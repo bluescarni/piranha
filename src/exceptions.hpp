@@ -41,7 +41,7 @@ namespace piranha
 class base_exception: public std::exception
 {
         public:
-		base_exception(const std::string &);
+		explicit base_exception(const std::string &);
 		virtual const char *what() const throw();
 		virtual ~base_exception() throw();
 	private:
@@ -51,7 +51,7 @@ class base_exception: public std::exception
 /// Exception for functionality not implemented or not available on the current platform.
 struct not_implemented_error: public base_exception
 {
-	not_implemented_error(const std::string &s);
+	explicit not_implemented_error(const std::string &s);
 };
 
 }
