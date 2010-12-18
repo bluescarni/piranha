@@ -22,7 +22,7 @@
 #define PIRANHA_THREAD_MANAGEMENT_HPP
 
 #include <mutex>
-#include <utility>
+#include <tuple>
 
 namespace piranha
 {
@@ -38,7 +38,7 @@ class thread_management
 {
 	public:
 		static void bind_to_proc(unsigned);
-		static std::pair<bool,unsigned> bound_proc();
+		static std::tuple<bool,unsigned> bound_proc();
 	private:
 		static std::mutex m_mutex;
 };

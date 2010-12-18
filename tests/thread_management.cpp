@@ -25,7 +25,6 @@
 
 #include <mutex>
 #include <thread>
-#include <utility>
 
 #include "../src/runtime_info.hpp"
 #include "../src/thread_group.hpp"
@@ -38,11 +37,11 @@ static inline void test_function()
 {
 	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
 		piranha::thread_management::bind_to_proc(i);
-		const std::pair<bool,unsigned> retval = piranha::thread_management::bound_proc();
+		const auto retval = piranha::thread_management::bound_proc();
 		// Lock because Boost unit test is not thread-safe.
 		std::lock_guard<std::mutex> lock(mutex);
-		BOOST_CHECK_EQUAL(retval.first,true);
-		BOOST_CHECK_EQUAL(retval.second,i);
+		BOOST_CHECK_EQUAL(std::get<0>(retval),true);
+		BOOST_CHECK_EQUAL(std::get<1>(retval),i);
 	}
 }
 

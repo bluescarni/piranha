@@ -27,7 +27,6 @@ extern "C"
 
 #endif
 
-#include <boost/numeric/conversion/cast.hpp>
 #include <mutex>
 #include <thread>
 
@@ -58,7 +57,7 @@ unsigned runtime_info::hardware_concurrency()
 	std::lock_guard<std::mutex> lock(m_mutex);
 #ifdef __linux__
 	int candidate = ::get_nprocs();
-	return (candidate <= 0) ? 0 : boost::numeric_cast<unsigned>(candidate);
+	return (candidate <= 0) ? 0 : static_cast<unsigned>(candidate);
 #else
 #warning Cannot determine automatically hardware concurrency.
 	return 0;

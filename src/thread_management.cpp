@@ -21,7 +21,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <mutex>
 #include <stdexcept>
-#include <utility>
+#include <tuple>
 
 #include "config.hpp"
 #include "exceptions.hpp"
@@ -103,7 +103,7 @@ void thread_management::bind_to_proc(unsigned n)
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
  * @throws std::runtime_error if the operation fails in an unspecified way.
  */
-std::pair<bool,unsigned> thread_management::bound_proc()
+std::tuple<bool,unsigned> thread_management::bound_proc()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE)
@@ -115,7 +115,7 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	}
 	const int cpu_count = CPU_COUNT(&cpuset);
 	if (cpu_count == 0 || cpu_count > 1) {
-		return std::make_pair(false,0);
+		return std::make_tuple(false,0);
 	}
 	int cpu_setsize;
 	try {
@@ -127,7 +127,7 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 		if (CPU_ISSET(i,&cpuset)) {
 			// Cast is safe here (verified above that cpu_setsize is representable in int,
 			// and, by extension, in unsigned).
-			return std::make_pair(true,static_cast<unsigned>(i));
+			return std::make_tuple(true,static_cast<unsigned>(i));
 		}
 	}
 	piranha_throw(std::runtime_error,"operation failed");
