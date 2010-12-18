@@ -54,28 +54,36 @@ std::mutex thread_management::m_mutex;
  * 
  * @param[in] n index of the processor to which the thread will be bound (starting from index 0).
  * 
- * @throws std::runtime_error if one of these conditions arises:
+ * @throws piranha::value_error if one of these conditions arises:
  * \li n is greater than an implementation-defined maximum value,
- * \li piranha::runtime_info::hardware_concurrency() returns a positive value m and n >= m,
- * \li the operation fails.
+ * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value m and n >= m.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
+ * @throws std::runtime_error if the operation fails in an unspecified way.
  */
 void thread_management::bind_to_proc(unsigned n)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE)
-	if (n >= boost::numeric_cast<unsigned>(CPU_SETSIZE)) {
-		piranha_throw(std::runtime_error,"processor index is larger than the maximum allowed value");
+	unsigned cpu_setsize;
+	int n_int;
+	try {
+		cpu_setsize = boost::numeric_cast<unsigned>(CPU_SETSIZE);
+		n_int = boost::numeric_cast<int>(n);
+	} catch (const boost::numeric::bad_numeric_cast &) {
+		piranha_throw(std::runtime_error,"numeric conversion error");
+	}
+	if (n >= cpu_setsize) {
+		piranha_throw(piranha::value_error,"processor index is larger than the maximum allowed value");
 	}
 	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
-		piranha_throw(std::runtime_error,"processor index is larger than the detected hardware concurrency");
+		piranha_throw(piranha::value_error,"processor index is larger than the detected hardware concurrency");
 	}
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
-	CPU_SET(boost::numeric_cast<int>(n),&cpuset);
+	CPU_SET(n_int,&cpuset);
 	const int errno_ = ::pthread_setaffinity_np(::pthread_self(),sizeof(cpuset),&cpuset);
 	if (errno_ != 0) {
-		piranha_throw(std::runtime_error,"operation failed");
+		piranha_throw(std::runtime_error,"the call to pthread_setaffinity_np() failed");
 	}
 #else
 #warning No bind_to_proc implementation available.
@@ -92,11 +100,8 @@ void thread_management::bind_to_proc(unsigned n)
  * @return the pair (true,n) if the calling thread is bound to a single processor with index n, (false,0)
  * otherwise.
  * 
- * @throws std::runtime_error if one of these conditions arises:
- * \li n is greater than an implementation-defined maximum value,
- * \li piranha::runtime_info::hardware_concurrency() returns a positive value m and n >= m,
- * \li the operation fails.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
+ * @throws std::runtime_error if the operation fails in an unspecified way.
  */
 std::pair<bool,unsigned> thread_management::bound_proc()
 {
@@ -106,15 +111,23 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	CPU_ZERO(&cpuset);
 	const int errno_ = ::pthread_getaffinity_np(::pthread_self(),sizeof(cpuset),&cpuset);
 	if (errno_ != 0) {
-		piranha_throw(std::runtime_error,"operation failed");
+		piranha_throw(std::runtime_error,"the call to pthread_getaffinity_np() failed");
 	}
 	const int cpu_count = CPU_COUNT(&cpuset);
 	if (cpu_count == 0 || cpu_count > 1) {
 		return std::make_pair(false,0);
 	}
-	for (int i = 0; i < CPU_SETSIZE; ++i) {
+	int cpu_setsize;
+	try {
+		cpu_setsize = boost::numeric_cast<int>(CPU_SETSIZE);
+	} catch (const boost::numeric::bad_numeric_cast &) {
+		piranha_throw(std::runtime_error,"numeric conversion error");
+	}
+	for (int i = 0; i < cpu_setsize; ++i) {
 		if (CPU_ISSET(i,&cpuset)) {
-			return std::make_pair(true,boost::numeric_cast<unsigned>(i));
+			// Cast is safe here (verified above that cpu_setsize is representable in int,
+			// and, by extension, in unsigned).
+			return std::make_pair(true,static_cast<unsigned>(i));
 		}
 	}
 	piranha_throw(std::runtime_error,"operation failed");

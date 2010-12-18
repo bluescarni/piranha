@@ -21,8 +21,27 @@
 #ifndef PIRANHA_SETTINGS_HPP
 #define PIRANHA_SETTINGS_HPP
 
+#include <mutex>
+
 namespace piranha
 {
+
+/// Global settings.
+/**
+ * This class stores the global settings of piranha's runtime environment.
+ * The methods of this class, unless otherwise specified, are thread-safe.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
+class settings
+{
+	public:
+		static unsigned get_n_threads();
+		static void set_n_threads(unsigned);
+	private:
+		static unsigned		m_n_threads;
+		static std::mutex	m_mutex;
+};
 
 }
 

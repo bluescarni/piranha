@@ -1,6 +1,7 @@
 SET(SRC_LIST
 	exceptions.cpp
 	runtime_info.cpp
+	settings.cpp
 	thread_group.cpp
 	thread_management.cpp
 )

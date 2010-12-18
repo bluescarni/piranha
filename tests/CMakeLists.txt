@@ -12,3 +12,7 @@ ADD_TEST(thread_group thread_group)
 ADD_EXECUTABLE(thread_management thread_management.cpp)
 TARGET_LINK_LIBRARIES(thread_management piranha_static ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 ADD_TEST(thread_management thread_management)
+
+ADD_EXECUTABLE(settings settings.cpp)
+TARGET_LINK_LIBRARIES(settings piranha_static ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+ADD_TEST(settings settings)

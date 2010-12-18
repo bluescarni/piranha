@@ -18,27 +18,21 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_PIRANHA_HPP
-#define PIRANHA_PIRANHA_HPP
+#include "../src/settings.hpp"
 
-/** \file piranha.hpp
- * Global piranha header file.
- * 
- * Include this file to import piranha's entire public interface.
- */
+#define BOOST_TEST_MODULE settings_test
+#include <boost/test/unit_test.hpp>
 
-/// Root piranha namespace.
-namespace piranha {}
+#include "../src/exceptions.hpp"
+#include "../src/runtime_info.hpp"
 
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified.
-
-#include "config.hpp"
-#include "cvector.hpp"
-#include "exceptions.hpp"
-#include "runtime_info.hpp"
-#include "settings.hpp"
-#include "thread_group.hpp"
-#include "thread_management.hpp"
-
-#endif
+// Check getting and setting number of threads.
+BOOST_AUTO_TEST_CASE(settings_thread_number)
+{
+	BOOST_CHECK_PREDICATE([](unsigned n){return n != 0;},(piranha::settings::get_n_threads()));
+	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
+		piranha::settings::set_n_threads(i + 1);
+		BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(), i + 1);
+	}
+	BOOST_CHECK_THROW(piranha::settings::set_n_threads(0),piranha::value_error);
+}

@@ -30,6 +30,8 @@
 #include "../src/runtime_info.hpp"
 #include "../src/thread_group.hpp"
 
+// TODO: check for exceptions throwing.
+
 std::mutex mutex;
 
 static inline void test_function()

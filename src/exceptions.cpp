@@ -54,4 +54,10 @@ base_exception::~base_exception() throw() {}
  */
 not_implemented_error::not_implemented_error(const std::string &s): base_exception(s) {}
 
+/// Constructor.
+/**
+ * @see piranha::base_exception::base_exception().
+ */
+value_error::value_error(const std::string &s): base_exception(s) {}
+
 }

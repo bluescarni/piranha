@@ -18,27 +18,44 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_PIRANHA_HPP
-#define PIRANHA_PIRANHA_HPP
+#include <algorithm>
+#include <mutex>
 
-/** \file piranha.hpp
- * Global piranha header file.
- * 
- * Include this file to import piranha's entire public interface.
- */
-
-/// Root piranha namespace.
-namespace piranha {}
-
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified.
-
-#include "config.hpp"
-#include "cvector.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
-#include "thread_group.hpp"
-#include "thread_management.hpp"
 
-#endif
+namespace piranha
+{
+
+unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+std::mutex settings::m_mutex;
+
+/// Get the number of threads available for use by piranha.
+/**
+ * The initial value upon program startup is set to the maximum between 1 and piranha::runtime_info::hardware_concurrency().
+ * 
+ * @return the number of threads that will be available for use by piranha.
+ */
+unsigned settings::get_n_threads()
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	return m_n_threads;
+}
+
+/// Set the number of threads available for use by piranha.
+/**
+ * @param[in] n the desired number of threads.
+ * 
+ * @throws piranha::value_error if n == 0.
+ */
+void settings::set_n_threads(unsigned n)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+	if (n == 0) {
+		piranha_throw(value_error,"the number of threads must be strictly positive");
+	}
+	m_n_threads = n;
+}
+
+}
