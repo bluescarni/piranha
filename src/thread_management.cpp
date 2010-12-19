@@ -115,7 +115,7 @@ std::tuple<bool,unsigned> thread_management::bound_proc()
 	}
 	const int cpu_count = CPU_COUNT(&cpuset);
 	if (cpu_count == 0 || cpu_count > 1) {
-		return std::make_tuple(false,0);
+		return std::make_tuple(false,static_cast<unsigned>(0));
 	}
 	int cpu_setsize;
 	try {

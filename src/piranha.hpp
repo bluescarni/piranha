@@ -31,7 +31,9 @@
 namespace piranha {}
 
 // NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified.
+// - thread safety: assume none unless specified
+// - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
+//   to document every occurrence.
 
 #include "config.hpp"
 #include "cvector.hpp"

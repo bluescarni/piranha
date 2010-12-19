@@ -27,4 +27,6 @@
 
 #define piranha_assert assert
 
+#define piranha_nullptr (0)
+
 #endif
