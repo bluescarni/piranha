@@ -26,7 +26,8 @@
 #include <cassert>
 
 #define piranha_assert assert
-
+// These are not implemented yet in GCC.
 #define piranha_nullptr (0)
+#define piranha_noexcept
 
 #endif

@@ -1,15 +1,28 @@
 #include <iostream>
+#include <mutex>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
-#include "src/runtime_info.hpp"
-#include "src/thread_management.hpp"
+#include "src/cvector.hpp"
+
+struct trivial
+{
+	int n;
+};
+
+piranha::cvector<trivial> get()
+{
+	try {
+		return piranha::cvector<trivial>(10000000);
+	} catch (...) {
+		throw;
+	}
+}
 
 int main()
 {
-	std::cout << std::thread::hardware_concurrency() << '\n';
-	std::cout << piranha::runtime_info::hardware_concurrency() << '\n';
-// 	piranha::thread_management::bind_to_proc(7);
-	std::cout << piranha::thread_management::bound_proc().first << '\n';
-	std::cout << piranha::thread_management::bound_proc().second << '\n';
+	piranha::cvector<trivial> t;
+	t = get();
+	std::cout << t.size() << '\n';
 }
