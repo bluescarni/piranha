@@ -47,6 +47,12 @@ struct trivial
 struct nontrivial
 {
 	nontrivial():v(std::vector<double>::size_type(1)) {}
+	nontrivial(nontrivial &&nt):v(std::move(nt.v)) {}
+	nontrivial &operator=(nontrivial &&nt)
+	{
+		v = std::move(nt.v);
+		return *this;
+	}
 	std::vector<double> v;
 };
 
@@ -56,40 +62,104 @@ unsigned copies = 0;
 struct nontrivial_throwing
 {
 	nontrivial_throwing():v(1) {}
-	nontrivial_throwing(const nontrivial_throwing &ntt):v(ntt.v)
+	nontrivial_throwing(const nontrivial_throwing &ntt):v()
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		++copies;
 		if (copies > 10000) {
 			throw custom_exception();
 		}
+		++copies;
+		v = ntt.v;
+	}
+	nontrivial_throwing(nontrivial_throwing &&ntt):v(std::move(ntt.v)) {}
+	nontrivial_throwing &operator=(nontrivial_throwing &&ntt)
+	{
+		v = std::move(ntt.v);
+		return *this;
 	}
 	std::vector<double> v;
 };
 
+const unsigned size = 1000000;
+
+static inline void set_mt()
+{
+	piranha::settings::set_n_threads((piranha::runtime_info::hardware_concurrency() == 0) ? 1 : piranha::runtime_info::hardware_concurrency());
+}
+
+static inline void set_st()
+{
+	piranha::settings::set_n_threads(1);
+}
+
 BOOST_AUTO_TEST_CASE(cvector_size_constructor)
 {
-	piranha::cvector<trivial> t(10000000);
-	piranha::cvector<nontrivial> nt(1000000);
-	BOOST_CHECK_THROW(piranha::cvector<nontrivial_throwing> ntt(1000000),custom_exception);
+	set_mt();
+	piranha::cvector<trivial> t(size);
+	piranha::cvector<nontrivial> nt(size);
+	BOOST_CHECK_THROW(piranha::cvector<nontrivial_throwing> ntt(size),custom_exception);
+	set_st();
 }
 
 BOOST_AUTO_TEST_CASE(cvector_copy_constructor)
 {
-	piranha::cvector<trivial> t(10000000);
+	set_mt();
+	piranha::cvector<trivial> t(size);
 	piranha::cvector<trivial> t_copy(t);
-	piranha::cvector<nontrivial> nt(1000000);
+	piranha::cvector<nontrivial> nt(size);
 	piranha::cvector<nontrivial> nt_copy(nt);
+	set_st();
 }
 
-static inline piranha::cvector<nontrivial> get_cvector()
+static inline piranha::cvector<nontrivial> get_nontrivial()
 {
-	return piranha::cvector<nontrivial>(1000000);
+	return piranha::cvector<nontrivial>(size);
+}
+
+static inline piranha::cvector<trivial> get_trivial()
+{
+	return piranha::cvector<trivial>(size);
 }
 
 BOOST_AUTO_TEST_CASE(cvector_move_assignment)
 {
-	piranha::cvector<nontrivial> t;
-	t = get_cvector();
-	BOOST_CHECK_EQUAL(t.size(),piranha::cvector<nontrivial>::size_type(1000000));
+	set_mt();
+	piranha::cvector<nontrivial> nt;
+	nt = get_nontrivial();
+	BOOST_CHECK_EQUAL(nt.size(),piranha::cvector<nontrivial>::size_type(size));
+	piranha::cvector<trivial> t;
+	t = get_trivial();
+	BOOST_CHECK_EQUAL(t.size(),piranha::cvector<trivial>::size_type(size));
+	set_st();
+}
+
+BOOST_AUTO_TEST_CASE(cvector_assignment)
+{
+	set_mt();
+	piranha::cvector<trivial> t, u(get_trivial());
+	t = u;
+	BOOST_CHECK_EQUAL(t.size(),piranha::cvector<trivial>::size_type(size));
+	piranha::cvector<nontrivial> nt, nu(get_nontrivial());
+	nt = nu;
+	BOOST_CHECK_EQUAL(nt.size(),piranha::cvector<nontrivial>::size_type(size));
+	set_st();
+}
+
+BOOST_AUTO_TEST_CASE(cvector_resize)
+{
+	set_mt();
+	piranha::cvector<trivial> t(size);
+	t.resize(size + 100);
+	BOOST_CHECK_EQUAL(t.size(),piranha::cvector<trivial>::size_type(size + 100));
+	piranha::cvector<nontrivial> nt(size);
+	nt.resize(size + 100);
+	BOOST_CHECK_EQUAL(nt.size(),piranha::cvector<nontrivial>::size_type(size + 100));
+	{
+	std::lock_guard<std::mutex> lock(mutex);
+	copies = 0;
+	}
+	piranha::cvector<nontrivial_throwing> ntt(9000);
+	BOOST_CHECK_THROW(ntt.resize(10100),custom_exception);
+	BOOST_CHECK_EQUAL(ntt.size(),piranha::cvector<nontrivial>::size_type(9000));
+	set_st();
 }

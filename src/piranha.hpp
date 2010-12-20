@@ -34,6 +34,8 @@ namespace piranha {}
 // - thread safety: assume none unless specified
 // - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
 //   to document every occurrence.
+// - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
+//   to signal/emulate them.
 
 #include "config.hpp"
 #include "cvector.hpp"

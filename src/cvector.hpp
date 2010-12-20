@@ -23,22 +23,22 @@
 
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/utility.hpp>
 #include <cstddef>
 #include <exception>
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <new> // For std::bad_alloc.
 #include <thread>
 #include <type_traits>
 #include <vector>
 
 #include "config.hpp" // For piranha_assert.
+#include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "thread_group.hpp"
-
-// TODO: remove.
-#include <iostream>
 
 namespace piranha {
 
@@ -50,8 +50,9 @@ namespace piranha {
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Affinity settings.
+ * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
  */
-template <class T, class Allocator = std::allocator<T>>
+template <class T>
 class cvector
 {
 	public:
@@ -61,7 +62,7 @@ class cvector
 		typedef std::size_t size_type;
 	private:
 		// Allocator type.
-		typedef typename Allocator::template rebind<value_type>::other allocator_type;
+		typedef std::allocator<T> allocator_type;
 		template <typename Functor, typename... Args>
 		static void thread_runner(Functor &&f, const size_type &size, Args && ... params)
 		{
@@ -73,9 +74,14 @@ class cvector
 			n_threads = (size / n_threads >= min_work) ? n_threads : std::max<size_type>(static_cast<size_type>(1),size / min_work);
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);
-// std::cout << "n_threads: " << n_threads << '\n';
 			std::mutex mutex;
 			std::vector<std::exception_ptr> exceptions;
+			// Reserve enough space to store exceptions, so that we avoid potential problems
+			// when pushing back the exceptions in the catch(...) blocks.
+			exceptions.reserve(boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads));
+			if (exceptions.capacity() < boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads)) {
+				throw std::bad_alloc();
+			}
 			// If we have just one thread or we are already being called by a thread separate from
 			// the main one, do not open new threads.
 			if (n_threads == 1 || std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
@@ -93,7 +99,6 @@ class cvector
 			// Rethrow the first exception encountered.
 			for (std::vector<std::exception_ptr>::size_type i = 0; i < exceptions.size(); ++i) {
 				if (exceptions[i] != piranha_nullptr) {
-// std::cout << "gonna rethrow\n";
 					std::rethrow_exception(exceptions[i]);
 				}
 			}
@@ -105,7 +110,6 @@ class cvector
 			void impl(const size_type &work_size, const size_type &offset, const size_type &,
 				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin, const std::true_type &) const
 			{
-// std::cout << "trivial!\n";
 				try {
 					const value_type tmp = value_type();
 					value_type *current = begin + offset;
@@ -114,6 +118,8 @@ class cvector
 					}
 				} catch (...) {
 					// No need to do any rolling back for trivial objects. Just store the exception.
+					// NOTE: is it even possible for trivial objects to throw on default construction and/or
+					// assignment?
 					std::lock_guard<std::mutex> lock(*mutex);
 					exceptions->push_back(std::current_exception());
 				}
@@ -122,7 +128,6 @@ class cvector
 			void impl(const size_type &work_size, const size_type &offset, const size_type &,
 				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin, const std::false_type &) const
 			{
-// std::cout << "nontrivial!\n";
 				size_type i = 0;
 				try {
 					allocator_type a;
@@ -132,7 +137,6 @@ class cvector
 						a.construct(current,tmp);
 					}
 				} catch (...) {
-// std::cout << "rolling back\n";
 					allocator_type a;
 					value_type *current = begin + offset;
 					// Roll back the construction.
@@ -211,6 +215,40 @@ class cvector
 				impl(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin,std::is_trivial<value_type>());
 			}
 		};
+		struct mover
+		{
+			void impl(const size_type &work_size, const size_type &offset, const size_type &n_threads,
+				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin, const std::true_type &) const
+			{
+				// Moving a trivial object means simply to copy it.
+				copy_ctor()(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin);
+			}
+			void impl(const size_type &work_size, const size_type &offset, const size_type &,
+				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin, const std::false_type &) const
+			{
+				size_type i = 0;
+				try {
+					allocator_type a;
+					value_type *dest_current = dest_begin + offset, *src_current = src_begin + offset;
+					for (; i < work_size; ++i, ++dest_current, ++src_current) {
+						a.construct(dest_current,piranha_move_if_noexcept(*src_current));
+					}
+				} catch (...) {
+					allocator_type a;
+					value_type *dest_current = dest_begin + offset;
+					for (size_type j = 0; j < i; ++j, ++dest_current) {
+						a.destroy(dest_current);
+					}
+					std::lock_guard<std::mutex> lock(*mutex);
+					exceptions->push_back(std::current_exception());
+				}
+			}
+			void operator()(const size_type &work_size, const size_type &offset, const size_type &n_threads,
+				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin) const
+			{
+				impl(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin,std::is_trivial<value_type>());
+			}
+		};
 	public:
 		/// Default constructor.
 		/**
@@ -241,29 +279,11 @@ class cvector
 		/**
 		 * @param[in] other vector that will be moved.
 		 */
-		cvector(cvector &&other) piranha_noexcept:m_data(other.m_data),m_size(other.m_size)
+		cvector(cvector &&other) piranha_noexcept(true) : m_data(other.m_data),m_size(other.m_size)
 		{
-// std::cout << "Move construct!\n";
 			// Empty the other cvector.
 			other.m_data = piranha_nullptr;
 			other.m_size = 0;
-		}
-		/// Move assignment.
-		/**
-		 * @param[in] other vector that will be moved.
-		 * 
-		 * @return reference to this.
-		 */
-		cvector &operator=(cvector &&other) piranha_noexcept
-		{
-// std::cout << "Move assign!\n";
-			destroy_and_deallocate();
-			m_data = other.m_data;
-			m_size = other.m_size;
-			// Empty other.
-			other.m_data = piranha_nullptr;
-			other.m_size = 0;
-			return *this;
 		}
 		/// Constructor from size.
 		/**
@@ -297,6 +317,53 @@ class cvector
 			assert((m_size == 0 && m_data == piranha_nullptr) || (m_size != 0 && m_data != piranha_nullptr));
 			destroy_and_deallocate();
 		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other vector that will be moved.
+		 * 
+		 * @return reference to this.
+		 */
+		cvector &operator=(cvector &&other) piranha_noexcept(true)
+		{
+			destroy_and_deallocate();
+			m_data = other.m_data;
+			m_size = other.m_size;
+			// Empty other.
+			other.m_data = piranha_nullptr;
+			other.m_size = 0;
+			return *this;
+		}
+		/// Assignment operator.
+		/**
+		 * @param[in] other vector to be copied.
+		 * 
+		 * @return reference to this.
+		 */
+		cvector &operator=(const cvector &other)
+		{
+			if (this == boost::addressof(other)) {
+				return *this;
+			}
+			if (other.size() == 0) {
+				resize(0);
+			} else {
+				allocator_type a;
+				value_type *new_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+				copy_ctor c;
+				try {
+					thread_runner(c,other.size(),new_data,other.m_data);
+				} catch (...) {
+					a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+					throw;
+				}
+				// Erase previous content.
+				destroy_and_deallocate();
+				// Final assignment.
+				m_data = new_data;
+				m_size = other.size();
+			}
+			return *this;
+		}
 		/// Size getter.
 		/**
 		 * @return the size of the vector.
@@ -304,6 +371,61 @@ class cvector
 		size_type size() const
 		{
 			return m_size;
+		}
+		/// Resize.
+		/**
+		 * Resize the vector preserving the existing content.
+		 * 
+		 * @param[in] size new size.
+		 */
+		void resize(const size_type &size)
+		{
+			// Do nothing if size is the same.
+			if (size == m_size) {
+				return;
+			}
+			// For resize(0), destroy and zero out the data members.
+			if (size == 0) {
+				destroy_and_deallocate();
+				m_data = piranha_nullptr;
+				m_size = 0;
+				return;
+			}
+			allocator_type a;
+			// Allocate the new data.
+			value_type *new_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
+			// Default-construct the new data, if any.
+			if (size > m_size) {
+				default_ctor f;
+				try {
+					thread_runner(f,size - m_size,new_data + m_size);
+				} catch (...) {
+					// Default constructions have been rolled back, deallocate and throw.
+					a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(size));
+					throw;
+				}
+			}
+			// Move the old data, to the minimum of old and new size.
+			mover m;
+			try {
+				thread_runner(m,std::min<size_type>(m_size,size),new_data,m_data);
+			} catch (...) {
+				// We reach here only if we did not actually move, but copied. The copied
+				// objects have been rolled back by the mover, now we need to destroy the default
+				// constructed objects from above (if any) and deallocate the new data.
+				if (size > m_size) {
+					destructor d;
+					thread_runner(d,size - m_size,new_data + m_size);
+				}
+				allocator_type a;
+				a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(size));
+				throw;
+			}
+			// Destroy and deallocate old data.
+			destroy_and_deallocate();
+			// Final assignment of new data.
+			m_data = new_data;
+			m_size = size;
 		}
 	private:
 		void destroy_and_deallocate()
@@ -319,271 +441,6 @@ class cvector
 	private:
 		value_type	*m_data;
 		size_type	m_size;
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-// 		template <class Functor, class Value>
-// 		static void executor(Functor &f, Value *begin, const size_type &size)
-// 		{
-// 			size_type nthread = boost::numeric_cast<size_type>(settings::get_nthread());
-// 			while (size / nthread < 50) {
-// 				nthread /= 2;
-// 				if (nthread <= 1) {
-// 					nthread = 1;
-// 					break;
-// 				}
-// 			}
-// 			piranha_assert(nthread >= 1);
-// 			if (!ForceSingleThread && nthread > 1) {
-// 				boost::thread_group tg;
-// 				const size_type sub_size = size / nthread;
-// 				size_type offset = 0;
-// 				for (size_type i = 0; i < nthread - static_cast<size_type>(1); ++i) {
-// 					tg.create_thread(boost::bind(f + offset, begin + offset, sub_size));
-// 					offset += sub_size;
-// 				}
-// 				tg.create_thread(boost::bind(f + offset, begin + offset, size - offset));
-// 				tg.join_all();
-// 			} else {
-// 				f(begin,size);
-// 			}
-// 		}
-// 		template <class Derived>
-// 		struct base_functor
-// 		{
-// 			typedef void result_type;
-// 			Derived operator+(const size_type &) const
-// 			{
-// 				return *(static_cast<Derived const *>(this));
-// 			}
-// 		};
-// 		struct default_ctor: base_functor<default_ctor>
-// 		{
-// 			// Trivial construction via assignment.
-// 			void impl(value_type *begin, const size_type &size, const boost::true_type &) const
-// 			{
-// 				const value_type tmp = value_type();
-// 				for (size_type i = 0; i < size; ++i, ++begin) {
-// 					*begin = tmp;
-// 				}
-// 			}
-// 			// Non-trivial construction.
-// 			void impl(value_type *begin, const size_type &size, const boost::false_type &) const
-// 			{
-// 				allocator_type a;
-// 				const value_type tmp = value_type();
-// 				for (size_type i = 0; i < size; ++i, ++begin) {
-// 					a.construct(begin,tmp);
-// 				}
-// 			}
-// 			void operator()(value_type *begin, const size_type &size) const
-// 			{
-// 				impl(begin,size,boost::is_pod<value_type>());
-// 			}
-// 		};
-// 		struct copy_ctor: base_functor<copy_ctor>
-// 		{
-// 			copy_ctor(const value_type *start):m_start(start) {}
-// 			copy_ctor operator+(const size_type &offset) const
-// 			{
-// 				copy_ctor retval(*this);
-// 				retval.m_start += offset;
-// 				return retval;
-// 			}
-// 			// Trivial copy construction via memcpy.
-// 			void impl(value_type *begin, const size_type &size, const boost::true_type &)
-// 			{
-// 				std::memcpy(static_cast<void *>(begin),static_cast<void const *>(m_start),sizeof(value_type) * size);
-// 			}
-// 			// Non-trivial copy construction.
-// 			void impl(value_type *begin, const size_type &size, const boost::false_type &)
-// 			{
-// 				allocator_type a;
-// 				for (size_type i = 0; i < size; ++i, ++begin) {
-// 					a.construct(begin,*m_start);
-// 					++m_start;
-// 				}
-// 			}
-// 			void operator()(value_type *begin, const size_type &size)
-// 			{
-// 				impl(begin,size,boost::is_pod<value_type>());
-// 			}
-// 			value_type const *m_start;
-// 		};
-// 		struct assigner: base_functor<assigner>
-// 		{
-// 			assigner(const value_type *start):m_start(start) {}
-// 			assigner operator+(const size_type &offset) const
-// 			{
-// 				assigner retval(*this);
-// 				retval.m_start += offset;
-// 				return retval;
-// 			}
-// 			// Trivial assignment via memcpy.
-// 			void impl(value_type *begin, const size_type &size, const boost::true_type &)
-// 			{
-// 				std::memcpy(static_cast<void *>(begin),static_cast<void const *>(m_start),sizeof(value_type) * size);
-// 			}
-// 			// Non-trivial assignment.
-// 			void impl(value_type *begin, const size_type &size, const boost::false_type &)
-// 			{
-// 				for (size_type i = 0; i < size; ++i, ++begin) {
-// 					*begin = *m_start;
-// 					++m_start;
-// 				}
-// 			}
-// 			void operator()(value_type *begin, const size_type &size)
-// 			{
-// 				impl(begin,size,boost::is_pod<value_type>());
-// 			}
-// 			value_type const *m_start;
-// 		};
-// 		struct destructor: base_functor<destructor>
-// 		{
-// 			// Trivial destructor.
-// 			void impl(value_type *, const size_type &, const boost::true_type &) const
-// 			{}
-// 			// Non-trivial destructor.
-// 			void impl(value_type *begin, const size_type &size, const boost::false_type &) const
-// 			{
-// 				allocator_type a;
-// 				for (size_type i = 0; i < size; ++i, ++begin) {
-// 					a.destroy(begin);
-// 				}
-// 			}
-// 			void operator()(value_type *begin, const size_type &size) const
-// 			{
-// 				impl(begin,size,boost::is_pod<value_type>());
-// 			}
-// 		};
-// 	public:
-// 		typedef value_type * iterator;
-// 		typedef value_type const * const_iterator;
-// 		cvector(): m_data(0),m_size(0) {}
-// 		explicit cvector(const size_type &size)
-// 		{
-// 			allocator_type a;
-// 			m_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
-// 			default_ctor f;
-// 			executor(f,m_data,size);
-// 			m_size = size;
-// 		}
-// 		cvector(const cvector &v)
-// 		{
-// 			allocator_type a;
-// 			m_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(v.m_size));
-// 			copy_ctor c(v.m_data);
-// 			executor(c,m_data,v.m_size);
-// 			m_size = v.m_size;
-// 		}
-// 		cvector &operator=(const cvector &v)
-// 		{
-// 			if (this == &v) {
-// 				return *this;
-// 			}
-// 			if (m_size == v.m_size) {
-// 				// If the two sizes match, we can just assign member by member.
-// 				assigner a(v.m_data);
-// 				executor(a,m_data,m_size);
-// 			} else {
-// 				// If sizes do not match, destroy and copy-rebuild.
-// 				allocator_type a;
-// 				// Destroy old data.
-// 				destructor d;
-// 				executor(d,m_data,m_size);
-// 				// Deallocate and allocate new space.
-// 				a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
-// 				m_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(v.m_size));
-// 				// Copy over data from v into the new space.
-// 				copy_ctor c(v.m_data);
-// 				executor(c,m_data,v.m_size);
-// 				m_size = v.m_size;
-// 			}
-// 			return *this;
-// 		}
-// 		~cvector()
-// 		{
-// 			destructor d;
-// 			executor(d,m_data,m_size);
-// 			allocator_type a;
-// 			a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
-// 		}
-// 		const_iterator begin() const
-// 		{
-// 			return m_data;
-// 		}
-// 		iterator begin()
-// 		{
-// 			return m_data;
-// 		}
-// 		const_iterator end() const
-// 		{
-// 			return m_data + m_size;
-// 		}
-// 		iterator end()
-// 		{
-// 			return m_data + m_size;
-// 		}
-// 		void swap(cvector &v)
-// 		{
-// 			std::swap(m_data,v.m_data);
-// 			std::swap(m_size,v.m_size);
-// 		}
-// 		void resize(const size_type &new_size)
-// 		{
-// 			if (m_size == new_size) {
-// 				return;
-// 			}
-// 			allocator_type a;
-// 			// Allocate the new data.
-// 			value_type *new_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(new_size));
-// 			// Copy over old data, to the minimum of old and new sizes.
-// 			copy_ctor c(m_data);
-// 			executor(c,new_data,std::min<size_type>(m_size,new_size));
-// 			if (new_size > m_size) {
-// 				// Default construct remaining data, if any.
-// 				default_ctor f;
-// 				executor(f,new_data + m_size, new_size - m_size);
-// 			}
-// 			// Destroy and deallocate old data.
-// 			destructor d;
-// 			executor(d,m_data,m_size);
-// 			a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
-// 			// Final assignment.
-// 			m_data = new_data;
-// 			m_size = new_size;
-// 		}
-// 		value_type &operator[](const size_type &n)
-// 		{
-// 			return m_data[n];
-// 		}
-// 		const value_type &operator[](const size_type &n) const
-// 		{
-// 			return m_data[n];
-// 		}
-// 		size_type size() const
-// 		{
-// 			return m_size;
-// 		}
-// 		void clear()
-// 		{
-// 			destructor d;
-// 			executor(d,m_data,m_size);
-// 			allocator_type a;
-// 			a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
-// 			m_data = 0;
-// 			m_size = 0;
-// 		}
-// 	private:
-// 		value_type	*m_data;
-// 		size_type	m_size;
 };
 
 }

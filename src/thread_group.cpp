@@ -18,10 +18,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <list>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "thread_group.hpp"
 
@@ -44,7 +44,7 @@ thread_group::~thread_group()
 void thread_group::join_all()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	for (std::list<std::unique_ptr<std::thread>>::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
+	for (container_type::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
 		if ((*it)->joinable()) {
 			(*it)->join();
 		}

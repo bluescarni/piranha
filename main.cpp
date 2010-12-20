@@ -6,23 +6,29 @@
 
 #include "src/cvector.hpp"
 
-struct trivial
+struct nontrivial
 {
-	int n;
+	nontrivial():v(std::vector<double>::size_type(1)) {}
+	nontrivial(nontrivial &&nt):v(std::move(nt.v))
+	{
+// std::cout << "move ctor\n";
+	}
+	nontrivial &operator=(nontrivial &&nt)
+	{
+std::cout << "move ass\n";
+		v = std::move(nt.v);
+		return *this;
+	}
+	std::vector<double> v;
 };
 
-piranha::cvector<trivial> get()
+static inline nontrivial nontrivial_get()
 {
-	try {
-		return piranha::cvector<trivial>(10000000);
-	} catch (...) {
-		throw;
-	}
+	return nontrivial();
 }
 
 int main()
 {
-	piranha::cvector<trivial> t;
-	t = get();
-	std::cout << t.size() << '\n';
+	piranha::cvector<nontrivial> v(10000);
+	v.resize(10001);
 }

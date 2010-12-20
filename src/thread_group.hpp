@@ -21,10 +21,14 @@
 #ifndef PIRANHA_THREAD_GROUP_HPP
 #define PIRANHA_THREAD_GROUP_HPP
 
-#include <list>
+#include <boost/integer_traits.hpp>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <thread>
+#include <vector>
+
+#include "exceptions.hpp"
 
 namespace piranha
 {
@@ -37,6 +41,8 @@ namespace piranha
  */
 class thread_group
 {
+		typedef std::vector<std::unique_ptr<std::thread>> container_type;
+		typedef container_type::size_type size_type;
 	public:
 		/// Default constructor.
 		thread_group() = default;
@@ -55,17 +61,29 @@ class thread_group
 		 * 
 		 * @param[in] f functor used as argument for thread creation.
 		 * @param[in] params parameters to be passed to the functor upon invocation.
+		 * 
+		 * @throws std::runtime_error if storage allocation for the new thread fails.
 		 */
 		template <typename Functor, typename... Args>
 		void create_thread(Functor &&f, Args && ... params)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
-			m_threads.push_back(std::unique_ptr<std::thread>(new std::thread(std::forward<Functor>(f),std::forward<Args>(params)...)));
+			if (m_threads.size() == boost::integer_traits<size_type>::const_max) {
+				piranha_throw(std::runtime_error,"maximum number of threads exceeded");
+			}
+			// Make space for the new thread.
+			const size_type new_size = m_threads.size() + static_cast<size_type>(1);
+			m_threads.reserve(new_size);
+			if (m_threads.capacity() < new_size) {
+				piranha_throw(std::runtime_error,"could not allocate storage for new thread");
+			}
+			std::unique_ptr<std::thread> new_thread(new std::thread(std::forward<Functor>(f),std::forward<Args>(params)...));
+			m_threads.push_back(std::move(new_thread));
 		}
 		void join_all();
 	private:
-		std::list<std::unique_ptr<std::thread>>	m_threads;
-		std::mutex				m_mutex;
+		std::vector<std::unique_ptr<std::thread>>	m_threads;
+		std::mutex					m_mutex;
 };
 
 }
