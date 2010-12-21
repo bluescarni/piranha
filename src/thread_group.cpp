@@ -18,7 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <memory>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -45,8 +44,8 @@ void thread_group::join_all()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (container_type::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-		if ((*it)->joinable()) {
-			(*it)->join();
+		if (it->joinable()) {
+			it->join();
 		}
 	}
 }

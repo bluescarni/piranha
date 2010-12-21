@@ -22,9 +22,9 @@
 #define PIRANHA_THREAD_GROUP_HPP
 
 #include <boost/integer_traits.hpp>
-#include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -41,7 +41,7 @@ namespace piranha
  */
 class thread_group
 {
-		typedef std::vector<std::unique_ptr<std::thread>> container_type;
+		typedef std::vector<std::thread> container_type;
 		typedef container_type::size_type size_type;
 	public:
 		/// Default constructor.
@@ -63,6 +63,9 @@ class thread_group
 		 * @param[in] params parameters to be passed to the functor upon invocation.
 		 * 
 		 * @throws std::runtime_error if storage allocation for the new thread fails.
+		 * @throws std::system_error if the new thread could not be started.
+		 * @throws unspecified any exception thrown by copying the functor or its arguments into the
+		 * thread's internal storage.
 		 */
 		template <typename Functor, typename... Args>
 		void create_thread(Functor &&f, Args && ... params)
@@ -77,13 +80,13 @@ class thread_group
 			if (m_threads.capacity() < new_size) {
 				piranha_throw(std::runtime_error,"could not allocate storage for new thread");
 			}
-			std::unique_ptr<std::thread> new_thread(new std::thread(std::forward<Functor>(f),std::forward<Args>(params)...));
+			std::thread new_thread(std::forward<Functor>(f),std::forward<Args>(params)...);
 			m_threads.push_back(std::move(new_thread));
 		}
 		void join_all();
 	private:
-		std::vector<std::unique_ptr<std::thread>>	m_threads;
-		std::mutex					m_mutex;
+		container_type	m_threads;
+		std::mutex	m_mutex;
 };
 
 }

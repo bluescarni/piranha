@@ -66,11 +66,11 @@ class cvector
 		// Structure used internally for thread handling.
 		struct thread_control
 		{
-			size_type						work_size;
-			size_type						offset;
-			size_type						n_threads;
-			std::mutex						*mutex;
-			std::vector<std::exception_ptr>				*exceptions;
+			size_type			work_size;
+			size_type			offset;
+			size_type			n_threads;
+			std::mutex			*mutex;
+			std::vector<std::exception_ptr>	*exceptions;
 		};
 		template <typename Functor, typename... Args>
 		static void thread_runner(Functor &&f, const size_type &size, Args && ... params)
