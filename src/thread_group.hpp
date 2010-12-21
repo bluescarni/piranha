@@ -58,6 +58,8 @@ class thread_group
 		 * \code
 		 * f(params)
 		 * \endcode
+		 * If any exception is thrown during this operation, no thread will be added and the
+		 * internal state will be identical to the state before the operation was attempted.
 		 * 
 		 * @param[in] f functor used as argument for thread creation.
 		 * @param[in] params parameters to be passed to the functor upon invocation.

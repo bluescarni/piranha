@@ -66,9 +66,10 @@ class cvector
 		// Structure used internally for thread handling.
 		struct thread_control
 		{
-			size_type			work_size;
-			size_type			offset;
-			size_type			n_threads;
+			const size_type			work_size;
+			const size_type			offset;
+			const size_type			n_threads;
+			size_type			*n_started_threads;
 			std::mutex			*mutex;
 			std::vector<std::exception_ptr>	*exceptions;
 		};
@@ -94,18 +95,31 @@ class cvector
 			// If we have just one thread or we are already being called by a thread separate from
 			// the main one, do not open new threads.
 			if (n_threads == 1 || std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
-				thread_control tc = {size,0,1,&mutex,&exceptions};
+				thread_control tc = {size,0,1,piranha_nullptr,&mutex,&exceptions};
 				f(tc,std::forward<Args>(params)...);
 			} else {
 				thread_group tg;
-				size_type i = 0;
-				for (; i < n_threads - static_cast<size_type>(1); ++i) {
-					thread_control tc = {work_size,i * work_size,n_threads,&mutex,&exceptions};
-					tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
+				size_type i = 0, n_started_threads = 0;
+				{
+					std::lock_guard<std::mutex> lock(mutex);
+					for (; i < n_threads - static_cast<size_type>(1); ++i) {
+						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&mutex,&exceptions};
+						try {
+							tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
+							++n_started_threads;
+						} catch (...) {
+							exceptions.push_back(std::current_exception());
+						}
+					}
+					// Last thread might have more work to do.
+					thread_control tc = {size - work_size * i,i * work_size,n_threads,&n_started_threads,&mutex,&exceptions};
+					try {
+						tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
+						++n_started_threads;
+					} catch (...) {
+						exceptions.push_back(std::current_exception());
+					}
 				}
-				// Last thread might have more work to do.
-				thread_control tc = {size - work_size * i,i * work_size,n_threads,&mutex,&exceptions};
-				tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 				tg.join_all();
 			}
 			// Rethrow the first exception encountered.
@@ -115,6 +129,16 @@ class cvector
 				}
 			}
 			
+		}
+		// Helper function to detect if all threads could be started in the thread runner.
+		static bool is_ready(thread_control &tc)
+		{
+			std::lock_guard<std::mutex> lock(*tc.mutex);
+			if (tc.n_started_threads && *tc.n_started_threads != tc.n_threads) {
+				return false;
+			} else {
+				return true;
+			}
 		}
 		struct default_ctor
 		{
@@ -160,6 +184,9 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
+				if (!is_ready(tc)) {
+					return;
+				}
 				// NOTE: replace with is_trivially_copyable? At the moment it seems not to be present
 				// in GCC 4.5.
 				impl(tc,begin,std::is_trivial<value_type>());
@@ -180,6 +207,9 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
+				if (!is_ready(tc)) {
+					return;
+				}
 				impl(tc,begin,std::is_trivial<value_type>());
 			}
 		};
@@ -215,6 +245,9 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, const value_type *src_begin) const
 			{
+				if (!is_ready(tc)) {
+					return;
+				}
 				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
 			}
 		};
@@ -246,6 +279,9 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, value_type *src_begin) const
 			{
+				if (!is_ready(tc)) {
+					return;
+				}
 				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
 			}
 		};
