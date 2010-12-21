@@ -63,6 +63,15 @@ class cvector
 	private:
 		// Allocator type.
 		typedef std::allocator<T> allocator_type;
+		// Structure used internally for thread handling.
+		struct thread_control
+		{
+			size_type						work_size;
+			size_type						offset;
+			size_type						n_threads;
+			std::mutex						*mutex;
+			std::vector<std::exception_ptr>				*exceptions;
+		};
 		template <typename Functor, typename... Args>
 		static void thread_runner(Functor &&f, const size_type &size, Args && ... params)
 		{
@@ -85,15 +94,18 @@ class cvector
 			// If we have just one thread or we are already being called by a thread separate from
 			// the main one, do not open new threads.
 			if (n_threads == 1 || std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
-				f(size,0,1,&mutex,&exceptions,std::forward<Args>(params)...);
+				thread_control tc = {size,0,1,&mutex,&exceptions};
+				f(tc,std::forward<Args>(params)...);
 			} else {
 				thread_group tg;
 				size_type i = 0;
 				for (; i < n_threads - static_cast<size_type>(1); ++i) {
-					tg.create_thread(std::forward<Functor>(f),work_size,i * work_size,n_threads,&mutex,&exceptions,std::forward<Args>(params)...);
+					thread_control tc = {work_size,i * work_size,n_threads,&mutex,&exceptions};
+					tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 				}
 				// Last thread might have more work to do.
-				tg.create_thread(std::forward<Functor>(f),size - work_size * i,i * work_size,n_threads,&mutex,&exceptions,std::forward<Args>(params)...);
+				thread_control tc = {size - work_size * i,i * work_size,n_threads,&mutex,&exceptions};
+				tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 				tg.join_all();
 			}
 			// Rethrow the first exception encountered.
@@ -107,146 +119,134 @@ class cvector
 		struct default_ctor
 		{
 			// Trivial construction via assignment.
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin, const std::true_type &) const
+			void impl(thread_control &tc, value_type *begin, const std::true_type &) const
 			{
 				try {
 					const value_type tmp = value_type();
-					value_type *current = begin + offset;
-					for (size_type i = 0; i < work_size; ++i, ++current) {
+					value_type *current = begin + tc.offset;
+					for (size_type i = 0; i < tc.work_size; ++i, ++current) {
 						*current = tmp;
 					}
 				} catch (...) {
 					// No need to do any rolling back for trivial objects. Just store the exception.
 					// NOTE: is it even possible for trivial objects to throw on default construction and/or
 					// assignment?
-					std::lock_guard<std::mutex> lock(*mutex);
-					exceptions->push_back(std::current_exception());
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
 				}
 			}
 			// Non-trivial construction.
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin, const std::false_type &) const
+			void impl(thread_control &tc, value_type *begin, const std::false_type &) const
 			{
 				size_type i = 0;
 				try {
 					allocator_type a;
-					value_type *current = begin + offset;
+					value_type *current = begin + tc.offset;
 					const value_type tmp = value_type();
-					for (; i < work_size; ++i, ++current) {
+					for (; i < tc.work_size; ++i, ++current) {
 						a.construct(current,tmp);
 					}
 				} catch (...) {
 					allocator_type a;
-					value_type *current = begin + offset;
+					value_type *current = begin + tc.offset;
 					// Roll back the construction.
 					for (size_type j = 0; j < i; ++j, ++current) {
 						a.destroy(current);
 					}
 					// Store the exception.
-					std::lock_guard<std::mutex> lock(*mutex);
-					exceptions->push_back(std::current_exception());
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
 				}
 			}
-			void operator()(const size_type &work_size, const size_type &offset, const size_type &n_threads,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin) const
+			void operator()(thread_control &tc, value_type *begin) const
 			{
 				// NOTE: replace with is_trivially_copyable? At the moment it seems not to be present
 				// in GCC 4.5.
-				impl(work_size,offset,n_threads,mutex,exceptions,begin,std::is_trivial<value_type>());
+				impl(tc,begin,std::is_trivial<value_type>());
 			}
 		};
 		struct destructor
 		{
 			// Trivial destructor: do not do anything, simple deallocation is fine.
-			void impl(const size_type &, const size_type &, const size_type &,
-				std::mutex *, std::vector<std::exception_ptr> *, value_type *, const std::true_type &) const
+			void impl(thread_control &, value_type *, const std::true_type &) const
 			{}
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *, std::vector<std::exception_ptr> *, value_type *begin, const std::false_type &) const
+			void impl(thread_control &tc, value_type *begin, const std::false_type &) const
 			{
 				allocator_type a;
-				value_type *current = begin + offset;
-				for (size_type i = 0; i < work_size; ++i, ++current) {
+				value_type *current = begin + tc.offset;
+				for (size_type i = 0; i < tc.work_size; ++i, ++current) {
 					a.destroy(current);
 				}
 			}
-			void operator()(const size_type &work_size, const size_type &offset, const size_type &n_threads,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *begin) const
+			void operator()(thread_control &tc, value_type *begin) const
 			{
-				impl(work_size,offset,n_threads,mutex,exceptions,begin,std::is_trivial<value_type>());
+				impl(tc,begin,std::is_trivial<value_type>());
 			}
 		};
 		struct copy_ctor
 		{
 			// Trivial copy construction via memcpy.
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *, std::vector<std::exception_ptr> *, value_type *dest_begin, const value_type *src_begin, const std::true_type &) const
+			void impl(thread_control &tc, value_type *dest_begin, const value_type *src_begin, const std::true_type &) const
 			{
-				std::memcpy(static_cast<void *>(dest_begin + offset),static_cast<void const *>(src_begin + offset),sizeof(value_type) * work_size);
+				std::memcpy(static_cast<void *>(dest_begin + tc.offset),static_cast<void const *>(src_begin + tc.offset),sizeof(value_type) * tc.work_size);
 			}
 			// Non-trivial copy construction.
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, const value_type *src_begin, const std::false_type &) const
+			void impl(thread_control &tc, value_type *dest_begin, const value_type *src_begin, const std::false_type &) const
 			{
 				size_type i = 0;
 				try {
 					allocator_type a;
-					value_type *dest_current = dest_begin + offset;
-					value_type const *src_current = src_begin + offset;
-					for (; i < work_size; ++i, ++dest_current, ++src_current) {
+					value_type *dest_current = dest_begin + tc.offset;
+					value_type const *src_current = src_begin + tc.offset;
+					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
 						a.construct(dest_current,*src_current);
 					}
 				} catch (...) {
 					// Roll back.
 					allocator_type a;
-					value_type *dest_current = dest_begin + offset;
+					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
 						a.destroy(dest_current);
 					}
 					// Store the exception.
-					std::lock_guard<std::mutex> lock(*mutex);
-					exceptions->push_back(std::current_exception());
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
 				}
 			}
-			void operator()(const size_type &work_size, const size_type &offset, const size_type &n_threads,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, const value_type *src_begin) const
+			void operator()(thread_control &tc, value_type *dest_begin, const value_type *src_begin) const
 			{
-				impl(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin,std::is_trivial<value_type>());
+				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
 			}
 		};
 		struct mover
 		{
-			void impl(const size_type &work_size, const size_type &offset, const size_type &n_threads,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin, const std::true_type &) const
+			void impl(thread_control &tc, value_type *dest_begin, value_type *src_begin, const std::true_type &) const
 			{
 				// Moving a trivial object means simply to copy it.
-				copy_ctor()(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin);
+				copy_ctor()(tc,dest_begin,src_begin);
 			}
-			void impl(const size_type &work_size, const size_type &offset, const size_type &,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin, const std::false_type &) const
+			void impl(thread_control &tc, value_type *dest_begin, value_type *src_begin, const std::false_type &) const
 			{
 				size_type i = 0;
 				try {
 					allocator_type a;
-					value_type *dest_current = dest_begin + offset, *src_current = src_begin + offset;
-					for (; i < work_size; ++i, ++dest_current, ++src_current) {
+					value_type *dest_current = dest_begin + tc.offset, *src_current = src_begin + tc.offset;
+					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
 						a.construct(dest_current,piranha_move_if_noexcept(*src_current));
 					}
 				} catch (...) {
 					allocator_type a;
-					value_type *dest_current = dest_begin + offset;
+					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
 						a.destroy(dest_current);
 					}
-					std::lock_guard<std::mutex> lock(*mutex);
-					exceptions->push_back(std::current_exception());
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
 				}
 			}
-			void operator()(const size_type &work_size, const size_type &offset, const size_type &n_threads,
-				std::mutex *mutex, std::vector<std::exception_ptr> *exceptions, value_type *dest_begin, value_type *src_begin) const
+			void operator()(thread_control &tc, value_type *dest_begin, value_type *src_begin) const
 			{
-				impl(work_size,offset,n_threads,mutex,exceptions,dest_begin,src_begin,std::is_trivial<value_type>());
+				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
 			}
 		};
 	public:
