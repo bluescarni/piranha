@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <mutex>
+#include <stdexcept>
 
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
@@ -47,13 +48,13 @@ unsigned settings::get_n_threads()
 /**
  * @param[in] n the desired number of threads.
  * 
- * @throws piranha::value_error if n == 0.
+ * @throws std::invalid_argument if n == 0.
  */
 void settings::set_n_threads(unsigned n)
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	if (n == 0) {
-		piranha_throw(value_error,"the number of threads must be strictly positive");
+		piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
 	}
 	m_n_threads = n;
 }

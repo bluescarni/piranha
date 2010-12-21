@@ -54,7 +54,7 @@ std::mutex thread_management::m_mutex;
  * 
  * @param[in] n index of the processor to which the thread will be bound (starting from index 0).
  * 
- * @throws piranha::value_error if one of these conditions arises:
+ * @throws std::invalid_argument if one of these conditions arises:
  * \li n is greater than an implementation-defined maximum value,
  * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value m and n >= m.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
@@ -73,10 +73,10 @@ void thread_management::bind_to_proc(unsigned n)
 		piranha_throw(std::runtime_error,"numeric conversion error");
 	}
 	if (n >= cpu_setsize) {
-		piranha_throw(piranha::value_error,"processor index is larger than the maximum allowed value");
+		piranha_throw(std::invalid_argument,"processor index is larger than the maximum allowed value");
 	}
 	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
-		piranha_throw(piranha::value_error,"processor index is larger than the detected hardware concurrency");
+		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
 	}
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);

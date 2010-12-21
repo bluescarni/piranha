@@ -18,7 +18,10 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <cstdlib>
+#include <iostream>
 #include <mutex>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -39,13 +42,20 @@ thread_group::~thread_group()
 /// Join all threads in the group.
 /**
  * Will join iteratively all threads belonging to the group. It is safe to call this method multiple times.
+ * Any failure in std::thread::join will result in the termination of the program via std::abort().
  */
 void thread_group::join_all()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (container_type::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
 		if (it->joinable()) {
-			it->join();
+			try {
+				it->join();
+			} catch (const std::system_error &se) {
+				std::cout << "thread_group::join_all() caused program abortion; error message is:\n";
+				std::cout << se.what() << '\n';
+				std::abort();
+			}
 		}
 	}
 }

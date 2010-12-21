@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
+#include <condition_variable>
 #include <cstddef>
 #include <exception>
 #include <cstring>
@@ -70,7 +71,9 @@ class cvector
 			const size_type			offset;
 			const size_type			n_threads;
 			size_type			*n_started_threads;
+			size_type			*n_completed_threads;
 			std::mutex			*mutex;
+			std::condition_variable		*cond_var;
 			std::vector<std::exception_ptr>	*exceptions;
 		};
 		template <typename Functor, typename... Args>
@@ -85,7 +88,9 @@ class cvector
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);
 			std::mutex mutex;
+			std::condition_variable cond_var;
 			std::vector<std::exception_ptr> exceptions;
+			size_type n_completed_threads = 0;
 			// Reserve enough space to store exceptions, so that we avoid potential problems
 			// when pushing back the exceptions in the catch(...) blocks.
 			exceptions.reserve(boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads));
@@ -95,7 +100,7 @@ class cvector
 			// If we have just one thread or we are already being called by a thread separate from
 			// the main one, do not open new threads.
 			if (n_threads == 1 || std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
-				thread_control tc = {size,0,1,piranha_nullptr,&mutex,&exceptions};
+				thread_control tc = {size,0,1,piranha_nullptr,&n_completed_threads,&mutex,&cond_var,&exceptions};
 				f(tc,std::forward<Args>(params)...);
 			} else {
 				thread_group tg;
@@ -103,7 +108,7 @@ class cvector
 				{
 					std::lock_guard<std::mutex> lock(mutex);
 					for (; i < n_threads - static_cast<size_type>(1); ++i) {
-						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&mutex,&exceptions};
+						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&n_completed_threads,&mutex,&cond_var,&exceptions};
 						try {
 							tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 							++n_started_threads;
@@ -112,7 +117,7 @@ class cvector
 						}
 					}
 					// Last thread might have more work to do.
-					thread_control tc = {size - work_size * i,i * work_size,n_threads,&n_started_threads,&mutex,&exceptions};
+					thread_control tc = {size - work_size * i,i * work_size,n_threads,&n_started_threads,&n_completed_threads,&mutex,&cond_var,&exceptions};
 					try {
 						tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 						++n_started_threads;
@@ -122,6 +127,7 @@ class cvector
 				}
 				tg.join_all();
 			}
+			piranha_assert(exceptions.size() <= n_threads);
 			// Rethrow the first exception encountered.
 			for (std::vector<std::exception_ptr>::size_type i = 0; i < exceptions.size(); ++i) {
 				if (exceptions[i] != piranha_nullptr) {
@@ -138,6 +144,22 @@ class cvector
 				return false;
 			} else {
 				return true;
+			}
+		}
+		// Helper function to wait for the completion of all threads.
+		static void wait_for_all_completion(thread_control &tc)
+		{
+			{
+				std::lock_guard<std::mutex> lock(*tc.mutex);
+				++*tc.n_completed_threads;
+				piranha_assert(*tc.n_completed_threads <= tc.n_threads);
+			}
+			tc.cond_var->notify_all();
+			{
+				std::unique_lock<std::mutex> lock(*tc.mutex);
+				while (*tc.n_completed_threads < tc.n_threads) {
+					tc.cond_var->wait(lock);
+				}
 			}
 		}
 		struct default_ctor
@@ -171,15 +193,18 @@ class cvector
 						a.construct(current,tmp);
 					}
 				} catch (...) {
-					allocator_type a;
-					value_type *current = begin + tc.offset;
-					// Roll back the construction.
-					for (size_type j = 0; j < i; ++j, ++current) {
-						a.destroy(current);
-					}
 					// Store the exception.
 					std::lock_guard<std::mutex> lock(*tc.mutex);
 					tc.exceptions->push_back(std::current_exception());
+				}
+				wait_for_all_completion(tc);
+				if (tc.exceptions->size() != 0) {
+					// Do the rollback if any exception was thrown in any thread.
+					allocator_type a;
+					value_type *current = begin + tc.offset;
+					for (size_type j = 0; j < i; ++j, ++current) {
+						a.destroy(current);
+					}
 				}
 			}
 			void operator()(thread_control &tc, value_type *begin) const
@@ -232,15 +257,18 @@ class cvector
 						a.construct(dest_current,*src_current);
 					}
 				} catch (...) {
+					// Store the exception.
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
+				}
+				wait_for_all_completion(tc);
+				if (tc.exceptions->size() != 0) {
 					// Roll back.
 					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
 						a.destroy(dest_current);
 					}
-					// Store the exception.
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
 				}
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, const value_type *src_begin) const
@@ -268,13 +296,16 @@ class cvector
 						a.construct(dest_current,piranha_move_if_noexcept(*src_current));
 					}
 				} catch (...) {
+					std::lock_guard<std::mutex> lock(*tc.mutex);
+					tc.exceptions->push_back(std::current_exception());
+				}
+				wait_for_all_completion(tc);
+				if (tc.exceptions->size() != 0) {
 					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
 						a.destroy(dest_current);
 					}
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
 				}
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, value_type *src_begin) const

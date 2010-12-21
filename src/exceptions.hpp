@@ -54,12 +54,6 @@ struct not_implemented_error: public base_exception
 	explicit not_implemented_error(const std::string &s);
 };
 
-/// Exception for invalid values as function arguments.
-struct value_error: public base_exception
-{
-	explicit value_error(const std::string &s);
-};
-
 }
 
 #endif

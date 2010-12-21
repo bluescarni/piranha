@@ -23,7 +23,8 @@
 #define BOOST_TEST_MODULE settings_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/exceptions.hpp"
+#include <stdexcept>
+
 #include "../src/runtime_info.hpp"
 
 // Check getting and setting number of threads.
@@ -34,5 +35,5 @@ BOOST_AUTO_TEST_CASE(settings_thread_number)
 		piranha::settings::set_n_threads(i + 1);
 		BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(), i + 1);
 	}
-	BOOST_CHECK_THROW(piranha::settings::set_n_threads(0),piranha::value_error);
+	BOOST_CHECK_THROW(piranha::settings::set_n_threads(0),std::invalid_argument);
 }
