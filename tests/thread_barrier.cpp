@@ -18,29 +18,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/thread_group.hpp"
+#include "../src/thread_barrier.hpp"
 
-#define BOOST_TEST_MODULE thread_group_test
+#define BOOST_TEST_MODULE thread_barrier_test
 #include <boost/test/unit_test.hpp>
 
 #include <thread>
 
-// Test construction and multiple joins.
-BOOST_AUTO_TEST_CASE(thread_group_run_test_01)
-{
-	piranha::thread_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([](int x, int y){return x + y;},i,i + 1));
-	}
-	BOOST_CHECK_NO_THROW(tg.join_all());
-	BOOST_CHECK_NO_THROW(tg.join_all());
-}
+#include "../src/thread_group.hpp"
 
-// Test destructor with embedded join().
-BOOST_AUTO_TEST_CASE(thread_group_run_test_02)
+BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {
+	const unsigned n_threads = 100;
+	piranha::thread_barrier tb(n_threads);
 	piranha::thread_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([](int x, int y){return x + y;},i,i + 1));
+	for (unsigned i = 0; i < n_threads; ++i) {
+		BOOST_CHECK_NO_THROW(tg.create_thread([&tb](unsigned x, unsigned y){tb.wait();return x + y;},i,i + 1));
 	}
+	BOOST_CHECK_NO_THROW(tg.join_all());
+	BOOST_CHECK_NO_THROW(tg.join_all());
 }

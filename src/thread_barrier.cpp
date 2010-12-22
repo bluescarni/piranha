@@ -18,29 +18,54 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/thread_group.hpp"
+#include <mutex>
+#include <stdexcept>
 
-#define BOOST_TEST_MODULE thread_group_test
-#include <boost/test/unit_test.hpp>
+#include "exceptions.hpp"
+#include "thread_barrier.hpp"
 
-#include <thread>
-
-// Test construction and multiple joins.
-BOOST_AUTO_TEST_CASE(thread_group_run_test_01)
+namespace piranha
 {
-	piranha::thread_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([](int x, int y){return x + y;},i,i + 1));
+
+/// Constructor.
+/**
+ * Construct a barrier for \p count threads.
+ * 
+ * @param[in] count number of threads for which the barrier is configured.
+ * 
+ * @throws std::invalid_argument if <tt>count == 0</tt>.
+ * @throws std::system_error if an error occurs.
+ */
+thread_barrier::thread_barrier(unsigned count):m_threshold(count),m_count(count),m_generation(0)
+{
+	if (count == 0) {
+		piranha_throw(std::invalid_argument,"count cannot be zero");
 	}
-	BOOST_CHECK_NO_THROW(tg.join_all());
-	BOOST_CHECK_NO_THROW(tg.join_all());
 }
 
-// Test destructor with embedded join().
-BOOST_AUTO_TEST_CASE(thread_group_run_test_02)
+/// Wait method.
+/**
+ * Block until \p count threads have called wait() on this. When the <tt>count</tt>-th thread calls
+ * wait(), all waiting threads are unblocked, and the barrier is reset.
+ * 
+ * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
+ * 
+ * @throws std::system_error if an error occurs.
+ */
+bool thread_barrier::wait()
 {
-	piranha::thread_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([](int x, int y){return x + y;},i,i + 1));
+	std::unique_lock<std::mutex> lock(m_mutex);
+	unsigned gen = m_generation;
+	if (--m_count == 0) {
+		++m_generation;
+		m_count = m_threshold;
+		m_cond.notify_all();
+		return true;
 	}
+	while (gen == m_generation) {
+		m_cond.wait(lock);
+	}
+	return false;
+}
+
 }

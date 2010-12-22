@@ -42,6 +42,7 @@ namespace piranha {}
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
+#include "thread_barrier.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
 
