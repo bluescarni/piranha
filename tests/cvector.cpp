@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(cvector_assignment)
 	set_st();
 }
 
-BOOST_AUTO_TEST_CASE(cvector_resize)
+BOOST_AUTO_TEST_CASE(cvector_resize_01)
 {
 	set_mt();
 	piranha::cvector<trivial> t(size);
@@ -161,12 +161,25 @@ BOOST_AUTO_TEST_CASE(cvector_resize)
 	piranha::cvector<nontrivial> nt(size);
 	nt.resize(size + 100);
 	BOOST_CHECK_EQUAL(nt.size(),piranha::cvector<nontrivial>::size_type(size + 100));
-	{
-	std::lock_guard<std::mutex> lock(mutex);
 	copies = 0;
-	}
 	piranha::cvector<nontrivial_throwing> ntt(9000);
 	BOOST_CHECK_THROW(ntt.resize(10100),custom_exception);
 	BOOST_CHECK_EQUAL(ntt.size(),piranha::cvector<nontrivial>::size_type(9000));
+	set_st();
+}
+
+BOOST_AUTO_TEST_CASE(cvector_resize_02)
+{
+	set_mt();
+	piranha::cvector<trivial> t(size);
+	t.resize(size - 100);
+	BOOST_CHECK_EQUAL(t.size(),piranha::cvector<trivial>::size_type(size - 100));
+	piranha::cvector<nontrivial> nt(size);
+	nt.resize(size - 100);
+	BOOST_CHECK_EQUAL(nt.size(),piranha::cvector<nontrivial>::size_type(size - 100));
+	copies = 0;
+	piranha::cvector<nontrivial_throwing> ntt(9000);
+	BOOST_CHECK_NO_THROW(ntt.resize(8900));
+	BOOST_CHECK_EQUAL(ntt.size(),piranha::cvector<nontrivial>::size_type(8900));
 	set_st();
 }
