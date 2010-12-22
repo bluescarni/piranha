@@ -46,7 +46,26 @@ namespace piranha {
 /// Concurrent vector class.
 /**
  * This class is a minimal vector class which can use multiple threads during construction,
- * destruction and resize.
+ * destruction and resize. Whether or not actual threads are spawned depends on the return value of
+ * piranha::settings::get_n_threads() and the number of elements in the container. I.e., if
+ * the user requests the use of a single thread or if the number of elements in the container is lower than an
+ * implementation-defined value, no new threads will be opened. No new threads will be opened also in case
+ * the vector instance is used from a thread different from the main one.
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * The class provides the strong exception safety guarantee: both in single-thread and multi-thread mode,
+ * any exception will be caught and re-thrown after the original state of the object has been restored. In case of multi-thread
+ * mode, exceptions thrown in the separate threads will be stored and re-thrown in the main thread. At most one exception per thread
+ * will be generated: which exception is re-thrown in the main thread is dependent on the thread scheduling, and it is therefore
+ * undefined (and most likely nondeterministic).
+ *
+ * The following important <b>caveat</b> applies: any exception thrown
+ * from a thread separate from the main one and resulting from an error condition in the thread-related primitives
+ * used in the internal implementation (e.g., locks, mutexes, condition variables), will result in an std::system_error exception
+ * begin thrown from the thread and subsequent program termination. This limitation is related to the use of locking primitives
+ * in the <tt>catch (...)</tt> blocks within each thread, and might be lifted in the future with the adoption of lock-free data
+ * structures for transporting exceptions.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
