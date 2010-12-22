@@ -46,18 +46,19 @@ class thread_group
 	public:
 		/// Default constructor.
 		thread_group() = default;
+		/// Deleted copy constructor.
 		thread_group(const thread_group &) = delete;
+		/// Deleted assignment operator.
 		thread_group &operator=(const thread_group &) = delete;
+		/// Deleted move constructor.
 		thread_group(thread_group &&) = delete;
+		/// Deleted move assignment operator.
 		thread_group &operator=(thread_group &&) = delete;
 		~thread_group();
 		/// Add thread to the group.
 		/**
 		 * The thread is created, immediately started, and finally added to the group. The function
-		 * launched by the thread is:
-		 * \code
-		 * f(params)
-		 * \endcode
+		 * launched by the thread is <tt>f(params)</tt>.
 		 * If any exception is thrown during this operation, no thread will be added and the
 		 * internal state will be identical to the state before the operation was attempted.
 		 * 

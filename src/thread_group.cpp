@@ -42,7 +42,7 @@ thread_group::~thread_group()
 /// Join all threads in the group.
 /**
  * Will join iteratively all threads belonging to the group. It is safe to call this method multiple times.
- * Any failure in std::thread::join will result in the termination of the program via std::abort().
+ * Any failure in std::thread::join() will result in the termination of the program via std::abort().
  */
 void thread_group::join_all()
 {

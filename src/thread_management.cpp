@@ -56,7 +56,7 @@ std::mutex thread_management::m_mutex;
  * 
  * @throws std::invalid_argument if one of these conditions arises:
  * \li n is greater than an implementation-defined maximum value,
- * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value m and n >= m.
+ * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value \p m and <tt>n >= m</tt>.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
  * @throws std::runtime_error if the operation fails in an unspecified way.
  */
@@ -97,7 +97,7 @@ void thread_management::bind_to_proc(unsigned n)
  * The complexity of the operation is at most linear in the number of processors available on the system.
  * This method requires platform-specific functions and thus might not be available on all configurations.
  * 
- * @return the pair (true,n) if the calling thread is bound to a single processor with index n, (false,0)
+ * @return the pair <tt>(true,n)</tt> if the calling thread is bound to a single processor with index \p n, <tt>(false,0)</tt>
  * otherwise.
  * 
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
