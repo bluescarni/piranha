@@ -471,10 +471,10 @@ class cvector
 				// objects have been rolled back by the mover, now we need to destroy the default
 				// constructed objects from above (if any) and deallocate the new data.
 				if (size > m_size) {
-					destructor d;
 					// Here we could have problems starting threads, catch any error and
 					// perform manual destruction.
 					try {
+						destructor d;
 						thread_runner(d,size - m_size,new_data + m_size);
 					} catch (...) {
 						for (size_type i = 0; i < size - m_size; ++i) {
