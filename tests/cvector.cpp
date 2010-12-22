@@ -61,7 +61,14 @@ unsigned copies = 0;
 
 struct nontrivial_throwing
 {
-	nontrivial_throwing():v(1) {}
+	nontrivial_throwing():v(1)
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		if (copies > 10000) {
+			throw custom_exception();
+		}
+		++copies;
+	}
 	nontrivial_throwing(const nontrivial_throwing &ntt):v()
 	{
 		std::lock_guard<std::mutex> lock(mutex);

@@ -62,6 +62,11 @@ class thread_barrier
 		thread_barrier &operator=(const thread_barrier &) = delete;
 		/// Deleted move assignment operator.
 		thread_barrier &operator=(thread_barrier &&) = delete;
+		/// Default destructor.
+		/**
+		 * No threads must be waiting on this when the destructor is called.
+		 */
+		~thread_barrier() = default;
 		bool wait();
 	private:
 		std::mutex		m_mutex;

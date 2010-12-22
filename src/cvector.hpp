@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
-#include <condition_variable>
 #include <cstddef>
 #include <exception>
 #include <cstring>
@@ -39,6 +38,7 @@
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
+#include "thread_barrier.hpp"
 #include "thread_group.hpp"
 
 namespace piranha {
@@ -52,6 +52,8 @@ namespace piranha {
  * 
  * \todo Affinity settings.
  * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
+ * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
+ * and if this is not the case add it.
  */
 template <class T>
 class cvector
@@ -71,36 +73,41 @@ class cvector
 			const size_type			offset;
 			const size_type			n_threads;
 			size_type			*n_started_threads;
-			size_type			*n_completed_threads;
+			thread_barrier			*barrier;
 			std::mutex			*mutex;
-			std::condition_variable		*cond_var;
 			std::vector<std::exception_ptr>	*exceptions;
 		};
 		template <typename Functor, typename... Args>
 		static void thread_runner(Functor &&f, const size_type &size, Args && ... params)
 		{
 			piranha_assert(size > 0);
-			size_type n_threads = boost::numeric_cast<size_type>(settings::get_n_threads());
+			size_type n_threads;
+			// If we are already being called by a thread separate from
+			// the main one, force a single thread.
+			if (std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
+				n_threads = 1;
+			} else {
+				n_threads = boost::numeric_cast<size_type>(settings::get_n_threads());
+			}
 			piranha_assert(n_threads > 0);
 			// Make sure that every thread has a minimum amount of work to do. If necessary, reduce the number of threads.
 			const size_type min_work = 50;
 			n_threads = (size / n_threads >= min_work) ? n_threads : std::max<size_type>(static_cast<size_type>(1),size / min_work);
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);
+			// Variables to control the thread(s).
 			std::mutex mutex;
-			std::condition_variable cond_var;
 			std::vector<std::exception_ptr> exceptions;
-			size_type n_completed_threads = 0;
+			thread_barrier barrier(n_threads);
 			// Reserve enough space to store exceptions, so that we avoid potential problems
 			// when pushing back the exceptions in the catch(...) blocks.
 			exceptions.reserve(boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads));
-			if (exceptions.capacity() < boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads)) {
+			if (exceptions.capacity() < n_threads) {
 				throw std::bad_alloc();
 			}
-			// If we have just one thread or we are already being called by a thread separate from
-			// the main one, do not open new threads.
-			if (n_threads == 1 || std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
-				thread_control tc = {size,0,1,piranha_nullptr,&n_completed_threads,&mutex,&cond_var,&exceptions};
+			// If we have just one thread, do not actually open new threads.
+			if (n_threads == 1) {
+				thread_control tc = {size,0,1,piranha_nullptr,&barrier,&mutex,&exceptions};
 				f(tc,std::forward<Args>(params)...);
 			} else {
 				thread_group tg;
@@ -108,7 +115,7 @@ class cvector
 				{
 					std::lock_guard<std::mutex> lock(mutex);
 					for (; i < n_threads - static_cast<size_type>(1); ++i) {
-						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&n_completed_threads,&mutex,&cond_var,&exceptions};
+						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&barrier,&mutex,&exceptions};
 						try {
 							tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 							++n_started_threads;
@@ -117,7 +124,7 @@ class cvector
 						}
 					}
 					// Last thread might have more work to do.
-					thread_control tc = {size - work_size * i,i * work_size,n_threads,&n_started_threads,&n_completed_threads,&mutex,&cond_var,&exceptions};
+					thread_control tc = {size - work_size * i,i * work_size,n_threads,&n_started_threads,&barrier,&mutex,&exceptions};
 					try {
 						tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 						++n_started_threads;
@@ -146,22 +153,6 @@ class cvector
 				return true;
 			}
 		}
-		// Helper function to wait for the completion of all threads.
-		static void wait_for_all_completion(thread_control &tc)
-		{
-			{
-				std::lock_guard<std::mutex> lock(*tc.mutex);
-				++*tc.n_completed_threads;
-				piranha_assert(*tc.n_completed_threads <= tc.n_threads);
-			}
-			tc.cond_var->notify_all();
-			{
-				std::unique_lock<std::mutex> lock(*tc.mutex);
-				while (*tc.n_completed_threads < tc.n_threads) {
-					tc.cond_var->wait(lock);
-				}
-			}
-		}
 		struct default_ctor
 		{
 			// Trivial construction via assignment.
@@ -186,24 +177,21 @@ class cvector
 			{
 				size_type i = 0;
 				try {
-					allocator_type a;
 					value_type *current = begin + tc.offset;
-					const value_type tmp = value_type();
 					for (; i < tc.work_size; ++i, ++current) {
-						a.construct(current,tmp);
+						new ((void *)current) value_type();
 					}
 				} catch (...) {
 					// Store the exception.
 					std::lock_guard<std::mutex> lock(*tc.mutex);
 					tc.exceptions->push_back(std::current_exception());
 				}
-				wait_for_all_completion(tc);
+				tc.barrier->wait();
 				if (tc.exceptions->size() != 0) {
 					// Do the rollback if any exception was thrown in any thread.
-					allocator_type a;
 					value_type *current = begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++current) {
-						a.destroy(current);
+						current->~value_type();
 					}
 				}
 			}
@@ -224,10 +212,9 @@ class cvector
 			{}
 			void impl(thread_control &tc, value_type *begin, const std::false_type &) const
 			{
-				allocator_type a;
 				value_type *current = begin + tc.offset;
 				for (size_type i = 0; i < tc.work_size; ++i, ++current) {
-					a.destroy(current);
+					current->~value_type();
 				}
 			}
 			void operator()(thread_control &tc, value_type *begin) const
@@ -250,24 +237,22 @@ class cvector
 			{
 				size_type i = 0;
 				try {
-					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset;
 					value_type const *src_current = src_begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
-						a.construct(dest_current,*src_current);
+						new ((void *)dest_current) value_type(*src_current);
 					}
 				} catch (...) {
 					// Store the exception.
 					std::lock_guard<std::mutex> lock(*tc.mutex);
 					tc.exceptions->push_back(std::current_exception());
 				}
-				wait_for_all_completion(tc);
+				tc.barrier->wait();
 				if (tc.exceptions->size() != 0) {
 					// Roll back.
-					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
-						a.destroy(dest_current);
+						dest_current->~value_type();
 					}
 				}
 			}
@@ -290,21 +275,19 @@ class cvector
 			{
 				size_type i = 0;
 				try {
-					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset, *src_current = src_begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
-						a.construct(dest_current,piranha_move_if_noexcept(*src_current));
+						new ((void *)dest_current) value_type(piranha_move_if_noexcept(*src_current));
 					}
 				} catch (...) {
 					std::lock_guard<std::mutex> lock(*tc.mutex);
 					tc.exceptions->push_back(std::current_exception());
 				}
-				wait_for_all_completion(tc);
+				tc.barrier->wait();
 				if (tc.exceptions->size() != 0) {
-					allocator_type a;
 					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
-						a.destroy(dest_current);
+						dest_current->~value_type();
 					}
 				}
 			}
@@ -331,13 +314,12 @@ class cvector
 			if (other.size() == 0) {
 				return;
 			}
-			allocator_type a;
-			m_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+			m_data = m_allocator.allocate(other.size());
 			copy_ctor c;
 			try {
 				thread_runner(c,other.size(),m_data,other.m_data);
 			} catch (...) {
-				a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+				m_allocator.deallocate(m_data,other.size());
 				throw;
 			}
 			m_size = other.size();
@@ -363,14 +345,13 @@ class cvector
 			if (size == 0) {
 				return;
 			}
-			allocator_type a;
-			m_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
+			m_data = m_allocator.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
 			default_ctor f;
 			try {
 				thread_runner(f,size,m_data);
 			} catch (...) {
 				// Any construction has been rolled back, just de-allocate and re-throw.
-				a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
+				m_allocator.deallocate(m_data,size);
 				throw;
 			}
 			m_size = size;
@@ -382,7 +363,18 @@ class cvector
 		~cvector()
 		{
 			assert((m_size == 0 && m_data == piranha_nullptr) || (m_size != 0 && m_data != piranha_nullptr));
-			destroy_and_deallocate();
+			// Here throwing can happen, e.g., in thread starting or copying arguments for the thread functions.
+			try {
+				destroy_and_deallocate();
+			} catch (...) {
+				// If anything goes wrong, do a bare destruction function
+				// that will not throw.
+				for (size_type i = 0; i < m_size; ++i) {
+					(m_data + i)->~value_type();
+				}
+				// No need for numeric cast, as we were able to construct the object in the first place.
+				m_allocator.deallocate(m_data,m_size);
+			}
 		}
 		/// Move assignment operator.
 		/**
@@ -414,13 +406,12 @@ class cvector
 			if (other.size() == 0) {
 				resize(0);
 			} else {
-				allocator_type a;
-				value_type *new_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+				value_type *new_data = m_allocator.allocate(other.size());
 				copy_ctor c;
 				try {
 					thread_runner(c,other.size(),new_data,other.m_data);
 				} catch (...) {
-					a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(other.size()));
+					m_allocator.deallocate(new_data,other.size());
 					throw;
 				}
 				// Erase previous content.
@@ -435,7 +426,7 @@ class cvector
 		/**
 		 * @return the size of the vector.
 		 */
-		size_type size() const
+		size_type size() const piranha_noexcept(true)
 		{
 			return m_size;
 		}
@@ -458,9 +449,8 @@ class cvector
 				m_size = 0;
 				return;
 			}
-			allocator_type a;
 			// Allocate the new data.
-			value_type *new_data = a.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
+			value_type *new_data = m_allocator.allocate(boost::numeric_cast<typename allocator_type::size_type>(size));
 			// Default-construct the new data, if any.
 			if (size > m_size) {
 				default_ctor f;
@@ -468,7 +458,7 @@ class cvector
 					thread_runner(f,size - m_size,new_data + m_size);
 				} catch (...) {
 					// Default constructions have been rolled back, deallocate and throw.
-					a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(size));
+					m_allocator.deallocate(new_data,size);
 					throw;
 				}
 			}
@@ -482,10 +472,17 @@ class cvector
 				// constructed objects from above (if any) and deallocate the new data.
 				if (size > m_size) {
 					destructor d;
-					thread_runner(d,size - m_size,new_data + m_size);
+					// Here we could have problems starting threads, catch any error and
+					// perform manual destruction.
+					try {
+						thread_runner(d,size - m_size,new_data + m_size);
+					} catch (...) {
+						for (size_type i = 0; i < size - m_size; ++i) {
+							(new_data + m_size + i)->~value_type();
+						}
+					}
 				}
-				allocator_type a;
-				a.deallocate(new_data,boost::numeric_cast<typename allocator_type::size_type>(size));
+				m_allocator.deallocate(new_data,size);
 				throw;
 			}
 			// Destroy and deallocate old data.
@@ -502,12 +499,13 @@ class cvector
 			}
 			destructor d;
 			thread_runner(d,m_size,m_data);
-			allocator_type a;
-			a.deallocate(m_data,boost::numeric_cast<typename allocator_type::size_type>(m_size));
+			// No need for numeric cast, as we were able to construct the object in the first place.
+			m_allocator.deallocate(m_data,m_size);
 		}
 	private:
 		value_type	*m_data;
 		size_type	m_size;
+		allocator_type	m_allocator;
 };
 
 }

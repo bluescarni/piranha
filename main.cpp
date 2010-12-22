@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "src/cvector.hpp"
+#include "src/piranha.hpp"
 
 struct nontrivial
 {
