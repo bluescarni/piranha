@@ -58,6 +58,7 @@ std::mutex thread_management::m_mutex;
  * \li n is greater than an implementation-defined maximum value,
  * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value \p m and <tt>n >= m</tt>.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
+ * @throws std::system_error in case of failure(s) by threading primitives.
  * @throws std::runtime_error if the operation fails in an unspecified way.
  */
 void thread_management::bind_to_proc(unsigned n)

@@ -37,6 +37,8 @@ std::mutex settings::m_mutex;
  * The initial value upon program startup is set to the maximum between 1 and piranha::runtime_info::hardware_concurrency().
  * 
  * @return the number of threads that will be available for use by piranha.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 unsigned settings::get_n_threads()
 {
@@ -49,6 +51,7 @@ unsigned settings::get_n_threads()
  * @param[in] n the desired number of threads.
  * 
  * @throws std::invalid_argument if <tt>n == 0</tt>.
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 void settings::set_n_threads(unsigned n)
 {

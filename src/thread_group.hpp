@@ -23,7 +23,7 @@
 
 #include <boost/integer_traits.hpp>
 #include <mutex>
-#include <stdexcept>
+#include <new>
 #include <system_error>
 #include <thread>
 #include <vector>
@@ -45,6 +45,9 @@ class thread_group
 		typedef container_type::size_type size_type;
 	public:
 		/// Default constructor.
+		/**
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
 		thread_group() = default;
 		/// Deleted copy constructor.
 		thread_group(const thread_group &) = delete;
@@ -65,8 +68,8 @@ class thread_group
 		 * @param[in] f functor used as argument for thread creation.
 		 * @param[in] params parameters to be passed to the functor upon invocation.
 		 * 
-		 * @throws std::runtime_error if storage allocation for the new thread fails.
-		 * @throws std::system_error if the new thread could not be started.
+		 * @throws std::bad_alloc if storage allocation for the new thread fails.
+		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 * @throws unspecified any exception thrown by copying the functor or its arguments into the
 		 * thread's internal storage.
 		 */
@@ -75,13 +78,13 @@ class thread_group
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			if (m_threads.size() == boost::integer_traits<size_type>::const_max) {
-				piranha_throw(std::runtime_error,"maximum number of threads exceeded");
+				throw std::bad_alloc();
 			}
 			// Make space for the new thread.
 			const size_type new_size = m_threads.size() + static_cast<size_type>(1);
 			m_threads.reserve(new_size);
 			if (m_threads.capacity() < new_size) {
-				piranha_throw(std::runtime_error,"could not allocate storage for new thread");
+				throw std::bad_alloc();
 			}
 			std::thread new_thread(std::forward<Functor>(f),std::forward<Args>(params)...);
 			m_threads.push_back(std::move(new_thread));

@@ -51,6 +51,8 @@ std::thread::id runtime_info::get_main_thread_id()
 /**
  * @return number of detected hardware thread contexts (typically equal to the number of CPU cores), or 0 if
  * the detection fails.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 unsigned runtime_info::hardware_concurrency()
 {

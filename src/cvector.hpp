@@ -67,12 +67,15 @@ namespace piranha {
  * in the <tt>catch (...)</tt> blocks within each thread, and might be lifted in the future with the adoption of lock-free data
  * structures for transporting exceptions.
  * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ * @throws std::bad_alloc in case of memory allocation failure(s).
+ * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
+ * @throws unspecified any exception thrown by constructing, copying, assigning or moving objects of type \p T.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Affinity settings.
  * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
- * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
- * and if this is not the case add it.
  */
 template <class T>
 class cvector
@@ -163,13 +166,40 @@ class cvector
 			
 		}
 		// Helper function to detect if all threads could be started in the thread runner.
-		static bool is_ready(thread_control &tc)
+		static bool is_thread_ready(thread_control &tc)
 		{
-			std::lock_guard<std::mutex> lock(*tc.mutex);
-			if (tc.n_started_threads && *tc.n_started_threads != tc.n_threads) {
-				return false;
+			piranha_assert(tc.n_threads > 0);
+			if (tc.n_threads > 1) {
+				std::lock_guard<std::mutex> lock(*tc.mutex);
+				if (tc.n_started_threads && *tc.n_started_threads != tc.n_threads) {
+					return false;
+				} else {
+					return true;
+				}
 			} else {
 				return true;
+			}
+		}
+		// Helper function to wait on the barrier used for rollback operations.
+		static void barrier_wait(thread_control &tc)
+		{
+			piranha_assert(tc.n_threads > 0);
+			if (tc.n_threads > 1) {
+				piranha_assert(tc.barrier);
+				tc.barrier->wait();
+			}
+		}
+		// Helper function to store exceptions in threads.
+		static void store_exception(thread_control &tc)
+		{
+			piranha_assert(tc.n_threads > 0);
+			piranha_assert(tc.exceptions);
+			if (tc.n_threads > 1) {
+				piranha_assert(tc.mutex);
+				std::lock_guard<std::mutex> lock(*tc.mutex);
+				tc.exceptions->push_back(std::current_exception());
+			} else {
+				tc.exceptions->push_back(std::current_exception());
 			}
 		}
 		struct default_ctor
@@ -187,8 +217,7 @@ class cvector
 					// No need to do any rolling back for trivial objects. Just store the exception.
 					// NOTE: is it even possible for trivial objects to throw on default construction and/or
 					// assignment?
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
+					store_exception(tc);
 				}
 			}
 			// Non-trivial construction.
@@ -202,10 +231,9 @@ class cvector
 					}
 				} catch (...) {
 					// Store the exception.
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
+					store_exception(tc);
 				}
-				tc.barrier->wait();
+				barrier_wait(tc);
 				if (tc.exceptions->size() != 0) {
 					// Do the rollback if any exception was thrown in any thread.
 					value_type *current = begin + tc.offset;
@@ -216,7 +244,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
-				if (!is_ready(tc)) {
+				if (!is_thread_ready(tc)) {
 					return;
 				}
 				// NOTE: replace with is_trivially_copyable? At the moment it seems not to be present
@@ -238,7 +266,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
-				if (!is_ready(tc)) {
+				if (!is_thread_ready(tc)) {
 					return;
 				}
 				impl(tc,begin,std::is_trivial<value_type>());
@@ -263,10 +291,9 @@ class cvector
 					}
 				} catch (...) {
 					// Store the exception.
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
+					store_exception(tc);
 				}
-				tc.barrier->wait();
+				barrier_wait(tc);
 				if (tc.exceptions->size() != 0) {
 					// Roll back.
 					value_type *dest_current = dest_begin + tc.offset;
@@ -277,7 +304,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, const value_type *src_begin) const
 			{
-				if (!is_ready(tc)) {
+				if (!is_thread_ready(tc)) {
 					return;
 				}
 				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
@@ -285,10 +312,10 @@ class cvector
 		};
 		struct mover
 		{
-			void impl(thread_control &tc, value_type *dest_begin, value_type *src_begin, const std::true_type &) const
+			void impl(thread_control &tc, value_type *dest_begin, value_type *src_begin, const std::true_type &tt) const
 			{
 				// Moving a trivial object means simply to copy it.
-				copy_ctor()(tc,dest_begin,src_begin);
+				copy_ctor().impl(tc,dest_begin,src_begin,tt);
 			}
 			void impl(thread_control &tc, value_type *dest_begin, value_type *src_begin, const std::false_type &) const
 			{
@@ -299,10 +326,9 @@ class cvector
 						new ((void *)dest_current) value_type(piranha_move_if_noexcept(*src_current));
 					}
 				} catch (...) {
-					std::lock_guard<std::mutex> lock(*tc.mutex);
-					tc.exceptions->push_back(std::current_exception());
+					store_exception(tc);
 				}
-				tc.barrier->wait();
+				barrier_wait(tc);
 				if (tc.exceptions->size() != 0) {
 					value_type *dest_current = dest_begin + tc.offset;
 					for (size_type j = 0; j < i; ++j, ++dest_current) {
@@ -312,7 +338,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, value_type *src_begin) const
 			{
-				if (!is_ready(tc)) {
+				if (!is_thread_ready(tc)) {
 					return;
 				}
 				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());

@@ -28,6 +28,10 @@
  */
 
 /// Root piranha namespace.
+/**
+ * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
+ * and if this is not the case add it.
+ */
 namespace piranha {}
 
 // NOTES FOR DOCUMENTATION:

@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <mutex>
 #include <system_error>
@@ -32,17 +32,23 @@ namespace piranha
 
 /// Destructor.
 /**
- * Will call join_all() before exiting.
+ * Will call join_all() before exiting. If join_all() throws, the program will abort via std::terminate().
  */
 thread_group::~thread_group()
 {
-	join_all();
+	try {
+		join_all();
+	} catch (...) {
+		std::terminate();
+	}
 }
 
 /// Join all threads in the group.
 /**
  * Will join iteratively all threads belonging to the group. It is safe to call this method multiple times.
  * Any failure in std::thread::join() will result in the termination of the program via std::abort().
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 void thread_group::join_all()
 {
@@ -54,7 +60,7 @@ void thread_group::join_all()
 			} catch (const std::system_error &se) {
 				std::cout << "thread_group::join_all() caused program abortion; error message is:\n";
 				std::cout << se.what() << '\n';
-				std::abort();
+				std::terminate();
 			}
 		}
 	}
