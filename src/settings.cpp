@@ -48,7 +48,7 @@ unsigned settings::get_n_threads()
 /**
  * @param[in] n the desired number of threads.
  * 
- * @throws std::invalid_argument if n == 0.
+ * @throws std::invalid_argument if <tt>n == 0</tt>.
  */
 void settings::set_n_threads(unsigned n)
 {

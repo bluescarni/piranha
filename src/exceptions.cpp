@@ -50,7 +50,7 @@ base_exception::~base_exception() throw() {}
 
 /// Constructor.
 /**
- * @see piranha::base_exception::base_exception().
+ * @param[in] s std::string representing an error message.
  */
 not_implemented_error::not_implemented_error(const std::string &s): base_exception(s) {}
 
