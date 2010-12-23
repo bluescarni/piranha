@@ -62,7 +62,7 @@ namespace piranha {
  *
  * The following important <b>caveat</b> applies: any exception thrown
  * from a thread separate from the main one and resulting from an error condition in the thread-related primitives
- * used in the internal implementation (e.g., locks, mutexes, condition variables), will result in an std::system_error exception
+ * used in the internal implementation (e.g., locks, mutexes, condition variables), will result in an <tt>std::system_error</tt> exception
  * begin thrown from the thread and subsequent program termination. This limitation is related to the use of locking primitives
  * in the <tt>catch (...)</tt> blocks within each thread, and might be lifted in the future with the adoption of lock-free data
  * structures for transporting exceptions.
@@ -551,6 +551,28 @@ class cvector
 			// Final assignment of new data.
 			m_data = new_data;
 			m_size = size;
+		}
+		/// Mutating accessor.
+		/**
+		 * @param[in] n element index.
+		 * 
+		 * @return reference to the <tt>n</tt>-th element of the container.
+		 */
+		value_type &operator[](const size_type &n) piranha_noexcept(true)
+		{
+			piranha_assert(n < m_size);
+			return m_data[n];
+		}
+		/// Non-mutating accessor.
+		/**
+		 * @param[in] n element index.
+		 * 
+		 * @return const reference to the <tt>n</tt>-th element of the container.
+		 */
+		const value_type &operator[](const size_type &n) const piranha_noexcept(true)
+		{
+			piranha_assert(n < m_size);
+			return m_data[n];
 		}
 	private:
 		void destroy_and_deallocate()

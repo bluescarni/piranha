@@ -86,8 +86,7 @@ class thread_group
 			if (m_threads.capacity() < new_size) {
 				throw std::bad_alloc();
 			}
-			std::thread new_thread(std::forward<Functor>(f),std::forward<Args>(params)...);
-			m_threads.push_back(std::move(new_thread));
+			m_threads.push_back(std::thread(std::forward<Functor>(f),std::forward<Args>(params)...));
 		}
 		void join_all();
 	private:

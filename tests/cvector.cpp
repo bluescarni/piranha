@@ -183,3 +183,20 @@ BOOST_AUTO_TEST_CASE(cvector_resize_02)
 	BOOST_CHECK_EQUAL(ntt.size(),piranha::cvector<nontrivial>::size_type(8900));
 	set_st();
 }
+
+BOOST_AUTO_TEST_CASE(cvector_accessors)
+{
+	set_mt();
+	piranha::cvector<int> t(size);
+	t[100] = -10;
+	BOOST_CHECK_EQUAL(t[0],0);
+	BOOST_CHECK_EQUAL(t[100],-10);
+	set_st();
+}
+
+BOOST_AUTO_TEST_CASE(cvector_mt_destructor)
+{
+	set_mt();
+	piranha::cvector<trivial> t(size);
+	piranha::cvector<nontrivial> nt(size);
+}
