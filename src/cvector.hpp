@@ -67,11 +67,6 @@ namespace piranha {
  * in the <tt>catch (...)</tt> blocks within each thread, and might be lifted in the future with the adoption of lock-free data
  * structures for transporting exceptions.
  * 
- * @throws std::system_error in case of failure(s) by threading primitives.
- * @throws std::bad_alloc in case of memory allocation failure(s).
- * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
- * @throws unspecified any exception thrown by constructing, copying, assigning or moving objects of type \p T.
- * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Affinity settings.
@@ -216,7 +211,8 @@ class cvector
 				} catch (...) {
 					// No need to do any rolling back for trivial objects. Just store the exception.
 					// NOTE: is it even possible for trivial objects to throw on default construction and/or
-					// assignment?
+					// assignment? Note that a trivially-copyable object could in principle throw on default
+					// construction?
 					store_exception(tc);
 				}
 			}
@@ -349,10 +345,15 @@ class cvector
 		/**
 		 * Will build an empty vector.
 		 */
-		cvector():m_data(piranha_nullptr),m_size(0) {}
+		cvector() piranha_noexcept(true) : m_data(piranha_nullptr),m_size(0) {}
 		/// Copy constructor.
 		/**
 		 * @param[in] other vector that will be copied.
+		 * 
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 * @throws std::bad_alloc in case of memory allocation failure(s).
+		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
+		 * @throws unspecified any exception thrown by copy-constructing objects of type \p T.
 		 */
 		cvector(const cvector &other):m_data(piranha_nullptr),m_size(0)
 		{
@@ -384,6 +385,11 @@ class cvector
 		 * Will build a vector of default-constructed elements.
 		 * 
 		 * @param[in] size desired vector size.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 * @throws std::bad_alloc in case of memory allocation failure(s).
+		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
+		 * @throws unspecified any exception thrown by default-constructing objects of type \p T.
 		 */
 		explicit cvector(const size_type &size):m_data(piranha_nullptr),m_size(0)
 		{
@@ -442,6 +448,11 @@ class cvector
 		 * @param[in] other vector to be copied.
 		 * 
 		 * @return reference to this.
+		 * 
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 * @throws std::bad_alloc in case of memory allocation failure(s).
+		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
+		 * @throws unspecified any exception thrown by copy-constructing or moving objects of type \p T.
 		 */
 		cvector &operator=(const cvector &other)
 		{
@@ -477,9 +488,14 @@ class cvector
 		}
 		/// Resize.
 		/**
-		 * Resize the vector preserving the existing content.
+		 * Resize the vector preserving the existing content. New elements will be default-constructed.
 		 * 
 		 * @param[in] size new size.
+		 * 
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 * @throws std::bad_alloc in case of memory allocation failure(s).
+		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
+		 * @throws unspecified any exception thrown by default-constructing or copying objects of type \p T.
 		 */
 		void resize(const size_type &size)
 		{
