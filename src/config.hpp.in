@@ -26,9 +26,10 @@
 #include <cassert>
 
 #define piranha_assert assert
-// These are not implemented yet in GCC.
+// c++0x features not implemented yet in GCC.
 #define piranha_nullptr (0)
 #define piranha_noexcept(expr)
 #define piranha_move_if_noexcept(expr) std::move(expr)
+#define piranha_override
 
 #endif

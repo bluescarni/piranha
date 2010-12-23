@@ -24,6 +24,8 @@
 #include <exception>
 #include <string>
 
+#include "config.hpp" // For piranha_override.
+
 #define _PIRANHA_EXCEPTION_QUOTEME(x) #x
 #define PIRANHA_EXCEPTION_QUOTEME(x) _PIRANHA_EXCEPTION_QUOTEME(x)
 #define PIRANHA_EXCEPTION_EXCTOR(s) ((std::string(__FILE__ "," PIRANHA_EXCEPTION_QUOTEME(__LINE__) ": ") + s) + ".")
@@ -42,7 +44,7 @@ class base_exception: public std::exception
 {
         public:
 		explicit base_exception(const std::string &);
-		virtual const char *what() const throw();
+		virtual const char *what() const throw() piranha_override;
 		virtual ~base_exception() throw();
 	private:
 		const std::string m_what;
