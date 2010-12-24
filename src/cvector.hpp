@@ -452,7 +452,7 @@ class cvector
 		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 * @throws std::bad_alloc in case of memory allocation failure(s).
 		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
-		 * @throws unspecified any exception thrown by copy-constructing or moving objects of type \p T.
+		 * @throws unspecified any exception thrown by copy-constructing objects of type \p T.
 		 */
 		cvector &operator=(const cvector &other)
 		{

@@ -6,29 +6,29 @@
 
 #include "src/piranha.hpp"
 
-struct nontrivial
+piranha::integer get_integer()
 {
-	nontrivial():v(std::vector<double>::size_type(1)) {}
-	nontrivial(nontrivial &&nt):v(std::move(nt.v))
-	{
-// std::cout << "move ctor\n";
-	}
-	nontrivial &operator=(nontrivial &&nt)
-	{
-std::cout << "move ass\n";
-		v = std::move(nt.v);
-		return *this;
-	}
-	std::vector<double> v;
-};
-
-static inline nontrivial nontrivial_get()
-{
-	return nontrivial();
+	return piranha::integer();
 }
 
 int main()
 {
-	piranha::cvector<nontrivial> v(10000);
-	v.resize(10001);
+	piranha::integer i, j;
+	j = get_integer();
+	piranha::integer k(std::move(j));
+	std::cout << i << '\n';
+	piranha::integer l("-45475934753489573453478957348975348978979878979");
+	std::cout << l << '\n';
+	std::cout << piranha::integer(1E56) << '\n';
+	std::cout << piranha::integer(100) << '\n';
+	std::cout << piranha::integer(100L) << '\n';
+	std::cout << piranha::integer(100U) << '\n';
+	std::cout << piranha::integer(100LU) << '\n';
+	std::cout << piranha::integer(100LL) << '\n';
+	std::cout << piranha::integer(100LLU) << '\n';
+	piranha::integer foo;
+	std::cin >> foo;
+	std::cout << foo << '\n';
+//	mpz_init(integ);
+// 	std::cout << i << '\n';
 }

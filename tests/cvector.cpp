@@ -108,6 +108,16 @@ BOOST_AUTO_TEST_CASE(cvector_size_constructor)
 	set_st();
 }
 
+BOOST_AUTO_TEST_CASE(cvector_move_constructor)
+{
+	set_mt();
+	piranha::cvector<trivial> t(size);
+	piranha::cvector<trivial> t_move(std::move(t));
+	piranha::cvector<nontrivial> nt(size);
+	piranha::cvector<nontrivial> nt_move(std::move(nt));
+	set_st();
+}
+
 BOOST_AUTO_TEST_CASE(cvector_copy_constructor)
 {
 	set_mt();

@@ -4,8 +4,10 @@ ENABLE_TESTING()
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0)
 
+SET(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules)
 INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(FindBoost)
+INCLUDE(FindGMP)
 INCLUDE(FindThreads)
 
 # Configuration for GCC.
@@ -28,6 +30,8 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	ADD_DEFINITIONS(-D_REENTRANT)
 	# When compiling with GCC, enable the GNU extensions - used for instance in thread affinity settings.
 	ADD_DEFINITIONS(-D_GNU_SOURCE)
+ELSE(CMAKE_COMPILER_IS_GNUCXX)
+	MESSAGE(FATAL_ERROR "This compiler is not supported at the present time.")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 # Set default build type to "Release", change it in the GUI if you need to build with debug.
@@ -65,6 +69,11 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
 # when compiling tests.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_THREAD_LIBRARY} ${Boost_SERIALIZATION_LIBRARY})
+
+# GMP setup.
+FIND_PACKAGE(GMP REQUIRED)
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${GMP_LIBRARIES})
+INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR})
 
 IF(UNIX)
 	# Install path for libraries.
