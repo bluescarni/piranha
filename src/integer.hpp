@@ -22,35 +22,26 @@
 #define PIRANHA_INTEGER_HPP
 
 #include <algorithm>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/find.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/integer_traits.hpp>
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
-// #include <boost/numeric/conversion/bounds.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility.hpp>
+#include <cctype> // For std::isdigit().
 #include <cstddef>
 #include <cstring>
 #include <gmp.h>
 #include <iostream>
-#include <iterator>
 #include <limits>
-#include <locale>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-// #include <typeinfo>
 #include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
-// #include "integer_typedefs.h"
-// #include "log2_table.h"
-// #include "math.h"
 
 namespace piranha
 {
@@ -79,133 +70,38 @@ class integer
 		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
 		// Default result type will be integer itself; for consistency with C/C++ when one of the arguments
 		// is a floating point type, we will return a value of the same floating point type.
-		template <class T, class Enable = void>
+		template <typename T, typename Enable = void>
 		struct deduce_result_type
 		{
 			typedef integer type;
 		};
-		template <class T>
+		template <typename T>
 		struct deduce_result_type<T,typename boost::enable_if<std::is_floating_point<T>>::type>
 		{
 			typedef T type;
 		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
-		// functions. For floating-point values, it will check they are not NaN or Inf, for other types it will be a no-op.
-		template <class T>
-		static void fp_normal_check(const T &, typename boost::disable_if<std::is_floating_point<T>>::type * = 0) {}
-		template <class T>
+		// functions.
+		template <typename T>
 		static void fp_normal_check(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
 		{
 			if (!boost::math::isfinite(x)) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
 			}
 		}
-// 		// Convert input value into GMP-compatible type.
-// 		template <class T>
-// 		static const T &to_gmp_type(const T &x)
-// 		{
-// 			return x;
-// 		}
-// 		// Special handling for long double: cast to lexical representation and recover the corresponding truncated integer.
-// 		static ::mpz_class to_gmp_type(const long double &x)
-// 		{
-// 			// OPTIMIZE: here we can reduce for sure the number of allocations, e.g., split using iterators instead of vectors.
-// 			std::string str = boost::lexical_cast<std::string>(x);
-// 			std::vector<std::string> split_vector;
-// 			boost::algorithm::split(split_vector, str,boost::is_any_of("eE"));
-// 			if (split_vector.size() != 1 && split_vector.size() != 2) {
-// 				throw boost::bad_lexical_cast();
-// 			}
-// 			try {
-// 				// Trim any "+" sign.
-// 				boost::trim_left_if(split_vector[0],boost::is_any_of("+"));
-// 				// Take out const reference to string, so that we use only const iterators and we are
-// 				// sure these are not invalidated.
-// 				const std::string &mantissa = split_vector[0];
-// 				const boost::iterator_range<std::string::const_iterator> point_range = boost::algorithm::find_last(mantissa,".");
-// 				// In case of scientific notation, this is the mantissa.
-// 				::mpz_class retval(std::string(mantissa.begin(),point_range.begin()));
-// 				if (split_vector.size() == 2) {
-// 					boost::trim_left_if(split_vector[1],boost::is_any_of("+"));
-// 					// Take care of the exponent, if any.
-// 					const long exponent = boost::lexical_cast<long>(split_vector[1]);
-// 					if (exponent < 0) {
-// 						// We assume the form is always 1.23456En, so that negative n means the number is 0.something,
-// 						// which truncates to zero.
-// 						retval = 0;
-// 					} else {
-// 						// a.b E n == a E n + sign(a) * 0.b E n
-// 						// Calculate 10 ** n.
-// 						::mpz_class tmp;
-// 						::mpz_ui_pow_ui(tmp.get_mpz_t(),static_cast<unsigned long>(10),boost::numeric_cast<unsigned long>(exponent));
-// 						// a E n.
-// 						retval *= tmp;
-// 						// Parse b. b is a sequence of n digits, of which min(n,exponent) are of interest for building the value: if they
-// 						// are more than the exponent we discard those not belonging to the integral part.
-// 						const unsigned long b_int_size = std::min<unsigned long>(
-// 							boost::numeric_cast<unsigned long>(std::distance(point_range.end(),mantissa.end())),
-// 							boost::numeric_cast<unsigned long>(exponent));
-// 						if (b_int_size) {
-// 							// There are characters between "." and the end of the mantissa string: b exists.
-// 							::mpz_class b(std::string(point_range.end(),point_range.end() + b_int_size));
-// 							::mpz_ui_pow_ui(tmp.get_mpz_t(),static_cast<unsigned long>(10),boost::numeric_cast<unsigned long>(exponent) - b_int_size);
-// 							b *= tmp;
-// 							if (retval >= 0) {
-// 								retval += b;
-// 							} else {
-// 								retval -= b;
-// 							}
-// 						}
-// 					}
-// 				}
-// 				return retval;
-// 			} catch (const std::invalid_argument &) {
-// 				// This means constructing an ::mpz_class from string failed. Interpret this as
-// 				// a bad lexical cast for consistency.
-// 				throw boost::bad_lexical_cast();
-// 			}
-// 		}
-// 		// GMP's interface does not support long long: convert it to mpz type before doing anything.
-// 		static ::mpz_class to_gmp_type(const long long &n)
-// 		{
-// 			return boost::lexical_cast< ::mpz_class>(n);
-// 		}
-// 		static ::mpz_class to_gmp_type(const unsigned long long &n)
-// 		{
-// 			return boost::lexical_cast< ::mpz_class>(n);
-// 		}
-// 		// Create GMP integer class from generic integer type.
-// 		template <class T>
-// 		static ::mpz_class gmp_from_int(const T &n)
-// 		{
-// 			static_assert(boost::is_integral<T>::value,"T is not integral.");
-// 			return ::mpz_class(n);
-// 		}
-// 		static ::mpz_class gmp_from_int(const long long &n)
-// 		{
-// 			return boost::lexical_cast< ::mpz_class>(n);
-// 		}
-// 		static ::mpz_class gmp_from_int(const unsigned long long &n)
-// 		{
-// 			return boost::lexical_cast< ::mpz_class>(n);
-// 		}
+		// Convert input long double into text representation of the corresponding truncated integer.
+		static std::string ld_to_string(const long double &x)
+		{
+			boost::format f("%.0Lf");
+			f % x;
+			return f.str();
+		}
 
 
 
 
 
 
-// 		// Print to stream.
-// 		struct print_visitor: public boost::static_visitor<>
-// 		{
-// 			print_visitor(std::ostream &os):m_os(os) {}
-// 			template <class T>
-// 			void operator()(const T &value) const
-// 			{
-// 				m_os << value;
-// 			}
-// 			mutable std::ostream &m_os;
-// 		};
 // 		// Addition with self.
 // 		struct self_adder_visitor: public boost::static_visitor<bool>
 // 		{
@@ -977,12 +873,6 @@ class integer
 // 				m_value = mpz_class(to_gmp_type(x));
 // 			}
 // 		}
-// 		void upgrade()
-// 		{
-// 			piranha_assert(boost::get<max_fast_int>(&m_value));
-// //std::cout << "upgrading!\n";
-// 			m_value = gmp_from_int(*boost::get<max_fast_int>(&m_value));
-// 		}
 // 		// Functions and visitor to convert to numerical pod types.
 // 		template <class T>
 // 		static void mpz_class_convert(T &output, const mpz_class &input, typename boost::enable_if_c<boost::is_arithmetic<T>::value>::type * = 0)
@@ -1071,11 +961,11 @@ class integer
 // 				}
 // 			}
 // 		};
-// 		// Constructor from mpz_class. For internal use only.
-// 		explicit integer(const mpz_class &n):m_value(n) {}
+
+
+		// Validate the string format for integers.
 		static void validate_string(const char *str)
 		{
-			// Validate the string's input format.
 			const std::size_t size = std::strlen(str);
 			if (!size) {
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
@@ -1088,13 +978,10 @@ class integer
 			if (str[has_minus] == '0' && (signed_size > 1 || has_minus)) {
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
-			// Check the chars.
-			for (std::size_t i = has_minus; i < size; ++i) {
-				if (!std::isdigit(str[i],std::locale())) {
-					piranha_throw(std::invalid_argument,"invalid string input for integer type");
-				}
-			}
+			// Check that each character is a digit.
+			std::for_each(str + has_minus, str + size,[](char c){if (!std::isdigit(c)) {piranha_throw(std::invalid_argument,"invalid string input for integer type");}});
 		}
+		// Construction.
 		void construct_from_string(const char *str)
 		{
 			validate_string(str);
@@ -1105,28 +992,134 @@ class integer
 				::mpz_clear(m_value);
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
+			piranha_assert(retval == 0);
 		}
-		template <class T>
+		template <typename T>
 		void construct_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = 0)
 		{
+			fp_normal_check(x);
 			::mpz_init_set_d(m_value,static_cast<double>(x));
 		}
-		template <class T>
+		template <typename T>
 		void construct_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
 		{
 			::mpz_init_set_si(m_value,static_cast<long>(si));
 		}
-		template <class T>
+		template <typename T>
 		void construct_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
 		{
 			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
-		template <class T>
+		template <typename T>
 		void construct_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = 0)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
+		}
+		void construct_from_arithmetic(const long double &x)
+		{
+			construct_from_string(ld_to_string(x).c_str());
+		}
+		// Assignment.
+		void assign_from_string(const char *str)
+		{
+			validate_string(str);
+			// String is OK.
+			const int retval = ::mpz_set_str(m_value,str,10);
+			if (retval == -1) {
+				piranha_throw(std::invalid_argument,"invalid string input for integer type");
+			}
+			piranha_assert(retval == 0);
+		}
+		template <typename T>
+		void assign_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = 0)
+		{
+			fp_normal_check(x);
+			::mpz_set_d(m_value,static_cast<double>(x));
+		}
+		template <typename T>
+		void assign_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			::mpz_set_si(m_value,static_cast<long>(si));
+		}
+		template <typename T>
+		void assign_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			::mpz_set_ui(m_value,static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void assign_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = 0)
+		{
+			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
+		}
+		void assign_from_arithmetic(const long double &x)
+		{
+			assign_from_string(ld_to_string(x).c_str());
+		}
+		// Conversion.
+		template <typename T>
+		typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value &&
+			!std::is_same<T,long long>::value,T>::type convert_to() const
+		{
+			if (::mpz_fits_slong_p(m_value)) {
+				try {
+					return(boost::numeric_cast<T>(::mpz_get_si(m_value)));
+				} catch (const boost::bad_numeric_cast &) {}
+			}
+			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+		}
+		template <typename T>
+		typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value &&
+			!std::is_same<T,unsigned long long>::value,T>::type convert_to() const
+		{
+			if (::mpz_fits_ulong_p(m_value)) {
+				try {
+					return(boost::numeric_cast<T>(::mpz_get_ui(m_value)));
+				} catch (const boost::bad_numeric_cast &) {}
+			}
+			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+		}
+		template <typename T>
+		typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to() const
+		{
+			try {
+				return boost::lexical_cast<T>(*this);
+			} catch (const boost::bad_lexical_cast &) {
+				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+			}
+		}
+		template <typename T>
+		typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to() const
+		{
+			// Extract always the double-precision value, and cast as needed.
+			// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
+			// so far never had problems, but if this becomes an issue we can resort to
+			// the good old lexical casting.
+			if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::lowest())) < 0) {
+				return -std::numeric_limits<T>::infinity();
+			} else if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::highest())) > 0) {
+				return std::numeric_limits<T>::infinity();
+			} else {
+				return static_cast<T>(::mpz_get_d(m_value));
+			}
+		}
+		template <typename T>
+		typename boost::enable_if_c<std::is_same<T,long double>::value,T>::type convert_to() const
+		{
+			try {
+				return boost::lexical_cast<long double>(*this);
+			} catch (const boost::bad_lexical_cast &) {
+				// If the conversion fails, it means we are at +-Inf.
+				piranha_assert(mpz_cmp_si(m_value,static_cast<long>(0)) != 0);
+				if (mpz_cmp_si(m_value,static_cast<long>(0)) > 0) {
+					return std::numeric_limits<long double>::infinity();
+				} else {
+					return -std::numeric_limits<long double>::infinity();
+				}
+			}
 		}
 	public:
 		/// Default constructor.
@@ -1166,9 +1159,9 @@ class integer
 		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
 		 * the integer object.
 		 * 
-		 * @param[in] x arithmetic type used to construct the integer object.
+		 * @param[in] x arithmetic type used to construct this.
 		 */
-		template <class T>
+		template <typename T>
 		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
 		{
 			construct_from_arithmetic(x);
@@ -1229,7 +1222,7 @@ class integer
 		integer &operator=(const integer &other)
 		{
 			if (this != boost::addressof(other)) {
-				// Handle assignement to moved-from objects.
+				// Handle assignment to moved-from objects.
 				if (m_value->_mp_d) {
 					::mpz_set(m_value,other.m_value);
 				} else {
@@ -1237,6 +1230,47 @@ class integer
 					::mpz_init_set(m_value,other.m_value);
 				}
 			}
+			return *this;
+		}
+		/// Assignment operator from string.
+		/**
+		 * @param[in] str string representation of the integer to be assigned.
+		 * 
+		 * @return reference to this.
+		 * 
+		 * @throws std::invalid_argument if the string is malformed.
+		 */
+		integer &operator=(const std::string &str)
+		{
+			assign_from_string(str.c_str());
+			return *this;
+		}
+		/// Assignment operator from C string.
+		/**
+		 * @param[in] str string representation of the integer to be assigned.
+		 * 
+		 * @see operator=(const std::string &)
+		 */
+		integer &operator=(const char *str)
+		{
+			assign_from_string(str);
+			return *this;
+		}
+		/// Generic assignment from arithmetic types.
+		/**
+		 * The supported types for \p T are all arithmetic types.
+		 * Use of other types will result in a compile-time error.
+		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
+		 * the integer object.
+		 * 
+		 * @param[in] x arithmetic type that will be assigned to this.
+		 * 
+		 * @return reference to this.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
+		{
+			assign_from_arithmetic(x);
 			return *this;
 		}
 		/// Swap.
@@ -1249,48 +1283,29 @@ class integer
 		{
 			::mpz_swap(m_value,n.m_value);
 		}
-// 		/// Generic assignment operator.
-// 		/**
-// 		 * The logic is identical to that of the generic constructor. T must be an arithmetic type.
-// 		 * 
-// 		 * @param[in] x assignment argument.
-// 		 * 
-// 		 * @return reference to this.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
-// 		{
-// 			construct_from_numerical_pod(x);
-// 			return *this;
-// 		}
-// 		/// Convert to arithmetic type.
-// 		/**
-// 		 * Extract an instance of arithmetic type T from the integer.
-// 		 * 
-// 		 * Conversion to integral types is exact, its success depending on whether or not
-// 		 * the target type can represent the current value of the integer (in case of overflow a piranha::value_error exception
-// 		 * will be thrown).
-// 		 * 
-// 		 * Conversion to floating point types is exact if the target type can represent exactly the current value of the integer.
-// 		 * If that is not the case, the output value will be one of the two adjacents (with an unspecified rounding direction).
-// 		 * Return values of +-inf will be produced if the current value of the integer overflows the range of the floating-point type.
-// 		 * Conversion to floating-point will never throw.
-// 		 * 
-// 		 * If T is not an arithmetic type, a compile-time error will be produced.
-// 		 * 
-// 		 * NOTE: if c++0x support has been enabled, this operator will be marked as explicit. Do not rely on this operator to be called
-// 		 * implicitly.
-// 		 * 
-// 		 * @return result of the conversion to target type T.
-// 		 * 
-// 		 * @throws piranha::value_error if the conversion to an integral type results in (negative) overflow.
-// 		 */
-// 		template <class T>
-// 		__PIRANHA_EXPLICIT_CONVERSION operator T() const
-// 		{
-// 			p_static_check(boost::is_arithmetic<typename boost::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
-// 			return boost::apply_visitor(convert_visitor<typename boost::remove_cv<T>::type>(),m_value);
-// 		}
+		/// Conversion operator to arithmetic type.
+		/**
+		 * Extract an instance of arithmetic type \p T from this.
+		 * 
+		 * Conversion to integral types is exact, its success depending on whether or not
+		 * the target type can represent the current value of the integer.
+		 * 
+		 * Conversion to floating point types is exact if the target type can represent exactly the current value of the integer.
+		 * If that is not the case, the output value will be one of the two adjacents (with an unspecified rounding direction).
+		 * Return values of +-inf will be produced if the current value of the integer overflows the range of the floating-point type.
+		 * 
+		 * If \p T is not an arithmetic type, a compile-time error will be produced.
+		 * 
+		 * @return result of the conversion to target type T.
+		 * 
+		 * @throws std::overflow_error if the conversion to an integral type results in (negative) overflow.
+		 */
+		template <typename T>
+		explicit operator T() const
+		{
+			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
+			return convert_to<typename std::remove_cv<T>::type>();
+		}
 // 		/// Conversion to bool.
 // 		/**
 // 		 * This conversion operator returns this != 0, and it can be called implicitly.

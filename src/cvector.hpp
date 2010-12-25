@@ -72,7 +72,7 @@ namespace piranha {
  * \todo Affinity settings.
  * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
  */
-template <class T>
+template <typename T>
 class cvector
 {
 	public:
