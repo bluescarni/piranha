@@ -173,6 +173,25 @@ BOOST_AUTO_TEST_CASE(integer_swap_test)
 	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
 }
 
+template <typename T>
+static inline void inf_conversion_test()
+{
+	{
+		std::ostringstream oss;
+		oss << piranha::integer(boost::numeric::bounds<T>::highest());
+		std::string tmp(oss.str());
+		tmp.append("0000000");
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(tmp)),std::numeric_limits<T>::infinity());
+	}
+	{
+		std::ostringstream oss;
+		oss << piranha::integer(boost::numeric::bounds<T>::lowest());
+		std::string tmp(oss.str());
+		tmp.append("0000000");
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(tmp)),-std::numeric_limits<T>::infinity());
+	}
+}
+
 BOOST_AUTO_TEST_CASE(integer_conversion_test)
 {
 	piranha::integer bigint("6456895768945764589283127342389472389472389423799923942394823749238472394872389472389472389748923749223947234892374897");
@@ -180,11 +199,17 @@ BOOST_AUTO_TEST_CASE(integer_conversion_test)
 	piranha::integer max_unsigned(boost::numeric::bounds<unsigned>::highest());
 	BOOST_CHECK_THROW(static_cast<int>(max_unsigned),std::overflow_error);
 	BOOST_CHECK_NO_THROW(static_cast<unsigned>(max_unsigned));
-	if (boost::numeric::bounds<float>::highest() != boost::numeric::bounds<double>::highest()) {
-		piranha::integer inf_plus(static_cast<double>(boost::numeric::bounds<float>::highest()) * boost::numeric::bounds<float>::highest());
-		BOOST_CHECK_EQUAL(static_cast<float>(inf_plus),std::numeric_limits<float>::infinity());
-		piranha::integer inf_minus(-static_cast<double>(boost::numeric::bounds<float>::highest()) * boost::numeric::bounds<float>::highest());
-		BOOST_CHECK_EQUAL(static_cast<float>(inf_minus),-std::numeric_limits<float>::infinity());
+	// Conversion that will generate infinity.
+	inf_conversion_test<float>();
+	inf_conversion_test<double>();
+	inf_conversion_test<long double>();
+	// Implicit conversion to bool.
+	piranha::integer true_int(1), false_int(0);
+	if (!true_int) {
+		BOOST_CHECK_EQUAL(0,1);
+	}
+	if (false_int) {
+		BOOST_CHECK_EQUAL(0,1);
 	}
 }
 
@@ -202,9 +227,18 @@ BOOST_AUTO_TEST_CASE(integer_stream_test)
 		oss << piranha::integer(tmp);
 		BOOST_CHECK_EQUAL(tmp,oss.str());
 	}
-	piranha::integer tmp;
-	std::stringstream ss;
-	ss << "123";
-	ss >> tmp;
-	BOOST_CHECK_EQUAL(static_cast<int>(tmp),123);
+	{
+		piranha::integer tmp;
+		std::stringstream ss;
+		ss << "123";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(static_cast<int>(tmp),123);
+	}
+	{
+		piranha::integer tmp;
+		std::stringstream ss;
+		ss << "-30000";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(static_cast<int>(tmp),-30000);
+	}
 }

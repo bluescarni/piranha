@@ -1065,7 +1065,7 @@ class integer
 		// Conversion.
 		template <typename T>
 		typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value &&
-			!std::is_same<T,long long>::value,T>::type convert_to() const
+			!std::is_same<T,long long>::value && !std::is_same<T,bool>::value,T>::type convert_to() const
 		{
 			if (::mpz_fits_slong_p(m_value)) {
 				try {
@@ -1076,7 +1076,7 @@ class integer
 		}
 		template <typename T>
 		typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value &&
-			!std::is_same<T,unsigned long long>::value,T>::type convert_to() const
+			!std::is_same<T,unsigned long long>::value && !std::is_same<T,bool>::value,T>::type convert_to() const
 		{
 			if (::mpz_fits_ulong_p(m_value)) {
 				try {
@@ -1116,13 +1116,19 @@ class integer
 				return boost::lexical_cast<long double>(*this);
 			} catch (const boost::bad_lexical_cast &) {
 				// If the conversion fails, it means we are at +-Inf.
-				piranha_assert(mpz_cmp_si(m_value,static_cast<long>(0)) != 0);
-				if (mpz_cmp_si(m_value,static_cast<long>(0)) > 0) {
+				piranha_assert(mpz_sgn(m_value) != 0);
+				if (mpz_sgn(m_value) > 0) {
 					return std::numeric_limits<long double>::infinity();
 				} else {
 					return -std::numeric_limits<long double>::infinity();
 				}
 			}
+		}
+		// Special handling for bool.
+		template <typename T>
+		typename boost::enable_if_c<std::is_same<T,bool>::value,T>::type convert_to() const
+		{
+			return (mpz_sgn(m_value) != 0);
 		}
 	public:
 		/// Default constructor.
@@ -1303,7 +1309,8 @@ class integer
 		/**
 		 * Extract an instance of arithmetic type \p T from this.
 		 * 
-		 * Conversion to integral types is exact, its success depending on whether or not
+		 * Conversion to \p bool is always successful, and returns <tt>this != 0</tt>.
+		 * Conversion to the other integral types is exact, its success depending on whether or not
 		 * the target type can represent the current value of the integer.
 		 * 
 		 * Conversion to floating point types is exact if the target type can represent exactly the current value of the integer.
@@ -1314,24 +1321,15 @@ class integer
 		 * 
 		 * @return result of the conversion to target type T.
 		 * 
-		 * @throws std::overflow_error if the conversion to an integral type results in (negative) overflow.
+		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
 		 */
 		template <typename T>
-		explicit operator T() const
+		explicit operator T() const piranha_noexcept((std::is_same<typename std::remove_cv<T>::type,bool>::value ||
+			std::is_floating_point<typename std::remove_cv<T>::type>::value))
 		{
 			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
 			return convert_to<typename std::remove_cv<T>::type>();
 		}
-// 		/// Conversion to bool.
-// 		/**
-// 		 * This conversion operator returns this != 0, and it can be called implicitly.
-// 		 * 
-// 		 * @return true if this != 0, false otherwise.
-// 		 */
-// 		operator bool() const
-// 		{
-// 			return (*this != 0);
-// 		}
 // 		/// In-place addition.
 // 		/**
 // 		 * Add x to the current value of the integer object. This template operator is activated only if
