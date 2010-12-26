@@ -55,7 +55,7 @@ namespace piranha
  * The implementation employs the \p mpz_t type from the multiprecision GMP library.
  * 
  * Interoperability with all builtin C++ arithmetic types is provided. Please note that since the GMP API does not provide interoperability
- * with long long and long double, interaction with this types will be somewhat slow due to the extra workload of converting such types
+ * with <tt>long long</tt> and <tt>long double</tt>, interaction with this types will be somewhat slow due to the extra workload of converting such types
  * to GMP-compatible types. Also, every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
  * 
@@ -92,6 +92,7 @@ class integer
 		// Convert input long double into text representation of the corresponding truncated integer.
 		static std::string ld_to_string(const long double &x)
 		{
+			piranha_assert(boost::math::isfinite(x));
 			boost::format f("%.0Lf");
 			f % x;
 			return f.str();
@@ -1019,6 +1020,7 @@ class integer
 		}
 		void construct_from_arithmetic(const long double &x)
 		{
+			fp_normal_check(x);
 			construct_from_string(ld_to_string(x).c_str());
 		}
 		// Assignment.
@@ -1057,6 +1059,7 @@ class integer
 		}
 		void assign_from_arithmetic(const long double &x)
 		{
+			fp_normal_check(x);
 			assign_from_string(ld_to_string(x).c_str());
 		}
 		// Conversion.
@@ -1126,7 +1129,7 @@ class integer
 		/**
 		 * The value is initialised to zero.
 		 */
-		integer()
+		integer() piranha_noexcept(true)
 		{
 			::mpz_init(m_value);
 		}
@@ -1134,7 +1137,7 @@ class integer
 		/**
 		 * @param[in] other integer to be deep-copied.
 		 */
-		integer(const integer &other)
+		integer(const integer &other) piranha_noexcept(true)
 		{
 			::mpz_init_set(m_value,other.m_value);
 		}
@@ -1160,6 +1163,8 @@ class integer
 		 * the integer object.
 		 * 
 		 * @param[in] x arithmetic type used to construct this.
+		 * 
+		 * @throw std::invalid_argument if \p T is a non-finite floating-point type.
 		 */
 		template <typename T>
 		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
@@ -1219,7 +1224,7 @@ class integer
 		 * 
 		 * @return reference to this.
 		 */
-		integer &operator=(const integer &other)
+		integer &operator=(const integer &other) piranha_noexcept(true)
 		{
 			if (this != boost::addressof(other)) {
 				// Handle assignment to moved-from objects.
@@ -1242,18 +1247,24 @@ class integer
 		 */
 		integer &operator=(const std::string &str)
 		{
-			assign_from_string(str.c_str());
-			return *this;
+			return operator=(str.c_str());
 		}
 		/// Assignment operator from C string.
 		/**
 		 * @param[in] str string representation of the integer to be assigned.
 		 * 
+		 * @return reference to this.
+		 * 
 		 * @see operator=(const std::string &)
 		 */
 		integer &operator=(const char *str)
 		{
-			assign_from_string(str);
+			if (m_value->_mp_d) {
+				assign_from_string(str);
+			} else {
+				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
+				construct_from_string(str);
+			}
 			return *this;
 		}
 		/// Generic assignment from arithmetic types.
@@ -1270,7 +1281,12 @@ class integer
 		template <typename T>
 		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
 		{
-			assign_from_arithmetic(x);
+			if (m_value->_mp_d) {
+				assign_from_arithmetic(x);
+			} else {
+				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
+				construct_from_arithmetic(x);
+			}
 			return *this;
 		}
 		/// Swap.
@@ -1917,6 +1933,9 @@ namespace std
 
 /// Specialization of std::swap for piranha::integer.
 /**
+ * @param[in] n1 first argument.
+ * @param[in] n2 second argument.
+ * 
  * @see piranha::integer::swap()
  */
 template <>
@@ -1925,7 +1944,7 @@ inline void swap(piranha::integer &n1, piranha::integer &n2)
 	n1.swap(n2);
 }
 
-/// Specialization of std::numeric_limits piranha::integer.
+/// Specialization of std::numeric_limits for piranha::integer.
 template <>
 class numeric_limits<piranha::integer>: public numeric_limits<long>
 {

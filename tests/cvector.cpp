@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <exception>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -104,7 +105,8 @@ BOOST_AUTO_TEST_CASE(cvector_size_constructor)
 	set_mt();
 	piranha::cvector<trivial> t(size);
 	piranha::cvector<nontrivial> nt(size);
-	BOOST_CHECK_THROW(piranha::cvector<nontrivial_throwing> ntt(size),custom_exception);
+	std::unique_ptr<piranha::cvector<nontrivial_throwing>> ptr;
+	BOOST_CHECK_THROW(ptr.reset(new piranha::cvector<nontrivial_throwing>(size)),custom_exception);
 	set_st();
 }
 
