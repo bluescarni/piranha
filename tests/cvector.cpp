@@ -49,6 +49,7 @@ struct nontrivial
 {
 	nontrivial():v(std::vector<double>::size_type(1)) {}
 	nontrivial(nontrivial &&nt):v(std::move(nt.v)) {}
+	nontrivial(const nontrivial &nt):v(nt.v) {}
 	nontrivial &operator=(nontrivial &&nt)
 	{
 		v = std::move(nt.v);
