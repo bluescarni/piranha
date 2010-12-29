@@ -983,7 +983,7 @@ class integer
 		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
 		 * the integer object.
 		 * 
-		 * @param[in] x arithmetic type used to construct this.
+		 * @param[in] x arithmetic type used to construct \p this.
 		 * 
 		 * @throw std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
@@ -995,7 +995,7 @@ class integer
 		/// Constructor from string.
 		/**
 		 * The string must be a sequence of decimal digits, preceded by a minus sign for
-		 * strictly negative numbers. The first digit of a non-zero number must not be zero. A malformed string will throw a piranha::value_error
+		 * strictly negative numbers. The first digit of a non-zero number must not be zero. A malformed string will throw an \p std::invalid_argument
 		 * exception.
 		 * 
 		 * @param[in] str decimal string representation of the number used to initialise the integer object.
@@ -1032,7 +1032,7 @@ class integer
 		/**
 		 * @param[in] other integer to be moved.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 */
 		integer &operator=(integer &&other) piranha_noexcept(true)
 		{
@@ -1043,7 +1043,7 @@ class integer
 		/**
 		 * @param[in] other integer to be assigned.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 */
 		integer &operator=(const integer &other) piranha_noexcept(true)
 		{
@@ -1062,7 +1062,7 @@ class integer
 		/**
 		 * @param[in] str string representation of the integer to be assigned.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 * 
 		 * @throws std::invalid_argument if the string is malformed.
 		 */
@@ -1074,7 +1074,7 @@ class integer
 		/**
 		 * @param[in] str string representation of the integer to be assigned.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 * 
 		 * @see operator=(const std::string &)
 		 */
@@ -1095,9 +1095,9 @@ class integer
 		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
 		 * the integer object.
 		 * 
-		 * @param[in] x arithmetic type that will be assigned to this.
+		 * @param[in] x arithmetic type that will be assigned to \p this.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 * 
 		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
@@ -1114,7 +1114,7 @@ class integer
 		}
 		/// Swap.
 		/**
-		 * Swap the content of this and n.
+		 * Swap the content of \p this and \p n.
 		 * 
 		 * @param[in] n swap argument.
 		 */
@@ -1124,7 +1124,7 @@ class integer
 		}
 		/// Conversion operator to arithmetic type.
 		/**
-		 * Extract an instance of arithmetic type \p T from this.
+		 * Extract an instance of arithmetic type \p T from \p this.
 		 * 
 		 * Conversion to \p bool is always successful, and returns <tt>this != 0</tt>.
 		 * Conversion to the other integral types is exact, its success depending on whether or not
@@ -1155,13 +1155,13 @@ class integer
 		 * If \p T is integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
 		 * 
-		 * - this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
 		 * - \p f is added to \p x,
-		 * - the result is assigned back to this.
+		 * - the result is assigned back to \p this.
 		 * 
 		 * @param[in] x argument for the addition.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 * 
 		 * @throws std::invalid_argument if \p T is a floating-point type and the result of the operation generates a non-finite value.
 		 */
@@ -1217,7 +1217,7 @@ class integer
 		}
 		/// Identity operation.
 		/**
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 */
 		integer &operator+()
 		{
@@ -1225,7 +1225,7 @@ class integer
 		}
 		/// Identity operation (const version).
 		/**
-		 * @return const reference to this.
+		 * @return const reference to \p this.
 		 */
 		const integer &operator+() const
 		{
@@ -1233,9 +1233,9 @@ class integer
 		}
 		/// Prefix increment.
 		/**
-		 * Increment this by one.
+		 * Increment \p this by one.
 		 * 
-		 * @return reference to this after the increment.
+		 * @return reference to \p this after the increment.
 		 */
 		integer &operator++()
 		{
@@ -1243,9 +1243,9 @@ class integer
 		}
 		/// Suffix increment.
 		/**
-		 * Increment this by one and return a copy of this as it was before the increment.
+		 * Increment \p this by one and return a copy of \p this as it was before the increment.
 		 * 
-		 * @return copy of this before the increment.
+		 * @return copy of \p this before the increment.
 		 */
 		integer operator++(int)
 		{
@@ -1259,7 +1259,7 @@ class integer
 		 * 
 		 * @param[in] x argument for the addition.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 */
 		template <typename T>
 		typename boost::enable_if_c<
@@ -1313,7 +1313,7 @@ class integer
 		}
 		/// In-place negation.
 		/**
-		 * Set this to -this.
+		 * Set \p this to \p -this.
 		 */
 		void negate()
 		{
@@ -1321,7 +1321,7 @@ class integer
 		}
 		/// Negated copy.
 		/**
-		 * @return copy of -this.
+		 * @return copy of \p -this.
 		 */
 		integer operator-() const
 		{
@@ -1331,9 +1331,9 @@ class integer
 		}
 		/// Prefix decrement.
 		/**
-		 * Decrement this by one and return.
+		 * Decrement \p this by one and return.
 		 * 
-		 * @return reference to this.
+		 * @return reference to \p this.
 		 */
 		integer &operator--()
 		{
@@ -1341,9 +1341,9 @@ class integer
 		}
 		/// Suffix decrement.
 		/**
-		 * Decrement this by one and return a copy of this as it was before the decrement.
+		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
 		 * 
-		 * @return copy of this before the decrement.
+		 * @return copy of \p this before the decrement.
 		 */
 		integer operator--(int)
 		{
