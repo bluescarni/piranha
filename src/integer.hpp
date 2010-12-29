@@ -63,22 +63,18 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo implementation notes: use of internal GMP implementation details.
+ * \todo implementation notes: use of internal GMP implementation details
+ * \todo implement hash via mpz_getlimbn and mpz_size: http://gmplib.org/manual/Integer-Special-Functions.html#Integer-Special-Functions
+ * \todo move safety
+ * \todo exception safety
  */
 class integer
 {
-		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
-		// Default result type will be integer itself; for consistency with C/C++ when one of the arguments
-		// is a floating point type, we will return a value of the same floating point type.
-		template <typename T, typename Enable = void>
-		struct deduce_result_type
-		{
-			typedef integer type;
-		};
+		// Strip T of reference, const and volatile attributes.
 		template <typename T>
-		struct deduce_result_type<T,typename boost::enable_if<std::is_floating_point<T>>::type>
+		struct strip_cv_ref
 		{
-			typedef T type;
+			typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
 		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
@@ -99,260 +95,6 @@ class integer
 		}
 
 
-
-
-
-
-// 		// Addition with self.
-// 		struct self_adder_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				n1 += n2;
-// 				return true;
-// 			}
-// 			bool operator()(mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 += to_gmp_type(n2);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &, const mpz_class &) const
-// 			{
-// 				// NOTE: here probably we can do better than this :)
-// 				return false;
-// 			}
-// 			bool operator()(max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				// Interval arithmetics: n1 + [n2_m,n2_M] == [m,M], from which:
-// 				// - if n1 > 0 -> n2 must be in [m,M - n1]
-// 				// - if n1 < 0 -> n2 must be in [m - n1,M]
-// 				// OPTIMIZE: here maybe we can reduce the branching by testing for n1 >= 0 and then 'else', in place of a second if.
-// 				// OPTIMIZE: likely/unlikely of help here? Returning false will happen just once anyway in the
-// 				// lifetime of the integer part of the variant...
-// 				if (n1 > 0 && n2 > boost::integer_traits<max_fast_int>::const_max - n1) {
-// 					return false;
-// 				}
-// 				if (n1 < 0 && n2 < boost::integer_traits<max_fast_int>::const_min - n1) {
-// 					return false;
-// 				}
-// 				n1 += n2;
-// 				return true;
-// 			}
-// 		};
-// 		// Addition with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_adder_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_adder_visitor(const T &value):m_value(value) {}
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				n += to_gmp_type(m_value);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				try {
-// 					const max_fast_int tmp = boost::numeric_cast<max_fast_int>(m_value);
-// 					self_adder_visitor a;
-// 					return a(n,tmp);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert T to max_fast_int, we need to upgrade to mpz_class.
-// 					return false;
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		template <class Functor, class Variant>
-// 		void generic_binary_applier(const Functor &f, const Variant &other)
-// 		{
-// 			if (unlikely(!boost::apply_visitor(f,m_value,other))) {
-// 				// Make sure we are in max_fast_int mode.
-// 				piranha_assert(boost::get<max_fast_int>(&m_value));
-// 				upgrade();
-// 				const bool new_status = boost::apply_visitor(f,m_value,other);
-// 				(void)new_status;
-// 				piranha_assert(new_status);
-// 			}
-// 		}
-// 		template <class Functor>
-// 		void generic_unary_applier(const Functor &f)
-// 		{
-// 			if (unlikely(!boost::apply_visitor(f,m_value))) {
-// 				// Make sure we are in max_fast_int mode.
-// 				piranha_assert(boost::get<max_fast_int>(&m_value));
-// 				upgrade();
-// 				const bool new_status = boost::apply_visitor(f,m_value);
-// 				(void)new_status;
-// 				piranha_assert(new_status);
-// 			}
-// 		}
-// 		void dispatch_add(const integer &n)
-// 		{
-// 			generic_binary_applier(self_adder_visitor(),n.m_value);
-// 		}
-// 		template <class T>
-// 		void dispatch_add(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0)
-// 		{
-// 			generic_unary_applier(integral_pod_adder_visitor<T>(n));
-// 		}
-// 		template <class T>
-// 		void dispatch_add(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0)
-// 		{
-// 			// NOTE: fp normal checks are performed in the assignment.
-// 			*this = operator T() + x;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_plus(const T &n, typename boost::enable_if_c<boost::is_integral<T>::value || boost::is_same<integer,T>::value>::type * = 0) const
-// 		{
-// 			integer retval(*this);
-// 			retval += n;
-// 			return retval;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_plus(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			// NOTE: No need for fp normal checks, as we do not modify this.
-// 			return operator T() + x;
-// 		}
-// 		// Operator++.
-// 		struct self_increment_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				++n;
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				// Cannot increase past the upper limit.
-// 				if (unlikely(n == boost::integer_traits<max_fast_int>::const_max)) {
-// 					return false;
-// 				}
-// 				++n;
-// 				return true;
-// 			}
-// 		};
-// 		// Subtraction with self.
-// 		struct self_subtractor_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				n1 -= n2;
-// 				return true;
-// 			}
-// 			bool operator()(mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 -= to_gmp_type(n2);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &, const mpz_class &) const
-// 			{
-// 				return false;
-// 			}
-// 			bool operator()(max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				// Check if we can compute -n2 safely and then use the adder visitor.
-// 				const max_fast_int offset = boost::integer_traits<max_fast_int>::const_max + boost::integer_traits<max_fast_int>::const_min;
-// 				if (offset < 0 && n2 < (-boost::integer_traits<max_fast_int>::const_max)) {
-// 					return false;
-// 				}
-// 				if (offset > 0 && n2 > (-boost::integer_traits<max_fast_int>::const_min)) {
-// 					return false;
-// 				}
-// 				self_adder_visitor a;
-// 				return a(n1,-n2);
-// 			}
-// 		};
-// 		// Subtraction with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_subtractor_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_subtractor_visitor(const T &value):m_value(value) {}
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				n -= to_gmp_type(m_value);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				try {
-// 					const max_fast_int tmp = boost::numeric_cast<max_fast_int>(m_value);
-// 					self_subtractor_visitor a;
-// 					return a(n,tmp);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert T to max_fast_int, we need to upgrade to mpz_class.
-// 					return false;
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		// In-place negation.
-// 		struct negate_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				mpz_neg(n.get_mpz_t(),n.get_mpz_t());
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				const max_fast_int offset = boost::integer_traits<max_fast_int>::const_max + boost::integer_traits<max_fast_int>::const_min;
-// 				if (offset < 0 && n < (-boost::integer_traits<max_fast_int>::const_max)) {
-// 					return false;
-// 				}
-// 				if (offset > 0 && n > (-boost::integer_traits<max_fast_int>::const_min)) {
-// 					return false;
-// 				}
-// 				n = -n;
-// 				return true;
-// 			}
-// 		};
-// 		void dispatch_sub(const integer &n)
-// 		{
-// 			generic_binary_applier(self_subtractor_visitor(),n.m_value);
-// 		}
-// 		template <class T>
-// 		void dispatch_sub(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0)
-// 		{
-// 			generic_unary_applier(integral_pod_subtractor_visitor<T>(n));
-// 		}
-// 		template <class T>
-// 		void dispatch_sub(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0)
-// 		{
-// 			*this = operator T() - x;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_minus(const T &n, typename boost::disable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			integer retval(*this);
-// 			retval -= n;
-// 			return retval;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_minus(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return operator T() - x;
-// 		}
-// 		// Operator--.
-// 		struct self_decrement_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				--n;
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				// Cannot decrease below the lower limit.
-// 				if (unlikely(n == boost::integer_traits<max_fast_int>::const_min)) {
-// 					return false;
-// 				}
-// 				--n;
-// 				return true;
-// 			}
-// 		};
 // 		// Multiplication with self.
 // 		struct self_multiplier_visitor: public boost::static_visitor<bool>
 // 		{
@@ -860,110 +602,6 @@ class integer
 // 				return boost::apply_visitor(natural_power_visitor<T>(exp),m_value);
 // 			}
 // 		}
-// 		template <class T>
-// 		void construct_from_numerical_pod(const T &x, typename boost::enable_if_c<boost::is_arithmetic<T>::value>::type * = 0)
-// 		{
-// 			fp_normal_check(x);
-// 			try {
-// 				// First let's try to convert the POD to a max_fast_int without precision loss.
-// 				// Floating point values will be truncated (i.e., rounded to zero).
-// 				m_value = boost::numeric_cast<max_fast_int>(x);
-// 			} catch (const boost::numeric::bad_numeric_cast &) {
-// 				// If the above fails, build a GMP integer instead. Same truncation rules apply for floating point values.
-// 				// We must use a wrapper function in order to cope with the fact that the GMP C++ interface does not support long long and long double.
-// 				m_value = mpz_class(to_gmp_type(x));
-// 			}
-// 		}
-// 		// Functions and visitor to convert to numerical pod types.
-// 		template <class T>
-// 		static void mpz_class_convert(T &output, const mpz_class &input, typename boost::enable_if_c<boost::is_arithmetic<T>::value>::type * = 0)
-// 		{
-// 			if (boost::is_integral<T>::value) {
-// 				if (boost::is_signed<T>::value) {
-// 					if (input.fits_slong_p()) {
-// 						output = boost::numeric_cast<T>(input.get_si());
-// 					} else {
-// 						throw boost::numeric::bad_numeric_cast();
-// 					}
-// 				} else {
-// 					if (input >= 0 && input.fits_ulong_p()) {
-// 						output = boost::numeric_cast<T>(input.get_ui());
-// 					} else {
-// 						throw boost::numeric::bad_numeric_cast();
-// 					}
-// 				}
-// 			} else {
-// 				// Extract always the double-precision value, and cast as needed.
-// 				// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
-// 				// so far never had problems, but if this becomes an issue we can resort to
-// 				// the good old lexical casting.
-// 				if (input < boost::numeric::bounds<T>::lowest()) {
-// 					output = -std::numeric_limits<T>::infinity();
-// 				} else if (input > boost::numeric::bounds<T>::highest()) {
-// 					output = std::numeric_limits<T>::infinity();
-// 				} else {
-// 					output = boost::numeric_cast<T>(input.get_d());
-// 				}
-// 			}
-// 		}
-// 		// Handle long double separately, not supported by GMP API.
-// 		static void mpz_class_convert(long double &output, const mpz_class &input)
-// 		{
-// 			try {
-// 				output = boost::lexical_cast<long double>(input);
-// 			} catch (const boost::bad_lexical_cast &) {
-// 				// If the conversion fails, it means we are at +-Inf.
-// 				piranha_assert(input != 0);
-// 				if (input > 0) {
-// 					output = std::numeric_limits<long double>::infinity();
-// 				} else {
-// 					output = -std::numeric_limits<long double>::infinity();
-// 				}
-// 			}
-// 		}
-// #ifdef BOOST_HAS_LONG_LONG
-// 		// Same for long long.
-// 		static void mpz_class_convert(long long &output, const mpz_class &input)
-// 		{
-// 			output = boost::lexical_cast<long long>(input);
-// 		}
-// 		static void mpz_class_convert(unsigned long long &output, const mpz_class &input)
-// 		{
-// 			output = boost::lexical_cast<unsigned long long>(input);
-// 		}
-// #endif
-// 		template <class T>
-// 		struct convert_visitor: public boost::static_visitor<T>
-// 		{
-// 			p_static_check(boost::is_arithmetic<T>::value,"");
-// 			static std::string get_err_msg()
-// 			{
-// 				return std::string("cannot perform requested conversion to type '") +
-// 					std::string(typeid(T).name()) + "\'";
-// 			}
-// 			T operator()(const mpz_class &n) const
-// 			{
-// 				T retval;
-// 				try {
-// 					mpz_class_convert(retval,n);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					piranha_throw(value_error,get_err_msg());
-// 				} catch (const boost::bad_lexical_cast &) {
-// 					piranha_throw(value_error,get_err_msg());
-// 				}
-// 				return retval;
-// 			}
-// 			T operator()(const max_fast_int &n) const
-// 			{
-// 				try {
-// 					return boost::numeric_cast<T>(n);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					piranha_throw(value_error,get_err_msg());
-// 				}
-// 			}
-// 		};
-
-
 		// Validate the string format for integers.
 		static void validate_string(const char *str)
 		{
@@ -1130,6 +768,183 @@ class integer
 		{
 			return (mpz_sgn(m_value) != 0);
 		}
+		// In-place addition.
+		void in_place_add(const integer &n)
+		{
+			::mpz_add(m_value,m_value,n.m_value);
+		}
+		void in_place_add(integer &&n)
+		{
+			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+				swap(n);
+			}
+			in_place_add(n);
+		}
+		template <typename T>
+		void in_place_add(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			if (si >= 0) {
+				::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(si));
+			} else {
+				// Neat trick here. See:
+				// http://stackoverflow.com/questions/4536095/unary-minus-and-signed-to-unsigned-conversion
+				::mpz_sub_ui(m_value,m_value,-static_cast<unsigned long>(si));
+			}
+		}
+		template <typename T>
+		void in_place_add(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(ui));
+		}
+		// For (unsigned) long long create a temporary integer and add it.
+		template <typename T>
+		void in_place_add(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			in_place_add(integer(n));
+		}
+		template <typename T>
+		void in_place_add(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			operator=(static_cast<T>(*this) + x);
+		}
+		// In-place subtraction.
+		void in_place_sub(const integer &n)
+		{
+			::mpz_sub(m_value,m_value,n.m_value);
+		}
+		void in_place_sub(integer &&n)
+		{
+			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+				swap(n);
+				::mpz_neg(m_value,m_value);
+				in_place_add(n);
+			} else {
+				in_place_sub(n);
+			}
+		}
+		template <typename T>
+		void in_place_sub(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			if (si >= 0) {
+				::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(si));
+			} else {
+				::mpz_add_ui(m_value,m_value,-static_cast<unsigned long>(si));
+			}
+		}
+		template <typename T>
+		void in_place_sub(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_sub(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			in_place_sub(integer(n));
+		}
+		template <typename T>
+		void in_place_sub(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			operator=(static_cast<T>(*this) - x);
+		}
+		// Binary operations.
+		// Type trait for allowed arguments in arithmetic binary operations.
+		template <typename T, typename U>
+		struct are_binary_op_types: std::integral_constant<bool,
+			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_arithmetic<typename strip_cv_ref<U>::type>::value) ||
+			(std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_arithmetic<typename strip_cv_ref<T>::type>::value) ||
+			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value)>
+		{};
+		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
+		// Default result type will be integer itself; for consistency with C/C++ when one of the arguments
+		// is a floating point type, we will return a value of the same floating point type.
+		template <typename T, typename U, typename Enable = void>
+		struct deduce_binary_op_result_type
+		{
+			typedef integer type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename boost::enable_if<std::is_floating_point<typename strip_cv_ref<T>::type>>::type>
+		{
+			typedef typename strip_cv_ref<T>::type type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename boost::enable_if<std::is_floating_point<typename strip_cv_ref<U>::type>>::type>
+		{
+			typedef typename strip_cv_ref<U>::type type;
+		};
+		// Binary addition.
+		template <typename T, typename U>
+		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			>::type * = 0)
+		{
+			// NOTE: the logic here is that we can "steal" from n1 we do it here, otherwise we
+			// attempt the steal from n2 in the overload below.
+			integer retval(std::forward<T>(n1));
+			retval += std::forward<U>(n2);
+			return retval;
+		}
+		template <typename T, typename U>
+		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			>::type * = 0)
+		{
+			integer retval(std::forward<U>(n2));
+			retval += std::forward<T>(n1);
+			return retval;
+		}
+		template <typename T>
+		static T binary_plus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) + x);
+		}
+		template <typename T>
+		static T binary_plus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return binary_plus(n,x);
+		}
+		// Binary subtraction.
+		template <typename T, typename U>
+		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			>::type * = 0)
+		{
+			integer retval(std::forward<T>(n1));
+			retval -= std::forward<U>(n2);
+			return retval;
+		}
+		template <typename T, typename U>
+		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			>::type * = 0)
+		{
+			integer retval(std::forward<U>(n2));
+			::mpz_neg(retval.m_value,retval.m_value);
+			retval += std::forward<T>(n1);
+			return retval;
+		}
+		template <typename T>
+		static T binary_minus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) - x);
+		}
+		template <typename T>
+		static T binary_minus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return -binary_minus(n,x);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1170,7 +985,7 @@ class integer
 		 * 
 		 * @param[in] x arithmetic type used to construct this.
 		 * 
-		 * @throw std::invalid_argument if \p T is a non-finite floating-point type.
+		 * @throw std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
 		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
@@ -1283,9 +1098,11 @@ class integer
 		 * @param[in] x arithmetic type that will be assigned to this.
 		 * 
 		 * @return reference to this.
+		 * 
+		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
+		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x) piranha_noexcept(!std::is_floating_point<T>::value)
 		{
 			if (m_value->_mp_d) {
 				assign_from_arithmetic(x);
@@ -1330,200 +1147,210 @@ class integer
 			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
 			return convert_to<typename std::remove_cv<T>::type>();
 		}
-// 		/// In-place addition.
-// 		/**
-// 		 * Add x to the current value of the integer object. This template operator is activated only if
-// 		 * T is either integer or an arithmetic type.
-// 		 * 
-// 		 * If T is integer or an integral type, the result will be exact. If T is a floating-point type the following steps take place:
-// 		 * 
-// 		 * - this is converted to an instance f of type T via operator T(),
-// 		 * - f is added to x,
-// 		 * - the result is assigned back to this.
-// 		 * 
-// 		 * These steps are intended to mimic the behaviour of C++'s integral types.
-// 		 * 
-// 		 * @param[in] x argument for the addition.
-// 		 * 
-// 		 * @return reference to this.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<integer,T>::value,integer &>::type operator+=(const T &x)
-// 		{
-// 			dispatch_add(x);
-// 			return *this;
-// 		}
-// 		/// Generic in-place addition with integer.
-// 		/**
-// 		 * Add a piranha::integer in-place. This template operator is activated only if T is an arithmetic type.
-// 		 * This method will first compute n + x, then cast the result back to T via static_cast and assign it to x.
-// 		 * 
-// 		 * @param[in,out] x first argument.
-// 		 * @param[in] n second argument.
-// 		 * 
-// 		 * @return reference to x.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,T &>::type operator+=(T &x, const integer &n)
-// 		{
-// 			x = static_cast<T>(n + x);
-// 			return x;
-// 		}
-// 		/// Generic integer addition.
-// 		/**
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 * 
-// 		 * If T is an integral type, the exact result will be returned as a piranha::integer.
-// 		 * 
-// 		 * If T is a floating-point type, n will first be converted to T via integer::operator T(), and then
-// 		 * added to x. The type of the result will be T.
-// 		 * 
-// 		 * @param[in] n first argument
-// 		 * @param[in] x second argument.
-// 		 * 
-// 		 * @return n + x.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			typename deduce_result_type<T>::type>::type operator+(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_operator_plus(x);
-// 		}
-// 		/// Generic integer addition.
-// 		/**
-// 		 * Equivalent to n + x. This template operator is activated only if T is an arithmetic type.
-// 		 * 
-// 		 * @see operator+(const integer &, const T &)
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,
-// 			typename deduce_result_type<T>::type>::type operator+(const T &x, const integer &n)
-// 		{
-// 			return (n + x);
-// 		}
-// 		/// Identity operation.
-// 		/**
-// 		 * @return reference to this.
-// 		 */
-// 		integer &operator+()
-// 		{
-// 			return *this;
-// 		}
-// 		/// Identity operation (const version).
-// 		/**
-// 		 * @return const reference to this.
-// 		 */
-// 		const integer &operator+() const
-// 		{
-// 			return *this;
-// 		}
-// 		/// Prefix increment.
-// 		/**
-// 		 * Increment this by one.
-// 		 * 
-// 		 * @return reference to this after the increment.
-// 		 */
-// 		integer &operator++()
-// 		{
-// 			generic_unary_applier(self_increment_visitor());
-// 			return *this;
-// 		}
-// 		/// Suffix increment.
-// 		/**
-// 		 * Increment this by one and return a copy of this as it was before the increment.
-// 		 * 
-// 		 * @return copy of this before the increment.
-// 		 */
-// 		integer operator++(int)
-// 		{
-// 			const integer retval(*this);
-// 			++(*this);
-// 			return retval;
-// 		}
-// 		/// In-place subtraction.
-// 		/**
-// 		 * The same rules described in operator+=() apply.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<integer,T>::value,integer &>::type operator-=(const T &x)
-// 		{
-// 			dispatch_sub(x);
-// 			return *this;
-// 		}
-// 		/// Generic in-place subtraction with integer.
-// 		/**
-// 		 * The same rules described in operator+=(T &, const integer &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,T &>::type operator-=(T &x, const integer &n)
-// 		{
-// 			x = static_cast<T>(x - n);
-// 			return x;
-// 		}
-// 		/// In-place negation.
-// 		/**
-// 		 * Set this to -this.
-// 		 */
-// 		void negate()
-// 		{
-// 			generic_unary_applier(negate_visitor());
-// 		}
-// 		/// Negated copy.
-// 		/**
-// 		 * @return copy of -this.
-// 		 */
-// 		integer operator-() const
-// 		{
-// 			integer retval(*this);
-// 			retval.negate();
-// 			return retval;
-// 		}
-// 		/// Generic integer subtraction.
-// 		/**
-// 		 * The same rules described in operator+(const integer &, const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			typename deduce_result_type<T>::type>::type operator-(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_operator_minus(x);
-// 		}
-// 		/// Generic integer subtraction.
-// 		/**
-// 		 * The same rules described in operator+(const T &, const integer &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,
-// 			typename deduce_result_type<T>::type>::type operator-(const T &x, const integer &n)
-// 		{
-// 			typename deduce_result_type<T>::type retval(n - x);
-// 			// TODO: math namespace.
-// 			piranha::negate(retval);
-// 			return retval;
-// 		}
-// 		/// Prefix decrement.
-// 		/**
-// 		 * Decrement this by one and return.
-// 		 * 
-// 		 * @return reference to this.
-// 		 */
-// 		integer &operator--()
-// 		{
-// 			generic_unary_applier(self_decrement_visitor());
-// 			return *this;
-// 		}
-// 		/// Suffix decrement.
-// 		/**
-// 		 * Decrement this by one and return a copy of this as it was before the decrement.
-// 		 * 
-// 		 * @return copy of this before the decrement.
-// 		 */
-// 		integer operator--(int)
-// 		{
-// 			const integer retval(*this);
-// 			--(*this);
-// 			return retval;
-// 		}
+		/// In-place addition.
+		/**
+		 * Add \p x to the current value of the integer object. This template operator is activated only if
+		 * \p T is either integer or an arithmetic type.
+		 * 
+		 * If \p T is integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is added to \p x,
+		 * - the result is assigned back to this.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to this.
+		 * 
+		 * @throws std::invalid_argument if \p T is a floating-point type and the result of the operation generates a non-finite value.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<
+			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator+=(T &&x)
+			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+		{
+			in_place_add(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place addition with piranha::integer.
+		/**
+		 * Add a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 */
+		template <typename T, typename I>
+		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+			operator+=(T &x, I &&n)
+		{
+			x = static_cast<T>(std::forward<I>(n) + x);
+			return x;
+		}
+		/// Generic binary addition involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator+(T &&x, U &&y)
+		{
+			return binary_plus(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// Identity operation.
+		/**
+		 * @return reference to this.
+		 */
+		integer &operator+()
+		{
+			return *this;
+		}
+		/// Identity operation (const version).
+		/**
+		 * @return const reference to this.
+		 */
+		const integer &operator+() const
+		{
+			return *this;
+		}
+		/// Prefix increment.
+		/**
+		 * Increment this by one.
+		 * 
+		 * @return reference to this after the increment.
+		 */
+		integer &operator++()
+		{
+			return operator+=(1);
+		}
+		/// Suffix increment.
+		/**
+		 * Increment this by one and return a copy of this as it was before the increment.
+		 * 
+		 * @return copy of this before the increment.
+		 */
+		integer operator++(int)
+		{
+			const integer retval(*this);
+			++(*this);
+			return retval;
+		}
+		/// In-place subtraction.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to this.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<
+			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator-=(T &&x)
+			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+		{
+			in_place_sub(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place subtraction with piranha::integer.
+		/**
+		 * Subtract a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * This method will first compute <tt>x - n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 */
+		template <typename T, typename I>
+		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+			operator-=(T &x, I &&n)
+		{
+			x = static_cast<T>(x - std::forward<I>(n));
+			return x;
+		}
+		/// Generic binary subtraction involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x - y</tt>.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator-(T &&x, U &&y)
+		{
+			return binary_minus(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// In-place negation.
+		/**
+		 * Set this to -this.
+		 */
+		void negate()
+		{
+			::mpz_neg(m_value,m_value);
+		}
+		/// Negated copy.
+		/**
+		 * @return copy of -this.
+		 */
+		integer operator-() const
+		{
+			integer retval(*this);
+			retval.negate();
+			return retval;
+		}
+		/// Prefix decrement.
+		/**
+		 * Decrement this by one and return.
+		 * 
+		 * @return reference to this.
+		 */
+		integer &operator--()
+		{
+			return operator-=(1);
+		}
+		/// Suffix decrement.
+		/**
+		 * Decrement this by one and return a copy of this as it was before the decrement.
+		 * 
+		 * @return copy of this before the decrement.
+		 */
+		integer operator--(int)
+		{
+			const integer retval(*this);
+			--(*this);
+			return retval;
+		}
 // 		/// In-place multiplication.
 // 		/**
 // 		 * The same rules described in operator+=() apply.

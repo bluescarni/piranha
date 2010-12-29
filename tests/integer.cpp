@@ -37,9 +37,9 @@
 #include <string>
 
 const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> arithmetic_values(
-	(char)-42,(short)-42,-42,-42L,-42LL,
+	(char)-42,(short)42,-42,42L,-42LL,
 	(unsigned char)42,(unsigned short)42,42U,42UL,42ULL,
-	123.456f,-123.456,123.456L
+	23.456f,-23.456,23.456L
 );
 
 const std::vector<std::string> invalid_strings{"-0","+0","01","+1","123f"," 123","123 ","123.56"};
@@ -241,4 +241,129 @@ BOOST_AUTO_TEST_CASE(integer_stream_test)
 		ss >> tmp;
 		BOOST_CHECK_EQUAL(static_cast<int>(tmp),-30000);
 	}
+}
+
+struct check_arithmetic_in_place_add
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			// In-place add, integer on the left.
+			piranha::integer i(1);
+			i += x;
+			BOOST_CHECK_EQUAL(static_cast<int>(x) + 1, static_cast<int>(i));
+		}
+		{
+			// In-place add, integer on the right.
+			T y(x);
+			piranha::integer i(1);
+			y += i;
+			BOOST_CHECK_EQUAL(x + 1, y);
+			y += std::move(i);
+			BOOST_CHECK_EQUAL(x + 2, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_add
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i + x),x + 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(x + i),x + 1);
+		// Check also with move semantics.
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(1) + x),x + 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(x + piranha::integer(1)),x + 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_addition_test)
+{
+	{
+		// In-place addition.
+		piranha::integer i(1), j(42);
+		i += j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),43);
+		i += std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),43 + 42);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_add());
+	}
+	{
+		// Binary addition.
+		piranha::integer i(1);
+		// With this line we check all possible combinations of lvalue/rvalue.
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(1) + (i + ((i + i) + i))),5);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_add());
+	}
+	// Identity operation.
+	piranha::integer i(123);
+	BOOST_CHECK_EQUAL(static_cast<int>(+i), 123);
+	BOOST_CHECK_EQUAL(static_cast<int>(+static_cast<const piranha::integer &>(i)), 123);
+	// Increments.
+	BOOST_CHECK_EQUAL(static_cast<int>(++i), 124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i++), 124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i), 125);
+}
+
+struct check_arithmetic_in_place_sub
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			piranha::integer i(1);
+			i -= x;
+			BOOST_CHECK_EQUAL(1 - static_cast<int>(x), static_cast<int>(i));
+		}
+		{
+			T y(x);
+			piranha::integer i(1);
+			y -= i;
+			BOOST_CHECK_EQUAL(x - 1, y);
+			y -= std::move(i);
+			BOOST_CHECK_EQUAL(x - 2, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_sub
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(50), j(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i - x),50 - x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x - j),x - 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(50) - x),50 - x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x - piranha::integer(1)),x - 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_subtraction_test)
+{
+	{
+		piranha::integer i(1), j(42);
+		i -= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),-41);
+		i -= std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),-41 - 42);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_sub());
+	}
+	{
+		piranha::integer i(1);
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(1) - (i - ((i - i) - i))),-1);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_sub());
+	}
+	// Negation operation.
+	piranha::integer i(123);
+	i.negate();
+	BOOST_CHECK_EQUAL(static_cast<int>(i), -123);
+	BOOST_CHECK_EQUAL(static_cast<int>(-i), 123);
+	// Increments.
+	BOOST_CHECK_EQUAL(static_cast<int>(--i), -124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i--), -124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i), -125);
 }
