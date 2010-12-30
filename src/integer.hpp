@@ -67,6 +67,7 @@ namespace piranha
  * \todo implement hash via mpz_getlimbn and mpz_size: http://gmplib.org/manual/Integer-Special-Functions.html#Integer-Special-Functions
  * \todo move safety
  * \todo exception safety
+ * \todo fix use of noexcept
  */
 class integer
 {
@@ -95,105 +96,6 @@ class integer
 		}
 
 
-// 		// Multiplication with self.
-// 		struct self_multiplier_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				n1 *= n2;
-// 				return true;
-// 			}
-// 			bool operator()(mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 *= to_gmp_type(n2);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &, const mpz_class &) const
-// 			{
-// 				return false;
-// 			}
-// 			bool operator()(max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				if (unlikely(n1 == 0)) {
-// 					return true;
-// 				}
-// 				if (unlikely(n2 == 0)) {
-// 					n1 = 0;
-// 					return true;
-// 				}
-// 				const max_fast_int offset = boost::integer_traits<max_fast_int>::const_max + boost::integer_traits<max_fast_int>::const_min;
-// 				// If offset is negative, it means we can compute (-max) safely and we just have to check if n1 or n2 are less than (-max). max is the range.
-// 				if (unlikely(offset < 0 && (n1 < -boost::integer_traits<max_fast_int>::const_max || n2 < -boost::integer_traits<max_fast_int>::const_max))) {
-// 					return false;
-// 				}
-// 				// If offset is positive, it means we can compute (-min) safely and we just have to check if n1 or n2 are greater than (-min). (-min) is the range.
-// 				if (unlikely(offset > 0 && (n1 > -boost::integer_traits<max_fast_int>::const_min || n2 > -boost::integer_traits<max_fast_int>::const_min))) {
-// 					return false;
-// 				}
-// 				// NOTE: if offset is zero, the range is evenly split. No need for special checks.
-// 				const std::size_t ulog1 = detail::log2_table::ulog(n1), ulog2 = detail::log2_table::ulog(n2);
-// 				// NOTE: it is guaranteed at this point that the result of the multiplication will
-// 				// be <= 2 ** (ulog1 + ulog2). Hence we need to compare ulog1 + ulog2 to the last index
-// 				// of the table, which corresponds to the log2 of the highest power of two representable
-// 				// by the integer type. Anything above that will be unsafe.
-// 				if (likely(ulog1 + ulog2 < detail::log2_table::size())) {
-// 					n1 *= n2;
-// 					return true;
-// 				} else {
-// 					return false;
-// 				}
-// 			}
-// 		};
-// 		// Multiplication with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_multiplier_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_multiplier_visitor(const T &value):m_value(value) {}
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				n *= to_gmp_type(m_value);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				try {
-// 					const max_fast_int tmp = boost::numeric_cast<max_fast_int>(m_value);
-// 					self_multiplier_visitor a;
-// 					return a(n,tmp);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert T to max_fast_int, we need to upgrade to mpz_class.
-// 					return false;
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		void dispatch_mult(const integer &n)
-// 		{
-// 			generic_binary_applier(self_multiplier_visitor(),n.m_value);
-// 		}
-// 		template <class T>
-// 		void dispatch_mult(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0)
-// 		{
-// 			generic_unary_applier(integral_pod_multiplier_visitor<T>(n));
-// 		}
-// 		template <class T>
-// 		void dispatch_mult(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0)
-// 		{
-// 			*this = operator T() * x;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_mult(const T &n, typename boost::disable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			integer retval(*this);
-// 			retval *= n;
-// 			return retval;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_mult(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return operator T() * x;
-// 		}
 // 		// Division with self.
 // 		struct self_divider_visitor: public boost::static_visitor<bool>
 // 		{
@@ -850,6 +752,40 @@ class integer
 		{
 			operator=(static_cast<T>(*this) - x);
 		}
+		// In-place multiplication.
+		void in_place_mul(const integer &n)
+		{
+			::mpz_mul(m_value,m_value,n.m_value);
+		}
+		void in_place_mul(integer &&n)
+		{
+			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+				swap(n);
+			}
+			in_place_mul(n);
+		}
+		template <typename T>
+		void in_place_mul(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			::mpz_mul_si(m_value,m_value,static_cast<long>(si));
+		}
+		template <typename T>
+		void in_place_mul(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			::mpz_mul_ui(m_value,m_value,static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_mul(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			in_place_mul(integer(n));
+		}
+		template <typename T>
+		void in_place_mul(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			operator=(static_cast<T>(*this) * x);
+		}
 		// Binary operations.
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
@@ -944,6 +880,39 @@ class integer
 		static T binary_minus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
 		{
 			return -binary_minus(n,x);
+		}
+		// Binary multiplication.
+		template <typename T, typename U>
+		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			>::type * = 0)
+		{
+			integer retval(std::forward<T>(n1));
+			retval *= std::forward<U>(n2);
+			return retval;
+		}
+		template <typename T, typename U>
+		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			>::type * = 0)
+		{
+			integer retval(std::forward<U>(n2));
+			retval *= std::forward<T>(n1);
+			return retval;
+		}
+		template <typename T>
+		static T binary_mul(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) * x);
+		}
+		template <typename T>
+		static T binary_mul(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return binary_mul(n,x);
 		}
 	public:
 		/// Default constructor.
@@ -1257,7 +1226,7 @@ class integer
 		/**
 		 * The same rules described in operator+=() apply.
 		 * 
-		 * @param[in] x argument for the addition.
+		 * @param[in] x argument for the subtraction.
 		 * 
 		 * @return reference to \p this.
 		 */
@@ -1351,46 +1320,64 @@ class integer
 			--(*this);
 			return retval;
 		}
-// 		/// In-place multiplication.
-// 		/**
-// 		 * The same rules described in operator+=() apply.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<integer,T>::value,integer &>::type operator*=(const T &x)
-// 		{
-// 			dispatch_mult(x);
-// 			return *this;
-// 		}
-// 		/// Generic in-place multiplication with integer.
-// 		/**
-// 		 * The same rules described in operator+=(T &, const integer &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,T &>::type operator*=(T &x, const integer &n)
-// 		{
-// 			x = static_cast<T>(x * n);
-// 			return x;
-// 		}
-// 		/// Generic integer multiplication.
-// 		/**
-// 		 * The same rules described in operator+(const integer &, const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			typename deduce_result_type<T>::type>::type operator*(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_operator_mult(x);
-// 		}
-// 		/// Generic integer multiplication.
-// 		/**
-// 		 * The same rules described in operator+(const T &, const integer &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,
-// 			typename deduce_result_type<T>::type>::type operator*(const T &x, const integer &n)
-// 		{
-// 			return (n * x);
-// 		}
+		/// In-place multiplication.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the multiplication.
+		 * 
+		 * @return reference to \p this.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<
+			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator*=(T &&x)
+			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+		{
+			in_place_mul(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place multiplication with piranha::integer.
+		/**
+		 * Multiply a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * This method will first compute <tt>n * x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 */
+		template <typename T, typename I>
+		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+			operator*=(T &x, I &&n)
+		{
+			x = static_cast<T>(std::forward<I>(n) * x);
+			return x;
+		}
+		/// Generic binary multiplication involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x * y</tt>.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator*(T &&x, U &&y)
+		{
+			return binary_mul(std::forward<T>(x),std::forward<U>(y));
+		}
 // 		/// In-place division.
 // 		/**
 // 		 * The same rules described in operator+=() apply. Division by integer or by integral type is truncated.

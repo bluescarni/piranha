@@ -367,3 +367,54 @@ BOOST_AUTO_TEST_CASE(integer_subtraction_test)
 	BOOST_CHECK_EQUAL(static_cast<int>(i--), -124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i), -125);
 }
+
+struct check_arithmetic_in_place_mul
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			piranha::integer i(1);
+			i *= x;
+			BOOST_CHECK_EQUAL(static_cast<int>(x), static_cast<int>(i));
+		}
+		{
+			T y(x);
+			piranha::integer i(1);
+			y *= i;
+			BOOST_CHECK_EQUAL(x, y);
+			y *= std::move(i);
+			BOOST_CHECK_EQUAL(x, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_mul
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(2), j(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i * x),2 * x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x * j),x);
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) * x),2 * x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x * piranha::integer(1)),x);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_multiplication_test)
+{
+	{
+		piranha::integer i(1), j(42);
+		i *= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),42);
+		i *= std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),42 * 42);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_mul());
+	}
+	{
+		piranha::integer i(2);
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) * (i * ((i * i) * i))),32);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_mul());
+	}
+}

@@ -31,10 +31,11 @@ void free_function(void *ptr, size_t)
 
 int main()
 {
-// 	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
-	mpz_class i(1);
-	mpz_class j(1);
-	mpz_class k(1);
-	mpz_class l(1);
-	mpz_class(i + j + k + l);
+	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
+	integer i(1);
+	integer j(2);
+	integer k(3);
+	integer l(4);
+	l *= (i + j + k + l);
+	std::cout << static_cast<int>(l) << '\n';
 }
