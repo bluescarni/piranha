@@ -58,7 +58,7 @@ IF(SYSTEM_M_LIBRARY)
 ENDIF(SYSTEM_M_LIBRARY)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization thread unit_test_framework)
+SET(REQUIRED_BOOST_LIBS serialization unit_test_framework)
 MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
 FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
 MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
@@ -68,7 +68,7 @@ MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
 # when compiling tests.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_THREAD_LIBRARY} ${Boost_SERIALIZATION_LIBRARY})
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
