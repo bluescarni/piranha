@@ -26,10 +26,19 @@
 #include <cassert>
 
 #define piranha_assert assert
+
 // c++0x features not implemented yet in GCC.
 #define piranha_nullptr (0)
 #define piranha_noexcept(expr)
 #define piranha_move_if_noexcept(expr) std::move(expr)
 #define piranha_override
+
+#if defined(__GNUC__)
+	#define likely(x) __builtin_expect((x),1)
+	#define unlikely(x) __builtin_expect((x),0)
+#else
+	#define likely(x) (x)
+	#define unlikely(x) (x)
+#endif
 
 #endif

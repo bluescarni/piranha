@@ -56,6 +56,13 @@ struct not_implemented_error: public base_exception
 	explicit not_implemented_error(const std::string &s);
 };
 
+/// Exception for signalling division by zero.
+struct zero_division_error: public base_exception
+{
+	explicit zero_division_error(const std::string &s);
+};
+
+
 }
 
 #endif

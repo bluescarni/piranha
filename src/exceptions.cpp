@@ -54,4 +54,10 @@ base_exception::~base_exception() throw() {}
  */
 not_implemented_error::not_implemented_error(const std::string &s): base_exception(s) {}
 
+/// Constructor.
+/**
+ * @param[in] s std::string representing an error message.
+ */
+zero_division_error::zero_division_error(const std::string &s): base_exception(s) {}
+
 }
