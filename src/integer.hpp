@@ -99,68 +99,6 @@ class integer
 		}
 
 
-// 		// Modulo with self.
-// 		struct self_modulo_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				n1 %= n2;
-// 				return true;
-// 			}
-// 			bool operator()(mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 %= to_gmp_type(n2);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n1, const mpz_class &n2) const
-// 			{
-// 				if (unlikely(!n2.fits_slong_p())) {
-// 					return false;
-// 				}
-// 				try {
-// 					n1 %= boost::numeric_cast<max_fast_int>(n2.get_si());
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					return false;
-// 				}
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 %= n2;
-// 				return true;
-// 			}
-// 		};
-// 		// Modulo with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_modulo_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_modulo_visitor(const T &value):m_value(value) {}
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				n %= to_gmp_type(m_value);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				try {
-// 					// If we cannot convert m_value to max_fast_int, it means
-// 					// that m_value is larger than n: n does not change.
-// 					n %= boost::numeric_cast<max_fast_int>(m_value);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {}
-// 				return true;
-// 			}
-// 			const T &m_value;
-// 		};
-// 		void dispatch_modulo(const integer &n)
-// 		{
-// 			generic_binary_applier(self_modulo_visitor(),n.m_value);
-// 		}
-// 		template <class T>
-// 		void dispatch_modulo(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0)
-// 		{
-// 			generic_unary_applier(integral_pod_modulo_visitor<T>(n));
-// 		}
 // 		// Equality with self.
 // 		struct self_equality_visitor: public boost::static_visitor<bool>
 // 		{
@@ -704,6 +642,37 @@ class integer
 			}
 			operator=(static_cast<T>(*this) / x);
 		}
+		// In-place modulo.
+		void in_place_mod(const integer &n)
+		{
+			if (unlikely(mpz_sgn(n.m_value) <= 0)) {
+				piranha_throw(std::invalid_argument,"non-positive divisor");
+			}
+			::mpz_mod(m_value,m_value,n.m_value);
+		}
+		template <typename T>
+		void in_place_mod(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			if (unlikely(si <= 0)) {
+				piranha_throw(std::invalid_argument,"non-positive divisor");
+			}
+			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(si));
+		}
+		template <typename T>
+		void in_place_mod(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			if (unlikely(ui == 0)) {
+				piranha_throw(std::invalid_argument,"non-positive divisor");
+			}
+			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_mod(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			in_place_mod(integer(n));
+		}
 		// Binary operations.
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
@@ -860,6 +829,17 @@ class integer
 				piranha_throw(piranha::zero_division_error,"division by zero");
 			}
 			return (x / n_T);
+		}
+		// Binary modulo operation.
+		template <typename T, typename U>
+		static integer binary_mod(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
+			>::type * = 0)
+		{
+			integer retval(std::forward<T>(n1));
+			retval %= std::forward<U>(n2);
+			return retval;
 		}
 	public:
 		/// Default constructor.
@@ -1391,68 +1371,74 @@ class integer
 		{
 			return binary_div(std::forward<T>(x),std::forward<U>(y));
 		}
-// 		/// In-place modulo operation.
-// 		/**
-// 		 * Sets this to this % n. This template operator is enabled if T is integer or an integral type.
-// 		 * 
-// 		 * If n is non-positive or this is negative, a piranha::value_error exception will be thrown.
-// 		 * 
-// 		 * @param[in] n modulo argument.
-// 		 * 
-// 		 * @return reference to this.
-// 		 * 
-// 		 * @throws piranha::value_error if n is non-positive or this is negative.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_integral<T>::value || boost::is_same<T,integer>::value,integer &>::type operator%=(const T &n)
-// 		{
-// 			if (n <= 0 || *this < 0) {
-// 				piranha_throw(value_error,"invalid argument(s) for modulo operation");
-// 			}
-// 			dispatch_modulo(n);
-// 			return *this;
-// 		}
-// 		/// Generic in-place modulo operation with integer.
-// 		/**
-// 		 * This template operator is enabled if T is an integral type.
-// 		 * 
-// 		 * The same rules described in piranha::integer::operator%=(const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_integral<T>::value,T &>::type
-// 			operator%=(T &n1, const integer &n2)
-// 		{
-// 			n1 = static_cast<T>(n1 % n2);
-// 			return n1;
-// 		}
-// 		/// Generic modulo operation with integer.
-// 		/**
-// 		 * This template operator is enabled if T is integer or an integral type.
-// 		 * 
-// 		 * The same rules described in piranha::integer::operator%=(const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_integral<T>::value || boost::is_same<T,integer>::value,integer>::type
-// 			operator%(const integer &n1, const T &n2)
-// 		{
-// 			integer retval(n1);
-// 			retval %= n2;
-// 			return retval;
-// 		}
-// 		/// Generic modulo operation with integer.
-// 		/**
-// 		 * This template operator is enabled if T is an integral type.
-// 		 * 
-// 		 * The same rules described in piranha::integer::operator%=(const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_integral<T>::value,integer>::type
-// 			operator%(const T &n1, const integer &n2)
-// 		{
-// 			integer retval(n1);
-// 			retval %= n2;
-// 			return retval;
-// 		}
+		/// In-place modulo operation.
+		/**
+		 * Sets \p this to <tt>this % n</tt>. This template operator is enabled if \p T is piranha::integer or an integral type.
+		 * \p this must be non-negative and \p n strictly positive, otherwise an \p std::invalid_argument exception will be thrown.
+		 * 
+		 * @param[in] n argument for the modulo operation.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>this < 0</tt>.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<
+			std::is_integral<typename strip_cv_ref<T>::type>::value ||
+			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator%=(T &&n)
+		{
+			if (unlikely(mpz_sgn(m_value) < 0)) {
+				piranha_throw(std::invalid_argument,"negative dividend");
+			}
+			in_place_mod(std::forward<T>(n));
+			return *this;
+		}
+		/// Generic in-place modulo operation with piranha::integer.
+		/**
+		 * Apply the modulo operation by a piranha::integer in-place. This template operator is activated only if \p T is an integral type and \p I is piranha::integer.
+		 * This method will first compute <tt>x % n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>x < 0</tt>.
+		 */
+		template <typename T, typename I>
+		friend inline typename boost::enable_if_c<std::is_integral<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+			operator%=(T &x, I &&n)
+		{
+			x = static_cast<T>(x % std::forward<I>(n));
+			return x;
+		}
+		/// Generic binary modulo operation involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an integral type,
+		 * - \p U is piranha::integer and \p T is an integral type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * The result is always a non-negative piranha::integer.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x % y</tt>.
+		 * 
+		 * @throws std::invalid_argument if <tt>y <= 0</tt> or <tt>x < 0</tt>.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value && !std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value,
+			typename deduce_binary_op_result_type<T,U>::type>::type
+			operator%(T &&x, U &&y)
+		{
+			return binary_mod(std::forward<T>(x),std::forward<U>(y));
+		}
+
+
 // 		/// Generic integer equality operator.
 // 		/**
 // 		 * This template operator is activated only if T is an arithmetic type or integer.

@@ -30,11 +30,14 @@
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
+#include <boost/utility.hpp>
+#include <ctgmath>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "../src/exceptions.hpp"
 
@@ -486,4 +489,88 @@ BOOST_AUTO_TEST_CASE(integer_division_test)
 		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) / (i / ((i / i) / i))),2);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_div());
 	}
+}
+
+struct check_integral_zeroes_mod
+{
+	template <typename T>
+	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
+	{
+		piranha::integer i(2);
+		BOOST_CHECK_THROW(i %= x,std::invalid_argument);
+	}
+	template <typename T>
+	void operator()(const T &,typename boost::enable_if_c<std::is_floating_point<T>::value>::type * = 0) const
+	{}
+};
+
+struct check_integral_in_place_mod
+{
+	template <typename T>
+	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
+	{
+		{
+			piranha::integer i(100);
+			if (x > 0) {
+				i %= x;
+				BOOST_CHECK_EQUAL(static_cast<int>(100 % x), static_cast<int>(i));
+			} else {
+				BOOST_CHECK_THROW(i %= x,std::invalid_argument);
+			}
+			i.negate();
+			BOOST_CHECK_THROW(i %= x,std::invalid_argument);
+		}
+		{
+			T y(abs(x));
+			piranha::integer i(10);
+			y %= i;
+			BOOST_CHECK_EQUAL(static_cast<T>(2), y);
+			if (std::is_signed<T>::value) {
+				T z(-abs(x));
+				BOOST_CHECK_THROW(z %= i,std::invalid_argument);
+			}
+		}
+	}
+	template <typename T>
+	void operator()(const T &,typename boost::enable_if_c<std::is_floating_point<T>::value>::type * = 0) const
+	{}
+};
+
+struct check_integral_binary_mod
+{
+	template <typename T>
+	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
+	{
+		piranha::integer i(100), j(105);
+		BOOST_CHECK_EQUAL(static_cast<T>(i % abs(x)),static_cast<T>(100 % abs(x)));
+		BOOST_CHECK_EQUAL(static_cast<T>(abs(x) % j),static_cast<T>(abs(x) % 105));
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) % abs(x)),static_cast<T>(2 % x));
+		BOOST_CHECK_EQUAL(static_cast<T>(abs(x) % piranha::integer(1)),static_cast<T>(0));
+		if (std::is_signed<T>::value) {
+			BOOST_CHECK_THROW(-abs(x) % i,std::invalid_argument);
+			BOOST_CHECK_THROW(i % -abs(x),std::invalid_argument);
+		}
+	}
+	template <typename T>
+	void operator()(const T &,typename boost::enable_if_c<std::is_floating_point<T>::value>::type * = 0) const
+	{}
+};
+
+BOOST_AUTO_TEST_CASE(integer_modulo_test)
+{
+	{
+		piranha::integer i(42), j(33);
+		i %= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),9);
+		BOOST_CHECK_THROW(i %= -j,std::invalid_argument);
+		BOOST_CHECK_THROW(i %= piranha::integer(),std::invalid_argument);
+		i.negate();
+		BOOST_CHECK_THROW(i %= j,std::invalid_argument);
+		i = 0;
+		i %= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),0);
+		boost::fusion::for_each(arithmetic_zeroes,check_integral_zeroes_mod());
+		boost::fusion::for_each(arithmetic_values,check_integral_in_place_mod());
+	}
+	boost::fusion::for_each(arithmetic_values,check_integral_binary_mod());
 }
