@@ -12,6 +12,7 @@ INCLUDE(FindThreads)
 
 # Configuration for GCC.
 IF(CMAKE_COMPILER_IS_GNUCXX)
+	MESSAGE(STATUS "GNU compiler detected.")
 	CHECK_CXX_COMPILER_FLAG(-Wnon-virtual-dtor GNUCXX_VIRTUAL_DTOR)
 	IF(GNUCXX_VIRTUAL_DTOR)
 		MESSAGE(STATUS "Enabling '-Wnon-virtual-dtor' compiler flag.")
