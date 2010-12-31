@@ -40,7 +40,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "config.hpp"
+#include "config.hpp" // For (un)likely.
 #include "exceptions.hpp"
 
 namespace piranha
@@ -68,6 +68,9 @@ namespace piranha
  * \todo move safety
  * \todo exception safety
  * \todo fix use of noexcept
+ * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
+ * \todo test for number of memory allocations
+ * \todo improve interaction with long long via decomposition of operations in long operands
  */
 class integer
 {
@@ -96,135 +99,6 @@ class integer
 		}
 
 
-// 		// Division with self.
-// 		struct self_divider_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				n1 /= n2;
-// 				return true;
-// 			}
-// 			bool operator()(mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				n1 /= to_gmp_type(n2);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n1, const mpz_class &n2) const
-// 			{
-// 				const max_fast_int offset = boost::integer_traits<max_fast_int>::const_max + boost::integer_traits<max_fast_int>::const_min;
-// 				// If the operand is near the bounds, refuse to do anything: a change of sign from the division could lead to overflow.
-// 				if (offset < 0 && n1 < -boost::integer_traits<max_fast_int>::const_max) {
-// 					return false;
-// 				}
-// 				if (offset > 0 && n1 > -boost::integer_traits<max_fast_int>::const_min) {
-// 					return false;
-// 				}
-// 				// If abs(n2) > abs(n1), result will be zero. This will let us shortcut any GMP operation even if n2 is larger than max_fast_int.
-// 				if (n2 > to_gmp_type(n1) || n2 < to_gmp_type(-n1)) {
-// 					n1 = 0;
-// 					return true;
-// 				}
-// 				// Try extracting a max_fast_int from mpz.
-// 				if (!n2.fits_slong_p()) {
-// 					// Unable to extract long.
-// 					return false;
-// 				}
-// 				// Finally, perform the division. If we fail to convert n2 to max_fast_int, return false.
-// 				try {
-// 					n1 /= boost::numeric_cast<max_fast_int>(n2.get_si());
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					return false;
-// 				}
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				// Make sure a division with -1 will not produce an overflow.
-// 				const max_fast_int offset = boost::integer_traits<max_fast_int>::const_max + boost::integer_traits<max_fast_int>::const_min;
-// 				if (offset < 0 && n1 < -boost::integer_traits<max_fast_int>::const_max) {
-// 					return false;
-// 				}
-// 				if (offset > 0 && n1 > -boost::integer_traits<max_fast_int>::const_min) {
-// 					return false;
-// 				}
-// 				n1 /= n2;
-// 				return true;
-// 			}
-// 		};
-// 		// Division with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_divider_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_divider_visitor(const T &value):m_value(value) {}
-// 			bool operator()(mpz_class &n) const
-// 			{
-// 				n /= to_gmp_type(m_value);
-// 				return true;
-// 			}
-// 			bool operator()(max_fast_int &n) const
-// 			{
-// 				try {
-// 					const max_fast_int tmp = boost::numeric_cast<max_fast_int>(m_value);
-// 					self_divider_visitor a;
-// 					return a(n,tmp);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert T to max_fast_int, we need to upgrade to mpz_class.
-// 					return false;
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		void dispatch_divide(const integer &n)
-// 		{
-// 			if (n == 0) {
-// 				piranha_throw(zero_division_error,"cannot divide by zero");
-// 			}
-// 			generic_binary_applier(self_divider_visitor(),n.m_value);
-// 		}
-// 		template <class T>
-// 		void dispatch_divide(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0)
-// 		{
-// 			// Prevent division by zero.
-// 			if (n == 0) {
-// 				piranha_throw(zero_division_error,"cannot divide by zero");
-// 			}
-// 			generic_unary_applier(integral_pod_divider_visitor<T>(n));
-// 		}
-// 		template <class T>
-// 		void dispatch_divide(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0)
-// 		{
-// 			fp_normal_check(x);
-// 			// Prevent division by zero.
-// 			if (x == 0) {
-// 				piranha_throw(zero_division_error,"cannot divide by zero");
-// 			}
-// 			*this = operator T() / x;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_divide(const T &n, typename boost::disable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			integer retval(*this);
-// 			retval /= n;
-// 			return retval;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_divide(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return operator T() / x;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_divide_left(const T &n, typename boost::disable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			integer retval(n);
-// 			retval /= *this;
-// 			return retval;
-// 		}
-// 		template <class T>
-// 		typename deduce_result_type<T>::type dispatch_operator_divide_left(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return x / operator T();
-// 		}
 // 		// Modulo with self.
 // 		struct self_modulo_visitor: public boost::static_visitor<bool>
 // 		{
@@ -786,6 +660,50 @@ class integer
 		{
 			operator=(static_cast<T>(*this) * x);
 		}
+		// In-place division.
+		void in_place_div(const integer &n)
+		{
+			if (unlikely(mpz_sgn(n.m_value) == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			::mpz_tdiv_q(m_value,m_value,n.m_value);
+		}
+		template <typename T>
+		void in_place_div(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			if (unlikely(si == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			if (si > 0) {
+				::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(si));
+			} else {
+				::mpz_tdiv_q_ui(m_value,m_value,-static_cast<unsigned long>(si));
+				::mpz_neg(m_value,m_value);
+			}
+		}
+		template <typename T>
+		void in_place_div(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			if (unlikely(ui == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_div(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			in_place_div(integer(n));
+		}
+		template <typename T>
+		void in_place_div(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			if (unlikely(x == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			operator=(static_cast<T>(*this) / x);
+		}
 		// Binary operations.
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
@@ -913,6 +831,35 @@ class integer
 		static T binary_mul(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
 		{
 			return binary_mul(n,x);
+		}
+		// Binary division.
+		template <typename T, typename U>
+		static integer binary_div(T &&n1, U &&n2, typename boost::enable_if_c<
+			are_binary_op_types<T,U>::value &&
+			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
+			>::type * = 0)
+		{
+			// NOTE: here it makes sense only to attempt to steal n1's storage, not n2's, because the operation is not commutative.
+			integer retval(std::forward<T>(n1));
+			retval /= std::forward<U>(n2);
+			return retval;
+		}
+		template <typename T>
+		static T binary_div(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			if (unlikely(x == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			return (static_cast<T>(n) / x);
+		}
+		template <typename T>
+		static T binary_div(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			const T n_T = static_cast<T>(n);
+			if (unlikely(n_T == 0)) {
+				piranha_throw(piranha::zero_division_error,"division by zero");
+			}
+			return (x / n_T);
 		}
 	public:
 		/// Default constructor.
@@ -1171,7 +1118,7 @@ class integer
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * and combined with \p f to generate the return value, wich will then be of type \p F.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1267,7 +1214,7 @@ class integer
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * and combined with \p f to generate the return value, wich will then be of type \p F.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1339,7 +1286,7 @@ class integer
 		}
 		/// Generic in-place multiplication with piranha::integer.
 		/**
-		 * Multiply a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * Multiply by a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
 		 * This method will first compute <tt>n * x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1365,7 +1312,7 @@ class integer
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * and combined with \p f to generate the return value, wich will then be of type \p F.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1378,55 +1325,72 @@ class integer
 		{
 			return binary_mul(std::forward<T>(x),std::forward<U>(y));
 		}
-// 		/// In-place division.
-// 		/**
-// 		 * The same rules described in operator+=() apply. Division by integer or by integral type is truncated.
-// 		 * Trying to divide by zero will throw a piranha::zero_division_error exception.
-// 		 * 
-// 		 * @throws piranha::zero_division_error if x is zero.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<integer,T>::value,integer &>::type operator/=(const T &x)
-// 		{
-// 			dispatch_divide(x);
-// 			return *this;
-// 		}
-// 		/// Generic in-place division with integer.
-// 		/**
-// 		 * The same rules described in operator+=(T &, const integer &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,T &>::type operator/=(T &x, const integer &n)
-// 		{
-// 			x = static_cast<T>(x / n);
-// 			return x;
-// 		}
-// 		/// Generic integer division.
-// 		/**
-// 		 * The same rules described in operator+(const integer &, const T &) apply.
-// 		 * Trying to divide by zero will throw a piranha::zero_division_error exception.
-// 		 * 
-// 		 * @throws piranha::zero_division_error if x is zero.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			typename deduce_result_type<T>::type>::type operator/(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_operator_divide(x);
-// 		}
-// 		/// Generic integer division.
-// 		/**
-// 		 * The same rules described in operator+(const T &, const integer &) apply.
-// 		 * Trying to divide by zero will throw a piranha::zero_division_error exception.
-// 		 * 
-// 		 * @throws piranha::zero_division_error if x is zero.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,
-// 			typename deduce_result_type<T>::type>::type operator/(const T &x, const integer &n)
-// 		{
-// 			return n.dispatch_operator_divide_left(x);
-// 		}
+		/// In-place division.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * Division by integer or by an integral type is truncated.
+		 * Trying to divide by zero will throw a piranha::zero_division_error exception.
+		 * 
+		 * @param[in] x argument for the division.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws piranha::zero_division_error if <tt>x == 0</tt>.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<
+			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator/=(T &&x)
+			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+		{
+			in_place_div(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place division with piranha::integer.
+		/**
+		 * Divide by a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * This method will first compute <tt>x / n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
+		 */
+		template <typename T, typename I>
+		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+			operator/=(T &x, I &&n)
+		{
+			x = static_cast<T>(x / std::forward<I>(n));
+			return x;
+		}
+		/// Generic binary division involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the result of the operation, truncated to zero, will be returned as a piranha::integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and combined with \p f to generate the return value, wich will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x / y</tt>.
+		 * 
+		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator/(T &&x, U &&y)
+		{
+			return binary_div(std::forward<T>(x),std::forward<U>(y));
+		}
 // 		/// In-place modulo operation.
 // 		/**
 // 		 * Sets this to this % n. This template operator is enabled if T is integer or an integral type.

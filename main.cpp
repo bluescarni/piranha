@@ -31,11 +31,7 @@ void free_function(void *ptr, size_t)
 
 int main()
 {
-	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
-	integer i(1);
-	integer j(2);
-	integer k(3);
-	integer l(4);
-	l *= (i + j + k + l);
-	std::cout << static_cast<int>(l) << '\n';
+//	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
+	integer i(4), j(0);
+	std::cout << (i / 3.) << '\n';
 }

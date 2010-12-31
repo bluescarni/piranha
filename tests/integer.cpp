@@ -36,6 +36,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "../src/exceptions.hpp"
+
 const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> arithmetic_values(
 	(char)-42,(short)42,-42,42L,-42LL,
 	(unsigned char)42,(unsigned short)42,42U,42UL,42ULL,
@@ -416,5 +418,72 @@ BOOST_AUTO_TEST_CASE(integer_multiplication_test)
 		piranha::integer i(2);
 		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) * (i * ((i * i) * i))),32);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_mul());
+	}
+}
+
+const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> arithmetic_zeroes(
+	(char)0,(short)0,0,0L,0LL,
+	(unsigned char)0,(unsigned short)0,0U,0UL,0ULL,
+	0.f,-0.,0.L
+);
+
+struct check_arithmetic_zeroes_div
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(2);
+		BOOST_CHECK_THROW(i /= x,piranha::zero_division_error);
+	}
+};
+
+struct check_arithmetic_binary_div
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(100), j(105);
+		BOOST_CHECK_EQUAL(static_cast<T>(i / x),100 / x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x / j),x / 105);
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) / x),2 / x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x / piranha::integer(1)),x);
+	}
+};
+
+struct check_arithmetic_in_place_div
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			piranha::integer i(100);
+			i /= x;
+			BOOST_CHECK_EQUAL(static_cast<int>(100 / x), static_cast<int>(i));
+		}
+		{
+			T y(x);
+			piranha::integer i(1);
+			y /= i;
+			BOOST_CHECK_EQUAL(x, y);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_division_test)
+{
+	{
+		piranha::integer i(42), j(2);
+		i /= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),21);
+		i /= -j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),-10);
+		BOOST_CHECK_THROW(i /= piranha::integer(),piranha::zero_division_error);
+		boost::fusion::for_each(arithmetic_zeroes,check_arithmetic_zeroes_div());
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_div());
+	}
+	{
+		piranha::integer i(1);
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) / (i / ((i / i) / i))),2);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_div());
 	}
 }
