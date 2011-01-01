@@ -33,11 +33,11 @@ int main()
 {
 //	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
 	integer i(-4);
-	std::cout << (i %= 3) << '\n';
-	std::cout << (i % 3) << '\n';
-	std::cout << (3 % integer(-4)) << '\n';
-	std::cout << ((-42) % 105) << '\n';
-	std::cout << ((-42) / 105) << '\n';
-	std::cout << (integer(-42) % integer(105)) << '\n';
-	std::cout << (integer(-42) / integer(105)) << '\n';
+	std::cout << (-i == 4.L) << '\n';
+	std::cout << (4.L == -i) << '\n';
+	std::cout << (4.3L > -i) << '\n';
+	std::cout << (4.3L < -i) << '\n';
+	std::cout << (3 >= 2) << '\n';
+	std::cout << (integer(3) >= 2) << '\n';
+	std::cout << (integer(3) <= 3) << '\n';
 }

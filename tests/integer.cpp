@@ -574,3 +574,40 @@ BOOST_AUTO_TEST_CASE(integer_modulo_test)
 	}
 	boost::fusion::for_each(arithmetic_values,check_integral_binary_mod());
 }
+
+struct check_arithmetic_comparisons
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		piranha::integer i(x);
+		BOOST_CHECK(i + 1 > x);
+		BOOST_CHECK(x < i + 1);
+		BOOST_CHECK(i + 1 >= x);
+		BOOST_CHECK(x <= i + 1);
+		BOOST_CHECK(i - 1 < x);
+		BOOST_CHECK(x > i - 1);
+		BOOST_CHECK(i - 1 <= x);
+		BOOST_CHECK(x >= i - 1);
+		BOOST_CHECK(i + 1 != x);
+		BOOST_CHECK(x != i + 1);
+		if (std::is_integral<T>::value) {
+			BOOST_CHECK(i + 10 == x + 10);
+			BOOST_CHECK(!(i + 10 != x + 10));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_comparisons_test)
+{
+	piranha::integer i(42), j(43);
+	BOOST_CHECK(i != j);
+	BOOST_CHECK(i < j);
+	BOOST_CHECK(i <= j);
+	BOOST_CHECK(j > i);
+	BOOST_CHECK(j >= i);
+	BOOST_CHECK(i + 1 == j);
+	BOOST_CHECK(i + 1 <= j);
+	BOOST_CHECK(i + 1 >= j);
+	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
+}

@@ -70,7 +70,9 @@ namespace piranha
  * \todo fix use of noexcept
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
+ * \todo exception specifications for in-place operations with integers: document the possible overflow errors.
  * \todo improve interaction with long long via decomposition of operations in long operands
+ * \todo improve performance of binary modulo operation when the second argument is a hardware integer
  */
 class integer
 {
@@ -99,173 +101,6 @@ class integer
 		}
 
 
-// 		// Equality with self.
-// 		struct self_equality_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(const mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				return n1 == n2;
-// 			}
-// 			bool operator()(const mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 == to_gmp_type(n2);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const mpz_class &n2) const
-// 			{
-// 				return n2 == to_gmp_type(n1);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 == n2;
-// 			}
-// 		};
-// 		// Equality with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_equality_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_equality_visitor(const T &value):m_value(value) {}
-// 			bool operator()(const mpz_class &n) const
-// 			{
-// 				return n == to_gmp_type(m_value);
-// 			}
-// 			bool operator()(const max_fast_int &n) const
-// 			{
-// 				try {
-// 					return n == boost::numeric_cast<max_fast_int>(m_value);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert m_value to max_fast_int, it cannot be equal to n.
-// 					return false;
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		bool dispatch_equality(const integer &n) const
-// 		{
-// 			return boost::apply_visitor(self_equality_visitor(),m_value,n.m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_equality(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0) const
-// 		{
-// 			return boost::apply_visitor(integral_pod_equality_visitor<T>(n),m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_equality(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return operator T() == x;
-// 		}
-// 		// Less-than with self.
-// 		struct self_less_than_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(const mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				return n1 < n2;
-// 			}
-// 			bool operator()(const mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 < to_gmp_type(n2);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const mpz_class &n2) const
-// 			{
-// 				return n2 > to_gmp_type(n1);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 < n2;
-// 			}
-// 		};
-// 		// Less-than with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_less_than_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_less_than_visitor(const T &value):m_value(value) {}
-// 			bool operator()(const mpz_class &n) const
-// 			{
-// 				return n < to_gmp_type(m_value);
-// 			}
-// 			bool operator()(const max_fast_int &n) const
-// 			{
-// 				try {
-// 					return n < boost::numeric_cast<max_fast_int>(m_value);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert m_value to max_fast_int, depending on its sign
-// 					// it will be less-than or greater-than n.
-// 					return (m_value >= 0);
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		bool dispatch_less_than(const integer &n) const
-// 		{
-// 			return boost::apply_visitor(self_less_than_visitor(),m_value,n.m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_less_than(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0) const
-// 		{
-// 			return boost::apply_visitor(integral_pod_less_than_visitor<T>(n),m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_less_than(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return x > operator T();
-// 		}
-// 		// Greater-than with self.
-// 		struct self_greater_than_visitor: public boost::static_visitor<bool>
-// 		{
-// 			bool operator()(const mpz_class &n1, const mpz_class &n2) const
-// 			{
-// 				return n1 > n2;
-// 			}
-// 			bool operator()(const mpz_class &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 > to_gmp_type(n2);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const mpz_class &n2) const
-// 			{
-// 				return n2 < to_gmp_type(n1);
-// 			}
-// 			bool operator()(const max_fast_int &n1, const max_fast_int &n2) const
-// 			{
-// 				return n1 > n2;
-// 			}
-// 		};
-// 		// Greater-than with integral POD types.
-// 		template <class T>
-// 		struct integral_pod_greater_than_visitor: public boost::static_visitor<bool>
-// 		{
-// 			p_static_check(boost::is_integral<T>::value,"");
-// 			integral_pod_greater_than_visitor(const T &value):m_value(value) {}
-// 			bool operator()(const mpz_class &n) const
-// 			{
-// 				return n > to_gmp_type(m_value);
-// 			}
-// 			bool operator()(const max_fast_int &n) const
-// 			{
-// 				try {
-// 					return n > boost::numeric_cast<max_fast_int>(m_value);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {
-// 					// If we cannot convert m_value to max_fast_int, depending on its sign
-// 					// it will be less-than or greater-than n.
-// 					return (m_value <= 0);
-// 				}
-// 			}
-// 			const T &m_value;
-// 		};
-// 		bool dispatch_greater_than(const integer &n) const
-// 		{
-// 			return boost::apply_visitor(self_greater_than_visitor(),m_value,n.m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_greater_than(const T &n, typename boost::enable_if<boost::is_integral<T> >::type * = 0) const
-// 		{
-// 			return boost::apply_visitor(integral_pod_greater_than_visitor<T>(n),m_value);
-// 		}
-// 		template <class T>
-// 		bool dispatch_greater_than(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			return x < operator T();
-// 		}
 // 		// Exponentiation to natural power.
 // 		template <class T>
 // 		struct natural_power_visitor: public boost::static_visitor<integer>
@@ -840,6 +675,106 @@ class integer
 			integer retval(std::forward<T>(n1));
 			retval %= std::forward<U>(n2);
 			return retval;
+		}
+		// Binary equality.
+		static bool binary_equality(const integer &n1, const integer &n2)
+		{
+			return (::mpz_cmp(n1.m_value,n2.m_value) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+			std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return binary_equality(n1,integer(n2));
+		}
+		template <typename T>
+		static bool binary_equality(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) == x);
+		}
+		template <typename T>
+		static bool binary_equality(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		{
+			return binary_equality(n,x);
+		}
+		// Binary less-than.
+		static bool binary_less_than(const integer &n1, const integer &n2)
+		{
+			return (::mpz_cmp(n1.m_value,n2.m_value) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+			std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return binary_less_than(n1,integer(n2));
+		}
+		template <typename T>
+		static bool binary_less_than(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) < x);
+		}
+		// Binary less-than or equal.
+		static bool binary_leq(const integer &n1, const integer &n2)
+		{
+			return (::mpz_cmp(n1.m_value,n2.m_value) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+			std::is_same<T,unsigned long long>::value>::type * = 0)
+		{
+			return binary_leq(n1,integer(n2));
+		}
+		template <typename T>
+		static bool binary_leq(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		{
+			return (static_cast<T>(n) <= x);
+		}
+		// Inverse forms of less-than and leq.
+		template <typename T>
+		static bool binary_less_than(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		{
+			return !binary_leq(n,x);
+		}
+		template <typename T>
+		static bool binary_leq(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		{
+			return !binary_less_than(n,x);
 		}
 	public:
 		/// Default constructor.
@@ -1437,158 +1372,144 @@ class integer
 		{
 			return binary_mod(std::forward<T>(x),std::forward<U>(y));
 		}
-
-
-// 		/// Generic integer equality operator.
-// 		/**
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 * 
-// 		 * If T is an integral type, the comparison will be exact.
-// 		 * 
-// 		 * If T is a floating-point type, n will be converted to T using piranha::integer::operator T() and then compared to x.
-// 		 * 
-// 		 * @param[in] n first argument.
-// 		 * @param[in] x second argument.
-// 		 * 
-// 		 * @return true if n == x, false otherwise.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator==(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_equality(x);
-// 		}
-// 		/// Generic integer equality operator.
-// 		/**
-// 		 * Equivalent to operator==(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator==(const T &x, const integer &n)
-// 		{
-// 			return (n == x);
-// 		}
-// 		/// Generic integer inequality operator.
-// 		/**
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 * 
-// 		 * Equivalent to the negation of operator==(const integer &, const T &).
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator!=(const integer &n, const T &x)
-// 		{
-// 			return !(n == x);
-// 		}
-// 		/// Generic integer inequality operator.
-// 		/**
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 * 
-// 		 * Equivalent to operator!=(const integer &, const T &).
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator!=(const T &x, const integer &n)
-// 		{
-// 			return (n != x);
-// 		}
-// 		/// Generic integer less-than operator.
-// 		/**
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 * 
-// 		 * If T is an integral type, the comparison will be exact.
-// 		 * 
-// 		 * If T is a floating-point type, n will be converted to T using piranha::integer::operator T() and then compared to x.
-// 		 * 
-// 		 * @param[in] n first argument.
-// 		 * @param[in] x second argument.
-// 		 * 
-// 		 * @return true if n < x, false otherwise.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator<(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_less_than(x);
-// 		}
-// 		/// Generic integer less-than operator.
-// 		/**
-// 		 * Equivalent to operator>(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator<(const T &x, const integer &n)
-// 		{
-// 			return (n > x);
-// 		}
-// 		/// Generic integer greater-than operator.
-// 		/**
-// 		 * The same rules described in operator<(const integer &, const T &) apply.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator>(const integer &n, const T &x)
-// 		{
-// 			return n.dispatch_greater_than(x);
-// 		}
-// 		/// Generic integer greater-than operator.
-// 		/**
-// 		 * Equivalent to operator<(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator>(const T &x, const integer &n)
-// 		{
-// 			return (n < x);
-// 		}
-// 		/// Generic integer greater-than or equal operator.
-// 		/**
-// 		 * Equivalent to the negation of operator<(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator>=(const integer &n, const T &x)
-// 		{
-// 			return !(n < x);
-// 		}
-// 		/// Generic integer greater-than or equal operator.
-// 		/**
-// 		 * Equivalent to operator<=(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator>=(const T &x, const integer &n)
-// 		{
-// 			return (n <= x);
-// 		}
-// 		/// Generic integer less-than or equal operator.
-// 		/**
-// 		 * Equivalent to the negation of operator>(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type or integer.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,
-// 			bool>::type operator<=(const integer &n, const T &x)
-// 		{
-// 			return !(n > x);
-// 		}
-// 		/// Generic integer less-than or equal operator.
-// 		/**
-// 		 * Equivalent to operator>=(const integer &, const T &).
-// 		 * 
-// 		 * This template operator is activated only if T is an arithmetic type.
-// 		 */
-// 		template <class T>
-// 		friend inline typename boost::enable_if_c<boost::is_arithmetic<T>::value,bool>::type operator<=(const T &x, const integer &n)
-// 		{
-// 			return (n >= x);
-// 		}
+		/// Generic equality operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		{
+			return binary_equality(x,y);
+		}
+		/// Generic inequality operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		{
+			return !(x == y);
+		}
+		/// Generic less-than operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		{
+			return binary_less_than(x,y);
+		}
+		/// Generic less-than or equal operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		{
+			return binary_leq(x,y);
+		}
+		/// Generic greater-than operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		{
+			return (y < x);
+		}
+		/// Generic greater-than or equal operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an arithmetic type,
+		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		{
+			return (y <= x);
+		}
 // 		/// Combined multiply-add.
 // 		/**
 // 		 * Sets this to this + (n1 * n2).
