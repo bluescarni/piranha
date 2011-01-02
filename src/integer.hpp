@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_set> // For hash specialisation.
 #include <vector>
 
 #include "config.hpp" // For (un)likely.
@@ -1629,7 +1630,7 @@ class integer
 namespace std
 {
 
-/// Specialization of std::swap for piranha::integer.
+/// Specialization of \p std::swap for piranha::integer.
 /**
  * @param[in] n1 first argument.
  * @param[in] n2 second argument.
@@ -1642,7 +1643,7 @@ inline void swap(piranha::integer &n1, piranha::integer &n2)
 	n1.swap(n2);
 }
 
-/// Specialization of std::numeric_limits for piranha::integer.
+/// Specialization of \p std::numeric_limits for piranha::integer.
 template <>
 class numeric_limits<piranha::integer>: public numeric_limits<long>
 {
@@ -1651,6 +1652,28 @@ class numeric_limits<piranha::integer>: public numeric_limits<long>
 		static const bool is_bounded = false;
 		/// Override is_modulo attribute to false.
 		static const bool is_modulo = false;
+};
+
+/// Specialisation of \p std::hash for piranha::integer.
+template <>
+struct hash<piranha::integer>
+{
+	/// Result type.
+	typedef std::size_t result_type;
+	/// Argument type.
+	typedef piranha::integer argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] n piranha::integer whose hash value will be returned.
+	 * 
+	 * @return <tt>n.hash()</tt>
+	 * 
+	 * @see piranha::integer::hash()
+	 */
+	result_type operator()(const argument_type &n) const
+	{
+		return n.hash();
+	}
 };
 
 }
