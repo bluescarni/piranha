@@ -18,28 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONFIG_HPP
-#define PIRANHA_CONFIG_HPP
+#include "../src/mf_int.hpp"
 
-@PIRANHA_THREAD_MODEL@
-@PIRANHA_64BIT_MODE@
+#define BOOST_TEST_MODULE runtime_info_test
+#include <boost/test/unit_test.hpp>
 
-#include <cassert>
-
-#define piranha_assert assert
-
-// c++0x features not implemented yet in GCC.
-#define piranha_nullptr (0)
-#define piranha_noexcept(expr)
-#define piranha_move_if_noexcept(expr) std::move(expr)
-#define piranha_override
-
-#if defined(__GNUC__)
-	#define likely(x) __builtin_expect((x),1)
-	#define unlikely(x) __builtin_expect((x),0)
-#else
-	#define likely(x) (x)
-	#define unlikely(x) (x)
-#endif
-
-#endif
+BOOST_AUTO_TEST_CASE(mf_int_msb_test)
+{
+	BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(0),-1);
+	piranha::mf_uint tmp(1);
+	for (unsigned i = 0; i < piranha::mf_int_traits::nbits; ++i, tmp <<= 1) {
+		BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(tmp),static_cast<int>(i));
+		BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(tmp + i),static_cast<int>(i));
+	}
+}

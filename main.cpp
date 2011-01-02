@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <mutex>
@@ -29,6 +30,15 @@ void free_function(void *ptr, size_t)
 	std::free(ptr);
 }
 
+template <typename T>
+struct hop_bucket
+{
+	hop_bucket():m_occupied(false),m_value(),m_bitset(0) {}
+	bool		m_occupied;
+	T		m_value;
+	std::uint64_t	m_bitset;
+};
+
 int main()
 {
 //	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
@@ -36,9 +46,9 @@ int main()
 // 	integer i(1);
 // 	i.multiply_accumulate(i,i);
 
-	integer i("-2123123123");
-	std::cout << i.hash() << '\n';
-	std::size_t n = -1;
-	boost::hash_combine(n,2123123123);
-	std::cout << n << '\n';
+// 	std::string str("tmp");
+// 	std::hash<std::string> h;
+// 	std::cout << h(str) << '\n';
+
+	std::cout << mf_int_traits::msb(boost::integer_traits<mf_uint>::const_max) << '\n';
 }

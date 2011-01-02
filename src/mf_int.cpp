@@ -18,28 +18,24 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONFIG_HPP
-#define PIRANHA_CONFIG_HPP
+#include <cstddef>
 
-@PIRANHA_THREAD_MODEL@
-@PIRANHA_64BIT_MODE@
+#include "mf_int.hpp"
 
-#include <cassert>
+namespace piranha
+{
 
-#define piranha_assert assert
+mf_int_traits::table_type mf_int_traits::init_log_table_256()
+{
+	table_type retval;
+	retval[0] = retval[1] = 0;
+	for (std::size_t i = 2; i < retval.size(); ++i) {
+		retval[i] = 1 + retval[i / static_cast<std::size_t>(2)];
+	}
+	retval[0] = -1;
+	return retval;
+}
 
-// c++0x features not implemented yet in GCC.
-#define piranha_nullptr (0)
-#define piranha_noexcept(expr)
-#define piranha_move_if_noexcept(expr) std::move(expr)
-#define piranha_override
+const mf_int_traits::table_type mf_int_traits::log_table_256 = mf_int_traits::init_log_table_256();
 
-#if defined(__GNUC__)
-	#define likely(x) __builtin_expect((x),1)
-	#define unlikely(x) __builtin_expect((x),0)
-#else
-	#define likely(x) (x)
-	#define unlikely(x) (x)
-#endif
-
-#endif
+}
