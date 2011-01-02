@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -99,58 +100,6 @@ class integer
 			f % x;
 			return f.str();
 		}
-
-
-// 		// Exponentiation to natural power.
-// 		template <class T>
-// 		struct natural_power_visitor: public boost::static_visitor<integer>
-// 		{
-// 			p_static_check((boost::is_integral<T>::value || boost::is_same<T,integer>::value),"");
-// 			natural_power_visitor(const T &exp):m_exp(exp)
-// 			{
-// 				piranha_assert(exp > 0);
-// 			}
-// 			integer operator()(const mpz_class &n) const
-// 			{
-// 				// Let's try to use the GMP function.
-// 				try {
-// 					mpz_class tmp;
-// 					mpz_pow_ui(tmp.get_mpz_t(),n.get_mpz_t(),boost::numeric_cast<unsigned long>(m_exp));
-// 					return integer(tmp);
-// 				} catch (const boost::numeric::bad_numeric_cast &) {}
-// 				// NOTE: if exp is an integer, it will throw value_error in a failed numeric_cast.
-// 				catch (const value_error &) {}
-// 				// If we cannot convert m_exp to unsigned long, resort to exponentiation by squaring.
-// 				return integer(math::ebs(n,m_exp));
-// 			}
-// 			integer operator()(const max_fast_int &n) const
-// 			{
-// 				return math::ebs(integer(n),m_exp);
-// 			}
-// 			const T &m_exp;
-// 		};
-// 		template <class T>
-// 		integer dispatch_pow(const T &x, typename boost::enable_if<boost::is_floating_point<T> >::type * = 0) const
-// 		{
-// 			fp_normal_check(x);
-// 			if (!math::is_integral(x)) {
-// 				piranha_throw(value_error,"invalid floating-point exponent");
-// 			}
-// 			return dispatch_pow(integer(x));
-// 		}
-// 		template <class T>
-// 		integer dispatch_pow(const T &exp, typename boost::enable_if_c<boost::is_integral<T>::value || boost::is_same<T,integer>::value>::type * = 0) const
-// 		{
-// 			// n ** 0 == 1, always.
-// 			if (!exp) {
-// 				return integer(1);
-// 			}
-// 			if (exp < 0) {
-// 				return 1 / boost::apply_visitor(natural_power_visitor<T>(-exp),m_value);
-// 			} else {
-// 				return boost::apply_visitor(natural_power_visitor<T>(exp),m_value);
-// 			}
-// 		}
 		// Validate the string format for integers.
 		static void validate_string(const char *str)
 		{
@@ -775,6 +724,63 @@ class integer
 		static bool binary_leq(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
 		{
 			return !binary_less_than(n,x);
+		}
+		// Exponentiation.
+		template <typename T>
+		integer pow_impl(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = 0) const
+		{
+			unsigned long exp;
+			try {
+				exp = boost::numeric_cast<unsigned long>(ui);
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			}
+			integer retval;
+			::mpz_pow_ui(retval.m_value,m_value,exp);
+			return retval;
+		}
+		template <typename T>
+		integer pow_impl(const T &si, typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value>::type * = 0) const
+		{
+			if (si >= 0) {
+				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
+			} else {
+				if (*this == 0) {
+					piranha_throw(piranha::zero_division_error,"negative exponentiation of zero");
+				}
+				return (1 / *this).pow(-static_cast<typename std::make_unsigned<T>::type>(si));
+			}
+		}
+		integer pow_impl(const integer &n) const
+		{
+			unsigned long exp;
+			try {
+				exp = static_cast<unsigned long>(n);
+			} catch (const std::overflow_error &) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			}
+			return pow_impl(exp);
+		}
+		template <typename T>
+		integer pow_impl(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0) const
+		{
+			if (!boost::math::isfinite(x) || boost::math::trunc(x) != x) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			}
+			unsigned long exp;
+			try {
+				exp = boost::numeric_cast<unsigned long>((x >= 0) ? x : -x);
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			}
+			if (x >= 0) {
+				return pow_impl(exp);
+			} else {
+				if (*this == 0) {
+					piranha_throw(piranha::zero_division_error,"negative exponentiation of zero");
+				}
+				return (1 / *this).pow(exp);
+			}
 		}
 	public:
 		/// Default constructor.
@@ -1510,56 +1516,47 @@ class integer
 		{
 			return (y <= x);
 		}
-// 		/// Combined multiply-add.
-// 		/**
-// 		 * Sets this to this + (n1 * n2).
-// 		 * 
-// 		 * @param[in] n1 first argument.
-// 		 * @param[in] n2 second argument.
-// 		 * 
-// 		 * @return reference to this.
-// 		 */
-// 		integer &multiply_accumulate(const integer &n1, const integer &n2)
-// 		{
-// 			mpz_class *a = boost::get<mpz_class>(&m_value);
-// 			const mpz_class *b = boost::get<mpz_class>(&n1.m_value), *c = boost::get<mpz_class>(&n2.m_value);
-// 			// If all the operands are of mpz_class type, then we can use the GMP function.
-// 			if (a && b && c) {
-// 				mpz_addmul(a->get_mpz_t(),b->get_mpz_t(),c->get_mpz_t());
-// 			} else {
-// 				*this += n1 * n2;
-// 			}
-// 			return *this;
-// 		}
-// 		/// Exponentiation.
-// 		/**
-// 		 * Return this ** exp. This template method is activated only if T is an arithmetic type or integer.
-// 		 * 
-// 		 * If T is an integral type or integer, the result will be exact, with negative powers calculated as (1 / this) ** n.
-// 		 * 
-// 		 * If T is a floating-point type, the result will be exact if exp is an integer, otherwise a piranha::value_error exception will
-// 		 * be thrown.
-// 		 * 
-// 		 * Trying to raise zero to a negative exponent will throw a piranha::zero_division_error exception. this ** 0 will always return 1.
-// 		 * 
-// 		 * @param[in] exp exponent.
-// 		 * 
-// 		 * @return this ** exp.
-// 		 * 
-// 		 * @throws piranha::value_error if T is a floating-point type and exp is not an exact integer.
-// 		 * @throws piranha::zero_division_error if this is zero and exp is negative.
-// 		 */
-// 		template <class T>
-// 		typename boost::enable_if_c<boost::is_arithmetic<T>::value || boost::is_same<T,integer>::value,integer>::type pow(const T &exp) const
-// 		{
-// 			return dispatch_pow(exp);
-// 		}
-
-
-
-
-
-
+		/// Combined multiply-add.
+		/**
+		 * Sets \p this to <tt>this + (x * y)</tt>.
+		 * 
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		integer &multiply_accumulate(const integer &n1, const integer &n2)
+		{
+			::mpz_addmul(m_value,n1.m_value,n2.m_value);
+			return *this;
+		}
+		/// Exponentiation.
+		/**
+		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an arithmetic type or integer.
+		 * 
+		 * If \p T is an integral type or integer, the result will be exact, with negative powers calculated as <tt>(1 / this) ** exp</tt>.
+		 * 
+		 * If \p T is a floating-point type, the result will be exact if \p exp can be converted exactly to an integer value,
+		 * otherwise an \p std::invalid_argument exception will be thrown.
+		 * 
+		 * Trying to raise zero to a negative exponent will throw a piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
+		 * 
+		 * In any case, the value of \p exp cannot exceed in magnitude the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
+		 * \p std::invalid_argument exception will be thrown.
+		 * 
+		 * @param[in] exp exponent.
+		 * 
+		 * @return <tt>this ** exp</tt>.
+		 * 
+		 * @throws std::invalid_argument if \p T is a floating-point type and \p exp is not an exact integer, or if <tt>exp</tt>'s magnitude exceeds
+		 * the range of the <tt>unsigned long</tt> type.
+		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
+		 */
+		template <typename T>
+		typename boost::enable_if_c<std::is_arithmetic<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
+		{
+			return pow_impl(exp);
+		}
 		/// Overload output stream operator for piranha::integer.
 		/**
 		 * @param[in] os output stream.

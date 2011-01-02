@@ -29,6 +29,7 @@
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
+#include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/utility.hpp>
 #include <ctgmath>
@@ -79,6 +80,15 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<long double>::infinity())),std::invalid_argument);
+	if (std::numeric_limits<float>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::quiet_NaN())),std::invalid_argument);
+	}
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::quiet_NaN())),std::invalid_argument);
+	}
+	if (std::numeric_limits<long double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<long double>::quiet_NaN())),std::invalid_argument);
+	}
 }
 
 struct check_arithmetic_assignment
@@ -113,8 +123,17 @@ BOOST_AUTO_TEST_CASE(integer_assignment_test)
 	BOOST_CHECK_EQUAL(30000,static_cast<int>(j));
 	// Assignment from non-finite floating-point.
 	BOOST_CHECK_THROW(j = -std::numeric_limits<float>::infinity(),std::invalid_argument);
-	BOOST_CHECK_THROW(j = -std::numeric_limits<double>::infinity(),std::invalid_argument);
+	BOOST_CHECK_THROW(j = std::numeric_limits<double>::infinity(),std::invalid_argument);
 	BOOST_CHECK_THROW(j = -std::numeric_limits<long double>::infinity(),std::invalid_argument);
+	if (std::numeric_limits<float>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(j = std::numeric_limits<float>::quiet_NaN(),std::invalid_argument);
+	}
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(j = std::numeric_limits<double>::quiet_NaN(),std::invalid_argument);
+	}
+	if (std::numeric_limits<long double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(j = std::numeric_limits<long double>::quiet_NaN(),std::invalid_argument);
+	}
 }
 
 struct check_arithmetic_move_construction
@@ -610,4 +629,37 @@ BOOST_AUTO_TEST_CASE(integer_comparisons_test)
 	BOOST_CHECK(i + 1 <= j);
 	BOOST_CHECK(i + 1 >= j);
 	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
+}
+
+BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
+{
+	piranha::integer i(10);
+	i.multiply_accumulate(piranha::integer(10),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(i,-10);
+	i.multiply_accumulate(piranha::integer(-10),piranha::integer(2));
+	BOOST_CHECK_EQUAL(i,-30);
+	i.multiply_accumulate(piranha::integer(-10),piranha::integer(-3));
+	BOOST_CHECK_EQUAL(i,0);
+}
+
+BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer(10).pow(2),100);
+	BOOST_CHECK_EQUAL(piranha::integer(10).pow(piranha::integer(2)),100);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-2),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(2LL),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(3ULL),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3.),-1);
+	BOOST_CHECK_THROW(piranha::integer(-1).pow(-3.1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(0.),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).pow(0.),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).pow(3.),0);
+	BOOST_CHECK_THROW(piranha::integer(0).pow(-3.),piranha::zero_division_error);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(static_cast<double>(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * -10),std::invalid_argument);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+	}
 }

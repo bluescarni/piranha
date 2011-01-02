@@ -32,12 +32,10 @@ void free_function(void *ptr, size_t)
 int main()
 {
 //	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
-	integer i(-4);
-	std::cout << (-i == 4.L) << '\n';
-	std::cout << (4.L == -i) << '\n';
-	std::cout << (4.3L > -i) << '\n';
-	std::cout << (4.3L < -i) << '\n';
-	std::cout << (3 >= 2) << '\n';
-	std::cout << (integer(3) >= 2) << '\n';
-	std::cout << (integer(3) <= 3) << '\n';
+
+// 	integer i(1);
+// 	i.multiply_accumulate(i,i);
+
+	integer i(2);
+	std::cout << i.pow(145.) << '\n';
 }
