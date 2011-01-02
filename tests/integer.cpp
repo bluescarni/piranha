@@ -36,10 +36,12 @@
 #include <ctgmath>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "../src/exceptions.hpp"
 
@@ -672,4 +674,14 @@ BOOST_AUTO_TEST_CASE(integer_hash_test)
 	BOOST_CHECK_EQUAL((piranha::integer() + piranha::integer(1) - piranha::integer(1)).hash(),static_cast<std::size_t>(0));
 	BOOST_CHECK_EQUAL((piranha::integer(1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(1).hash());
 	BOOST_CHECK_EQUAL((piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(-1).hash());
+}
+
+BOOST_AUTO_TEST_CASE(integer_vector_accumulate_test)
+{
+	std::vector<piranha::integer> v;
+	for (unsigned long i = 0; i < 10000; ++i) {
+		v.push_back(piranha::integer(i));
+	}
+	BOOST_CHECK_EQUAL(std::accumulate(v.begin(),v.end(),piranha::integer(0),
+		[](piranha::integer &n1, const piranha::integer &n2){return(std::move(n1) + n2);}),piranha::integer(10000) * piranha::integer(9999) / 2);
 }
