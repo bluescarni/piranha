@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/trunc.hpp>
@@ -65,7 +66,6 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo implementation notes: use of internal GMP implementation details
- * \todo implement hash via mpz_getlimbn and mpz_size: http://gmplib.org/manual/Integer-Special-Functions.html#Integer-Special-Functions
  * \todo move safety
  * \todo exception safety
  * \todo fix use of noexcept
@@ -1556,6 +1556,25 @@ class integer
 		typename boost::enable_if_c<std::is_arithmetic<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
 		{
 			return pow_impl(exp);
+		}
+		/// Hash value.
+		/**
+		 * The value is calculated via \p boost::hash_combine over the limbs of the internal \p mpz_t type. The sign of \p this
+		 * is used as initial seed value.
+		 * 
+		 * @return a hash value for \p this.
+		 * 
+		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/reference.html#boost.hash_combine
+		 */
+		std::size_t hash() const
+		{
+			const ::mp_size_t size = boost::numeric_cast< ::mp_size_t>(::mpz_size(m_value));
+			// Use the sign as initial seed value.
+			std::size_t retval = static_cast<std::size_t>(mpz_sgn(m_value));
+			for (::mp_size_t i = 0; i < size; ++i) {
+				boost::hash_combine(retval,::mpz_getlimbn(m_value,i));
+			}
+			return retval;
 		}
 		/// Overload output stream operator for piranha::integer.
 		/**

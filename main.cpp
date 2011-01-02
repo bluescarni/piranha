@@ -36,6 +36,9 @@ int main()
 // 	integer i(1);
 // 	i.multiply_accumulate(i,i);
 
-	integer i(2);
-	std::cout << i.pow(145.) << '\n';
+	integer i("-2123123123");
+	std::cout << i.hash() << '\n';
+	std::size_t n = -1;
+	boost::hash_combine(n,2123123123);
+	std::cout << n << '\n';
 }

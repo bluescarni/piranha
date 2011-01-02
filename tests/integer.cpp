@@ -32,6 +32,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/utility.hpp>
+#include <cstddef>
 #include <ctgmath>
 #include <limits>
 #include <memory>
@@ -540,12 +541,12 @@ struct check_integral_in_place_mod
 			BOOST_CHECK_THROW(i %= x,std::invalid_argument);
 		}
 		{
-			T y(abs(x));
+			T y(::abs(x));
 			piranha::integer i(10);
 			y %= i;
 			BOOST_CHECK_EQUAL(static_cast<T>(2), y);
 			if (std::is_signed<T>::value) {
-				T z(-abs(x));
+				T z(-::abs(x));
 				BOOST_CHECK_THROW(z %= i,std::invalid_argument);
 			}
 		}
@@ -561,13 +562,13 @@ struct check_integral_binary_mod
 	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
 	{
 		piranha::integer i(100), j(105);
-		BOOST_CHECK_EQUAL(static_cast<T>(i % abs(x)),static_cast<T>(100 % abs(x)));
-		BOOST_CHECK_EQUAL(static_cast<T>(abs(x) % j),static_cast<T>(abs(x) % 105));
-		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) % abs(x)),static_cast<T>(2 % x));
-		BOOST_CHECK_EQUAL(static_cast<T>(abs(x) % piranha::integer(1)),static_cast<T>(0));
+		BOOST_CHECK_EQUAL(static_cast<T>(i % ::abs(x)),static_cast<T>(100 % ::abs(x)));
+		BOOST_CHECK_EQUAL(static_cast<T>(::abs(x) % j),static_cast<T>(::abs(x) % 105));
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) % ::abs(x)),static_cast<T>(2 % x));
+		BOOST_CHECK_EQUAL(static_cast<T>(::abs(x) % piranha::integer(1)),static_cast<T>(0));
 		if (std::is_signed<T>::value) {
-			BOOST_CHECK_THROW(-abs(x) % i,std::invalid_argument);
-			BOOST_CHECK_THROW(i % -abs(x),std::invalid_argument);
+			BOOST_CHECK_THROW(-::abs(x) % i,std::invalid_argument);
+			BOOST_CHECK_THROW(i % -::abs(x),std::invalid_argument);
 		}
 	}
 	template <typename T>
@@ -662,4 +663,13 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 	if (std::numeric_limits<double>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(integer_hash_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer().hash(),static_cast<std::size_t>(0));
+	BOOST_CHECK(piranha::integer(1).hash() != piranha::integer(-1).hash());
+	BOOST_CHECK_EQUAL((piranha::integer() + piranha::integer(1) - piranha::integer(1)).hash(),static_cast<std::size_t>(0));
+	BOOST_CHECK_EQUAL((piranha::integer(1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(1).hash());
+	BOOST_CHECK_EQUAL((piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(-1).hash());
 }
