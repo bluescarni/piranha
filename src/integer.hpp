@@ -29,7 +29,6 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/utility/enable_if.hpp>
 #include <boost/utility.hpp>
 #include <cctype> // For std::isdigit().
 #include <cstddef>
@@ -1518,7 +1517,7 @@ class integer
 		}
 		/// Combined multiply-add.
 		/**
-		 * Sets \p this to <tt>this + (x * y)</tt>.
+		 * Sets \p this to <tt>this + (n1 * n2)</tt>.
 		 * 
 		 * @param[in] n1 first argument.
 		 * @param[in] n2 second argument.
