@@ -80,6 +80,7 @@ class mf_int_traits
 			static void run(int &retval, const utype &n)
 			{
 				static_assert(NextShift != 0,"Invalid value for next shift.");
+				static_assert(TotalShift < boost::integer_traits<utype>::const_max - NextShift,"Overflow error.");
 				const utype new_n = n >> NextShift;
 				if (new_n) {
 					msb_impl<NextShift / 2, TotalShift + NextShift>::run(retval,new_n);
@@ -93,10 +94,11 @@ class mf_int_traits
 		{
 			static void run(int &retval, const utype &n)
 			{
+				static_assert(TotalShift < boost::integer_traits<utype>::const_max - static_cast<utype>(15),"Overflow error.");
 				const utype new_n = n >> static_cast<utype>(8);
 				if (new_n) {
 					piranha_assert(new_n < log_table_256.size());
-					retval = (TotalShift + 8) + log_table_256[new_n];
+					retval = (TotalShift + static_cast<utype>(8)) + log_table_256[new_n];
 				} else {
 					piranha_assert(n < log_table_256.size());
 					retval = TotalShift + log_table_256[n];

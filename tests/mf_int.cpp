@@ -23,6 +23,8 @@
 #define BOOST_TEST_MODULE runtime_info_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/integer_traits.hpp>
+
 BOOST_AUTO_TEST_CASE(mf_int_msb_test)
 {
 	BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(0),-1);
@@ -31,4 +33,6 @@ BOOST_AUTO_TEST_CASE(mf_int_msb_test)
 		BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(tmp),static_cast<int>(i));
 		BOOST_CHECK_EQUAL(piranha::mf_int_traits::msb(tmp + i),static_cast<int>(i));
 	}
+	BOOST_CHECK_EQUAL(static_cast<unsigned>(piranha::mf_int_traits::msb(boost::integer_traits<piranha::mf_uint>::const_max)),
+		piranha::mf_int_traits::nbits - static_cast<unsigned>(1));
 }
