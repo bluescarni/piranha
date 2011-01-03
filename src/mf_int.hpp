@@ -41,15 +41,6 @@ namespace piranha
 class mf_int_traits
 {
 	public:
-		/// Number of bits of the maximum-width fast integer.
-		/**
-		 * Typically this number will be either 64 or 32.
-		 */
-#if defined(PIRANHA_64BIT_MODE)
-		static const unsigned nbits = 64;
-#else
-		static const unsigned nbits = 32;
-#endif
 		/// Maximum-width fast signed integer type.
 #if defined(PIRANHA_64BIT_MODE)
 		typedef std::int64_t type;
@@ -58,6 +49,15 @@ class mf_int_traits
 #endif
 		/// Maximum-width fast unsigned integer.
 		typedef std::make_unsigned<type>::type utype;
+		/// Number of bits of the maximum-width fast integer.
+		/**
+		 * Typically this number will be either 64 or 32.
+		 */
+#if defined(PIRANHA_64BIT_MODE)
+		static const utype nbits = 64;
+#else
+		static const utype nbits = 32;
+#endif
 		/// Most significant bit.
 		/**
 		 * @param n unsigned integer whose most significant bit will be computed.
@@ -67,10 +67,8 @@ class mf_int_traits
 		 */
 		static int msb(const utype &n)
 		{
-			// Paranoia check.
-			static_assert(boost::integer_traits<utype>::const_max >= nbits,"Invalid utype.");
 			int retval;
-			msb_impl<static_cast<utype>(nbits) / static_cast<utype>(2)>::run(retval,n);
+			msb_impl<nbits / static_cast<utype>(2)>::run(retval,n);
 			return retval;
 		}
 	private:
@@ -83,9 +81,9 @@ class mf_int_traits
 				static_assert(TotalShift < boost::integer_traits<utype>::const_max - NextShift,"Overflow error.");
 				const utype new_n = n >> NextShift;
 				if (new_n) {
-					msb_impl<NextShift / 2, TotalShift + NextShift>::run(retval,new_n);
+					msb_impl<NextShift / static_cast<utype>(2), TotalShift + NextShift>::run(retval,new_n);
 				} else {
-					msb_impl<NextShift / 2, TotalShift>::run(retval,n);
+					msb_impl<NextShift / static_cast<utype>(2), TotalShift>::run(retval,n);
 				}
 			}
 		};
@@ -94,18 +92,19 @@ class mf_int_traits
 		{
 			static void run(int &retval, const utype &n)
 			{
-				static_assert(TotalShift < boost::integer_traits<utype>::const_max - static_cast<utype>(15),"Overflow error.");
+				static_assert(TotalShift < static_cast<unsigned>(boost::integer_traits<int>::const_max),"Overflow error.");
+				static_assert(static_cast<int>(TotalShift) < boost::integer_traits<int>::const_max - 15,"Overflow error.");
 				const utype new_n = n >> static_cast<utype>(8);
 				if (new_n) {
 					piranha_assert(new_n < log_table_256.size());
-					retval = (TotalShift + static_cast<utype>(8)) + log_table_256[new_n];
+					retval = static_cast<int>(TotalShift) + 8 + log_table_256[new_n];
 				} else {
 					piranha_assert(n < log_table_256.size());
-					retval = TotalShift + log_table_256[n];
+					retval = static_cast<int>(TotalShift) + log_table_256[n];
 				}
 			}
 		};
-		// TODO: try with char here instead?
+		// NOTE: try with char here instead?
 		typedef std::array<int,256> table_type;
 		static table_type init_log_table_256();
 		static const table_type log_table_256;

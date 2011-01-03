@@ -29,8 +29,8 @@ mf_int_traits::table_type mf_int_traits::init_log_table_256()
 {
 	table_type retval;
 	retval[0] = retval[1] = 0;
-	for (std::size_t i = 2; i < retval.size(); ++i) {
-		retval[i] = 1 + retval[i / static_cast<std::size_t>(2)];
+	for (table_type::size_type i = 2; i < retval.size(); ++i) {
+		retval[i] = 1 + retval[i / static_cast<table_type::size_type>(2)];
 	}
 	retval[0] = -1;
 	return retval;
