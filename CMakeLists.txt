@@ -37,7 +37,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(FATAL_ERROR "c++0x support could not be detected.")
 	ENDIF(GNUCXX_STD_CPP0X)
 	# Add to the base flags extra warnings. Also, additional flags to turn off some GCC warnings that in practice clutter the compilation output.
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wdisabled-optimization")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wdisabled-optimization")
 	# Suggested for multithreaded code.
 	ADD_DEFINITIONS(-D_REENTRANT)
 	# When compiling with GCC, enable the GNU extensions - used for instance in thread affinity settings.

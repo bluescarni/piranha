@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 	piranha::thread_barrier tb(n_threads);
 	piranha::thread_group tg;
 	for (unsigned i = 0; i < n_threads; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([&tb](unsigned x, unsigned y){tb.wait();return x + y;},i,i + 1));
+		BOOST_CHECK_NO_THROW(tg.create_thread([&tb](unsigned x, unsigned y) -> unsigned {tb.wait();return x + y;},i,i + 1));
 	}
 	BOOST_CHECK_NO_THROW(tg.join_all());
 	BOOST_CHECK_NO_THROW(tg.join_all());
