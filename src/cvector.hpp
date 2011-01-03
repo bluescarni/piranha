@@ -165,8 +165,9 @@ class cvector
 		{
 			piranha_assert(tc.n_threads > 0);
 			if (tc.n_threads > 1) {
+				piranha_assert(tc.n_started_threads && tc.mutex);
 				std::lock_guard<std::mutex> lock(*tc.mutex);
-				if (tc.n_started_threads && *tc.n_started_threads != tc.n_threads) {
+				if (*tc.n_started_threads != tc.n_threads) {
 					return false;
 				} else {
 					return true;
@@ -190,7 +191,7 @@ class cvector
 			piranha_assert(tc.n_threads > 0);
 			piranha_assert(tc.exceptions);
 			if (tc.n_threads > 1) {
-				piranha_assert(tc.mutex);
+				piranha_assert(tc.mutex && tc.exceptions);
 				std::lock_guard<std::mutex> lock(*tc.mutex);
 				tc.exceptions->push_back(std::current_exception());
 			} else {
