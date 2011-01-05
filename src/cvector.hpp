@@ -392,7 +392,7 @@ class cvector
 		 * @throws boost::numeric::bad_numeric_cast in case of over/under-flow in numeric conversions.
 		 * @throws unspecified any exception thrown by default-constructing objects of type \p T.
 		 */
-		explicit cvector(const size_type &size):m_data(piranha_nullptr),m_size(0)
+		explicit cvector(const size_type &size):m_data(piranha_nullptr),m_size(0),m_allocator()
 		{
 			if (size == 0) {
 				return;
