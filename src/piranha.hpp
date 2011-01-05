@@ -44,6 +44,7 @@ namespace piranha {}
 #include "config.hpp"
 #include "cvector.hpp"
 #include "exceptions.hpp"
+#include "hop_table.hpp"
 #include "integer.hpp"
 #include "mf_int.hpp"
 #include "runtime_info.hpp"

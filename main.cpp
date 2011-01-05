@@ -2,13 +2,15 @@
 #include <cstdlib>
 #include <iostream>
 #include <mutex>
+#include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
 
 #include <gmpxx.h>
 
-#include "src/piranha.hpp"
+#include "src/hop_table.hpp"
+#include "src/integer.hpp"
 
 using namespace piranha;
 
@@ -30,14 +32,9 @@ void free_function(void *ptr, size_t)
 	std::free(ptr);
 }
 
-template <typename T>
-struct hop_bucket
-{
-	hop_bucket():m_occupied(false),m_value(),m_bitset(0) {}
-	bool		m_occupied;
-	T		m_value;
-	std::uint64_t	m_bitset;
-};
+struct foo {};
+
+void do_foo(const foo &) {}
 
 int main()
 {
@@ -50,5 +47,25 @@ int main()
 // 	std::hash<std::string> h;
 // 	std::cout << h(str) << '\n';
 
-	std::cout << mf_int_traits::msb(boost::integer_traits<mf_uint>::const_max) << '\n';
+// 	typedef integer int_type;
+// 
+// 	hop_table<int_type> ht;
+// 	std::cout << (ht.begin() == ht.end()) << '\n';
+// 	std::cout << (ht.find(int_type(1)) == ht.end()) << '\n';
+// 	ht.emplace(int_type(10));
+// 	ht.emplace(int_type(10));
+// 	ht.emplace(int_type(11));
+// 	for (int i = 0; i < 61; ++i) {
+// 		ht.emplace(int_type(9));
+// 	}
+// 	ht.emplace(int_type(10));
+// 	ht.emplace(int_type(10));
+
+
+	hop_table<std::string> ht;
+	std::string tmp = "";
+	for (int i = 0; i < 1500; ++i) {
+		tmp.push_back(unsigned(i));
+		ht.emplace(tmp);
+	}
 }
