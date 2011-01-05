@@ -25,6 +25,8 @@
 namespace piranha
 {
 
+const mf_uint mf_int_traits::nbits;
+
 mf_int_traits::table_type mf_int_traits::init_log_table_256()
 {
 	table_type retval;
