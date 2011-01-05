@@ -36,7 +36,7 @@ namespace piranha
  * @throws std::invalid_argument if <tt>count == 0</tt>.
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
-thread_barrier::thread_barrier(unsigned count):m_threshold(count),m_count(count),m_generation(0)
+thread_barrier::thread_barrier(unsigned count):m_mutex(),m_cond(),m_threshold(count),m_count(count),m_generation(0)
 {
 	if (count == 0) {
 		piranha_throw(std::invalid_argument,"count cannot be zero");
