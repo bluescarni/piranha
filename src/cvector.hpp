@@ -373,6 +373,8 @@ class cvector
 		}
 		/// Move constructor.
 		/**
+		 * After the move, \p other will be equivalent to a default-constructed vector.
+		 * 
 		 * @param[in] other vector that will be moved.
 		 */
 		cvector(cvector &&other) piranha_noexcept(true) : m_data(other.m_data),m_size(other.m_size)
@@ -430,6 +432,8 @@ class cvector
 		}
 		/// Move assignment operator.
 		/**
+		 * After the move, \p other will be equivalent to a default-constructed vector.
+		 * 
 		 * @param[in] other vector that will be moved.
 		 * 
 		 * @return reference to this.
