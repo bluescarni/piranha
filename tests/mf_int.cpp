@@ -20,7 +20,7 @@
 
 #include "../src/mf_int.hpp"
 
-#define BOOST_TEST_MODULE runtime_info_test
+#define BOOST_TEST_MODULE mf_int_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/integer_traits.hpp>
