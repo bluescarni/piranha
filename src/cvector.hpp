@@ -342,6 +342,10 @@ class cvector
 			}
 		};
 	public:
+		/// Iterator type.
+		typedef T * iterator;
+		/// Const iterator type.
+		typedef const T * const_iterator;
 		/// Default constructor.
 		/**
 		 * Will build an empty vector.
@@ -482,6 +486,38 @@ class cvector
 				m_size = other.size();
 			}
 			return *this;
+		}
+		/// Const begin iterator.
+		/**
+		 * @return cvector::const_iterator to the first element, or end() if the vector is empty.
+		 */
+		const_iterator begin() const
+		{
+			return m_data;
+		}
+		/// Const end iterator.
+		/**
+		 * @return cvector::const_iterator to the position after the last element.
+		 */
+		const_iterator end() const
+		{
+			return m_data + m_size;
+		}
+		/// Begin iterator.
+		/**
+		 * @return cvector::iterator to the first element, or end() if the vector is empty.
+		 */
+		iterator begin()
+		{
+			return m_data;
+		}
+		/// End iterator.
+		/**
+		 * @return cvector::iterator to the position after the last element.
+		 */
+		iterator end()
+		{
+			return m_data + m_size;
 		}
 		/// Size getter.
 		/**
