@@ -213,3 +213,14 @@ BOOST_AUTO_TEST_CASE(cvector_mt_destructor)
 	piranha::cvector<trivial> t(size);
 	piranha::cvector<nontrivial> nt(size);
 }
+
+BOOST_AUTO_TEST_CASE(cvector_mt_iterators)
+{
+	piranha::cvector<trivial> t0;
+	BOOST_CHECK(t0.begin() == t0.end());
+	piranha::cvector<trivial> t1(size);
+	piranha::cvector<trivial>::size_type count = 0;
+	for (auto it = t1.begin(); it != t1.end(); ++it, ++count) {}
+	BOOST_CHECK_EQUAL(count,t1.size());
+	BOOST_CHECK_EQUAL(size,t1.size());
+}
