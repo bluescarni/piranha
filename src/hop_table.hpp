@@ -302,31 +302,10 @@ class hop_table
 		 */
 		const_iterator find(const key_type &k) const
 		{
-			const size_type container_size = m_container.size();
-			if (unlikely(!container_size)) {
+			if (unlikely(!m_container.size())) {
 				return end();
 			}
-			const size_type bucket_idx = bucket(k);
-			const hop_bucket &b = m_container[bucket_idx];
-			// Detect if the virtual bucket is empty.
-			if (b.none()) {
-// std::cout << "empty bitset\n";
-				return end();
-			}
-			size_type next_idx = bucket_idx;
-			// Walk through the virtual bucket's entries.
-			for (mf_uint i = 0; i < mf_int_traits::nbits; ++i, ++next_idx) {
-				// Do not try to examine buckets past the end.
-				if (next_idx == container_size) {
-					break;
-				}
-				piranha_assert(!b.test(i) || m_container[next_idx].m_occupied);
-				if (b.test(i) && m_key_equal(*m_container[next_idx].ptr(),k))
-				{
-					return const_iterator(this,next_idx);
-				}
-			}
-			return end();
+			return find_impl(k,bucket(k));
 		}
 		/// Find element.
 		/**
@@ -359,15 +338,19 @@ class hop_table
 		template <typename... Args>
 		std::pair<iterator,bool> emplace(Args && ... params)
 		{
+			if (unlikely(!m_container.size())) {
+				increase_size();
+			}
 			key_type k(std::forward<Args>(params)...);
-			const auto it = find(k);
+			const size_type bucket_idx = bucket(k);
+			const auto it = find_impl(k,bucket_idx);
 			if (it != end()) {
 				return std::make_pair(it,false);
 			}
-			auto ue_retval = _unique_emplace(std::move(k));
+			auto ue_retval = _unique_emplace(std::move(k),bucket_idx);
 			while (unlikely(!ue_retval.second)) {
 				increase_size();
-				ue_retval = _unique_emplace(std::move(k));
+				ue_retval = _unique_emplace(std::move(k),bucket(k));
 			}
 			++m_n_elements;
 			return std::make_pair(ue_retval.first,true);
@@ -375,21 +358,25 @@ class hop_table
 		/// Move-construct element in-place (low-level).
 		/**
 		 * Move-construct into its destination bucket an instance of hop_table::key_type using \p k.
+		 * The parameter \p bucket_idx is the first-choice bucket for \p k and must be equal to the output
+		 * of bucket() before the insertion.
 		 * This method will not check if a key equivalent to \p k already exists in the table, nor it will
-		 * update the number of elements present in the table after a successful insertion.
+		 * update the number of elements present in the table after a successful insertion, nor it will check
+		 * if the value of \p bucket_idx is correct.
 		 * 
 		 * If \p k can be inserted in the table without any resize operation, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(end(),false)</tt>.
 		 * 
 		 * @param[in] k hop_table::key_type instance that will be used for move-construction and insertion.
+		 * @param[in] bucket_idx first-choice bucket for \p k.
 		 * 
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or
 		 * end()) and the result of the operation.
 		 * 
 		 * @throws unspecified any exception thrown by hop_table::key_type's move constructor.
 		 */
-		std::pair<iterator,bool> _unique_emplace(key_type &&k)
+		std::pair<iterator,bool> _unique_emplace(key_type &&k, const size_type &bucket_idx)
 		{
 			const size_type container_size = m_container.size();
 			if (unlikely(!container_size)) {
@@ -397,7 +384,7 @@ class hop_table
 // std::cout << "no free buckets\n";
 				return std::make_pair(end(),false);
 			}
-			const size_type bucket_idx = bucket(k);
+			piranha_assert(bucket_idx == bucket(k));
 // std::cout << "original bucket index: " << bucket_idx << '\n';
 			if (!m_container[bucket_idx].m_occupied) {
 // std::cout << "found on 1st shot: " << bucket_idx << '\n';
@@ -469,6 +456,31 @@ class hop_table
 			return std::make_pair(iterator(this,alt_idx),true);
 		}
 	private:
+		const_iterator find_impl(const key_type &k, const size_type &bucket_idx) const
+		{
+			const size_type container_size = m_container.size();
+			piranha_assert(container_size && bucket_idx == bucket(k));
+			const hop_bucket &b = m_container[bucket_idx];
+			// Detect if the virtual bucket is empty.
+			if (b.none()) {
+// std::cout << "empty bitset\n";
+				return end();
+			}
+			size_type next_idx = bucket_idx;
+			// Walk through the virtual bucket's entries.
+			for (mf_uint i = 0; i < mf_int_traits::nbits; ++i, ++next_idx) {
+				// Do not try to examine buckets past the end.
+				if (next_idx == container_size) {
+					break;
+				}
+				piranha_assert(!b.test(i) || m_container[next_idx].m_occupied);
+				if (b.test(i) && m_key_equal(*m_container[next_idx].ptr(),k))
+				{
+					return const_iterator(this,next_idx);
+				}
+			}
+			return end();
+		}
 		// Run a consistency check on the table, will return false if something is wrong.
 		bool sanity_check() const
 		{
@@ -527,14 +539,14 @@ class hop_table
 			std::list<hop_table> temp_tables;
 			temp_tables.push_back(hop_table(table_sizes[cur_size_index],m_hasher,m_key_equal));
 			try {
-				decltype(_unique_emplace(key_type())) result;
+				decltype(_unique_emplace(key_type(),0)) result;
 				for (auto it = m_container.begin(); it != m_container.end(); ++it) {
 					if (it->m_occupied) {
 						do {
-							result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())));
+							result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())),temp_tables.back().bucket(*(it->ptr())));
 							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 							if (unlikely(!result.second)) {
-// std::cout << "ZOMGMOMGOMOGMGOOM\n";
+std::cout << "ZOMGMOMGOMOGMGOOM\n";
 								if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 									throw std::bad_alloc();
 								}
@@ -552,7 +564,7 @@ class hop_table
 					for (auto it = table_it->m_container.begin(); it != table_it->m_container.end(); ++it) {
 						if (it->m_occupied) {
 							do {
-								result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())));
+								result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())),temp_tables.back().bucket(*(it->ptr())));
 								temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 								if (unlikely(!result.second)) {
 									if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
@@ -599,7 +611,7 @@ class hop_table
 				throw std::bad_alloc();
 			}
 			piranha_assert(*it >= hint);
-// std::cout << "hint was: " << hint << ", size is: " << *it << '\n';
+std::cout << "hint was: " << hint << ", size is: " << *it << '\n';
 			return *it;
 		}
 	private:
