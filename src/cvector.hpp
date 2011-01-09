@@ -40,6 +40,7 @@
 #include "settings.hpp"
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
+#include "type_traits.hpp"
 
 namespace piranha {
 
@@ -200,31 +201,15 @@ class cvector
 		}
 		struct default_ctor
 		{
-			// Trivial construction via assignment.
-			void impl(thread_control &tc, value_type *begin, const std::true_type &) const
-			{
-				try {
-					const value_type tmp = value_type();
-					value_type *current = begin + tc.offset;
-					for (size_type i = 0; i < tc.work_size; ++i, ++current) {
-						*current = tmp;
-					}
-				} catch (...) {
-					// No need to do any rolling back for trivial objects. Just store the exception.
-					// NOTE: is it even possible for trivial objects to throw on default construction and/or
-					// assignment? Note that a trivially-copyable object could in principle throw on default
-					// construction?
-					store_exception(tc);
-				}
-			}
-			// Non-trivial construction.
-			void impl(thread_control &tc, value_type *begin, const std::false_type &) const
+			// Construction via copy constructor of a default-constructed instance.
+			void impl(thread_control &tc, value_type *begin) const
 			{
 				size_type i = 0;
 				try {
+					const value_type tmp = value_type();
 					value_type *current = begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++current) {
-						new ((void *)current) value_type();
+						new ((void *)current) value_type(tmp);
 					}
 				} catch (...) {
 					// Store the exception.
@@ -244,9 +229,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				// NOTE: replace with is_trivially_copyable? At the moment it seems not to be present
-				// in GCC 4.5.
-				impl(tc,begin,std::is_trivial<value_type>());
+				impl(tc,begin);
 			}
 		};
 		struct destructor
@@ -266,7 +249,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,begin,std::is_trivial<value_type>());
+				impl(tc,begin,std::has_trivial_destructor<value_type>());
 			}
 		};
 		struct copy_ctor
@@ -304,7 +287,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
+				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
 			}
 		};
 		struct mover
@@ -338,7 +321,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,dest_begin,src_begin,std::is_trivial<value_type>());
+				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
 			}
 		};
 	public:

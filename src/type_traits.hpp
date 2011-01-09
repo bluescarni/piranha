@@ -18,40 +18,33 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_PIRANHA_HPP
-#define PIRANHA_PIRANHA_HPP
+#ifndef PIRANHA_TYPE_TRAITS_HPP
+#define PIRANHA_TYPE_TRAITS_HPP
 
-/** \file piranha.hpp
- * Global piranha header file.
- * 
- * Include this file to import piranha's entire public interface.
- */
+#include <type_traits>
 
-/// Root piranha namespace.
+namespace piranha
+{
+
+/// Trivially copyable type trait.
 /**
- * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
- * and if this is not the case add it.
+ * This type trait is intended to be equivalent to \p std::is_trivially_copyable, which,
+ * at the time of this writing, has not been implemented yet in GCC. If the compiler
+ * is GCC, then GCC's intrinsic type trait \p __has_trivial_copy will be used. Otherwise,
+ * \p std::is_trivially_copyable will be used instead.
+ * 
+ * @see http://gcc.gnu.org/onlinedocs/gcc/Type-Traits.html
  */
-namespace piranha {}
+template <typename T>
+struct is_trivially_copyable: std::integral_constant<bool,
+#if defined(__GNUC__)
+	__has_trivial_copy(T)
+#else
+	std::is_trivially_copyable<T>::value
+#endif
+	>
+{};
 
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified
-// - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
-//   to document every occurrence.
-// - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
-//   to signal/emulate them.
-
-#include "config.hpp"
-#include "cvector.hpp"
-#include "exceptions.hpp"
-#include "hop_table.hpp"
-#include "integer.hpp"
-#include "mf_int.hpp"
-#include "runtime_info.hpp"
-#include "settings.hpp"
-#include "thread_barrier.hpp"
-#include "thread_group.hpp"
-#include "thread_management.hpp"
-#include "type_traits.hpp"
+}
 
 #endif
