@@ -44,4 +44,11 @@ BOOST_AUTO_TEST_CASE(is_trivially_copyable_test)
 		std::string m_str;
 	};
 	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial0>::value,false);
+	struct nontrivial1
+	{
+		nontrivial1():m_value(1) {}
+		nontrivial1(const nontrivial1 &) {m_value = 0;}
+		double m_value;
+	};
+	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial1>::value,false);
 }

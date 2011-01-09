@@ -321,6 +321,8 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
+				// NOTE: possibly here it should really be: move it if it has a move ctor
+				// and it is not trivially copyable otherwise fall back to copying.
 				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
 			}
 		};
