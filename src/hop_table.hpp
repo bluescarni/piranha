@@ -369,6 +369,7 @@ class hop_table
 				increase_size();
 				ue_retval = _unique_emplace(std::move(k));
 			}
+			++m_n_elements;
 			return std::make_pair(ue_retval.first,true);
 		}
 		/// Move-construct element in-place (low-level).
@@ -404,7 +405,6 @@ class hop_table
 				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::move(k));
 				m_container[bucket_idx].m_occupied = true;
 				m_container[bucket_idx].set(0);
-				++m_n_elements;
 				return std::make_pair(iterator(this,bucket_idx),true);
 			}
 			size_type alt_idx = bucket_idx + 1;
@@ -465,7 +465,6 @@ class hop_table
 			new ((void *)&m_container[alt_idx].m_storage) key_type(std::move(k));
 			m_container[alt_idx].m_occupied = true;
 			m_container[bucket_idx].set(alt_idx - bucket_idx);
-			++m_n_elements;
 			return std::make_pair(iterator(this,alt_idx),true);
 		}
 	private:
@@ -515,6 +514,7 @@ class hop_table
 #endif
 		typedef std::array<size_type,n_available_sizes> table_sizes_type;
 		static const table_sizes_type table_sizes;
+		// Increase table size at least to the next available size.
 		void increase_size()
 		{
 // std::cout << "resize requested!!!\n";
@@ -531,6 +531,7 @@ class hop_table
 					if (it->m_occupied) {
 						do {
 							result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())));
+							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 							if (unlikely(!result.second)) {
 // std::cout << "ZOMGMOMGOMOGMGOOM\n";
 								if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
@@ -551,6 +552,7 @@ class hop_table
 						if (it->m_occupied) {
 							do {
 								result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())));
+								temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 								if (unlikely(!result.second)) {
 									if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 										throw std::bad_alloc();
@@ -575,6 +577,7 @@ class hop_table
 			m_container = std::move(temp_tables.front().m_container);
 			temp_tables.front().m_n_elements = 0;
 		}
+		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
 		{
 			auto range = std::equal_range(table_sizes.begin(),table_sizes.end(),m_container.size());
@@ -587,6 +590,7 @@ class hop_table
 			piranha_assert(range.second - range.first == 1);
 			return std::distance(table_sizes.begin(),range.first);
 		}
+		// Get table size at least equal to hint.
 		static size_type get_size_from_hint(const size_type &hint)
 		{
 			auto it = std::lower_bound(table_sizes.begin(),table_sizes.end(),hint);
