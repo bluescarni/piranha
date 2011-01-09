@@ -380,12 +380,12 @@ class hop_table
 		 * 
 		 * If \p k can be inserted in the table without any resize operation, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
-		 * will be <tt>(it,false)</tt> - where \p it is an implementation-defined iterator instance which should not be used.
+		 * will be <tt>(end(),false)</tt>.
 		 * 
 		 * @param[in] k hop_table::key_type instance that will be used for move-construction and insertion.
 		 * 
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or
-		 * an implementation-defined iterator instance) and the result of the operation.
+		 * end()) and the result of the operation.
 		 * 
 		 * @throws unspecified any exception thrown by hop_table::key_type's move constructor.
 		 */
@@ -407,7 +407,7 @@ class hop_table
 				m_container[bucket_idx].set(0);
 				return std::make_pair(iterator(this,bucket_idx),true);
 			}
-			size_type alt_idx = bucket_idx + 1;
+			size_type alt_idx = bucket_idx + static_cast<size_type>(1);
 			// Start the linear probe.
 			for (; alt_idx < container_size; ++alt_idx) {
 				if (!m_container[alt_idx].m_occupied) {
@@ -439,8 +439,9 @@ class hop_table
 					return std::make_pair(end(),false);
 				}
 				piranha_assert(msb > 0);
+				piranha_assert(hop_bucket::max_shift >= static_cast<unsigned>(msb));
 				const size_type next_idx = alt_idx + (hop_bucket::max_shift - static_cast<unsigned>(msb));
-				piranha_assert(next_idx < orig_idx);
+				piranha_assert(next_idx < orig_idx && next_idx >= alt_idx && orig_idx >= alt_idx);
 				piranha_assert(m_container[alt_idx].test(next_idx - alt_idx));
 				piranha_assert(!m_container[alt_idx].test(orig_idx - alt_idx));
 				// Move the content of the target bucket to the empty slot.
@@ -545,7 +546,7 @@ class hop_table
 				}
 				piranha_assert(temp_tables.size() >= 1);
 				while (unlikely(temp_tables.size() > 1)) {
-					// Get the item before the last one.
+					// Get the table before the last one.
 					auto table_it = temp_tables.end();
 					--(--table_it);
 					for (auto it = table_it->m_container.begin(); it != table_it->m_container.end(); ++it) {

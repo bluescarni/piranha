@@ -51,7 +51,7 @@ class mf_int_traits
 		typedef std::make_unsigned<type>::type utype;
 		/// Number of bits of the maximum-width fast integer.
 		/**
-		 * Typically this number will be either 64 or 32.
+		 * Typically this number will be either 64 or 32, depending on the platform.
 		 */
 #if defined(PIRANHA_64BIT_MODE)
 		static const utype nbits = 64;
@@ -64,6 +64,8 @@ class mf_int_traits
 		 * 
 		 * @return the position, starting from 0, of the most significant bit (i.e., truncated base-2 logarithm) of input \p n.
 		 * If \p n is zero, -1 will be returned.
+		 * 
+		 * @see http://www-graphics.stanford.edu/~seander/bithacks.html
 		 */
 		static int msb(const utype &n)
 		{
