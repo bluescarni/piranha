@@ -276,6 +276,14 @@ class hop_table
 		{
 			return m_n_elements;
 		}
+		/// Test for empty table.
+		/**
+		 * @return true if size() returns 0, false otherwise.
+		 */
+		bool empty() const
+		{
+			return !size();
+		}
 		/// Number of buckets.
 		/**
 		 * @return number of buckets in the table.
