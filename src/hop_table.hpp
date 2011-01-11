@@ -41,6 +41,7 @@
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
+#include "type_traits.hpp"
 
 
 #include <iostream> // TODO: remove!!!!
@@ -62,41 +63,29 @@ namespace piranha
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
-		struct hop_bucket
+		template <typename U>
+		struct base_hop_bucket
 		{
-			typedef typename boost::aligned_storage<sizeof(T),boost::alignment_of<T>::value>::type storage_type;
+			typedef typename boost::aligned_storage<sizeof(U),boost::alignment_of<U>::value>::type storage_type;
 			static const mf_uint max_shift = mf_int_traits::nbits - static_cast<mf_uint>(1);
 			static const mf_uint highest_bit = static_cast<mf_uint>(1) << max_shift;
-			hop_bucket():m_occupied(false),m_bitset(0),m_storage() {}
-			hop_bucket(const hop_bucket &other):m_occupied(false),m_bitset(other.m_bitset),m_storage()
-			{
-// std::cout << "copy bucket\n";
-				if (other.m_occupied) {
-// std::cout << "copy blup\n";
-					new ((void *)&m_storage) T(*other.ptr());
-					m_occupied = true;
-				}
-			}
-			hop_bucket(hop_bucket &&other):m_occupied(false),m_bitset(other.m_bitset),m_storage()
-			{
-// std::cout << "move bucket\n";
-				if (other.m_occupied) {
-// std::cout << "move blup\n";
-					new ((void *)&m_storage) T(std::move(*other.ptr()));
-					m_occupied = true;
-				}
-			}
-			hop_bucket &operator=(const hop_bucket &) = delete;
-			hop_bucket &operator=(hop_bucket &&) = delete;
-			T *ptr()
+			base_hop_bucket():m_occupied(false),m_bitset(0),m_storage() {}
+			explicit base_hop_bucket(bool occupied, const mf_uint &bitset):m_occupied(occupied),m_bitset(bitset),m_storage() {}
+			base_hop_bucket(const base_hop_bucket &) = default;
+			~base_hop_bucket() = default;
+			// These are not used, delete them just in case.
+			base_hop_bucket(base_hop_bucket &&) = delete;
+			base_hop_bucket &operator=(const base_hop_bucket &) = delete;
+			base_hop_bucket &operator=(base_hop_bucket &&) = delete;
+			U *ptr()
 			{
 				piranha_assert(m_occupied);
-				return static_cast<T *>(static_cast<void *>(&m_storage));
+				return static_cast<U *>(static_cast<void *>(&m_storage));
 			}
-			const T *ptr() const
+			const U *ptr() const
 			{
 				piranha_assert(m_occupied);
-				return static_cast<const T *>(static_cast<const void *>(&m_storage));
+				return static_cast<const U *>(static_cast<const void *>(&m_storage));
 			}
 			bool none() const
 			{
@@ -117,16 +106,38 @@ class hop_table
 				piranha_assert(idx < mf_int_traits::nbits);
 				m_bitset ^= (highest_bit >> idx);
 			}
-			~hop_bucket()
-			{
-				if (m_occupied) {
-					ptr()->~T();
-				}
-			}
 			bool		m_occupied;
 			mf_uint		m_bitset;
 			storage_type	m_storage;
 		};
+		template <typename U, typename Enable = void>
+		struct generic_hop_bucket: base_hop_bucket<U>
+		{
+			generic_hop_bucket() = default;
+			generic_hop_bucket(const generic_hop_bucket &other):base_hop_bucket<U>(other.m_occupied,other.m_bitset)
+			{
+				if (this->m_occupied) {
+					new ((void *)&this->m_storage) U(*other.ptr());
+				}
+			}
+			~generic_hop_bucket()
+			{
+				if (this->m_occupied) {
+					this->ptr()->~U();
+				}
+			}
+		};
+		template <typename U>
+		struct generic_hop_bucket<U, typename boost::enable_if_c<
+			std::has_trivial_destructor<U>::value && is_trivially_copyable<U>::value
+			>::type>: base_hop_bucket<U>
+		{
+			generic_hop_bucket() = default;
+			generic_hop_bucket(const generic_hop_bucket &) = default;
+			~generic_hop_bucket() = default;
+		};
+	public:
+		typedef generic_hop_bucket<T> hop_bucket;
 		typedef piranha::cvector<hop_bucket> container_type;
 	public:
 		/// Functor type for the calculation of hash values.
