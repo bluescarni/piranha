@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/type_traits/alignment_of.hpp>
+#include <boost/utility.hpp>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -38,6 +39,7 @@
 
 #include "config.hpp"
 #include "cvector.hpp"
+#include "exceptions.hpp"
 #include "mf_int.hpp"
 
 
@@ -53,6 +55,9 @@ namespace piranha
  * @see http://en.wikipedia.org/wiki/Hopscotch_hashing
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo bucket type with no-op destructor for T with trivial dtor.
+ * \todo try using pointers during table resize.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
@@ -288,11 +293,15 @@ class hop_table
 		 * @param[in] k input argument.
 		 * 
 		 * @return index of the first destination bucket for \p k.
+		 * 
+		 * @throws piranha::zero_division_error if size() is zero.
 		 */
 		size_type bucket(const key_type &k) const
 		{
-			piranha_assert(m_container.size());
-			return m_hasher(k) % m_container.size();
+			if (unlikely(!m_container.size())) {
+				piranha_throw(zero_division_error,"cannot calculate bucket index in an empty table");
+			}
+			return bucket_impl(k);
 		}
 		/// Find element.
 		/**
@@ -305,7 +314,7 @@ class hop_table
 			if (unlikely(!m_container.size())) {
 				return end();
 			}
-			return find_impl(k,bucket(k));
+			return find_impl(k,bucket_impl(k));
 		}
 		/// Find element.
 		/**
@@ -317,50 +326,48 @@ class hop_table
 		{
 			return static_cast<const hop_table *>(this)->find(k);
 		}
-		/// Construct element in-place.
+		/// Insert element.
 		/**
-		 * Construct into its destination bucket an instance of hop_table::key_type using the forwarded \p params.
-		 * If no other equivalent key exists in the table, the insertion is successful and returns the <tt>(it,true)</tt>
+		 * This template is activated only if \p U is implicitly convertible to \p T.
+		 * If no other key equivalent to \p k exists in the table, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
 		 * 
-		 * @param[in] params parameters that will be used to construct the hop_table::key_type instance.
+		 * @param[in] k object that will be inserted into the table.
 		 * 
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
 		 * equivalent) and the result of the operation.
 		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of a hop_table::key_type instance using \p params,
-		 * - hop_table::key_type's move constructor.
+		 * @throws unspecified any exception thrown by hop_table::key_type's move or copy constructors.
 		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
 		 * maximum number of buckets.
 		 */
-		template <typename... Args>
-		std::pair<iterator,bool> emplace(Args && ... params)
+		template <typename U>
+		std::pair<iterator,bool> insert(U &&k, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
 		{
 			if (unlikely(!m_container.size())) {
 				increase_size();
 			}
-			key_type k(std::forward<Args>(params)...);
-			const size_type bucket_idx = bucket(k);
+			const auto bucket_idx = bucket_impl(k);
 			const auto it = find_impl(k,bucket_idx);
 			if (it != end()) {
 				return std::make_pair(it,false);
 			}
-			auto ue_retval = _unique_emplace(std::move(k),bucket_idx);
+			auto ue_retval = _unique_insert(std::forward<U>(k),bucket_idx);
 			while (unlikely(!ue_retval.second)) {
 				increase_size();
-				ue_retval = _unique_emplace(std::move(k),bucket(k));
+				ue_retval = _unique_insert(std::forward<U>(k),bucket_impl(k));
 			}
 			++m_n_elements;
 			return std::make_pair(ue_retval.first,true);
 		}
-		/// Move-construct element in-place (low-level).
+		/// Insert unique element (low-level).
 		/**
-		 * Move-construct into its destination bucket an instance of hop_table::key_type using \p k.
-		 * The parameter \p bucket_idx is the first-choice bucket for \p k and must be equal to the output
+		 * This template is activated only if \p U is implicitly convertible to \p T.
+		 * Insert \p k into the table.
+		 * The parameter \p bucket_idx is the first-choice bucket for \p k and, for a non-empty table, must be equal to the output
 		 * of bucket() before the insertion.
-		 * This method will not check if a key equivalent to \p k already exists in the table, nor it will
+		 * This method will not check if a key equivalent to \p k already exists in the table, it will not
 		 * update the number of elements present in the table after a successful insertion, nor it will check
 		 * if the value of \p bucket_idx is correct.
 		 * 
@@ -368,15 +375,16 @@ class hop_table
 		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(end(),false)</tt>.
 		 * 
-		 * @param[in] k hop_table::key_type instance that will be used for move-construction and insertion.
+		 * @param[in] k object that will be inserted into the table.
 		 * @param[in] bucket_idx first-choice bucket for \p k.
 		 * 
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or
 		 * end()) and the result of the operation.
 		 * 
-		 * @throws unspecified any exception thrown by hop_table::key_type's move constructor.
+		 * @throws unspecified any exception thrown by hop_table::key_type's move or copy constructors.
 		 */
-		std::pair<iterator,bool> _unique_emplace(key_type &&k, const size_type &bucket_idx)
+		template <typename U>
+		std::pair<iterator,bool> _unique_insert(U &&k, const size_type &bucket_idx, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
 		{
 			const size_type container_size = m_container.size();
 			if (unlikely(!container_size)) {
@@ -384,12 +392,12 @@ class hop_table
 // std::cout << "no free buckets\n";
 				return std::make_pair(end(),false);
 			}
-			piranha_assert(bucket_idx == bucket(k));
+			piranha_assert(bucket_idx == bucket_impl(k));
 // std::cout << "original bucket index: " << bucket_idx << '\n';
 			if (!m_container[bucket_idx].m_occupied) {
 // std::cout << "found on 1st shot: " << bucket_idx << '\n';
 				piranha_assert(!m_container[bucket_idx].test(0));
-				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::move(k));
+				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::forward<U>(k));
 				m_container[bucket_idx].m_occupied = true;
 				m_container[bucket_idx].set(0);
 				return std::make_pair(iterator(this,bucket_idx),true);
@@ -450,16 +458,21 @@ class hop_table
 			// The available slot is within the destination virtual bucket.
 			piranha_assert(!m_container[alt_idx].m_occupied);
 			piranha_assert(!m_container[bucket_idx].test(alt_idx - bucket_idx));
-			new ((void *)&m_container[alt_idx].m_storage) key_type(std::move(k));
+			new ((void *)&m_container[alt_idx].m_storage) key_type(std::forward<U>(k));
 			m_container[alt_idx].m_occupied = true;
 			m_container[bucket_idx].set(alt_idx - bucket_idx);
 			return std::make_pair(iterator(this,alt_idx),true);
 		}
 	private:
+		size_type bucket_impl(const key_type &k) const
+		{
+			piranha_assert(m_container.size());
+			return m_hasher(k) % m_container.size();
+		}
 		const_iterator find_impl(const key_type &k, const size_type &bucket_idx) const
 		{
 			const size_type container_size = m_container.size();
-			piranha_assert(container_size && bucket_idx == bucket(k));
+			piranha_assert(container_size && bucket_idx == bucket_impl(k));
 			const hop_bucket &b = m_container[bucket_idx];
 			// Detect if the virtual bucket is empty.
 			if (b.none()) {
@@ -492,7 +505,7 @@ class hop_table
 // std::cout << "not occupied!!\n";
 							return false;
 						}
-						if (bucket(*m_container[i + j].ptr()) != i) {
+						if (bucket_impl(*m_container[i + j].ptr()) != i) {
 // std::cout << "not hashed good!\n";
 							return false;
 						}
@@ -539,11 +552,11 @@ class hop_table
 			std::list<hop_table> temp_tables;
 			temp_tables.push_back(hop_table(table_sizes[cur_size_index],m_hasher,m_key_equal));
 			try {
-				decltype(_unique_emplace(key_type(),0)) result;
+				decltype(_unique_insert(key_type(),0)) result;
 				for (auto it = m_container.begin(); it != m_container.end(); ++it) {
 					if (it->m_occupied) {
 						do {
-							result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())),temp_tables.back().bucket(*(it->ptr())));
+							result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
 							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 							if (unlikely(!result.second)) {
 std::cout << "ZOMGMOMGOMOGMGOOM\n";
@@ -564,7 +577,7 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 					for (auto it = table_it->m_container.begin(); it != table_it->m_container.end(); ++it) {
 						if (it->m_occupied) {
 							do {
-								result = temp_tables.back()._unique_emplace(std::move(*(it->ptr())),temp_tables.back().bucket(*(it->ptr())));
+								result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
 								temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 								if (unlikely(!result.second)) {
 									if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
