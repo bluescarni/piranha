@@ -859,7 +859,9 @@ class integer
 		 */
 		~integer()
 		{
-			if (m_value->_mp_d) {
+			// The rationale for using unlikely here is that mpz_clear is an expensive operation
+			// which is going to dominate anyway the branch penalty.
+			if (unlikely(m_value->_mp_d != 0)) {
 				::mpz_clear(m_value);
 			} else {
 				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
