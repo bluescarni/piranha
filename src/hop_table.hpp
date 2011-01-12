@@ -56,8 +56,6 @@ namespace piranha
  * @see http://en.wikipedia.org/wiki/Hopscotch_hashing
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo try using pointers during table resize.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
@@ -241,6 +239,28 @@ class hop_table
 		~hop_table()
 		{
 			piranha_assert(sanity_check());
+		}
+		/// Default copy assignment operator.
+		hop_table &operator=(const hop_table &other) = default;
+		/// Move assignment operator.
+		/**
+		 * Will copy hash functor and equality predicate, moving only the internal representation of the table.
+		 * 
+		 * @param[in] other table to be moved into \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the assignment operator of the hash functor or of the equality predicate.
+		 */
+		hop_table &operator=(hop_table &&other)
+		{
+			m_hasher = other.m_hasher;
+			m_key_equal = other.m_key_equal;
+			m_n_elements = other.m_n_elements;
+			m_container = std::move(other.m_container);
+			// Zero out other.
+			other.m_n_elements = 0;
+			return *this;
 		}
 		/// Const begin iterator.
 		/**
@@ -520,11 +540,11 @@ class hop_table
 				for (mf_uint j = 0; j < std::min<mf_uint>(mf_int_traits::nbits,m_container.size() - i); ++j) {
 					if (m_container[i].test(j)) {
 						if (!m_container[i + j].m_occupied) {
-// std::cout << "not occupied!!\n";
+std::cout << "not occupied!!\n";
 							return false;
 						}
 						if (bucket_impl(*m_container[i + j].ptr()) != i) {
-// std::cout << "not hashed good!\n";
+std::cout << "not hashed good!\n";
 							return false;
 						}
 					}
@@ -534,18 +554,18 @@ class hop_table
 				}
 			}
 			if (count != m_n_elements) {
-// std::cout << "inconsistent size!\n";
+std::cout << "inconsistent size!\n";
 				return false;
 			}
 			if (m_container.size() != table_sizes[get_size_index()]) {
-// std::cout << "inconsistent size index!\n";
+std::cout << "inconsistent size index!\n";
 				return false;
 			}
 			// Check size is consistent with number of iterator traversals.
 			count = 0;
 			for (auto it = begin(); it != end(); ++it, ++count) {}
 			if (count != m_n_elements) {
-// std::cout << "inconsistent number of iterator traversals!\n";
+std::cout << "inconsistent number of iterator traversals!\n";
 				return false;
 			}
 			return true;
@@ -570,77 +590,49 @@ std::cout << "resize requested: " << (double)m_n_elements / m_container.size() <
 			auto ptr_hasher = [&m_hasher](const key_type *ptr){return m_hasher(*ptr);};
 			auto ptr_key_equal = [&m_key_equal](const key_type *ptr1, const key_type *ptr2){return m_key_equal(*ptr1,*ptr2);};
 			typedef hop_table<key_type *,decltype(ptr_hasher),decltype(ptr_key_equal)> ptr_hop_table;
+			// NOTE: this gets constructed here before the ptr table, so that it will be destructed by last
+			// and will not disrupt sanity checks in case of exceptions thrown below when building the final table.
 			container_type new_container;
-			std::list<ptr_hop_table> temp_tables;
-			temp_tables.push_back(ptr_hop_table(table_sizes[cur_size_index],ptr_hasher,ptr_key_equal));
+			ptr_hop_table ptr_table(table_sizes[cur_size_index],ptr_hasher,ptr_key_equal);
 			std::pair<typename ptr_hop_table::iterator,bool> result;
-			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+			auto it = m_container.begin();
+			while (it != m_container.end()) {
 				if (it->m_occupied) {
-					do {
-						result = temp_tables.back()._unique_insert(it->ptr(),temp_tables.back().bucket_impl(it->ptr()));
-						temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
-						if (unlikely(!result.second)) {
+					result = ptr_table._unique_insert(it->ptr(),ptr_table.bucket_impl(it->ptr()));
+					++ptr_table.m_n_elements;
+					if (unlikely(!result.second)) {
 std::cout << "ZOMGMOMGOMOGMGOOM\n";
-							if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
-								throw std::bad_alloc();
-							}
-							++cur_size_index;
-							temp_tables.push_back(ptr_hop_table(table_sizes[cur_size_index],ptr_hasher,ptr_key_equal));
+						if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
+							throw std::bad_alloc();
 						}
-					} while (unlikely(!result.second));
-				}
-			}
-			piranha_assert(temp_tables.size() >= 1);
-			while (unlikely(temp_tables.size() > 1)) {
-				// Get the table before the last one.
-				auto table_it = temp_tables.end();
-				--(--table_it);
-				for (auto it = table_it->m_container.begin(); it != table_it->m_container.end(); ++it) {
-					if (it->m_occupied) {
-						do {
-							result = temp_tables.back()._unique_insert(*(it->ptr()),temp_tables.back().bucket_impl(*(it->ptr())));
-							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
-							if (unlikely(!result.second)) {
-								if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
-									throw std::bad_alloc();
-								}
-								++cur_size_index;
-								temp_tables.push_back(ptr_hop_table(table_sizes[cur_size_index],ptr_hasher,ptr_key_equal));
-							}
-						} while (unlikely(!result.second));
+						++cur_size_index;
+						// Create new empty table.
+						ptr_table.m_container = typename ptr_hop_table::container_type(table_sizes[cur_size_index]);
+						ptr_table.m_n_elements = 0;
+						// Reset the iterator and restart from the beginning.
+						it = m_container.begin();
+						continue;
 					}
 				}
-				// The table before the last one was emptied, remove it.
-				temp_tables.erase(table_it);
+				++it;
 			}
-			piranha_assert(temp_tables.size() == 1 && temp_tables.front().m_n_elements == m_n_elements);
-			// Build the new container from the sole remaining pointer table.
-			new_container.resize(temp_tables.front().m_container.size());
-			try {
-				size_type i = 0;
-				for (auto it = temp_tables.front().m_container.begin(); it != temp_tables.front().m_container.end(); ++it, ++i) {
-					if (it->m_occupied) {
-						new ((void *)&new_container[i].m_storage) key_type(piranha_move_if_noexcept(**it->ptr()));
-						new_container[i].m_occupied = true;
-					}
-					new_container[i].m_bitset = it->m_bitset;
+			piranha_assert(ptr_table.m_n_elements == m_n_elements);
+			// Build the new container from the pointer table.
+			new_container.resize(ptr_table.m_container.size());
+			size_type i = 0;
+			for (auto it = ptr_table.m_container.begin(); it != ptr_table.m_container.end(); ++it, ++i) {
+				if (it->m_occupied) {
+					new ((void *)&new_container[i].m_storage) key_type(piranha_move_if_noexcept(**it->ptr()));
+					new_container[i].m_occupied = true;
+					// Update the pointer in the pointer table. This is needed to preserve
+					// the sanity checks called by ptr table's destructor in debug mode.
+					*it->ptr() = new_container[i].ptr();
 				}
-			} catch (...) {
-				// Before re-throwing, make sure the pointer table gets cleared.
-				clear_ptr_table(temp_tables.front());
-				throw;
+				new_container[i].m_bitset = it->m_bitset;
 			}
+std::cout << "final move\n";
 			m_container = std::move(new_container);
-			clear_ptr_table(temp_tables.front());
-		}
-		template <typename U, typename Hash2, typename Pred2>
-		static void clear_ptr_table(hop_table<U *,Hash2,Pred2> &t)
-		{
-			for (auto it = t.m_container.begin(); it != t.m_container.end(); ++it) {
-				it->m_bitset = 0;
-				it->m_occupied = false;
-			}
-			t.m_n_elements = 0;
+std::cout << "final move done!\n";
 		}
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
@@ -668,8 +660,8 @@ std::cout << "hint was: " << hint << ", size is: " << *it << '\n';
 		}
 	private:
 		container_type	m_container;
-		const hasher	m_hasher;
-		const key_equal	m_key_equal;
+		hasher		m_hasher;
+		key_equal	m_key_equal;
 		size_type	m_n_elements;
 };
 
