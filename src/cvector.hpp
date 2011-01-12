@@ -72,6 +72,7 @@ namespace piranha {
  * 
  * \todo Affinity settings.
  * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
+ * \todo Fix minimum work size!
  */
 template <typename T>
 class cvector
@@ -109,7 +110,7 @@ class cvector
 			}
 			piranha_assert(n_threads > 0);
 			// Make sure that every thread has a minimum amount of work to do. If necessary, reduce the number of threads.
-			const size_type min_work = 50;
+			const size_type min_work = 100000;
 			n_threads = (size / n_threads >= min_work) ? n_threads : std::max<size_type>(static_cast<size_type>(1),size / min_work);
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);

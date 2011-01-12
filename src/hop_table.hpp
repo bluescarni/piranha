@@ -137,7 +137,6 @@ class hop_table
 			generic_hop_bucket(const generic_hop_bucket &) = default;
 			~generic_hop_bucket() = default;
 		};
-	public:
 		typedef generic_hop_bucket<T> hop_bucket;
 		typedef piranha::cvector<hop_bucket> container_type;
 	public:
