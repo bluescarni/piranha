@@ -194,6 +194,10 @@ BOOST_AUTO_TEST_CASE(cvector_resize_02)
 	piranha::cvector<nontrivial_throwing> ntt(9000);
 	BOOST_CHECK_NO_THROW(ntt.resize(8900));
 	BOOST_CHECK_EQUAL(ntt.size(),piranha::cvector<nontrivial>::size_type(8900));
+	// Test resize from zero.
+	piranha::cvector<nontrivial> nt2;
+	nt2.resize(size);
+	BOOST_CHECK_EQUAL(size,nt2.size());
 	set_st();
 }
 

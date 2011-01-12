@@ -550,27 +550,29 @@ class cvector
 				}
 			}
 			// Move the old data, to the minimum of old and new size.
-			mover m;
-			try {
-				thread_runner(m,std::min<size_type>(m_size,size),new_data,m_data);
-			} catch (...) {
-				// We reach here only if we did not actually move, but copied. The copied
-				// objects have been rolled back by the mover, now we need to destroy the default
-				// constructed objects from above (if any) and deallocate the new data.
-				if (size > m_size) {
-					// Here we could have problems starting threads, catch any error and
-					// perform manual destruction.
-					try {
-						destructor d;
-						thread_runner(d,size - m_size,new_data + m_size);
-					} catch (...) {
-						for (size_type i = 0; i < size - m_size; ++i) {
-							(new_data + m_size + i)->~value_type();
+			if (m_size) {
+				mover m;
+				try {
+					thread_runner(m,std::min<size_type>(m_size,size),new_data,m_data);
+				} catch (...) {
+					// We reach here only if we did not actually move, but copied. The copied
+					// objects have been rolled back by the mover, now we need to destroy the default
+					// constructed objects from above (if any) and deallocate the new data.
+					if (size > m_size) {
+						// Here we could have problems starting threads, catch any error and
+						// perform manual destruction.
+						try {
+							destructor d;
+							thread_runner(d,size - m_size,new_data + m_size);
+						} catch (...) {
+							for (size_type i = 0; i < size - m_size; ++i) {
+								(new_data + m_size + i)->~value_type();
+							}
 						}
 					}
+					m_allocator.deallocate(new_data,size);
+					throw;
 				}
-				m_allocator.deallocate(new_data,size);
-				throw;
 			}
 			// Destroy and deallocate old data.
 			destroy_and_deallocate();
