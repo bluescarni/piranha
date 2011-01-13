@@ -18,14 +18,18 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <boost/iterator/counting_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <mutex>
 #include <stdexcept>
-#include <tuple>
+#include <thread>
+#include <unordered_set>
+#include <utility>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
+#include "settings.hpp"
 #include "thread_management.hpp"
 
 #ifdef PIRANHA_THREAD_MODEL_PTHREADS
@@ -46,6 +50,9 @@ namespace piranha
 {
 
 std::mutex thread_management::m_mutex;
+
+std::mutex thread_management::binder::m_binder_mutex;
+std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 
 /// Bind thread to specific processor.
 /**
@@ -104,7 +111,7 @@ void thread_management::bind_to_proc(unsigned n)
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
  * @throws std::runtime_error if the operation fails in an unspecified way.
  */
-std::tuple<bool,unsigned> thread_management::bound_proc()
+std::pair<bool,unsigned> thread_management::bound_proc()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE)
@@ -116,7 +123,7 @@ std::tuple<bool,unsigned> thread_management::bound_proc()
 	}
 	const int cpu_count = CPU_COUNT(&cpuset);
 	if (cpu_count == 0 || cpu_count > 1) {
-		return std::make_tuple(false,static_cast<unsigned>(0));
+		return std::make_pair(false,static_cast<unsigned>(0));
 	}
 	int cpu_setsize;
 	try {
@@ -128,7 +135,7 @@ std::tuple<bool,unsigned> thread_management::bound_proc()
 		if (CPU_ISSET(i,&cpuset)) {
 			// Cast is safe here (verified above that cpu_setsize is representable in int,
 			// and, by extension, in unsigned).
-			return std::make_tuple(true,static_cast<unsigned>(i));
+			return std::make_pair(true,static_cast<unsigned>(i));
 		}
 	}
 	piranha_throw(std::runtime_error,"operation failed");
@@ -138,5 +145,59 @@ std::tuple<bool,unsigned> thread_management::bound_proc()
 #endif
 }
 
+/// Default constructor.
+/**
+ * Will attempt to bind the calling thread to the first available processor.
+ */
+thread_management::binder::binder():m_result(false,0)
+{
+	// Do nothing if we are not in a different thread.
+	if (std::this_thread::get_id() == runtime_info::get_main_thread_id()) {
+		return;
+	}
+	std::lock_guard<std::mutex> lock(m_binder_mutex);
+	unsigned candidate = 0, n_threads = settings::get_n_threads();
+	for (; candidate < n_threads; ++candidate) {
+		// If the processor is not taken, bail out and try to use it.
+		if (m_used_procs.find(candidate) == m_used_procs.end()) {
+			break;
+		}
+	}
+	// If all procs were already taken, do not try to do any binding.
+	if (candidate == n_threads) {
+		return;
+	}
+	// Try to do the binding.
+	try {
+		bind_to_proc(candidate);
+	} catch (...) {
+		// Ignore any error and return.
+		return;
+	}
+	// Bind was successful, record it.
+	auto result = m_used_procs.insert(candidate);
+	piranha_assert(result.second);
+	m_result.first = true;
+	m_result.second = candidate;
 }
 
+/// Destructor.
+/**
+ * Will remove the corresponding processor index from the internal list of used processors,
+ * if the constructor resulted in a succesful bind operation.
+ */
+thread_management::binder::~binder()
+{
+	// Do nothing if we are not in a different thread.
+	if (std::this_thread::get_id() == runtime_info::get_main_thread_id()) {
+		return;
+	}
+	std::lock_guard<std::mutex> lock(m_binder_mutex);
+	if (m_result.first) {
+		auto it = m_used_procs.find(m_result.second);
+		piranha_assert(it != m_used_procs.end());
+		m_used_procs.erase(it);
+	}
+}
+
+}
