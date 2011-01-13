@@ -60,6 +60,7 @@ namespace piranha
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
+		// Need this friendship when dealing with ptr table during resize.
 		template <typename U, typename Hash2, typename Pred2>
 		friend class hop_table;
 		template <typename U>
@@ -250,7 +251,7 @@ class hop_table
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the assignment operator of the hash functor or of the equality predicate.
+		 * @throws unspecified any exception thrown by the assignment operator of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		hop_table &operator=(hop_table &&other)
 		{
