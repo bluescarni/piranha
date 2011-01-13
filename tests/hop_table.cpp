@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(hop_table_constructors_test)
 // 	BOOST_CHECK(it8 == ht8.end());
 }
 
-BOOST_AUTO_TEST_CASE(hop_table_emplace_test)
+BOOST_AUTO_TEST_CASE(hop_table_insert_test)
 {
-	// Check emplace when the resize operation fails on the first try.
+	// Check insert when the resize operation fails on the first try.
 	const std::size_t critical_size =
 #if defined(PIRANHA_64BIT_MODE)
 		193;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(hop_table_emplace_test)
 	auto custom_hash = [](std::size_t i) -> std::size_t {return i;};
 	hop_table<std::size_t,decltype(custom_hash)> ht(custom_hash);
 	for (std::size_t i = 0; i < critical_size; ++i) {
-		BOOST_CHECK_EQUAL(ht.emplace(i * critical_size).second,true);
+		BOOST_CHECK_EQUAL(ht.insert(i * critical_size).second,true);
 	}
 	// Verify insertion of all items.
 	for (std::size_t i = 0; i < critical_size; ++i) {
