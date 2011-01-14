@@ -71,9 +71,7 @@ namespace piranha {
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo Affinity settings.
  * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
- * \todo Fix minimum work size!
  */
 template <typename T>
 class cvector
@@ -204,7 +202,7 @@ class cvector
 		struct default_ctor
 		{
 			// Construction via copy constructor of a default-constructed instance.
-			void impl(thread_control &tc, value_type *begin) const
+			void impl(thread_control &tc, value_type *begin, const std::false_type &) const
 			{
 				size_type i = 0;
 				try {
@@ -226,13 +224,18 @@ class cvector
 					}
 				}
 			}
+			// Construction via zero-memset for PODs.
+			void impl(thread_control &tc, value_type *begin, const std::true_type &) const
+			{
+				std::memset(begin + tc.offset,0,sizeof(T) * tc.work_size);
+			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
 				thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,begin);
+				impl(tc,begin,std::is_pod<value_type>());
 			}
 		};
 		struct destructor
