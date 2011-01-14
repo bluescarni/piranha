@@ -40,6 +40,7 @@
 #include "settings.hpp"
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
+#include "thread_management.hpp"
 #include "type_traits.hpp"
 
 namespace piranha {
@@ -227,6 +228,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
+				thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
@@ -247,6 +249,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
+				thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
@@ -285,6 +288,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, const value_type *src_begin) const
 			{
+				thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
@@ -319,6 +323,7 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *dest_begin, value_type *src_begin) const
 			{
+				thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
