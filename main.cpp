@@ -52,6 +52,12 @@ void free_function(void *ptr, size_t size)
 
 static unsigned long constant = (boost::posix_time::microsec_clock::local_time() - boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
 
+struct trivial
+{
+	int n;
+	double x;
+};
+
 int main()
 {
 	settings::set_n_threads(1);
@@ -89,6 +95,16 @@ int main()
 // 	ht0.emplace("e cretino!");
 // 	ht0.emplace("zio scatenato!!!");
 
+	std::cout << std::is_pod<trivial>::value << '\n';
+	return 0;
+
+const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
+	/*std::thread t([](){*/cvector<double> ht(500000000);/*});*/
+// 	t.join();
+std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+	return 0;
+
+#if 0
 	struct foo
 	{
 		long x;
@@ -111,7 +127,7 @@ int main()
 		}
 	};
 
-const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
+
 	hop_table<std::string> ht/*(10000000)*/;
 // 	foo f;
 // 	f.y = 0.;
@@ -144,5 +160,7 @@ std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::loc
 // 	std::cout << ht.n_buckets() << '\n';
 // 	return 0;
 // 	std::for_each(boost::counting_iterator<int>(0),boost::counting_iterator<int>(2000000),[&ht](int n){ht.emplace(n);});
+
+#endif
 
 }
