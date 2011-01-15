@@ -64,19 +64,11 @@ class hop_table
 		template <typename U, typename Hash2, typename Pred2>
 		friend class hop_table;
 		template <typename U>
-		struct base_hop_bucket
+		struct base_generic_hop_bucket
 		{
 			typedef typename boost::aligned_storage<sizeof(U),boost::alignment_of<U>::value>::type storage_type;
 			static const mf_uint max_shift = mf_int_traits::nbits - static_cast<mf_uint>(1);
 			static const mf_uint highest_bit = static_cast<mf_uint>(1) << max_shift;
-			base_hop_bucket():m_occupied(false),m_bitset(0),m_storage() {}
-			explicit base_hop_bucket(bool occupied, const mf_uint &bitset):m_occupied(occupied),m_bitset(bitset),m_storage() {}
-			base_hop_bucket(const base_hop_bucket &) = default;
-			~base_hop_bucket() = default;
-			// These are not used, delete them just in case.
-			base_hop_bucket(base_hop_bucket &&) = delete;
-			base_hop_bucket &operator=(const base_hop_bucket &) = delete;
-			base_hop_bucket &operator=(base_hop_bucket &&) = delete;
 			U *ptr()
 			{
 				piranha_assert(m_occupied);
@@ -111,15 +103,34 @@ class hop_table
 			storage_type	m_storage;
 		};
 		template <typename U, typename Enable = void>
-		struct generic_hop_bucket: base_hop_bucket<U>
+		struct generic_hop_bucket: base_generic_hop_bucket<U>
 		{
-			generic_hop_bucket() = default;
-			generic_hop_bucket(const generic_hop_bucket &other):base_hop_bucket<U>(other.m_occupied,other.m_bitset)
+			// NOTE: no need to init the storage space, it will be inited
+			// when constructing the objects in-place.
+			generic_hop_bucket()
 			{
+				this->m_occupied = false;
+				this->m_bitset = 0;
+			}
+			generic_hop_bucket(const generic_hop_bucket &other)
+			{
+				this->m_occupied = other.m_occupied;
+				this->m_bitset = other.m_bitset;
 				if (this->m_occupied) {
 					new ((void *)&this->m_storage) U(*other.ptr());
 				}
 			}
+			// NOTE: this should be called only in the default constructor of cvector,
+			// so assert that other is empty.
+			generic_hop_bucket(generic_hop_bucket &&other)
+			{
+				this->m_occupied = other.m_occupied;
+				this->m_bitset = other.m_bitset;
+				piranha_assert(!other.m_occupied && !other.m_bitset);
+			}
+			// Delete unused operators.
+			generic_hop_bucket &operator=(generic_hop_bucket &&) = delete;
+			generic_hop_bucket &operator=(const generic_hop_bucket &) = delete;
 			~generic_hop_bucket()
 			{
 				if (this->m_occupied) {
@@ -127,15 +138,13 @@ class hop_table
 				}
 			}
 		};
+		// NOTE: the rationale here is that for trivially-copyable and trivially-destructible
+		// objects, the bucket can behave like a POD type, which lets optimizations in cvector kick in.
 		template <typename U>
 		struct generic_hop_bucket<U, typename boost::enable_if_c<
 			std::has_trivial_destructor<U>::value && is_trivially_copyable<U>::value
-			>::type>: base_hop_bucket<U>
-		{
-			generic_hop_bucket() = default;
-			generic_hop_bucket(const generic_hop_bucket &) = default;
-			~generic_hop_bucket() = default;
-		};
+			>::type>: base_generic_hop_bucket<U>
+		{};
 		typedef generic_hop_bucket<T> hop_bucket;
 		typedef piranha::cvector<hop_bucket> container_type;
 	public:
