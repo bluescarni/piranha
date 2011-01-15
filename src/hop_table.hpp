@@ -146,7 +146,7 @@ class hop_table
 			>::type>: base_generic_hop_bucket<U>
 		{};
 		typedef generic_hop_bucket<T> hop_bucket;
-		typedef piranha::cvector<hop_bucket,100000> container_type;
+		typedef piranha::cvector<hop_bucket,1000000> container_type;
 	public:
 		/// Functor type for the calculation of hash values.
 		typedef Hash hasher;
@@ -591,56 +591,67 @@ std::cout << "inconsistent number of iterator traversals!\n";
 		// Increase table size at least to the next available size.
 		void increase_size()
 		{
-// std::cout << "resize requested: " << (double)m_n_elements / m_container.size() << '\n';
+// std::cout << "resize requested!!!\n";
 			auto cur_size_index = get_size_index();
 			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 				throw std::bad_alloc();
 			}
 			++cur_size_index;
-			auto ptr_hasher = [&m_hasher](const key_type *ptr){return m_hasher(*ptr);};
-			auto ptr_key_equal = [&m_key_equal](const key_type *ptr1, const key_type *ptr2){return m_key_equal(*ptr1,*ptr2);};
-			typedef hop_table<key_type *,decltype(ptr_hasher),decltype(ptr_key_equal)> ptr_hop_table;
-			// NOTE: this gets constructed here before the ptr table, so that it will be destructed by last
-			// and will not disrupt sanity checks in case of exceptions thrown below when building the final table.
-			container_type new_container;
-			ptr_hop_table ptr_table(table_sizes[cur_size_index],ptr_hasher,ptr_key_equal);
-			std::pair<typename ptr_hop_table::iterator,bool> result;
-			auto it = m_container.begin();
-			while (it != m_container.end()) {
-				if (it->m_occupied) {
-					result = ptr_table._unique_insert(it->ptr(),ptr_table.bucket_impl(it->ptr()));
-					++ptr_table.m_n_elements;
-					if (unlikely(!result.second)) {
+			std::list<hop_table> temp_tables;
+			temp_tables.push_back(hop_table(table_sizes[cur_size_index],m_hasher,m_key_equal));
+			try {
+				decltype(_unique_insert(key_type(),0)) result;
+				const auto it_f = m_container.end();
+				for (auto it = m_container.begin(); it != it_f; ++it) {
+					if (it->m_occupied) {
+						do {
+							result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
+							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
+							if (unlikely(!result.second)) {
 std::cout << "ZOMGMOMGOMOGMGOOM\n";
-						if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
-							throw std::bad_alloc();
-						}
-						++cur_size_index;
-						// Create new empty table.
-						ptr_table.m_container = typename ptr_hop_table::container_type(table_sizes[cur_size_index]);
-						ptr_table.m_n_elements = 0;
-						// Reset the iterator and restart from the beginning.
-						it = m_container.begin();
-						continue;
+								if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
+									throw std::bad_alloc();
+								}
+								++cur_size_index;
+								temp_tables.push_back(hop_table(table_sizes[cur_size_index],m_hasher,m_key_equal));
+							}
+						} while (unlikely(!result.second));
 					}
 				}
-				++it;
-			}
-			piranha_assert(ptr_table.m_n_elements == m_n_elements);
-			// Build the new container from the pointer table.
-			new_container.resize(ptr_table.m_container.size());
-			size_type i = 0;
-			for (auto it = ptr_table.m_container.begin(); it != ptr_table.m_container.end(); ++it, ++i) {
-				if (it->m_occupied) {
-					new ((void *)&new_container[i].m_storage) key_type(piranha_move_if_noexcept(**it->ptr()));
-					new_container[i].m_occupied = true;
-					// Update the pointer in the pointer table. This is needed to preserve
-					// the sanity checks called by ptr table's destructor in debug mode.
-					*it->ptr() = new_container[i].ptr();
+				piranha_assert(temp_tables.size() >= 1);
+				while (unlikely(temp_tables.size() > 1)) {
+					// Get the table before the last one.
+					const auto table_it = ((temp_tables.end())--)--, table_it_f = table_it->m_container.end();
+					// Try to insert all elements from the penultimate table into the last one.
+					// If something goes wrong, append another table at the end and insert there instead.
+					for (auto it = table_it->m_container.begin(); it != table_it_f; ++it) {
+						if (it->m_occupied) {
+							do {
+								result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
+								temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
+								if (unlikely(!result.second)) {
+									if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
+										throw std::bad_alloc();
+									}
+									++cur_size_index;
+									temp_tables.push_back(hop_table(table_sizes[cur_size_index],m_hasher,m_key_equal));
+								}
+							} while (unlikely(!result.second));
+						}
+					}
+					// The penultimate table one was emptied, remove it.
+					temp_tables.erase(table_it);
 				}
-				new_container[i].m_bitset = it->m_bitset;
+			} catch (...) {
+				// In face of exceptions, zero out the table and re-throw.
+				m_container = container_type();
+				m_n_elements = 0;
+				throw;
 			}
-			m_container = std::move(new_container);
+			piranha_assert(temp_tables.front().m_n_elements == m_n_elements);
+			// Grab the payload from the temp table.
+			m_container = std::move(temp_tables.front().m_container);
+			temp_tables.front().m_n_elements = 0;
 		}
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const

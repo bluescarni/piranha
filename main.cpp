@@ -95,11 +95,18 @@ int main()
 // 	ht0.emplace("e cretino!");
 // 	ht0.emplace("zio scatenato!!!");
 
-	std::cout << std::is_pod<trivial>::value << '\n';
-	return 0;
-
 const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
-	/*std::thread t([](){*/cvector<double> ht(500000000);/*});*/
+
+// 	hop_table<int>::hop_bucket b = hop_table<int>::hop_bucket();
+// 	std::cout << b.m_occupied << '\n';
+// 	std::cout << b.m_bitset << '\n';
+// 	return 0;
+
+	/*std::thread t([](){*/hop_table<integer> ht;/*});*/
+	for (int i = 0; i < 5000000; ++i) {
+		integer tmp(i);
+		ht.insert(tmp);
+	}
 // 	t.join();
 std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 	return 0;
