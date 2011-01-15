@@ -50,8 +50,8 @@ namespace piranha {
  * This class is a minimal vector class which can use multiple threads during construction,
  * destruction and resize. Whether or not actual threads are spawned depends on the return value of
  * piranha::settings::get_n_threads() and the number of elements in the container. I.e., if
- * the user requests the use of a single thread or if the number of elements in the container is lower than an
- * implementation-defined value, no new threads will be opened. No new threads will be opened also in case
+ * the user requests the use of a single thread or if the number of elements in the container is lower than
+ * the template parameter \p MinWork, no new threads will be opened. No new threads will be opened also in case
  * the vector instance is used from a thread different from the main one.
  * 
  * \section exception_safety Exception safety guarantees
@@ -70,10 +70,8 @@ namespace piranha {
  * structures for transporting exceptions.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo Performance tuning on the minimum work size. Make it template parameter with default value?
  */
-template <typename T>
+template <typename T, std::size_t MinWork = 50>
 class cvector
 {
 	public:
@@ -109,7 +107,7 @@ class cvector
 			}
 			piranha_assert(n_threads > 0);
 			// Make sure that every thread has a minimum amount of work to do. If necessary, reduce the number of threads.
-			const size_type min_work = 100000;
+			const size_type min_work = MinWork;
 			n_threads = (size / n_threads >= min_work) ? n_threads : std::max<size_type>(static_cast<size_type>(1),size / min_work);
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);
