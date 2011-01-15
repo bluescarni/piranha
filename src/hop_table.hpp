@@ -591,7 +591,7 @@ std::cout << "inconsistent number of iterator traversals!\n";
 		// Increase table size at least to the next available size.
 		void increase_size()
 		{
-std::cout << "resize requested: " << (double)m_n_elements / m_container.size() << '\n';
+// std::cout << "resize requested: " << (double)m_n_elements / m_container.size() << '\n';
 			auto cur_size_index = get_size_index();
 			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 				throw std::bad_alloc();
@@ -640,9 +640,7 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 				}
 				new_container[i].m_bitset = it->m_bitset;
 			}
-std::cout << "final move\n";
 			m_container = std::move(new_container);
-std::cout << "final move done!\n";
 		}
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
