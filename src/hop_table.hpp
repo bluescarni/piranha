@@ -51,18 +51,20 @@ namespace piranha
 
 /// Hopscotch hash table.
 /**
- * Hash table class based on hopscotch hashing.
+ * Hash table class based on hopscotch hashing. The interface is similar to \p std::unordered_set.
  * 
  * @see http://en.wikipedia.org/wiki/Hopscotch_hashing
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
+ * which provide the basic exception safety guarantee.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
-		// Need this friendship when dealing with ptr table during resize.
-		template <typename U, typename Hash2, typename Pred2>
-		friend class hop_table;
 		template <typename U>
 		struct base_generic_hop_bucket
 		{
@@ -99,8 +101,8 @@ class hop_table
 				m_bitset ^= (highest_bit >> idx);
 			}
 			bool		m_occupied;
-			mf_uint		m_bitset;
 			storage_type	m_storage;
+			mf_uint		m_bitset;
 		};
 		template <typename U, typename Enable = void>
 		struct generic_hop_bucket: base_generic_hop_bucket<U>
