@@ -146,7 +146,8 @@ class hop_table
 			>::type>: base_generic_hop_bucket<U>
 		{};
 		typedef generic_hop_bucket<T> hop_bucket;
-		typedef piranha::cvector<hop_bucket,1000000> container_type;
+		// The numerical value here is kind of empirical/rule of thumb.
+		typedef piranha::cvector<hop_bucket,5000000> container_type;
 	public:
 		/// Functor type for the calculation of hash values.
 		typedef Hash hasher;

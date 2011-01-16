@@ -102,10 +102,12 @@ const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_
 // 	std::cout << b.m_bitset << '\n';
 // 	return 0;
 
-	/*std::thread t([](){*/hop_table<integer> ht;/*});*/
-	for (int i = 0; i < 5000000; ++i) {
-		integer tmp(i);
-		ht.insert(tmp);
+	/*std::thread t([](){*/hop_table<int> ht;/*});*/
+// std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+
+// 	return 0;
+	for (int i = 0; i < 20000000; ++i) {
+		ht.insert(i);
 	}
 // 	t.join();
 std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
