@@ -400,8 +400,7 @@ class hop_table
 			if (unlikely(!m_container.size())) {
 				increase_size();
 			}
-			const auto bucket_idx = bucket_impl(k);
-			const auto it = find_impl(k,bucket_idx);
+			const auto bucket_idx = bucket_impl(k), it = find_impl(k,bucket_idx);
 			if (it != end()) {
 				return std::make_pair(it,false);
 			}
@@ -412,6 +411,31 @@ class hop_table
 			}
 			++m_n_elements;
 			return std::make_pair(ue_retval.first,true);
+		}
+		/// Erase element.
+		/**
+		 * Erase the element to which \p it points. \p it must be a valid iterator
+		 * pointing to an element of the table.
+		 * 
+		 * @param[in] it iterator to the element of the table to be removed.
+		 * 
+		 * @throws unspecified any exception thrown by hop_table::key_type's destructor.
+		 */
+		void erase(const iterator &it)
+		{
+			piranha_assert(!empty() && it.m_table == this && it.m_idx < m_container.size());
+			piranha_assert(m_container[it.m_idx].m_occupied);
+			// Find the original destination bucket.
+			const auto bucket_idx = bucket_impl(*it);
+			piranha_assert(it.m_idx >= bucket_idx && it.m_idx - bucket_idx < mf_int_traits::nbits);
+			// Destroy the object stored in the iterator position.
+			m_container[it.m_idx].ptr()->~key_type();
+			m_container[it.m_idx].m_occupied = false;
+			// Flip the bucket flag.
+			m_container[bucket_idx].toggle(it.m_idx - bucket_idx);
+			// Update the number of elements.
+			piranha_assert(m_n_elements);
+			--m_n_elements;
 		}
 		/// Insert unique element (low-level).
 		/**
