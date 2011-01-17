@@ -245,6 +245,25 @@ class hop_table
 			// Mark the other as empty, as other's cvector will be empty.
 			other.m_n_elements = 0;
 		}
+		/// Constructor from range.
+		/**
+		 * Create a table with a copy of a range.
+		 * 
+		 * @param[in] start begin of range.
+		 * @param[in] end end of range.
+		 * @param[in] n_buckets number of initial buckets.
+		 * @param[in] h hash functor.
+		 * @param[in] k key equality predicate.
+		 */
+		template <typename InputIterator>
+		hop_table(const InputIterator &start, const InputIterator &end, const size_type &n_buckets = 0,
+			const hasher &h = hasher(), const key_equal &k = key_equal()):
+			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0)
+		{
+			for (auto it = start; it != end; ++it) {
+				insert(*it);
+			}
+		}
 		/// Destructor.
 		/**
 		 * No side effects.
@@ -647,9 +666,9 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 				}
 				piranha_assert(temp_tables.size() >= 1);
 				while (unlikely(temp_tables.size() > 1)) {
-					// Get the table before the last one.
-					const auto table_it = ((temp_tables.end())--)--, table_it_f = table_it->m_container.end();
-					// Try to insert all elements from the penultimate table into the last one.
+					// Get the first table.
+					const auto table_it = temp_tables.begin(), table_it_f = table_it->m_container.end();
+					// Try to insert all elements from the first table into the last one.
 					// If something goes wrong, append another table at the end and insert there instead.
 					for (auto it = table_it->m_container.begin(); it != table_it_f; ++it) {
 						if (it->m_occupied) {
@@ -666,13 +685,19 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 							} while (unlikely(!result.second));
 						}
 					}
-					// The penultimate table one was emptied, remove it.
-					temp_tables.erase(table_it);
+					// The first table was emptied, remove it.
+					table_it->m_container = container_type();
+					table_it->m_n_elements = 0;
+					temp_tables.pop_front();
 				}
 			} catch (...) {
-				// In face of exceptions, zero out the table and re-throw.
+				// In face of exceptions, zero out the current and temporary tables, and re-throw.
 				m_container = container_type();
 				m_n_elements = 0;
+				for (auto it = temp_tables.begin(); it != temp_tables.end(); ++it) {
+					it->m_container = container_type();
+					it->m_n_elements = 0;
+				}
 				throw;
 			}
 			piranha_assert(temp_tables.front().m_n_elements == m_n_elements);
