@@ -69,38 +69,51 @@ class hop_table
 		struct base_generic_hop_bucket
 		{
 			typedef typename boost::aligned_storage<sizeof(U),boost::alignment_of<U>::value>::type storage_type;
-			static const mf_uint max_shift = mf_int_traits::nbits - static_cast<mf_uint>(1);
-			static const mf_uint highest_bit = static_cast<mf_uint>(1) << max_shift;
+			static const mf_uint n_eff_bits = mf_int_traits::nbits - static_cast<mf_uint>(1);
+			static const mf_uint max_shift = n_eff_bits - static_cast<mf_uint>(1);
+			static const mf_uint highest_bit = static_cast<mf_uint>(1) << n_eff_bits;
 			U *ptr()
 			{
-				piranha_assert(m_occupied);
+				piranha_assert(test_occupied());
 				return static_cast<U *>(static_cast<void *>(&m_storage));
 			}
 			const U *ptr() const
 			{
-				piranha_assert(m_occupied);
+				piranha_assert(test_occupied());
 				return static_cast<const U *>(static_cast<const void *>(&m_storage));
 			}
 			bool none() const
 			{
-				return !m_bitset;
+				// Suppress the lsb as it is used for the occupied flag.
+				return !(m_bitset >> static_cast<unsigned>(1));
 			}
 			bool test(const mf_uint &idx) const
 			{
-				piranha_assert(idx < mf_int_traits::nbits);
+				piranha_assert(idx < n_eff_bits);
 				return m_bitset & (highest_bit >> idx);
 			}
 			void set(const mf_uint &idx)
 			{
-				piranha_assert(idx < mf_int_traits::nbits);
+				piranha_assert(idx < n_eff_bits);
 				m_bitset |= (highest_bit >> idx);
 			}
 			void toggle(const mf_uint &idx)
 			{
-				piranha_assert(idx < mf_int_traits::nbits);
+				piranha_assert(idx < n_eff_bits);
 				m_bitset ^= (highest_bit >> idx);
 			}
-			bool		m_occupied;
+			bool test_occupied() const
+			{
+				return (m_bitset & static_cast<mf_uint>(1));
+			}
+			void set_occupied()
+			{
+				m_bitset |= static_cast<mf_uint>(1);
+			}
+			void toggle_occupied()
+			{
+				m_bitset ^= static_cast<mf_uint>(1);
+			}
 			storage_type	m_storage;
 			mf_uint		m_bitset;
 		};
@@ -111,14 +124,12 @@ class hop_table
 			// when constructing the objects in-place.
 			generic_hop_bucket()
 			{
-				this->m_occupied = false;
 				this->m_bitset = 0;
 			}
 			generic_hop_bucket(const generic_hop_bucket &other)
 			{
-				this->m_occupied = other.m_occupied;
 				this->m_bitset = other.m_bitset;
-				if (this->m_occupied) {
+				if (this->test_occupied()) {
 					new ((void *)&this->m_storage) U(*other.ptr());
 				}
 			}
@@ -126,16 +137,15 @@ class hop_table
 			// so assert that other is empty.
 			generic_hop_bucket(generic_hop_bucket &&other)
 			{
-				this->m_occupied = other.m_occupied;
 				this->m_bitset = other.m_bitset;
-				piranha_assert(!other.m_occupied && !other.m_bitset);
+				piranha_assert(!other.m_bitset);
 			}
 			// Delete unused operators.
 			generic_hop_bucket &operator=(generic_hop_bucket &&) = delete;
 			generic_hop_bucket &operator=(const generic_hop_bucket &) = delete;
 			~generic_hop_bucket()
 			{
-				if (this->m_occupied) {
+				if (this->test_occupied()) {
 					this->ptr()->~U();
 				}
 			}
@@ -174,7 +184,7 @@ class hop_table
 					const size_type container_size = m_table->m_container.size();
 					do {
 						++m_idx;
-					} while (m_idx < container_size && !m_table->m_container[m_idx].m_occupied);
+					} while (m_idx < container_size && !m_table->m_container[m_idx].test_occupied());
 				}
 				bool equal(const iterator_impl &other) const
 				{
@@ -183,7 +193,7 @@ class hop_table
 				}
 				const key_type &dereference() const
 				{
-					piranha_assert(m_table && m_idx < m_table->m_container.size() && m_table->m_container[m_idx].m_occupied);
+					piranha_assert(m_table && m_idx < m_table->m_container.size() && m_table->m_container[m_idx].test_occupied());
 					return *m_table->m_container[m_idx].ptr();
 				}
 			private:
@@ -302,7 +312,7 @@ class hop_table
 		{
 			const_iterator retval(this,0);
 			// Go to the first occupied bucket.
-			if (m_container.size() && !m_container[0].m_occupied) {
+			if (m_container.size() && !m_container[0].test_occupied()) {
 				retval.increment();
 			}
 			return retval;
@@ -443,13 +453,13 @@ class hop_table
 		void erase(const iterator &it)
 		{
 			piranha_assert(!empty() && it.m_table == this && it.m_idx < m_container.size());
-			piranha_assert(m_container[it.m_idx].m_occupied);
+			piranha_assert(m_container[it.m_idx].test_occupied());
 			// Find the original destination bucket.
 			const auto bucket_idx = bucket_impl(*it);
-			piranha_assert(it.m_idx >= bucket_idx && it.m_idx - bucket_idx < mf_int_traits::nbits);
+			piranha_assert(it.m_idx >= bucket_idx && it.m_idx - bucket_idx < hop_bucket::n_eff_bits);
 			// Destroy the object stored in the iterator position.
 			m_container[it.m_idx].ptr()->~key_type();
-			m_container[it.m_idx].m_occupied = false;
+			m_container[it.m_idx].toggle_occupied();
 			// Flip the bucket flag.
 			m_container[bucket_idx].toggle(it.m_idx - bucket_idx);
 			// Update the number of elements.
@@ -488,18 +498,18 @@ class hop_table
 			}
 			piranha_assert(bucket_idx == bucket_impl(k));
 // std::cout << "original bucket index: " << bucket_idx << '\n';
-			if (!m_container[bucket_idx].m_occupied) {
+			if (!m_container[bucket_idx].test_occupied()) {
 // std::cout << "found on 1st shot: " << bucket_idx << '\n';
 				piranha_assert(!m_container[bucket_idx].test(0));
 				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::forward<U>(k));
-				m_container[bucket_idx].m_occupied = true;
+				m_container[bucket_idx].set_occupied();
 				m_container[bucket_idx].set(0);
 				return std::make_pair(iterator(this,bucket_idx),true);
 			}
 			size_type alt_idx = bucket_idx + static_cast<size_type>(1);
 			// Start the linear probe.
 			for (; alt_idx < container_size; ++alt_idx) {
-				if (!m_container[alt_idx].m_occupied) {
+				if (!m_container[alt_idx].test_occupied()) {
 					break;
 				}
 			}
@@ -509,13 +519,14 @@ class hop_table
 				return std::make_pair(end(),false);
 			}
 // std::cout << "found after linear probe\n";
-			while (alt_idx - bucket_idx >= mf_int_traits::nbits) {
+			while (alt_idx - bucket_idx >= hop_bucket::n_eff_bits) {
 // std::cout << "need to do the hopscotch dance\n";
 				const size_type orig_idx = alt_idx;
 				// First let's try to move as back as possible.
 				alt_idx -= hop_bucket::max_shift;
-				int msb = mf_int_traits::msb(m_container[alt_idx].m_bitset), min_bit_pos = 1;
-				piranha_assert(msb != 0);
+				int msb = mf_int_traits::msb(m_container[alt_idx].m_bitset), min_bit_pos = 2;
+				// Msb cannot be in index 1 because that is the empty bucket we are starting from.
+				piranha_assert(msb != 1);
 				while (msb < min_bit_pos && alt_idx < orig_idx) {
 // std::cout << "bling bling\n";
 					++alt_idx;
@@ -528,8 +539,10 @@ class hop_table
 					return std::make_pair(end(),false);
 				}
 				piranha_assert(msb > 0);
-				piranha_assert(hop_bucket::max_shift >= static_cast<unsigned>(msb));
-				const size_type next_idx = alt_idx + (hop_bucket::max_shift - static_cast<unsigned>(msb));
+				// NOTE: here we have to take always msb - 1 because the lsb does not count for bucket
+				// indexing, as it is used for the occupied flag.
+				piranha_assert(hop_bucket::max_shift >= static_cast<unsigned>(msb - 1));
+				const size_type next_idx = alt_idx + (hop_bucket::max_shift - static_cast<unsigned>(msb - 1));
 				piranha_assert(next_idx < orig_idx && next_idx >= alt_idx && orig_idx >= alt_idx);
 				piranha_assert(m_container[alt_idx].test(next_idx - alt_idx));
 				piranha_assert(!m_container[alt_idx].test(orig_idx - alt_idx));
@@ -539,8 +552,8 @@ class hop_table
 				// Destroy the object in the target bucket.
 				m_container[next_idx].ptr()->~key_type();
 				// Set the flags.
-				m_container[orig_idx].m_occupied = true;
-				m_container[next_idx].m_occupied = false;
+				m_container[orig_idx].toggle_occupied();
+				m_container[next_idx].toggle_occupied();
 				m_container[alt_idx].toggle(next_idx - alt_idx);
 				m_container[alt_idx].toggle(orig_idx - alt_idx);
 				piranha_assert(!m_container[alt_idx].test(next_idx - alt_idx));
@@ -550,10 +563,10 @@ class hop_table
 			}
 // std::cout << "gonna write into: " << alt_idx << '\n';
 			// The available slot is within the destination virtual bucket.
-			piranha_assert(!m_container[alt_idx].m_occupied);
+			piranha_assert(!m_container[alt_idx].test_occupied());
 			piranha_assert(!m_container[bucket_idx].test(alt_idx - bucket_idx));
 			new ((void *)&m_container[alt_idx].m_storage) key_type(std::forward<U>(k));
-			m_container[alt_idx].m_occupied = true;
+			m_container[alt_idx].set_occupied();
 			m_container[bucket_idx].set(alt_idx - bucket_idx);
 			return std::make_pair(iterator(this,alt_idx),true);
 		}
@@ -575,12 +588,12 @@ class hop_table
 			}
 			size_type next_idx = bucket_idx;
 			// Walk through the virtual bucket's entries.
-			for (mf_uint i = 0; i < mf_int_traits::nbits; ++i, ++next_idx) {
+			for (mf_uint i = 0; i < hop_bucket::n_eff_bits; ++i, ++next_idx) {
 				// Do not try to examine buckets past the end.
 				if (next_idx == container_size) {
 					break;
 				}
-				piranha_assert(!b.test(i) || m_container[next_idx].m_occupied);
+				piranha_assert(!b.test(i) || m_container[next_idx].test_occupied());
 				if (b.test(i) && m_key_equal(*m_container[next_idx].ptr(),k))
 				{
 					return const_iterator(this,next_idx);
@@ -593,9 +606,9 @@ class hop_table
 		{
 			size_type count = 0;
 			for (size_type i = 0; i < m_container.size(); ++i) {
-				for (mf_uint j = 0; j < std::min<mf_uint>(mf_int_traits::nbits,m_container.size() - i); ++j) {
+				for (mf_uint j = 0; j < std::min<mf_uint>(hop_bucket::n_eff_bits,m_container.size() - i); ++j) {
 					if (m_container[i].test(j)) {
-						if (!m_container[i + j].m_occupied) {
+						if (!m_container[i + j].test_occupied()) {
 std::cout << "not occupied!!\n";
 							return false;
 						}
@@ -605,7 +618,7 @@ std::cout << "not hashed good!\n";
 						}
 					}
 				}
-				if (m_container[i].m_occupied) {
+				if (m_container[i].test_occupied()) {
 					++count;
 				}
 			}
@@ -649,7 +662,7 @@ std::cout << "inconsistent number of iterator traversals!\n";
 				decltype(_unique_insert(key_type(),0)) result;
 				const auto it_f = m_container.end();
 				for (auto it = m_container.begin(); it != it_f; ++it) {
-					if (it->m_occupied) {
+					if (it->test_occupied()) {
 						do {
 							result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
 							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
@@ -671,7 +684,7 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 					// Try to insert all elements from the first table into the last one.
 					// If something goes wrong, append another table at the end and insert there instead.
 					for (auto it = table_it->m_container.begin(); it != table_it_f; ++it) {
-						if (it->m_occupied) {
+						if (it->test_occupied()) {
 							do {
 								result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
 								temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
@@ -735,6 +748,10 @@ std::cout << "hint was: " << hint << ", size is: " << *it << '\n';
 		key_equal	m_key_equal;
 		size_type	m_n_elements;
 };
+
+template <typename T, typename Hash, typename Pred>
+template <typename U>
+const mf_uint hop_table<T,Hash,Pred>::base_generic_hop_bucket<U>::n_eff_bits;
 
 template <typename T, typename Hash, typename Pred>
 const typename hop_table<T,Hash,Pred>::table_sizes_type hop_table<T,Hash,Pred>::table_sizes = { {
