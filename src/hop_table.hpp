@@ -249,18 +249,18 @@ class hop_table
 		/**
 		 * Create a table with a copy of a range.
 		 * 
-		 * @param[in] start begin of range.
+		 * @param[in] begin begin of range.
 		 * @param[in] end end of range.
 		 * @param[in] n_buckets number of initial buckets.
 		 * @param[in] h hash functor.
 		 * @param[in] k key equality predicate.
 		 */
 		template <typename InputIterator>
-		hop_table(const InputIterator &start, const InputIterator &end, const size_type &n_buckets = 0,
+		hop_table(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0,
 			const hasher &h = hasher(), const key_equal &k = key_equal()):
 			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0)
 		{
-			for (auto it = start; it != end; ++it) {
+			for (auto it = begin; it != end; ++it) {
 				insert(*it);
 			}
 		}
