@@ -70,6 +70,8 @@ namespace piranha {
  * structures for transporting exceptions.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo Investigate performance issues on parallel destruction.
  */
 template <typename T, std::size_t MinWork = 50>
 class cvector
@@ -250,7 +252,11 @@ class cvector
 			}
 			void operator()(thread_control &tc, value_type *begin) const
 			{
-				thread_management::binder b;
+				// NOTE: here there seem to be performance issues when calling massively in parallel
+				// free() and forcing it to be in different processors, as it will be mostly the case
+				// in non-trivial classes. Disable for now and check
+				// later, when the polynomial classes are implemented and after benchmarking.
+				// thread_management::binder b;
 				if (!is_thread_ready(tc)) {
 					return;
 				}
