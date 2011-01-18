@@ -228,3 +228,39 @@ BOOST_AUTO_TEST_CASE(cvector_mt_iterators)
 	BOOST_CHECK_EQUAL(count,t1.size());
 	BOOST_CHECK_EQUAL(size,t1.size());
 }
+
+BOOST_AUTO_TEST_CASE(cvector_swap)
+{
+	set_mt();
+	{
+	piranha::cvector<int> t(size), u(size / 2);
+	t[10] = -10;
+	u[10] = 111;
+	t.swap(u);
+	BOOST_CHECK_EQUAL(t[10],111);
+	BOOST_CHECK_EQUAL(u[10],-10);
+	BOOST_CHECK_EQUAL(t.size(),size / 2);
+	BOOST_CHECK_EQUAL(u.size(),size);
+	}
+	{
+	piranha::cvector<nontrivial> t(size), u(size / 2);
+	t.swap(u);
+	BOOST_CHECK_EQUAL(t.size(),size / 2);
+	BOOST_CHECK_EQUAL(u.size(),size);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cvector_clear)
+{
+	set_mt();
+	{
+	piranha::cvector<int> t(size);
+	t.clear();
+	BOOST_CHECK_EQUAL(t.size(),unsigned(0));
+	}
+	{
+	piranha::cvector<nontrivial> t(size);
+	t.clear();
+	BOOST_CHECK_EQUAL(t.size(),unsigned(0));
+	}
+}

@@ -479,6 +479,24 @@ class cvector
 			}
 			return *this;
 		}
+		/// Swap.
+		/**
+		 * @param[in] other swap argument.
+		 */
+		void swap(cvector &other)
+		{
+			std::swap(m_data,other.m_data);
+			std::swap(m_size,other.m_size);
+			std::swap(m_allocator,other.m_allocator);
+		}
+		/// Clear.
+		/**
+		 * Equivalent to resize() to zero.
+		 */
+		void clear()
+		{
+			resize(0);
+		}
 		/// Const begin iterator.
 		/**
 		 * @return cvector::const_iterator to the first element, or end() if the vector is empty.

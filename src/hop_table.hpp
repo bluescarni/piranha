@@ -466,6 +466,26 @@ class hop_table
 			piranha_assert(m_n_elements);
 			--m_n_elements;
 		}
+		/// Remove all elements.
+		/**
+		 * After this call, size() and n_buckets() will both return zero.
+		 */
+		void clear()
+		{
+			m_container = container_type();
+			m_n_elements = 0;
+		}
+		/// Swap content.
+		/**
+		 * @param[in] other swap argument.
+		 */
+		void swap(hop_table &other)
+		{
+			m_container.swap(other.m_container);
+			std::swap(m_hasher,other.m_hasher);
+			std::swap(m_key_equal,other.m_key_equal);
+			std::swap<size_type>(m_n_elements,other.m_n_elements);
+		}
 		/// Insert unique element (low-level).
 		/**
 		 * This template is activated only if \p U is implicitly convertible to \p T.

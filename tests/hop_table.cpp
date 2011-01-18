@@ -273,3 +273,47 @@ BOOST_AUTO_TEST_CASE(hop_table_erase_test)
 {
 	boost::mpl::for_each<key_types>(erase_tester());
 }
+
+struct clear_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hop_table<T> h(make_hop_table<T>());
+		h.clear();
+		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
+		BOOST_CHECK_EQUAL(h.n_buckets(),unsigned(0));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hop_table_clear_test)
+{
+	boost::mpl::for_each<key_types>(clear_tester());
+}
+
+struct swap_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hop_table<T> h1(make_hop_table<T>()), h2(h1);
+		const auto nb1 = h1.n_buckets(), s1 = h1.size();
+		for (int i = 0; i < N / 2; ++i) {
+			h2.erase(h2.find(boost::lexical_cast<T>(i)));
+		}
+		const auto nb2 = h2.n_buckets(), s2 = h2.size();
+		h1.swap(h2);
+		BOOST_CHECK_EQUAL(h1.n_buckets(),nb2);
+		BOOST_CHECK_EQUAL(h2.n_buckets(),nb1);
+		BOOST_CHECK_EQUAL(h1.size(),s2);
+		BOOST_CHECK_EQUAL(h2.size(),s1);
+		for (int i = 0; i < N / 2; ++i) {
+			BOOST_CHECK(h1.find(boost::lexical_cast<T>(i)) == h1.end());
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hop_table_swap_test)
+{
+	boost::mpl::for_each<key_types>(swap_tester());
+}
