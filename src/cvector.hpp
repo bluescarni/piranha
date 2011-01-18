@@ -209,7 +209,7 @@ class cvector
 					const value_type tmp = value_type();
 					value_type *current = begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++current) {
-						new ((void *)current) value_type(tmp);
+						::new ((void *)current) value_type(tmp);
 					}
 				} catch (...) {
 					// Store the exception.
@@ -278,7 +278,7 @@ class cvector
 					value_type *dest_current = dest_begin + tc.offset;
 					value_type const *src_current = src_begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
-						new ((void *)dest_current) value_type(*src_current);
+						::new ((void *)dest_current) value_type(*src_current);
 					}
 				} catch (...) {
 					// Store the exception.
@@ -315,7 +315,7 @@ class cvector
 				try {
 					value_type *dest_current = dest_begin + tc.offset, *src_current = src_begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
-						new ((void *)dest_current) value_type(piranha_move_if_noexcept(*src_current));
+						::new ((void *)dest_current) value_type(piranha_move_if_noexcept(*src_current));
 					}
 				} catch (...) {
 					store_exception(tc);

@@ -130,7 +130,7 @@ class hop_table
 			{
 				this->m_bitset = other.m_bitset;
 				if (this->test_occupied()) {
-					new ((void *)&this->m_storage) U(*other.ptr());
+					::new ((void *)&this->m_storage) U(*other.ptr());
 				}
 			}
 			// NOTE: this should be called only in the default constructor of cvector,
@@ -518,7 +518,7 @@ class hop_table
 			piranha_assert(bucket_idx == bucket_impl(k));
 			if (!m_container[bucket_idx].test_occupied()) {
 				piranha_assert(!m_container[bucket_idx].test(0));
-				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::forward<U>(k));
+				::new ((void *)&m_container[bucket_idx].m_storage) key_type(std::forward<U>(k));
 				m_container[bucket_idx].set_occupied();
 				m_container[bucket_idx].set(0);
 				return std::make_pair(iterator(this,bucket_idx),true);
@@ -559,7 +559,7 @@ class hop_table
 				piranha_assert(m_container[alt_idx].test(next_idx - alt_idx));
 				piranha_assert(!m_container[alt_idx].test(orig_idx - alt_idx));
 				// Move the content of the target bucket to the empty slot.
-				new ((void *)&m_container[orig_idx].m_storage)
+				::new ((void *)&m_container[orig_idx].m_storage)
 					key_type(std::move(*m_container[next_idx].ptr()));
 				// Destroy the object in the target bucket.
 				m_container[next_idx].ptr()->~key_type();
@@ -576,7 +576,7 @@ class hop_table
 			// The available slot is within the destination virtual bucket.
 			piranha_assert(!m_container[alt_idx].test_occupied());
 			piranha_assert(!m_container[bucket_idx].test(alt_idx - bucket_idx));
-			new ((void *)&m_container[alt_idx].m_storage) key_type(std::forward<U>(k));
+			::new ((void *)&m_container[alt_idx].m_storage) key_type(std::forward<U>(k));
 			m_container[alt_idx].set_occupied();
 			m_container[bucket_idx].set(alt_idx - bucket_idx);
 			return std::make_pair(iterator(this,alt_idx),true);
