@@ -43,9 +43,6 @@
 #include "mf_int.hpp"
 #include "type_traits.hpp"
 
-
-#include <iostream> // TODO: remove!!!!
-
 namespace piranha
 {
 
@@ -68,6 +65,9 @@ class hop_table
 		template <typename U>
 		struct base_generic_hop_bucket
 		{
+			// NOTE: here the bitset is read from msb to lsb. lsb is reserved for the flag
+			// that signals if the bucket is occupied, leaving a size of nbits - 1 for the virtual
+			// bucket.
 			typedef typename boost::aligned_storage<sizeof(U),boost::alignment_of<U>::value>::type storage_type;
 			static const mf_uint n_eff_bits = mf_int_traits::nbits - static_cast<mf_uint>(1);
 			static const mf_uint max_shift = n_eff_bits - static_cast<mf_uint>(1);
@@ -266,7 +266,7 @@ class hop_table
 		 * @param[in] k key equality predicate.
 		 */
 		template <typename InputIterator>
-		hop_table(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0,
+		explicit hop_table(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0,
 			const hasher &h = hasher(), const key_equal &k = key_equal()):
 			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0)
 		{
@@ -283,7 +283,7 @@ class hop_table
 			piranha_assert(sanity_check());
 		}
 		/// Default copy assignment operator.
-		hop_table &operator=(const hop_table &other) = default;
+		hop_table &operator=(const hop_table &) = default;
 		/// Move assignment operator.
 		/**
 		 * Will copy hash functor and equality predicate, moving only the internal representation of the table.
@@ -493,13 +493,10 @@ class hop_table
 			const size_type container_size = m_container.size();
 			if (unlikely(!container_size)) {
 				// No free slot was found, need to resize.
-// std::cout << "no free buckets\n";
 				return std::make_pair(end(),false);
 			}
 			piranha_assert(bucket_idx == bucket_impl(k));
-// std::cout << "original bucket index: " << bucket_idx << '\n';
 			if (!m_container[bucket_idx].test_occupied()) {
-// std::cout << "found on 1st shot: " << bucket_idx << '\n';
 				piranha_assert(!m_container[bucket_idx].test(0));
 				new ((void *)&m_container[bucket_idx].m_storage) key_type(std::forward<U>(k));
 				m_container[bucket_idx].set_occupied();
@@ -515,12 +512,9 @@ class hop_table
 			}
 			if (alt_idx == container_size) {
 				// No free slot was found, need to resize.
-// std::cout << "no free buckets\n";
 				return std::make_pair(end(),false);
 			}
-// std::cout << "found after linear probe\n";
 			while (alt_idx - bucket_idx >= hop_bucket::n_eff_bits) {
-// std::cout << "need to do the hopscotch dance\n";
 				const size_type orig_idx = alt_idx;
 				// First let's try to move as back as possible.
 				alt_idx -= hop_bucket::max_shift;
@@ -528,14 +522,12 @@ class hop_table
 				// Msb cannot be in index 1 because that is the empty bucket we are starting from.
 				piranha_assert(msb != 1);
 				while (msb < min_bit_pos && alt_idx < orig_idx) {
-// std::cout << "bling bling\n";
 					++alt_idx;
 					++min_bit_pos;
 					msb = mf_int_traits::msb(m_container[alt_idx].m_bitset);
 				}
 				if (alt_idx == orig_idx) {
 					// No free slot was found, need to resize.
-// std::cout << "no free buckets\n";
 					return std::make_pair(end(),false);
 				}
 				piranha_assert(msb > 0);
@@ -561,7 +553,6 @@ class hop_table
 				// Set the new alt_idx.
 				alt_idx = next_idx;
 			}
-// std::cout << "gonna write into: " << alt_idx << '\n';
 			// The available slot is within the destination virtual bucket.
 			piranha_assert(!m_container[alt_idx].test_occupied());
 			piranha_assert(!m_container[bucket_idx].test(alt_idx - bucket_idx));
@@ -583,7 +574,6 @@ class hop_table
 			const hop_bucket &b = m_container[bucket_idx];
 			// Detect if the virtual bucket is empty.
 			if (b.none()) {
-// std::cout << "empty bitset\n";
 				return end();
 			}
 			size_type next_idx = bucket_idx;
@@ -609,11 +599,9 @@ class hop_table
 				for (mf_uint j = 0; j < std::min<mf_uint>(hop_bucket::n_eff_bits,m_container.size() - i); ++j) {
 					if (m_container[i].test(j)) {
 						if (!m_container[i + j].test_occupied()) {
-std::cout << "not occupied!!\n";
 							return false;
 						}
 						if (bucket_impl(*m_container[i + j].ptr()) != i) {
-std::cout << "not hashed good!\n";
 							return false;
 						}
 					}
@@ -623,18 +611,15 @@ std::cout << "not hashed good!\n";
 				}
 			}
 			if (count != m_n_elements) {
-std::cout << "inconsistent size!\n";
 				return false;
 			}
 			if (m_container.size() != table_sizes[get_size_index()]) {
-std::cout << "inconsistent size index!\n";
 				return false;
 			}
 			// Check size is consistent with number of iterator traversals.
 			count = 0;
 			for (auto it = begin(); it != end(); ++it, ++count) {}
 			if (count != m_n_elements) {
-std::cout << "inconsistent number of iterator traversals!\n";
 				return false;
 			}
 			return true;
@@ -650,7 +635,6 @@ std::cout << "inconsistent number of iterator traversals!\n";
 		// Increase table size at least to the next available size.
 		void increase_size()
 		{
-// std::cout << "resize requested!!!\n";
 			auto cur_size_index = get_size_index();
 			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 				throw std::bad_alloc();
@@ -667,7 +651,6 @@ std::cout << "inconsistent number of iterator traversals!\n";
 							result = temp_tables.back()._unique_insert(std::move(*(it->ptr())),temp_tables.back().bucket_impl(*(it->ptr())));
 							temp_tables.back().m_n_elements += static_cast<size_type>(result.second);
 							if (unlikely(!result.second)) {
-std::cout << "ZOMGMOMGOMOGMGOOM\n";
 								if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
 									throw std::bad_alloc();
 								}
@@ -739,7 +722,6 @@ std::cout << "ZOMGMOMGOMOGMGOOM\n";
 				throw std::bad_alloc();
 			}
 			piranha_assert(*it >= hint);
-std::cout << "hint was: " << hint << ", size is: " << *it << '\n';
 			return *it;
 		}
 	private:
