@@ -60,7 +60,7 @@ struct trivial
 
 int main()
 {
-	settings::set_n_threads(1);
+// 	settings::set_n_threads(1);
 // 	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
 
 // 	integer i(1);
@@ -95,14 +95,38 @@ int main()
 // 	ht0.emplace("e cretino!");
 // 	ht0.emplace("zio scatenato!!!");
 
-const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
-
 // 	hop_table<int>::hop_bucket b = hop_table<int>::hop_bucket();
 // 	std::cout << b.m_occupied << '\n';
 // 	std::cout << b.m_bitset << '\n';
 // 	return 0;
 
-	/*std::thread t([](){*/hop_table<int> ht;/*});*/
+	auto custom_hasher = [](const std::pair<double,double> &p) -> std::size_t {
+		std::size_t retval = boost::hash<double>()(p.second);
+		return retval;
+	};
+
+	thread_management::bind_to_proc(0);
+
+	const int N = 18000000;
+
+	std::vector<integer> vs;
+	for (int i = 0; i < N; ++i) {
+		vs.push_back(integer(std::hash<std::string>()(boost::lexical_cast<std::string>(i))));
+	}
+
+const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
+	/*std::thread t([](){*/hop_table<integer> ht(2 * N)/*(10000000)*/;/*});*/
+std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+	for (int i = 0; i < N; ++i) {
+		auto retval = ht.insert(vs[i]);
+// 		auto retval = ht._unique_insert(tmp,ht.bucket(tmp));
+// 		if (unlikely(!retval.second)) {
+// 			std::cout << "FAIL\n";
+// 		}
+	}
+std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+	return 0;
+#if 0
 // std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 
 // 	return 0;
@@ -113,7 +137,7 @@ const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_
 std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 	return 0;
 
-#if 0
+
 	struct foo
 	{
 		long x;
