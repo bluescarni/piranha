@@ -327,6 +327,9 @@ struct load_factor_tester
 		BOOST_CHECK_THROW(h.load_factor(),piranha::zero_division_error);
 		hop_table<T> i(10);
 		BOOST_CHECK_EQUAL(i.load_factor(),0);
+		hop_table<T> j(make_hop_table<T>());
+		BOOST_CHECK(j.load_factor() > 0);
+		BOOST_CHECK(j.load_factor() <= 1);
 	}
 };
 
