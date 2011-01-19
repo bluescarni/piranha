@@ -18,41 +18,14 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_PIRANHA_HPP
-#define PIRANHA_PIRANHA_HPP
+#include <mutex>
 
-/** \file piranha.hpp
- * Global piranha header file.
- * 
- * Include this file to import piranha's entire public interface.
- */
-
-/// Root piranha namespace.
-/**
- * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
- * and if this is not the case add it.
- */
-namespace piranha {}
-
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified
-// - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
-//   to document every occurrence.
-// - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
-//   to signal/emulate them.
-
-#include "config.hpp"
-#include "cvector.hpp"
-#include "exceptions.hpp"
-#include "hop_table.hpp"
-#include "integer.hpp"
-#include "mf_int.hpp"
-#include "runtime_info.hpp"
-#include "settings.hpp"
 #include "symbol.hpp"
-#include "thread_barrier.hpp"
-#include "thread_group.hpp"
-#include "thread_management.hpp"
-#include "type_traits.hpp"
 
-#endif
+namespace piranha
+{
+
+symbol::container_type symbol::m_symbol_list;
+std::mutex symbol::m_mutex;
+
+}

@@ -18,41 +18,42 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_PIRANHA_HPP
-#define PIRANHA_PIRANHA_HPP
+#include "../src/symbol.hpp"
 
-/** \file piranha.hpp
- * Global piranha header file.
- * 
- * Include this file to import piranha's entire public interface.
- */
+#define BOOST_TEST_MODULE symbol_test
+#include <boost/test/unit_test.hpp>
 
-/// Root piranha namespace.
-/**
- * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
- * and if this is not the case add it.
- */
-namespace piranha {}
+using namespace piranha;
 
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified
-// - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
-//   to document every occurrence.
-// - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
-//   to signal/emulate them.
+BOOST_AUTO_TEST_CASE(symbol_constructor_test)
+{
+	symbol x("x");
+	BOOST_CHECK_EQUAL(x.get_name(),"x");
+	BOOST_CHECK_EQUAL(x.get_value(),0.);
+	symbol y("y",1.);
+	BOOST_CHECK_EQUAL(y.get_name(),"y");
+	BOOST_CHECK_EQUAL(y.get_value(),1.);
+	symbol y2("y");
+	BOOST_CHECK_EQUAL(y2.get_name(),"y");
+	BOOST_CHECK_EQUAL(y2.get_value(),1.);
+	symbol x2("x",2.);
+	BOOST_CHECK_EQUAL(x2.get_name(),"x");
+	BOOST_CHECK_EQUAL(x2.get_value(),2.);
+	symbol x3("x");
+	BOOST_CHECK_EQUAL(x3.get_name(),"x");
+	BOOST_CHECK_EQUAL(x3.get_value(),2.);
+	// Copy ctor.
+	symbol x4(x3);
+	BOOST_CHECK_EQUAL(x4.get_name(),"x");
+	BOOST_CHECK_EQUAL(x4.get_value(),2.);
+}
 
-#include "config.hpp"
-#include "cvector.hpp"
-#include "exceptions.hpp"
-#include "hop_table.hpp"
-#include "integer.hpp"
-#include "mf_int.hpp"
-#include "runtime_info.hpp"
-#include "settings.hpp"
-#include "symbol.hpp"
-#include "thread_barrier.hpp"
-#include "thread_group.hpp"
-#include "thread_management.hpp"
-#include "type_traits.hpp"
-
-#endif
+BOOST_AUTO_TEST_CASE(symbol_operators_test)
+{
+	BOOST_CHECK_EQUAL(symbol("x"),symbol("x"));
+	BOOST_CHECK_EQUAL(symbol("x"),symbol("x",1.));
+	BOOST_CHECK_EQUAL(symbol("x").get_name(),symbol("x").get_name());
+	BOOST_CHECK_EQUAL(symbol("x").get_name(),symbol("x",1.).get_name());
+	BOOST_CHECK(symbol("y") != symbol("x",1.));
+	BOOST_CHECK(symbol("y").get_name() != symbol("x",1.).get_name());
+}

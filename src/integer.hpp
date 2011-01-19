@@ -1583,7 +1583,7 @@ class integer
 		 * @param[in] os output stream.
 		 * @param[in] n piranha::integer to be sent to stream.
 		 * 
-		 * @return reference to output stream.
+		 * @return reference to \p os.
 		 */
 		friend inline std::ostream &operator<<(std::ostream &os, const integer &n)
 		{
@@ -1604,7 +1604,7 @@ class integer
 		 * @param[in] is input stream.
 		 * @param[in,out] n integer to which the contents of the stream will be assigned.
 		 * 
-		 * @return reference to input stream.
+		 * @return reference to \p is.
 		 */
 		friend inline std::istream &operator>>(std::istream &is, integer &n)
 		{
