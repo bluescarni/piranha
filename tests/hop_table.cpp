@@ -317,3 +317,20 @@ BOOST_AUTO_TEST_CASE(hop_table_swap_test)
 {
 	boost::mpl::for_each<key_types>(swap_tester());
 }
+
+struct load_factor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hop_table<T> h;
+		BOOST_CHECK_THROW(h.load_factor(),piranha::zero_division_error);
+		hop_table<T> i(10);
+		BOOST_CHECK_EQUAL(i.load_factor(),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hop_table_load_factor_test)
+{
+	boost::mpl::for_each<key_types>(load_factor_tester());
+}

@@ -365,6 +365,19 @@ class hop_table
 		{
 			return m_container.size();
 		}
+		/// Load factor.
+		/**
+		 * @return <tt>size() / n_buckets()</tt>.
+		 * 
+		 * @throws piranha::zero_division_error if the table is empty.
+		 */
+		double load_factor() const
+		{
+			if (unlikely(!m_container.size())) {
+				piranha_throw(zero_division_error,"number of buckets is zero");
+			}
+			return static_cast<double>(m_n_elements) / m_container.size();
+		}
 		/// Index of first destination bucket.
 		/**
 		 * Index of the first bucket that would be taken into consideration during the insertion operation of \p k.
