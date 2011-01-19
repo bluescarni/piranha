@@ -93,6 +93,8 @@ class symbol
 		}
 		/// Equality operator.
 		/**
+		 * @param[in] other equality argument.
+		 * 
 		 * @return true if \p other refers to the same underlying object of \p this, false otherwise.
 		 */
 		bool operator==(const symbol &other) const
@@ -101,7 +103,9 @@ class symbol
 		}
 		/// Inequality operator.
 		/**
-		 * @return <tt>!(*this == other)</tt>.
+		 * @param[in] other inequality argument.
+		 * 
+		 * @return negation of operator==().
 		 */
 		bool operator!=(const symbol &other) const
 		{
