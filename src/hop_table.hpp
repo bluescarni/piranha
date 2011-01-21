@@ -23,10 +23,8 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/aligned_storage.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/type_traits/alignment_of.hpp>
 #include <boost/utility.hpp>
 #include <cstddef>
 #include <functional>
@@ -41,7 +39,6 @@
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -68,7 +65,7 @@ class hop_table
 			// NOTE: here the bitset is read from msb to lsb. lsb is reserved for the flag
 			// that signals if the bucket is occupied, leaving a size of nbits - 1 for the virtual
 			// bucket.
-			typedef typename boost::aligned_storage<sizeof(U),boost::alignment_of<U>::value>::type storage_type;
+			typedef typename std::aligned_storage<sizeof(U),alignof(U)>::type storage_type;
 			static const mf_uint n_eff_bits = mf_int_traits::nbits - static_cast<mf_uint>(1);
 			static const mf_uint max_shift = n_eff_bits - static_cast<mf_uint>(1);
 			static const mf_uint highest_bit = static_cast<mf_uint>(1) << n_eff_bits;
@@ -154,7 +151,7 @@ class hop_table
 		// objects, the bucket can behave like a POD type, which lets optimizations in cvector kick in.
 		template <typename U>
 		struct generic_hop_bucket<U, typename boost::enable_if_c<
-			std::has_trivial_destructor<U>::value && is_trivially_copyable<U>::value
+			std::has_trivial_destructor<U>::value && std::has_trivial_copy_constructor<U>::value
 			>::type>: base_generic_hop_bucket<U>
 		{};
 		typedef generic_hop_bucket<T> hop_bucket;
