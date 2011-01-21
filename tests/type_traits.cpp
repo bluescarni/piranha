@@ -24,31 +24,23 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <type_traits>
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(is_trivially_copyable_test)
+BOOST_AUTO_TEST_CASE(type_traits_strip_cv_test)
 {
-	struct trivial0 {};
-	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial0>::value,true);
-	struct trivial1
-	{
-		trivial1():m_value(1) {}
-		~trivial1() {m_value = 0;}
-		double m_value;
-	};
-	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial1>::value,true);
-	struct nontrivial0
-	{
-		nontrivial0():m_str("hello") {}
-		std::string m_str;
-	};
-	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial0>::value,false);
-	struct nontrivial1
-	{
-		nontrivial1():m_value(1) {}
-		nontrivial1(const nontrivial1 &) {m_value = 0;}
-		double m_value;
-	};
-	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial1>::value,false);
+	static_assert(std::is_same<int,strip_cv_ref<const int>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<volatile int>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<const volatile int>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<const int &>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<volatile int &>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<const volatile int &>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<int &&>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<const int &&>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<volatile int &&>::type>::value,"");
+	static_assert(std::is_same<int,strip_cv_ref<const volatile int &&>::type>::value,"");
+	static_assert(std::is_same<int *,strip_cv_ref<int * const>::type>::value,"");
+	static_assert(std::is_same<int *,strip_cv_ref<int * volatile>::type>::value,"");
+	static_assert(std::is_same<int *,strip_cv_ref<int * const volatile>::type>::value,"");
 }

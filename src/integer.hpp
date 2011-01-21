@@ -44,6 +44,7 @@
 
 #include "config.hpp" // For (un)likely.
 #include "exceptions.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -77,12 +78,6 @@ namespace piranha
  */
 class integer
 {
-		// Strip T of reference, const and volatile attributes.
-		template <typename T>
-		struct strip_cv_ref
-		{
-			typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
-		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
 		template <typename T>

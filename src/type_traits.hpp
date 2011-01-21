@@ -26,24 +26,16 @@
 namespace piranha
 {
 
-/// Trivially copyable type trait.
+/// Strip reference and top-level cv-qualifiers
 /**
- * This type trait is intended to be equivalent to \p std::is_trivially_copyable, which,
- * at the time of this writing, has not been implemented yet in GCC. If the compiler
- * is GCC, then GCC's intrinsic type trait \p __has_trivial_copy will be used. Otherwise,
- * \p std::is_trivially_copyable will be used instead.
- * 
- * @see http://gcc.gnu.org/onlinedocs/gcc/Type-Traits.html
+ * This type trait removes top-level cv-qualifiers and, if \p T is a reference, transforms it into the referred-to type.
  */
 template <typename T>
-struct is_trivially_copyable: std::integral_constant<bool,
-#if defined(__GNUC__)
-	__has_trivial_copy(T)
-#else
-	std::is_trivially_copyable<T>::value
-#endif
-	>
-{};
+struct strip_cv_ref
+{
+	/// Type definition.
+	typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
+};
 
 }
 
