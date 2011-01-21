@@ -41,7 +41,6 @@
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
-#include "type_traits.hpp"
 
 namespace piranha {
 
@@ -299,7 +298,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
+				impl(tc,dest_begin,src_begin,std::has_trivial_copy_constructor<value_type>());
 			}
 		};
 		struct mover
@@ -336,7 +335,7 @@ class cvector
 				}
 				// NOTE: possibly here it should really be: move it if it has a move ctor
 				// and it is not trivially copyable otherwise fall back to copying.
-				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
+				impl(tc,dest_begin,src_begin,std::has_trivial_copy_constructor<value_type>());
 			}
 		};
 	public:
