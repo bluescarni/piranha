@@ -116,6 +116,14 @@ class numerical_coefficient
 			assign(std::forward<U>(other));
 			return *this;
 		}
+		/// Value getter.
+		/**
+		 * @return const reference to the internal type.
+		 */
+		const type &get_value() const
+		{
+			return m_value;
+		}
 	private:
 		type m_value;
 };
