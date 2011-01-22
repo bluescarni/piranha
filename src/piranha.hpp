@@ -31,6 +31,9 @@
 /**
  * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
  * and if this is not the case add it.
+ * 
+ * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
+ * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment)
  */
 namespace piranha {}
 

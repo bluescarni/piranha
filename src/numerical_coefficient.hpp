@@ -25,41 +25,42 @@
 #include <type_traits>
 
 #include "config.hpp"
-#include "crtp_helper.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
 
-/// Numerical coefficient tag class.
-/**
- * Used to tag piranha::numerical_coefficient.
- */
-struct numerical_coefficient_tag {};
-
 /// Numerical coefficient.
 /**
- * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag struct
- * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment)
+ * This class is intended as a thin wrapper around C++ arithmetic types and types behaving like them. Construction,
+ * assignment, arithmetic operations, etc. will be forwarded to an instance of type \p T stored as a member of the class.
+ * A set of additional methods is provided, so that this class can be used as coefficient type in series.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, typename Derived>
-class numerical_coefficient: numerical_coefficient_tag, public crtp_helper<Derived>
+template <typename T>
+class numerical_coefficient
 {
+		// Type trait to detect numerical coefficient class.
+		template <typename U>
+		struct is_numerical_coefficient: std::false_type {};
+		template <typename U>
+		struct is_numerical_coefficient<numerical_coefficient<U>>: std::true_type {};
 		template <typename U>
 		void assign(U &&other, typename boost::enable_if_c<
-			std::is_base_of<numerical_coefficient_tag,typename strip_cv_ref<U>::type>::value &&
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
 			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
 		{
 			m_value = std::move(other.m_value);
 		}
 		template <typename U>
 		void assign(const U &other, typename boost::enable_if<
-			std::is_base_of<numerical_coefficient_tag,typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
 		{
 			m_value = other.m_value;
 		}
 		template <class U>
-		void assign(U &&other, typename boost::disable_if<std::is_base_of<numerical_coefficient_tag,typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
+		void assign(U &&other, typename boost::disable_if<is_numerical_coefficient<typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
 		{
 			m_value = std::forward<U>(other);
 		}
@@ -105,15 +106,15 @@ class numerical_coefficient: numerical_coefficient_tag, public crtp_helper<Deriv
 		 * 
 		 * @param[in] other assignment argument.
 		 * 
-		 * @return reference to \p this cast to the derived instance.
+		 * @return reference to \p this.
 		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy/move assignment operators.
 		 */
 		template <typename U>
-		Derived &operator=(U &&other)
+		numerical_coefficient &operator=(U &&other)
 		{
 			assign(std::forward<U>(other));
-			return *this->derived();
+			return *this;
 		}
 	private:
 		type m_value;
