@@ -81,7 +81,7 @@ class integer
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
 		template <typename T>
-		static void fp_normal_check(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static void fp_normal_check(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			if (!boost::math::isfinite(x)) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
@@ -127,25 +127,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = 0)
+		void construct_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_init_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
 		void construct_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void construct_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = 0)
+		void construct_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -166,25 +166,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = 0)
+		void assign_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
 		void assign_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void assign_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = 0)
+		void assign_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -275,7 +275,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_add(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
 				::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(si));
@@ -287,18 +287,18 @@ class integer
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		// For (unsigned) long long create a temporary integer and add it.
 		template <typename T>
-		void in_place_add(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		void in_place_add(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_add(integer(n));
 		}
 		template <typename T>
-		void in_place_add(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		void in_place_add(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) + x);
 		}
@@ -319,7 +319,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_sub(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
 				::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(si));
@@ -329,17 +329,17 @@ class integer
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		void in_place_sub(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_sub(integer(n));
 		}
 		template <typename T>
-		void in_place_sub(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		void in_place_sub(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) - x);
 		}
@@ -357,23 +357,23 @@ class integer
 		}
 		template <typename T>
 		void in_place_mul(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_si(m_value,m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void in_place_mul(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		void in_place_mul(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_mul(integer(n));
 		}
 		template <typename T>
-		void in_place_mul(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		void in_place_mul(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) * x);
 		}
@@ -387,7 +387,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_div(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -401,7 +401,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_div(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -409,12 +409,12 @@ class integer
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		void in_place_div(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_div(integer(n));
 		}
 		template <typename T>
-		void in_place_div(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		void in_place_div(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -431,7 +431,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_mod(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si <= 0)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
@@ -440,7 +440,7 @@ class integer
 		}
 		template <typename T>
 		void in_place_mod(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
@@ -448,7 +448,7 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mod(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = 0)
+		void in_place_mod(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_mod(integer(n));
 		}
@@ -484,7 +484,7 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			// NOTE: the logic here is that we can "steal" from n1 we do it here, otherwise we
 			// attempt the steal from n2 in the overload below.
@@ -497,19 +497,19 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
 			retval += std::forward<T>(n1);
 			return retval;
 		}
 		template <typename T>
-		static T binary_plus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_plus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) + x);
 		}
 		template <typename T>
-		static T binary_plus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_plus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return binary_plus(n,x);
 		}
@@ -519,7 +519,7 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
 			retval -= std::forward<U>(n2);
@@ -530,7 +530,7 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
 			::mpz_neg(retval.m_value,retval.m_value);
@@ -538,12 +538,12 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_minus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_minus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) - x);
 		}
 		template <typename T>
-		static T binary_minus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_minus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return -binary_minus(n,x);
 		}
@@ -553,7 +553,7 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
 			retval *= std::forward<U>(n2);
@@ -564,19 +564,19 @@ class integer
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
 			retval *= std::forward<T>(n1);
 			return retval;
 		}
 		template <typename T>
-		static T binary_mul(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_mul(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) * x);
 		}
 		template <typename T>
-		static T binary_mul(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_mul(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return binary_mul(n,x);
 		}
@@ -585,7 +585,7 @@ class integer
 		static integer binary_div(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			// NOTE: here it makes sense only to attempt to steal n1's storage, not n2's, because the operation is not commutative.
 			integer retval(std::forward<T>(n1));
@@ -593,7 +593,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_div(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_div(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -601,7 +601,7 @@ class integer
 			return (static_cast<T>(n) / x);
 		}
 		template <typename T>
-		static T binary_div(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static T binary_div(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			const T n_T = static_cast<T>(n);
 			if (unlikely(n_T == 0)) {
@@ -614,7 +614,7 @@ class integer
 		static integer binary_mod(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
-			>::type * = 0)
+			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
 			retval %= std::forward<U>(n2);
@@ -627,29 +627,29 @@ class integer
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = 0)
+			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static bool binary_equality(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) == x);
 		}
 		template <typename T>
-		static bool binary_equality(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		static bool binary_equality(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
 		{
 			return binary_equality(n,x);
 		}
@@ -660,24 +660,24 @@ class integer
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = 0)
+			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_less_than(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static bool binary_less_than(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) < x);
 		}
@@ -688,41 +688,41 @@ class integer
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = 0)
+			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = 0)
+			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = 0)
+			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_leq(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = 0)
+		static bool binary_leq(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) <= x);
 		}
 		// Inverse forms of less-than and leq.
 		template <typename T>
-		static bool binary_less_than(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		static bool binary_less_than(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
 		{
 			return !binary_leq(n,x);
 		}
 		template <typename T>
-		static bool binary_leq(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		static bool binary_leq(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
 		{
 			return !binary_less_than(n,x);
 		}
 		// Exponentiation.
 		template <typename T>
-		integer pow_impl(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = 0) const
+		integer pow_impl(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
 			unsigned long exp;
 			try {
@@ -735,7 +735,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		integer pow_impl(const T &si, typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value>::type * = 0) const
+		integer pow_impl(const T &si, typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
 			if (si >= 0) {
 				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
@@ -757,7 +757,7 @@ class integer
 			return pow_impl(exp);
 		}
 		template <typename T>
-		integer pow_impl(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = 0) const
+		integer pow_impl(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr) const
 		{
 			if (!boost::math::isfinite(x) || boost::math::trunc(x) != x) {
 				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
@@ -820,7 +820,7 @@ class integer
 		 * @throw std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = 0)
+		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
 		{
 			construct_from_arithmetic(x);
 		}
