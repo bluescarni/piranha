@@ -48,6 +48,7 @@ namespace piranha {}
 #include "hop_table.hpp"
 #include "integer.hpp"
 #include "mf_int.hpp"
+#include "numerical_coefficient.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "symbol.hpp"
