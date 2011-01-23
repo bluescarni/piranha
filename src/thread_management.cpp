@@ -94,9 +94,8 @@ void thread_management::bind_to_proc(unsigned n)
 		piranha_throw(std::runtime_error,"the call to pthread_setaffinity_np() failed");
 	}
 #else
-#warning No bind_to_proc implementation available.
 	(void)n;
-	piranha_throw(not_implemented_error,"bind_to_proc is not available on this platform")
+	piranha_throw(not_implemented_error,"bind_to_proc is not available on this platform");
 #endif
 }
 
@@ -140,8 +139,7 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	}
 	piranha_throw(std::runtime_error,"operation failed");
 #else
-#warning No bound_proc implementation available.
-	piranha_throw(not_implemented_error,"bound_proc is not available on this platform")
+	piranha_throw(not_implemented_error,"bound_proc is not available on this platform");
 #endif
 }
 
