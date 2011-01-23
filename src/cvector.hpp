@@ -71,6 +71,7 @@ namespace piranha {
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Investigate performance issues on parallel destruction.
+ * \todo initializer_list constructor.
  */
 template <typename T, std::size_t MinWork = 50>
 class cvector

@@ -30,6 +30,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <initializer_list>
 #include <string>
 
 #include "../src/config.hpp"
@@ -135,6 +136,19 @@ struct move_assignment_tester
 	}
 };
 
+struct initializer_list_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hop_table<T> h = {boost::lexical_cast<T>("1"),boost::lexical_cast<T>("2"),boost::lexical_cast<T>("3"),boost::lexical_cast<T>("4"),boost::lexical_cast<T>("4")};
+		BOOST_CHECK_EQUAL(h.size(),unsigned(4));
+		for (int i = 1; i <= 4; ++i) {
+			BOOST_CHECK(h.find(boost::lexical_cast<T>(i)) != h.end());
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(hop_table_constructors_test)
 {
 	// Def ctor.
@@ -176,6 +190,8 @@ BOOST_AUTO_TEST_CASE(hop_table_constructors_test)
 	boost::mpl::for_each<key_types>(copy_assignment_tester());
 	// Move assignment.
 	boost::mpl::for_each<key_types>(move_assignment_tester());
+	// Initializer list.
+	boost::mpl::for_each<key_types>(initializer_list_tester());
 }
 
 struct iterator_tester

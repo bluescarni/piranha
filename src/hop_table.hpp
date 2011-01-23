@@ -28,6 +28,7 @@
 #include <boost/utility.hpp>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <list>
 #include <new>
@@ -272,6 +273,23 @@ class hop_table
 			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0)
 		{
 			for (auto it = begin; it != end; ++it) {
+				insert(*it);
+			}
+		}
+		/// Constructor from initializer list.
+		/**
+		 * Will insert() all the elements of the initializer list, ignoring the return value of the operation.
+		 * Hash functor and equality predicate will be default-constructed. \p U must be implicitly convertible
+		 * to hop_table::key_type.
+		 * 
+		 * @param[in] list initializer list of elements to be inserted.
+		 * 
+		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
+		 */
+		template <typename U>
+		hop_table(std::initializer_list<U> list):m_container(get_size_from_hint(boost::numeric_cast<size_type>(list.size()))),m_hasher(),m_key_equal(),m_n_elements(0)
+		{
+			for (auto it = list.begin(); it != list.end(); ++it) {
 				insert(*it);
 			}
 		}
