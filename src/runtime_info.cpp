@@ -18,11 +18,19 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifdef __linux__
+#if defined(__linux__)
 
 extern "C"
 {
 #include <sys/sysinfo.h>
+}
+
+#elif defined(__FreeBSD__)
+
+extern "C"
+{
+#include <sys/types.h>
+#include <sys/sysctl.h>
 }
 
 #endif
@@ -57,11 +65,15 @@ std::thread::id runtime_info::get_main_thread_id()
 unsigned runtime_info::hardware_concurrency()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-#ifdef __linux__
+#if defined(__linux__)
 	int candidate = ::get_nprocs();
 	return (candidate <= 0) ? 0 : static_cast<unsigned>(candidate);
+#elif defined(__FreeBSD__)
+	int count;
+	std::size_t size = sizeof(count);
+	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0 : static_cast<unsigned>(count);
 #else
-#warning Cannot determine automatically hardware concurrency.
+	std::cout << "Warning: cannot determine automatically hardware concurrency.\n";
 	return 0;
 #endif
 }
