@@ -39,6 +39,7 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo instead of nbits, use numeric_limits::digits
+ * \todo better heuristic for 64bit mode in build system: query nbits of std::size_t.
  * \todo move out the msb routine and generalise it?
  */
 class mf_int_traits

@@ -39,8 +39,8 @@ class runtime_info
 	public:
 		/// Main thread ID.
 		/**
-		* @return const reference to an instance of the ID of the main thread of execution.
-		*/
+		 * @return const reference to an instance of the ID of the main thread of execution.
+		 */
 		static const std::thread::id &get_main_thread_id()
 		{
 			return m_main_thread_id;
