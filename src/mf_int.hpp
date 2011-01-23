@@ -37,6 +37,9 @@ namespace piranha
  * available on the host platform.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo instead of nbits, use numeric_limits::digits
+ * \todo move out the msb routine and generalise it?
  */
 class mf_int_traits
 {

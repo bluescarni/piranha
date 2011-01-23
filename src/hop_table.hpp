@@ -55,6 +55,10 @@ namespace piranha
  * which provide the basic exception safety guarantee.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo tests for low-level methods
+ * \todo try forcing 32-bit bitmap insted of mf_int
+ * \todo see if find() can be sped up by using msb() instead of linear search
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
