@@ -162,15 +162,11 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	}
 	piranha_throw(std::runtime_error,"operation failed");
 #elif defined(__FreeBSD__)
-	cpu_set_t cpuset;
+	cpuset_t cpuset;
 	CPU_ZERO(&cpuset);
 	const int errno_ = ::cpuset_getaffinity(CPU_LEVEL_WHICH,CPU_WHICH_TID,-1,sizeof(cpuset),&cpuset);
 	if (errno_ != 0) {
 		piranha_throw(std::runtime_error,"the call to ::cpuset_getaffinity() failed");
-	}
-	const int cpu_count = CPU_COUNT(&cpuset);
-	if (cpu_count == 0 || cpu_count > 1) {
-		return std::make_pair(false,static_cast<unsigned>(0));
 	}
 	int cpu_setsize;
 	try {
@@ -178,14 +174,19 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	} catch (const boost::numeric::bad_numeric_cast &) {
 		piranha_throw(std::runtime_error,"numeric conversion error");
 	}
+	unsigned bound_cpus = 0;
+	int candidate = 0;
 	for (int i = 0; i < cpu_setsize; ++i) {
 		if (CPU_ISSET(i,&cpuset)) {
-			// Cast is safe here (verified above that cpu_setsize is representable in int,
-			// and, by extension, in unsigned).
-			return std::make_pair(true,static_cast<unsigned>(i));
+			++bound_cpus;
+			candidate = i;
 		}
 	}
-	piranha_throw(std::runtime_error,"operation failed");
+	if (bound_cpus == 0 || bound_cpus > 1) {
+		return std::make_pair(false,static_cast<unsigned>(0));
+	} else {
+		return std::make_pair(true,static_cast<unsigned>(candidate));
+	}
 #else
 	piranha_throw(not_implemented_error,"bound_proc is not available on this platform");
 #endif
