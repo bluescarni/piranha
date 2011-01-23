@@ -1259,7 +1259,6 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator/=(T &&x)
-			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_div(std::forward<T>(x));
 			return *this;
