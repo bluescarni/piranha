@@ -46,15 +46,6 @@ namespace piranha
 const std::thread::id runtime_info::m_main_thread_id = {std::this_thread::get_id()};
 std::mutex runtime_info::m_mutex;
 
-/// Main thread ID.
-/**
- * @return ID of the main thread of execution.
- */
-std::thread::id runtime_info::get_main_thread_id()
-{
-	return m_main_thread_id;
-}
-
 /// Hardware concurrency.
 /**
  * @return number of detected hardware thread contexts (typically equal to the number of CPU cores), or 0 if

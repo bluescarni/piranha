@@ -37,7 +37,14 @@ namespace piranha
 class runtime_info
 {
 	public:
-		static std::thread::id get_main_thread_id();
+		/// Main thread ID.
+		/**
+		* @return const reference to an instance of the ID of the main thread of execution.
+		*/
+		static const std::thread::id &get_main_thread_id()
+		{
+			return m_main_thread_id;
+		}
 		static unsigned hardware_concurrency();
 	private:
 		static const std::thread::id	m_main_thread_id;
