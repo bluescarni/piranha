@@ -11,6 +11,8 @@ INCLUDE(FindBoost)
 INCLUDE(FindGMP)
 INCLUDE(FindThreads)
 
+MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
+
 # Check pointer size.
 CHECK_TYPE_SIZE("void *" POINTER_SIZE)
 MESSAGE(STATUS "Pointer size is " ${POINTER_SIZE})
