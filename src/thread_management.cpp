@@ -32,17 +32,19 @@
 #include "settings.hpp"
 #include "thread_management.hpp"
 
-#ifdef PIRANHA_THREAD_MODEL_PTHREADS
+#if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
 extern "C"
 {
 #include <pthread.h>
+#include <sched.h>
 }
 #endif
 
-#ifdef _GNU_SOURCE
+#if defined(__FreeBSD__)
 extern "C"
 {
-#include <sched.h>
+#include <sys/param.h>
+#include <sys/cpuset.h>
 }
 #endif
 
@@ -93,6 +95,27 @@ void thread_management::bind_to_proc(unsigned n)
 	if (errno_ != 0) {
 		piranha_throw(std::runtime_error,"the call to pthread_setaffinity_np() failed");
 	}
+#elif defined(__FreeBSD__)
+	unsigned cpu_setsize;
+	int n_int;
+	try {
+		cpu_setsize = boost::numeric_cast<unsigned>(CPU_SETSIZE);
+		n_int = boost::numeric_cast<int>(n);
+	} catch (const boost::numeric::bad_numeric_cast &) {
+		piranha_throw(std::runtime_error,"numeric conversion error");
+	}
+	if (n >= cpu_setsize) {
+		piranha_throw(std::invalid_argument,"processor index is larger than the maximum allowed value");
+	}
+	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
+		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
+	}
+	cpuset_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(n,&cpuset);
+	if (::cpuset_setaffinity(CPU_LEVEL_WHICH,CPU_WHICH_TID,-1,sizeof(cpuset),&cpuset) == -1) {
+		piranha_throw(std::runtime_error,"the call to cpuset_setaffinity() failed");
+	}
 #else
 	(void)n;
 	piranha_throw(not_implemented_error,"bind_to_proc is not available on this platform");
@@ -119,6 +142,31 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 	const int errno_ = ::pthread_getaffinity_np(::pthread_self(),sizeof(cpuset),&cpuset);
 	if (errno_ != 0) {
 		piranha_throw(std::runtime_error,"the call to pthread_getaffinity_np() failed");
+	}
+	const int cpu_count = CPU_COUNT(&cpuset);
+	if (cpu_count == 0 || cpu_count > 1) {
+		return std::make_pair(false,static_cast<unsigned>(0));
+	}
+	int cpu_setsize;
+	try {
+		cpu_setsize = boost::numeric_cast<int>(CPU_SETSIZE);
+	} catch (const boost::numeric::bad_numeric_cast &) {
+		piranha_throw(std::runtime_error,"numeric conversion error");
+	}
+	for (int i = 0; i < cpu_setsize; ++i) {
+		if (CPU_ISSET(i,&cpuset)) {
+			// Cast is safe here (verified above that cpu_setsize is representable in int,
+			// and, by extension, in unsigned).
+			return std::make_pair(true,static_cast<unsigned>(i));
+		}
+	}
+	piranha_throw(std::runtime_error,"operation failed");
+#elif defined(__FreeBSD__)
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	const int errno_ = ::cpuset_getaffinity(CPU_LEVEL_WHICH,CPU_WHICH_TID,-1,sizeof(cpuset),&cpuset);
+	if (errno_ != 0) {
+		piranha_throw(std::runtime_error,"the call to ::cpuset_getaffinity() failed");
 	}
 	const int cpu_count = CPU_COUNT(&cpuset);
 	if (cpu_count == 0 || cpu_count > 1) {

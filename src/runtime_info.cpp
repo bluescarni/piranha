@@ -73,7 +73,7 @@ unsigned runtime_info::hardware_concurrency()
 	std::size_t size = sizeof(count);
 	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0 : static_cast<unsigned>(count);
 #else
-	std::cout << "Warning: cannot determine automatically hardware concurrency.\n";
+	std::cout << "Warning: hardware concurrency detection not implemented.\n";
 	return 0;
 #endif
 }
