@@ -124,7 +124,9 @@ void thread_management::bind_to_proc(unsigned n)
 
 /// Query if current thread is bound to a processor.
 /**
- * The complexity of the operation is at most linear in the number of processors available on the system.
+ * The complexity of the operation is at most linear in the maximum number of processors that can be
+ * represented on the system (e.g., in Unix-like system this number will typically correspond to the
+ * \p CPU_SETSIZE macro).
  * This method requires platform-specific functions and thus might not be available on all configurations.
  * 
  * @return the pair <tt>(true,n)</tt> if the calling thread is bound to a single processor with index \p n, <tt>(false,0)</tt>
