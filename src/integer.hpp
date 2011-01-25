@@ -1655,14 +1655,14 @@ template <>
 struct hash<piranha::integer>
 {
 	/// Result type.
-	typedef std::size_t result_type;
+	typedef size_t result_type;
 	/// Argument type.
 	typedef piranha::integer argument_type;
 	/// Hash operator.
 	/**
 	 * @param[in] n piranha::integer whose hash value will be returned.
 	 * 
-	 * @return <tt>n.hash()</tt>
+	 * @return <tt>n.hash()</tt>.
 	 * 
 	 * @see piranha::integer::hash()
 	 */
