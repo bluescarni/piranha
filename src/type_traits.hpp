@@ -23,6 +23,10 @@
 
 #include <type_traits>
 
+/** \file type_traits.hpp
+ * \brief Type traits.
+ */
+
 namespace piranha
 {
 
@@ -38,5 +42,34 @@ struct strip_cv_ref
 };
 
 }
+
+/// Macro to test if class has type definition.
+/**
+ * This macro will declare a template struct parametrized over one type \p T and called <tt>has_typedef_type_name</tt>
+ * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, false otherwise.
+ * 
+ * For instance:
+ * \code
+ * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type)
+ * struct foo
+ * {
+ * 	typedef int foo_type;
+ * };
+ * struct bar {};
+ * \endcode
+ * \p has_typedef_foo_type<foo>::value will be true and \p has_typedef_foo_type<bar>::value will be false.
+ */
+#define PIRANHA_DECLARE_HAS_TYPEDEF(type_name) \
+template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT> \
+struct has_typedef_##type_name \
+{ \
+	typedef char yes[1]; \
+	typedef char no[2]; \
+	template <typename C> \
+	static yes &test(typename C::type_name *); \
+	template <typename> \
+	static no &test(...); \
+	static const bool value = sizeof(test<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>(0)) == sizeof(yes); \
+};
 
 #endif
