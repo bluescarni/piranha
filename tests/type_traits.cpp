@@ -28,7 +28,7 @@
 
 using namespace piranha;
 
-PIRANHA_DECLARE_HAS_TYPEDEF(foo_type)
+PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
 
 BOOST_AUTO_TEST_CASE(type_traits_strip_cv_test)
 {
@@ -56,6 +56,6 @@ struct bar {};
 
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
-	static_assert(has_typedef_foo_type<foo>::value,"Failed to assert presence of typedef.");
-	static_assert(!has_typedef_foo_type<bar>::value,"Failed to assert absence of typedef.");
+	BOOST_CHECK(has_typedef_foo_type<foo>::value);
+	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
 }

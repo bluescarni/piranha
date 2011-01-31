@@ -45,12 +45,12 @@ struct strip_cv_ref
 
 /// Macro to test if class has type definition.
 /**
- * This macro will declare a template struct parametrized over one type \p T and called <tt>has_typedef_type_name</tt>
+ * This macro will declare a template struct parametrized over one type \p T and called <tt>has_typedef_type_name</tt>,
  * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, false otherwise.
  * 
  * For instance:
  * \code
- * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type)
+ * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
  * struct foo
  * {
  * 	typedef int foo_type;
@@ -70,6 +70,6 @@ struct has_typedef_##type_name \
 	template <typename> \
 	static no &test(...); \
 	static const bool value = sizeof(test<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>(0)) == sizeof(yes); \
-};
+}
 
 #endif
