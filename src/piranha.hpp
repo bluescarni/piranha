@@ -22,7 +22,7 @@
 #define PIRANHA_PIRANHA_HPP
 
 /** \file piranha.hpp
- * Global piranha header file.
+ * \brief Global piranha header file.
  * 
  * Include this file to import piranha's entire public interface.
  */
@@ -45,7 +45,6 @@ namespace piranha {}
 //   to signal/emulate them.
 
 #include "config.hpp"
-#include "crtp_helper.hpp"
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "hop_table.hpp"
