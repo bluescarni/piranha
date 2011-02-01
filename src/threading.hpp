@@ -180,7 +180,7 @@ struct unique_lock
 #if defined(PIRANHA_USE_BOOST_THREAD)
 typedef boost::thread::id thread_id;
 #else
-std::thread::id thread_id;
+typedef std::thread::id thread_id;
 #endif
 
 /// Wrapper namespace.
