@@ -35,6 +35,8 @@ extern "C"
 
 #endif
 
+#include <iostream>
+
 #include "runtime_info.hpp"
 #include "threading.hpp"
 
