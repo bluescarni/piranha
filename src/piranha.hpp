@@ -57,6 +57,7 @@ namespace piranha {}
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
+#include "threading.hpp"
 #include "type_traits.hpp"
 
 #endif
