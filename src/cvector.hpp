@@ -25,12 +25,9 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
 #include <cstddef>
-#include <exception>
 #include <cstring>
 #include <memory>
-#include <mutex>
 #include <new> // For std::bad_alloc.
-#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -41,6 +38,7 @@
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
+#include "threading.hpp"
 
 namespace piranha {
 
@@ -68,6 +66,11 @@ namespace piranha {
  * in the <tt>catch (...)</tt> blocks within each thread, and might be lifted in the future with the adoption of lock-free data
  * structures for transporting exceptions.
  * 
+ * Additionally, if the host platform does not support natively standard C++ threading, exceptions generated in separate threads will be caught
+ * and re-thrown in the main thread only if they were originally thrown using Boost's <tt>throw_exception()</tt> function.
+ * 
+ * @see http://www.boost.org/doc/libs/release/libs/exception/doc/throw_exception.html
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Investigate performance issues on parallel destruction.
@@ -92,9 +95,11 @@ class cvector
 			const size_type			n_threads;
 			size_type			*n_started_threads;
 			thread_barrier			*barrier;
-			std::mutex			*mutex;
-			std::vector<std::exception_ptr>	*exceptions;
+			piranha::mutex			*mutex;
+			std::vector<exception_ptr>	*exceptions;
 		};
+		// Lock type.
+		typedef lock_guard<mutex>::type lock_type;
 		template <typename Functor, typename... Args>
 		static void thread_runner(Functor &&f, const size_type &size, Args && ... params)
 		{
@@ -102,7 +107,7 @@ class cvector
 			size_type n_threads;
 			// If we are already being called by a thread separate from
 			// the main one, force a single thread.
-			if (std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
+			if (this_thread::get_id() != runtime_info::get_main_thread_id()) {
 				n_threads = 1;
 			} else {
 				n_threads = boost::numeric_cast<size_type>(settings::get_n_threads());
@@ -114,12 +119,12 @@ class cvector
 			const size_type work_size = size / n_threads;
 			piranha_assert(n_threads > 0);
 			// Variables to control the thread(s).
-			std::mutex mutex;
-			std::vector<std::exception_ptr> exceptions;
+			mutex mutex;
+			std::vector<exception_ptr> exceptions;
 			thread_barrier barrier(n_threads);
 			// Reserve enough space to store exceptions, so that we avoid potential problems
 			// when pushing back the exceptions in the catch(...) blocks.
-			exceptions.reserve(boost::numeric_cast<std::vector<std::exception_ptr>::size_type>(n_threads));
+			exceptions.reserve(boost::numeric_cast<std::vector<exception_ptr>::size_type>(n_threads));
 			if (exceptions.capacity() < n_threads) {
 				throw std::bad_alloc();
 			}
@@ -131,14 +136,14 @@ class cvector
 				thread_group tg;
 				size_type i = 0, n_started_threads = 0;
 				{
-					std::lock_guard<std::mutex> lock(mutex);
+					lock_type lock(mutex);
 					for (; i < n_threads - static_cast<size_type>(1); ++i) {
 						thread_control tc = {work_size,i * work_size,n_threads,&n_started_threads,&barrier,&mutex,&exceptions};
 						try {
 							tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 							++n_started_threads;
 						} catch (...) {
-							exceptions.push_back(std::current_exception());
+							exceptions.push_back(current_exception());
 						}
 					}
 					// Last thread might have more work to do.
@@ -147,16 +152,16 @@ class cvector
 						tg.create_thread(std::forward<Functor>(f),tc,std::forward<Args>(params)...);
 						++n_started_threads;
 					} catch (...) {
-						exceptions.push_back(std::current_exception());
+						exceptions.push_back(current_exception());
 					}
 				}
 				tg.join_all();
 			}
 			piranha_assert(exceptions.size() <= n_threads);
 			// Rethrow the first exception encountered.
-			for (std::vector<std::exception_ptr>::size_type i = 0; i < exceptions.size(); ++i) {
+			for (std::vector<exception_ptr>::size_type i = 0; i < exceptions.size(); ++i) {
 				if (exceptions[i] != piranha_nullptr) {
-					std::rethrow_exception(exceptions[i]);
+					piranha::rethrow_exception(exceptions[i]);
 				}
 			}
 			
@@ -167,7 +172,7 @@ class cvector
 			piranha_assert(tc.n_threads > 0);
 			if (tc.n_threads > 1) {
 				piranha_assert(tc.n_started_threads && tc.mutex);
-				std::lock_guard<std::mutex> lock(*tc.mutex);
+				lock_type lock(*tc.mutex);
 				if (*tc.n_started_threads != tc.n_threads) {
 					return false;
 				} else {
@@ -193,10 +198,10 @@ class cvector
 			piranha_assert(tc.exceptions);
 			if (tc.n_threads > 1) {
 				piranha_assert(tc.mutex && tc.exceptions);
-				std::lock_guard<std::mutex> lock(*tc.mutex);
-				tc.exceptions->push_back(std::current_exception());
+				lock_type lock(*tc.mutex);
+				tc.exceptions->push_back(current_exception());
 			} else {
-				tc.exceptions->push_back(std::current_exception());
+				tc.exceptions->push_back(current_exception());
 			}
 		}
 		struct default_ctor

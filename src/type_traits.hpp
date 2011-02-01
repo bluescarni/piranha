@@ -21,11 +21,11 @@
 #ifndef PIRANHA_TYPE_TRAITS_HPP
 #define PIRANHA_TYPE_TRAITS_HPP
 
-#include <type_traits>
-
 /** \file type_traits.hpp
  * \brief Type traits.
  */
+
+#include <type_traits>
 
 namespace piranha
 {

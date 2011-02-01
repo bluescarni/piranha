@@ -18,11 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <mutex>
 #include <stdexcept>
 
 #include "exceptions.hpp"
 #include "thread_barrier.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -54,7 +54,7 @@ thread_barrier::thread_barrier(unsigned count):m_mutex(),m_cond(),m_threshold(co
  */
 bool thread_barrier::wait()
 {
-	std::unique_lock<std::mutex> lock(m_mutex);
+	unique_lock<mutex>::type lock(m_mutex);
 	unsigned gen = m_generation;
 	if (--m_count == 0) {
 		++m_generation;

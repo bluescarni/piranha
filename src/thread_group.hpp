@@ -22,13 +22,12 @@
 #define PIRANHA_THREAD_GROUP_HPP
 
 #include <boost/integer_traits.hpp>
-#include <mutex>
 #include <new>
 #include <system_error>
-#include <thread>
 #include <vector>
 
 #include "exceptions.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -41,7 +40,7 @@ namespace piranha
  */
 class thread_group
 {
-		typedef std::vector<std::thread> container_type;
+		typedef std::vector<thread> container_type;
 		typedef container_type::size_type size_type;
 	public:
 		/// Default constructor.
@@ -76,7 +75,7 @@ class thread_group
 		template <typename Functor, typename... Args>
 		void create_thread(Functor &&f, Args && ... params)
 		{
-			std::lock_guard<std::mutex> lock(m_mutex);
+			lock_guard<mutex>::type lock(m_mutex);
 			if (m_threads.size() == boost::integer_traits<size_type>::const_max) {
 				throw std::bad_alloc();
 			}
@@ -86,12 +85,12 @@ class thread_group
 			if (m_threads.capacity() < new_size) {
 				throw std::bad_alloc();
 			}
-			m_threads.push_back(std::thread(std::forward<Functor>(f),std::forward<Args>(params)...));
+			m_threads.push_back(thread(std::forward<Functor>(f),std::forward<Args>(params)...));
 		}
 		void join_all();
 	private:
 		container_type	m_threads;
-		std::mutex	m_mutex;
+		mutex		m_mutex;
 };
 
 }

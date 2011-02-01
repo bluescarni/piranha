@@ -23,12 +23,12 @@
 #define BOOST_TEST_MODULE runtime_info_test
 #include <boost/test/unit_test.hpp>
 
-#include <thread>
+#include "../src/threading.hpp"
 
 // Simple check on the thread id.
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
-	BOOST_CHECK_EQUAL(piranha::runtime_info::get_main_thread_id(),std::this_thread::get_id());
+	BOOST_CHECK_EQUAL(piranha::runtime_info::get_main_thread_id(),piranha::this_thread::get_id());
 }
 
 // Simple check on the thread concurrency.

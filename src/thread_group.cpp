@@ -20,12 +20,11 @@
 
 #include <exception>
 #include <iostream>
-#include <mutex>
 #include <system_error>
-#include <thread>
 #include <vector>
 
 #include "thread_group.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -46,13 +45,13 @@ thread_group::~thread_group()
 /// Join all threads in the group.
 /**
  * Will join iteratively all threads belonging to the group. It is safe to call this method multiple times.
- * Any failure in std::thread::join() will result in the termination of the program via std::abort().
+ * Any failure in the <tt>join()</tt> method of piranha::thread will result in the termination of the program via std::abort().
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
 void thread_group::join_all()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	lock_guard<mutex>::type lock(m_mutex);
 	for (container_type::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
 		if (it->joinable()) {
 			try {

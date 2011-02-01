@@ -23,11 +23,11 @@
 
 #include <iostream>
 #include <map>
-#include <mutex>
 #include <string>
 #include <utility>
 
 #include "config.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -130,7 +130,7 @@ class symbol
 		template <bool Replace>
 		static container_type::const_iterator get_iterator(const std::string &name, const double &value)
 		{
-			std::lock_guard<std::mutex> lock(m_mutex);
+			lock_guard<mutex>::type lock(m_mutex);
 			auto it = m_symbol_list.find(name);
 			if (it == m_symbol_list.end()) {
 				// If symbol is not present in the list, add it.
@@ -146,7 +146,7 @@ class symbol
 			return it;
 		}
 		const container_type::const_iterator	m_it;
-		static std::mutex			m_mutex;
+		static mutex				m_mutex;
 		static container_type			m_symbol_list;
 };
 

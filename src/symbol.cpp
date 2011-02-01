@@ -18,14 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <mutex>
-
 #include "symbol.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
 
 symbol::container_type symbol::m_symbol_list;
-std::mutex symbol::m_mutex;
+mutex symbol::m_mutex;
 
 }

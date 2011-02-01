@@ -23,8 +23,6 @@
 #define BOOST_TEST_MODULE thread_group_test
 #include <boost/test/unit_test.hpp>
 
-#include <thread>
-
 // Test construction and multiple joins.
 BOOST_AUTO_TEST_CASE(thread_group_run_test_01)
 {

@@ -23,13 +23,27 @@
 #define BOOST_TEST_MODULE cvector_test
 #include <boost/test/unit_test.hpp>
 
-#include <exception>
 #include <memory>
-#include <mutex>
 #include <vector>
 
+#include "../src/config.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
+#include "../src/threading.hpp"
+
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	#include <boost/throw_exception.hpp>
+#endif
+
+template <class Exception>
+static inline void custom_throw(const Exception &e)
+{
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	boost::throw_exception(e);
+#else
+	throw e;
+#endif
+}
 
 struct custom_exception: public std::exception
 {
@@ -58,24 +72,26 @@ struct nontrivial
 	std::vector<double> v;
 };
 
-std::mutex mutex;
+piranha::mutex mutex;
+typedef piranha::lock_guard<piranha::mutex>::type lock_type;
+
 unsigned copies = 0;
 
 struct nontrivial_throwing
 {
 	nontrivial_throwing():v(1)
 	{
-		std::lock_guard<std::mutex> lock(mutex);
+		lock_type lock(mutex);
 		if (copies > 10000) {
-			throw custom_exception();
+			custom_throw(custom_exception());
 		}
 		++copies;
 	}
 	nontrivial_throwing(const nontrivial_throwing &ntt):v()
 	{
-		std::lock_guard<std::mutex> lock(mutex);
+		lock_type lock(mutex);
 		if (copies > 10000) {
-			throw custom_exception();
+			custom_throw(custom_exception());
 		}
 		++copies;
 		v = ntt.v;

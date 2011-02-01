@@ -35,16 +35,14 @@ extern "C"
 
 #endif
 
-#include <mutex>
-#include <thread>
-
 #include "runtime_info.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
 
-const std::thread::id runtime_info::m_main_thread_id = {std::this_thread::get_id()};
-std::mutex runtime_info::m_mutex;
+const thread_id runtime_info::m_main_thread_id = {this_thread::get_id()};
+mutex runtime_info::m_mutex;
 
 /// Hardware concurrency.
 /**
@@ -55,7 +53,7 @@ std::mutex runtime_info::m_mutex;
  */
 unsigned runtime_info::hardware_concurrency()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	lock_guard<mutex>::type lock(m_mutex);
 #if defined(__linux__)
 	int candidate = ::get_nprocs();
 	return (candidate <= 0) ? 0 : static_cast<unsigned>(candidate);

@@ -19,18 +19,18 @@
  ***************************************************************************/
 
 #include <algorithm>
-#include <mutex>
 #include <stdexcept>
 
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
 
 unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
-std::mutex settings::m_mutex;
+mutex settings::m_mutex;
 
 /// Get the number of threads available for use by piranha.
 /**
@@ -42,7 +42,7 @@ std::mutex settings::m_mutex;
  */
 unsigned settings::get_n_threads()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	lock_guard<mutex>::type lock(m_mutex);
 	return m_n_threads;
 }
 
@@ -55,7 +55,7 @@ unsigned settings::get_n_threads()
  */
 void settings::set_n_threads(unsigned n)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	lock_guard<mutex>::type lock(m_mutex);
 	if (n == 0) {
 		piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
 	}

@@ -21,9 +21,10 @@
 #ifndef PIRANHA_THREAD_MANAGEMENT_HPP
 #define PIRANHA_THREAD_MANAGEMENT_HPP
 
-#include <mutex>
 #include <unordered_set>
 #include <utility>
+
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -65,11 +66,11 @@ class thread_management
 				binder &operator=(binder &&) = delete;
 			private:
 				std::pair<bool,unsigned>		m_result;
-				static std::mutex			m_binder_mutex;
+				static mutex				m_binder_mutex;
 				static std::unordered_set<unsigned>	m_used_procs;
 		};
 	private:
-		static std::mutex m_mutex;
+		static mutex m_mutex;
 };
 
 }

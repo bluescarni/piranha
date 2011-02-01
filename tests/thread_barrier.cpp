@@ -23,8 +23,6 @@
 #define BOOST_TEST_MODULE thread_barrier_test
 #include <boost/test/unit_test.hpp>
 
-#include <thread>
-
 #include "../src/thread_group.hpp"
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)

@@ -21,8 +21,7 @@
 #ifndef PIRANHA_RUNTIME_INFO_HPP
 #define PIRANHA_RUNTIME_INFO_HPP
 
-#include <mutex>
-#include <thread>
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -41,14 +40,14 @@ class runtime_info
 		/**
 		 * @return const reference to an instance of the ID of the main thread of execution.
 		 */
-		static const std::thread::id &get_main_thread_id()
+		static const thread_id &get_main_thread_id()
 		{
 			return m_main_thread_id;
 		}
 		static unsigned hardware_concurrency();
 	private:
-		static const std::thread::id	m_main_thread_id;
-		static std::mutex		m_mutex;
+		static const thread_id	m_main_thread_id;
+		static mutex		m_mutex;
 };
 
 }

@@ -23,17 +23,15 @@
 #define BOOST_TEST_MODULE thread_management_test
 #include <boost/test/unit_test.hpp>
 
-#include <mutex>
-#include <thread>
-
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/thread_barrier.hpp"
 #include "../src/thread_group.hpp"
+#include "../src/threading.hpp"
 
 // TODO: check for exceptions throwing.
 
-std::mutex mutex;
+piranha::mutex mutex;
 
 static inline void test_function()
 {
@@ -41,7 +39,7 @@ static inline void test_function()
 		piranha::thread_management::bind_to_proc(i);
 		const auto retval = piranha::thread_management::bound_proc();
 		// Lock because Boost unit test is not thread-safe.
-		std::lock_guard<std::mutex> lock(mutex);
+		piranha::lock_guard<piranha::mutex>::type lock(mutex);
 		BOOST_CHECK_EQUAL(retval.first,true);
 		BOOST_CHECK_EQUAL(retval.second,i);
 	}
@@ -51,7 +49,7 @@ static inline void test_function()
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
 	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
-		std::thread t(test_function);
+		piranha::thread t(test_function);
 		t.join();
 	}
 }
@@ -78,7 +76,7 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 		for (unsigned j = 0; j < i; ++j) {
 			auto f = []() -> void {
 				piranha::thread_management::binder b;
-				std::lock_guard<std::mutex> lock(mutex);
+				piranha::lock_guard<piranha::mutex>::type lock(mutex);
 				BOOST_CHECK_EQUAL(true,piranha::thread_management::bound_proc().first);
 			};
 			tg.create_thread(f);
@@ -95,7 +93,7 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 	piranha::thread_barrier tb(hc + 1);
 	for (unsigned i = 0; i < hc + 1; ++i) {
 		auto f = [&count,&tb,hc]() -> void {
-			std::unique_lock<std::mutex> lock(mutex);
+			piranha::unique_lock<piranha::mutex>::type lock(mutex);
 			piranha::thread_management::binder b;
 			if (count >= hc) {
 				BOOST_CHECK_EQUAL(false,piranha::thread_management::bound_proc().first);
