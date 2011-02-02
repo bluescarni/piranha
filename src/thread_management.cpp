@@ -32,19 +32,26 @@
 #include "threading.hpp"
 
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
+
 extern "C"
 {
 #include <pthread.h>
 #include <sched.h>
 }
-#endif
 
-#if defined(__FreeBSD__)
+#elif defined(__FreeBSD__)
+
 extern "C"
 {
 #include <sys/param.h>
 #include <sys/cpuset.h>
 }
+
+#elif defined(_WIN32)
+
+#include <Windows.h>
+#include <limits>
+
 #endif
 
 namespace piranha
@@ -72,6 +79,9 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 void thread_management::bind_to_proc(unsigned n)
 {
 	lock_guard<mutex>::type lock(m_mutex);
+	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
+		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
+	}
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
 	unsigned cpu_setsize;
 	int n_int;
@@ -83,9 +93,6 @@ void thread_management::bind_to_proc(unsigned n)
 	}
 	if (n >= cpu_setsize) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the maximum allowed value");
-	}
-	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
-		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
 	}
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
@@ -106,14 +113,19 @@ void thread_management::bind_to_proc(unsigned n)
 	if (n >= cpu_setsize) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the maximum allowed value");
 	}
-	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
-		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
-	}
 	cpuset_t cpuset;
 	CPU_ZERO(&cpuset);
 	CPU_SET(n,&cpuset);
 	if (::cpuset_setaffinity(CPU_LEVEL_WHICH,CPU_WHICH_TID,-1,sizeof(cpuset),&cpuset) == -1) {
 		piranha_throw(std::runtime_error,"the call to cpuset_setaffinity() failed");
+	}
+#elif defined(_WIN32)
+	// Check we are not going to bit shift too much.
+	if (n >= static_cast<unsigned>(std::numeric_limits<DWORD_PTR>::digits)) {
+		piranha_throw(std::invalid_argument,"processor index is larger than the maximum allowed value");
+	}
+	if (::SetThreadAffinityMask(::GetCurrentThread(),(DWORD_PTR)1 << n) == 0) {
+		piranha_throw(std::runtime_error,"the call to SetThreadAffinityMask() failed");
 	}
 #else
 	(void)n;
@@ -187,6 +199,29 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 		return std::make_pair(false,static_cast<unsigned>(0));
 	} else {
 		return std::make_pair(true,static_cast<unsigned>(candidate));
+	}
+#elif defined(_WIN32)
+	// Store the original affinity mask.
+	const DWORD_PTR original_affinity_mask = ::SetThreadAffinityMask(::GetCurrentThread(),(DWORD_PTR)1);
+	if (original_affinity_mask == 0) {
+		piranha_throw(std::runtime_error,"the call to SetThreadAffinityMask() failed");
+	}
+	const unsigned cpu_setsize = static_cast<unsigned>(std::numeric_limits<DWORD_PTR>::digits);
+	unsigned bound_cpus = 0, candidate = 0;
+	for (unsigned i = 0; i < cpu_setsize; ++i) {
+		if (((DWORD_PTR)1 << i) & original_affinity_mask) {
+			++bound_cpus;
+			candidate = i;
+		}
+	}
+	// Restore the original affinity mask.
+	if (::SetThreadAffinityMask(::GetCurrentThread(),original_affinity_mask) == 0) {
+		piranha_throw(std::runtime_error,"the call to SetThreadAffinityMask() failed");
+	}
+	if (bound_cpus == 0 || bound_cpus > 1) {
+		return std::make_pair(false,static_cast<unsigned>(0));
+	} else {
+		return std::make_pair(true,candidate);
 	}
 #else
 	piranha_throw(not_implemented_error,"bound_proc is not available on this platform");
