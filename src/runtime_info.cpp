@@ -33,6 +33,10 @@ extern "C"
 #include <sys/sysctl.h>
 }
 
+#elif defined(_WIN32)
+
+#include <Windows.h>
+
 #endif
 
 #include <iostream>
@@ -63,6 +67,11 @@ unsigned runtime_info::hardware_concurrency()
 	int count;
 	std::size_t size = sizeof(count);
 	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0 : static_cast<unsigned>(count);
+#elif defined(_WIN32)
+	SYSTEM_INFO info = SYSTEM_INFO();
+	::GetSystemInfo(&info);
+	// info.dwNumberOfProcessors is a dword, i.e., an unsigned integer.
+	return info.dwNumberOfProcessors;
 #else
 	std::cout << "Warning: hardware concurrency detection not implemented.\n";
 	return 0;
