@@ -49,7 +49,10 @@ extern "C"
 
 #elif defined(_WIN32)
 
+extern "C"
+{
 #include <Windows.h>
+}
 #include <limits>
 
 #endif
