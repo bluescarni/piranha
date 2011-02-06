@@ -36,11 +36,15 @@ namespace piranha
  * assignment, arithmetic operations, etc. will be forwarded to an instance of type \p T stored as a member of the class.
  * A set of additional methods is provided, so that this class can be used as coefficient type in series.
  * 
+ * \p T must not be a pointer type, a reference type or cv-qualified, otherwise a static assertion will fail.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
 class numerical_coefficient
 {
+		static_assert(!std::is_pointer<T>::value,"T must not be a pointer type.");
+		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
 		// Make friend with all instances of numerical_coefficient.
 		template <typename U>
 		friend class numerical_coefficient;

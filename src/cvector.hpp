@@ -39,6 +39,7 @@
 #include "thread_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
+#include "type_traits.hpp"
 
 namespace piranha {
 
@@ -50,6 +51,8 @@ namespace piranha {
  * the user requests the use of a single thread or if the number of elements in the container is lower than
  * the template parameter \p MinWork, no new threads will be opened. No new threads will be opened also in case
  * the vector instance is used from a thread different from the main one.
+ * 
+ * \p T must not be a reference type or cv-qualified, otherwise a static assertion will fail.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -79,6 +82,7 @@ namespace piranha {
 template <typename T, std::size_t MinWork = 50>
 class cvector
 {
+		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
 	public:
 		/// Value type.
 		typedef T value_type;

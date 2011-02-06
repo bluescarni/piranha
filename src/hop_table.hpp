@@ -40,6 +40,7 @@
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -47,6 +48,9 @@ namespace piranha
 /// Hopscotch hash table.
 /**
  * Hash table class based on hopscotch hashing. The interface is similar to \p std::unordered_set.
+ * 
+ * \p T must not be a reference type or cv-qualified, otherwise a static assertion will fail.
+ * \p Hash and \p Pred must not be reference types, pointer types or cv-qualified, otherwise a static assertion will fail.
  * 
  * @see http://en.wikipedia.org/wiki/Hopscotch_hashing
  * 
@@ -64,6 +68,9 @@ namespace piranha
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
+		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
+		static_assert(!is_cv_or_ref<Hash>::value && !std::is_pointer<Hash>::value,"Hash must not be a reference/pointer type or cv-qualified.");
+		static_assert(!is_cv_or_ref<Pred>::value && !std::is_pointer<Pred>::value,"Pred must not be a reference/pointer type or cv-qualified.");
 		template <typename U>
 		struct base_generic_hop_bucket
 		{
