@@ -42,13 +42,39 @@ struct constructor_tester
 		typedef numerical_coefficient<T> nc;
 		BOOST_CHECK((std::has_trivial_destructor<T>::value && std::has_trivial_destructor<nc>::value) || (!std::has_trivial_destructor<T>::value && !std::has_trivial_destructor<nc>::value));
 		BOOST_CHECK((std::has_trivial_copy_constructor<T>::value && std::has_trivial_copy_constructor<nc>::value) || (!std::has_trivial_copy_constructor<T>::value && !std::has_trivial_copy_constructor<nc>::value));
+		// Default constructor.
 		BOOST_CHECK_EQUAL(nc().get_value(),T());
-		// Try construction from int.
-		BOOST_CHECK_EQUAL(nc(3).get_value(),T(3));
+		// Copy construction from value.
+		T value(3);
+		BOOST_CHECK_EQUAL(nc(value).get_value(),T(3));
+		// Move construction from value.
+		BOOST_CHECK_EQUAL(nc(T(3)).get_value(),T(3));
+		// Copy construction.
+		nc other(value);
+		BOOST_CHECK_EQUAL(nc(other).get_value(),T(3));
+		// Move construction.
+		BOOST_CHECK_EQUAL(nc(nc(value)).get_value(),T(3));
+		// Check copy/move construction from coefficients of different types.
+		typedef numerical_coefficient<int> nc_other;
+		nc_other nco{3};
+		BOOST_CHECK_EQUAL(nc(nco).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(nc_other(3)).get_value(),T(3));
 		// Assignment from int.
 		nc n;
 		n = 10;
 		BOOST_CHECK_EQUAL(n.get_value(),T(10));
+		n = int(10);
+		BOOST_CHECK_EQUAL(n.get_value(),T(10));
+		// Assignment from numerical_coefficient of same type.
+		n = other;
+		BOOST_CHECK_EQUAL(n.get_value(),T(3));
+		n = nc(value);
+		BOOST_CHECK_EQUAL(n.get_value(),T(3));
+		// Assignment from numerical_coefficient of different type.
+		n = nco;
+		BOOST_CHECK_EQUAL(n.get_value(),T(3));
+		n = nc_other(3);
+		BOOST_CHECK_EQUAL(n.get_value(),T(3));
 	}
 };
 

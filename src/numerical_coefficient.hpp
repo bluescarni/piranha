@@ -41,6 +41,9 @@ namespace piranha
 template <typename T>
 class numerical_coefficient
 {
+		// Make friend with all instances of numerical_coefficient.
+		template <typename U>
+		friend class numerical_coefficient;
 		// Type trait to detect numerical coefficient class.
 		template <typename U>
 		struct is_numerical_coefficient: std::false_type {};
@@ -84,16 +87,36 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
 		 */
 		numerical_coefficient(numerical_coefficient &&) = default;
-		/// Generic constructor.
+		/// Copy constructor from numerical coefficient of other type.
 		/**
-		 * Will try to construct the underlying numerical type with the forwarded arguments.
+		 * Will use the numerical value of \p other to copy-construct the internal numerical value.
 		 * 
-		 * @param[in] params arguments used for the construction of the underlying numerical type.
-		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's constructor.
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor from type \p U.
 		 */
-		template <typename... Args>
-		explicit numerical_coefficient(Args && ... params):m_value(std::forward<Args>(params)...) {}
+		template <typename U>
+		explicit numerical_coefficient(const numerical_coefficient<U> &other):m_value(other.m_value) {}
+		/// Move constructor from numerical coefficient of other type.
+		/**
+		 * Will use the numerical value of \p other to move-construct the internal numerical value.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor from type \p U.
+		 */
+		template <typename U>
+		explicit numerical_coefficient(numerical_coefficient<U> &&other):m_value(std::move(other.m_value)) {}
+		/// Copy constructor from numerical_coefficient::type.
+		/**
+		 * Will use \p x to copy-construct the internal numerical value.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor.
+		 */
+		explicit numerical_coefficient(const type &x):m_value(x) {}
+		/// Move constructor from numerical_coefficient::type.
+		/**
+		 * Will use \p x to move-construct the internal numerical value.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
+		 */
+		explicit numerical_coefficient(type &&x):m_value(std::move(x)) {}
 		/// Default destructor.
 		/**
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's destructor.
