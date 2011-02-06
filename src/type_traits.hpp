@@ -30,7 +30,7 @@
 namespace piranha
 {
 
-/// Strip reference and top-level cv-qualifiers
+/// Strip reference and top-level cv-qualifiers.
 /**
  * This type trait removes top-level cv-qualifiers and, if \p T is a reference, transforms it into the referred-to type.
  */
@@ -40,6 +40,17 @@ struct strip_cv_ref
 	/// Type definition.
 	typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
 };
+
+/// Type is reference or is cv-qualified.
+/**
+ * This type trait is true if either \p T is a reference or it is cv-qualified, false otherwise.
+ */
+template <typename T>
+struct is_cv_or_ref: std::conditional<
+	std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value,
+	std::true_type,
+	std::false_type>::type
+{};
 
 }
 

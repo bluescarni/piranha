@@ -59,3 +59,15 @@ BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 	BOOST_CHECK(has_typedef_foo_type<foo>::value);
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_is_cv_ref)
+{
+	BOOST_CHECK_EQUAL(is_cv_or_ref<int>::value,false);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<int &>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<const int>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<const volatile int>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<const volatile int &>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<volatile int>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<int * const>::value,true);
+	BOOST_CHECK_EQUAL(is_cv_or_ref<int const *>::value,false);
+}
