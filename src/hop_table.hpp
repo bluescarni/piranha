@@ -47,6 +47,9 @@ namespace piranha
 
 /// Hopscotch hash table.
 /**
+ * \image html hopscotch.gif "Hopscotch hashing."
+ * \image latex hopscotch.gif "Hopscotch hashing." width=5cm
+ * 
  * Hash table class based on hopscotch hashing. The interface is similar to \p std::unordered_set.
  * 
  * \p T must not be a reference type or cv-qualified, otherwise a static assertion will fail.
@@ -64,6 +67,7 @@ namespace piranha
  * \todo tests for low-level methods
  * \todo try forcing 32-bit bitmap insted of mf_int
  * \todo see if find() can be sped up by using msb() instead of linear search
+ * \todo missing exception throwing specifications in the documentation
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
@@ -273,6 +277,10 @@ class hop_table
 		 * @param[in] n_buckets number of initial buckets.
 		 * @param[in] h hash functor.
 		 * @param[in] k key equality predicate.
+		 * 
+		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
+		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>, or arising from
+		 * calling insert() on the elements of the range.
 		 */
 		template <typename InputIterator>
 		explicit hop_table(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0,
