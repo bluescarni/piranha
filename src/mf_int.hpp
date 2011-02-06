@@ -73,6 +73,9 @@ class mf_int_traits
 		 */
 		static int msb(const utype &n)
 		{
+			// TODO: when generalising check:
+			// - nbits must be a power of 2
+			// - nbits must be 8 at least.
 			int retval;
 			msb_impl<nbits / static_cast<utype>(2)>::run(retval,n);
 			return retval;
