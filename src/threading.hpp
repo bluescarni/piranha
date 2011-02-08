@@ -183,9 +183,10 @@ typedef boost::thread::id thread_id;
 typedef std::thread::id thread_id;
 #endif
 
-/// Wrapper namespace.
+/// Calling thread namespace.
 /**
- * Meant to be equivalent to either <tt>std::this_thread</tt> or <tt>boost::this_thread</tt>.
+ * The functions in this namespace operate on the calling thread.
+ * This namespace is meant to be equivalent to either <tt>std::this_thread</tt> or <tt>boost::this_thread</tt>.
  */
 namespace this_thread
 {

@@ -299,6 +299,8 @@ class hop_table
 		 * 
 		 * @param[in] list initializer list of elements to be inserted.
 		 * 
+		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
+		 * @throws boost::bad_numeric_cast if converting from the type of <tt>list.size()</tt> to hop_table::size_type results in a positive overflow.
 		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		template <typename U>
