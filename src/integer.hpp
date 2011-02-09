@@ -1639,16 +1639,87 @@ inline void swap(piranha::integer &n1, piranha::integer &n2)
 	n1.swap(n2);
 }
 
+#if 0
 /// Specialization of \p std::numeric_limits for piranha::integer.
 template <>
-class numeric_limits<piranha::integer>: public numeric_limits<long>
+class numeric_limits<piranha::integer>
 {
 	public:
+		/// Specialisation flag.
+		static piranha_constexpr bool is_specialized = true;
+		/// Minimum representable value.
+		/**
+		 * @return default-constructed piranha::integer.
+		 */
+		static const piranha::integer min() piranha_noexcept(true)
+		{
+			return piranha::integer();
+		}
+		/// Maximum representable value.
+		/**
+		 * @return default-constructed piranha::integer.
+		 */
+		static const piranha::integer max() piranha_noexcept(true)
+		{
+			return piranha::integer();
+		}
+		/// Lowest finite value.
+		/**
+		 * @return default-constructed piranha::integer.
+		 */
+		static const piranha::integer lowest() piranha_noexcept(true)
+		{
+			return piranha::integer();
+		}
+		static piranha_constexpr int digits = 0;
+		static piranha_constexpr int digits10 = 0;
+		static piranha_constexpr bool is_signed = true;
+		static piranha_constexpr bool is_integer = true;
+		static piranha_constexpr bool is_exact = true;
+		static piranha_constexpr int radix = 0;
+		static piranha::integer epsilon() throw()
+		{
+			return piranha::integer(1);
+		}
+		static piranha::integer round_error() throw()
+		{
+			return piranha::integer();
+		}
+		static const int min_exponent = 0;
+		static const int min_exponent10 = 0;
+		static const int max_exponent = 0;
+		static const int max_exponent10 = 0;
+		static const bool has_infinity = false;
+		static const bool has_quiet_NaN = false;
+		static const bool has_signaling_NaN = false;
+		static const float_denorm_style has_denorm = denorm_absent;
+		static const bool has_denorm_loss = false;
+		static piranha::integer infinity() throw()
+		{
+			return piranha::integer();
+		}
+		static piranha::integer quiet_NaN() throw()
+		{
+			return piranha::integer();
+		}
+		static piranha::integer signaling_NaN() throw()
+		{
+			return piranha::integer();
+		}
+		static piranha::integer denorm_min() throw()
+		{
+			return piranha::integer();
+		}
+		static const bool is_iec559 = false;
 		/// Override is_bounded attribute to false.
 		static const bool is_bounded = false;
 		/// Override is_modulo attribute to false.
 		static const bool is_modulo = false;
+		static const bool traps = false;
+		static const bool tinyness_before = false;
+		static const float_round_style round_style = round_toward_zero;
 };
+#endif
 
 /// Specialisation of \p std::hash for piranha::integer.
 template <>
