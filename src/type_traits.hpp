@@ -43,7 +43,7 @@ struct strip_cv_ref
 
 /// Type is reference or is cv-qualified.
 /**
- * This type trait is true if either \p T is a reference or it is cv-qualified, false otherwise.
+ * This type trait inherits from \p std::true_type if either \p T is a reference or it is cv-qualified, from \p std::false_type otherwise.
  */
 template <typename T>
 struct is_cv_or_ref: std::conditional<
