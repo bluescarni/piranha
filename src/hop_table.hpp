@@ -48,7 +48,7 @@ namespace piranha
 /// Hopscotch hash table.
 /**
  * \image html hopscotch.gif "Hopscotch hashing."
- * \image latex hopscotch.gif "Hopscotch hashing." width=5cm
+ * \image latex hopscotch.png "Hopscotch hashing." width=5cm
  * 
  * Hash table class based on hopscotch hashing. The interface is similar to \p std::unordered_set.
  * 
