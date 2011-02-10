@@ -42,6 +42,7 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo test move constructor in inherited term.
+ * \todo exception safety specifications and implementation of move assignment that queries for has_move_assignment and otherwise copies.
  */
 template <typename Cf, typename Key, typename Derived = void>
 class base_term: public base_term_tag
@@ -112,7 +113,7 @@ class base_term: public base_term_tag
 		 * @throws unspecified any exception thrown by the copy assignment operators of \p Cf and \p Key.
 		 */
 		base_term &operator=(const base_term &) = default;
-		/// Default move-assignment operator.
+		/// Move-assignment operator.
 		/**
 		 * Will move <tt>other<tt>'s coefficient and key.
 		 * 
@@ -126,6 +127,7 @@ class base_term: public base_term_tag
 		{
 			m_cf = std::move(other.m_cf);
 			m_key = std::move(other.m_key);
+			return *this;
 		}
 		/// Equality operator.
 		/**
