@@ -559,6 +559,8 @@ class hop_table
 		template <typename U>
 		std::pair<iterator,bool> _unique_insert(U &&k, const size_type &bucket_idx, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
 		{
+			// Assert that key is not present already in the table.
+			piranha_assert(find(std::forward<U>(k)) == end());
 			const size_type container_size = m_container.size();
 			if (unlikely(!container_size)) {
 				// No free slot was found, need to resize.
