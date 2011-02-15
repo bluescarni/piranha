@@ -99,3 +99,27 @@ BOOST_AUTO_TEST_CASE(base_term_equality_test)
 {
 	boost::mpl::for_each<cf_types>(equality_tester());
 }
+
+struct hash_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			typedef base_term<Cf,Key> term_type;
+			BOOST_CHECK_EQUAL(term_type().hash(),std::hash<Key>()(Key()));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<key_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(base_term_hash_test)
+{
+	boost::mpl::for_each<cf_types>(hash_tester());
+}

@@ -21,6 +21,7 @@
 #ifndef PIRANHA_BASE_TERM_HPP
 #define PIRANHA_BASE_TERM_HPP
 
+#include <cstddef>
 #include <type_traits>
 #include <unordered_set>
 
@@ -143,35 +144,22 @@ class base_term: public base_term_tag
 		{
 			return m_key == other.m_key;
 		}
+		/// Hash value.
+		/**
+		 * This method can be re-implemented in derived terms.
+		 * 
+		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
+		 * 
+		 * @throws unspecified any exception thrown by the specialisation of \p std::hash for \p Key.
+		 */
+		std::size_t hash() const
+		{
+			return std::hash<key_type>()(m_key);
+		}
 		/// Coefficient member.
 		mutable Cf	m_cf;
 		/// Key member.
 		Key		m_key;
-};
-
-}
-
-namespace std
-{
-
-/// Specialisation of \p std::hash for piranha::base_term.
-template <typename Cf, typename Key, typename Derived>
-struct hash<piranha::base_term<Cf,Key,Derived>>
-{
-	/// Result type.
-	typedef size_t result_type;
-	/// Argument type.
-	typedef piranha::base_term<Cf,Key,Derived> argument_type;
-	/// Hash operator.
-	/**
-	 * @param[in] t piranha::base_term whose hash value will be returned.
-	 * 
-	 * @return <tt>std::hash<Key>()(t.m_key)</tt>.
-	 */
-	result_type operator()(const argument_type &t) const
-	{
-		return hash<Key>()(t.m_key);
-	}
 };
 
 }
