@@ -25,11 +25,8 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
-#include <type_traits>
 #include <unordered_set>
 #include <vector>
-
-#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -41,15 +38,13 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must not be a pointer type, a reference type or cv-qualified, otherwise a static assertion will fail.
+ * - \p T must be suitable for use in \p std::vector
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Derived = void>
 class array_key
 {
-		static_assert(!std::is_pointer<T>::value,"T must not be a pointer type.");
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
 		// Underlying container.
 		typedef std::vector<T> container_type;
 	public:
@@ -85,6 +80,8 @@ class array_key
 		~array_key() = default;
 		/// Defaulted copy assignment operator.
 		/**
+		 * @return reference to \p this.
+		 * 
 		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s copy assignment operator.
 		 */
 		array_key &operator=(const array_key &) = default;
