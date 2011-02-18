@@ -22,6 +22,7 @@
 #define PIRANHA_BASE_TERM_HPP
 
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 #include <unordered_set>
 
@@ -155,6 +156,23 @@ class base_term: public base_term_tag
 		std::size_t hash() const
 		{
 			return std::hash<key_type>()(m_key);
+		}
+		/// Overload of stream operator for piranha::base_term.
+		/**
+		 * Will print to stream a human-readable representation of the term.
+		 * 
+		 * @param[in,out] os target stream.
+		 * @param[in] t piranha::base_term that will be directed to \p os.
+		 * 
+		 * @return reference to \p os.
+		 * 
+		 * @throws unspecified any exception thrown by directing to the stream the term's
+		 * coefficient and/or key.
+		 */
+		friend inline std::ostream &operator<<(std::ostream &os, const base_term<Cf,Key,Derived> &t)
+		{
+			os << t.m_cf << " - " << t.m_key;
+			return os;
 		}
 		/// Coefficient member.
 		mutable Cf	m_cf;
