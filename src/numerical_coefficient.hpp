@@ -154,10 +154,10 @@ class numerical_coefficient
 		}
 		/// Overload of stream operator for piranha::numerical_coefficient.
 		/**
-		 * Will print to stream the internal value of the numerical coefficient.
+		 * Will direct to stream the internal value of the numerical coefficient.
 		 * 
 		 * @param[in,out] os target stream.
-		 * @param[in] t piranha::numerical_coefficient that will be directed to \p os.
+		 * @param[in] nc piranha::numerical_coefficient that will be directed to \p os.
 		 * 
 		 * @return reference to \p os.
 		 * 

@@ -159,7 +159,7 @@ class base_term: public detail::base_term_tag
 		}
 		/// Overload of stream operator for piranha::base_term.
 		/**
-		 * Will print to stream a human-readable representation of the term.
+		 * Will direct to stream a human-readable representation of the term.
 		 * 
 		 * @param[in,out] os target stream.
 		 * @param[in] t piranha::base_term that will be directed to \p os.
