@@ -22,6 +22,7 @@
 #define PIRANHA_NUMERICAL_COEFFICIENT_HPP
 
 #include <boost/utility/enable_if.hpp>
+#include <iostream>
 #include <type_traits>
 
 #include "config.hpp"
@@ -150,6 +151,23 @@ class numerical_coefficient
 		const type &get_value() const
 		{
 			return m_value;
+		}
+		/// Overload of stream operator for piranha::numerical_coefficient.
+		/**
+		 * Will print to stream the internal value of the numerical coefficient.
+		 * 
+		 * @param[in,out] os target stream.
+		 * @param[in] t piranha::numerical_coefficient that will be directed to \p os.
+		 * 
+		 * @return reference to \p os.
+		 * 
+		 * @throws unspecified any exception thrown by directing to the stream the internal value
+		 * of the numerical coefficient.
+		 */
+		friend inline std::ostream &operator<<(std::ostream &os, const numerical_coefficient<T> &nc)
+		{
+			os << nc.m_value;
+			return os;
 		}
 	private:
 		type m_value;
