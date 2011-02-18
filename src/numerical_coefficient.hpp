@@ -96,6 +96,8 @@ class numerical_coefficient
 		/**
 		 * Will use the numerical value of \p other to copy-construct the internal numerical value.
 		 * 
+		 * @param[in] other numerical coefficient to be copied.
+		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor from type \p U.
 		 */
 		template <typename U>
@@ -103,6 +105,8 @@ class numerical_coefficient
 		/// Move constructor from numerical coefficient of other type.
 		/**
 		 * Will use the numerical value of \p other to move-construct the internal numerical value.
+		 * 
+		 * @param[in] other numerical coefficient to be moved.
 		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor from type \p U.
 		 */
@@ -112,12 +116,16 @@ class numerical_coefficient
 		/**
 		 * Will use \p x to copy-construct the internal numerical value.
 		 * 
+		 * @param[in] x value to be copied.
+		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor.
 		 */
 		explicit numerical_coefficient(const type &x):m_value(x) {}
 		/// Move constructor from numerical_coefficient::type.
 		/**
 		 * Will use \p x to move-construct the internal numerical value.
+		 * 
+		 * @param[in] x value to be moved.
 		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
 		 */

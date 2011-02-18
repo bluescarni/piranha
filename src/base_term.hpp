@@ -97,7 +97,7 @@ class base_term: public detail::base_term_tag
 		explicit base_term(const base_term<Cf2,Key2,Derived2> &other):m_cf(other.m_cf),m_key(other.m_key) {}
 		/// Move constructor from different piranha::base_term.
 		/**
-		 * Will use <tt>other<tt>'s coefficient and key to move-construct base_term::m_cf and base_term::m_key.
+		 * Will use <tt>other</tt>'s coefficient and key to move-construct base_term::m_cf and base_term::m_key.
 		 * 
 		 * @param[in] other piranha::base_term used for move construction.
 		 * 
@@ -112,12 +112,14 @@ class base_term: public detail::base_term_tag
 		~base_term() = default;
 		/// Default copy assignment operator.
 		/**
+		 * @return reference to \p this.
+		 * 
 		 * @throws unspecified any exception thrown by the copy assignment operators of \p Cf and \p Key.
 		 */
 		base_term &operator=(const base_term &) = default;
 		/// Move-assignment operator.
 		/**
-		 * Will move <tt>other<tt>'s coefficient and key.
+		 * Will move <tt>other</tt>'s coefficient and key.
 		 * 
 		 * @param[in] other assignment argument.
 		 * 
