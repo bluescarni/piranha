@@ -47,7 +47,7 @@ namespace piranha
  * \todo exception safety specifications and implementation of move assignment that queries for has_move_assignment and otherwise copies.
  */
 template <typename Cf, typename Key, typename Derived = void>
-class base_term: public base_term_tag
+class base_term: public detail::base_term_tag
 {
 	private:
 		static_assert(!std::is_pointer<Cf>::value && !std::is_pointer<Key>::value,"Cf and Key must not be pointer types.");
