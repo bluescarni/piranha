@@ -74,6 +74,7 @@ namespace piranha
  * \todo test for number of memory allocations
  * \todo exception specifications for in-place operations with integers: document the possible overflow errors.
  * \todo improve interaction with long long via decomposition of operations in long operands
+ * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
  */
 class integer

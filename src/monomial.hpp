@@ -59,7 +59,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @param[in] params arguments used for construction.
 		 * 
-		 * @throws unspecified any exception thrown by the invoked <tt>piranha::array_key</tt>'s constructor.
+		 * @throws unspecified any exception thrown by the invoked piranha::array_key's constructor.
 		 */
 		template <typename... Args>
 		explicit monomial(Args && ... params):base(std::forward<Args>(params)...) {}
@@ -73,7 +73,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the invoked <tt>piranha::array_key</tt>'s assignment operator.
+		 * @throws unspecified any exception thrown by the invoked piranha::array_key's assignment operator.
 		 */
 		template <typename U>
 		monomial &operator=(U &&other)
