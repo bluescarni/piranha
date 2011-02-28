@@ -46,6 +46,22 @@ BOOST_AUTO_TEST_CASE(symbol_constructor_test)
 	symbol x4(x3);
 	BOOST_CHECK_EQUAL(x4.get_name(),"x");
 	BOOST_CHECK_EQUAL(x4.get_value(),2.);
+	// Move ctor - equivalent to copy.
+	symbol x5(std::move(x4));
+	BOOST_CHECK_EQUAL(x4.get_name(),"x");
+	BOOST_CHECK_EQUAL(x4.get_value(),2.);
+	BOOST_CHECK_EQUAL(x5.get_name(),"x");
+	BOOST_CHECK_EQUAL(x5.get_value(),2.);
+	// Copy assignment.
+	x5 = y;
+	BOOST_CHECK_EQUAL(x5.get_name(),"y");
+	BOOST_CHECK_EQUAL(x5.get_value(),1.);
+	// Move assignment - equivalent to copy assignment.
+	x5 = std::move(y);
+	BOOST_CHECK_EQUAL(x5.get_name(),"y");
+	BOOST_CHECK_EQUAL(x5.get_value(),1.);
+	BOOST_CHECK_EQUAL(y.get_name(),"y");
+	BOOST_CHECK_EQUAL(y.get_value(),1.);
 }
 
 BOOST_AUTO_TEST_CASE(symbol_operators_test)
@@ -56,4 +72,8 @@ BOOST_AUTO_TEST_CASE(symbol_operators_test)
 	BOOST_CHECK_EQUAL(symbol("x").get_name(),symbol("x",1.).get_name());
 	BOOST_CHECK(symbol("y") != symbol("x",1.));
 	BOOST_CHECK(symbol("y").get_name() != symbol("x",1.).get_name());
+	// Lexicographic comparison.
+	BOOST_CHECK(symbol("a") < symbol("b"));
+	BOOST_CHECK(!(symbol("a") < symbol("a")));
+	BOOST_CHECK(symbol("abc") < symbol("abd"));
 }

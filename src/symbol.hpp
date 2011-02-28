@@ -62,15 +62,30 @@ class symbol
 		 * @param[in] value numerical value of the symbol.
 		 */
 		explicit symbol(const std::string &name, const double &value):m_it(get_iterator<true>(name,value)) {}
-		/// Default copy constructor.
+		/// Defaulted copy constructor.
 		symbol(const symbol &) = default;
-		/// Deleted move constructor.
-		symbol(symbol &&) = delete;
-		/// Deleted copy assignment operator.
-		symbol &operator=(const symbol &) = delete;
-		/// Deleted move assignment operator.
-		symbol &operator=(symbol &&) = delete;
-		/// Default destructor.
+		/// Move constructor.
+		/**
+		 * Equivalent to the copy constructor.
+		 * 
+		 * @param[in] other symbol to be copied.
+		 */
+		symbol(symbol &&other):m_it(other.m_it) {}
+		/// Defaulted copy assignment operator.
+		symbol &operator=(const symbol &) = default;
+		/// Move assignment operator.
+		/**
+		 * Equivalent to the copy assignment operator.
+		 * 
+		 * @param[in] other symbol to be copied.
+		 * 
+		 * @return reference to \p this.
+		 */
+		symbol &operator=(symbol &&other) piranha_noexcept(true)
+		{
+			return operator=(other);
+		}
+		/// Defaulted destructor.
 		~symbol() = default;
 		/// Name getter.
 		/**
@@ -111,9 +126,21 @@ class symbol
 		{
 			return !(*this == other);
 		}
+		/// Less-than comparison.
+		/**
+		 * Will compare lexicographically the names of the two symbols.
+		 * 
+		 * @param[in] other comparison argument.
+		 * 
+		 * @return <tt>this->get_name() < other.get_name()</tt>.
+		 */
+		bool operator<(const symbol &other) const
+		{
+			return get_name() < other.get_name();
+		}
 		/// Overload output stream operator for piranha::symbol.
 		/**
-		 * Will send to \p os a human-readable description of \p s.
+		 * Will direct to \p os a human-readable description of \p s.
 		 * 
 		 * @param[in,out] os output stream.
 		 * @param[in] s piranha::symbol to be sent to stream.
@@ -145,9 +172,9 @@ class symbol
 			piranha_assert(it != m_symbol_list.end());
 			return it;
 		}
-		const container_type::const_iterator	m_it;
-		static mutex				m_mutex;
-		static container_type			m_symbol_list;
+		container_type::const_iterator	m_it;
+		static mutex			m_mutex;
+		static container_type		m_symbol_list;
 };
 
 }
