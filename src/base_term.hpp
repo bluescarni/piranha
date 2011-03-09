@@ -149,8 +149,6 @@ class base_term: public detail::base_term_tag
 		}
 		/// Hash value.
 		/**
-		 * This method can be re-implemented in derived terms.
-		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
 		 * 
 		 * @throws unspecified any exception thrown by the specialisation of \p std::hash for \p Key.

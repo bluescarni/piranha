@@ -60,9 +60,6 @@ class array_key
 		 */
 		array_key(const array_key &) = default;
 		/// Defaulted move constructor.
-		/**
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s move constructor.
-		 */
 		array_key(array_key &&) = default;
 		/// Constructor from initializer list.
 		/**
@@ -90,8 +87,6 @@ class array_key
 		 * @param[in] other assignment target.
 		 * 
 		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s move assignment operator.
 		 */
 		array_key &operator=(array_key &&other)
 		{
