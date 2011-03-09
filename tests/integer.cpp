@@ -684,6 +684,33 @@ BOOST_AUTO_TEST_CASE(integer_hash_test)
 	BOOST_CHECK_EQUAL(hasher(piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)),hasher(piranha::integer(-1)));
 }
 
+BOOST_AUTO_TEST_CASE(integer_sign_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer().sign(),0);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).sign(),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-10).sign(),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).sign(),1);
+	BOOST_CHECK_EQUAL(piranha::integer(10).sign(),1);
+}
+
+BOOST_AUTO_TEST_CASE(integer_math_overloads_test)
+{
+	BOOST_CHECK(piranha::math::is_zero(piranha::integer()));
+	BOOST_CHECK(piranha::math::is_zero(piranha::integer(0)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(-1)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(-10)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(1)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(10)));
+	piranha::integer n(0);
+	piranha::math::negate(n);
+	BOOST_CHECK_EQUAL(n,piranha::integer());
+	n = 10;
+	piranha::math::negate(n);
+	BOOST_CHECK_EQUAL(n,piranha::integer(-10));
+	piranha::math::negate(n);
+	BOOST_CHECK_EQUAL(n,piranha::integer(10));
+}
+
 BOOST_AUTO_TEST_CASE(integer_vector_accumulate_test)
 {
 	std::vector<piranha::integer> v;

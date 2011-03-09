@@ -44,13 +44,11 @@
 
 #include "config.hpp" // For (un)likely.
 #include "exceptions.hpp"
+#include "math.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
-
-// TODO: move this in math namespace.
-// void negate(integer &n);
 
 /// Arbitrary precision integer class.
 /**
@@ -1573,6 +1571,14 @@ class integer
 			}
 			return retval;
 		}
+		/// Sign.
+		/**
+		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>.
+		 */
+		int sign() const
+		{
+			return mpz_sgn(m_value);
+		}
 		/// Overload output stream operator for piranha::integer.
 		/**
 		 * @param[in] os output stream.
@@ -1615,12 +1621,34 @@ class integer
 };
 
 
-// TODO: move this in math namespace.
-// Overload multiply_accumulate.
-// inline void negate(integer &n)
-// {
-// 	n.negate();
-// }
+namespace math
+{
+
+/// piranha::math::negate() overload for piranha::integer.
+/**
+ * Will call internally piranha::integer::negate().
+ * 
+ * @param[in,out] n piranha::integer to be negated.
+ */
+inline void negate(integer &n)
+{
+	n.negate();
+}
+
+/// piranha::math::is_zero() overload for piranha::integer.
+/**
+ * Will call internally piranha::integer::sign().
+ * 
+ * @param[in] n integer whose sign will be returned.
+ * 
+ * @returns <tt>n.sign() == 0</tt>.
+ */
+inline bool is_zero(const integer &n)
+{
+	return n.sign() == 0;
+}
+
+}
 
 }
 
