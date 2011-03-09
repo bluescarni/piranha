@@ -21,7 +21,6 @@
 #ifndef PIRANHA_NUMERICAL_COEFFICIENT_HPP
 #define PIRANHA_NUMERICAL_COEFFICIENT_HPP
 
-#include <boost/utility/enable_if.hpp>
 #include <iostream>
 #include <type_traits>
 
@@ -55,20 +54,20 @@ class numerical_coefficient
 		template <typename U>
 		struct is_numerical_coefficient<numerical_coefficient<U>>: std::true_type {};
 		template <typename U>
-		void assign(U &&other, typename boost::enable_if_c<
+		void assign(U &&other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
 			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
 		{
 			m_value = std::move(other.m_value);
 		}
 		template <typename U>
-		void assign(const U &other, typename boost::enable_if<
-			is_numerical_coefficient<typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
+		void assign(const U &other, typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value = other.m_value;
 		}
 		template <class U>
-		void assign(U &&other, typename boost::disable_if<is_numerical_coefficient<typename strip_cv_ref<U>::type>>::type * = piranha_nullptr)
+		void assign(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value = std::forward<U>(other);
 		}
