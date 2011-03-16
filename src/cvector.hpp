@@ -98,6 +98,10 @@ struct CvectorElementConcept:
  * 
  * @see http://www.boost.org/doc/libs/release/libs/exception/doc/throw_exception.html
  * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object equivalent to a default-constructed object.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo Investigate performance issues on parallel destruction.

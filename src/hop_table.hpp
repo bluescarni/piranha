@@ -70,6 +70,7 @@ namespace piranha
  * \todo try forcing 32-bit bitmap insted of mf_int
  * \todo see if find() can be sped up by using msb() instead of linear search
  * \todo missing exception throwing specifications in the documentation
+ * \todo require non-throwing functors for hash and equality for move semantics - so that for assignment we can guarantee exception safety.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
