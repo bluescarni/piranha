@@ -22,6 +22,7 @@
 #define PIRANHA_CVECTOR_HPP
 
 #include <algorithm>
+#include <boost/concept_assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
 #include <cstddef>
@@ -43,6 +44,24 @@
 
 namespace piranha {
 
+namespace detail
+{
+
+// Concept for element type of cvector.
+template <typename T>
+struct CvectorElementConcept:
+	boost::DefaultConstructible<T>,
+	boost::CopyConstructible<T>
+{
+	BOOST_CONCEPT_USAGE(CvectorElementConcept)
+	{
+		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
+		static_assert(is_nothrow_destructible<T>::value,"T must not be nothrow-destructible.");
+	}
+};
+
+}
+
 /// Concurrent vector class.
 /**
  * This class is a minimal vector class which can use multiple threads during construction,
@@ -52,7 +71,12 @@ namespace piranha {
  * the template parameter \p MinWork, no new threads will be opened. No new threads will be opened also in case
  * the vector instance is used from a thread different from the main one.
  * 
- * \p T must not be a reference type or cv-qualified, otherwise a static assertion will fail.
+ * \section type_requirements Type requirements
+ * 
+ * - \p T must not be a reference type or cv-qualified,
+ * - \p T must be default-constructible,
+ * - \p T must be copy-constructible,
+ * - \p T must be destructible without throwing.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -82,7 +106,7 @@ namespace piranha {
 template <typename T, std::size_t MinWork = 50>
 class cvector
 {
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
+		BOOST_CONCEPT_ASSERT((detail::CvectorElementConcept<T>));
 	public:
 		/// Value type.
 		typedef T value_type;
@@ -428,18 +452,7 @@ class cvector
 		~cvector()
 		{
 			assert((m_size == 0 && m_data == piranha_nullptr) || (m_size != 0 && m_data != piranha_nullptr));
-			// Here throwing can happen, e.g., in thread starting or copying arguments for the thread functions.
-			try {
-				destroy_and_deallocate();
-			} catch (...) {
-				// If anything goes wrong, do a bare destruction function
-				// that will not throw.
-				for (size_type i = 0; i < m_size; ++i) {
-					(m_data + i)->~value_type();
-				}
-				// No need for numeric cast, as we were able to construct the object in the first place.
-				m_allocator.deallocate(m_data,m_size);
-			}
+			destroy_and_deallocate();
 		}
 		/// Move assignment operator.
 		/**
@@ -472,25 +485,10 @@ class cvector
 		 */
 		cvector &operator=(const cvector &other)
 		{
-			if (this == boost::addressof(other)) {
-				return *this;
-			}
-			if (other.size() == 0) {
-				resize(0);
-			} else {
-				value_type *new_data = m_allocator.allocate(other.size());
-				copy_ctor c;
-				try {
-					thread_runner(c,other.size(),new_data,other.m_data);
-				} catch (...) {
-					m_allocator.deallocate(new_data,other.size());
-					throw;
-				}
-				// Erase previous content.
-				destroy_and_deallocate();
-				// Final assignment.
-				m_data = new_data;
-				m_size = other.size();
+			// Copy + move idiom.
+			if (this != boost::addressof(other)) {
+				cvector tmp(other);
+				*this = std::move(tmp);
 			}
 			return *this;
 		}
@@ -498,7 +496,7 @@ class cvector
 		/**
 		 * @param[in] other swap argument.
 		 */
-		void swap(cvector &other)
+		void swap(cvector &other) piranha_noexcept(true)
 		{
 			std::swap(m_data,other.m_data);
 			std::swap(m_size,other.m_size);
@@ -648,8 +646,16 @@ class cvector
 			if (m_size == 0) {
 				return;
 			}
-			destructor d;
-			thread_runner(d,m_size,m_data);
+			try {
+				destructor d;
+				thread_runner(d,m_size,m_data);
+			} catch (...) {
+				// If anything goes wrong, do a bare destruction function
+				// that will not throw.
+				for (size_type i = 0; i < m_size; ++i) {
+					(m_data + i)->~value_type();
+				}
+			}
 			// No need for numeric cast, as we were able to construct the object in the first place.
 			m_allocator.deallocate(m_data,m_size);
 		}
