@@ -21,12 +21,17 @@
 #ifndef PIRANHA_BASE_TERM_HPP
 #define PIRANHA_BASE_TERM_HPP
 
+#include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <iostream>
 #include <type_traits>
 #include <unordered_set>
 
+#include "coefficient_concept.hpp"
+#include "config.hpp"
+#include "crtp_concept.hpp"
 #include "detail/base_term_fwd.hpp"
+#include "key_concept.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -39,19 +44,28 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Cf and \p Key must not be pointer types, reference types or cv-qualified, otherwise a static assertion will fail.
+ * - \p Derived must be a model of piranha::CRTPConcept.
+ * - \p Cf must be a model of piranha::CoefficientConcept.
+ * - \p Key must be a model of piranha::KeyConcept.
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the strong exception safety guarantee for all operations.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics for this class is equivalent by its data members' move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo test move constructor in inherited term.
- * \todo exception safety specifications and implementation of move assignment that queries for has_move_assignment and otherwise copies.
  */
 template <typename Cf, typename Key, typename Derived = void>
-class base_term: public detail::base_term_tag
+class base_term: detail::base_term_tag
 {
-	private:
-		static_assert(!std::is_pointer<Cf>::value && !std::is_pointer<Key>::value,"Cf and Key must not be pointer types.");
-		static_assert(!is_cv_or_ref<Cf>::value && !is_cv_or_ref<Key>::value,"Cf and Key must not be reference types or cv-qualified.");
+		BOOST_CONCEPT_ASSERT((CRTPConcept<base_term<Cf,Key,Derived>,Derived>));
+		BOOST_CONCEPT_ASSERT((CoefficientConcept<Cf>));
+		BOOST_CONCEPT_ASSERT((KeyConcept<Key>));
 	public:
 		/// Alias for coefficient type.
 		typedef Cf cf_type;
@@ -69,11 +83,11 @@ class base_term: public detail::base_term_tag
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
 		base_term(const base_term &) = default;
-		/// Default move constructor.
+		/// Move constructor.
 		/**
-		 * @throws unspecified any exception thrown by the move constructors of \p Cf and \p Key.
+		 * @param[in] other term to move from.
 		 */
-		base_term(base_term &&) = default;
+		base_term(base_term &&other) piranha_noexcept(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Constructor from generic coefficient and key.
 		/**
 		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key.
@@ -105,18 +119,22 @@ class base_term: public detail::base_term_tag
 		 */
 		template <typename Cf2, typename Key2, typename Derived2>
 		explicit base_term(base_term<Cf2,Key2,Derived2> &&other):m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
-		/// Default destructor.
-		/**
-		 * @throws unspecified any exception thrown by the destructors of \p Cf and \p Key.
-		 */
-		~base_term() = default;
-		/// Default copy assignment operator.
+		/// Trivial destructor.
+		~base_term() piranha_noexcept(true) {}
+		/// Copy assignment operator.
 		/**
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the copy assignment operators of \p Cf and \p Key.
+		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
-		base_term &operator=(const base_term &) = default;
+		base_term &operator=(const base_term &other)
+		{
+			if (this != &other) {
+				base_term tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
 		/// Move-assignment operator.
 		/**
 		 * Will move <tt>other</tt>'s coefficient and key.
@@ -124,10 +142,8 @@ class base_term: public detail::base_term_tag
 		 * @param[in] other assignment argument.
 		 * 
 		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the move assignment operators of \p Cf and \p Key.
 		 */
-		base_term &operator=(base_term &&other)
+		base_term &operator=(base_term &&other) piranha_noexcept(true)
 		{
 			m_cf = std::move(other.m_cf);
 			m_key = std::move(other.m_key);
@@ -149,6 +165,8 @@ class base_term: public detail::base_term_tag
 		}
 		/// Hash value.
 		/**
+		 * The term's hash value is given by its key's hash value.
+		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
 		 * 
 		 * @throws unspecified any exception thrown by the specialisation of \p std::hash for \p Key.
