@@ -22,6 +22,7 @@
 #define PIRANHA_KEY_CONCEPT_HPP
 
 #include <boost/concept_check.hpp>
+#include <unordered_set>
 
 #include "container_element_concept.hpp"
 
@@ -33,16 +34,22 @@ namespace piranha
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::ContainerElementConcept,
- * - must not be a pointer.
+ * - must not be a pointer,
+ * - must be equality-comparable,
+ * - must be provided with a \p std::hash specialisation.
  */
 template <typename T>
 struct KeyConcept:
-	ContainerElementConcept<T>
+	ContainerElementConcept<T>,
+	boost::EqualityComparable<T>
 {
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(KeyConcept)
 	{
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
+		// TODO: assert here that hasher satisfy the Hashable requirements.
+		std::hash<T> hasher;
+		(void)hasher;
 	}
 };
 
