@@ -25,6 +25,7 @@
 #include <unordered_set>
 
 #include "array_key.hpp"
+#include "config.hpp"
 
 namespace piranha
 {
@@ -32,6 +33,18 @@ namespace piranha
 /// Monomial class.
 /**
  * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * \p T must be suitable for use in piranha::array_key.
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the same exception safety guarantee as piranha::array_key.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics for this class are equivalent to those for piranha::array_key.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -76,7 +89,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws unspecified any exception thrown by the invoked piranha::array_key's assignment operator.
 		 */
 		template <typename U>
-		monomial &operator=(U &&other)
+		monomial &operator=(U &&other) piranha_noexcept(std::is_rvalue_reference<U &&>::value)
 		{
 			base::operator=(std::forward<U>(other));
 			return *this;
