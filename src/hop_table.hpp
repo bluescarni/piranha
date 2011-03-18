@@ -37,6 +37,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "container_element_concept.hpp"
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
@@ -56,28 +57,30 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must not be a reference type or cv-qualified, otherwise a static assertion will fail.
- * - \p Hash and \p Pred must not be reference types, pointer types or cv-qualified, otherwise a static assertion will fail.
+ * \p T must be a model of piranha::ContainerElementConcept. \p Hash and \p Pred must model the
+ * concepts in the standard C++ library for the corresponding types of \p std::unordered_set.
  * 
  * \section exception_safety Exception safety guarantees
  * 
  * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
  * which provide the basic exception safety guarantee.
  * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object equivalent to an empty table whose hasher and
+ * equality predicate have been moved-from.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
+ * \todo concept assert for hash and pred.
  * \todo tests for low-level methods
  * \todo try forcing 32-bit bitmap insted of mf_int
  * \todo see if find() can be sped up by using msb() instead of linear search
- * \todo missing exception throwing specifications in the documentation
- * \todo require non-throwing functors for hash and equality for move semantics - so that for assignment we can guarantee exception safety.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
-		static_assert(!is_cv_or_ref<Hash>::value && !std::is_pointer<Hash>::value,"Hash must not be a reference/pointer type or cv-qualified.");
-		static_assert(!is_cv_or_ref<Pred>::value && !std::is_pointer<Pred>::value,"Pred must not be a reference/pointer type or cv-qualified.");
+		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
 		template <typename U>
 		struct base_generic_hop_bucket
 		{
@@ -248,7 +251,7 @@ class hop_table
 		 */
 		explicit hop_table(const size_type &n_buckets, const hasher &h = hasher(), const key_equal &k = key_equal()):
 			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0) {}
-		/// Copy constructor.
+		/// Defaulted copy constructor.
 		/**
 		 * @throws unspecified any exception thrown by the copy constructors of piranha::cvector, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
@@ -256,18 +259,13 @@ class hop_table
 		/// Move constructor.
 		/**
 		 * After the move, \p other will have zero buckets and zero elements, and its hasher and equality predicate
-		 * will have been used to copy-construct their counterparts in \p this.
+		 * will have been used to move-construct their counterparts in \p this.
 		 * 
 		 * @param[in] other table to be moved.
-		 * 
-		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
-		hop_table(hop_table &&other): m_container(),m_hasher(other.m_hasher),
-			m_key_equal(other.m_key_equal),m_n_elements(other.m_n_elements)
+		hop_table(hop_table &&other) piranha_noexcept(true) : m_container(std::move(other.m_container)),m_hasher(std::move(other.m_hasher)),
+			m_key_equal(std::move(other.m_key_equal)),m_n_elements(std::move(other.m_n_elements))
 		{
-			// Assign it here, so that if hasher or equality throw in the initialiser list
-			// we won't have fucked other.
-			m_container = std::move(other.m_container);
 			// Mark the other as empty, as other's cvector will be empty.
 			other.m_n_elements = 0;
 		}
@@ -317,27 +315,37 @@ class hop_table
 		/**
 		 * No side effects.
 		 */
-		~hop_table()
+		~hop_table() piranha_noexcept(true)
 		{
 			piranha_assert(sanity_check());
 		}
-		/// Default copy assignment operator.
-		hop_table &operator=(const hop_table &) = default;
-		/// Move assignment operator.
+		/// Copy assignment operator.
 		/**
-		 * Will copy hash functor and equality predicate, moving only the internal representation of the table.
-		 * 
-		 * @param[in] other table to be moved into \p this.
+		 * @param[in] other assignment argument.
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the assignment operator of <tt>Hash</tt> or <tt>Pred</tt>.
+		 * @throws unspecified any exception thrown by the copy constructors of piranha::cvector, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
-		hop_table &operator=(hop_table &&other)
+		hop_table &operator=(const hop_table &other)
 		{
-			m_hasher = other.m_hasher;
-			m_key_equal = other.m_key_equal;
-			m_n_elements = other.m_n_elements;
+			if (this != &other) {
+				hop_table tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other table to be moved into \p this.
+		 * 
+		 * @return reference to \p this.
+		 */
+		hop_table &operator=(hop_table &&other) piranha_noexcept(true)
+		{
+			m_hasher = std::move(other.m_hasher);
+			m_key_equal = std::move(other.m_key_equal);
+			m_n_elements = std::move(other.m_n_elements);
 			m_container = std::move(other.m_container);
 			// Zero out other.
 			other.m_n_elements = 0;
@@ -390,7 +398,7 @@ class hop_table
 		}
 		/// Test for empty table.
 		/**
-		 * @return true if size() returns 0, false otherwise.
+		 * @return \p true if size() returns 0, \p false otherwise.
 		 */
 		bool empty() const
 		{
@@ -471,7 +479,7 @@ class hop_table
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
 		 * equivalent) and the result of the operation.
 		 * 
-		 * @throws unspecified any exception thrown by hop_table::key_type's move or copy constructors.
+		 * @throws unspecified any exception thrown by hop_table::key_type's copy constructor.
 		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
 		 * maximum number of buckets.
 		 */
@@ -499,8 +507,6 @@ class hop_table
 		 * pointing to an element of the table.
 		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
-		 * 
-		 * @throws unspecified any exception thrown by hop_table::key_type's destructor.
 		 */
 		void erase(const iterator &it)
 		{
@@ -529,7 +535,11 @@ class hop_table
 		}
 		/// Swap content.
 		/**
+		 * Will use \p std::swap to swap hasher and equality predicate.
+		 * 
 		 * @param[in] other swap argument.
+		 * 
+		 * @throws unspecified any exception thrown by swapping hasher or equality predicate via \p std::swap.
 		 */
 		void swap(hop_table &other)
 		{
@@ -558,7 +568,7 @@ class hop_table
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or
 		 * end()) and the result of the operation.
 		 * 
-		 * @throws unspecified any exception thrown by hop_table::key_type's move or copy constructors.
+		 * @throws unspecified any exception thrown by hop_table::key_type's copy constructor.
 		 */
 		template <typename U>
 		std::pair<iterator,bool> _unique_insert(U &&k, const size_type &bucket_idx, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
