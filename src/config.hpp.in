@@ -44,7 +44,7 @@
 	#define piranha_constexpr const
 #endif
 
-#define piranha_move_if_noexcept(expr) std::move(expr)
+// No override available so far in GCC.
 #define piranha_override
 
 #if defined(__GNUC__)
