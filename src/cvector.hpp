@@ -455,7 +455,7 @@ class cvector
 			other.m_size = 0;
 			return *this;
 		}
-		/// Assignment operator.
+		/// Copy assignment operator.
 		/**
 		 * @param[in] other vector to be copied.
 		 * 
