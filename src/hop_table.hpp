@@ -154,15 +154,19 @@ class hop_table
 			}
 			// NOTE: this should be called only in the default constructor of cvector,
 			// so assert that other is empty.
-			generic_hop_bucket(generic_hop_bucket &&other)
+			generic_hop_bucket(generic_hop_bucket &&other) piranha_noexcept(true)
 			{
 				this->m_bitset = other.m_bitset;
 				piranha_assert(!other.m_bitset);
 			}
+			// This should never be called, define it only to satisfy concept.
+			generic_hop_bucket &operator=(generic_hop_bucket &&) piranha_noexcept(true)
+			{
+				piranha_assert(false);
+			}
 			// Delete unused operators.
-			generic_hop_bucket &operator=(generic_hop_bucket &&) = delete;
 			generic_hop_bucket &operator=(const generic_hop_bucket &) = delete;
-			~generic_hop_bucket()
+			~generic_hop_bucket() piranha_noexcept(true)
 			{
 				if (this->test_occupied()) {
 					this->ptr()->~U();
