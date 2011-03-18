@@ -22,9 +22,8 @@
 #define PIRANHA_CVECTOR_HPP
 
 #include <algorithm>
-#include <boost/concept_assert.hpp>
+#include <boost/concept/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/utility.hpp>
 #include <cstddef>
 #include <cstring>
 #include <memory>
@@ -33,6 +32,7 @@
 #include <vector>
 
 #include "config.hpp" // For piranha_assert.
+#include "container_element_concept.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
@@ -43,24 +43,6 @@
 #include "type_traits.hpp"
 
 namespace piranha {
-
-namespace detail
-{
-
-// Concept for element type of cvector.
-template <typename T>
-struct CvectorElementConcept:
-	boost::DefaultConstructible<T>,
-	boost::CopyConstructible<T>
-{
-	BOOST_CONCEPT_USAGE(CvectorElementConcept)
-	{
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
-		static_assert(is_nothrow_destructible<T>::value,"T must not be nothrow-destructible.");
-	}
-};
-
-}
 
 /// Concurrent vector class.
 /**
@@ -73,10 +55,7 @@ struct CvectorElementConcept:
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must not be a reference type or cv-qualified,
- * - \p T must be default-constructible,
- * - \p T must be copy-constructible,
- * - \p T must be destructible without throwing.
+ * \p T must be a model of piranha::ContainerElementConcept.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -110,7 +89,7 @@ struct CvectorElementConcept:
 template <typename T, std::size_t MinWork = 50>
 class cvector
 {
-		BOOST_CONCEPT_ASSERT((detail::CvectorElementConcept<T>));
+		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
 	public:
 		/// Value type.
 		typedef T value_type;
@@ -297,7 +276,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,begin,std::has_trivial_destructor<value_type>());
+				impl(tc,begin,is_trivially_destructible<value_type>());
 			}
 		};
 		struct copy_ctor
@@ -336,7 +315,7 @@ class cvector
 				if (!is_thread_ready(tc)) {
 					return;
 				}
-				impl(tc,dest_begin,src_begin,std::has_trivial_copy_constructor<value_type>());
+				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
 			}
 		};
 		struct mover
@@ -352,7 +331,7 @@ class cvector
 				try {
 					value_type *dest_current = dest_begin + tc.offset, *src_current = src_begin + tc.offset;
 					for (; i < tc.work_size; ++i, ++dest_current, ++src_current) {
-						::new ((void *)dest_current) value_type(piranha_move_if_noexcept(*src_current));
+						::new ((void *)dest_current) value_type(std::move(*src_current));
 					}
 				} catch (...) {
 					store_exception(tc);
@@ -373,7 +352,7 @@ class cvector
 				}
 				// NOTE: possibly here it should really be: move it if it has a move ctor
 				// and it is not trivially copyable otherwise fall back to copying.
-				impl(tc,dest_begin,src_begin,std::has_trivial_copy_constructor<value_type>());
+				impl(tc,dest_begin,src_begin,is_trivially_copyable<value_type>());
 			}
 		};
 	public:
@@ -385,7 +364,7 @@ class cvector
 		/**
 		 * Will build an empty vector.
 		 */
-		cvector() piranha_noexcept(true) : m_data(piranha_nullptr),m_size(0) {}
+		cvector() : m_data(piranha_nullptr),m_size(0) {}
 		/// Copy constructor.
 		/**
 		 * @param[in] other vector that will be copied.
@@ -453,7 +432,7 @@ class cvector
 		/**
 		 * Will destroy all elements and de-allocate the internal memory.
 		 */
-		~cvector()
+		~cvector() piranha_noexcept(true)
 		{
 			assert((m_size == 0 && m_data == piranha_nullptr) || (m_size != 0 && m_data != piranha_nullptr));
 			destroy_and_deallocate();
@@ -490,7 +469,7 @@ class cvector
 		cvector &operator=(const cvector &other)
 		{
 			// Copy + move idiom.
-			if (this != boost::addressof(other)) {
+			if (this != &other) {
 				cvector tmp(other);
 				*this = std::move(tmp);
 			}
@@ -550,7 +529,7 @@ class cvector
 		/**
 		 * @return the size of the vector.
 		 */
-		size_type size() const piranha_noexcept(true)
+		size_type size() const
 		{
 			return m_size;
 		}
@@ -628,7 +607,7 @@ class cvector
 		 * 
 		 * @return reference to the <tt>n</tt>-th element of the container.
 		 */
-		value_type &operator[](const size_type &n) piranha_noexcept(true)
+		value_type &operator[](const size_type &n)
 		{
 			piranha_assert(n < m_size);
 			return m_data[n];
@@ -639,7 +618,7 @@ class cvector
 		 * 
 		 * @return const reference to the <tt>n</tt>-th element of the container.
 		 */
-		const value_type &operator[](const size_type &n) const piranha_noexcept(true)
+		const value_type &operator[](const size_type &n) const
 		{
 			piranha_assert(n < m_size);
 			return m_data[n];
