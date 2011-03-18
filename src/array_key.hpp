@@ -21,6 +21,7 @@
 #ifndef PIRANHA_ARRAY_KEY_HPP
 #define PIRANHA_ARRAY_KEY_HPP
 
+#include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <cstddef>
 #include <initializer_list>
@@ -28,23 +29,38 @@
 #include <unordered_set>
 #include <vector>
 
+#include "config.hpp"
+#include "container_element_concept.hpp"
+#include "crtp_concept.hpp"
+
 namespace piranha
 {
 
 /// Array key.
 /**
- * Key type represented by an array-like sequence of instances of \p T. Interface and semantics
+ * Key type represented by an array-like sequence of instances of type \p T. Interface and semantics
  * mimic those of \p std::vector.
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must be suitable for use in \p std::vector
+ * - \p T must be a model of piranha::ContainerElementConcept.
+ * - \p Derived must be a model of piranha::CRTPConcept.
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the same exception safety guarantee as \p std::vector.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics for this class are equivalent to those for \p std::vector.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Derived = void>
 class array_key
 {
+		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
+		BOOST_CONCEPT_ASSERT((CRTPConcept<array_key<T,Derived>,Derived>));
 		// Underlying container.
 		typedef std::vector<T> container_type;
 	public:
@@ -59,8 +75,12 @@ class array_key
 		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s copy constructor.
 		 */
 		array_key(const array_key &) = default;
-		/// Defaulted move constructor.
-		array_key(array_key &&) = default;
+		/// Move constructor.
+		/**
+		 * @param[in] other object to move from.
+		 */
+		array_key(array_key &&other) piranha_noexcept(true) : m_container(std::move(other.m_container))
+		{}
 		/// Constructor from initializer list.
 		/**
 		 * Will set the values of the internal array to those in \p list.
@@ -71,10 +91,8 @@ class array_key
 		 */
 		array_key(std::initializer_list<value_type> list):m_container(list) {}
 		/// Defaulted destructor.
-		/**
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s destructor.
-		 */
-		~array_key() = default;
+		~array_key() piranha_noexcept(true)
+		{}
 		/// Defaulted copy assignment operator.
 		/**
 		 * @return reference to \p this.
@@ -88,7 +106,7 @@ class array_key
 		 * 
 		 * @return reference to \p this.
 		 */
-		array_key &operator=(array_key &&other)
+		array_key &operator=(array_key &&other) piranha_noexcept(true)
 		{
 			m_container = std::move(other.m_container);
 			return *this;
