@@ -27,11 +27,11 @@
 #include <type_traits>
 #include <unordered_set>
 
-#include "coefficient_concept.hpp"
+#include "concepts/coefficient.hpp"
+#include "concepts/crtp.hpp"
+#include "concepts/key.hpp"
 #include "config.hpp"
-#include "crtp_concept.hpp"
 #include "detail/base_term_fwd.hpp"
-#include "key_concept.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -44,9 +44,9 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Derived must be a model of piranha::CRTPConcept.
- * - \p Cf must be a model of piranha::CoefficientConcept.
- * - \p Key must be a model of piranha::KeyConcept.
+ * - \p Derived must be a model of piranha::concept::CRTP.
+ * - \p Cf must be a model of piranha::concept::Coefficient.
+ * - \p Key must be a model of piranha::concept::Key.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -63,9 +63,9 @@ namespace piranha
 template <typename Cf, typename Key, typename Derived = void>
 class base_term: detail::base_term_tag
 {
-		BOOST_CONCEPT_ASSERT((CRTPConcept<base_term<Cf,Key,Derived>,Derived>));
-		BOOST_CONCEPT_ASSERT((CoefficientConcept<Cf>));
-		BOOST_CONCEPT_ASSERT((KeyConcept<Key>));
+		BOOST_CONCEPT_ASSERT((concept::CRTP<base_term<Cf,Key,Derived>,Derived>));
+		BOOST_CONCEPT_ASSERT((concept::Coefficient<Cf>));
+		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 	public:
 		/// Alias for coefficient type.
 		typedef Cf cf_type;

@@ -29,9 +29,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "concepts/container_element.hpp"
+#include "concepts/crtp.hpp"
 #include "config.hpp"
-#include "container_element_concept.hpp"
-#include "crtp_concept.hpp"
 
 namespace piranha
 {
@@ -43,8 +43,8 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must be a model of piranha::ContainerElementConcept.
- * - \p Derived must be a model of piranha::CRTPConcept.
+ * - \p T must be a model of piranha::concept::ContainerElement.
+ * - \p Derived must be a model of piranha::concept::CRTP.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -59,8 +59,8 @@ namespace piranha
 template <typename T, typename Derived = void>
 class array_key
 {
-		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
-		BOOST_CONCEPT_ASSERT((CRTPConcept<array_key<T,Derived>,Derived>));
+		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
 		// Underlying container.
 		typedef std::vector<T> container_type;
 	public:

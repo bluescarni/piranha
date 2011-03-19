@@ -31,8 +31,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "concepts/container_element.hpp"
 #include "config.hpp" // For piranha_assert.
-#include "container_element_concept.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
@@ -55,7 +55,7 @@ namespace piranha {
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be a model of piranha::ContainerElementConcept.
+ * \p T must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantees
  * 
@@ -89,7 +89,7 @@ namespace piranha {
 template <typename T, std::size_t MinWork = 50>
 class cvector
 {
-		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
+		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
 	public:
 		/// Value type.
 		typedef T value_type;

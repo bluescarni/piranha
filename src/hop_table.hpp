@@ -36,8 +36,8 @@
 #include <utility>
 #include <type_traits>
 
+#include "concepts/container_element.hpp"
 #include "config.hpp"
-#include "container_element_concept.hpp"
 #include "cvector.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
@@ -57,7 +57,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be a model of piranha::ContainerElementConcept. \p Hash and \p Pred must model the
+ * \p T must be a model of piranha::concept::ContainerElement. \p Hash and \p Pred must model the
  * concepts in the standard C++ library for the corresponding types of \p std::unordered_set.
  * 
  * \section exception_safety Exception safety guarantees
@@ -80,7 +80,7 @@ namespace piranha
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hop_table
 {
-		BOOST_CONCEPT_ASSERT((ContainerElementConcept<T>));
+		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
 		template <typename U>
 		struct base_generic_hop_bucket
 		{
