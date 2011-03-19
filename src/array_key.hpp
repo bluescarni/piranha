@@ -90,7 +90,7 @@ class array_key
 		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s constructor from initializer list.
 		 */
 		array_key(std::initializer_list<value_type> list):m_container(list) {}
-		/// Defaulted destructor.
+		/// Trivial destructor.
 		~array_key() piranha_noexcept_spec(true)
 		{}
 		/// Defaulted copy assignment operator.
