@@ -781,7 +781,7 @@ class integer
 		/**
 		 * The value is initialised to zero.
 		 */
-		integer() piranha_noexcept(true)
+		integer() piranha_noexcept_spec(true)
 		{
 			::mpz_init(m_value);
 		}
@@ -789,7 +789,7 @@ class integer
 		/**
 		 * @param[in] other integer to be deep-copied.
 		 */
-		integer(const integer &other) piranha_noexcept(true)
+		integer(const integer &other) piranha_noexcept_spec(true)
 		{
 			::mpz_init_set(m_value,other.m_value);
 		}
@@ -797,7 +797,7 @@ class integer
 		/**
 		 * @param[in] other integer to be moved.
 		 */
-		integer(integer &&other) piranha_noexcept(true)
+		integer(integer &&other) piranha_noexcept_spec(true)
 		{
 			m_value->_mp_size = other.m_value->_mp_size;
 			m_value->_mp_d = other.m_value->_mp_d;
@@ -851,7 +851,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer() piranha_noexcept(true)
+		~integer() piranha_noexcept_spec(true)
 		{
 			// The rationale for using unlikely here is that mpz_clear is an expensive operation
 			// which is going to dominate anyway the branch penalty.
@@ -867,7 +867,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		integer &operator=(integer &&other) piranha_noexcept(true)
+		integer &operator=(integer &&other) piranha_noexcept_spec(true)
 		{
 			swap(other);
 			return *this;
@@ -878,7 +878,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		integer &operator=(const integer &other) piranha_noexcept(true)
+		integer &operator=(const integer &other) piranha_noexcept_spec(true)
 		{
 			if (this != boost::addressof(other)) {
 				// Handle assignment to moved-from objects.
@@ -935,7 +935,7 @@ class integer
 		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x) piranha_noexcept(!std::is_floating_point<T>::value)
+		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x) piranha_noexcept_spec(!std::is_floating_point<T>::value)
 		{
 			if (m_value->_mp_d) {
 				assign_from_arithmetic(x);
@@ -951,7 +951,7 @@ class integer
 		 * 
 		 * @param[in] n swap argument.
 		 */
-		void swap(integer &n) piranha_noexcept(true)
+		void swap(integer &n) piranha_noexcept_spec(true)
 		{
 			::mpz_swap(m_value,n.m_value);
 		}
@@ -974,7 +974,7 @@ class integer
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
 		 */
 		template <typename T>
-		explicit operator T() const piranha_noexcept((std::is_same<typename std::remove_cv<T>::type,bool>::value ||
+		explicit operator T() const piranha_noexcept_spec((std::is_same<typename std::remove_cv<T>::type,bool>::value ||
 			std::is_floating_point<typename std::remove_cv<T>::type>::value))
 		{
 			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
@@ -1002,7 +1002,7 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator+=(T &&x)
-			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_add(std::forward<T>(x));
 			return *this;
@@ -1098,7 +1098,7 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator-=(T &&x)
-			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_sub(std::forward<T>(x));
 			return *this;
@@ -1196,7 +1196,7 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator*=(T &&x)
-			piranha_noexcept(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
+			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_mul(std::forward<T>(x));
 			return *this;
@@ -1680,7 +1680,7 @@ class numeric_limits<piranha::integer>
 		/**
 		 * @return default-constructed piranha::integer.
 		 */
-		static const piranha::integer min() piranha_noexcept(true)
+		static const piranha::integer min() piranha_noexcept_spec(true)
 		{
 			return piranha::integer();
 		}
@@ -1688,7 +1688,7 @@ class numeric_limits<piranha::integer>
 		/**
 		 * @return default-constructed piranha::integer.
 		 */
-		static const piranha::integer max() piranha_noexcept(true)
+		static const piranha::integer max() piranha_noexcept_spec(true)
 		{
 			return piranha::integer();
 		}
@@ -1696,7 +1696,7 @@ class numeric_limits<piranha::integer>
 		/**
 		 * @return default-constructed piranha::integer.
 		 */
-		static const piranha::integer lowest() piranha_noexcept(true)
+		static const piranha::integer lowest() piranha_noexcept_spec(true)
 		{
 			return piranha::integer();
 		}

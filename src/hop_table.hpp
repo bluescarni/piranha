@@ -154,19 +154,19 @@ class hop_table
 			}
 			// NOTE: this should be called only in the default constructor of cvector,
 			// so assert that other is empty.
-			generic_hop_bucket(generic_hop_bucket &&other) piranha_noexcept(true)
+			generic_hop_bucket(generic_hop_bucket &&other) piranha_noexcept_spec(true)
 			{
 				this->m_bitset = other.m_bitset;
 				piranha_assert(!other.m_bitset);
 			}
 			// This should never be called, define it only to satisfy concept.
-			generic_hop_bucket &operator=(generic_hop_bucket &&) piranha_noexcept(true)
+			generic_hop_bucket &operator=(generic_hop_bucket &&) piranha_noexcept_spec(true)
 			{
 				piranha_assert(false);
 			}
 			// Delete unused operators.
 			generic_hop_bucket &operator=(const generic_hop_bucket &) = delete;
-			~generic_hop_bucket() piranha_noexcept(true)
+			~generic_hop_bucket() piranha_noexcept_spec(true)
 			{
 				if (this->test_occupied()) {
 					this->ptr()->~U();
@@ -267,7 +267,7 @@ class hop_table
 		 * 
 		 * @param[in] other table to be moved.
 		 */
-		hop_table(hop_table &&other) piranha_noexcept(true) : m_container(std::move(other.m_container)),m_hasher(std::move(other.m_hasher)),
+		hop_table(hop_table &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container)),m_hasher(std::move(other.m_hasher)),
 			m_key_equal(std::move(other.m_key_equal)),m_n_elements(std::move(other.m_n_elements))
 		{
 			// Mark the other as empty, as other's cvector will be empty.
@@ -319,7 +319,7 @@ class hop_table
 		/**
 		 * No side effects.
 		 */
-		~hop_table() piranha_noexcept(true)
+		~hop_table() piranha_noexcept_spec(true)
 		{
 			piranha_assert(sanity_check());
 		}
@@ -345,7 +345,7 @@ class hop_table
 		 * 
 		 * @return reference to \p this.
 		 */
-		hop_table &operator=(hop_table &&other) piranha_noexcept(true)
+		hop_table &operator=(hop_table &&other) piranha_noexcept_spec(true)
 		{
 			m_hasher = std::move(other.m_hasher);
 			m_key_equal = std::move(other.m_key_equal);

@@ -79,7 +79,7 @@ class array_key
 		/**
 		 * @param[in] other object to move from.
 		 */
-		array_key(array_key &&other) piranha_noexcept(true) : m_container(std::move(other.m_container))
+		array_key(array_key &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container))
 		{}
 		/// Constructor from initializer list.
 		/**
@@ -91,7 +91,7 @@ class array_key
 		 */
 		array_key(std::initializer_list<value_type> list):m_container(list) {}
 		/// Defaulted destructor.
-		~array_key() piranha_noexcept(true)
+		~array_key() piranha_noexcept_spec(true)
 		{}
 		/// Defaulted copy assignment operator.
 		/**
@@ -106,7 +106,7 @@ class array_key
 		 * 
 		 * @return reference to \p this.
 		 */
-		array_key &operator=(array_key &&other) piranha_noexcept(true)
+		array_key &operator=(array_key &&other) piranha_noexcept_spec(true)
 		{
 			m_container = std::move(other.m_container);
 			return *this;

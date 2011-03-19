@@ -89,7 +89,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws unspecified any exception thrown by the invoked piranha::array_key's assignment operator.
 		 */
 		template <typename U>
-		monomial &operator=(U &&other) piranha_noexcept(std::is_rvalue_reference<U &&>::value)
+		monomial &operator=(U &&other) piranha_noexcept_spec(std::is_rvalue_reference<U &&>::value)
 		{
 			base::operator=(std::forward<U>(other));
 			return *this;

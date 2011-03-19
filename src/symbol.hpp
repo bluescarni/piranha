@@ -70,7 +70,7 @@ class symbol
 		 * 
 		 * @param[in] other symbol to be copied.
 		 */
-		symbol(symbol &&other) piranha_noexcept(true) : m_it(other.m_it) {}
+		symbol(symbol &&other) piranha_noexcept_spec(true) : m_it(other.m_it) {}
 		/// Defaulted copy assignment operator.
 		symbol &operator=(const symbol &) = default;
 		/// Move assignment operator.
@@ -81,7 +81,7 @@ class symbol
 		 * 
 		 * @return reference to \p this.
 		 */
-		symbol &operator=(symbol &&other) piranha_noexcept(true)
+		symbol &operator=(symbol &&other) piranha_noexcept_spec(true)
 		{
 			return operator=(other);
 		}

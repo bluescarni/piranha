@@ -87,7 +87,7 @@ class base_term: detail::base_term_tag
 		/**
 		 * @param[in] other term to move from.
 		 */
-		base_term(base_term &&other) piranha_noexcept(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
+		base_term(base_term &&other) piranha_noexcept_spec(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Constructor from generic coefficient and key.
 		/**
 		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key.
@@ -120,7 +120,7 @@ class base_term: detail::base_term_tag
 		template <typename Cf2, typename Key2, typename Derived2>
 		explicit base_term(base_term<Cf2,Key2,Derived2> &&other):m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Trivial destructor.
-		~base_term() piranha_noexcept(true) {}
+		~base_term() piranha_noexcept_spec(true) {}
 		/// Copy assignment operator.
 		/**
 		 * @return reference to \p this.
@@ -143,7 +143,7 @@ class base_term: detail::base_term_tag
 		 * 
 		 * @return reference to \p this.
 		 */
-		base_term &operator=(base_term &&other) piranha_noexcept(true)
+		base_term &operator=(base_term &&other) piranha_noexcept_spec(true)
 		{
 			m_cf = std::move(other.m_cf);
 			m_key = std::move(other.m_key);

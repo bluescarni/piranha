@@ -36,11 +36,13 @@
 // c++0x features depending on the GCC version.
 #if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
 	#define piranha_nullptr nullptr
-	#define piranha_noexcept(expr) noexcept(expr)
+	#define piranha_noexcept_spec(expr) noexcept(expr)
+	#define piranha_noexcept_op(expr) noexcept(expr)
 	#define piranha_constexpr constexpr
 #else
 	#define piranha_nullptr (0)
-	#define piranha_noexcept(expr)
+	#define piranha_noexcept_spec(expr)
+	#define piranha_noexcept_op(expr) (true)
 	#define piranha_constexpr const
 #endif
 

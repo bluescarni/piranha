@@ -395,7 +395,7 @@ class cvector
 		 * 
 		 * @param[in] other vector that will be moved.
 		 */
-		cvector(cvector &&other) piranha_noexcept(true) : m_data(other.m_data),m_size(other.m_size)
+		cvector(cvector &&other) piranha_noexcept_spec(true) : m_data(other.m_data),m_size(other.m_size)
 		{
 			// Empty the other cvector.
 			other.m_data = piranha_nullptr;
@@ -432,7 +432,7 @@ class cvector
 		/**
 		 * Will destroy all elements and de-allocate the internal memory.
 		 */
-		~cvector() piranha_noexcept(true)
+		~cvector() piranha_noexcept_spec(true)
 		{
 			assert((m_size == 0 && m_data == piranha_nullptr) || (m_size != 0 && m_data != piranha_nullptr));
 			destroy_and_deallocate();
@@ -445,7 +445,7 @@ class cvector
 		 * 
 		 * @return reference to this.
 		 */
-		cvector &operator=(cvector &&other) piranha_noexcept(true)
+		cvector &operator=(cvector &&other) piranha_noexcept_spec(true)
 		{
 			destroy_and_deallocate();
 			m_data = other.m_data;
@@ -479,7 +479,7 @@ class cvector
 		/**
 		 * @param[in] other swap argument.
 		 */
-		void swap(cvector &other) piranha_noexcept(true)
+		void swap(cvector &other) piranha_noexcept_spec(true)
 		{
 			std::swap(m_data,other.m_data);
 			std::swap(m_size,other.m_size);
