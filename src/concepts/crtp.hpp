@@ -30,7 +30,7 @@ namespace piranha
 namespace concept
 {
 
-/// Concept for classes using the CRTP.
+/// Concept for classes using the curiously recurring template pattern.
 /**
  * \p Derived must either derive from \p Base or be \p void.
  * 

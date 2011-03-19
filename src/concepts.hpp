@@ -25,11 +25,14 @@
  * \brief Include this file to include all concepts defined in Piranha.
  */
 
+namespace piranha
+{
 /// Concepts namespace.
 /**
  * All concepts in Piranha are defined within this namespace.
  */
 namespace concept {}
+}
 
 // Include all concepts.
 #include "concepts/coefficient.hpp"
