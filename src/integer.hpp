@@ -851,7 +851,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer()
+		~integer() piranha_noexcept(true)
 		{
 			// The rationale for using unlikely here is that mpz_clear is an expensive operation
 			// which is going to dominate anyway the branch penalty.
