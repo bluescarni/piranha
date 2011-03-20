@@ -39,7 +39,41 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<int,integer,std::string> key_types;
+// NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hop_table:
+// in the current GCC (4.6) the destructor of std::string does not have nothrow, so we cannot use it.
+class custom_string: public std::string
+{
+	public:
+		custom_string() = default;
+		custom_string(const custom_string &) = default;
+		// NOTE: strange thing here, move constructor of std::string results in undefined reference?
+		custom_string(custom_string &&other) piranha_noexcept_spec(true) : std::string(other) {}
+		template <typename... Args>
+		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
+		custom_string &operator=(const custom_string &) = default;
+		custom_string &operator=(custom_string &&other) piranha_noexcept_spec(true)
+		{
+			std::string::operator=(std::move(other));
+			return *this;
+		}
+		~custom_string() piranha_noexcept_spec(true) {}
+};
+
+namespace std
+{
+template <>
+struct hash<custom_string>
+{
+	typedef size_t result_type;
+	typedef custom_string argument_type;
+	result_type operator()(const argument_type &s) const
+	{
+		return hash<std::string>{}(s);
+	}
+};
+}
+
+typedef boost::mpl::vector<int,integer,custom_string> key_types;
 
 const int N = 10000;
 
@@ -152,32 +186,32 @@ struct initializer_list_tester
 BOOST_AUTO_TEST_CASE(hop_table_constructors_test)
 {
 	// Def ctor.
-	hop_table<std::string> ht;
+	hop_table<custom_string> ht;
 	BOOST_CHECK(ht.begin() == ht.end());
 	BOOST_CHECK(ht.empty());
 	BOOST_CHECK_EQUAL(ht.size(),unsigned(0));
 	BOOST_CHECK_EQUAL(ht.n_buckets(),unsigned(0));
 	BOOST_CHECK_THROW(ht.bucket("hello"),zero_division_error);
 	// Ctor from number of buckets.
-	hop_table<std::string> ht0(0);
+	hop_table<custom_string> ht0(0);
 	BOOST_CHECK(ht0.n_buckets() == 0);
 	BOOST_CHECK(ht0.begin() == ht0.end());
-	hop_table<std::string> ht1(1);
+	hop_table<custom_string> ht1(1);
 	BOOST_CHECK(ht1.n_buckets() >= 1);
 	BOOST_CHECK(ht1.begin() == ht1.end());
-	hop_table<std::string> ht2(2);
+	hop_table<custom_string> ht2(2);
 	BOOST_CHECK(ht2.n_buckets() >= 2);
 	BOOST_CHECK(ht2.begin() == ht2.end());
-	hop_table<std::string> ht3(3);
+	hop_table<custom_string> ht3(3);
 	BOOST_CHECK(ht3.n_buckets() >= 3);
 	BOOST_CHECK(ht3.begin() == ht3.end());
-	hop_table<std::string> ht4(4);
+	hop_table<custom_string> ht4(4);
 	BOOST_CHECK(ht4.n_buckets() >= 4);
 	BOOST_CHECK(ht4.begin() == ht4.end());
-	hop_table<std::string> ht5(456);
+	hop_table<custom_string> ht5(456);
 	BOOST_CHECK(ht5.n_buckets() >= 456);
 	BOOST_CHECK(ht5.begin() == ht5.end());
-	hop_table<std::string> ht6(100001);
+	hop_table<custom_string> ht6(100001);
 	BOOST_CHECK(ht6.n_buckets() >= 100001);
 	BOOST_CHECK(ht6.begin() == ht6.end());
 	// Range constructor.

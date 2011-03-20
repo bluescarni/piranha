@@ -62,9 +62,10 @@ struct trivial
 struct nontrivial
 {
 	nontrivial():v(std::vector<double>::size_type(1)) {}
-	nontrivial(nontrivial &&nt):v(std::move(nt.v)) {}
+	nontrivial(nontrivial &&nt) piranha_noexcept_spec(true) : v(std::move(nt.v)) {}
 	nontrivial(const nontrivial &nt):v(nt.v) {}
-	nontrivial &operator=(nontrivial &&nt)
+	~nontrivial() piranha_noexcept_spec(true) {}
+	nontrivial &operator=(nontrivial &&nt) piranha_noexcept_spec(true)
 	{
 		v = std::move(nt.v);
 		return *this;
@@ -96,12 +97,13 @@ struct nontrivial_throwing
 		++copies;
 		v = ntt.v;
 	}
-	nontrivial_throwing(nontrivial_throwing &&ntt):v(std::move(ntt.v)) {}
-	nontrivial_throwing &operator=(nontrivial_throwing &&ntt)
+	nontrivial_throwing(nontrivial_throwing &&ntt) piranha_noexcept_spec(true) : v(std::move(ntt.v)) {}
+	nontrivial_throwing &operator=(nontrivial_throwing &&ntt) piranha_noexcept_spec(true)
 	{
 		v = std::move(ntt.v);
 		return *this;
 	}
+	~nontrivial_throwing() piranha_noexcept_spec(true) {}
 	std::vector<double> v;
 };
 
