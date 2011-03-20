@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 
+#include "../src/concepts/key.hpp"
 #include "../src/integer.hpp"
 
 using namespace piranha;
@@ -39,6 +40,7 @@ struct constructor_tester
 	void operator()(const T &)
 	{
 		typedef monomial<T> monomial_type;
+		BOOST_CONCEPT_ASSERT((concept::Key<monomial_type>));
 		monomial_type m0;
 		BOOST_CHECK_NO_THROW(monomial_type{});
 		BOOST_CHECK_NO_THROW(monomial_type(monomial_type{}));
