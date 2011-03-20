@@ -67,7 +67,6 @@ namespace piranha
  * \todo implementation notes: use of internal GMP implementation details
  * \todo move safety
  * \todo exception safety
- * \todo fix use of noexcept
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
  * \todo exception specifications for in-place operations with integers: document the possible overflow errors.
@@ -82,7 +81,7 @@ class integer
 		template <typename T>
 		static void fp_normal_check(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
 		{
-			if (!boost::math::isfinite(x)) {
+			if (unlikely(!boost::math::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
 			}
 		}
@@ -781,7 +780,7 @@ class integer
 		/**
 		 * The value is initialised to zero.
 		 */
-		integer() piranha_noexcept_spec(true)
+		integer()
 		{
 			::mpz_init(m_value);
 		}
@@ -789,7 +788,7 @@ class integer
 		/**
 		 * @param[in] other integer to be deep-copied.
 		 */
-		integer(const integer &other) piranha_noexcept_spec(true)
+		integer(const integer &other)
 		{
 			::mpz_init_set(m_value,other.m_value);
 		}
@@ -878,7 +877,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		integer &operator=(const integer &other) piranha_noexcept_spec(true)
+		integer &operator=(const integer &other)
 		{
 			if (this != boost::addressof(other)) {
 				// Handle assignment to moved-from objects.
@@ -935,7 +934,7 @@ class integer
 		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x) piranha_noexcept_spec(!std::is_floating_point<T>::value)
+		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
 		{
 			if (m_value->_mp_d) {
 				assign_from_arithmetic(x);
@@ -974,8 +973,7 @@ class integer
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
 		 */
 		template <typename T>
-		explicit operator T() const piranha_noexcept_spec((std::is_same<typename std::remove_cv<T>::type,bool>::value ||
-			std::is_floating_point<typename std::remove_cv<T>::type>::value))
+		explicit operator T() const
 		{
 			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
 			return convert_to<typename std::remove_cv<T>::type>();
@@ -1002,7 +1000,6 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator+=(T &&x)
-			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_add(std::forward<T>(x));
 			return *this;
@@ -1098,7 +1095,6 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator-=(T &&x)
-			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_sub(std::forward<T>(x));
 			return *this;
@@ -1196,7 +1192,6 @@ class integer
 		typename boost::enable_if_c<
 			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator*=(T &&x)
-			piranha_noexcept_spec(!std::is_floating_point<typename strip_cv_ref<T>::type>::value)
 		{
 			in_place_mul(std::forward<T>(x));
 			return *this;
