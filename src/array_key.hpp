@@ -193,6 +193,18 @@ class array_key
 		{
 			return m_container == other.m_container;
 		}
+		/// Inequality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 * 
+		 * @return negation of operator==().
+		 * 
+		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s equality operator.
+		 */
+		bool operator!=(const array_key &other) const
+		{
+			return !operator==(other);
+		}
 		/// Overload of stream operator for piranha::array_key.
 		/**
 		 * Will direct to stream a human-readable representation of the key.

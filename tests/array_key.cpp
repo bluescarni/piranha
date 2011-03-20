@@ -120,6 +120,16 @@ struct equality_tester
 		}
 		key_type k1{T(0),T(1),T(2),T(3)};
 		BOOST_CHECK(k0 == k1);
+		// Inequality.
+		k0 = key_type{};
+		BOOST_CHECK(k0 != k1);
+		for (int i = 0; i < 3; ++i) {
+			k0.push_back(T(i));
+		}
+		BOOST_CHECK(k0 != k1);
+		k0.push_back(T(3));
+		k0.push_back(T());
+		BOOST_CHECK(k0 != k1);
 	}
 };
 
