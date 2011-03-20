@@ -22,7 +22,9 @@
 #define PIRANHA_CONCEPT_COEFFICIENT_HPP
 
 #include <boost/concept_check.hpp>
+#include <iostream>
 
+#include "../config.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -36,7 +38,8 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::ContainerElement,
- * - must not be a pointer.
+ * - must not be a pointer,
+ * - must be directable to output stream.
  */
 template <typename T>
 struct Coefficient:
@@ -46,6 +49,7 @@ struct Coefficient:
 	BOOST_CONCEPT_USAGE(Coefficient)
 	{
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
+		std::cout << *(static_cast<T *>(piranha_nullptr));
 	}
 };
 

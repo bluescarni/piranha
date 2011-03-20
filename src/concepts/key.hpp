@@ -22,8 +22,10 @@
 #define PIRANHA_CONCEPT_KEY_HPP
 
 #include <boost/concept_check.hpp>
+#include <iostream>
 #include <unordered_set>
 
+#include "../config.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -38,6 +40,7 @@ namespace concept
  * 
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
+ * - must be directable to output stream,
  * - must be equality-comparable,
  * - must be provided with a \p std::hash specialisation.
  * 
@@ -52,6 +55,7 @@ struct Key:
 	BOOST_CONCEPT_USAGE(Key)
 	{
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
+		std::cout << *(static_cast<T *>(piranha_nullptr));
 		// TODO: assert here that hasher satisfy the Hashable requirements.
 		std::hash<T> hasher;
 		(void)hasher;
