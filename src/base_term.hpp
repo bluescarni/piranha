@@ -123,6 +123,8 @@ class base_term: detail::base_term_tag
 		~base_term() piranha_noexcept_spec(true) {}
 		/// Copy assignment operator.
 		/**
+		 * @param[in] other assignment argument.
+		 * 
 		 * @return reference to \p this.
 		 * 
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
