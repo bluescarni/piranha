@@ -39,6 +39,7 @@
 #include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "cvector.hpp"
+#include "debug_access.hpp"
 #include "exceptions.hpp"
 #include "mf_int.hpp"
 #include "type_traits.hpp"
@@ -81,6 +82,9 @@ template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_t
 class hop_table
 {
 		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		// Make friend with debug access class.
+		template <typename U>
+		friend class debug_access;
 		template <typename U>
 		struct base_generic_hop_bucket
 		{

@@ -32,8 +32,10 @@
 #include <cstddef>
 #include <initializer_list>
 #include <string>
+#include <type_traits>
 
 #include "../src/config.hpp"
+#include "../src/debug_access.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 
@@ -183,8 +185,27 @@ struct initializer_list_tester
 	}
 };
 
+struct hop_table_debug_access_tag {};
+
+namespace piranha
+{
+
+// Test of private/protected parts.
+template <>
+struct debug_access<hop_table_debug_access_tag>
+{
+	debug_access()
+	{
+		BOOST_CHECK(std::is_pod<hop_table<int>::hop_bucket>::value);
+		BOOST_CHECK(!std::is_pod<hop_table<custom_string>::hop_bucket>::value);
+	}
+};
+
+}
+
 BOOST_AUTO_TEST_CASE(hop_table_constructors_test)
 {
+	debug_access<hop_table_debug_access_tag> da;
 	// Def ctor.
 	hop_table<custom_string> ht;
 	BOOST_CHECK(ht.begin() == ht.end());
