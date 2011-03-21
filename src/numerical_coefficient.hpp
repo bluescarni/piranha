@@ -21,9 +21,11 @@
 #ifndef PIRANHA_NUMERICAL_COEFFICIENT_HPP
 #define PIRANHA_NUMERICAL_COEFFICIENT_HPP
 
+#include <boost/concept/assert.hpp>
 #include <iostream>
 #include <type_traits>
 
+#include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "type_traits.hpp"
 
@@ -36,15 +38,24 @@ namespace piranha
  * assignment, arithmetic operations, etc. will be forwarded to an instance of type \p T stored as a member of the class.
  * A set of additional methods is provided, so that this class can be used as coefficient type in series.
  * 
- * \p T must not be a pointer type, a reference type or cv-qualified, otherwise a static assertion will fail.
+ * \section type_requirements Type requirements
+ * 
+ * \p T must be a model of piranha::concept::ContainerElement.
+ * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the same exception safety guarantee as the underlying type \p T.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics for this class are equivalent to those for the underlying type \p T.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
 class numerical_coefficient
 {
-		static_assert(!std::is_pointer<T>::value,"T must not be a pointer type.");
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
+		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
 		// Make friend with all instances of numerical_coefficient.
 		template <typename U>
 		friend class numerical_coefficient;
@@ -81,15 +92,12 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's default constructor.
 		 */
 		numerical_coefficient():m_value() {}
-		/// Default copy constructor.
+		/// Defaulted copy constructor.
 		/**
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor.
 		 */
 		numerical_coefficient(const numerical_coefficient &) = default;
-		/// Default move constructor.
-		/**
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
-		 */
+		/// Defaulted move constructor.
 		numerical_coefficient(numerical_coefficient &&) = default;
 		/// Copy constructor from numerical coefficient of other type.
 		/**
@@ -129,10 +137,7 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
 		 */
 		explicit numerical_coefficient(type &&x):m_value(std::move(x)) {}
-		/// Default destructor.
-		/**
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's destructor.
-		 */
+		/// Defaulted destructor.
 		~numerical_coefficient() = default;
 		/// Generic assignment operator.
 		/**
