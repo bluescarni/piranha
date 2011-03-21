@@ -62,11 +62,24 @@ namespace piranha
  * 
  * @see http://gmplib.org/
  * 
+ * \section exception_safety Exception safety guarantees
+ * 
+ * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
+ * the program will terminate.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object in a state that is destructible and assignable.
+ * 
+ * \section implementation_details Implementation details
+ * 
+ * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
+ * across different versions. GMP versions 4.x and 5.x are explicitly supported by this class.
+ * 
+ * @see http://gmplib.org/manual/Integer-Internals.html
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo implementation notes: use of internal GMP implementation details
- * \todo move safety
- * \todo exception safety
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
  * \todo exception specifications for in-place operations with integers: document the possible overflow errors.
