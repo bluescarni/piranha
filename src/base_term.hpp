@@ -54,7 +54,7 @@ namespace piranha
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics for this class is equivalent by its data members' move semantics.
+ * Move semantics for this class is equivalent to its data members' move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
