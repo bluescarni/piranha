@@ -24,7 +24,6 @@
 #include <type_traits>
 
 #include "config.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -46,7 +45,7 @@ namespace math
  */
 template <typename T>
 inline bool is_zero(const T &x, typename std::enable_if<
-	std::is_arithmetic<typename strip_cv_ref<T>::type>::value
+	std::is_arithmetic<T>::value
 	>::type * = piranha_nullptr)
 {
 	return x == static_cast<T>(0);
@@ -61,7 +60,7 @@ inline bool is_zero(const T &x, typename std::enable_if<
  */
 template <typename T>
 inline void negate(T &x, typename std::enable_if<
-	std::is_arithmetic<typename strip_cv_ref<T>::type>::value
+	std::is_arithmetic<T>::value
 	>::type * = piranha_nullptr)
 {
 	x = -x;
