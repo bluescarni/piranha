@@ -26,6 +26,9 @@
 #include <string>
 #include <type_traits>
 
+#include "../src/config.hpp"
+#include "../src/integer.hpp"
+
 using namespace piranha;
 
 PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
@@ -71,3 +74,71 @@ BOOST_AUTO_TEST_CASE(type_traits_is_cv_ref)
 	BOOST_CHECK_EQUAL(is_cv_or_ref<int * const>::value,true);
 	BOOST_CHECK_EQUAL(is_cv_or_ref<int const *>::value,false);
 }
+
+struct trivial {};
+
+struct nontrivial_copy
+{
+	nontrivial_copy(nontrivial_copy &&) piranha_noexcept_spec(false) {}
+	nontrivial_copy &operator=(nontrivial_copy &&) piranha_noexcept_spec(false)
+	{
+		return *this;
+	}
+	nontrivial_copy(const nontrivial_copy &other):n(other.n) {}
+	int n;
+};
+
+struct nontrivial_dtor
+{
+	nontrivial_dtor(const nontrivial_dtor &) = default;
+	nontrivial_dtor(nontrivial_dtor &&) piranha_noexcept_spec(false) {}
+	nontrivial_dtor &operator=(nontrivial_dtor &&) piranha_noexcept_spec(false)
+	{
+		return *this;
+	}
+	~nontrivial_dtor() piranha_noexcept_spec(false)
+	{
+		n = 0;
+	}
+	int n;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_trivially_copyable)
+{
+	BOOST_CHECK_EQUAL(is_trivially_copyable<int>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial_dtor>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial_copy>::value,false);
+	BOOST_CHECK_EQUAL(is_trivially_copyable<std::string>::value,false);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible)
+{
+	BOOST_CHECK_EQUAL(is_trivially_destructible<int>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_destructible<trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_destructible<nontrivial_copy>::value,true);
+	BOOST_CHECK_EQUAL(is_trivially_destructible<nontrivial_dtor>::value,false);
+	BOOST_CHECK_EQUAL(is_trivially_destructible<std::string>::value,false);
+}
+
+#if defined(PIRANHA_HAVE_NOEXCEPT)
+BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
+{
+	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<int>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<integer>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<nontrivial_dtor>::value,false);
+	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<nontrivial_copy>::value,false);
+	BOOST_CHECK_EQUAL(is_nothrow_move_assignable<int>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_assignable<trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_assignable<integer>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_move_assignable<nontrivial_dtor>::value,false);
+	BOOST_CHECK_EQUAL(is_nothrow_move_assignable<nontrivial_copy>::value,false);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<integer>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
+}
+
+#endif
