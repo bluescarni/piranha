@@ -25,7 +25,15 @@
  * \brief Type traits.
  */
 
+#include <boost/concept/assert.hpp>
+#include <boost/integer_traits.hpp>
+#include <cstddef>
 #include <type_traits>
+
+#include "concepts/term.hpp"
+#include "config.hpp"
+#include "detail/base_series_fwd.hpp"
+#include "detail/base_term_fwd.hpp"
 
 namespace piranha
 {
@@ -37,20 +45,177 @@ namespace piranha
 template <typename T>
 struct strip_cv_ref
 {
-	/// Type definition.
+	/// Type-trait type definition.
 	typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
 };
 
 /// Type is reference or is cv-qualified.
 /**
- * This type trait inherits from \p std::true_type if either \p T is a reference or it is cv-qualified, from \p std::false_type otherwise.
+ * This type trait defines a static const boolean \p value flag which is \p true if either \p T is a reference or it is cv-qualified, \p false otherwise.
  */
 template <typename T>
-struct is_cv_or_ref: std::conditional<
-	std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value,
-	std::true_type,
-	std::false_type>::type
+struct is_cv_or_ref
+{
+	/// Type-trait value.
+	static const bool value = (std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value) ? true : false;
+};
+
+template <typename T>
+const bool is_cv_or_ref<T>::value;
+
+/// Type has non-throwing move constructor.
+/**
+ * Placeholder for <tt>std::is_nothrow_move_constructible</tt>, until it is implemented in GCC.
+ * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
+ * the \p noexcept operator.
+ */
+template <typename T>
+struct is_nothrow_move_constructible
+{
+	/// Type-trait value.
+	static const bool value = piranha_noexcept_op(T(static_cast<T &&>(*static_cast<T *>(piranha_nullptr))));
+};
+
+template <typename T>
+const bool is_nothrow_move_constructible<T>::value;
+
+/// Type has non-throwing move assignment operator.
+/**
+ * Placeholder for <tt>std::is_nothrow_move_assignable</tt>, until it is implemented in GCC.
+ * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
+ * the \p noexcept operator.
+ */
+template <typename T>
+struct is_nothrow_move_assignable
+{
+	/// Type-trait value.
+	static const bool value = piranha_noexcept_op(*static_cast<T *>(piranha_nullptr) = static_cast<T &&>(*static_cast<T *>(piranha_nullptr)));
+};
+
+template <typename T>
+const bool is_nothrow_move_assignable<T>::value;
+
+/// Type is nothrow-destructible.
+/**
+ * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
+ * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
+ * the \p noexcept operator.
+ */
+template <typename T>
+struct is_nothrow_destructible
+{
+	/// Type-trait value.
+	static const bool value = piranha_noexcept_op(static_cast<T *>(piranha_nullptr)->~T());
+};
+
+template <typename T>
+const bool is_nothrow_destructible<T>::value;
+
+/// Type is trivially destructible.
+/**
+ * Placeholder for <tt>std::is_trivially_destructible</tt>, until it is implemented in GCC.
+ * Will use a GCC-specific type trait for implementation.
+ */
+template <typename T>
+struct is_trivially_destructible : std::has_trivial_destructor<T>
 {};
+
+/// Type is trivially copyable.
+/**
+ * Placeholder for <tt>std::is_trivially_copyable</tt>, until it is implemented in GCC.
+ * Will use a GCC-specific type trait for implementation.
+ */
+template <typename T>
+struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
+{};
+
+namespace detail
+{
+
+template <typename CfSeries, std::size_t Level = 0, typename Enable = void>
+struct echelon_level_impl
+{
+	static_assert(Level < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+	static const std::size_t value = echelon_level_impl<typename CfSeries::term_type::cf_type,Level + static_cast<std::size_t>(1)>::value;
+};
+
+template <typename Cf, std::size_t Level>
+struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<base_series_tag,Cf>::value>::type>
+{
+	static const std::size_t value = Level;
+};
+
+}
+
+/// Echelon size.
+/**
+ * Echelon size of \p Term. The echelon size is defined recursively by the number of times coefficient types are series, in \p Term
+ * and its nested types.
+ * 
+ * For instance, polynomials have numerical coefficients, hence their echelon size is 1. Fourier series are also series with numerical coefficients,
+ * hence their echelon size is also 1. Poisson series are Fourier series with polynomial coefficients, hence their echelon size is 2.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * \p Term must be a model of piranha::concept::Term.
+ */
+template <typename Term>
+struct echelon_size
+{
+	private:
+		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
+		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+	public:
+		/// Value of echelon size.
+		static const std::size_t value = detail::echelon_level_impl<typename Term::cf_type>::value + static_cast<std::size_t>(1);
+};
+
+namespace detail
+{
+
+template <typename Term1, typename Term2, std::size_t CurLevel = 0, typename Enable = void>
+struct echelon_position_impl
+{
+	static_assert(std::is_base_of<base_series_tag,typename Term1::cf_type>::value,"Term type does not appear in echelon hierarchy.");
+	static const std::size_t value = echelon_position_impl<typename Term1::cf_type::term_type,Term2>::value + static_cast<std::size_t>(1);
+};
+
+template <typename Term1, typename Term2, std::size_t CurLevel>
+struct echelon_position_impl<Term1,Term2,CurLevel,typename std::enable_if<std::is_same<Term1,Term2>::value>::type>
+{
+	static const std::size_t value = CurLevel;
+};
+
+}
+
+/// Echelon position.
+/**
+ * Echelon position of \p Term with respect to \p TopLevelTerm.
+ * The echelon position is an index, starting from zero, corresponding to the level in the echelon hierarchy of \p TopLevelTerm
+ * in which \p Term appears.
+ * 
+ * For instance, if \p TopLevelTerm and \p Term are the same type, then the echelon position of \p Term is 0, because \p Term is the
+ * first type encountered in the echelon hierarchy of \p TopLevelTerm. If \p TopLevelTerm is a Poisson series term, then the echelon position
+ * of the polynomial term type defined by the coefficient of \p TopLevelTerm is 1.
+ * 
+ * If \p Term does not appear in the echelon hierarchy of \p TopLevelTerm, a compile-time error will be produced.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * \p Term and \p TopLevelTerm must be models of piranha::concept::Term.
+ */
+template <typename TopLevelTerm, typename Term>
+class echelon_position
+{
+	private:
+		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
+		BOOST_CONCEPT_ASSERT((concept::Term<TopLevelTerm>));
+		static_assert(std::is_same<Term,TopLevelTerm>::value || detail::echelon_position_impl<TopLevelTerm,Term>::value,
+			"Assertion error in the calculation of echcelon position.");
+	public:
+		/// Value of echelon position.
+		static const std::size_t value = detail::echelon_position_impl<TopLevelTerm,Term>::value;
+};
 
 }
 
