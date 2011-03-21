@@ -70,8 +70,17 @@ class monomial: public array_key<T,monomial<T>>
 		~monomial() = default;
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
-		/// Defaulted move assignment operator.
-		monomial &operator=(monomial &&) = default;
+		/// Move assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		monomial &operator=(monomial &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
 };
 
 }
