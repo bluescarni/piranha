@@ -34,6 +34,10 @@
  * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
  * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment)
  * \todo better piranha_throw macro with support of boost_throw when using boost thread instead of native c++0x threads.
+ * \todo switch to auto -> decltype declarations of member functions for complicated types (e.g., tuples) when decltype on this
+ * becomes available.
+ * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
+ * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  */
 namespace piranha
 {
@@ -54,13 +58,22 @@ namespace detail {}
 // - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
 //   to signal/emulate them.
 
+#include "array_key.hpp"
+#include "base_series.hpp"
+#include "base_term.hpp"
+#include "concepts.hpp"
 #include "config.hpp"
 #include "cvector.hpp"
+#include "debug_access.hpp"
+#include "echelon_descriptor.hpp"
 #include "exceptions.hpp"
 #include "hop_table.hpp"
 #include "integer.hpp"
+#include "math.hpp"
 #include "mf_int.hpp"
+#include "monomial.hpp"
 #include "numerical_coefficient.hpp"
+#include "polynomial_term.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "symbol.hpp"
