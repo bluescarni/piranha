@@ -66,34 +66,12 @@ class monomial: public array_key<T,monomial<T>>
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
 		monomial(std::initializer_list<T> list):base(list) {}
-		/// Generic constructor.
-		/**
-		 * Will forward its arguments to one of the constructors of piranha::array_key.
-		 * 
-		 * @param[in] params arguments used for construction.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked piranha::array_key's constructor.
-		 */
-		template <typename... Args>
-		explicit monomial(Args && ... params):base(std::forward<Args>(params)...) {}
 		/// Defaulted destructor.
 		~monomial() = default;
-		/// Generic assignment operator.
-		/**
-		 * Will forward the assignment operator to the base class.
-		 * 
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked piranha::array_key's assignment operator.
-		 */
-		template <typename U>
-		monomial &operator=(U &&other) piranha_noexcept_spec(std::is_rvalue_reference<U &&>::value)
-		{
-			base::operator=(std::forward<U>(other));
-			return *this;
-		}
+		/// Defaulted copy assignment operator.
+		monomial &operator=(const monomial &) = default;
+		/// Defaulted move assignment operator.
+		monomial &operator=(monomial &&) = default;
 };
 
 }
