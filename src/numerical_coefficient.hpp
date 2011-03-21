@@ -27,6 +27,8 @@
 
 #include "concepts/container_element.hpp"
 #include "config.hpp"
+#include "echelon_descriptor.hpp"
+#include "math.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -81,6 +83,36 @@ class numerical_coefficient
 		void assign(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value = std::forward<U>(other);
+		}
+		template <bool Sign, typename U>
+		void dispatch_add(U &&other, typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
+			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
+		{
+			if (Sign) {
+				m_value += std::move(other.m_value);
+			} else {
+				m_value -= std::move(other.m_value);
+			}
+		}
+		template <bool Sign, typename U>
+		void dispatch_add(const U &other, typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		{
+			if (Sign) {
+				m_value += other.m_value;
+			} else {
+				m_value -= other.m_value;
+			}
+		}
+		template <bool Sign, class U>
+		void dispatch_add(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		{
+			if (Sign) {
+				m_value += std::forward<U>(other);
+			} else {
+				m_value -= std::forward<U>(other);
+			}
 		}
 	public:
 		/// Underlying numerical type.
@@ -163,6 +195,66 @@ class numerical_coefficient
 		const type &get_value() const
 		{
 			return m_value;
+		}
+		/// Zero test.
+		/**
+		 * @return output of piranha::math::is_zero() on the internal numerical value.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::math::is_zero().
+		 */
+		template <typename Term>
+		bool is_zero(const echelon_descriptor<Term> &) const
+		{
+			return math::is_zero(m_value);
+		}
+		/// Compatibility test.
+		/**
+		 * A numerical coefficient is always compatible for insertion as in any series.
+		 * 
+		 * @return \p true.
+		 */
+		template <typename Term>
+		bool is_compatible(const echelon_descriptor<Term> &) const
+		{
+			return true;
+		}
+		/// Generic in-place addition.
+		/**
+		 * If \p x is an instance of piranha::numerical_coefficient, then <tt>p</tt>'s numerical value will be added in-place
+		 * to the numerical value of \p this. Otherwise, \p x will be directly added in-place to the numerical value of \p this.
+		 * 
+		 * @param[in] x argument of the addition.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's in-place addition operator.
+		 */
+		template <typename U, typename Term>
+		void add(U &&x, const echelon_descriptor<Term> &)
+		{
+			dispatch_add<true>(std::forward<U>(x));
+		}
+		/// Generic in-place subtraction.
+		/**
+		 * Semantically equivalent to add().
+		 * 
+		 * @param[in] x argument of the subtraction.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's in-place subtraction operator.
+		 */
+		template <typename U, typename Term>
+		void subtract(U &&x, const echelon_descriptor<Term> &)
+		{
+			dispatch_add<false>(std::forward<U>(x));
+		}
+		/// In-place negation.
+		/**
+		 * Will invoke piranha::math::negate() on the internal numerical value.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::math::negate().
+		 */
+		template <typename Term>
+		void negate(const echelon_descriptor<Term> &)
+		{
+			math::negate(m_value);
 		}
 		/// Overload of stream operator for piranha::numerical_coefficient.
 		/**
