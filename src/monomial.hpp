@@ -23,9 +23,11 @@
 
 #include <initializer_list>
 #include <unordered_set>
+#include <vector>
 
 #include "array_key.hpp"
 #include "config.hpp"
+#include "symbol.hpp"
 
 namespace piranha
 {
@@ -70,16 +72,29 @@ class monomial: public array_key<T,monomial<T>>
 		~monomial() = default;
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
-		/// Move assignment operator.
+		/// Defaulted move assignment operator.
+		monomial &operator=(monomial &&) = default;
+		/// Compatibility check
 		/**
-		 * @param[in] other assignment argument.
+		 * A monomial and a vector of arguments are compatible if their sizes coincide.
 		 * 
-		 * @return reference to \p this.
+		 * @param[in] args reference arguments vector.
+		 * 
+		 * @return <tt>this->size() == args.size()</tt>.
 		 */
-		monomial &operator=(monomial &&other) piranha_noexcept_spec(true)
+		bool is_compatible(const std::vector<symbol> &args) const
 		{
-			base::operator=(std::move(other));
-			return *this;
+			return (this->size() == args.size());
+		}
+		/// Ignorability check.
+		/**
+		 * A monomial is never ignorable by definition.
+		 * 
+		 * @return \p false.
+		 */
+		bool is_ignorable(const std::vector<symbol> &) const
+		{
+			return false;
 		}
 };
 

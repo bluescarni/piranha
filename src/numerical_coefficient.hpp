@@ -169,6 +169,20 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
 		 */
 		explicit numerical_coefficient(type &&x):m_value(std::move(x)) {}
+		/// Generic constructor.
+		/**
+		 * This constructor is activated only if \p U is not an instance of piranha::numerical_coefficient.
+		 * \p x will be forwarded to construct the internal numerical value.
+		 * 
+		 * @param[in] x argument for construction.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's invoked constructor.
+		 */
+		template <typename U>
+		explicit numerical_coefficient(U &&x,
+			typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr):
+			m_value(std::forward<U>(x))
+		{}
 		/// Defaulted destructor.
 		~numerical_coefficient() = default;
 		/// Generic assignment operator.
@@ -196,14 +210,14 @@ class numerical_coefficient
 		{
 			return m_value;
 		}
-		/// Zero test.
+		/// Ignorability test.
 		/**
 		 * @return output of piranha::math::is_zero() on the internal numerical value.
 		 * 
 		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
 		template <typename Term>
-		bool is_zero(const echelon_descriptor<Term> &) const
+		bool is_ignorable(const echelon_descriptor<Term> &) const
 		{
 			return math::is_zero(m_value);
 		}
