@@ -56,7 +56,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, typename Derived = void>
+template <typename T, typename Derived>
 class array_key
 {
 		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));

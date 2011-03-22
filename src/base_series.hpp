@@ -48,7 +48,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename Term, typename Derived = void>
+template <typename Term, typename Derived>
 class base_series: detail::base_series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));

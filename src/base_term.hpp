@@ -61,7 +61,7 @@ namespace piranha
  * 
  * \todo test move constructor in inherited term.
  */
-template <typename Cf, typename Key, typename Derived = void>
+template <typename Cf, typename Key, typename Derived>
 class base_term: detail::base_term_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::CRTP<base_term<Cf,Key,Derived>,Derived>));
