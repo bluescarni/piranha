@@ -29,7 +29,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "echelon_descriptor.hpp"
 #include "config.hpp"
 #include "monomial.hpp"
 #include "symbol.hpp"
@@ -75,40 +74,6 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		polynomial_term(const polynomial_term &) = default;
 		/// Defaulted move assignment operator.
 		polynomial_term(polynomial_term &&) = default;
-		/// Compatibility test.
-		/**
-		 * @param[in] ed reference piranha::echelon_descriptor.
-		 * 
-		 * @return \p true if both these conditions hold:
-		 * 
-		 * - the number of arguments in \p ed at the echelon position corresponding to this term type is the same as the
-		 *   key's size,
-		 * - the coefficient's <tt>is_compatible(ed)</tt> method returns true,
-		 * 
-		 * \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by the coefficient's <tt>is_compatible()</tt> method.
-		 */
-		template <typename Term>
-		bool is_compatible(const echelon_descriptor<Term> &ed) const
-		{
-			return (this->m_cf.is_compatible(ed) && this->m_key.size() == ed.template get_args<polynomial_term<Cf,ExpoType>>().size());
-		}
-		/// Ignorability test.
-		/**
-		 * A polynomial term is ignorable iff its coefficient is zero.
-		 * 
-		 * @param[in] ed reference piranha::echelon_descriptor.
-		 * 
-		 * @return return value of the coefficient's <tt>is_zero(ed)</tt> method.
-		 * 
-		 * @throws unspecified any exception thrown by the coefficient's <tt>is_zero()</tt> method.
-		 */
-		template <typename Term>
-		bool is_ignorable(const echelon_descriptor<Term> &ed) const
-		{
-			return this->m_cf.is_zero(ed);
-		}
 };
 
 }

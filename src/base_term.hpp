@@ -32,6 +32,7 @@
 #include "concepts/key.hpp"
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
+#include "echelon_descriptor.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -176,6 +177,34 @@ class base_term: detail::base_term_tag
 		std::size_t hash() const
 		{
 			return std::hash<key_type>()(m_key);
+		}
+		/// Compatibility test.
+		/**
+		 * @param[in] ed reference piranha::echelon_descriptor.
+		 * 
+		 * @return \p true is both the coefficient's and the key's <tt>is_compatible()</tt> method returns true,
+		 * \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the coefficient's or the key's <tt>is_compatible()</tt> method.
+		 */
+		template <typename Term>
+		bool is_compatible(const echelon_descriptor<Term> &ed) const
+		{
+			return (m_cf.is_compatible(ed) && m_key.is_compatible(ed.template get_args<Derived>()));
+		}
+		/// Ignorability test.
+		/**
+		 * @param[in] ed reference piranha::echelon_descriptor.
+		 * 
+		 * @return \p true is either the coefficient's or the key's <tt>is_ignorable()</tt> method returns true,
+		 * \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the coefficient's or the key's <tt>is_ignorable()</tt> method.
+		 */
+		template <typename Term>
+		bool is_ignorable(const echelon_descriptor<Term> &ed) const
+		{
+			return (m_cf.is_ignorable(ed) || m_key.is_ignorable(ed.template get_args<Derived>()));
 		}
 		/// Overload of stream operator for piranha::base_term.
 		/**
