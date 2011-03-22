@@ -23,8 +23,11 @@
 
 #include <boost/concept_check.hpp>
 #include <iostream>
+#include <type_traits>
 
 #include "../config.hpp"
+#include "../detail/base_term_fwd.hpp"
+#include "../detail/echelon_descriptor_fwd.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -39,7 +42,11 @@ namespace concept
  * 
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
- * - must be directable to output stream.
+ * - must be directable to output stream,
+ * - must be provided with a const \p is_compatible method accepting a generic piranha::echelon_descriptor
+ *   as input and returning a boolean value,
+ * - must be provided with a const \p is_ignorable method accepting a generic piranha::echelon_descriptor
+ *   as input and returning a boolean value.
  */
 template <typename T>
 struct Coefficient:
@@ -48,8 +55,14 @@ struct Coefficient:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Coefficient)
 	{
+		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
 		std::cout << *(static_cast<T *>(piranha_nullptr));
+		const T inst = T();
+		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for coefficient type.");
+		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
 	}
 };
 

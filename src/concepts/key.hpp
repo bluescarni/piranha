@@ -23,9 +23,12 @@
 
 #include <boost/concept_check.hpp>
 #include <iostream>
+#include <type_traits>
 #include <unordered_set>
+#include <vector>
 
 #include "../config.hpp"
+#include "../symbol.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -42,7 +45,11 @@ namespace concept
  * - must not be a pointer,
  * - must be directable to output stream,
  * - must be equality-comparable,
- * - must be provided with a \p std::hash specialisation.
+ * - must be provided with a \p std::hash specialisation,
+ * - must be provided with a const \p is_compatible method accepting a vector of piranha::symbol
+ *   as input and returning a boolean value,
+ * - must be provided with a const \p is_ignorable method accepting a vector of piranha::symbol
+ *   as input and returning a boolean value.
  * 
  * \todo assert that key's hasher satisfy the Hashable requirements.
  */
@@ -56,6 +63,11 @@ struct Key:
 	{
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
 		std::cout << *(static_cast<T *>(piranha_nullptr));
+		const T inst = T();
+		auto tmp1 = inst.is_compatible(std::vector<symbol>{});
+		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
+		auto tmp2 = inst.is_ignorable(std::vector<symbol>{});
+		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
 		// TODO: assert here that hasher satisfy the Hashable requirements.
 		std::hash<T> hasher;
 		(void)hasher;
