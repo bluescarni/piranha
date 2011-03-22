@@ -40,7 +40,7 @@ struct constructor_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T> key_type;
+		typedef array_key<T,void> key_type;
 		key_type k0;
 		BOOST_CHECK_NO_THROW(key_type{});
 		BOOST_CHECK_NO_THROW(key_type(key_type{}));
@@ -68,7 +68,7 @@ struct hash_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T> key_type;
+		typedef array_key<T,void> key_type;
 		key_type k0;
 		BOOST_CHECK_EQUAL(k0.hash(),std::size_t());
 		BOOST_CHECK_EQUAL(k0.hash(),std::hash<key_type>()(k0));
@@ -87,7 +87,7 @@ struct push_back_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T> key_type;
+		typedef array_key<T,void> key_type;
 		key_type k0;
 		for (int i = 0; i < 4; ++i) {
 			k0.push_back(T(i));
@@ -112,7 +112,7 @@ struct equality_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T> key_type;
+		typedef array_key<T,void> key_type;
 		key_type k0;
 		BOOST_CHECK(k0 == key_type{});
 		for (int i = 0; i < 4; ++i) {

@@ -28,11 +28,13 @@
 #include <utility>
 
 #include "../src/integer.hpp"
+#include "../src/monomial.hpp"
+#include "../src/numerical_coefficient.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
-typedef boost::mpl::vector<int,integer> key_types;
+typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
+typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
 struct constructor_tester
 {
@@ -42,23 +44,24 @@ struct constructor_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key> term_type;
+			typedef base_term<Cf,Key,void> term_type;
+			typedef typename Key::value_type value_type;
 			// Default constructor.
-			BOOST_CHECK_EQUAL(term_type().m_cf,Cf());
+			BOOST_CHECK_EQUAL(term_type().m_cf.get_value(),Cf().get_value());
 			BOOST_CHECK_EQUAL(term_type().m_key,Key());
 			// Generic constructor.
-			BOOST_CHECK_EQUAL(term_type(1,1).m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(term_type(1,1).m_key,Key(1));
+			BOOST_CHECK_EQUAL(term_type(1,Key{value_type(1)}).m_cf.get_value(),Cf(1).get_value());
+			BOOST_CHECK_EQUAL(term_type(1,Key{value_type(1)}).m_key,Key{value_type(1)});
 			// Constructor from term of different type.
-			typedef base_term<Key,Cf> other_term_type;
-			other_term_type other(Key(1),Cf(1));
-			BOOST_CHECK_EQUAL(term_type(other).m_cf,Key(1));
-			BOOST_CHECK_EQUAL(term_type(other).m_key,Cf(1));
+			typedef numerical_coefficient<long> Cf2;
+			typedef base_term<Cf2,Key,void> other_term_type;
+			other_term_type other(1,Key{value_type(1)});
+			BOOST_CHECK_EQUAL(term_type(other).m_cf.get_value(),Cf2(1).get_value());
+			BOOST_CHECK_EQUAL(term_type(other).m_key[0],Key{value_type(1)}[0]);
 			// Move assignment.
-			term_type term(1,2);
-			term = term_type(2,1);
-			BOOST_CHECK_EQUAL(term.m_cf,Cf(2));
-			BOOST_CHECK_EQUAL(term.m_key,Key(1));
+			term_type term(1,Key{value_type(2)});
+			term = term_type(2,Key{value_type(1)});
+			BOOST_CHECK_EQUAL(term.m_cf.get_value(),Cf(2).get_value());
 		}
 	};
 	template <typename Cf>
@@ -81,10 +84,11 @@ struct equality_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key> term_type;
+			typedef base_term<Cf,Key,void> term_type;
+			typedef typename Key::value_type value_type;
 			BOOST_CHECK(term_type() == term_type());
-			BOOST_CHECK(term_type(1,2) == term_type(2,2));
-			BOOST_CHECK(!(term_type(2,1) == term_type(2,2)));
+			BOOST_CHECK(term_type(1,Key{value_type(2)}) == term_type(2,Key{value_type(2)}));
+			BOOST_CHECK(!(term_type(2,Key{value_type(1)}) == term_type(2,Key{value_type(2)})));
 		}
 	};
 	template <typename Cf>
@@ -93,7 +97,6 @@ struct equality_tester
 		boost::mpl::for_each<key_types>(runner<Cf>());
 	}
 };
-
 
 BOOST_AUTO_TEST_CASE(base_term_equality_test)
 {
@@ -108,8 +111,10 @@ struct hash_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key> term_type;
+			typedef base_term<Cf,Key,void> term_type;
+			typedef typename Key::value_type value_type;
 			BOOST_CHECK_EQUAL(term_type().hash(),std::hash<Key>()(Key()));
+			BOOST_CHECK_EQUAL(term_type(2,Key{value_type(1)}).hash(),std::hash<Key>()(Key{value_type(1)}));
 		}
 	};
 	template <typename Cf>
