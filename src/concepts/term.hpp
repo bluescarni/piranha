@@ -44,7 +44,7 @@ struct Term
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Term)
 	{
-		static_assert(std::is_base_of<T,detail::base_term_tag>::value,"Term type must derive from base_term.");
+		static_assert(std::is_base_of<detail::base_term_tag,T>::value,"Term type must derive from base_term.");
 	}
 };
 
