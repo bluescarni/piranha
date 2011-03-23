@@ -35,7 +35,6 @@
 
 #include "concepts/term.hpp"
 #include "config.hpp"
-#include "detail/base_term_fwd.hpp"
 #include "detail/echelon_descriptor_fwd.hpp"
 #include "exceptions.hpp"
 #include "symbol.hpp"
