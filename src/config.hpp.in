@@ -35,6 +35,8 @@
 #endif
 
 // c++0x features depending on the GCC version.
+// NOTE: when removing support for GCC < 4.6 remember that
+// we can default move assignment in derived classes.
 #if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
 	#define piranha_nullptr nullptr
 	#define piranha_constexpr constexpr
