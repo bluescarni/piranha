@@ -26,9 +26,11 @@
 #include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <vector>
 
 #include "../src/concepts/key.hpp"
 #include "../src/integer.hpp"
+#include "../src/symbol.hpp"
 
 using namespace piranha;
 
@@ -81,4 +83,42 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(monomial_hash_test)
 {
 	boost::mpl::for_each<expo_types>(hash_tester());
+}
+
+struct compatibility_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> monomial_type;
+		monomial_type m0;
+		BOOST_CHECK(m0.is_compatible(std::vector<symbol>{}));
+		monomial_type m1 = {T(0),T(1)};
+		BOOST_CHECK(!m1.is_compatible(std::vector<symbol>(1,symbol{"foobarize"})));
+		monomial_type m2 = {T(0)};
+		BOOST_CHECK(m2.is_compatible(std::vector<symbol>(1,symbol{"foobarize"})));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_compatibility_test)
+{
+	boost::mpl::for_each<expo_types>(compatibility_tester());
+}
+
+struct ignorability_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> monomial_type;
+		monomial_type m0;
+		BOOST_CHECK(!m0.is_ignorable(std::vector<symbol>{}));
+		monomial_type m1 = {T(0)};
+		BOOST_CHECK(!m1.is_ignorable(std::vector<symbol>(1,symbol{"foobarize"})));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_ignorability_test)
+{
+	boost::mpl::for_each<expo_types>(ignorability_tester());
 }

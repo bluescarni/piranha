@@ -72,8 +72,18 @@ class monomial: public array_key<T,monomial<T>>
 		~monomial() = default;
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
-		/// Defaulted move assignment operator.
-		monomial &operator=(monomial &&) = default;
+		// NOTE: this can be defaulted in GCC >= 4.6.
+		/// Move assignment operator.
+		/**
+		 * @param[in] other object to move from.
+		 * 
+		 * @return reference to \p this.
+		 */
+		monomial &operator=(monomial &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
 		/// Compatibility check
 		/**
 		 * A monomial and a vector of arguments are compatible if their sizes coincide.
@@ -90,10 +100,14 @@ class monomial: public array_key<T,monomial<T>>
 		/**
 		 * A monomial is never ignorable by definition.
 		 * 
+		 * @param[in] args reference arguments vector.
+		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const std::vector<symbol> &) const
+		bool is_ignorable(const std::vector<symbol> &args) const
 		{
+			(void)args;
+			piranha_assert(is_compatible(args));
 			return false;
 		}
 };
