@@ -1629,32 +1629,28 @@ class integer
 };
 
 
-namespace math
+namespace detail
 {
 
-/// piranha::math::negate() overload for piranha::integer.
-/**
- * Will call internally piranha::integer::negate().
- * 
- * @param[in,out] n piranha::integer to be negated.
- */
-inline void negate(integer &n)
+// Specialise implementation of math::is_zero for integer.
+template <typename T>
+struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
 {
-	n.negate();
-}
+	static bool run(const T &n)
+	{
+		return n.sign() == 0;
+	}
+};
 
-/// piranha::math::is_zero() overload for piranha::integer.
-/**
- * Will call internally piranha::integer::sign().
- * 
- * @param[in] n integer whose sign will be returned.
- * 
- * @returns <tt>n.sign() == 0</tt>.
- */
-inline bool is_zero(const integer &n)
+// Specialise implementation of math::negate for integer.
+template <typename T>
+struct math_negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
 {
-	return n.sign() == 0;
-}
+	static void run(T &n)
+	{
+		n.negate();
+	}
+};
 
 }
 

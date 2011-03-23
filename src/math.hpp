@@ -21,12 +21,35 @@
 #ifndef PIRANHA_MATH_HPP
 #define PIRANHA_MATH_HPP
 
-#include <type_traits>
-
-#include "config.hpp"
-
 namespace piranha
 {
+
+namespace detail
+{
+
+// Default implementation of math::is_zero.
+// NOTE: the technique and its motivations are well-described here:
+// http://www.gotw.ca/publications/mill17.htm
+template <typename T, typename Enable = void>
+struct math_is_zero_impl
+{
+	static bool run(const T &x)
+	{
+		return x == 0;
+	}
+};
+
+// Default implementation of math::negate.
+template <typename T, typename Enable = void>
+struct math_negate_impl
+{
+	static void run(T &x)
+	{
+		x = -x;
+	}
+};
+
+}
 
 /// Math namespace.
 /**
@@ -37,33 +60,30 @@ namespace math
 
 /// Zero test.
 /**
- * This template function is activated iff \p T is an arithmetic type.
+ * Test if value is zero. This function works with all C++ arithmetic types
+ * and with piranha's numerical types.
  * 
  * @param[in] x value to be tested.
  * 
- * @return <tt>x == static_cast<T>(0)</tt>.
+ * @return \p true if value is zero, \p false otherwise.
  */
 template <typename T>
-inline bool is_zero(const T &x, typename std::enable_if<
-	std::is_arithmetic<T>::value
-	>::type * = piranha_nullptr)
+inline bool is_zero(const T &x)
 {
-	return x == static_cast<T>(0);
+	return piranha::detail::math_is_zero_impl<T>::run(x);
 }
 
 /// In-place negation.
 /**
- * This template function is activated iff \p T is an arithmetic type.
- * Equivalent to <tt>x = -x</tt>.
+ * Negate value in-place. This function works with all C++ arithmetic types
+ * and with piranha's numerical types.
  * 
  * @param[in,out] x value to be negated.
  */
 template <typename T>
-inline void negate(T &x, typename std::enable_if<
-	std::is_arithmetic<T>::value
-	>::type * = piranha_nullptr)
+inline void negate(T &x)
 {
-	x = -x;
+	piranha::detail::math_negate_impl<T>::run(x);
 }
 
 }
