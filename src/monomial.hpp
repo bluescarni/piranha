@@ -35,6 +35,7 @@ namespace piranha
 /// Monomial class.
 /**
  * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
+ * This class is a model of the piranha::concept::Key concept.
  * 
  * \section type_requirements Type requirements
  * 
