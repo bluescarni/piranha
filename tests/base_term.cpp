@@ -25,14 +25,17 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <tuple>
 #include <utility>
 
+#include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
 #include "../src/numerical_coefficient.hpp"
 
 using namespace piranha;
 
+// NOTE: maybe once series coefficient is available we can add it here.
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
 typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
@@ -127,4 +130,67 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(base_term_hash_test)
 {
 	boost::mpl::for_each<cf_types>(hash_tester());
+}
+
+struct compatibility_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			class term_type: public base_term<Cf,Key,term_type> {};
+			typedef typename Key::value_type value_type;
+			echelon_descriptor<term_type> ed;
+			const auto &args = ed.template get_args<term_type>();
+			term_type t1;
+			BOOST_CHECK_EQUAL((int)(t1.is_compatible(ed)) - (int)(t1.m_cf.is_compatible(ed) && t1.m_key.is_compatible(args)),0);
+			term_type t2;
+			t2.m_cf = 1;
+			t2.m_key = Key{value_type(1)};
+			BOOST_CHECK_EQUAL((int)(t2.is_compatible(ed)) - (int)(t2.m_cf.is_compatible(ed) && t2.m_key.is_compatible(args)),0);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<key_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(base_term_compatibility_test)
+{
+	boost::mpl::for_each<cf_types>(compatibility_tester());
+}
+
+struct ignorability_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			class term_type: public base_term<Cf,Key,term_type> {};
+			typedef typename Key::value_type value_type;
+			echelon_descriptor<term_type> ed;
+			const auto &args = ed.template get_args<term_type>();
+			term_type t1;
+			BOOST_CHECK_EQUAL((int)(t1.is_ignorable(ed)) - (int)(t1.m_cf.is_ignorable(ed) || t1.m_key.is_ignorable(args)),0);
+			term_type t2;
+			t2.m_cf = 1;
+			BOOST_CHECK_EQUAL((int)(t2.is_ignorable(ed)) - (int)(t2.m_cf.is_ignorable(ed) || t2.m_key.is_ignorable(args)),0);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<key_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(base_term_ignorability_test)
+{
+	boost::mpl::for_each<cf_types>(ignorability_tester());
 }
