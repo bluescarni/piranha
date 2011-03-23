@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE monomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 
