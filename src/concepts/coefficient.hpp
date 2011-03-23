@@ -46,7 +46,13 @@ namespace concept
  * - must be provided with a const \p is_compatible method accepting a generic piranha::echelon_descriptor
  *   as input and returning a boolean value,
  * - must be provided with a const \p is_ignorable method accepting a generic piranha::echelon_descriptor
- *   as input and returning a boolean value.
+ *   as input and returning a boolean value,
+ * - must be provided with a \p negate method accepting a generic piranha::echelon_descriptor
+ *   as input and returning void,
+ * - must be provided with an \p add method accepting an instance of \p T and a generic piranha::echelon_descriptor
+ *   as input and returning void,
+ * - must be provided with a \p subtract method accepting an instance of \p T and a generic piranha::echelon_descriptor
+ *   as input and returning void.
  */
 template <typename T>
 struct Coefficient:
@@ -62,7 +68,14 @@ struct Coefficient:
 		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for coefficient type.");
 		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
+		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for coefficient type.");
+		T inst_m;
+		inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid negate() method signature for coefficient type.");
+		inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
+		inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
 	}
 };
 
