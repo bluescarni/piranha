@@ -39,6 +39,7 @@ namespace piranha
  * This class is intended as a thin wrapper around C++ arithmetic types and types behaving like them. Construction,
  * assignment, arithmetic operations, etc. will be forwarded to an instance of type \p T stored as a member of the class.
  * A set of additional methods is provided, so that this class can be used as coefficient type in series.
+ * This class is a model of the piranha::concept::Cf concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -165,8 +166,6 @@ class numerical_coefficient
 		 * Will use \p x to move-construct the internal numerical value.
 		 * 
 		 * @param[in] x value to be moved.
-		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor.
 		 */
 		explicit numerical_coefficient(type &&x):m_value(std::move(x)) {}
 		/// Generic constructor.
@@ -185,6 +184,19 @@ class numerical_coefficient
 		{}
 		/// Defaulted destructor.
 		~numerical_coefficient() = default;
+		/// Defaulted copy assignment operator.
+		numerical_coefficient &operator=(const numerical_coefficient &) = default;
+		/// Move assignment operator.
+		/**
+		 * @param[in] other object to move from.
+		 * 
+		 * @return reference to \p this.
+		 */
+		numerical_coefficient &operator=(numerical_coefficient &&other) piranha_noexcept_spec(true)
+		{
+			m_value = std::move(other.m_value);
+			return *this;
+		}
 		/// Generic assignment operator.
 		/**
 		 * If \p other is an instance of numerical_coefficient, its numerical value will be assigned to the numerical value of \p this. Otherwise, \p other
@@ -194,7 +206,7 @@ class numerical_coefficient
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy/move assignment operators.
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy assignment operators.
 		 */
 		template <typename U>
 		numerical_coefficient &operator=(U &&other)
