@@ -21,18 +21,9 @@
 #ifndef PIRANHA_POLYNOMIAL_TERM_HPP
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
-#include <cstddef>
-#include <initializer_list>
-#include <iterator>
-#include <numeric>
-#include <utility>
-#include <vector>
-
 #include "base_term.hpp"
 #include "config.hpp"
 #include "monomial.hpp"
-#include "symbol.hpp"
-#include "term_series_converter.hpp"
 
 namespace piranha
 {
@@ -41,6 +32,7 @@ namespace piranha
 /**
  * This class extends piranha::base_term for use in polynomials. The coefficient type \p Cf is generic,
  * the key is piranha::monomial of \p ExpoType.
+ * This class is a model of the piranha::concept::Term concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -71,9 +63,18 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		/// Defaulted destructor.
 		~polynomial_term() = default;
 		/// Defaulted copy assignment operator.
-		polynomial_term(const polynomial_term &) = default;
-		/// Defaulted move assignment operator.
-		polynomial_term(polynomial_term &&) = default;
+		polynomial_term &operator=(const polynomial_term &) = default;
+		/// Move assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		polynomial_term &operator=(polynomial_term &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
 };
 
 }
