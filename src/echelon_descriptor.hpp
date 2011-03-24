@@ -216,7 +216,7 @@ class echelon_descriptor
 			// Use copy-and-move to make it exception-safe.
 			if (this != &other) {
 				auto tmp(other);
-				*this = std::move(other);
+				*this = std::move(tmp);
 			}
 			return *this;
 		}
@@ -301,18 +301,6 @@ class echelon_descriptor
 			if (unlikely(it != new_args_vector.end() && *it == s)) {
 				piranha_throw(std::invalid_argument,"symbol already present in this echelon level");
 			}
-			auto it_to_index = [](typename std::remove_const<decltype(it)>::type begin, typename std::remove_const<decltype(it)>::type target) -> std::size_t {
-				std::size_t retval = 0;
-				while (begin != target) {
-					if (unlikely(retval == boost::integer_traits<std::size_t>::const_max)) {
-						piranha_throw(std::overflow_error,"overflow error");
-					}
-					++retval;
-					++begin;
-				}
-				return retval;
-			};
-			const auto index = it_to_index(new_args_vector.begin(),it);
 			new_args_vector.insert(it,s);
 			// Move in the new args vector.
 			args_vector = std::move(new_args_vector);
