@@ -26,8 +26,11 @@
 #include <string>
 #include <type_traits>
 
+#include "../src/base_term.hpp"
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
+#include "../src/monomial.hpp"
+#include "../src/numerical_coefficient.hpp"
 
 using namespace piranha;
 
@@ -142,3 +145,17 @@ BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 }
 
 #endif
+
+// TODO: test with larger echelon sizesonce we have coefficient series.
+
+class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,term_type1> {};
+
+BOOST_AUTO_TEST_CASE(type_traits_echelon_size)
+{
+	BOOST_CHECK_EQUAL(echelon_size<term_type1>::value,std::size_t(1));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_echelon_position)
+{
+	BOOST_CHECK_EQUAL((echelon_position<term_type1,term_type1>::value),std::size_t(0));
+}

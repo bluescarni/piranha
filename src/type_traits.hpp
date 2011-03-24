@@ -170,6 +170,9 @@ struct echelon_size
 		static const std::size_t value = detail::echelon_level_impl<typename Term::cf_type>::value + static_cast<std::size_t>(1);
 };
 
+template <typename Term>
+const std::size_t echelon_size<Term>::value;
+
 namespace detail
 {
 
@@ -216,6 +219,9 @@ class echelon_position
 		/// Value of echelon position.
 		static const std::size_t value = detail::echelon_position_impl<TopLevelTerm,Term>::value;
 };
+
+template <typename TopLevelTerm, typename Term>
+const std::size_t echelon_position<TopLevelTerm,Term>::value;
 
 }
 
