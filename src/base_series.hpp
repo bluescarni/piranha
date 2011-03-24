@@ -209,7 +209,7 @@ std::cout << "erasing term become ignorable!\n";
 		 * 
 		 * - if \p term is not of type base_series::term_type, it is forwarded to construct an instance of
 		 *   base_series::term_type, and the algorithm proceeds to insert that instead;
-		 * - if the term is not compatible for insertion, a \p std::invalid_argument exception is thrown;
+		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
 		 * - if the term is ignorable, the method will return;
 		 * - if the term is already in the series, then:
 		 *   - its coefficient is added (if \p Sign is \p true) or subtracted (if \p Sign is \p false)
