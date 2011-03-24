@@ -47,7 +47,7 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantees
  * 
- * This class provides the same exception safety guarantee as the underlying type \p T.
+ * This class provides the same exception safety guarantees as the underlying type \p T.
  * 
  * \section move_semantics Move semantics
  * 
