@@ -27,6 +27,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 
+#include "../src/concepts/term.hpp"
 #include "../src/integer.hpp"
 #include "../src/numerical_coefficient.hpp"
 
@@ -44,6 +45,7 @@ struct constructor_tester
 		void operator()(const Expo &)
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
+			BOOST_CONCEPT_ASSERT((concept::Term<term_type>));
 			typedef typename term_type::key_type key_type;
 			// Default constructor.
 			BOOST_CHECK_EQUAL(term_type().m_cf.get_value(),Cf().get_value());
