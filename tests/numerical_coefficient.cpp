@@ -68,6 +68,8 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(nc(other).get_value(),T(3));
 		// Move construction.
 		BOOST_CHECK_EQUAL(nc(nc(value)).get_value(),T(3));
+		// Move assignment.
+		other = nc(T(3));
 		// Check copy/move construction from coefficients of different types.
 		typedef numerical_coefficient<int> nc_other;
 		nc_other nco{3};
