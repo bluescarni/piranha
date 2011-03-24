@@ -46,13 +46,21 @@ namespace piranha
  * - \p Term must be a model of piranha::concept::Term.
  * - \p Derived must be a model of piranha::concept::CRTP.
  * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the same exception safety guarantee as piranha::hop_table.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics is equivalent to piranha::hop_table's move semantics.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Term, typename Derived>
 class base_series: detail::base_series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
-		BOOST_CONCEPT_ASSERT((concept::CRTP<Derived>));
+		BOOST_CONCEPT_ASSERT((concept::CRTP<base_series<Term,Derived>,Derived>));
 	public:
 		/// Alias for term type.
 		typedef Term term_type;
@@ -92,13 +100,37 @@ std::cout << "term type insert!\n";
 			piranha_assert(empty() || m_container.begin()->is_compatible(ed));
 			// Generate error if term is not compatible.
 			if (unlikely(!term.is_compatible(ed))) {
+std::cout << "term type incompatible LOL!\n";
 				piranha_throw(std::invalid_argument,"cannot insert incompatible term");
 			}
 			// Discard ignorable term.
 			if (unlikely(term.is_ignorable(ed))) {
+std::cout << "term type ignorable!\n";
 				return;
 			}
 			insertion_impl<Sign>(std::forward<T>(term),ed);
+		}
+		template <bool Sign, typename Iterator, typename EchelonDescriptor>
+		static void insertion_cf_arithmetics(Iterator &it, const term_type &term, const EchelonDescriptor &ed)
+		{
+			if (Sign) {
+std::cout << "adding!\n";
+				it->m_cf.add(term.m_cf,ed);
+			} else {
+std::cout << "subtracting!\n";
+				it->m_cf.subtract(term.m_cf,ed);
+			}
+		}
+		template <bool Sign, typename Iterator, typename EchelonDescriptor>
+		static void insertion_cf_arithmetics(Iterator &it, term_type &&term, const EchelonDescriptor &ed)
+		{
+			if (Sign) {
+std::cout << "move adding!\n";
+				it->m_cf.add(std::move(term.m_cf),ed);
+			} else {
+std::cout << "move subtracting!\n";
+				it->m_cf.subtract(std::move(term.m_cf),ed);
+			}
 		}
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T, typename EchelonDescriptor>
@@ -123,14 +155,7 @@ std::cout << "updating existing term!\n";
 				// Assert the existing term is not ignorable.
 				piranha_assert(!it->is_ignorable(ed));
 				// The term exists already, update it.
-				if (Sign) {
-					// TODO: move semantics here? Could be useful for coefficient series.
-std::cout << "adding!\n";
-					it->m_cf.add(term.m_cf,ed);
-				} else {
-std::cout << "subtracting!\n";
-					it->m_cf.subtract(term.m_cf,ed);
-				}
+				insertion_cf_arithmetics<Sign>(it,std::forward<T>(term),ed);
 				// Check if the term has become ignorable after the modification.
 				if (unlikely(it->is_ignorable(ed))) {
 std::cout << "erasing term become ignorable!\n";
@@ -202,10 +227,10 @@ std::cout << "erasing term become ignorable!\n";
 	protected:
 		/// Insert generic term.
 		/**
-		 * This template method is activated only if \p T derives from piranha::base_term, and will insert \p term into the series
+		 * This method will insert \p term into the series
 		 * using \p ed as reference piranha::echelon_descriptor.
 		 * 
-		 * The insertions algorithm proceeds as follows:
+		 * The insertion algorithm proceeds as follows:
 		 * 
 		 * - if \p term is not of type base_series::term_type, it is forwarded to construct an instance of
 		 *   base_series::term_type, and the algorithm proceeds to insert that instead;
@@ -227,10 +252,8 @@ std::cout << "erasing term become ignorable!\n";
 		 * - piranha::hop_table::insert().
 		 * @throws std::invalid_argument if \p term is ignorable.
 		 */
-		template <bool Sign, typename T, typename Term>
-		void insert(T &&term, const echelon_descriptor<Term> &ed, typename std::enable_if<
-			std::is_base_of<detail::base_term_tag,typename strip_cv_ref<T>::type>::value
-			>::type * = piranha_nullptr)
+		template <bool Sign, typename T, typename Term2>
+		void insert(T &&term, const echelon_descriptor<Term2> &ed)
 		{
 			dispatch_insertion<Sign>(std::forward<T>(term),ed);
 		}
@@ -243,10 +266,8 @@ std::cout << "erasing term become ignorable!\n";
 		 * 
 		 * @throws unspecified any exception thrown by generic insert().
 		 */
-		template <typename T, typename EchelonDescriptor>
-		void insert(T &&term, EchelonDescriptor &ed, typename std::enable_if<
-			std::is_base_of<detail::base_term_tag,typename strip_cv_ref<T>::type>::value
-			>::type * = piranha_nullptr)
+		template <typename T, typename Term2>
+		void insert(T &&term, const echelon_descriptor<Term2> &ed)
 		{
 			insert<true>(std::forward<T>(term),ed);
 		}
