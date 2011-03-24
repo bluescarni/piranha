@@ -60,6 +60,16 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		polynomial_term(const polynomial_term &) = default;
 		/// Defaulted move constructor.
 		polynomial_term(polynomial_term &&) = default;
+		/// Generic constructor.
+		/**
+		 * Will perfectly forward all arguments to a matching constructor in piranha::base_term.
+		 * 
+		 * @param[in] params parameters for construction.
+		 * 
+		 * @throws unspecified any exception thrown by the invoked constructor in piranha::base_term.
+		 */
+		template <typename... Args>
+		explicit polynomial_term(Args && ... params):base(std::forward<Args>(params)...) {}
 		/// Defaulted destructor.
 		~polynomial_term() = default;
 		/// Defaulted copy assignment operator.

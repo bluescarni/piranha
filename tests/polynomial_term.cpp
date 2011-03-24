@@ -68,6 +68,12 @@ struct constructor_tester
 			t = std::move(t_copy1);
 			BOOST_CHECK_EQUAL(t.m_cf.get_value(),Cf(1).get_value());
 			BOOST_CHECK_EQUAL(t.m_key,key_type{Expo(2)});
+			// Generic constructor.
+			typedef polynomial_term<numerical_coefficient<float>,Expo> other_term_type;
+			other_term_type ot{7,key_type{Expo(2)}};
+			term_type t_from_ot(ot);
+			BOOST_CHECK_EQUAL(t_from_ot.m_cf.get_value(),Cf(float(7)).get_value());
+			BOOST_CHECK_EQUAL(t_from_ot.m_key,key_type{Expo(2)});
 		}
 	};
 	template <typename Cf>
