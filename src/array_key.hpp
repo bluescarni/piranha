@@ -46,13 +46,13 @@ namespace piranha
  * - \p T must be a model of piranha::concept::ContainerElement.
  * - \p Derived must be a model of piranha::concept::CRTP.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same exception safety guarantee as \p std::vector.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics for this class are equivalent to those for \p std::vector.
+ * Move semantics is equivalent to <tt>std::vector</tt>'s move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */

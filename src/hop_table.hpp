@@ -61,7 +61,7 @@ namespace piranha
  * \p T must be a model of piranha::concept::ContainerElement. \p Hash and \p Pred must model the
  * concepts in the standard C++ library for the corresponding types of \p std::unordered_set.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
  * which provide the basic exception safety guarantee.

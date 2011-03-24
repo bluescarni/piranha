@@ -45,13 +45,13 @@ namespace piranha
  * 
  * \p T must be a model of piranha::concept::ContainerElement.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantees as the underlying type \p T.
+ * This class provides the same exception safety guarantee as the underlying type \p T.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics for this class are equivalent to those for the underlying type \p T.
+ * Move semantics is equivalent to <tt>T</tt>'s move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */

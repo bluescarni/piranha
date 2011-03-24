@@ -41,13 +41,13 @@ namespace piranha
  * 
  * \p T must be suitable for use in piranha::array_key.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same exception safety guarantee as piranha::array_key.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics for this class are equivalent to those for piranha::array_key.
+ * Move semantics is equivalent to piranha::array_key's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */

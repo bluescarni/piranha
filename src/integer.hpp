@@ -62,7 +62,7 @@ namespace piranha
  * 
  * @see http://gmplib.org/
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
  * the program will terminate.

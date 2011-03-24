@@ -57,7 +57,7 @@ namespace piranha {
  * 
  * \p T must be a model of piranha::concept::ContainerElement.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * The class provides the strong exception safety guarantee: both in single-thread and multi-thread mode,
  * any exception will be caught and re-thrown after the original state of the object has been restored. In case of multi-thread

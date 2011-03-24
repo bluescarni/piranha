@@ -39,13 +39,13 @@ namespace piranha
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p ExpoType must be suitable for use in piranha::monomial.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same guarantees as piranha::base_term.
+ * This class provides the same guarantee as piranha::base_term.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to that of piranha::base_term.
+ * Move semantics is equivalent to piranha::base_term's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */

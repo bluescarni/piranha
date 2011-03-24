@@ -49,13 +49,13 @@ namespace piranha
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
  * 
- * \section exception_safety Exception safety guarantees
+ * \section exception_safety Exception safety guarantee
  * 
  * This class provides the strong exception safety guarantee for all operations.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics for this class is equivalent to its data members' move semantics.
+ * Move semantics is equivalent to its data members' move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
