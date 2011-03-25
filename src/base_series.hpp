@@ -172,12 +172,20 @@ std::cout << "erasing term become ignorable!\n";
 		/// Defaulted default constructor.
 		base_series() = default;
 		/// Defaulted copy constructor.
+		/**
+		 * @throw unspecified any exception thrown by the copy constructor of piranha::hop_table.
+		 */
 		base_series(const base_series &) = default;
 		/// Defaulted move constructor.
 		base_series(base_series &&) = default;
 		/// Defaulted destructor.
 		~base_series() = default;
 		/// Defaulted copy-assignment operator.
+		/**
+		 * @throw unspecified any exception thrown by the copy assignment operator of piranha::hop_table.
+		 * 
+		 * @return reference to \p this.
+		 */
 		base_series &operator=(const base_series &) = default;
 		/// Move assignment operator.
 		/**
