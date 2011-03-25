@@ -29,8 +29,6 @@
 
 /// Root piranha namespace.
 /**
- * \todo Check if in the end destructors will be implicitly marked as noexcept(true) in the final c++0x standard,
- * and if this is not the case add it.
  * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
  * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment)
  * \todo better piranha_throw macro with support of boost_throw when using boost thread instead of native c++0x threads.
@@ -81,6 +79,7 @@ namespace detail {}
 #include "thread_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
+#include "top_level_series.hpp"
 #include "type_traits.hpp"
 
 #endif
