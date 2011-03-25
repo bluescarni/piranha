@@ -43,6 +43,7 @@ namespace concept
  * 
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
+ * - must be constructible from a \p std::vector of piranha::symbol,
  * - must be directable to output stream,
  * - must be equality-comparable,
  * - must be provided with a \p std::hash specialisation,
@@ -62,6 +63,7 @@ struct Key:
 	BOOST_CONCEPT_USAGE(Key)
 	{
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
+		T tmp = T(std::vector<symbol>());
 		std::cout << *(static_cast<T *>(piranha_nullptr));
 		const T inst = T();
 		auto tmp1 = inst.is_compatible(std::vector<symbol>{});

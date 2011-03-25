@@ -58,6 +58,11 @@ struct constructor_tester
 		}
 		BOOST_CHECK_NO_THROW(m0 = m1);
 		BOOST_CHECK_NO_THROW(m0 = std::move(m1));
+		// Constructor from arguments vector.
+		monomial_type m2 = monomial_type(std::vector<symbol>());
+		BOOST_CHECK_EQUAL(m2.size(),unsigned(0));
+		monomial_type m3 = monomial_type(std::vector<symbol>(3,symbol("foo")));
+		BOOST_CHECK_EQUAL(m3.size(),unsigned(3));
 	}
 };
 

@@ -21,11 +21,14 @@
 #ifndef PIRANHA_MONOMIAL_HPP
 #define PIRANHA_MONOMIAL_HPP
 
+#include <boost/concept/assert.hpp>
 #include <initializer_list>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
 #include "array_key.hpp"
+#include "concepts/monomial_exponent.hpp"
 #include "config.hpp"
 #include "symbol.hpp"
 
@@ -39,7 +42,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be suitable for use in piranha::array_key.
+ * \p T must be a model of piranha::concept::MonomialExponent.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -54,6 +57,7 @@ namespace piranha
 template <typename T>
 class monomial: public array_key<T,monomial<T>>
 {
+		BOOST_CONCEPT_ASSERT((concept::MonomialExponent<T>));
 		typedef array_key<T,monomial<T>> base;
 	public:
 		/// Defaulted default constructor.
@@ -69,6 +73,26 @@ class monomial: public array_key<T,monomial<T>>
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
 		monomial(std::initializer_list<T> list):base(list) {}
+		/// Constructor from vector of arguments.
+		/**
+		 * The monomial will be created with a number of variables equal to <tt>args.size()</tt>
+		 * and filled with exponents constructed from the integral constant 0.
+		 * 
+		 * @param[in] args vector of piranha::symbol used for construction.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - <tt>std::vector::push_back</tt> or <tt>std::vector::reserve</tt>,
+		 * - the construction of instances of type \p T from the integral constant 0.
+		 */
+		monomial(const std::vector<symbol> &args):base()
+		{
+			if (std::is_same<decltype(args.size),decltype(this->size())>::value) {
+				this->m_container.reserve(args.size());
+			}
+			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
+				this->push_back(T(0));
+			}
+		}
 		/// Defaulted destructor.
 		~monomial() = default;
 		/// Defaulted copy assignment operator.

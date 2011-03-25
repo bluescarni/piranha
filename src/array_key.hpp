@@ -61,9 +61,9 @@ class array_key
 {
 		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
-		// Underlying container.
-		typedef std::vector<T> container_type;
 	public:
+		/// Internal container type.
+		typedef std::vector<T> container_type;
 		/// Value type.
 		typedef T value_type;
 		/// Size type.
@@ -229,7 +229,8 @@ class array_key
 			os << ']';
 			return os;
 		}
-	private:
+	protected:
+		/// Internal container.
 		container_type m_container;
 };
 
