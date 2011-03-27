@@ -408,3 +408,24 @@ BOOST_AUTO_TEST_CASE(hop_table_load_factor_test)
 {
 	boost::mpl::for_each<key_types>(load_factor_tester());
 }
+
+struct m_iterators_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hop_table<T> h;
+		BOOST_CHECK(h._m_begin() == h._m_end());
+		h.insert(T());
+		BOOST_CHECK(h._m_begin() != h._m_end());
+		*h._m_begin() = boost::lexical_cast<T>("42");
+		BOOST_CHECK(*h._m_begin() == boost::lexical_cast<T>("42"));
+		// Check we can clear and destroy without bad consequences.
+		h.clear();
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hop_table_m_iterators_test)
+{
+	boost::mpl::for_each<key_types>(m_iterators_tester());
+}

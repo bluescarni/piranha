@@ -197,12 +197,14 @@ class hop_table
 		/// Size type.
 		typedef typename container_type::size_type size_type;
 	private:
-		class iterator_impl: public boost::iterator_facade<iterator_impl,key_type const,boost::forward_traversal_tag>
+		template <typename Key>
+		class iterator_impl: public boost::iterator_facade<iterator_impl<Key>,Key,boost::forward_traversal_tag>
 		{
 				friend class hop_table;
+				typedef typename std::conditional<std::is_const<Key>::value,hop_table const,hop_table>::type table_type;
 			public:
 				iterator_impl():m_table(piranha_nullptr),m_idx(0) {}
-				explicit iterator_impl(const hop_table *table, const size_type &idx):m_table(table),m_idx(idx) {}
+				explicit iterator_impl(table_type *table, const size_type &idx):m_table(table),m_idx(idx) {}
 			private:
 				friend class boost::iterator_core_access;
 				void increment()
@@ -218,18 +220,18 @@ class hop_table
 					piranha_assert(m_table && other.m_table);
 					return (m_table == other.m_table && m_idx == other.m_idx);
 				}
-				const key_type &dereference() const
+				Key &dereference() const
 				{
 					piranha_assert(m_table && m_idx < m_table->m_container.size() && m_table->m_container[m_idx].test_occupied());
 					return *m_table->m_container[m_idx].ptr();
 				}
 			private:
-				const hop_table	*m_table;
+				table_type	*m_table;
 				size_type	m_idx;
 		};
 	public:
 		/// Iterator type.
-		typedef iterator_impl iterator;
+		typedef iterator_impl<key_type const> iterator;
 		/// Const iterator type.
 		/**
 		 * Equivalent to the iterator type.
@@ -556,6 +558,38 @@ class hop_table
 			std::swap(m_key_equal,other.m_key_equal);
 			std::swap<size_type>(m_n_elements,other.m_n_elements);
 		}
+		/** @name Low-level interface
+		 * Low-level methods and types.
+		 */
+		//@{
+		/// Mutable iterator.
+		/**
+		 * This iterator type provides non-const access to the elements of the table. Please note that modifications
+		 * to an existing element of the table might invalidate the relation between the element and its position in the table.
+		 * After such modifications of one or more elements, the only valid operation is hop_table::clear() (destruction of the
+		 * table before calling hop_table::clear() will lead to assertion failures in debug mode).
+		 */
+		typedef iterator_impl<key_type> _m_iterator;
+		/// Mutable begin iterator.
+		/**
+		 * @return hop_table::_m_iterator to the beginning of the table.
+		 */
+		_m_iterator _m_begin()
+		{
+			_m_iterator retval(this,0);
+			if (m_container.size() && !m_container[0].test_occupied()) {
+				retval.increment();
+			}
+			return retval;
+		}
+		/// Mutable end iterator.
+		/**
+		 * @return hop_table::_m_iterator to the end of the table.
+		 */
+		_m_iterator _m_end()
+		{
+			return _m_iterator(this,m_container.size());
+		}
 		/// Insert unique element (low-level).
 		/**
 		 * This template is activated only if \p U is implicitly convertible to \p T.
@@ -702,6 +736,7 @@ class hop_table
 			piranha_assert(m_container.size());
 			return m_hasher(k) % m_container.size();
 		}
+		//@}
 	private:
 		// Run a consistency check on the table, will return false if something is wrong.
 		bool sanity_check() const
