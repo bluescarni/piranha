@@ -90,6 +90,8 @@ class numerical_coefficient
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
 			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
 		{
+			// NOTE: here it is enough the rvalue ref check. If it is a *const* rvalue, the move
+			// will preserve constness and will be equivalent to method below.
 			if (Sign) {
 				m_value += std::move(other.m_value);
 			} else {
