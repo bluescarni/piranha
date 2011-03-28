@@ -63,6 +63,20 @@ struct is_cv_or_ref
 template <typename T>
 const bool is_cv_or_ref<T>::value;
 
+/// Type is non-const rvalue reference.
+/**
+ * This type trait defines a static const boolean \p value flag which is \p true if \p T is a non-const rvalue reference.
+ */
+template <typename T>
+struct is_nonconst_rvalue_ref
+{
+	/// Type-trait value.
+	static const bool value = std::is_rvalue_reference<T>::value && !std::is_const<typename std::remove_reference<T>::type>::value;
+};
+
+template <typename T>
+const bool is_nonconst_rvalue_ref<T>::value;
+
 /// Type has non-throwing move constructor.
 /**
  * Placeholder for <tt>std::is_nothrow_move_constructible</tt>, until it is implemented in GCC.
