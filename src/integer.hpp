@@ -494,7 +494,7 @@ class integer
 		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
 			// NOTE: the logic here is that we can "steal" from n1 we do it here, otherwise we
@@ -507,7 +507,7 @@ class integer
 		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
@@ -529,7 +529,7 @@ class integer
 		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
@@ -540,7 +540,7 @@ class integer
 		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
@@ -563,7 +563,7 @@ class integer
 		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
@@ -574,7 +574,7 @@ class integer
 		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_rvalue_reference<T &&>::value)
+			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<U>(n2));
