@@ -44,11 +44,13 @@ namespace piranha
  * \section type_requirements Type requirements
  * 
  * - \p Term must be a model of piranha::concept::Term.
- * - \p Derived must be a model of piranha::concept::CRTP.
+ * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_series
+ *   of \p Term and \p Derived as base class.
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as piranha::hop_table.
+ * This class provides the same exception safety guarantee as piranha::hop_table. In particular, exceptions thrown during
+ * any operation involving term insertion will leave the object in an undefined but valid state.
  * 
  * \section move_semantics Move semantics
  * 
@@ -65,6 +67,9 @@ class base_series: detail::base_series_tag
 		/// Alias for term type.
 		typedef Term term_type;
 	private:
+		// Make friend with all base series.
+		template <typename Term2, typename Derived2>
+		friend class base_series;
 		// Make friend with debugging class.
 		template <typename T>
 		friend class debug_access;
@@ -235,8 +240,8 @@ std::cout << "erasing term become ignorable!\n";
 	protected:
 		/// Insert generic term.
 		/**
-		 * This method will insert \p term into the series
-		 * using \p ed as reference piranha::echelon_descriptor.
+		 * This method will insert \p term into the series using internally piranha::hop_table::insert and
+		 * with \p ed as reference piranha::echelon_descriptor.
 		 * 
 		 * The insertion algorithm proceeds as follows:
 		 * 
@@ -245,7 +250,7 @@ std::cout << "erasing term become ignorable!\n";
 		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
 		 * - if the term is ignorable, the method will return;
 		 * - if the term is already in the series, then:
-		 *   - its coefficient is added (if \p Sign is \p true) or subtracted (if \p Sign is \p false)
+		 *   - its coefficient is added (i.e., \p Sign is \p true) or subtracted (i.e., \p Sign is \p false)
 		 *     to the existing term's coefficient;
 		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
 		 * - else:
@@ -278,6 +283,90 @@ std::cout << "erasing term become ignorable!\n";
 		void insert(T &&term, const echelon_descriptor<Term2> &ed)
 		{
 			insert<true>(std::forward<T>(term),ed);
+		}
+		/// Merge terms from another series.
+		/**
+		 * This template method is activated only if \p T derives from piranha::base_series.
+		 * 
+		 * All terms in \p series will be inserted into \p this using piranha::base_series::insert. If any exception occurs during the insertion process,
+		 * \p this will be left in an undefined (but valid) state. \p series is allowed to be \p this (in such a case, a copy of \p series will be created
+		 * before proceeding with the merge).
+		 * 
+		 * @param[in] series piranha::base_series whose terms will be merged into \p this.
+		 * @param[in] ed reference piranha::echelon_descriptor.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::base_series::insert or the copy constructor of piranha::base_series.
+		 */
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<std::is_base_of<base_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			merge_terms_impl0<Sign>(std::forward<T>(series),ed);
+		}
+	private:
+		// Overload in case that T derives from the same type as this (base_series<Term,Derived>).
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
+			// series is an instance of the type of this.
+			if (unlikely(&series == this)) {
+std::cout << "ZOMG merging with self\n";
+				// If the two series are the same object, we need to make a copy.
+				// NOTE: we do not forward here, when making the copy, because if T is a non-const
+				// rvalue reference we might actually erase this: with Derived(series), a move
+				// constructor might end up being called.
+				merge_terms_impl1<Sign>(base_series<Term,Derived>(series),ed);
+			} else {
+std::cout << "all normal, merging with other\n";
+				merge_terms_impl1<Sign>(std::forward<T>(series),ed);
+			}
+		}
+		// Overload in case that T is not an instance of the type of this.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<!std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// No worries about same object, just forward.
+			merge_terms_impl1<Sign>(std::forward<T>(series),ed);
+		}
+		// Overload if we cannot move objects from series.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<!is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL copy!\n";
+			const auto it_f = series.m_container.end();
+			try {
+				for (auto it = series.m_container.begin(); it != it_f; ++it) {
+					insert<Sign>(*it,ed);
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out this series.
+				m_container.clear();
+				throw;
+			}
+		}
+		// Overload if we can move objects from series.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL move!\n";
+			const auto it_f = series.m_container._m_end();
+			try {
+				for (auto it = series.m_container._m_begin(); it != it_f; ++it) {
+					insert<Sign>(std::move(*it),ed);
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out both series.
+				m_container.clear();
+				series.m_container.clear();
+				throw;
+			}
+			// The other series must alway be cleared, since we moved out the terms.
+			series.m_container.clear();
 		}
 	protected:
 		/// Terms container.

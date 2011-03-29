@@ -162,3 +162,109 @@ BOOST_AUTO_TEST_CASE(base_series_insertion_test)
 {
 	boost::mpl::for_each<cf_types>(insertion_tester());
 }
+
+struct merge_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<merge_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				typedef polynomial_term<Cf,Expo> term_type;
+				typedef typename Cf::type value_type;
+				typedef typename term_type::key_type key_type;
+				typedef base_series<term_type,void> series_type;
+				typedef echelon_descriptor<term_type> ed_type;
+				ed_type ed;
+				ed.template add_symbol<term_type>(symbol("x"));
+				series_type s1, s2;
+				s1.insert(term_type(1,key_type{Expo(1)}),ed);
+				s2.insert(term_type(2,key_type{Expo(2)}),ed);
+				// Merge with copy.
+				s1.template merge_terms<true>(s2,ed);
+				BOOST_CHECK_EQUAL(s1.size(),unsigned(2));
+				auto it = s1.m_container.begin();
+				BOOST_CHECK(it->m_cf.get_value() == 1 || it->m_cf.get_value() == 2);
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == 1 || it->m_cf.get_value() == 2);
+				// Merge with move.
+				series_type s3;
+				s3.insert(term_type(3,key_type{Expo(3)}),ed);
+				s1.template merge_terms<true>(std::move(s3),ed);
+				BOOST_CHECK(s3.empty());
+				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
+				// Merge with self.
+				s1.template merge_terms<true>(s1,ed);
+				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
+				it = s1.m_container.begin();
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) || it->m_cf.get_value() == value_type(3) + value_type(3));
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) || it->m_cf.get_value() == value_type(3) + value_type(3));
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) || it->m_cf.get_value() == value_type(3) + value_type(3));
+				// Merge with self + move.
+				s1.template merge_terms<true>(std::move(s1),ed);
+				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
+				it = s1.m_container.begin();
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) + value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) + value_type(2) + value_type(2) ||
+					it->m_cf.get_value() == value_type(3) + value_type(3) + value_type(3) + value_type(3));
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) + value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) + value_type(2) + value_type(2) ||
+					it->m_cf.get_value() == value_type(3) + value_type(3) + value_type(3) + value_type(3));
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == value_type(1) + value_type(1) + value_type(1) + value_type(1) ||
+					it->m_cf.get_value() == value_type(2) + value_type(2) + value_type(2) + value_type(2) ||
+					it->m_cf.get_value() == value_type(3) + value_type(3) + value_type(3) + value_type(3));
+				// Merge with different series type.
+				s1.m_container.clear();
+				s1.insert(term_type(1,key_type{Expo(1)}),ed);
+				typedef polynomial_term<numerical_coefficient<long>,Expo> term_type2;
+				typedef typename term_type2::key_type key_type2;
+				typedef base_series<term_type2,void> series_type2;
+				typedef echelon_descriptor<term_type2> ed_type2;
+				ed_type2 ed2;
+				ed2.template add_symbol<term_type2>(symbol("x"));
+				series_type2 s4;
+				s4.insert(term_type2(1,key_type2{Expo(1)}),ed2);
+				s1.template merge_terms<true>(s4,ed);
+				BOOST_CHECK_EQUAL(s1.size(), unsigned(1));
+				it = s1.m_container.begin();
+				value_type tmp(1);
+				tmp += long(1);
+				BOOST_CHECK(it->m_cf.get_value() == tmp);
+				s4.m_container.clear();
+				s4.insert(term_type2(1,key_type2{Expo(2)}),ed2);
+				s1.template merge_terms<true>(s4,ed);
+				it = s1.m_container.begin();
+				BOOST_CHECK_EQUAL(s1.size(), unsigned(2));
+				BOOST_CHECK(it->m_cf.get_value() == tmp || it->m_cf.get_value() == long(1));
+				++it;
+				BOOST_CHECK(it->m_cf.get_value() == tmp || it->m_cf.get_value() == long(1));
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+		}
+};
+}
+
+typedef debug_access<merge_tag> merge_tester;
+
+BOOST_AUTO_TEST_CASE(base_series_merge_test)
+{
+	boost::mpl::for_each<cf_types>(merge_tester());
+}
