@@ -317,6 +317,13 @@ BOOST_AUTO_TEST_CASE(integer_addition_test)
 		BOOST_CHECK_EQUAL(static_cast<int>(i),43);
 		i += std::move(j);
 		BOOST_CHECK_EQUAL(static_cast<int>(i),43 + 42);
+		// Add with self.
+		i += i;
+		BOOST_CHECK_EQUAL(i, 2 * (43 + 42));
+		// Add with self + move.
+		i = 1;
+		i += std::move(i);
+		BOOST_CHECK_EQUAL(i, 2);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_add());
 	}
 	{
@@ -378,6 +385,13 @@ BOOST_AUTO_TEST_CASE(integer_subtraction_test)
 		BOOST_CHECK_EQUAL(static_cast<int>(i),-41);
 		i -= std::move(j);
 		BOOST_CHECK_EQUAL(static_cast<int>(i),-41 - 42);
+		// Sub with self.
+		i -= i;
+		BOOST_CHECK_EQUAL(i,0);
+		// Sub with self + move.
+		i = 1;
+		i -= std::move(i);
+		BOOST_CHECK_EQUAL(i,0);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_sub());
 	}
 	{
@@ -438,6 +452,14 @@ BOOST_AUTO_TEST_CASE(integer_multiplication_test)
 		BOOST_CHECK_EQUAL(static_cast<int>(i),42);
 		i *= std::move(j);
 		BOOST_CHECK_EQUAL(static_cast<int>(i),42 * 42);
+		// Mul with self.
+		i = 2;
+		i *= i;
+		BOOST_CHECK_EQUAL(i,4);
+		// Mul with self + move.
+		i = 3;
+		i *= std::move(i);
+		BOOST_CHECK_EQUAL(i,9);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_mul());
 	}
 	{
