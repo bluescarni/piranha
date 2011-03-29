@@ -45,7 +45,8 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Derived must be a model of piranha::concept::CRTP.
+ * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_term
+ *   of \p Term and \p Derived as base class.
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
  * 

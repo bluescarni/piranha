@@ -135,6 +135,8 @@ class echelon_descriptor
 			typedef boost::transform_iterator<decltype(f),decltype(difference.begin())> t_iter;
 			retval.push_back(std::vector<std::vector<symbol>::size_type>{});
 			retval.back().insert(retval.back().end(),t_iter(difference.begin(),f),t_iter(difference.end(),f));
+			piranha_assert(retval.size() > 0);
+			piranha_assert(retval.size() > 1 || v1 == v2);
 			return retval;
 		}
 		template <std::size_t N = 0, typename Enable = void>
