@@ -69,6 +69,9 @@ template <typename TopLevelTerm>
 class echelon_descriptor
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<TopLevelTerm>));
+		// Make friends with all kinds of descriptors.
+		template <typename TopLevelTerm2>
+		friend class echelon_descriptor;
 		// Template MP to define a tuple of uniform types.
 		template <typename T, std::size_t Size>
 		struct ntuple
@@ -100,6 +103,8 @@ class echelon_descriptor
 		static std::vector<std::vector<std::vector<symbol>::size_type>>
 			get_symbol_diff(const std::vector<symbol> &v1, const std::vector<symbol> &v2)
 		{
+			piranha_assert(std::is_sorted(v1.begin(),v1.end()));
+			piranha_assert(std::is_sorted(v2.begin(),v2.end()));
 			// Functor to locate the index of a symbol in v2.
 			struct f_type
 			{
@@ -136,7 +141,6 @@ class echelon_descriptor
 			retval.push_back(std::vector<std::vector<symbol>::size_type>{});
 			retval.back().insert(retval.back().end(),t_iter(difference.begin(),f),t_iter(difference.end(),f));
 			piranha_assert(retval.size() > 0);
-			piranha_assert(retval.size() > 1 || v1 == v2);
 			return retval;
 		}
 		template <std::size_t N = 0, typename Enable = void>
@@ -160,6 +164,41 @@ class echelon_descriptor
 					std::get<echelon_size<TopLevelTerm>::value - static_cast<std::size_t>(1)>(args_tuple2))
 				);
 			}
+		};
+		template <std::size_t N = 0, typename Enable = void>
+		struct apply_difference_impl
+		{
+			static void run(args_tuple_type &new_args_tuple, const diff_tuple_type &diff_tuple, const args_tuple_type &other_args_tuple)
+			{
+				auto &new_args = std::get<N>(new_args_tuple);
+				const auto &diff = std::get<N>(diff_tuple);
+				const auto &other_args = std::get<N>(other_args_tuple);
+				piranha_assert(diff.size() > 0);
+				piranha_assert(new_args.size() == diff.size() - decltype(diff.size())(1));
+				decltype(new_args.size()) offset = 0;
+				for (decltype(diff.size()) i = 0; i < diff.size(); ++i) {
+					piranha_assert(std::is_sorted(diff[i].begin(),diff[i].end()));
+					for (auto it = diff[i].begin(); it != diff[i].end(); ++it) {
+						// First let's go to the position into which we want to insert.
+						auto new_args_it = new_args.begin();
+						std::advance(new_args_it,offset);
+						std::advance(new_args_it,i);
+						piranha_assert(new_args_it <= new_args.end());
+						// Second, let's identify what we want to insert.
+						auto other_args_it = other_args.begin();
+						std::advance(other_args_it,*it);
+						piranha_assert(other_args_it <= other_args.end());
+						new_args.insert(new_args_it,*other_args_it);
+						++offset;
+					}
+				}
+				apply_difference_impl<N + static_cast<std::size_t>(1)>::run(new_args_tuple,diff_tuple,other_args_tuple);
+			}
+		};
+		template <std::size_t N>
+		struct apply_difference_impl<N,typename std::enable_if<N == echelon_size<TopLevelTerm>::value>::type>
+		{
+			static void run(args_tuple_type &, const diff_tuple_type &, const args_tuple_type &) {}
 		};
 		template <std::size_t N = 0, typename Enable = void>
 		struct sort_check_impl
@@ -256,6 +295,8 @@ class echelon_descriptor
 		}
 		/// Calculate difference between echelon descriptors.
 		/**
+		 * This template method is enabled iff the echelon sizes of \p TopLevelTerm and \p TopLevelTerm2 coincide.
+		 * 
 		 * The difference between two echelon descriptors is described for each level of the echelon hierarchy in terms of the
 		 * differences between the corresponding arguments vectors. Given two argument vectors \p a1 and \p a2, the difference of \p a1
 		 * with respect to \p a2 is given as a structure describing how elements of \p a2 not appearing in \p a1 must be inserted into \p a1
@@ -267,8 +308,6 @@ class echelon_descriptor
 		 * <tt>d = [[0,1],[],[3]]</tt>. This means that arguments <tt>['a','b']</tt> must be inserted before the first position in
 		 * \p a1, that no arguments must be inserted before <tt>'e'</tt> in \p a1 and that argument <tt>'f'</tt> must be inserted after the end of \p a1.
 		 * 
-		 * If the echelon size of \p TopLevelTerm2 is different from that of \p TopLevelTerm, a compile-time error will be produced.
-		 * 
 		 * @param[in] other piranha::echelon_descriptor with respect to which the difference will be calculated.
 		 * 
 		 * @return tuple of difference vectors.
@@ -276,10 +315,37 @@ class echelon_descriptor
 		 * @throws unspecified any exception thrown in case of memory allocation errors by standard containers.
 		 */
 		template <typename TopLevelTerm2>
-		diff_tuple_type difference(const echelon_descriptor<TopLevelTerm2> &other) const
+		diff_tuple_type difference(const echelon_descriptor<TopLevelTerm2> &other,
+			typename std::enable_if<echelon_size<TopLevelTerm>::value == echelon_size<TopLevelTerm2>::value>::type * = piranha_nullptr) const
 		{
-			static_assert(echelon_size<TopLevelTerm>::value == echelon_size<TopLevelTerm2>::value,"Incompatible echelon sizes.");
 			return difference_impl<>::run(m_args_tuple,other.m_args_tuple);
+		}
+		/// Merge with other descriptor.
+		/**
+		 * This template method is enabled iff the echelon sizes of \p TopLevelTerm and \p TopLevelTerm2 coincide.
+		 * 
+		 * Returns a new piranha::echelon_descriptor resulting from applying the difference with respect to
+		 * another piranha::echelon_descriptor calculated using difference(): output descriptor will contain
+		 * all symbols from \p this plus the symbols in \p other not appearing in \p this.
+		 * 
+		 * If the echelon size of \p TopLevelTerm2 is different from that of \p TopLevelTerm, a compile-time error will be produced.
+		 * 
+		 * @param[in] other piranha::echelon_descriptor to be merged into \p this.
+		 * 
+		 * @return merged piranha::echelon_descriptor.
+		 * 
+		 * @throws unspecified any exception thrown in case of memory allocation errors by standard containers.
+		 */
+		template <typename TopLevelTerm2>
+		echelon_descriptor merge(const echelon_descriptor<TopLevelTerm2> &other,
+			typename std::enable_if<echelon_size<TopLevelTerm>::value == echelon_size<TopLevelTerm2>::value>::type * = piranha_nullptr) const
+		{
+			const diff_tuple_type diff = difference(other);
+			args_tuple_type new_args_tuple = m_args_tuple;
+			apply_difference_impl<>::run(new_args_tuple,diff,other.m_args_tuple);
+			echelon_descriptor retval;
+			retval.m_args_tuple = std::move(new_args_tuple);
+			return retval;
 		}
 		/// Add symbol.
 		/**

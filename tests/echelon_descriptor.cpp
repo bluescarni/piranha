@@ -35,6 +35,7 @@
 #include "../src/monomial.hpp"
 #include "../src/numerical_coefficient.hpp"
 #include "../src/symbol.hpp"
+#include "../src/utils.hpp"
 
 // TODO: test with larger echelon sizes. Make sure in higher sizes there is term_type1, so
 // that tests below remain valid.
@@ -109,25 +110,6 @@ BOOST_AUTO_TEST_CASE(echelon_descriptor_add_symbol_test)
 	boost::mpl::for_each<term_types>(add_symbol_tester());
 }
 
-template <typename Functor, typename Tuple, std::size_t N = 0, typename Enable = void>
-struct tuple_iterate
-{
-	template <typename... Args>
-	void operator()(const Functor &f, Tuple &t, Args && ... params) const
-	{
-		f(std::get<N>(t),std::forward<Args>(params)...);
-		tuple_iterate<Functor,Tuple,N + std::size_t(1),Enable>()(f,t,std::forward<Args>(params)...);
-	}
-};
-
-template <typename Functor, typename Tuple, std::size_t N>
-struct tuple_iterate<Functor,Tuple,N,typename std::enable_if<std::tuple_size<Tuple>::value == N>::type>
-{
-	template <typename... Args>
-	void operator()(const Functor &, Tuple &, Args && ...) const
-	{}
-};
-
 struct diff_tester
 {
 	template <typename T>
@@ -158,10 +140,54 @@ struct diff_tester
 		BOOST_CHECK(std::get<0>(diff) == expected_result);
 		// Another example.
 		BOOST_CHECK(std::get<0>(ed_type{}.difference(b)) == decltype(expected_result)({{0,1,2,3}}));
+		// Another example.
+		BOOST_CHECK_EQUAL(std::get<0>(b.difference(ed_type{})).size(),unsigned(5));
+		BOOST_CHECK(std::get<0>(b.difference(ed_type{}))[0] == std::vector<std::vector<symbol>::size_type>());
+		BOOST_CHECK(std::get<0>(b.difference(ed_type{}))[1] == std::vector<std::vector<symbol>::size_type>());
+		BOOST_CHECK(std::get<0>(b.difference(ed_type{}))[2] == std::vector<std::vector<symbol>::size_type>());
+		BOOST_CHECK(std::get<0>(b.difference(ed_type{}))[3] == std::vector<std::vector<symbol>::size_type>());
+		BOOST_CHECK(std::get<0>(b.difference(ed_type{}))[4] == std::vector<std::vector<symbol>::size_type>());
 	}
 };
 
 BOOST_AUTO_TEST_CASE(echelon_descriptor_diff_test)
 {
 	boost::mpl::for_each<term_types>(diff_tester());
+}
+
+struct merge_tester
+{
+	template <typename T>
+	void operator()(const T &) const
+	{
+		typedef echelon_descriptor<T> ed_type;
+		typedef typename ed_type::top_level_term_type tl_type;
+		ed_type a, b;
+		auto new_ed = a.merge(b);
+		BOOST_CHECK(a.get_args_tuple() == new_ed.get_args_tuple());
+		BOOST_CHECK(b.get_args_tuple() == new_ed.get_args_tuple());
+		a.template add_symbol<tl_type>(symbol("e"));
+		a.template add_symbol<tl_type>(symbol("c"));
+		new_ed = a.merge(b);
+		BOOST_CHECK(new_ed.get_args_tuple() == a.get_args_tuple());
+		new_ed = b.merge(a);
+		BOOST_CHECK(new_ed.get_args_tuple() == a.get_args_tuple());
+		b.template add_symbol<tl_type>(symbol("a"));
+		b.template add_symbol<tl_type>(symbol("b"));
+		b.template add_symbol<tl_type>(symbol("f"));
+		b.template add_symbol<tl_type>(symbol("c"));
+		auto new_a = a.merge(b);
+		auto new_b = b.merge(new_a);
+		BOOST_CHECK(new_a.get_args_tuple() == new_b.get_args_tuple());
+		auto saved_new = new_a;
+		new_b = b.merge(a);
+		new_a = a.merge(new_b);
+		BOOST_CHECK(new_a.get_args_tuple() == new_b.get_args_tuple());
+		BOOST_CHECK(new_a.get_args_tuple() == saved_new.get_args_tuple());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(echelon_descriptor_merge_test)
+{
+	boost::mpl::for_each<term_types>(merge_tester());
 }
