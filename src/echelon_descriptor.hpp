@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "concepts/term.hpp"
@@ -324,28 +325,29 @@ class echelon_descriptor
 		/**
 		 * This template method is enabled iff the echelon sizes of \p TopLevelTerm and \p TopLevelTerm2 coincide.
 		 * 
-		 * Returns a new piranha::echelon_descriptor resulting from applying the difference with respect to
-		 * another piranha::echelon_descriptor calculated using difference(): output descriptor will contain
-		 * all symbols from \p this plus the symbols in \p other not appearing in \p this.
+		 * Returns a pair formed by:
 		 * 
-		 * If the echelon size of \p TopLevelTerm2 is different from that of \p TopLevelTerm, a compile-time error will be produced.
+		 * - a new piranha::echelon_descriptor resulting from applying the difference with respect to
+		 *   another piranha::echelon_descriptor calculated using difference(): this descriptor will contain
+		 *   all symbols from \p this plus the symbols in \p other not appearing in \p this;
+		 * - the return value of <tt>difference(other)</tt>.
 		 * 
 		 * @param[in] other piranha::echelon_descriptor to be merged into \p this.
 		 * 
-		 * @return merged piranha::echelon_descriptor.
+		 * @return pair containing the merged piranha::echelon_descriptor and the difference of \p this with respect to \p other.
 		 * 
 		 * @throws unspecified any exception thrown in case of memory allocation errors by standard containers.
 		 */
 		template <typename TopLevelTerm2>
-		echelon_descriptor merge(const echelon_descriptor<TopLevelTerm2> &other,
+		std::pair<echelon_descriptor,diff_tuple_type> merge(const echelon_descriptor<TopLevelTerm2> &other,
 			typename std::enable_if<echelon_size<TopLevelTerm>::value == echelon_size<TopLevelTerm2>::value>::type * = piranha_nullptr) const
 		{
-			const diff_tuple_type diff = difference(other);
+			diff_tuple_type diff = difference(other);
 			args_tuple_type new_args_tuple = m_args_tuple;
 			apply_difference_impl<>::run(new_args_tuple,diff,other.m_args_tuple);
-			echelon_descriptor retval;
-			retval.m_args_tuple = std::move(new_args_tuple);
-			return retval;
+			echelon_descriptor retval_ed;
+			retval_ed.m_args_tuple = std::move(new_args_tuple);
+			return std::make_pair(std::move(retval_ed),std::move(diff));
 		}
 		/// Add symbol.
 		/**
