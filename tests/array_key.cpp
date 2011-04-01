@@ -27,8 +27,11 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <unordered_set>
+#include <vector>
 
+#include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
+#include "../src/symbol.hpp"
 
 using namespace piranha;
 
@@ -136,4 +139,66 @@ struct equality_tester
 BOOST_AUTO_TEST_CASE(array_key_equality_test)
 {
 	boost::mpl::for_each<value_types>(equality_tester());
+}
+
+struct merge_args_tag;
+
+namespace piranha
+{
+
+template <>
+class debug_access<merge_args_tag>
+{
+	public:
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef array_key<T,void> key_type;
+			std::vector<symbol> v1, v2;
+			v2.push_back(symbol("a"));
+			key_type k;
+			auto out = k.base_merge_args(v1,v2);
+			BOOST_CHECK_EQUAL(out.size(),unsigned(1));
+			BOOST_CHECK_EQUAL(out[0],T(0));
+			v2.push_back(symbol("b"));
+			v2.push_back(symbol("c"));
+			v2.push_back(symbol("d"));
+			v1.push_back(symbol("b"));
+			v1.push_back(symbol("d"));
+			k.push_back(T(2));
+			k.push_back(T(4));
+			out = k.base_merge_args(v1,v2);
+			BOOST_CHECK_EQUAL(out.size(),unsigned(4));
+			BOOST_CHECK_EQUAL(out[0],T(0));
+			BOOST_CHECK_EQUAL(out[1],T(2));
+			BOOST_CHECK_EQUAL(out[2],T(0));
+			BOOST_CHECK_EQUAL(out[3],T(4));
+			v2.push_back(symbol("e"));
+			v2.push_back(symbol("f"));
+			v2.push_back(symbol("g"));
+			v2.push_back(symbol("h"));
+			v1.push_back(symbol("e"));
+			v1.push_back(symbol("g"));
+			k.push_back(T(5));
+			k.push_back(T(7));
+			out = k.base_merge_args(v1,v2);
+			BOOST_CHECK_EQUAL(out.size(),unsigned(8));
+			BOOST_CHECK_EQUAL(out[0],T(0));
+			BOOST_CHECK_EQUAL(out[1],T(2));
+			BOOST_CHECK_EQUAL(out[2],T(0));
+			BOOST_CHECK_EQUAL(out[3],T(4));
+			BOOST_CHECK_EQUAL(out[4],T(5));
+			BOOST_CHECK_EQUAL(out[5],T(0));
+			BOOST_CHECK_EQUAL(out[6],T(7));
+			BOOST_CHECK_EQUAL(out[7],T(0));
+		}
+};
+
+}
+
+typedef piranha::debug_access<merge_args_tag> merge_args_tester;
+
+BOOST_AUTO_TEST_CASE(array_key_merge_args_test)
+{
+	boost::mpl::for_each<value_types>(merge_args_tester());
 }
