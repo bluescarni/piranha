@@ -21,17 +21,21 @@
 #ifndef PIRANHA_ARRAY_KEY_HPP
 #define PIRANHA_ARRAY_KEY_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
-#include "concepts/container_element.hpp"
+#include "concepts/array_key_value_type.hpp"
 #include "concepts/crtp.hpp"
 #include "config.hpp"
+#include "debug_access.hpp"
+#include "symbol.hpp"
 
 namespace piranha
 {
@@ -43,7 +47,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must be a model of piranha::concept::ContainerElement.
+ * - \p T must be a model of piranha::concept::ArrayKeyValueType.
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
  *   of \p Term and \p Derived as base class.
  * 
@@ -60,8 +64,10 @@ namespace piranha
 template <typename T, typename Derived>
 class array_key
 {
-		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<T>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
+		template <typename U>
+		friend class debug_access;
 	public:
 		/// Internal container type.
 		typedef std::vector<T> container_type;
@@ -229,6 +235,50 @@ class array_key
 			}
 			os << ']';
 			return os;
+		}
+	protected:
+		/// Merge arguments.
+		/**
+		 * Merge the new arguments vector \p new_args into \p this, given the current reference arguments vector
+		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container
+		 * after being constructed from the integral constant 0.
+		 * 
+		 * @param[in] orig_args current reference arguments vector for \p this.
+		 * @param[in] new_args new arguments vector.
+		 * 
+		 * @return piranha::array_key resulting from merging \p new_args into \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - <tt>std::vector::reserve()</tt>,
+		 * - <tt>std::vector::push_back()</tt>,
+		 * - the construction of instances of type \p T from the integral constant 0.
+		 */
+		array_key base_merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		{
+			array_key retval;
+			// Reserve space if we are sure that the types are the same (i.e., no risky type conversions).
+			if (std::is_same<size_type,decltype(new_args.size())>::value) {
+				retval.m_container.reserve(new_args.size());
+			}
+			piranha_assert(m_container.size() == orig_args.size());
+			piranha_assert(new_args.size() > orig_args.size());
+			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
+			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
+			auto it_new = new_args.begin();
+			for (size_type i = 0; i < m_container.size(); ++i, ++it_new) {
+				while (*it_new != orig_args[i]) {
+					retval.m_container.push_back(value_type(0));
+					++it_new;
+					piranha_assert(it_new != new_args.end());
+				}
+				retval.m_container.push_back(m_container[i]);
+			}
+			// Fill up arguments at the tail of new_args but not in orig_args.
+			for (; it_new != new_args.end(); ++it_new) {
+				retval.m_container.push_back(value_type(0));
+			}
+			piranha_assert(retval.size() == new_args.size());
+			return retval;
 		}
 	protected:
 		/// Internal container.

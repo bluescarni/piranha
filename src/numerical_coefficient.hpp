@@ -284,6 +284,17 @@ class numerical_coefficient
 		{
 			math::negate(m_value);
 		}
+		/// Merge new arguments.
+		/**
+		 * No special actions are required for arguments merging in piranha::numerical_coefficient.
+		 * 
+		 * @return copy of \p this.
+		 */
+		template <typename Term>
+		numerical_coefficient merge_args(const echelon_descriptor<Term> &, const echelon_descriptor<Term> &) const
+		{
+			return *this;
+		}
 		/// Overload of stream operator for piranha::numerical_coefficient.
 		/**
 		 * Will direct to stream the internal value of the numerical coefficient.

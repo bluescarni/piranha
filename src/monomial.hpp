@@ -28,7 +28,6 @@
 #include <vector>
 
 #include "array_key.hpp"
-#include "concepts/monomial_exponent.hpp"
 #include "config.hpp"
 #include "symbol.hpp"
 
@@ -42,7 +41,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be a model of piranha::concept::MonomialExponent.
+ * \p T must be suitable for use in piranha::array_key.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -57,7 +56,6 @@ namespace piranha
 template <typename T>
 class monomial: public array_key<T,monomial<T>>
 {
-		BOOST_CONCEPT_ASSERT((concept::MonomialExponent<T>));
 		typedef array_key<T,monomial<T>> base;
 	public:
 		/// Defaulted default constructor.
@@ -81,7 +79,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * @param[in] args vector of piranha::symbol used for construction.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - <tt>std::vector::push_back</tt> or <tt>std::vector::reserve</tt>,
+		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
 		 * - the construction of instances of type \p T from the integral constant 0.
 		 */
 		monomial(const std::vector<symbol> &args):base()
@@ -134,6 +132,23 @@ class monomial: public array_key<T,monomial<T>>
 			(void)args;
 			piranha_assert(is_compatible(args));
 			return false;
+		}
+		/// Merge arguments.
+		/**
+		 * Will forward the call to piranha::array_key::base_merge_args().
+		 * 
+		 * @param[in] orig_args original arguments vector.
+		 * @param[in] new_args new arguments vector.
+		 * 
+		 * @return piranha::monomial with the new arguments merged in.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::array_key::base_merge_args().
+		 */
+		monomial merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		{
+			monomial retval;
+			static_cast<base &>(retval) = this->base_merge_args(orig_args,new_args);
+			return retval;
 		}
 };
 
