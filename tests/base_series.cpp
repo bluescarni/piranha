@@ -163,12 +163,12 @@ BOOST_AUTO_TEST_CASE(base_series_insertion_test)
 	boost::mpl::for_each<cf_types>(insertion_tester());
 }
 
-struct merge_tag {};
+struct merge_terms_tag {};
 
 namespace piranha
 {
 template <>
-class debug_access<merge_tag>
+class debug_access<merge_terms_tag>
 {
 	public:
 		template <typename Cf>
@@ -262,9 +262,69 @@ class debug_access<merge_tag>
 };
 }
 
-typedef debug_access<merge_tag> merge_tester;
+typedef debug_access<merge_terms_tag> merge_terms_tester;
 
-BOOST_AUTO_TEST_CASE(base_series_merge_test)
+BOOST_AUTO_TEST_CASE(base_series_merge_terms_test)
 {
-	boost::mpl::for_each<cf_types>(merge_tester());
+	boost::mpl::for_each<cf_types>(merge_terms_tester());
+}
+
+struct merge_args_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<merge_args_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				typedef polynomial_term<Cf,Expo> term_type;
+				typedef typename Cf::type value_type;
+				typedef typename term_type::key_type key_type;
+				typedef base_series<term_type,void> series_type;
+				typedef echelon_descriptor<term_type> ed_type;
+				series_type s;
+				ed_type ed1, ed2;
+				s.insert(term_type(1,key_type{}),ed1);
+				ed2.template add_symbol<term_type>(symbol("x"));
+				auto merge_out = s.merge_args(ed1,ed2);
+				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));
+				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(0)})) != merge_out.m_container.end());
+				auto compat_check = [](const series_type &series, const ed_type &ed) -> void {
+					for (auto it = series.m_container.begin(); it != series.m_container.end(); ++it) {
+						BOOST_CHECK(it->is_compatible(ed));
+					}
+				};
+				compat_check(merge_out,ed2);
+				s = std::move(merge_out);
+				s.insert(term_type(1,key_type{Expo(1)}),ed2);
+				s.insert(term_type(2,key_type{Expo(2)}),ed2);
+				ed1 = ed2;
+				ed2.template add_symbol<term_type>(symbol("y"));
+				merge_out = s.merge_args(ed1,ed2);
+				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(3));
+				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(0),Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(1),Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(2,key_type{Expo(2),Expo(0)})) != merge_out.m_container.end());
+				compat_check(merge_out,ed2);
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+		}
+};
+}
+
+typedef debug_access<merge_args_tag> merge_args_tester;
+
+BOOST_AUTO_TEST_CASE(base_series_merge_args_test)
+{
+	boost::mpl::for_each<cf_types>(merge_args_tester());
 }

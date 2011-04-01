@@ -21,6 +21,7 @@
 #ifndef PIRANHA_BASE_SERIES_HPP
 #define PIRANHA_BASE_SERIES_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <iostream>
 #include <stdexcept>
@@ -55,6 +56,8 @@ namespace piranha
  * \section move_semantics Move semantics
  * 
  * Move semantics is equivalent to piranha::hop_table's move semantics.
+ * 
+ * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods og hop_table
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -167,6 +170,70 @@ std::cout << "erasing term become ignorable!\n";
 					m_container.erase(it);
 				}
 			}
+		}
+		// Overload in case that T derives from the same type as this (base_series<Term,Derived>).
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
+			// series is an instance of the type of this.
+			if (unlikely(&series == this)) {
+std::cout << "ZOMG merging with self\n";
+				// If the two series are the same object, we need to make a copy.
+				// NOTE: we do not forward here, when making the copy, because if T is a non-const
+				// rvalue reference we might actually erase this: with Derived(series), a move
+				// constructor might end up being called.
+				merge_terms_impl1<Sign>(base_series<Term,Derived>(series),ed);
+			} else {
+std::cout << "all normal, merging with other\n";
+				merge_terms_impl1<Sign>(std::forward<T>(series),ed);
+			}
+		}
+		// Overload in case that T is not an instance of the type of this.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<!std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// No worries about same object, just forward.
+			merge_terms_impl1<Sign>(std::forward<T>(series),ed);
+		}
+		// Overload if we cannot move objects from series.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<!is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL copy!\n";
+			const auto it_f = series.m_container.end();
+			try {
+				for (auto it = series.m_container.begin(); it != it_f; ++it) {
+					insert<Sign>(*it,ed);
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out this series.
+				m_container.clear();
+				throw;
+			}
+		}
+		// Overload if we can move objects from series.
+		template <bool Sign, typename T, typename Term2>
+		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL move!\n";
+			const auto it_f = series.m_container._m_end();
+			try {
+				for (auto it = series.m_container._m_begin(); it != it_f; ++it) {
+					insert<Sign>(std::move(*it),ed);
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out both series.
+				m_container.clear();
+				series.m_container.clear();
+				throw;
+			}
+			// The other series must alway be cleared, since we moved out the terms.
+			series.m_container.clear();
 		}
 	public:
 		/// Size type.
@@ -303,70 +370,43 @@ std::cout << "erasing term become ignorable!\n";
 		{
 			merge_terms_impl0<Sign>(std::forward<T>(series),ed);
 		}
-	private:
-		// Overload in case that T derives from the same type as this (base_series<Term,Derived>).
-		template <bool Sign, typename T, typename Term2>
-		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
-			typename std::enable_if<std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		/// Merge arguments.
+		/**
+		 * This method will return a piranha::base_series resulting from merging a new set of arguments into the current series. \p orig_ed is the
+		 * piranha::echelon_descriptor which the current terms refer to, while \p new_ed is the piranha::echelon_descriptor containing the new set of arguments.
+		 * 
+		 * The algorithm for merging iterates over the terms of the current series, performing at each iteration the following operations:
+		 * 
+		 * - create a new coefficient \p c from the output of the current coefficient's <tt>merge_args()</tt> method,
+		 * - create a new key \p k from the output of the current key's <tt>merge_args()</tt> method,
+		 * - create a new piranha::base_series::term_type \p t from \p c and \p k,
+		 * - insert \p t into the series to be returned.
+		 * 
+		 * @param[in] orig_ed original piranha::echelon_descriptor.
+		 * @param[in] new_ed new piranha::echelon_descriptor.
+		 * 
+		 * @return a piranha::base_series whose terms result from merging the new echelon descriptor into the terms of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::base_series::insert(),
+		 * - the <tt>merge_args()</tt> method of coefficient and/or key types,
+		 * - the constructor of piranha::base_series::term_type from a coefficient - key pair.
+		 */
+		template <typename Term2>
+		base_series merge_args(const echelon_descriptor<Term2> &orig_ed, const echelon_descriptor<Term2> &new_ed) const
 		{
-			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
-			// series is an instance of the type of this.
-			if (unlikely(&series == this)) {
-std::cout << "ZOMG merging with self\n";
-				// If the two series are the same object, we need to make a copy.
-				// NOTE: we do not forward here, when making the copy, because if T is a non-const
-				// rvalue reference we might actually erase this: with Derived(series), a move
-				// constructor might end up being called.
-				merge_terms_impl1<Sign>(base_series<Term,Derived>(series),ed);
-			} else {
-std::cout << "all normal, merging with other\n";
-				merge_terms_impl1<Sign>(std::forward<T>(series),ed);
+			piranha_assert(std::is_sorted(orig_ed.template get_args<term_type>().begin(),orig_ed.template get_args<term_type>().end()));
+			piranha_assert(std::is_sorted(new_ed.template get_args<term_type>().begin(),new_ed.template get_args<term_type>().end()));
+			piranha_assert(new_ed.template get_args<term_type>().size() > orig_ed.template get_args<term_type>().size());
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			base_series retval;
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				cf_type new_cf(it->m_cf.merge_args(orig_ed,new_ed));
+				key_type new_key(it->m_key.merge_args(orig_ed.template get_args<term_type>(),new_ed.template get_args<term_type>()));
+				retval.insert(term_type(std::move(new_cf),std::move(new_key)),new_ed);
 			}
-		}
-		// Overload in case that T is not an instance of the type of this.
-		template <bool Sign, typename T, typename Term2>
-		void merge_terms_impl0(T &&series, const echelon_descriptor<Term2> &ed,
-			typename std::enable_if<!std::is_base_of<base_series<Term,Derived>,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
-		{
-			// No worries about same object, just forward.
-			merge_terms_impl1<Sign>(std::forward<T>(series),ed);
-		}
-		// Overload if we cannot move objects from series.
-		template <bool Sign, typename T, typename Term2>
-		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
-			typename std::enable_if<!is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
-		{
-std::cout << "LOL copy!\n";
-			const auto it_f = series.m_container.end();
-			try {
-				for (auto it = series.m_container.begin(); it != it_f; ++it) {
-					insert<Sign>(*it,ed);
-				}
-			} catch (...) {
-				// In case of any insertion error, zero out this series.
-				m_container.clear();
-				throw;
-			}
-		}
-		// Overload if we can move objects from series.
-		template <bool Sign, typename T, typename Term2>
-		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
-			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
-		{
-std::cout << "LOL move!\n";
-			const auto it_f = series.m_container._m_end();
-			try {
-				for (auto it = series.m_container._m_begin(); it != it_f; ++it) {
-					insert<Sign>(std::move(*it),ed);
-				}
-			} catch (...) {
-				// In case of any insertion error, zero out both series.
-				m_container.clear();
-				series.m_container.clear();
-				throw;
-			}
-			// The other series must alway be cleared, since we moved out the terms.
-			series.m_container.clear();
+			return retval;
 		}
 	protected:
 		/// Terms container.
