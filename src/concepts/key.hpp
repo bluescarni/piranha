@@ -50,7 +50,9 @@ namespace concept
  * - must be provided with a const \p is_compatible method accepting a vector of piranha::symbol
  *   as input and returning a boolean value,
  * - must be provided with a const \p is_ignorable method accepting a vector of piranha::symbol
- *   as input and returning a boolean value.
+ *   as input and returning a boolean value,
+ * - must be provided with a const \p merge_args method accepting two \p std::vector of piranha::symbol
+ *   as input and returning an instance of \p T.
  * 
  * \todo assert that key's hasher satisfy the Hashable requirements.
  */
@@ -70,6 +72,8 @@ struct Key:
 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
 		auto tmp2 = inst.is_ignorable(std::vector<symbol>{});
 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
+		auto merge_out = inst.merge_args(std::vector<symbol>{},std::vector<symbol>{});
+		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for key type.");
 		// TODO: assert here that hasher satisfy the Hashable requirements.
 		std::hash<T> hasher;
 		(void)hasher;

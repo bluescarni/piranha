@@ -140,7 +140,21 @@ struct compatibility_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			class term_type: public base_term<Cf,Key,term_type> {};
+			class term_type: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type() = default;
+					term_type(const term_type &) = default;
+					term_type(term_type &&) = default;
+					term_type &operator=(const term_type &) = default;
+					term_type &operator=(term_type &&other)
+					{
+						base_term<Cf,Key,term_type>::operator=(std::move(other));
+						return *this;
+					}
+					// Needed to satisfy concept checking.
+					explicit term_type(const Cf &, const Key &) {}
+			};
 			typedef typename Key::value_type value_type;
 			echelon_descriptor<term_type> ed;
 			const auto &args = ed.template get_args<term_type>();
@@ -172,7 +186,21 @@ struct ignorability_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			class term_type: public base_term<Cf,Key,term_type> {};
+			class term_type: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type() = default;
+					term_type(const term_type &) = default;
+					term_type(term_type &&) = default;
+					term_type &operator=(const term_type &) = default;
+					term_type &operator=(term_type &&other)
+					{
+						base_term<Cf,Key,term_type>::operator=(std::move(other));
+						return *this;
+					}
+					// Needed to satisfy concept checking.
+					explicit term_type(const Cf &, const Key &) {}
+			};
 			typedef typename Key::value_type value_type;
 			echelon_descriptor<term_type> ed;
 			const auto &args = ed.template get_args<term_type>();

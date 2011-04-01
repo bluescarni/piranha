@@ -52,7 +52,9 @@ namespace concept
  * - must be provided with an \p add method accepting an instance of \p T and a generic piranha::echelon_descriptor
  *   as input and returning void,
  * - must be provided with a \p subtract method accepting an instance of \p T and a generic piranha::echelon_descriptor
- *   as input and returning void.
+ *   as input and returning void,
+ * - must be provided with a const \p merge_args method accepting two generic piranha::echelon_descriptor of the same type
+ *   as input and returning an instance of \p T.
  */
 template <typename T>
 struct Coefficient:
@@ -76,6 +78,8 @@ struct Coefficient:
 		static_assert(std::is_same<decltype(inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
 		inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
+		auto merge_out = inst.merge_args(*static_cast<ed_type const *>(piranha_nullptr),*static_cast<ed_type const *>(piranha_nullptr));
+		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for coefficient type.");
 	}
 };
 

@@ -162,7 +162,21 @@ BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 
 // TODO: test with larger echelon sizes once we have coefficient series.
 
-class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,term_type1> {};
+class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,term_type1>
+{
+	public:
+		term_type1() = default;
+		term_type1(const term_type1 &) = default;
+		term_type1(term_type1 &&) = default;
+		term_type1 &operator=(const term_type1 &) = default;
+		term_type1 &operator=(term_type1 &&other)
+		{
+			base_term<numerical_coefficient<double>,monomial<int>,term_type1>::operator=(std::move(other));
+			return *this;
+		}
+		// Needed to satisfy concept checking.
+		explicit term_type1(const numerical_coefficient<double> &, const monomial<int> &) {}
+};
 
 BOOST_AUTO_TEST_CASE(type_traits_echelon_size)
 {

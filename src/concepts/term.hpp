@@ -36,7 +36,8 @@ namespace concept
 /**
  * The requisites for type \p T are the following:
  * 
- * - must derive from piranha::base_term.
+ * - must derive from piranha::base_term,
+ * - must be provided with a two-arguments constructor from piranha::base_term::cf_type and piranha::base_term::key_type.
  */
 template <typename T>
 struct Term
@@ -45,6 +46,13 @@ struct Term
 	BOOST_CONCEPT_USAGE(Term)
 	{
 		static_assert(std::is_base_of<detail::base_term_tag,T>::value,"Term type must derive from base_term.");
+		// Test the two-arguments constructor.
+		typedef typename T::cf_type cf_type;
+		typedef typename T::key_type key_type;
+		// NOTE: here cf and key types are required to have default constructors from basE_term.
+		cf_type cf;
+		key_type key;
+		T t(cf,key);
 	}
 };
 
