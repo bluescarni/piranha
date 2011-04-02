@@ -228,7 +228,7 @@ class echelon_position
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		BOOST_CONCEPT_ASSERT((concept::Term<TopLevelTerm>));
 		static_assert(std::is_same<Term,TopLevelTerm>::value || detail::echelon_position_impl<TopLevelTerm,Term>::value,
-			"Assertion error in the calculation of echcelon position.");
+			"Assertion error in the calculation of echelon position.");
 	public:
 		/// Value of echelon position.
 		static const std::size_t value = detail::echelon_position_impl<TopLevelTerm,Term>::value;

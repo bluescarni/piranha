@@ -49,7 +49,7 @@ struct Term
 		// Test the two-arguments constructor.
 		typedef typename T::cf_type cf_type;
 		typedef typename T::key_type key_type;
-		// NOTE: here cf and key types are required to have default constructors from basE_term.
+		// NOTE: here cf and key types are required to have default constructors from base_term.
 		cf_type cf;
 		key_type key;
 		T t(cf,key);
