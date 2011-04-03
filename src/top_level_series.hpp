@@ -21,10 +21,12 @@
 #ifndef PIRANHA_TOP_LEVEL_SERIES_HPP
 #define PIRANHA_TOP_LEVEL_SERIES_HPP
 
+#include <boost/concept/assert.hpp>
 #include <iostream>
 #include <type_traits>
 
 #include "base_series.hpp"
+#include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/top_level_series_fwd.hpp"
@@ -40,7 +42,9 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p Term and \p Derived must be suitable for use in piranha::base_series.
+ * - \p Term and \p Derived must be suitable for use in piranha::base_series.
+ * - \p Derived must be a model of piranha::concept::CRTP, with piranha::top_level_series
+ *   of \p Term and \p Derived as base class.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -53,23 +57,50 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Term, typename Derived>
-class top_level_series: public base_series<Term,Derived>
+class top_level_series: public base_series<Term,Derived>, detail::top_level_series_tag
 {
+		BOOST_CONCEPT_ASSERT((concept::CRTP<top_level_series<Term,Derived>,Derived>));
+		typedef base_series<Term,Derived> base;
 		template <typename T>
 		friend class debug_access;
+		// Make friend with all top_level_series.
+		template <typename Term2, typename Derived2>
+		friend class top_level_series;
 		static_assert(echelon_size<Term>::value > 0,"Error in the calculation of echelon size.");
-		template <typename T>
+		template <bool Sign, typename T>
 		void dispatch_add(T &&x, typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
-			Term tmp(std::forward<T>(x),typename Term::key_type(m_ed.get_args<Term>()));
-			this->insert(std::move(tmp),m_ed);
+			Term tmp(typename Term::cf_type(std::forward<T>(x)),typename Term::key_type(m_ed.template get_args<Term>()));
+			this->template insert<Sign>(std::move(tmp),m_ed);
 		}
-// 		template <typename T>
-// 		void dispatch_add(T &&other, typename std::enable_if<std::is_base_of<top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
-// 		{
-// 			if (m_ed.get_args_tuple() == other.m_ed.get_args_tuple())
-// 		}
-		typedef base_series<Term,Derived> base;
+		template <bool Sign, typename T>
+		void dispatch_add(T &&other, typename std::enable_if<std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			static_assert(echelon_size<Term>::value == echelon_size<typename strip_cv_ref<T>::type::term_type>::value,
+				"Cannot add/subtract series with different echelon sizes.");
+			// NOTE: if they are not the same, we are going to do heavy calculations anyway: mark it "likely".
+			if (likely(m_ed.get_args_tuple() == other.m_ed.get_args_tuple())) {
+std::cout << "LOL same args tuple!\n";
+				this->template merge_terms<Sign>(std::forward<T>(other),m_ed);
+			} else {
+std::cout << "oh NOES different!\n";
+				// Let's deal with the first series.
+				auto merge1 = m_ed.merge(other.m_ed);
+				if (merge1.first.get_args_tuple() != m_ed.get_args_tuple()) {
+					base::operator=(this->merge_args(m_ed,merge1.first));
+					m_ed = std::move(merge1.first);
+				}
+				// Second series.
+				auto merge2 = other.m_ed.merge(m_ed);
+				piranha_assert(merge2.first.get_args_tuple() == m_ed.get_args_tuple());
+				if (merge2.first.get_args_tuple() != other.m_ed.get_args_tuple()) {
+					auto other_base_copy = other.merge_args(other.m_ed,merge2.first);
+					this->template merge_terms<Sign>(std::move(other_base_copy),m_ed);
+				} else {
+					this->template merge_terms<Sign>(std::forward<T>(other),m_ed);
+				}
+			}
+		}
 	public:
 		/// Defaulted default constructor.
 		top_level_series() = default;
@@ -96,7 +127,7 @@ class top_level_series: public base_series<Term,Derived>
 		 * 
 		 * @return reference to \p this.
 		 */
-		top_level_series &operator=(top_level_series &&other) piranha_noexcept(true)
+		top_level_series &operator=(top_level_series &&other) piranha_noexcept_spec(true)
 		{
 			// Descriptor and base cannot throw on move.
 			base::operator=(std::move(other));
@@ -125,22 +156,54 @@ class top_level_series: public base_series<Term,Derived>
 		 * The addition algorithm proceeds as follows:
 		 * 
 		 * - if \p other is an instance of piranha::top_level_series:
-		 *   - if the echelon descriptors of \p this and \p other differ, they are merged, and \p this and \p other are
-		 *     modified to be compatible with the merged descriptor (a copy of \p other might be created if necessary);
-		 *   - all terms in \p other (or its copy) will be merged into \p this using piranha::base_series::merge_terms;
+		 *   - if the echelon descriptors of \p this and \p other differ, they are merged using piranha::echelon_descriptor::merge(),
+		 *     and \p this and \p other are
+		 *     modified as necessary to be compatible with the merged descriptor using piranha::base_series::merge_args()
+		 *     (a copy of \p other might be created if it requires modifications);
+		 *   - all terms in \p other (or its copy) will be merged into \p this using piranha::base_series::merge_terms() and the merged descriptor;
 		 * - else:
-		 *   - a piranha::base_series::term_type will be constructed, with \p other used to construct the coefficient
-		 *     and with the arguments vector at echelon position 0 used to construct the key. This term will be inserted
-		 *     into \p this.
+		 *   - a \p Term instance will be constructed as follows:
+		 *     - \p other will be forwarded to construct the coefficient;
+		 *     - the arguments vector at echelon position 0 of the echelon descriptor of \p this will be used to construct the key;
+		 *   - the term will be inserted into \p this using piranha::base_series::insert().
+		 * 
+		 * If \p other is a piranha::top_level_series and its term type's echelon size is different from the echelon size of
+		 * the term type of this series, a compile-time error will be produced.
 		 * 
 		 * @param[in] other object to be added to the series.
 		 * 
 		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::base_series::merge_args(),
+		 * - piranha::echelon_descriptor::merge(),
+		 * - piranha::base_series::merge_terms(),
+		 * - piranha::base_series::insert(),
+		 * - one of the following constructors:
+		 *   - \p Term from its coefficient and key,
+		 *   - coefficient from \p T,
+		 *   - key from arguments vector.
 		 */
 		template <typename T>
 		Derived &operator+=(T &&other)
 		{
-			dispatch_add(std::forward<T>(other));
+			dispatch_add<true>(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
+		}
+		/// In-place subtraction.
+		/**
+		 * The subtraction algorithm is equivalent, apart to a change in sign, to the addition algorithm described in operator+=().
+		 * 
+		 * @param[in] other object to be subtracted from the series.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified the same exceptions type possibly thrown by operator+=().
+		 */
+		template <typename T>
+		Derived &operator-=(T &&other)
+		{
+			dispatch_add<false>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
 	private:
@@ -159,6 +222,7 @@ class top_level_series: public base_series<Term,Derived>
 			return true;
 		}
 	protected:
+		/// Echelon descriptor.
 		echelon_descriptor<Term> m_ed;
 };
 
