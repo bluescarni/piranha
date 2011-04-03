@@ -34,6 +34,8 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/symbol.hpp"
 
+// TODO: test merge_terms with negative sign.
+
 using namespace piranha;
 
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
