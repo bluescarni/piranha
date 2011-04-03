@@ -215,16 +215,47 @@ std::cout << "LOL copy!\n";
 				throw;
 			}
 		}
+		static void swap_for_merge(container_type &&c1, container_type &&c2, bool &swap)
+		{
+			// Swap only if the buckets count (i.e., the memory allocated) is greater.
+			if (c1.n_buckets() > c2.n_buckets()) {
+				container_type tmp(std::move(c1));
+				c1 = std::move(c2);
+				c2 = std::move(tmp);
+				swap = true;
+			}
+std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
+		}
+		// This overloads the above in the case we are dealing with two different container types:
+		// in such a condition, we won't do any swapping.
+		template <typename OtherContainerType>
+		static void swap_for_merge(container_type &&, OtherContainerType &&, bool &)
+		{
+static_assert(!std::is_same<typename strip_cv_ref<OtherContainerType>::type,container_type>::value,"ahi ahi");
+std::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBb\n";
+		}
 		// Overload if we can move objects from series.
 		template <bool Sign, typename T, typename Term2>
 		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
 			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
 		{
 std::cout << "LOL move!\n";
-			const auto it_f = series.m_container._m_end();
+			bool swap = false;
+			// Try to steal memory from other.
+			swap_for_merge(std::move(m_container),std::move(series.m_container),swap);
 			try {
+				const auto it_f = series.m_container._m_end();
 				for (auto it = series.m_container._m_begin(); it != it_f; ++it) {
 					insert<Sign>(std::move(*it),ed);
+				}
+				// If we swapped the operands and a negative merge was performed, we need to change
+				// the signs of all coefficients.
+				if (swap && !Sign) {
+std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
+					const auto it_f2 = m_container.end();
+					for (auto it = m_container.begin(); it != it_f2; ++it) {
+						it->m_cf.negate(ed);
+					}
 				}
 			} catch (...) {
 				// In case of any insertion error, zero out both series.
@@ -362,7 +393,10 @@ std::cout << "LOL move!\n";
 		 * @param[in] series piranha::base_series whose terms will be merged into \p this.
 		 * @param[in] ed reference piranha::echelon_descriptor.
 		 * 
-		 * @throws unspecified any exception thrown by piranha::base_series::insert or the copy constructor of piranha::base_series.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::base_series::insert,
+		 * - the copy constructor of piranha::base_series,
+		 * - the coefficient type's <tt>negate()</tt> method.
 		 */
 		template <bool Sign, typename T, typename Term2>
 		void merge_terms(T &&series, const echelon_descriptor<Term2> &ed,

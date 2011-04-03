@@ -34,8 +34,6 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/symbol.hpp"
 
-// TODO: test merge_terms with negative sign.
-
 using namespace piranha;
 
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
@@ -202,6 +200,42 @@ class debug_access<merge_terms_tag>
 				s1.template merge_terms<true>(std::move(s3),ed);
 				BOOST_CHECK(s3.empty());
 				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
+				// Merge with move + swap.
+				series_type s1_copy = s1;
+				s3.insert(term_type(4,key_type{Expo(4)}),ed);
+				s3.insert(term_type(5,key_type{Expo(5)}),ed);
+				s3.insert(term_type(6,key_type{Expo(6)}),ed);
+				s3.insert(term_type(7,key_type{Expo(7)}),ed);
+				s1_copy.template merge_terms<true>(std::move(s3),ed);
+				BOOST_CHECK_EQUAL(s1_copy.size(),unsigned(7));
+				BOOST_CHECK(s3.empty());
+				// Negative merge with move + swap.
+				s1_copy = s1;
+				s3.insert(term_type(4,key_type{Expo(4)}),ed);
+				s3.insert(term_type(5,key_type{Expo(5)}),ed);
+				s3.insert(term_type(6,key_type{Expo(6)}),ed);
+				s3.insert(term_type(7,key_type{Expo(7)}),ed);
+				s1_copy.template merge_terms<false>(std::move(s3),ed);
+				BOOST_CHECK_EQUAL(s1_copy.size(),unsigned(7));
+				it = s1_copy.m_container.begin();
+				auto check_neg_merge = [&it]() -> void {
+					BOOST_CHECK(it->m_cf.get_value() == value_type(1) || it->m_cf.get_value() == value_type(2) || it->m_cf.get_value() == value_type(3) ||
+						it->m_cf.get_value() == value_type(-4) || it->m_cf.get_value() == value_type(-5) ||
+						it->m_cf.get_value() == value_type(-6) || it->m_cf.get_value() == value_type(-7));
+				};
+				check_neg_merge();
+				++it;
+				check_neg_merge();
+				++it;
+				check_neg_merge();
+				++it;
+				check_neg_merge();
+				++it;
+				check_neg_merge();
+				++it;
+				check_neg_merge();
+				++it;
+				check_neg_merge();
 				// Merge with self.
 				s1.template merge_terms<true>(s1,ed);
 				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
