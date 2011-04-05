@@ -240,7 +240,7 @@ const std::size_t echelon_position<TopLevelTerm,Term>::value;
 /// Return type of arithmetic binary operators.
 /**
  * This type-trait will define a boolean flag \p value that is \p true if the return type of binary arithmetic operators
- * (\p operator+, \p operator-, \p operator* and \p operator/) is the type of the second operand, \p false otherwise.
+ * \p operator+, \p operator- and \p operator* is the type of the second operand, \p false otherwise.
  * 
  * For instance, a mixed-mode binary arithmetic operation with \p int as first argument type and \p double as second argument
  * type wil return a \p double instance, and hence the value of the type-trait is \p true. If the operands are switched (i.e.,
@@ -259,7 +259,6 @@ class binary_op_return_type
 		static_assert(value || std::is_same<retval_type,T1>::value,"Invalid return value type.");
 		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) - *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
 		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) * *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
-		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) / *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
 };
 
 }
