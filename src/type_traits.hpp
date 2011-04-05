@@ -237,6 +237,31 @@ class echelon_position
 template <typename TopLevelTerm, typename Term>
 const std::size_t echelon_position<TopLevelTerm,Term>::value;
 
+/// Return type of arithmetic binary operators.
+/**
+ * This type-trait will define a boolean flag \p value that is \p true if the return type of binary arithmetic operators
+ * (\p operator+, \p operator-, \p operator* and \p operator/) is the type of the second operand, \p false otherwise.
+ * 
+ * For instance, a mixed-mode binary arithmetic operation with \p int as first argument type and \p double as second argument
+ * type wil return a \p double instance, and hence the value of the type-trait is \p true. If the operands are switched (i.e.,
+ * the first operand is a \p double and the second one is a \p int), the type-trait's value will be \p false.
+ * 
+ * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1.
+ */
+template <typename T1, typename T2, typename Enable = void>
+class binary_op_return_type
+{
+		typedef decltype(*static_cast<T1 * const>(piranha_nullptr) + *static_cast<T2 * const>(piranha_nullptr)) retval_type;
+	public:
+		/// Type-trait's value.
+		static const bool value = std::is_same<retval_type,T2>::value;
+	private:
+		static_assert(value || std::is_same<retval_type,T1>::value,"Invalid return value type.");
+		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) - *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
+		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) * *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
+		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) / *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
+};
+
 }
 
 /// Macro to test if class has type definition.

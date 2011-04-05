@@ -187,3 +187,12 @@ BOOST_AUTO_TEST_CASE(type_traits_echelon_position)
 {
 	BOOST_CHECK_EQUAL((echelon_position<term_type1,term_type1>::value),std::size_t(0));
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_binary_op_return_type)
+{
+	BOOST_CHECK((binary_op_return_type<int,int>::value));
+	BOOST_CHECK((binary_op_return_type<int,double>::value));
+	BOOST_CHECK((!binary_op_return_type<double,int>::value));
+	BOOST_CHECK((!binary_op_return_type<integer,int>::value));
+	BOOST_CHECK((binary_op_return_type<int,integer>::value));
+}
