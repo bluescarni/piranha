@@ -359,7 +359,7 @@ class cvector
 		/// Iterator type.
 		typedef T * iterator;
 		/// Const iterator type.
-		typedef const T * const_iterator;
+		typedef T const * const_iterator;
 		/// Default constructor.
 		/**
 		 * Will build an empty vector.
