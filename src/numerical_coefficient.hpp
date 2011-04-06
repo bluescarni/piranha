@@ -316,6 +316,18 @@ class numerical_coefficient
 		type m_value;
 };
 
+/// Specialisation of piranha::binary_op_return_type for piranha::numerical_coefficient operands.
+/**
+ * Equivalent to piranha::binary_op_return_type of the internal numerical types of the piranha::numerical_coefficient operands.
+ */
+template <typename T1, typename T2>
+class binary_op_return_type<numerical_coefficient<T1>,numerical_coefficient<T2>,void>
+{
+	public:
+		/// Type-trait's value.
+		static const bool value = binary_op_return_type<T1,T2>::value;
+};
+
 }
 
 #endif
