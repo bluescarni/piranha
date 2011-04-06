@@ -35,6 +35,7 @@
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mf_int.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -184,4 +185,29 @@ struct arithmetics_tester
 BOOST_AUTO_TEST_CASE(numerical_coefficient_arithmetics_test)
 {
 	boost::mpl::for_each<types>(arithmetics_tester());
+}
+
+struct binary_op_return_type_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef numerical_coefficient<T> nc1_type;
+			typedef numerical_coefficient<U> nc2_type;
+			BOOST_CHECK((binary_op_return_type<nc1_type,nc2_type>::value == binary_op_return_type<T,U>::value));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(numerical_coefficient_binary_op_return_type_test)
+{
+	boost::mpl::for_each<types>(binary_op_return_type_tester());
 }
