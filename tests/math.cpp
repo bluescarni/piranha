@@ -69,6 +69,7 @@ struct check_is_zero_01
 	void operator()(const T &value) const
 	{
 		BOOST_CHECK(math::is_zero(value));
+		BOOST_CHECK(math::is_zero(std::complex<T>(value)));
 	}
 };
 
@@ -78,6 +79,7 @@ struct check_is_zero_02
 	void operator()(const T &value) const
 	{
 		BOOST_CHECK(!math::is_zero(value));
+		BOOST_CHECK(!math::is_zero(std::complex<T>(value)));
 	}
 };
 

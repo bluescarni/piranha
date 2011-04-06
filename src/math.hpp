@@ -21,6 +21,8 @@
 #ifndef PIRANHA_MATH_HPP
 #define PIRANHA_MATH_HPP
 
+#include <boost/type_traits/is_complex.hpp>
+
 namespace piranha
 {
 
@@ -36,6 +38,17 @@ struct math_is_zero_impl
 	static bool run(const T &x)
 	{
 		return x == 0;
+	}
+};
+
+// Handle std::complex types.
+template <typename T>
+struct math_is_zero_impl<T,typename std::enable_if<boost::is_complex<T>::value>::type>
+{
+	static bool run(const T &c)
+	{
+		return math_is_zero_impl<typename T::value_type>::run(c.real()) &&
+			math_is_zero_impl<typename T::value_type>::run(c.imag());
 	}
 };
 
