@@ -57,7 +57,7 @@ template <typename T>
 struct is_cv_or_ref
 {
 	/// Type-trait value.
-	static const bool value = (std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value) ? true : false;
+	static const bool value = (std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value);
 };
 
 template <typename T>

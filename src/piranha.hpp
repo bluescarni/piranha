@@ -36,6 +36,9 @@
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
+ * \todo document classes in detail:: use to implement mathematical functions?
+ * \todo fix type traits such as is_nothrow_move_constructible/assignable. They must work also for references,
+ * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible).
  */
 namespace piranha
 {
