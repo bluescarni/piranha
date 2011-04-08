@@ -25,6 +25,7 @@
 #include <type_traits>
 
 #include "../detail/base_term_fwd.hpp"
+#include "container_element.hpp"
 
 namespace piranha
 {
@@ -40,7 +41,8 @@ namespace concept
  * - must be provided with a two-arguments constructor from piranha::base_term::cf_type and piranha::base_term::key_type.
  */
 template <typename T>
-struct Term
+struct Term:
+	ContainerElement<T>
 {
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Term)

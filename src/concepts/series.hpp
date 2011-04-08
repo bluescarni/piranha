@@ -25,6 +25,7 @@
 #include <type_traits>
 
 #include "../detail/base_series_fwd.hpp"
+#include "container_element.hpp"
 
 namespace piranha
 {
@@ -36,10 +37,12 @@ namespace concept
 /**
  * The requisites for type \p T are the following:
  * 
+ * - must be a model of piranha::concept::ContainerElement,
  * - must derive from piranha::base_series.
  */
 template <typename T>
-struct Series
+struct Series:
+	ContainerElement<T>
 {
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Series)
