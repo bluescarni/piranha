@@ -69,6 +69,8 @@ namespace detail {}
 #include "cvector.hpp"
 #include "debug_access.hpp"
 #include "echelon_descriptor.hpp"
+#include "echelon_position.hpp"
+#include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "hop_table.hpp"
 #include "integer.hpp"

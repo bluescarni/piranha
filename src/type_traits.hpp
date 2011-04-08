@@ -23,16 +23,14 @@
 
 /** \file type_traits.hpp
  * \brief Type traits.
+ * 
+ * This header contains general-purpose type-traits classes.
  */
 
-#include <boost/concept/assert.hpp>
-#include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <type_traits>
 
-#include "concepts/term.hpp"
 #include "config.hpp"
-#include "detail/base_series_fwd.hpp"
 #include "detail/base_term_fwd.hpp"
 
 namespace piranha
@@ -142,100 +140,6 @@ struct is_trivially_destructible : std::has_trivial_destructor<T>
 template <typename T>
 struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
 {};
-
-namespace detail
-{
-
-template <typename CfSeries, std::size_t Level = 0, typename Enable = void>
-struct echelon_level_impl
-{
-	static_assert(Level < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
-	static const std::size_t value = echelon_level_impl<typename CfSeries::term_type::cf_type,Level + static_cast<std::size_t>(1)>::value;
-};
-
-template <typename Cf, std::size_t Level>
-struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<base_series_tag,Cf>::value>::type>
-{
-	static const std::size_t value = Level;
-};
-
-}
-
-/// Echelon size.
-/**
- * Echelon size of \p Term. The echelon size is defined recursively by the number of times coefficient types are series, in \p Term
- * and its nested types.
- * 
- * For instance, polynomials have numerical coefficients, hence their echelon size is 1. Fourier series are also series with numerical coefficients,
- * hence their echelon size is also 1. Poisson series are Fourier series with polynomial coefficients, hence their echelon size is 2.
- * 
- * \section type_requirements Type requirements
- * 
- * \p Term must be a model of piranha::concept::Term.
- */
-template <typename Term>
-struct echelon_size
-{
-	private:
-		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
-		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
-	public:
-		/// Value of echelon size.
-		static const std::size_t value = detail::echelon_level_impl<typename Term::cf_type>::value + static_cast<std::size_t>(1);
-};
-
-template <typename Term>
-const std::size_t echelon_size<Term>::value;
-
-namespace detail
-{
-
-template <typename Term1, typename Term2, std::size_t CurLevel = 0, typename Enable = void>
-struct echelon_position_impl
-{
-	static_assert(std::is_base_of<base_series_tag,typename Term1::cf_type>::value,"Term type does not appear in echelon hierarchy.");
-	static const std::size_t value = echelon_position_impl<typename Term1::cf_type::term_type,Term2>::value + static_cast<std::size_t>(1);
-};
-
-template <typename Term1, typename Term2, std::size_t CurLevel>
-struct echelon_position_impl<Term1,Term2,CurLevel,typename std::enable_if<std::is_same<Term1,Term2>::value>::type>
-{
-	static const std::size_t value = CurLevel;
-};
-
-}
-
-/// Echelon position.
-/**
- * Echelon position of \p Term with respect to \p TopLevelTerm.
- * The echelon position is an index, starting from zero, corresponding to the level in the echelon hierarchy of \p TopLevelTerm
- * in which \p Term appears.
- * 
- * For instance, if \p TopLevelTerm and \p Term are the same type, then the echelon position of \p Term is 0, because \p Term is the
- * first type encountered in the echelon hierarchy of \p TopLevelTerm. If \p TopLevelTerm is a Poisson series term, then the echelon position
- * of the polynomial term type defined by the coefficient of \p TopLevelTerm is 1.
- * 
- * If \p Term does not appear in the echelon hierarchy of \p TopLevelTerm, a compile-time error will be produced.
- * 
- * \section type_requirements Type requirements
- * 
- * \p Term and \p TopLevelTerm must be models of piranha::concept::Term.
- */
-template <typename TopLevelTerm, typename Term>
-class echelon_position
-{
-	private:
-		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
-		BOOST_CONCEPT_ASSERT((concept::Term<TopLevelTerm>));
-		static_assert(std::is_same<Term,TopLevelTerm>::value || detail::echelon_position_impl<TopLevelTerm,Term>::value,
-			"Assertion error in the calculation of echelon position.");
-	public:
-		/// Value of echelon position.
-		static const std::size_t value = detail::echelon_position_impl<TopLevelTerm,Term>::value;
-};
-
-template <typename TopLevelTerm, typename Term>
-const std::size_t echelon_position<TopLevelTerm,Term>::value;
 
 /// Return type of arithmetic binary operators.
 /**

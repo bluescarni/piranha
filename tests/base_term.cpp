@@ -28,6 +28,7 @@
 #include <tuple>
 #include <utility>
 
+#include "../src/config.hpp"
 #include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
@@ -147,7 +148,7 @@ struct compatibility_tester
 					term_type(const term_type &) = default;
 					term_type(term_type &&) = default;
 					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&other)
+					term_type &operator=(term_type &&other) piranha_noexcept_spec(true)
 					{
 						base_term<Cf,Key,term_type>::operator=(std::move(other));
 						return *this;
@@ -193,7 +194,7 @@ struct ignorability_tester
 					term_type(const term_type &) = default;
 					term_type(term_type &&) = default;
 					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&other)
+					term_type &operator=(term_type &&other) piranha_noexcept_spec(true)
 					{
 						base_term<Cf,Key,term_type>::operator=(std::move(other));
 						return *this;

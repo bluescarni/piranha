@@ -37,9 +37,10 @@
 #include "concepts/term.hpp"
 #include "config.hpp"
 #include "detail/echelon_descriptor_fwd.hpp"
+#include "echelon_position.hpp"
+#include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "symbol.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {

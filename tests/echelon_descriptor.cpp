@@ -31,6 +31,7 @@
 #include <type_traits>
 
 #include "../src/base_term.hpp"
+#include "../src/config.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
 #include "../src/numerical_coefficient.hpp"
@@ -49,7 +50,7 @@ class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,t
 		term_type1(const term_type1 &) = default;
 		term_type1(term_type1 &&) = default;
 		term_type1 &operator=(const term_type1 &) = default;
-		term_type1 &operator=(term_type1 &&other)
+		term_type1 &operator=(term_type1 &&other) piranha_noexcept_spec(true)
 		{
 			base_term<numerical_coefficient<double>,monomial<int>,term_type1>::operator=(std::move(other));
 			return *this;
