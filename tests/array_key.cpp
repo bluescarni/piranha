@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <initializer_list>
 #include <unordered_set>
 #include <vector>
 
@@ -37,13 +38,38 @@ using namespace piranha;
 
 typedef boost::mpl::vector<unsigned,integer> value_types;
 
+template <typename T>
+class g_key_type: public array_key<T,g_key_type<T>>
+{
+		typedef array_key<T,g_key_type<T>> base;
+	public:
+		g_key_type() = default;
+		g_key_type(const g_key_type &) = default;
+		g_key_type(g_key_type &&) = default;
+		g_key_type &operator=(const g_key_type &) = default;
+		g_key_type &operator=(g_key_type &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
+		explicit g_key_type(std::initializer_list<T> list):base(list) {}
+};
+
+namespace std
+{
+
+template <typename T>
+class hash<g_key_type<T>>: public hash<array_key<T,g_key_type<T>>> {};
+
+}
+
 // Constructors, assignments and element access.
 struct constructor_tester
 {
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T,void> key_type;
+		typedef g_key_type<T> key_type;
 		key_type k0;
 		BOOST_CHECK_NO_THROW(key_type{});
 		BOOST_CHECK_NO_THROW(key_type(key_type{}));
@@ -71,7 +97,7 @@ struct hash_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T,void> key_type;
+		typedef g_key_type<T> key_type;
 		key_type k0;
 		BOOST_CHECK_EQUAL(k0.hash(),std::size_t());
 		BOOST_CHECK_EQUAL(k0.hash(),std::hash<key_type>()(k0));
@@ -90,7 +116,7 @@ struct push_back_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T,void> key_type;
+		typedef g_key_type<T> key_type;
 		key_type k0;
 		for (int i = 0; i < 4; ++i) {
 			k0.push_back(T(i));
@@ -115,7 +141,7 @@ struct equality_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef array_key<T,void> key_type;
+		typedef g_key_type<T> key_type;
 		key_type k0;
 		BOOST_CHECK(k0 == key_type{});
 		for (int i = 0; i < 4; ++i) {
@@ -153,7 +179,7 @@ class debug_access<merge_args_tag>
 		template <typename T>
 		void operator()(const T &)
 		{
-			typedef array_key<T,void> key_type;
+			typedef g_key_type<T> key_type;
 			std::vector<symbol> v1, v2;
 			v2.push_back(symbol("a"));
 			key_type k;

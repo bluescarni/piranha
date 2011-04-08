@@ -40,6 +40,25 @@ using namespace piranha;
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
 typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
+template <typename Cf, typename Key>
+class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
+{
+		typedef base_term<Cf,Key,g_term_type> base;
+	public:
+		g_term_type() = default;
+		g_term_type(const g_term_type &) = default;
+		g_term_type(g_term_type &&) = default;
+		g_term_type &operator=(const g_term_type &) = default;
+		g_term_type &operator=(g_term_type &&other) piranha_noexcept_spec(true)
+		{
+			base_term<Cf,Key,g_term_type>::operator=(std::move(other));
+			return *this;
+		}
+		// Needed to satisfy concept checking.
+		template <typename... Args>
+		explicit g_term_type(Args && ... params):base(std::forward<Args>(params)...) {}
+};
+
 struct constructor_tester
 {
 	template <typename Cf>
@@ -48,7 +67,7 @@ struct constructor_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key,void> term_type;
+			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			// Default constructor.
 			BOOST_CHECK_EQUAL(term_type().m_cf.get_value(),Cf().get_value());
@@ -58,7 +77,7 @@ struct constructor_tester
 			BOOST_CHECK_EQUAL(term_type(1,Key{value_type(1)}).m_key,Key{value_type(1)});
 			// Constructor from term of different type.
 			typedef numerical_coefficient<long> Cf2;
-			typedef base_term<Cf2,Key,void> other_term_type;
+			typedef g_term_type<Cf2,Key>  other_term_type;
 			other_term_type other(1,Key{value_type(1)});
 			BOOST_CHECK_EQUAL(term_type(other).m_cf.get_value(),Cf2(1).get_value());
 			BOOST_CHECK_EQUAL(term_type(other).m_key[0],Key{value_type(1)}[0]);
@@ -88,7 +107,7 @@ struct equality_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key,void> term_type;
+			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			BOOST_CHECK(term_type() == term_type());
 			BOOST_CHECK(term_type(1,Key{value_type(2)}) == term_type(2,Key{value_type(2)}));
@@ -115,7 +134,7 @@ struct hash_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef base_term<Cf,Key,void> term_type;
+			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			BOOST_CHECK_EQUAL(term_type().hash(),std::hash<Key>()(Key()));
 			BOOST_CHECK_EQUAL(term_type(2,Key{value_type(1)}).hash(),std::hash<Key>()(Key{value_type(1)}));

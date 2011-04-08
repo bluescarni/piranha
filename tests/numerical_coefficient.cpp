@@ -33,7 +33,7 @@
 #include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
-#include "../src/monomial.hpp"
+#include "../src/polynomial_term.hpp"
 #include "../src/mf_int.hpp"
 #include "../src/type_traits.hpp"
 
@@ -106,7 +106,7 @@ struct ignorability_tester
 	void operator()(const T &)
 	{
 		typedef numerical_coefficient<T> nc;
-		typedef echelon_descriptor<base_term<nc,monomial<int>,void>> ed_type;
+		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
 		ed_type ed;
 		BOOST_CHECK((nc(0).is_ignorable(ed) && math::is_zero(T(0))) || (!nc(0).is_ignorable(ed) && !math::is_zero(T(0))));
 		BOOST_CHECK((!nc(1).is_ignorable(ed) && !math::is_zero(T(1))) || (nc(1).is_ignorable(ed) && math::is_zero(T(1))));
@@ -124,7 +124,7 @@ struct compatibility_tester
 	void operator()(const T &)
 	{
 		typedef numerical_coefficient<T> nc;
-		typedef echelon_descriptor<base_term<nc,monomial<int>,void>> ed_type;
+		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
 		ed_type ed;
 		BOOST_CHECK(nc().is_compatible(ed));
 		BOOST_CHECK(nc(1).is_compatible(ed));
@@ -143,7 +143,7 @@ struct arithmetics_tester
 	{
 		typedef numerical_coefficient<T> nc;
 		typedef numerical_coefficient<other_type> nc_other;
-		typedef echelon_descriptor<base_term<nc,monomial<int>,void>> ed_type;
+		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
 		ed_type ed;
 		nc cont;
 		T value{};

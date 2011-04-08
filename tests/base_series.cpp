@@ -39,6 +39,13 @@ using namespace piranha;
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
+template <typename Term>
+class g_series_type: public base_series<Term,g_series_type<Term>>
+{
+	public:
+		typedef base_series<Term,g_series_type<Term>> base;
+};
+
 struct construction_tag {};
 
 namespace piranha
@@ -55,7 +62,7 @@ struct debug_access<construction_tag>
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
 			typedef typename term_type::key_type key_type;
-			typedef base_series<term_type,void> series_type;
+			typedef g_series_type<term_type> series_type;
 			typedef echelon_descriptor<term_type> ed_type;
 			ed_type ed;
 			ed.template add_symbol<term_type>(symbol("x"));
@@ -113,7 +120,7 @@ class debug_access<insertion_tag>
 			{
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef typename term_type::key_type key_type;
-				typedef base_series<term_type,void> series_type;
+				typedef g_series_type<term_type> series_type;
 				typedef echelon_descriptor<term_type> ed_type;
 				ed_type ed;
 				ed.template add_symbol<term_type>(symbol("x"));
@@ -180,7 +187,7 @@ class debug_access<merge_terms_tag>
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef typename Cf::type value_type;
 				typedef typename term_type::key_type key_type;
-				typedef base_series<term_type,void> series_type;
+				typedef g_series_type<term_type> series_type;
 				typedef echelon_descriptor<term_type> ed_type;
 				ed_type ed;
 				ed.template add_symbol<term_type>(symbol("x"));
@@ -268,7 +275,7 @@ class debug_access<merge_terms_tag>
 				s1.insert(term_type(1,key_type{Expo(1)}),ed);
 				typedef polynomial_term<numerical_coefficient<long>,Expo> term_type2;
 				typedef typename term_type2::key_type key_type2;
-				typedef base_series<term_type2,void> series_type2;
+				typedef g_series_type<term_type2> series_type2;
 				typedef echelon_descriptor<term_type2> ed_type2;
 				ed_type2 ed2;
 				ed2.template add_symbol<term_type2>(symbol("x"));
@@ -322,16 +329,17 @@ class debug_access<merge_args_tag>
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef typename Cf::type value_type;
 				typedef typename term_type::key_type key_type;
-				typedef base_series<term_type,void> series_type;
+				typedef g_series_type<term_type> series_type;
 				typedef echelon_descriptor<term_type> ed_type;
-				series_type s;
+				series_type s_derived;
+				typename series_type::base &s = static_cast<typename series_type::base &>(s_derived);
 				ed_type ed1, ed2;
 				s.insert(term_type(1,key_type{}),ed1);
 				ed2.template add_symbol<term_type>(symbol("x"));
 				auto merge_out = s.merge_args(ed1,ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));
 				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(0)})) != merge_out.m_container.end());
-				auto compat_check = [](const series_type &series, const ed_type &ed) -> void {
+				auto compat_check = [](const typename series_type::base &series, const ed_type &ed) -> void {
 					for (auto it = series.m_container.begin(); it != series.m_container.end(); ++it) {
 						BOOST_CHECK(it->is_compatible(ed));
 					}

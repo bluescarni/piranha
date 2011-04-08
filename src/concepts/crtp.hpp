@@ -32,7 +32,7 @@ namespace concept
 
 /// Concept for classes using the curiously recurring template pattern.
 /**
- * \p Derived must either derive from \p Base or be \p void.
+ * \p Derived must derive from \p Base (as determined by \p std::is_base_of).
  * 
  * @see http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
  */
@@ -42,7 +42,7 @@ struct CRTP
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(CRTP)
 	{
-		static_assert(std::is_same<void,Derived>::value || std::is_base_of<Base,Derived>::value,"CRTP derived class does not derive from base and is not void.");
+		static_assert(std::is_base_of<Base,Derived>::value,"CRTP derived class does not derive from base.");
 	}
 };
 
