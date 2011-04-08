@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "concepts/array_key_value_type.hpp"
+#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
@@ -50,6 +51,7 @@ namespace piranha
  * - \p T must be a model of piranha::concept::ArrayKeyValueType.
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
  *   of \p Term and \p Derived as base class.
+ * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -99,7 +101,9 @@ class array_key
 		array_key(std::initializer_list<value_type> list):m_container(list) {}
 		/// Trivial destructor.
 		~array_key() piranha_noexcept_spec(true)
-		{}
+		{
+			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+		}
 		/// Defaulted copy assignment operator.
 		/**
 		 * @return reference to \p this.

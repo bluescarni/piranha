@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "base_term.hpp"
+#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/term.hpp"
 #include "config.hpp"
@@ -47,6 +48,7 @@ namespace piranha
  * - \p Term must be a model of piranha::concept::Term.
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_series
  *   of \p Term and \p Derived as base class.
+ * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -281,8 +283,11 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		base_series(const base_series &) = default;
 		/// Defaulted move constructor.
 		base_series(base_series &&) = default;
-		/// Defaulted destructor.
-		~base_series() = default;
+		/// Trivial destructor.
+		~base_series() piranha_noexcept_spec(true)
+		{
+			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+		}
 		/// Defaulted copy-assignment operator.
 		/**
 		 * @throw unspecified any exception thrown by the copy assignment operator of piranha::hop_table.

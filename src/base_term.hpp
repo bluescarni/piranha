@@ -28,6 +28,7 @@
 #include <unordered_set>
 
 #include "concepts/coefficient.hpp"
+#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
 #include "config.hpp"
@@ -47,6 +48,7 @@ namespace piranha
  * 
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_term
  *   of \p Term and \p Derived as base class.
+ * - \p Derived must be a model of piranha::concept::ContainerElement.
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
  * 
@@ -122,7 +124,10 @@ class base_term: detail::base_term_tag
 		template <typename Cf2, typename Key2, typename Derived2>
 		explicit base_term(base_term<Cf2,Key2,Derived2> &&other):m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Trivial destructor.
-		~base_term() piranha_noexcept_spec(true) {}
+		~base_term() piranha_noexcept_spec(true)
+		{
+			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+		}
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
