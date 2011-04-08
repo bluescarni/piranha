@@ -38,7 +38,9 @@
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo document classes in detail:: use to implement mathematical functions?
  * \todo fix type traits such as is_nothrow_move_constructible/assignable. They must work also for references,
- * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible).
+ * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
+ * reference collapsing rules, etc. etc.
+ * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
  */
 namespace piranha
 {
@@ -84,5 +86,6 @@ namespace detail {}
 #include "threading.hpp"
 #include "top_level_series.hpp"
 #include "type_traits.hpp"
+#include "utils.hpp"
 
 #endif

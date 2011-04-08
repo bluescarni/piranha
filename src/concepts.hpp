@@ -35,10 +35,12 @@ namespace concept {}
 }
 
 // Include all concepts.
+#include "concepts/array_key_value_type.hpp"
 #include "concepts/coefficient.hpp"
 #include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
+#include "concepts/series.hpp"
 #include "concepts/term.hpp"
 
 #endif
