@@ -246,19 +246,22 @@ const std::size_t echelon_position<TopLevelTerm,Term>::value;
  * type wil return a \p double instance, and hence the value of the type-trait is \p true. If the operands are switched (i.e.,
  * the first operand is a \p double and the second one is a \p int), the type-trait's value will be \p false.
  * 
- * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1.
+ * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1. Also, const/volatile qualifiers
+ * and references are removed from \p T1, \p T2 and <tt>T1 + T2</tt>.
  */
 template <typename T1, typename T2, typename Enable = void>
 class binary_op_return_type
 {
-		typedef decltype(*static_cast<T1 * const>(piranha_nullptr) + *static_cast<T2 * const>(piranha_nullptr)) retval_type;
+		typedef typename strip_cv_ref<T1>::type type1;
+		typedef typename strip_cv_ref<T2>::type type2;
+		typedef typename strip_cv_ref<decltype(std::declval<type1>() + std::declval<type2>())>::type retval_type;
 	public:
 		/// Type-trait's value.
-		static const bool value = std::is_same<retval_type,T2>::value;
+		static const bool value = std::is_same<retval_type,type2>::value;
 	private:
-		static_assert(value || std::is_same<retval_type,T1>::value,"Invalid return value type.");
-		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) - *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
-		static_assert(std::is_same<retval_type,decltype(*static_cast<T1 * const>(piranha_nullptr) * *static_cast<T2 * const>(piranha_nullptr))>::value,"Inconsistent return value type.");
+		static_assert(value || std::is_same<retval_type,type1>::value,"Invalid return value type.");
+		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() - std::declval<type2>())>::type>::value,"Inconsistent return value type.");
+		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() * std::declval<type2>())>::type>::value,"Inconsistent return value type.");
 };
 
 }
