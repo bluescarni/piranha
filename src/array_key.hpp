@@ -148,8 +148,11 @@ class array_key
 		}
 		/// Hash value.
 		/**
-		 * @return 0 if size() is 0, otherwise the result of mixing with \p boost::hash_combine the hash
-		 * values of the elements of the container, calculated via a default-constructed \p std::hash instance.
+		 * @return 0 if size() is 0, otherwise the result of iteratively mixing via \p boost::hash_combine the hash
+		 * values of the elements of the container, calculated via a default-constructed \p std::hash instance
+		 * and with 0 as initial seed value.
+		 * 
+		 * @throws unspecified any exception thrown by <tt>operator()</tt> of \p std::hash of \p T.
 		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
 		 */
@@ -303,6 +306,8 @@ struct hash<piranha::array_key<T,Derived>>
 	 * @param[in] a piranha::array_key whose hash value will be returned.
 	 * 
 	 * @return piranha::array_key::hash().
+	 * 
+	 * @throws unspecified any exception thrown by piranha::array_key::hash().
 	 */
 	result_type operator()(const argument_type &a) const
 	{
