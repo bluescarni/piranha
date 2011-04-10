@@ -44,6 +44,9 @@ struct tuple_iterate
 	 * @param[in] f \p Functor that will be applied to the elements of the tuple.
 	 * @param[in] t \p Tuple on whose elements the functor will be applied.
 	 * @param[in] params arguments that will be perfectly forwarded to the functor.
+	 * 
+	 * @throws unspecified any exception thrown by calling the \p Functor or by copying its pass-by-copy
+	 * arguments.
 	 */
 	template <typename... Args>
 	void operator()(const Functor &f, Tuple &t, Args && ... params) const

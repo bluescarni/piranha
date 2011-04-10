@@ -23,6 +23,8 @@
 
 #include <boost/type_traits/is_complex.hpp>
 
+#include "type_traits.hpp"
+
 namespace piranha
 {
 
@@ -96,7 +98,7 @@ inline bool is_zero(const T &x)
 template <typename T>
 inline void negate(T &x)
 {
-	piranha::detail::math_negate_impl<T>::run(x);
+	piranha::detail::math_negate_impl<typename strip_cv_ref<T>::type>::run(x);
 }
 
 }
