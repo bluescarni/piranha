@@ -38,6 +38,7 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must derive from piranha::base_term,
+ * - must be a model of piranha::concept::ContainerElement,
  * - must be provided with a two-arguments constructor from piranha::base_term::cf_type and piranha::base_term::key_type.
  */
 template <typename T>
