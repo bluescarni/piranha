@@ -65,9 +65,8 @@ struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<base
  * \p Term must be a model of piranha::concept::Term.
  */
 template <typename Term>
-struct echelon_size
+class echelon_size
 {
-	private:
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
 	public:

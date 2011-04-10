@@ -71,7 +71,6 @@ struct echelon_position_impl<Term1,Term2,CurLevel,typename std::enable_if<std::i
 template <typename TopLevelTerm, typename Term>
 class echelon_position
 {
-	private:
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		BOOST_CONCEPT_ASSERT((concept::Term<TopLevelTerm>));
 		static_assert(std::is_same<Term,TopLevelTerm>::value || detail::echelon_position_impl<TopLevelTerm,Term>::value,
