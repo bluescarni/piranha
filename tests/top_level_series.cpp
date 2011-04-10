@@ -31,6 +31,7 @@
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/numerical_coefficient.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/symbol.hpp"
@@ -240,4 +241,39 @@ typedef debug_access<arithmetics_tag> arithmetics_tester;
 BOOST_AUTO_TEST_CASE(top_level_series_arithmetics_test)
 {
 	boost::mpl::for_each<cf_types>(arithmetics_tester());
+}
+
+struct negate_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,Expo> p_type;
+			p_type p("x");
+			p += 1;
+			p += p_type("y");
+			BOOST_CHECK_EQUAL(p.size(),unsigned(3));
+			p_type q1 = p, q2 = p;
+			p.negate();
+			BOOST_CHECK_EQUAL(p.size(),unsigned(3));
+			p += q1;
+			BOOST_CHECK(p.empty());
+			math::negate(q2);
+			q2 += q1;
+			BOOST_CHECK(q2.empty());
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(top_level_series_negate_test)
+{
+	boost::mpl::for_each<cf_types>(negate_tester());
 }

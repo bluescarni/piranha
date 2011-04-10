@@ -31,6 +31,8 @@
 #include "debug_access.hpp"
 #include "detail/top_level_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
+#include "math.hpp"
+#include "series_binary_operators.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -151,6 +153,23 @@ std::cout << "oh NOES different!\n";
 			}
 			return *this;
 		}
+		/// Negate series in-place.
+		/**
+		 * This method will call the <tt>negate()</tt> method on the coefficients of all terms. In case of exceptions,
+		 * the basic exception safety guarantee is provided. Specifically, only a susbet of the series' coefficients will
+		 * have been negated in face of an exception.
+		 * 
+		 * @throws unspecified any exception thrown by the <tt>negate()</tt> method of the coefficient type.
+		 */
+		void negate()
+		{
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				it->m_cf.negate(m_ed);
+				piranha_assert(it->is_compatible(m_ed));
+				piranha_assert(!it->is_ignorable(m_ed));
+			}
+		}
 		/// In-place addition.
 		/**
 		 * The addition algorithm proceeds as follows:
@@ -225,6 +244,22 @@ std::cout << "oh NOES different!\n";
 		/// Echelon descriptor.
 		echelon_descriptor<Term> m_ed;
 };
+
+
+namespace detail
+{
+
+// Overload negation for top_level_series.
+template <typename TopLevelSeries>
+struct math_negate_impl<TopLevelSeries,typename std::enable_if<std::is_base_of<top_level_series_tag,TopLevelSeries>::value>::type>
+{
+	static void run(TopLevelSeries &s)
+	{
+		s.negate();
+	}
+};
+
+}
 
 }
 
