@@ -37,9 +37,6 @@ namespace piranha
  * The class has no data members, and hence has trivial move semantics and provides the strong exception safety guarantee.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo instead of using binary_op_return_type, maybe we can check for convertibility or constructibility of one series
- * term type from the other.
  */
 class series_binary_operators
 {
@@ -184,7 +181,7 @@ std::cout << "MIXED2!!!!\n";
 		 * The binary addition algorithm proceeds as follow:
 		 * 
 		 * - if both operands are series:
-		 *   - the return type is \p T if the value piranha::binary_op_return_type of the coefficient types of \p T and \p U is \p false,
+		 *   - the return type is \p T if the value of piranha::binary_op_return_type of the coefficient types of \p T and \p U is \p false,
 		 *     \p U otherwise;
 		 *   - the return value is built from either \p s1 or \p s2 (depending on its type);
 		 *   - piranha::top_level_series::operator+=() is called on the return value, with either \p s1 or \p s2 as argument;
@@ -193,6 +190,9 @@ std::cout << "MIXED2!!!!\n";
 		 *   - the return value is built from the series operand;
 		 *   - piranha::top_level_series::operator+=() is called on the return value, the non-series operand as argument;
 		 * - the return value is returned.
+		 * 
+		 * Note that in case of two series operands of different type but with same coefficient types the return type will depend on the order
+		 * of the operands.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.

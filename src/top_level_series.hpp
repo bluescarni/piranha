@@ -26,6 +26,7 @@
 #include <type_traits>
 
 #include "base_series.hpp"
+#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
@@ -47,10 +48,12 @@ namespace piranha
  * - \p Term and \p Derived must be suitable for use in piranha::base_series.
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::top_level_series
  *   of \p Term and \p Derived as base class.
+ * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as piranha::base_series.
+ * This class provides the same exception safety guarantee as piranha::base_series. Additional specific exception safety
+ * guarantees are described for some methods (e.g., negate()).
  * 
  * \section move_semantics Move semantics
  * 
@@ -59,7 +62,7 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Term, typename Derived>
-class top_level_series: public base_series<Term,Derived>, detail::top_level_series_tag
+class top_level_series: public base_series<Term,Derived>, public series_binary_operators, detail::top_level_series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::CRTP<top_level_series<Term,Derived>,Derived>));
 		typedef base_series<Term,Derived> base;
@@ -121,6 +124,7 @@ std::cout << "oh NOES different!\n";
 		 */
 		~top_level_series() piranha_noexcept_spec(true)
 		{
+			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 			piranha_assert(destruction_checks());
 		}
 		/// Move assignment operator.
@@ -225,6 +229,22 @@ std::cout << "oh NOES different!\n";
 			dispatch_add<false>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
+// 		/// Overload stream operator for piranha::top_level_series.
+// 		/**
+// 		 * Will direct to stream a human-readable representation of the series.
+// 		 * 
+// 		 * @param[in,out] os target stream.
+// 		 * @param[in] tls piranha::base_series argument.
+// 		 * 
+// 		 * @return reference to \p os.
+// 		 * 
+// 		 * @throws unspecified any exception resulting from directing to stream instances of piranha::base_series::term_type.
+// 		 */
+// 		friend inline std::ostream &operator<<(std::ostream &os, const top_level_series &tls)
+// 		{
+// std::cout << "LOL stream!!!!\n";
+// 			return os;
+// 		}
 	private:
 		bool destruction_checks() const
 		{
