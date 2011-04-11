@@ -80,6 +80,7 @@ namespace detail {}
 #include "numerical_coefficient.hpp"
 #include "polynomial_term.hpp"
 #include "runtime_info.hpp"
+#include "series_binary_operators.hpp"
 #include "settings.hpp"
 #include "symbol.hpp"
 #include "thread_barrier.hpp"

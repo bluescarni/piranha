@@ -1,199 +1,127 @@
-#include <algorithm>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/iterator/counting_iterator.hpp>
-#include <boost/pool/pool_alloc.hpp>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <ext/pool_allocator.h>
-#include <iostream>
-#include <mutex>
-#include <string>
-#include <thread>
-#include <type_traits>
-#include <unordered_map>
-#include <vector>
-
-#include <gmpxx.h>
-
-#include "src/hop_table.hpp"
-#include "src/integer.hpp"
-#include "src/settings.hpp"
-#include "src/thread_group.hpp"
-#include "src/type_traits.hpp"
+#include "src/piranha.hpp"
 
 using namespace piranha;
 
-__gnu_cxx::__pool_alloc<char> p;
-
-void *allocate_function(std::size_t alloc_size)
+template <typename Cf, typename Expo>
+class polynomial:
+	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>
 {
-// 	std::cout << "allocate\n";
-// 	return std::malloc(alloc_size);
-	return p.allocate(alloc_size);
-}
+		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
+	public:
+		polynomial() = default;
+		polynomial(const polynomial &) = default;
+		polynomial(polynomial &&) = default;
+		explicit polynomial(const std::string &name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_ed.template add_symbol<term_type>(symbol(name));
+			// Construct and insert the term.
+			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+		}
+		~polynomial() = default;
+		polynomial &operator=(const polynomial &) = default;
+		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
+};
 
-void *reallocate_function(void *ptr, std::size_t old_size, std::size_t new_size)
+template <typename Base>
+class base_complex: public Base
 {
-// 	std::cout << "reallocate\n";
-// 	return std::realloc(ptr,new_size);
-	void *new_ptr = p.allocate(new_size);
-	std::memcpy(new_ptr,ptr,std::min(new_size,old_size));
-	p.deallocate((char *)ptr,old_size);
-	return new_ptr;
-}
+	public:
+		base_complex() = default;
+		base_complex(const base_complex &) = default;
+		base_complex(base_complex &&) = default;
+		~base_complex() = default;
+		base_complex &operator=(const base_complex &) = default;
+		base_complex &operator=(base_complex &&) = default;
+	protected:
+		template <typename Series1, typename Series2>
+		explicit base_complex(Series1 &&s1, Series2 &&s2, const echelon_descriptor<typename Base::term_type> &ed,
+			typename std::enable_if<std::is_base_of<detail::base_series_tag,typename strip_cv_ref<Series1>::type>::value &&
+			std::is_base_of<detail::base_series_tag,typename strip_cv_ref<Series2>::type>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOLLER called!!!\n";
+		}
+};
 
-void free_function(void *ptr, size_t size)
+template <typename Cf, typename Expo>
+class polynomial2:
+	public base_complex<top_level_series<polynomial_term<Cf,Expo>,polynomial2<Cf,Expo>>>
 {
-// 	std::cout << "free\n";
-// 	std::free(ptr);
-	p.deallocate((char *)ptr,size);
-}
+		typedef base_complex<top_level_series<polynomial_term<Cf,Expo>,polynomial2<Cf,Expo>>> base;
+	public:
+		polynomial2() = default;
+		polynomial2(const polynomial2 &) = default;
+		polynomial2(polynomial2 &&) = default;
+		explicit polynomial2(const std::string &name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_ed.template add_symbol<term_type>(symbol(name));
+			// Construct and insert the term.
+			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+		}
+		explicit polynomial2(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_ed.template add_symbol<term_type>(symbol(name));
+			// Construct and insert the term.
+			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+		}
+		template <typename... Args>
+		explicit polynomial2(Args && ... params):base(std::forward<Args>(params)...) {}
+		~polynomial2() = default;
+		polynomial2 &operator=(const polynomial2 &) = default;
+		polynomial2 &operator=(polynomial2 &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
+};
 
-static unsigned long constant = (boost::posix_time::microsec_clock::local_time() - boost::posix_time::ptime(boost::gregorian::date(1970,1,1))).total_microseconds();
-
-struct trivial
+struct foo
 {
-	int n;
-	double x;
+	foo() = default;
+	foo(foo &&) = delete;
+	foo(const foo &) = default;
 };
 
 int main()
 {
-// 	settings::set_n_threads(1);
-// 	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
+// 	std::cout << is_nothrow_move_assignable<int &>::value << '\n';
+	typedef polynomial2<numerical_coefficient<integer>,int> p2_type;
 
-// 	integer i(1);
-// 	i.multiply_accumulate(i,i);
-
-// 	std::string str("tmp");
-// 	std::hash<std::string> h;
-// 	std::cout << h(str) << '\n';
-
-// 	typedef integer int_type;
-// 
-// 	hop_table<int_type> ht;
-// 	std::cout << (ht.begin() == ht.end()) << '\n';
-// 	std::cout << (ht.find(int_type(1)) == ht.end()) << '\n';
-// 	ht.emplace(int_type(10));
-// 	ht.emplace(int_type(10));
-// 	ht.emplace(int_type(11));
-// 	for (int i = 0; i < 61; ++i) {
-// 		ht.emplace(int_type(9));
-// 	}
-// 	ht.emplace(int_type(10));
-// 	ht.emplace(int_type(10));
-
-
-// 	hop_table<std::string> ht0(0);
-// 	hop_table<std::string> ht1(1);
-// 	hop_table<std::string> ht2(2);
-// 	hop_table<std::string> ht3(3);
-// 	hop_table<std::string> ht4(4);
-// 	ht0.emplace("ciao");
-// 	ht0.emplace("pirlone");
-// 	ht0.emplace("e cretino!");
-// 	ht0.emplace("zio scatenato!!!");
-
-// 	hop_table<int>::hop_bucket b = hop_table<int>::hop_bucket();
-// 	std::cout << b.m_occupied << '\n';
-// 	std::cout << b.m_bitset << '\n';
-// 	return 0;
-
-	auto custom_hasher = [](const std::pair<double,double> &p) -> std::size_t {
-		std::size_t retval = boost::hash<double>()(p.second);
-		return retval;
-	};
-
-	thread_management::bind_to_proc(0);
-
-	const int N = 18000000;
-
-	std::vector<integer> vs;
-	for (int i = 0; i < N; ++i) {
-		vs.push_back(integer(std::hash<std::string>()(boost::lexical_cast<std::string>(i))));
-	}
-
-const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
-	/*std::thread t([](){*/hop_table<integer> ht(2 * N)/*(10000000)*/;/*});*/
-std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
-	for (int i = 0; i < N; ++i) {
-		auto retval = ht.insert(vs[i]);
-// 		auto retval = ht._unique_insert(tmp,ht.bucket(tmp));
-// 		if (unlikely(!retval.second)) {
-// 			std::cout << "FAIL\n";
-// 		}
-	}
-std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+	std::cout << p2_type{} << '\n';
+// 	foo f = foo{};
 	return 0;
-#if 0
-// std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
-
-// 	return 0;
-	for (int i = 0; i < 20000000; ++i) {
-		ht.insert(i);
-	}
-// 	t.join();
-std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
-	return 0;
-
-
-	struct foo
-	{
-		long x;
-		double y;
-	};
 	
-	struct foo_hash
-	{
-		std::size_t operator()(const foo &f) const
-		{
-			return std::hash<long>()(f.x);
-		}
-	};
+	
+	
+	polynomial<numerical_coefficient<double>,int> x("x");
+	std::cout << x << '\n';
+	x += 4;
+	std::cout << x << '\n';
+	x += integer(5);
+	std::cout << x << '\n';
+	x += x;
+	polynomial2<numerical_coefficient<integer>,int> x2("x");
+	x += std::move(x2);
+	polynomial2<numerical_coefficient<integer>,int> x3("x");
+	x += std::move(x3);
 
-	struct foo_equal
-	{
-		std::size_t operator()(const foo &f1, const foo &f2) const
-		{
-			return f1.x == f2.x;
-		}
-	};
-
-
-	hop_table<std::string> ht/*(10000000)*/;
-// 	foo f;
-// 	f.y = 0.;
-	for (int i = 0; i < 600000; ++i) {
-// 		f.x = i;
-		//ht._unique_insert(f,ht.bucket(f));
-		ht.insert(boost::lexical_cast<std::string>(i));
-		//std::string("foo");
-	}
-std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
-
-// std::exit(1);
-
-// 	std::cout << ht.load_factor() << '\n';
-
-// 	struct td
-// 	{
-// 		td():m_value(std::sqrt(constant % 123456) * std::cos(1.5) * std::tan(3.56)) {std::cout << "called\n";}
-// 		td(const td &other):m_value(std::sqrt(constant % 123456) + other.m_value) {}
-// 		double m_value;
-// 	};
-// 
-// 	std::cout << is_trivially_copyable<td>::value << '\n';
-// 	
-// 	cvector<td> ht(20000000);
-// 	ht.resize(25000000);
-// 	std::cout << (unsigned long)ht[0].m_value << '\n';
-// 	std::cout << (unsigned long)ht[10].m_value << '\n';
-// 	std::cout << (unsigned long)ht[100].m_value << '\n';
-// 	std::cout << ht.n_buckets() << '\n';
-// 	return 0;
-// 	std::for_each(boost::counting_iterator<int>(0),boost::counting_iterator<int>(2000000),[&ht](int n){ht.emplace(n);});
-
-#endif
-
+	polynomial2<numerical_coefficient<integer>,int> y("y");
+	x += y;
+ 	x + y;
+	std::cout << x << "\n-------------\n";
+	std::cout << x + y << "\n-------------\n";
+// 	2 + x;
+// 	std::cout << x << "\n-------------\n";
+	3 + polynomial2<numerical_coefficient<std::complex<double>>,int>{};
+// 	p2_type foo, bar(foo);
+// 	p2_type frob{foo,bar,echelon_descriptor<p2_type::term_type>{}};
 }
