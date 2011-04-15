@@ -63,6 +63,37 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(m2.size(),unsigned(0));
 		monomial_type m3 = monomial_type(std::vector<symbol>(3,symbol("foo")));
 		BOOST_CHECK_EQUAL(m3.size(),unsigned(3));
+		std::vector<symbol> vs = {symbol("a"),symbol("b"),symbol("c")};
+		monomial_type k2(vs);
+		BOOST_CHECK_EQUAL(k2.size(),vs.size());
+		BOOST_CHECK_EQUAL(k2[0],T(0));
+		BOOST_CHECK_EQUAL(k2[1],T(0));
+		BOOST_CHECK_EQUAL(k2[2],T(0));
+		// Generic constructor for use in series.
+		BOOST_CHECK_THROW(monomial_type tmp(k2,std::vector<symbol>{}),std::invalid_argument);
+		monomial_type k3(k2,vs);
+		BOOST_CHECK_EQUAL(k3.size(),vs.size());
+		BOOST_CHECK_EQUAL(k3[0],T(0));
+		BOOST_CHECK_EQUAL(k3[1],T(0));
+		BOOST_CHECK_EQUAL(k3[2],T(0));
+		monomial_type k4(monomial_type(vs),vs);
+		BOOST_CHECK_EQUAL(k4.size(),vs.size());
+		BOOST_CHECK_EQUAL(k4[0],T(0));
+		BOOST_CHECK_EQUAL(k4[1],T(0));
+		BOOST_CHECK_EQUAL(k4[2],T(0));
+		typedef monomial<int> monomial_type2;
+		monomial_type2 k5(vs);
+		BOOST_CHECK_THROW(monomial_type tmp(k5,std::vector<symbol>{}),std::invalid_argument);
+		monomial_type k6(k5,vs);
+		BOOST_CHECK_EQUAL(k6.size(),vs.size());
+		BOOST_CHECK_EQUAL(k6[0],T(0));
+		BOOST_CHECK_EQUAL(k6[1],T(0));
+		BOOST_CHECK_EQUAL(k6[2],T(0));
+		monomial_type k7(monomial_type2(vs),vs);
+		BOOST_CHECK_EQUAL(k7.size(),vs.size());
+		BOOST_CHECK_EQUAL(k7[0],T(0));
+		BOOST_CHECK_EQUAL(k7[1],T(0));
+		BOOST_CHECK_EQUAL(k7[2],T(0));
 	}
 };
 

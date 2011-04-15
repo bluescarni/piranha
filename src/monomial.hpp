@@ -23,7 +23,6 @@
 
 #include <boost/concept/assert.hpp>
 #include <initializer_list>
-#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
@@ -71,26 +70,16 @@ class monomial: public array_key<T,monomial<T>>
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
 		monomial(std::initializer_list<T> list):base(list) {}
-		/// Constructor from vector of arguments.
+		/// Forwarding constructor.
 		/**
-		 * The monomial will be created with a number of variables equal to <tt>args.size()</tt>
-		 * and filled with exponents constructed from the integral constant 0.
+		 * Will perfectly forward the arguments to a corresponding constructor in piranha::array_key.
 		 * 
-		 * @param[in] args vector of piranha::symbol used for construction.
+		 * @param[in]  params arguments to be forwarded to the constructor.
 		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
-		 * - the construction of instances of type \p T from the integral constant 0.
+		 * @throws unspecified any exception thrown by the invoked constructor from piranha::array_key.
 		 */
-		monomial(const std::vector<symbol> &args):base()
-		{
-			if (std::is_same<decltype(args.size),decltype(this->size())>::value) {
-				this->m_container.reserve(args.size());
-			}
-			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
-				this->push_back(T(0));
-			}
-		}
+		template <typename... Args>
+		explicit monomial(Args && ... params):base(std::forward<Args>(params)...) {}
 		/// Defaulted destructor.
 		~monomial() = default;
 		/// Defaulted copy assignment operator.

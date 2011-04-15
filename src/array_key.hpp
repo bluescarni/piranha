@@ -166,7 +166,7 @@ class array_key: detail::array_key_tag
 		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
 		 * - the construction of instances of type \p T from the integral constant 0.
 		 */
-		array_key(const std::vector<symbol> &args)
+		explicit array_key(const std::vector<symbol> &args)
 		{
 			if (std::is_same<std::vector<symbol>::size_type,size_type>::value) {
 				m_container.reserve(args.size());
