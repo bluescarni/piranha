@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <stdexcept>
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
@@ -36,7 +37,10 @@
 #include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/array_key_fwd.hpp"
+#include "exceptions.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -64,7 +68,7 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Derived>
-class array_key
+class array_key: detail::array_key_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<T>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
@@ -75,6 +79,58 @@ class array_key
 		typedef std::vector<T> container_type;
 		/// Value type.
 		typedef T value_type;
+	private:
+		template <typename U>
+		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value &&
+			is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+		{
+			if (unlikely(args.size() != x.size())) {
+				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
+			}
+			return container_type(std::move(x.m_container));
+		}
+		template <typename U>
+		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value &&
+			!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+		{
+			if (unlikely(args.size() != x.size())) {
+				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
+			}
+			return container_type(x.m_container);
+		}
+		template <typename U>
+		static void fill_for_construction(container_type &retval, U &&x,
+			typename std::enable_if<is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+		{
+			for (decltype(x.size()) i = 0; i < x.size(); ++i) {
+				retval.push_back(value_type(std::move(x[i])));
+			}
+		}
+		template <typename U>
+		static void fill_for_construction(container_type &retval, U &&x,
+			typename std::enable_if<!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+		{
+			for (decltype(x.size()) i = 0; i < x.size(); ++i) {
+				retval.push_back(value_type(x[i]));
+			}
+		}
+		template <typename U>
+		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+			typename std::enable_if<!std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value>::type * = piranha_nullptr)
+		{
+			if (unlikely(args.size() != x.size())) {
+				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
+			}
+			container_type retval;
+			if (std::is_same<decltype(x.size()),size_type>::value) {
+				retval.reserve(x.size());
+			}
+			fill_for_construction(retval,std::forward<U>(x));
+			return retval;
+		}
+	public:
 		/// Size type.
 		typedef typename container_type::size_type size_type;
 		/// Defaulted default constructor.
@@ -99,6 +155,48 @@ class array_key
 		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s constructor from initializer list.
 		 */
 		array_key(std::initializer_list<value_type> list):m_container(list) {}
+		/// Constructor from vector of arguments.
+		/**
+		 * The key will be created with a number of variables equal to <tt>args.size()</tt>
+		 * and filled with exponents constructed from the integral constant 0.
+		 * 
+		 * @param[in] args vector of piranha::symbol used for construction.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
+		 * - the construction of instances of type \p T from the integral constant 0.
+		 */
+		array_key(const std::vector<symbol> &args)
+		{
+			if (std::is_same<std::vector<symbol>::size_type,size_type>::value) {
+				m_container.reserve(args.size());
+			}
+			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
+				push_back(T(0));
+			}
+		}
+		/// Generic constructor.
+		/**
+		 * Generic constructor for use in series. This template is activated only if \p U is an instance of piranha::array_key.
+		 * 
+		 * The internal container will be initialised with the
+		 * contents of the internal container of \p x (possibly converting the individual contained values through a suitable converting constructor,
+		 * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error will
+		 * be produced.
+		 * 
+		 * @param[in] x construction argument.
+		 * @param[in] args reference vector of symbolic arguments.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
+		 * - construction of piranha::array_key::value_type from the value type of \p U.
+		 * @throws std::invalid_argument if the sizes of \p x and \p args differ.
+		 */
+		template <typename U>
+		explicit array_key(U &&x, const std::vector<symbol> &args,
+			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+			:m_container(forward_for_construction(std::forward<U>(x),args))
+		{}
 		/// Trivial destructor.
 		~array_key() piranha_noexcept_spec(true)
 		{

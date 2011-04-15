@@ -53,6 +53,8 @@ class g_key_type: public array_key<T,g_key_type<T>>
 			return *this;
 		}
 		explicit g_key_type(std::initializer_list<T> list):base(list) {}
+		template <typename ... Args>
+		explicit g_key_type(Args && ... params):base(std::forward<Args>(params)...) {}
 };
 
 namespace std
@@ -84,6 +86,38 @@ struct constructor_tester
 		}
 		BOOST_CHECK_NO_THROW(k0 = k1);
 		BOOST_CHECK_NO_THROW(k0 = std::move(k1));
+		// Constructor from vector of symbols.
+		std::vector<symbol> vs = {symbol("a"),symbol("b"),symbol("c")};
+		key_type k2(vs);
+		BOOST_CHECK_EQUAL(k2.size(),vs.size());
+		BOOST_CHECK_EQUAL(k2[0],T(0));
+		BOOST_CHECK_EQUAL(k2[1],T(0));
+		BOOST_CHECK_EQUAL(k2[2],T(0));
+		// Generic constructor for use in series.
+		BOOST_CHECK_THROW(key_type tmp(k2,std::vector<symbol>{}),std::invalid_argument);
+		key_type k3(k2,vs);
+		BOOST_CHECK_EQUAL(k3.size(),vs.size());
+		BOOST_CHECK_EQUAL(k3[0],T(0));
+		BOOST_CHECK_EQUAL(k3[1],T(0));
+		BOOST_CHECK_EQUAL(k3[2],T(0));
+		key_type k4(key_type(vs),vs);
+		BOOST_CHECK_EQUAL(k4.size(),vs.size());
+		BOOST_CHECK_EQUAL(k4[0],T(0));
+		BOOST_CHECK_EQUAL(k4[1],T(0));
+		BOOST_CHECK_EQUAL(k4[2],T(0));
+		typedef g_key_type<int> key_type2;
+		key_type2 k5(vs);
+		BOOST_CHECK_THROW(key_type tmp(k5,std::vector<symbol>{}),std::invalid_argument);
+		key_type k6(k5,vs);
+		BOOST_CHECK_EQUAL(k6.size(),vs.size());
+		BOOST_CHECK_EQUAL(k6[0],T(0));
+		BOOST_CHECK_EQUAL(k6[1],T(0));
+		BOOST_CHECK_EQUAL(k6[2],T(0));
+		key_type k7(key_type2(vs),vs);
+		BOOST_CHECK_EQUAL(k7.size(),vs.size());
+		BOOST_CHECK_EQUAL(k7[0],T(0));
+		BOOST_CHECK_EQUAL(k7[1],T(0));
+		BOOST_CHECK_EQUAL(k7[2],T(0));
 	}
 };
 
