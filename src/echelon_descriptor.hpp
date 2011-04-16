@@ -29,6 +29,7 @@
 #include <deque>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -375,6 +376,20 @@ class echelon_descriptor
 			new_args_vector.insert(it,s);
 			// Move in the new args vector.
 			args_vector = std::move(new_args_vector);
+		}
+		/// Add symbol.
+		/**
+		 * Add piranha::symbol with name \p str to the arguments vector at the echelon position corresponding to \p Term.
+		 * The symbol will be created from the string and then added using the other overload of this method.
+		 * 
+		 * @param[in] str name of the symbol to be added.
+		 * 
+		 * @throws unspecified any exception thrown by creating a piranha::symbol from string or by calling the other overload of this method.
+		 */
+		template <typename Term>
+		void add_symbol(const std::string &str)
+		{
+			add_symbol<Term>(symbol(str));
 		}
 	private:
 		bool destruction_checks() const

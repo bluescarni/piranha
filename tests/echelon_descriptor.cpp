@@ -112,8 +112,8 @@ struct add_symbol_tester
 		BOOST_CHECK(a.template get_args<term_type1>() == std::vector<symbol>{});
 		a.template add_symbol<term_type1>(symbol("c"));
 		a.template add_symbol<term_type1>(symbol("b"));
-		a.template add_symbol<term_type1>(symbol("a"));
-		a.template add_symbol<term_type1>(symbol("d"));
+		a.template add_symbol<term_type1>("a");
+		a.template add_symbol<term_type1>("d");
 		BOOST_CHECK(a.template get_args<term_type1>() == std::vector<symbol>({symbol("a"),symbol("b"),symbol("c"),symbol("d")}));
 		// Check that adding existing symbol results in an error.
 		BOOST_CHECK_THROW(a.template add_symbol<term_type1>(symbol("d")),std::invalid_argument);
