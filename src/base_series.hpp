@@ -41,6 +41,21 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Hash functor for term type in base series.
+struct term_hasher
+{
+	template <typename Term>
+	std::size_t operator()(const Term &term) const
+	{
+		return term.hash();
+	}
+};
+
+}
+
 /// Base series class.
 /**
  * \section type_requirements Type requirements
@@ -78,17 +93,9 @@ class base_series: detail::base_series_tag
 		// Make friend with debugging class.
 		template <typename T>
 		friend class debug_access;
-		// Hash functor for term_type.
-		struct term_hasher
-		{
-			std::size_t operator()(const term_type &term) const
-			{
-				return term.hash();
-			}
-		};
 	protected:
 		/// Container type for terms.
-		typedef hop_table<term_type,term_hasher> container_type;
+		typedef hop_table<term_type,detail::term_hasher> container_type;
 	private:
 		// Overload for completely different term type: convert to term_type and proceed.
 		template <bool Sign, typename T, typename EchelonDescriptor>
