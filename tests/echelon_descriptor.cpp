@@ -43,21 +43,25 @@
 
 using namespace piranha;
 
-class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,term_type1>
+template <int N>
+class term_type_n: public base_term<numerical_coefficient<double>,monomial<int>,term_type_n<N>>
 {
 	public:
-		term_type1() = default;
-		term_type1(const term_type1 &) = default;
-		term_type1(term_type1 &&) = default;
-		term_type1 &operator=(const term_type1 &) = default;
-		term_type1 &operator=(term_type1 &&other) piranha_noexcept_spec(true)
+		term_type_n() = default;
+		term_type_n(const term_type_n &) = default;
+		term_type_n(term_type_n &&) = default;
+		term_type_n &operator=(const term_type_n &) = default;
+		term_type_n &operator=(term_type_n &&other) piranha_noexcept_spec(true)
 		{
-			base_term<numerical_coefficient<double>,monomial<int>,term_type1>::operator=(std::move(other));
+			base_term<numerical_coefficient<double>,monomial<int>,term_type_n>::operator=(std::move(other));
 			return *this;
 		}
 		// Needed to satisfy concept checking.
-		explicit term_type1(const numerical_coefficient<double> &, const monomial<int> &) {}
+		explicit term_type_n(const numerical_coefficient<double> &, const monomial<int> &) {}
 };
+
+typedef term_type_n<0> term_type0;
+typedef term_type_n<1> term_type1;
 
 typedef boost::mpl::vector<term_type1> term_types;
 
@@ -77,6 +81,12 @@ struct constructor_tester
 		ed1 = b;
 		// Move assignment.
 		ed2 = std::move(a);
+		// Copy constructor from different term type.
+		typedef echelon_descriptor<term_type0> ed_type0;
+		ed_type0 a0;
+		ed_type c{a0};
+		// Move constructor from different term type.
+		ed_type d{std::move(a0)};
 	}
 };
 

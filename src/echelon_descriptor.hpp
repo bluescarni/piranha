@@ -234,11 +234,25 @@ class echelon_descriptor
 		 * @throw unspecified any exception thrown by the copy constructor of \p std::vector of piranha::symbol.
 		 */
 		echelon_descriptor(const echelon_descriptor &) = default;
+		/// Copy constructor from different descriptor type.
+		/**
+		 * @param[in] other piranha::echelon_descriptor that will be copied.
+		 * 
+		 * @throw unspecified any exception thrown by the copy constructor of \p std::vector of piranha::symbol.
+		 */
+		template <typename TopLevelTerm2>
+		explicit echelon_descriptor(const echelon_descriptor<TopLevelTerm2> &other) : m_args_tuple(other.m_args_tuple) {}
 		/// Move constructor.
 		/**
 		 * @param[in] other descriptor to move from.
 		 */
 		echelon_descriptor(echelon_descriptor &&other) piranha_noexcept_spec(true) : m_args_tuple(std::move(other.m_args_tuple)) {}
+		/// Move constructor from different descriptor type.
+		/**
+		 * @param[in] other piranha::echelon_descriptor that will be moved.
+		 */
+		template <typename TopLevelTerm2>
+		explicit echelon_descriptor(echelon_descriptor<TopLevelTerm2> &&other) : m_args_tuple(std::move(other.m_args_tuple)) {}
 		/// Destructor.
 		/**
 		 * Equivalent to the default destructor, apart from checks being performed in debug mode.
