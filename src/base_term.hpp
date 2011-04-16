@@ -103,26 +103,6 @@ class base_term: detail::base_term_tag
 		 */
 		template <typename T, typename U>
 		explicit base_term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
-		/// Copy constructor from different piranha::base_term.
-		/**
-		 * Will use <tt>other</tt>'s coefficient and key to copy-construct base_term::m_cf and base_term::m_key.
-		 * 
-		 * @param[in] other piranha::base_term used for copy construction.
-		 * 
-		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
-		 */
-		template <typename Cf2, typename Key2, typename Derived2>
-		explicit base_term(const base_term<Cf2,Key2,Derived2> &other):m_cf(other.m_cf),m_key(other.m_key) {}
-		/// Move constructor from different piranha::base_term.
-		/**
-		 * Will use <tt>other</tt>'s coefficient and key to move-construct base_term::m_cf and base_term::m_key.
-		 * 
-		 * @param[in] other piranha::base_term used for move construction.
-		 * 
-		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
-		 */
-		template <typename Cf2, typename Key2, typename Derived2>
-		explicit base_term(base_term<Cf2,Key2,Derived2> &&other):m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Trivial destructor.
 		~base_term() piranha_noexcept_spec(true)
 		{

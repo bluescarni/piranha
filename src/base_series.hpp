@@ -97,18 +97,31 @@ class base_series: detail::base_series_tag
 		/// Container type for terms.
 		typedef hop_table<term_type,detail::term_hasher> container_type;
 	private:
-		// Overload for completely different term type: convert to term_type and proceed.
+		// Overload for completely different term type: copy-convert to term_type and proceed.
 		template <bool Sign, typename T, typename EchelonDescriptor>
-		void dispatch_insertion(T &&term, EchelonDescriptor &ed, typename std::enable_if<
-			!std::is_same<typename strip_cv_ref<T>::type,term_type>::value
+		void dispatch_insertion(T &&term, const EchelonDescriptor &ed, typename std::enable_if<
+			!std::is_same<typename strip_cv_ref<T>::type,term_type>::value &&
+			!is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "converting to term type\n";
-			dispatch_insertion<Sign>(term_type(std::forward<T>(term)),ed);
+std::cout << "copy converting to term type\n";
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(term.m_cf,ed),
+				typename term_type::key_type(term.m_key,ed.template get_args<term_type>())),ed);
+		}
+		// Overload for completely different term type: move-convert to term_type and proceed.
+		template <bool Sign, typename T, typename EchelonDescriptor>
+		void dispatch_insertion(T &&term, const EchelonDescriptor &ed, typename std::enable_if<
+			!std::is_same<typename strip_cv_ref<T>::type,term_type>::value &&
+			is_nonconst_rvalue_ref<T &&>::value
+			>::type * = piranha_nullptr)
+		{
+std::cout << "move converting to term type\n";
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(std::move(term.m_cf),ed),
+				typename term_type::key_type(std::move(term.m_key),ed.template get_args<term_type>())),ed);
 		}
 		// Overload for term_type.
 		template <bool Sign, typename T, typename EchelonDescriptor>
-		void dispatch_insertion(T &&term, EchelonDescriptor &ed, typename std::enable_if<
+		void dispatch_insertion(T &&term, const EchelonDescriptor &ed, typename std::enable_if<
 			std::is_same<typename strip_cv_ref<T>::type,term_type>::value
 			>::type * = piranha_nullptr)
 		{
@@ -151,7 +164,7 @@ std::cout << "move subtracting!\n";
 		}
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T, typename EchelonDescriptor>
-		void insertion_impl(T &&term, EchelonDescriptor &ed, typename std::enable_if<
+		void insertion_impl(T &&term, const EchelonDescriptor &ed, typename std::enable_if<
 			std::is_same<typename strip_cv_ref<T>::type,term_type>::value
 			>::type * = piranha_nullptr)
 		{

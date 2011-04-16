@@ -56,7 +56,7 @@ class polynomial:
 			// Insert the symbol.
 			this->m_ed.template add_symbol<term_type>(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
 		~polynomial() = default;
 		polynomial &operator=(const polynomial &) = default;
@@ -127,7 +127,7 @@ class polynomial2:
 			// Insert the symbol.
 			this->m_ed.template add_symbol<term_type>(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
 		~polynomial2() = default;
 		polynomial2 &operator=(const polynomial2 &) = default;

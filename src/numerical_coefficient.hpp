@@ -59,6 +59,10 @@ template <typename T>
 class numerical_coefficient
 {
 		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+	public:
+		/// Underlying numerical type.
+		typedef T type;
+	private:
 		// Make friend with all instances of numerical_coefficient.
 		template <typename U>
 		friend class numerical_coefficient;
@@ -117,9 +121,31 @@ class numerical_coefficient
 				m_value -= std::forward<U>(other);
 			}
 		}
+		template <typename U>
+		static type forward_for_construction(U &&x,
+			typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		{
+			return type(std::forward<U>(x));
+		}
+		template <typename U>
+		static type forward_for_construction(U &&x,
+			typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
+			is_nonconst_rvalue_ref<U &&>::value
+			>::type * = piranha_nullptr)
+		{
+			return type(std::move(x.m_value));
+		}
+		template <typename U>
+		static type forward_for_construction(U &&x,
+			typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
+			!is_nonconst_rvalue_ref<U &&>::value
+			>::type * = piranha_nullptr)
+		{
+			return type(x.m_value);
+		}
 	public:
-		/// Underlying numerical type.
-		typedef T type;
 		/// Default constructor.
 		/**
 		 * Will explicitly call numerical_coefficient::type's default constructor.
@@ -134,55 +160,24 @@ class numerical_coefficient
 		numerical_coefficient(const numerical_coefficient &) = default;
 		/// Defaulted move constructor.
 		numerical_coefficient(numerical_coefficient &&) = default;
-		/// Copy constructor from numerical coefficient of other type.
-		/**
-		 * Will use the numerical value of \p other to copy-construct the internal numerical value.
-		 * 
-		 * @param[in] other numerical coefficient to be copied.
-		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor from type \p U.
-		 */
-		template <typename U>
-		explicit numerical_coefficient(const numerical_coefficient<U> &other):m_value(other.m_value) {}
-		/// Move constructor from numerical coefficient of other type.
-		/**
-		 * Will use the numerical value of \p other to move-construct the internal numerical value.
-		 * 
-		 * @param[in] other numerical coefficient to be moved.
-		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's move constructor from type \p U.
-		 */
-		template <typename U>
-		explicit numerical_coefficient(numerical_coefficient<U> &&other):m_value(std::move(other.m_value)) {}
-		/// Copy constructor from numerical_coefficient::type.
-		/**
-		 * Will use \p x to copy-construct the internal numerical value.
-		 * 
-		 * @param[in] x value to be copied.
-		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's copy constructor.
-		 */
-		explicit numerical_coefficient(const type &x):m_value(x) {}
-		/// Move constructor from numerical_coefficient::type.
-		/**
-		 * Will use \p x to move-construct the internal numerical value.
-		 * 
-		 * @param[in] x value to be moved.
-		 */
-		explicit numerical_coefficient(type &&x):m_value(std::move(x)) {}
 		/// Generic constructor.
 		/**
-		 * This constructor is activated only if \p U is not an instance of piranha::numerical_coefficient.
-		 * \p x will be forwarded to construct the internal numerical value.
+		 * Generic constructor for use in series.
 		 * 
-		 * @param[in] x argument for construction.
+		 * The construction algorithm proceeds as follows:
 		 * 
-		 * @throws unspecified any exception thrown by numerical_coefficient::type's invoked constructor.
+		 * - if \p x is an instance of piranha::numerical_coefficient:
+		 *   - its numerical value is used to construct the numerical value of \p this;
+		 * - else:
+		 *   - \p x is used directly to construct the numerical value of \p this.
+		 * 
+		 * @param[in] x construction argument.
+		 * 
+		 * @throws unspecified any exception thrown by the construction of the internal numerical value from \p x or its
+		 * internal numerical value.
 		 */
-		template <typename U>
-		explicit numerical_coefficient(U &&x,
-			typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr):
-			m_value(std::forward<U>(x))
+		template <typename U, typename Term>
+		explicit numerical_coefficient(U &&x, const echelon_descriptor<Term> &):m_value(forward_for_construction(std::forward<U>(x)))
 		{}
 		/// Defaulted destructor.
 		~numerical_coefficient() = default;

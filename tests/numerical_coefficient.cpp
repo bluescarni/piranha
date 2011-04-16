@@ -49,6 +49,8 @@ struct constructor_tester
 	void operator()(const T &)
 	{
 		typedef numerical_coefficient<T> nc;
+		typedef echelon_descriptor<polynomial_term<nc,int>> ed_type;
+		ed_type ed;
 		BOOST_CONCEPT_ASSERT((concept::Coefficient<nc>));
 		BOOST_CHECK((std::has_trivial_destructor<T>::value && std::has_trivial_destructor<nc>::value) || (!std::has_trivial_destructor<T>::value && !std::has_trivial_destructor<nc>::value));
 		BOOST_CHECK((std::has_trivial_copy_constructor<T>::value && std::has_trivial_copy_constructor<nc>::value) || (!std::has_trivial_copy_constructor<T>::value && !std::has_trivial_copy_constructor<nc>::value));
@@ -56,26 +58,28 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(nc().get_value(),T());
 		// Copy construction from value.
 		T value(3);
-		BOOST_CHECK_EQUAL(nc(value).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(value,ed).get_value(),T(3));
 		// Copy construction from different value type.
 		other_type other_value(3);
-		BOOST_CHECK_EQUAL(nc(other_value).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(other_value,ed).get_value(),T(3));
 		// Move construction from value.
-		BOOST_CHECK_EQUAL(nc(T(3)).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(T(3),ed).get_value(),T(3));
 		// Move construciton from other value type.
-		BOOST_CHECK_EQUAL(nc(other_type(3)).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(other_type(3),ed).get_value(),T(3));
 		// Copy construction.
-		nc other(value);
-		BOOST_CHECK_EQUAL(nc(other).get_value(),T(3));
+		nc other(value,ed);
+		BOOST_CHECK_EQUAL(nc(other,ed).get_value(),T(3));
 		// Move construction.
-		BOOST_CHECK_EQUAL(nc(nc(value)).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(nc(value,ed)).get_value(),T(3));
 		// Move assignment.
-		other = nc(T(3));
+		other = nc(T(3),ed);
 		// Check copy/move construction from coefficients of different types.
 		typedef numerical_coefficient<int> nc_other;
-		nc_other nco{3};
-		BOOST_CHECK_EQUAL(nc(nco).get_value(),T(3));
-		BOOST_CHECK_EQUAL(nc(nc_other(3)).get_value(),T(3));
+		typedef echelon_descriptor<polynomial_term<nc_other,int>> ed_type_other;
+		ed_type_other ed_other;
+		nc_other nco{3,ed_other};
+		BOOST_CHECK_EQUAL(nc(nco,ed).get_value(),T(3));
+		BOOST_CHECK_EQUAL(nc(nc_other(3,ed_other),ed).get_value(),T(3));
 		// Assignment from int.
 		nc n;
 		n = 10;
@@ -85,12 +89,12 @@ struct constructor_tester
 		// Assignment from numerical_coefficient of same type.
 		n = other;
 		BOOST_CHECK_EQUAL(n.get_value(),T(3));
-		n = nc(value);
+		n = nc(value,ed);
 		BOOST_CHECK_EQUAL(n.get_value(),T(3));
 		// Assignment from numerical_coefficient of different type.
 		n = nco;
 		BOOST_CHECK_EQUAL(n.get_value(),T(3));
-		n = nc_other(3);
+		n = nc_other(3,ed_other);
 		BOOST_CHECK_EQUAL(n.get_value(),T(3));
 	}
 };
@@ -108,8 +112,8 @@ struct ignorability_tester
 		typedef numerical_coefficient<T> nc;
 		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
 		ed_type ed;
-		BOOST_CHECK((nc(0).is_ignorable(ed) && math::is_zero(T(0))) || (!nc(0).is_ignorable(ed) && !math::is_zero(T(0))));
-		BOOST_CHECK((!nc(1).is_ignorable(ed) && !math::is_zero(T(1))) || (nc(1).is_ignorable(ed) && math::is_zero(T(1))));
+		BOOST_CHECK((nc(0,ed).is_ignorable(ed) && math::is_zero(T(0))) || (!nc(0,ed).is_ignorable(ed) && !math::is_zero(T(0))));
+		BOOST_CHECK((!nc(1,ed).is_ignorable(ed) && !math::is_zero(T(1))) || (nc(1,ed).is_ignorable(ed) && math::is_zero(T(1))));
 	}
 };
 
@@ -127,7 +131,7 @@ struct compatibility_tester
 		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
 		ed_type ed;
 		BOOST_CHECK(nc().is_compatible(ed));
-		BOOST_CHECK(nc(1).is_compatible(ed));
+		BOOST_CHECK(nc(1,ed).is_compatible(ed));
 	}
 };
 
@@ -144,21 +148,23 @@ struct arithmetics_tester
 		typedef numerical_coefficient<T> nc;
 		typedef numerical_coefficient<other_type> nc_other;
 		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
+		typedef echelon_descriptor<polynomial_term<numerical_coefficient<other_type>,int>> ed_type_other;
 		ed_type ed;
+		ed_type_other ed_other;
 		nc cont;
 		T value{};
 		// Same numerical container.
-		cont.add(nc{T(1)},ed);
+		cont.add(nc{T(1),ed},ed);
 		value += T(1);
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
-		cont.subtract(nc{T(-1)},ed);
+		cont.subtract(nc{T(-1),ed},ed);
 		value -= T(-1);
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
 		// Other numerical container.
-		cont.add(nc_other{other_type(1)},ed);
+		cont.add(nc_other{other_type(1),ed_other},ed);
 		value += other_type(1);
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
-		cont.subtract(nc_other{other_type(1)},ed);
+		cont.subtract(nc_other{other_type(1),ed_other},ed);
 		value -= other_type(1);
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
 		// Same numerical type.

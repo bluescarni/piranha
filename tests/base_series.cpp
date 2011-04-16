@@ -71,7 +71,7 @@ struct debug_access<construction_tag>
 			BOOST_CHECK_EQUAL(series_type().size(), (unsigned)0);
 			// Copy constructor.
 			series_type s;
-			s.insert(term_type(1,key_type{Expo(1)}),ed);
+			s.insert(term_type(Cf(1,ed),key_type{Expo(1)}),ed);
 			series_type t(s);
 			BOOST_CHECK(*s.m_container.begin() == *t.m_container.begin());
 			BOOST_CHECK(s.m_container.begin()->m_cf.get_value() == t.m_container.begin()->m_cf.get_value());
@@ -126,33 +126,33 @@ class debug_access<insertion_tag>
 				ed.template add_symbol<term_type>(symbol("x"));
 				// Insert well-behaved term.
 				series_type s;
-				s.insert(term_type(1,key_type{Expo(1)}),ed);
+				s.insert(term_type(Cf(1,ed),key_type{Expo(1)}),ed);
 				BOOST_CHECK(!s.empty());
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insert incompatible term.
-				BOOST_CHECK_THROW(s.insert(term_type(1,key_type{}),ed),std::invalid_argument);
+				BOOST_CHECK_THROW(s.insert(term_type(Cf(1,ed),key_type{}),ed),std::invalid_argument);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insert ignorable term.
-				s.insert(term_type(0,key_type{Expo(1)}),ed);
+				s.insert(term_type(Cf(0,ed),key_type{Expo(1)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insert another new term.
-				s.insert(term_type(1,key_type{Expo(2)}),ed);
+				s.insert(term_type(Cf(1,ed),key_type{Expo(2)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(2));
 				// Insert equivalent terms.
-				s.insert(term_type(2,key_type{Expo(2)}),ed);
+				s.insert(term_type(Cf(2,ed),key_type{Expo(2)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(2));
-				s.template insert<false>(term_type(-2,key_type{Expo(2)}),ed);
+				s.template insert<false>(term_type(Cf(-2,ed),key_type{Expo(2)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(2));
 				// Insert terms that will prompt for erase of a term.
-				s.insert(term_type(-2,key_type{Expo(2)}),ed);
-				s.insert(term_type(-2,key_type{Expo(2)}),ed);
-				s.insert(term_type(-1,key_type{Expo(2)}),ed);
+				s.insert(term_type(Cf(-2,ed),key_type{Expo(2)}),ed);
+				s.insert(term_type(Cf(-2,ed),key_type{Expo(2)}),ed);
+				s.insert(term_type(Cf(-1,ed),key_type{Expo(2)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insertion of different term type.
 				typedef polynomial_term<numerical_coefficient<float>,Expo> other_term_type;
-				s.insert(other_term_type(1,key_type{Expo(1)}),ed);
+				s.insert(other_term_type(numerical_coefficient<float>(1,ed),key_type{Expo(1)}),ed);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
-				BOOST_CHECK_EQUAL(s.m_container.begin()->m_cf.get_value(),Cf(1).get_value() + float(1));
+				BOOST_CHECK_EQUAL(s.m_container.begin()->m_cf.get_value(),numerical_coefficient<float>(1,ed).get_value() + float(1));
 			}
 		};
 		template <typename Cf>
@@ -192,8 +192,8 @@ class debug_access<merge_terms_tag>
 				ed_type ed;
 				ed.template add_symbol<term_type>(symbol("x"));
 				series_type s1, s2;
-				s1.insert(term_type(1,key_type{Expo(1)}),ed);
-				s2.insert(term_type(2,key_type{Expo(2)}),ed);
+				s1.insert(term_type(Cf(1,ed),key_type{Expo(1)}),ed);
+				s2.insert(term_type(Cf(2,ed),key_type{Expo(2)}),ed);
 				// Merge with copy.
 				s1.template merge_terms<true>(s2,ed);
 				BOOST_CHECK_EQUAL(s1.size(),unsigned(2));
@@ -203,25 +203,25 @@ class debug_access<merge_terms_tag>
 				BOOST_CHECK(it->m_cf.get_value() == 1 || it->m_cf.get_value() == 2);
 				// Merge with move.
 				series_type s3;
-				s3.insert(term_type(3,key_type{Expo(3)}),ed);
+				s3.insert(term_type(Cf(3,ed),key_type{Expo(3)}),ed);
 				s1.template merge_terms<true>(std::move(s3),ed);
 				BOOST_CHECK(s3.empty());
 				BOOST_CHECK_EQUAL(s1.size(),unsigned(3));
 				// Merge with move + swap.
 				series_type s1_copy = s1;
-				s3.insert(term_type(4,key_type{Expo(4)}),ed);
-				s3.insert(term_type(5,key_type{Expo(5)}),ed);
-				s3.insert(term_type(6,key_type{Expo(6)}),ed);
-				s3.insert(term_type(7,key_type{Expo(7)}),ed);
+				s3.insert(term_type(Cf(4,ed),key_type{Expo(4)}),ed);
+				s3.insert(term_type(Cf(5,ed),key_type{Expo(5)}),ed);
+				s3.insert(term_type(Cf(6,ed),key_type{Expo(6)}),ed);
+				s3.insert(term_type(Cf(7,ed),key_type{Expo(7)}),ed);
 				s1_copy.template merge_terms<true>(std::move(s3),ed);
 				BOOST_CHECK_EQUAL(s1_copy.size(),unsigned(7));
 				BOOST_CHECK(s3.empty());
 				// Negative merge with move + swap.
 				s1_copy = s1;
-				s3.insert(term_type(4,key_type{Expo(4)}),ed);
-				s3.insert(term_type(5,key_type{Expo(5)}),ed);
-				s3.insert(term_type(6,key_type{Expo(6)}),ed);
-				s3.insert(term_type(7,key_type{Expo(7)}),ed);
+				s3.insert(term_type(Cf(4,ed),key_type{Expo(4)}),ed);
+				s3.insert(term_type(Cf(5,ed),key_type{Expo(5)}),ed);
+				s3.insert(term_type(Cf(6,ed),key_type{Expo(6)}),ed);
+				s3.insert(term_type(Cf(7,ed),key_type{Expo(7)}),ed);
 				s1_copy.template merge_terms<false>(std::move(s3),ed);
 				BOOST_CHECK_EQUAL(s1_copy.size(),unsigned(7));
 				it = s1_copy.m_container.begin();
@@ -272,7 +272,7 @@ class debug_access<merge_terms_tag>
 					it->m_cf.get_value() == value_type(3) + value_type(3) + value_type(3) + value_type(3));
 				// Merge with different series type.
 				s1.m_container.clear();
-				s1.insert(term_type(1,key_type{Expo(1)}),ed);
+				s1.insert(term_type(Cf(1,ed),key_type{Expo(1)}),ed);
 				typedef polynomial_term<numerical_coefficient<long>,Expo> term_type2;
 				typedef typename term_type2::key_type key_type2;
 				typedef g_series_type<term_type2> series_type2;
@@ -280,7 +280,7 @@ class debug_access<merge_terms_tag>
 				ed_type2 ed2;
 				ed2.template add_symbol<term_type2>(symbol("x"));
 				series_type2 s4;
-				s4.insert(term_type2(1,key_type2{Expo(1)}),ed2);
+				s4.insert(term_type2(numerical_coefficient<long>(1,ed2),key_type2{Expo(1)}),ed2);
 				s1.template merge_terms<true>(s4,ed);
 				BOOST_CHECK_EQUAL(s1.size(), unsigned(1));
 				it = s1.m_container.begin();
@@ -288,7 +288,7 @@ class debug_access<merge_terms_tag>
 				tmp += long(1);
 				BOOST_CHECK(it->m_cf.get_value() == tmp);
 				s4.m_container.clear();
-				s4.insert(term_type2(1,key_type2{Expo(2)}),ed2);
+				s4.insert(term_type2(numerical_coefficient<long>(1,ed2),key_type2{Expo(2)}),ed2);
 				s1.template merge_terms<true>(s4,ed);
 				it = s1.m_container.begin();
 				BOOST_CHECK_EQUAL(s1.size(), unsigned(2));
@@ -334,11 +334,11 @@ class debug_access<merge_args_tag>
 				series_type s_derived;
 				typename series_type::base &s = static_cast<typename series_type::base &>(s_derived);
 				ed_type ed1, ed2;
-				s.insert(term_type(1,key_type{}),ed1);
+				s.insert(term_type(Cf(1,ed1),key_type{}),ed1);
 				ed2.template add_symbol<term_type>(symbol("x"));
 				auto merge_out = s.merge_args(ed1,ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));
-				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1,ed2),key_type{Expo(0)})) != merge_out.m_container.end());
 				auto compat_check = [](const typename series_type::base &series, const ed_type &ed) -> void {
 					for (auto it = series.m_container.begin(); it != series.m_container.end(); ++it) {
 						BOOST_CHECK(it->is_compatible(ed));
@@ -346,15 +346,15 @@ class debug_access<merge_args_tag>
 				};
 				compat_check(merge_out,ed2);
 				s = std::move(merge_out);
-				s.insert(term_type(1,key_type{Expo(1)}),ed2);
-				s.insert(term_type(2,key_type{Expo(2)}),ed2);
+				s.insert(term_type(Cf(1,ed2),key_type{Expo(1)}),ed2);
+				s.insert(term_type(Cf(2,ed2),key_type{Expo(2)}),ed2);
 				ed1 = ed2;
 				ed2.template add_symbol<term_type>(symbol("y"));
 				merge_out = s.merge_args(ed1,ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(3));
-				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(0),Expo(0)})) != merge_out.m_container.end());
-				BOOST_CHECK(merge_out.m_container.find(term_type(1,key_type{Expo(1),Expo(0)})) != merge_out.m_container.end());
-				BOOST_CHECK(merge_out.m_container.find(term_type(2,key_type{Expo(2),Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1,ed2),key_type{Expo(0),Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1,ed2),key_type{Expo(1),Expo(0)})) != merge_out.m_container.end());
+				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(2,ed2),key_type{Expo(2),Expo(0)})) != merge_out.m_container.end());
 				compat_check(merge_out,ed2);
 			}
 		};
