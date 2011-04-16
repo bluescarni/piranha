@@ -339,7 +339,7 @@ class hop_table
 		 */
 		hop_table &operator=(const hop_table &other)
 		{
-			if (this != &other) {
+			if (likely(this != &other)) {
 				hop_table tmp(other);
 				*this = std::move(tmp);
 			}

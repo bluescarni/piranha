@@ -118,7 +118,7 @@ class base_term: detail::base_term_tag
 		 */
 		base_term &operator=(const base_term &other)
 		{
-			if (this != &other) {
+			if (likely(this != &other)) {
 				base_term tmp(other);
 				*this = std::move(tmp);
 			}

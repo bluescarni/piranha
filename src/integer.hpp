@@ -894,7 +894,7 @@ class integer
 		 */
 		integer &operator=(const integer &other)
 		{
-			if (this != boost::addressof(other)) {
+			if (likely(this != &other)) {
 				// Handle assignment to moved-from objects.
 				if (m_value->_mp_d) {
 					::mpz_set(m_value,other.m_value);

@@ -271,8 +271,7 @@ class echelon_descriptor
 		 */
 		echelon_descriptor &operator=(const echelon_descriptor &other)
 		{
-			// Use copy-and-move to make it exception-safe.
-			if (this != &other) {
+			if (likely(this != &other)) {
 				auto tmp(other);
 				*this = std::move(tmp);
 			}

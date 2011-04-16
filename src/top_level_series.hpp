@@ -229,7 +229,7 @@ std::cout << 3 << '\n';
 		top_level_series &operator=(const top_level_series &other)
 		{
 			// Use copy+move idiom.
-			if (this != &other) {
+			if (likely(this != &other)) {
 				top_level_series tmp(other);
 				*this = std::move(tmp);
 			}

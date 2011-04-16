@@ -471,7 +471,7 @@ class cvector
 		cvector &operator=(const cvector &other)
 		{
 			// Copy + move idiom.
-			if (this != &other) {
+			if (likely(this != &other)) {
 				cvector tmp(other);
 				*this = std::move(tmp);
 			}
