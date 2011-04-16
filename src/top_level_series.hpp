@@ -30,6 +30,7 @@
 #include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/base_series_fwd.hpp"
 #include "detail/top_level_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
 #include "math.hpp"
@@ -65,7 +66,9 @@ template <typename Term, typename Derived>
 class top_level_series: public base_series<Term,Derived>, public series_binary_operators, detail::top_level_series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::CRTP<top_level_series<Term,Derived>,Derived>));
+		// Shortcut for base_series base.
 		typedef base_series<Term,Derived> base;
+		// Make friends for debug.
 		template <typename T>
 		friend class debug_access;
 		// Make friend with all top_level_series.
@@ -75,7 +78,10 @@ class top_level_series: public base_series<Term,Derived>, public series_binary_o
 		template <bool Sign, typename T>
 		void dispatch_add(T &&x, typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
-			Term tmp(typename Term::cf_type(std::forward<T>(x)),typename Term::key_type(m_ed.template get_args<Term>()));
+			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
+				"Cannot add non top level series.");
+			// NOTE: here maybe the constructor from cf should take also the echelon descriptor as parameter?
+			Term tmp(typename Term::cf_type(std::forward<T>(x),m_ed),typename Term::key_type(m_ed.template get_args<Term>()));
 			this->template insert<Sign>(std::move(tmp),m_ed);
 		}
 		template <bool Sign, typename T>
@@ -106,6 +112,77 @@ std::cout << "oh NOES different!\n";
 				}
 			}
 		}
+		// Overload for assignment from non-series type.
+		template <typename T>
+		void dispatch_generic_assignment(T &&x, typename std::enable_if<
+			!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+std::cout << 0 << '\n';
+			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
+				"Cannot assign non top level series.");
+			echelon_descriptor<Term> empty_ed;
+			Term tmp(typename Term::cf_type(std::forward<T>(x),empty_ed),typename Term::key_type(empty_ed.template get_args<Term>()));
+			this->m_container.clear();
+			m_ed = std::move(empty_ed);
+			this->template insert<true>(std::move(tmp),m_ed);
+		}
+		// Assign from series with same term type, move semantics.
+		template <typename Series>
+		void dispatch_series_assignment(Series &&s,
+			typename std::enable_if<
+			std::is_same<Term,typename strip_cv_ref<Series>::type::term_type>::value &&
+			is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+std::cout << 1 << '\n';
+			// This is to check for self-assignment, which could happen in the case Series derives from same type as this
+			// and the canonical move-assignment operator does not kick in.
+			if (likely(&m_ed != &s.m_ed)) {
+				m_ed = std::move(s.m_ed);
+				this->m_container = std::move(s.m_container);
+			}
+		}
+		// Assign from series with same term type, copy semantics.
+		template <typename Series>
+		void dispatch_series_assignment(Series &&s,
+			typename std::enable_if<
+			std::is_same<Term,typename strip_cv_ref<Series>::type::term_type>::value &&
+			!is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+std::cout << 2 << '\n';
+			if (likely(&m_ed != &s.m_ed)) {
+				auto new_ed = s.m_ed;
+				auto new_container = s.m_container;
+				m_ed = std::move(new_ed);
+				this->m_container = std::move(new_container);
+			}
+		}
+		// Assign from series with different term type.
+		template <typename Series>
+		void dispatch_series_assignment(Series &&s,
+			typename std::enable_if<
+			!std::is_same<Term,typename strip_cv_ref<Series>::type::term_type>::value
+			>::type * = piranha_nullptr)
+		{
+std::cout << 3 << '\n';
+			// NOTE: we do not move away the other echelon descriptor, since if something goes wrong
+			// in the term merging below, series s could be left in an inconsistent state.
+			echelon_descriptor<Term> new_ed(s.m_ed);
+			// The next two lines are exception-safe.
+			m_ed = std::move(new_ed);
+			this->m_container.clear();
+			this->template merge_terms<true>(std::forward<Series>(s),m_ed);
+		}
+		// Overload for assignment from series type.
+		template <typename Series>
+		void dispatch_generic_assignment(Series &&s, typename std::enable_if<
+			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series>::type>::value>::type * = piranha_nullptr)
+		{
+			static_assert(echelon_size<Term>::value == echelon_size<typename strip_cv_ref<Series>::type::term_type>::value,
+				"Cannot add/subtract series with different echelon sizes.");
+			dispatch_series_assignment(std::forward<Series>(s));
+		}
 	public:
 		/// Defaulted default constructor.
 		top_level_series() = default;
@@ -135,9 +212,11 @@ std::cout << "oh NOES different!\n";
 		 */
 		top_level_series &operator=(top_level_series &&other) piranha_noexcept_spec(true)
 		{
-			// Descriptor and base cannot throw on move.
-			base::operator=(std::move(other));
-			m_ed = std::move(other.m_ed);
+			if (likely(this != &other)) {
+				// Descriptor and base cannot throw on move.
+				base::operator=(std::move(other));
+				m_ed = std::move(other.m_ed);
+			}
 			return *this;
 		}
 		/// Copy assignment operator.
@@ -155,6 +234,37 @@ std::cout << "oh NOES different!\n";
 				top_level_series tmp(other);
 				*this = std::move(tmp);
 			}
+			return *this;
+		}
+		/// Generic assignment operator.
+		/**
+		 * The generic assignment algorithm works as follow:
+		 * 
+		 * - if \p T derives from piranha::top_level_series,
+		 *   - if the term type of \p T is the same as that of \p this:
+		 *     - terms container and echelon descriptor are assigned to \p this;
+		 *   - else:
+		 *     - \p this is emptied and all terms from \p x are inserted using piranha::base_series::merge_terms()
+		 *       (the echelon descriptor of \p x is also assigned to \p this);
+		 * - else:
+		 *   - \p x is used to construct a term type as follows:
+		 *     - \p x is forwarded to construct a coefficient, together with the echelon descriptor of \p this;
+		 *     - the arguments vector at echelon position 0 of the echelon descriptor of \p this will be used to construct a key;
+		 *     - coefficient and key are used to construct the term instance;
+		 *   - the term is inserted into \p this using piranha::base_series::insert().
+		 * 
+		 * If \p other is a piranha::top_level_series and its term type's echelon size is different from the echelon size of
+		 * the term type of this series, a compile-time error will be produced. A compile-time error will also be produced if \p other
+		 * derives from piranha::base_series without being a piranha::top_level_series.
+		 * 
+		 * @param[in] x object to assign from.
+		 * 
+		 * @return reference to \p this.
+		 */
+		template <typename T>
+		top_level_series &operator=(T &&x)
+		{
+			dispatch_generic_assignment(std::forward<T>(x));
 			return *this;
 		}
 		/// Negate series in-place.
@@ -191,7 +301,8 @@ std::cout << "oh NOES different!\n";
 		 *   - the term will be inserted into \p this using piranha::base_series::insert().
 		 * 
 		 * If \p other is a piranha::top_level_series and its term type's echelon size is different from the echelon size of
-		 * the term type of this series, a compile-time error will be produced.
+		 * the term type of this series, a compile-time error will be produced. A compile-time error will also be produced if \p other
+		 * derives from piranha::base_series without being a piranha::top_level_series.
 		 * 
 		 * @param[in] other object to be added to the series.
 		 * 

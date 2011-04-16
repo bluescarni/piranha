@@ -65,6 +65,12 @@ class polynomial:
 			base::operator=(std::move(other));
 			return *this;
 		}
+		template <typename... Args>
+		polynomial &operator=(Args && ... params)
+		{
+			base::operator=(std::forward<Args>(params)...);
+			return *this;
+		}
 };
 
 struct constructor_tester
@@ -134,6 +140,12 @@ class polynomial2:
 		polynomial2 &operator=(polynomial2 &&other) piranha_noexcept_spec(true)
 		{
 			base::operator=(std::move(other));
+			return *this;
+		}
+		template <typename... Args>
+		polynomial2 &operator=(Args && ... params)
+		{
+			base::operator=(std::forward<Args>(params)...);
 			return *this;
 		}
 };
@@ -361,4 +373,69 @@ typedef debug_access<binary_arithmetics_tag> binary_arithmetics_tester;
 BOOST_AUTO_TEST_CASE(top_level_series_binary_arithmetics_test)
 {
 	boost::mpl::for_each<cf_types>(binary_arithmetics_tester());
+}
+
+struct generic_assignment_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<generic_assignment_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				typedef polynomial<Cf,Expo> p_type1;
+				typedef polynomial<numerical_coefficient<float>,Expo> p_type2;
+				auto checker1 = [](const p_type1 &poly) -> void {
+					BOOST_CHECK_EQUAL(poly.size(),1u);
+					BOOST_CHECK_EQUAL(poly.m_container.begin()->m_cf.get_value(),Cf(5,poly.m_ed).get_value());
+				};
+				p_type1 p;
+				p = 5;
+				checker1(p);
+				integer tmp(5);
+				p = integer(5);
+				checker1(p);
+				p = tmp;
+				checker1(p);
+				p_type1 q;
+				q = 6;
+				auto checker2 = [](const p_type1 &poly) -> void {
+					BOOST_CHECK_EQUAL(poly.size(),1u);
+					BOOST_CHECK_EQUAL(poly.m_container.begin()->m_cf.get_value(),Cf(6,poly.m_ed).get_value());
+				};
+				p = q;
+				checker2(p);
+				p = std::move(q);
+				checker2(p);
+				p_type2 r;
+				r = 7;
+				auto checker3 = [](const p_type1 &poly) -> void {
+					BOOST_CHECK_EQUAL(poly.size(),1u);
+					BOOST_CHECK_EQUAL(poly.m_container.begin()->m_cf.get_value(),Cf(numerical_coefficient<float>(7,poly.m_ed),poly.m_ed).get_value());
+				};
+				p = r;
+				checker3(p);
+				p = std::move(r);
+				checker3(p);
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+		}
+};
+}
+
+typedef debug_access<generic_assignment_tag> generic_assignment_tester;
+
+BOOST_AUTO_TEST_CASE(top_level_series_generic_assignment_test)
+{
+	boost::mpl::for_each<cf_types>(generic_assignment_tester());
 }
