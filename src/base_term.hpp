@@ -134,8 +134,10 @@ class base_term: detail::base_term_tag
 		 */
 		base_term &operator=(base_term &&other) piranha_noexcept_spec(true)
 		{
-			m_cf = std::move(other.m_cf);
-			m_key = std::move(other.m_key);
+			if (likely(this != &other)) {
+				m_cf = std::move(other.m_cf);
+				m_key = std::move(other.m_key);
+			}
 			return *this;
 		}
 		/// Equality operator.

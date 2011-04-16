@@ -196,7 +196,9 @@ class array_key: detail::array_key_tag
 		explicit array_key(U &&x, const std::vector<symbol> &args,
 			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
-		{}
+		{
+			piranha_assert(std::is_sorted(args.begin(),args.end()));
+		}
 		/// Trivial destructor.
 		~array_key() piranha_noexcept_spec(true)
 		{
@@ -217,7 +219,9 @@ class array_key: detail::array_key_tag
 		 */
 		array_key &operator=(array_key &&other) piranha_noexcept_spec(true)
 		{
-			m_container = std::move(other.m_container);
+			if (likely(this != &other)) {
+				m_container = std::move(other.m_container);
+			}
 			return *this;
 		}
 		/// Size of the internal array container.

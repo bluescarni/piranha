@@ -447,12 +447,14 @@ class cvector
 		 */
 		cvector &operator=(cvector &&other) piranha_noexcept_spec(true)
 		{
-			destroy_and_deallocate();
-			m_data = other.m_data;
-			m_size = other.m_size;
-			// Empty other.
-			other.m_data = piranha_nullptr;
-			other.m_size = 0;
+			if (likely(this != &other)) {
+				destroy_and_deallocate();
+				m_data = other.m_data;
+				m_size = other.m_size;
+				// Empty other.
+				other.m_data = piranha_nullptr;
+				other.m_size = 0;
+			}
 			return *this;
 		}
 		/// Copy assignment operator.

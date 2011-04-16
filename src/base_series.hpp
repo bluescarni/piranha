@@ -323,7 +323,9 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 */
 		base_series &operator=(base_series &&other) piranha_noexcept_spec(true)
 		{
-			m_container = std::move(other.m_container);
+			if (likely(this != &other)) {
+				m_container = std::move(other.m_container);
+			}
 			return *this;
 		}
 		/// Series size.

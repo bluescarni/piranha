@@ -353,12 +353,14 @@ class hop_table
 		 */
 		hop_table &operator=(hop_table &&other) piranha_noexcept_spec(true)
 		{
-			m_hasher = std::move(other.m_hasher);
-			m_key_equal = std::move(other.m_key_equal);
-			m_n_elements = std::move(other.m_n_elements);
-			m_container = std::move(other.m_container);
-			// Zero out other.
-			other.m_n_elements = 0;
+			if (likely(this != &other)) {
+				m_hasher = std::move(other.m_hasher);
+				m_key_equal = std::move(other.m_key_equal);
+				m_n_elements = std::move(other.m_n_elements);
+				m_container = std::move(other.m_container);
+				// Zero out other.
+				other.m_n_elements = 0;
+			}
 			return *this;
 		}
 		/// Const begin iterator.

@@ -274,7 +274,9 @@ class echelon_descriptor
 		 */
 		echelon_descriptor &operator=(echelon_descriptor &&other) piranha_noexcept_spec(true)
 		{
-			m_args_tuple = std::move(other.m_args_tuple);
+			if (likely(this != &other)) {
+				m_args_tuple = std::move(other.m_args_tuple);
+			}
 			return *this;
 		}
 		/// Arguments getter.

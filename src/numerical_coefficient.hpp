@@ -191,7 +191,9 @@ class numerical_coefficient
 		 */
 		numerical_coefficient &operator=(numerical_coefficient &&other) piranha_noexcept_spec(true)
 		{
-			m_value = std::move(other.m_value);
+			if (likely(this != &other)) {
+				m_value = std::move(other.m_value);
+			}
 			return *this;
 		}
 		/// Generic assignment operator.
