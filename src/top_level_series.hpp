@@ -80,7 +80,6 @@ class top_level_series: public base_series<Term,Derived>, public series_binary_o
 		{
 			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
 				"Cannot add non top level series.");
-			// NOTE: here maybe the constructor from cf should take also the echelon descriptor as parameter?
 			Term tmp(typename Term::cf_type(std::forward<T>(x),m_ed),typename Term::key_type(m_ed.template get_args<Term>()));
 			this->template insert<Sign>(std::move(tmp),m_ed);
 		}
@@ -247,11 +246,13 @@ std::cout << 3 << '\n';
 		 *     - \p this is emptied and all terms from \p x are inserted using piranha::base_series::merge_terms()
 		 *       (the echelon descriptor of \p x is also assigned to \p this);
 		 * - else:
-		 *   - \p x is used to construct a term type as follows:
-		 *     - \p x is forwarded to construct a coefficient, together with the echelon descriptor of \p this;
+		 *   - \p x is used to construct a new term as follows:
+		 *     - \p x is forwarded, together with an empty echelon descriptor, to construct a coefficient;
 		 *     - the arguments vector at echelon position 0 of the echelon descriptor of \p this will be used to construct a key;
-		 *     - coefficient and key are used to construct the term instance;
-		 *   - the term is inserted into \p this using piranha::base_series::insert().
+		 *     - coefficient and key are used to construct the new term instance;
+		 *   - an empty echelon descriptor is assigned to \p this;
+		 *   - all terms of this are discarded;
+		 *   - the new term is inserted into \p this using piranha::base_series::insert().
 		 * 
 		 * If \p other is a piranha::top_level_series and its term type's echelon size is different from the echelon size of
 		 * the term type of this series, a compile-time error will be produced. A compile-time error will also be produced if \p other
@@ -296,7 +297,7 @@ std::cout << 3 << '\n';
 		 *   - all terms in \p other (or its copy) will be merged into \p this using piranha::base_series::merge_terms() and the merged descriptor;
 		 * - else:
 		 *   - a \p Term instance will be constructed as follows:
-		 *     - \p other will be forwarded to construct the coefficient;
+		 *     - \p other will be forwarded, together with the echelon descriptor of \p this, to construct the coefficient;
 		 *     - the arguments vector at echelon position 0 of the echelon descriptor of \p this will be used to construct the key;
 		 *   - the term will be inserted into \p this using piranha::base_series::insert().
 		 * 

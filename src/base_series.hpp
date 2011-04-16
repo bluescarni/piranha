@@ -370,12 +370,17 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 * 
 		 * The insertion algorithm proceeds as follows:
 		 * 
-		 * - if \p term is not of type base_series::term_type, it is forwarded to construct an instance of
-		 *   base_series::term_type, and the algorithm proceeds to insert that instead;
+		 * - if \p term is not of type base_series::term_type, its coefficient and key are forwarded to construct a base_series::term_type
+		 *   as follows:
+		 *     - <tt>term</tt>'s coefficient is forwarded, together with \p ed, to construct a coefficient of type base_series::term_type::cf_type;
+		 *     - <tt>term</tt>'s key is forwarded, together with the arguments vector at the echelon level of \p ed corresponding to base_series::term_type,
+		 *       to construct a key of type base_series::term_type::key_type;
+		 *     - the newly-constructed coefficient and key are used to construct an instance of base_series::term_type, which will replace \p term as the
+		 *       argument of insertion for the remaining portion of the algorithm;
 		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
 		 * - if the term is ignorable, the method will return;
 		 * - if the term is already in the series, then:
-		 *   - its coefficient is added (i.e., \p Sign is \p true) or subtracted (i.e., \p Sign is \p false)
+		 *   - its coefficient is added (if \p Sign is \p true) or subtracted (if \p Sign is \p false)
 		 *     to the existing term's coefficient;
 		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
 		 * - else:
