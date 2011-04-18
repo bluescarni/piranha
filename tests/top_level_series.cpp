@@ -27,6 +27,7 @@
 #include <boost/mpl/vector.hpp>
 #include <string>
 #include <tuple>
+#include <type_traits>
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
@@ -35,6 +36,7 @@
 #include "../src/numerical_coefficient.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/symbol.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -50,7 +52,7 @@ class polynomial:
 		polynomial() = default;
 		polynomial(const polynomial &) = default;
 		polynomial(polynomial &&) = default;
-		explicit polynomial(const std::string &name):base()
+		explicit polynomial(const char *name):base()
 		{
 			typedef typename base::term_type term_type;
 			// Insert the symbol.
@@ -58,6 +60,17 @@ class polynomial:
 			// Construct and insert the term.
 			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
+		template <typename T>
+		explicit polynomial(T &&name, typename std::enable_if<std::is_same<std::string,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_ed.template add_symbol<term_type>(symbol(name));
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
+		}
+		template <typename... Args>
+		explicit polynomial(Args && ... params):base(std::forward<Args>(params)...) {}
 		~polynomial() = default;
 		polynomial &operator=(const polynomial &) = default;
 		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
@@ -65,58 +78,13 @@ class polynomial:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		template <typename... Args>
-		polynomial &operator=(Args && ... params)
+		template <typename T>
+		polynomial &operator=(T &&x)
 		{
-			base::operator=(std::forward<Args>(params)...);
+			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
-
-struct constructor_tester
-{
-	template <typename Cf>
-	struct runner
-	{
-		template <typename Expo>
-		void operator()(const Expo &)
-		{
-			typedef polynomial<Cf,Expo> p_type;
-			// Default construction.
-			p_type p1;
-			BOOST_CHECK_EQUAL(p1.size(),unsigned(0));
-			p_type x("x");
-			BOOST_CHECK_EQUAL(x.size(),unsigned(1));
-			// Copy construction.
-			p_type x2 = x;
-			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
-			// Move construction.
-			p_type x3 = std::move(x2);
-			BOOST_CHECK(x2.empty());
-			BOOST_CHECK_EQUAL(x3.size(),unsigned(1));
-			// Copy assignment.
-			x3 = x;
-			BOOST_CHECK_EQUAL(x3.size(),unsigned(1));
-			// Revive moved-from object.
-			x2 = x;
-			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
-			// Move assignment.
-			x2 = std::move(x);
-			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
-			BOOST_CHECK(x.empty());
-		}
-	};
-	template <typename Cf>
-	void operator()(const Cf &)
-	{
-		boost::mpl::for_each<expo_types>(runner<Cf>());
-	}
-};
-
-BOOST_AUTO_TEST_CASE(top_level_series_constructors_test)
-{
-	boost::mpl::for_each<cf_types>(constructor_tester());
-}
 
 template <typename Cf, typename Expo>
 class polynomial2:
@@ -142,13 +110,83 @@ class polynomial2:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		template <typename... Args>
-		polynomial2 &operator=(Args && ... params)
+		template <typename T>
+		polynomial2 &operator=(T &&x)
 		{
-			base::operator=(std::forward<Args>(params)...);
+			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
+
+struct constructor_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,Expo> p_type;
+			// Default construction.
+			p_type p1;
+			BOOST_CHECK_EQUAL(p1.size(),unsigned(0));
+			p_type x(std::string("x"));
+			BOOST_CHECK_EQUAL(x.size(),unsigned(1));
+			// Copy construction.
+			p_type x2 = x;
+			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
+			// Move construction.
+			p_type x3 = std::move(x2);
+			BOOST_CHECK(x2.empty());
+			BOOST_CHECK_EQUAL(x3.size(),unsigned(1));
+			// Copy assignment.
+			x3 = x;
+			BOOST_CHECK_EQUAL(x3.size(),unsigned(1));
+			// Revive moved-from object.
+			x2 = x;
+			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
+			// Move assignment.
+			x2 = std::move(x);
+			BOOST_CHECK_EQUAL(x2.size(),unsigned(1));
+			BOOST_CHECK(x.empty());
+			// Generic construction tests.
+			p_type x4(0);
+			BOOST_CHECK(x4.empty());
+			p_type x5(1);
+			BOOST_CHECK_EQUAL(x5.size(),1u);
+			p_type x6(integer(10));
+			BOOST_CHECK_EQUAL(x6.size(),1u);
+			x6 -= integer(10);
+			BOOST_CHECK(x6.empty());
+			// Construction from different series type, but same term_type.
+			polynomial2<Cf,Expo> y0;
+			y0 += 1;
+			p_type x7(y0);
+			x7 -= 1;
+			BOOST_CHECK(x7.empty());
+			p_type x7a(std::move(y0));
+			BOOST_CHECK_EQUAL(x7a.size(),1u);
+			// Construction from different series type with different term_type.
+			polynomial2<numerical_coefficient<float>,Expo> y1;
+			y1 += 1;
+			p_type x8(y1);
+			x8 -=1;
+			BOOST_CHECK(x8.empty());
+			p_type x8a(std::move(y1));
+			BOOST_CHECK_EQUAL(x8a.size(),1u);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(top_level_series_constructors_test)
+{
+	boost::mpl::for_each<cf_types>(constructor_tester());
+}
 
 struct arithmetics_tag {};
 

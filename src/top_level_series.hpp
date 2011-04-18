@@ -116,7 +116,6 @@ std::cout << "oh NOES different!\n";
 		void dispatch_generic_assignment(T &&x, typename std::enable_if<
 			!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
-std::cout << 0 << '\n';
 			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
 				"Cannot assign non top level series.");
 			echelon_descriptor<Term> empty_ed;
@@ -133,13 +132,12 @@ std::cout << 0 << '\n';
 			is_nonconst_rvalue_ref<Series &&>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << 1 << '\n';
-			// This is to check for self-assignment, which could happen in the case Series derives from same type as this
-			// and the canonical move-assignment operator does not kick in.
-			if (likely(&m_ed != &s.m_ed)) {
-				m_ed = std::move(s.m_ed);
-				this->m_container = std::move(s.m_container);
-			}
+			// NOTE: this check for self-assignment should never fail, since this method is not called if Series derives from the type of this
+			// (same thing below). Random statement: self-assignment can happen only if the assigned-from object derives from the type of this.
+			piranha_assert(&m_ed != &s.m_ed);
+			piranha_assert(&this->m_container != &s.m_container);
+			m_ed = std::move(s.m_ed);
+			this->m_container = std::move(s.m_container);
 		}
 		// Assign from series with same term type, copy semantics.
 		template <typename Series>
@@ -149,13 +147,12 @@ std::cout << 1 << '\n';
 			!is_nonconst_rvalue_ref<Series &&>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << 2 << '\n';
-			if (likely(&m_ed != &s.m_ed)) {
-				auto new_ed = s.m_ed;
-				auto new_container = s.m_container;
-				m_ed = std::move(new_ed);
-				this->m_container = std::move(new_container);
-			}
+			piranha_assert(&m_ed != &s.m_ed);
+			piranha_assert(&this->m_container != &s.m_container);
+			auto new_ed = s.m_ed;
+			auto new_container = s.m_container;
+			m_ed = std::move(new_ed);
+			this->m_container = std::move(new_container);
 		}
 		// Assign from series with different term type.
 		template <typename Series>
@@ -164,7 +161,6 @@ std::cout << 2 << '\n';
 			!std::is_same<Term,typename strip_cv_ref<Series>::type::term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << 3 << '\n';
 			// NOTE: we do not move away the other echelon descriptor, since if something goes wrong
 			// in the term merging below, series s could be left in an inconsistent state.
 			echelon_descriptor<Term> new_ed(s.m_ed);
@@ -193,6 +189,20 @@ std::cout << 3 << '\n';
 		top_level_series(const top_level_series &) = default;
 		/// Defaulted move constructor.
 		top_level_series(top_level_series &&) = default;
+		/// Generic constructor.
+		/**
+		 * The rules of generic construction follow the same rules of generic assignment operator=(T &&x). I.e., this constructor is equivalent
+		 * to default-constructing the series and then assigning \p x to it.
+		 * 
+		 * @param[in] x object used to initialise the series.
+		 * 
+		 * @throws unspecified any exception thrown by the generic assignment operator.
+		 */
+		template <typename T>
+		top_level_series(T &&x, typename std::enable_if<!std::is_base_of<top_level_series,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			operator=(std::forward<T>(x));
+		}
 		/// Trivial destructor.
 		/**
 		 * Equivalent to the defaulted destructor, apart from sanity checks being run
@@ -211,6 +221,7 @@ std::cout << 3 << '\n';
 		 */
 		top_level_series &operator=(top_level_series &&other) piranha_noexcept_spec(true)
 		{
+std::cout << "Loool another one I want\n";
 			if (likely(this != &other)) {
 				// Descriptor and base cannot throw on move.
 				base::operator=(std::move(other));
@@ -228,6 +239,7 @@ std::cout << 3 << '\n';
 		 */
 		top_level_series &operator=(const top_level_series &other)
 		{
+std::cout << "Loool the one I want\n";
 			// Use copy+move idiom.
 			if (likely(this != &other)) {
 				top_level_series tmp(other);
@@ -237,9 +249,10 @@ std::cout << 3 << '\n';
 		}
 		/// Generic assignment operator.
 		/**
-		 * The generic assignment algorithm works as follow:
+		 * This template method is enabled only if \p T does not derive from piranha::top_level_series of \p Term and
+		 * \p Derived (ignoring cv-qualifiers and references). The generic assignment algorithm works as follows:
 		 * 
-		 * - if \p T derives from piranha::top_level_series,
+		 * - if \p T is an instance of piranha::top_level_series,
 		 *   - if the term type of \p T is the same as that of \p this:
 		 *     - terms container and echelon descriptor are assigned to \p this;
 		 *   - else:
@@ -248,7 +261,7 @@ std::cout << 3 << '\n';
 		 * - else:
 		 *   - \p x is used to construct a new term as follows:
 		 *     - \p x is forwarded, together with an empty echelon descriptor, to construct a coefficient;
-		 *     - the arguments vector at echelon position 0 of the echelon descriptor of \p this will be used to construct a key;
+		 *     - an empty arguments vector will be used to construct a key;
 		 *     - coefficient and key are used to construct the new term instance;
 		 *   - an empty echelon descriptor is assigned to \p this;
 		 *   - all terms of this are discarded;
@@ -263,8 +276,11 @@ std::cout << 3 << '\n';
 		 * @return reference to \p this.
 		 */
 		template <typename T>
-		top_level_series &operator=(T &&x)
+		typename std::enable_if<!std::is_base_of<top_level_series,typename strip_cv_ref<T>::type>::value,top_level_series &>::type operator=(T &&x)
 		{
+			// NOTE: the enabler condition is used to make sure that when assigning to classes that derive from this type, the canonical
+			// assignment operators defined above are called.
+std::cout << "GENERIIIIIIIC\n";
 			dispatch_generic_assignment(std::forward<T>(x));
 			return *this;
 		}
