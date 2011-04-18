@@ -51,6 +51,8 @@ namespace piranha
  *   of \p Term and \p Derived as base class.
  * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
+ * Additional type requirements are provided in specific methods.
+ * 
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same exception safety guarantee as piranha::base_series. Additional specific exception safety

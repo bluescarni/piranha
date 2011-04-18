@@ -163,6 +163,8 @@ class binary_op_return_type
 		/// Type-trait's value.
 		static const bool value = std::is_same<retval_type,type2>::value;
 	private:
+		// NOTE: here the static asserts are going to fail for top_level_series which are of different type but same coefficient type:
+		// the order of the operands will determine the return value type.
 		static_assert(value || std::is_same<retval_type,type1>::value,"Invalid return value type.");
 		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() - std::declval<type2>())>::type>::value,"Inconsistent return value type.");
 		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() * std::declval<type2>())>::type>::value,"Inconsistent return value type.");
