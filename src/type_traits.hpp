@@ -141,20 +141,19 @@ template <typename T>
 struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
 {};
 
-/// Return type of arithmetic binary operators.
+/// Promotion rule for binary operators.
 /**
- * This type-trait will define a boolean flag \p value that is \p true if the return type of binary arithmetic operators
- * \p operator+, \p operator- and \p operator* is the type of the second operand, \p false otherwise.
+ * This type-trait will define a boolean flag \p value that is \p true if either \p T1 and \p T2 are the same type (minus references and cv-qualifiers)
+ * or the application of a binary operator on instances of type \p T1 and \p T2 (in this order) would promote \p T1 to \p T2, false otherwise.
  * 
  * For instance, a mixed-mode binary arithmetic operation with \p int as first argument type and \p double as second argument
  * type wil return a \p double instance, and hence the value of the type-trait is \p true. If the operands are switched (i.e.,
  * the first operand is a \p double and the second one is a \p int), the type-trait's value will be \p false.
  * 
- * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1. Also, const/volatile qualifiers
- * and references are removed from \p T1, \p T2 and <tt>T1 + T2</tt>.
+ * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1.
  */
 template <typename T1, typename T2, typename Enable = void>
-class binary_op_return_type
+class binary_op_promotion_rule
 {
 		typedef typename strip_cv_ref<T1>::type type1;
 		typedef typename strip_cv_ref<T2>::type type2;
@@ -162,12 +161,6 @@ class binary_op_return_type
 	public:
 		/// Type-trait's value.
 		static const bool value = std::is_same<retval_type,type2>::value;
-	private:
-		// NOTE: here the static asserts are going to fail for top_level_series which are of different type but same coefficient type:
-		// the order of the operands will determine the return value type.
-		static_assert(value || std::is_same<retval_type,type1>::value,"Invalid return value type.");
-		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() - std::declval<type2>())>::type>::value,"Inconsistent return value type.");
-		static_assert(std::is_same<retval_type,typename strip_cv_ref<decltype(std::declval<type1>() * std::declval<type2>())>::type>::value,"Inconsistent return value type.");
 };
 
 }

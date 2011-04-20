@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(numerical_coefficient_arithmetics_test)
 	boost::mpl::for_each<types>(arithmetics_tester());
 }
 
-struct binary_op_return_type_tester
+struct binary_op_promotion_rule_tester
 {
 	template <typename T>
 	struct runner
@@ -203,7 +203,7 @@ struct binary_op_return_type_tester
 		{
 			typedef numerical_coefficient<T> nc1_type;
 			typedef numerical_coefficient<U> nc2_type;
-			BOOST_CHECK((binary_op_return_type<nc1_type,nc2_type>::value == binary_op_return_type<T,U>::value));
+			BOOST_CHECK((binary_op_promotion_rule<nc1_type,nc2_type>::value == binary_op_promotion_rule<T,U>::value));
 		}
 	};
 	template <typename T>
@@ -213,7 +213,7 @@ struct binary_op_return_type_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(numerical_coefficient_binary_op_return_type_test)
+BOOST_AUTO_TEST_CASE(numerical_coefficient_binary_op_promotion_rule_test)
 {
-	boost::mpl::for_each<types>(binary_op_return_type_tester());
+	boost::mpl::for_each<types>(binary_op_promotion_rule_tester());
 }

@@ -160,11 +160,11 @@ BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 
 #endif
 
-BOOST_AUTO_TEST_CASE(type_traits_binary_op_return_type)
+BOOST_AUTO_TEST_CASE(type_traits_binary_op_promotion_rule)
 {
-	BOOST_CHECK((binary_op_return_type<int,int>::value));
-	BOOST_CHECK((binary_op_return_type<int,double>::value));
-	BOOST_CHECK((!binary_op_return_type<double,int>::value));
-	BOOST_CHECK((!binary_op_return_type<integer,int>::value));
-	BOOST_CHECK((binary_op_return_type<int,integer>::value));
+	BOOST_CHECK((binary_op_promotion_rule<int,int>::value));
+	BOOST_CHECK((binary_op_promotion_rule<int,double>::value));
+	BOOST_CHECK((!binary_op_promotion_rule<double,int>::value));
+	BOOST_CHECK((!binary_op_promotion_rule<integer,int>::value));
+	BOOST_CHECK((binary_op_promotion_rule<int,integer>::value));
 }

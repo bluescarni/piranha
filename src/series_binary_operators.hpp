@@ -38,12 +38,12 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// NOTE: the existence of this class, as opposed to defining the operators directly in top_level_series,
+// is that it provides a non-templated scope for the operators - which are declared as inline friends.
+// If they were declared as such in top_level_series, ambiguities would arise due to the presence of an extra
+// template parameter.
 class series_binary_operators
 {
-		// NOTE: the existence of this class, as opposed to defining the operators directly in top_level_series,
-		// is that it provides a non-templated scope for the operators - which are declared as inline friends.
-		// If they were declared as such in top_level_series, ambiguities would arise due to the presence of an extra
-		// template parameter.
 		template <typename T, typename U>
 		struct series_op_return_type
 		{
@@ -55,7 +55,7 @@ class series_binary_operators
 				typedef typename T1::term_type::cf_type cf_type1;
 				typedef typename T2::term_type::cf_type cf_type2;
 				typedef typename std::conditional<
-					binary_op_return_type<cf_type1,cf_type2>::value,
+					binary_op_promotion_rule<cf_type1,cf_type2>::value,
 					cf_type2,
 					cf_type1
 				>::type result_type;
@@ -66,7 +66,7 @@ class series_binary_operators
 				static_assert(std::is_same<
 					result_type,
 					typename std::conditional<
-					binary_op_return_type<cf_type2,cf_type1>::value,
+					binary_op_promotion_rule<cf_type2,cf_type1>::value,
 					cf_type1,
 					cf_type2
 					>::type>::value,
@@ -181,7 +181,7 @@ std::cout << "MIXED2!!!!\n";
 		 * The binary addition algorithm proceeds as follow:
 		 * 
 		 * - if both operands are series:
-		 *   - the return type is \p T if the value of piranha::binary_op_return_type of the coefficient types of \p T and \p U is \p false,
+		 *   - the return type is \p T if the value of piranha::binary_op_promotion_rule of the coefficient types of \p T and \p U is \p false,
 		 *     \p U otherwise;
 		 *   - the return value is built from either \p s1 or \p s2 (depending on its type);
 		 *   - piranha::top_level_series::operator+=() is called on the return value, with either \p s1 or \p s2 as argument;
