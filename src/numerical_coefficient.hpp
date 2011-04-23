@@ -292,6 +292,11 @@ class numerical_coefficient
 		{
 			return *this;
 		}
+		template <typename U, typename Term>
+		bool is_equal_to(const U &x, const echelon_descriptor<Term> &) const
+		{
+			return m_value == x;
+		}
 		/// Overload of stream operator for piranha::numerical_coefficient.
 		/**
 		 * Will direct to stream the internal value of the numerical coefficient.

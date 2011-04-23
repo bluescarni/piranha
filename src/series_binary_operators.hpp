@@ -174,6 +174,40 @@ std::cout << "MIXED2!!!!\n";
 		{
 			return series_binary_add<Sign>(std::forward<Series1>(s1),std::forward<Series2>(s2));
 		}
+		template <typename Series, typename T>
+		static bool mixed_equality(const Series &s, const T &x)
+		{
+			const auto size = s.size();
+			if (size > 1) {
+				return false;
+			}
+			if (!size) {
+				return typename Series::term_type::cf_type(x,s.m_ed).is_ignorable(s.m_ed);
+			}
+			const auto it = s.m_container.begin();
+			return (it->m_cf.is_equal_to(x,s.m_ed) && it->m_key.is_unitary(s.m_ed.template get_args<typename Series::term_type>()));
+		}
+		template <typename Series, typename T>
+		static bool dispatch_equality(const Series &s, const T &x,
+			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL bool1\n";
+			return mixed_equality(s,x);
+		}
+		template <typename T, typename Series>
+		static bool dispatch_equality(const T &x, const Series &s,
+			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+std::cout << "LOL bool2\n";
+			return mixed_equality(s,x);
+		}
+		template <typename Series1, typename Series2>
+		static bool dispatch_equality(const Series1 &s1, const Series2 &s2,
+			typename std::enable_if<std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series1>::type>::value &&
+			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series2>::type>::value>::type * = piranha_nullptr)
+		{
+			return series_equality(s1,s2);
+		}
 	public:
 		/// Binary addition involving piranha::top_level_series.
 		/**
@@ -227,6 +261,12 @@ std::cout << "MIXED2!!!!\n";
 		friend inline typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator-(T &&s1, U &&s2)
 		{
 			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
+		}
+		/// Equality operator involving piranha::top_level_series.
+		template <typename T, typename U>
+		friend inline typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator==(const T &s1, const U &s2)
+		{
+			return dispatch_equality(s1,s2);
 		}
 };
 
