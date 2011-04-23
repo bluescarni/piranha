@@ -76,6 +76,8 @@ class top_level_series: public base_series<Term,Derived>, public series_binary_o
 		// Make friend with all top_level_series.
 		template <typename Term2, typename Derived2>
 		friend class top_level_series;
+		// Make friend with series binary operators class.
+		friend class series_binary_operators;
 		static_assert(echelon_size<Term>::value > 0,"Error in the calculation of echelon size.");
 		template <bool Sign, typename T>
 		void dispatch_add(T &&x, typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
