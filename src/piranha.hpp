@@ -41,6 +41,7 @@
  * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
  * reference collapsing rules, etc. etc.
  * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
+ * \todo inline friend functions in class scope: is inline redundant?
  */
 namespace piranha
 {
