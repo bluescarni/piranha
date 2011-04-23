@@ -217,3 +217,22 @@ BOOST_AUTO_TEST_CASE(numerical_coefficient_binary_op_promotion_rule_test)
 {
 	boost::mpl::for_each<types>(binary_op_promotion_rule_tester());
 }
+
+struct equality_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef numerical_coefficient<T> nc;
+		typedef echelon_descriptor<polynomial_term<numerical_coefficient<T>,int>> ed_type;
+		ed_type ed;
+		BOOST_CHECK(nc{}.is_equal_to(nc(0,ed),ed));
+		BOOST_CHECK(nc(3,ed).is_equal_to(T(3),ed));
+		BOOST_CHECK(nc(3,ed).is_equal_to(numerical_coefficient<float>(3,ed),ed));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(numerical_coefficient_equality_test)
+{
+	boost::mpl::for_each<types>(equality_tester());
+}

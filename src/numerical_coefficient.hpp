@@ -145,6 +145,20 @@ class numerical_coefficient
 		{
 			return type(x.m_value);
 		}
+		// Equality operator with numerical coefficients.
+		template <typename U>
+		bool dispatch_equality(const U &nc,
+			typename std::enable_if<is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr) const
+		{
+			return m_value == nc.m_value;
+		}
+		// Equality operator with arbitrary type.
+		template <typename U>
+		bool dispatch_equality(const U &x,
+			typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr) const
+		{
+			return m_value == x;
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -292,10 +306,25 @@ class numerical_coefficient
 		{
 			return *this;
 		}
+		/// Equality operator.
+		/**
+		 * The equality operator works as follow:
+		 * 
+		 * - if \p x is an instance of piranha::numerical_coefficient, the internal values
+		 *   are compared;
+		 * - else, the internal numerical value is compared to \p x.
+		 * 
+		 * @param[in] x argument for equality test.
+		 * 
+		 * @return \p true if \p this is equal to \p x, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the equality operator of the internal
+		 * numerical type.
+		 */
 		template <typename U, typename Term>
 		bool is_equal_to(const U &x, const echelon_descriptor<Term> &) const
 		{
-			return m_value == x;
+			return dispatch_equality(x);
 		}
 		/// Overload of stream operator for piranha::numerical_coefficient.
 		/**
