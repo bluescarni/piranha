@@ -21,6 +21,7 @@
 #ifndef PIRANHA_MONOMIAL_HPP
 #define PIRANHA_MONOMIAL_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <initializer_list>
 #include <unordered_set>
@@ -28,6 +29,7 @@
 
 #include "array_key.hpp"
 #include "config.hpp"
+#include "math.hpp"
 #include "symbol.hpp"
 
 namespace piranha
@@ -140,6 +142,22 @@ class monomial: public array_key<T,monomial<T>>
 			monomial retval;
 			static_cast<base &>(retval) = this->base_merge_args(orig_args,new_args);
 			return retval;
+		}
+		/// Check if monomial is unitary.
+		/**
+		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns true.
+		 * 
+		 * @param[in] args reference vector of piranha::symbol.
+		 * 
+		 * @return \p true if the monomial is unitary, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::math::is_zero().
+		 */
+		bool is_unitary(const std::vector<symbol> &args) const
+		{
+			piranha_assert(args.size() == this->size());
+			return std::all_of(this->m_container.begin(),this->m_container.end(),
+				[](const T &element) {return math::is_zero(element);});
 		}
 };
 

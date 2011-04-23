@@ -209,3 +209,28 @@ BOOST_AUTO_TEST_CASE(monomial_merge_args_test)
 {
 	boost::mpl::for_each<expo_types>(merge_args_tester());
 }
+
+struct is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> key_type;
+		std::vector<symbol> v1, v2;
+		v2.push_back(symbol("a"));
+		key_type k(v1);
+		BOOST_CHECK(k.is_unitary(v1));
+		key_type k2(v2);
+		BOOST_CHECK(k2.is_unitary(v2));
+		k2[0] = 1;
+		BOOST_CHECK(!k2.is_unitary(v2));
+		k2[0] = 0;
+		BOOST_CHECK(k2.is_unitary(v2));
+	}
+};
+
+
+BOOST_AUTO_TEST_CASE(monomial_is_unitary_test)
+{
+	boost::mpl::for_each<expo_types>(is_unitary_tester());
+}
