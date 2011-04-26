@@ -17,13 +17,19 @@ class polynomial:
 			// Insert the symbol.
 			this->m_ed.template add_symbol<term_type>(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
 		~polynomial() = default;
 		polynomial &operator=(const polynomial &) = default;
 		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
 		{
 			base::operator=(std::move(other));
+			return *this;
+		}
+		template <typename T>
+		polynomial &operator=(T &&x)
+		{
+			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
@@ -38,6 +44,13 @@ class base_complex: public Base
 		~base_complex() = default;
 		base_complex &operator=(const base_complex &) = default;
 		base_complex &operator=(base_complex &&) = default;
+		template <typename T>
+		base_complex &operator=(T &&x)
+		{
+std::cout << "complex assign!!!\n";
+			Base::operator=(std::forward<T>(x));
+			return *this;
+		}
 	protected:
 		template <typename Series1, typename Series2>
 		explicit base_complex(Series1 &&s1, Series2 &&s2, const echelon_descriptor<typename Base::term_type> &ed,
@@ -63,7 +76,7 @@ class polynomial2:
 			// Insert the symbol.
 			this->m_ed.template add_symbol<term_type>(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
 		explicit polynomial2(const char *name):base()
 		{
@@ -71,7 +84,7 @@ class polynomial2:
 			// Insert the symbol.
 			this->m_ed.template add_symbol<term_type>(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(1,typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
 		}
 		template <typename... Args>
 		explicit polynomial2(Args && ... params):base(std::forward<Args>(params)...) {}
@@ -80,6 +93,13 @@ class polynomial2:
 		polynomial2 &operator=(polynomial2 &&other) piranha_noexcept_spec(true)
 		{
 			base::operator=(std::move(other));
+			return *this;
+		}
+		template <typename T>
+		polynomial2 &operator=(T &&x)
+		{
+std::cout << "poly2 assign\n";
+			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
@@ -96,7 +116,18 @@ int main()
 // 	std::cout << is_nothrow_move_assignable<int &>::value << '\n';
 	typedef polynomial2<numerical_coefficient<integer>,int> p2_type;
 
-	std::cout << p2_type{} << '\n';
+	p2_type p, q;
+	p = 5;
+	p = q;
+
+	std::cout << (p == 0) << '\n';
+	std::cout << (0 == p) << '\n';
+	
+	p = 5;
+
+	std::cout << (p == 5) << '\n';
+	std::cout << (5 == p) << '\n';
+	std::cout << (q == p) << '\n';
 // 	foo f = foo{};
 	return 0;
 	
