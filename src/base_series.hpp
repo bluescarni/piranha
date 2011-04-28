@@ -390,9 +390,13 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 * @param[in] ed reference piranha::echelon_descriptor.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - the constructor of base_series::term_type from type \p T;
-		 * - the \p is_compatible and \p is_ignorable methods of base_series::term_type;
-		 * - piranha::hop_table::insert().
+		 * - the constructors of base_series::term_type, and of its coefficient and key types,
+		 *   invoked by any necessary conversion;
+		 * - the <tt>is_compatible()</tt> and <tt>is_ignorable()</tt> methods of base_series::term_type;
+		 * - piranha::hop_table::insert(),
+		 * - piranha::hop_table::find(),
+		 * - piranha::hop_table::erase(),
+		 * - the <tt>negate()</tt>, <tt>add()</tt> and <tt>subtract()</tt> methods of the coefficient type,
 		 * @throws std::invalid_argument if \p term is ignorable.
 		 */
 		template <bool Sign, typename T, typename Term2>
@@ -456,7 +460,8 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::base_series::insert(),
 		 * - the <tt>merge_args()</tt> method of coefficient and/or key types,
-		 * - the constructor of piranha::base_series::term_type from a coefficient - key pair.
+		 * - the constructor of piranha::base_series::term_type from a coefficient - key pair, and the
+		 *   copy constructors of coefficient and key types.
 		 */
 		template <typename Term2>
 		base_series merge_args(const echelon_descriptor<Term2> &orig_ed, const echelon_descriptor<Term2> &new_ed) const

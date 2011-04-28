@@ -73,7 +73,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo concept assert for hash and pred.
+ * \todo concept assert for hash and pred. Require non-throwing swap, comparison and hashing operators and modify docs accordingly.
  * \todo tests for low-level methods
  * \todo try forcing 32-bit bitmap insted of mf_int
  * \todo see if find() can be sped up by using msb() instead of linear search
@@ -448,6 +448,7 @@ class hop_table
 		 * @return index of the first destination bucket for \p k.
 		 * 
 		 * @throws piranha::zero_division_error if n_buckets() returns zero.
+		 * @throws unspecified any exception thrown by _bucket().
 		 */
 		size_type bucket(const key_type &k) const
 		{
@@ -461,6 +462,8 @@ class hop_table
 		 * @param[in] k element to be located.
 		 * 
 		 * @return hop_table::const_iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * 
+		 * @throws unspecified any exception thrown by _find().
 		 */
 		const_iterator find(const key_type &k) const
 		{
@@ -474,6 +477,8 @@ class hop_table
 		 * @param[in] k element to be located.
 		 * 
 		 * @return hop_table::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * 
+		 * @throws unspecified any exception thrown by _find().
 		 */
 		iterator find(const key_type &k)
 		{
@@ -491,7 +496,9 @@ class hop_table
 		 * @return <tt>(hop_table::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
 		 * equivalent) and the result of the operation.
 		 * 
-		 * @throws unspecified any exception thrown by hop_table::key_type's copy constructor.
+		 * @throws unspecified any exception thrown by:
+		 * - hop_table::key_type's copy constructor,
+		 * - _find().
 		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
 		 * maximum number of buckets.
 		 */
@@ -519,6 +526,8 @@ class hop_table
 		 * pointing to an element of the table.
 		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
+		 * 
+		 * @throws unspecified any exception thrown by _bucket().
 		 */
 		void erase(const iterator &it)
 		{
@@ -699,6 +708,10 @@ class hop_table
 		 * @param[in] bucket_idx first-choice bucket for \p k.
 		 * 
 		 * @return hop_table::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - _bucket(),
+		 * - the comparison functor.
 		 */
 		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
 		{
@@ -732,6 +745,8 @@ class hop_table
 		 * @param[in] k input argument.
 		 * 
 		 * @return index of the first destination bucket for \p k.
+		 * 
+		 * @throws unspecified any exception thrown by the hashing functor.
 		 */
 		size_type _bucket(const key_type &k) const
 		{
