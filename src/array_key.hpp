@@ -54,7 +54,7 @@ namespace piranha
  * 
  * - \p T must be a model of piranha::concept::ArrayKeyValueType.
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
- *   of \p Term and \p Derived as base class.
+ *   of \p T and \p Derived as base class.
  * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
