@@ -24,6 +24,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/base_series_fwd.hpp"
 #include "detail/top_level_series_fwd.hpp"
 #include "type_traits.hpp"
 
@@ -168,6 +169,8 @@ std::cout << "MIXED2!!!!\n";
 		template <typename Series, typename T>
 		static bool mixed_equality(const Series &s, const T &x)
 		{
+			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
+				"Cannot compare non top level series.");
 			const auto size = s.size();
 			if (size > 1) {
 				return false;
@@ -279,6 +282,8 @@ std::cout << "LOL different terms\n";
 		template <typename Series1, typename Series2>
 		static bool series_equality(const Series1 &s1, const Series2 &s2)
 		{
+			static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
+				"Cannot compare series with different echelon sizes.");
 std::cout << "LOL series comparison\n";
 			// Arguments merging.
 			if (likely(s1.m_ed.get_args_tuple() == s2.m_ed.get_args_tuple())) {
@@ -411,6 +416,9 @@ std::cout << "LOL series equality 2\n";
 		 * 
 		 * Note that in series comparisons involving series with same coefficient types but different term types,
 		 * the promotion rule during term comparisons will depend on the order of the operands.
+		 * 
+		 * If the series being compared have different echelon sizes, or are piranha::base_series without being
+		 * piranha::top_level_series, compile-time error messages will be produced.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
