@@ -43,7 +43,11 @@ class base_complex: public Base
 		base_complex(base_complex &&) = default;
 		~base_complex() = default;
 		base_complex &operator=(const base_complex &) = default;
-		base_complex &operator=(base_complex &&) = default;
+		base_complex &operator=(base_complex &&other)
+		{
+			Base::operator=(std::move(other));
+			return *this;
+		}
 		template <typename T>
 		base_complex &operator=(T &&x)
 		{
@@ -114,7 +118,9 @@ struct foo
 int main()
 {
 // 	std::cout << is_nothrow_move_assignable<int &>::value << '\n';
+	typedef polynomial2<numerical_coefficient<integer>,int> p_type;
 	typedef polynomial2<numerical_coefficient<integer>,int> p2_type;
+	typedef polynomial2<numerical_coefficient<double>,int> p3_type;
 
 	p2_type p, q;
 	p = 5;
@@ -128,6 +134,18 @@ int main()
 	std::cout << (p == 5) << '\n';
 	std::cout << (5 == p) << '\n';
 	std::cout << (q == p) << '\n';
+	
+	q = 5;
+// 	std::cout << (q == p) << '\n';
+// 	
+// 	std::cout << (q == p_type{}) << '\n';
+// 	std::cout << (q == p3_type{}) << '\n';
+	std::cout << (p3_type{} == q) << '\n';
+	
+	std::cout << (p3_type{"a"} == p2_type{}) << '\n';
+	std::cout << (p3_type{} == p2_type{"a"}) << '\n';
+	std::cout << (p2_type{"a"} == p3_type{"a"}) << '\n';
+	std::cout << (p3_type{"a"} == p2_type{"a"}) << '\n';
 // 	foo f = foo{};
 	return 0;
 	
