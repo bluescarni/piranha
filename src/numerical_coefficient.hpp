@@ -84,7 +84,7 @@ class numerical_coefficient
 		{
 			m_value = other.m_value;
 		}
-		template <class U>
+		template <typename U>
 		void assign(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value = std::forward<U>(other);
@@ -112,7 +112,7 @@ class numerical_coefficient
 				m_value -= other.m_value;
 			}
 		}
-		template <bool Sign, class U>
+		template <bool Sign, typename U>
 		void dispatch_add(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			if (Sign) {
@@ -259,7 +259,7 @@ class numerical_coefficient
 		}
 		/// Generic in-place addition.
 		/**
-		 * If \p x is an instance of piranha::numerical_coefficient, then <tt>p</tt>'s numerical value will be added in-place
+		 * If \p x is an instance of piranha::numerical_coefficient, then <tt>x</tt>'s numerical value will be added in-place
 		 * to the numerical value of \p this. Otherwise, \p x will be directly added in-place to the numerical value of \p this.
 		 * 
 		 * @param[in] x argument of the addition.
