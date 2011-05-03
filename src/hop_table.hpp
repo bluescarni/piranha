@@ -525,6 +525,9 @@ class hop_table
 		 * Erase the element to which \p it points. \p it must be a valid iterator
 		 * pointing to an element of the table.
 		 * 
+		 * Erasing an element does not invalidate any iterator, apart from the one pointing
+		 * to the erased element.
+		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
 		 * 
 		 * @throws unspecified any exception thrown by _bucket().
