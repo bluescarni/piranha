@@ -194,6 +194,8 @@ struct arithmetics_tester
 		nc cont3{T(3),ed};
 		cont2.multiply(cont3,ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),((T(1) * 2) * T(2)) * T(3));
+		cont2.multiply(nc_other{-1,ed},ed);
+		BOOST_CHECK_EQUAL(cont2.get_value(),(((T(1) * 2) * T(2)) * T(3)) * other_type(-1));
 	}
 };
 
