@@ -108,16 +108,16 @@ class array_key: detail::array_key_tag
 		static void fill_for_construction(container_type &retval, U &&x,
 			typename std::enable_if<is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
-			for (decltype(x.size()) i = 0; i < x.size(); ++i) {
-				retval.push_back(value_type(std::move(x[i])));
+			for (auto it = x.begin(); it != x.end(); ++it) {
+				retval.emplace_back(std::move(*it));
 			}
 		}
 		template <typename U>
 		static void fill_for_construction(container_type &retval, U &&x,
 			typename std::enable_if<!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
-			for (decltype(x.size()) i = 0; i < x.size(); ++i) {
-				retval.push_back(value_type(x[i]));
+			for (auto it = x.begin(); it != x.end(); ++it) {
+				retval.emplace_back(*it);
 			}
 		}
 		template <typename U>
@@ -132,6 +132,16 @@ class array_key: detail::array_key_tag
 				retval.reserve(x.size());
 			}
 			fill_for_construction(retval,std::forward<U>(x));
+			return retval;
+		}
+		template <typename U>
+		static container_type construct_from_init_list(U &&init_list)
+		{
+			container_type retval;
+			if (std::is_same<decltype(init_list.size()),size_type>::value) {
+				retval.reserve(init_list.size());
+			}
+			fill_for_construction(retval,init_list);
 			return retval;
 		}
 	public:
@@ -152,13 +162,15 @@ class array_key: detail::array_key_tag
 		{}
 		/// Constructor from initializer list.
 		/**
-		 * Will set the values of the internal array to those in \p list.
+		 * The elements in \p list will be forwarded to construct the elements of the internal container.
 		 * 
 		 * @param[in] list initializer list.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s constructor from initializer list.
+		 * @throws unspecified any exception thrown by memory allocation in \p std::vector or by the construction
+		 * of objects of type \p T from objects of type \p U.
 		 */
-		array_key(std::initializer_list<value_type> list):m_container(list) {}
+		template <typename U>
+		explicit array_key(std::initializer_list<U> list) : m_container(construct_from_init_list(list)) {}
 		/// Constructor from vector of arguments.
 		/**
 		 * The key will be created with a number of variables equal to <tt>args.size()</tt>

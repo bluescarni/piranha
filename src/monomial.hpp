@@ -71,7 +71,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
-		monomial(std::initializer_list<T> list):base(list) {}
+		template <typename U>
+		explicit monomial(std::initializer_list<U> list):base(list) {}
 		/// Forwarding constructor.
 		/**
 		 * Will perfectly forward the arguments to a corresponding constructor in piranha::array_key.

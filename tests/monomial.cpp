@@ -56,6 +56,13 @@ struct constructor_tester
 			BOOST_CHECK_NO_THROW(m1[i] = i + 1);
 			BOOST_CHECK_EQUAL(m1[i],i + 1);
 		}
+		monomial_type m1a{0,1,2,3};
+		BOOST_CHECK_EQUAL(m1a.size(),static_cast<decltype(m1a.size())>(4));
+		for (typename monomial_type::size_type i = 0; i < m1a.size(); ++i) {
+			BOOST_CHECK_EQUAL(m1a[i],i);
+			BOOST_CHECK_NO_THROW(m1a[i] = i + 1);
+			BOOST_CHECK_EQUAL(m1a[i],i + 1);
+		}
 		BOOST_CHECK_NO_THROW(m0 = m1);
 		BOOST_CHECK_NO_THROW(m0 = std::move(m1));
 		// Constructor from arguments vector.
@@ -129,9 +136,9 @@ struct compatibility_tester
 		typedef monomial<T> monomial_type;
 		monomial_type m0;
 		BOOST_CHECK(m0.is_compatible(std::vector<symbol>{}));
-		monomial_type m1 = {T(0),T(1)};
+		monomial_type m1{T(0),T(1)};
 		BOOST_CHECK(!m1.is_compatible(std::vector<symbol>(1,symbol{"foobarize"})));
-		monomial_type m2 = {T(0)};
+		monomial_type m2{T(0)};
 		BOOST_CHECK(m2.is_compatible(std::vector<symbol>(1,symbol{"foobarize"})));
 	}
 };
@@ -149,7 +156,7 @@ struct ignorability_tester
 		typedef monomial<T> monomial_type;
 		monomial_type m0;
 		BOOST_CHECK(!m0.is_ignorable(std::vector<symbol>{}));
-		monomial_type m1 = {T(0)};
+		monomial_type m1{T(0)};
 		BOOST_CHECK(!m1.is_ignorable(std::vector<symbol>(1,symbol{"foobarize"})));
 	}
 };
