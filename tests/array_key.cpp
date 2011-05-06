@@ -262,3 +262,26 @@ BOOST_AUTO_TEST_CASE(array_key_merge_args_test)
 {
 	boost::mpl::for_each<value_types>(merge_args_tester());
 }
+
+struct iterators_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<T> key_type;
+		key_type k0;
+		BOOST_CHECK(k0.begin() == k0.end());
+		for (int i = 0; i < 4; ++i) {
+			k0.push_back(T(i));
+		}
+		BOOST_CHECK(k0.begin() + 4 == k0.end());
+		BOOST_CHECK(k0.begin() != k0.end());
+		const key_type k1{};
+		BOOST_CHECK(k1.begin() == k1.end());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_iterators_test)
+{
+	boost::mpl::for_each<value_types>(iterators_tester());
+}

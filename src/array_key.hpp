@@ -79,6 +79,10 @@ class array_key: detail::array_key_tag
 		typedef std::vector<T> container_type;
 		/// Value type.
 		typedef T value_type;
+		/// Iterator type.
+		typedef typename container_type::iterator iterator;
+		/// Const iterator type.
+		typedef typename container_type::const_iterator const_iterator;
 	private:
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
@@ -223,6 +227,38 @@ class array_key: detail::array_key_tag
 				m_container = std::move(other.m_container);
 			}
 			return *this;
+		}
+		/// Begin iterator.
+		/**
+		 * @return iterator to the first element of the internal container.
+		 */
+		iterator begin()
+		{
+			return m_container.begin();
+		}
+		/// End iterator.
+		/**
+		 * @return iterator one past the last element of the internal container.
+		 */
+		iterator end()
+		{
+			return m_container.end();
+		}
+		/// Begin const iterator.
+		/**
+		 * @return const iterator to the first element of the internal container.
+		 */
+		const_iterator begin() const
+		{
+			return m_container.begin();
+		}
+		/// End const iterator.
+		/**
+		 * @return const iterator one past the last element of the internal container.
+		 */
+		const_iterator end() const
+		{
+			return m_container.end();
 		}
 		/// Size of the internal array container.
 		/**
