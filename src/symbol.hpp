@@ -51,6 +51,8 @@ class symbol
 		 * use its numerical value for \p this. Otherwise, the numerical value will be 0.
 		 * 
 		 * @param[in] name name of the symbol.
+		 * 
+		 * @throws unspecified any exception thrown by <tt>std::map::insert()</tt>.
 		 */
 		explicit symbol(const std::string &name):m_it(get_iterator<false>(name,0.)) {}
 		/// Constructor from name and numerical value.
@@ -60,6 +62,8 @@ class symbol
 		 * 
 		 * @param[in] name name of the symbol.
 		 * @param[in] value numerical value of the symbol.
+		 * 
+		 * @throws unspecified any exception thrown by <tt>std::map::insert()</tt>.
 		 */
 		explicit symbol(const std::string &name, const double &value):m_it(get_iterator<true>(name,value)) {}
 		/// Defaulted copy constructor.
