@@ -25,7 +25,6 @@
 #include <array>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/utility.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -180,7 +179,7 @@ class hop_table
 		// NOTE: the rationale here is that for trivially-copyable and trivially-destructible
 		// objects, the bucket can behave like a POD type, which lets optimizations in cvector kick in.
 		template <typename U>
-		struct generic_hop_bucket<U, typename boost::enable_if_c<
+		struct generic_hop_bucket<U, typename std::enable_if<
 			std::has_trivial_destructor<U>::value && std::has_trivial_copy_constructor<U>::value
 			>::type>: base_generic_hop_bucket<U>
 		{};
@@ -486,7 +485,7 @@ class hop_table
 		}
 		/// Insert element.
 		/**
-		 * This template is activated only if \p U is implicitly convertible to \p T.
+		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
 		 * If no other key equivalent to \p k exists in the table, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
@@ -503,7 +502,7 @@ class hop_table
 		 * maximum number of buckets.
 		 */
 		template <typename U>
-		std::pair<iterator,bool> insert(U &&k, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
+		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(!m_container.size())) {
 				increase_size();
@@ -606,7 +605,7 @@ class hop_table
 		}
 		/// Insert unique element (low-level).
 		/**
-		 * This template is activated only if \p U is implicitly convertible to \p T.
+		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
 		 * The parameter \p bucket_idx is the first-choice bucket for \p k and, for a
 		 * table with a positive number of buckets, must be equal to the output
 		 * of bucket() before the insertion.
@@ -627,7 +626,8 @@ class hop_table
 		 * @throws unspecified any exception thrown by hop_table::key_type's copy constructor.
 		 */
 		template <typename U>
-		std::pair<iterator,bool> _unique_insert(U &&k, const size_type &bucket_idx, typename boost::enable_if<std::is_convertible<U,T>>::type * = piranha_nullptr)
+		std::pair<iterator,bool> _unique_insert(U &&k, const size_type &bucket_idx,
+			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			// Assert that key is not present already in the table.
 			piranha_assert(find(std::forward<U>(k)) == end());
