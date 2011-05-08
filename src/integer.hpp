@@ -86,6 +86,10 @@ namespace piranha
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
+ * \todo deal with extended char types: char16_t and char32_t should be already ok, as long will always be at least
+ * equal in width. Problem seems to be wchar_t, which apparently can be any width :/ Probably better to exclude it altogether.
+ * Remember to activate the checks on the types on construction, assignment, arithmetic operations: enable if type is arithmetic
+ * _but_ not wchar_t. Maybe some template type traits like is_gmp_arithmetic_type could be handy to reduce verbosity.
  */
 class integer
 {
@@ -207,7 +211,7 @@ class integer
 		// Conversion.
 		template <typename T>
 		typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value &&
-			!std::is_same<T,long long>::value && !std::is_same<T,bool>::value,T>::type convert_to() const
+			!std::is_same<T,long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_slong_p(m_value)) {
 				try {
@@ -218,7 +222,7 @@ class integer
 		}
 		template <typename T>
 		typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value &&
-			!std::is_same<T,unsigned long long>::value && !std::is_same<T,bool>::value,T>::type convert_to() const
+			!std::is_same<T,unsigned long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_ulong_p(m_value)) {
 				try {
@@ -228,7 +232,7 @@ class integer
 			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to() const
+		typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to_impl() const
 		{
 			try {
 				return boost::lexical_cast<T>(*this);
@@ -237,7 +241,7 @@ class integer
 			}
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to() const
+		typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to_impl() const
 		{
 			// Extract always the double-precision value, and cast as needed.
 			// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
@@ -252,7 +256,7 @@ class integer
 			}
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<T,long double>::value,T>::type convert_to() const
+		typename boost::enable_if_c<std::is_same<T,long double>::value,T>::type convert_to_impl() const
 		{
 			try {
 				return boost::lexical_cast<long double>(*this);
@@ -268,7 +272,7 @@ class integer
 		}
 		// Special handling for bool.
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<T,bool>::value,T>::type convert_to() const
+		typename boost::enable_if_c<std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			return (mpz_sgn(m_value) != 0);
 		}
@@ -969,7 +973,7 @@ class integer
 		{
 			::mpz_swap(m_value,n.m_value);
 		}
-		/// Conversion operator to arithmetic type.
+		/// Conversion to arithmetic types.
 		/**
 		 * Extract an instance of arithmetic type \p T from \p this.
 		 * 
@@ -981,17 +985,168 @@ class integer
 		 * If that is not the case, the output value will be one of the two adjacents (with an unspecified rounding direction).
 		 * Return values of +-inf will be produced if the current value of the integer overflows the range of the floating-point type.
 		 * 
-		 * If \p T is not an arithmetic type, a compile-time error will be produced.
+		 * If \p T is not an arithmetic type or it is \p wchar_t, a compile-time error will be produced.
 		 * 
 		 * @return result of the conversion to target type T.
 		 * 
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
 		 */
 		template <typename T>
-		explicit operator T() const
+		T convert_to() const
 		{
-			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value,"Cannot convert to non-arithmetic type.");
-			return convert_to<typename std::remove_cv<T>::type>();
+			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value && !std::is_same<wchar_t,typename std::remove_cv<T>::type>::value,
+				"Cannot convert to non-arithmetic type or wchar_t.");
+			return convert_to_impl<typename std::remove_cv<T>::type>();
+		}
+		/// Conversion operator to \p bool.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator bool() const
+		{
+			return convert_to<bool>();
+		}
+		/// Conversion operator to \p char.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator char() const
+		{
+			return convert_to<char>();
+		}
+		/// Conversion operator to <tt>signed char</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator signed char() const
+		{
+			return convert_to<signed char>();
+		}
+		/// Conversion operator to \p short.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator short() const
+		{
+			return convert_to<short>();
+		}
+		/// Conversion operator to \p int.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator int() const
+		{
+			return convert_to<int>();
+		}
+		/// Conversion operator to \p long.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator long() const
+		{
+			return convert_to<long>();
+		}
+		/// Conversion operator to <tt>long long</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator long long() const
+		{
+			return convert_to<long long>();
+		}
+		/// Conversion operator to <tt>unsigned char</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator unsigned char() const
+		{
+			return convert_to<unsigned char>();
+		}
+		/// Conversion operator to <tt>unsigned short</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator unsigned short() const
+		{
+			return convert_to<unsigned short>();
+		}
+		/// Conversion operator to <tt>unsigned int</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator unsigned int() const
+		{
+			return convert_to<unsigned int>();
+		}
+		/// Conversion operator to <tt>unsigned long</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator unsigned long() const
+		{
+			return convert_to<unsigned long>();
+		}
+		/// Conversion operator to <tt>unsigned long long</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator unsigned long long() const
+		{
+			return convert_to<unsigned long long>();
+		}
+		/// Conversion operator to <tt>float</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator float() const
+		{
+			return convert_to<float>();
+		}
+		/// Conversion operator to <tt>double</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator double() const
+		{
+			return convert_to<double>();
+		}
+		/// Conversion operator to <tt>long double</tt>.
+		/**
+		 * Equivalent to a call to convert_to().
+		 * 
+		 * @see convert_to().
+		 */
+		explicit operator long double() const
+		{
+			return convert_to<long double>();
 		}
 		/// In-place addition.
 		/**
