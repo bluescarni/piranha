@@ -82,9 +82,7 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		 */
 		polynomial_term &operator=(polynomial_term &&other) piranha_noexcept_spec(true)
 		{
-			if (likely(this != &other)) {
-				base::operator=(std::move(other));
-			}
+			base::operator=(std::move(other));
 			return *this;
 		}
 };

@@ -96,9 +96,7 @@ class monomial: public array_key<T,monomial<T>>
 		 */
 		monomial &operator=(monomial &&other) piranha_noexcept_spec(true)
 		{
-			if (likely(this != &other)) {
-				base::operator=(std::move(other));
-			}
+			base::operator=(std::move(other));
 			return *this;
 		}
 		/// Compatibility check
