@@ -89,7 +89,6 @@ namespace piranha
  * 
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
- * \todo exception specifications for in-place operations with integers: document the possible overflow errors.
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
@@ -1191,6 +1190,8 @@ class integer
 		 * @param[in] n second argument.
 		 * 
 		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
@@ -1286,6 +1287,8 @@ class integer
 		 * @param[in] n second argument.
 		 * 
 		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
@@ -1383,6 +1386,8 @@ class integer
 		 * @param[in] n second argument.
 		 * 
 		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
@@ -1446,6 +1451,7 @@ class integer
 		 * @return reference to \p x.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
@@ -1513,6 +1519,7 @@ class integer
 		 * @return reference to \p x.
 		 * 
 		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>x < 0</tt>.
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend inline typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
