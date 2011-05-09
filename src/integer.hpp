@@ -29,7 +29,6 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/utility.hpp>
 #include <cctype> // For std::isdigit().
 #include <cstddef>
 #include <cstring>
@@ -52,15 +51,22 @@ namespace piranha
 
 /// Arbitrary precision integer class.
 /**
- * This class can represent integer numbers of arbitrary size (i.e., the size is limited only by the available memory).
+ * This class represents integer numbers of arbitrary size (i.e., the size is limited only by the available memory).
  * The implementation employs the \p mpz_t type from the multiprecision GMP library.
  * 
- * Interoperability with all builtin C++ arithmetic types is provided. Please note that since the GMP API does not provide interoperability
- * with <tt>long long</tt> and <tt>long double</tt>, interaction with this types will be somewhat slow due to the extra workload of converting such types
+ * \section interop Interoperability with fundamental types
+ * 
+ * Full interoperability with the following C++ types is provided:
+ * 
+ * - all signed integer types,
+ * - all unsigned integer types,
+ * - all floating-point types,
+ * - \p bool and \p char.
+ * 
+ * Please note that since the GMP API does not directly provide interoperability
+ * with <tt>long long</tt> and <tt>long double</tt>, interaction with this types will be slower due to the extra workload of converting such types
  * to GMP-compatible types. Also, every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
- * 
- * @see http://gmplib.org/
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -77,6 +83,7 @@ namespace piranha
  * across different versions. GMP versions 4.x and 5.x are explicitly supported by this class.
  * 
  * @see http://gmplib.org/manual/Integer-Internals.html
+ * @see http://gmplib.org/
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
@@ -86,17 +93,21 @@ namespace piranha
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
- * \todo deal with extended char types: char16_t and char32_t should be already ok, as long will always be at least
- * equal in width. Problem seems to be wchar_t, which apparently can be any width :/ Probably better to exclude it altogether.
- * Remember to activate the checks on the types on construction, assignment, arithmetic operations: enable if type is arithmetic
- * _but_ not wchar_t. Maybe some template type traits like is_gmp_arithmetic_type could be handy to reduce verbosity.
  */
 class integer
 {
+		// C++ arithmetic types supported for interaction with integer.
+		template <typename T>
+		struct is_interop_type
+		{
+			static const bool value = std::is_arithmetic<T>::value &&
+				!std::is_same<T,wchar_t>::value && !std::is_same<T,char16_t>::value &&
+				!std::is_same<T,char32_t>::value;
+		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
 		template <typename T>
-		static void fp_normal_check(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static void fp_normal_check(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(!boost::math::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
@@ -142,25 +153,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_init_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void construct_from_arithmetic(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void construct_from_arithmetic(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -181,25 +192,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &x, typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void assign_from_arithmetic(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void assign_from_arithmetic(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ll, typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -210,7 +221,7 @@ class integer
 		}
 		// Conversion.
 		template <typename T>
-		typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value &&
+		typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value &&
 			!std::is_same<T,long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_slong_p(m_value)) {
@@ -221,7 +232,7 @@ class integer
 			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value &&
+		typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value &&
 			!std::is_same<T,unsigned long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_ulong_p(m_value)) {
@@ -232,7 +243,7 @@ class integer
 			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to_impl() const
 		{
 			try {
 				return boost::lexical_cast<T>(*this);
@@ -241,7 +252,7 @@ class integer
 			}
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to_impl() const
 		{
 			// Extract always the double-precision value, and cast as needed.
 			// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
@@ -256,7 +267,7 @@ class integer
 			}
 		}
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<T,long double>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_same<T,long double>::value,T>::type convert_to_impl() const
 		{
 			try {
 				return boost::lexical_cast<long double>(*this);
@@ -272,7 +283,7 @@ class integer
 		}
 		// Special handling for bool.
 		template <typename T>
-		typename boost::enable_if_c<std::is_same<T,bool>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			return (mpz_sgn(m_value) != 0);
 		}
@@ -289,7 +300,7 @@ class integer
 			in_place_add(n);
 		}
 		template <typename T>
-		void in_place_add(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_add(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
@@ -301,19 +312,19 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_add(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_add(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		// For (unsigned) long long create a temporary integer and add it.
 		template <typename T>
-		void in_place_add(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_add(integer(n));
 		}
 		template <typename T>
-		void in_place_add(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) + x);
 		}
@@ -333,7 +344,7 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_sub(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_sub(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
@@ -343,18 +354,18 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_sub(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_sub(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_sub(integer(n));
 		}
 		template <typename T>
-		void in_place_sub(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) - x);
 		}
@@ -371,24 +382,24 @@ class integer
 			in_place_mul(n);
 		}
 		template <typename T>
-		void in_place_mul(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_mul(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_si(m_value,m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void in_place_mul(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_mul(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_mul(integer(n));
 		}
 		template <typename T>
-		void in_place_mul(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			operator=(static_cast<T>(*this) * x);
 		}
@@ -401,7 +412,7 @@ class integer
 			::mpz_tdiv_q(m_value,m_value,n.m_value);
 		}
 		template <typename T>
-		void in_place_div(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_div(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si == 0)) {
@@ -415,7 +426,7 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_div(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_div(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0)) {
@@ -424,12 +435,12 @@ class integer
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_div(integer(n));
 		}
 		template <typename T>
-		void in_place_div(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -445,7 +456,7 @@ class integer
 			::mpz_mod(m_value,m_value,n.m_value);
 		}
 		template <typename T>
-		void in_place_mod(const T &si, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_mod(const T &si, typename std::enable_if<std::is_integral<T>::value
 			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si <= 0)) {
@@ -454,7 +465,7 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(si));
 		}
 		template <typename T>
-		void in_place_mod(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value
+		void in_place_mod(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0)) {
@@ -463,7 +474,7 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mod(const T &n, typename boost::enable_if_c<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mod(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			in_place_mod(integer(n));
 		}
@@ -471,8 +482,8 @@ class integer
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
 		struct are_binary_op_types: std::integral_constant<bool,
-			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_arithmetic<typename strip_cv_ref<U>::type>::value) ||
-			(std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_arithmetic<typename strip_cv_ref<T>::type>::value) ||
+			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_interop_type<typename strip_cv_ref<U>::type>::value) ||
+			(std::is_same<typename strip_cv_ref<U>::type,integer>::value && is_interop_type<typename strip_cv_ref<T>::type>::value) ||
 			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value)>
 		{};
 		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
@@ -484,18 +495,18 @@ class integer
 			typedef integer type;
 		};
 		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename boost::enable_if<std::is_floating_point<typename strip_cv_ref<T>::type>>::type>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename strip_cv_ref<T>::type>::value>::type>
 		{
 			typedef typename strip_cv_ref<T>::type type;
 		};
 		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename boost::enable_if<std::is_floating_point<typename strip_cv_ref<U>::type>>::type>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename strip_cv_ref<U>::type>::value>::type>
 		{
 			typedef typename strip_cv_ref<U>::type type;
 		};
 		// Binary addition.
 		template <typename T, typename U>
-		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
@@ -508,7 +519,7 @@ class integer
 			return retval;
 		}
 		template <typename T, typename U>
-		static integer binary_plus(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
@@ -519,18 +530,18 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_plus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_plus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) + x);
 		}
 		template <typename T>
-		static T binary_plus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_plus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_plus(n,x);
 		}
 		// Binary subtraction.
 		template <typename T, typename U>
-		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
@@ -541,7 +552,7 @@ class integer
 			return retval;
 		}
 		template <typename T, typename U>
-		static integer binary_minus(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
@@ -553,18 +564,18 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_minus(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_minus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) - x);
 		}
 		template <typename T>
-		static T binary_minus(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_minus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return -binary_minus(n,x);
 		}
 		// Binary multiplication.
 		template <typename T, typename U>
-		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
@@ -575,7 +586,7 @@ class integer
 			return retval;
 		}
 		template <typename T, typename U>
-		static integer binary_mul(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
 			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
@@ -586,18 +597,18 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_mul(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_mul(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) * x);
 		}
 		template <typename T>
-		static T binary_mul(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_mul(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_mul(n,x);
 		}
 		// Binary division.
 		template <typename T, typename U>
-		static integer binary_div(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_div(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
 			>::type * = piranha_nullptr)
@@ -608,7 +619,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_div(const integer &n, const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_div(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -616,7 +627,7 @@ class integer
 			return (static_cast<T>(n) / x);
 		}
 		template <typename T>
-		static T binary_div(const T &x, const integer &n, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static T binary_div(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			const T n_T = static_cast<T>(n);
 			if (unlikely(n_T == 0)) {
@@ -626,7 +637,7 @@ class integer
 		}
 		// Binary modulo operation.
 		template <typename T, typename U>
-		static integer binary_mod(T &&n1, U &&n2, typename boost::enable_if_c<
+		static integer binary_mod(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
 			>::type * = piranha_nullptr)
@@ -641,30 +652,30 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
 			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) == x);
 		}
 		template <typename T>
-		static bool binary_equality(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
+		static bool binary_equality(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(n,x);
 		}
@@ -674,25 +685,25 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
 			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_less_than(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) < x);
 		}
@@ -702,42 +713,42 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename boost::enable_if_c<std::is_integral<T>::value &&
+		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
 			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2, typename boost::enable_if_c<std::is_same<T,long long>::value ||
+		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
 			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
 			return binary_leq(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n, const T &x,typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) <= x);
 		}
 		// Inverse forms of less-than and leq.
 		template <typename T>
-		static bool binary_less_than(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
+		static bool binary_less_than(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
 		{
 			return !binary_leq(n,x);
 		}
 		template <typename T>
-		static bool binary_leq(const T &x, const integer &n, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
+		static bool binary_leq(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
 		{
 			return !binary_less_than(n,x);
 		}
 		// Exponentiation.
 		template <typename T>
-		integer pow_impl(const T &ui, typename boost::enable_if_c<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = piranha_nullptr) const
+		integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
 			unsigned long exp;
 			try {
@@ -750,7 +761,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		integer pow_impl(const T &si, typename boost::enable_if_c<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
+		integer pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
 			if (si >= 0) {
 				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
@@ -772,7 +783,7 @@ class integer
 			return pow_impl(exp);
 		}
 		template <typename T>
-		integer pow_impl(const T &x, typename boost::enable_if<std::is_floating_point<T>>::type * = piranha_nullptr) const
+		integer pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
 		{
 			if (!boost::math::isfinite(x) || boost::math::trunc(x) != x) {
 				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
@@ -823,19 +834,19 @@ class integer
 			other.m_value->_mp_d = 0;
 			other.m_value->_mp_alloc = 0;
 		}
-		/// Generic constructor from arithmetic types.
+		/// Generic constructor.
 		/**
-		 * The supported types for \p T are all arithmetic types.
+		 * The supported types for \p T are the \ref interop "interoperable types".
 		 * Use of other types will result in a compile-time error.
 		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
 		 * the integer object.
 		 * 
-		 * @param[in] x arithmetic type used to construct \p this.
+		 * @param[in] x object used to construct \p this.
 		 * 
 		 * @throw std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		explicit integer(const T &x, typename boost::enable_if<std::is_arithmetic<T>>::type * = piranha_nullptr)
+		explicit integer(const T &x, typename std::enable_if<is_interop_type<T>::value>::type * = piranha_nullptr)
 		{
 			construct_from_arithmetic(x);
 		}
@@ -941,19 +952,19 @@ class integer
 		}
 		/// Generic assignment from arithmetic types.
 		/**
-		 * The supported types for \p T are all arithmetic types.
+		 * The supported types for \p T are the \ref interop "interoperable types".
 		 * Use of other types will result in a compile-time error.
-		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
+		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to assign
 		 * the integer object.
 		 * 
-		 * @param[in] x arithmetic type that will be assigned to \p this.
+		 * @param[in] x object that will be assigned to \p this.
 		 * 
 		 * @return reference to \p this.
 		 * 
 		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<std::is_arithmetic<T>::value,integer &>::type operator=(const T &x)
+		typename std::enable_if<is_interop_type<T>::value,integer &>::type operator=(const T &x)
 		{
 			if (m_value->_mp_d) {
 				assign_from_arithmetic(x);
@@ -975,7 +986,7 @@ class integer
 		}
 		/// Conversion to arithmetic types.
 		/**
-		 * Extract an instance of arithmetic type \p T from \p this.
+		 * Extract an instance of arithmetic type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types".
 		 * 
 		 * Conversion to \p bool is always successful, and returns <tt>this != 0</tt>.
 		 * Conversion to the other integral types is exact, its success depending on whether or not
@@ -985,8 +996,6 @@ class integer
 		 * If that is not the case, the output value will be one of the two adjacents (with an unspecified rounding direction).
 		 * Return values of +-inf will be produced if the current value of the integer overflows the range of the floating-point type.
 		 * 
-		 * If \p T is not an arithmetic type or it is \p wchar_t, a compile-time error will be produced.
-		 * 
 		 * @return result of the conversion to target type T.
 		 * 
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
@@ -994,9 +1003,8 @@ class integer
 		template <typename T>
 		T convert_to() const
 		{
-			static_assert(std::is_arithmetic<typename std::remove_cv<T>::type>::value && !std::is_same<wchar_t,typename std::remove_cv<T>::type>::value,
-				"Cannot convert to non-arithmetic type or wchar_t.");
-			return convert_to_impl<typename std::remove_cv<T>::type>();
+			static_assert(is_interop_type<T>::value, "Unsupported type for conversion.");
+			return convert_to_impl<T>();
 		}
 		/// Conversion operator to \p bool.
 		/**
@@ -1151,7 +1159,7 @@ class integer
 		/// In-place addition.
 		/**
 		 * Add \p x to the current value of the integer object. This template operator is activated only if
-		 * \p T is either integer or an arithmetic type.
+		 * \p T is either integer or an \ref interop "interoperable type".
 		 * 
 		 * If \p T is integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -1167,8 +1175,8 @@ class integer
 		 * @throws std::invalid_argument if \p T is a floating-point type and the result of the operation generates a non-finite value.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<
-			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+		typename std::enable_if<
+			is_interop_type<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator+=(T &&x)
 		{
 			in_place_add(std::forward<T>(x));
@@ -1176,7 +1184,7 @@ class integer
 		}
 		/// Generic in-place addition with piranha::integer.
 		/**
-		 * Add a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * Add a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
 		 * This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1185,7 +1193,7 @@ class integer
 		 * @return reference to \p x.
 		 */
 		template <typename T, typename I>
-		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
 			operator+=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) + x);
@@ -1195,8 +1203,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
@@ -1210,7 +1218,7 @@ class integer
 		 * @return <tt>x + y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator+(T &&x, U &&y)
 		{
 			return binary_plus(std::forward<T>(x),std::forward<U>(y));
@@ -1262,8 +1270,8 @@ class integer
 		 * @return reference to \p this.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<
-			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+		typename std::enable_if<
+			is_interop_type<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator-=(T &&x)
 		{
 			in_place_sub(std::forward<T>(x));
@@ -1271,7 +1279,7 @@ class integer
 		}
 		/// Generic in-place subtraction with piranha::integer.
 		/**
-		 * Subtract a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * Subtract a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
 		 * This method will first compute <tt>x - n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1280,7 +1288,7 @@ class integer
 		 * @return reference to \p x.
 		 */
 		template <typename T, typename I>
-		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
 			operator-=(T &x, I &&n)
 		{
 			x = static_cast<T>(x - std::forward<I>(n));
@@ -1290,8 +1298,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
@@ -1305,7 +1313,7 @@ class integer
 		 * @return <tt>x - y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator-(T &&x, U &&y)
 		{
 			return binary_minus(std::forward<T>(x),std::forward<U>(y));
@@ -1359,8 +1367,8 @@ class integer
 		 * @return reference to \p this.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<
-			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+		typename std::enable_if<
+			is_interop_type<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator*=(T &&x)
 		{
 			in_place_mul(std::forward<T>(x));
@@ -1368,7 +1376,7 @@ class integer
 		}
 		/// Generic in-place multiplication with piranha::integer.
 		/**
-		 * Multiply by a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * Multiply by a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
 		 * This method will first compute <tt>n * x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1377,7 +1385,7 @@ class integer
 		 * @return reference to \p x.
 		 */
 		template <typename T, typename I>
-		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
 			operator*=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) * x);
@@ -1387,8 +1395,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
@@ -1402,7 +1410,7 @@ class integer
 		 * @return <tt>x * y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator*(T &&x, U &&y)
 		{
 			return binary_mul(std::forward<T>(x),std::forward<U>(y));
@@ -1420,8 +1428,8 @@ class integer
 		 * @throws piranha::zero_division_error if <tt>x == 0</tt>.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<
-			std::is_arithmetic<typename strip_cv_ref<T>::type>::value ||
+		typename std::enable_if<
+			is_interop_type<typename strip_cv_ref<T>::type>::value ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator/=(T &&x)
 		{
 			in_place_div(std::forward<T>(x));
@@ -1429,7 +1437,7 @@ class integer
 		}
 		/// Generic in-place division with piranha::integer.
 		/**
-		 * Divide by a piranha::integer in-place. This template operator is activated only if \p T is an arithmetic type and \p I is piranha::integer.
+		 * Divide by a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
 		 * This method will first compute <tt>x / n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1440,7 +1448,7 @@ class integer
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
 		 */
 		template <typename T, typename I>
-		friend inline typename boost::enable_if_c<std::is_arithmetic<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
 			operator/=(T &x, I &&n)
 		{
 			x = static_cast<T>(x / std::forward<I>(n));
@@ -1450,8 +1458,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the result of the operation, truncated to zero, will be returned as a piranha::integer.
@@ -1467,14 +1475,14 @@ class integer
 		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator/(T &&x, U &&y)
 		{
 			return binary_div(std::forward<T>(x),std::forward<U>(y));
 		}
 		/// In-place modulo operation.
 		/**
-		 * Sets \p this to <tt>this % n</tt>. This template operator is enabled if \p T is piranha::integer or an integral type.
+		 * Sets \p this to <tt>this % n</tt>. This template operator is enabled if \p T is piranha::integer or an integral type among the \ref interop "interoperable types".
 		 * \p this must be non-negative and \p n strictly positive, otherwise an \p std::invalid_argument exception will be thrown.
 		 * 
 		 * @param[in] n argument for the modulo operation.
@@ -1484,8 +1492,8 @@ class integer
 		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>this < 0</tt>.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<
-			std::is_integral<typename strip_cv_ref<T>::type>::value ||
+		typename std::enable_if<
+			(std::is_integral<typename strip_cv_ref<T>::type>::value && is_interop_type<typename strip_cv_ref<T>::type>::value) ||
 			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator%=(T &&n)
 		{
 			if (unlikely(mpz_sgn(m_value) < 0)) {
@@ -1496,8 +1504,8 @@ class integer
 		}
 		/// Generic in-place modulo operation with piranha::integer.
 		/**
-		 * Apply the modulo operation by a piranha::integer in-place. This template operator is activated only if \p T is an integral type and \p I is piranha::integer.
-		 * This method will first compute <tt>x % n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * Apply the modulo operation by a piranha::integer in-place. This template operator is activated only if \p T is an integral type among the \ref interop "interoperable types"
+		 * and \p I is piranha::integer. This method will first compute <tt>x % n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
@@ -1507,7 +1515,7 @@ class integer
 		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>x < 0</tt>.
 		 */
 		template <typename T, typename I>
-		friend inline typename boost::enable_if_c<std::is_integral<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
 			operator%=(T &x, I &&n)
 		{
 			x = static_cast<T>(x % std::forward<I>(n));
@@ -1517,8 +1525,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an integral type,
-		 * - \p U is piranha::integer and \p T is an integral type,
+		 * - \p T is piranha::integer and \p U is an integral type among the \ref interop "interoperable types",
+		 * - \p U is piranha::integer and \p T is an integral type among the \ref interop "interoperable types",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * The result is always a non-negative piranha::integer.
@@ -1531,7 +1539,7 @@ class integer
 		 * @throws std::invalid_argument if <tt>y <= 0</tt> or <tt>x < 0</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<
+		friend inline typename std::enable_if<
 			are_binary_op_types<T,U>::value && !std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value,
 			typename deduce_binary_op_result_type<T,U>::type>::type
 			operator%(T &&x, U &&y)
@@ -1542,8 +1550,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1557,7 +1565,7 @@ class integer
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
 		{
 			return binary_equality(x,y);
 		}
@@ -1565,8 +1573,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1580,7 +1588,7 @@ class integer
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
 		{
 			return !(x == y);
 		}
@@ -1588,8 +1596,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1603,7 +1611,7 @@ class integer
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
 		{
 			return binary_less_than(x,y);
 		}
@@ -1611,8 +1619,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1626,7 +1634,7 @@ class integer
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
 		{
 			return binary_leq(x,y);
 		}
@@ -1634,8 +1642,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1649,7 +1657,7 @@ class integer
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
 		{
 			return (y < x);
 		}
@@ -1657,8 +1665,8 @@ class integer
 		/**
 		 * This template operator is activated if either:
 		 * 
-		 * - \p T is piranha::integer and \p U is an arithmetic type,
-		 * - \p U is piranha::integer and \p T is an arithmetic type,
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1672,7 +1680,7 @@ class integer
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename boost::enable_if_c<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
 		{
 			return (y <= x);
 		}
@@ -1692,7 +1700,7 @@ class integer
 		}
 		/// Exponentiation.
 		/**
-		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an arithmetic type or integer.
+		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an \ref interop "interoperable type" or integer.
 		 * 
 		 * If \p T is an integral type or integer, the result will be exact, with negative powers calculated as <tt>(1 / this) ** exp</tt>.
 		 * 
@@ -1713,7 +1721,7 @@ class integer
 		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
 		 */
 		template <typename T>
-		typename boost::enable_if_c<std::is_arithmetic<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
+		typename std::enable_if<is_interop_type<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
 		{
 			return pow_impl(exp);
 		}
