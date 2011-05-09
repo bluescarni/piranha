@@ -41,7 +41,7 @@
  * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
  * reference collapsing rules, etc. etc.
  * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
- * \todo inline friend functions in class scope: is inline redundant?
+ * \todo inline friend functions in class scope: is inline redundant? yes: http://stackoverflow.com/questions/3980627/is-a-friend-function-defined-in-class-automatically-inline
  */
 namespace piranha
 {
@@ -80,6 +80,7 @@ namespace detail {}
 #include "monomial.hpp"
 #include "numerical_coefficient.hpp"
 #include "polynomial_term.hpp"
+#include "polynomial.hpp"
 #include "runtime_info.hpp"
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
