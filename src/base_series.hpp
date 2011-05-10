@@ -68,13 +68,13 @@ struct term_hasher
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same exception safety guarantee as piranha::hop_table. In particular, exceptions thrown during
- * any operation involving term insertion will leave the object in an undefined but valid state.
+ * any operation involving term insertion (e.g., insert()) will leave the object in an undefined but valid state.
  * 
  * \section move_semantics Move semantics
  * 
  * Move semantics is equivalent to piranha::hop_table's move semantics.
  * 
- * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods og hop_table
+ * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods of hop_table
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -178,18 +178,40 @@ std::cout << "new term!\n";
 				// Change sign if requested.
 				if (!Sign) {
 std::cout << "negating!\n";
-					result.first->m_cf.negate(ed);
+					// Cleanup function.
+					auto cleanup = [&]() -> void {
+						// Negation is a mutating operation. We have to check again for compatibility
+						// and ignorability.
+						if (unlikely(!result.first->is_compatible(ed) || result.first->is_ignorable(ed))) {
+							this->m_container.erase(result.first);
+						}
+					};
+					try {
+						result.first->m_cf.negate(ed);
+						cleanup();
+					} catch (...) {
+						cleanup();
+						throw;
+					}
 				}
 			} else {
 std::cout << "updating existing term!\n";
 				// Assert the existing term is not ignorable.
 				piranha_assert(!it->is_ignorable(ed));
-				// The term exists already, update it.
-				insertion_cf_arithmetics<Sign>(it,std::forward<T>(term),ed);
-				// Check if the term has become ignorable after the modification.
-				if (unlikely(it->is_ignorable(ed))) {
-std::cout << "erasing term become ignorable!\n";
-					m_container.erase(it);
+				// Cleanup function.
+				auto cleanup = [&]() -> void {
+					if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
+						this->m_container.erase(it);
+					}
+				};
+				try {
+					// The term exists already, update it.
+					insertion_cf_arithmetics<Sign>(it,std::forward<T>(term),ed);
+					// Check if the term has become ignorable or incompatible after the modification.
+					cleanup();
+				} catch (...) {
+					cleanup();
+					throw;
 				}
 			}
 		}
@@ -275,8 +297,16 @@ std::cout << "LOL move!\n";
 				if (swap && !Sign) {
 std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 					const auto it_f2 = m_container.end();
-					for (auto it = m_container.begin(); it != it_f2; ++it) {
+					for (auto it = m_container.begin(); it != it_f2;) {
 						it->m_cf.negate(ed);
+						if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
+							// Record current iterator and then increase it.
+							auto tmp_it = it++;
+							// Erase the invalid term.
+							m_container.erase(tmp_it);
+						} else {
+							++it;
+						}
 					}
 				}
 			} catch (...) {
@@ -385,6 +415,14 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
 		 * - else:
 		 *   - the term is inserted into the term container and, if \p Sign is \p false, its coefficient is negated.
+		 * 
+		 * After any modification to an existing term in the series (e.g., via insertion with negative \p Sign or via in-place addition
+		 * or subtraction of existing coefficients), the term will be checked again for compatibility and ignorability, and, in case
+		 * the term has become incompatible or ignorable, it will be erased from the series.
+		 * 
+		 * The exception safety guarantee upon insertion is that the series will be left in an undefined but valid state. Such a guarantee
+		 * relies on the fact that the addition/subtraction and negation methods of the coefficient type will leave the coefficient in a valid
+		 * (possibly undefined) state in face of exceptions.
 		 * 
 		 * @param[in] term term to be inserted.
 		 * @param[in] ed reference piranha::echelon_descriptor.
