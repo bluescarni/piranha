@@ -63,7 +63,8 @@ namespace piranha
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
- * which provide the basic exception safety guarantee.
+ * which provide the following guarantee: the table will be either left in the same state as it was before the attempted
+ * insertion or it will be emptied.
  * 
  * \section move_semantics Move semantics
  * 
