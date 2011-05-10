@@ -47,9 +47,9 @@ namespace concept
  * - must be directable to output stream,
  * - must be equality-comparable,
  * - must be provided with a \p std::hash specialisation,
- * - must be provided with a const \p is_compatible method accepting a vector of piranha::symbol
+ * - must be provided with a const non-throwing \p is_compatible method accepting a vector of piranha::symbol
  *   as input and returning a boolean value,
- * - must be provided with a const \p is_ignorable method accepting a vector of piranha::symbol
+ * - must be provided with a const non-throwing \p is_ignorable method accepting a vector of piranha::symbol
  *   as input and returning a boolean value,
  * - must be provided with a const \p merge_args method accepting two \p std::vector of piranha::symbol
  *   as input and returning an instance of \p T,
@@ -70,8 +70,10 @@ struct Key:
 		T tmp = T(std::vector<symbol>());
 		std::cout << *(static_cast<T *>(piranha_nullptr));
 		const T inst = T();
+		static_assert(piranha_noexcept_op(inst.is_compatible(std::declval<std::vector<symbol>>())),"is_compatible() must be non-throwing.");
 		auto tmp1 = inst.is_compatible(std::vector<symbol>{});
 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
+		static_assert(piranha_noexcept_op(inst.is_ignorable(std::declval<std::vector<symbol>>())),"is_ignorable() must be non-throwing.");
 		auto tmp2 = inst.is_ignorable(std::vector<symbol>{});
 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
 		auto merge_out = inst.merge_args(std::vector<symbol>{},std::vector<symbol>{});

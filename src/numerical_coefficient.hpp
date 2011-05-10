@@ -255,12 +255,13 @@ class numerical_coefficient
 		}
 		/// Ignorability test.
 		/**
-		 * @return output of piranha::math::is_zero() on the internal numerical value.
+		 * Note that this method is not allowed to throw: any exception resulting from invoking piranha::math::is_zero()
+		 * will result in the termination of the program.
 		 * 
-		 * @throws unspecified any exception thrown by piranha::math::is_zero().
+		 * @return output of piranha::math::is_zero() on the internal numerical value.
 		 */
 		template <typename Term>
-		bool is_ignorable(const echelon_descriptor<Term> &) const
+		bool is_ignorable(const echelon_descriptor<Term> &) const piranha_noexcept_spec(true)
 		{
 			return math::is_zero(m_value);
 		}
@@ -271,7 +272,7 @@ class numerical_coefficient
 		 * @return \p true.
 		 */
 		template <typename Term>
-		bool is_compatible(const echelon_descriptor<Term> &) const
+		bool is_compatible(const echelon_descriptor<Term> &) const piranha_noexcept_spec(true)
 		{
 			return true;
 		}

@@ -43,9 +43,9 @@ namespace concept
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
  * - must be directable to output stream,
- * - must be provided with a const \p is_compatible method accepting a generic piranha::echelon_descriptor
+ * - must be provided with a const non-throwing \p is_compatible method accepting a generic piranha::echelon_descriptor
  *   as input and returning a boolean value,
- * - must be provided with a const \p is_ignorable method accepting a generic piranha::echelon_descriptor
+ * - must be provided with a const non-throwing \p is_ignorable method accepting a generic piranha::echelon_descriptor
  *   as input and returning a boolean value,
  * - must be provided with a \p negate method accepting a generic piranha::echelon_descriptor
  *   as input and returning void,
@@ -67,8 +67,10 @@ struct Coefficient:
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
 		std::cout << *(static_cast<T *>(piranha_nullptr));
 		const T inst = T();
+		static_assert(piranha_noexcept_op(inst.template is_compatible(std::declval<ed_type>())),"is_compatible() must be non-throwing.");
 		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for coefficient type.");
+		static_assert(piranha_noexcept_op(inst.template is_ignorable(std::declval<ed_type>())),"is_ignorable() must be non-throwing.");
 		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for coefficient type.");
 		T inst_m;

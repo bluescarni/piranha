@@ -107,7 +107,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @return <tt>this->size() == args.size()</tt>.
 		 */
-		bool is_compatible(const std::vector<symbol> &args) const
+		bool is_compatible(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
 		{
 			return (this->size() == args.size());
 		}
@@ -119,7 +119,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const std::vector<symbol> &args) const
+		bool is_ignorable(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
 		{
 			(void)args;
 			piranha_assert(is_compatible(args));

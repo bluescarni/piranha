@@ -172,11 +172,11 @@ class base_term: detail::base_term_tag
 		 * 
 		 * @return \p true is both the coefficient's and the key's <tt>is_compatible()</tt> method returns true,
 		 * \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by the coefficient's or the key's <tt>is_compatible()</tt> method.
 		 */
+		// NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
+		// we must take care of asserting noexcept on the correspondnig methods in the derived class.
 		template <typename Term>
-		bool is_compatible(const echelon_descriptor<Term> &ed) const
+		bool is_compatible(const echelon_descriptor<Term> &ed) const piranha_noexcept_spec(true)
 		{
 			return (m_cf.is_compatible(ed) && m_key.is_compatible(ed.template get_args<Derived>()));
 		}
@@ -186,11 +186,9 @@ class base_term: detail::base_term_tag
 		 * 
 		 * @return \p true is either the coefficient's or the key's <tt>is_ignorable()</tt> method returns true,
 		 * \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by the coefficient's or the key's <tt>is_ignorable()</tt> method.
 		 */
 		template <typename Term>
-		bool is_ignorable(const echelon_descriptor<Term> &ed) const
+		bool is_ignorable(const echelon_descriptor<Term> &ed) const piranha_noexcept_spec(true)
 		{
 			return (m_cf.is_ignorable(ed) || m_key.is_ignorable(ed.template get_args<Derived>()));
 		}
