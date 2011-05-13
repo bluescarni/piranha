@@ -36,6 +36,12 @@
 namespace piranha
 {
 
+/// Enabler variable.
+/**
+ * @see http://boost.2283326.n4.nabble.com/New-powerful-way-to-use-enable-if-in-C-0x-td3442723.html.
+ */
+extern void *enabler;
+
 /// Strip reference and top-level cv-qualifiers.
 /**
  * This type trait removes top-level cv-qualifiers and, if \p T is a reference, transforms it into the referred-to type.
