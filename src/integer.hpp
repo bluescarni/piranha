@@ -89,9 +89,11 @@ namespace piranha
  * 
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
+ * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
+ * \todo implement generic conversion operator using the new enable_if semantics.
  */
 class integer
 {
@@ -810,6 +812,69 @@ class integer
 		integer()
 		{
 			::mpz_init(m_value);
+		}
+		/// Class for the representation of the number of limbs in a piranha::integer.
+		/**
+		 * This class is used in the constructor of piranha::integer from size, and
+		 * it represents the number of limbs that will be allocated for the constructed object.
+		 */
+		class nlimbs
+		{
+				friend class integer;
+			public:
+				/// Deleted default constructor.
+				nlimbs() = delete;
+				/// Deleted copy constructor.
+				nlimbs(const nlimbs &) = delete;
+				/// Deleted move constructor.
+				nlimbs(nlimbs &&) = delete;
+				/// Deleted copy-assignment operator.
+				nlimbs &operator=(const nlimbs &) = delete;
+				/// Deleted move-assignment operator.
+				nlimbs &operator=(nlimbs &&) = delete;
+				/// Constructor from \p std::size_t.
+				/**
+				 * @param[in] n number of limbs that will be allocated when constructing a piranha::integer.
+				 */
+				explicit nlimbs(const std::size_t &n):m_n(n) {}
+			private:
+				const std::size_t m_n;
+		};
+		/// Constructor from number of limbs.
+		/**
+		 * Construct an integer object initialised to zero and with pre-allocated space of \p n limbs.
+		 * A limb is, in the jargon of the GMP library, "the part of a multi-precision number that fits into a single
+		 * machine word". The GMP global variable \p mp_bits_per_limb represents the number of bits contained in a limb
+		 * (typically 32 or 64).
+		 * 
+		 * Example usage:
+		 * @code
+		 * using namespace piranha;
+		 * integer n(integer::nlimbs(4));
+		 * @endcode
+		 * 
+		 * @param[in] n number of limbs to allocate during construction.
+		 * 
+		 * @throws std::invalid_argument if \p n was constructed with 0.
+		 * @throws std::overflow_error in case of numeric conversion error(s).
+		 * 
+		 * @see http://gmplib.org/manual/Nomenclature-and-Types.html.
+		 */
+		integer(const nlimbs &n)
+		{
+			if (unlikely(!n.m_n)) {
+				piranha_throw(std::invalid_argument,"the number of limbs must be strictly positive");
+			}
+			try {
+				const auto n_limbs = boost::numeric_cast<mp_bitcnt_t>(n.m_n);
+				const auto bits_per_limb = boost::numeric_cast<mp_bitcnt_t>(::mp_bits_per_limb);
+				if (unlikely(n_limbs > boost::integer_traits<mp_bitcnt_t>::const_max / bits_per_limb)) {
+					throw;
+				}
+				::mpz_init2(m_value,n_limbs * bits_per_limb);
+			} catch (...) {
+				piranha_throw(std::overflow_error,"overflow error while calculating memory to be allocated");
+			}
 		}
 		/// Copy constructor.
 		/**
@@ -1740,6 +1805,8 @@ class integer
 		 * @return a hash value for \p this.
 		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/reference.html#boost.hash_combine
+		 * 
+		 * \todo fix this not to throw.
 		 */
 		std::size_t hash() const
 		{
@@ -1750,6 +1817,14 @@ class integer
 				boost::hash_combine(retval,::mpz_getlimbn(m_value,i));
 			}
 			return retval;
+		}
+		/// Integer size.
+		/**
+		 * @return number of GMP limbs which the number represented by \p this is made of. If \p this represents 0, the return value will be 0.
+		 */
+		std::size_t size() const
+		{
+			return ::mpz_size(m_value);
 		}
 		/// Sign.
 		/**

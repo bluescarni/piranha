@@ -93,6 +93,10 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	if (std::numeric_limits<long double>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<long double>::quiet_NaN())),std::invalid_argument);
 	}
+	// Constructor from size.
+	piranha::integer k(piranha::integer::nlimbs(4));
+	BOOST_CHECK_EQUAL(k,0);
+	BOOST_CHECK_THROW(piranha::integer{piranha::integer::nlimbs(0)},std::invalid_argument);
 }
 
 struct check_arithmetic_assignment
@@ -741,4 +745,12 @@ BOOST_AUTO_TEST_CASE(integer_vector_accumulate_test)
 	}
 	BOOST_CHECK_EQUAL(std::accumulate(v.begin(),v.end(),piranha::integer(0),
 		[](piranha::integer &n1, const piranha::integer &n2){return(std::move(n1) + n2);}),piranha::integer(10000) * piranha::integer(9999) / 2);
+}
+
+BOOST_AUTO_TEST_CASE(integer_size_test)
+{
+	piranha::integer k;
+	BOOST_CHECK_EQUAL(k.size(),0u);
+	k = 1;
+	BOOST_CHECK(k.size() > 0u);
 }
