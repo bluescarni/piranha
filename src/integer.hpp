@@ -855,26 +855,12 @@ class integer
 		 * 
 		 * @param[in] n number of limbs to allocate during construction.
 		 * 
-		 * @throws std::invalid_argument if \p n was constructed with 0.
-		 * @throws std::overflow_error in case of numeric conversion error(s).
-		 * 
 		 * @see http://gmplib.org/manual/Nomenclature-and-Types.html.
 		 */
 		integer(const nlimbs &n)
 		{
-			if (unlikely(!n.m_n)) {
-				piranha_throw(std::invalid_argument,"the number of limbs must be strictly positive");
-			}
-			try {
-				const auto n_limbs = boost::numeric_cast<mp_bitcnt_t>(n.m_n);
-				const auto bits_per_limb = boost::numeric_cast<mp_bitcnt_t>(::mp_bits_per_limb);
-				if (unlikely(n_limbs > boost::integer_traits<mp_bitcnt_t>::const_max / bits_per_limb)) {
-					throw;
-				}
-				::mpz_init2(m_value,n_limbs * bits_per_limb);
-			} catch (...) {
-				piranha_throw(std::overflow_error,"overflow error while calculating memory to be allocated");
-			}
+			// NOTE: use unsigned types everywhere, so that in case of overflow we just allocate a different amount of memory.
+			::mpz_init2(m_value,n.m_n * std::make_unsigned<decltype(::mp_bits_per_limb)>::type(::mp_bits_per_limb));
 		}
 		/// Copy constructor.
 		/**
@@ -1810,7 +1796,7 @@ class integer
 		 */
 		std::size_t hash() const
 		{
-			const ::mp_size_t size = boost::numeric_cast< ::mp_size_t>(::mpz_size(m_value));
+			const ::mp_size_t size = boost::numeric_cast< ::mp_size_t>(this->size());
 			// Use the sign as initial seed value.
 			std::size_t retval = static_cast<std::size_t>(mpz_sgn(m_value));
 			for (::mp_size_t i = 0; i < size; ++i) {

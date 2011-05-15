@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	// Constructor from size.
 	piranha::integer k(piranha::integer::nlimbs(4));
 	BOOST_CHECK_EQUAL(k,0);
-	BOOST_CHECK_THROW(piranha::integer{piranha::integer::nlimbs(0)},std::invalid_argument);
+	BOOST_CHECK_NO_THROW(piranha::integer{piranha::integer::nlimbs(0)});
 }
 
 struct check_arithmetic_assignment
