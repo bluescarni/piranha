@@ -97,7 +97,6 @@ namespace piranha
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
- * \todo implement generic conversion operator using the new enable_if semantics.
  */
 class integer
 {
@@ -138,7 +137,7 @@ class integer
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
 			// A number starting with zero cannot be multi-digit and cannot have a leading minus sign (no '-0' allowed).
-			if (str[has_minus] == '0' && (signed_size > 1 || has_minus)) {
+			if (str[has_minus] == '0' && (signed_size > 1u || has_minus)) {
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
 			// Check that each character is a digit.
@@ -442,7 +441,7 @@ class integer
 		void in_place_div(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(ui == 0)) {
+			if (unlikely(ui == 0u)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
 			}
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
@@ -481,7 +480,7 @@ class integer
 		void in_place_mod(const T &ui, typename std::enable_if<std::is_integral<T>::value
 			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(ui == 0)) {
+			if (unlikely(ui == 0u)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
 			}
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
@@ -1196,161 +1195,10 @@ class integer
 		 * 
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
 		 */
-		template <typename T>
-		T convert_to() const
+		template <typename T, typename std::enable_if<is_interop_type<T>::value>::type*& = enabler>
+		explicit operator T() const
 		{
-			static_assert(is_interop_type<T>::value, "Unsupported type for conversion.");
 			return convert_to_impl<T>();
-		}
-		/// Conversion operator to \p bool.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator bool() const
-		{
-			return convert_to<bool>();
-		}
-		/// Conversion operator to \p char.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator char() const
-		{
-			return convert_to<char>();
-		}
-		/// Conversion operator to <tt>signed char</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator signed char() const
-		{
-			return convert_to<signed char>();
-		}
-		/// Conversion operator to \p short.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator short() const
-		{
-			return convert_to<short>();
-		}
-		/// Conversion operator to \p int.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator int() const
-		{
-			return convert_to<int>();
-		}
-		/// Conversion operator to \p long.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator long() const
-		{
-			return convert_to<long>();
-		}
-		/// Conversion operator to <tt>long long</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator long long() const
-		{
-			return convert_to<long long>();
-		}
-		/// Conversion operator to <tt>unsigned char</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator unsigned char() const
-		{
-			return convert_to<unsigned char>();
-		}
-		/// Conversion operator to <tt>unsigned short</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator unsigned short() const
-		{
-			return convert_to<unsigned short>();
-		}
-		/// Conversion operator to <tt>unsigned int</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator unsigned int() const
-		{
-			return convert_to<unsigned int>();
-		}
-		/// Conversion operator to <tt>unsigned long</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator unsigned long() const
-		{
-			return convert_to<unsigned long>();
-		}
-		/// Conversion operator to <tt>unsigned long long</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator unsigned long long() const
-		{
-			return convert_to<unsigned long long>();
-		}
-		/// Conversion operator to <tt>float</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator float() const
-		{
-			return convert_to<float>();
-		}
-		/// Conversion operator to <tt>double</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator double() const
-		{
-			return convert_to<double>();
-		}
-		/// Conversion operator to <tt>long double</tt>.
-		/**
-		 * Equivalent to a call to convert_to().
-		 * 
-		 * @see convert_to().
-		 */
-		explicit operator long double() const
-		{
-			return convert_to<long double>();
 		}
 		/// In-place addition.
 		/**
