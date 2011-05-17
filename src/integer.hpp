@@ -88,8 +88,11 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo check out the impact of the unlikely() on destruction, maybe that's a contributor to weak performance in parallel destruction of cvector?
+ * \todo memory optimisations for division (same as those for mult and add)
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
- * \todo test for number of memory allocations
+ * \todo test for number of memory allocations: such tests should re-defined GMP memory allocation functions so that they count the allocations, and report
+ * their number. It would be useful to check that future GMP versions still behave the way it is assumed in this class regarding allocation requirements
+ * for arithmetic operations.
  * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
@@ -378,7 +381,15 @@ class integer
 		}
 		void in_place_mul(integer &&n)
 		{
-			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+			// NOTE: here target size is increased by 1 in order to pre-emptively increase the likelyhood of
+			// future additions being able to steal memory.
+			const std::size_t s1 = size(), s2 = n.size(), target_size = s1 + s2 + std::size_t(1);
+			const auto a2 = n.allocated_size();
+			// NOTE: the possible scenario in which swapping is useful is the following:
+			// s1's size in limbs is unitary and s2's is not: the GMP docs state the only condition
+			// in which a copy of this is avoided is when the second operand has 1 limb. If s2 has enough space
+			// to store the result, steal it.
+			if (s1 == 1u && a2 >= target_size) {
 				swap(n);
 			}
 			in_place_mul(n);
@@ -509,27 +520,65 @@ class integer
 		// Binary addition.
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
-			// NOTE: the logic here is that we can "steal" from n1 we do it here, otherwise we
-			// attempt the steal from n2 in the overload below.
-			integer retval(std::forward<T>(n1));
-			retval += std::forward<U>(n2);
+			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
+			const std::size_t target_size = std::max<std::size_t>(n1.size(),n2.size()) + std::size_t(1);
+			if (is_nonconst_rvalue_ref<T &&>::value && is_nonconst_rvalue_ref<U &&>::value) {
+				if (a1 >= a2 && a1 >= target_size) {
+					return binary_plus_fwd_first(std::forward<T>(n1),n2);
+				} else if (a2 >= a1 && a2 >= target_size) {
+					return binary_plus_fwd_first(std::forward<U>(n2),n1);
+				} else {
+					return binary_plus_new(n1,n2,target_size);
+				}
+			} else if (is_nonconst_rvalue_ref<T &&>::value && a1 >= target_size) {
+				return binary_plus_fwd_first(std::forward<T>(n1),n2);
+			} else if (is_nonconst_rvalue_ref<U &&>::value && a2 >= target_size) {
+				return binary_plus_fwd_first(std::forward<U>(n2),n1);
+			} else {
+				return binary_plus_new(n1,n2,target_size);
+			}
+		}
+		template <typename T, typename U>
+		static integer binary_plus_fwd_first(T &&n, const U &x)
+		{
+			integer retval(std::forward<T>(n));
+			retval.in_place_add(x);
+			return retval;
+		}
+		template <typename T>
+		static integer binary_plus_new(const integer &n1, const T &n2, const std::size_t &target_size)
+		{
+			integer retval{nlimbs(target_size)};
+			retval = n1;
+			retval.in_place_add(n2);
 			return retval;
 		}
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
-			integer retval(std::forward<U>(n2));
-			retval += std::forward<T>(n1);
-			return retval;
+			const std::size_t target_size = n1.size() + std::size_t(1);
+			if (n1.allocated_size() >= target_size) {
+				return binary_plus_fwd_first(std::forward<T>(n1),n2);
+			} else {
+				return binary_plus_new(n1,n2,target_size);
+			}
+		}
+		template <typename T, typename U>
+		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
+			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			>::type * = piranha_nullptr)
+		{
+			const std::size_t target_size = n2.size() + std::size_t(1);
+			if (n2.allocated_size() >= target_size) {
+				return binary_plus_fwd_first(std::forward<U>(n2),n1);
+			} else {
+				return binary_plus_new(n2,n1,target_size);
+			}
 		}
 		template <typename T>
 		static T binary_plus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -544,26 +593,71 @@ class integer
 		// Binary subtraction.
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
-			integer retval(std::forward<T>(n1));
-			retval -= std::forward<U>(n2);
+			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
+			const std::size_t target_size = std::max<std::size_t>(n1.size(),n2.size()) + std::size_t(1);
+			if (is_nonconst_rvalue_ref<T &&>::value && is_nonconst_rvalue_ref<U &&>::value) {
+				if (a1 >= a2 && a1 >= target_size) {
+					return binary_minus_fwd_first<true>(std::forward<T>(n1),n2);
+				} else if (a2 >= a1 && a2 >= target_size) {
+					return binary_minus_fwd_first<false>(std::forward<U>(n2),n1);
+				} else {
+					return binary_minus_new<true>(n1,n2,target_size);
+				}
+			} else if (is_nonconst_rvalue_ref<T &&>::value && a1 >= target_size) {
+				return binary_minus_fwd_first<true>(std::forward<T>(n1),n2);
+			} else if (is_nonconst_rvalue_ref<U &&>::value && a2 >= target_size) {
+				return binary_minus_fwd_first<false>(std::forward<U>(n2),n1);
+			} else {
+				return binary_minus_new<true>(n1,n2,target_size);
+			}
+		}
+		template <bool Order, typename T, typename U>
+		static integer binary_minus_fwd_first(T &&n, const U &x)
+		{
+			integer retval(std::forward<T>(n));
+			retval.in_place_sub(x);
+			if (!Order) {
+				retval.negate();
+			}
+			return retval;
+		}
+		template <bool Order, typename T>
+		static integer binary_minus_new(const integer &n1, const T &n2, const std::size_t &target_size)
+		{
+			integer retval{nlimbs(target_size)};
+			retval = n1;
+			retval.in_place_sub(n2);
+			if (!Order) {
+				retval.negate();
+			}
 			return retval;
 		}
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
-			integer retval(std::forward<U>(n2));
-			::mpz_neg(retval.m_value,retval.m_value);
-			retval += std::forward<T>(n1);
-			return retval;
+			const std::size_t target_size = n1.size() + std::size_t(1);
+			if (n1.allocated_size() >= target_size) {
+				return binary_minus_fwd_first<true>(std::forward<T>(n1),n2);
+			} else {
+				return binary_minus_new<true>(n1,n2,target_size);
+			}
+		}
+		template <typename T, typename U>
+		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
+			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			>::type * = piranha_nullptr)
+		{
+			const std::size_t target_size = n2.size() + std::size_t(1);
+			if (n2.allocated_size() >= target_size) {
+				return binary_minus_fwd_first<false>(std::forward<U>(n2),n1);
+			} else {
+				return binary_minus_new<false>(n2,n1,target_size);
+			}
 		}
 		template <typename T>
 		static T binary_minus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -578,25 +672,75 @@ class integer
 		// Binary multiplication.
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value &&
+			std::is_same<typename strip_cv_ref<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
-			integer retval(std::forward<T>(n1));
-			retval *= std::forward<U>(n2);
+			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
+			const std::size_t s1 = n1.size(), s2 = n2.size(), target_size = s1 + s2 + std::size_t(1);
+			// Condition for stealing: one integer has size 1 and the other has allocated enough space.
+			if (is_nonconst_rvalue_ref<T &&>::value && is_nonconst_rvalue_ref<U &&>::value) {
+				if (s2 == 1u && a1 >= target_size) {
+					return binary_mul_fwd_first(std::forward<T>(n1),n2);
+				} else if (s1 == 1u && a2 >= target_size) {
+					return binary_mul_fwd_first(std::forward<U>(n2),n1);
+				} else {
+					return binary_mul_new(n1,n2,target_size);
+				}
+			} else if (is_nonconst_rvalue_ref<T &&>::value && s2 == 1u && a1 >= target_size) {
+				return binary_mul_fwd_first(std::forward<T>(n1),n2);
+			} else if (is_nonconst_rvalue_ref<U &&>::value && s1 == 1u && a2 >= target_size) {
+				return binary_mul_fwd_first(std::forward<U>(n2),n1);
+			} else {
+				return binary_mul_new(n1,n2,target_size);
+			}
+		}
+		template <typename T, typename U>
+		static integer binary_mul_fwd_first(T &&n, const U &x)
+		{
+			integer retval(std::forward<T>(n));
+			retval.in_place_mul(x);
+			return retval;
+		}
+		static integer binary_mul_new(const integer &n1, const integer &n2, const std::size_t &target_size)
+		{
+			integer retval{nlimbs(target_size)};
+			::mpz_mul(retval.m_value,n1.m_value,n2.m_value);
+			return retval;
+		}
+		template <typename T>
+		static integer binary_mul_new(const integer &n1, const T &n2, const std::size_t &target_size)
+		{
+			integer retval{nlimbs(target_size)};
+			retval = n1;
+			retval.in_place_mul(n2);
 			return retval;
 		}
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
-			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value &&
-			!(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_nonconst_rvalue_ref<T &&>::value)
+			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
-			integer retval(std::forward<U>(n2));
-			retval *= std::forward<T>(n1);
-			return retval;
+			// NOTE: here the formula would be: n1.size() + size_in_limbs_of_U + 1, but we
+			// are assuming that the size of U is no greater than 1 limb.
+			const std::size_t target_size = n1.size() + std::size_t(2);
+			if (n1.allocated_size() >= target_size) {
+				return binary_mul_fwd_first(std::forward<T>(n1),n2);
+			} else {
+				return binary_mul_new(n1,n2,target_size);
+			}
+		}
+		template <typename T, typename U>
+		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
+			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			>::type * = piranha_nullptr)
+		{
+			const std::size_t target_size = n2.size() + std::size_t(2);
+			if (n2.allocated_size() >= target_size) {
+				return binary_mul_fwd_first(std::forward<U>(n2),n1);
+			} else {
+				return binary_mul_new(n2,n1,target_size);
+			}
 		}
 		template <typename T>
 		static T binary_mul(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -1816,7 +1960,7 @@ class integer
 		}
 		/// Number of allocated limbs.
 		/**
-		 * @return number of GMP limbs corrently allocated in \p this. The return type is the unsigned counterpart of the integer
+		 * @return number of GMP limbs currently allocated in \p this. The return type is the unsigned counterpart of the integer
 		 * type used to represent the allocated size in GMP's integer type.
 		 */
 		auto allocated_size() const -> typename strip_cv_ref<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type
