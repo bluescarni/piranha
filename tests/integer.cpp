@@ -754,3 +754,13 @@ BOOST_AUTO_TEST_CASE(integer_size_test)
 	k = 1;
 	BOOST_CHECK(k.size() > 0u);
 }
+
+BOOST_AUTO_TEST_CASE(integer_allocated_size_test)
+{
+	piranha::integer k(piranha::integer::nlimbs(0));
+	BOOST_CHECK(k.allocated_size() == 1u);
+	k = piranha::integer(piranha::integer::nlimbs(10));
+	BOOST_CHECK(k.allocated_size() == 10u);
+	k = piranha::integer(piranha::integer::nlimbs(100));
+	BOOST_CHECK(k.allocated_size() == 100u);
+}

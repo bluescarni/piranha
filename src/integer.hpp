@@ -87,6 +87,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
+ * \todo check out the impact of the unlikely() on destruction, maybe that's a contributor to weak performance in parallel destruction of cvector?
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations
  * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
@@ -295,7 +296,7 @@ class integer
 		}
 		void in_place_add(integer &&n)
 		{
-			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+			if (n.allocated_size() > allocated_size()) {
 				swap(n);
 			}
 			in_place_add(n);
@@ -336,7 +337,7 @@ class integer
 		}
 		void in_place_sub(integer &&n)
 		{
-			if (n.m_value->_mp_alloc > m_value->_mp_alloc) {
+			if (n.allocated_size() > allocated_size()) {
 				swap(n);
 				::mpz_neg(m_value,m_value);
 				in_place_add(n);
@@ -930,6 +931,7 @@ class integer
 		 */
 		~integer() piranha_noexcept_spec(true)
 		{
+			piranha_assert(m_value->_mp_alloc >= 0);
 			// The rationale for using unlikely here is that mpz_clear is an expensive operation
 			// which is going to dominate anyway the branch penalty.
 			if (unlikely(m_value->_mp_d != 0)) {
@@ -1811,6 +1813,16 @@ class integer
 		std::size_t size() const
 		{
 			return ::mpz_size(m_value);
+		}
+		/// Number of allocated limbs.
+		/**
+		 * @return number of GMP limbs corrently allocated in \p this. The return type is the unsigned counterpart of the integer
+		 * type used to represent the allocated size in GMP's integer type.
+		 */
+		auto allocated_size() const -> typename strip_cv_ref<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type
+		{
+			typedef typename strip_cv_ref<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type return_type;
+			return return_type(m_value->_mp_alloc);
 		}
 		/// Sign.
 		/**
