@@ -27,6 +27,7 @@
 #include "polynomial_term.hpp"
 #include "symbol.hpp"
 #include "top_level_series.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -68,7 +69,7 @@ class polynomial:
 		polynomial(const polynomial &) = default;
 		/// Defaulted move constructor.
 		polynomial(polynomial &&) = default;
-		/// Constrcutor from symbol name.
+		/// Constructor from symbol name.
 		/**
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name.
@@ -101,14 +102,16 @@ class polynomial:
 		}
 		/// Generic constructor.
 		/**
-		 * Will perfectly forward the arguments to a constructor in the base class.
+		 * This constructor, activated only if the number of arguments is at least 2 or if the only argument is not of type piranha::polynomial
+		 * (disregarding cv-qualifications or references), will perfectly forward its arguments to a constructor in the base class.
 		 * 
-		 * @param[in] params construction arguments.
+		 * @param[in] arg1 first argument for construction.
+		 * @param[in] argn additional construction arguments.
 		 * 
 		 * @throws unspecified any exception thrown by the invoked base constructor.
 		 */
-		template <typename... Args>
-		explicit polynomial(Args && ... params) : base(std::forward<Args>(params)...) {}
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
+		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {std::cout << "generic polyctor\n";}
 		/// Defaulted destructor.
 		~polynomial() = default;
 		/// Defaulted copy assignment operator.
@@ -142,7 +145,8 @@ class polynomial:
 		}
 		/// Generic assignment operator.
 		/**
-		 * Will forward the assignment to the base class.
+		 * Will forward the assignment to the base class. This assignment operator is activated only when \p T is not
+		 * piranha::polynomial and no other assignment operator applies.
 		 * 
 		 * @param[in] x assignment argument.
 		 * 
@@ -151,7 +155,7 @@ class polynomial:
 		 * @throws unspecified any exception thrown by the assignment operator in the base class.
 		 */
 		template <typename T>
-		typename std::enable_if<!std::is_constructible<symbol,T &&>::value,polynomial &>::type operator=(T &&x)
+		typename std::enable_if<!std::is_constructible<symbol,T &&>::value && !std::is_same<polynomial,typename strip_cv_ref<T>::type>::value,polynomial &>::type operator=(T &&x)
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
