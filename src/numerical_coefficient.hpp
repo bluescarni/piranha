@@ -71,6 +71,10 @@ class numerical_coefficient
 		struct is_numerical_coefficient: std::false_type {};
 		template <typename U>
 		struct is_numerical_coefficient<numerical_coefficient<U>>: std::true_type {};
+		// Generic constructor from non numerical coefficient type.
+		template <typename U, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type*& = enabler>
+		explicit numerical_coefficient(U &&x):
+			m_value(std::forward<U>(x)) {}
 		template <typename U>
 		void assign(U &&other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
@@ -122,20 +126,38 @@ class numerical_coefficient
 			}
 		}
 		template <typename U>
-		void dispatch_multiply(U &&other, typename std::enable_if<
+		numerical_coefficient dispatch_multiply(U &&other, typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
+			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
+		{
+			return numerical_coefficient{m_value * std::move(other.m_value)};
+		}
+		template <typename U>
+		numerical_coefficient dispatch_multiply(const U &other, typename std::enable_if<
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		{
+			return numerical_coefficient{m_value * other.m_value};
+		}
+		template <typename U>
+		numerical_coefficient dispatch_multiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		{
+			return numerical_coefficient{m_value * std::forward<U>(other)};
+		}
+		template <typename U>
+		void dispatch_imultiply(U &&other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
 			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
 		{
 			m_value *= std::move(other.m_value);
 		}
 		template <typename U>
-		void dispatch_multiply(const U &other, typename std::enable_if<
+		void dispatch_imultiply(const U &other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value *= other.m_value;
 		}
 		template <typename U>
-		void dispatch_multiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		void dispatch_imultiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value *= std::forward<U>(other);
 		}
@@ -303,6 +325,23 @@ class numerical_coefficient
 		{
 			dispatch_add<false>(std::forward<U>(x));
 		}
+		/// Generic multiplication.
+		/**
+		 * If \p x is an instance of piranha::numerical_coefficient, then the numerical value of \p this will be multiplied by
+		 * <tt>x</tt>'s numerical value, and the result will be used to create the return value.
+		 * 
+		 * Otherwise, the numerical value of \p this will be directly multiplied by \p x and the result will be used to create
+		 * the return value.
+		 * 
+		 * @param[in] x argument of the multiplication.
+		 * 
+		 * @throws unspecified any exception thrown by numerical_coefficient::type's multiplication operator.
+		 */
+		template <typename U, typename Term>
+		numerical_coefficient multiply(U &&x, const echelon_descriptor<Term> &)
+		{
+			return dispatch_multiply(std::forward<U>(x));
+		}
 		/// Generic in-place multiplication.
 		/**
 		 * If \p x is an instance of piranha::numerical_coefficient, then the numerical value of \p this will be multiplied in-place by
@@ -313,9 +352,9 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's in-place multiplication operator.
 		 */
 		template <typename U, typename Term>
-		void multiply(U &&x, const echelon_descriptor<Term> &)
+		void imultiply(U &&x, const echelon_descriptor<Term> &)
 		{
-			dispatch_multiply(std::forward<U>(x));
+			dispatch_imultiply(std::forward<U>(x));
 		}
 		/// In-place negation.
 		/**

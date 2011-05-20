@@ -185,17 +185,23 @@ struct arithmetics_tester
 		cont.negate(ed);
 		math::negate(value);
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
-		// Multiplication.
+		// In-place multiplication.
 		nc cont2{T(1),ed};
-		cont2.multiply(2,ed);
+		cont2.imultiply(2,ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),T(1) * 2);
-		cont2.multiply(nc{T(2),ed},ed);
+		cont2.imultiply(nc{T(2),ed},ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),(T(1) * 2) * T(2));
 		nc cont3{T(3),ed};
-		cont2.multiply(cont3,ed);
+		cont2.imultiply(cont3,ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),((T(1) * 2) * T(2)) * T(3));
-		cont2.multiply(nc_other{-1,ed},ed);
+		cont2.imultiply(nc_other{-1,ed},ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),(((T(1) * 2) * T(2)) * T(3)) * other_type(-1));
+		// Multiplication.
+		BOOST_CHECK_EQUAL((nc{T(1),ed}.multiply(2,ed).get_value()),T(1) * 2);
+		BOOST_CHECK_EQUAL((nc{T(1),ed}.multiply(nc{T(2),ed},ed).get_value()),T(1) * T(2));
+		nc cont4{T(4),ed};
+		BOOST_CHECK_EQUAL((nc{T(2),ed}.multiply(cont4,ed).get_value()),T(2) * T(4));
+		BOOST_CHECK_EQUAL((nc{T(2),ed}.multiply(nc_other{-1,ed},ed).get_value()),T(2) * other_type(-1));
 	}
 };
 
