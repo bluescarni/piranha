@@ -335,6 +335,8 @@ class numerical_coefficient
 		 * 
 		 * @param[in] x argument of the multiplication.
 		 * 
+		 * @return the result of multiplying \p this by \p x.
+		 * 
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's multiplication operator.
 		 */
 		template <typename U, typename Term>
