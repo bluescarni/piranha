@@ -144,20 +144,20 @@ class numerical_coefficient
 			return numerical_coefficient{m_value * std::forward<U>(other)};
 		}
 		template <typename U>
-		void dispatch_imultiply(U &&other, typename std::enable_if<
+		void dispatch_multiply_by(U &&other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
 			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
 		{
 			m_value *= std::move(other.m_value);
 		}
 		template <typename U>
-		void dispatch_imultiply(const U &other, typename std::enable_if<
+		void dispatch_multiply_by(const U &other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value *= other.m_value;
 		}
 		template <typename U>
-		void dispatch_imultiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		void dispatch_multiply_by(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
 			m_value *= std::forward<U>(other);
 		}
@@ -352,9 +352,9 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's in-place multiplication operator.
 		 */
 		template <typename U, typename Term>
-		void imultiply(U &&x, const echelon_descriptor<Term> &)
+		void multiply_by(U &&x, const echelon_descriptor<Term> &)
 		{
-			dispatch_imultiply(std::forward<U>(x));
+			dispatch_multiply_by(std::forward<U>(x));
 		}
 		/// In-place negation.
 		/**

@@ -187,14 +187,14 @@ struct arithmetics_tester
 		BOOST_CHECK_EQUAL(cont.get_value(),value);
 		// In-place multiplication.
 		nc cont2{T(1),ed};
-		cont2.imultiply(2,ed);
+		cont2.multiply_by(2,ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),T(1) * 2);
-		cont2.imultiply(nc{T(2),ed},ed);
+		cont2.multiply_by(nc{T(2),ed},ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),(T(1) * 2) * T(2));
 		nc cont3{T(3),ed};
-		cont2.imultiply(cont3,ed);
+		cont2.multiply_by(cont3,ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),((T(1) * 2) * T(2)) * T(3));
-		cont2.imultiply(nc_other{-1,ed},ed);
+		cont2.multiply_by(nc_other{-1,ed},ed);
 		BOOST_CHECK_EQUAL(cont2.get_value(),(((T(1) * 2) * T(2)) * T(3)) * other_type(-1));
 		// Multiplication.
 		BOOST_CHECK_EQUAL((nc{T(1),ed}.multiply(2,ed).get_value()),T(1) * 2);
