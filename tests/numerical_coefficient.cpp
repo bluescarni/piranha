@@ -41,7 +41,7 @@ using namespace piranha;
 
 typedef boost::mpl::vector<double,mf_int,integer> types;
 
-typedef float other_type;
+typedef long double other_type;
 
 struct constructor_tester
 {
@@ -201,7 +201,7 @@ struct arithmetics_tester
 		BOOST_CHECK_EQUAL((nc{T(1),ed}.multiply(nc{T(2),ed},ed).get_value()),T(1) * T(2));
 		nc cont4{T(4),ed};
 		BOOST_CHECK_EQUAL((nc{T(2),ed}.multiply(cont4,ed).get_value()),T(2) * T(4));
-		BOOST_CHECK_EQUAL((nc{T(2),ed}.multiply(nc_other{-1,ed},ed).get_value()),T(2) * other_type(-1));
+		BOOST_CHECK_EQUAL((nc_other{-1,ed}.multiply(nc{T(2),ed},ed).get_value()),T(2) * other_type(-1));
 	}
 };
 

@@ -71,8 +71,8 @@ class numerical_coefficient
 		struct is_numerical_coefficient: std::false_type {};
 		template <typename U>
 		struct is_numerical_coefficient<numerical_coefficient<U>>: std::true_type {};
-		// Generic constructor from non numerical coefficient type.
-		template <typename U, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type*& = enabler>
+		// Generic constructor from T.
+		template <typename U, typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type*& = enabler>
 		explicit numerical_coefficient(U &&x):
 			m_value(std::forward<U>(x)) {}
 		template <typename U>
