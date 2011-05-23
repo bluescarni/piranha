@@ -27,6 +27,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 
+#include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
 #include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
@@ -36,6 +37,8 @@ using namespace piranha;
 
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
+
+typedef long double other_type;
 
 struct constructor_tester
 {
@@ -93,4 +96,50 @@ struct constructor_tester
 BOOST_AUTO_TEST_CASE(polynomial_term_constructor_test)
 {
 	boost::mpl::for_each<cf_types>(constructor_tester());
+}
+
+struct multiplication_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial_term<Cf,Expo> term_type;
+			typedef echelon_descriptor<term_type> ed_type;
+			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<term_type>));
+			typedef typename term_type::key_type key_type;
+			ed_type ed;
+			ed.template add_symbol<term_type>("x");
+			term_type t1, t2;
+			t1.m_cf = Cf(2,ed);
+			t1.m_key = key_type{Expo(2)};
+			t2.m_cf = Cf(3,ed);
+			t2.m_key = key_type{Expo(3)};
+			auto t3 = t1.multiply(t2,ed);
+			BOOST_CHECK_EQUAL(t3.m_cf.get_value(),t1.m_cf.get_value() * t2.m_cf.get_value());
+			BOOST_CHECK_EQUAL(t3.m_key[0],Expo(5));
+			typedef polynomial_term<numerical_coefficient<other_type>,Expo> other_term_type;
+			typedef echelon_descriptor<other_term_type> other_ed_type;
+			other_ed_type other_ed;
+			other_ed.template add_symbol<other_term_type>("x");
+			other_term_type t4;
+			t4.m_cf = numerical_coefficient<other_type>(2,other_ed);
+			t4.m_key = key_type{Expo(2)};
+			auto t5 = t4.multiply(t2,other_ed);
+			BOOST_CHECK_EQUAL(t5.m_cf.get_value(),t4.m_cf.get_value() * t2.m_cf.get_value());
+			BOOST_CHECK_EQUAL(t5.m_key[0],Expo(5));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_term_multiplication_test)
+{
+	boost::mpl::for_each<cf_types>(multiplication_tester());
 }

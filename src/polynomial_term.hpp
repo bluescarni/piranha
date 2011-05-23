@@ -23,6 +23,7 @@
 
 #include "base_term.hpp"
 #include "config.hpp"
+#include "echelon_descriptor.hpp"
 #include "monomial.hpp"
 
 namespace piranha
@@ -32,7 +33,7 @@ namespace piranha
 /**
  * This class extends piranha::base_term for use in polynomials. The coefficient type \p Cf is generic,
  * the key is piranha::monomial of \p ExpoType.
- * This class is a model of the piranha::concept::Term concept.
+ * This class is a model of the piranha::concept::MultipliableTerm concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -84,6 +85,35 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		{
 			base::operator=(std::move(other));
 			return *this;
+		}
+		/// Term multiplication.
+		/**
+		 * Multiplication of \p this by \p other will produce a single term whose coefficient is the
+		 * result of the multiplication of the current coefficient by the coefficient of \p other (via the coefficient's <tt>multiply()</tt> method)
+		 * and whose key is the element-by-element sum of the vectors of the exponents of the two terms.
+		 * 
+		 * @param[in] other argument of the multiplication.
+		 * @param[in] ed reference echelon descriptor.
+		 * 
+		 * @return the result of the multiplication of \p this by \p other.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>multiply()</tt> method of \p Cf,
+		 * - the constructor of piranha::polynomial_term from coefficient and key,
+		 * - the in-place addition operator of \p ExpoType.
+		 */
+		template <typename Cf2, typename ExpoType2, typename Term>
+		polynomial_term multiply(const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
+		{
+			piranha_assert(other.m_key.size() == this->m_key.size());
+			piranha_assert(other.m_key.size() == ed.template get_args<polynomial_term>().size());
+			polynomial_term pt(this->m_cf.multiply(other.m_cf,ed),this->m_key);
+			// Key part.
+			const auto size = this->m_key.size();
+			for (decltype(this->m_key.size()) i = 0; i < size; ++i) {
+				pt.m_key[i] += other.m_key[i];
+			}
+			return pt;
 		}
 };
 
