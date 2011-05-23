@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <tuple>
 #include <type_traits>
 
 #include "../src/base_term.hpp"
@@ -167,4 +168,11 @@ BOOST_AUTO_TEST_CASE(type_traits_binary_op_promotion_rule)
 	BOOST_CHECK((!binary_op_promotion_rule<double,int>::value));
 	BOOST_CHECK((!binary_op_promotion_rule<integer,int>::value));
 	BOOST_CHECK((binary_op_promotion_rule<int,integer>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_tuple)
+{
+	BOOST_CHECK(is_tuple<std::tuple<>>::value);
+	BOOST_CHECK(is_tuple<std::tuple<int>>::value);
+	BOOST_CHECK(!is_tuple<std::string>::value);
 }

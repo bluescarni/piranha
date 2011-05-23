@@ -28,6 +28,7 @@
  */
 
 #include <cstddef>
+#include <tuple>
 #include <type_traits>
 
 #include "config.hpp"
@@ -168,6 +169,16 @@ class binary_op_promotion_rule
 		/// Type-trait's value.
 		static const bool value = std::is_same<retval_type,type2>::value;
 };
+
+/// Type-trait to test if type is a tuple.
+/**
+ * The \p value member will be \p true if \p T is an \p std::tuple, \p false otherwise.
+ */
+template <typename T>
+struct is_tuple: std::false_type {};
+
+template <typename... Args>
+struct is_tuple<std::tuple<Args...>>: std::true_type {};
 
 }
 
