@@ -18,30 +18,46 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_MULTIPLIABLE_TERM_HPP
+#define PIRANHA_MULTIPLIABLE_TERM_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+#include <type_traits>
+
+#include "../echelon_descriptor.hpp"
+#include "../type_traits.hpp"
+#include "term.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
+namespace concept
+{
+
+/// Concept for series terms multipliable by the non-specialised piranha::series_multiplier.
+/**
+ * The requisites for type \p T are the following:
+ * 
+ * - must be a model of piranha::concept::Term,
+ * - must be provided with a const member function <tt>multiply()</tt> accepting as const parameters
+ *   another term instance and a generic piranha::echelon_descriptor, and returning either a single term of type \p T or an \p std::tuple
+ *   of terms of type \p T (of nonzero size) as the result of the multiplication between \p this and the first argument of the method.
+ * 
+ * \todo implement the check on the tuple types.
+ */
+template <typename T>
+struct MultipliableTerm:
+	Term<T>
+{
+	/// Concept usage pattern.
+	BOOST_CONCEPT_USAGE(MultipliableTerm)
+	{
+		typedef decltype(std::declval<T>().multiply(std::declval<T>(),std::declval<echelon_descriptor<T>>())) ret_type;
+		static_assert(is_tuple<ret_type>::value || std::is_same<T,ret_type>::value,"Invalid return value type.");
+	}
+};
+
+}
+}
 
 #endif
