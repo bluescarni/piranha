@@ -95,8 +95,9 @@ class series_multiplier
 		 * - the <tt>multiply()</tt> method of the term type of \p Series1.
 		 */
 		template <typename Term>
-		Series1 operator()(const echelon_descriptor<Term> &ed) const
+		typename Series1::base_series_type operator()(const echelon_descriptor<Term> &ed) const
 		{
+			typedef typename Series1::base_series_type return_type;
 			typedef typename Series1::term_type term_type1;
 			typedef typename Series2::term_type term_type2;
 			// Cache the pointers.
@@ -111,13 +112,13 @@ class series_multiplier
 			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
 			std::back_insert_iterator<decltype(v2)> bii2(v2);
 			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
-			return mult_impl(v1.begin(),v1.end(),v2.begin(),v2.end(),ed);
+			return mult_impl<return_type>(v1.begin(),v1.end(),v2.begin(),v2.end(),ed);
 		}
 	private:
-		template <typename Iterator1, typename Iterator2, typename Term>
-		static Series1 mult_impl(const Iterator1 &it_i1, const Iterator1 &it_f1, const Iterator2 &it_i2, const Iterator2 &it_f2, const echelon_descriptor<Term> &ed)
+		template <typename ReturnType, typename Iterator1, typename Iterator2, typename Term>
+		static ReturnType mult_impl(const Iterator1 &it_i1, const Iterator1 &it_f1, const Iterator2 &it_i2, const Iterator2 &it_f2, const echelon_descriptor<Term> &ed)
 		{
-			Series1 retval;
+			ReturnType retval;
 			for (auto it1 = it_i1; it1 != it_f1; ++it1) {
 				for (auto it2 = it_i2; it2 != it_f2; ++it2) {
 					insert_impl(retval,(*it1)->multiply(*(*it2),ed),ed);
@@ -128,8 +129,8 @@ class series_multiplier
 		template <typename Tuple, std::size_t N = 0, typename Enable2 = void>
 		struct inserter
 		{
-			template <typename Term>
-			static void run(Tuple &t, Series1 &retval, const echelon_descriptor<Term> &ed)
+			template <typename ReturnType, typename Term>
+			static void run(Tuple &t, ReturnType &retval, const echelon_descriptor<Term> &ed)
 			{
 				retval.insert(std::move(std::get<N>(t)),ed);
 				inserter<Tuple,N + static_cast<std::size_t>(1)>::run(t,retval,ed);
@@ -138,17 +139,17 @@ class series_multiplier
 		template <typename Tuple, std::size_t N>
 		struct inserter<Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
 		{
-			template <typename Term>
-			static void run(Tuple &, Series1 &, const echelon_descriptor<Term> &)
+			template <typename ReturnType, typename Term>
+			static void run(Tuple &, ReturnType &, const echelon_descriptor<Term> &)
 			{}
 		};
-		template <typename Term, typename... Args>
-		static void insert_impl(Series1 &retval,std::tuple<Args...> &&mult_res, const echelon_descriptor<Term> &ed)
+		template <typename ReturnType, typename Term, typename... Args>
+		static void insert_impl(ReturnType &retval,std::tuple<Args...> &&mult_res, const echelon_descriptor<Term> &ed)
 		{
 			inserter<std::tuple<Args...>>::run(mult_res,retval,ed);
 		}
-		template <typename Term>
-		static void insert_impl(Series1 &retval,typename Series1::term_type &&mult_res, const echelon_descriptor<Term> &ed)
+		template <typename ReturnType, typename Term>
+		static void insert_impl(ReturnType &retval,typename Series1::term_type &&mult_res, const echelon_descriptor<Term> &ed)
 		{
 			retval.insert(std::move(mult_res),ed);
 		}
