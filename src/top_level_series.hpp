@@ -63,6 +63,9 @@ namespace piranha
  * Move semantics is equivalent to piranha::base_series' move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo cast operator, to series and non-series types.
+ * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  */
 template <typename Term, typename Derived>
 class top_level_series: public base_series<Term,Derived>, public series_binary_operators, detail::top_level_series_tag
@@ -183,6 +186,8 @@ std::cout << "oh NOES different!\n";
 			dispatch_series_assignment(std::forward<Series>(s));
 		}
 	public:
+		/// Base series type from which this type derives.
+		typedef base base_series_type;
 		/// Defaulted default constructor.
 		top_level_series() = default;
 		/// Defaulted copy constructor.
@@ -195,7 +200,7 @@ std::cout << "oh NOES different!\n";
 		top_level_series(top_level_series &&) = default;
 		/// Generic constructor.
 		/**
-		 * The rules of generic construction follow the same rules of generic assignment operator=(T &&x). I.e., this constructor is equivalent
+		 * The rules of generic construction follow the same rules of generic assignment operator=(T &&x). That is, this constructor is equivalent
 		 * to default-constructing the series and then assigning \p x to it.
 		 * 
 		 * @param[in] x object used to initialise the series.
@@ -203,7 +208,7 @@ std::cout << "oh NOES different!\n";
 		 * @throws unspecified any exception thrown by the generic assignment operator.
 		 */
 		template <typename T>
-		top_level_series(T &&x, typename std::enable_if<!std::is_base_of<top_level_series,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		explicit top_level_series(T &&x, typename std::enable_if<!std::is_base_of<top_level_series,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
 			operator=(std::forward<T>(x));
 		}
