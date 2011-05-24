@@ -21,7 +21,10 @@
 #ifndef PIRANHA_POLYNOMIAL_TERM_HPP
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
+#include <boost/concept/assert.hpp>
+
 #include "base_term.hpp"
+#include "concepts/multipliable_coefficient.hpp"
 #include "config.hpp"
 #include "echelon_descriptor.hpp"
 #include "monomial.hpp"
@@ -37,7 +40,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Cf must be a model of piranha::concept::Coefficient.
+ * - \p Cf must be a model of piranha::concept::MultipliableCoefficient.
  * - \p ExpoType must be suitable for use in piranha::monomial.
  * 
  * \section exception_safety Exception safety guarantee
@@ -53,6 +56,7 @@ namespace piranha
 template <typename Cf, typename ExpoType>
 class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>>
 {
+		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
 		typedef base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>> base;
 	public:
 		/// Defaulted default constructor.
