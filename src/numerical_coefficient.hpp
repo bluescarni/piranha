@@ -128,18 +128,18 @@ class numerical_coefficient
 		template <typename U>
 		numerical_coefficient dispatch_multiply(U &&other, typename std::enable_if<
 			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value &&
-			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr)
+			std::is_rvalue_reference<U &&>::value>::type * = piranha_nullptr) const
 		{
 			return numerical_coefficient{m_value * std::move(other.m_value)};
 		}
 		template <typename U>
 		numerical_coefficient dispatch_multiply(const U &other, typename std::enable_if<
-			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+			is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr) const
 		{
 			return numerical_coefficient{m_value * other.m_value};
 		}
 		template <typename U>
-		numerical_coefficient dispatch_multiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		numerical_coefficient dispatch_multiply(U &&other, typename std::enable_if<!is_numerical_coefficient<typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr) const
 		{
 			return numerical_coefficient{m_value * std::forward<U>(other)};
 		}
@@ -340,7 +340,7 @@ class numerical_coefficient
 		 * @throws unspecified any exception thrown by numerical_coefficient::type's multiplication operator.
 		 */
 		template <typename U, typename Term>
-		numerical_coefficient multiply(U &&x, const echelon_descriptor<Term> &)
+		numerical_coefficient multiply(U &&x, const echelon_descriptor<Term> &) const
 		{
 			return dispatch_multiply(std::forward<U>(x));
 		}
