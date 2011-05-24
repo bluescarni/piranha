@@ -55,6 +55,14 @@ namespace piranha
  *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail;
  * - the term type of \p Series1 must be a model of piranha::concept::MultipliableTerm.
  * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will have no effect on an existing object.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo series multiplier concept?
