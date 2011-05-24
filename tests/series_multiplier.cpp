@@ -23,12 +23,6 @@
 #define BOOST_TEST_MODULE series_multiplier_test
 #include <boost/test/unit_test.hpp>
 
-// #include <boost/concept/assert.hpp>
-// #include <boost/mpl/for_each.hpp>
-// #include <boost/mpl/vector.hpp>
-// 
-// #include "../src/concepts/multipliable_term.hpp"
-// #include "../src/concepts/term.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
@@ -37,11 +31,6 @@
 #include "../src/top_level_series.hpp"
 
 using namespace piranha;
-
-// typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
-// typedef boost::mpl::vector<unsigned,integer> expo_types;
-// 
-// typedef long double other_type;
 
 template <typename Cf, typename Expo>
 class polynomial:
