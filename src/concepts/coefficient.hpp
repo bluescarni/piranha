@@ -47,11 +47,15 @@ namespace concept
  *   as input and returning a boolean value,
  * - must be provided with a const non-throwing \p is_ignorable method accepting a generic piranha::echelon_descriptor
  *   as input and returning a boolean value,
+ * - must be provided with a const \p is_equal_to method accepting an instance of \p T and a generic piranha::echelon_descriptor
+ *   as input and returning a boolean value,
  * - must be provided with a \p negate method accepting a generic piranha::echelon_descriptor
  *   as input and returning void,
  * - must be provided with an \p add method accepting an instance of \p T and a generic piranha::echelon_descriptor
  *   as input and returning void,
  * - must be provided with a \p subtract method accepting an instance of \p T and a generic piranha::echelon_descriptor
+ *   as input and returning void,
+ * - must be provided with a \p multiply_by method accepting a generic object and a generic piranha::echelon_descriptor
  *   as input and returning void,
  * - must be provided with a const \p merge_args method accepting two generic piranha::echelon_descriptor of the same type
  *   as input and returning an instance of \p T.
@@ -73,6 +77,7 @@ struct Coefficient:
 		static_assert(piranha_noexcept_op(inst.template is_ignorable(std::declval<ed_type>())),"is_ignorable() must be non-throwing.");
 		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for coefficient type.");
+		static_assert(std::is_same<decltype(inst.is_equal_to(inst,std::declval<ed_type>())),bool>::value,"Invalid is_equal_to() method signature for coefficient type.");
 		T inst_m;
 		inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr));
 		static_assert(std::is_same<decltype(inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid negate() method signature for coefficient type.");
