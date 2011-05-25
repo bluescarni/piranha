@@ -319,6 +319,13 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 			series.m_container.clear();
 		}
 	public:
+		/// Base series type.
+		/**
+		 * Typedef for the type of \p this.
+		 */
+		// NOTE: this is here essentially for use in series_multiplier, where trying to determine
+		// this type via decltype() and auto results in some internal compiler error :/
+		typedef base_series base_series_type;
 		/// Size type.
 		/**
 		 * Used to represent the number of terms in the series. Equivalent to piranha::hop_table::size_type.
@@ -476,6 +483,12 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		void merge_terms(T &&series, const echelon_descriptor<Term2> &ed,
 			typename std::enable_if<std::is_base_of<base_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
+			// NOTE: ideas to improve the method:
+			// - estimate the size of the series after merge, and swap only if needed: this way we could avoid
+			//   increasingly endlessly the memory usage in pathological cases (right now we steal memory regardless,
+			//   as long as it increases the capacity of this);
+			// - take into account that for series with wildly different number of terms it might make sense to move/copy
+			//   the longer series into this and merge with the shorter one.
 			merge_terms_impl0<Sign>(std::forward<T>(series),ed);
 		}
 		/// Merge arguments.

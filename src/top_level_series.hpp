@@ -186,8 +186,6 @@ std::cout << "oh NOES different!\n";
 			dispatch_series_assignment(std::forward<Series>(s));
 		}
 	public:
-		/// Base series type from which this type derives.
-		typedef base base_series_type;
 		/// Defaulted default constructor.
 		top_level_series() = default;
 		/// Defaulted copy constructor.
