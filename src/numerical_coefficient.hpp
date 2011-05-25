@@ -328,7 +328,8 @@ class numerical_coefficient
 		/// Generic multiplication.
 		/**
 		 * If \p x is an instance of piranha::numerical_coefficient, then the numerical value of \p this will be multiplied by
-		 * <tt>x</tt>'s numerical value, and the result will be used to create the return value.
+		 * <tt>x</tt>'s numerical value, and the result will be used to create the return value (i.e., the instance of the internal
+		 * numerical value will be constructed via the result of the multiplication).
 		 * 
 		 * Otherwise, the numerical value of \p this will be directly multiplied by \p x and the result will be used to create
 		 * the return value.

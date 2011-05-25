@@ -298,6 +298,10 @@ class integer
 		}
 		void in_place_add(integer &&n)
 		{
+			// NOTE: here we should probably check if the allocated size in this
+			// is enough, in that case there is little point in swapping?
+			// NOTE: this is never called in the binary operator, only the
+			// const & overload is.
 			if (n.allocated_size() > allocated_size()) {
 				swap(n);
 			}
