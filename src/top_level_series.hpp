@@ -380,6 +380,20 @@ std::cout << "GENERIIIIIIIC\n";
 		{
 			return *static_cast<Derived const *>(this);
 		}
+		/// Negation operator.
+		/**
+		 * @return a copy of \p this on which negate() has been called.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - negate(),
+		 * - the copy constructor of \p Derived.
+		 */
+		Derived operator-() const
+		{
+			Derived retval(*static_cast<Derived const *>(this));
+			retval.negate();
+			return retval;
+		}
 // 		/// Overload stream operator for piranha::top_level_series.
 // 		/**
 // 		 * Will direct to stream a human-readable representation of the series.
