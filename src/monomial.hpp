@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <initializer_list>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
@@ -31,6 +32,7 @@
 #include "config.hpp"
 #include "math.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -76,13 +78,17 @@ class monomial: public array_key<T,monomial<T>>
 		/// Forwarding constructor.
 		/**
 		 * Will perfectly forward the arguments to a corresponding constructor in piranha::array_key.
+		 * This constructor is enabled only if the number of variadic arguments is nonzero or
+		 * if \p U is not of the same type as \p this.
 		 * 
-		 * @param[in]  params arguments to be forwarded to the constructor.
+		 * @param[in] arg1 first argument to be forwarded to the base constructor.
+		 * @param[in] params other arguments to be forwarded to the base constructor.
 		 * 
 		 * @throws unspecified any exception thrown by the invoked constructor from piranha::array_key.
 		 */
-		template <typename... Args>
-		explicit monomial(Args && ... params):base(std::forward<Args>(params)...) {}
+		template <typename U, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<monomial,typename strip_cv_ref<U>::type>::value>::type*& = enabler>
+		explicit monomial(U &&arg1, Args && ... params):
+			base(std::forward<U>(arg1),std::forward<Args>(params)...) {}
 		/// Defaulted destructor.
 		~monomial() = default;
 		/// Defaulted copy assignment operator.
