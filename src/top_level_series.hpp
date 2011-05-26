@@ -364,6 +364,22 @@ std::cout << "GENERIIIIIIIC\n";
 			dispatch_add<false>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
+		/// Identity operator.
+		/**
+		 * @return reference to \p this, cast to type \p Derived.
+		 */
+		Derived &operator+()
+		{
+			return *static_cast<Derived *>(this);
+		}
+		/// Const identity operator.
+		/**
+		 * @return const reference to \p this, cast to type \p Derived.
+		 */
+		const Derived &operator+() const
+		{
+			return *static_cast<Derived const *>(this);
+		}
 // 		/// Overload stream operator for piranha::top_level_series.
 // 		/**
 // 		 * Will direct to stream a human-readable representation of the series.
