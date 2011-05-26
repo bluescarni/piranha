@@ -130,7 +130,7 @@ class debug_access<insertion_tag>
 				BOOST_CHECK(!s.empty());
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insert incompatible term.
-				BOOST_CHECK_THROW(s.insert(term_type(Cf(1,ed),key_type{}),ed),std::invalid_argument);
+				BOOST_CHECK_THROW(s.insert(term_type(Cf(1,ed),key_type()),ed),std::invalid_argument);
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
 				// Insert ignorable term.
 				s.insert(term_type(Cf(0,ed),key_type{Expo(1)}),ed);
@@ -334,7 +334,7 @@ class debug_access<merge_args_tag>
 				series_type s_derived;
 				typename series_type::base &s = static_cast<typename series_type::base &>(s_derived);
 				ed_type ed1, ed2;
-				s.insert(term_type(Cf(1,ed1),key_type{}),ed1);
+				s.insert(term_type(Cf(1,ed1),key_type()),ed1);
 				ed2.template add_symbol<term_type>(symbol("x"));
 				auto merge_out = s.merge_args(ed1,ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));

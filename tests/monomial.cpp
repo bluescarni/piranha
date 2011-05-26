@@ -45,8 +45,8 @@ struct constructor_tester
 		typedef monomial<T> monomial_type;
 		BOOST_CONCEPT_ASSERT((concept::Key<monomial_type>));
 		monomial_type m0;
-		BOOST_CHECK_NO_THROW(monomial_type{});
-		BOOST_CHECK_NO_THROW(monomial_type(monomial_type{}));
+		BOOST_CHECK_NO_THROW(monomial_type());
+		BOOST_CHECK_NO_THROW(monomial_type(monomial_type()));
 		BOOST_CHECK_NO_THROW(monomial_type(m0));
 		// From init list.
 		monomial_type m1{T(0),T(1),T(2),T(3)};
