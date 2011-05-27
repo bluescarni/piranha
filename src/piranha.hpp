@@ -45,6 +45,7 @@
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method?
+ * \todo strip_cv_ref should be std::decay probably.
  */
 namespace piranha
 {

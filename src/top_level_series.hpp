@@ -118,6 +118,57 @@ std::cout << "oh NOES different!\n";
 				}
 			}
 		}
+		// Overload for non-series.
+		template <typename T>
+		void dispatch_multiply(T &&x, typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
+				"Cannot multiply non top level series.");
+			const auto it_f = this->m_container.end();
+			try {
+				for (auto it = this->m_container.begin(); it != it_f;) {
+					// NOTE: no forwarding here, as x is needed in multiple places.
+					// Maybe it could be forwarded just for the last term?
+					it->m_cf.multiply_by(x,m_ed);
+					if (unlikely(!it->is_compatible(m_ed) || it->is_ignorable(m_ed))) {
+						auto tmp_it = it++;
+						this->m_container.erase(tmp_it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				// In case of any error, just clear the series out.
+				this->m_container.clear();
+				throw;
+			}
+		}
+		// Overload for series.
+		template <typename T>
+		void dispatch_multiply(T &&other, typename std::enable_if<std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		{
+			static_assert(echelon_size<Term>::value == echelon_size<typename strip_cv_ref<T>::type::term_type>::value,
+				"Cannot multiply series with different echelon sizes.");
+			if (likely(m_ed.get_args_tuple() == other.m_ed.get_args_tuple())) {
+				base::operator=(this->multiply_by_series(other,m_ed));
+			} else {
+				// Let's deal with the first series.
+				auto merge1 = m_ed.merge(other.m_ed);
+				if (merge1.first.get_args_tuple() != m_ed.get_args_tuple()) {
+					base::operator=(this->merge_args(m_ed,merge1.first));
+					m_ed = std::move(merge1.first);
+				}
+				// Second series.
+				auto merge2 = other.m_ed.merge(m_ed);
+				piranha_assert(merge2.first.get_args_tuple() == m_ed.get_args_tuple());
+				if (merge2.first.get_args_tuple() != other.m_ed.get_args_tuple()) {
+					auto other_base_copy = other.merge_args(other.m_ed,merge2.first);
+					base::operator=(this->multiply_by_series(other_base_copy,m_ed));
+				} else {
+					base::operator=(this->multiply_by_series(other,m_ed));
+				}
+			}
+		}
 		// Overload for assignment from non-series type.
 		template <typename T>
 		void dispatch_generic_assignment(T &&x, typename std::enable_if<
@@ -362,6 +413,46 @@ std::cout << "GENERIIIIIIIC\n";
 		Derived &operator-=(T &&other)
 		{
 			dispatch_add<false>(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
+		}
+		/// In-place multiplication.
+		/**
+		 * The multiplication algorithm proceeds as follows:
+		 * 
+		 * - if \p other is an instance of piranha::top_level_series:
+		 *   - if the echelon descriptors of \p this and \p other differ, they are merged using piranha::echelon_descriptor::merge(),
+		 *     and \p this and \p other are
+		 *     modified as necessary to be compatible with the merged descriptor using piranha::base_series::merge_args()
+		 *     (a copy of \p other might be created if it requires modifications);
+		 *   - \p other (or its copy) is passed as argument to piranha::base_series::multiply_by_series() (together with the merged echelon descriptor),
+		 *     and the output assigned back to \p this using piranha::base_series::operator=();
+		 * - else:
+		 *   - the coefficients of all terms of the series are multiplied in-place by \p other, using the <tt>multiply_by()</tt> method. If a
+		 *     term is rendered ignorable or incompatible by the multiplication (e.g., multiplication by zero), it will be erased from the series.
+		 * 
+		 * If \p other is a piranha::top_level_series and its term type's echelon size is different from the echelon size of
+		 * the term type of this series, a compile-time error will be produced. A compile-time error will also be produced if \p other
+		 * derives from piranha::base_series without being a piranha::top_level_series.
+		 * 
+		 * If any exception is thrown when multiplying by a non-series type, \p this will be left in a valid but unspecified state.
+		 * 
+		 * @param[in] other object to be added to the series.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>multiply_by()</tt> method of the coefficient type,
+		 * - the <tt>is_ignorable()</tt> method of the term type,
+		 * - piranha::base_series::multiply_by_series(),
+		 * - memory allocation errors in standard containers,
+		 * - hop_table::erase().
+		 *
+		 * @return reference to \p this, cast to type \p Derived.
+		 */
+		template <typename T>
+		Derived &operator*=(T &&other)
+		{
+			dispatch_multiply(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
 // 		/// Overload stream operator for piranha::top_level_series.

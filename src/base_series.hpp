@@ -36,6 +36,7 @@
 #include "detail/base_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
 #include "hop_table.hpp"
+#include "series_multiplier.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -55,6 +56,9 @@ struct term_hasher
 };
 
 }
+
+// Fwd declaration of binary operators class.
+class series_binary_operators;
 
 /// Base series class.
 /**
@@ -87,6 +91,9 @@ class base_series: detail::base_series_tag
 		/// Alias for term type.
 		typedef Term term_type;
 	private:
+		// Make friends with binary operators class.
+		// NOTE: we should try to avoid having to do this.
+		friend class series_binary_operators;
 		// Make friend with all base series.
 		template <typename Term2, typename Derived2>
 		friend class base_series;
@@ -529,6 +536,36 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 				retval.insert(term_type(std::move(new_cf),std::move(new_key)),new_ed);
 			}
 			return retval;
+		}
+		/// Multiply by series.
+		/**
+		 * This method multiplies input \p series by \p this (cast to its \p Derived type), returning an instance of this type containing
+		 * the result of the multiplication.
+		 * 
+		 * The multiplication is actually performed by an instance of piranha::series_multiplier, parametrized on the types \p Derived and \p T.
+		 * The piranha::series_multiplier instance will be constructed using \p this (cast to its \p Derived type) and \p series as
+		 * arguments; after construction, <tt>operator()</tt> will be called on the series multiplier instance with \p ed as only argument, and its
+		 * return value will be returned.
+		 * 
+		 * Note that the type of the result of the multiplication is this type, regardless of the promotion rules for coefficient type arithmetics.
+		 * 
+		 * This template method is activated only if \p series is an instance of piranha::base_series.
+		 * 
+		 * @param[in] series series by which \p this will be multiplied.
+		 * @param[in] ed reference echelon descriptor that will be used to build the return value.
+		 * 
+		 * @return result of the multiplication of \p this by \p series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the constructor of piranha::series_multiplier,
+		 * - piranha::series_multiplier::operator()().
+		 */
+		template <typename T, typename Term2>
+		base_series multiply_by_series(const T &series, const echelon_descriptor<Term2> &ed,
+			typename std::enable_if<std::is_base_of<base_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr) const
+		{
+			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
+			return sm(ed);
 		}
 	protected:
 		/// Terms container.
