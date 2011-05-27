@@ -345,18 +345,30 @@ std::cout << "GENERIIIIIIIC\n";
 		/// Negate series in-place.
 		/**
 		 * This method will call the <tt>negate()</tt> method on the coefficients of all terms. In case of exceptions,
-		 * the basic exception safety guarantee is provided. Specifically, only a susbet of the series' coefficients will
-		 * have been negated in face of an exception.
+		 * the basic exception safety guarantee is provided.
 		 * 
-		 * @throws unspecified any exception thrown by the <tt>negate()</tt> method of the coefficient type.
+		 * If any term becomes ignorable or incompatible after negation, it will be erased from the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>negate()</tt> method of the coefficient type,
+		 * - piranha::hop_table::erase().
 		 */
 		void negate()
 		{
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				it->m_cf.negate(m_ed);
-				piranha_assert(it->is_compatible(m_ed));
-				piranha_assert(!it->is_ignorable(m_ed));
+			try {
+				const auto it_f = this->m_container.end();
+				for (auto it = this->m_container.begin(); it != it_f;) {
+					it->m_cf.negate(m_ed);
+					if (unlikely(!it->is_compatible(m_ed) || it->is_ignorable(m_ed))) {
+						auto tmp_it = it++;
+						this->m_container.erase(tmp_it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				this->m_container.clear();
+				throw;
 			}
 		}
 		/// In-place addition.
@@ -454,6 +466,35 @@ std::cout << "GENERIIIIIIIC\n";
 		{
 			dispatch_multiply(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
+		/// Identity operator.
+		/**
+		 * @return reference to \p this, cast to type \p Derived.
+		 */
+		Derived &operator+()
+		{
+			return *static_cast<Derived *>(this);
+		}
+		/// Const identity operator.
+		/**
+		 * @return const reference to \p this, cast to type \p Derived.
+		 */
+		const Derived &operator+() const
+		{
+			return *static_cast<Derived const *>(this);
+		}
+		/// Negation operator.
+		/**
+		 * @return a copy of \p this on which negate() has been called.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - negate(),
+		 * - the copy constructor of \p Derived.
+		 */
+		Derived operator-() const
+		{
+			Derived retval(*static_cast<Derived const *>(this));
+			retval.negate();
+			return retval;
 		}
 // 		/// Overload stream operator for piranha::top_level_series.
 // 		/**

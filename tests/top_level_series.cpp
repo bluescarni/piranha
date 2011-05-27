@@ -545,3 +545,59 @@ BOOST_AUTO_TEST_CASE(top_level_series_equality_test)
 {
 	boost::mpl::for_each<cf_types>(equality_tester());
 }
+
+struct identity_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,Expo> p_type1;
+			+p_type1{} == +p_type1{};
+			+p_type1{} == p_type1{};
+			p_type1{} == +p_type1{};
+			p_type1("x") == +p_type1("x");
+			+p_type1("x") == p_type1("x");
+			+p_type1("x") == +p_type1("x");
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(top_level_series_identity_test)
+{
+	boost::mpl::for_each<cf_types>(identity_tester());
+}
+
+struct negation_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,Expo> p_type1;
+			+p_type1{} == -(-(+p_type1{}));
+			-(-(+p_type1{})) == p_type1{};
+			-p_type1("x") == -(+p_type1("x"));
+			-(+p_type1("x")) == -p_type1("x");
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(top_level_series_negation_test)
+{
+	boost::mpl::for_each<cf_types>(negation_tester());
+}

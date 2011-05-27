@@ -100,6 +100,9 @@ class base_series: detail::base_series_tag
 		// Make friend with debugging class.
 		template <typename T>
 		friend class debug_access;
+		// Make friend with series multiplier class.
+		template <typename Series1, typename Series2, typename Enable>
+		friend class series_multiplier;
 	protected:
 		/// Container type for terms.
 		typedef hop_table<term_type,detail::term_hasher> container_type;

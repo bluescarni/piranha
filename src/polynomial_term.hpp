@@ -22,12 +22,14 @@
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
 #include <boost/concept/assert.hpp>
+#include <type_traits>
 
 #include "base_term.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "config.hpp"
 #include "echelon_descriptor.hpp"
 #include "monomial.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -68,13 +70,16 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		/// Generic constructor.
 		/**
 		 * Will perfectly forward all arguments to a matching constructor in piranha::base_term.
+		 * This constructor is enabled only if the number of variadic arguments is nonzero or
+		 * if \p T is not of the same type as \p this.
 		 * 
-		 * @param[in] params parameters for construction.
+		 * @param[in] arg1 first argument to be forwarded to the base constructor.
+		 * @param[in] params other arguments to be forwarded to the base constructor.
 		 * 
 		 * @throws unspecified any exception thrown by the invoked constructor in piranha::base_term.
 		 */
-		template <typename... Args>
-		explicit polynomial_term(Args && ... params):base(std::forward<Args>(params)...) {}
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_term,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
+		explicit polynomial_term(T &&arg1, Args && ... params):base(std::forward<T>(arg1),std::forward<Args>(params)...) {}
 		/// Defaulted destructor.
 		~polynomial_term() = default;
 		/// Defaulted copy assignment operator.

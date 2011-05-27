@@ -74,8 +74,8 @@ struct constructor_tester
 	{
 		typedef g_key_type<T> key_type;
 		key_type k0;
-		BOOST_CHECK_NO_THROW(key_type{});
-		BOOST_CHECK_NO_THROW(key_type(key_type{}));
+		BOOST_CHECK_NO_THROW(key_type());
+		BOOST_CHECK_NO_THROW(key_type(key_type()));
 		BOOST_CHECK_NO_THROW(key_type(k0));
 		// From init list.
 		key_type k1{T(0),T(1),T(2),T(3)};
@@ -185,14 +185,14 @@ struct equality_tester
 	{
 		typedef g_key_type<T> key_type;
 		key_type k0;
-		BOOST_CHECK(k0 == key_type{});
+		BOOST_CHECK(k0 == key_type());
 		for (int i = 0; i < 4; ++i) {
 			k0.push_back(T(i));
 		}
 		key_type k1{T(0),T(1),T(2),T(3)};
 		BOOST_CHECK(k0 == k1);
 		// Inequality.
-		k0 = key_type{};
+		k0 = key_type();
 		BOOST_CHECK(k0 != k1);
 		for (int i = 0; i < 3; ++i) {
 			k0.push_back(T(i));
@@ -284,7 +284,7 @@ struct iterators_tester
 		}
 		BOOST_CHECK(k0.begin() + 4 == k0.end());
 		BOOST_CHECK(k0.begin() != k0.end());
-		const key_type k1{};
+		const key_type k1 = key_type();
 		BOOST_CHECK(k1.begin() == k1.end());
 	}
 };
