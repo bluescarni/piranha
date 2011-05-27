@@ -466,6 +466,7 @@ std::cout << "GENERIIIIIIIC\n";
 		{
 			dispatch_multiply(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
+		}
 		/// Identity operator.
 		/**
 		 * @return reference to \p this, cast to type \p Derived.
