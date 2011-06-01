@@ -262,6 +262,7 @@ thread_management::binder::binder():m_result(false,0)
 	}
 	// Bind was successful, record it.
 	auto result = m_used_procs.insert(candidate);
+	(void)result;
 	piranha_assert(result.second);
 	m_result.first = true;
 	m_result.second = candidate;
