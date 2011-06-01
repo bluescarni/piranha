@@ -160,6 +160,7 @@ class monomial: public array_key<T,monomial<T>>
 		 */
 		bool is_unitary(const std::vector<symbol> &args) const
 		{
+			(void)args;
 			piranha_assert(args.size() == this->size());
 			return std::all_of(this->m_container.begin(),this->m_container.end(),
 				[](const T &element) {return math::is_zero(element);});
