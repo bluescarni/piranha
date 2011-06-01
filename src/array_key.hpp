@@ -280,6 +280,16 @@ class array_key: detail::array_key_tag
 		{
 			return m_container.size();
 		}
+		/// Resize the internal array container.
+		/**
+		 * @param[in] new_size desired new size for the internal container.
+		 * 
+		 * @throws unspecified any exception thrown by <tt>std::vector::resize()</tt>.
+		 */
+		void resize(const size_type &new_size)
+		{
+			m_container.resize(new_size);
+		}
 		/// Element access.
 		/**
 		 * @param[in] i index of the element to be accessed.
@@ -312,10 +322,10 @@ class array_key: detail::array_key_tag
 		 */
 		std::size_t hash() const
 		{
-			std::size_t retval = 0;
+			std::size_t retval = 0u;
 			const auto size = m_container.size();
 			std::hash<T> hasher;
-			for (decltype(m_container.size()) i = 0; i < size; ++i) {
+			for (decltype(m_container.size()) i = 0u; i < size; ++i) {
 				boost::hash_combine(retval,hasher(m_container[i]));
 			}
 			return retval;

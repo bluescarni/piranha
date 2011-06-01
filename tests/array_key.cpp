@@ -293,3 +293,23 @@ BOOST_AUTO_TEST_CASE(array_key_iterators_test)
 {
 	boost::mpl::for_each<value_types>(iterators_tester());
 }
+
+struct resize_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<T> key_type;
+		key_type k0;
+		BOOST_CHECK(k0.size() == 0u);
+		k0.resize(1u);
+		BOOST_CHECK(k0.size() == 1u);
+		k0.resize(10u);
+		BOOST_CHECK(k0.size() == 10u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_resize_test)
+{
+	boost::mpl::for_each<value_types>(resize_tester());
+}
