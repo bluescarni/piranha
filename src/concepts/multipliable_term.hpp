@@ -39,9 +39,11 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::Term,
- * - must be provided with a const member function <tt>multiply()</tt> accepting as const parameters
- *   another term instance and a generic piranha::echelon_descriptor, and returning either a single term of type \p T or an \p std::tuple
- *   of terms of type \p T (of nonzero size) as the result of the multiplication between \p this and the first argument of the method.
+ * - must be provided with a typedef \p multiplication_result_type which is either \p T itself or a tuple of types \p T,
+ *   used to represent the result of the multiplication with another term,
+ * - must be provided with a const member function <tt>multiply()</tt> accepting as first parameter a mutable reference
+ *   to an instance of type \p multiplication_result_type, as second parameter a const reference to another term instance and
+ *   as third parameter a const reference to a generic piranha::echelon_descriptor, and returning \p void.
  * 
  * \todo implement the check on the tuple types.
  */
@@ -49,11 +51,16 @@ template <typename T>
 struct MultipliableTerm:
 	Term<T>
 {
+	PIRANHA_DECLARE_HAS_TYPEDEF(multiplication_result_type);
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(MultipliableTerm)
 	{
-		typedef decltype(std::declval<T>().multiply(std::declval<T>(),std::declval<echelon_descriptor<T>>())) ret_type;
-		static_assert(is_tuple<ret_type>::value || std::is_same<T,ret_type>::value,"Invalid return value type.");
+		static_assert(has_typedef_multiplication_result_type<T>::value,"Missing multiplication result type typedef.");
+		static_assert(std::is_same<typename T::multiplication_result_type,T>::value ||
+			is_tuple<typename T::multiplication_result_type>::value,"Invalid multiplication result type typedef.");
+		typename T::multiplication_result_type retval;
+		typedef decltype(std::declval<T>().multiply(retval,std::declval<T>(),std::declval<echelon_descriptor<T>>())) ret_type;
+		static_assert(std::is_same<void,ret_type>::value,"Invalid return value type for multiply()");
 	}
 };
 

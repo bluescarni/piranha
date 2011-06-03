@@ -61,6 +61,8 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
 		typedef base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>> base;
 	public:
+		/// Result type for the multiplication by another term.
+		typedef polynomial_term multiplication_result_type;
 		/// Defaulted default constructor.
 		polynomial_term() = default;
 		/// Defaulted copy constructor.
@@ -101,28 +103,32 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		 * result of the multiplication of the current coefficient by the coefficient of \p other (via the coefficient's <tt>multiply()</tt> method)
 		 * and whose key is the element-by-element sum of the vectors of the exponents of the two terms.
 		 * 
+		 * @param[out] retval return value of the multiplication.
 		 * @param[in] other argument of the multiplication.
 		 * @param[in] ed reference echelon descriptor.
 		 * 
-		 * @return the result of the multiplication of \p this by \p other.
-		 * 
 		 * @throws unspecified any exception thrown by:
+		 * - the assignment operators of coefficient and key,
 		 * - the <tt>multiply()</tt> method of \p Cf,
-		 * - the constructor of piranha::polynomial_term from coefficient and key,
 		 * - the in-place addition operator of \p ExpoType.
+		 * 
+		 * \todo fix use of multiply() once polynomial multiplier is implemented.
 		 */
 		template <typename Cf2, typename ExpoType2, typename Term>
-		polynomial_term multiply(const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
+		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
 		{
 			piranha_assert(other.m_key.size() == this->m_key.size());
 			piranha_assert(other.m_key.size() == ed.template get_args<polynomial_term>().size());
-			polynomial_term pt(this->m_cf.multiply(other.m_cf,ed),this->m_key);
+			// TODO: fix this.
+			//retval.m_cf = this->m_cf.multiply(other.m_cf,ed);
+			retval.m_cf = this->m_cf;
+			retval.m_cf.multiply_by(other.m_cf,ed);
 			// Key part.
+			retval.m_key = this->m_key;
 			const auto size = this->m_key.size();
-			for (decltype(this->m_key.size()) i = 0; i < size; ++i) {
-				pt.m_key[i] += other.m_key[i];
+			for (decltype(this->m_key.size()) i = 0u; i < size; ++i) {
+				retval.m_key[i] += other.m_key[i];
 			}
-			return pt;
 		}
 };
 

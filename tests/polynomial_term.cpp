@@ -112,22 +112,22 @@ struct multiplication_tester
 			typedef typename term_type::key_type key_type;
 			ed_type ed;
 			ed.template add_symbol<term_type>("x");
-			term_type t1, t2;
+			term_type t1, t2, t3;
 			t1.m_cf = Cf(2,ed);
 			t1.m_key = key_type{Expo(2)};
 			t2.m_cf = Cf(3,ed);
 			t2.m_key = key_type{Expo(3)};
-			auto t3 = t1.multiply(t2,ed);
+			t1.multiply(t3,t2,ed);
 			BOOST_CHECK_EQUAL(t3.m_cf.get_value(),t1.m_cf.get_value() * t2.m_cf.get_value());
 			BOOST_CHECK_EQUAL(t3.m_key[0],Expo(5));
 			typedef polynomial_term<numerical_coefficient<other_type>,Expo> other_term_type;
 			typedef echelon_descriptor<other_term_type> other_ed_type;
 			other_ed_type other_ed;
 			other_ed.template add_symbol<other_term_type>("x");
-			other_term_type t4;
+			other_term_type t4, t5;
 			t4.m_cf = numerical_coefficient<other_type>(2,other_ed);
 			t4.m_key = key_type{Expo(2)};
-			auto t5 = t4.multiply(t2,other_ed);
+			t4.multiply(t5,t2,other_ed);
 			BOOST_CHECK_EQUAL(t5.m_cf.get_value(),t4.m_cf.get_value() * t2.m_cf.get_value());
 			BOOST_CHECK_EQUAL(t5.m_key[0],Expo(5));
 		}
