@@ -191,29 +191,29 @@ BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 	BOOST_CHECK(ht.begin() == ht.end());
 	BOOST_CHECK(ht.empty());
 	BOOST_CHECK_EQUAL(ht.size(),unsigned(0));
-	BOOST_CHECK_EQUAL(ht.n_buckets(),unsigned(0));
+	BOOST_CHECK_EQUAL(ht.bucket_count(),unsigned(0));
 	BOOST_CHECK_THROW(ht.bucket("hello"),zero_division_error);
 	// Ctor from number of buckets.
 	hash_set<custom_string> ht0(0);
-	BOOST_CHECK(ht0.n_buckets() == 0);
+	BOOST_CHECK(ht0.bucket_count() == 0);
 	BOOST_CHECK(ht0.begin() == ht0.end());
 	hash_set<custom_string> ht1(1);
-	BOOST_CHECK(ht1.n_buckets() >= 1);
+	BOOST_CHECK(ht1.bucket_count() >= 1);
 	BOOST_CHECK(ht1.begin() == ht1.end());
 	hash_set<custom_string> ht2(2);
-	BOOST_CHECK(ht2.n_buckets() >= 2);
+	BOOST_CHECK(ht2.bucket_count() >= 2);
 	BOOST_CHECK(ht2.begin() == ht2.end());
 	hash_set<custom_string> ht3(3);
-	BOOST_CHECK(ht3.n_buckets() >= 3);
+	BOOST_CHECK(ht3.bucket_count() >= 3);
 	BOOST_CHECK(ht3.begin() == ht3.end());
 	hash_set<custom_string> ht4(4);
-	BOOST_CHECK(ht4.n_buckets() >= 4);
+	BOOST_CHECK(ht4.bucket_count() >= 4);
 	BOOST_CHECK(ht4.begin() == ht4.end());
 	hash_set<custom_string> ht5(456);
-	BOOST_CHECK(ht5.n_buckets() >= 456);
+	BOOST_CHECK(ht5.bucket_count() >= 456);
 	BOOST_CHECK(ht5.begin() == ht5.end());
 	hash_set<custom_string> ht6(100001);
-	BOOST_CHECK(ht6.n_buckets() >= 100001);
+	BOOST_CHECK(ht6.bucket_count() >= 100001);
 	BOOST_CHECK(ht6.begin() == ht6.end());
 	// Range constructor.
 	boost::mpl::for_each<key_types>(range_ctor_tester());
@@ -345,7 +345,7 @@ struct clear_tester
 		hash_set<T> h(make_hash_set<T>());
 		h.clear();
 		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
-		BOOST_CHECK_EQUAL(h.n_buckets(),unsigned(0));
+		BOOST_CHECK_EQUAL(h.bucket_count(),unsigned(0));
 	}
 };
 
@@ -360,14 +360,14 @@ struct swap_tester
 	void operator()(const T &)
 	{
 		hash_set<T> h1(make_hash_set<T>()), h2(h1);
-		const auto nb1 = h1.n_buckets(), s1 = h1.size();
+		const auto nb1 = h1.bucket_count(), s1 = h1.size();
 		for (int i = 0; i < N / 2; ++i) {
 			h2.erase(h2.find(boost::lexical_cast<T>(i)));
 		}
-		const auto nb2 = h2.n_buckets(), s2 = h2.size();
+		const auto nb2 = h2.bucket_count(), s2 = h2.size();
 		h1.swap(h2);
-		BOOST_CHECK_EQUAL(h1.n_buckets(),nb2);
-		BOOST_CHECK_EQUAL(h2.n_buckets(),nb1);
+		BOOST_CHECK_EQUAL(h1.bucket_count(),nb2);
+		BOOST_CHECK_EQUAL(h2.bucket_count(),nb1);
 		BOOST_CHECK_EQUAL(h1.size(),s2);
 		BOOST_CHECK_EQUAL(h2.size(),s1);
 		for (int i = 0; i < N / 2; ++i) {

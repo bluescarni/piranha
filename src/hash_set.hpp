@@ -521,13 +521,13 @@ class hash_set
 		/**
 		 * @return number of buckets in the table.
 		 */
-		size_type n_buckets() const
+		size_type bucket_count() const
 		{
 			return m_container.size();
 		}
 		/// Load factor.
 		/**
-		 * @return <tt>size() / n_buckets()</tt>, or 0 if the table is empty.
+		 * @return <tt>size() / bucket_count()</tt>, or 0 if the table is empty.
 		 */
 		double load_factor() const
 		{
@@ -542,7 +542,7 @@ class hash_set
 		 * 
 		 * @return index of the destination bucket for \p k.
 		 * 
-		 * @throws piranha::zero_division_error if n_buckets() returns zero.
+		 * @throws piranha::zero_division_error if bucket_count() returns zero.
 		 * @throws unspecified any exception thrown by _bucket().
 		 */
 		size_type bucket(const key_type &k) const
@@ -703,7 +703,7 @@ class hash_set
 		}
 		/// Remove all elements.
 		/**
-		 * After this call, size() and n_buckets() will both return zero.
+		 * After this call, size() and bucket_count() will both return zero.
 		 */
 		void clear()
 		{
