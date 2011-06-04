@@ -46,9 +46,9 @@ namespace detail
 {
 
 // Hash functor for term type in base series.
+template <typename Term>
 struct term_hasher
 {
-	template <typename Term>
 	std::size_t operator()(const Term &term) const
 	{
 		return term.hash();
@@ -105,7 +105,7 @@ class base_series: detail::base_series_tag
 		friend class series_multiplier;
 	protected:
 		/// Container type for terms.
-		typedef hash_set<term_type,detail::term_hasher> container_type;
+		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
 	private:
 		// Overload for completely different term type: copy-convert to term_type and proceed.
 		template <bool Sign, typename T, typename EchelonDescriptor>
