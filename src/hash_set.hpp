@@ -125,8 +125,10 @@ class hash_set
 			typedef iterator_impl<T> iterator;
 			typedef iterator_impl<T const> const_iterator;
 			list():m_node() {}
-			// TODO: missing move constructor.
-			list(list &&) = delete;
+			list(list &&other):m_node()
+			{
+				steal_from_rvalue(std::move(other));
+			}
 			list(const list &other):m_node()
 			{
 				try {
@@ -160,16 +162,7 @@ class hash_set
 				if (likely(this != &other)) {
 					// Destroy the content of this.
 					destroy();
-					// Do something only if there is content in the other.
-					if (other.m_node.m_next) {
-						// Move construct current first node with first node of other.
-						::new ((void *)&m_node.m_storage) T(std::move(*other.m_node.ptr()));
-						// Link remaining content of other into this.
-						m_node.m_next = other.m_node.m_next;
-						// Destroy first node of other.
-						other.m_node.ptr()->~T();
-						other.m_node.m_next = piranha_nullptr;
-					}
+					steal_from_rvalue(std::move(other));
 				}
 				return *this;
 			}
@@ -184,6 +177,21 @@ class hash_set
 			~list()
 			{
 				destroy();
+			}
+			void steal_from_rvalue(list &&other)
+			{
+				piranha_assert(empty());
+				// Do something only if there is content in the other.
+				if (other.m_node.m_next) {
+					// Move construct current first node with first node of other.
+					::new ((void *)&m_node.m_storage) T(std::move(*other.m_node.ptr()));
+					// Link remaining content of other into this.
+					m_node.m_next = other.m_node.m_next;
+					// Destroy first node of other.
+					other.m_node.ptr()->~T();
+					other.m_node.m_next = piranha_nullptr;
+				}
+				piranha_assert(other.empty());
 			}
 			template <typename U>
 			node *insert(U &&item, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
@@ -620,13 +628,18 @@ class hash_set
 		 * as the erased element.
 		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
+		 * 
+		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
+		 * no such element exists.
 		 */
-		void erase(const iterator &it)
+		iterator erase(const iterator &it)
 		{
 			// Verify the iterator is valid.
 			piranha_assert(!empty() && it.m_set == this && it.m_idx < m_container.size() &&
 				!m_container[it.m_idx].empty() && it.m_it.m_ptr != m_container[it.m_idx].end().m_ptr);
 			auto &bucket = m_container[it.m_idx];
+			iterator retval;
+			retval.m_set = this;
 			// If the pointed-to element is the first one in the bucket, we need special care.
 			if (&*it == &*bucket.m_node.ptr()) {
 				// Destroy the payload.
@@ -634,6 +647,18 @@ class hash_set
 				if (bucket.m_node.m_next == &bucket.terminator) {
 					// Special handling if this was the only element.
 					bucket.m_node.m_next = piranha_nullptr;
+					// Go to the next valid iterator, or end().
+					size_type idx = it.m_idx + 1u;
+					for (; idx < m_container.size(); ++idx) {
+						if (!m_container[idx].empty()) {
+							break;
+						}
+					}
+					retval.m_idx = idx;
+					// If we are not at the end, assign proper iterator.
+					if (idx != m_container.size()) {
+						retval.m_it.m_ptr = m_container[idx].begin().m_ptr;
+					}
 				} else {
 					// Store the link in the second element.
 					auto tmp = bucket.m_node.m_next->m_next;
@@ -643,6 +668,9 @@ class hash_set
 					::delete bucket.m_node.m_next;
 					// Establish the new link.
 					bucket.m_node.m_next = tmp;
+					// Setup return value.
+					retval.m_idx = it.m_idx;
+					retval.m_it.m_ptr = bucket.begin().m_ptr;
 				}
 			} else {
 				auto b_it = bucket.begin();
@@ -662,9 +690,15 @@ class hash_set
 				// We never want to go throught the whole list, it means the element
 				// to which 'it' refers is not here.
 				piranha_assert(b_it != b_it_f);
+				// Now the previous bucket iterator contains the link to the element past the erased one:
+				// just increase it.
+				retval.m_idx = it.m_idx;
+				retval.m_it.m_ptr = prev_b_it.m_ptr;
+				++retval;
 			}
 			piranha_assert(m_n_elements);
 			--m_n_elements;
+			return retval;
 		}
 		/// Remove all elements.
 		/**

@@ -324,6 +324,11 @@ struct erase_tester
 			h.erase(r);
 		}
 		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
+		h = make_hash_set<T>();
+		for (auto it = h.begin(); it != h.end();) {
+			it = h.erase(it);
+		}
+		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
 	}
 };
 
