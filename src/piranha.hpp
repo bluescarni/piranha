@@ -46,6 +46,7 @@
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method?
  * \todo strip_cv_ref should be std::decay probably.
+ * \todo try to get away with the friendship to binary series operators by base series.
  */
 namespace piranha
 {
@@ -77,7 +78,7 @@ namespace detail {}
 #include "echelon_position.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
-#include "hop_table.hpp"
+#include "hash_set.hpp"
 #include "integer.hpp"
 #include "math.hpp"
 #include "mf_int.hpp"

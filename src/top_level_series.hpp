@@ -97,10 +97,10 @@ class top_level_series: public base_series<Term,Derived>, public series_binary_o
 				"Cannot add/subtract series with different echelon sizes.");
 			// NOTE: if they are not the same, we are going to do heavy calculations anyway: mark it "likely".
 			if (likely(m_ed.get_args_tuple() == other.m_ed.get_args_tuple())) {
-std::cout << "LOL same args tuple!\n";
+// std::cout << "LOL same args tuple!\n";
 				this->template merge_terms<Sign>(std::forward<T>(other),m_ed);
 			} else {
-std::cout << "oh NOES different!\n";
+// std::cout << "oh NOES different!\n";
 				// Let's deal with the first series.
 				auto merge1 = m_ed.merge(other.m_ed);
 				if (merge1.first.get_args_tuple() != m_ed.get_args_tuple()) {
@@ -131,8 +131,8 @@ std::cout << "oh NOES different!\n";
 					// Maybe it could be forwarded just for the last term?
 					it->m_cf.multiply_by(x,m_ed);
 					if (unlikely(!it->is_compatible(m_ed) || it->is_ignorable(m_ed))) {
-						auto tmp_it = it++;
-						this->m_container.erase(tmp_it);
+						// Erase will return the next iterator.
+						it = this->m_container.erase(it);
 					} else {
 						++it;
 					}
@@ -279,7 +279,7 @@ std::cout << "oh NOES different!\n";
 		 */
 		top_level_series &operator=(top_level_series &&other) piranha_noexcept_spec(true)
 		{
-std::cout << "Loool another one I want\n";
+// std::cout << "Loool another one I want\n";
 			if (likely(this != &other)) {
 				// Descriptor and base cannot throw on move.
 				base::operator=(std::move(other));
@@ -297,7 +297,7 @@ std::cout << "Loool another one I want\n";
 		 */
 		top_level_series &operator=(const top_level_series &other)
 		{
-std::cout << "Loool the one I want\n";
+// std::cout << "Loool the one I want\n";
 			// Use copy+move idiom.
 			if (likely(this != &other)) {
 				top_level_series tmp(other);
@@ -338,7 +338,7 @@ std::cout << "Loool the one I want\n";
 		{
 			// NOTE: the enabler condition is used to make sure that when assigning to classes that derive from this type, the canonical
 			// assignment operators defined above are called.
-std::cout << "GENERIIIIIIIC\n";
+// std::cout << "GENERIIIIIIIC\n";
 			dispatch_generic_assignment(std::forward<T>(x));
 			return *this;
 		}
@@ -360,8 +360,7 @@ std::cout << "GENERIIIIIIIC\n";
 				for (auto it = this->m_container.begin(); it != it_f;) {
 					it->m_cf.negate(m_ed);
 					if (unlikely(!it->is_compatible(m_ed) || it->is_ignorable(m_ed))) {
-						auto tmp_it = it++;
-						this->m_container.erase(tmp_it);
+						it = this->m_container.erase(it);
 					} else {
 						++it;
 					}

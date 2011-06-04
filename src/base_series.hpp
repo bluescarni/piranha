@@ -35,7 +35,7 @@
 #include "debug_access.hpp"
 #include "detail/base_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
-#include "hop_table.hpp"
+#include "hash_set.hpp"
 #include "series_multiplier.hpp"
 #include "type_traits.hpp"
 
@@ -71,14 +71,14 @@ class series_binary_operators;
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as piranha::hop_table. In particular, exceptions thrown during
+ * This class provides the same exception safety guarantee as piranha::hash_set. In particular, exceptions thrown during
  * any operation involving term insertion (e.g., insert()) will leave the object in an undefined but valid state.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to piranha::hop_table's move semantics.
+ * Move semantics is equivalent to piranha::hash_set's move semantics.
  * 
- * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods of hop_table
+ * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods of hash_set
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -105,7 +105,7 @@ class base_series: detail::base_series_tag
 		friend class series_multiplier;
 	protected:
 		/// Container type for terms.
-		typedef hop_table<term_type,detail::term_hasher> container_type;
+		typedef hash_set<term_type,detail::term_hasher> container_type;
 	private:
 		// Overload for completely different term type: copy-convert to term_type and proceed.
 		template <bool Sign, typename T, typename EchelonDescriptor>
@@ -114,7 +114,6 @@ class base_series: detail::base_series_tag
 			!is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "copy converting to term type\n";
 			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(term.m_cf,ed),
 				typename term_type::key_type(term.m_key,ed.template get_args<term_type>())),ed);
 		}
@@ -125,7 +124,6 @@ std::cout << "copy converting to term type\n";
 			is_nonconst_rvalue_ref<T &&>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "move converting to term type\n";
 			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(std::move(term.m_cf),ed),
 				typename term_type::key_type(std::move(term.m_key),ed.template get_args<term_type>())),ed);
 		}
@@ -135,17 +133,14 @@ std::cout << "move converting to term type\n";
 			std::is_same<typename strip_cv_ref<T>::type,term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "term type insert!\n";
 			// Debug checks.
 			piranha_assert(empty() || m_container.begin()->is_compatible(ed));
 			// Generate error if term is not compatible.
 			if (unlikely(!term.is_compatible(ed))) {
-std::cout << "term type incompatible LOL!\n";
 				piranha_throw(std::invalid_argument,"cannot insert incompatible term");
 			}
 			// Discard ignorable term.
 			if (unlikely(term.is_ignorable(ed))) {
-std::cout << "term type ignorable!\n";
 				return;
 			}
 			insertion_impl<Sign>(std::forward<T>(term),ed);
@@ -154,10 +149,8 @@ std::cout << "term type ignorable!\n";
 		static void insertion_cf_arithmetics(Iterator &it, const term_type &term, const EchelonDescriptor &ed)
 		{
 			if (Sign) {
-std::cout << "adding!\n";
 				it->m_cf.add(term.m_cf,ed);
 			} else {
-std::cout << "subtracting!\n";
 				it->m_cf.subtract(term.m_cf,ed);
 			}
 		}
@@ -165,10 +158,8 @@ std::cout << "subtracting!\n";
 		static void insertion_cf_arithmetics(Iterator &it, term_type &&term, const EchelonDescriptor &ed)
 		{
 			if (Sign) {
-std::cout << "move adding!\n";
 				it->m_cf.add(std::move(term.m_cf),ed);
 			} else {
-std::cout << "move subtracting!\n";
 				it->m_cf.subtract(std::move(term.m_cf),ed);
 			}
 		}
@@ -181,13 +172,11 @@ std::cout << "move subtracting!\n";
 			// Try to locate the term.
 			const auto it = m_container.find(term);
 			if (it == m_container.end()) {
-std::cout << "new term!\n";
 				// This is a new term, insert it.
 				const auto result = m_container.insert(std::forward<T>(term));
 				piranha_assert(result.second);
 				// Change sign if requested.
 				if (!Sign) {
-std::cout << "negating!\n";
 					// Cleanup function.
 					auto cleanup = [&]() -> void {
 						// Negation is a mutating operation. We have to check again for compatibility
@@ -205,7 +194,6 @@ std::cout << "negating!\n";
 					}
 				}
 			} else {
-std::cout << "updating existing term!\n";
 				// Assert the existing term is not ignorable.
 				piranha_assert(!it->is_ignorable(ed));
 				// Cleanup function.
@@ -233,14 +221,12 @@ std::cout << "updating existing term!\n";
 			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
 			// series is an instance of the type of this.
 			if (unlikely(&series == this)) {
-std::cout << "ZOMG merging with self\n";
 				// If the two series are the same object, we need to make a copy.
 				// NOTE: we do not forward here, when making the copy, because if T is a non-const
 				// rvalue reference we might actually erase this: with Derived(series), a move
 				// constructor might end up being called.
 				merge_terms_impl1<Sign>(base_series<Term,Derived>(series),ed);
 			} else {
-std::cout << "all normal, merging with other\n";
 				merge_terms_impl1<Sign>(std::forward<T>(series),ed);
 			}
 		}
@@ -257,7 +243,6 @@ std::cout << "all normal, merging with other\n";
 		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
 			typename std::enable_if<!is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
 		{
-std::cout << "LOL copy!\n";
 			const auto it_f = series.m_container.end();
 			try {
 				for (auto it = series.m_container.begin(); it != it_f; ++it) {
@@ -278,22 +263,17 @@ std::cout << "LOL copy!\n";
 				c2 = std::move(tmp);
 				swap = true;
 			}
-std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n";
 		}
 		// This overloads the above in the case we are dealing with two different container types:
 		// in such a condition, we won't do any swapping.
 		template <typename OtherContainerType>
 		static void swap_for_merge(container_type &&, OtherContainerType &&, bool &)
-		{
-static_assert(!std::is_same<typename strip_cv_ref<OtherContainerType>::type,container_type>::value,"ahi ahi");
-std::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBb\n";
-		}
+		{}
 		// Overload if we can move objects from series.
 		template <bool Sign, typename T, typename Term2>
 		void merge_terms_impl1(T &&series, const echelon_descriptor<Term2> &ed,
 			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
 		{
-std::cout << "LOL move!\n";
 			bool swap = false;
 			// Try to steal memory from other.
 			swap_for_merge(std::move(m_container),std::move(series.m_container),swap);
@@ -305,15 +285,12 @@ std::cout << "LOL move!\n";
 				// If we swapped the operands and a negative merge was performed, we need to change
 				// the signs of all coefficients.
 				if (swap && !Sign) {
-std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 					const auto it_f2 = m_container.end();
 					for (auto it = m_container.begin(); it != it_f2;) {
 						it->m_cf.negate(ed);
 						if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
-							// Record current iterator and then increase it.
-							auto tmp_it = it++;
 							// Erase the invalid term.
-							m_container.erase(tmp_it);
+							it = m_container.erase(it);
 						} else {
 							++it;
 						}
@@ -338,18 +315,18 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		typedef base_series base_series_type;
 		/// Size type.
 		/**
-		 * Used to represent the number of terms in the series. Equivalent to piranha::hop_table::size_type.
+		 * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.
 		 */
 		typedef typename container_type::size_type size_type;
 		/// Defaulted default constructor.
 		base_series() = default;
 		/// Defaulted copy constructor.
 		/**
-		 * @throw unspecified any exception thrown by the copy constructor of piranha::hop_table.
+		 * @throw unspecified any exception thrown by the copy constructor of piranha::hash_set.
 		 */
 		base_series(const base_series &) = default;
 		/// Defaulted move constructor.
-		base_series(base_series &&) = default;
+		base_series(base_series &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container)) {}
 		/// Trivial destructor.
 		~base_series() piranha_noexcept_spec(true)
 		{
@@ -357,7 +334,7 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		}
 		/// Defaulted copy-assignment operator.
 		/**
-		 * @throw unspecified any exception thrown by the copy assignment operator of piranha::hop_table.
+		 * @throw unspecified any exception thrown by the copy assignment operator of piranha::hash_set.
 		 * 
 		 * @return reference to \p this.
 		 */
@@ -412,7 +389,7 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 	protected:
 		/// Insert generic term.
 		/**
-		 * This method will insert \p term into the series using internally piranha::hop_table::insert and
+		 * This method will insert \p term into the series using internally piranha::hash_set::insert and
 		 * with \p ed as reference piranha::echelon_descriptor.
 		 * 
 		 * The insertion algorithm proceeds as follows:
@@ -448,9 +425,9 @@ std::cout << "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC\n";
 		 * - the constructors of base_series::term_type, and of its coefficient and key types,
 		 *   invoked by any necessary conversion;
 		 * - the <tt>is_compatible()</tt> and <tt>is_ignorable()</tt> methods of base_series::term_type;
-		 * - piranha::hop_table::insert(),
-		 * - piranha::hop_table::find(),
-		 * - piranha::hop_table::erase(),
+		 * - piranha::hash_set::insert(),
+		 * - piranha::hash_set::find(),
+		 * - piranha::hash_set::erase(),
 		 * - the <tt>negate()</tt>, <tt>add()</tt> and <tt>subtract()</tt> methods of the coefficient type,
 		 * @throws std::invalid_argument if \p term is ignorable.
 		 */
