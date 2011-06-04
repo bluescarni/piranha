@@ -48,20 +48,22 @@ namespace concept
  * \todo implement the check on the tuple types.
  */
 template <typename T>
-struct MultipliableTerm:
+class MultipliableTerm:
 	Term<T>
 {
-	PIRANHA_DECLARE_HAS_TYPEDEF(multiplication_result_type);
-	/// Concept usage pattern.
-	BOOST_CONCEPT_USAGE(MultipliableTerm)
-	{
-		static_assert(has_typedef_multiplication_result_type<T>::value,"Missing multiplication result type typedef.");
-		static_assert(std::is_same<typename T::multiplication_result_type,T>::value ||
-			is_tuple<typename T::multiplication_result_type>::value,"Invalid multiplication result type typedef.");
-		typename T::multiplication_result_type retval;
-		typedef decltype(std::declval<T>().multiply(retval,std::declval<T>(),std::declval<echelon_descriptor<T>>())) ret_type;
-		static_assert(std::is_same<void,ret_type>::value,"Invalid return value type for multiply()");
-	}
+	private:
+		PIRANHA_DECLARE_HAS_TYPEDEF(multiplication_result_type);
+	public:
+		/// Concept usage pattern.
+		BOOST_CONCEPT_USAGE(MultipliableTerm)
+		{
+			static_assert(has_typedef_multiplication_result_type<T>::value,"Missing multiplication result type typedef.");
+			static_assert(std::is_same<typename T::multiplication_result_type,T>::value ||
+				is_tuple<typename T::multiplication_result_type>::value,"Invalid multiplication result type typedef.");
+			typename T::multiplication_result_type retval;
+			typedef decltype(std::declval<T>().multiply(retval,std::declval<T>(),std::declval<echelon_descriptor<T>>())) ret_type;
+			static_assert(std::is_same<void,ret_type>::value,"Invalid return value type for multiply()");
+		}
 };
 
 }
