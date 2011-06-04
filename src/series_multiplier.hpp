@@ -121,8 +121,41 @@ class series_multiplier
 		{
 			ReturnType retval;
 			typename term_type1::multiplication_result_type tmp;
-			for (Size1 i = 0u; i < size1; ++i) {
-				for (Size2 j = 0u; j < size2; ++j) {
+			const Size1 bsize1 = 256u, nblocks1 = size1 / bsize1;
+			const Size2 bsize2 = 256u, nblocks2 = size2 / bsize2;
+			for (Size1 n1 = 0u; n1 < nblocks1; ++n1) {
+				const Size1 i_start = n1 * bsize1, i_end = i_start + bsize1;
+				// regulars1 * regulars2
+				for (Size2 n2 = 0u; n2 < nblocks2; ++n2) {
+					const Size2 j_start = n2 * bsize2, j_end = j_start + bsize2;
+					for (Size1 i = i_start; i < i_end; ++i) {
+						for (Size2 j = j_start; j < j_end; ++j) {
+							(t1[i])->multiply(tmp,*(t2[j]),ed);
+							insert_impl(retval,tmp,ed);
+						}
+					}
+				}
+				// regulars1 * rem2
+				for (Size1 i = i_start; i < i_end; ++i) {
+					for (Size2 j = nblocks2 * bsize2; j < size2; ++j) {
+						(t1[i])->multiply(tmp,*(t2[j]),ed);
+						insert_impl(retval,tmp,ed);
+					}
+				}
+			}
+			// rem1 * regulars2
+			for (Size2 n2 = 0u; n2 < nblocks2; ++n2) {
+				const Size2 j_start = n2 * bsize2, j_end = j_start + bsize2;
+				for (Size1 i = nblocks1 * bsize1; i < size1; ++i) {
+					for (Size2 j = j_start; j < j_end; ++j) {
+						(t1[i])->multiply(tmp,*(t2[j]),ed);
+						insert_impl(retval,tmp,ed);
+					}
+				}
+			}
+			// rem1 * rem2.
+			for (Size1 i = nblocks1 * bsize1; i < size1; ++i) {
+				for (Size2 j = nblocks2 * bsize2; j < size2; ++j) {
 					(t1[i])->multiply(tmp,*(t2[j]),ed);
 					insert_impl(retval,tmp,ed);
 				}
