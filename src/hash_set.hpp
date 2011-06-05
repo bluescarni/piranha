@@ -585,8 +585,8 @@ class hash_set
 		 */
 		double get_max_load_factor() const
 		{
-			// Maximum load factor hard-coded to 0.75.
-			return 0.75;
+			// Maximum load factor hard-coded to 1.
+			return 1.;
 		}
 		/// Insert element.
 		/**
