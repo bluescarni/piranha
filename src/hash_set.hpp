@@ -922,26 +922,8 @@ class hash_set
 				throw std::bad_alloc();
 			}
 			++cur_size_index;
-			// Create new table with needed amount of buckets.
-			hash_set new_table(table_sizes[cur_size_index],m_hasher,m_key_equal);
-			try {
-				const auto it_f = _m_end();
-				for (auto it = _m_begin(); it != it_f; ++it) {
-					const auto new_idx = new_table._bucket(*it);
-					new_table._unique_insert(std::move(*it),new_idx);
-				}
-			} catch (...) {
-				// Clear up both this and the new table upon any kind of error.
-				clear();
-				new_table.clear();
-				throw;
-			}
-			// Retain the number of elements.
-			new_table.m_n_elements = m_n_elements;
-			// Clear the old table.
-			clear();
-			// Assign the new table.
-			*this = std::move(new_table);
+			// Rehash to the new size.
+			rehash(table_sizes[cur_size_index]);
 		}
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
