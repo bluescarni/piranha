@@ -725,6 +725,38 @@ class hash_set
 			std::swap(m_key_equal,other.m_key_equal);
 			std::swap<size_type>(m_n_elements,other.m_n_elements);
 		}
+		/// Rehash table.
+		/**
+		 * Change the number of buckets in the table to at least \p new_size.
+		 * 
+		 * @param[in] new_size new desired number of buckets.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from number of buckets
+		 * or by _unique_insert().
+		 */
+		void rehash(const size_type &new_size)
+		{
+			// Create a new table with needed amount of buckets.
+			hash_set new_table(new_size,m_hasher,m_key_equal);
+			try {
+				const auto it_f = _m_end();
+				for (auto it = _m_begin(); it != it_f; ++it) {
+					const auto new_idx = new_table._bucket(*it);
+					new_table._unique_insert(std::move(*it),new_idx);
+				}
+			} catch (...) {
+				// Clear up both this and the new table upon any kind of error.
+				clear();
+				new_table.clear();
+				throw;
+			}
+			// Retain the number of elements.
+			new_table.m_n_elements = m_n_elements;
+			// Clear the old table.
+			clear();
+			// Assign the new table.
+			*this = std::move(new_table);
+		}
 		/** @name Low-level interface
 		 * Low-level methods and types.
 		 */

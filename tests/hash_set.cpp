@@ -421,3 +421,32 @@ BOOST_AUTO_TEST_CASE(hash_set_m_iterators_test)
 {
 	boost::mpl::for_each<key_types>(m_iterators_tester());
 }
+
+struct rehash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hash_set<T> h;
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h.rehash(100u);
+		BOOST_CHECK(h.bucket_count() >= 100u);
+		h.rehash(10u);
+		BOOST_CHECK(h.bucket_count() >= 10u);
+		h.rehash(1000u);
+		BOOST_CHECK(h.bucket_count() >= 1000u);
+		h.rehash(0u);
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h = make_hash_set<T>();
+		const auto old = h.bucket_count();
+		h.rehash(old * 2u);
+		BOOST_CHECK(h.bucket_count() >= old * 2u);
+		h.rehash(old);
+		BOOST_CHECK(h.bucket_count() >= old);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hash_set_rehash_test)
+{
+	boost::mpl::for_each<key_types>(rehash_tester());
+}
