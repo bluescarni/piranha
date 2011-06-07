@@ -480,10 +480,7 @@ class hash_set
 		 */
 		const_iterator end() const
 		{
-			const_iterator retval;
-			retval.m_set = this;
-			retval.m_idx = m_container.size();
-			return retval;
+			return const_iterator(this,m_container.size(),typename list::const_iterator{});
 		}
 		/// Begin iterator.
 		/**
@@ -798,10 +795,7 @@ class hash_set
 		 */
 		_m_iterator _m_end()
 		{
-			_m_iterator retval;
-			retval.m_set = this;
-			retval.m_idx = m_container.size();
-			return retval;
+			return _m_iterator(this,m_container.size(),typename list::iterator{});
 		}
 		/// Insert unique element (low-level).
 		/**
@@ -852,15 +846,18 @@ class hash_set
 		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
 		{
 			// Assert bucket index is correct.
-			piranha_assert(bucket_idx == _bucket(k));
+			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < m_container.size());
 			const auto &b = m_container[bucket_idx];
 			const auto it_f = b.end();
+			const_iterator retval(end());
 			for (auto it = b.begin(); it != it_f; ++it) {
 				if (m_key_equal(*it,k)) {
-					return iterator(this,bucket_idx,it);
+					retval.m_idx = bucket_idx;
+					retval.m_it = it;
+					break;
 				}
 			}
-			return end();
+			return retval;
 		}
 		/// Index of destination bucket (low-level).
 		/**
