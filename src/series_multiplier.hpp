@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/concept/assert.hpp>
+#include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <iterator>
 #include <tuple>
@@ -33,7 +34,7 @@
 #include "concepts/series.hpp"
 #include "echelon_descriptor.hpp"
 #include "echelon_size.hpp"
-#include "utils.hpp"
+#include "integer.hpp"
 
 namespace piranha
 {
@@ -116,46 +117,88 @@ class series_multiplier
 			return mult_impl<return_type>(&v1[0],v1.size(),&v2[0],v2.size(),ed);
 		}
 	private:
-		template <typename ReturnType, typename Size1, typename Size2, typename Term>
-		static ReturnType mult_impl(const term_type1 **t1, const Size1 &size1, const term_type2 **t2, const Size2 &size2, const echelon_descriptor<Term> &ed)
+		template <typename ReturnType, typename Size, typename Term>
+		static auto estimate_size(const term_type1 **t1, const Size &size1, const term_type2 **t2,
+			const Size &size2, const echelon_descriptor<Term> &ed) -> decltype(std::declval<ReturnType>().m_container.bucket_count())
 		{
-			ReturnType retval;
+			std::vector<typename std::decay<decltype(*t1)>::type> copy1(t1,t1 + size1);
+			std::vector<typename std::decay<decltype(*t2)>::type> copy2(t2,t2 + size2);
+			integer mean(0);
+			// NOTE: hard-coded number of trials: 10. This could be easily parallelised, but not
+			// sure if it is worth.
+			const int ntrials = 10;
 			typename term_type1::multiplication_result_type tmp;
-			const Size1 bsize1 = 256u, nblocks1 = size1 / bsize1;
-			const Size2 bsize2 = 256u, nblocks2 = size2 / bsize2;
-			for (Size1 n1 = 0u; n1 < nblocks1; ++n1) {
-				const Size1 i_start = n1 * bsize1, i_end = i_start + bsize1;
+			for (int n = 0; n < ntrials; ++n) {
+				std::random_shuffle(copy1.begin(),copy1.end());
+				std::random_shuffle(copy2.begin(),copy2.end());
+				ReturnType tmp_retval;
+				Size i = 0u;
+				for (; i < std::min<Size>(size1,size2); ++i) {
+					(copy1[i])->multiply(tmp,*(copy2[i]),ed);
+					insert_impl(tmp_retval,tmp,ed);
+					if (tmp_retval.size() != i + 1u) {
+						break;
+					}
+				}
+				mean += i;
+			}
+			mean /= ntrials;
+			// NOTE: Using the Ramanujan Q function here, multiplied by a heuristic factor pi:
+			// http://en.wikipedia.org/wiki/Birthday_problem
+			const integer M = 2 * (mean * mean + 1 - 2 * mean);
+// std::cout << "mean = " << mean << '\n';
+// std::cout << "M = " << M << '\n';
+			return static_cast<decltype(std::declval<ReturnType>().m_container.bucket_count())>(M);
+		}
+		template <typename ReturnType, typename Size, typename Term>
+		static ReturnType mult_impl(const term_type1 **t1, const Size &size1, const term_type2 **t2, const Size &size2, const echelon_descriptor<Term> &ed)
+		{
+			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
+			ReturnType retval;
+			if (size1 > 2000u && size2 > 2000u) {
+				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
+				// of the estimate. In such a case, just ignore the rehashing and proceed.
+				try {
+					retval.m_container.rehash(estimate_size<ReturnType>(t1,size1,t2,size2,ed));
+				} catch (...) {}
+// std::cout << "buckets: " << retval.m_container.bucket_count() << '\n';
+			}
+			typename term_type1::multiplication_result_type tmp;
+			// NOTE: hard-coded block size of 256.
+			const Size bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
+			for (Size n1 = 0u; n1 < nblocks1; ++n1) {
+				const Size i_start = n1 * bsize1, i_end = i_start + bsize1;
 				// regulars1 * regulars2
-				for (Size2 n2 = 0u; n2 < nblocks2; ++n2) {
-					const Size2 j_start = n2 * bsize2, j_end = j_start + bsize2;
-					for (Size1 i = i_start; i < i_end; ++i) {
-						for (Size2 j = j_start; j < j_end; ++j) {
+				for (Size n2 = 0u; n2 < nblocks2; ++n2) {
+					const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
+					for (Size i = i_start; i < i_end; ++i) {
+						for (Size j = j_start; j < j_end; ++j) {
 							(t1[i])->multiply(tmp,*(t2[j]),ed);
 							insert_impl(retval,tmp,ed);
 						}
 					}
 				}
 				// regulars1 * rem2
-				for (Size1 i = i_start; i < i_end; ++i) {
-					for (Size2 j = nblocks2 * bsize2; j < size2; ++j) {
+				for (Size i = i_start; i < i_end; ++i) {
+					for (Size j = nblocks2 * bsize2; j < size2; ++j) {
 						(t1[i])->multiply(tmp,*(t2[j]),ed);
 						insert_impl(retval,tmp,ed);
 					}
 				}
 			}
 			// rem1 * regulars2
-			for (Size2 n2 = 0u; n2 < nblocks2; ++n2) {
-				const Size2 j_start = n2 * bsize2, j_end = j_start + bsize2;
-				for (Size1 i = nblocks1 * bsize1; i < size1; ++i) {
-					for (Size2 j = j_start; j < j_end; ++j) {
+			for (Size n2 = 0u; n2 < nblocks2; ++n2) {
+				const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
+				for (Size i = nblocks1 * bsize1; i < size1; ++i) {
+					for (Size j = j_start; j < j_end; ++j) {
 						(t1[i])->multiply(tmp,*(t2[j]),ed);
 						insert_impl(retval,tmp,ed);
 					}
 				}
 			}
 			// rem1 * rem2.
-			for (Size1 i = nblocks1 * bsize1; i < size1; ++i) {
-				for (Size2 j = nblocks2 * bsize2; j < size2; ++j) {
+			for (Size i = nblocks1 * bsize1; i < size1; ++i) {
+				for (Size j = nblocks2 * bsize2; j < size2; ++j) {
 					(t1[i])->multiply(tmp,*(t2[j]),ed);
 					insert_impl(retval,tmp,ed);
 				}
