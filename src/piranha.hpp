@@ -47,6 +47,7 @@
  * and use it explictly only when actually using that generic method?
  * \todo strip_cv_ref should be std::decay probably.
  * \todo try to get away with the friendship to binary series operators by base series.
+ * \todo hashing of array_key based on kronecker substitution.
  */
 namespace piranha
 {
