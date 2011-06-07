@@ -21,6 +21,7 @@
 #ifndef PIRANHA_POLYNOMIAL_TERM_HPP
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <type_traits>
 
@@ -112,7 +113,7 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		 * - the <tt>multiply()</tt> method of \p Cf,
 		 * - the in-place addition operator of \p ExpoType.
 		 * 
-		 * \todo fix use of multiply() once polynomial multiplier is implemented.
+		 * \todo use of multiply(): which is the better strategy? In-place or not? Move or not (this is a question for series_multiplier)?
 		 */
 		template <typename Cf2, typename ExpoType2, typename Term>
 		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
@@ -124,8 +125,9 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 			retval.m_cf = this->m_cf;
 			retval.m_cf.multiply_by(other.m_cf,ed);
 			// Key part.
-			retval.m_key = this->m_key;
 			const auto size = this->m_key.size();
+			retval.m_key.resize(size);
+			std::copy(this->m_key.begin(),this->m_key.end(),retval.m_key.begin());
 			for (decltype(this->m_key.size()) i = 0u; i < size; ++i) {
 				retval.m_key[i] += other.m_key[i];
 			}
