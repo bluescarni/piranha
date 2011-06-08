@@ -257,7 +257,7 @@ class base_series: detail::base_series_tag
 		static void swap_for_merge(container_type &&c1, container_type &&c2, bool &swap)
 		{
 			// Swap only if the buckets count (i.e., the memory allocated) is greater.
-			if (c1.n_buckets() > c2.n_buckets()) {
+			if (c1.bucket_count() > c2.bucket_count()) {
 				container_type tmp(std::move(c1));
 				c1 = std::move(c2);
 				c2 = std::move(tmp);
