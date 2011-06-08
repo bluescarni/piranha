@@ -79,6 +79,7 @@ class series_multiplier
 			"Mismatch in echelon sizes.");
 		typedef typename Series1::term_type term_type1;
 		typedef typename Series2::term_type term_type2;
+		typedef typename Series1::base_series_type return_type;
 	public:
 		/// Constructor.
 		/**
@@ -101,7 +102,6 @@ class series_multiplier
 		template <typename Term>
 		typename Series1::base_series_type operator()(const echelon_descriptor<Term> &ed) const
 		{
-			typedef typename Series1::base_series_type return_type;
 			// Cache the pointers.
 			// NOTE: here maybe it is possible to improve performance by using std::array when number of
 			// terms is small.
@@ -114,12 +114,13 @@ class series_multiplier
 			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
 			std::back_insert_iterator<decltype(v2)> bii2(v2);
 			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
-			return mult_impl<return_type>(&v1[0],v1.size(),&v2[0],v2.size(),ed);
+			return mult_impl(&v1[0],v1.size(),&v2[0],v2.size(),ed);
 		}
 	private:
-		template <typename ReturnType, typename Size, typename Term>
+		template <typename Size, typename Term>
 		static auto estimate_size(const term_type1 **t1, const Size &size1, const term_type2 **t2,
-			const Size &size2, const echelon_descriptor<Term> &ed) -> decltype(std::declval<ReturnType>().m_container.bucket_count())
+			const Size &size2, const echelon_descriptor<Term> &ed) ->
+			decltype(std::declval<return_type>().m_container.bucket_count())
 		{
 			std::vector<typename std::decay<decltype(*t1)>::type> copy1(t1,t1 + size1);
 			std::vector<typename std::decay<decltype(*t2)>::type> copy2(t2,t2 + size2);
@@ -131,7 +132,7 @@ class series_multiplier
 			for (int n = 0; n < ntrials; ++n) {
 				std::random_shuffle(copy1.begin(),copy1.end());
 				std::random_shuffle(copy2.begin(),copy2.end());
-				ReturnType tmp_retval;
+				return_type tmp_retval;
 				Size i = 0u;
 				for (; i < std::min<Size>(size1,size2); ++i) {
 					(copy1[i])->multiply(tmp,*(copy2[i]),ed);
@@ -145,18 +146,18 @@ class series_multiplier
 			mean /= ntrials;
 			// NOTE: heuristic from experiments.
 			const integer M = (mean * mean * 4) / 3;
-			return static_cast<decltype(std::declval<ReturnType>().m_container.bucket_count())>(M);
+			return static_cast<decltype(std::declval<return_type>().m_container.bucket_count())>(M);
 		}
-		template <typename ReturnType, typename Size, typename Term>
-		static ReturnType mult_impl(const term_type1 **t1, const Size &size1, const term_type2 **t2, const Size &size2, const echelon_descriptor<Term> &ed)
+		template <typename Size, typename Term>
+		static return_type mult_impl(const term_type1 **t1, const Size &size1, const term_type2 **t2, const Size &size2, const echelon_descriptor<Term> &ed)
 		{
 			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
-			ReturnType retval;
+			return_type retval;
 			if (size1 > 2000u && size2 > 2000u) {
 				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
 				// of the estimate. In such a case, just ignore the rehashing and proceed.
 				try {
-					retval.m_container.rehash(estimate_size<ReturnType>(t1,size1,t2,size2,ed));
+					retval.m_container.rehash(estimate_size(t1,size1,t2,size2,ed));
 				} catch (...) {}
 			}
 			typename term_type1::multiplication_result_type tmp;
@@ -204,8 +205,8 @@ class series_multiplier
 		template <typename Tuple, std::size_t N = 0, typename Enable2 = void>
 		struct inserter
 		{
-			template <typename ReturnType, typename Term>
-			static void run(Tuple &t, ReturnType &retval, const echelon_descriptor<Term> &ed)
+			template <typename Term>
+			static void run(Tuple &t, return_type &retval, const echelon_descriptor<Term> &ed)
 			{
 				retval.insert(std::get<N>(t),ed);
 				inserter<Tuple,N + static_cast<std::size_t>(1)>::run(t,retval,ed);
@@ -214,17 +215,17 @@ class series_multiplier
 		template <typename Tuple, std::size_t N>
 		struct inserter<Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
 		{
-			template <typename ReturnType, typename Term>
-			static void run(Tuple &, ReturnType &, const echelon_descriptor<Term> &)
+			template <typename Term>
+			static void run(Tuple &, return_type &, const echelon_descriptor<Term> &)
 			{}
 		};
-		template <typename ReturnType, typename Term, typename... Args>
-		static void insert_impl(ReturnType &retval,std::tuple<Args...> &mult_res, const echelon_descriptor<Term> &ed)
+		template <typename Term, typename... Args>
+		static void insert_impl(return_type &retval,std::tuple<Args...> &mult_res, const echelon_descriptor<Term> &ed)
 		{
 			inserter<std::tuple<Args...>>::run(mult_res,retval,ed);
 		}
-		template <typename ReturnType, typename Term>
-		static void insert_impl(ReturnType &retval, typename Series1::term_type &mult_res, const echelon_descriptor<Term> &ed)
+		template <typename Term>
+		static void insert_impl(return_type &retval, typename Series1::term_type &mult_res, const echelon_descriptor<Term> &ed)
 		{
 			retval.insert(mult_res,ed);
 		}
