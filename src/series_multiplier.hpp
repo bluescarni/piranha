@@ -143,9 +143,9 @@ class series_multiplier
 				mean += i;
 			}
 			mean /= ntrials;
-			// NOTE: Using the Ramanujan Q function here, multiplied by a heuristic factor pi:
+			// NOTE: Using the Ramanujan Q function here, multiplied by a heuristic factor 2:
 			// http://en.wikipedia.org/wiki/Birthday_problem
-			const integer M = 2 * (mean * mean + 1 - 2 * mean);
+			const integer M = (2 * (mean * mean + 1 - 2 * mean) * 2) / 3;
 // std::cout << "mean = " << mean << '\n';
 // std::cout << "M = " << M << '\n';
 			return static_cast<decltype(std::declval<ReturnType>().m_container.bucket_count())>(M);
