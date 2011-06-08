@@ -143,11 +143,8 @@ class series_multiplier
 				mean += i;
 			}
 			mean /= ntrials;
-			// NOTE: Using the Ramanujan Q function here, multiplied by a heuristic factor 2:
-			// http://en.wikipedia.org/wiki/Birthday_problem
-			const integer M = (2 * (mean * mean + 1 - 2 * mean) * 2) / 3;
-// std::cout << "mean = " << mean << '\n';
-// std::cout << "M = " << M << '\n';
+			// NOTE: heuristic from experiments.
+			const integer M = (mean * mean * 4) / 3;
 			return static_cast<decltype(std::declval<ReturnType>().m_container.bucket_count())>(M);
 		}
 		template <typename ReturnType, typename Size, typename Term>
@@ -161,7 +158,6 @@ class series_multiplier
 				try {
 					retval.m_container.rehash(estimate_size<ReturnType>(t1,size1,t2,size2,ed));
 				} catch (...) {}
-// std::cout << "buckets: " << retval.m_container.bucket_count() << '\n';
 			}
 			typename term_type1::multiplication_result_type tmp;
 			// NOTE: hard-coded block size of 256.
