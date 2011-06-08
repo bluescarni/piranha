@@ -312,9 +312,12 @@ class array_key: detail::array_key_tag
 		}
 		/// Hash value.
 		/**
-		 * @return 0 if size() is 0, otherwise the result of iteratively mixing via \p boost::hash_combine the hash
-		 * values of the elements of the container, calculated via a default-constructed \p std::hash instance
-		 * and with 0 as initial seed value.
+		 * @return one of the following:
+		 * - 0 if size() is 0
+		 * - the hash of the first element (via \p std::hash) if size() is 1,
+		 * - the result of iteratively mixing via \p boost::hash_combine the hash
+		 *   values of all the elements of the container, calculated via \p std::hash,
+		 *   with the hash value of the first element as seed value.
 		 * 
 		 * @throws unspecified any exception thrown by <tt>operator()</tt> of \p std::hash of \p T.
 		 * 
@@ -322,13 +325,25 @@ class array_key: detail::array_key_tag
 		 */
 		std::size_t hash() const
 		{
-			std::size_t retval = 0u;
 			const auto size = m_container.size();
-			std::hash<T> hasher;
-			for (decltype(m_container.size()) i = 0u; i < size; ++i) {
-				boost::hash_combine(retval,hasher(m_container[i]));
+			switch (size) {
+				case 0u:
+					return 0u;
+				case 1u:
+				{
+					std::hash<T> hasher;
+					return hasher(m_container[0u]);
+				}
+				default:
+				{
+					std::hash<T> hasher;
+					std::size_t retval = hasher(m_container[0u]);
+					for (decltype(m_container.size()) i = 1u; i < size; ++i) {
+						boost::hash_combine(retval,hasher(m_container[i]));
+					}
+					return retval;
+				}
 			}
-			return retval;
 		}
 		/// Add element at the end.
 		/**
