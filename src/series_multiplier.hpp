@@ -114,49 +114,64 @@ class series_multiplier
 			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
 			std::back_insert_iterator<decltype(v2)> bii2(v2);
 			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
+			// Build the return value, the multiplication functor and accessories.
 			typename term_type1::multiplication_result_type tmp;
 			return_type retval;
-			const auto size1 = v1.size(), size2 = v2.size();
-			if (size1 > 2000u && size2 > 2000u) {
-				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
-				// of the estimate. In such a case, just ignore the rehashing and proceed.
-				try {
-					retval.m_container.rehash(estimate_size(&v1[0u],size1,&v2[0u],size2,ed));
-				} catch (...) {}
-			}
 			const auto f = [&v1,&v2,&tmp,&ed,&retval](const decltype(v1.size()) &i, const decltype(v1.size()) &j) -> void {
 				(v1[i])->multiply(tmp,*(v2[j]),ed);
 				series_multiplier::insert_impl(retval,tmp,ed);
 			};
+			const auto size1 = v1.size(), size2 = v2.size();
+			if (size1 > 2000u && size2 > 2000u) {
+				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
+				// of the estimate or in rehashing. In such a case, just ignore the rehashing, clean
+				// up retval just to be sure, and proceed.
+				try {
+					retval.m_container.rehash(esitmate_final_series_size(f,size1,size2,retval));
+				} catch (...) {
+					retval.m_container.clear();
+				}
+			}
 			blocked_multiplication(f,decltype(v1.size())(0u),size1,decltype(v2.size())(0u),size2);
 			return retval;
 		}
 	private:
-		template <typename Size, typename Term>
-		static auto estimate_size(const term_type1 **t1, const Size &size1, const term_type2 **t2,
-			const Size &size2, const echelon_descriptor<Term> &ed) ->
+		template <typename Functor, typename Size>
+		static auto esitmate_final_series_size(const Functor &f, const Size &size1, const Size &size2, return_type &retval) ->
 			decltype(std::declval<return_type>().m_container.bucket_count())
 		{
-			std::vector<typename std::decay<decltype(*t1)>::type> copy1(t1,t1 + size1);
-			std::vector<typename std::decay<decltype(*t2)>::type> copy2(t2,t2 + size2);
+			// Fill the vector of indices.
+			std::vector<Size> idx1, idx2;
+			idx1.reserve(size1);
+			idx2.reserve(size2);
+			for (Size i = 0u; i < size1; ++i) {
+				idx1.push_back(i);
+			}
+			for (Size i = 0u; i < size2; ++i) {
+				idx2.push_back(i);
+			}
 			integer mean(0);
 			// NOTE: hard-coded number of trials: 10. This could be easily parallelised, but not
 			// sure if it is worth.
 			const int ntrials = 10;
-			typename term_type1::multiplication_result_type tmp;
 			for (int n = 0; n < ntrials; ++n) {
-				std::random_shuffle(copy1.begin(),copy1.end());
-				std::random_shuffle(copy2.begin(),copy2.end());
-				return_type tmp_retval;
+				// Randomize the indices.
+				std::random_shuffle(idx1.begin(),idx1.end());
+				std::random_shuffle(idx2.begin(),idx2.end());
 				Size i = 0u;
 				for (; i < std::min<Size>(size1,size2); ++i) {
-					(copy1[i])->multiply(tmp,*(copy2[i]),ed);
-					insert_impl(tmp_retval,tmp,ed);
-					if (tmp_retval.size() != i + 1u) {
+					// NOTE: by accessing idx1 and idx2 using an instance of type Size we are
+					// not absolutely sure that it will work in face of types with different ranges.
+					// The worst that can happen is that i is truncated to idx1/2's size type, so
+					// it seems not much of a big deal.
+					f(idx1[i],idx2[i]);
+					if (retval.size() != i + 1u) {
 						break;
 					}
 				}
 				mean += i;
+				// Reset retval.
+				retval.m_container.clear();
 			}
 			mean /= ntrials;
 			// NOTE: heuristic from experiments.
