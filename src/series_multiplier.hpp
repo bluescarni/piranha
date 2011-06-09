@@ -114,7 +114,22 @@ class series_multiplier
 			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
 			std::back_insert_iterator<decltype(v2)> bii2(v2);
 			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
-			return mult_impl(&v1[0],v1.size(),&v2[0],v2.size(),ed);
+			typename term_type1::multiplication_result_type tmp;
+			return_type retval;
+			const auto size1 = v1.size(), size2 = v2.size();
+			if (size1 > 2000u && size2 > 2000u) {
+				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
+				// of the estimate. In such a case, just ignore the rehashing and proceed.
+				try {
+					retval.m_container.rehash(estimate_size(&v1[0u],size1,&v2[0u],size2,ed));
+				} catch (...) {}
+			}
+			const auto f = [&v1,&v2,&tmp,&ed,&retval](const decltype(v1.size()) &i, const decltype(v1.size()) &j) -> void {
+				(v1[i])->multiply(tmp,*(v2[j]),ed);
+				series_multiplier::insert_impl(retval,tmp,ed);
+			};
+			blocked_multiplication(f,decltype(v1.size())(0u),size1,decltype(v2.size())(0u),size2);
+			return retval;
 		}
 	private:
 		template <typename Size, typename Term>
@@ -148,59 +163,49 @@ class series_multiplier
 			const integer M = (mean * mean * 4) / 3;
 			return static_cast<decltype(std::declval<return_type>().m_container.bucket_count())>(M);
 		}
-		template <typename Size, typename Term>
-		static return_type mult_impl(const term_type1 **t1, const Size &size1, const term_type2 **t2, const Size &size2, const echelon_descriptor<Term> &ed)
+		template <typename Functor, typename Size>
+		static void blocked_multiplication(const Functor &f, const Size &start1, const Size &size1,
+			const Size &start2, const Size &size2)
 		{
-			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
-			return_type retval;
-			if (size1 > 2000u && size2 > 2000u) {
-				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
-				// of the estimate. In such a case, just ignore the rehashing and proceed.
-				try {
-					retval.m_container.rehash(estimate_size(t1,size1,t2,size2,ed));
-				} catch (...) {}
-			}
-			typename term_type1::multiplication_result_type tmp;
 			// NOTE: hard-coded block size of 256.
+			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
 			const Size bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
+			// Start and end of last (possibly irregular) blocks.
+			const Size i_ir_start = start1 + nblocks1 * bsize1, i_ir_end = start1 + size1;
+			const Size j_ir_start = start2 + nblocks2 * bsize2, j_ir_end = start2 + size2;
 			for (Size n1 = 0u; n1 < nblocks1; ++n1) {
-				const Size i_start = n1 * bsize1, i_end = i_start + bsize1;
+				const Size i_start = start1 + n1 * bsize1, i_end = i_start + bsize1;
 				// regulars1 * regulars2
 				for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-					const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
+					const Size j_start = start2 + n2 * bsize2, j_end = j_start + bsize2;
 					for (Size i = i_start; i < i_end; ++i) {
 						for (Size j = j_start; j < j_end; ++j) {
-							(t1[i])->multiply(tmp,*(t2[j]),ed);
-							insert_impl(retval,tmp,ed);
+							f(i,j);
 						}
 					}
 				}
 				// regulars1 * rem2
 				for (Size i = i_start; i < i_end; ++i) {
-					for (Size j = nblocks2 * bsize2; j < size2; ++j) {
-						(t1[i])->multiply(tmp,*(t2[j]),ed);
-						insert_impl(retval,tmp,ed);
+					for (Size j = j_ir_start; j < j_ir_end; ++j) {
+						f(i,j);
 					}
 				}
 			}
 			// rem1 * regulars2
 			for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-				const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
-				for (Size i = nblocks1 * bsize1; i < size1; ++i) {
+				const Size j_start = start2 + n2 * bsize2, j_end = j_start + bsize2;
+				for (Size i = i_ir_start; i < i_ir_end; ++i) {
 					for (Size j = j_start; j < j_end; ++j) {
-						(t1[i])->multiply(tmp,*(t2[j]),ed);
-						insert_impl(retval,tmp,ed);
+						f(i,j);
 					}
 				}
 			}
 			// rem1 * rem2.
-			for (Size i = nblocks1 * bsize1; i < size1; ++i) {
-				for (Size j = nblocks2 * bsize2; j < size2; ++j) {
-					(t1[i])->multiply(tmp,*(t2[j]),ed);
-					insert_impl(retval,tmp,ed);
+			for (Size i = i_ir_start; i < i_ir_end; ++i) {
+				for (Size j = j_ir_start; j < j_ir_end; ++j) {
+					f(i,j);
 				}
 			}
-			return retval;
 		}
 		template <typename Tuple, std::size_t N = 0, typename Enable2 = void>
 		struct inserter
