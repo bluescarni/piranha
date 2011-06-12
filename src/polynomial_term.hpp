@@ -113,7 +113,9 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		 * - the <tt>multiply()</tt> method of \p Cf,
 		 * - the in-place addition operator of \p ExpoType.
 		 * 
-		 * \todo use of multiply(): which is the better strategy? In-place or not? Move or not (this is a question for series_multiplier)?
+		 * \todo use of multiply(): specify that depending on whether one of the coefficients is a series or not,
+		 * multiply_by() might be used?
+		 * \todo which is the better strategy? In-place or not? Move or not (this is a question for series_multiplier)?
 		 */
 		template <typename Cf2, typename ExpoType2, typename Term>
 		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
