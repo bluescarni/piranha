@@ -30,6 +30,7 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <stdexcept>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -601,18 +602,33 @@ class hash_set
 		 * @throws unspecified any exception thrown by:
 		 * - hash_set::key_type's copy constructor,
 		 * - _find().
+		 * @throws std::overflow_error if a successful insertion would result in size() exceeding the maximum
+		 * value representable by type piranha::hash_set::size_type.
 		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
 		 * maximum number of buckets.
 		 */
 		template <typename U>
 		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(!m_container.size() || (static_cast<double>(m_n_elements) + 1.) / m_container.size() > get_max_load_factor())) {
-				increase_size();
+			// Handle the case of a table with no buckets.
+			if (unlikely(!bucket_count())) {
+				_increase_size();
 			}
-			const auto bucket_idx = _bucket(k), it = _find(k,bucket_idx);
+			// Try to locate the element.
+			auto bucket_idx = _bucket(k);
+			const auto it = _find(k,bucket_idx);
 			if (it != end()) {
+				// Item already present, exit.
 				return std::make_pair(it,false);
+			}
+			if (unlikely(m_n_elements == boost::integer_traits<size_type>::const_max)) {
+				piranha_throw(std::overflow_error,"maximum number of elements reached");
+			}
+			// Item is new. Handle the case in which we need to rehash because of load factor.
+			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / bucket_count() > get_max_load_factor())) {
+				_increase_size();
+				// We need a new bucket index in case of a rehash.
+				bucket_idx = _bucket(k);
 			}
 			const auto it_retval = _unique_insert(std::forward<U>(k),bucket_idx);
 			++m_n_elements;
@@ -876,6 +892,35 @@ class hash_set
 			piranha_assert(m_container.size());
 			return m_hasher(k) % m_container.size();
 		}
+		/// Force update of the number of elements.
+		/**
+		 * After this call, size() will return \p new_size regardless of the true number of elements in the table.
+		 * 
+		 * @param[in] new_size new table size.
+		 */
+		void _update_size(const size_type &new_size)
+		{
+			m_n_elements = new_size;
+		}
+		/// Increase bucket count.
+		/**
+		 * Increase the number of buckets to the next implementation-defined value.
+		 * 
+		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
+		 * maximum number of buckets.
+		 * @throws unspecified any exception thrown by rehash().
+		 */
+		void _increase_size()
+		{
+// std::cout << "lol increase\n";
+			auto cur_size_index = get_size_index();
+			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
+				throw std::bad_alloc();
+			}
+			++cur_size_index;
+			// Rehash to the new size.
+			rehash(table_sizes[cur_size_index]);
+		}
 		//@}
 	private:
 		// Run a consistency check on the table, will return false if something is wrong.
@@ -912,17 +957,6 @@ class hash_set
 #endif
 		typedef std::array<size_type,n_available_sizes> table_sizes_type;
 		static const table_sizes_type table_sizes;
-		// Increase table size at least to the next available size.
-		void increase_size()
-		{
-			auto cur_size_index = get_size_index();
-			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
-				throw std::bad_alloc();
-			}
-			++cur_size_index;
-			// Rehash to the new size.
-			rehash(table_sizes[cur_size_index]);
-		}
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
 		{

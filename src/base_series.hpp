@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/concept/assert.hpp>
+#include <boost/integer_traits.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
@@ -77,8 +78,6 @@ class series_binary_operators;
  * \section move_semantics Move semantics
  * 
  * Move semantics is equivalent to piranha::hash_set's move semantics.
- * 
- * \todo improve performance in insertion: avoid calculating hash value multiple times, use low-level methods of hash_set
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -169,33 +168,52 @@ class base_series: detail::base_series_tag
 			std::is_same<typename strip_cv_ref<T>::type,term_type>::value
 			>::type * = piranha_nullptr)
 		{
-			// Try to locate the term.
-			const auto it = m_container.find(term);
+			// NOTE: here we are basically going to reconstruct hash_set::insert() with the goal
+			// of optimising things by avoiding one branch.
+			// Handle the case of a table with no buckets.
+			if (unlikely(!m_container.bucket_count())) {
+				m_container._increase_size();
+			}
+			// Try to locate the element.
+			auto bucket_idx = m_container._bucket(term);
+			const auto it = m_container._find(term,bucket_idx);
 			if (it == m_container.end()) {
-				// This is a new term, insert it.
-				const auto result = m_container.insert(std::forward<T>(term));
-				piranha_assert(result.second);
-				// Change sign if requested.
+				if (unlikely(m_container.size() == boost::integer_traits<size_type>::const_max)) {
+					piranha_throw(std::overflow_error,"maximum number of elements reached");
+				}
+				// Term is new. Handle the case in which we need to rehash because of load factor.
+				if (unlikely(static_cast<double>(m_container.size() + size_type(1u)) / m_container.bucket_count() >
+					m_container.get_max_load_factor()))
+				{
+					m_container._increase_size();
+					// We need a new bucket index in case of a rehash.
+					bucket_idx = m_container._bucket(term);
+				}
+				const auto new_it = m_container._unique_insert(std::forward<T>(term),bucket_idx);
+				m_container._update_size(m_container.size() + 1u);
+				// Insertion was successful, change sign if requested.
 				if (!Sign) {
 					// Cleanup function.
 					auto cleanup = [&]() -> void {
 						// Negation is a mutating operation. We have to check again for compatibility
 						// and ignorability.
-						if (unlikely(!result.first->is_compatible(ed) || result.first->is_ignorable(ed))) {
-							this->m_container.erase(result.first);
+						if (unlikely(!new_it->is_compatible(ed) || new_it->is_ignorable(ed))) {
+							this->m_container.erase(new_it);
 						}
 					};
 					try {
-						result.first->m_cf.negate(ed);
+						new_it->m_cf.negate(ed);
 						cleanup();
 					} catch (...) {
+						// Run the cleanup function also in case of exceptions, as we do not know
+						// in which state the modified term is.
 						cleanup();
 						throw;
 					}
 				}
 			} else {
-				// Assert the existing term is not ignorable.
-				piranha_assert(!it->is_ignorable(ed));
+				// Assert the existing term is not ignorable and it is compatible.
+				piranha_assert(!it->is_ignorable(ed) && it->is_compatible(ed));
 				// Cleanup function.
 				auto cleanup = [&]() -> void {
 					if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
