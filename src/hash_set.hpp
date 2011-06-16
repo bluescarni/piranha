@@ -822,7 +822,8 @@ class hash_set
 		 * of bucket() before the insertion.
 		 * 
 		 * This method will not check if a key equivalent to \p k already exists in the table, it will not
-		 * update the number of elements present in the table after the insertion, nor it will check
+		 * update the number of elements present in the table after the insertion, it will not resize
+		 * the table in case the maximum load factor is exceeded, nor it will check
 		 * if the value of \p bucket_idx is correct.
 		 * 
 		 * @param[in] k object that will be inserted into the table.
