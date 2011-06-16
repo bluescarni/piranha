@@ -53,6 +53,8 @@ class thread_management
 		 * 
 		 * \todo make more exception safe in ctor/dtor: if *anything* fails on construction, init with (0,false). In dtor, check
 		 * for (0,false) before doing anything. This way potential problems with mutexes throwing are avoided.
+		 * \todo different binding strategies depending on the topology of the multicore architecture? E.g., avoid hyperthreading
+		 * cores, distribute among different processores according to cache memory hierarchies, etc.
 		 */
 		class binder
 		{
