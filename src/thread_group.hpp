@@ -67,7 +67,7 @@ class thread_group
 		 * @param[in] f functor used as argument for thread creation.
 		 * @param[in] params parameters to be passed to the functor upon invocation.
 		 * 
-		 * @throws std::bad_alloc if storage allocation for the new thread fails.
+		 * @throws std::bad_alloc if storage allocation for the new thread object fails.
 		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 * @throws unspecified any exception thrown by copying the functor or its arguments into the
 		 * thread's internal storage.
