@@ -25,11 +25,15 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <cmath>
 #include <cstddef>
 #include <iterator>
 #include <list>
+#include <new> // For bad_alloc.
+#include <numeric>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "concepts/multipliable_term.hpp"
@@ -37,11 +41,13 @@
 #include "config.hpp"
 #include "echelon_descriptor.hpp"
 #include "echelon_size.hpp"
+#include "exceptions.hpp"
 #include "integer.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
@@ -102,6 +108,7 @@ class series_multiplier
 		 * @return the result of multiplying the two series used for construction.
 		 * 
 		 * @throws unspecified any exception thrown by:
+		 * - \p boost::numeric_cast (in case of over/underflow errors converting from one integer type to another),
 		 * - memory allocation errors in standard containers,
 		 * - piranha::base_series::insert(),
 		 * - the <tt>multiply()</tt> method of the term type of \p Series1.
@@ -147,7 +154,7 @@ class series_multiplier
 			if (n_threads > size1) {
 				n_threads = size1;
 			}
-// std::cout << "using " << n_threads << " threads\n";
+std::cout << "using " << n_threads << " threads\n";
 			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
@@ -157,9 +164,16 @@ class series_multiplier
 				return retval;
 			} else {
 // boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
+				// Tools to handle exceptions thrown in the threads.
+				std::vector<exception_ptr> exceptions;
+				exceptions.reserve(n_threads);
+				if (exceptions.capacity() != n_threads) {
+					throw std::bad_alloc();
+				}
+				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
-				std::list<return_type/*,align_allocator<return_type,64u>*/> retval_list;
-				std::list<functor<Term>/*,align_allocator<functor<Term>,64u>*/> functor_list;
+				std::list<return_type> retval_list;
+				std::list<functor<Term>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					retval_list.push_back(return_type{});
@@ -175,20 +189,35 @@ class series_multiplier
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					// Functor for use in the thread.
-					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&c,&m,&cur_n]() -> void {
-						thread_management::binder binder;
-						const auto tmp_i = i;
-						series_multiplier::rehasher(*f_it,*r_it,s1,size2,&c,&m,&cur_n,&tmp_i);
-						series_multiplier::blocked_multiplication(*f_it,
-							i * block_size,s1,size_type(0u),size2);
+					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&c,&m,&cur_n,&exceptions,&exceptions_mutex]() -> void {
+						try {
+							const auto tmp_i = i;
+							thread_management::binder binder;
+							series_multiplier::rehasher(*f_it,*r_it,s1,size2,&c,&m,&cur_n,&tmp_i);
+// std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
+							series_multiplier::blocked_multiplication(*f_it,
+								i * block_size,s1,size_type(0u),size2);
 // std::cout << "final series size: " << f_it->m_retval.size() << '\n';
+						} catch (...) {
+							lock_guard<mutex>::type lock(exceptions_mutex);
+							exceptions.push_back(current_exception());
+						}
 					};
 					tg.create_thread(f);
 				}
 				tg.join_all();
+				if (unlikely(exceptions.size())) {
+					// Re-throw the first exception found.
+					piranha::rethrow_exception(exceptions[0u]);
+				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				const auto final_estimate = esitmate_final_series_size(functor<Term>(v1,v2,ed,retval),size1,size2,retval);
+				auto final_estimate = esitmate_final_series_size(functor<Term>(v1,v2,ed,retval),size1,size2,retval);
+				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
+				// methods in hash_set.
+				if (unlikely(!final_estimate)) {
+					final_estimate = 1u;
+				}
 // std::cout << "Final estimate: " <<  final_estimate << '\n';
 				// Try to see if a series already has enough buckets.
 				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {return r.m_container.bucket_count() >= final_estimate;});
@@ -196,16 +225,163 @@ class series_multiplier
 // std::cout << "Found candidate series for final summation\n";
 					retval = std::move(*it);
 					retval_list.erase(it);
+				} else {
+					// Otherwise, just rehash to the desired value.
+					retval.m_container.rehash(final_estimate);
+// std::cout << "After final estimate: " << retval.m_container.bucket_count() << '\n';
 				}
 // time0 = boost::posix_time::microsec_clock::local_time();
-				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
-					retval.template merge_terms<true>(std::move(*r_it),ed);
+				// Cleanup functor that will erase all elements in retval_list.
+				auto cleanup = [&retval_list]() -> void {
+					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) -> void {r.m_container.clear();});
+				};
+				try {
+					final_merge(retval,retval_list,n_threads,ed);
+				} catch (...) {
+					// Do the cleanup before re-throwing, as we use mutable iterators in final_merge.
+					cleanup();
+					// Clear also retval: it could have bogus number of elements if errors arise in the final merge.
+					retval.m_container.clear();
+					throw;
 				}
 // std::cout << "Elapsed time for summation: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
+				// Clean up the temporary series.
+				cleanup();
 				return retval;
 			}
 		}
 	private:
+		typedef decltype(std::declval<return_type>().m_container.bucket_count()) bucket_size_type;
+		template <typename RetvalList, typename Size, typename Term>
+		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads, const echelon_descriptor<Term> &ed)
+		{
+			piranha_assert(n_threads > 1u);
+			piranha_assert(retval.m_container.bucket_count());
+			// Misc for exception handling.
+			mutex e_mutex;
+			std::vector<exception_ptr> e_vector;
+			// We never need more capacity than the number of threads.
+			e_vector.reserve(n_threads);
+			if (unlikely(e_vector.capacity() != n_threads)) {
+				throw std::bad_alloc();
+			}
+			typedef typename std::vector<std::pair<bucket_size_type,decltype(retval.m_container._m_begin())>> container_type;
+			typedef typename container_type::size_type size_type;
+			// First, let's fill a vector assigning each term of each element in retval_list to a bucket in retval.
+			const size_type size = static_cast<size_type>(
+				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const return_type &r) {return n + r.size();}));
+			container_type idx(size);
+			thread_group tg1;
+			size_type i = 0u;
+			piranha_assert(retval_list.size() <= n_threads);
+			for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
+				auto f = [&idx,&retval,&e_mutex,&e_vector,i,r_it]() -> void {
+					try {
+						thread_management::binder b;
+						const auto it_f = r_it->m_container._m_end();
+						auto tmp_i = i;
+						for (auto it = r_it->m_container._m_begin(); it != it_f; ++it, ++tmp_i) {
+							piranha_assert(tmp_i < idx.size());
+							idx[tmp_i] = std::make_pair(retval.m_container._bucket(*it),it);
+						}
+					} catch (...) {
+						lock_guard<mutex>::type lock(e_mutex);
+						e_vector.push_back(current_exception());
+					}
+				};
+				tg1.create_thread(f);
+				i += r_it->size();
+			}
+			tg1.join_all();
+			if (unlikely(e_vector.size())) {
+				piranha::rethrow_exception(e_vector[0u]);
+			}
+			// Reset exception vector.
+			e_vector.clear();
+			e_vector.reserve(n_threads);
+			if (unlikely(e_vector.capacity() != n_threads)) {
+				throw std::bad_alloc();
+			}
+			thread_group tg2;
+			mutex m;
+			std::vector<integer> new_sizes;
+			new_sizes.reserve(n_threads);
+			if (unlikely(new_sizes.capacity() != n_threads)) {
+				throw std::bad_alloc();
+			}
+			// Vector of terms for which insertion failed.
+			const bucket_size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
+			for (Size n = 0u; n < n_threads; ++n) {
+				// The are the bucket indices allowed to the current thread.
+				const bucket_size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
+				auto f = [start,end,&size,&retval,&ed,&idx,&m,&new_sizes,&e_mutex,&e_vector]() -> void {
+					try {
+						thread_management::binder b;
+						size_type count_plus = 0u, count_minus = 0u;
+						for (size_type i = 0u; i < size; ++i) {
+							const auto &bucket_idx = idx[i].first;
+							auto &term_it = idx[i].second;
+							if (bucket_idx >= start && bucket_idx < end) {
+								// Reconstruct part of base_series insertion, without the update in the number of elements.
+								// NOTE: compatibility and ignorability do not matter, as terms being inserted come from base_series
+								// anyway. Same for check on bucket_count.
+								const auto it = retval.m_container._find(*term_it,bucket_idx);
+								if (it == retval.m_container.end()) {
+									// Term is new.
+									retval.m_container._unique_insert(std::move(*term_it),bucket_idx);
+									// Update term count.
+									piranha_assert(count_plus < boost::integer_traits<size_type>::const_max);
+									++count_plus;
+								} else {
+									// Assert the existing term is not ignorable and it is compatible.
+									piranha_assert(!it->is_ignorable(ed) && it->is_compatible(ed));
+									// Cleanup function.
+									auto cleanup = [&]() -> void {
+										if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
+											retval.m_container._erase(it);
+											// After term is erased, update count.
+											piranha_assert(count_minus < boost::integer_traits<size_type>::const_max);
+											++count_minus;
+										}
+									};
+									try {
+										// The term exists already, update it.
+										retval.template insertion_cf_arithmetics<true>(it,std::move(*term_it),ed);
+										// Check if the term has become ignorable or incompatible after the modification.
+										cleanup();
+									} catch (...) {
+										cleanup();
+										throw;
+									}
+								}
+							}
+						}
+						// Store the new size.
+						lock_guard<mutex>::type lock(m);
+						new_sizes.push_back(integer(count_plus) - integer(count_minus));
+					} catch (...) {
+						lock_guard<mutex>::type lock(e_mutex);
+						e_vector.push_back(current_exception());
+					}
+				};
+				tg2.create_thread(f);
+			}
+			tg2.join_all();
+			if (unlikely(e_vector.size())) {
+				piranha::rethrow_exception(e_vector[0u]);
+			}
+			// Final update of retval's size.
+			const auto new_size = std::accumulate(new_sizes.begin(),new_sizes.end(),integer(0));
+std::cout << "new size is " << new_size << '\n';
+			piranha_assert(new_size + retval.m_container.size() >= 0);
+			retval.m_container._update_size(static_cast<decltype(retval.m_container.size())>(new_size + retval.m_container.size()));
+			// Take care of rehashing, if needed.
+			if (unlikely(retval.m_container.load_factor() > retval.m_container.get_max_load_factor())) {
+				retval.m_container.rehash(
+					static_cast<bucket_size_type>(integer(std::ceil(retval.size() / retval.m_container.get_max_load_factor())))
+				);
+			}
+		}
 		template <typename Term>
 		struct functor
 		{
@@ -235,7 +411,10 @@ class series_multiplier
 		{
 			piranha_assert((c && m && cur_n && n) || (!c && !m && !cur_n && !n));
 			// NOTE: hard-coded value of 100 for minimum size of input series.
-			if (s1 > 100u && s2 > 100u) {
+			// NOTE: always do the analysis in multi-thread mode, otherwise
+			// the condition variable will wait on threads that might never get there (when
+			// the subdivision of work produces one block of size > 100, and all the other smaller).
+			if (c || (s1 > 100u && s2 > 100u)) {
 				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
 				// of the estimate or in rehashing. In such a case, just ignore the rehashing, clean
 				// up retval just to be sure, and proceed.
@@ -247,7 +426,6 @@ class series_multiplier
 				}
 			}
 		}
-		typedef decltype(std::declval<return_type>().m_container.bucket_count()) bucket_size_type;
 		template <typename Functor, typename Size>
 		static bucket_size_type esitmate_final_series_size(const Functor &f, const Size &size1, const Size &size2, return_type &retval,
 			condition_variable *c = piranha_nullptr, mutex *m = piranha_nullptr, Size *cur_n = piranha_nullptr,
@@ -280,19 +458,13 @@ class series_multiplier
 				}
 			};
 			if (c) {
-				{
 				unique_lock<mutex>::type lock(*m);
 				while (*cur_n != *n) {
-// std::cout << "lals " << *cur_n << ',' << *n << '\n';
 					c->wait(lock);
-// std::cout << "wait exited " << *cur_n << ',' << *n << '\n';
 				}
-// std::cout << "bols\n";
 				randomizer();
 				++*cur_n;
-				}
 				c->notify_all();
-// std::cout << "notified\n";
 			} else {
 				randomizer();
 			}
@@ -318,8 +490,8 @@ class series_multiplier
 			}
 			mean /= ntrials;
 			// NOTE: heuristic from experiments.
-			const integer M = (mean * mean * 4) / 3;
-std::cout << "M = " << M << '\n';
+			const integer M = (mean * mean * 6) / 3;
+// std::cout << "M = " << M << '\n';
 			return static_cast<bucket_size_type>(M);
 		}
 		template <typename Functor, typename Size>
