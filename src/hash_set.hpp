@@ -47,7 +47,19 @@ namespace piranha
 
 /// Hash set.
 /**
- * Hash set class with interface similar to \p std::unordered_set.
+ * Hash set class with interface similar to \p std::unordered_set. The main points of difference with respect to
+ * \p std::unordered_set are the following:
+ * 
+ * - the exception safety guarantee is weaker (see below),
+ * - iterators and iterator invalidation: after a rehash operation, all iterators will be invalidated and existing
+ *   references/pointers to the elements will also be invalid; after an insertion/erase operation, all existing iterators, pointers
+ *   and references to the elements in the destination bucket will be invalid.
+ * 
+ * The implementation employs a separate chaining strategy consisting of an array of buckets, each one a singly linked list with the first node
+ * stored directly within the array (so that the first insertion in a bucket does not require any heap allocation).
+ * 
+ * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and multi-threaded contexts,
+ * and, if misused, could lead to data corruption and other unpredictable errors.
  * 
  * \section type_requirements Type requirements
  * 
@@ -338,6 +350,11 @@ class hash_set
 		 * Equivalent to the iterator type.
 		 */
 		typedef iterator const_iterator;
+		/// Local iterator.
+		/**
+		 * Const iterator that can be used to iterate through a single bucket.
+		 */
+		typedef typename list::const_iterator local_iterator;
 		/// Default constructor.
 		/**
 		 * If not specified, it will default-initialise the hasher and the equality predicate.
@@ -491,7 +508,7 @@ class hash_set
 		 */
 		const_iterator end() const
 		{
-			return const_iterator(this,bucket_count(),typename list::const_iterator{});
+			return const_iterator(this,bucket_count(),local_iterator{});
 		}
 		/// Begin iterator.
 		/**
@@ -651,6 +668,8 @@ class hash_set
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
 		 * 
+		 * After the operation has taken place, the size() of the table will be decreased by one.
+		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
 		 * 
 		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
@@ -658,67 +677,26 @@ class hash_set
 		 */
 		iterator erase(const iterator &it)
 		{
-			// Verify the iterator is valid.
-			piranha_assert(!empty() && it.m_set == this && it.m_idx < m_container.size() &&
-				!m_container[it.m_idx].empty() && it.m_it.m_ptr != m_container[it.m_idx].end().m_ptr);
-			auto &bucket = m_container[it.m_idx];
+			piranha_assert(!empty());
+			const auto b_it = _erase(it);
 			iterator retval;
 			retval.m_set = this;
-			// If the pointed-to element is the first one in the bucket, we need special care.
-			if (&*it == &*bucket.m_node.ptr()) {
-				// Destroy the payload.
-				bucket.m_node.ptr()->~T();
-				if (bucket.m_node.m_next == &bucket.terminator) {
-					// Special handling if this was the only element.
-					bucket.m_node.m_next = piranha_nullptr;
-					// Go to the next valid iterator, or end().
-					size_type idx = it.m_idx + 1u;
-					for (; idx < m_container.size(); ++idx) {
-						if (!m_container[idx].empty()) {
-							break;
-						}
+			// Travel to the next iterator if necessary.
+			if (b_it == m_container[it.m_idx].end()) {
+				size_type idx = it.m_idx + 1u;
+				for (; idx < bucket_count(); ++idx) {
+					if (!m_container[idx].empty()) {
+						break;
 					}
-					retval.m_idx = idx;
-					// If we are not at the end, assign proper iterator.
-					if (idx != m_container.size()) {
-						retval.m_it.m_ptr = m_container[idx].begin().m_ptr;
-					}
-				} else {
-					// Store the link in the second element.
-					auto tmp = bucket.m_node.m_next->m_next;
-					// Move-construct from the second element, and then destroy it.
-					::new ((void *)&bucket.m_node.m_storage) T(std::move(*bucket.m_node.m_next->ptr()));
-					bucket.m_node.m_next->ptr()->~T();
-					::delete bucket.m_node.m_next;
-					// Establish the new link.
-					bucket.m_node.m_next = tmp;
-					// Setup return value.
-					retval.m_idx = it.m_idx;
-					retval.m_it.m_ptr = bucket.begin().m_ptr;
+				}
+				retval.m_idx = idx;
+				// If we are not at the end, assign proper iterator.
+				if (idx != bucket_count()) {
+					retval.m_it = m_container[idx].begin();
 				}
 			} else {
-				auto b_it = bucket.begin();
-				auto prev_b_it = b_it;
-				const auto b_it_f = bucket.end();
-				++b_it;
-				for (; b_it != b_it_f; ++b_it, ++prev_b_it) {
-					if (&*b_it == &*it) {
-						// Assign to the previous element the next link of the current one.
-						prev_b_it.m_ptr->m_next = b_it.m_ptr->m_next;
-						// Delete the current one.
-						b_it.m_ptr->ptr()->~T();
-						::delete b_it.m_ptr;
-						break;
-					};
-				}
-				// We never want to go throught the whole list, it means the element
-				// to which 'it' refers is not here.
-				piranha_assert(b_it != b_it_f);
-				// Now the previous bucket iterator contains the link to the element past the erased one:
-				// just increase it.
 				retval.m_idx = it.m_idx;
-				retval.m_it.m_ptr = prev_b_it.m_ptr;
-				++retval;
+				retval.m_it = b_it;
 			}
 			piranha_assert(m_n_elements);
 			--m_n_elements;
@@ -853,7 +831,7 @@ class hash_set
 			// Assert bucket index is correct.
 			piranha_assert(bucket_idx == _bucket(k));
 			auto ptr = m_container[bucket_idx].insert(std::forward<U>(k));
-			return iterator(this,bucket_idx,typename list::const_iterator(ptr));
+			return iterator(this,bucket_idx,local_iterator(ptr));
 		}
 		/// Find element (low-level).
 		/**
@@ -930,6 +908,79 @@ class hash_set
 			++cur_size_index;
 			// Rehash to the new size.
 			rehash(table_sizes[cur_size_index]);
+		}
+		/// Erase element.
+		/**
+		 * Erase the element to which \p it points. \p it must be a valid iterator
+		 * pointing to an element of the table.
+		 * 
+		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
+		 * as the erased element.
+		 * 
+		 * This method will not update the number of elements in the table.
+		 * 
+		 * @param[in] it iterator to the element of the table to be removed.
+		 * 
+		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
+		 * no such element exists.
+		 */
+		local_iterator _erase(const iterator &it)
+		{
+			// Verify the iterator is valid.
+			piranha_assert(it.m_set == this);
+			piranha_assert(it.m_idx < bucket_count());
+			piranha_assert(!m_container[it.m_idx].empty());
+			piranha_assert(it.m_it != m_container[it.m_idx].end());
+			auto &bucket = m_container[it.m_idx];
+			// If the pointed-to element is the first one in the bucket, we need special care.
+			if (&*it == &*bucket.m_node.ptr()) {
+				// Destroy the payload.
+				bucket.m_node.ptr()->~T();
+				if (bucket.m_node.m_next == &bucket.terminator) {
+					// Special handling if this was the only element.
+					bucket.m_node.m_next = piranha_nullptr;
+					return bucket.end();
+				} else {
+					// Store the link in the second element.
+					auto tmp = bucket.m_node.m_next->m_next;
+					// Move-construct from the second element, and then destroy it.
+					::new ((void *)&bucket.m_node.m_storage) T(std::move(*bucket.m_node.m_next->ptr()));
+					bucket.m_node.m_next->ptr()->~T();
+					::delete bucket.m_node.m_next;
+					// Establish the new link.
+					bucket.m_node.m_next = tmp;
+					return bucket.begin();
+				}
+			} else {
+				auto b_it = bucket.begin();
+				auto prev_b_it = b_it;
+				const auto b_it_f = bucket.end();
+				++b_it;
+				for (; b_it != b_it_f; ++b_it, ++prev_b_it) {
+					if (&*b_it == &*it) {
+						// Assign to the previous element the next link of the current one.
+						prev_b_it.m_ptr->m_next = b_it.m_ptr->m_next;
+						// Delete the current one.
+						b_it.m_ptr->ptr()->~T();
+						::delete b_it.m_ptr;
+						break;
+					};
+				}
+				// We never want to go through the whole list, it means the element
+				// to which 'it' refers is not here: assert that the iterator we just
+				// erased was not end() - i.e., it was pointing to something.
+				piranha_assert(b_it.m_ptr);
+				// See if the erased iterator was the last one of the list.
+				const auto tmp = prev_b_it;
+				++prev_b_it;
+				if (prev_b_it == b_it_f) {
+					// Iterator is the last one, return local end().
+					return b_it_f;
+				} else {
+					// Iterator is not the last one, return it.
+					return tmp;
+				}
+			}
 		}
 		//@}
 	private:
