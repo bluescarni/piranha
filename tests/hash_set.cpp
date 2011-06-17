@@ -438,11 +438,22 @@ struct rehash_tester
 		h.rehash(0u);
 		BOOST_CHECK(h.bucket_count() == 0u);
 		h = make_hash_set<T>();
-		const auto old = h.bucket_count();
+		auto old = h.bucket_count();
 		h.rehash(old * 2u);
 		BOOST_CHECK(h.bucket_count() >= old * 2u);
 		h.rehash(old);
 		BOOST_CHECK(h.bucket_count() >= old);
+		h = make_hash_set<T>();
+		old = h.bucket_count();
+		h.rehash(0u);
+		BOOST_CHECK(old == h.bucket_count());
+		h = hash_set<T>(100u);
+		h.rehash(0u);
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h = make_hash_set<T>();
+		old = h.bucket_count();
+		h.rehash(1000u);
+		BOOST_CHECK(h.bucket_count() == old);
 	}
 };
 
