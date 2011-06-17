@@ -47,7 +47,6 @@ namespace piranha
 
 /// Hash set.
 /**
- * 
  * Hash set class with interface similar to \p std::unordered_set.
  * 
  * \section type_requirements Type requirements
@@ -71,7 +70,6 @@ namespace piranha
  * \todo concept assert for hash and pred. Require non-throwing swap, comparison and hashing operators and modify docs accordingly.
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
- * \todo investigate guarding of size() against overflows (implement and evaluate cost)
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
@@ -87,10 +85,12 @@ class hash_set
 			node():m_storage(),m_next(piranha_nullptr) {}
 			const T *ptr() const
 			{
+				piranha_assert(m_next);
 				return static_cast<const T *>(static_cast<const void *>(&m_storage));
 			}
 			T *ptr()
 			{
+				piranha_assert(m_next);
 				return static_cast<T *>(static_cast<void *>(&m_storage));
 			}
 			storage_type	m_storage;
@@ -103,9 +103,17 @@ class hash_set
 			class iterator_impl: public boost::iterator_facade<iterator_impl<U>,U,boost::forward_traversal_tag>
 			{
 					typedef typename std::conditional<std::is_const<U>::value,node const *,node *>::type ptr_type;
+					template <typename V>
+					friend class iterator_impl;
 				public:
 					iterator_impl():m_ptr(piranha_nullptr) {}
 					explicit iterator_impl(ptr_type ptr):m_ptr(ptr) {}
+					// Constructor from other iterator type.
+					template <typename V>
+					iterator_impl(const iterator_impl<V> &other,
+						typename std::enable_if<std::is_convertible<typename iterator_impl<V>::ptr_type,ptr_type>::value>::type * = piranha_nullptr):
+						m_ptr(other.m_ptr)
+					{}
 				private:
 					friend class boost::iterator_core_access;
 					void increment()
@@ -113,7 +121,8 @@ class hash_set
 						piranha_assert(m_ptr && m_ptr->m_next);
 						m_ptr = m_ptr->m_next;
 					}
-					bool equal(const iterator_impl &other) const
+					template <typename V>
+					bool equal(const iterator_impl<V> &other) const
 					{
 						return m_ptr == other.m_ptr;
 					}
@@ -312,7 +321,7 @@ class hash_set
 				}
 				Key &dereference() const
 				{
-					piranha_assert(m_set && m_idx < m_set->m_container.size() &&
+					piranha_assert(m_set && m_idx < m_set->bucket_count() &&
 						m_it != m_set->m_container[m_idx].end());
 					return *m_it;
 				}
@@ -368,8 +377,8 @@ class hash_set
 		hash_set(hash_set &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container)),m_hasher(std::move(other.m_hasher)),
 			m_key_equal(std::move(other.m_key_equal)),m_n_elements(std::move(other.m_n_elements))
 		{
-			// Mark the other as empty, as other's vector will be empty.
-			other.m_n_elements = 0u;
+			// Clear the other.
+			other.clear();
 		}
 		/// Constructor from range.
 		/**
@@ -449,7 +458,7 @@ class hash_set
 				m_n_elements = std::move(other.m_n_elements);
 				m_container = std::move(other.m_container);
 				// Zero out other.
-				other.m_n_elements = 0u;
+				other.clear();
 			}
 			return *this;
 		}
@@ -464,14 +473,14 @@ class hash_set
 			const_iterator retval;
 			retval.m_set = this;
 			size_type idx = 0u;
-			for (; idx < m_container.size(); ++idx) {
+			for (; idx < bucket_count(); ++idx) {
 				if (!m_container[idx].empty()) {
 					break;
 				}
 			}
 			retval.m_idx = idx;
 			// If we are not at the end, assign proper iterator.
-			if (idx != m_container.size()) {
+			if (idx != bucket_count()) {
 				retval.m_it = m_container[idx].begin();
 			}
 			return retval;
@@ -482,7 +491,7 @@ class hash_set
 		 */
 		const_iterator end() const
 		{
-			return const_iterator(this,m_container.size(),typename list::const_iterator{});
+			return const_iterator(this,bucket_count(),typename list::const_iterator{});
 		}
 		/// Begin iterator.
 		/**
@@ -526,12 +535,12 @@ class hash_set
 		}
 		/// Load factor.
 		/**
-		 * @return <tt>size() / bucket_count()</tt>, or 0 if the table is empty.
+		 * @return <tt>(double)size() / bucket_count()</tt>, or 0 if the table is empty.
 		 */
 		double load_factor() const
 		{
 
-			return (m_container.size()) ? static_cast<double>(m_n_elements) / m_container.size() : 0.;
+			return (bucket_count()) ? static_cast<double>(size()) / bucket_count() : 0.;
 		}
 		/// Index of destination bucket.
 		/**
@@ -546,7 +555,7 @@ class hash_set
 		 */
 		size_type bucket(const key_type &k) const
 		{
-			if (unlikely(!m_container.size())) {
+			if (unlikely(!bucket_count())) {
 				piranha_throw(zero_division_error,"cannot calculate bucket index in an empty table");
 			}
 			return _bucket(k);
@@ -561,7 +570,7 @@ class hash_set
 		 */
 		const_iterator find(const key_type &k) const
 		{
-			if (unlikely(!m_container.size())) {
+			if (unlikely(!bucket_count())) {
 				return end();
 			}
 			return _find(k,_bucket(k));
@@ -794,14 +803,14 @@ class hash_set
 			_m_iterator retval;
 			retval.m_set = this;
 			size_type idx = 0u;
-			for (; idx < m_container.size(); ++idx) {
+			for (; idx < bucket_count(); ++idx) {
 				if (!m_container[idx].empty()) {
 					break;
 				}
 			}
 			retval.m_idx = idx;
 			// If we are not at the end, assign proper iterator.
-			if (idx != m_container.size()) {
+			if (idx != bucket_count()) {
 				retval.m_it = m_container[idx].begin();
 			}
 			return retval;
@@ -812,7 +821,7 @@ class hash_set
 		 */
 		_m_iterator _m_end()
 		{
-			return _m_iterator(this,m_container.size(),typename list::iterator{});
+			return _m_iterator(this,bucket_count(),typename list::iterator{});
 		}
 		/// Insert unique element (low-level).
 		/**
@@ -864,7 +873,7 @@ class hash_set
 		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
 		{
 			// Assert bucket index is correct.
-			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < m_container.size());
+			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < bucket_count());
 			const auto &b = m_container[bucket_idx];
 			const auto it_f = b.end();
 			const_iterator retval(end());
@@ -890,8 +899,8 @@ class hash_set
 		 */
 		size_type _bucket(const key_type &k) const
 		{
-			piranha_assert(m_container.size());
-			return m_hasher(k) % m_container.size();
+			piranha_assert(bucket_count());
+			return m_hasher(k) % bucket_count();
 		}
 		/// Force update of the number of elements.
 		/**
@@ -928,7 +937,7 @@ class hash_set
 		bool sanity_check() const
 		{
 			size_type count = 0u;
-			for (size_type i = 0u; i < m_container.size(); ++i) {
+			for (size_type i = 0u; i < bucket_count(); ++i) {
 				for (auto it = m_container[i].begin(); it != m_container[i].end(); ++it) {
 					if (_bucket(*it) != i) {
 						return false;
@@ -939,7 +948,7 @@ class hash_set
 			if (count != m_n_elements) {
 				return false;
 			}
-			if (m_container.size() != table_sizes[get_size_index()]) {
+			if (bucket_count() != table_sizes[get_size_index()]) {
 				return false;
 			}
 			// Check size is consistent with number of iterator traversals.
@@ -961,7 +970,7 @@ class hash_set
 		// Return the index in the table_sizes array of the current table size.
 		std::size_t get_size_index() const
 		{
-			auto range = std::equal_range(table_sizes.begin(),table_sizes.end(),m_container.size());
+			auto range = std::equal_range(table_sizes.begin(),table_sizes.end(),bucket_count());
 			// Paranoia check.
 			typedef typename std::iterator_traits<typename table_sizes_type::iterator>::difference_type difference_type;
 			static_assert(
