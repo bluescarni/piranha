@@ -22,6 +22,7 @@
 #define PIRANHA_THREAD_GROUP_HPP
 
 #include <boost/integer_traits.hpp>
+#include <memory>
 #include <new>
 #include <system_error>
 #include <vector>
@@ -40,7 +41,7 @@ namespace piranha
  */
 class thread_group
 {
-		typedef std::vector<thread> container_type;
+		typedef std::vector<std::unique_ptr<thread>> container_type;
 		typedef container_type::size_type size_type;
 	public:
 		/// Default constructor.
@@ -85,7 +86,7 @@ class thread_group
 			if (m_threads.capacity() < new_size) {
 				throw std::bad_alloc();
 			}
-			m_threads.push_back(thread(std::forward<Functor>(f),std::forward<Args>(params)...));
+			m_threads.push_back(std::unique_ptr<thread>(new thread(std::forward<Functor>(f),std::forward<Args>(params)...)));
 		}
 		void join_all();
 	private:

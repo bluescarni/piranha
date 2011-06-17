@@ -53,9 +53,9 @@ void thread_group::join_all()
 {
 	lock_guard<mutex>::type lock(m_mutex);
 	for (container_type::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-		if (it->joinable()) {
+		if ((*it)->joinable()) {
 			try {
-				it->join();
+				(*it)->join();
 			} catch (const std::system_error &se) {
 				std::cout << "thread_group::join_all() caused program abortion; error message is:\n";
 				std::cout << se.what() << '\n';
