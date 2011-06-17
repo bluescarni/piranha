@@ -611,6 +611,7 @@ class hash_set
 		double get_max_load_factor() const
 		{
 			// Maximum load factor hard-coded to 1.
+			// NOTE: if this is ever made configurable, it should never be allowed to go to zero.
 			return 1.;
 		}
 		/// Insert element.
@@ -728,7 +729,8 @@ class hash_set
 		}
 		/// Rehash table.
 		/**
-		 * Change the number of buckets in the table to at least \p new_size.
+		 * Change the number of buckets in the table to at least \p new_size. No rehash is performed
+		 * if rehashing would lead to exceeding the maximum load factor.
 		 * 
 		 * @param[in] new_size new desired number of buckets.
 		 * 
@@ -737,6 +739,17 @@ class hash_set
 		 */
 		void rehash(const size_type &new_size)
 		{
+			// If rehash is requested to zero, do something only if there are no items stored in the table.
+			if (!new_size) {
+				if (!size()) {
+					m_container = container_type();
+				}
+				return;
+			}
+			// Do nothing if rehashing to the new size would lead to exceeding the max load factor.
+			if (static_cast<double>(size()) / new_size > get_max_load_factor()) {
+				return;
+			}
 			// Create a new table with needed amount of buckets.
 			hash_set new_table(new_size,m_hasher,m_key_equal);
 			try {
@@ -1006,6 +1019,10 @@ class hash_set
 			count = 0u;
 			for (auto it = begin(); it != end(); ++it, ++count) {}
 			if (count != m_n_elements) {
+				return false;
+			}
+			// Check load factor is not exceeded.
+			if (load_factor() > get_max_load_factor()) {
 				return false;
 			}
 			return true;
