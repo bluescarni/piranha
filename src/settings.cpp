@@ -62,4 +62,16 @@ void settings::set_n_threads(unsigned n)
 	m_n_threads = n;
 }
 
+/// Reset the number of threads available for use by piranha.
+/**
+ * Will set the number of threads to the maximum between 1 and piranha::runtime_info::hardware_concurrency().
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+void settings::reset_n_threads()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+}
+
 }

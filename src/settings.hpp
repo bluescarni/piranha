@@ -38,6 +38,7 @@ class settings
 	public:
 		static unsigned get_n_threads();
 		static void set_n_threads(unsigned);
+		static void reset_n_threads();
 	private:
 		static unsigned	m_n_threads;
 		static mutex	m_mutex;
