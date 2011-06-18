@@ -23,11 +23,15 @@
 #define BOOST_TEST_MODULE series_multiplier_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/vector.hpp>
+
 #include "../src/debug_access.hpp"
 #include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
 #include "../src/numerical_coefficient.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/settings.hpp"
 #include "../src/top_level_series.hpp"
 
 using namespace piranha;
@@ -60,6 +64,8 @@ class polynomial:
 
 typedef polynomial<numerical_coefficient<double>,int> p_type1;
 typedef polynomial<numerical_coefficient<integer>,int> p_type2;
+
+typedef boost::mpl::vector<p_type1,p_type2> p_types;
 
 struct operator_tag {};
 
@@ -98,4 +104,82 @@ typedef debug_access<operator_tag> operator_tester;
 BOOST_AUTO_TEST_CASE(series_multiplier_operator_test)
 {
 	operator_tester o;
+}
+
+struct multiplication_tester
+{
+	// NOTE: this test is going to be exact in case of coefficients cancellations with double
+	// precision coefficients only if the platform has ieee 754 format (integer exactly representable
+	// as doubles up to 2 ** 53).
+	template <typename T>
+	void operator()(const T &)
+	{
+		T x("x"), y("y"), z("z"), t("t"), u("u");
+		// Dense case, default setup.
+		auto f = 1 + x + y + z + t;
+		auto tmp(f);
+		for (int i = 1; i < 10; ++i) {
+			f *= tmp;
+		}
+		auto g = f + 1;
+		auto retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),10626u);
+		// Dense case, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto retval = f * g;
+			BOOST_CHECK_EQUAL(retval.size(),10626u);
+		}
+		settings::reset_n_threads();
+		// Dense case with cancellations, default setup.
+		auto h = 1 - x + y + z + t;
+		tmp = h;
+		for (int i = 1; i < 10; ++i) {
+			h *= tmp;
+		}
+		retval = f * h;
+		BOOST_CHECK_EQUAL(retval.size(),5786u);
+		// Dense case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto retval = f * h;
+			BOOST_CHECK_EQUAL(retval.size(),5786u);
+		}
+		settings::reset_n_threads();
+		// Sparse case, default.
+		f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
+		auto tmp_f(f);
+		g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_g(g);
+		h = (-u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_h(h);
+		for (int i = 1; i < 8; ++i) {
+			f *= tmp_f;
+			g *= tmp_g;
+			h *= tmp_h;
+		}
+		retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),591235u);
+		// Sparse case, force n threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto retval = f * g;
+			BOOST_CHECK_EQUAL(retval.size(),591235u);
+		}
+		settings::reset_n_threads();
+		// Sparse case with cancellations, default.
+		retval = f * h;
+		BOOST_CHECK_EQUAL(retval.size(),591184u);
+		// Sparse case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto retval = f * h;
+			BOOST_CHECK_EQUAL(retval.size(),591184u);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_multiplier_multiplication_test)
+{
+	boost::mpl::for_each<p_types>(multiplication_tester());
 }

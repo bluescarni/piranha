@@ -80,7 +80,8 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo series multiplier concept?
- * \todo evaluate the opportunity of using std::move when inserting into retval.
+ * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
+ * means via template specialisation to customise the behaviour for different types of coefficients.
  */
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
