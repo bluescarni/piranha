@@ -340,7 +340,7 @@ class base_series: detail::base_series_tag
 		base_series() = default;
 		/// Defaulted copy constructor.
 		/**
-		 * @throw unspecified any exception thrown by the copy constructor of piranha::hash_set.
+		 * @throws unspecified any exception thrown by the copy constructor of piranha::hash_set.
 		 */
 		base_series(const base_series &) = default;
 		/// Defaulted move constructor.
@@ -352,7 +352,7 @@ class base_series: detail::base_series_tag
 		}
 		/// Defaulted copy-assignment operator.
 		/**
-		 * @throw unspecified any exception thrown by the copy assignment operator of piranha::hash_set.
+		 * @throws unspecified any exception thrown by the copy assignment operator of piranha::hash_set.
 		 * 
 		 * @return reference to \p this.
 		 */
