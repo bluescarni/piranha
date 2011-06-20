@@ -21,15 +21,39 @@
 #ifndef PIRANHA_EXCEPTIONS_HPP
 #define PIRANHA_EXCEPTIONS_HPP
 
+#include <boost/lexical_cast.hpp>
 #include <exception>
 #include <string>
 
 #include "config.hpp" // For piranha_override.
 
-#define _PIRANHA_EXCEPTION_QUOTEME(x) #x
-#define PIRANHA_EXCEPTION_QUOTEME(x) _PIRANHA_EXCEPTION_QUOTEME(x)
-#define PIRANHA_EXCEPTION_EXCTOR(s) ((std::string(__FILE__ "," PIRANHA_EXCEPTION_QUOTEME(__LINE__) ": ") + s) + ".")
-#define piranha_throw(ex,s) (throw ex(PIRANHA_EXCEPTION_EXCTOR(s)))
+namespace piranha
+{
+namespace detail
+{
+
+template <typename ExceptionType, typename N, typename String>
+void throw_impl(const char *file, N &&line, String &&desc)
+{
+	std::string msg(file);
+	msg += ",";
+	msg += boost::lexical_cast<std::string>(line);
+	msg += ": ";
+	msg += desc;
+	msg += ".";
+	throw ExceptionType(msg);
+}
+
+template <typename ExceptionType, typename N>
+void throw_impl(const char *, N &&)
+{
+	ExceptionType ex;
+	throw ex;
+}
+
+}}
+
+#define piranha_throw(exc_type,...) piranha::detail::throw_impl<exc_type>(__FILE__,__LINE__,##__VA_ARGS__);throw
 
 namespace piranha
 {
