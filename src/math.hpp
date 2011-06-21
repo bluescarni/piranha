@@ -22,6 +22,7 @@
 #define PIRANHA_MATH_HPP
 
 #include <boost/type_traits/is_complex.hpp>
+#include <cmath>
 #include <type_traits>
 
 #include "type_traits.hpp"
@@ -76,6 +77,28 @@ struct math_multiply_accumulate_impl
 	}
 };
 
+#if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
+
+// Implementation of multiply-accumulate for floating-point types, if fast FMA is available.
+template <typename T>
+struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_point<T>::value>::type>
+{
+	static void run(float &x, const float &y, const float &z)
+	{
+		x = fmaf(y,z,x);
+	}
+	static void run(double &x, const double &y, const double &z)
+	{
+		x = fma(y,z,x);
+	}
+	static void run(long double &x, const long double &y, const long double &z)
+	{
+		x = fmal(y,z,x);
+	}
+};
+
+#endif
+
 }
 
 /// Math namespace.
@@ -120,6 +143,9 @@ inline void negate(T &x)
  * x += y * z
  * @endcode
  * where \p y and \p z are perfectly forwarded.
+ * 
+ * In case fast fma functions are available on the host platform, they will be used instead of the above
+ * formula for floating-point types.
  * 
  * @param[in,out] x value used for accumulation.
  * @param[in] y first multiplicand.
