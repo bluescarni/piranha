@@ -127,8 +127,9 @@ struct multiplication_tester
 		// Dense case, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto retval = f * g;
-			BOOST_CHECK_EQUAL(retval.size(),10626u);
+			auto tmp = f * g;
+			BOOST_CHECK_EQUAL(tmp.size(),10626u);
+			BOOST_CHECK(tmp == retval);
 		}
 		settings::reset_n_threads();
 		// Dense case with cancellations, default setup.
@@ -142,8 +143,9 @@ struct multiplication_tester
 		// Dense case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto retval = f * h;
-			BOOST_CHECK_EQUAL(retval.size(),5786u);
+			auto tmp = f * h;
+			BOOST_CHECK_EQUAL(tmp.size(),5786u);
+			BOOST_CHECK(retval == tmp);
 		}
 		settings::reset_n_threads();
 		// Sparse case, default.
@@ -163,8 +165,9 @@ struct multiplication_tester
 		// Sparse case, force n threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto retval = f * g;
-			BOOST_CHECK_EQUAL(retval.size(),591235u);
+			auto tmp = f * g;
+			BOOST_CHECK_EQUAL(tmp.size(),591235u);
+			BOOST_CHECK(retval == tmp);
 		}
 		settings::reset_n_threads();
 		// Sparse case with cancellations, default.
@@ -173,8 +176,9 @@ struct multiplication_tester
 		// Sparse case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto retval = f * h;
-			BOOST_CHECK_EQUAL(retval.size(),591184u);
+			auto tmp = f * h;
+			BOOST_CHECK_EQUAL(tmp.size(),591184u);
+			BOOST_CHECK(tmp == retval);
 		}
 	}
 };
