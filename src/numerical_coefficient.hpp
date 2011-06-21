@@ -359,6 +359,20 @@ class numerical_coefficient
 		{
 			dispatch_multiply_by(std::forward<U>(x));
 		}
+		/// Multiply-accumulate.
+		/**
+		 * Will call math::multiply_accumulate() on the values of \p this, \p x and \p y (in this order).
+		 * 
+		 * @param[in] x first multiplicand.
+		 * @param[in] y second multiplicand.
+		 * 
+		 * @throws unspecified any exception thrown by math::multiply_accumulate().
+		 */
+		template <typename U, typename V, typename Term>
+		void multiply_accumulate(const numerical_coefficient<U> &x, const numerical_coefficient<V> &y, const echelon_descriptor<Term> &)
+		{
+			math::multiply_accumulate(m_value,x.m_value,y.m_value);
+		}
 		/// In-place negation.
 		/**
 		 * Will invoke piranha::math::negate() on the internal numerical value.

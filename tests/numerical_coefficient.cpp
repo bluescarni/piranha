@@ -202,6 +202,15 @@ struct arithmetics_tester
 		nc cont4{T(4),ed};
 		BOOST_CHECK_EQUAL((nc{T(2),ed}.multiply(cont4,ed).get_value()),T(2) * T(4));
 		BOOST_CHECK_EQUAL((nc_other{-1,ed}.multiply(nc{T(2),ed},ed).get_value()),T(2) * other_type(-1));
+		// Multiply-accumulate.
+		nc cont5{T(5),ed};
+		cont5.multiply_accumulate(nc{T(6),ed},nc{T(7),ed},ed);
+		BOOST_CHECK_EQUAL(cont5.get_value(),T(5) + T(6) * T(7));
+		nc cont6{T(-6),ed};
+		cont6.multiply_accumulate(nc{T(-7),ed},nc{T(8),ed},ed);
+		T tmp(-6);
+		math::multiply_accumulate(tmp,T(-7),T(8));
+		BOOST_CHECK_EQUAL(cont6.get_value(),tmp);
 	}
 };
 
