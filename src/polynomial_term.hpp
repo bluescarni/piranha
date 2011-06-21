@@ -26,10 +26,13 @@
 #include <type_traits>
 
 #include "base_term.hpp"
+#include "concepts/multaddable_coefficient.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "config.hpp"
+#include "detail/base_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
 #include "monomial.hpp"
+#include "series_multiplier.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -46,6 +49,9 @@ namespace piranha
  * - \p Cf must be a model of piranha::concept::MultipliableCoefficient.
  * - \p ExpoType must be suitable for use in piranha::monomial.
  * 
+ * Additionally, for usage in the piranha::series_multiplier specialisation for polynomials,
+ * \p Cf must be a model of piranha::concept::MultaddableCoefficient.
+ * 
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same guarantee as piranha::base_term.
@@ -60,7 +66,11 @@ template <typename Cf, typename ExpoType>
 class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>>
 {
 		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
+		BOOST_CONCEPT_ASSERT((concept::MultaddableCoefficient<Cf>));
 		typedef base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>> base;
+		// Make friend with series multipliers.
+		template <typename Series1, typename Series2, typename Enable>
+		friend class series_multiplier;
 	public:
 		/// Result type for the multiplication by another term.
 		typedef polynomial_term multiplication_result_type;
@@ -101,31 +111,30 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce a single term whose coefficient is the
-		 * result of the multiplication of the current coefficient by the coefficient of \p other (via the coefficient's <tt>multiply()</tt> method)
+		 * result of the multiplication of the current coefficient by the coefficient of \p other
 		 * and whose key is the element-by-element sum of the vectors of the exponents of the two terms.
+		 * 
+		 * The coefficient method used for multiplication will be <tt>multiply_by()</tt> if both coefficient
+		 * types (\p Cf and \p Cf2) are not instances of piranha::base_series, otherwise it will be
+		 * <tt>multiply()</tt> (this implies that for non-series coefficients the multiplication is in-place,
+		 * while for series coefficients it is not).
 		 * 
 		 * @param[out] retval return value of the multiplication.
 		 * @param[in] other argument of the multiplication.
 		 * @param[in] ed reference echelon descriptor.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - the assignment operators of coefficient and key,
-		 * - the <tt>multiply()</tt> method of \p Cf,
+		 * - the assignment operators of the coefficient type,
+		 * - piranha::array_key::resize(),
+		 * - the <tt>multiply()</tt> or <tt>multiply_by()</tt> method of \p Cf,
 		 * - the in-place addition operator of \p ExpoType.
-		 * 
-		 * \todo use of multiply(): specify that depending on whether one of the coefficients is a series or not,
-		 * multiply_by() might be used?
-		 * \todo which is the better strategy? In-place or not? Move or not (this is a question for series_multiplier)?
 		 */
 		template <typename Cf2, typename ExpoType2, typename Term>
 		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
 		{
 			piranha_assert(other.m_key.size() == this->m_key.size());
 			piranha_assert(other.m_key.size() == ed.template get_args<polynomial_term>().size());
-			// TODO: fix this.
-			//retval.m_cf = this->m_cf.multiply(other.m_cf,ed);
-			retval.m_cf = this->m_cf;
-			retval.m_cf.multiply_by(other.m_cf,ed);
+			cf_mult_impl(retval,other,ed);
 			// Key part.
 			const auto size = this->m_key.size();
 			retval.m_key.resize(size);
@@ -133,6 +142,24 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 			for (decltype(this->m_key.size()) i = 0u; i < size; ++i) {
 				retval.m_key[i] += other.m_key[i];
 			}
+		}
+	private:
+		// Overload if no coefficient is series.
+		template <typename Cf2, typename ExpoType2, typename Term>
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed,
+			typename std::enable_if<!std::is_base_of<detail::base_series_tag,Cf>::value &&
+			!std::is_base_of<detail::base_series_tag,Cf2>::value>::type * = piranha_nullptr) const
+		{
+			retval.m_cf = this->m_cf;
+			retval.m_cf.multiply_by(other.m_cf,ed);
+		}
+		// Overload if at least one coefficient is series.
+		template <typename Cf2, typename ExpoType2, typename Term>
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed,
+			typename std::enable_if<std::is_base_of<detail::base_series_tag,Cf>::value ||
+			std::is_base_of<detail::base_series_tag,Cf2>::value>::type * = piranha_nullptr) const
+		{
+			retval.m_cf = this->m_cf.multiply(other.m_cf,ed);
 		}
 };
 
