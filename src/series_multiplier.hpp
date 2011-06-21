@@ -96,9 +96,15 @@ class series_multiplier
 		typedef typename Series1::term_type term_type1;
 		/// Alias for term type of \p Series2.
 		typedef typename Series2::term_type term_type2;
-		/// Alias for the type of the result of the multiplication.
+	private:
 		typedef decltype(std::declval<Series1>().multiply_by_series(
-			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) return_type;
+			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) determined_return_type;
+	protected:
+		/// Alias for the type of the result of the multiplication.
+		/**
+		 * Return type is the base series type of \p Series1.
+		 */
+		typedef determined_return_type return_type;
 	public:
 		/// Constructor.
 		/**
