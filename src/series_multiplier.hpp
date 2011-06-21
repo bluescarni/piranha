@@ -91,7 +91,10 @@ class series_multiplier
 		BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<typename Series1::term_type>));
 		static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
 			"Mismatch in echelon sizes.");
+	protected:
+		/// Alias for term type of \p Series1.
 		typedef typename Series1::term_type term_type1;
+		/// Alias for term type of \p Series2.
 		typedef typename Series2::term_type term_type2;
 		/// Alias for the type of the result of the multiplication.
 		typedef decltype(std::declval<Series1>().multiply_by_series(
@@ -106,18 +109,70 @@ class series_multiplier
 		{}
 		/// Compute result of series multiplication.
 		/**
-		 * @param[in] ed piranha::echelon_descriptor that will be used to build (via repeated insertions) the result of the series multiplication.
+		 * This method will call execute() with a \p Functor type that uses the <tt>multiply()</tt> method
+		 * of the first series' term type to produce the results of term-by-term multiplications, and
+		 * piranha::base_series::insert() to insert such results in the return value.
 		 * 
-		 * @return the result of multiplying the two series used for construction.
+		 * @param[in] ed piranha::echelon_descriptor that will be used to build (via repeated insertions)
+		 * the result of the series multiplication.
+		 * 
+		 * @return the result of multiplying the two series.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - \p boost::numeric_cast (in case of over/underflow errors converting from one integer type to another),
-		 * - memory allocation errors in standard containers,
 		 * - piranha::base_series::insert(),
-		 * - the <tt>multiply()</tt> method of the term type of \p Series1.
+		 * - the <tt>multiply()</tt> method of the term type of \p Series1,
+		 * - execute().
 		 */
 		template <typename Term>
-		typename Series1::base_series_type operator()(const echelon_descriptor<Term> &ed) const
+		return_type operator()(const echelon_descriptor<Term> &ed) const
+		{
+			return execute<plain_functor<Term>>(ed);
+		}
+	protected:
+		/// Low-level implementation of series multiplication.
+		/**
+		 * The multiplication algorithm proceeds as follows:
+		 * 
+		 * - if one of the two series is empty, a default-constructed instance of \p return_type is returned;
+		 * - a heuristic determines whether to enable multi-threaded mode or not;
+		 * - in single-threaded mode:
+		 *   - an instance of \p Functor is created and its <tt>operator()</tt> is run iteratively over the terms
+		 *     of the two series to construct the return value;
+		 * - in multi-threaded mode:
+		 *   - the first series is subdivided into segments and the same process described for single-threaded mode is run in parallel,
+		 *     storing the multiple resulting series in a list;
+		 *   - the series in the result list are merged into a single series via piranha::base_series::insert().
+		 * 
+		 * The protocol expected by an instance of type \p Functor is the following:
+		 * 
+		 * - it must be constructible from two vectors of const pointers to the terms in the input series, an echelon
+		 *   descriptor of the type of \p ed, and an instance of type \p return_type that will be used to
+		 *   accumulate the terms during multiplication;
+		 * - it must be provided with an <tt>operator()()</tt>, taking two unsigned integers (e.g., \p i and \p j) as input
+		 *   parameters and returning void. A call of this operator will multiply the <tt>i</tt>-th term of the first series
+		 *   by the <tt>j</tt>-th term of the second series (as they appear in the pointers vectors),
+		 *   and insert the result into the the instance of \p return_type used for construction.
+		 * 
+		 * Note that the parameters passed to the constructor exist outside the \p Functor. In particular,
+		 * the \p return_type instance used for construction will then be used to create the return value (and
+		 * thus \p Functor is expected to use a reference or a pointer to such object in its operations).
+		 * Instances of \p Functor are created sequentially, and they are
+		 * allowed to mutate the vectors of terms pointers.
+		 * 
+		 * @param[in] ed piranha::echelon_descriptor that will be passed to \p Functor to perform term-by-term multiplications.
+		 * 
+		 * @return the result of multiplying the first series by the second series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - memory allocation errors in standard containers,
+		 * - \p boost::numeric_cast (in case of out-of-range convertions from one integral type to another),
+		 * - the cast operator of piranha::integer to integral types,
+		 * - the constructor and call operator of \p Functor,
+		 * - errors in threading primitives,
+		 * - piranha::base_series::insert().
+		 */
+		template <typename Functor, typename Term>
+		return_type execute(const echelon_descriptor<Term> &ed) const
 		{
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_s1.empty() || m_s2.empty())) {
@@ -161,7 +216,7 @@ std::cout << "using " << n_threads << " threads\n";
 			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
-				functor<Term> f(v1,v2,ed,retval);
+				Functor f(v1,v2,ed,retval);
 				rehasher(f,retval,size1,size2);
 				blocked_multiplication(f,size_type(0u),size1,size_type(0u),size2);
 				return retval;
@@ -176,11 +231,11 @@ std::cout << "using " << n_threads << " threads\n";
 				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
 				std::list<return_type> retval_list;
-				std::list<functor<Term>> functor_list;
+				std::list<Functor> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					retval_list.push_back(return_type{});
-					functor_list.push_back(functor<Term>(v1,v2,ed,retval_list.back()));
+					functor_list.push_back(Functor(v1,v2,ed,retval_list.back()));
 				}
 				thread_group tg;
 				condition_variable c;
@@ -215,7 +270,7 @@ std::cout << "using " << n_threads << " threads\n";
 				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				auto final_estimate = esitmate_final_series_size(functor<Term>(v1,v2,ed,retval),size1,size2,retval);
+				auto final_estimate = esitmate_final_series_size(Functor(v1,v2,ed,retval),size1,size2,retval);
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -238,6 +293,7 @@ std::cout << "using " << n_threads << " threads\n";
 				auto cleanup = [&retval_list]() -> void {
 					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) -> void {r.m_container.clear();});
 				};
+std::cout << "going for final\n";
 				try {
 					final_merge(retval,retval_list,n_threads,ed);
 				} catch (...) {
@@ -386,9 +442,9 @@ std::cout << "new size is " << new_size << '\n';
 			}
 		}
 		template <typename Term>
-		struct functor
+		struct plain_functor
 		{
-			explicit functor(const std::vector<term_type1 const *> &v1, const std::vector<term_type2 const *> &v2,
+			explicit plain_functor(const std::vector<term_type1 const *> &v1, const std::vector<term_type2 const *> &v2,
 				const echelon_descriptor<Term> &ed, return_type &retval):
 				m_v1(v1),m_v2(v2),m_ed(ed),m_retval(retval)
 			{}
