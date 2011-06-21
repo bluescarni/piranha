@@ -48,6 +48,10 @@
  * \todo strip_cv_ref should be std::decay probably.
  * \todo try to get away with the friendship to binary series operators by base series.
  * \todo hashing of array_key based on kronecker substitution.
+ * \todo cache aligned memory allocation: to be completely sure that we are not sharing cache lines among threads,
+ * we must 1) figure a way to determine cache line size
+ * (like http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache/) 2) use the aligning
+ * allocator _everywhere_ there might be potential cache line sharing.
  */
 namespace piranha
 {
