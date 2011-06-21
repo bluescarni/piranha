@@ -670,6 +670,14 @@ BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 	BOOST_CHECK_EQUAL(i,-30);
 	i.multiply_accumulate(piranha::integer(-10),piranha::integer(-3));
 	BOOST_CHECK_EQUAL(i,0);
+	// Same with function from math.
+	i = 10;
+	piranha::math::multiply_accumulate(i,piranha::integer(10),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(i,-10);
+	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(2));
+	BOOST_CHECK_EQUAL(i,-30);
+	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(-3));
+	BOOST_CHECK_EQUAL(i,0);
 }
 
 BOOST_AUTO_TEST_CASE(integer_exponentiation_test)

@@ -22,6 +22,7 @@
 #define PIRANHA_MATH_HPP
 
 #include <boost/type_traits/is_complex.hpp>
+#include <type_traits>
 
 #include "type_traits.hpp"
 
@@ -64,6 +65,17 @@ struct math_negate_impl
 	}
 };
 
+// Default implementation of multiply-accumulate.
+template <typename T, typename U, typename V, typename Enable = void>
+struct math_multiply_accumulate_impl
+{
+	template <typename U2, typename V2>
+	static void run(T &x, U2 &&y, V2 &&z)
+	{
+		x += std::forward<U2>(y) * std::forward<V2>(z);
+	}
+};
+
 }
 
 /// Math namespace.
@@ -99,6 +111,25 @@ template <typename T>
 inline void negate(T &x)
 {
 	piranha::detail::math_negate_impl<typename strip_cv_ref<T>::type>::run(x);
+}
+
+/// Multiply-accumulate.
+/**
+ * Will set \p x to <tt>x + y * z</tt>. Default implementation is equivalent to:
+ * @code
+ * x += y * z
+ * @endcode
+ * where \p y and \p z are perfectly forwarded.
+ * 
+ * @param[in,out] x value used for accumulation.
+ * @param[in] y first multiplicand.
+ * @param[in] z second multiplicand.
+ */
+template <typename T, typename U, typename V>
+inline void multiply_accumulate(T &x, U &&y, V &&z)
+{
+	piranha::detail::math_multiply_accumulate_impl<typename std::decay<T>::type,
+		typename std::decay<U>::type,typename std::decay<V>::type>::run(x,std::forward<U>(y),std::forward<V>(z));
 }
 
 }

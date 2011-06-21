@@ -1893,6 +1893,16 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value
 	}
 };
 
+// Specialise multadd for integer.
+template <typename T>
+struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	static void run(T &x, const T &y, const T &z)
+	{
+		x.multiply_accumulate(y,z);
+	}
+};
+
 }
 
 }

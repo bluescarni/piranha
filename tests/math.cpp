@@ -88,3 +88,25 @@ BOOST_AUTO_TEST_CASE(is_zero_test)
 	boost::fusion::for_each(zeroes,check_is_zero_01());
 	boost::fusion::for_each(arithmetic_values,check_is_zero_02());
 }
+
+struct check_multiply_accumulate
+{
+	template <typename T>
+	void operator()(const T &) const
+	{
+		T x(2);
+		math::multiply_accumulate(x,T(4),T(6));
+		BOOST_CHECK_EQUAL(x,T(2) + T(4) * T(6));
+		if (std::is_signed<T>::value || std::is_floating_point<T>::value) {
+			x = T(-2);
+			math::multiply_accumulate(x,T(5),T(-7));
+			BOOST_CHECK_EQUAL(x,T(-2) + T(5) * T(-7));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(multiply_accumulate_test)
+{
+	boost::fusion::for_each(arithmetic_values,check_multiply_accumulate());
+}
+
