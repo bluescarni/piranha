@@ -324,13 +324,6 @@ class base_series: detail::base_series_tag
 			series.m_container.clear();
 		}
 	public:
-		/// Base series type.
-		/**
-		 * Typedef for the type of \p this.
-		 */
-		// NOTE: this is here essentially for use in series_multiplier, where trying to determine
-		// this type via decltype() and auto results in some internal compiler error :/
-		typedef base_series base_series_type;
 		/// Size type.
 		/**
 		 * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.

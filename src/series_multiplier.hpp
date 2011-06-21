@@ -93,14 +93,16 @@ class series_multiplier
 			"Mismatch in echelon sizes.");
 		typedef typename Series1::term_type term_type1;
 		typedef typename Series2::term_type term_type2;
-		typedef typename Series1::base_series_type return_type;
+		/// Alias for the type of the result of the multiplication.
+		typedef decltype(std::declval<Series1>().multiply_by_series(
+			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) return_type;
 	public:
 		/// Constructor.
 		/**
 		 * @param[in] s1 first series.
 		 * @param[in] s2 second series.
 		 */
-		series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(s1),m_s2(s2)
+		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(s1),m_s2(s2)
 		{}
 		/// Compute result of series multiplication.
 		/**

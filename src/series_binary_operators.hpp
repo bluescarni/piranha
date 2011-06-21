@@ -199,8 +199,9 @@ std::cout << "MIXED2!!!!\n";
 		{
 			static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
 				"Cannot multiply series with different echelon sizes.");
-			typedef typename Series1::base_series_type base_type1;
-			typedef typename Series2::base_series_type base_type2;
+			// Determine base series types using the multiply_by_series() method.
+			typedef decltype(s1.multiply_by_series(s2,s1.m_ed)) base_type1;
+			typedef decltype(s2.multiply_by_series(s1,s2.m_ed)) base_type2;
 			Series1 retval;
 			if (likely(s1.m_ed.get_args_tuple() == s2.m_ed.get_args_tuple())) {
 				retval.m_ed = s1.m_ed;
