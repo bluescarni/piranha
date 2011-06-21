@@ -70,6 +70,8 @@ struct is_alignable<1u,InitialN>
  * 	- a nonzero power of 2,
  * 	- a multiple of <tt>sizeof(void *)</tt>.
  * 
+ * In any case, a nonzero \p N must be a multiple of the alignment requirement for type \p T.
+ * 
  * When \p N is zero, memory allocation will use \p std::malloc. Otherwise, the address of the allocated memory is guaranteed to be
  * a multiple of \p N through the usage of platform-specific routines such as <tt>posix_memalign()</tt> (on POSIX systems)
  * and <tt>_aligned_malloc()</tt> (on Windows systems). On unsupported platforms, trying to use this allocator will result in
@@ -84,11 +86,13 @@ struct is_alignable<1u,InitialN>
  * This class has no data members and hence has trivial move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo maybe we can allow also N == 1 here.
  */
 template <typename T, std::size_t N = 0u>
 class malloc_allocator
 {
-		static_assert(detail::is_alignable<N>::value,"Invalid alignment value.");
+		static_assert(detail::is_alignable<N>::value && !(N % alignof(T)),"Invalid alignment value.");
 	public:
 		/// Size type.
 		typedef std::size_t size_type;
