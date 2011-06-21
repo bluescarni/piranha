@@ -40,7 +40,7 @@ namespace concept
  * 
  * - must be a model of piranha::concept::Coefficient,
  * - must be provided with a const \p multiply method accepting an instance of \p T and a generic piranha::echelon_descriptor
- *   as input and returning an instance of \p T,
+ *   as input and returning an instance of \p T.
  */
 template <typename T>
 struct MultipliableCoefficient:

@@ -18,32 +18,46 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_CONCEPT_MULTADDABLE_COEFFICIENT_HPP
+#define PIRANHA_CONCEPT_MULTADDABLE_COEFFICIENT_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+#include <type_traits>
+
+#include "../base_term.hpp"
+#include "../echelon_descriptor.hpp"
+#include "coefficient.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
+
+namespace concept
+{
+
+/// Concept for multaddable coefficients.
 /**
- * All concepts in Piranha are defined within this namespace.
+ * The requisites for type \p T are the following:
+ * 
+ * - must be a model of piranha::concept::Coefficient,
+ * - must be provided with a \p multiply_accumulate method accepting two instances of \p T and a generic piranha::echelon_descriptor
+ *   as input and returning void.
  */
-namespace concept {}
+template <typename T>
+struct MultaddableCoefficient:
+	Coefficient<T>
+{
+	/// Concept usage pattern.
+	BOOST_CONCEPT_USAGE(MultaddableCoefficient)
+	{
+		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
+		T cf;
+		static_assert(std::is_same<decltype(cf.multiply_accumulate(std::declval<T>(),std::declval<T>(),std::declval<ed_type>())),void>::value,
+			"Invalid multiply_accumulate() method signature for coefficient type.");
+	}
+};
+
 }
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multaddable_coefficient.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
+}
 
 #endif
