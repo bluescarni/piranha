@@ -21,16 +21,29 @@
 #ifndef PIRANHA_POLYNOMIAL_HPP
 #define PIRANHA_POLYNOMIAL_HPP
 
+#include <algorithm>
+#include <boost/integer_traits.hpp>
+#include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include "config.hpp"
+#include "exceptions.hpp"
 #include "polynomial_term.hpp"
+#include "series_multiplier.hpp"
 #include "symbol.hpp"
 #include "top_level_series.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
+
+namespace detail
+{
+
+struct polynomial_tag {};
+
+}
 
 /// Polynomial class.
 /**
@@ -56,7 +69,7 @@ namespace piranha
  */
 template <typename Cf, typename Expo>
 class polynomial:
-	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>
+	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,detail::polynomial_tag
 {
 		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
 	public:
@@ -160,6 +173,127 @@ class polynomial:
 			base::operator=(std::forward<T>(x));
 			return *this;
 		}
+};
+
+/// Series multiplier tuned for polynomials.
+/**
+ * This piranha::series_multiplier specialisation is activated when both series are instances of
+ * piranha::polynomial. It employs a specialised \p Functor that uses a multiply-accumulate operation
+ * during coefficient arithmetic, that can result in faster computations (e.g., with piranha::integer coefficients or when
+ * the host platform provides fast implementation of floating-point multiply-add operations).
+ * 
+ * Exception safety guarantee and move semantics are equivalent to the non-specialised series multiplier.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
+template <typename Series1, typename Series2>
+class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series1>::value &&
+	std::is_base_of<detail::polynomial_tag,Series2>::value>::type>:
+	public series_multiplier<Series1,Series2,int>
+{
+		typedef series_multiplier<Series1,Series2,int> base;
+	public:
+		/// Constructor.
+		/**
+		 * Equivalent to the constructor of the non-specialised piranha::series_multiplier.
+		 * 
+		 * @param[in] s1 first multiplicand series.
+		 * @param[in] s2 second multiplicand series.
+		 */
+		explicit series_multiplier(const Series1 &s1, const Series2 &s2):base(s1,s2) {}
+		/// Multiplication implementations.
+		/**
+		 * Equivalent to calling piranha::series_multiplier::execute with a specialised \p Functor.
+		 * 
+		 * @param[in] ed piranha::echelon_descriptor that will be used to build (via repeated insertions)
+		 * the result of the series multiplication.
+		 * 
+		 * @return the result of multiplying the two series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::base_series::insert(),
+		 * - the <tt>multiply_accumulate()</tt> method of the coefficient type of \p Series1,
+		 * - the <tt>multiply()</tt> method of the term type of \p Series1,
+		 * - execute().
+		 */
+		template <typename Term>
+		typename base::return_type operator()(const echelon_descriptor<Term> &ed) const
+		{
+			return base::template execute<poly_functor<Term>>(ed);
+		}
+	private:
+		template <typename Term>
+		struct poly_functor
+		{
+			explicit poly_functor(const std::vector<typename base::term_type1 const *> &v1, const std::vector<typename base::term_type2 const *> &v2,
+				const echelon_descriptor<Term> &ed, typename base::return_type &retval):
+				m_v1(v1),m_v2(v2),m_ed(ed),m_retval(retval)
+			{}
+			template <typename Size>
+			void operator()(const Size &i, const Size &j) const
+			{
+				piranha_assert(i < m_v1.size() && j < m_v2.size());
+				const auto &t1 = *m_v1[i];
+				const auto &t2 = *m_v2[j];
+				m_tmp.m_key.resize(t1.m_key.size());
+				piranha_assert(m_tmp.m_key.size() == m_ed.template get_args<typename base::term_type1>().size());
+				piranha_assert(m_tmp.m_key.size() == t2.m_key.size());
+				std::copy(t1.m_key.begin(),t1.m_key.end(),m_tmp.m_key.begin());
+				const auto size = t1.m_key.size();
+				for (decltype(t1.m_key.size()) n = 0u; n < size; ++n) {
+					m_tmp.m_key[n] += t2.m_key[n];
+				}
+				auto &container = m_retval.m_container;
+				typedef decltype(container.bucket_count()) size_type;
+				// Prepare the return series.
+				if (unlikely(!container.bucket_count())) {
+					container._increase_size();
+				}
+				// Try to locate the term into retval.
+				size_type bucket_idx = container._bucket(m_tmp);
+				const auto it = container._find(m_tmp,bucket_idx);
+				if (it == container.end()) {
+					if (unlikely(container.size() == boost::integer_traits<size_type>::const_max)) {
+						piranha_throw(std::overflow_error,"maximum number of elements reached");
+					}
+					// Term is new. Handle the case in which we need to rehash because of load factor.
+					if (unlikely(static_cast<double>(container.size() + size_type(1u)) / container.bucket_count() >
+						container.get_max_load_factor()))
+					{
+						container._increase_size();
+						// We need a new bucket index in case of a rehash.
+						bucket_idx = container._bucket(m_tmp);
+					}
+					// Take care of multiplying the coefficient.
+					t1.cf_mult_impl(m_tmp,t2,m_ed);
+					// Insert and update size.
+					container._unique_insert(m_tmp,bucket_idx);
+					container._update_size(container.size() + 1u);
+				} else {
+					// Assert the existing term is not ignorable and it is compatible.
+					piranha_assert(!it->is_ignorable(m_ed) && it->is_compatible(m_ed));
+					// Cleanup function.
+					auto cleanup = [&]() -> void {
+						if (unlikely(!it->is_compatible(this->m_ed) || it->is_ignorable(this->m_ed))) {
+							container.erase(it);
+						}
+					};
+					try {
+						it->m_cf.multiply_accumulate(t1.m_cf,t2.m_cf,m_ed);
+						// Check if the term has become ignorable or incompatible after the modification.
+						cleanup();
+					} catch (...) {
+						cleanup();
+						throw;
+					}
+				}
+			}
+			const std::vector<typename base::term_type1 const *>	&m_v1;
+			const std::vector<typename base::term_type2 const *>	&m_v2;
+			const echelon_descriptor<Term>				&m_ed;
+			typename base::return_type				&m_retval;
+			mutable typename base::term_type1			m_tmp;
+		};
 };
 
 }
