@@ -25,14 +25,48 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <type_traits>
 
 #include "../src/integer.hpp"
 #include "../src/numerical_coefficient.hpp"
+#include "../src/polynomial_term.hpp"
+#include "../src/settings.hpp"
+#include "../src/symbol.hpp"
+#include "../src/top_level_series.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
 typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
+
+template <typename Cf, typename Expo>
+class polynomial_alt:
+	public top_level_series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>>
+{
+		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>> base;
+	public:
+		polynomial_alt() = default;
+		polynomial_alt(const polynomial_alt &) = default;
+		polynomial_alt(polynomial_alt &&) = default;
+		explicit polynomial_alt(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_ed.template add_symbol<term_type>(symbol(name));
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
+		}
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_alt,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
+		explicit polynomial_alt(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		~polynomial_alt() = default;
+		polynomial_alt &operator=(const polynomial_alt &) = default;
+		polynomial_alt &operator=(polynomial_alt &&other) piranha_noexcept_spec(true)
+		{
+			base::operator=(std::move(other));
+			return *this;
+		}
+};
 
 struct constructor_tester
 {
@@ -118,4 +152,104 @@ struct assignment_tester
 BOOST_AUTO_TEST_CASE(polynomial_assignment_test)
 {
 	boost::mpl::for_each<cf_types>(assignment_tester());
+}
+
+struct multiplication_tester
+{
+	// NOTE: this test is going to be exact in case of coefficients cancellations with double
+	// precision coefficients only if the platform has ieee 754 format (integer exactly representable
+	// as doubles up to 2 ** 53).
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		typedef polynomial<Cf,int> p_type;
+		typedef polynomial_alt<Cf,int> p_type_alt;
+		p_type x("x"), y("y"), z("z"), t("t"), u("u");
+		// Dense case, default setup.
+		auto f = 1 + x + y + z + t;
+		auto tmp(f);
+		for (int i = 1; i < 10; ++i) {
+			f *= tmp;
+		}
+		auto g = f + 1;
+		auto retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),10626u);
+		auto retval_alt = p_type_alt(f) * p_type_alt(g);
+		BOOST_CHECK(retval == retval_alt);
+		// Dense case, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * g;
+			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
+			BOOST_CHECK_EQUAL(tmp.size(),10626u);
+			BOOST_CHECK(tmp == retval);
+			BOOST_CHECK(tmp == tmp_alt);
+		}
+		settings::reset_n_threads();
+		// Dense case with cancellations, default setup.
+		auto h = 1 - x + y + z + t;
+		tmp = h;
+		for (int i = 1; i < 10; ++i) {
+			h *= tmp;
+		}
+		retval = f * h;
+		retval_alt = p_type_alt(f) * p_type_alt(h);
+		BOOST_CHECK_EQUAL(retval.size(),5786u);
+		BOOST_CHECK(retval == retval_alt);
+		// Dense case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * h;
+			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
+			BOOST_CHECK_EQUAL(tmp.size(),5786u);
+			BOOST_CHECK(retval == tmp);
+			BOOST_CHECK(tmp_alt == tmp);
+		}
+		settings::reset_n_threads();
+		// Sparse case, default.
+		f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
+		auto tmp_f(f);
+		g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_g(g);
+		h = (-u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_h(h);
+		for (int i = 1; i < 8; ++i) {
+			f *= tmp_f;
+			g *= tmp_g;
+			h *= tmp_h;
+		}
+		retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),591235u);
+		retval_alt = p_type_alt(f) * p_type_alt(g);
+		BOOST_CHECK(retval == retval_alt);
+		// Sparse case, force n threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * g;
+			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
+			BOOST_CHECK_EQUAL(tmp.size(),591235u);
+			BOOST_CHECK(retval == tmp);
+			BOOST_CHECK(tmp_alt == tmp);
+		}
+		settings::reset_n_threads();
+		// Sparse case with cancellations, default.
+		retval = f * h;
+		BOOST_CHECK_EQUAL(retval.size(),591184u);
+		retval_alt = p_type_alt(f) * p_type_alt(h);
+		BOOST_CHECK(retval_alt == retval);
+		// Sparse case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * h;
+			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
+			BOOST_CHECK_EQUAL(tmp.size(),591184u);
+			BOOST_CHECK(tmp == retval);
+			BOOST_CHECK(tmp == tmp_alt);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_multiplier_test)
+{
+	boost::mpl::for_each<cf_types>(multiplication_tester());
 }
