@@ -241,3 +241,34 @@ BOOST_AUTO_TEST_CASE(monomial_is_unitary_test)
 {
 	boost::mpl::for_each<expo_types>(is_unitary_tester());
 }
+
+struct degree_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> key_type;
+		key_type k0;
+		BOOST_CHECK_EQUAL(k0.degree(),T(0));
+		std::vector<symbol> v1;
+		v1.push_back(symbol("a"));
+		key_type k1(v1);
+		BOOST_CHECK_EQUAL(k1.degree(),T(0));
+		k1[0] = T(2);
+		BOOST_CHECK_EQUAL(k1.degree(),T(2));
+		std::vector<symbol> v2;
+		v2.push_back(symbol("a"));
+		v2.push_back(symbol("b"));
+		key_type k2(v2);
+		BOOST_CHECK_EQUAL(k2.degree(),T(0));
+		k2[0] = T(2);
+		k2[1] = T(3);
+		BOOST_CHECK_EQUAL(k2.degree(),T(2) + T(3));
+	}
+};
+
+
+BOOST_AUTO_TEST_CASE(monomial_degree_test)
+{
+	boost::mpl::for_each<expo_types>(degree_tester());
+}

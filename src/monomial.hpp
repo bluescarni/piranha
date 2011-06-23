@@ -165,6 +165,19 @@ class monomial: public array_key<T,monomial<T>>
 			return std::all_of(this->m_container.begin(),this->m_container.end(),
 				[](const T &element) {return math::is_zero(element);});
 		}
+		/// Degree.
+		/**
+		 * Monomial degree.
+		 * 
+		 * @return the summation of all the exponents of the monomial, or <tt>T(0)</tt> if the size
+		 * of the monomial is zero.
+		 * 
+		 * @throws unspecified any exception thrown by the addition and assignment operators of \p T.
+		 */
+		T degree() const
+		{
+			return std::accumulate(this->m_container.begin(),this->m_container.end(),T(0));
+		}
 };
 
 }
