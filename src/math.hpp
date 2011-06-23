@@ -83,17 +83,9 @@ struct math_multiply_accumulate_impl
 template <typename T>
 struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_point<T>::value>::type>
 {
-	static void run(float &x, const float &y, const float &z)
+	static void run(T &x, const T &y, const T &z)
 	{
-		x = fmaf(y,z,x);
-	}
-	static void run(double &x, const double &y, const double &z)
-	{
-		x = fma(y,z,x);
-	}
-	static void run(long double &x, const long double &y, const long double &z)
-	{
-		x = fmal(y,z,x);
+		x = std::fma(y,z,x);
 	}
 };
 
