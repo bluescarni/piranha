@@ -97,6 +97,7 @@ class series_multiplier
 		/// Alias for term type of \p Series2.
 		typedef typename Series2::term_type term_type2;
 	private:
+		// Define it here and typedef it below, otherwise doxygen gets confused.
 		typedef decltype(std::declval<Series1>().multiply_by_series(
 			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) determined_return_type;
 	protected:
@@ -162,8 +163,8 @@ class series_multiplier
 		 * Note that the parameters passed to the constructor exist outside the \p Functor. In particular,
 		 * the \p return_type instance used for construction will then be used to create the return value (and
 		 * thus \p Functor is expected to use a reference or a pointer to such object in its operations).
-		 * Instances of \p Functor are created sequentially, and they are
-		 * allowed to mutate the vectors of terms pointers.
+		 * Instances of \p Functor are created sequentially (when operating in multi-threaded mode), and they are
+		 * allowed to mutate the vectors of terms pointers (in particular, they are allowed to reorder them).
 		 * 
 		 * @param[in] ed piranha::echelon_descriptor that will be passed to \p Functor to perform term-by-term multiplications.
 		 * 
