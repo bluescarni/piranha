@@ -51,7 +51,9 @@
  * \todo cache aligned memory allocation: to be completely sure that we are not sharing cache lines among threads,
  * we must 1) figure a way to determine cache line size
  * (like http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache/) 2) use the aligning
- * allocator _everywhere_ there might be potential cache line sharing.
+ * allocator _everywhere_ there might be potential cache line sharing -> investigate the use of mt_alloc with custom
+ * alignment to solve the problem of frequently-used cache values during multiplication (e.g., the m_tmp members in
+ * functors).
  */
 namespace piranha
 {

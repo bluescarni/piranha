@@ -128,9 +128,7 @@ class array_key: detail::array_key_tag
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
 			}
 			container_type retval;
-			if (std::is_same<decltype(x.size()),size_type>::value) {
-				retval.reserve(x.size());
-			}
+			retval.reserve(x.size());
 			fill_for_construction(retval,std::forward<U>(x));
 			return retval;
 		}
@@ -138,9 +136,7 @@ class array_key: detail::array_key_tag
 		static container_type construct_from_init_list(U &&init_list)
 		{
 			container_type retval;
-			if (std::is_same<decltype(init_list.size()),size_type>::value) {
-				retval.reserve(init_list.size());
-			}
+			retval.reserve(init_list.size());
 			fill_for_construction(retval,init_list);
 			return retval;
 		}
@@ -184,9 +180,7 @@ class array_key: detail::array_key_tag
 		 */
 		explicit array_key(const std::vector<symbol> &args)
 		{
-			if (std::is_same<std::vector<symbol>::size_type,size_type>::value) {
-				m_container.reserve(args.size());
-			}
+			m_container.reserve(args.size());
 			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
 				push_back(T(0));
 			}
@@ -438,10 +432,7 @@ class array_key: detail::array_key_tag
 		array_key base_merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
 		{
 			array_key retval;
-			// Reserve space if we are sure that the types are the same (i.e., no risky type conversions).
-			if (std::is_same<size_type,decltype(new_args.size())>::value) {
-				retval.m_container.reserve(new_args.size());
-			}
+			retval.m_container.reserve(new_args.size());
 			piranha_assert(m_container.size() == orig_args.size());
 			piranha_assert(new_args.size() > orig_args.size());
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));

@@ -135,7 +135,7 @@ class cvector
 			thread_barrier barrier(n_threads);
 			// Reserve enough space to store exceptions, so that we avoid potential problems
 			// when pushing back the exceptions in the catch(...) blocks.
-			exceptions.reserve(boost::numeric_cast<std::vector<exception_ptr>::size_type>(n_threads));
+			exceptions.reserve(n_threads);
 			if (exceptions.capacity() < n_threads) {
 				throw std::bad_alloc();
 			}
