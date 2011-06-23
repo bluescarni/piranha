@@ -1,8 +1,35 @@
+#include <array>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 
 #include "src/piranha.hpp"
+
+#include <algorithm>
+#include <cstring>
+#include <ext/mt_allocator.h>
+
+// TODO: replace wih max align type?
+__gnu_cxx::__mt_alloc<std::size_t> allocator;
+
+void *allocate_function(std::size_t alloc_size)
+{
+	return static_cast<void *>(allocator.allocate(alloc_size / sizeof(std::size_t) + 1u));
+}
+
+void *reallocate_function(void *ptr, std::size_t old_size, std::size_t new_size)
+{
+	auto new_ptr = static_cast<void *>(allocator.allocate(new_size / sizeof(std::size_t) + 1u));
+	std::memcpy(new_ptr,ptr,old_size);
+	allocator.deallocate(static_cast<std::size_t *>(ptr),old_size / sizeof(std::size_t) + 1u);
+	return new_ptr;
+}
+
+void free_function(void *ptr, std::size_t size)
+{
+	allocator.deallocate(static_cast<std::size_t *>(ptr),size / sizeof(std::size_t) + 1u);
+}
 
 using namespace piranha;
 
@@ -37,19 +64,30 @@ using namespace piranha;
 // 		}
 // };
 
+// void *allocate_function(std::size_t alloc_size);
+// void *blab_allocate_function(std::size_t alloc_size)
+// {
+// 	return allocate_function(alloc_size);
+// }
+// 
+// void *reallocate_function(void *ptr, std::size_t old_size, std::size_t new_size);
+// 
+// void free_function(void *ptr, std::size_t);
+
 void gogo()
 {
 // 	thread_management::binder b;
-	typedef polynomial<numerical_coefficient<double>,int16_t> p_type;
+	typedef polynomial<numerical_coefficient<__int128_t>,int16_t> p_type;
 	p_type x("x"), y("y"), z("z"), t("t");
 	auto f = 1 + x + y + z + t, tmp(f);
-	for (int i = 1; i < 20; ++i) {
+	for (int i = 1; i < 10; ++i) {
 		f *= tmp;
 	}
 	std::cout << f.size() << '\n';
 	auto g = f + 1;
 	const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
 	auto retval = f * g;
+return;
 	std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 	std::cout << retval.size() << '\n';
 }
@@ -57,29 +95,49 @@ void gogo()
 void blo()
 {
 	thread_management::binder b;
-	typedef polynomial<numerical_coefficient<double>,int16_t> p_type;
+	typedef polynomial<numerical_coefficient<integer>,int16_t> p_type;
 	p_type x("x"), y("y"), z("z"), t("t"), u("u");
 	auto f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1), tmp_f(f);
 	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1), tmp_g(g);
-	auto h = (x + y + u*u*2 + t*t*t*3 + z*z*z*z*z*5 + 1), tmp_h(h);
 	for (int i = 1; i < 12; ++i) {
 		f *= tmp_f;
 		g *= tmp_g;
-		h *= tmp_h;
 	}
 	std::cout << f.size() << '\n';
 	std::cout << g.size() << '\n';
-	f *= g;
-	g *= h;
 	const boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
-	f += std::move(g);
+	f *= g;
 	std::cout << "Elapsed time: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 	std::cout << f.size() << '\n';
 }
 
+inline std::ostream &operator<<(std::ostream &os, const __uint128_t &n)
+{
+	std::array<char,40u> buffer;
+	auto it = buffer.begin();
+	auto tmp = n;
+	while (true) {
+		unsigned q = tmp % 10u;
+		piranha_assert(it != buffer.end());
+		*it = q + '0';
+		++it;
+		tmp /= 10u;
+		// TODO: avoid one division by checking if tmp < 10u?
+		if (!tmp) {
+			break;
+		}
+	}
+	// TODO: use reverse iterator instead.
+	std::reverse(buffer.begin(),it);
+	std::for_each(buffer.begin(),it,[&](char c) -> void {os << c;});
+	return os;
+}
+
 int main()
 {
-	settings::set_n_threads(1);
+// 	mp_set_memory_functions(allocate_function,reallocate_function,free_function);
+	std::fma(1.,2.,3.);
+	settings::set_n_threads(2);
 	gogo();
 	return 0;
 	
