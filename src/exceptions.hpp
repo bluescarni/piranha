@@ -39,13 +39,13 @@ void throw_impl(const char *file, N &&line, String &&desc)
 	msg += ",";
 	msg += boost::lexical_cast<std::string>(line);
 	msg += ": ";
-	msg += desc;
+	msg += std::forward<String>(desc);
 	msg += ".";
 	throw ExceptionType(msg);
 }
 
 template <typename ExceptionType, typename N>
-void throw_impl(const char *, N &&)
+void throw_impl(const char *, N &&, int &&)
 {
 	ExceptionType ex;
 	throw ex;
@@ -53,7 +53,7 @@ void throw_impl(const char *, N &&)
 
 }}
 
-#define piranha_throw(exc_type,...) piranha::detail::throw_impl<exc_type>(__FILE__,__LINE__,##__VA_ARGS__);throw
+#define piranha_throw(exc_type,...) piranha::detail::throw_impl<exc_type>(__FILE__,__LINE__,__VA_ARGS__);throw
 
 namespace piranha
 {
