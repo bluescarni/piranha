@@ -97,6 +97,7 @@ namespace detail {}
 #include "series_binary_operators.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
+#include "static_vector.hpp"
 #include "symbol.hpp"
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
