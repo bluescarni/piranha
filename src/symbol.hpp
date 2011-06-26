@@ -101,13 +101,11 @@ class symbol
 		}
 		/// Value getter.
 		/**
-		 * This method is thread-safe as long as the numerical value of \p this is not being modified
-		 * concurrently (e.g., by constructing a symbol with the same name in a different thread).
-		 * 
 		 * @return numerical value of the symbol. 
 		 */
 		double get_value() const
 		{
+			lock_guard<mutex>::type lock(m_mutex);
 			return m_it->second;
 		}
 		/// Equality operator.
