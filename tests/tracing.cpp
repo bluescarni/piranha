@@ -57,6 +57,9 @@ BOOST_AUTO_TEST_CASE(tracing_trace_test)
 	BOOST_CHECK_THROW(tracing::trace("event3",f3),boost::bad_any_cast);
 	BOOST_CHECK_THROW(tracing::trace("event4",
 		[](boost::any &) -> void {throw std::runtime_error("");}),std::runtime_error);
+	settings::set_tracing(false);
+	BOOST_CHECK_NO_THROW(tracing::trace("event4",
+		[](boost::any &) -> void {throw std::runtime_error("");}));
 }
 
 BOOST_AUTO_TEST_CASE(tracing_dump_test)
