@@ -104,6 +104,7 @@ namespace detail {}
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "top_level_series.hpp"
+#include "tracing.hpp"
 #include "type_traits.hpp"
 #include "utils.hpp"
 
