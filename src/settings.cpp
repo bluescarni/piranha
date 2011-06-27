@@ -29,8 +29,9 @@
 namespace piranha
 {
 
-unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
 mutex settings::m_mutex;
+unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+bool settings::m_tracing = false;
 
 /// Get the number of threads available for use by piranha.
 /**
@@ -72,6 +73,34 @@ void settings::reset_n_threads()
 {
 	lock_guard<mutex>::type lock(m_mutex);
 	m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+}
+
+/// Get tracing status.
+/**
+ * Tracing is disabled by default on program startup.
+ * 
+ * @return \p true if tracing is enabled, \p false otherwise.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+bool settings::get_tracing()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	return m_tracing;
+}
+
+/// Set tracing status.
+/**
+ * Tracing is disabled by default on program startup.
+ * 
+ * @param[in] flag \p true to enable tracing, \p false to disable it.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+void settings::set_tracing(bool flag)
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_tracing = flag;
 }
 
 }

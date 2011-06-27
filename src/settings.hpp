@@ -39,9 +39,12 @@ class settings
 		static unsigned get_n_threads();
 		static void set_n_threads(unsigned);
 		static void reset_n_threads();
+		static bool get_tracing();
+		static void set_tracing(bool);
 	private:
-		static unsigned	m_n_threads;
 		static mutex	m_mutex;
+		static unsigned	m_n_threads;
+		static bool	m_tracing;
 };
 
 }
