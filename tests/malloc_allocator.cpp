@@ -26,6 +26,7 @@
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <new>
+#include <stdexcept>
 
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
@@ -63,14 +64,31 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_construction_test)
 
 BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
 {
-	// We assume here that size of void * is a power of 2.
-	static const std::size_t alignment = sizeof(void *) * sizeof(void *);
-	malloc_allocator<char,alignment> a;
-	auto ptr = a.allocate(0);
-	BOOST_CHECK(ptr == piranha_nullptr);
-	BOOST_CHECK_NO_THROW(a.deallocate(ptr,0));
-	ptr = a.allocate(1);
-	BOOST_CHECK(ptr != piranha_nullptr);
-	BOOST_CHECK(!((std::uintptr_t)ptr % alignment));
-	BOOST_CHECK_NO_THROW(a.deallocate(ptr,0));
+	// Do the tests only if sizeof(void *) is a power of 2. All alignments are
+	// required to be powers of 2, so if alignof(char) < sizeof(void *), sizeof(void *)
+	// is a valid alignment for char (supposing that the platform provides that extended alignment).
+	if (malloc_allocator<char>().have_memalign_primitives() && !(sizeof(void *) & (sizeof(void *) - 1u))) {
+		const std::size_t good_align = alignof(char) < sizeof(void *) ? sizeof(void *) : alignof(char), bad_align = 7u;
+		malloc_allocator<char> good(good_align);
+		BOOST_CHECK_THROW(new malloc_allocator<char>(bad_align),std::invalid_argument);
+		auto ptr = good.allocate(0);
+		BOOST_CHECK(ptr == piranha_nullptr);
+		BOOST_CHECK_NO_THROW(good.deallocate(ptr,0));
+		ptr = good.allocate(1);
+		auto ptr2 = good.allocate(1);
+		BOOST_CHECK(ptr != piranha_nullptr);
+		BOOST_CHECK(ptr2 != piranha_nullptr);
+		BOOST_CHECK(!((ptr - ptr2) % good_align));
+		BOOST_CHECK_NO_THROW(good.deallocate(ptr,0));
+		BOOST_CHECK_NO_THROW(good.deallocate(ptr2,0));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(malloc_allocator_equality_test)
+{
+	BOOST_CHECK(malloc_allocator<char>{} == malloc_allocator<char>{});
+	if (malloc_allocator<char>().have_memalign_primitives()) {
+		BOOST_CHECK(malloc_allocator<char>{sizeof(void *)} == malloc_allocator<char>{sizeof(void *)});
+		BOOST_CHECK(malloc_allocator<char>{sizeof(void *)} != malloc_allocator<char>{});
+	}
 }

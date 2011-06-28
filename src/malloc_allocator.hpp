@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <new>
+#include <stdexcept>
 
 #if defined(_WIN32)
 #include <malloc.h>
@@ -36,46 +37,10 @@
 namespace piranha
 {
 
-namespace detail
-{
-
-template <std::size_t N, std::size_t InitialN = N>
-struct is_alignable
-{
-	static const bool value = (N % 2u || InitialN % sizeof(void *)) ? false : is_alignable<N / 2u,InitialN>::value;
-};
-
-template <>
-struct is_alignable<0u,0u>
-{
-	static const bool value = true;
-};
-
-template <std::size_t InitialN>
-struct is_alignable<1u,InitialN>
-{
-	// This is valid only when we arrive here from the recursion. If this is the first iteration,
-	// alignment is not valid because 1 is not a nonzero power of 2.
-	static const bool value = InitialN != 1u;
-};
-
-}
-
 /// Allocator supporting memory alignment.
 /**
  * This allocator is based on <tt>malloc()</tt> and other low-level platform-specific memory allocation primitives, and supports
- * the allocation of memory aligned to multiples of \p N. The requisites on \p N are the following:
- * 
- * - must be either zero or one of the following:
- * 	- a nonzero power of 2,
- * 	- a multiple of <tt>sizeof(void *)</tt>.
- * 
- * In any case, a nonzero \p N must be a multiple of the alignment requirement for type \p T.
- * 
- * When \p N is zero, memory allocation will use \p std::malloc. Otherwise, the address of the allocated memory is guaranteed to be
- * a multiple of \p N through the usage of platform-specific routines such as <tt>posix_memalign()</tt> (on POSIX systems)
- * and <tt>_aligned_malloc()</tt> (on Windows systems). On unsupported platforms, trying to use this allocator will result in
- * a static assertion failure at compile time.
+ * memory allocation with custom alignment requirements.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -83,16 +48,13 @@ struct is_alignable<1u,InitialN>
  * 
  * \section move_semantics Move semantics
  * 
- * This class has no data members and hence has trivial move semantics.
+ * This class has trivial move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo maybe we can allow also N == 1 here.
  */
-template <typename T, std::size_t N = 0u>
+template <typename T>
 class malloc_allocator
 {
-		static_assert(detail::is_alignable<N>::value && !(N % alignof(T)),"Invalid alignment value.");
 	public:
 		/// Size type.
 		typedef std::size_t size_type;
@@ -113,52 +75,76 @@ class malloc_allocator
 		struct rebind
 		{
 			/// Rebound allocator type.
-			/**
-			 * Alignment is preserved in the rebound allocator type.
-			 */
-			typedef malloc_allocator<U,N> other;
+			typedef malloc_allocator<U> other;
 		};
 		/// Trivial default constructor.
-		malloc_allocator() {}
+		/**
+		 * Default construction is always successful and equivalent to construction with zero \p alignment.
+		 * Memory allocation will use the standard <tt>std::malloc()</tt> function.
+		 */
+		malloc_allocator():m_alignment(0u) {}
+		/// Constructor from alignment value.
+		/**
+		 * The memory allocated by this allocator will be aligned to the specified \p alignment value.
+		 * If \p alignment is not zero, it must be a nonnegative integral power of
+		 * two not smaller than the alignment requirement for type \p T. Additionally, \p alignment
+		 * might have to conform to other platform-specific requirements.
+		 * 
+		 * If \p alignment is zero, the memory allocated by this allocator is guaranteed to be able
+		 * to store any C++ type (thanks to the use of <tt>std::malloc()</tt>).
+		 * 
+		 * @param[in] alignment desired alignment.
+		 * 
+		 * @throws std::invalid_argument in case of an invalid nonzero \p alignment.
+		 */
+		malloc_allocator(const std::size_t &alignment):m_alignment(alignment)
+		{
+			check_alignment(alignment);
+		}
 		/// Trivial copy constructor.
-		malloc_allocator(const malloc_allocator &) {}
+		malloc_allocator(const malloc_allocator &other):m_alignment(other.m_alignment) {}
 		/// Trivial move constructor.
-		malloc_allocator(malloc_allocator &&) piranha_noexcept_spec(true) {}
+		malloc_allocator(malloc_allocator &&other) piranha_noexcept_spec(true):m_alignment(other.m_alignment) {}
 		/// Trivial destructor.
 		~malloc_allocator() piranha_noexcept_spec(true) {}
-		/// Trivial copy assignment operator.
-		/**
-		 * @return reference to \p this.
-		 */
-		malloc_allocator &operator=(const malloc_allocator &)
-		{
-			return *this;
-		}
-		/// Trivial move assignment operator.
-		/**
-		 * @return reference to \p this.
-		 */
-		malloc_allocator &operator=(malloc_allocator &&) piranha_noexcept_spec(true)
-		{
-			return *this;
-		}
+		/// Deleted copy assignment operator.
+		malloc_allocator &operator=(const malloc_allocator &) = delete;
+		/// Deleted move assignment operator.
+		malloc_allocator &operator=(malloc_allocator &&) = delete;
 		/// Memory address of reference.
+		/**
+		 * @param[in] x reference.
+		 * 
+		 * @return pointer to input reference.
+		 */
 		pointer address(reference x) const
 		{
 			return &x;
 		}
 		/// Memory address of const reference.
+		/**
+		 * @param[in] x const reference.
+		 * 
+		 * @return const pointer to input reference.
+		 */
 		const_pointer address(const_reference x) const
 		{
 			return &x;
 		}
 		/// Allocate memory.
 		/**
+		 * If the allocator was constructed with a zero \p alignment,
+		 * the method will use <tt>std::malloc()</tt>. Otherwise, the address of the allocated memory is guaranteed to be
+		 * aligned to \p alignment through the usage of platform-specific routines such as <tt>posix_memalign()</tt> (on POSIX systems)
+		 * and <tt>_aligned_malloc()</tt> (on Windows systems). On unsupported platforms, trying to allocate memory with nonzero
+		 * \p alignment will raise an \p std::bad_alloc exception.
+		 * 
 		 * @param[in] size number of instances of \p value_type for which memory will be allocated.
 		 * 
 		 * @return address to the allocated memory or \p nullptr if \p size is zero.
 		 * 
-		 * @throws std::bad_alloc if \p size is greater than max_size() or if the allocation fails.
+		 * @throws std::bad_alloc if \p size is greater than max_size(), if the allocation fails, or if memory aligning
+		 * primitives are not available on the host platform and \p alignment is not zero.
 		 */
 		pointer allocate(size_type size, const void * = piranha_nullptr)
 		{
@@ -166,29 +152,29 @@ class malloc_allocator
 				return piranha_nullptr;
 			}
 			if (unlikely(size > max_size())) {
-				throw std::bad_alloc();
+				piranha_throw(std::bad_alloc,0);
 			}
-			if (N) {
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+			if (m_alignment) {
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
 				void *ptr;
-				const auto retval = posix_memalign(&ptr,N,size * sizeof(T));
+				const auto retval = posix_memalign(&ptr,m_alignment,size * sizeof(T));
 				if (unlikely(retval)) {
-					throw std::bad_alloc();
+					piranha_throw(std::bad_alloc,0);
 				}
 				return static_cast<T *>(ptr);
 #elif defined(_WIN32)
-				void *ptr = _aligned_malloc(size * sizeof(T),N);
+				void *ptr = _aligned_malloc(size * sizeof(T),m_alignment);
 				if (unlikely(ptr == NULL)) {
-					throw std::bad_alloc();
+					piranha_throw(std::bad_alloc,0);
 				}
 				return static_cast<T *>(ptr);
 #else
-				static_assert(false,"No memory alignmnent primitives available on this platform.");
+				piranha_throw(std::bad_alloc,0);
 #endif
 			} else {
 				pointer ret = static_cast<T *>(std::malloc(size * sizeof(T)));
 				if (unlikely(!ret)) {
-					throw std::bad_alloc();
+					piranha_throw(std::bad_alloc,0);
 				}
 				return ret;
 			}
@@ -204,14 +190,16 @@ class malloc_allocator
 			if (!p) {
 				return;
 			}
-			if (N) {
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+			if (m_alignment) {
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
 				// Posix memalign can be freed by standard free() function.
 				std::free(static_cast<void *>(p));
 #elif defined(_WIN32)
 				_aligned_free(static_cast<void *>(p));
 #else
-				static_assert(false,"No memory alignmnent primitives available on this platform.");
+				// We should never get here, as any allocation would have thrown and we deleted
+				// assignment operators.
+				piranha_assert(false);
 #endif
 			} else {
 				std::free(static_cast<void *>(p));
@@ -258,26 +246,80 @@ class malloc_allocator
 		{
 			p->~T();
 		}
+		/// Alignment getter.
+		/**
+		 * @return the alignment value used during the construction of the allocator.
+		 */
+		std::size_t get_alignment() const
+		{
+			return m_alignment;
+		}
+		/// Type-trait for alignment primitives.
+		/**
+		 * @return \p true if the host platform supports the memory alignment primitives needed for nonzero
+		 * alignments, \p false otherwise.
+		 */
+		bool have_memalign_primitives() const
+		{
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN) || defined(_WIN32)
+			return true;
+#else
+			return false;
+#endif
+		}
+	protected:
+		/// Check alignment.
+		/**
+		 * @param[in] alignment alignment value to be checked.
+		 * 
+		 * @throws std::invalid_argument if the alignment value is not valid.
+		 */
+		void check_alignment(const std::size_t &alignment) const
+		{
+			// If alignment is not zero, we must run the checks.
+			if (alignment) {
+				if (unlikely(alignment < alignof(T))) {
+					piranha_throw(std::invalid_argument,"invalid alignment: smaller than alignof(T)");
+				}
+				if (unlikely(alignment & (alignment - 1u))) {
+					piranha_throw(std::invalid_argument,"invalid alignment: not a power of 2");
+				}
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
+				// Extra check for posix_memalign requirements.
+				if (unlikely(alignment % sizeof(void *))) {
+					piranha_throw(std::invalid_argument,"invalid alignment: not a multiple of sizeof(void *)");
+				}
+#endif
+			}
+		}
+	private:
+		const std::size_t m_alignment;
 };
 
 /// Equality operator for piranha::malloc_allocator.
 /**
- * @return \p true.
+ * @param[in] a1 first allocator.
+ * @param[in] a2 second allocator.
+ * 
+ * @return \p true if the alignments of \p a1 and \p a2 coincide, \p false otherwise.
  */
-template <typename T, std::size_t N>
-inline bool operator==(const malloc_allocator<T,N> &, const malloc_allocator<T,N> &)
+template <typename T>
+inline bool operator==(const malloc_allocator<T> &a1, const malloc_allocator<T> &a2)
 {
-	return true;
+	return a1.get_alignment() == a2.get_alignment();
 }
 
 /// Inequality operator for piranha::malloc_allocator.
 /**
- * @return \p false.
+ * @param[in] a1 first allocator.
+ * @param[in] a2 second allocator.
+ * 
+ * @return opposite of the equality operator.
  */
-template <typename T, std::size_t N>
-inline bool operator!=(const malloc_allocator<T,N> &, const malloc_allocator<T,N> &)
+template <typename T>
+inline bool operator!=(const malloc_allocator<T> &a1, const malloc_allocator<T> &a2)
 {
-	return false;
+	return !(a1 == a2);
 }
 
 }
