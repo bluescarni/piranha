@@ -45,6 +45,7 @@ class runtime_info
 			return m_main_thread_id;
 		}
 		static unsigned hardware_concurrency();
+		static unsigned get_cache_line_size();
 	private:
 		static const thread_id	m_main_thread_id;
 		static mutex		m_mutex;

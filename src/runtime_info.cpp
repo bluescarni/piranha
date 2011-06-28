@@ -23,6 +23,7 @@
 extern "C"
 {
 #include <sys/sysinfo.h>
+#include <unistd.h>
 }
 
 #elif defined(__FreeBSD__)
@@ -42,7 +43,7 @@ extern "C"
 
 #endif
 
-#include <iostream>
+#include <boost/numeric/conversion/cast.hpp>
 
 #include "runtime_info.hpp"
 #include "threading.hpp"
@@ -55,7 +56,7 @@ mutex runtime_info::m_mutex;
 
 /// Hardware concurrency.
 /**
- * @return number of detected hardware thread contexts (typically equal to the number of CPU cores), or 0 if
+ * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
  * the detection fails.
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
@@ -65,7 +66,7 @@ unsigned runtime_info::hardware_concurrency()
 	lock_guard<mutex>::type lock(m_mutex);
 #if defined(__linux__)
 	int candidate = ::get_nprocs();
-	return (candidate <= 0) ? 0 : static_cast<unsigned>(candidate);
+	return (candidate <= 0) ? 0u : static_cast<unsigned>(candidate);
 #elif defined(__FreeBSD__)
 	int count;
 	std::size_t size = sizeof(count);
@@ -76,8 +77,24 @@ unsigned runtime_info::hardware_concurrency()
 	// info.dwNumberOfProcessors is a dword, i.e., an unsigned integer.
 	return info.dwNumberOfProcessors;
 #else
-	std::cout << "Warning: hardware concurrency detection not implemented.\n";
-	return 0;
+	return 0u;
+#endif
+}
+
+/// Size of the data cache line.
+/**
+ * Will return the data cache line size (in bytes), or 0 if the value cannot be determined.
+ * 
+ * @return data cache line size in bytes.
+ */
+unsigned runtime_info::get_cache_line_size()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+#if defined(__linux__)
+	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
+#else
+	return 0u;
 #endif
 }
 

@@ -36,3 +36,9 @@ BOOST_AUTO_TEST_CASE(runtime_info_hardware_concurrency_test)
 {
 	BOOST_CHECK_NO_THROW(piranha::runtime_info::hardware_concurrency());
 }
+
+// Simple check on cache line size.
+BOOST_AUTO_TEST_CASE(runtime_info_get_cache_line_size)
+{
+	BOOST_CHECK_NO_THROW(piranha::runtime_info::get_cache_line_size());
+}
