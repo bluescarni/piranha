@@ -88,9 +88,11 @@ class malloc_allocator
 		 * The memory allocated by this allocator will be aligned to the specified \p alignment value.
 		 * If \p alignment is not zero, it must be a nonnegative integral power of
 		 * two not smaller than the alignment requirement for type \p T. Additionally, \p alignment
-		 * might have to conform to other platform-specific requirements.
+		 * might have to conform to other platform-specific requirements. Finally, construction
+		 * with nonzero \p alignment will fail if \p have_memalign_primitives is \p false.
 		 * 
-		 * If \p alignment is zero, the memory allocated by this allocator is guaranteed to be able
+		 * If \p alignment is zero, construction will always be successful,
+		 * and the memory allocated by this allocator is guaranteed to be able
 		 * to store any C++ type (thanks to the use of <tt>std::malloc()</tt>).
 		 * 
 		 * @param[in] alignment desired alignment.
@@ -136,15 +138,13 @@ class malloc_allocator
 		 * If the allocator was constructed with a zero \p alignment,
 		 * the method will use <tt>std::malloc()</tt>. Otherwise, the address of the allocated memory is guaranteed to be
 		 * aligned to \p alignment through the usage of platform-specific routines such as <tt>posix_memalign()</tt> (on POSIX systems)
-		 * and <tt>_aligned_malloc()</tt> (on Windows systems). On unsupported platforms, trying to allocate memory with nonzero
-		 * \p alignment will raise an \p std::bad_alloc exception.
+		 * and <tt>_aligned_malloc()</tt> (on Windows systems).
 		 * 
 		 * @param[in] size number of instances of \p value_type for which memory will be allocated.
 		 * 
 		 * @return address to the allocated memory or \p nullptr if \p size is zero.
 		 * 
-		 * @throws std::bad_alloc if \p size is greater than max_size(), if the allocation fails, or if memory aligning
-		 * primitives are not available on the host platform and \p alignment is not zero.
+		 * @throws std::bad_alloc if \p size is greater than max_size(), or if the allocation fails.
 		 */
 		pointer allocate(size_type size, const void * = piranha_nullptr)
 		{
@@ -169,7 +169,9 @@ class malloc_allocator
 				}
 				return static_cast<T *>(ptr);
 #else
-				piranha_throw(std::bad_alloc,0);
+				// We should never get there, as no memalign primitives means the object
+				// should have not been constructed in the first place.
+				piranha_assert(false);
 #endif
 			} else {
 				pointer ret = static_cast<T *>(std::malloc(size * sizeof(T)));
@@ -197,7 +199,7 @@ class malloc_allocator
 #elif defined(_WIN32)
 				_aligned_free(static_cast<void *>(p));
 #else
-				// We should never get here, as any allocation would have thrown and we deleted
+				// We should never get here, as construction would have thrown and we deleted
 				// assignment operators.
 				piranha_assert(false);
 #endif
@@ -256,20 +258,28 @@ class malloc_allocator
 		}
 		/// Type-trait for alignment primitives.
 		/**
-		 * @return \p true if the host platform supports the memory alignment primitives needed for nonzero
+		 * \p true if the host platform supports the memory alignment primitives needed for nonzero
 		 * alignments, \p false otherwise.
 		 */
-		bool have_memalign_primitives() const
-		{
+		static const bool have_memalign_primitives =
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN) || defined(_WIN32)
-			return true;
+			true;
 #else
-			return false;
+			false;
 #endif
-		}
 	protected:
 		/// Check alignment.
 		/**
+		 * The checks performed are:
+		 * 
+		 * - \p have_memalign_primitives is \p true,
+		 * - <tt>alignment >= alignof(T)</tt>,
+		 * - \p alignment is a power of 2,
+		 * - platform-specific checks.
+		 * 
+		 * If any of these checks fails, an \p std::invalid_argument exception will be thrown. Calling this method
+		 * with zero \p alignment never throws.
+		 * 
 		 * @param[in] alignment alignment value to be checked.
 		 * 
 		 * @throws std::invalid_argument if the alignment value is not valid.
@@ -278,6 +288,9 @@ class malloc_allocator
 		{
 			// If alignment is not zero, we must run the checks.
 			if (alignment) {
+				if (!have_memalign_primitives) {
+					piranha_throw(std::invalid_argument,"invalid alignment: nonzero, with no aligning primitives available on the platform");
+				}
 				if (unlikely(alignment < alignof(T))) {
 					piranha_throw(std::invalid_argument,"invalid alignment: smaller than alignof(T)");
 				}

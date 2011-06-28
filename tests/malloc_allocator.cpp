@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
 	// Do the tests only if sizeof(void *) is a power of 2. All alignments are
 	// required to be powers of 2, so if alignof(char) < sizeof(void *), sizeof(void *)
 	// is a valid alignment for char (supposing that the platform provides that extended alignment).
-	if (malloc_allocator<char>().have_memalign_primitives() && !(sizeof(void *) & (sizeof(void *) - 1u))) {
+	if (malloc_allocator<char>::have_memalign_primitives && !(sizeof(void *) & (sizeof(void *) - 1u))) {
 		const std::size_t good_align = alignof(char) < sizeof(void *) ? sizeof(void *) : alignof(char), bad_align = 7u;
 		malloc_allocator<char> good(good_align);
 		BOOST_CHECK_THROW(new malloc_allocator<char>(bad_align),std::invalid_argument);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
 BOOST_AUTO_TEST_CASE(malloc_allocator_equality_test)
 {
 	BOOST_CHECK(malloc_allocator<char>{} == malloc_allocator<char>{});
-	if (malloc_allocator<char>().have_memalign_primitives()) {
+	if (malloc_allocator<char>::have_memalign_primitives) {
 		BOOST_CHECK(malloc_allocator<char>{sizeof(void *)} == malloc_allocator<char>{sizeof(void *)});
 		BOOST_CHECK(malloc_allocator<char>{sizeof(void *)} != malloc_allocator<char>{});
 	}
