@@ -47,8 +47,12 @@ class runtime_info
 		static unsigned hardware_concurrency();
 		static unsigned get_cache_line_size();
 	private:
+		static unsigned determine_cache_line_size();
+		static unsigned determine_hardware_concurrency();
+	private:
 		static const thread_id	m_main_thread_id;
-		static mutex		m_mutex;
+		static const unsigned	m_hardware_concurrency;
+		static const unsigned	m_cache_line_size;
 };
 
 }

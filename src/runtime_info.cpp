@@ -52,18 +52,21 @@ namespace piranha
 {
 
 const thread_id runtime_info::m_main_thread_id = {this_thread::get_id()};
-mutex runtime_info::m_mutex;
+const unsigned runtime_info::m_hardware_concurrency = runtime_info::determine_hardware_concurrency();
+const unsigned runtime_info::m_cache_line_size = runtime_info::determine_cache_line_size();
 
 /// Hardware concurrency.
 /**
  * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
  * the detection fails.
- * 
- * @throws std::system_error in case of failure(s) by threading primitives.
  */
 unsigned runtime_info::hardware_concurrency()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	return m_hardware_concurrency;
+}
+
+unsigned runtime_info::determine_hardware_concurrency()
+{
 #if defined(__linux__)
 	int candidate = ::get_nprocs();
 	return (candidate <= 0) ? 0u : static_cast<unsigned>(candidate);
@@ -89,7 +92,11 @@ unsigned runtime_info::hardware_concurrency()
  */
 unsigned runtime_info::get_cache_line_size()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	return m_cache_line_size;
+}
+
+unsigned runtime_info::determine_cache_line_size()
+{
 #if defined(__linux__)
 	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
