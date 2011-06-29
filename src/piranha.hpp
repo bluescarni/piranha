@@ -77,6 +77,7 @@ namespace detail {}
 #include "array_key.hpp"
 #include "base_series.hpp"
 #include "base_term.hpp"
+#include "cache_aligning_allocator.hpp"
 #include "concepts.hpp"
 #include "config.hpp"
 #include "cvector.hpp"
