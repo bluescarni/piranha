@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 // Simple check on the thread concurrency.
 BOOST_AUTO_TEST_CASE(runtime_info_hardware_concurrency_test)
 {
-	BOOST_CHECK_NO_THROW(piranha::runtime_info::hardware_concurrency());
+	BOOST_CHECK_NO_THROW(piranha::runtime_info::get_hardware_concurrency());
 	BOOST_CHECK(piranha::runtime_info::determine_hardware_concurrency() == piranha::runtime_info::get_hardware_concurrency());
 }
 

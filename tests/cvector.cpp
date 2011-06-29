@@ -111,7 +111,7 @@ const unsigned size = 1000000;
 
 static inline void set_mt()
 {
-	piranha::settings::set_n_threads((piranha::runtime_info::hardware_concurrency() == 0) ? 1 : piranha::runtime_info::hardware_concurrency());
+	piranha::settings::set_n_threads((piranha::runtime_info::get_hardware_concurrency() == 0) ? 1 : piranha::runtime_info::get_hardware_concurrency());
 }
 
 static inline void set_st()

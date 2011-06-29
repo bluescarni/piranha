@@ -35,7 +35,7 @@ piranha::mutex mutex;
 
 static inline void test_function()
 {
-	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
+	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::thread_management::bind_to_proc(i);
 		const auto retval = piranha::thread_management::bound_proc();
 		// Lock because Boost unit test is not thread-safe.
@@ -48,7 +48,7 @@ static inline void test_function()
 // Check binding on new threads thread.
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
-	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
+	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::thread t(test_function);
 		t.join();
 	}
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 BOOST_AUTO_TEST_CASE(thread_management_thread_group_bind)
 {
 	piranha::thread_group tg;
-	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
+	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		tg.create_thread(test_function);
 	}
 	tg.join_all();
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 	// Check we are not binding from main thread.
 	piranha::thread_management::binder b;
 	BOOST_CHECK_EQUAL(false,piranha::thread_management::bound_proc().first);
-	unsigned hc = piranha::runtime_info::hardware_concurrency();
+	unsigned hc = piranha::runtime_info::get_hardware_concurrency();
 	for (unsigned i = 0; i < hc; ++i) {
 		piranha::thread_group tg;
 		for (unsigned j = 0; j < i; ++j) {

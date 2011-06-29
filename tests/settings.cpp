@@ -31,7 +31,7 @@
 BOOST_AUTO_TEST_CASE(settings_thread_number)
 {
 	BOOST_CHECK_PREDICATE([](unsigned n){return n != 0;},(piranha::settings::get_n_threads()));
-	for (unsigned i = 0; i < piranha::runtime_info::hardware_concurrency(); ++i) {
+	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::settings::set_n_threads(i + 1);
 		BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(), i + 1);
 	}
@@ -42,5 +42,5 @@ BOOST_AUTO_TEST_CASE(settings_reset_thread_number)
 {
 	piranha::settings::set_n_threads(10u);
 	piranha::settings::reset_n_threads();
-	BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(),piranha::runtime_info::hardware_concurrency());
+	BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(),piranha::runtime_info::get_hardware_concurrency());
 }

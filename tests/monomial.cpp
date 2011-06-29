@@ -53,15 +53,15 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(m1.size(),static_cast<decltype(m1.size())>(4));
 		for (typename monomial_type::size_type i = 0; i < m1.size(); ++i) {
 			BOOST_CHECK_EQUAL(m1[i],i);
-			BOOST_CHECK_NO_THROW(m1[i] = i + 1);
-			BOOST_CHECK_EQUAL(m1[i],i + 1);
+			BOOST_CHECK_NO_THROW(m1[i] = T(i) + 1);
+			BOOST_CHECK_EQUAL(m1[i],T(i) + 1);
 		}
 		monomial_type m1a{0,1,2,3};
 		BOOST_CHECK_EQUAL(m1a.size(),static_cast<decltype(m1a.size())>(4));
 		for (typename monomial_type::size_type i = 0; i < m1a.size(); ++i) {
 			BOOST_CHECK_EQUAL(m1a[i],i);
-			BOOST_CHECK_NO_THROW(m1a[i] = i + 1);
-			BOOST_CHECK_EQUAL(m1a[i],i + 1);
+			BOOST_CHECK_NO_THROW(m1a[i] = T(i) + 1);
+			BOOST_CHECK_EQUAL(m1a[i],T(i) + 1);
 		}
 		BOOST_CHECK_NO_THROW(m0 = m1);
 		BOOST_CHECK_NO_THROW(m0 = std::move(m1));

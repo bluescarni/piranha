@@ -82,15 +82,15 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k1.size(),static_cast<decltype(k1.size())>(4));
 		for (typename key_type::size_type i = 0; i < k1.size(); ++i) {
 			BOOST_CHECK_EQUAL(k1[i],i);
-			BOOST_CHECK_NO_THROW(k1[i] = i + 1);
-			BOOST_CHECK_EQUAL(k1[i],i + 1);
+			BOOST_CHECK_NO_THROW(k1[i] = i + T(1));
+			BOOST_CHECK_EQUAL(k1[i],i + T(1));
 		}
 		key_type k1a{0,1,2,3};
 		BOOST_CHECK_EQUAL(k1a.size(),static_cast<decltype(k1a.size())>(4));
 		for (typename key_type::size_type i = 0; i < k1a.size(); ++i) {
 			BOOST_CHECK_EQUAL(k1a[i],i);
-			BOOST_CHECK_NO_THROW(k1a[i] = i + 1);
-			BOOST_CHECK_EQUAL(k1a[i],i + 1);
+			BOOST_CHECK_NO_THROW(k1a[i] = i + T(1));
+			BOOST_CHECK_EQUAL(k1a[i],i + T(1));
 		}
 		BOOST_CHECK_NO_THROW(k0 = k1);
 		BOOST_CHECK_NO_THROW(k0 = std::move(k1));
