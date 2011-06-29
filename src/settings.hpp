@@ -42,9 +42,15 @@ class settings
 		static bool get_tracing();
 		static void set_tracing(bool);
 	private:
+		struct startup
+		{
+			startup();
+		};
+	private:
 		static mutex	m_mutex;
 		static unsigned	m_n_threads;
 		static bool	m_tracing;
+		static startup	m_startup;
 };
 
 }

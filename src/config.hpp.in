@@ -24,6 +24,7 @@
 @PIRANHA_THREAD_MODEL@
 @PIRANHA_64BIT_MODE@
 @PIRANHA_USE_BOOST_THREAD@
+@PIRANHA_VERSION@
 
 #include <cassert>
 #include <cstdlib>

@@ -19,9 +19,12 @@
  ***************************************************************************/
 
 #include <algorithm>
+#include <iostream>
 #include <stdexcept>
 
+#include "config.hpp"
 #include "exceptions.hpp"
+#include "malloc_allocator.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "threading.hpp"
@@ -32,6 +35,25 @@ namespace piranha
 mutex settings::m_mutex;
 unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
 bool settings::m_tracing = false;
+settings::startup settings::m_startup;
+
+settings::startup::startup()
+{
+	std::cout << "Piranha version: " << PIRANHA_VERSION << '\n';
+	std::cout << "Hardware concurrency: " << runtime_info::determine_hardware_concurrency() << '\n';
+	std::cout << "Cache line size: " << runtime_info::determine_cache_line_size() << '\n';
+	std::cout << "Memory alignment primitives: " <<
+		(malloc_allocator<char>::have_memalign_primitives ? "available" : "unavailable") << '\n';
+	std::cout << "Threading primitives: " <<
+#ifdef PIRANHA_USE_BOOST_THREAD
+		"Boost.Thread"
+#else
+		"native C++"
+#endif
+		<< '\n';
+	std::cout << "Piranha is ready.\n";
+	std::cout << "__________________________________\n";
+}
 
 /// Get the number of threads available for use by piranha.
 /**
