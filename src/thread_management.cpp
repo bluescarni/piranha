@@ -74,7 +74,7 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
  * 
  * @throws std::invalid_argument if one of these conditions arises:
  * \li n is greater than an implementation-defined maximum value,
- * \li piranha::runtime_info::hardware_concurrency() returns a nonzero value \p m and <tt>n >= m</tt>.
+ * \li piranha::runtime_info::get_hardware_concurrency() returns a nonzero value \p m and <tt>n >= m</tt>.
  * @throws piranha::not_implemented_error if the method is not available on the current platform.
  * @throws std::system_error in case of failure(s) by threading primitives.
  * @throws std::runtime_error if the operation fails in an unspecified way.
@@ -82,7 +82,7 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 void thread_management::bind_to_proc(unsigned n)
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	if (runtime_info::hardware_concurrency() != 0 && n >= runtime_info::hardware_concurrency()) {
+	if (runtime_info::get_hardware_concurrency() != 0 && n >= runtime_info::get_hardware_concurrency()) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
 	}
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)

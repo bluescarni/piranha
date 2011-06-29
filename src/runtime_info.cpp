@@ -55,16 +55,22 @@ const thread_id runtime_info::m_main_thread_id = {this_thread::get_id()};
 const unsigned runtime_info::m_hardware_concurrency = runtime_info::determine_hardware_concurrency();
 const unsigned runtime_info::m_cache_line_size = runtime_info::determine_cache_line_size();
 
-/// Hardware concurrency.
+/// Get hardware concurrency.
 /**
- * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
- * the detection fails.
+ * @return the value of determine_hardware_concurrency() computed at the startup of the program.
  */
-unsigned runtime_info::hardware_concurrency()
+unsigned runtime_info::get_hardware_concurrency()
 {
 	return m_hardware_concurrency;
 }
 
+/// Determine hardware concurrency.
+/**
+ * This method is not thread-safe.
+ * 
+ * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
+ * the detection fails.
+ */
 unsigned runtime_info::determine_hardware_concurrency()
 {
 #if defined(__linux__)
@@ -84,23 +90,29 @@ unsigned runtime_info::determine_hardware_concurrency()
 #endif
 }
 
-/// Size of the data cache line.
+/// Get size of the data cache line.
 /**
- * Will return the data cache line size (in bytes), or 0 if the value cannot be determined.
- * 
- * @return data cache line size in bytes.
+ * @return the value of determine_cache_line_size() computed at the startup of the program.
  */
 unsigned runtime_info::get_cache_line_size()
 {
 	return m_cache_line_size;
 }
 
+/// Determine size of the data cache line.
+/**
+ * Will return the data cache line size (in bytes), or 0 if the value cannot be determined.
+ * This method is not thread-safe.
+ * 
+ * @return data cache line size in bytes.
+ */
 unsigned runtime_info::determine_cache_line_size()
 {
 #if defined(__linux__)
 	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
 #else
+	// TODO: missing windows stuff.
 	return 0u;
 #endif
 }

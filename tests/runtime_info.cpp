@@ -35,10 +35,12 @@ BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 BOOST_AUTO_TEST_CASE(runtime_info_hardware_concurrency_test)
 {
 	BOOST_CHECK_NO_THROW(piranha::runtime_info::hardware_concurrency());
+	BOOST_CHECK(piranha::runtime_info::determine_hardware_concurrency() == piranha::runtime_info::get_hardware_concurrency());
 }
 
 // Simple check on cache line size.
 BOOST_AUTO_TEST_CASE(runtime_info_get_cache_line_size)
 {
 	BOOST_CHECK_NO_THROW(piranha::runtime_info::get_cache_line_size());
+	BOOST_CHECK(piranha::runtime_info::determine_cache_line_size() == piranha::runtime_info::get_cache_line_size());
 }

@@ -44,11 +44,23 @@ class runtime_info
 		{
 			return m_main_thread_id;
 		}
-		static unsigned hardware_concurrency();
+		/** @name Getters
+		 * The values returned by these methods are static constants determined at startup
+		 * using the <tt>determine_</tt> methods. Their purpose is to provide fast, thread-safe
+		 * information on the runtime environment.
+		 */
+		//@{
+		static unsigned get_hardware_concurrency();
 		static unsigned get_cache_line_size();
-	private:
+		//@}
+		/** @name Runtime query primitives
+		 * These methods explicitly query the runtime environment using low-level platform-specific
+		 * primitives. These methods are not thread-safe.
+		 */
+		//@{
 		static unsigned determine_cache_line_size();
 		static unsigned determine_hardware_concurrency();
+		//@}
 	private:
 		static const thread_id	m_main_thread_id;
 		static const unsigned	m_hardware_concurrency;

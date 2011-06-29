@@ -30,12 +30,12 @@ namespace piranha
 {
 
 mutex settings::m_mutex;
-unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
 bool settings::m_tracing = false;
 
 /// Get the number of threads available for use by piranha.
 /**
- * The initial value upon program startup is set to the maximum between 1 and piranha::runtime_info::hardware_concurrency().
+ * The initial value upon program startup is set to the maximum between 1 and piranha::runtime_info::determine_hardware_concurrency().
  * 
  * @return the number of threads that will be available for use by piranha.
  * 
@@ -65,14 +65,14 @@ void settings::set_n_threads(unsigned n)
 
 /// Reset the number of threads available for use by piranha.
 /**
- * Will set the number of threads to the maximum between 1 and piranha::runtime_info::hardware_concurrency().
+ * Will set the number of threads to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
 void settings::reset_n_threads()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_n_threads = std::max<unsigned>(runtime_info::hardware_concurrency(),static_cast<unsigned>(1));
+	m_n_threads = std::max<unsigned>(runtime_info::get_hardware_concurrency(),static_cast<unsigned>(1));
 }
 
 /// Get tracing status.
