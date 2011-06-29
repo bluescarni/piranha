@@ -172,6 +172,7 @@ class malloc_allocator
 				// We should never get there, as no memalign primitives means the object
 				// should have not been constructed in the first place.
 				piranha_assert(false);
+				return piranha_nullptr;
 #endif
 			} else {
 				pointer ret = static_cast<T *>(std::malloc(size * sizeof(T)));
@@ -284,7 +285,7 @@ class malloc_allocator
 		 * 
 		 * @throws std::invalid_argument if the alignment value is not valid.
 		 */
-		void check_alignment(const std::size_t &alignment) const
+		static void check_alignment(const std::size_t &alignment)
 		{
 			// If alignment is not zero, we must run the checks.
 			if (alignment) {
