@@ -7,6 +7,7 @@ SET(SRC_LIST
 	thread_barrier.cpp
 	thread_group.cpp
 	thread_management.cpp
+	tracing.cpp
 )
 
 IF(BUILD_MAIN OR BUILD_TESTS)
