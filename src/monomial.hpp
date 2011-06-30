@@ -160,23 +160,25 @@ class monomial: public array_key<T,monomial<T>>
 		 */
 		bool is_unitary(const std::vector<symbol> &args) const
 		{
+			typedef typename base::value_type value_type;
 			(void)args;
 			piranha_assert(args.size() == this->size());
 			return std::all_of(this->m_container.begin(),this->m_container.end(),
-				[](const T &element) {return math::is_zero(element);});
+				[](const value_type &element) {return math::is_zero(element);});
 		}
 		/// Degree.
 		/**
 		 * Monomial degree.
 		 * 
-		 * @return the summation of all the exponents of the monomial, or <tt>T(0)</tt> if the size
+		 * @return the summation of all the exponents of the monomial, or <tt>value_type(0)</tt> if the size
 		 * of the monomial is zero.
 		 * 
-		 * @throws unspecified any exception thrown by the addition and assignment operators of \p T.
+		 * @throws unspecified any exception thrown by the addition and assignment operators of \p value_type.
 		 */
-		T degree() const
+		typename array_key<T,monomial<T>>::value_type degree() const
 		{
-			return std::accumulate(this->m_container.begin(),this->m_container.end(),T(0));
+			typedef typename base::value_type value_type;
+			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
 		}
 };
 
