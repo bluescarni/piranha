@@ -39,46 +39,72 @@
 #include "debug_access.hpp"
 #include "detail/array_key_fwd.hpp"
 #include "exceptions.hpp"
+#include "static_vector.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
 
+/// Static size tag for piranha::array_key.
+/**
+ * When used as a type in piranha::array_key, the underlying container of the
+ * piranha::array_key class will be a piranha::static_vector of \p T with maximum
+ * size \p MaxSize.
+ */
+template <typename T, std::uint8_t MaxSize>
+struct static_size {};
+
 /// Array key.
 /**
  * Key type represented by an array-like sequence of instances of type \p T. Interface and semantics
  * mimic those of \p std::vector.
  * 
+ * If \p T is piranha::static_size of \p U and \p MaxSize, then the underlying array container will
+ * be piranha::static_vector of \p U and \p MaxSize (and hence the size of the array key will be
+ * at most \p MaxSize). Otherwise, the underlying container will be std::vector.
+ * 
  * \section type_requirements Type requirements
  * 
- * - \p T must be a model of piranha::concept::ArrayKeyValueType.
+ * - \p T must either be a model of piranha::concept::ArrayKeyValueType, or piranha::static_size of \p U and \p MaxSize,
+ *   in which case \p U must be suitable for use in piranha::static_vector,
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
  *   of \p T and \p Derived as base class.
  * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as \p std::vector.
+ * This class provides the same exception safety guarantee as \p std::vector or piranha::static_vector, depending on
+ * the underlying container.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to <tt>std::vector</tt>'s move semantics.
+ * Move semantics is equivalent to <tt>std::vector</tt>'s or piranha::static_vector's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename Derived>
 class array_key: detail::array_key_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<T>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
+		template <typename U>
+		struct determine_container_type
+		{
+			BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<U>));
+			typedef std::vector<U> type;
+		};
+		template <typename U, std::uint8_t MaxSize>
+		struct determine_container_type<static_size<U,MaxSize>>
+		{
+			typedef static_vector<U,MaxSize> type;
+		};
 		template <typename U>
 		friend class debug_access;
 	public:
 		/// Internal container type.
-		typedef std::vector<T> container_type;
+		typedef typename determine_container_type<T>::type container_type;
 		/// Value type.
-		typedef T value_type;
+		typedef typename container_type::value_type value_type;
 		/// Iterator type.
 		typedef typename container_type::iterator iterator;
 		/// Const iterator type.
@@ -86,7 +112,7 @@ class array_key: detail::array_key_tag
 	private:
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
-			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value &&
+			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
 			is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
@@ -96,7 +122,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
-			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value &&
+			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
 			!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
@@ -122,7 +148,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
-			typename std::enable_if<!std::is_same<T,typename strip_cv_ref<U>::type::value_type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -147,7 +173,7 @@ class array_key: detail::array_key_tag
 		array_key() = default;
 		/// Defaulted copy constructor.
 		/**
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s copy constructor.
+		 * @throws unspecified any exception thrown by the copy constructor of the underlying container.
 		 */
 		array_key(const array_key &) = default;
 		/// Move constructor.
@@ -163,7 +189,7 @@ class array_key: detail::array_key_tag
 		 * @param[in] list initializer list.
 		 * 
 		 * @throws unspecified any exception thrown by memory allocation in \p std::vector or by the construction
-		 * of objects of type \p T from objects of type \p U.
+		 * of objects of type \p value_type from objects of type \p U.
 		 */
 		template <typename U>
 		explicit array_key(std::initializer_list<U> list) : m_container(construct_from_init_list(list)) {}
@@ -175,14 +201,14 @@ class array_key: detail::array_key_tag
 		 * @param[in] args vector of piranha::symbol used for construction.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
-		 * - the construction of instances of type \p T from the integral constant 0.
+		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
+		 * - the construction of instances of type \p value_type from the integral constant 0.
 		 */
 		explicit array_key(const std::vector<symbol> &args)
 		{
 			m_container.reserve(args.size());
 			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
-				push_back(T(0));
+				push_back(value_type(0));
 			}
 		}
 		/// Generic constructor.
@@ -198,7 +224,7 @@ class array_key: detail::array_key_tag
 		 * @param[in] args reference vector of symbolic arguments.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - <tt>std::vector::push_back()</tt> or <tt>std::vector::reserve()</tt>,
+		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
 		 * - construction of piranha::array_key::value_type from the value type of \p U.
 		 * @throws std::invalid_argument if the sizes of \p x and \p args differ.
 		 */
@@ -218,7 +244,7 @@ class array_key: detail::array_key_tag
 		/**
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s copy assignment operator.
+		 * @throws unspecified any exception thrown by the copy assignment operator of the underlying container.
 		 */
 		array_key &operator=(const array_key &) = default;
 		/// Move assignment operator.
@@ -278,7 +304,7 @@ class array_key: detail::array_key_tag
 		/**
 		 * @param[in] new_size desired new size for the internal container.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector::resize()</tt>.
+		 * @throws unspecified any exception thrown by the <tt>resize()</tt> method of the underlying container.
 		 */
 		void resize(const size_type &new_size)
 		{
@@ -288,20 +314,22 @@ class array_key: detail::array_key_tag
 		/**
 		 * @param[in] i index of the element to be accessed.
 		 * 
-		 * @return reference to the <tt>i</tt>-th element of the container.
+		 * @return reference to the element of the container at index \p i.
 		 */
-		T &operator[](const size_type &i)
+		value_type &operator[](const size_type &i)
 		{
+			piranha_assert(i < size());
 			return m_container[i];
 		}
 		/// Const element access.
 		/**
 		 * @param[in] i index of the element to be accessed.
 		 * 
-		 * @return const reference to the <tt>i</tt>-th element of the container.
+		 * @return cosnt reference to the element of the container at index \p i.
 		 */
-		const T &operator[](const size_type &i) const
+		const value_type &operator[](const size_type &i) const
 		{
+			piranha_assert(i < size());
 			return m_container[i];
 		}
 		/// Hash value.
@@ -313,7 +341,7 @@ class array_key: detail::array_key_tag
 		 *   values of all the elements of the container, calculated via \p std::hash,
 		 *   with the hash value of the first element as seed value.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>operator()</tt> of \p std::hash of \p T.
+		 * @throws unspecified any exception thrown by <tt>operator()</tt> of \p std::hash of \p value_type.
 		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
 		 */
@@ -325,12 +353,12 @@ class array_key: detail::array_key_tag
 					return 0u;
 				case 1u:
 				{
-					std::hash<T> hasher;
+					std::hash<value_type> hasher;
 					return hasher(m_container[0u]);
 				}
 				default:
 				{
-					std::hash<T> hasher;
+					std::hash<value_type> hasher;
 					std::size_t retval = hasher(m_container[0u]);
 					for (decltype(m_container.size()) i = 1u; i < size; ++i) {
 						boost::hash_combine(retval,hasher(m_container[i]));
@@ -345,7 +373,7 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @param[in] x element to be added to the internal array.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector::push_back()</tt>.
+		 * @throws unspecified any exception thrown by the <tt>push_back()</tt> method of the internal container.
 		 */
 		void push_back(value_type &&x)
 		{
@@ -357,7 +385,7 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @param[in] x element to be added to the internal array.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector::push_back()</tt>.
+		 * @throws unspecified any exception thrown by the <tt>push_back()</tt> method of the internal container.
 		 */
 		void push_back(const value_type &x)
 		{
@@ -370,7 +398,7 @@ class array_key: detail::array_key_tag
 		 * @return true if <tt>other</tt>'s size() matches the size of \p this and all elements are equal,
 		 * false otherwise.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s equality operator.
+		 * @throws unspecified any exception thrown by the equality operator of the internal container.
 		 */
 		bool operator==(const array_key &other) const
 		{
@@ -382,7 +410,7 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @return negation of operator==().
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::vector</tt>'s equality operator.
+		 * @throws unspecified any exception thrown by the equality operator.
 		 */
 		bool operator!=(const array_key &other) const
 		{
@@ -425,9 +453,8 @@ class array_key: detail::array_key_tag
 		 * @return piranha::array_key resulting from merging \p new_args into \p this.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - <tt>std::vector::reserve()</tt>,
-		 * - <tt>std::vector::push_back()</tt>,
-		 * - the construction of instances of type \p T from the integral constant 0.
+		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
+		 * - the construction of instances of type \p value_type from the integral constant 0.
 		 */
 		array_key base_merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
 		{
