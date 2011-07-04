@@ -36,6 +36,7 @@
 #include <utility>
 #include <vector>
 
+#include "cache_aligning_allocator.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/series.hpp"
 #include "config.hpp"
@@ -237,8 +238,8 @@ std::cout << "using " << n_threads << " threads\n";
 				}
 				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
-				std::list<return_type> retval_list;
-				std::list<Functor> functor_list;
+				std::list<return_type,cache_aligning_allocator<return_type>> retval_list;
+				std::list<Functor,cache_aligning_allocator<return_type>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					retval_list.push_back(return_type{});
@@ -256,8 +257,8 @@ std::cout << "using " << n_threads << " threads\n";
 					// Functor for use in the thread.
 					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&c,&m,&cur_n,&exceptions,&exceptions_mutex]() -> void {
 						try {
-							const auto tmp_i = i;
 							thread_management::binder binder;
+							const auto tmp_i = i;
 							series_multiplier::rehasher(*f_it,*r_it,s1,size2,&c,&m,&cur_n,&tmp_i);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
 							series_multiplier::blocked_multiplication(*f_it,
@@ -479,7 +480,7 @@ std::cout << "new size is " << new_size << '\n';
 			// NOTE: hard-coded value of 100 for minimum size of input series.
 			// NOTE: always do the analysis in multi-thread mode, otherwise
 			// the condition variable will wait on threads that might never get there (when
-			// the subdivision of work produces one block of size > 100, and all the other smaller).
+			// the subdivision of work produces one block of size > 100, and all the others smaller).
 			if (c || (s1 > 100u && s2 > 100u)) {
 				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
 				// of the estimate or in rehashing. In such a case, just ignore the rehashing, clean
