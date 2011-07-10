@@ -1,6 +1,5 @@
 SET(SRC_LIST
 	exceptions.cpp
-	mf_int.cpp
 	runtime_info.cpp
 	settings.cpp
 	symbol.cpp

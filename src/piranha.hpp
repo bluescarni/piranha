@@ -89,7 +89,6 @@ namespace detail {}
 #include "hash_set.hpp"
 #include "integer.hpp"
 #include "math.hpp"
-#include "mf_int.hpp"
 #include "monomial.hpp"
 #include "numerical_coefficient.hpp"
 #include "polynomial_term.hpp"
