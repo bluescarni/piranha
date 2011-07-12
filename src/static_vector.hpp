@@ -29,7 +29,6 @@
 #include <new>
 #include <type_traits>
 
-
 #include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
