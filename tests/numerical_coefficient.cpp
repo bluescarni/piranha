@@ -34,12 +34,11 @@
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
-#include "../src/mf_int.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,mf_int,integer> types;
+typedef boost::mpl::vector<double,long,integer> types;
 
 typedef long double other_type;
 
