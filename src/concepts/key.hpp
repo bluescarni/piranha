@@ -57,6 +57,9 @@ namespace concept
  *   as input and returning bool.
  * 
  * \todo assert that key's hasher satisfy the Hashable requirements.
+ * \todo requirements on default-constructed key: must it be unitary?
+ * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
+ * polynomial ctors from symbol)
  */
 template <typename T>
 struct Key:
