@@ -772,3 +772,21 @@ BOOST_AUTO_TEST_CASE(integer_allocated_size_test)
 	k = piranha::integer(piranha::integer::nlimbs(100));
 	BOOST_CHECK(k.allocated_size() == 100u);
 }
+
+BOOST_AUTO_TEST_CASE(integer_sqrt_test)
+{
+	piranha::integer n(0);
+	BOOST_CHECK(n.sqrt() == 0);
+	n = -1;
+	BOOST_CHECK_THROW(n.sqrt(),std::invalid_argument);
+	n = 1;
+	BOOST_CHECK(n.sqrt() == 1);
+	n = 2;
+	BOOST_CHECK(n.sqrt() == 1);
+	n = 3;
+	BOOST_CHECK(n.sqrt() == 1);
+	n = 4;
+	BOOST_CHECK(n.sqrt() == 2);
+	n = 17;
+	BOOST_CHECK(n.sqrt() == 4);
+}

@@ -1781,6 +1781,21 @@ class integer
 		{
 			return pow_impl(exp);
 		}
+		/// Integer square root.
+		/**
+		 * @return the truncated integer part of the square root of \p this.
+		 * 
+		 * @throws std::invalid_argument if \p this is negative.
+		 */
+		integer sqrt() const
+		{
+			if (unlikely(sign() < 0)) {
+				piranha_throw(std::invalid_argument,"cannot calculate square root of negative integer");
+			}
+			integer retval(*this);
+			::mpz_sqrt(retval.m_value,m_value);
+			return retval;
+		}
 		/// Hash value.
 		/**
 		 * The value is calculated via \p boost::hash_combine over the limbs of the internal \p mpz_t type. The sign of \p this
