@@ -54,6 +54,7 @@
  * allocator _everywhere_ there might be potential cache line sharing -> investigate the use of mt_alloc with custom
  * alignment to solve the problem of frequently-used cache values during multiplication (e.g., the m_tmp members in
  * functors).
+ * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  */
 namespace piranha
 {

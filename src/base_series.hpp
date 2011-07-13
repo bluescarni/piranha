@@ -183,7 +183,7 @@ class base_series: detail::base_series_tag
 				}
 				// Term is new. Handle the case in which we need to rehash because of load factor.
 				if (unlikely(static_cast<double>(m_container.size() + size_type(1u)) / m_container.bucket_count() >
-					m_container.get_max_load_factor()))
+					m_container.max_load_factor()))
 				{
 					m_container._increase_size();
 					// We need a new bucket index in case of a rehash.

@@ -185,6 +185,8 @@ class polynomial:
  * Exception safety guarantee and move semantics are equivalent to the non-specialised series multiplier.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo use std::vector with custom allocator to make extra sure about cache alignment in m_tmp.
  */
 template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series1>::value &&
@@ -258,7 +260,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<
 					}
 					// Term is new. Handle the case in which we need to rehash because of load factor.
 					if (unlikely(static_cast<double>(container.size() + size_type(1u)) / container.bucket_count() >
-						container.get_max_load_factor()))
+						container.max_load_factor()))
 					{
 						container._increase_size();
 						// We need a new bucket index in case of a rehash.
