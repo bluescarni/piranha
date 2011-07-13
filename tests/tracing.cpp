@@ -27,6 +27,7 @@
 #include <boost/any.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 using namespace piranha;
 
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_CASE(tracing_trace_test)
 		}
 	};
 	tracing::trace("event2",f2);
-	tracing::trace("event2",f2);
+	tracing::trace(std::string("event2"),f2);
 	tracing::trace("event2",f2);
 	auto f3 = [](boost::any &x) -> void {
 		if (x.empty()) {
@@ -69,4 +70,16 @@ BOOST_AUTO_TEST_CASE(tracing_dump_test)
 	tracing::dump(oss);
 	BOOST_CHECK(!oss.str().empty());
 	tracing::dump();
+}
+
+BOOST_AUTO_TEST_CASE(tracing_get_test)
+{
+	settings::set_tracing(true);
+	BOOST_CHECK(tracing::get("event1").empty());
+	BOOST_CHECK(tracing::get(std::string("event1")).empty());
+	BOOST_CHECK(!tracing::get("event2").empty());
+	BOOST_CHECK(!tracing::get(std::string("event2")).empty());
+	BOOST_CHECK(tracing::get("event_n").empty());
+	BOOST_CHECK(tracing::get(std::string("event_n")).empty());
+	BOOST_CHECK((bool)boost::any_cast<int>(tracing::get("event2")));
 }

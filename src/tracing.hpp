@@ -46,6 +46,9 @@ namespace piranha
  * move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo settings::get_tracing() should use an atomic variable instead of mutex, to maximize performance
+ * in those cases in which we are not tracing.
  */
 class tracing
 {
@@ -80,6 +83,39 @@ class tracing
 			if (likely(!settings::get_tracing())) {
 				return;
 			}
+			trace_impl(str,f);
+		}
+		/// Trace event (C string version).
+		/**
+		 * Functionally equivalent to the other trace() method overload.
+		 * 
+		 * @param[in] str the descriptor of the event being traced.
+		 * @param[in] f the functor to be applied to the data associated to \p str.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the other version of trace(),
+		 * - construction of \p std::string from a C string.
+		 */
+		template <typename Functor>
+		static void trace(const char *str, const Functor &f)
+		{
+			if (likely(!settings::get_tracing())) {
+				return;
+			}
+			trace_impl(str,f);
+		}
+		static boost::any get(const char *s);
+		static boost::any get(const std::string &);
+		static void dump(std::ostream & = std::cout);
+	private:
+		template <typename Functor>
+		static void trace_impl(const char *str, const Functor &f)
+		{
+			trace_impl(std::string(str),f);
+		}
+		template <typename Functor>
+		static void trace_impl(const std::string &str, const Functor &f)
+		{
 			lock_guard<mutex>::type lock(m_mutex);
 			bool new_item = false;
 			auto it = m_container.find(str);
@@ -98,7 +134,6 @@ class tracing
 				throw;
 			}
 		}
-		static void dump(std::ostream & = std::cout);
 	private:
 		static container_type	m_container;
 		static mutex		m_mutex;

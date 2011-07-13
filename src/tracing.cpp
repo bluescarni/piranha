@@ -96,4 +96,36 @@ void tracing::dump(std::ostream &os)
 	}
 }
 
+/// Get data associated to an event (C string version).
+/**
+ * @return an instance of \p boost::any containing the data associated to the event described by \p str,
+ * or an empty \p boost::any instance if the event is not in the database.
+ * 
+ * @throws unspecified any exception thrown by the constructor of \p std::string from a C string, or
+ * by the other overload of the method.
+ */
+boost::any tracing::get(const char *str)
+{
+	return get(std::string(str));
+}
+
+/// Get data associated to an event.
+/**
+ * @return an instance of \p boost::any containing the data associated to the event described by \p str,
+ * or an empty \p boost::any instance if the event is not in the database.
+ * 
+ * @throws unspecified any exception thrown by threading primitives, or by the copy constructor
+ * of \p boost::any.
+ */
+boost::any tracing::get(const std::string &str)
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	const auto it = m_container.find(str);
+	if (it == m_container.end()) {
+		return boost::any();
+	} else {
+		return it->second;
+	}
+}
+
 }
