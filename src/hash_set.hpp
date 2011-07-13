@@ -608,7 +608,7 @@ class hash_set
 		/**
 		 * @return the maximum load factor allowed before a resize.
 		 */
-		double get_max_load_factor() const
+		double max_load_factor() const
 		{
 			// Maximum load factor hard-coded to 1.
 			// NOTE: if this is ever made configurable, it should never be allowed to go to zero.
@@ -652,7 +652,7 @@ class hash_set
 				piranha_throw(std::overflow_error,"maximum number of elements reached");
 			}
 			// Item is new. Handle the case in which we need to rehash because of load factor.
-			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / bucket_count() > get_max_load_factor())) {
+			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / bucket_count() > max_load_factor())) {
 				_increase_size();
 				// We need a new bucket index in case of a rehash.
 				bucket_idx = _bucket(k);
@@ -747,7 +747,7 @@ class hash_set
 				return;
 			}
 			// Do nothing if rehashing to the new size would lead to exceeding the max load factor.
-			if (static_cast<double>(size()) / new_size > get_max_load_factor()) {
+			if (static_cast<double>(size()) / new_size > max_load_factor()) {
 				return;
 			}
 			// Create a new table with needed amount of buckets.
@@ -1022,7 +1022,7 @@ class hash_set
 				return false;
 			}
 			// Check load factor is not exceeded.
-			if (load_factor() > get_max_load_factor()) {
+			if (load_factor() > max_load_factor()) {
 				return false;
 			}
 			return true;

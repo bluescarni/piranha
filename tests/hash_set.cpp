@@ -393,6 +393,7 @@ struct load_factor_tester
 		hash_set<T> j(make_hash_set<T>());
 		BOOST_CHECK(j.load_factor() > 0);
 		BOOST_CHECK(j.load_factor() <= 1);
+		BOOST_CHECK(h.max_load_factor() > 0);
 	}
 };
 
