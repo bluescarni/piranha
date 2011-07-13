@@ -22,6 +22,7 @@
 #define PIRANHA_SERIES_MULTIPLIER_H
 
 #include <algorithm>
+#include <boost/any.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -31,6 +32,7 @@
 #include <list>
 #include <new> // For bad_alloc.
 #include <numeric>
+#include <random>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -49,6 +51,7 @@
 #include "thread_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
+#include "tracing.hpp"
 
 namespace piranha
 {
@@ -83,6 +86,9 @@ namespace piranha
  * \todo series multiplier concept?
  * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
  * means via template specialisation to customise the behaviour for different types of coefficients.
+ * \todo when estimating series size, we should take into account that term-by-term multiplication can generate multiple terms (e.g., Poisson series).
+ * \todo swap series if they are the same type and if first one is smaller than second -> more opportunity for subdivision in mt mode
+ * \todo try to abstract exception handling in mt-mode into a generic functor that re-throws exceptions transported from threads.
  */
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
@@ -102,7 +108,7 @@ class series_multiplier
 		typedef decltype(std::declval<Series1>().multiply_by_series(
 			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) determined_return_type;
 	protected:
-		/// Alias for the type of the result of the multiplication.
+		/// Type of the result of the multiplication.
 		/**
 		 * Return type is the base series type of \p Series1.
 		 */
@@ -220,13 +226,15 @@ class series_multiplier
 			if (n_threads > size1) {
 				n_threads = size1;
 			}
-std::cout << "using " << n_threads << " threads\n";
 			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
 				Functor f(v1,v2,ed,retval);
-				rehasher(f,retval,size1,size2);
+				const auto tmp = rehasher(f,retval,size1,size2);
 				blocked_multiplication(f,size_type(0u),size1,size_type(0u),size2);
+				if (tmp.first) {
+					trace_estimates(retval.size(),tmp.second);
+				}
 				return retval;
 			} else {
 // boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
@@ -234,7 +242,7 @@ std::cout << "using " << n_threads << " threads\n";
 				std::vector<exception_ptr> exceptions;
 				exceptions.reserve(n_threads);
 				if (exceptions.capacity() != n_threads) {
-					throw std::bad_alloc();
+					piranha_throw(std::bad_alloc,0);
 				}
 				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
@@ -246,23 +254,22 @@ std::cout << "using " << n_threads << " threads\n";
 					functor_list.push_back(Functor(v1,v2,ed,retval_list.back()));
 				}
 				thread_group tg;
-				condition_variable c;
-				mutex m;
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
-				size_type cur_n = 0u;
 				for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					// Functor for use in the thread.
-					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&c,&m,&cur_n,&exceptions,&exceptions_mutex]() -> void {
+					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex]() -> void {
 						try {
 							thread_management::binder binder;
-							const auto tmp_i = i;
-							series_multiplier::rehasher(*f_it,*r_it,s1,size2,&c,&m,&cur_n,&tmp_i);
+							const auto tmp = series_multiplier::rehasher(*f_it,*r_it,s1,size2);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
 							series_multiplier::blocked_multiplication(*f_it,
 								i * block_size,s1,size_type(0u),size2);
+							if (tmp.first) {
+								series_multiplier::trace_estimates(r_it->m_container.size(),tmp.second);
+							}
 // std::cout << "final series size: " << f_it->m_retval.size() << '\n';
 						} catch (...) {
 							lock_guard<mutex>::type lock(exceptions_mutex);
@@ -278,7 +285,7 @@ std::cout << "using " << n_threads << " threads\n";
 				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				auto final_estimate = esitmate_final_series_size(Functor(v1,v2,ed,retval),size1,size2,retval);
+				auto final_estimate = estimate_final_series_size(Functor(v1,v2,ed,retval),size1,size2,retval);
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -286,7 +293,9 @@ std::cout << "using " << n_threads << " threads\n";
 				}
 // std::cout << "Final estimate: " <<  final_estimate << '\n';
 				// Try to see if a series already has enough buckets.
-				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {return r.m_container.bucket_count() >= final_estimate;});
+				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {
+					return r.m_container.bucket_count() * r.m_container.max_load_factor() >= final_estimate;
+				});
 				if (it != retval_list.end()) {
 // std::cout << "Found candidate series for final summation\n";
 					retval = std::move(*it);
@@ -304,6 +313,10 @@ std::cout << "using " << n_threads << " threads\n";
 std::cout << "going for final\n";
 				try {
 					final_merge(retval,retval_list,n_threads,ed);
+					// Here the estimate will be correct if the initial estimate (corrected for load factor)
+					// is at least equal to the final real bucket count.
+std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate << '\n';
+					trace_estimates(retval.m_container.size(),final_estimate);
 				} catch (...) {
 					// Do the cleanup before re-throwing, as we use mutable iterators in final_merge.
 					cleanup();
@@ -319,6 +332,36 @@ std::cout << "going for final\n";
 		}
 	private:
 		typedef decltype(std::declval<return_type>().m_container.bucket_count()) bucket_size_type;
+		static void trace_estimates(const bucket_size_type &real_size, const bucket_size_type &estimate)
+		{
+			tracing::trace("number_of_estimates",[](boost::any &x) -> void {
+				if (unlikely(x.empty())) {
+					x = 0ull;
+				}
+				auto ptr = boost::any_cast<unsigned long long>(&x);
+				if (likely((bool)ptr)) {
+					++*ptr;
+				}
+			});
+			tracing::trace("number_of_correct_estimates",[real_size,estimate](boost::any &x) -> void {
+				if (unlikely(x.empty())) {
+					x = 0ull;
+				}
+				auto ptr = boost::any_cast<unsigned long long>(&x);
+				if (likely((bool)ptr)) {
+					*ptr += static_cast<unsigned long long>(estimate >= real_size);
+				}
+			});
+			tracing::trace("accumulated_estimate_ratio",[real_size,estimate](boost::any &x) -> void {
+				if (unlikely(x.empty())) {
+					x = 0.;
+				}
+				auto ptr = boost::any_cast<double>(&x);
+				if (likely((bool)ptr && estimate)) {
+					*ptr += static_cast<double>(estimate) / real_size;
+				}
+			});
+		}
 		template <typename RetvalList, typename Size, typename Term>
 		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads, const echelon_descriptor<Term> &ed)
 		{
@@ -330,7 +373,7 @@ std::cout << "going for final\n";
 			// We never need more capacity than the number of threads.
 			e_vector.reserve(n_threads);
 			if (unlikely(e_vector.capacity() != n_threads)) {
-				throw std::bad_alloc();
+				piranha_throw(std::bad_alloc,0);
 			}
 			typedef typename std::vector<std::pair<bucket_size_type,decltype(retval.m_container._m_begin())>> container_type;
 			typedef typename container_type::size_type size_type;
@@ -367,16 +410,15 @@ std::cout << "going for final\n";
 			e_vector.clear();
 			e_vector.reserve(n_threads);
 			if (unlikely(e_vector.capacity() != n_threads)) {
-				throw std::bad_alloc();
+				piranha_throw(std::bad_alloc,0);
 			}
 			thread_group tg2;
 			mutex m;
 			std::vector<integer> new_sizes;
 			new_sizes.reserve(n_threads);
 			if (unlikely(new_sizes.capacity() != n_threads)) {
-				throw std::bad_alloc();
+				piranha_throw(std::bad_alloc,0);
 			}
-			// Vector of terms for which insertion failed.
 			const bucket_size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
 			for (Size n = 0u; n < n_threads; ++n) {
 				// The are the bucket indices allowed to the current thread.
@@ -443,9 +485,9 @@ std::cout << "new size is " << new_size << '\n';
 			piranha_assert(new_size + retval.m_container.size() >= 0);
 			retval.m_container._update_size(static_cast<decltype(retval.m_container.size())>(new_size + retval.m_container.size()));
 			// Take care of rehashing, if needed.
-			if (unlikely(retval.m_container.load_factor() > retval.m_container.get_max_load_factor())) {
+			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					static_cast<bucket_size_type>(integer(std::ceil(retval.size() / retval.m_container.get_max_load_factor())))
+					boost::numeric_cast<bucket_size_type>(std::ceil(retval.size() / retval.m_container.max_load_factor()))
 				);
 			}
 		}
@@ -472,93 +514,93 @@ std::cout << "new size is " << new_size << '\n';
 		// Functor tasked to prepare return value(s) with estimated bucket sizes (if
 		// it is worth to perform such analysis).
 		template <typename Functor, typename Size>
-		static void rehasher(const Functor &f, return_type &r, const Size &s1, const Size &s2,
-			condition_variable *c = piranha_nullptr, mutex *m = piranha_nullptr, Size *cur_n = piranha_nullptr,
-			const Size *n = piranha_nullptr)
+		static std::pair<bool,bucket_size_type> rehasher(const Functor &f, return_type &r, const Size &s1, const Size &s2)
 		{
-			piranha_assert((c && m && cur_n && n) || (!c && !m && !cur_n && !n));
-			// NOTE: hard-coded value of 100 for minimum size of input series.
-			// NOTE: always do the analysis in multi-thread mode, otherwise
-			// the condition variable will wait on threads that might never get there (when
-			// the subdivision of work produces one block of size > 100, and all the others smaller).
-			if (c || (s1 > 100u && s2 > 100u)) {
+			// NOTE: hard-coded value of 100000 for minimm number of terms multiplications.
+			if (s2 && s1 >= 100000u / s2) {
 				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
 				// of the estimate or in rehashing. In such a case, just ignore the rehashing, clean
 				// up retval just to be sure, and proceed.
 				try {
-					auto size = esitmate_final_series_size(f,s1,s2,r,c,m,cur_n,n);
-					r.m_container.rehash(static_cast<decltype(size)>((size * integer(r.m_container.get_max_load_factor() * 100)) / 100));
+					auto size = estimate_final_series_size(f,s1,s2,r);
+					r.m_container.rehash(boost::numeric_cast<decltype(size)>(std::ceil(size / r.m_container.max_load_factor())));
+					return std::make_pair(true,size);
 				} catch (...) {
 					r.m_container.clear();
+					return std::make_pair(false,bucket_size_type(0u));
 				}
 			}
+			return std::make_pair(false,bucket_size_type(0u));
 		}
 		template <typename Functor, typename Size>
-		static bucket_size_type esitmate_final_series_size(const Functor &f, const Size &size1, const Size &size2, return_type &retval,
-			condition_variable *c = piranha_nullptr, mutex *m = piranha_nullptr, Size *cur_n = piranha_nullptr,
-			const Size *n = piranha_nullptr)
+		static bucket_size_type estimate_final_series_size(const Functor &f, const Size &size1, const Size &size2, return_type &retval)
 		{
-			piranha_assert((c && m && cur_n && n) || (!c && !m && !cur_n && !n));
-			// NOTE: Hard-coded number of trials = 10.
-			const auto ntrials = 10u;
-			std::vector<std::vector<Size>> v_idx1(ntrials), v_idx2(ntrials);
-			// Functor to fill the vectors of indices and randomize them.
-			auto randomizer = [&ntrials,&v_idx1,&v_idx2,&size1,&size2]() -> void {
-				for (auto i = 0u; i < ntrials; ++i) {
-					if (i) {
-						v_idx1[i] = v_idx1[i - 1u];
-						v_idx2[i] = v_idx2[i - 1u];
-						std::random_shuffle(v_idx1[i].begin(),v_idx1[i].end());
-						std::random_shuffle(v_idx2[i].begin(),v_idx2[i].end());
-					} else {
-						v_idx1[i].reserve(size1);
-						v_idx2[i].reserve(size2);
-						for (Size j = 0u; j < size1; ++j) {
-							v_idx1[i].push_back(j);
-						}
-						for (Size j = 0u; j < size2; ++j) {
-							v_idx2[i].push_back(j);
-						}
-						std::random_shuffle(v_idx1[i].begin(),v_idx1[i].end());
-						std::random_shuffle(v_idx2[i].begin(),v_idx2[i].end());
-					}
-				}
-			};
-			if (c) {
-				unique_lock<mutex>::type lock(*m);
-				while (*cur_n != *n) {
-					c->wait(lock);
-				}
-				randomizer();
-				++*cur_n;
-				c->notify_all();
-			} else {
-				randomizer();
+			// If one of the two series is empty, just return 0.
+			if (unlikely(!size1 || !size2)) {
+				return 0u;
 			}
+			// NOTE: Hard-coded number of trials = 10.
+			// NOTE: here consider that in case of extremely sparse series with few terms (e.g., next to the lower limit
+			// for which this function is called) this will incur in noticeable overhead, since we will need many term-by-term
+			// before encountering the first duplicate.
+			const auto ntrials = 10u;
+			// NOTE: Hard-coded value for the estimation multiplier.
+			const auto multiplier = 3;
+			// Size of the multiplication result
+			// Vectors of indices.
+			std::vector<Size> v_idx1, v_idx2;
+			for (Size i = 0u; i < size1; ++i) {
+				v_idx1.push_back(i);
+			}
+			for (Size i = 0u; i < size2; ++i) {
+				v_idx2.push_back(i);
+			}
+			// Maxium number of random multiplications before which a duplicate term must be generated.
+			const Size max_M = static_cast<Size>(((integer(size1) * size2) / multiplier).sqrt());
+			// Random number engine and generator.
+			std::mt19937 engine;
+			typedef typename std::iterator_traits<typename std::vector<Size>::iterator>::difference_type diff_type;
+			typedef std::uniform_int_distribution<diff_type> dist_type;
+			auto rng = [&engine](const diff_type &n) {return dist_type(diff_type(0),n - diff_type(1))(engine);};
+			// Init mean.
 			integer mean(0);
-			// This could be easily parallelised, but not sure if it is worth.
+			// Go with the trials.
+			// NOTE: This could be easily parallelised, but not sure if it is worth.
 			for (auto n = 0u; n < ntrials; ++n) {
-				const auto &idx1 = v_idx1[n], &idx2 = v_idx2[n];
-				Size i = 0u;
-				for (; i < std::min<Size>(size1,size2); ++i) {
-					// NOTE: by accessing idx1 and idx2 using an instance of type Size we are
-					// not absolutely sure that it will work in face of types with different ranges.
-					// The worst that can happen is that i is truncated to idx1/2's size type, so
-					// it seems not much of a big deal - worst that can happen is underestimate
-					// of final series size.
-					f(idx1[i],idx2[i]);
-					if (retval.size() != i + 1u) {
+				// Randomise.
+				std::random_shuffle(v_idx1.begin(),v_idx1.end(),rng);
+				std::random_shuffle(v_idx2.begin(),v_idx2.end(),rng);
+				Size count = 0u;
+				auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
+				while (count < max_M) {
+					if (it1 == v_idx1.end()) {
+						// Each time we wrap around the first series,
+						// wrap around also the second and rotate it.
+						it1 = v_idx1.begin();
+						auto middle = v_idx2.end();
+						--middle;
+						std::rotate(v_idx2.begin(),middle,v_idx2.end());
+						it2 = v_idx2.begin();
+					}
+					if (it2 == v_idx2.end()) {
+						it2 = v_idx2.begin();
+					}
+					// Perform multiplication and check if it produces a new term.
+					f(*it1,*it2);
+					if (retval.size() != count + 1u) {
 						break;
 					}
+					// Increase cycle variables.
+					++count;
+					++it1;
+					++it2;
 				}
-				mean += i;
+				mean += count;
 				// Reset retval.
 				retval.m_container.clear();
 			}
 			mean /= ntrials;
-			// NOTE: heuristic from experiments.
-			const integer M = (mean * mean * 6) / 3;
-// std::cout << "M = " << M << '\n';
+			const integer M = mean * mean * multiplier;
 			return static_cast<bucket_size_type>(M);
 		}
 		template <typename Functor, typename Size>
