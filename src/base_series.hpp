@@ -435,7 +435,6 @@ class base_series: detail::base_series_tag
 		 * @throws unspecified any exception thrown by:
 		 * - the constructors of base_series::term_type, and of its coefficient and key types,
 		 *   invoked by any necessary conversion;
-		 * - the <tt>is_compatible()</tt> and <tt>is_ignorable()</tt> methods of base_series::term_type;
 		 * - piranha::hash_set::insert(),
 		 * - piranha::hash_set::find(),
 		 * - piranha::hash_set::erase(),
