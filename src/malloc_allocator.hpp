@@ -292,6 +292,8 @@ class malloc_allocator
 				if (!have_memalign_primitives) {
 					piranha_throw(std::invalid_argument,"invalid alignment: nonzero, with no aligning primitives available on the platform");
 				}
+				// NOTE: here the check is like this because standard says that all alignments larger than that of T
+				// include also the alignment of T (so no need to check for mod alignof(T)).
 				if (unlikely(alignment < alignof(T))) {
 					piranha_throw(std::invalid_argument,"invalid alignment: smaller than alignof(T)");
 				}
