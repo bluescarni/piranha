@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "array_key.hpp"
+#include "concepts/key.hpp"
 #include "config.hpp"
 #include "math.hpp"
 #include "symbol.hpp"
@@ -89,8 +90,11 @@ class monomial: public array_key<T,monomial<T>>
 		template <typename U, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<monomial,typename strip_cv_ref<U>::type>::value>::type*& = enabler>
 		explicit monomial(U &&arg1, Args && ... params):
 			base(std::forward<U>(arg1),std::forward<Args>(params)...) {}
-		/// Defaulted destructor.
-		~monomial() = default;
+		/// Trivial destructor.
+		~monomial()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Key<monomial>));
+		}
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
 		// NOTE: this can be defaulted in GCC >= 4.6.
