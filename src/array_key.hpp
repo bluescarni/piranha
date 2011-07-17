@@ -480,6 +480,30 @@ class array_key: detail::array_key_tag
 			piranha_assert(retval.size() == new_args.size());
 			return retval;
 		}
+		/// Vector sum.
+		/**
+		 * The elements of \p this will be assigned to \p retval, and then summed in-place
+		 * with the elements of \p other.
+		 * 
+		 * @param[out] retval piranha::array_key that will hold the result of the summation.
+		 * @param[in] other piranha::array_key that will be added to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - resize(),
+		 * - the assignment operator of \p T,
+		 * - the in-place addition operator of \p T.
+		 */
+		template <typename U, typename Derived2>
+		void add(array_key &retval, const array_key<U,Derived2> &other) const
+		{
+			piranha_assert(other.size() == size());
+			const auto s = size();
+			retval.resize(s);
+			std::copy(begin(),end(),retval.begin());
+			for (decltype(size()) i = 0u; i < s; ++i) {
+				retval[i] += other[i];
+			}
+		}
 	protected:
 		/// Internal container.
 		container_type m_container;

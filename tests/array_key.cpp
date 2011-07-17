@@ -313,3 +313,38 @@ BOOST_AUTO_TEST_CASE(array_key_resize_test)
 {
 	boost::mpl::for_each<value_types>(resize_tester());
 }
+
+struct add_tag;
+
+namespace piranha
+{
+
+template <>
+class debug_access<add_tag>
+{
+	public:
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef g_key_type<T> key_type;
+			key_type k1, k2, retval;
+			k1.add(retval,k2);
+			BOOST_CHECK(!retval.size());
+			k1.resize(1);
+			k2.resize(1);
+			k1[0] = 1;
+			k2[0] = 2;
+			k1.add(retval,k2);
+			BOOST_CHECK(retval.size() == 1u);
+			BOOST_CHECK(retval[0] == T(3));
+		}
+};
+
+}
+
+typedef piranha::debug_access<add_tag> add_tester;
+
+BOOST_AUTO_TEST_CASE(array_key_add_test)
+{
+	boost::mpl::for_each<value_types>(add_tester());
+}
