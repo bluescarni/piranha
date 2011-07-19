@@ -42,7 +42,7 @@ namespace piranha
 /// Base term class.
 /**
  * Every term must derive from this base class, which is parametrised over a coefficient type \p Cf and a key type
- * \p Key. One coefficient instance and one key instance are the only data members and they can be accessed directly.
+ * \p Key. One mutable coefficient instance and one key instance are the only data members and they can be accessed directly.
  * 
  * \section type_requirements Type requirements
  * 
