@@ -22,7 +22,9 @@
 #define PIRANHA_CONCEPT_ARRAY_KEY_VALUE_TYPE_HPP
 
 #include <boost/concept_check.hpp>
+#include <iostream>
 
+#include "../math.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -36,11 +38,19 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::ContainerElement,
- * - must be constructible from the integral constant 0.
+ * - must be constructible from the integral constant 0,
+ * - must be assignable,
+ * - must be equality-comparable,
+ * - must be addable (both in binary and unary form),
+ * - must be streamable,
+ * - must be a valid argument type for piranha::math::is_zero().
+ * 
+ * \todo add std::is_assignable check when implemented in GCC.
  */
 template <typename T>
 struct ArrayKeyValueType:
-	ContainerElement<T>
+	ContainerElement<T>,
+	boost::EqualityComparable<T>
 {
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(ArrayKeyValueType)
@@ -48,6 +58,11 @@ struct ArrayKeyValueType:
 		T inst = T(0);
 		// Shut off compiler warning.
 		(void)&inst;
+		T inst2(inst);
+		inst += inst2;
+		inst = inst + inst2;
+		std::cout << inst2;
+		piranha::math::is_zero(inst);
 	}
 };
 
