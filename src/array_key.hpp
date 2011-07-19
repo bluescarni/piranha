@@ -67,7 +67,7 @@ struct static_size {};
  * \section type_requirements Type requirements
  * 
  * - \p T must either be a model of piranha::concept::ArrayKeyValueType, or piranha::static_size of \p U and \p MaxSize,
- *   in which case \p U must be suitable for use in piranha::static_vector,
+ *   in which case \p U must be a model of piranha::concept::ArrayKeyValueType,
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
  *   of \p T and \p Derived as base class.
  * - \p Derived must be a model of piranha::concept::ContainerElement.
@@ -335,7 +335,7 @@ class array_key: detail::array_key_tag
 		/// Hash value.
 		/**
 		 * @return one of the following:
-		 * - 0 if size() is 0
+		 * - 0 if size() is 0,
 		 * - the hash of the first element (via \p std::hash) if size() is 1,
 		 * - the result of iteratively mixing via \p boost::hash_combine the hash
 		 *   values of all the elements of the container, calculated via \p std::hash,
