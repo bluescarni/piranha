@@ -184,6 +184,24 @@ class monomial: public array_key<T,monomial<T>>
 			typedef typename base::value_type value_type;
 			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
 		}
+		/// Multiply monomial.
+		/**
+		 * Multiplies \p this by \p other and stores the result in \p retval.
+		 * 
+		 * @param[out] retval return value.
+		 * @param[in] other argument of multiplication.
+		 * @param[in] args reference vector of arguments.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::array_key::add().
+		 */
+		template <typename U>
+		void multiply(monomial &retval, const monomial<U> &other, const std::vector<symbol> &args) const
+		{
+			(void)args;
+			piranha_assert(other.size() == this->size());
+			piranha_assert(other.size() == args.size());
+			this->add(retval,other);
+		}
 };
 
 }
