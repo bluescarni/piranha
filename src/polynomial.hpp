@@ -237,14 +237,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<
 				piranha_assert(i < m_v1.size() && j < m_v2.size());
 				const auto &t1 = *m_v1[i];
 				const auto &t2 = *m_v2[j];
-				m_tmp.m_key.resize(t1.m_key.size());
-				piranha_assert(m_tmp.m_key.size() == m_ed.template get_args<typename base::term_type1>().size());
-				piranha_assert(m_tmp.m_key.size() == t2.m_key.size());
-				std::copy(t1.m_key.begin(),t1.m_key.end(),m_tmp.m_key.begin());
-				const auto size = t1.m_key.size();
-				for (decltype(t1.m_key.size()) n = 0u; n < size; ++n) {
-					m_tmp.m_key[n] += t2.m_key[n];
-				}
+				t1.m_key.multiply(m_tmp.m_key,t2.m_key,m_ed.template get_args<typename base::term_type1>());
 				auto &container = m_retval.m_container;
 				typedef decltype(container.bucket_count()) size_type;
 				// Prepare the return series.
