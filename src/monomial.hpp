@@ -154,7 +154,7 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Check if monomial is unitary.
 		/**
-		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns true.
+		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
 		 * 
 		 * @param[in] args reference vector of piranha::symbol.
 		 * 

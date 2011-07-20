@@ -238,7 +238,6 @@ struct is_unitary_tester
 	}
 };
 
-
 BOOST_AUTO_TEST_CASE(monomial_is_unitary_test)
 {
 	boost::mpl::for_each<expo_types>(is_unitary_tester());
