@@ -21,7 +21,6 @@
 #ifndef PIRANHA_POLYNOMIAL_TERM_HPP
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
-#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <type_traits>
 
@@ -132,16 +131,8 @@ class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf
 		template <typename Cf2, typename ExpoType2, typename Term>
 		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
 		{
-			piranha_assert(other.m_key.size() == this->m_key.size());
-			piranha_assert(other.m_key.size() == ed.template get_args<polynomial_term>().size());
 			cf_mult_impl(retval,other,ed);
-			// Key part.
-			const auto size = this->m_key.size();
-			retval.m_key.resize(size);
-			std::copy(this->m_key.begin(),this->m_key.end(),retval.m_key.begin());
-			for (decltype(this->m_key.size()) i = 0u; i < size; ++i) {
-				retval.m_key[i] += other.m_key[i];
-			}
+			this->m_key.multiply(retval.m_key,other.m_key,ed.template get_args<polynomial_term>());
 		}
 	private:
 		// Overload if no coefficient is series.
