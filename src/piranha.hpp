@@ -55,6 +55,8 @@
  * alignment to solve the problem of frequently-used cache values during multiplication (e.g., the m_tmp members in
  * functors).
  * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
+ * \todo assert that concepts are respected in models.
+ * \todo do we need an is_assignable_concept? it is used in monomial, for instance, or when doing std::copy
  */
 namespace piranha
 {
@@ -107,6 +109,7 @@ namespace detail {}
 #include "top_level_series.hpp"
 #include "tracing.hpp"
 #include "type_traits.hpp"
+#include "univariate_monomial.hpp"
 #include "utils.hpp"
 
 #endif
