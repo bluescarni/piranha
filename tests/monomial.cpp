@@ -26,6 +26,8 @@
 #include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstddef>
+#include <unordered_set>
 #include <vector>
 
 #include "../src/concepts/key.hpp"
