@@ -33,14 +33,50 @@
 #include "monomial.hpp"
 #include "series_multiplier.hpp"
 #include "type_traits.hpp"
+#include "univariate_monomial.hpp"
 
 namespace piranha
 {
 
+namespace detail
+{
+
+template <typename T>
+struct polynomial_term_key
+{
+	typedef monomial<T> type;
+};
+
+template <typename T>
+struct polynomial_term_key<univariate_monomial<T>>
+{
+	typedef univariate_monomial<T> type;
+};
+
+}
+
 /// Polynomial term.
 /**
  * This class extends piranha::base_term for use in polynomials. The coefficient type \p Cf is generic,
- * the key is piranha::monomial of \p ExpoType.
+ * the key type is determined as follows:
+ * 
+ * - if \p ExpoType is piranha::univariate_monomial of \p T, the key will also be piranha::univariate_monomial of \p T,
+ * - otherwise, the key will be piranha::monomial of \p ExpoType.
+ * 
+ * Examples:
+ * @code
+ * polynomial_term<numerical_coefficient<double>,int>
+ * @endcode
+ * is a multivariate polynomial term with double-precision coefficient and \p int exponents.
+ * @code
+ * polynomial_term<numerical_coefficient<double>,static_size<int,5>>
+ * @endcode
+ * is a multivariate polynomial term with double-precision coefficient and a maximum of 5 \p int exponents.
+ * @code
+ * polynomial_term<numerical_coefficient<double>,univariate_monomial<int>>
+ * @endcode
+ * is a univariate polynomial term with double-precision coefficient and \p int exponent.
+ * 
  * This class is a model of the piranha::concept::MultipliableTerm concept.
  * 
  * \section type_requirements Type requirements
@@ -62,11 +98,11 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename ExpoType>
-class polynomial_term: public base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>>
+class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
 {
 		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
 		BOOST_CONCEPT_ASSERT((concept::MultaddableCoefficient<Cf>));
-		typedef base_term<Cf,monomial<ExpoType>,polynomial_term<Cf,ExpoType>> base;
+		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
