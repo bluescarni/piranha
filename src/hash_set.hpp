@@ -82,6 +82,8 @@ namespace piranha
  * \todo concept assert for hash and pred. Require non-throwing swap, comparison and hashing operators and modify docs accordingly.
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
+ * \todo list of available sizes should be built at runtime: pre-calculated prime sizes stored as strings and converted to numbers using
+ * lexical cast at program startup, until out-of-range happens.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set

@@ -89,6 +89,8 @@ namespace piranha
  * \todo when estimating series size, we should take into account that term-by-term multiplication can generate multiple terms (e.g., Poisson series).
  * \todo swap series if they are the same type and if first one is smaller than second -> more opportunity for subdivision in mt mode
  * \todo try to abstract exception handling in mt-mode into a generic functor that re-throws exceptions transported from threads.
+ * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
+ * \todo swap arguments if series are same type and second series has more terms: better chances of mt-mode activation.
  */
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
@@ -421,7 +423,7 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 			}
 			const bucket_size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
 			for (Size n = 0u; n < n_threads; ++n) {
-				// The are the bucket indices allowed to the current thread.
+				// These are the bucket indices allowed to the current thread.
 				const bucket_size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
 				auto f = [start,end,&size,&retval,&ed,&idx,&m,&new_sizes,&e_mutex,&e_vector]() -> void {
 					try {

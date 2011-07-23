@@ -55,7 +55,7 @@ struct polynomial_tag {};
  * 
  * \section type_requirements Type requirements
  * 
- * \p Cf and \p ExpoType must be suitable for use in piranha::polynomial_term.
+ * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term.
  * 
  * \section exception_safety Exception safety guarantee
  * 
