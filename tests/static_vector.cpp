@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <iterator>
 #include <new>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -96,6 +97,13 @@ struct constructor_tester
 				BOOST_CHECK_EQUAL(u[0],boost::lexical_cast<T>(1));
 				BOOST_CHECK_EQUAL(u[1],boost::lexical_cast<T>(2));
 			}
+			// Constructor from copies.
+			v = vector_type(0u,boost::lexical_cast<T>(1));
+			BOOST_CHECK_EQUAL(v.size(),0u);
+			v = vector_type(1u,boost::lexical_cast<T>(2));
+			BOOST_CHECK_EQUAL(v.size(),1u);
+			BOOST_CHECK(v[0u] == boost::lexical_cast<T>(2));
+			BOOST_CHECK_THROW(v = vector_type(1u + U::value,boost::lexical_cast<T>(2)),std::bad_alloc);
 		}
 	};
 	template <typename T>
@@ -275,4 +283,38 @@ struct resize_tester
 BOOST_AUTO_TEST_CASE(static_vector_resize_test)
 {
 	boost::mpl::for_each<value_types>(resize_tester());
+}
+
+struct stream_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v;
+			std::ostringstream oss1;
+			oss1 << v;
+			BOOST_CHECK(!oss1.str().empty());
+			v.push_back(boost::lexical_cast<T>(1));
+			if (U::value > 1u) {
+				v.push_back(boost::lexical_cast<T>(1));
+			}
+			std::ostringstream oss2;
+			oss2 << v;
+			BOOST_CHECK(!oss2.str().empty());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_stream_test)
+{
+	boost::mpl::for_each<value_types>(stream_tester());
 }

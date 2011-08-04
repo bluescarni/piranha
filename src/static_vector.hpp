@@ -121,10 +121,24 @@ class static_vector
 				}
 			}
 		}
+		/// Constructor from multiple copies.
+		/**
+		 * Will construct a vector containing \p n copies of \p x.
+		 * 
+		 * @param[in] n number of copies of \p x that will be inserted in the vector.
+		 * @param[in] x element whose copies will be inserted in the vector.
+		 * 
+		 * @throws unspecified any exception thrown by push_back().
+		 */
 		explicit static_vector(const size_type &n, const value_type &x):m_size(0u)
 		{
-			for (size_type i = 0u; i < n; ++i) {
-				push_back(x);
+			try {
+				for (size_type i = 0u; i < n; ++i) {
+					push_back(x);
+				}
+			} catch (...) {
+				destroy_items();
+				throw;
 			}
 		}
 		/// Destructor.
@@ -365,6 +379,17 @@ class static_vector
 				}
 			}
 		}
+		/// Stream operator overload for piranha::static_vector.
+		/**
+		 * Will print to stream a human-readable representation of \p v.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] v vector to be streamed.
+		 * 
+		 * @return reference to \p os.
+		 * 
+		 * @throws unspecified any exception thrown by printing to stream instances of the value type of \p v.
+		 */
 		friend std::ostream &operator<<(std::ostream &os, const static_vector &v)
 		{
 			os << '[';
