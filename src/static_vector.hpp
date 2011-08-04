@@ -26,6 +26,7 @@
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstring>
+#include <iostream>
 #include <new>
 #include <type_traits>
 
@@ -120,6 +121,22 @@ class static_vector
 				}
 			}
 		}
+		explicit static_vector(const size_type &n, const value_type &x):m_size(0u)
+		{
+			for (size_type i = 0u; i < n; ++i) {
+				push_back(x);
+			}
+		}
+		/// Destructor.
+		/**
+		 * Will destroy all elements of the vector.
+		 */
+		~static_vector()
+		{
+			if (!std::is_pod<T>::value) {
+				destroy_items();
+			}
+		}
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other target of the copy assignment operation.
@@ -177,16 +194,6 @@ class static_vector
 				m_size = other.m_size;
 			}
 			return *this;
-		}
-		/// Destructor.
-		/**
-		 * Will destroy all elements of the vector.
-		 */
-		~static_vector()
-		{
-			if (!std::is_pod<T>::value) {
-				destroy_items();
-			}
 		}
 		/// Const index operator.
 		/**
@@ -357,6 +364,18 @@ class static_vector
 					--m_size;
 				}
 			}
+		}
+		friend std::ostream &operator<<(std::ostream &os, const static_vector &v)
+		{
+			os << '[';
+			for (decltype(v.size()) i = 0u; i < v.size(); ++i) {
+				os << v[i];
+				if (i != v.size() - 1u) {
+					os << ',';
+				}
+			}
+			os << ']';
+			return os;
 		}
 	private:
 		void destroy_items()
