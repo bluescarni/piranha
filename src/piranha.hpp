@@ -91,6 +91,7 @@ namespace detail {}
 #include "exceptions.hpp"
 #include "hash_set.hpp"
 #include "integer.hpp"
+#include "kronecker_array.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
 #include "numerical_coefficient.hpp"
