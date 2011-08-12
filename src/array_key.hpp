@@ -48,7 +48,7 @@ namespace piranha
 
 /// Static size tag for piranha::array_key.
 /**
- * When used as a type in piranha::array_key, the underlying container of the
+ * When this class is used as parameter type in piranha::array_key, the underlying container of the
  * piranha::array_key class will be a piranha::static_vector of \p T with maximum
  * size \p MaxSize.
  */
