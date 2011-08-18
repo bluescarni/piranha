@@ -427,11 +427,11 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @throws unspecified any exception thrown by directing to the stream instances of piranha::array_key::value_type.
 		 */
-		friend inline std::ostream &operator<<(std::ostream &os, const array_key &a)
+		friend std::ostream &operator<<(std::ostream &os, const array_key &a)
 		{
 			typedef decltype(a.m_container.size()) size_type;
 			os << '[';
-			for (size_type i = 0; i < a.m_container.size(); ++i) {
+			for (size_type i = 0u; i < a.m_container.size(); ++i) {
 				os << a[i];
 				if (i != a.m_container.size() - static_cast<size_type>(1)) {
 					os << ',';
@@ -465,7 +465,7 @@ class array_key: detail::array_key_tag
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
 			auto it_new = new_args.begin();
-			for (size_type i = 0; i < m_container.size(); ++i, ++it_new) {
+			for (size_type i = 0u; i < m_container.size(); ++i, ++it_new) {
 				while (*it_new != orig_args[i]) {
 					retval.m_container.push_back(value_type(0));
 					++it_new;
