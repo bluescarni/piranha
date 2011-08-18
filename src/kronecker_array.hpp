@@ -62,7 +62,7 @@ namespace piranha
  * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
  */
-template <typename SignedInteger = std::make_signed<std::size_t>::type>
+template <typename SignedInteger>
 class kronecker_array
 {
 	public:
@@ -229,7 +229,7 @@ class kronecker_array
 			int_type retval = boost::numeric_cast<int_type>(v[0u]) - emin;
 			piranha_assert(retval >= 0);
 			for (decltype(v.size()) i = 1u; i < size; ++i, shift += d_shift) {
-				piranha_assert(shift < std::numerical_limit<int_type>::digits);
+				piranha_assert(shift < std::numeric_limits<int_type>::digits);
 				retval += (boost::numeric_cast<int_type>(v[i]) - emin) << shift;
 			}
 			return retval + hmin;
@@ -279,12 +279,12 @@ class kronecker_array
 			}
 			const uint_type code = static_cast<uint_type>(n - hmin);
 			// Do the first value manually.
-			piranha_assert(shift < unsigned(std::numerical_limit<uint_type>::digits));
+			piranha_assert(shift < unsigned(std::numeric_limits<uint_type>::digits));
 			const auto mod_arg = (uint_type(1u) << shift) - uint_type(1u);
 			retval[0u] = boost::numeric_cast<v_type>(static_cast<int_type>(code & mod_arg) + emin);
 			for (size_type i = 1u; i < m; ++i, shift += d_shift) {
 				piranha_assert(shift <= boost::integer_traits<uint_type>::const_max - d_shift);
-				piranha_assert((shift + d_shift) < unsigned(std::numerical_limit<uint_type>::digits));
+				piranha_assert((shift + d_shift) < unsigned(std::numeric_limits<uint_type>::digits));
 				const auto mod_arg = (uint_type(1u) << (shift + d_shift)) - uint_type(1u);
 				retval[i] = boost::numeric_cast<v_type>(static_cast<int_type>((code & mod_arg) >> shift) + emin);
 			}
