@@ -69,6 +69,8 @@ class static_vector
 	public:
 		/// Size type.
 		typedef std::uint8_t size_type;
+		/// Maximum size.
+		static const size_type max_size = MaxSize;
 		/// Contained type.
 		typedef T value_type;
 		/// Iterator type.
