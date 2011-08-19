@@ -39,31 +39,6 @@ using namespace piranha;
 
 typedef boost::mpl::vector<std::int8_t,std::int16_t,std::int32_t,std::make_signed<std::size_t>::type> int_types;
 
-// Constructors, assignments.
-struct constructor_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef kronecker_array<T> ka_type;
-		ka_type k1;
-		BOOST_CHECK(k1.get_value() == 0);
-		BOOST_CHECK(k1.size() == 0u);
-		ka_type k2(k1);
-		BOOST_CHECK(k2.get_value() == 0);
-		BOOST_CHECK(k2.size() == 0u);
-		ka_type k3;
-		k3 = k2;
-		BOOST_CHECK(k3.get_value() == 0);
-		BOOST_CHECK(k3.size() == 0u);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_array_constructor_test)
-{
-	boost::mpl::for_each<int_types>(constructor_tester());
-}
-
 // Limits.
 struct limits_tester
 {
@@ -145,21 +120,4 @@ struct coding_tester
 BOOST_AUTO_TEST_CASE(kronecker_array_coding_test)
 {
 	boost::mpl::for_each<int_types>(coding_tester());
-}
-
-struct getters_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef kronecker_array<T> ka_type;
-		ka_type k0;
-		BOOST_CHECK(k0.size() == 0u);
-		BOOST_CHECK(k0.get_value() == 0);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_array_getters_test)
-{
-	boost::mpl::for_each<int_types>(getters_tester());
 }

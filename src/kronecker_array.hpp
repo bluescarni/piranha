@@ -39,14 +39,11 @@ namespace piranha
 
 /// Kronecker array.
 /**
- * This class represents an array of integral values which is encoded as an instance of \p SignedInteger type,
+ * This class offers static methods to encode (and decode) arrays of integral values as instances of \p SignedInteger type,
  * using a technique known as "Kronecker's trick".
  * 
- * Depending on the width and numerical limits of \p SignedInteger, the class will be able to hold vectors of integers up to a certain
+ * Depending on the width and numerical limits of \p SignedInteger, the class will be able to operate on vectors of integers up to a certain
  * dimension and within certain bounds on the vector's components. Such limits can be queried with the get_limits() static method.
- * 
- * The default parameter type for this class is the signed counterpart of \p std::size_t, which, on many platforms, is the "fast" integer
- * with maximum width.
  * 
  * \section type_requirements Type requirements
  * 
@@ -58,7 +55,7 @@ namespace piranha
  * 
  * \section move_semantics Move semantics
  * 
- * This class stores internally arithmetic C++ types, and hence has trivial move semantics.
+ * This class does not have any non-static data members, hence it has trivial move semantics.
  * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
  */
@@ -132,34 +129,10 @@ class kronecker_array
 	public:
 		/// Size type.
 		/**
-		 * Equivalent to the size type of piranha::static_vector.
+		 * Unisigned integer type equivalent to the size type of piranha::static_vector. Used to represent the
+		 * dimension of the vectors on which the class can operate.
 		 */
 		typedef typename limits_type::size_type size_type;
-		/// Default constructor.
-		/**
-		 * Will initialise an array with zero components, represented internally as 0.
-		 */
-		kronecker_array():m_size(0u),m_value(0) {}
-		/// Defaulted copy constructor.
-		kronecker_array(const kronecker_array &) = default;
-// 		explicit kronecker_array(const std::vector<symbol> &args):m_size(0u),m_value(0)
-// 		{
-// 			if (unlikely(args.size() >= log2_limits.size())) {
-// 				piranha_throw(std::invalid_argument,"excessive number of symbols for Kronecker array");
-// 			}
-// 			static_vector<int_type,nbits> tmp(args.size(),int_type(0));
-// 			m_value = encode(tmp);
-// 			m_size = args.size();
-// 		}
-		/// Trivial destructor.
-		~kronecker_array()
-		{
-			piranha_assert(m_size < log2_limits.size());
-			piranha_assert((m_size == 0u && m_value == 0) || m_size);
-			piranha_assert(m_value >= std::get<3u>(log2_limits[m_size]) && m_value <= std::get<4u>(log2_limits[m_size]));
-		}
-		/// Defaulted copy assignment operator.
-		kronecker_array &operator=(const kronecker_array &) = default;
 		/// Get the limits of the Kronecker codification.
 		/**
 		 * Will return a const reference to a piranha::static_vector of tuples describing the limits for the Kronecker
@@ -170,7 +143,7 @@ class kronecker_array
 		 * Each element of the returned vector is an \p std::tuple of 6 \p SignedInteger instances built as follows:
 		 * 
 		 * - position 0: \f$n\f$, with \f$2^n\f$ being the width of the closed interval \f$I\f$ in which the components of the array to be
-		 *   encoded are allowed to vary,
+		 *   encoded are allowed to exist,
 		 * - position 1: the lower bound of \f$I\f$, which is \f$-2^{n-1}\f$,
 		 * - position 2: the upper bound of \f$I\f$, which is \f$2^{n-1}-1\f$,
 		 * - position 3: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
@@ -289,25 +262,6 @@ class kronecker_array
 				retval[i] = boost::numeric_cast<v_type>(static_cast<int_type>((code & mod_arg) >> shift) + emin);
 			}
 		}
-		/// Value getter.
-		/**
-		 * @return the internal instance of \p SignedInteger that codes the array.
-		 */
-		int_type get_value() const
-		{
-			return m_value;
-		}
-		/// Size getter.
-		/**
-		 * @return the size of the array encoded by the internal instance of \p SignedInteger.
-		 */
-		size_type size() const
-		{
-			return m_size;
-		}
-	private:
-		size_type	m_size;
-		int_type	m_value;
 };
 
 template <typename SignedInteger>
