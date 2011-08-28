@@ -289,7 +289,8 @@ class hash_set
 		typedef T key_type;
 		/// Size type.
 		/**
-		 * This type is an unsigned integer.
+		 * This type is the unsigned integer corresponding to the size type of \p std::vector
+		 * for user-defined classes.
 		 */
 		typedef typename container_type::size_type size_type;
 	private:
