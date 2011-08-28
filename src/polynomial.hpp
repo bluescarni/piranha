@@ -186,7 +186,8 @@ class polynomial:
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo use std::vector with custom allocator to make extra sure about cache alignment in m_tmp.
+ * \todo use std::vector with custom allocator to make extra sure about cache alignment in m_tmp. NOTE: not sure this can be done,
+ * would need hash set to be searchable with non-key types for this to work.
  */
 template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series1>::value &&
