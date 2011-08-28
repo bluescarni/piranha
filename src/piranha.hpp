@@ -36,7 +36,7 @@
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
- * \todo document classes in detail:: use to implement mathematical functions?
+ * \todo document classes in detail:: namespace used to implement mathematical functions?
  * \todo fix type traits such as is_nothrow_move_constructible/assignable. They must work also for references,
  * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
  * reference collapsing rules, etc. etc.
@@ -44,10 +44,11 @@
  * \todo inline friend functions in class scope: is inline redundant? yes: http://stackoverflow.com/questions/3980627/is-a-friend-function-defined-in-class-automatically-inline
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
- * and use it explictly only when actually using that generic method?
+ * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that
+ * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
  * \todo strip_cv_ref should be std::decay probably.
  * \todo try to get away with the friendship to binary series operators by base series.
- * \todo hashing of array_key based on kronecker substitution.
+ * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer.
  * \todo cache aligned memory allocation: to be completely sure that we are not sharing cache lines among threads,
  * we must 1) figure a way to determine cache line size
  * (like http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache/) 2) use the aligning
@@ -92,6 +93,7 @@ namespace detail {}
 #include "hash_set.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
+#include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
 #include "numerical_coefficient.hpp"
