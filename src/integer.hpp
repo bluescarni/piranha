@@ -1856,6 +1856,7 @@ class integer
 			if (size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2)) {
 				piranha_throw(std::overflow_error,"number of digits is too large");
 			}
+			// TODO: use static vector here.
 			// NOTE: here we can optimize, avoiding one allocation, by using a std::array if
 			// size_base10 is small enough.
 			std::vector<char> tmp(boost::numeric_cast<std::vector<char>::size_type>(size_base10 + static_cast<std::size_t>(2)));
