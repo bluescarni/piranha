@@ -30,6 +30,7 @@
 #include "config.hpp"
 #include "detail/base_series_fwd.hpp"
 #include "echelon_descriptor.hpp"
+#include "kronecker_monomial.hpp"
 #include "monomial.hpp"
 #include "series_multiplier.hpp"
 #include "type_traits.hpp"
@@ -51,6 +52,12 @@ template <typename T>
 struct polynomial_term_key<univariate_monomial<T>>
 {
 	typedef univariate_monomial<T> type;
+};
+
+template <typename T>
+struct polynomial_term_key<kronecker_monomial<T>>
+{
+	typedef kronecker_monomial<T> type;
 };
 
 }
