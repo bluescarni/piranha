@@ -91,7 +91,7 @@ class monomial: public array_key<T,monomial<T>>
 		explicit monomial(U &&arg1, Args && ... params):
 			base(std::forward<U>(arg1),std::forward<Args>(params)...) {}
 		/// Trivial destructor.
-		~monomial()
+		~monomial() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<monomial>));
 		}
