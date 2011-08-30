@@ -118,7 +118,7 @@ class univariate_monomial
 			}
 		}
 		/// Trivial destructor.
-		~univariate_monomial()
+		~univariate_monomial() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<univariate_monomial>));
 		}
