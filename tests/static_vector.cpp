@@ -33,11 +33,32 @@
 #include <string>
 #include <type_traits>
 
+#include "../src/config.hpp"
 #include "../src/integer.hpp"
+
+// NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:
+// in the current GCC (4.6) the destructor of std::string does not have nothrow, so we cannot use it.
+class custom_string: public std::string
+{
+	public:
+		custom_string() = default;
+		custom_string(const custom_string &) = default;
+		// NOTE: strange thing here, move constructor of std::string results in undefined reference?
+		custom_string(custom_string &&other) piranha_noexcept_spec(true) : std::string(other) {}
+		template <typename... Args>
+		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
+		custom_string &operator=(const custom_string &) = default;
+		custom_string &operator=(custom_string &&other) piranha_noexcept_spec(true)
+		{
+			std::string::operator=(std::move(other));
+			return *this;
+		}
+		~custom_string() piranha_noexcept_spec(true) {}
+};
 
 using namespace piranha;
 
-typedef boost::mpl::vector<int,integer,std::string> value_types;
+typedef boost::mpl::vector<int,integer,custom_string> value_types;
 typedef boost::mpl::vector<std::integral_constant<std::uint8_t,1u>,std::integral_constant<std::uint8_t,5u>,std::integral_constant<std::uint8_t,10u>> size_types;
 
 // Constructors, assignments and element access.
