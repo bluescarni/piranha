@@ -43,6 +43,16 @@ namespace piranha
  */
 extern void *enabler;
 
+/// Type-trait to test if type is a tuple.
+/**
+ * The \p value member will be \p true if \p T is an \p std::tuple, \p false otherwise.
+ */
+template <typename T>
+struct is_tuple: std::false_type {};
+
+template <typename... Args>
+struct is_tuple<std::tuple<Args...>>: std::true_type {};
+
 /// Strip reference and top-level cv-qualifiers.
 /**
  * This type trait removes top-level cv-qualifiers and, if \p T is a reference, transforms it into the referred-to type.
@@ -88,15 +98,23 @@ const bool is_nonconst_rvalue_ref<T>::value;
  * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
  * the \p noexcept operator.
  */
-template <typename T>
+template <typename T, typename Enable = void>
 struct is_nothrow_move_constructible
 {
 	/// Type-trait value.
 	static const bool value = piranha_noexcept_op(T(static_cast<T &&>(*static_cast<T *>(piranha_nullptr))));
 };
 
+// TODO: this will have to be removed once GCC support improves. It is used in kronecker_array
+// when dealing with vectors of tuples representing the limits.
 template <typename T>
-const bool is_nothrow_move_constructible<T>::value;
+struct is_nothrow_move_constructible<std::tuple<T,T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	static const bool value = true;
+};
+
+template <typename T, typename Enable>
+const bool is_nothrow_move_constructible<T,Enable>::value;
 
 /// Type has non-throwing move assignment operator.
 /**
@@ -104,15 +122,22 @@ const bool is_nothrow_move_constructible<T>::value;
  * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
  * the \p noexcept operator.
  */
-template <typename T>
+template <typename T, typename Enable = void>
 struct is_nothrow_move_assignable
 {
 	/// Type-trait value.
 	static const bool value = piranha_noexcept_op(*static_cast<T *>(piranha_nullptr) = static_cast<T &&>(*static_cast<T *>(piranha_nullptr)));
 };
 
+// TODO: same as is_nothrow_move_constructible above.
 template <typename T>
-const bool is_nothrow_move_assignable<T>::value;
+struct is_nothrow_move_assignable<std::tuple<T,T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	static const bool value = true;
+};
+
+template <typename T, typename Enable>
+const bool is_nothrow_move_assignable<T,Enable>::value;
 
 /// Type is nothrow-destructible.
 /**
@@ -158,6 +183,10 @@ struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
  * the first operand is a \p double and the second one is a \p int), the type-trait's value will be \p false.
  * 
  * Default implementation will be \p true if the return type of <tt>T1 + T2</tt> is \p T2, false if it is \p T1.
+ * 
+ * \todo note here that short + char -> int, so we should take this into account. The documentation above is also misleading a bit,
+ * should probably fix this altogether. We have essentially three possibilities: result is first type, result is second type, result
+ * is none of the two.
  */
 template <typename T1, typename T2, typename Enable = void>
 class binary_op_promotion_rule
@@ -169,16 +198,6 @@ class binary_op_promotion_rule
 		/// Type-trait's value.
 		static const bool value = std::is_same<retval_type,type2>::value;
 };
-
-/// Type-trait to test if type is a tuple.
-/**
- * The \p value member will be \p true if \p T is an \p std::tuple, \p false otherwise.
- */
-template <typename T>
-struct is_tuple: std::false_type {};
-
-template <typename... Args>
-struct is_tuple<std::tuple<Args...>>: std::true_type {};
 
 }
 
