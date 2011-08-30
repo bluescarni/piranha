@@ -57,6 +57,8 @@ namespace piranha
  * 
  * This class does not have any non-static data members, hence it has trivial move semantics.
  * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
  */
 template <typename SignedInteger>

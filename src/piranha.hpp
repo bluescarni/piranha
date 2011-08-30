@@ -58,7 +58,7 @@
  * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  * \todo assert that concepts are respected in models.
  * \todo do we need an is_assignable_concept? it is used in monomial, for instance, or when doing std::copy
- * \todo replace exact-width types with least/fast, which are guaranteed to exist (exact width are not guaranteed).
+ * \todo replace exact-width types with least/fast, which are guaranteed to exist (exact width are not guaranteed) -> fix also in tests.
  * \todo check the include of pure C stuff (GMP is already fine, maybe the platform-specific stuff needs to be reviewed - aligning alloc, cache size, number of
  * threads, etc.). http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
  */
