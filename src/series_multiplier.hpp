@@ -262,15 +262,17 @@ class series_multiplier
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					// Functor for use in the thread.
-					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex]() -> void {
+					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
+					// because of a GCC bug in 4.6.
+					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
 						try {
 							thread_management::binder binder;
-							const auto tmp = series_multiplier::rehasher(*f_it,*r_it,s1,size2);
+							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
-							series_multiplier::blocked_multiplication(*f_it,
+							this->blocked_multiplication(*f_it,
 								i * block_size,s1,size_type(0u),size2);
 							if (tmp.first) {
-								series_multiplier::trace_estimates(r_it->m_container.size(),tmp.second);
+								this->trace_estimates(r_it->m_container.size(),tmp.second);
 							}
 // std::cout << "final series size: " << f_it->m_retval.size() << '\n';
 						} catch (...) {
@@ -547,7 +549,8 @@ std::cout << "new size is " << new_size << '\n';
 			// before encountering the first duplicate.
 			const auto ntrials = 10u;
 			// NOTE: Hard-coded value for the estimation multiplier.
-			const auto multiplier = 3;
+			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
+			const auto multiplier = 4;
 			// Size of the multiplication result
 			// Vectors of indices.
 			std::vector<Size> v_idx1, v_idx2;
