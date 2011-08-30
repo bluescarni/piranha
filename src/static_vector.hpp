@@ -108,9 +108,9 @@ class static_vector
 		}
 		/// Move constructor.
 		/**
-		 * @param[in] other target of the copy operation.
+		 * @param[in] other target of the move operation.
 		 */
-		static_vector(static_vector &&other):m_size(0u)
+		static_vector(static_vector &&other) piranha_noexcept_spec(true):m_size(0u)
 		{
 			if (std::is_pod<T>::value) {
 				std::memcpy(static_cast<void *>(&m_storage),static_cast<void const *>(&other.m_storage),other.m_size * sizeof(T));
@@ -147,7 +147,7 @@ class static_vector
 		/**
 		 * Will destroy all elements of the vector.
 		 */
-		~static_vector()
+		~static_vector() piranha_noexcept_spec(true)
 		{
 			if (!std::is_pod<T>::value) {
 				destroy_items();
@@ -180,7 +180,7 @@ class static_vector
 		 * 
 		 * @return reference to \p this.
 		 */
-		static_vector &operator=(static_vector &&other)
+		static_vector &operator=(static_vector &&other) piranha_noexcept_spec(true)
 		{
 			if (likely(this != &other)) {
 				if (std::is_pod<T>::value) {
