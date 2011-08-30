@@ -54,6 +54,8 @@ namespace piranha
  * Move semantics is equivalent to <tt>T</tt>'s move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo formalize the requirements for types?
  */
 template <typename T>
 class numerical_coefficient
