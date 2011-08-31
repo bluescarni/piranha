@@ -60,6 +60,7 @@ namespace concept
  * \todo requirements on default-constructed key: must it be unitary?
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
  * polynomial ctors from symbol)
+ * \todo requirements on merge_args: remember second argument must contain all elements in first argument.
  */
 template <typename T>
 struct Key:

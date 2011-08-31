@@ -69,7 +69,7 @@ struct Coefficient:
 	{
 		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
-		std::cout << *(static_cast<T *>(piranha_nullptr));
+// 		std::cout << *(static_cast<T *>(piranha_nullptr));
 		const T inst = T();
 		static_assert(piranha_noexcept_op(inst.template is_compatible(std::declval<ed_type>())),"is_compatible() must be non-throwing.");
 		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
