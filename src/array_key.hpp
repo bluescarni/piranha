@@ -464,10 +464,12 @@ class array_key: detail::array_key_tag
 			piranha_assert(new_args.size() > orig_args.size());
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
+			piranha_assert(std::all_of(orig_args.begin(),orig_args.end(),[&new_args](const symbol &s) {return std::find(new_args.begin(),new_args.end(),s) != new_args.end();}));
 			auto it_new = new_args.begin();
 			for (size_type i = 0u; i < m_container.size(); ++i, ++it_new) {
 				while (*it_new != orig_args[i]) {
 					retval.m_container.push_back(value_type(0));
+					piranha_assert(it_new != new_args.end());
 					++it_new;
 					piranha_assert(it_new != new_args.end());
 				}
