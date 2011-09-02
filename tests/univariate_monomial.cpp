@@ -234,3 +234,24 @@ BOOST_AUTO_TEST_CASE(univariate_monomial_exponent_test)
 {
 	boost::mpl::for_each<expo_types>(exponent_tester());
 }
+
+struct degree_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef univariate_monomial<T> key_type;
+		key_type k0;
+		std::vector<symbol> v;
+		BOOST_CHECK(k0.degree(v) == T(0));
+		k0.set_exponent(4);
+		v.push_back(symbol("a"));
+		BOOST_CHECK(k0.degree(v) == T(4));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(univariate_monomial_degree_test)
+{
+	boost::mpl::for_each<expo_types>(degree_tester());
+}
+
