@@ -25,14 +25,13 @@
 #include <type_traits>
 
 #include "base_term.hpp"
-#include "concepts/multaddable_coefficient.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "config.hpp"
 #include "detail/base_series_fwd.hpp"
+#include "detail/series_multiplier_fwd.hpp"
 #include "echelon_descriptor.hpp"
 #include "kronecker_monomial.hpp"
 #include "monomial.hpp"
-#include "series_multiplier.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
 
@@ -68,6 +67,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * the key type is determined as follows:
  * 
  * - if \p ExpoType is piranha::univariate_monomial of \p T, the key will also be piranha::univariate_monomial of \p T,
+ * - if \p ExpoType is piranha::kronecker_monomial of \p T, the key will also be piranha::kronecker_monomial of \p T,
  * - otherwise, the key will be piranha::monomial of \p ExpoType.
  * 
  * Examples:
@@ -83,16 +83,17 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * polynomial_term<numerical_coefficient<double>,univariate_monomial<int>>
  * @endcode
  * is a univariate polynomial term with double-precision coefficient and \p int exponent.
+ * @code
+ * polynomial_term<numerical_coefficient<double>,kronecker_monomial<>>
+ * @endcode
+ * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
  * 
  * This class is a model of the piranha::concept::MultipliableTerm concept.
  * 
  * \section type_requirements Type requirements
  * 
  * - \p Cf must be a model of piranha::concept::MultipliableCoefficient.
- * - \p ExpoType must be suitable for use in piranha::monomial.
- * 
- * Additionally, for usage in the piranha::series_multiplier specialisation for polynomials,
- * \p Cf must be a model of piranha::concept::MultaddableCoefficient.
+ * - \p ExpoType must be suitable for use in piranha::monomial, or be piranha::univariate_monomial or piranha::kronecker_monomial.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -108,7 +109,6 @@ template <typename Cf, typename ExpoType>
 class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
 {
 		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
-		BOOST_CONCEPT_ASSERT((concept::MultaddableCoefficient<Cf>));
 		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>

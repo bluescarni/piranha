@@ -42,6 +42,7 @@
 #include "concepts/multipliable_term.hpp"
 #include "concepts/series.hpp"
 #include "config.hpp"
+#include "detail/series_multiplier_fwd.hpp"
 #include "echelon_descriptor.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
