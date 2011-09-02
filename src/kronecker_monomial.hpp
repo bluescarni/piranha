@@ -36,6 +36,7 @@
 
 #include "concepts/key.hpp"
 #include "config.hpp"
+#include "detail/kronecker_monomial_fwd.hpp"
 #include "kronecker_array.hpp"
 #include "static_vector.hpp"
 #include "symbol.hpp"
@@ -67,7 +68,7 @@ namespace piranha
  * are the effects on parallel kronecker multiplication (i.e., on the barriers that make the parallel algorithm work)?
  */
 template <typename T = std::make_signed<std::size_t>::type>
-class kronecker_monomial
+class kronecker_monomial: detail::kronecker_monomial_tag
 {
 		static_assert(std::is_signed<T>::value,"kronecker_monomial requires a signed integer type.");
 	public:
