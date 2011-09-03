@@ -62,7 +62,7 @@ struct static_size {};
  * 
  * If \p T is piranha::static_size of \p U and \p MaxSize, then the underlying array container will
  * be piranha::static_vector of \p U and \p MaxSize (and hence the size of the array key will be
- * at most \p MaxSize). Otherwise, the underlying container will be std::vector.
+ * at most \p MaxSize). Otherwise, the underlying container will be \p std::vector.
  * 
  * \section type_requirements Type requirements
  * 
