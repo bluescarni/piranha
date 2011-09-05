@@ -233,6 +233,20 @@ class univariate_monomial
 			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
 			return math::is_zero(m_value);
 		}
+		/// Degree.
+		/**
+		 * @param[in] args reference vector of piranha::symbol.
+		 * 
+		 * @return degree of the monomial.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor of \p T.
+		 */
+		T degree(const std::vector<symbol> &args) const
+		{
+			(void)args;
+			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
+			return m_value;
+		}
 		/// Multiply monomials.
 		/**
 		 * @param[out] retval object that will store the result of the multiplication.

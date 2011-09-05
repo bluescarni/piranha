@@ -172,15 +172,19 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Degree.
 		/**
-		 * Monomial degree.
+		 * Degree of the monomial.
+		 * 
+		 * @param[in] args reference vector of piranha::symbol.
 		 * 
 		 * @return the summation of all the exponents of the monomial, or <tt>value_type(0)</tt> if the size
 		 * of the monomial is zero.
 		 * 
 		 * @throws unspecified any exception thrown by the addition and assignment operators of \p value_type.
 		 */
-		typename array_key<T,monomial<T>>::value_type degree() const
+		typename array_key<T,monomial<T>>::value_type degree(const std::vector<symbol> &args) const
 		{
+			(void)args;
+			piranha_assert(args.size() == this->size());
 			typedef typename base::value_type value_type;
 			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
 		}

@@ -22,11 +22,13 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
+#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
 
+#include "concepts/multaddable_coefficient.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "polynomial_term.hpp"
@@ -55,7 +57,7 @@ struct polynomial_tag {};
  * 
  * \section type_requirements Type requirements
  * 
- * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term.
+ * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term. Additionally, \p Cf must also be a model of piranha::concept::MultaddableCoefficient.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -71,6 +73,7 @@ template <typename Cf, typename Expo>
 class polynomial:
 	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,detail::polynomial_tag
 {
+		BOOST_CONCEPT_ASSERT((concept::MultaddableCoefficient<Cf>));
 		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
 	public:
 		/// Defaulted default constructor.
