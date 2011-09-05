@@ -33,6 +33,7 @@ extern "C"
 #include <sys/types.h>
 #include <sys/sysctl.h>
 }
+#include <cstddef>
 
 #elif defined(_WIN32)
 
@@ -40,11 +41,16 @@ extern "C"
 {
 #include <Windows.h>
 }
+#include <cstddef>
+#include <cstdlib>
+#include <new>
 
 #endif
 
 #include <boost/numeric/conversion/cast.hpp>
 
+#include "config.hpp"
+#include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "threading.hpp"
 
@@ -70,6 +76,8 @@ unsigned runtime_info::get_hardware_concurrency()
  * 
  * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
  * the detection fails.
+ *
+ * @throws unspecified any exception thrown by <tt>boost::numeric_cast()</tt>.
  */
 unsigned runtime_info::determine_hardware_concurrency()
 {
@@ -81,10 +89,11 @@ unsigned runtime_info::determine_hardware_concurrency()
 	std::size_t size = sizeof(count);
 	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0 : static_cast<unsigned>(count);
 #elif defined(_WIN32)
-	SYSTEM_INFO info = SYSTEM_INFO();
+	::SYSTEM_INFO info = ::SYSTEM_INFO();
 	::GetSystemInfo(&info);
-	// info.dwNumberOfProcessors is a dword, i.e., an unsigned integer.
-	return info.dwNumberOfProcessors;
+	// info.dwNumberOfProcessors is a dword, i.e., a long unsigned integer.
+	// http://msdn.microsoft.com/en-us/library/cc230318(v=prot.10).aspx
+	return boost::numeric_cast<unsigned>(info.dwNumberOfProcessors);
 #else
 	return 0u;
 #endif
@@ -105,14 +114,37 @@ unsigned runtime_info::get_cache_line_size()
  * This method is not thread-safe.
  * 
  * @return data cache line size in bytes.
+ *
+ * @throws unspecified any exception thrown by <tt>boost::numeric_cast()</tt>.
+ * @throws std::bad_alloc on Windows platforms, in case of memory allocation failures.
  */
 unsigned runtime_info::determine_cache_line_size()
 {
 #if defined(__linux__)
 	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
+#elif defined(_WIN32)
+	// Adapted from:
+	// http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache
+	std::size_t line_size = 0u;
+	::DWORD buffer_size = 0u;
+	::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = 0;
+	::GetLogicalProcessorInformation(0,&buffer_size);
+	buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(buffer_size);
+	if (unlikely(!buffer)) {
+		piranha_throw(std::bad_alloc,0);
+	}
+	::GetLogicalProcessorInformation(&buffer[0u],&buffer_size);
+	for (::DWORD i = 0u; i != buffer_size / sizeof(::SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+		if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
+			line_size = buffer[i].Cache.LineSize;
+			break;
+		}
+	}
+	std::free(buffer);
+	return boost::numeric_cast<unsigned>(line_size);
 #else
-	// TODO: missing windows stuff.
+	// TODO: FreeBSD, OSX, etc.?
 	return 0u;
 #endif
 }
