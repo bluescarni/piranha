@@ -32,6 +32,7 @@
 #include <cctype> // For std::isdigit().
 #include <cstddef>
 #include <cstring>
+// NOTE: GMP docs say gmp.h already includes the extern "C" parts.
 #include <gmp.h>
 #include <iostream>
 #include <limits>
