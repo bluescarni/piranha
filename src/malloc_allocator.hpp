@@ -28,7 +28,20 @@
 #include <stdexcept>
 
 #if defined(_WIN32)
+extern "C"
+{
+#if defined(__MINGW32__)
+// NOTE: for _aligned_malloc, only malloc.h should be needed. However, for MinGW it
+// seems like we need to include extra headers and use __mingw_aligned_malloc and friends:
+// http://sourceforge.net/apps/trac/mingw-w64/wiki/Missing%20_aligned_malloc
+#include <stdlib.h>
+#include <intrin.h>
+#endif
 #include <malloc.h>
+#if defined(__MINGW32__)
+#include <windows.h>
+#endif
+}
 #endif
 
 #include "config.hpp"
@@ -37,10 +50,11 @@
 namespace piranha
 {
 
-/// Allocator supporting memory alignment.
+/// Allocator supporting custom memory alignment.
 /**
  * This allocator is based on <tt>malloc()</tt> and other low-level platform-specific memory allocation primitives, and supports
- * memory allocation with custom alignment requirements.
+ * memory allocation with custom alignment requirements. The alignment value is selected on construction and it is subject to
+ * a series of constraints (explained in the constructors' documentation).
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -51,6 +65,9 @@ namespace piranha
  * This class has trivial move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ *
+ * \todo: maybe it makes sense to move the allocation/free methods in a separate .cpp, as we do for runtime_info (this
+ * way namespace pollution is prevented and platform-specific parts are isolated).
  */
 template <typename T>
 class malloc_allocator
@@ -79,16 +96,16 @@ class malloc_allocator
 		};
 		/// Trivial default constructor.
 		/**
-		 * Default construction is always successful and equivalent to construction with zero \p alignment.
+		 * Default construction is always successful and equivalent to construction with an alignment value of zero.
 		 * Memory allocation will use the standard <tt>std::malloc()</tt> function.
 		 */
 		malloc_allocator():m_alignment(0u) {}
 		/// Constructor from alignment value.
 		/**
-		 * The memory allocated by this allocator will be aligned to the specified \p alignment value.
+		 * The allocated memory will be aligned to the specified \p alignment value.
 		 * If \p alignment is not zero, it must be a nonnegative integral power of
 		 * two not smaller than the alignment requirement for type \p T. Additionally, \p alignment
-		 * might have to conform to other platform-specific requirements. Finally, construction
+		 * might have to conform to other platform-specific requirements. Construction
 		 * with nonzero \p alignment will fail if \p have_memalign_primitives is \p false.
 		 * 
 		 * If \p alignment is zero, construction will always be successful,
@@ -157,13 +174,17 @@ class malloc_allocator
 			if (m_alignment) {
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
 				void *ptr;
-				const auto retval = posix_memalign(&ptr,m_alignment,size * sizeof(T));
+				const auto retval = ::posix_memalign(&ptr,m_alignment,size * sizeof(T));
 				if (unlikely(retval)) {
 					piranha_throw(std::bad_alloc,0);
 				}
 				return static_cast<T *>(ptr);
 #elif defined(_WIN32)
-				void *ptr = _aligned_malloc(size * sizeof(T),m_alignment);
+#if defined(__MINGW32__)
+				void *ptr = ::__mingw_aligned_malloc(size * sizeof(T),m_alignment);
+#else
+				void *ptr = ::_aligned_malloc(size * sizeof(T),m_alignment);
+#endif
 				if (unlikely(ptr == NULL)) {
 					piranha_throw(std::bad_alloc,0);
 				}
@@ -198,7 +219,11 @@ class malloc_allocator
 				// Posix memalign can be freed by standard free() function.
 				std::free(static_cast<void *>(p));
 #elif defined(_WIN32)
-				_aligned_free(static_cast<void *>(p));
+#if defined(__MINGW32__)
+				::__mingw_aligned_free(static_cast<void *>(p));
+#else
+				::_aligned_free(static_cast<void *>(p));
+#endif
 #else
 				// We should never get here, as construction would have thrown and we deleted
 				// assignment operators.
