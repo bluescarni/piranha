@@ -35,7 +35,7 @@ extern "C"
 // seems like we need to include extra headers and use __mingw_aligned_malloc and friends:
 // http://sourceforge.net/apps/trac/mingw-w64/wiki/Missing%20_aligned_malloc
 #include <stdlib.h>
-#include <intrin.h>
+// #include <intrin.h> This does not seem to be there in mingw32?
 #endif
 #include <malloc.h>
 #if defined(__MINGW32__)

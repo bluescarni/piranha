@@ -123,7 +123,7 @@ unsigned runtime_info::determine_cache_line_size()
 #if defined(__linux__)
 	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
-#elif defined(_WIN32)
+#elif defined(_WIN32) && defined(PIRANHA_HAVE_SYSTEM_LOGICAL_PROCESSOR_INFORMATION)
 	// Adapted from:
 	// http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache
 	std::size_t line_size = 0u;
