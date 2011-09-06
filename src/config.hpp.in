@@ -69,4 +69,9 @@
 #define PIRANHA_HAVE_POSIX_MEMALIGN
 #endif
 
+// Ugh.
+// http://web.archiveorange.com/archive/v/NDiIbUvkEafCV0VHMIwL
+#include <boost/integer_traits.hpp>
+static_assert(boost::integer_traits<long long>::const_max >= 0,"Buggy integer_traits implementation: please update the Boost libraries.");
+
 #endif
