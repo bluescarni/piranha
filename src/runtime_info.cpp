@@ -130,7 +130,7 @@ unsigned runtime_info::determine_cache_line_size()
 	::DWORD buffer_size = 0u;
 	::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = 0;
 	::GetLogicalProcessorInformation(0,&buffer_size);
-	buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(buffer_size);
+	buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(boost::numeric_cast<std::size_t>(buffer_size));
 	if (unlikely(!buffer)) {
 		piranha_throw(std::bad_alloc,0);
 	}
