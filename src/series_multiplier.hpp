@@ -91,7 +91,6 @@ namespace piranha
  * \todo swap series if they are the same type and if first one is smaller than second -> more opportunity for subdivision in mt mode
  * \todo try to abstract exception handling in mt-mode into a generic functor that re-throws exceptions transported from threads.
  * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
- * \todo swap arguments if series are same type and second series has more terms: better chances of mt-mode activation.
  */
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
