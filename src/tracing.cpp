@@ -38,31 +38,34 @@ if (typeid(T) == x.type()) { \
 	os << boost::any_cast<T>(x); \
 } else
 
-void generic_printer(std::ostream &os,const boost::any &x)
+struct generic_printer
 {
-	print_case(char)
-	print_case(wchar_t)
-	print_case(char16_t)
-	print_case(char32_t)
-	print_case(unsigned char)
-	print_case(signed char)
-	print_case(unsigned short)
-	print_case(short)
-	print_case(unsigned)
-	print_case(int)
-	print_case(unsigned long)
-	print_case(long)
-	print_case(unsigned long long)
-	print_case(long long)
-	print_case(float)
-	print_case(double)
-	print_case(long double)
-	print_case(std::string)
-	print_case(const char *)
+	static void run(std::ostream &os,const boost::any &x)
 	{
-		os << "unprintable value of type '" << x.type().name() << "'";
+		print_case(char)
+		print_case(wchar_t)
+		print_case(char16_t)
+		print_case(char32_t)
+		print_case(unsigned char)
+		print_case(signed char)
+		print_case(unsigned short)
+		print_case(short)
+		print_case(unsigned)
+		print_case(int)
+		print_case(unsigned long)
+		print_case(long)
+		print_case(unsigned long long)
+		print_case(long long)
+		print_case(float)
+		print_case(double)
+		print_case(long double)
+		print_case(std::string)
+		print_case(const char *)
+		{
+			os << "unprintable value of type '" << x.type().name() << "'";
+		}
 	}
-}
+};
 
 #undef print_case
 
@@ -90,7 +93,7 @@ void tracing::dump(std::ostream &os)
 		if (it->second.empty()) {
 			os << "empty\n";
 		} else {
-			detail::generic_printer(os,it->second);
+			detail::generic_printer::run(os,it->second);
 			os << '\n';
 		}
 	}

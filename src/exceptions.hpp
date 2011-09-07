@@ -32,28 +32,30 @@ namespace piranha
 namespace detail
 {
 
-template <typename ExceptionType, typename N, typename String>
-void throw_impl(const char *file, N &&line, String &&desc)
+struct thrower
 {
-	std::string msg(file);
-	msg += ",";
-	msg += boost::lexical_cast<std::string>(line);
-	msg += ": ";
-	msg += std::forward<String>(desc);
-	msg += ".";
-	throw ExceptionType(msg);
-}
-
-template <typename ExceptionType, typename N>
-void throw_impl(const char *, N &&, int &&)
-{
-	ExceptionType ex;
-	throw ex;
-}
+	template <typename ExceptionType, typename N>
+	static void impl(const char *, N &&, int &&)
+	{
+		ExceptionType ex;
+		throw ex;
+	}
+	template <typename ExceptionType, typename N, typename String>
+	static void impl(const char *file, N &&line, String &&desc)
+	{
+		std::string msg(file);
+		msg += ",";
+		msg += boost::lexical_cast<std::string>(line);
+		msg += ": ";
+		msg += std::forward<String>(desc);
+		msg += ".";
+		throw ExceptionType(msg);
+	}
+};
 
 }}
 
-#define piranha_throw(exc_type,...) piranha::detail::throw_impl<exc_type>(__FILE__,__LINE__,__VA_ARGS__);throw
+#define piranha_throw(exc_type,...) piranha::detail::thrower::impl<exc_type>(__FILE__,__LINE__,__VA_ARGS__);throw
 
 namespace piranha
 {
