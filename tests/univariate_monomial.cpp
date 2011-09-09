@@ -255,3 +255,22 @@ BOOST_AUTO_TEST_CASE(univariate_monomial_degree_test)
 	boost::mpl::for_each<expo_types>(degree_tester());
 }
 
+struct get_element_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef univariate_monomial<T> k_type;
+		std::vector<symbol> vs1;
+		vs1.push_back(symbol("a"));
+		k_type k1({0});
+		BOOST_CHECK(k1.get_element(0,vs1) == 0);
+		k_type k2({1});
+		BOOST_CHECK(k2.get_element(0,vs1) == 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(univariate_monomial_get_element_test)
+{
+	boost::mpl::for_each<expo_types>(get_element_tester());
+}

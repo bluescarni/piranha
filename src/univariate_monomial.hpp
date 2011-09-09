@@ -67,6 +67,13 @@ class univariate_monomial
 {
 		BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<T>));
 	public:
+		/// Value type.
+		/**
+		 * Alias for \p T.
+		 */
+		typedef T value_type;
+		/// Size type.
+		typedef std::size_t size_type;
 		/// Default constructor.
 		/**
 		 * Will initialise the exponent to 0.
@@ -283,6 +290,23 @@ class univariate_monomial
 		void set_exponent(U &&x)
 		{
 			m_value = std::forward<U>(x);
+		}
+		/// Random-access getter.
+		/**
+		 * Equivalent to get_exponent(). This method is provided for use in the series class.
+		 * 
+		 * @param[in] n index of the exponent to get (must be 0).
+		 * @param[in] args reference vector of arguments.
+		 * 
+		 * @return const reference to the exponent at index \p n.
+		 */
+		const T &get_element(const size_type &n, const std::vector<symbol> &args) const
+		{
+			(void)n;
+			(void)args;
+			piranha_assert(n == 0u);
+			piranha_assert(args.size() == 1u);
+			return m_value;
 		}
 		/// Stream operator for piranha::univariate_monomial.
 		/**

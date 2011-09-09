@@ -73,12 +73,12 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		static_assert(std::is_signed<T>::value,"kronecker_monomial requires a signed integer type.");
 	public:
 		/// Alias for \p T.
-		typedef T int_type;
+		typedef T value_type;
 	private:
-		typedef kronecker_array<int_type> ka;
+		typedef kronecker_array<value_type> ka;
 		typedef typename std::decay<decltype(ka::get_limits())>::type _v_type;
 		// Vector type used for temporary packing/unpacking.
-		typedef static_vector<int_type,_v_type::max_size> v_type;
+		typedef static_vector<value_type,_v_type::max_size> v_type;
 	public:
 		/// Size type.
 		/**
@@ -113,7 +113,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		{
 			v_type tmp;
 			for (auto it = list.begin(); it != list.end(); ++it) {
-				tmp.push_back(boost::numeric_cast<int_type>(*it));
+				tmp.push_back(boost::numeric_cast<value_type>(*it));
 			}
 			m_value = ka::encode(tmp);
 		}
@@ -131,18 +131,18 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		{
 			v_type tmp;
 			for (auto it = args.begin(); it != args.end(); ++it) {
-				tmp.push_back(int_type(0));
+				tmp.push_back(value_type(0));
 			}
 			m_value = ka::encode(tmp);
 		}
-		/// Constructor from \p int_type.
+		/// Constructor from \p value_type.
 		/**
 		 * This constructor will initialise the internal integer instance
 		 * to \p n.
 		 * 
 		 * @param[in] n initializer for the internal integer instance.
 		 */
-		explicit kronecker_monomial(const int_type &n):m_value(n) {}
+		explicit kronecker_monomial(const value_type &n):m_value(n) {}
 		/// Trivial destructor.
 		~kronecker_monomial() piranha_noexcept_spec(true)
 		{
@@ -168,7 +168,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * @param[in] n value to which the internal integer instance will be set.
 		 */
-		void set_int(const int_type &n)
+		void set_int(const value_type &n)
 		{
 			m_value = n;
 		}
@@ -176,7 +176,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * @return value of the internal integer instance.
 		 */
-		int_type get_int() const
+		value_type get_int() const
 		{
 			return m_value;
 		}
@@ -250,9 +250,9 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			auto it_new = new_args.begin();
 			for (size_type i = 0u; i < old_vector.size(); ++i, ++it_new) {
 				while (*it_new != orig_args[i]) {
-					// NOTE: for arbitrary int types, int_type(0) might throw. Update docs
+					// NOTE: for arbitrary int types, value_type(0) might throw. Update docs
 					// if needed.
-					new_vector.push_back(int_type(0));
+					new_vector.push_back(value_type(0));
 					piranha_assert(it_new != new_args.end());
 					++it_new;
 					piranha_assert(it_new != new_args.end());
@@ -261,7 +261,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			// Fill up arguments at the tail of new_args but not in orig_args.
 			for (; it_new != new_args.end(); ++it_new) {
-				new_vector.push_back(int_type(0));
+				new_vector.push_back(value_type(0));
 			}
 			piranha_assert(new_vector.size() == new_args.size());
 			// Return monomial with the new encoded vector.
@@ -288,12 +288,30 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * @return degree of the monomial.
 		 * 
-		 * @throws \p std::overflow_error if the computation of the degree overflows type \p int_type.
+		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
+		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
 		 */
-		int_type degree(const std::vector<symbol> &args) const
+		value_type degree(const std::vector<symbol> &args) const
 		{
 			const auto tmp = unpack(args);
-			return std::accumulate(tmp.begin(),tmp.end(),int_type(0),safe_adder);
+			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),safe_adder);
+		}
+		/// Random-access getter.
+		/**
+		 * Will decode the internal integer instance and return the element at index \p n of the decoded vector.
+		 * 
+		 * @param[in] n index of the exponent to get.
+		 * @param[in] args reference vector of arguments.
+		 * 
+		 * @return exponent at index \p n.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
+		 */
+		value_type get_element(const size_type &n, const std::vector<symbol> &args) const
+		{
+			const auto tmp = unpack(args);
+			piranha_assert(n < tmp.size());
+			return tmp[n];
 		}
 		/// Multiply monomial.
 		/**
@@ -303,7 +321,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * @param[in] other multiplicand.
 		 * @param[in] args reference vector of piranha::symbol.
 		 * 
-		 * @throws \p std::overflow_error if the computation of the result overflows type \p int_type.
+		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode() and piranha::kronecker_array::decode(),
 		 * - piranha::static_vector::push_back().
@@ -324,7 +342,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		std::size_t hash() const
 		{
-			return std::hash<int_type>()(m_value);
+			return std::hash<value_type>()(m_value);
 		}
 		/// Equality operator.
 		/**
@@ -362,14 +380,14 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			return os;
 		}
 	private:
-		static int_type safe_adder(const int_type &a, const int_type &b)
+		static value_type safe_adder(const value_type &a, const value_type &b)
 		{
 			if (b >= 0) {
-				if (unlikely(a > boost::integer_traits<int_type>::const_max - b)) {
+				if (unlikely(a > boost::integer_traits<value_type>::const_max - b)) {
 					piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 				}
 			} else {
-				if (unlikely(a < boost::integer_traits<int_type>::const_min - b)) {
+				if (unlikely(a < boost::integer_traits<value_type>::const_min - b)) {
 					piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 				}
 			}
@@ -385,7 +403,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			return retval;
 		}
 	private:
-		int_type m_value;
+		value_type m_value;
 };
 
 }

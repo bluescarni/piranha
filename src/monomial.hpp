@@ -206,6 +206,22 @@ class monomial: public array_key<T,monomial<T>>
 			piranha_assert(other.size() == args.size());
 			this->add(retval,other);
 		}
+		/// Random-access getter.
+		/**
+		 * Equivalent to operator[](). This method is used by the series class.
+		 * 
+		 * @param[in] n index of the exponent to get.
+		 * @param[in] args reference vector of arguments.
+		 * 
+		 * @return const reference to the exponent at index \p n.
+		 */
+		const typename base::value_type &get_element(const typename base::size_type &n, const std::vector<symbol> &args) const
+		{
+			(void)args;
+			piranha_assert(args.size() == this->size());
+			piranha_assert(n < this->size());
+			return (*this)[n];
+		}
 };
 
 }
