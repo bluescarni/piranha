@@ -122,7 +122,18 @@ class series_multiplier
 		 * @param[in] s2 second series.
 		 */
 		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(s1),m_s2(s2)
-		{}
+		{
+			if (unlikely(m_s1.empty() || m_s2.empty())) {
+				return;
+			}
+			m_v1.reserve(m_s1.size());
+			m_v2.reserve(m_s2.size());
+			// Fill in the vectors of pointers.
+			std::back_insert_iterator<decltype(m_v1)> bii1(m_v1);
+			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
+			std::back_insert_iterator<decltype(m_v2)> bii2(m_v2);
+			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
+		}
 		/// Compute result of series multiplication.
 		/**
 		 * This method will call execute() with a \p Functor type that uses the <tt>multiply()</tt> method
@@ -194,21 +205,9 @@ class series_multiplier
 			if (unlikely(m_s1.empty() || m_s2.empty())) {
 				return return_type{};
 			}
-			// Cache the pointers.
-			// NOTE: here maybe it is possible to improve performance by using std::array when number of
-			// terms is small.
-			std::vector<term_type1 const *> v1;
-			std::vector<term_type2 const *> v2;
-			v1.reserve(m_s1.size());
-			v2.reserve(m_s2.size());
-			// Fill in the vectors of pointers.
-			std::back_insert_iterator<decltype(v1)> bii1(v1);
-			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
-			std::back_insert_iterator<decltype(v2)> bii2(v2);
-			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
 			// This is the size type that will be used throughout the calculations.
-			typedef decltype(v1.size()) size_type;
-			const auto size1 = v1.size(), size2 = v2.size();
+			typedef decltype(m_v1.size()) size_type;
+			const auto size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
 			auto n_threads = boost::numeric_cast<size_type>(settings::get_n_threads());
@@ -231,7 +230,7 @@ class series_multiplier
 			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
-				Functor f(v1,v2,ed,retval);
+				Functor f(m_v1,m_v2,ed,retval);
 				const auto tmp = rehasher(f,retval,size1,size2);
 				blocked_multiplication(f,size_type(0u),size1,size_type(0u),size2);
 				if (tmp.first) {
@@ -253,7 +252,7 @@ class series_multiplier
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					retval_list.push_back(return_type{});
-					functor_list.push_back(Functor(v1,v2,ed,retval_list.back()));
+					functor_list.push_back(Functor(m_v1,m_v2,ed,retval_list.back()));
 				}
 				thread_group tg;
 				auto f_it = functor_list.begin();
@@ -264,7 +263,7 @@ class series_multiplier
 					// Functor for use in the thread.
 					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
 					// because of a GCC bug in 4.6.
-					auto f = [&v1,&v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
+					auto f = [&m_v1,&m_v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
 						try {
 							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
@@ -289,7 +288,7 @@ class series_multiplier
 				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				auto final_estimate = estimate_final_series_size(Functor(v1,v2,ed,retval),size1,size2,retval);
+				auto final_estimate = estimate_final_series_size(Functor(m_v1,m_v2,ed,retval),size1,size2,retval);
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -680,8 +679,10 @@ std::cout << "new size is " << new_size << '\n';
 			retval.insert(mult_res,ed);
 		}
 	private:
-		const Series1 &m_s1;
-		const Series2 &m_s2;
+		const Series1			&m_s1;
+		const Series2			&m_s2;
+		std::vector<term_type1 const *>	m_v1;
+		std::vector<term_type2 const *>	m_v2;
 };
 
 }
