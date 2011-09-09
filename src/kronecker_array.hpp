@@ -227,7 +227,7 @@ class kronecker_array
 		 * - the size of \p retval is zero and \p n is not zero,
 		 * - \p n is out of the allowed bounds reported by get_limits().
 		 * @throws unspecified any exception thrown by <tt>boost::numeric_cast</tt> in case the value type of
-		 * \p Vector is not \p SignedInteger. 
+		 * \p Vector is not \p SignedInteger.
 		 */
 		template <typename Vector>
 		static void decode(Vector &retval, const int_type &n)
