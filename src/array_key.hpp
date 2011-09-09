@@ -337,7 +337,7 @@ class array_key: detail::array_key_tag
 		 * @return one of the following:
 		 * - 0 if size() is 0,
 		 * - the hash of the first element (via \p std::hash) if size() is 1,
-		 * - the result of iteratively mixing via \p boost::hash_combine the hash
+		 * - in all other cases, the result of iteratively mixing via \p boost::hash_combine the hash
 		 *   values of all the elements of the container, calculated via \p std::hash,
 		 *   with the hash value of the first element as seed value.
 		 * 
