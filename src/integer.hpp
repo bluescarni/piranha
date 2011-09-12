@@ -96,8 +96,8 @@ namespace piranha
  * for arithmetic operations.
  * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
  * \todo improve interaction with long long via decomposition of operations in long operands
- * \todo no-penalty interop with (unsigned) long long if it coincides with (unsigned) long
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
+ * \todo reduce interop types: remove long double and keep long long only if it is not wider than long.
  */
 class integer
 {

@@ -40,6 +40,15 @@ namespace piranha
  * 
  * The methods of this class, unless specified otherwise, are thread-safe.
  * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee for all operations.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object in a state equivalent to a
+ * default-constructed object.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 class symbol
