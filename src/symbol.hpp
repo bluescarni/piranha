@@ -38,7 +38,8 @@ namespace piranha
  * are tracked in global list for the duration of the program, so that different instances of symbols with the same name are always
  * referring to the same underlying object.
  * 
- * The methods of this class, unless specified otherwise, are thread-safe.
+ * The methods of this class, unless specified otherwise, are thread-safe: it is possible to create, access and operate on objects of this class
+ * concurrently from multiple threads
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -50,6 +51,8 @@ namespace piranha
  * default-constructed object.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo drop the value, does not make much sense anymore.
  */
 class symbol
 {
