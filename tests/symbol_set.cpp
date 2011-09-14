@@ -46,6 +46,14 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 	ss3 = std::move(ss2);
 	BOOST_CHECK(ss2.size() == 0u);
 	BOOST_CHECK(ss3[0u] == symbol("a"));
+	symbol_set ss4({symbol("a"),symbol("c"),symbol("b")});
+	BOOST_CHECK(ss4 == symbol_set({symbol("a"),symbol("b"),symbol("c")}));
+	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
+	// Self assignment.
+	ss4 = ss4;
+	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
+	ss4 = std::move(ss4);
+	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
 }
 
 BOOST_AUTO_TEST_CASE(symbol_set_add_test)

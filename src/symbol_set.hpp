@@ -22,6 +22,7 @@
 #define PIRANHA_SYMBOL_SET_HPP
 
 #include <algorithm>
+#include <initializer_list>
 #include <iterator>
 #include <stdexcept>
 #include <vector>
@@ -85,11 +86,36 @@ class symbol_set
 		symbol_set(const symbol_set &) = default;
 		/// Defaulted move constructor.
 		symbol_set(symbol_set &&) = default;
-		/// Defaulted copy assignment operator.
+		/// Constructor from initializer list of piranha::symbol.
 		/**
+		 * Each symbol in the list will be added via add() to the set.
+		 * 
+		 * @param[in] l list of symbols used for construction.
+		 * 
+		 * @throws unspecified any exception thrown by add().
+		 */
+		explicit symbol_set(std::initializer_list<symbol> l)
+		{
+			for (auto it = l.begin(); it != l.end(); ++it) {
+				add(*it);
+			}
+		}
+		/// Copy assignment operator.
+		/**
+		 * @param[in] other set to be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
-		symbol_set &operator=(const symbol_set &) = default;
+		symbol_set &operator=(const symbol_set &other)
+		{
+			if (likely(this != &other)) {
+				symbol_set tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
 		/// Move operator.
 		/**
 		 * @param[in] other assignment argument.
