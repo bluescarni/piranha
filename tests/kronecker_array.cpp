@@ -37,7 +37,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<std::int8_t,std::int16_t,std::int32_t,std::make_signed<std::size_t>::type> int_types;
+typedef boost::mpl::vector<std::int_least8_t,std::int_least16_t,std::int_least32_t,std::make_signed<std::size_t>::type> int_types;
 
 // Limits.
 struct limits_tester
@@ -89,7 +89,7 @@ struct coding_tester
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emin1}) == emin1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emax1}) == emax1);
 		// Test with max/min vectors in various sizes.
-		for (std::uint8_t i = 1u; i < l.size(); ++i) {
+		for (std::uint_least8_t i = 1u; i < l.size(); ++i) {
 			const auto emin = std::get<1u>(l[i]), emax = std::get<2u>(l[i]);
 			std::vector<T> v1(i,emin), v2(v1);
 			auto c = ka_type::encode(v1);

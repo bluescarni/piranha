@@ -27,6 +27,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <new>
 #include <sstream>
@@ -59,7 +60,7 @@ class custom_string: public std::string
 using namespace piranha;
 
 typedef boost::mpl::vector<int,integer,custom_string> value_types;
-typedef boost::mpl::vector<std::integral_constant<std::uint8_t,1u>,std::integral_constant<std::uint8_t,5u>,std::integral_constant<std::uint8_t,10u>> size_types;
+typedef boost::mpl::vector<std::integral_constant<std::uint_least8_t,1u>,std::integral_constant<std::uint_least8_t,5u>,std::integral_constant<std::uint_least8_t,10u>> size_types;
 
 // Constructors, assignments and element access.
 struct constructor_tester

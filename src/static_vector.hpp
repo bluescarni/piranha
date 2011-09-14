@@ -25,6 +25,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <new>
@@ -60,15 +61,19 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, std::uint8_t MaxSize>
+template <typename T, std::uint_least8_t MaxSize>
 class static_vector
 {
-		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
-		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
-		typedef typename std::aligned_storage<sizeof(T[MaxSize]),alignof(T[MaxSize])>::type storage_type;
 	public:
 		/// Size type.
-		typedef std::uint8_t size_type;
+		typedef std::uint_least8_t size_type;
+	private:
+		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
+		// This check is against overflows when using memcpy.
+		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),"The size type for static_vector might overflow.");
+		typedef typename std::aligned_storage<sizeof(T[MaxSize]),alignof(T[MaxSize])>::type storage_type;
+	public:
 		/// Maximum size.
 		static const size_type max_size = MaxSize;
 		/// Contained type.
