@@ -241,13 +241,22 @@ class array_key: detail::array_key_tag
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 		}
-		/// Defaulted copy assignment operator.
+		/// Copy assignment operator.
 		/**
+		 * @param[in] other array to be assigned to \p this.
+		 * 
 		 * @return reference to \p this.
 		 * 
 		 * @throws unspecified any exception thrown by the copy assignment operator of the underlying container.
 		 */
-		array_key &operator=(const array_key &) = default;
+		array_key &operator=(const array_key &other)
+		{
+			if (likely(this != &other)) {
+				array_key tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
 		/// Move assignment operator.
 		/**
 		 * @param[in] other assignment target.
