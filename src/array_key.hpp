@@ -25,6 +25,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <initializer_list>
 #include <iostream>
 #include <stdexcept>
@@ -52,7 +53,7 @@ namespace piranha
  * piranha::array_key class will be a piranha::static_vector of \p T with maximum
  * size \p MaxSize.
  */
-template <typename T, std::uint8_t MaxSize>
+template <typename T, std::uint_least8_t MaxSize>
 struct static_size {};
 
 /// Array key.
@@ -93,7 +94,7 @@ class array_key: detail::array_key_tag
 			BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<U>));
 			typedef std::vector<U> type;
 		};
-		template <typename U, std::uint8_t MaxSize>
+		template <typename U, std::uint_least8_t MaxSize>
 		struct determine_container_type<static_size<U,MaxSize>>
 		{
 			typedef static_vector<U,MaxSize> type;
