@@ -49,19 +49,15 @@
  * \todo strip_cv_ref should be std::decay probably.
  * \todo try to get away with the friendship to binary series operators by base series.
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer.
- * \todo cache aligned memory allocation: to be completely sure that we are not sharing cache lines among threads,
- * we must 1) figure a way to determine cache line size
- * (like http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache/) 2) use the aligning
- * allocator _everywhere_ there might be potential cache line sharing -> investigate the use of mt_alloc with custom
- * alignment to solve the problem of frequently-used cache values during multiplication (e.g., the m_tmp members in
- * functors).
  * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  * \todo assert that concepts are respected in models.
- * \todo do we need an is_assignable_concept? it is used in monomial, for instance, or when doing std::copy
- * \todo replace exact-width types with least/fast, which are guaranteed to exist (exact width are not guaranteed) -> fix also in tests.
+ * \todo do we need an is_assignable_concept? it is used in monomial, for instance, or when doing std::copy -> maybe we should require it in container_element?
  * \todo check the include of pure C stuff (GMP is already fine, maybe the platform-specific stuff needs to be reviewed - aligning alloc, cache size, number of
  * threads, etc.). http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
  * \todo type-trait and report on startup if thread management primitives are available?
+ * \todo check the series concept: where is it used?
+ * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
+ * (or standard containers) has strong exception safety guarantee.
  */
 namespace piranha
 {
