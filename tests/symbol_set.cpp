@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_add_test)
 	ss.add(symbol("a"));
 	BOOST_CHECK(ss[0u] == symbol("a"));
 	BOOST_CHECK(ss[1u] == symbol("b"));
-	ss.add(symbol("c"));
+	ss.add("c");
 	BOOST_CHECK(ss[0u] == symbol("a"));
 	BOOST_CHECK(ss[1u] == symbol("b"));
 	BOOST_CHECK(ss[2u] == symbol("c"));

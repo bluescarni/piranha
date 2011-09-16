@@ -185,6 +185,19 @@ class symbol_set
 			m_values = std::move(new_values);
 			piranha_assert(check());
 		}
+		/// Add symbol to the set.
+		/**
+		 * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
+		 * 
+		 * @param[in] name name of r the piranha::symbol to be inserted.
+		 * 
+		 * @throws unspecified any exception thrown by the other overload of this method or by the construction
+		 * of piranha::symbol from \p std::string.
+		 */
+		void add(const std::string &name)
+		{
+			add(symbol(name));
+		}
 		/// Set size.
 		/**
 		 * @return the number of elements in the set.
