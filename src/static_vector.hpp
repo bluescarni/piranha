@@ -53,7 +53,7 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * Unless otherwise specified, this class provides the strong exception safety for all operations.
+ * This class provides the strong exception safety for all operations, apart from resize() (see documentation of the method).
  * 
  * \section move_semantics Move semantics
  * 
@@ -353,6 +353,9 @@ class static_vector
 		 * and placed at the end().
 		 * If \p new_size is smaller than the size of the object before the operation, the first \p new_size object in the vector will be preserved.
 		 * 
+		 * This method offers the strong exception safety guarantee when reducing the size of the vector or if the size does not change.
+		 * If an exception is thrown while increasing the size of the vector, the object will be left in a valid but non-specified state.
+		 * 
 		 * @param[in] new_size new size for the vector.
 		 * 
 		 * @throws std::bad_alloc if \p new_size is greater than \p MaxSize.
@@ -367,16 +370,13 @@ class static_vector
 			if (new_size == old_size) {
 				return;
 			} else if (new_size > old_size) {
-				// Operate on copy to provide strong exception safety.
-				static_vector new_vector(*this);
+				// Construct new in case of larger size.
 				const value_type tmp = value_type();
 				for (size_type i = old_size; i < new_size; ++i) {
-					::new ((void *)(new_vector.ptr() + i)) value_type(tmp);
-					piranha_assert(new_vector.m_size != MaxSize);
-					++new_vector.m_size;
+					::new ((void *)(ptr() + i)) value_type(tmp);
+					piranha_assert(m_size != MaxSize);
+					++m_size;
 				}
-				// Move in the new vector.
-				*this = std::move(new_vector);
 			} else {
 				// Destroy in case of smaller size.
 				for (size_type i = new_size; i < old_size; ++i) {
