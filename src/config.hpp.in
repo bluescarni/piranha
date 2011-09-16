@@ -59,9 +59,11 @@
 #if defined(__GNUC__)
 	#define likely(x) __builtin_expect((x),1)
 	#define unlikely(x) __builtin_expect((x),0)
+	#define PIRANHA_PRETTY_FUNC __PRETTY_FUNCTION__
 #else
 	#define likely(x) (x)
 	#define unlikely(x) (x)
+	#define PIRANHA_PRETTY_FUNC __func__
 #endif
 
 // Support of posix_memalign.
