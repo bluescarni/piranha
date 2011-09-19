@@ -27,11 +27,12 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <stdexcept>
 #include <unordered_set>
-#include <vector>
 
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
+#include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
 
 using namespace piranha;
@@ -95,14 +96,14 @@ struct constructor_tester
 		BOOST_CHECK_NO_THROW(k0 = k1);
 		BOOST_CHECK_NO_THROW(k0 = std::move(k1));
 		// Constructor from vector of symbols.
-		std::vector<symbol> vs = {symbol("a"),symbol("b"),symbol("c")};
+		symbol_set vs({symbol("a"),symbol("b"),symbol("c")});
 		key_type k2(vs);
 		BOOST_CHECK_EQUAL(k2.size(),vs.size());
 		BOOST_CHECK_EQUAL(k2[0],T(0));
 		BOOST_CHECK_EQUAL(k2[1],T(0));
 		BOOST_CHECK_EQUAL(k2[2],T(0));
 		// Generic constructor for use in series.
-		BOOST_CHECK_THROW(key_type tmp(k2,std::vector<symbol>{}),std::invalid_argument);
+		BOOST_CHECK_THROW(key_type tmp(k2,symbol_set{}),std::invalid_argument);
 		key_type k3(k2,vs);
 		BOOST_CHECK_EQUAL(k3.size(),vs.size());
 		BOOST_CHECK_EQUAL(k3[0],T(0));
@@ -115,7 +116,7 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k4[2],T(0));
 		typedef g_key_type<int> key_type2;
 		key_type2 k5(vs);
-		BOOST_CHECK_THROW(key_type tmp(k5,std::vector<symbol>{}),std::invalid_argument);
+		BOOST_CHECK_THROW(key_type tmp(k5,symbol_set{}),std::invalid_argument);
 		key_type k6(k5,vs);
 		BOOST_CHECK_EQUAL(k6.size(),vs.size());
 		BOOST_CHECK_EQUAL(k6[0],T(0));
@@ -222,17 +223,17 @@ class debug_access<merge_args_tag>
 		void operator()(const T &)
 		{
 			typedef g_key_type<T> key_type;
-			std::vector<symbol> v1, v2;
-			v2.push_back(symbol("a"));
+			symbol_set v1, v2;
+			v2.add(symbol("a"));
 			key_type k;
 			auto out = k.base_merge_args(v1,v2);
 			BOOST_CHECK_EQUAL(out.size(),unsigned(1));
 			BOOST_CHECK_EQUAL(out[0],T(0));
-			v2.push_back(symbol("b"));
-			v2.push_back(symbol("c"));
-			v2.push_back(symbol("d"));
-			v1.push_back(symbol("b"));
-			v1.push_back(symbol("d"));
+			v2.add(symbol("b"));
+			v2.add(symbol("c"));
+			v2.add(symbol("d"));
+			v1.add(symbol("b"));
+			v1.add(symbol("d"));
 			k.push_back(T(2));
 			k.push_back(T(4));
 			out = k.base_merge_args(v1,v2);
@@ -241,12 +242,12 @@ class debug_access<merge_args_tag>
 			BOOST_CHECK_EQUAL(out[1],T(2));
 			BOOST_CHECK_EQUAL(out[2],T(0));
 			BOOST_CHECK_EQUAL(out[3],T(4));
-			v2.push_back(symbol("e"));
-			v2.push_back(symbol("f"));
-			v2.push_back(symbol("g"));
-			v2.push_back(symbol("h"));
-			v1.push_back(symbol("e"));
-			v1.push_back(symbol("g"));
+			v2.add(symbol("e"));
+			v2.add(symbol("f"));
+			v2.add(symbol("g"));
+			v2.add(symbol("h"));
+			v1.add(symbol("e"));
+			v1.add(symbol("g"));
 			k.push_back(T(5));
 			k.push_back(T(7));
 			out = k.base_merge_args(v1,v2);
@@ -259,6 +260,10 @@ class debug_access<merge_args_tag>
 			BOOST_CHECK_EQUAL(out[5],T(0));
 			BOOST_CHECK_EQUAL(out[6],T(7));
 			BOOST_CHECK_EQUAL(out[7],T(0));
+			BOOST_CHECK_THROW(k.base_merge_args(v2,v1),std::invalid_argument);
+			BOOST_CHECK_THROW(k.base_merge_args(v1,symbol_set{}),std::invalid_argument);
+			v1.add(symbol("z"));
+			BOOST_CHECK_THROW(k.base_merge_args(v1,v2),std::invalid_argument);
 		}
 };
 
@@ -343,6 +348,8 @@ class debug_access<add_tag>
 			k1.add(retval,k2a);
 			BOOST_CHECK(retval.size() == 1u);
 			BOOST_CHECK(retval[0] == T(3));
+			k2a.resize(2);
+			BOOST_CHECK_THROW(k1.add(retval,k2a),std::invalid_argument);
 		}
 };
 

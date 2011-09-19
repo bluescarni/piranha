@@ -100,6 +100,7 @@ namespace detail {}
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "runtime_info.hpp"
+#include "series.hpp"
 #include "series_binary_operators.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"

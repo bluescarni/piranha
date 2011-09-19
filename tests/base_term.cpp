@@ -29,15 +29,14 @@
 #include <utility>
 
 #include "../src/config.hpp"
-#include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
-#include "../src/numerical_coefficient.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
 // NOTE: maybe once series coefficient is available we can add it here.
-typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
+typedef boost::mpl::vector<double,integer> cf_types;
 typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
 template <typename Cf, typename Key>
@@ -69,26 +68,24 @@ struct constructor_tester
 		{
 			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
-			echelon_descriptor<term_type> ed;
-			ed.template add_symbol<term_type>("x");
-			const auto &args = ed.template get_args<term_type>();
+			symbol_set args;
+			args.add("x");
 			// Default constructor.
-			BOOST_CHECK_EQUAL(term_type().m_cf.get_value(),Cf().get_value());
+			BOOST_CHECK_EQUAL(term_type().m_cf,Cf());
 			BOOST_CHECK_EQUAL(term_type().m_key,Key());
 			// Generic constructor.
-			BOOST_CHECK_EQUAL(term_type(Cf(1,ed),Key{value_type(1)}).m_cf.get_value(),Cf(1,ed).get_value());
-			BOOST_CHECK_EQUAL(term_type(Cf(1,ed),Key{value_type(1)}).m_key,Key{value_type(1)});
+			BOOST_CHECK_EQUAL(term_type(Cf(1),Key{value_type(1)}).m_cf,Cf(1));
+			BOOST_CHECK_EQUAL(term_type(Cf(1),Key{value_type(1)}).m_key,Key{value_type(1)});
 			// Constructor from term of different type.
-			typedef numerical_coefficient<long> Cf2;
-			typedef g_term_type<Cf2,Key>  other_term_type;
-			echelon_descriptor<other_term_type> ed2;
-			other_term_type other(Cf2(1,ed2),Key{value_type(1)});
-			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf,ed),Key(other.m_key,args)).m_cf.get_value(),Cf2(1,ed2).get_value());
-			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf,ed),Key(other.m_key,args)).m_key[0],Key{value_type(1)}[0]);
+			typedef long Cf2;
+			typedef g_term_type<Cf2,Key> other_term_type;
+			other_term_type other(Cf2(1),Key{value_type(1)});
+			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_cf,Cf(Cf2(1)));
+			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_key[0],Key{value_type(1)}[0]);
 			// Move assignment.
-			term_type term(Cf(1,ed),Key{value_type(2)});
-			term = term_type(Cf(2,ed),Key{value_type(1)});
-			BOOST_CHECK_EQUAL(term.m_cf.get_value(),Cf(2,ed).get_value());
+			term_type term(Cf(1),Key{value_type(2)});
+			term = term_type(Cf(2),Key{value_type(1)});
+			BOOST_CHECK_EQUAL(term.m_cf,Cf(2));
 		}
 	};
 	template <typename Cf>
@@ -113,11 +110,9 @@ struct equality_tester
 		{
 			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
-			echelon_descriptor<term_type> ed;
-			ed.template add_symbol<term_type>("x");
 			BOOST_CHECK(term_type() == term_type());
-			BOOST_CHECK(term_type(Cf(1,ed),Key{value_type(2)}) == term_type(Cf(2,ed),Key{value_type(2)}));
-			BOOST_CHECK(!(term_type(Cf(2,ed),Key{value_type(1)}) == term_type(Cf(2,ed),Key{value_type(2)})));
+			BOOST_CHECK(term_type(Cf(1),Key{value_type(2)}) == term_type(Cf(2),Key{value_type(2)}));
+			BOOST_CHECK(!(term_type(Cf(2),Key{value_type(1)}) == term_type(Cf(2),Key{value_type(2)})));
 		}
 	};
 	template <typename Cf>
@@ -142,10 +137,8 @@ struct hash_tester
 		{
 			typedef g_term_type<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
-			echelon_descriptor<term_type> ed;
-			ed.template add_symbol<term_type>("x");
 			BOOST_CHECK_EQUAL(term_type().hash(),std::hash<Key>()(Key()));
-			BOOST_CHECK_EQUAL(term_type(Cf(2,ed),Key{value_type(1)}).hash(),std::hash<Key>()(Key{value_type(1)}));
+			BOOST_CHECK_EQUAL(term_type(Cf(2),Key{value_type(1)}).hash(),std::hash<Key>()(Key{value_type(1)}));
 		}
 	};
 	template <typename Cf>
@@ -184,14 +177,13 @@ struct compatibility_tester
 					explicit term_type(const Cf &, const Key &) {}
 			};
 			typedef typename Key::value_type value_type;
-			echelon_descriptor<term_type> ed;
-			const auto &args = ed.template get_args<term_type>();
+			symbol_set args;
 			term_type t1;
-			BOOST_CHECK_EQUAL((int)(t1.is_compatible(ed)) - (int)(t1.m_cf.is_compatible(ed) && t1.m_key.is_compatible(args)),0);
+			BOOST_CHECK_EQUAL(t1.is_compatible(args),t1.m_key.is_compatible(args));
 			term_type t2;
 			t2.m_cf = 1;
 			t2.m_key = Key{value_type(1)};
-			BOOST_CHECK_EQUAL((int)(t2.is_compatible(ed)) - (int)(t2.m_cf.is_compatible(ed) && t2.m_key.is_compatible(args)),0);
+			BOOST_CHECK_EQUAL(t2.is_compatible(args),t2.m_key.is_compatible(args));
 		}
 	};
 	template <typename Cf>
@@ -230,13 +222,12 @@ struct ignorability_tester
 					explicit term_type(const Cf &, const Key &) {}
 			};
 			typedef typename Key::value_type value_type;
-			echelon_descriptor<term_type> ed;
-			const auto &args = ed.template get_args<term_type>();
+			symbol_set args;
 			term_type t1;
-			BOOST_CHECK_EQUAL((int)(t1.is_ignorable(ed)) - (int)(t1.m_cf.is_ignorable(ed) || t1.m_key.is_ignorable(args)),0);
+			BOOST_CHECK_EQUAL(t1.is_ignorable(args),t1.m_key.is_ignorable(args));
 			term_type t2;
 			t2.m_cf = 1;
-			BOOST_CHECK_EQUAL((int)(t2.is_ignorable(ed)) - (int)(t2.m_cf.is_ignorable(ed) || t2.m_key.is_ignorable(args)),0);
+			BOOST_CHECK_EQUAL(t2.is_ignorable(args),t2.m_key.is_ignorable(args));
 		}
 	};
 	template <typename Cf>

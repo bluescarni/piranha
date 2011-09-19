@@ -41,7 +41,7 @@
 #include "detail/array_key_fwd.hpp"
 #include "exceptions.hpp"
 #include "static_vector.hpp"
-#include "symbol.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -75,8 +75,7 @@ struct static_size {};
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as \p std::vector or piranha::static_vector, depending on
- * the underlying container.
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
  * \section move_semantics Move semantics
  * 
@@ -112,7 +111,7 @@ class array_key: detail::array_key_tag
 		typedef typename container_type::const_iterator const_iterator;
 	private:
 		template <typename U>
-		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+		static container_type forward_for_construction(U &&x, const symbol_set &args,
 			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
 			is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
@@ -122,7 +121,7 @@ class array_key: detail::array_key_tag
 			return container_type(std::move(x.m_container));
 		}
 		template <typename U>
-		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+		static container_type forward_for_construction(U &&x, const symbol_set &args,
 			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
 			!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
@@ -148,7 +147,7 @@ class array_key: detail::array_key_tag
 			}
 		}
 		template <typename U>
-		static container_type forward_for_construction(U &&x, const std::vector<symbol> &args,
+		static container_type forward_for_construction(U &&x, const symbol_set &args,
 			typename std::enable_if<!std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
@@ -189,32 +188,33 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @param[in] list initializer list.
 		 * 
-		 * @throws unspecified any exception thrown by memory allocation in \p std::vector or by the construction
+		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector or by the construction
 		 * of objects of type \p value_type from objects of type \p U.
 		 */
 		template <typename U>
 		explicit array_key(std::initializer_list<U> list) : m_container(construct_from_init_list(list)) {}
-		/// Constructor from vector of arguments.
+		/// Constructor from symbol set.
 		/**
 		 * The key will be created with a number of variables equal to <tt>args.size()</tt>
 		 * and filled with exponents constructed from the integral constant 0.
 		 * 
-		 * @param[in] args vector of piranha::symbol used for construction.
+		 * @param[in] args piranha::symbol_set used for construction.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
 		 * - the construction of instances of type \p value_type from the integral constant 0.
 		 */
-		explicit array_key(const std::vector<symbol> &args)
+		explicit array_key(const symbol_set &args)
 		{
 			m_container.reserve(args.size());
-			for (decltype(args.size()) i = 0; i < args.size(); ++i) {
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
 				push_back(value_type(0));
 			}
 		}
-		/// Generic constructor.
+		/// Constructor from piranha::array_key parametrized on a generic type.
 		/**
-		 * Generic constructor for use in series. This template is activated only if \p U is an instance of piranha::array_key.
+		 * Generic constructor for use in series, when inserting a term of different type.
+		 * This template is activated only if \p U is an instance of piranha::array_key.
 		 * 
 		 * The internal container will be initialised with the
 		 * contents of the internal container of \p x (possibly converting the individual contained values through a suitable converting constructor,
@@ -222,7 +222,7 @@ class array_key: detail::array_key_tag
 		 * be produced.
 		 * 
 		 * @param[in] x construction argument.
-		 * @param[in] args reference vector of symbolic arguments.
+		 * @param[in] args reference piranha::symbol_set.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
@@ -230,7 +230,7 @@ class array_key: detail::array_key_tag
 		 * @throws std::invalid_argument if the sizes of \p x and \p args differ.
 		 */
 		template <typename U>
-		explicit array_key(U &&x, const std::vector<symbol> &args,
+		explicit array_key(U &&x, const symbol_set &args,
 			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
 		{
@@ -247,7 +247,7 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the copy assignment operator of the underlying container.
+		 * @throws unspecified any exception thrown by the copy constructor of the underlying container.
 		 */
 		array_key &operator=(const array_key &other)
 		{
@@ -312,6 +312,9 @@ class array_key: detail::array_key_tag
 		}
 		/// Resize the internal array container.
 		/**
+		 * Semantically and functionally analogous to <tt>std::vector::resize()</tt>. This method provides the basic exception
+		 * safety guarantee.
+		 * 
 		 * @param[in] new_size desired new size for the internal container.
 		 * 
 		 * @throws unspecified any exception thrown by the <tt>resize()</tt> method of the underlying container.
@@ -453,28 +456,34 @@ class array_key: detail::array_key_tag
 	protected:
 		/// Merge arguments.
 		/**
-		 * Merge the new arguments vector \p new_args into \p this, given the current reference arguments vector
+		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
 		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container
 		 * after being constructed from the integral constant 0.
 		 * 
-		 * @param[in] orig_args current reference arguments vector for \p this.
-		 * @param[in] new_args new arguments vector.
+		 * @param[in] orig_args current reference arguments set for \p this.
+		 * @param[in] new_args new arguments set.
 		 * 
 		 * @return piranha::array_key resulting from merging \p new_args into \p this.
 		 * 
+		 * @throws std::invalid_argument in the following cases:
+		 * - the size of \p this is different from the size of \p orig_args,
+		 * - the size of \p new_args is not greater than the size of \p orig_args,
+		 * - not all elements of \p orig_args are included in \p new_args.
 		 * @throws unspecified any exception thrown by:
 		 * - the <tt>push_back()</tt> or <tt>reserve()</tt> methods of the underlying container,
 		 * - the construction of instances of type \p value_type from the integral constant 0.
 		 */
-		array_key base_merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		array_key base_merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
+			if (unlikely(m_container.size() != orig_args.size() || new_args.size() <= orig_args.size() ||
+				!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
+			{
+				piranha_throw(std::invalid_argument,"invalid argument(s) for symbol set merging");
+			}
 			array_key retval;
 			retval.m_container.reserve(new_args.size());
-			piranha_assert(m_container.size() == orig_args.size());
-			piranha_assert(new_args.size() > orig_args.size());
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
-			piranha_assert(std::all_of(orig_args.begin(),orig_args.end(),[&new_args](const symbol &s) {return std::find(new_args.begin(),new_args.end(),s) != new_args.end();}));
 			auto it_new = new_args.begin();
 			for (size_type i = 0u; i < m_container.size(); ++i, ++it_new) {
 				while (*it_new != orig_args[i]) {
@@ -497,9 +506,15 @@ class array_key: detail::array_key_tag
 		 * The elements of \p this will be assigned to \p retval, and then summed in-place
 		 * with the elements of \p other.
 		 * 
-		 * @param[out] retval piranha::array_key that will hold the result of the summation.
+		 * This method requires type \p T to be equipped with copy-assignment operator from type \p U and in-place addition
+		 * operator with type \p U.
+		 * 
+		 * If any error occurs, retval will be left in a valid but undefined state.
+		 * 
+		 * @param[out] retval piranha::array_key that will hold the result of the addition.
 		 * @param[in] other piranha::array_key that will be added to \p this.
 		 * 
+		 * @throws std::invalid_argument if the sizes of \p this and \p other are different.
 		 * @throws unspecified any exception thrown by:
 		 * - resize(),
 		 * - the assignment operator of \p T,
@@ -508,7 +523,9 @@ class array_key: detail::array_key_tag
 		template <typename U, typename Derived2>
 		void add(array_key &retval, const array_key<U,Derived2> &other) const
 		{
-			piranha_assert(other.size() == size());
+			if (unlikely(other.size() != size())) {
+				piranha_throw(std::invalid_argument,"invalid array size");
+			}
 			const auto s = size();
 			retval.resize(s);
 			std::copy(begin(),end(),retval.begin());

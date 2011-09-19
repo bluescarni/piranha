@@ -53,7 +53,7 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the strong exception safety for all operations, apart from resize() (see documentation of the method).
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
  * \section move_semantics Move semantics
  * 

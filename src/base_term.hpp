@@ -28,12 +28,12 @@
 #include <unordered_set>
 
 #include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
+#include "concepts/term.hpp"
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
-#include "echelon_descriptor.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -48,7 +48,7 @@ namespace piranha
  * 
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_term
  *   of \p Cf, \p Key and \p Derived as base class.
- * - \p Derived must be a model of piranha::concept::ContainerElement.
+ * - \p Derived must be a model of piranha::concept::Term.
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
  * 
@@ -106,7 +106,7 @@ class base_term: detail::base_term_tag
 		/// Trivial destructor.
 		~base_term() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+			BOOST_CONCEPT_ASSERT((concept::Term<Derived>));
 		}
 		/// Copy assignment operator.
 		/**
@@ -168,29 +168,25 @@ class base_term: detail::base_term_tag
 		}
 		/// Compatibility test.
 		/**
-		 * @param[in] ed reference piranha::echelon_descriptor.
+		 * @param[in] args reference arguments set.
 		 * 
-		 * @return \p true is both the coefficient's and the key's <tt>is_compatible()</tt> method returns true,
-		 * \p false otherwise.
+		 * @return the key's <tt>is_compatible()</tt> method's return value.
 		 */
-		// NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
-		// we must take care of asserting noexcept on the correspondnig methods in the derived class.
-		template <typename Term>
-		bool is_compatible(const echelon_descriptor<Term> &ed) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
-			return (m_cf.is_compatible(ed) && m_key.is_compatible(ed.template get_args<Derived>()));
+			// NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
+			// we must take care of asserting noexcept on the corresponding methods in the derived class.
+			return m_key.is_compatible(args);
 		}
 		/// Ignorability test.
 		/**
-		 * @param[in] ed reference piranha::echelon_descriptor.
+		 * @param[in] args reference arguments set.
 		 * 
-		 * @return \p true is either the coefficient's or the key's <tt>is_ignorable()</tt> method returns true,
-		 * \p false otherwise.
+		 * @return the key's <tt>is_ignorable()</tt> method's return value.
 		 */
-		template <typename Term>
-		bool is_ignorable(const echelon_descriptor<Term> &ed) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
-			return (m_cf.is_ignorable(ed) || m_key.is_ignorable(ed.template get_args<Derived>()));
+			return m_key.is_ignorable(args);
 		}
 		/// Overload of stream operator for piranha::base_term.
 		/**

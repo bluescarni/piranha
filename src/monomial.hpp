@@ -24,15 +24,15 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <initializer_list>
+#include <stdexcept>
 #include <type_traits>
 #include <unordered_set>
-#include <vector>
 
 #include "array_key.hpp"
 #include "concepts/key.hpp"
 #include "config.hpp"
 #include "math.hpp"
-#include "symbol.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -111,13 +111,13 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Compatibility check
 		/**
-		 * A monomial and a vector of arguments are compatible if their sizes coincide.
+		 * A monomial and a set of arguments are compatible if their sizes coincide.
 		 * 
-		 * @param[in] args reference arguments vector.
+		 * @param[in] args reference arguments set.
 		 * 
 		 * @return <tt>this->size() == args.size()</tt>.
 		 */
-		bool is_compatible(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			return (this->size() == args.size());
 		}
@@ -125,11 +125,11 @@ class monomial: public array_key<T,monomial<T>>
 		/**
 		 * A monomial is never ignorable by definition.
 		 * 
-		 * @param[in] args reference arguments vector.
+		 * @param[in] args reference arguments set.
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			(void)args;
 			piranha_assert(is_compatible(args));
@@ -139,14 +139,14 @@ class monomial: public array_key<T,monomial<T>>
 		/**
 		 * Will forward the call to piranha::array_key::base_merge_args().
 		 * 
-		 * @param[in] orig_args original arguments vector.
-		 * @param[in] new_args new arguments vector.
+		 * @param[in] orig_args original arguments set.
+		 * @param[in] new_args new arguments set.
 		 * 
 		 * @return piranha::monomial with the new arguments merged in.
 		 * 
 		 * @throws unspecified any exception thrown by piranha::array_key::base_merge_args().
 		 */
-		monomial merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
 			monomial retval;
 			static_cast<base &>(retval) = this->base_merge_args(orig_args,new_args);
@@ -154,68 +154,79 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Check if monomial is unitary.
 		/**
-		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
+		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true. This method requires
+		 * that the value type of the monomial is suitable as argument for piranha::math::is_zero().
 		 * 
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return \p true if the monomial is unitary, \p false otherwise.
 		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
-		bool is_unitary(const std::vector<symbol> &args) const
+		bool is_unitary(const symbol_set &args) const
 		{
 			typedef typename base::value_type value_type;
-			(void)args;
-			piranha_assert(args.size() == this->size());
+			if(unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
 			return std::all_of(this->m_container.begin(),this->m_container.end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
+		// NOTE: in the doc here we might need to add the assignable requirement, if this is not included
+		// in the element container concept.
 		/// Degree.
 		/**
-		 * Degree of the monomial.
+		 * Degree of the monomial. This method requires that the value type of the monomial is equipped with
+		 * the binary add operator.
 		 * 
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return the summation of all the exponents of the monomial, or <tt>value_type(0)</tt> if the size
 		 * of the monomial is zero.
 		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by the addition and assignment operators of \p value_type.
 		 */
-		typename array_key<T,monomial<T>>::value_type degree(const std::vector<symbol> &args) const
+		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(args.size() == this->size());
 			typedef typename base::value_type value_type;
+			if(unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
 			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
 		}
 		/// Multiply monomial.
 		/**
-		 * Multiplies \p this by \p other and stores the result in \p retval.
+		 * Multiplies \p this by \p other and stores the result in \p retval. Type requirements and exception safety
+		 * guarantee are the same as for piranha::array_key::add().
 		 * 
 		 * @param[out] retval return value.
 		 * @param[in] other argument of multiplication.
-		 * @param[in] args reference vector of arguments.
+		 * @param[in] args reference set of arguments.
 		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by piranha::array_key::add().
 		 */
 		template <typename U>
-		void multiply(monomial &retval, const monomial<U> &other, const std::vector<symbol> &args) const
+		void multiply(monomial &retval, const monomial<U> &other, const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(other.size() == this->size());
-			piranha_assert(other.size() == args.size());
+			if(unlikely(other.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
 			this->add(retval,other);
 		}
 		/// Random-access getter.
 		/**
-		 * Equivalent to operator[](). This method is used by the series class.
+		 * Equivalent to operator[](). This method is used by the series class. For performance reasons, this method is
+		 * protected by checks on \p n and \p args only in debug mode (via asserts).
 		 * 
 		 * @param[in] n index of the exponent to get.
-		 * @param[in] args reference vector of arguments.
+		 * @param[in] args reference set of arguments.
 		 * 
 		 * @return const reference to the exponent at index \p n.
 		 */
-		const typename base::value_type &get_element(const typename base::size_type &n, const std::vector<symbol> &args) const
+		const typename base::value_type &get_element(const typename base::size_type &n, const symbol_set &args) const
 		{
 			(void)args;
 			piranha_assert(args.size() == this->size());

@@ -32,14 +32,13 @@
 #include <tuple>
 #include <type_traits>
 #include <unordered_set>
-#include <vector>
 
 #include "concepts/key.hpp"
 #include "config.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
 #include "kronecker_array.hpp"
 #include "static_vector.hpp"
-#include "symbol.hpp"
+#include "symbol_set.hpp"
 
 namespace piranha
 {
@@ -117,17 +116,17 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			m_value = ka::encode(tmp);
 		}
-		/// Constructor from vector of symbols.
+		/// Constructor from set of symbols.
 		/**
 		 * After construction all exponents in the monomial will be zero.
 		 * 
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - piranha::static_vector::push_back().
 		 */
-		explicit kronecker_monomial(const std::vector<symbol> &args)
+		explicit kronecker_monomial(const symbol_set &args)
 		{
 			v_type tmp;
 			for (auto it = args.begin(); it != args.end(); ++it) {
@@ -190,11 +189,11 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * Otherwise, the monomial is considered to be compatible for insertion.
 		 * 
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return compatibility flag for the monomial.
 		 */
-		bool is_compatible(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			const auto s = args.size();
 			// No args means the value must also be zero.
@@ -214,11 +213,11 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * A monomial is never considered ignorable.
 		 * 
-		 * @param[in] args reference vector of piranha::symbol (ignored).
+		 * @param[in] args reference set of piranha::symbol (ignored).
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			(void)args;
 			piranha_assert(is_compatible(args));
@@ -226,25 +225,31 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Merge arguments.
 		/**
-		 * Merge the new arguments vector \p new_args into \p this, given the current reference arguments vector
+		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
 		 * \p orig_args.
 		 * 
-		 * @param[in] orig_args original arguments vector.
-		 * @param[in] new_args new arguments vector.
+		 * @param[in] orig_args original arguments set.
+		 * @param[in] new_args new arguments set.
 		 * 
 		 * @return monomial with merged arguments.
 		 * 
+		 * @throw std::invalid_argument if at least one of these conditions is true:
+		 * - the size of \p new_args is not greater than the size of \p orig_args,
+		 * - not all elements of \p orig_args are included in \p new_args.
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::kronecker_array::encode() and piranha::kronecker_array::decode(),
-		 * - piranha::static_vector::push_back().
+		 * - piranha::kronecker_array::encode(),
+		 * - piranha::static_vector::push_back(),
+		 * - unpack().
 		 */
-		kronecker_monomial merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		kronecker_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			piranha_assert(new_args.size() > orig_args.size());
+			if (unlikely(new_args.size() <= orig_args.size() ||
+				!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
+			{
+				piranha_throw(std::invalid_argument,"invalid argument(s) for symbol set merging");
+			}
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
-			piranha_assert(std::all_of(orig_args.begin(),orig_args.end(),[&new_args](const symbol &s) {return std::find(new_args.begin(),new_args.end(),s) != new_args.end();}));
-			piranha_assert(is_compatible(orig_args));
 			const auto old_vector = unpack(orig_args);
 			v_type new_vector;
 			auto it_new = new_args.begin();
@@ -271,11 +276,11 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Check if monomial is unitary.
 		/**
-		 * @param[in] args reference vector of piranha::symbol (ignored).
+		 * @param[in] args reference set of piranha::symbol (ignored).
 		 * 
-		 * @return \p true if all exponents are zero, \p false otherwise.
+		 * @return \p true if the internal integer instance is zero, \p false otherwise.
 		 */
-		bool is_unitary(const std::vector<symbol> &args) const
+		bool is_unitary(const symbol_set &args) const
 		{
 			(void)args;
 			piranha_assert(args.size() || !m_value);
@@ -284,14 +289,14 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Degree.
 		/**
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return degree of the monomial.
 		 * 
 		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
-		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type degree(const std::vector<symbol> &args) const
+		value_type degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),safe_adder);
@@ -301,13 +306,13 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * Will decode the internal integer instance and return the element at index \p n of the decoded vector.
 		 * 
 		 * @param[in] n index of the exponent to get.
-		 * @param[in] args reference vector of arguments.
+		 * @param[in] args reference set of arguments.
 		 * 
 		 * @return exponent at index \p n.
 		 * 
-		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
+		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type get_element(const size_type &n, const std::vector<symbol> &args) const
+		value_type get_element(const size_type &n, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(n < tmp.size());
@@ -319,14 +324,15 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * @param[out] retval result of multiplying \p this by \p other.
 		 * @param[in] other multiplicand.
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::kronecker_array::encode() and piranha::kronecker_array::decode(),
+		 * - piranha::kronecker_array::encode(),
+		 * - unpack(),
 		 * - piranha::static_vector::push_back().
 		 */
-		void multiply(kronecker_monomial &retval, const kronecker_monomial &other, const std::vector<symbol> &args) const
+		void multiply(kronecker_monomial &retval, const kronecker_monomial &other, const symbol_set &args) const
 		{
 			const auto size = args.size();
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
@@ -365,6 +371,27 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		{
 			return m_value != other.m_value;
 		}
+		/// Unpack internal integer instance.
+		/**
+		 * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return piranha::static_vector containing the result of decoding the internal integral instance via
+		 * piranha::kronecker_array.
+		 * 
+		 * @throws std::invalid_argument if the size of \p args is larger than the maximum size of piranha::static_vector.
+		 * @throws unspecified any exception thrown by piranha::kronecker_array::decode().
+		 */
+		v_type unpack(const symbol_set &args) const
+		{
+			v_type retval(args.size(),0);
+			if (unlikely(retval.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"error creating the unpacked vector");
+			}
+			ka::decode(retval,m_value);
+			return retval;
+		}
 		/// Stream operator overload for piranha::kronecker_monomial.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.
@@ -392,15 +419,6 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				}
 			}
 			return a + b;
-		}
-		v_type unpack(const std::vector<symbol> &args) const
-		{
-			// NOTE: here we should be sure that args size is never greater than the maximum possible value,
-			// as this object has supposedly been created with an args vector of admittable size.
-			piranha_assert(args.size() <= boost::integer_traits<size_type>::const_max);
-			v_type retval(args.size(),0);
-			ka::decode(retval,m_value);
-			return retval;
 		}
 	private:
 		value_type m_value;
