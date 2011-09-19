@@ -154,8 +154,7 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Check if monomial is unitary.
 		/**
-		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true. This method requires
-		 * that the value type of the monomial is suitable as argument for piranha::math::is_zero().
+		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.
 		 * 
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
@@ -177,8 +176,7 @@ class monomial: public array_key<T,monomial<T>>
 		// in the element container concept.
 		/// Degree.
 		/**
-		 * Degree of the monomial. This method requires that the value type of the monomial is equipped with
-		 * the binary add operator.
+		 * Degree of the monomial.
 		 * 
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
@@ -198,8 +196,8 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Multiply monomial.
 		/**
-		 * Multiplies \p this by \p other and stores the result in \p retval. Type requirements and exception safety
-		 * guarantee are the same as for piranha::array_key::add().
+		 * Multiplies \p this by \p other and stores the result in \p retval. The exception safety
+		 * guarantee is the same as for piranha::array_key::add().
 		 * 
 		 * @param[out] retval return value.
 		 * @param[in] other argument of multiplication.

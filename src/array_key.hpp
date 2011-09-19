@@ -506,10 +506,7 @@ class array_key: detail::array_key_tag
 		 * The elements of \p this will be assigned to \p retval, and then summed in-place
 		 * with the elements of \p other.
 		 * 
-		 * This method requires type \p T to be equipped with copy-assignment operator from type \p U and in-place addition
-		 * operator with type \p U.
-		 * 
-		 * If any error occurs, retval will be left in a valid but undefined state.
+		 * If any error occurs, \p retval will be left in a valid but undefined state.
 		 * 
 		 * @param[out] retval piranha::array_key that will hold the result of the addition.
 		 * @param[in] other piranha::array_key that will be added to \p this.
