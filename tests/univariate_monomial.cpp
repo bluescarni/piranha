@@ -28,10 +28,10 @@
 #include <cstddef>
 #include <stdexcept>
 #include <unordered_set>
-#include <vector>
 
 #include "../src/integer.hpp"
 #include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -51,12 +51,11 @@ struct constructor_tester
 		BOOST_CHECK(u1.get_exponent() == T(3));
 		um_type u2(std::move(u0));
 		BOOST_CHECK(u2.get_exponent() == T(3));
-		um_type u3 = um_type(std::vector<symbol>());
+		um_type u3 = um_type(symbol_set{});
 		BOOST_CHECK(u3.get_exponent() == T(0));
-		um_type u4 = um_type(std::vector<symbol>(1,symbol("x")));
+		um_type u4 = um_type(symbol_set({symbol("x")}));
 		BOOST_CHECK(u4.get_exponent() == T(0));
-		BOOST_CHECK_THROW(u4 = um_type(std::vector<symbol>({symbol("x"),symbol("y")})),std::invalid_argument);
-		BOOST_CHECK(um_type{}.get_exponent() == T(0));
+		BOOST_CHECK_THROW(u4 = um_type(symbol_set({symbol("x"),symbol("y")})),std::invalid_argument);
 		BOOST_CHECK(um_type{2}.get_exponent() == T(2));
 		BOOST_CHECK_THROW((um_type{2,3}),std::invalid_argument);
 		u0 = u2;
@@ -96,8 +95,8 @@ struct eq_tester
 	void operator()(const T &)
 	{
 		typedef univariate_monomial<T> monomial_type;
-		monomial_type m0;
-		BOOST_CHECK(m0 == monomial_type{});
+		monomial_type m0, m0a;
+		BOOST_CHECK(m0 == m0a);
 		BOOST_CHECK(m0 == monomial_type{0});
 		monomial_type m1{1};
 		BOOST_CHECK(m0 != m1);
@@ -116,13 +115,15 @@ struct compatibility_tester
 	{
 		typedef univariate_monomial<T> monomial_type;
 		monomial_type m0;
-		BOOST_CHECK(m0.is_compatible(std::vector<symbol>{}));
+		BOOST_CHECK(m0.is_compatible(symbol_set{}));
 		monomial_type m1{T(0)};
-		BOOST_CHECK(m1.is_compatible(std::vector<symbol>{}));
+		BOOST_CHECK(m1.is_compatible(symbol_set{}));
 		monomial_type m2{T(1)};
-		BOOST_CHECK(!m2.is_compatible(std::vector<symbol>{}));
-		BOOST_CHECK(m2.is_compatible(std::vector<symbol>(1,symbol{"x"})));
-		BOOST_CHECK(!m2.is_compatible(std::vector<symbol>(2,symbol{"x"})));
+		BOOST_CHECK(!m2.is_compatible(symbol_set{}));
+		symbol_set ss({symbol("x")});
+		BOOST_CHECK(m2.is_compatible(ss));
+		ss.add(symbol("y"));
+		BOOST_CHECK((!m2.is_compatible(ss)));
 	}
 };
 
@@ -138,9 +139,9 @@ struct ignorability_tester
 	{
 		typedef univariate_monomial<T> monomial_type;
 		monomial_type m0;
-		BOOST_CHECK(!m0.is_ignorable(std::vector<symbol>{}));
+		BOOST_CHECK(!m0.is_ignorable(symbol_set{}));
 		monomial_type m1{T(0)};
-		BOOST_CHECK(!m1.is_ignorable(std::vector<symbol>(1,symbol{"foobarize"})));
+		BOOST_CHECK(!m1.is_ignorable(symbol_set{symbol("foobarize")}));
 	}
 };
 
@@ -155,13 +156,14 @@ struct merge_args_tester
 	void operator()(const T &)
 	{
 		typedef univariate_monomial<T> key_type;
-		std::vector<symbol> v1, v2;
-		v2.push_back(symbol("a"));
+		symbol_set v1, v2;
+		v2.add(symbol("a"));
 		key_type k;
 		auto out = k.merge_args(v1,v2);
 		BOOST_CHECK(out.get_exponent() == T(0));
-		v2.push_back(symbol("b"));
+		v2.add(symbol("b"));
 		BOOST_CHECK_THROW(out = k.merge_args(v1,v2),std::invalid_argument);
+		BOOST_CHECK_THROW(out = k.merge_args(v1,v1),std::invalid_argument);
 	}
 };
 
@@ -176,8 +178,8 @@ struct is_unitary_tester
 	void operator()(const T &)
 	{
 		typedef univariate_monomial<T> key_type;
-		std::vector<symbol> v1, v2;
-		v2.push_back(symbol("a"));
+		symbol_set v1, v2;
+		v2.add(symbol("a"));
 		key_type k(v1);
 		BOOST_CHECK(k.is_unitary(v1));
 		key_type k2(v2);
@@ -201,12 +203,12 @@ struct multiply_tester
 	{
 		typedef univariate_monomial<T> key_type;
 		key_type k0, k1, k2;
-		std::vector<symbol> v;
+		symbol_set v;
 		k1.multiply(k0,k2,v);
 		BOOST_CHECK(k0.get_exponent() == T(0));
 		k1.set_exponent(1);
 		k2.set_exponent(2);
-		v.push_back(symbol("a"));
+		v.add(symbol("a"));
 		k1.multiply(k0,k2,v);
 		BOOST_CHECK(k0.get_exponent() == T(3));
 	}
@@ -242,10 +244,10 @@ struct degree_tester
 	{
 		typedef univariate_monomial<T> key_type;
 		key_type k0;
-		std::vector<symbol> v;
+		symbol_set v;
 		BOOST_CHECK(k0.degree(v) == T(0));
 		k0.set_exponent(4);
-		v.push_back(symbol("a"));
+		v.add(symbol("a"));
 		BOOST_CHECK(k0.degree(v) == T(4));
 	}
 };
@@ -261,8 +263,8 @@ struct get_element_tester
 	void operator()(const T &)
 	{
 		typedef univariate_monomial<T> k_type;
-		std::vector<symbol> vs1;
-		vs1.push_back(symbol("a"));
+		symbol_set vs1;
+		vs1.add(symbol("a"));
 		k_type k1({0});
 		BOOST_CHECK(k1.get_element(0,vs1) == 0);
 		k_type k2({1});

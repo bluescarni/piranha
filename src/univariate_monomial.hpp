@@ -31,12 +31,11 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <unordered_set>
-#include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
-#include "symbol.hpp"
+#include "symbol_set.hpp"
 
 namespace piranha
 {
@@ -54,7 +53,7 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as the type \p T.
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
  * \section move_semantics Move semantics
  * 
@@ -88,16 +87,16 @@ class univariate_monomial
 		univariate_monomial(const univariate_monomial &) = default;
 		/// Defaulted move constructor.
 		univariate_monomial(univariate_monomial &&) = default;
-		/// Constructor from vector of symbols.
+		/// Constructor from set of symbols.
 		/**
 		 * This constructor will initialise the value of the exponent to 0.
 		 * 
-		 * @param[in] args vector of symbols used for construction.
+		 * @param[in] args set of symbols used for construction.
 		 * 
 		 * @throws std::invalid_argument if the size of \p args is greater than 1.
 		 * @throws unspecified any exception thrown by the construction of an instance of \p T from 0.
 		 */
-		explicit univariate_monomial(const std::vector<symbol> &args):m_value(0)
+		explicit univariate_monomial(const symbol_set &args):m_value(0)
 		{
 			if (unlikely(args.size() > 1u)) {
 				piranha_throw(std::invalid_argument,"excessive number of symbols for univariate monomial");
@@ -129,14 +128,23 @@ class univariate_monomial
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<univariate_monomial>));
 		}
-		/// Defaulted copy assignment operator.
+		/// Copy assignment operator.
 		/**
+		 * @param[in] other assignment argument.
+		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the copy assignment operator of \p T.
+		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
-		univariate_monomial &operator=(const univariate_monomial &) = default;
-		/// Defaulted move assignment operator.
+		univariate_monomial &operator=(const univariate_monomial &other)
+		{
+			if (likely(this != &other)) {
+				univariate_monomial tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
+		/// Trivial move assignment operator.
 		univariate_monomial &operator=(univariate_monomial &&other) piranha_noexcept_spec(true)
 		{
 			m_value = std::move(other.m_value);
@@ -177,13 +185,13 @@ class univariate_monomial
 			return !(*this == m);
 		}
 		/// Compatibility test.
-		/**
-		 * @param[in] args reference arguments vector.
+		/** 
+		 * @param[in] args reference arguments set.
 		 * 
 		 * @return \p true if the size of \p args is 1 or if the size of \p args is 0 and piranha::math::is_zero()
 		 * on the exponent returns \p true.
 		 */
-		bool is_compatible(const std::vector<symbol> &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			const auto size = args.size();
 			return (size == 1u || (!size && math::is_zero(m_value)));
@@ -192,7 +200,7 @@ class univariate_monomial
 		/**
 		 * @return \p false (a monomial is never ignorable).
 		 */
-		bool is_ignorable(const std::vector<symbol> &) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &) const piranha_noexcept_spec(true)
 		{
 			return false;
 		}
@@ -206,19 +214,16 @@ class univariate_monomial
 		 * 
 		 * @return a default-constructed instance of piranha::univariate_monomial.
 		 * 
-		 * @throws std::invalid_argument if the size of \p new_args is greater than 1.
+		 * @throws std::invalid_argument if the size of \p new_args is different from 1 or the size of \p orig_args is not zero.
 		 * @throws unspecified any exception thrown by the default constructor of piranha::univariate_monomial.
 		 */
-		univariate_monomial merge_args(const std::vector<symbol> &orig_args, const std::vector<symbol> &new_args) const
+		univariate_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			(void)orig_args;
-			piranha_assert(orig_args.size() <= 1u);
-			piranha_assert(orig_args.size() || math::is_zero(m_value));
-			piranha_assert(new_args.size() > orig_args.size());
+			piranha_assert(math::is_zero(m_value));
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
-			if (unlikely(new_args.size() > 1u)) {
-				piranha_throw(std::invalid_argument,"excessive number of symbols for univariate monomial");
+			if (unlikely(new_args.size() != 1u || orig_args.size())) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
 			}
 			// The only valid possibility here is that a monomial with zero args is extended
 			// to one arg. Default construction is ok.
@@ -228,13 +233,13 @@ class univariate_monomial
 		/**
 		 * A monomial is unitary if piranha::math::is_zero() on its exponent returns \p true.
 		 * 
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return \p true if the monomial is unitary, \p false otherwise.
 		 * 
 		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
-		bool is_unitary(const std::vector<symbol> &args) const
+		bool is_unitary(const symbol_set &args) const
 		{
 			(void)args;
 			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
@@ -242,13 +247,13 @@ class univariate_monomial
 		}
 		/// Degree.
 		/**
-		 * @param[in] args reference vector of piranha::symbol.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return degree of the monomial.
 		 *
 		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
-		T degree(const std::vector<symbol> &args) const
+		T degree(const symbol_set &args) const
 		{
 			(void)args;
 			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
@@ -256,14 +261,16 @@ class univariate_monomial
 		}
 		/// Multiply monomials.
 		/**
+		 * In case of exceptions, this method will leave \p retval in a valid but undefined state.
+		 * 
 		 * @param[out] retval object that will store the result of the multiplication.
 		 * @param[in] other multiplication argument.
-		 * @param[in] args reference arguments vector.
+		 * @param[in] args reference arguments set.
 		 * 
 		 * @throws unspecified any exception thrown by copy-assignment of \p T and by in-place addition of \p T with \p U.
 		 */
 		template <typename U>
-		void multiply(univariate_monomial &retval, const univariate_monomial<U> &other, const std::vector<symbol> &args) const
+		void multiply(univariate_monomial &retval, const univariate_monomial<U> &other, const symbol_set &args) const
 		{
 			(void)args;
 			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
@@ -296,11 +303,11 @@ class univariate_monomial
 		 * Equivalent to get_exponent(). This method is provided for use in the series class.
 		 * 
 		 * @param[in] n index of the exponent to get (must be 0).
-		 * @param[in] args reference vector of arguments.
+		 * @param[in] args reference set of arguments.
 		 * 
 		 * @return const reference to the exponent at index \p n.
 		 */
-		const T &get_element(const size_type &n, const std::vector<symbol> &args) const
+		const T &get_element(const size_type &n, const symbol_set &args) const
 		{
 			(void)n;
 			(void)args;
