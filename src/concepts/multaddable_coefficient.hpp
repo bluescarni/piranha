@@ -25,7 +25,6 @@
 #include <type_traits>
 
 #include "../base_term.hpp"
-#include "../echelon_descriptor.hpp"
 #include "coefficient.hpp"
 
 namespace piranha
@@ -49,10 +48,10 @@ struct MultaddableCoefficient:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(MultaddableCoefficient)
 	{
-		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
-		T cf;
-		static_assert(std::is_same<decltype(cf.multiply_accumulate(std::declval<T>(),std::declval<T>(),std::declval<ed_type>())),void>::value,
-			"Invalid multiply_accumulate() method signature for coefficient type.");
+// 		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
+// 		T cf;
+// 		static_assert(std::is_same<decltype(cf.multiply_accumulate(std::declval<T>(),std::declval<T>(),std::declval<ed_type>())),void>::value,
+// 			"Invalid multiply_accumulate() method signature for coefficient type.");
 	}
 };
 

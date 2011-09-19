@@ -27,7 +27,6 @@
 
 #include "../config.hpp"
 #include "../detail/base_term_fwd.hpp"
-#include "../detail/echelon_descriptor_fwd.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -67,26 +66,26 @@ struct Coefficient:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Coefficient)
 	{
-		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
-		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
-		std::cout << *(static_cast<T *>(piranha_nullptr));
-		const T inst = T();
-		static_assert(piranha_noexcept_op(inst.template is_compatible(std::declval<ed_type>())),"is_compatible() must be non-throwing.");
-		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for coefficient type.");
-		static_assert(piranha_noexcept_op(inst.template is_ignorable(std::declval<ed_type>())),"is_ignorable() must be non-throwing.");
-		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for coefficient type.");
-		static_assert(std::is_same<decltype(inst.is_equal_to(inst,std::declval<ed_type>())),bool>::value,"Invalid is_equal_to() method signature for coefficient type.");
-		T inst_m;
-		inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid negate() method signature for coefficient type.");
-		inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
-		inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
-		auto merge_out = inst.merge_args(*static_cast<ed_type const *>(piranha_nullptr),*static_cast<ed_type const *>(piranha_nullptr));
-		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for coefficient type.");
+// 		typedef echelon_descriptor<base_term<int,int,void>> ed_type;
+// 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
+// 		std::cout << *(static_cast<T *>(piranha_nullptr));
+// 		const T inst = T();
+// 		static_assert(piranha_noexcept_op(inst.template is_compatible(std::declval<ed_type>())),"is_compatible() must be non-throwing.");
+// 		auto tmp1 = inst.template is_compatible(*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for coefficient type.");
+// 		static_assert(piranha_noexcept_op(inst.template is_ignorable(std::declval<ed_type>())),"is_ignorable() must be non-throwing.");
+// 		auto tmp2 = inst.template is_ignorable(*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for coefficient type.");
+// 		static_assert(std::is_same<decltype(inst.is_equal_to(inst,std::declval<ed_type>())),bool>::value,"Invalid is_equal_to() method signature for coefficient type.");
+// 		T inst_m;
+// 		inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(inst_m.negate(*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid negate() method signature for coefficient type.");
+// 		inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(inst_m.add(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
+// 		inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(inst_m.subtract(inst,*static_cast<ed_type const *>(piranha_nullptr))),void>::value,"Invalid add() method signature for coefficient type.");
+// 		auto merge_out = inst.merge_args(*static_cast<ed_type const *>(piranha_nullptr),*static_cast<ed_type const *>(piranha_nullptr));
+// 		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for coefficient type.");
 	}
 };
 
