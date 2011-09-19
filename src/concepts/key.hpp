@@ -42,24 +42,23 @@ namespace concept
  * 
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
- * - must be constructible from a \p std::vector of piranha::symbol,
+ * - must be constructible from a piranha::symbol_set,
  * - must be directable to output stream,
  * - must be equality-comparable,
  * - must be provided with a \p std::hash specialisation,
- * - must be provided with a const non-throwing \p is_compatible method accepting a vector of piranha::symbol
+ * - must be provided with a const non-throwing \p is_compatible method accepting a piranha::symbol_set
  *   as input and returning a boolean value,
- * - must be provided with a const non-throwing \p is_ignorable method accepting a vector of piranha::symbol
+ * - must be provided with a const non-throwing \p is_ignorable method accepting a piranha::symbol_set
  *   as input and returning a boolean value,
- * - must be provided with a const \p merge_args method accepting two \p std::vector of piranha::symbol
+ * - must be provided with a const \p merge_args method accepting two piranha::symbol_set
  *   as input and returning an instance of \p T,
- * - must be provided with a const \p is_unitary method accepting a \p std::vector of piranha::symbol
+ * - must be provided with a const \p is_unitary method accepting a piranha::symbol_set
  *   as input and returning bool.
  * 
  * \todo assert that key's hasher satisfy the Hashable requirements.
- * \todo requirements on default-constructed key: must it be unitary?
+ * \todo requirements on default-constructed key: must it be unitary? --> this one is probably not needed
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
  * polynomial ctors from symbol)
- * \todo requirements on merge_args: remember second argument must contain all elements in first argument.
  */
 template <typename T>
 struct Key:
@@ -69,23 +68,23 @@ struct Key:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Key)
 	{
-// 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
-// 		T tmp = T(std::vector<symbol>());
-// 		std::cout << *(static_cast<T *>(piranha_nullptr));
-// 		const T inst = T();
-// 		static_assert(piranha_noexcept_op(inst.is_compatible(std::declval<std::vector<symbol>>())),"is_compatible() must be non-throwing.");
-// 		auto tmp1 = inst.is_compatible(std::vector<symbol>{});
-// 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
-// 		static_assert(piranha_noexcept_op(inst.is_ignorable(std::declval<std::vector<symbol>>())),"is_ignorable() must be non-throwing.");
-// 		auto tmp2 = inst.is_ignorable(std::vector<symbol>{});
-// 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
-// 		auto merge_out = inst.merge_args(std::vector<symbol>{},std::vector<symbol>{});
-// 		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for key type.");
-// 		auto tmp3 = inst.is_unitary(std::vector<piranha::symbol>{});
-// 		static_assert(std::is_same<decltype(tmp3),bool>::value,"Invalid is_unitary() method signature for key type.");
-// 		// TODO: assert here that hasher satisfy the Hashable requirements.
-// 		std::hash<T> hasher;
-// 		(void)hasher;
+		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
+		T tmp = T(symbol_set{});
+		std::cout << (static_cast<T *>(piranha_nullptr));
+		const T inst = T();
+		static_assert(piranha_noexcept_op(inst.is_compatible(std::declval<symbol_set>())),"is_compatible() must be non-throwing.");
+		auto tmp1 = inst.is_compatible(symbol_set{});
+		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
+		static_assert(piranha_noexcept_op(inst.is_ignorable(std::declval<symbol_set>())),"is_ignorable() must be non-throwing.");
+		auto tmp2 = inst.is_ignorable(symbol_set{});
+		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
+		auto merge_out = inst.merge_args(symbol_set{},symbol_set{});
+		static_assert(std::is_same<decltype(merge_out),T>::value,"Invalid merge_args() method signature for key type.");
+		auto tmp3 = inst.is_unitary(symbol_set{});
+		static_assert(std::is_same<decltype(tmp3),bool>::value,"Invalid is_unitary() method signature for key type.");
+		// TODO: assert here that hasher satisfy the Hashable requirements.
+		std::hash<T> hasher;
+		(void)hasher;
 	}
 };
 
