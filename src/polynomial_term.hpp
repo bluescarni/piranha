@@ -26,12 +26,13 @@
 
 #include "base_term.hpp"
 #include "concepts/multipliable_coefficient.hpp"
+#include "concepts/multipliable_term.hpp"
 #include "config.hpp"
-#include "detail/base_series_fwd.hpp"
+#include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
-#include "echelon_descriptor.hpp"
 #include "kronecker_monomial.hpp"
 #include "monomial.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
 
@@ -72,19 +73,19 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * Examples:
  * @code
- * polynomial_term<numerical_coefficient<double>,int>
+ * polynomial_term<double,int>
  * @endcode
  * is a multivariate polynomial term with double-precision coefficient and \p int exponents.
  * @code
- * polynomial_term<numerical_coefficient<double>,static_size<int,5>>
+ * polynomial_term<double,static_size<int,5>>
  * @endcode
  * is a multivariate polynomial term with double-precision coefficient and a maximum of 5 \p int exponents.
  * @code
- * polynomial_term<numerical_coefficient<double>,univariate_monomial<int>>
+ * polynomial_term<double,univariate_monomial<int>>
  * @endcode
  * is a univariate polynomial term with double-precision coefficient and \p int exponent.
  * @code
- * polynomial_term<numerical_coefficient<double>,kronecker_monomial<>>
+ * polynomial_term<double,kronecker_monomial<>>
  * @endcode
  * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
  * 
@@ -105,6 +106,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// TODO: review coefficient concept and update descr above
 template <typename Cf, typename ExpoType>
 class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
 {
@@ -135,8 +137,11 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		 */
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_term,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
 		explicit polynomial_term(T &&arg1, Args && ... params):base(std::forward<T>(arg1),std::forward<Args>(params)...) {}
-		/// Defaulted destructor.
-		~polynomial_term() = default;
+		/// Trivial destructor.
+		~polynomial_term()
+		{
+			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<polynomial_term>));
+		}
 		/// Defaulted copy assignment operator.
 		polynomial_term &operator=(const polynomial_term &) = default;
 		/// Move assignment operator.
@@ -156,44 +161,45 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		 * result of the multiplication of the current coefficient by the coefficient of \p other
 		 * and whose key is the element-by-element sum of the vectors of the exponents of the two terms.
 		 * 
-		 * The coefficient method used for multiplication will be <tt>multiply_by()</tt> if both coefficient
-		 * types (\p Cf and \p Cf2) are not instances of piranha::base_series, otherwise it will be
-		 * <tt>multiply()</tt> (this implies that for non-series coefficients the multiplication is in-place,
-		 * while for series coefficients it is not).
+		 * The operator used for coefficient multiplication will be in-place multiplication
+		 * if the coefficient types (\p Cf and \p Cf2) are not series, otherwise it will be
+		 * the binary multiplication operator.
+		 * 
+		 * This method provides the basic exception safety guarantee: in face of exceptions, \p retval will be left in an
+		 * undefined but valid state.
 		 * 
 		 * @param[out] retval return value of the multiplication.
 		 * @param[in] other argument of the multiplication.
-		 * @param[in] ed reference echelon descriptor.
+		 * @param[in] args reference set of arguments.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - the assignment operators of the coefficient type,
-		 * - piranha::array_key::resize(),
-		 * - the <tt>multiply()</tt> or <tt>multiply_by()</tt> method of \p Cf,
-		 * - the in-place addition operator of \p ExpoType.
+		 * - the <tt>multiply()</tt> method of the key type,
+		 * - the multiplication operators of the coefficient types.
 		 */
-		template <typename Cf2, typename ExpoType2, typename Term>
-		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed) const
+		template <typename Cf2, typename ExpoType2>
+		void multiply(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const symbol_set &args) const
 		{
-			cf_mult_impl(retval,other,ed);
-			this->m_key.multiply(retval.m_key,other.m_key,ed.template get_args<polynomial_term>());
+			cf_mult_impl(retval,other);
+			this->m_key.multiply(retval.m_key,other.m_key,args);
 		}
 	private:
 		// Overload if no coefficient is series.
-		template <typename Cf2, typename ExpoType2, typename Term>
-		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed,
-			typename std::enable_if<!std::is_base_of<detail::base_series_tag,Cf>::value &&
-			!std::is_base_of<detail::base_series_tag,Cf2>::value>::type * = piranha_nullptr) const
+		template <typename Cf2, typename ExpoType2>
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value &&
+			!std::is_base_of<detail::series_tag,Cf2>::value>::type * = piranha_nullptr) const
 		{
 			retval.m_cf = this->m_cf;
-			retval.m_cf.multiply_by(other.m_cf,ed);
+			retval.m_cf *= other.m_cf;
 		}
 		// Overload if at least one coefficient is series.
-		template <typename Cf2, typename ExpoType2, typename Term>
-		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other, const echelon_descriptor<Term> &ed,
-			typename std::enable_if<std::is_base_of<detail::base_series_tag,Cf>::value ||
-			std::is_base_of<detail::base_series_tag,Cf2>::value>::type * = piranha_nullptr) const
+		template <typename Cf2, typename ExpoType2>
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
+			typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value ||
+			std::is_base_of<detail::series_tag,Cf2>::value>::type * = piranha_nullptr) const
 		{
-			retval.m_cf = this->m_cf.multiply(other.m_cf,ed);
+			retval.m_cf = this->m_cf * other.m_cf;
 		}
 };
 
