@@ -35,9 +35,10 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/series_fwd.hpp"
+#include "echelon_size.hpp"
 #include "hash_set.hpp"
 #include "math.hpp" // For negate().
-#include "series_multiplier.hpp"
+// #include "series_multiplier.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -79,7 +80,9 @@ struct term_hasher
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo review the conditions for swapping, we do not want to keep on increasing memory consumption.
+ * \todo review the conditions for swapping, we do not want to keep on increasing memory consumption (basically, same thing that must be done for integer).
+ * \todo cast operator, to series and non-series types.
+ * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  */
 template <typename Term, typename Derived>
 class series: detail::series_tag
@@ -320,6 +323,10 @@ class series: detail::series_tag
 			// The other series must alway be cleared, since we moved out the terms.
 			s.m_container.clear();
 		}
+// 		template <typename T>
+// 		void dispatch_generic_construction(T &&x, typename std::enable_if<>::type * = piranha_nullptr)
+// 		{
+// 		}
 	public:
 		/// Size type.
 		/**
@@ -335,10 +342,38 @@ class series: detail::series_tag
 		series(const series &) = default;
 		/// Defaulted move constructor.
 		series(series &&other) piranha_noexcept_spec(true) : m_symbol_set(std::move(other.m_symbol_set)),m_container(std::move(other.m_container)) {}
+		/// Generic construction.
+		/**
+		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
+		 * \p Derived (so that it does not compete with the copy and move constructors in overload resolution).
+		 * The generic construction algorithm works as follows:
+		 * 
+		 * - if \p T is an instance of piranha::series with the same echelon size as the calling type:
+		 *   - if the term type of \p T is the same as that of \p this:
+		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
+		 *   - else:
+		 *     - the symbol set of \p x is used to construct the symbol set of this and all terms from \p x are inserted into \p this;
+		 * - else:
+		 *   - \p x is used to construct a new term as follows:
+		 *     - \p x is forwarded to construct a coefficient;
+		 *     - an empty arguments set will be used to construct a key;
+		 *     - coefficient and key are used to construct the new term instance;
+		 *   - the new term is inserted into \p this.
+		 * 
+		 * @param[in] x object to construct from.
+		 * 
+		 * @throws unspecified
+		 */
+		template <typename T>
+		explicit series(T &&x, typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			dispatch_generic_construction(std::forward<T>(x));
+		}
 		/// Trivial destructor.
 		~series() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+			piranha_assert(destruction_checks());
 		}
 		/// Copy-assignment operator.
 		/**
@@ -562,8 +597,23 @@ class series: detail::series_tag
 		series multiply_by_series(const T &series,
 			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr) const
 		{
-			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
-			return sm();
+// 			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
+// 			return sm();
+		}
+		// Set of checks to be run on destruction in debug mode.
+		bool destruction_checks() const
+		{
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				if (!it->is_compatible(m_symbol_set)) {
+					std::cout << "Term not compatible.\n";
+					return false;
+				}
+				if (it->is_ignorable(m_symbol_set)) {
+					std::cout << "Term not ignorable.\n";
+					return false;
+				}
+			}
+			return true;
 		}
 	protected:
 		/// Symbol set.
