@@ -58,7 +58,7 @@ struct thrower
 
 }}
 
-#define piranha_throw(exc_type,...) piranha::detail::thrower::impl<exc_type>(__FILE__,__LINE__,PIRANHA_PRETTY_FUNC,__VA_ARGS__);throw
+#define piranha_throw(exc_type,...) piranha::detail::thrower::impl<exc_type>(__FILE__,__LINE__,__func__,__VA_ARGS__);throw
 
 namespace piranha
 {
