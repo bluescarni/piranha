@@ -21,17 +21,25 @@
 #ifndef PIRANHA_SERIES_HPP
 #define PIRANHA_SERIES_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
-#include <cstddef>
+#include <boost/integer_traits.hpp>
+#include <iostream>
+#include <stdexcept>
+#include <type_traits>
 
+#include "base_term.hpp"
 #include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/term.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/series_fwd.hpp"
 #include "hash_set.hpp"
+#include "math.hpp" // For negate().
 #include "series_multiplier.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -51,53 +59,303 @@ struct term_hasher
 
 }
 
+/// Series class.
+/**
+ * \section type_requirements Type requirements
+ * 
+ * - \p Term must be a model of piranha::concept::Term.
+ * - \p Derived must be a model of piranha::concept::CRTP, with piranha::series
+ *   of \p Term and \p Derived as base class.
+ * - \p Derived must be a model of piranha::concept::ContainerElement.
+ * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the same exception safety guarantee as piranha::hash_set. In particular, exceptions thrown during
+ * any operation involving term insertion (e.g., insert()) will leave the object in an undefined but valid state.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics is equivalent to piranha::hash_set's move semantics.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo review the conditions for swapping, we do not want to keep on increasing memory consumption.
+ */
 template <typename Term, typename Derived>
-class series
+class series: detail::series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<series<Term,Derived>,Derived>));
-		// Container type for terms.
-		typedef hash_set<Term,detail::term_hasher<Term>> container_type;
+	public:
+		/// Alias for term type.
+		typedef Term term_type;
+	private:
+		// Make friend with all series.
+		template <typename Term2, typename Derived2>
+		friend class series;
 		// Make friend with debugging class.
 		template <typename T>
 		friend class debug_access;
 		// Make friend with series multiplier class.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
-		// Make friend with other series types.
-		template <typename Term2, typename Derived2>
-		friend class series;
+	protected:
+		/// Container type for terms.
+		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
+	private:
+		// Overload for completely different term type: copy-convert to term_type and proceed.
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,term_type>::value &&
+			!is_nonconst_rvalue_ref<T &&>::value
+			>::type * = piranha_nullptr)
+		{
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(term.m_cf),
+				typename term_type::key_type(term.m_key,m_symbol_set)));
+		}
+		// Overload for completely different term type: move-convert to term_type and proceed.
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,term_type>::value &&
+			is_nonconst_rvalue_ref<T &&>::value
+			>::type * = piranha_nullptr)
+		{
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(std::move(term.m_cf)),
+				typename term_type::key_type(std::move(term.m_key),m_symbol_set)));
+		}
+		// Overload for term_type.
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			std::is_same<typename std::decay<T>::type,term_type>::value
+			>::type * = piranha_nullptr)
+		{
+			// Debug checks.
+			piranha_assert(empty() || m_container.begin()->is_compatible(m_symbol_set));
+			// Generate error if term is not compatible.
+			if (unlikely(!term.is_compatible(m_symbol_set))) {
+				piranha_throw(std::invalid_argument,"cannot insert incompatible term");
+			}
+			// Discard ignorable term.
+			if (unlikely(term.is_ignorable(m_symbol_set))) {
+				return;
+			}
+			insertion_impl<Sign>(std::forward<T>(term));
+		}
+		template <bool Sign, typename Iterator>
+		static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
+		{
+			if (Sign) {
+				it->m_cf += term.m_cf;
+			} else {
+				it->m_cf -= term.m_cf;
+			}
+		}
+		template <bool Sign, typename Iterator>
+		static void insertion_cf_arithmetics(Iterator &it, term_type &&term)
+		{
+			if (Sign) {
+				it->m_cf += std::move(term.m_cf);
+			} else {
+				it->m_cf -= std::move(term.m_cf);
+			}
+		}
+		// Insert compatible, non-ignorable term.
+		template <bool Sign, typename T>
+		void insertion_impl(T &&term, typename std::enable_if<
+			std::is_same<typename std::decay<T>::type,term_type>::value
+			>::type * = piranha_nullptr)
+		{
+			// NOTE: here we are basically going to reconstruct hash_set::insert() with the goal
+			// of optimising things by avoiding one branch.
+			// Handle the case of a table with no buckets.
+			if (unlikely(!m_container.bucket_count())) {
+				m_container._increase_size();
+			}
+			// Try to locate the element.
+			auto bucket_idx = m_container._bucket(term);
+			const auto it = m_container._find(term,bucket_idx);
+			if (it == m_container.end()) {
+				if (unlikely(m_container.size() == boost::integer_traits<size_type>::const_max)) {
+					piranha_throw(std::overflow_error,"maximum number of elements reached");
+				}
+				// Term is new. Handle the case in which we need to rehash because of load factor.
+				if (unlikely(static_cast<double>(m_container.size() + size_type(1u)) / m_container.bucket_count() >
+					m_container.max_load_factor()))
+				{
+					m_container._increase_size();
+					// We need a new bucket index in case of a rehash.
+					bucket_idx = m_container._bucket(term);
+				}
+				const auto new_it = m_container._unique_insert(std::forward<T>(term),bucket_idx);
+				m_container._update_size(m_container.size() + 1u);
+				// Insertion was successful, change sign if requested.
+				if (!Sign) {
+					// Cleanup function.
+					auto cleanup = [&]() -> void {
+						// Negation is a mutating operation. We have to check again for compatibility
+						// and ignorability.
+						if (unlikely(!new_it->is_compatible(this->m_symbol_set) || new_it->is_ignorable(this->m_symbol_set))) {
+							this->m_container.erase(new_it);
+						}
+					};
+					try {
+						math::negate(new_it->m_cf);
+						cleanup();
+					} catch (...) {
+						// Run the cleanup function also in case of exceptions, as we do not know
+						// in which state the modified term is.
+						cleanup();
+						throw;
+					}
+				}
+			} else {
+				// Assert the existing term is not ignorable and it is compatible.
+				piranha_assert(!it->is_ignorable(m_symbol_set) && it->is_compatible(m_symbol_set));
+				// Cleanup function.
+				auto cleanup = [&]() -> void {
+					if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
+						this->m_container.erase(it);
+					}
+				};
+				try {
+					// The term exists already, update it.
+					insertion_cf_arithmetics<Sign>(it,std::forward<T>(term));
+					// Check if the term has become ignorable or incompatible after the modification.
+					cleanup();
+				} catch (...) {
+					cleanup();
+					throw;
+				}
+			}
+		}
+		// Overload in case that T derives from the same type as this (series<Term,Derived>).
+		template <bool Sign, typename T>
+		void merge_terms_impl0(T &&s,
+			typename std::enable_if<std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
+			// series is an instance of the type of this.
+			if (unlikely(&s == this)) {
+				// If the two series are the same object, we need to make a copy.
+				// NOTE: we do not forward here, when making the copy, because if T is a non-const
+				// rvalue reference we might actually erase this: with Derived(series), a move
+				// constructor might end up being called.
+				merge_terms_impl1<Sign>(series<Term,Derived>(s));
+			} else {
+				merge_terms_impl1<Sign>(std::forward<T>(s));
+			}
+		}
+		// Overload in case that T is not an instance of the type of this.
+		template <bool Sign, typename T>
+		void merge_terms_impl0(T &&s,
+			typename std::enable_if<!std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			// No worries about same object, just forward.
+			merge_terms_impl1<Sign>(std::forward<T>(s));
+		}
+		// Overload if we cannot move objects from series.
+		template <bool Sign, typename T>
+		void merge_terms_impl1(T &&s,
+			typename std::enable_if<!is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+			const auto it_f = s.m_container.end();
+			try {
+				for (auto it = s.m_container.begin(); it != it_f; ++it) {
+					insert<Sign>(*it);
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out this series.
+				m_container.clear();
+				throw;
+			}
+		}
+		static void swap_for_merge(container_type &&c1, container_type &&c2, bool &swap)
+		{
+			// Swap only if the bucket count is greater.
+			if (c1.bucket_count() < c2.bucket_count()) {
+				container_type tmp(std::move(c1));
+				c1 = std::move(c2);
+				c2 = std::move(tmp);
+				swap = true;
+			}
+		}
+		// This overloads the above in the case we are dealing with two different container types:
+		// in such a condition, we won't do any swapping.
+		template <typename OtherContainerType>
+		static void swap_for_merge(container_type &&, OtherContainerType &&, bool &)
+		{}
+		// Overload if we can move objects from series.
+		template <bool Sign, typename T>
+		void merge_terms_impl1(T &&s,
+			typename std::enable_if<is_nonconst_rvalue_ref<T &&>::value>::type * = piranha_nullptr)
+		{
+			bool swap = false;
+			// Try to steal memory from other.
+			swap_for_merge(std::move(m_container),std::move(s.m_container),swap);
+			try {
+				const auto it_f = s.m_container._m_end();
+				for (auto it = s.m_container._m_begin(); it != it_f; ++it) {
+					insert<Sign>(std::move(*it));
+				}
+				// If we swapped the operands and a negative merge was performed, we need to change
+				// the signs of all coefficients.
+				if (swap && !Sign) {
+					const auto it_f2 = m_container.end();
+					for (auto it = m_container.begin(); it != it_f2;) {
+						math::negate(it->m_cf);
+						if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+							// Erase the invalid term.
+							it = m_container.erase(it);
+						} else {
+							++it;
+						}
+					}
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out both series.
+				m_container.clear();
+				s.m_container.clear();
+				throw;
+			}
+			// The other series must alway be cleared, since we moved out the terms.
+			s.m_container.clear();
+		}
 	public:
 		/// Size type.
 		/**
-		 * Used to represent the number of terms in the series. Unsigned integer type equivalent to piranha::hash_set::size_type.
+		 * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.
 		 */
 		typedef typename container_type::size_type size_type;
 		/// Defaulted default constructor.
-		/**
-		 * Will construct a series with zero terms and no arguments.
-		 */
 		series() = default;
 		/// Defaulted copy constructor.
 		/**
-		 * @throws unspecified any exception thrown by the copy constructor of piranha::hash_set or piranha::symbol_set.
+		 * @throws unspecified any exception thrown by the copy constructor of piranha::hash_set.
 		 */
 		series(const series &) = default;
 		/// Defaulted move constructor.
-		series(series &&) = default;
+		series(series &&other) piranha_noexcept_spec(true) : m_symbol_set(std::move(other.m_symbol_set)),m_container(std::move(other.m_container)) {}
 		/// Trivial destructor.
 		~series() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 		}
-		// TODO: fix this for exception safety.
-		/// Defaulted copy-assignment operator.
+		/// Copy-assignment operator.
 		/**
-		 * @throws unspecified any exception thrown by the copy assignment operator of piranha::hash_set or piranha::symbol_set.
+		 * @param[in] other assignment argument.
+		 * 
+		 * @throws unspecified any exception thrown by the copy constructor.
 		 * 
 		 * @return reference to \p this.
 		 */
-		series &operator=(const series &) = default;
+		series &operator=(const series &other)
+		{
+			if (likely(this != &other)) {
+				series tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
 		/// Move assignment operator.
 		/**
 		 * @param[in] other assignment argument.
@@ -107,10 +365,18 @@ class series
 		series &operator=(series &&other) piranha_noexcept_spec(true)
 		{
 			if (likely(this != &other)) {
-				m_sset = std::move(other.m_sset);
+				m_symbol_set = std::move(other.m_symbol_set);
 				m_container = std::move(other.m_container);
 			}
 			return *this;
+		}
+		/// Symbol set getter.
+		/**
+		 * @return const reference to the piranha::symbol_set describing the series.
+		 */
+		const symbol_set &get_symbol_set() const
+		{
+			return m_symbol_set;
 		}
 		/// Series size.
 		/**
@@ -128,8 +394,181 @@ class series
 		{
 			return !size();
 		}
+		/// Insert generic term.
+		/**
+		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
+		 * 
+		 * The insertion algorithm proceeds as follows:
+		 * 
+		 * - if \p term is not of type series::term_type, its coefficient and key are forwarded to construct a series::term_type
+		 *   as follows:
+		 *     - <tt>term</tt>'s coefficient is forwarded to construct a coefficient of type series::term_type::cf_type;
+		 *     - <tt>term</tt>'s key is forwarded, together with the series' piranha::symbol_set,
+		 *       to construct a key of type series::term_type::key_type;
+		 *     - the newly-constructed coefficient and key are used to construct an instance of series::term_type, which will replace \p term as the
+		 *       argument of insertion for the remaining portion of the algorithm;
+		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
+		 * - if the term is ignorable, the method will return;
+		 * - if the term is already in the series, then:
+		 *   - its coefficient is added (if \p Sign is \p true) or subtracted (if \p Sign is \p false)
+		 *     to the existing term's coefficient;
+		 *   - if, after the addition/subtraction the existing term is ignorable, it will be erased;
+		 * - else:
+		 *   - the term is inserted into the term container and, if \p Sign is \p false, its coefficient is negated.
+		 * 
+		 * After any modification to an existing term in the series (e.g., via insertion with negative \p Sign or via in-place addition
+		 * or subtraction of existing coefficients), the term will be checked again for compatibility and ignorability, and, in case
+		 * the term has become incompatible or ignorable, it will be erased from the series.
+		 * 
+		 * The exception safety guarantee upon insertion is that the series will be left in an undefined but valid state. Such a guarantee
+		 * relies on the fact that the addition/subtraction and negation methods of the coefficient type will leave the coefficient in a valid
+		 * (possibly undefined) state in face of exceptions.
+		 * 
+		 * @param[in] term term to be inserted.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the constructors of series::term_type, and of its coefficient and key types,
+		 *   invoked by any necessary conversion;
+		 * - piranha::hash_set::insert(),
+		 * - piranha::hash_set::find(),
+		 * - piranha::hash_set::erase(),
+		 * - piranha::math::negate(), in-place addition/subtraction on coefficient types.
+		 * @throws std::invalid_argument if \p term is ignorable.
+		 */
+		template <bool Sign, typename T>
+		void insert(T &&term)
+		{
+			dispatch_insertion<Sign>(std::forward<T>(term));
+		}
+		/// Insert generic term with <tt>Sign = true</tt>.
+		/**
+		 * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
+		 * 
+		 * @param[in] term term to be inserted.
+		 * 
+		 * @throws unspecified any exception thrown by generic insert().
+		 */
+		template <typename T>
+		void insert(T &&term)
+		{
+			insert<true>(std::forward<T>(term));
+		}
+		/// Overload stream operator for piranha::series.
+		/**
+		 * Will direct to stream a human-readable representation of the series.
+		 * 
+		 * @param[in,out] os target stream.
+		 * @param[in] s piranha::series argument.
+		 * 
+		 * @return reference to \p os.
+		 * 
+		 * @throws unspecified any exception resulting from directing to stream instances of piranha::series::term_type.
+		 */
+		friend std::ostream &operator<<(std::ostream &os, const series &s)
+		{
+			for (auto it = s.m_container.begin(); it != s.m_container.end(); ++it) {
+				os << *it << '\n';
+			}
+			return os;
+		}
 	private:
-		symbol_set	m_sset;
+		// Merge terms from another series.
+		/*
+		 * This template method is activated only if \p T derives from piranha::series.
+		 * 
+		 * All terms in \p s will be inserted into \p this using piranha::series::insert. If any exception occurs during the insertion process,
+		 * \p this will be left in an undefined (but valid) state. \p s is allowed to be \p this (in such a case, a copy of \p s will be created
+		 * before proceeding with the merge).
+		 * 
+		 * @param[in] s piranha::series whose terms will be merged into \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::insert,
+		 * - the copy constructor of piranha::series,
+		 * - piranha::math::negate() on the coefficient type.
+		 */
+		template <bool Sign, typename T>
+		void merge_terms(T &&s,
+			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			piranha_assert(m_symbol_set == s.m_symbol_set);
+			// NOTE: ideas to improve the method:
+			// - estimate the size of the series after merge, and swap only if needed: this way we could avoid
+			//   increasingly endlessly the memory usage in pathological cases (right now we steal memory regardless,
+			//   as long as it increases the capacity of this);
+			// - take into account that for series with wildly different number of terms it might make sense to move/copy
+			//   the longer series into this and merge with the shorter one.
+			merge_terms_impl0<Sign>(std::forward<T>(s));
+		}
+		// Merge arguments.
+		/*
+		 * This method will return a piranha::series resulting from merging a new set of arguments into the current series. 
+		 * \p new_ss is the piranha::symbol_set containing the new set of arguments.
+		 * 
+		 * The algorithm for merging iterates over the terms of the current series, performing at each iteration the following operations:
+		 * 
+		 * - create a new key \p k from the output of the current key's <tt>merge_args()</tt> method,
+		 * - create a new piranha::series::term_type \p t from the current coefficient and \p k,
+		 * - insert \p t into the series to be returned.
+		 * 
+		 * @param[in] new_ss new piranha::symbol_set.
+		 * 
+		 * @return a piranha::series whose terms result from merging the new echelon descriptor into the terms of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::insert(),
+		 * - the <tt>merge_args()</tt> method of the key type,
+		 * - the constructor of piranha::series::term_type from a coefficient - key pair, and the
+		 *   copy constructors of coefficient and key types.
+		 */
+		series merge_args(const symbol_set &new_ss) const
+		{
+			piranha_assert(new_ss.size() > m_symbol_set.size());
+			piranha_assert(std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end()));
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			series retval;
+			retval.m_symbol_set = new_ss;
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				cf_type new_cf(it->m_cf);
+				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
+				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
+			}
+			return retval;
+		}
+		// Multiply by series.
+		/*
+		 * This method multiplies input \p series by \p this (cast to its \p Derived type), returning an instance of this type containing
+		 * the result of the multiplication.
+		 * 
+		 * The multiplication is actually performed by an instance of piranha::series_multiplier, parametrized on the types \p Derived and \p T.
+		 * The piranha::series_multiplier instance will be constructed using \p this (cast to its \p Derived type) and \p series as
+		 * arguments; after construction, <tt>operator()</tt> (with no arguments) will be called on the series multiplier instance, and its
+		 * return value will be returned.
+		 * 
+		 * Note that the type of the result of the multiplication is this type, regardless of the promotion rules for coefficient type arithmetics.
+		 * 
+		 * This template method is activated only if \p series is an instance of piranha::series.
+		 * 
+		 * @param[in] series series by which \p this will be multiplied.
+		 * 
+		 * @return result of the multiplication of \p this by \p series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the constructor of piranha::series_multiplier,
+		 * - piranha::series_multiplier::operator()().
+		 */
+		template <typename T>
+		series multiply_by_series(const T &series,
+			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr) const
+		{
+			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
+			return sm();
+		}
+	protected:
+		/// Symbol set.
+		symbol_set	m_symbol_set;
+		/// Terms container.
 		container_type	m_container;
 };
 
