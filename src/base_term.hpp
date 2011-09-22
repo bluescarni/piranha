@@ -33,6 +33,7 @@
 #include "concepts/term.hpp"
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
+#include "math.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -180,13 +181,17 @@ class base_term: detail::base_term_tag
 		}
 		/// Ignorability test.
 		/**
+		 * Note that this method is not allowed to throw, so any exception thrown by calling piranha::math::is_zero() on the coefficient
+		 * will result in the termination of the program.
+		 * 
 		 * @param[in] args reference arguments set.
 		 * 
-		 * @return the key's <tt>is_ignorable()</tt> method's return value.
+		 * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient return \p true,
+		 * \p false otherwise.
 		 */
 		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
-			return m_key.is_ignorable(args);
+			return (math::is_zero(m_cf) || m_key.is_ignorable(args));
 		}
 		/// Overload of stream operator for piranha::base_term.
 		/**

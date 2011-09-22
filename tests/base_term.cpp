@@ -30,6 +30,7 @@
 
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -224,10 +225,12 @@ struct ignorability_tester
 			typedef typename Key::value_type value_type;
 			symbol_set args;
 			term_type t1;
-			BOOST_CHECK_EQUAL(t1.is_ignorable(args),t1.m_key.is_ignorable(args));
+			BOOST_CHECK_EQUAL(t1.is_ignorable(args),t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf));
+			BOOST_CHECK(t1.is_ignorable(args));
 			term_type t2;
 			t2.m_cf = 1;
-			BOOST_CHECK_EQUAL(t2.is_ignorable(args),t2.m_key.is_ignorable(args));
+			BOOST_CHECK_EQUAL(t2.is_ignorable(args),t2.m_key.is_ignorable(args) || math::is_zero(t2.m_cf));
+			BOOST_CHECK(!t2.is_ignorable(args));
 		}
 	};
 	template <typename Cf>
