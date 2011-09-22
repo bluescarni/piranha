@@ -24,7 +24,7 @@
 #include <boost/concept_check.hpp>
 #include <type_traits>
 
-#include "../detail/base_series_fwd.hpp"
+#include "../detail/series_fwd.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -38,7 +38,7 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::ContainerElement,
- * - must derive from piranha::base_series.
+ * - must derive from piranha::series.
  */
 template <typename T>
 struct Series:
@@ -47,7 +47,7 @@ struct Series:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(Series)
 	{
-		static_assert(std::is_base_of<detail::base_series_tag,T>::value,"Series type must derive from base_series.");
+		static_assert(std::is_base_of<detail::series_tag,T>::value,"Series type must derive from series.");
 	}
 };
 

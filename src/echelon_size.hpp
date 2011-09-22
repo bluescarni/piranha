@@ -27,7 +27,7 @@
 #include <type_traits>
 
 #include "concepts/term.hpp"
-#include "detail/base_series_fwd.hpp"
+#include "detail/series_fwd.hpp"
 
 namespace piranha
 {
@@ -43,7 +43,7 @@ struct echelon_level_impl
 };
 
 template <typename Cf, std::size_t Level>
-struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<base_series_tag,Cf>::value>::type>
+struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<series_tag,Cf>::value>::type>
 {
 	static const std::size_t value = Level;
 };

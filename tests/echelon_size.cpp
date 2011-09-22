@@ -26,13 +26,12 @@
 #include "../src/base_term.hpp"
 #include "../src/config.hpp"
 #include "../src/monomial.hpp"
-#include "../src/numerical_coefficient.hpp"
 
 using namespace piranha;
 
 // TODO: test with larger echelon sizes once we have coefficient series.
 
-class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,term_type1>
+class term_type1: public base_term<double,monomial<int>,term_type1>
 {
 	public:
 		term_type1() = default;
@@ -41,11 +40,11 @@ class term_type1: public base_term<numerical_coefficient<double>,monomial<int>,t
 		term_type1 &operator=(const term_type1 &) = default;
 		term_type1 &operator=(term_type1 &&other) piranha_noexcept_spec(true)
 		{
-			base_term<numerical_coefficient<double>,monomial<int>,term_type1>::operator=(std::move(other));
+			base_term<double,monomial<int>,term_type1>::operator=(std::move(other));
 			return *this;
 		}
 		// Needed to satisfy concept checking.
-		explicit term_type1(const numerical_coefficient<double> &, const monomial<int> &) {}
+		explicit term_type1(const double &, const monomial<int> &) {}
 };
 
 BOOST_AUTO_TEST_CASE(type_traits_echelon_size)

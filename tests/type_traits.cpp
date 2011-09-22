@@ -31,7 +31,6 @@
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
-#include "../src/numerical_coefficient.hpp"
 
 using namespace piranha;
 
