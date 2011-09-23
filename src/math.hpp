@@ -103,7 +103,8 @@ namespace math
 /// Zero test.
 /**
  * Test if value is zero. This function works with all C++ arithmetic types
- * and with piranha's numerical types.
+ * and with piranha's numerical types. For series types, it will return \p true
+ * if the series is empty, \p false otherwise.
  * 
  * @param[in] x value to be tested.
  * 

@@ -37,7 +37,7 @@
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
 #include "hash_set.hpp"
-#include "math.hpp" // For negate().
+#include "math.hpp" // For negate() and math specialisations.
 // #include "series_multiplier.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -621,6 +621,22 @@ class series: detail::series_tag
 		/// Terms container.
 		container_type	m_container;
 };
+
+namespace detail
+{
+
+template <typename Series>
+struct math_is_zero_impl<Series,typename std::enable_if<
+	std::is_base_of<series_tag,Series>::value>::type>
+{
+	static bool run(const Series &s)
+	{
+		return s.empty();
+	}
+};
+
+
+}
 
 }
 
