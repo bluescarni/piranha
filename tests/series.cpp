@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <stdexcept>
+#include <type_traits>
 
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
@@ -38,11 +39,11 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
-template <typename Term>
-class g_series_type: public series<Term,g_series_type<Term>>
+template <typename Cf, typename Expo>
+class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>
 {
 	public:
-		typedef series<Term,g_series_type<Term>> base;
+		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -54,6 +55,8 @@ class g_series_type: public series<Term,g_series_type<Term>>
 			}
 			return *this;
 		}
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type,typename std::decay<T>::type>::value>::type*& = enabler>
+		explicit g_series_type(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 };
 
 struct construction_tag {};
@@ -72,7 +75,7 @@ struct debug_access<construction_tag>
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
 			typedef typename term_type::key_type key_type;
-			typedef g_series_type<term_type> series_type;
+			typedef g_series_type<Cf,Expo> series_type;
 			symbol_set ed;
 			ed.add(symbol("x"));
 			// Default constructor.
@@ -141,7 +144,7 @@ class debug_access<insertion_tag>
 			{
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef typename term_type::key_type key_type;
-				typedef g_series_type<term_type> series_type;
+				typedef g_series_type<Cf,Expo> series_type;
 				symbol_set ed;
 				ed.add(symbol("x"));
 				// Insert well-behaved term.
@@ -208,7 +211,7 @@ class debug_access<merge_terms_tag>
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef Cf value_type;
 				typedef typename term_type::key_type key_type;
-				typedef g_series_type<term_type> series_type;
+				typedef g_series_type<Cf,Expo> series_type;
 				symbol_set ed;
 				ed.add(symbol("x"));
 				series_type s1, s2;
@@ -298,7 +301,7 @@ class debug_access<merge_terms_tag>
 				s1.insert(term_type(Cf(1),key_type{Expo(1)}));
 				typedef polynomial_term<long,Expo> term_type2;
 				typedef typename term_type2::key_type key_type2;
-				typedef g_series_type<term_type2> series_type2;
+				typedef g_series_type<long,Expo> series_type2;
 				symbol_set ed2;
 				ed2.add(symbol("x"));
 				series_type2 s4;
@@ -352,7 +355,7 @@ class debug_access<merge_args_tag>
 				typedef polynomial_term<Cf,Expo> term_type;
 				typedef Cf value_type;
 				typedef typename term_type::key_type key_type;
-				typedef g_series_type<term_type> series_type;
+				typedef g_series_type<Cf,Expo> series_type;
 				series_type s_derived;
 				typename series_type::base &s = static_cast<typename series_type::base &>(s_derived);
 				symbol_set ed1, ed2;
