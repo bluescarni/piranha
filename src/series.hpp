@@ -323,10 +323,84 @@ class series: detail::series_tag
 			// The other series must alway be cleared, since we moved out the terms.
 			s.m_container.clear();
 		}
-// 		template <typename T>
-// 		void dispatch_generic_construction(T &&x, typename std::enable_if<>::type * = piranha_nullptr)
-// 		{
-// 		}
+		// Generic construction
+		// ====================
+		// Series with same echelon size, same term type, move.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+			static_assert(!std::is_base_of<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
+			m_symbol_set = std::move(s.m_symbol_set);
+			m_container = std::move(s.m_container);
+		}
+		// Series with same echelon size, same term type, copy.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			!is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+			static_assert(!std::is_base_of<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
+			m_symbol_set = s.m_symbol_set;
+			m_container = s.m_container;
+		}
+		// Series with same echelon size and different term type, move.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+			m_symbol_set = std::move(s.m_symbol_set);
+			merge_terms<true>(std::forward<Series>(s));
+		}
+		// Series with same echelon size and different term type, copy.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			!is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = piranha_nullptr)
+		{
+			m_symbol_set = s.m_symbol_set;
+			merge_terms<true>(std::forward<Series>(s));
+		}
+		// Series with different echelon size.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			echelon_size<term_type>::value != echelon_size<typename std::decay<Series>::type::term_type>::value
+			>::type * = piranha_nullptr)
+		{
+			dispatch_generic_construction_from_cf(std::forward<Series>(s));
+		}
+		// Non-series.
+		template <typename T>
+		void dispatch_generic_construction(T &&x,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			dispatch_generic_construction_from_cf(std::forward<T>(x));
+		}
+		// Construct as coefficient helper.
+		template <typename T>
+		void dispatch_generic_construction_from_cf(T &&x)
+		{
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			cf_type cf(std::forward<T>(x));
+			key_type key(m_symbol_set);
+			insert(term_type(std::move(cf),std::move(key)));
+		}
 	public:
 		/// Size type.
 		/**
@@ -342,7 +416,7 @@ class series: detail::series_tag
 		series(const series &) = default;
 		/// Defaulted move constructor.
 		series(series &&other) piranha_noexcept_spec(true) : m_symbol_set(std::move(other.m_symbol_set)),m_container(std::move(other.m_container)) {}
-		/// Generic construction.
+		/// Generic constructor.
 		/**
 		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
 		 * \p Derived (so that it does not compete with the copy and move constructors in overload resolution).
@@ -352,7 +426,8 @@ class series: detail::series_tag
 		 *   - if the term type of \p T is the same as that of \p this:
 		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
 		 *   - else:
-		 *     - the symbol set of \p x is used to construct the symbol set of this and all terms from \p x are inserted into \p this;
+		 *     - the symbol set of \p x is forwarded to construct the symbol set of this and all terms from \p x are inserted into \p this
+		 *       (after conversion to \p term_type);
 		 * - else:
 		 *   - \p x is used to construct a new term as follows:
 		 *     - \p x is forwarded to construct a coefficient;
@@ -526,7 +601,6 @@ class series: detail::series_tag
 		void merge_terms(T &&s,
 			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
-			piranha_assert(m_symbol_set == s.m_symbol_set);
 			// NOTE: ideas to improve the method:
 			// - estimate the size of the series after merge, and swap only if needed: this way we could avoid
 			//   increasingly endlessly the memory usage in pathological cases (right now we steal memory regardless,
