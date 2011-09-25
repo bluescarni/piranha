@@ -59,6 +59,12 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 		}
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit g_series_type(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		template <typename T>
+		typename std::enable_if<!std::is_same<g_series_type,typename std::decay<T>::type>::value,g_series_type &>::type operator=(T &&x)
+		{
+			base::operator=(std::forward<T>(x));
+			return *this;
+		}
 };
 
 template <typename Cf, typename Expo>
@@ -79,6 +85,12 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 		}
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type2,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit g_series_type2(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		template <typename T>
+		typename std::enable_if<!std::is_same<g_series_type2,typename std::decay<T>::type>::value,g_series_type2 &>::type operator=(T &&x)
+		{
+			base::operator=(std::forward<T>(x));
+			return *this;
+		}
 };
 
 struct construction_tag {};
@@ -175,7 +187,52 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s1b.size() == 1u);
 			BOOST_CHECK(s1b.m_container.begin()->m_cf == Cf(1));
 			BOOST_CHECK(s1b.m_container.begin()->m_key.size() == 0u);
+			BOOST_CHECK(s1b.m_symbol_set.size() == 0u);
 			// Construction from coefficient series.
+			//typedef g_series_type<g_series_type<long,Expo>,Expo> series_type3;
+			//series_type3 s3o(other1);
+			// Generic assignment.
+			// Series, different term type, copy.
+			series_type s1c;
+			other1.m_symbol_set.add("x");
+			other1.insert(term_type2(1,key_type{Expo(1)}));
+			s1c = other1;
+			BOOST_CHECK(s1c.size() == 1u);
+			BOOST_CHECK(s1c.m_container.begin()->m_cf == Cf(1));
+			BOOST_CHECK(s1c.m_container.begin()->m_key.size() == 1u);
+			BOOST_CHECK(s1c.m_container.begin()->m_key[0u] == Expo(1));
+			// Series, different term type, move.
+			s1c = std::move(other1);
+			BOOST_CHECK(s1c.size() == 1u);
+			BOOST_CHECK(s1c.m_container.begin()->m_cf == Cf(1));
+			BOOST_CHECK(s1c.m_container.begin()->m_key.size() == 1u);
+			BOOST_CHECK(s1c.m_container.begin()->m_key[0u] == Expo(1));
+			BOOST_CHECK(other1.empty());
+			BOOST_CHECK(other1.m_symbol_set.size() == 0u);
+			// Series, same term type, copy.
+			other2.m_symbol_set.add("x");
+			other2.insert(term_type(1,key_type{Expo(1)}));
+			series_type sp2;
+			sp2 = other2;
+			BOOST_CHECK(sp2.size() == 1u);
+			BOOST_CHECK(sp2.m_container.begin()->m_cf == Cf(1));
+			BOOST_CHECK(sp2.m_container.begin()->m_key.size() == 1u);
+			BOOST_CHECK(sp2.m_container.begin()->m_key[0u] == Expo(1));
+			// Series, same term type, move.
+			sp2 = std::move(other2);
+			BOOST_CHECK(sp2.size() == 1u);
+			BOOST_CHECK(sp2.m_container.begin()->m_cf == Cf(1));
+			BOOST_CHECK(sp2.m_container.begin()->m_key.size() == 1u);
+			BOOST_CHECK(sp2.m_container.begin()->m_key[0u] == Expo(1));
+			BOOST_CHECK(other2.empty());
+			BOOST_CHECK(other2.m_symbol_set.size() == 0u);
+			// Assignment from non series.
+			s1b = 2;
+			BOOST_CHECK(s1b.size() == 1u);
+			BOOST_CHECK(s1b.m_container.begin()->m_cf == Cf(2));
+			BOOST_CHECK(s1b.m_container.begin()->m_key.size() == 0u);
+			BOOST_CHECK(s1b.m_symbol_set.size() == 0u);
+			// Assignment from coefficient series.
 			//typedef g_series_type<g_series_type<long,Expo>,Expo> series_type3;
 			//series_type3 s3o(other1);
 		}

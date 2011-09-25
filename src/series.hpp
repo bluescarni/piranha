@@ -485,6 +485,24 @@ class series: detail::series_tag
 			}
 			return *this;
 		}
+		/// Generic assignment operator.
+		/**
+		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
+		 * \p Derived. Generic assignment is equivalent to assignment to a piranha::series constructed
+		 * via the generic constructor.
+		 * 
+		 * @param[in] x assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the generic constructor.
+		 */
+		template <typename T>
+		typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value,series &>::type
+			operator=(T &&x)
+		{
+			return operator=(series(std::forward<T>(x)));
+		}
 		/// Symbol set getter.
 		/**
 		 * @return const reference to the piranha::symbol_set describing the series.
