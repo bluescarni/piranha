@@ -437,7 +437,12 @@ class series: detail::series_tag
 		 * 
 		 * @param[in] x object to construct from.
 		 * 
-		 * @throws unspecified
+		 * @throws unspecified any exception thrown by:
+		 * - the copy assignment operators of piranha::symbol_set and piranha::hash_set,
+		 * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
+		 * - the construction of a term from a coefficient-key pair,
+		 * - insert(),
+		 * - the copy constructor of piranha::series.
 		 */
 		template <typename T>
 		explicit series(T &&x, typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
@@ -594,8 +599,7 @@ class series: detail::series_tag
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::series::insert,
-		 * - the copy constructor of piranha::series,
-		 * - piranha::math::negate() on the coefficient type.
+		 * - the copy constructor of piranha::series.
 		 */
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
