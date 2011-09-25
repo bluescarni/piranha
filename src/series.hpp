@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
+#include <boost/math/special_functions/trunc.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
@@ -231,6 +233,10 @@ class series: detail::series_tag
 				}
 			}
 		}
+		// Terms merging
+		// =============
+		// NOTE: ideas to improve the algorithm:
+		// - optimization when merging with self: add each coefficient to itself, instead of copying and merging.
 		// Overload in case that T derives from the same type as this (series<Term,Derived>).
 		template <bool Sign, typename T>
 		void merge_terms_impl0(T &&s,
@@ -274,8 +280,24 @@ class series: detail::series_tag
 		}
 		static void swap_for_merge(container_type &&c1, container_type &&c2, bool &swap)
 		{
-			// Swap only if the bucket count is greater.
-			if (c1.bucket_count() < c2.bucket_count()) {
+			piranha_assert(!swap);
+			// Do not do anything in case of overflows.
+			if (unlikely(c1.size() > boost::integer_traits<size_type>::const_max - c2.size())) {
+				return;
+			}
+			// This is the maximum number of terms in the return value.
+			const auto max_size = c1.size() + c2.size();
+			// This will be the maximum required number of buckets.
+			size_type max_n_buckets;
+			try {
+				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(max_size * c1.max_load_factor()));
+			} catch (...) {
+				// Ignore any error on conversions.
+				return;
+			}
+			// Now we swap the containers, if the first one is not enough to contain the expected number of terms
+			// and if the second one is larger.
+			if (c1.bucket_count() < max_n_buckets && c2.bucket_count() > c1.bucket_count()) {
 				container_type tmp(std::move(c1));
 				c1 = std::move(c2);
 				c2 = std::move(tmp);
@@ -623,12 +645,6 @@ class series: detail::series_tag
 		void merge_terms(T &&s,
 			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
-			// NOTE: ideas to improve the method:
-			// - estimate the size of the series after merge, and swap only if needed: this way we could avoid
-			//   increasingly endlessly the memory usage in pathological cases (right now we steal memory regardless,
-			//   as long as it increases the capacity of this);
-			// - take into account that for series with wildly different number of terms it might make sense to move/copy
-			//   the longer series into this and merge with the shorter one.
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
 		// Merge arguments.

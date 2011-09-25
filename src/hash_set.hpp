@@ -85,6 +85,7 @@ namespace piranha
  * \todo list of available sizes should be built at runtime: pre-calculated prime sizes stored as strings and converted to numbers using
  * lexical cast at program startup, until out-of-range happens.
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
+ * \todo power of 2 sizes: test and see if it is viable.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
