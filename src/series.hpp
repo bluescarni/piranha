@@ -290,7 +290,7 @@ class series: detail::series_tag
 			// This will be the maximum required number of buckets.
 			size_type max_n_buckets;
 			try {
-				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(max_size * c1.max_load_factor()));
+				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(max_size / c1.max_load_factor()));
 			} catch (...) {
 				// Ignore any error on conversions.
 				return;
