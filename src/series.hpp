@@ -82,7 +82,6 @@ struct term_hasher
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo review the conditions for swapping, we do not want to keep on increasing memory consumption (basically, same thing that must be done for integer).
  * \todo cast operator, to series and non-series types.
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  */
@@ -290,6 +289,7 @@ class series: detail::series_tag
 			// This will be the maximum required number of buckets.
 			size_type max_n_buckets;
 			try {
+				piranha_assert(c1.max_load_factor() > 0);
 				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(max_size / c1.max_load_factor()));
 			} catch (...) {
 				// Ignore any error on conversions.
@@ -397,11 +397,11 @@ class series: detail::series_tag
 			m_symbol_set = s.m_symbol_set;
 			merge_terms<true>(std::forward<Series>(s));
 		}
-		// Series with different echelon size.
+		// Series with smaller echelon size.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
 			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
-			echelon_size<term_type>::value != echelon_size<typename std::decay<Series>::type::term_type>::value
+			echelon_size<typename std::decay<Series>::type::term_type>::value < echelon_size<term_type>::value
 			>::type * = piranha_nullptr)
 		{
 			dispatch_generic_construction_from_cf(std::forward<Series>(s));
@@ -422,6 +422,47 @@ class series: detail::series_tag
 			cf_type cf(std::forward<T>(x));
 			key_type key(m_symbol_set);
 			insert(term_type(std::move(cf),std::move(key)));
+		}
+		// In-place add/subtract
+		// =====================
+		// Overload for non-series type.
+		template <bool Sign, typename T>
+		void dispatch_in_place_add(T &&x, typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			term_type tmp(typename term_type::cf_type(std::forward<T>(x)),typename term_type::key_type(m_symbol_set));
+			insert<Sign>(std::move(tmp));
+		}
+		// Overload for series type with smaller echelon size.
+		template <bool Sign, typename T>
+		void dispatch_in_place_add(T &&series, typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<term_type>::value>::type * = piranha_nullptr)
+		{
+			term_type tmp(typename term_type::cf_type(std::forward<T>(series)),typename term_type::key_type(m_symbol_set));
+			insert<Sign>(std::move(tmp));
+		}
+		template <bool Sign, typename T>
+		void dispatch_in_place_add(T &&other, typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value>::type * = piranha_nullptr)
+		{
+			// NOTE: if they are not the same, we are going to do heavy calculations anyway: mark it "likely".
+			if (likely(m_symbol_set == other.m_symbol_set)) {
+				merge_terms<Sign>(std::forward<T>(other));
+			} else {
+				// Let's deal with the first series.
+				auto merge1 = m_symbol_set.merge(other.m_symbol_set);
+				if (merge1 != m_symbol_set) {
+					operator=(merge_args(merge1));
+				}
+				// Second series.
+				auto merge2 = other.m_symbol_set.merge(m_symbol_set);
+				piranha_assert(merge2 == m_symbol_set);
+				if (merge2 != other.m_symbol_set) {
+					auto other_copy = other.merge_args(merge2);
+					merge_terms<Sign>(std::move(other_copy));
+				} else {
+					merge_terms<Sign>(std::forward<T>(other));
+				}
+			}
 		}
 	public:
 		/// Size type.
@@ -456,6 +497,8 @@ class series: detail::series_tag
 		 *     - an empty arguments set will be used to construct a key;
 		 *     - coefficient and key are used to construct the new term instance;
 		 *   - the new term is inserted into \p this.
+		 * 
+		 * If \p x is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
 		 * 
 		 * @param[in] x object to construct from.
 		 * 
@@ -608,6 +651,86 @@ class series: detail::series_tag
 		{
 			insert<true>(std::forward<T>(term));
 		}
+		/// In-place addition.
+		/**
+		 * The addition algorithm proceeds as follows:
+		 * 
+		 * - if \p other is an instance of piranha::series with the same echelon size as \p this:
+		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
+		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
+		 *     (a copy of \p other might be created if it requires modifications);
+		 *   - all terms in \p other (or its copy) will be merged into \p this using piranha::insert();
+		 * - else:
+		 *   - a \p Term instance will be constructed as follows:
+		 *     - \p other will be forwarded to construct the coefficient;
+		 *     - the arguments set of \p this will be used to construct the key;
+		 *   - the term will be inserted into \p this using insert().
+		 * 
+		 * If \p other is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
+		 * 
+		 * Please note that in-place addition for series works slightly differently from addition for native C++ types: the coefficients of the terms
+		 * to be inserted into the series are, if necessary, first converted to the coefficient type of \p term_type and then added in-place
+		 * to exsisting coefficients. This behaviour
+		 * is different from the standard mechanism of type promotions for arithmetic C++ types.
+		 * 
+		 * @param[in] other object to be added to the series.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - insert(),
+		 * - the <tt>merge_args()</tt> method of the key type,
+		 * - the constructors of \p term_type, coefficient and key types,
+		 * - piranha::symbol_set::merge().
+		 */
+		template <typename T>
+		Derived &operator+=(T &&other)
+		{
+			dispatch_in_place_add<true>(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
+		}
+		/// In-place addition.
+		/**
+		 * Analogous to operator+=(), apart from a change in sign.
+		 * 
+		 * @param[in] other object to be subtracted from the series.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by operator+=().
+		 */
+		template <typename T>
+		Derived &operator-=(T &&other)
+		{
+			dispatch_in_place_add<false>(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
+		}
+		/// Negate series in-place.
+		/**
+		 * This method will call math::negate() on the coefficients of all terms. In case of exceptions,
+		 * the basic exception safety guarantee is provided.
+		 * 
+		 * If any term becomes ignorable or incompatible after negation, it will be erased from the series.
+		 * 
+		 * @throws unspecified any exception thrown by math::negate() on the coefficient type.
+		 */
+		void negate()
+		{
+			try {
+				const auto it_f = m_container.end();
+				for (auto it = m_container.begin(); it != it_f;) {
+					math::negate(it->m_cf);
+					if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+						it = m_container.erase(it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				m_container.clear();
+				throw;
+			}
+		}
 		/// Overload stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
@@ -744,6 +867,16 @@ struct math_is_zero_impl<Series,typename std::enable_if<
 	static bool run(const Series &s)
 	{
 		return s.empty();
+	}
+};
+
+template <typename Series>
+struct math_negate_impl<Series,typename std::enable_if<
+	std::is_base_of<series_tag,Series>::value>::type>
+{
+	static void run(Series &s)
+	{
+		s.negate();
 	}
 };
 
