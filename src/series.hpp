@@ -177,6 +177,13 @@ class series: detail::series_tag
 			// Try to locate the element.
 			auto bucket_idx = m_container._bucket(term);
 			const auto it = m_container._find(term,bucket_idx);
+			// Cleanup function that checks ignorability and compatibility of an element in the hash set,
+			// and removes it if necessary.
+			auto cleanup = [this](const typename container_type::const_iterator &it) -> void {
+				if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
+					this->m_container.erase(it);
+				}
+			};
 			if (it == m_container.end()) {
 				if (unlikely(m_container.size() == boost::integer_traits<size_type>::const_max)) {
 					piranha_throw(std::overflow_error,"maximum number of elements reached");
@@ -190,43 +197,29 @@ class series: detail::series_tag
 					bucket_idx = m_container._bucket(term);
 				}
 				const auto new_it = m_container._unique_insert(std::forward<T>(term),bucket_idx);
-				m_container._update_size(m_container.size() + 1u);
+				m_container._update_size(m_container.size() + size_type(1u));
 				// Insertion was successful, change sign if requested.
 				if (!Sign) {
-					// Cleanup function.
-					auto cleanup = [&]() -> void {
-						// Negation is a mutating operation. We have to check again for compatibility
-						// and ignorability.
-						if (unlikely(!new_it->is_compatible(this->m_symbol_set) || new_it->is_ignorable(this->m_symbol_set))) {
-							this->m_container.erase(new_it);
-						}
-					};
 					try {
 						math::negate(new_it->m_cf);
-						cleanup();
+						cleanup(new_it);
 					} catch (...) {
 						// Run the cleanup function also in case of exceptions, as we do not know
 						// in which state the modified term is.
-						cleanup();
+						cleanup(new_it);
 						throw;
 					}
 				}
 			} else {
 				// Assert the existing term is not ignorable and it is compatible.
 				piranha_assert(!it->is_ignorable(m_symbol_set) && it->is_compatible(m_symbol_set));
-				// Cleanup function.
-				auto cleanup = [&]() -> void {
-					if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
-						this->m_container.erase(it);
-					}
-				};
 				try {
 					// The term exists already, update it.
 					insertion_cf_arithmetics<Sign>(it,std::forward<T>(term));
 					// Check if the term has become ignorable or incompatible after the modification.
-					cleanup();
+					cleanup(it);
 				} catch (...) {
-					cleanup();
+					cleanup(it);
 					throw;
 				}
 			}
@@ -594,7 +587,8 @@ class series: detail::series_tag
 		}
 		/// Insert generic term.
 		/**
-		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
+		 * This method will insert \p term into the series using internally piranha::hash_set::insert. The method is enabled only
+		 * if \p term derives from piranha::base_term.
 		 * 
 		 * The insertion algorithm proceeds as follows:
 		 * 
@@ -631,10 +625,10 @@ class series: detail::series_tag
 		 * - piranha::hash_set::find(),
 		 * - piranha::hash_set::erase(),
 		 * - piranha::math::negate(), in-place addition/subtraction on coefficient types.
-		 * @throws std::invalid_argument if \p term is ignorable.
+		 * @throws std::invalid_argument if \p term is incompatible.
 		 */
 		template <bool Sign, typename T>
-		void insert(T &&term)
+		typename std::enable_if<std::is_base_of<detail::base_term_tag,typename std::decay<T>::type>::value,void>::type insert(T &&term)
 		{
 			dispatch_insertion<Sign>(std::forward<T>(term));
 		}
