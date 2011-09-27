@@ -73,8 +73,7 @@ struct term_hasher
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same exception safety guarantee as piranha::hash_set. In particular, exceptions thrown during
- * any operation involving term insertion (e.g., insert()) will leave the object in an undefined but valid state.
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
  * \section move_semantics Move semantics
  * 
@@ -395,7 +394,7 @@ class series: detail::series_tag
 			>::type * = piranha_nullptr)
 		{
 			m_symbol_set = s.m_symbol_set;
-			merge_terms<true>(std::forward<Series>(s));
+			merge_terms<true>(s);
 		}
 		// Series with smaller echelon size.
 		template <typename Series>
@@ -440,6 +439,7 @@ class series: detail::series_tag
 			term_type tmp(typename term_type::cf_type(std::forward<T>(series)),typename term_type::key_type(m_symbol_set));
 			insert<Sign>(std::move(tmp));
 		}
+		// Overload for series with same echelon size.
 		template <bool Sign, typename T>
 		void dispatch_in_place_add(T &&other, typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
 			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value>::type * = piranha_nullptr)
@@ -667,6 +667,8 @@ class series: detail::series_tag
 		 *   - the term will be inserted into \p this using insert().
 		 * 
 		 * If \p other is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
+		 * 
+		 * The exception safety guarantee for this method is the basic one.
 		 * 
 		 * Please note that in-place addition for series works slightly differently from addition for native C++ types: the coefficients of the terms
 		 * to be inserted into the series are, if necessary, first converted to the coefficient type of \p term_type and then added in-place
