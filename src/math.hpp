@@ -104,7 +104,8 @@ namespace math
 /**
  * Test if value is zero. This function works with all C++ arithmetic types
  * and with piranha's numerical types. For series types, it will return \p true
- * if the series is empty, \p false otherwise.
+ * if the series is empty, \p false otherwise. For \p std::complex, the function will
+ * return \p true if both the real and imaginary parts are zero, \p false otherwise.
  * 
  * @param[in] x value to be tested.
  * 
@@ -118,8 +119,8 @@ inline bool is_zero(const T &x)
 
 /// In-place negation.
 /**
- * Negate value in-place. This function works with all C++ arithmetic types
- * and with piranha's numerical types.
+ * Negate value in-place. This function works with all C++ arithmetic types,
+ * with piranha's numerical types and with series types. For series, piranha::series::negate() is called.
  * 
  * @param[in,out] x value to be negated.
  */
