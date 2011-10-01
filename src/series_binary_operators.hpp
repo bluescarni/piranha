@@ -83,7 +83,7 @@ class series_binary_operators
 				>::type>
 			{
 				typedef typename std::conditional<
-					(echelon_size<typename T1::term_type>::value > echelon_size<typename T2::term_type>::value),
+					((echelon_size<typename T1::term_type>::value) > (echelon_size<typename T2::term_type>::value)),
 					T1,
 					T2
 				>::type type;
