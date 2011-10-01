@@ -41,6 +41,7 @@
 #include "hash_set.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 // #include "series_multiplier.hpp"
+#include "series_binary_operators.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -64,6 +65,14 @@ struct term_hasher
 
 /// Series class.
 /**
+ * This class provides arithmetic and relational operators overloads for interaction with other series and non-series (scalar) types.
+ * Addition and subtraction are implemented directly within this class, both for series and scalar operands. Multiplication of series by
+ * scalar types is also implemented in this class, whereas series-by-series multiplication is provided via the external helper class
+ * piranha::series_multiplier (whose behaviour can be specialised to provide fast multiplication capabilities).
+ * Division by scalar types is also supported.
+ * 
+ * Support for comparison with series and scalar type is also provided.
+ * 
  * \section type_requirements Type requirements
  * 
  * - \p Term must be a model of piranha::concept::Term.
@@ -77,7 +86,7 @@ struct term_hasher
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to piranha::hash_set's move semantics.
+ * Moved-from series are left in a state equivalent to an empty series.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
@@ -85,7 +94,7 @@ struct term_hasher
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  */
 template <typename Term, typename Derived>
-class series: detail::series_tag
+class series: series_binary_operators, detail::series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<series<Term,Derived>,Derived>));

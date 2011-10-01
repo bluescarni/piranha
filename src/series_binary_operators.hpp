@@ -24,89 +24,108 @@
 #include <type_traits>
 
 #include "config.hpp"
-#include "detail/base_series_fwd.hpp"
-#include "detail/top_level_series_fwd.hpp"
+#include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
 
-/// Binary operators for piranha::top_level_series.
+/// Binary operators for piranha::series.
 /**
- * This class provides binary arithmetic and logical operator overloads for piranha::top_level_series instances. The operators
- * are implemented as inline friend functions, enabled only when at least one of the two operands derives from piranha::top_level_series.
+ * This class provides binary arithmetic and relational operators overloads for piranha::series instances. The operators
+ * are implemented as inline friend functions, enabled only when at least one of the two operands derives from piranha::series.
  * The class has no data members, and hence has trivial move semantics and provides the strong exception safety guarantee.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-// NOTE: the existence of this class, as opposed to defining the operators directly in top_level_series,
+// NOTE: the existence of this class, as opposed to defining the operators directly in series,
 // is that it provides a non-templated scope for the operators - which are declared as inline friends.
-// If they were declared as such in top_level_series, ambiguities would arise due to the presence of an extra
+// If they were declared as such in series, ambiguities would arise due to the presence of an extra
 // template parameter.
 class series_binary_operators
 {
 		template <typename T, typename U>
-		struct series_op_return_type
+		struct result_type
 		{
-			typedef typename strip_cv_ref<T>::type type1;
-			typedef typename strip_cv_ref<U>::type type2;
+			// Series with same echelon size and different coefficient types.
 			template <typename T1, typename T2, typename Enable = void>
 			struct deduction_impl
 			{
 				typedef typename T1::term_type::cf_type cf_type1;
 				typedef typename T2::term_type::cf_type cf_type2;
+				typedef decltype(std::declval<cf_type1>() + std::declval<cf_type2>()) _r_type;
+				static_assert(std::is_same<_r_type,cf_type1>::value || std::is_same<_r_type,cf_type2>::value,
+					"Invalid result type for binary operator.");
 				typedef typename std::conditional<
-					binary_op_promotion_rule<cf_type1,cf_type2>::value,
-					cf_type2,
-					cf_type1
-				>::type result_type;
-				// Check that result type is one of the two types.
-				static_assert(std::is_same<result_type,cf_type1>::value || std::is_same<result_type,cf_type2>::value,
-					"Invalid result type for binary operation on coefficients.");
-				typedef typename std::conditional<
-					std::is_same<result_type,cf_type1>::value,
+					std::is_same<_r_type,cf_type1>::value,
 					T1,
 					T2
 				>::type type;
 			};
+			// Series with same echelon size and coefficient types.
 			template <typename T1, typename T2>
-			struct deduction_impl<T1,T2,typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,T1>::value || !std::is_base_of<detail::top_level_series_tag,T2>::value>::type>
+			struct deduction_impl<T1,T2,
+				typename std::enable_if<
+				std::is_base_of<detail::series_tag,T1>::value &&
+				std::is_base_of<detail::series_tag,T2>::value &&
+				std::is_same<typename T1::term_type::cf_type,typename T2::term_type::cf_type>::value &&
+				echelon_size<typename T1::term_type>::value == echelon_size<typename T2::term_type>::value>::type>
+			{
+				typedef T1 type;
+			};
+			// Series with different echelon sizes.
+			template <typename T1, typename T2>
+			struct deduction_impl<T1,T2,typename std::enable_if<
+				std::is_base_of<detail::series_tag,T1>::value &&
+				std::is_base_of<detail::series_tag,T2>::value &&
+				echelon_size<typename T1::term_type>::value != echelon_size<typename T1::term_type>::value
+				>::type>
 			{
 				typedef typename std::conditional<
-					std::is_base_of<detail::top_level_series_tag,T1>::value,
+					(echelon_size<typename T1::term_type>::value > echelon_size<typename T2::term_type>::value),
 					T1,
 					T2
 				>::type type;
 			};
+			// Series and non-series.
+			template <typename T1, typename T2>
+			struct deduction_impl<T1,T2,typename std::enable_if<!std::is_base_of<detail::series_tag,T1>::value || !std::is_base_of<detail::series_tag,T2>::value>::type>
+			{
+				typedef typename std::conditional<
+					std::is_base_of<detail::series_tag,T1>::value,
+					T1,
+					T2
+				>::type type;
+			};
+			typedef typename std::decay<T>::type type1;
+			typedef typename std::decay<U>::type type2;
 			typedef typename deduction_impl<type1,type2>::type type;
 		};
 		template <typename T, typename U>
 		struct are_series_operands
 		{
-			static const bool value = std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value ||
-				std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<U>::type>::value;
+			static const bool value = std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value ||
+				std::is_base_of<detail::series_tag,typename std::decay<U>::type>::value;
 		};
 		template <bool Sign, typename Series, typename T>
-		static typename series_op_return_type<Series,T>::type dispatch_binary_add(Series &&s, T &&x,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		static typename result_type<Series,T>::type dispatch_binary_add(Series &&s, T &&x,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
-std::cout << "MIXED1!!!!\n";
 			return mixed_binary_add<Sign,false>(std::forward<Series>(s),std::forward<T>(x));
 		}
 		template <bool Sign, typename T, typename Series>
-		static typename series_op_return_type<T,Series>::type dispatch_binary_add(T &&x, Series &&s,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		static typename result_type<T,Series>::type dispatch_binary_add(T &&x, Series &&s,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
-std::cout << "MIXED2!!!!\n";
 			return mixed_binary_add<Sign,true>(std::forward<Series>(s),std::forward<T>(x));
 		}
 		template <bool Sign, bool Swapped, typename Series, typename T>
-		static typename strip_cv_ref<Series>::type mixed_binary_add(Series &&s, T &&x)
+		static typename std::decay<Series>::type mixed_binary_add(Series &&s, T &&x)
 		{
-			static_assert(std::is_same<typename strip_cv_ref<Series>::type,typename series_op_return_type<Series,T>::type>::value,"Inconsistent return value type.");
-			static_assert(std::is_same<typename strip_cv_ref<Series>::type,typename series_op_return_type<T,Series>::type>::value,"Inconsistent return value type.");
-			typename strip_cv_ref<Series>::type retval(std::forward<Series>(s));
+			static_assert(std::is_same<typename std::decay<Series>::type,typename result_type<Series,T>::type>::value,"Inconsistent return value type.");
+			static_assert(std::is_same<typename std::decay<Series>::type,typename result_type<T,Series>::type>::value,"Inconsistent return value type.");
+			typename std::decay<Series>::type retval(std::forward<Series>(s));
 			if (Sign) {
 				retval += std::forward<T>(x);
 			} else {
@@ -118,18 +137,20 @@ std::cout << "MIXED2!!!!\n";
 			}
 			return retval;
 		}
+		// NOTE: the idea here is that we need to try to optimize only the creation of the return value, as in-place operations
+		// take care of optimizing the actual operation.
 		// Overload if either:
 		// - return type is first series and series types are not the same,
 		// - series type are the same and first series is nonconst rvalue ref.
 		template <bool Sign, typename Series1, typename Series2>
-		static typename series_op_return_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
-			(std::is_same<typename series_op_return_type<Series1,Series2>::type,typename strip_cv_ref<Series1>::type>::value &&
-			!std::is_same<typename strip_cv_ref<Series1>::type,typename strip_cv_ref<Series2>::type>::value) ||
-			(std::is_same<typename strip_cv_ref<Series1>::type,typename strip_cv_ref<Series2>::type>::value &&
+		static typename result_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
+			(std::is_same<typename result_type<Series1,Series2>::type,typename std::decay<Series1>::type>::value &&
+			!std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value) ||
+			(std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value &&
 			is_nonconst_rvalue_ref<Series1 &&>::value)
 			>::type * = piranha_nullptr)
 		{
-			typename series_op_return_type<Series1,Series2>::type retval(std::forward<Series1>(s1));
+			typename result_type<Series1,Series2>::type retval(std::forward<Series1>(s1));
 			if (Sign) {
 				retval += std::forward<Series2>(s2);
 			} else {
@@ -141,14 +162,14 @@ std::cout << "MIXED2!!!!\n";
 		// - return type is second series and series types are not the same,
 		// - series type are the same and first series is not a nonconst rvalue ref.
 		template <bool Sign, typename Series1, typename Series2>
-		static typename series_op_return_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
-			(std::is_same<typename series_op_return_type<Series1,Series2>::type,typename strip_cv_ref<Series2>::type>::value &&
-			!std::is_same<typename strip_cv_ref<Series1>::type,typename strip_cv_ref<Series2>::type>::value) ||
-			(std::is_same<typename strip_cv_ref<Series1>::type,typename strip_cv_ref<Series2>::type>::value &&
+		static typename result_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
+			(std::is_same<typename result_type<Series1,Series2>::type,typename std::decay<Series2>::type>::value &&
+			!std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value) ||
+			(std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value &&
 			!is_nonconst_rvalue_ref<Series1 &&>::value)
 			>::type * = piranha_nullptr)
 		{
-			typename series_op_return_type<Series1,Series2>::type retval(std::forward<Series2>(s2));
+			typename result_type<Series1,Series2>::type retval(std::forward<Series2>(s2));
 			if (Sign) {
 				retval += std::forward<Series1>(s1);
 			} else {
@@ -159,24 +180,25 @@ std::cout << "MIXED2!!!!\n";
 			return retval;
 		}
 		template <bool Sign, typename Series1, typename Series2>
-		static typename series_op_return_type<Series1,Series2>::type dispatch_binary_add(Series1 &&s1, Series2 &&s2,
+		static typename result_type<Series1,Series2>::type dispatch_binary_add(Series1 &&s1, Series2 &&s2,
 			typename std::enable_if<
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series1>::type>::value &&
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series2>::type>::value
+			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			return series_binary_add<Sign>(std::forward<Series1>(s1),std::forward<Series2>(s2));
 		}
+#if 0
 		// Binary multiplication.
 		template <typename Series, typename T>
 		static typename series_op_return_type<Series,T>::type dispatch_binary_multiply(Series &&s, T &&x,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
 		template <typename T, typename Series>
 		static typename series_op_return_type<T,Series>::type dispatch_binary_multiply(T &&x, Series &&s,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -249,6 +271,7 @@ std::cout << "BLAH BLAH\n";
 		template <typename Series, typename T>
 		static bool mixed_equality(const Series &s, const T &x)
 		{
+			// TODO: what about this?
 			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
 				"Cannot compare non top level series.");
 			const auto size = s.size();
@@ -264,7 +287,7 @@ std::cout << "BLAH BLAH\n";
 		// Overload for series vs non-series.
 		template <typename Series, typename T>
 		static bool dispatch_equality(const Series &s, const T &x,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
 std::cout << "LOL bool1\n";
 			return mixed_equality(s,x);
@@ -272,7 +295,7 @@ std::cout << "LOL bool1\n";
 		// Overload for non-series vs series.
 		template <typename T, typename Series>
 		static bool dispatch_equality(const T &x, const Series &s,
-			typename std::enable_if<!std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
 		{
 std::cout << "LOL bool2\n";
 			return mixed_equality(s,x);
@@ -387,8 +410,8 @@ std::cout << "LOL different args\n";
 		// or coefficients are the same.
 		template <typename Series1, typename Series2>
 		static bool dispatch_equality(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series1>::type>::value &&
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series2>::type>::value &&
+			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series1>::type>::value &&
+			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series2>::type>::value &&
 			binary_op_promotion_rule<typename strip_cv_ref<Series1>::type::term_type::cf_type,
 			typename strip_cv_ref<Series2>::type::term_type::cf_type>::value>::type * = piranha_nullptr)
 		{
@@ -398,33 +421,36 @@ std::cout << "LOL series equality 1\n";
 		// Overload for: both series, and coefficient promotion rule does not promote first coefficient type to second.
 		template <typename Series1, typename Series2>
 		static bool dispatch_equality(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series1>::type>::value &&
-			std::is_base_of<detail::top_level_series_tag,typename strip_cv_ref<Series2>::type>::value &&
+			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series1>::type>::value &&
+			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series2>::type>::value &&
 			!binary_op_promotion_rule<typename strip_cv_ref<Series1>::type::term_type::cf_type,
 			typename strip_cv_ref<Series2>::type::term_type::cf_type>::value>::type * = piranha_nullptr)
 		{
 std::cout << "LOL series equality 2\n";
 			return series_equality(s2,s1);
 		}
+#endif
 	public:
-		/// Binary addition involving piranha::top_level_series.
+		/// Binary addition involving piranha::series.
 		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::top_level_series.
+		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * The binary addition algorithm proceeds as follows:
 		 * 
-		 * - if both operands are series:
-		 *   - the return type is \p T if the value of piranha::binary_op_promotion_rule of the coefficient types of \p T and \p U is \p false,
-		 *     \p U otherwise;
+		 * - if operands are series with same echelon size, the return type is determined by the coefficient types
+		 *   \p c1 and \p c2 of \p T and \p U respectively:
+		 *   - the return type is \p T if \p c1 and \p c2 are the same type or <tt>decltype(c1 + c2)</tt> is \p c1,
+		 *     it is \p c2 if <tt>decltype(c1 + c2)</tt> is \p c2. If \p c1 and \p c2 are different types and <tt>decltype(c1 + c2)</tt>
+		 *     is neither \p c1 or \p c2, a compile-time error will be produced;
 		 *   - the return value is built from either \p s1 or \p s2 (depending on its type);
-		 *   - piranha::top_level_series::operator+=() is called on the return value, with either \p s1 or \p s2 as argument;
+		 *   - piranha::series::operator+=() is called on the return value, with either \p s1 or \p s2 forwarded as argument;
 		 * - else:
-		 *   - the return type is the type of the series operand;
-		 *   - the return value is built from the series operand;
-		 *   - piranha::top_level_series::operator+=() is called on the return value, the non-series operand as argument;
+		 *   - the return type is the type of the series operand with largest echelon size;
+		 *   - the return value is built from the series operand with largest echelon size;
+		 *   - piranha::series::operator+=() is called on the return value;
 		 * - the return value is returned.
 		 * 
-		 * Note that in case of two series operands of different type but with same coefficient types, the return type will depend on the order
-		 * of the operands.
+		 * Note that the return type is determined solely by the coefficient types, and that the rules determining the return type and
+		 * the implementation of the operator might differ from those of built-in C++ types.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
@@ -433,17 +459,17 @@ std::cout << "LOL series equality 2\n";
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - copy-construction of return value type,
-		 * - piranha::top_level_series::operator+=().
+		 * - piranha::series::operator+=().
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator+(T &&s1, U &&s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator+(T &&s1, U &&s2)
 		{
 			return dispatch_binary_add<true>(std::forward<T>(s1),std::forward<U>(s2));
 		}
-		/// Binary subtraction involving piranha::top_level_series.
+		/// Binary subtraction involving piranha::series.
 		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::top_level_series. The algorithm proceeds in the same
-		 * way as operator+(), with a change in sign and possibly a call to piranha::top_level_series::negate().
+		 * This template operator is activated iff at least one operand is an instance of piranha::series. The algorithm proceeds in the same
+		 * way as operator+(), with a change in sign and possibly a call to piranha::series::negate().
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
@@ -452,17 +478,18 @@ std::cout << "LOL series equality 2\n";
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - copy-construction of return value type,
-		 * - piranha::top_level_series::operator-=(),
-		 * - piranha::top_level_series::negate().
+		 * - piranha::series::operator-=(),
+		 * - piranha::series::negate().
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator-(T &&s1, U &&s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator-(T &&s1, U &&s2)
 		{
 			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
 		}
-		/// Binary multiplication involving piranha::top_level_series.
+#if 0
+		/// Binary multiplication involving piranha::series.
 		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::top_level_series.
+		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * The binary addition algorithm proceeds as follows:
 		 * 
 		 * - if both operands are series:
@@ -473,7 +500,7 @@ std::cout << "LOL series equality 2\n";
 		 * - else:
 		 *   - the return type is the type of the series operand;
 		 *   - the return value is built from the series operand;
-		 *   - piranha::top_level_series::operator*=() is called on the return value, the non-series operand as argument;
+		 *   - piranha::series::operator*=() is called on the return value, the non-series operand as argument;
 		 * - the return value is returned.
 		 * 
 		 * Note that in case of two series operands of different type but with same coefficient types, the return type will depend on the order
@@ -486,24 +513,24 @@ std::cout << "LOL series equality 2\n";
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - copy-construction of return value type,
-		 * - piranha::top_level_series::operator*=(),
+		 * - piranha::series::operator*=(),
 		 * - the assignment operator of piranha::echelon_descriptor,
 		 * - piranha::echelon_descriptor::merge_args(),
 		 * - piranha::base_series::multiply_by_series(),
 		 * - piranha::base_series::merge_args().
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator*(T &&s1, U &&s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator*(T &&s1, U &&s2)
 		{
 			return dispatch_binary_multiply(std::forward<T>(s1),std::forward<U>(s2));
 		}
-		/// Equality operator involving piranha::top_level_series.
+		/// Equality operator involving piranha::series.
 		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::top_level_series.
+		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * 
 		 * The comparison algorithm operates as follows:
 		 * 
-		 * - if both operands are instances of piranha::top_level_series:
+		 * - if both operands are instances of piranha::series:
 		 *   - if the echelon descriptors of the two series differ, copies of the series
 		 *     are created as necessary, and the algorithm proceeds to the comparison of such
 		 *     copies instead;
@@ -535,7 +562,7 @@ std::cout << "LOL series equality 2\n";
 		 * the promotion rule during term comparisons will depend on the order of the operands.
 		 * 
 		 * If the series being compared have different echelon sizes, or are piranha::base_series without being
-		 * piranha::top_level_series, compile-time error messages will be produced.
+		 * piranha::series, compile-time error messages will be produced.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
@@ -554,11 +581,11 @@ std::cout << "LOL series equality 2\n";
 		 * - piranha::hop_table::find().
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator==(const T &s1, const U &s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator==(const T &s1, const U &s2)
 		{
 			return dispatch_equality(s1,s2);
 		}
-		/// Inequality operator involving piranha::top_level_series.
+		/// Inequality operator involving piranha::series.
 		/**
 		 * Logical negation of the equality operator.
 		 * 
@@ -570,10 +597,11 @@ std::cout << "LOL series equality 2\n";
 		 * @throws unspecified any exception thrown by the equality operator.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator!=(const T &s1, const U &s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator!=(const T &s1, const U &s2)
 		{
 			return !(s1 == s2);
 		}
+#endif
 };
 
 }
