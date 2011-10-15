@@ -111,6 +111,8 @@ class series: series_binary_operators, detail::series_tag
 		// Make friend with series multiplier class.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
+		// Make friend with series binary operators class.
+		friend class series_binary_operators;
 	protected:
 		/// Container type for terms.
 		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
