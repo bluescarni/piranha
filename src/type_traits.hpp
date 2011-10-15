@@ -34,6 +34,10 @@
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
 
+// TODO:
+// - take away binary op promotion rule
+// - check inclusion of this header -> only uses are in concept, the enabler thing and the has_type.
+
 namespace piranha
 {
 

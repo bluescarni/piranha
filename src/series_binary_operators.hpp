@@ -26,6 +26,8 @@
 #include "config.hpp"
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
+#include "math.hpp"
+// TODO: remove this most likely.
 #include "type_traits.hpp"
 
 namespace piranha
@@ -267,39 +269,62 @@ std::cout << "BLUH BLUH\n";
 std::cout << "BLAH BLAH\n";
 			return series_multiply_first(s2,s1);
 		}
+#endif
 		// Equality.
 		template <typename Series, typename T>
 		static bool mixed_equality(const Series &s, const T &x)
 		{
-			// TODO: what about this?
-			static_assert(!std::is_base_of<detail::base_series_tag,typename strip_cv_ref<T>::type>::value,
-				"Cannot compare non top level series.");
+std::cout << "ZOMG\n";
+			static_assert(std::is_base_of<detail::series_tag,Series>::value,"Non-series type during mixed comparison.");
 			const auto size = s.size();
-			if (size > 1) {
+			if (size > 1u) {
 				return false;
 			}
 			if (!size) {
-				return typename Series::term_type::cf_type(x,s.m_ed).is_ignorable(s.m_ed);
+				return math::is_zero(x);
 			}
 			const auto it = s.m_container.begin();
-			return (it->m_cf.is_equal_to(x,s.m_ed) && it->m_key.is_unitary(s.m_ed.template get_args<typename Series::term_type>()));
+			return (it->m_cf == x && it->m_key.is_unitary(s.m_symbol_set));
 		}
 		// Overload for series vs non-series.
 		template <typename Series, typename T>
 		static bool dispatch_equality(const Series &s, const T &x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
 		{
-std::cout << "LOL bool1\n";
+std::cout << "1\n";
+			return mixed_equality(s,x);
+		}
+		// Overload for series vs series with lesser echelon size.
+		template <typename Series, typename T>
+		static bool dispatch_equality(const Series &s, const T &x,
+			typename std::enable_if<
+			std::is_base_of<detail::series_tag,Series>::value &&
+			std::is_base_of<detail::series_tag,T>::value &&
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+		{
+std::cout << "2\n";
 			return mixed_equality(s,x);
 		}
 		// Overload for non-series vs series.
 		template <typename T, typename Series>
 		static bool dispatch_equality(const T &x, const Series &s,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
 		{
-std::cout << "LOL bool2\n";
+std::cout << "3\n";
 			return mixed_equality(s,x);
 		}
+		// Overload for series with lesser echelon size vs series.
+		template <typename T, typename Series>
+		static bool dispatch_equality(const T &x, const Series &s,
+			typename std::enable_if<
+			std::is_base_of<detail::series_tag,Series>::value &&
+			std::is_base_of<detail::series_tag,T>::value &&
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+		{
+std::cout << "4\n";
+			return mixed_equality(s,x);
+		}
+#if 0
 		// Overload with series with same term types.
 		template <typename Series1, typename Series2>
 		static bool series_equality_impl(const Series1 &s1, const Series2 &s2, typename std::enable_if<
@@ -524,24 +549,23 @@ std::cout << "LOL series equality 2\n";
 		{
 			return dispatch_binary_multiply(std::forward<T>(s1),std::forward<U>(s2));
 		}
+#endif
 		/// Equality operator involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * 
 		 * The comparison algorithm operates as follows:
 		 * 
-		 * - if both operands are instances of piranha::series:
-		 *   - if the echelon descriptors of the two series differ, copies of the series
+		 * - if both operands are instances of piranha::series with the same echelon size:
+		 *   - if the symbol sets of the two series differ, copies of the series
 		 *     are created as necessary, and the algorithm proceeds to the comparison of such
 		 *     copies instead;
 		 *   - if the term types of the two series are the same:
 		 *     - the series are equal if their sizes coincide, and if for each term \p t1
 		 *       of one series there exist a term \p t2 with the same key in the second series
-		 *       and the coefficients of \p t1 and \p t2 are equal (according to the <tt>is_equal_to()</tt>
-		 *       method of the coefficient type). Otherwise, the operator will return \p false;
+		 *       and the coefficients of \p t1 and \p t2 are equal. Otherwise, the operator will return \p false;
 		 *   - else:
-		 *     - one of the two series types is chosen for type promotion according to the value of
-		 *       piranha::binary_op_promotion_rule on the series' coefficient types;
+		 *     - one of the two series types is chosen for type promotion following the same rules of the binary addition operator;
 		 *     - each term \p t1 of the series to be promoted is converted to an instance \p t1c of the other series'
 		 *       term type, and a term \p t2 equivalent to \p t1c is located into the
 		 *       other series. If each non-ignorable converted term \p t1c is successfully identified in the other series
@@ -549,26 +573,22 @@ std::cout << "LOL series equality 2\n";
 		 *       located in this way is equivalent to the size of the other series, the operator returns \p true.
 		 *       Otherwise, the operator will return \p false;
 		 * - else:
-		 *   - if the size of the series operand is greater than one,\p false is returned;
-		 *   - if the size of the series operand is zero, then a coefficient is constructed from
-		 *     the non-series operand. If this coefficient is ignorable, then \p true is returned,
-		 *     otherwise \p false is returned;
-		 *   - if the coefficient of the only term of the series operand is equal to the non-series
-		 *     operand (as established by the <tt>is_equal_to()</tt> method of the coefficient type)
-		 *     and the key is unitary (as established by the key type's <tt>is_unitary()</tt> method),
+		 *   - if the size of the series operand with the largest echelon size is greater than one,\p false is returned;
+		 *   - if the size of the series operand with the largest echelon size is zero, then the return value of
+		 *     piranha::math::is_zero() on the other operand is returned;
+		 *   - if the coefficient of the only term of the series operand with the largest echelon size is equal to the other
+		 *     operand and the key is unitary (as established by the key type's <tt>is_unitary()</tt> method),
 		 *     then \p true will be returned, otherwise \p false will be returned.
 		 * 
 		 * Note that in series comparisons involving series with same coefficient types but different term types,
 		 * the promotion rule during term comparisons will depend on the order of the operands.
-		 * 
-		 * If the series being compared have different echelon sizes, or are piranha::base_series without being
-		 * piranha::series, compile-time error messages will be produced.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
 		 * 
 		 * @return \p true if <tt>s1 == s2</tt>, \p false otherwise.
 		 * 
+		 * FIXME: specs here.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::echelon_descriptor::merge(),
 		 * - piranha::base_series::merge_args(),
@@ -601,7 +621,6 @@ std::cout << "LOL series equality 2\n";
 		{
 			return !(s1 == s2);
 		}
-#endif
 };
 
 }

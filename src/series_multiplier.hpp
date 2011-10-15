@@ -43,7 +43,6 @@
 #include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/series_multiplier_fwd.hpp"
-#include "echelon_descriptor.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
@@ -57,6 +56,7 @@
 namespace piranha
 {
 
+// TODO everything needs to be ported here.
 /// Default series multiplier.
 /**
  * This class is used within piranha::base_series::multiply_by_series() to multiply two series as follows:
@@ -108,7 +108,7 @@ class series_multiplier
 	private:
 		// Define it here and typedef it below, otherwise doxygen gets confused.
 		typedef decltype(std::declval<Series1>().multiply_by_series(
-			std::declval<Series1>(),std::declval<echelon_descriptor<term_type1>>())) determined_return_type;
+			std::declval<Series1>())) determined_return_type;
 	protected:
 		/// Type of the result of the multiplication.
 		/**
@@ -151,9 +151,9 @@ class series_multiplier
 		 * - execute().
 		 */
 		template <typename Term>
-		return_type operator()(const echelon_descriptor<Term> &ed) const
+		return_type operator()() const
 		{
-			return execute<plain_functor<Term>>(ed);
+			return execute<plain_functor<Term>>();
 		}
 	protected:
 		/// Low-level implementation of series multiplication.
@@ -199,7 +199,7 @@ class series_multiplier
 		 * - piranha::base_series::insert().
 		 */
 		template <typename Functor, typename Term>
-		return_type execute(const echelon_descriptor<Term> &ed) const
+		return_type execute() const
 		{
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_s1.empty() || m_s2.empty())) {
@@ -366,7 +366,7 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 			});
 		}
 		template <typename RetvalList, typename Size, typename Term>
-		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads, const echelon_descriptor<Term> &ed)
+		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads)
 		{
 			piranha_assert(n_threads > 1u);
 			piranha_assert(retval.m_container.bucket_count());
@@ -498,7 +498,7 @@ std::cout << "new size is " << new_size << '\n';
 		struct plain_functor
 		{
 			explicit plain_functor(const std::vector<term_type1 const *> &v1, const std::vector<term_type2 const *> &v2,
-				const echelon_descriptor<Term> &ed, return_type &retval):
+				return_type &retval):
 				m_v1(v1),m_v2(v2),m_ed(ed),m_retval(retval)
 			{}
 			template <typename Size>
@@ -510,7 +510,6 @@ std::cout << "new size is " << new_size << '\n';
 			}
 			const std::vector<term_type1 const *>			&m_v1;
 			const std::vector<term_type2 const *>			&m_v2;
-			const echelon_descriptor<Term>				&m_ed;
 			return_type						&m_retval;
 			mutable typename term_type1::multiplication_result_type	m_tmp;
 		};
@@ -655,7 +654,7 @@ std::cout << "new size is " << new_size << '\n';
 		struct inserter
 		{
 			template <typename Term>
-			static void run(Tuple &t, return_type &retval, const echelon_descriptor<Term> &ed)
+			static void run(Tuple &t, return_type &retval)
 			{
 				retval.insert(std::get<N>(t),ed);
 				inserter<Tuple,N + static_cast<std::size_t>(1)>::run(t,retval,ed);
@@ -665,16 +664,16 @@ std::cout << "new size is " << new_size << '\n';
 		struct inserter<Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
 		{
 			template <typename Term>
-			static void run(Tuple &, return_type &, const echelon_descriptor<Term> &)
+			static void run(Tuple &, return_type &)
 			{}
 		};
 		template <typename Term, typename... Args>
-		static void insert_impl(return_type &retval,std::tuple<Args...> &mult_res, const echelon_descriptor<Term> &ed)
+		static void insert_impl(return_type &retval,std::tuple<Args...> &mult_res)
 		{
 			inserter<std::tuple<Args...>>::run(mult_res,retval,ed);
 		}
 		template <typename Term>
-		static void insert_impl(return_type &retval, typename Series1::term_type &mult_res, const echelon_descriptor<Term> &ed)
+		static void insert_impl(return_type &retval, typename Series1::term_type &mult_res)
 		{
 			retval.insert(mult_res,ed);
 		}

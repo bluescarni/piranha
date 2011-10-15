@@ -960,3 +960,80 @@ BOOST_AUTO_TEST_CASE(series_binary_arithmetics_test)
 {
 	boost::mpl::for_each<cf_types>(binary_arithmetics_tester());
 }
+
+struct equality_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			typedef g_series_type2<float,Expo> p_type2;
+// 			typedef polynomial<Cf,Expo> p_type1;
+// 			typedef polynomial<numerical_coefficient<long>,Expo> p_type2;
+// 			typedef polynomial2<Cf,Expo> p_type3;
+// 			typedef polynomial2<numerical_coefficient<long>,Expo> p_type4;
+			BOOST_CHECK(p_type1{} == 0);
+			BOOST_CHECK(0 == p_type1{});
+			BOOST_CHECK(!(p_type1{} == 1));
+			BOOST_CHECK(!(1 == p_type1{}));
+// 			BOOST_CHECK(p_type1{} == p_type11{});
+// 			BOOST_CHECK(p_type11{} == p_type1{});
+#if 0
+			BOOST_CHECK(p_type1{1} == 1);
+			BOOST_CHECK(1 == p_type1{1});
+			BOOST_CHECK(p_type1{1} != 0);
+			BOOST_CHECK(0 != p_type1{1});
+			BOOST_CHECK(p_type1{"x"} != 1);
+			BOOST_CHECK(p_type1{"x"} != 0);
+			BOOST_CHECK(1 != p_type1{"x"});
+			BOOST_CHECK(0 != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} == p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} == p_type2{"x"});
+			BOOST_CHECK(p_type2{"x"} == p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type1{"x"} + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} + p_type1{"x"} != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type1{"x"} + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} + p_type1{"x"} != p_type1{"x"});
+			BOOST_CHECK(p_type2{"x"} != p_type1{"x"} + p_type1{"x"});
+			BOOST_CHECK(p_type2{"x"} + p_type1{"x"} != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type2{"x"} + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} + p_type1{"x"} != p_type2{"x"});
+			BOOST_CHECK(0 == p_type1{"x"} - p_type2{"x"});
+			BOOST_CHECK(p_type1{"x"} - p_type2{"x"} == 0);
+			BOOST_CHECK(1 + p_type1{"x"} - p_type2{"x"} == 1);
+			BOOST_CHECK(p_type1{} == p_type2{});
+			BOOST_CHECK(1 + p_type1{"x"} != 0);
+			BOOST_CHECK(1 + p_type1{"x"} != 1);
+			BOOST_CHECK(1 + p_type1{"x"} != p_type1{"x"});
+			BOOST_CHECK(0 != 1 + p_type1{"x"});
+			BOOST_CHECK(1 != 1 + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != 1 + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != 1 + p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} + p_type1{"y"} != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type1{"x"} + p_type1{"y"});
+			BOOST_CHECK(p_type2{"x"} + p_type1{"y"} != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type2{"x"} + p_type1{"y"});
+			BOOST_CHECK(p_type3{"x"} + p_type1{"y"} != p_type1{"x"});
+			BOOST_CHECK(p_type3{"x"} != p_type1{"x"} + p_type1{"y"});
+			BOOST_CHECK(p_type3{"x"} + p_type1{"y"} != p_type1{"x"});
+			BOOST_CHECK(p_type1{"x"} != p_type3{"x"} + p_type1{"y"});
+			BOOST_CHECK(p_type4{"x"} + p_type3{"z"} != p_type2{"x"} + p_type1{"y"});
+			BOOST_CHECK(p_type4{"x"} + p_type3{"z"} == p_type2{"x"} + p_type1{"y"} - p_type1{"y"} + p_type1{"z"});
+#endif
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_equality_test)
+{
+	boost::mpl::for_each<cf_types>(equality_tester());
+}
