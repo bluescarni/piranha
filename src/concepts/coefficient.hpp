@@ -59,6 +59,7 @@ namespace concept
  * - must be provided with a const \p merge_args method accepting two generic piranha::echelon_descriptor of the same type
  *   as input and returning an instance of \p T.
  */
+// TODO: note that negate becomes piranha::math::negate().
 template <typename T>
 struct Coefficient:
 	ContainerElement<T>

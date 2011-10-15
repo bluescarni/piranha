@@ -58,6 +58,8 @@
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
+ * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
+ * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  */
 namespace piranha
 {
