@@ -27,8 +27,6 @@
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
 #include "math.hpp"
-// TODO: remove this most likely.
-#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -274,7 +272,6 @@ std::cout << "BLAH BLAH\n";
 		template <typename Series, typename T>
 		static bool mixed_equality(const Series &s, const T &x)
 		{
-std::cout << "ZOMG\n";
 			static_assert(std::is_base_of<detail::series_tag,Series>::value,"Non-series type during mixed comparison.");
 			const auto size = s.size();
 			if (size > 1u) {
@@ -291,7 +288,6 @@ std::cout << "ZOMG\n";
 		static bool dispatch_equality(const Series &s, const T &x,
 			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
 		{
-std::cout << "1\n";
 			return mixed_equality(s,x);
 		}
 		// Overload for series vs series with lesser echelon size.
@@ -302,7 +298,6 @@ std::cout << "1\n";
 			std::is_base_of<detail::series_tag,T>::value &&
 			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
 		{
-std::cout << "2\n";
 			return mixed_equality(s,x);
 		}
 		// Overload for non-series vs series.
@@ -310,7 +305,6 @@ std::cout << "2\n";
 		static bool dispatch_equality(const T &x, const Series &s,
 			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
 		{
-std::cout << "3\n";
 			return mixed_equality(s,x);
 		}
 		// Overload for series with lesser echelon size vs series.
@@ -321,7 +315,6 @@ std::cout << "3\n";
 			std::is_base_of<detail::series_tag,T>::value &&
 			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
 		{
-std::cout << "4\n";
 			return mixed_equality(s,x);
 		}
 		// Overload with series with same term types.
@@ -330,9 +323,7 @@ std::cout << "4\n";
 			std::is_same<typename Series1::term_type,typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "LOL same term\n";
 			if (s1.size() != s2.size()) {
-std::cout << "LOL different sizes\n";
 				return false;
 			}
 			piranha_assert(s1.m_symbol_set == s2.m_symbol_set);
@@ -353,7 +344,6 @@ std::cout << "LOL different sizes\n";
 			!std::is_same<typename Series1::term_type,typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "LOL different terms\n";
 			const auto it_f = s1.m_container.end();
 			const auto it_end = s2.m_container.end();
 			typedef typename std::decay<decltype(*it_end)>::type term_type;
@@ -406,13 +396,10 @@ std::cout << "LOL different terms\n";
 		template <typename Series1, typename Series2>
 		static bool series_equality(const Series1 &s1, const Series2 &s2)
 		{
-std::cout << "LOL series comparison\n";
 			// Arguments merging.
 			if (likely(s1.m_symbol_set == s2.m_symbol_set)) {
-std::cout << "LOL same args\n";
 				return series_equality_impl(s1,s2);
 			} else {
-std::cout << "LOL different args\n";
 				// Let's deal with the first series.
 				auto merge1 = s1.m_symbol_set.merge(s2.m_symbol_set);
 				const bool s1_needs_copy = (merge1 != s1.m_symbol_set);
@@ -434,7 +421,6 @@ std::cout << "LOL different args\n";
 			std::is_same<decltype(s1 + s2),Series1>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "LOL series equality 1\n";
 			return series_equality(s2,s1);
 		}
 		// Series with same echelon size, and type promotion rule does not return first type.
@@ -446,7 +432,6 @@ std::cout << "LOL series equality 1\n";
 			!std::is_same<decltype(s1 + s2),Series1>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "LOL series equality 2\n";
 			return series_equality(s1,s2);
 		}
 	public:

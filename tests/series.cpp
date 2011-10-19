@@ -972,19 +972,26 @@ struct equality_tester
 			typedef g_series_type<Cf,Expo> p_type1;
 			typedef g_series_type<p_type1,Expo> p_type11;
 			typedef g_series_type2<float,Expo> p_type2;
-// 			typedef polynomial<Cf,Expo> p_type1;
-// 			typedef polynomial<numerical_coefficient<long>,Expo> p_type2;
-// 			typedef polynomial2<Cf,Expo> p_type3;
-// 			typedef polynomial2<numerical_coefficient<long>,Expo> p_type4;
+			typedef g_series_type2<Cf,Expo> p_type3;
+			typedef g_series_type2<long,Expo> p_type4;
+			typedef g_series_type2<p_type3,Expo> p_type5;
 			BOOST_CHECK(p_type1{} == 0);
+			BOOST_CHECK(p_type1{"x"} != 1);
+			BOOST_CHECK(p_type1{"x"} + p_type1{"y"} != 1);
 			BOOST_CHECK(0 == p_type1{});
 			BOOST_CHECK(!(p_type1{} == 1));
 			BOOST_CHECK(!(1 == p_type1{}));
 			BOOST_CHECK(p_type1{} == p_type11{});
 			BOOST_CHECK(p_type11{} == p_type1{});
-#if 0
+			BOOST_CHECK(p_type11{"x"} != p_type1{});
+			BOOST_CHECK(p_type11{"x"} != p_type1{1});
+			BOOST_CHECK(p_type11{1} == p_type1{1});
+			BOOST_CHECK(p_type11{"x"} != p_type1{"x"});
+			BOOST_CHECK(p_type11{"x"} != p_type1{"y"});
 			BOOST_CHECK(p_type1{1} == 1);
 			BOOST_CHECK(1 == p_type1{1});
+			BOOST_CHECK(p_type11{1} == 1);
+			BOOST_CHECK(1 == p_type11{1});
 			BOOST_CHECK(p_type1{1} != 0);
 			BOOST_CHECK(0 != p_type1{1});
 			BOOST_CHECK(p_type1{"x"} != 1);
@@ -1023,7 +1030,14 @@ struct equality_tester
 			BOOST_CHECK(p_type1{"x"} != p_type3{"x"} + p_type1{"y"});
 			BOOST_CHECK(p_type4{"x"} + p_type3{"z"} != p_type2{"x"} + p_type1{"y"});
 			BOOST_CHECK(p_type4{"x"} + p_type3{"z"} == p_type2{"x"} + p_type1{"y"} - p_type1{"y"} + p_type1{"z"});
-#endif
+			BOOST_CHECK(p_type5{1} == p_type4{1});
+			BOOST_CHECK(p_type4{1} == p_type5{1});
+			BOOST_CHECK(p_type5{2} != p_type4{1});
+			BOOST_CHECK(p_type4{1} != p_type5{2});
+			BOOST_CHECK(p_type11{"x"} == p_type5{"x"});
+			BOOST_CHECK(p_type5{"x"} == p_type11{"x"});
+			BOOST_CHECK(p_type11{"y"} != p_type5{"x"});
+			BOOST_CHECK(p_type5{"x"} != p_type11{"y"});
 		}
 	};
 	template <typename Cf>
