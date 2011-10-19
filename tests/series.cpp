@@ -980,8 +980,8 @@ struct equality_tester
 			BOOST_CHECK(0 == p_type1{});
 			BOOST_CHECK(!(p_type1{} == 1));
 			BOOST_CHECK(!(1 == p_type1{}));
-// 			BOOST_CHECK(p_type1{} == p_type11{});
-// 			BOOST_CHECK(p_type11{} == p_type1{});
+			BOOST_CHECK(p_type1{} == p_type11{});
+			BOOST_CHECK(p_type11{} == p_type1{});
 #if 0
 			BOOST_CHECK(p_type1{1} == 1);
 			BOOST_CHECK(1 == p_type1{1});
