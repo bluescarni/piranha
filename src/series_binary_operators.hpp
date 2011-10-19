@@ -567,17 +567,14 @@ std::cout << "BLAH BLAH\n";
 		 * 
 		 * @return \p true if <tt>s1 == s2</tt>, \p false otherwise.
 		 * 
-		 * FIXME: specs here.
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::echelon_descriptor::merge(),
-		 * - piranha::base_series::merge_args(),
-		 * - the copy constructors of the series types involved in the comparison,
-		 * - the two-arguments constructor (from coefficient and key) of the series' term types,
-		 *   and the generic constructors of the coefficient and key types,
-		 * - the <tt>is_equal_to()</tt> method of the coefficient types,
-		 * - the <tt>is_unitary()</tt> method of the key types,
-		 * - the <tt>is_ignorable()</tt> method of the term types,
-		 * - piranha::hop_table::find().
+		 * - piranha::symbol_set::merge(),
+		 * - piranha::series::insert(),
+		 * - the <tt>merge_args()</tt> and <tt>is_unitary()</tt> methods of the key type,
+		 * - the equality operator of coefficient types,
+		 * - piranha::hash_set::find(),
+		 * - the constructors of term, coefficient and key types,
+		 * - piranha::math::is_zero().
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_series_operands<T,U>::value,bool>::type operator==(const T &s1, const U &s2)

@@ -757,48 +757,14 @@ class series: series_binary_operators, detail::series_tag
 			return os;
 		}
 	private:
-		// TODO: remove/resize these extended documentation, as it's likely to be rotten.
-		// Merge terms from another series.
-		/*
-		 * This template method is activated only if \p T derives from piranha::series.
-		 * 
-		 * All terms in \p s will be inserted into \p this using piranha::series::insert. If any exception occurs during the insertion process,
-		 * \p this will be left in an undefined (but valid) state. \p s is allowed to be \p this (in such a case, a copy of \p s will be created
-		 * before proceeding with the merge).
-		 * 
-		 * @param[in] s piranha::series whose terms will be merged into \p this.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - piranha::series::insert,
-		 * - the copy constructor of piranha::series.
-		 */
+		// Merge all terms from another series. Works if s is this (in which case a copy is maed). Basic exception safety guarantee.
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
 			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
-		// Merge arguments.
-		/*
-		 * This method will return a piranha::series resulting from merging a new set of arguments into the current series. 
-		 * \p new_ss is the piranha::symbol_set containing the new set of arguments.
-		 * 
-		 * The algorithm for merging iterates over the terms of the current series, performing at each iteration the following operations:
-		 * 
-		 * - create a new key \p k from the output of the current key's <tt>merge_args()</tt> method,
-		 * - create a new piranha::series::term_type \p t from the current coefficient and \p k,
-		 * - insert \p t into the series to be returned.
-		 * 
-		 * @param[in] new_ss new piranha::symbol_set.
-		 * 
-		 * @return a piranha::series whose terms result from merging the new echelon descriptor into the terms of \p this.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - piranha::series::insert(),
-		 * - the <tt>merge_args()</tt> method of the key type,
-		 * - the constructor of piranha::series::term_type from a coefficient - key pair, and the
-		 *   copy constructors of coefficient and key types.
-		 */
+		// Merge arguments using new_ss as new symbol set.
 		series merge_args(const symbol_set &new_ss) const
 		{
 			piranha_assert(new_ss.size() > m_symbol_set.size());
@@ -814,6 +780,7 @@ class series: series_binary_operators, detail::series_tag
 			}
 			return retval;
 		}
+		// TODO: fix this.
 		// Multiply by series.
 		/*
 		 * This method multiplies input \p series by \p this (cast to its \p Derived type), returning an instance of this type containing
