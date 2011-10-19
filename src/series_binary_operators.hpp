@@ -324,11 +324,10 @@ std::cout << "3\n";
 std::cout << "4\n";
 			return mixed_equality(s,x);
 		}
-#if 0
 		// Overload with series with same term types.
 		template <typename Series1, typename Series2>
 		static bool series_equality_impl(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<Series1>::type::term_type,typename strip_cv_ref<Series2>::type::term_type>::value
+			std::is_same<typename Series1::term_type,typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
 std::cout << "LOL same term\n";
@@ -336,12 +335,12 @@ std::cout << "LOL same term\n";
 std::cout << "LOL different sizes\n";
 				return false;
 			}
-			piranha_assert(s1.m_ed.get_args_tuple() == s2.m_ed.get_args_tuple());
+			piranha_assert(s1.m_symbol_set == s2.m_symbol_set);
 			const auto it_f = s1.m_container.end();
 			const auto it_end = s2.m_container.end();
 			for (auto it = s1.m_container.begin(); it != it_f; ++it) {
 				const auto tmp_it = s2.m_container.find(*it);
-				if (tmp_it == it_end || !tmp_it->m_cf.is_equal_to(it->m_cf,s2.m_ed)) {
+				if (tmp_it == it_end || tmp_it->m_cf != it->m_cf) {
 					return false;
 				}
 			}
@@ -351,35 +350,35 @@ std::cout << "LOL different sizes\n";
 		// Series2 term type.
 		template <typename Series1, typename Series2>
 		static bool series_equality_impl(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			!std::is_same<typename strip_cv_ref<Series1>::type::term_type,typename strip_cv_ref<Series2>::type::term_type>::value
+			!std::is_same<typename Series1::term_type,typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
 std::cout << "LOL different terms\n";
 			const auto it_f = s1.m_container.end();
 			const auto it_end = s2.m_container.end();
-			typedef typename strip_cv_ref<decltype(*it_end)>::type term_type;
+			typedef typename std::decay<decltype(*it_end)>::type term_type;
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
-			decltype(s1.size()) count = 0;
+			decltype(s1.size()) count = 0u;
 			for (auto it = s1.m_container.begin(); it != it_f; ++it) {
 				// NOTE: here there is quite a corner case: namely we cannot exclude
 				// that two different source terms do not generate the same converted term,
 				// which would cause the same term in s2 to be counted twice.
 				// Construct the temporary converted term.
-				term_type tmp(cf_type(it->m_cf,s2.m_ed),
-					key_type(it->m_key,s2.m_ed.template get_args<term_type>()));
+				term_type tmp(cf_type(it->m_cf),
+					key_type(it->m_key,s2.m_symbol_set));
 				// Locate the tmp term.
 				const auto tmp_it = s2.m_container.find(tmp);
 				const bool in_series = (tmp_it != it_end);
 				// If a converted term is not in the series, it must be ignorable,
 				// otherwise the series are different.
-				if (!in_series && !tmp.is_ignorable(s2.m_ed)) {
+				if (!in_series && !tmp.is_ignorable(s2.m_symbol_set)) {
 					return false;
 				}
 				if (in_series) {
 					// The existing term must not be ignorable.
-					piranha_assert(!tmp_it->is_ignorable(s2.m_ed));
-					if (!tmp_it->m_cf.is_equal_to(tmp.m_cf,s2.m_ed)) {
+					piranha_assert(!tmp_it->is_ignorable(s2.m_symbol_set));
+					if (tmp_it->m_cf != tmp.m_cf) {
 						// If the converted term is in the series, but its coefficient differs,
 						// then the series are different.
 						return false;
@@ -398,63 +397,58 @@ std::cout << "LOL different terms\n";
 		{
 			Series retval;
 			// This is the base type of the series.
-			typedef decltype(s.merge_args(s.m_ed,merge.first)) base_type;
+			typedef decltype(s.merge_args(merge)) base_type;
 			// Take care of assigning the merged base class.
-			(*static_cast<base_type *>(&retval)) = s.merge_args(s.m_ed,merge.first);
-			// Assign the echelon descriptor.
-			retval.m_ed = std::move(merge.first);
+			(*static_cast<base_type *>(&retval)) = s.merge_args(merge);
 			return retval;
 		}
-		// Series equality, with coefficient promotion rule promoting first coefficient type to second
-		// or coefficients are the same type.
+		// Series equality, with promotion rule returning Series1.
 		template <typename Series1, typename Series2>
 		static bool series_equality(const Series1 &s1, const Series2 &s2)
 		{
-			static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
-				"Cannot compare series with different echelon sizes.");
 std::cout << "LOL series comparison\n";
 			// Arguments merging.
-			if (likely(s1.m_ed.get_args_tuple() == s2.m_ed.get_args_tuple())) {
+			if (likely(s1.m_symbol_set == s2.m_symbol_set)) {
 std::cout << "LOL same args\n";
 				return series_equality_impl(s1,s2);
 			} else {
 std::cout << "LOL different args\n";
 				// Let's deal with the first series.
-				auto merge1 = s1.m_ed.merge(s2.m_ed);
-				const bool s1_needs_copy = merge1.first.get_args_tuple() != s1.m_ed.get_args_tuple();
-				auto merge2 = s2.m_ed.merge(merge1.first);
-				piranha_assert(merge1.first.get_args_tuple() == merge2.first.get_args_tuple());
-				const bool s2_needs_copy = merge2.first.get_args_tuple() != s2.m_ed.get_args_tuple();
+				auto merge1 = s1.m_symbol_set.merge(s2.m_symbol_set);
+				const bool s1_needs_copy = (merge1 != s1.m_symbol_set);
+				auto merge2 = s2.m_symbol_set.merge(merge1);
+				piranha_assert(merge1 == merge2);
+				const bool s2_needs_copy = (merge2 != s2.m_symbol_set);
 				return series_equality_impl(
 					s1_needs_copy ? merge_series_for_equality(s1,merge1) : s1,
 					s2_needs_copy ? merge_series_for_equality(s2,merge2) : s2
 				);
 			}
 		}
-		// Overload for: both series, and coefficient promotion rule promotes first coefficient type to second
-		// or coefficients are the same.
+		// Series with same echelon size, and type promotion rule returns the first type.
 		template <typename Series1, typename Series2>
 		static bool dispatch_equality(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series1>::type>::value &&
-			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series2>::type>::value &&
-			binary_op_promotion_rule<typename strip_cv_ref<Series1>::type::term_type::cf_type,
-			typename strip_cv_ref<Series2>::type::term_type::cf_type>::value>::type * = piranha_nullptr)
+			std::is_base_of<detail::series_tag,Series1>::value &&
+			std::is_base_of<detail::series_tag,Series2>::value &&
+			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value &&
+			std::is_same<decltype(s1 + s2),Series1>::value
+			>::type * = piranha_nullptr)
 		{
 std::cout << "LOL series equality 1\n";
-			return series_equality(s1,s2);
-		}
-		// Overload for: both series, and coefficient promotion rule does not promote first coefficient type to second.
-		template <typename Series1, typename Series2>
-		static bool dispatch_equality(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series1>::type>::value &&
-			std::is_base_of<detail::series_tag,typename strip_cv_ref<Series2>::type>::value &&
-			!binary_op_promotion_rule<typename strip_cv_ref<Series1>::type::term_type::cf_type,
-			typename strip_cv_ref<Series2>::type::term_type::cf_type>::value>::type * = piranha_nullptr)
-		{
-std::cout << "LOL series equality 2\n";
 			return series_equality(s2,s1);
 		}
-#endif
+		// Series with same echelon size, and type promotion rule does not return first type.
+		template <typename Series1, typename Series2>
+		static bool dispatch_equality(const Series1 &s1, const Series2 &s2, typename std::enable_if<
+			std::is_base_of<detail::series_tag,Series1>::value &&
+			std::is_base_of<detail::series_tag,Series2>::value &&
+			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value &&
+			!std::is_same<decltype(s1 + s2),Series1>::value
+			>::type * = piranha_nullptr)
+		{
+std::cout << "LOL series equality 2\n";
+			return series_equality(s1,s2);
+		}
 	public:
 		/// Binary addition involving piranha::series.
 		/**

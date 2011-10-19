@@ -757,6 +757,7 @@ class series: series_binary_operators, detail::series_tag
 			return os;
 		}
 	private:
+		// TODO: remove/resize these extended documentation, as it's likely to be rotten.
 		// Merge terms from another series.
 		/*
 		 * This template method is activated only if \p T derives from piranha::series.
