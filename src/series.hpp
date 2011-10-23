@@ -239,6 +239,8 @@ class series: series_binary_operators, detail::series_tag
 		// =============
 		// NOTE: ideas to improve the algorithm:
 		// - optimization when merging with self: add each coefficient to itself, instead of copying and merging.
+		// - optimization when merging with series with same bucket size: avoid computing the destination bucket,
+		//   as it will be the same as the original.
 		// Overload in case that T derives from the same type as this (series<Term,Derived>).
 		template <bool Sign, typename T>
 		void merge_terms_impl0(T &&s,
@@ -490,7 +492,7 @@ class series: series_binary_operators, detail::series_tag
 		 * The generic construction algorithm works as follows:
 		 * 
 		 * - if \p T is an instance of piranha::series with the same echelon size as the calling type:
-		 *   - if the term type of \p T is the same as that of \p this:
+		 *   - if the term type of \p T is the same as that of <tt>this</tt>:
 		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
 		 *   - else:
 		 *     - the symbol set of \p x is forwarded to construct the symbol set of this and all terms from \p x are inserted into \p this
@@ -660,7 +662,7 @@ class series: series_binary_operators, detail::series_tag
 		/**
 		 * The addition algorithm proceeds as follows:
 		 * 
-		 * - if \p other is an instance of piranha::series with the same echelon size as \p this:
+		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
 		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
 		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
 		 *     (a copy of \p other might be created if it requires modifications);

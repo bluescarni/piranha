@@ -108,85 +108,54 @@ class series_binary_operators
 			static const bool value = std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value ||
 				std::is_base_of<detail::series_tag,typename std::decay<U>::type>::value;
 		};
-		template <bool Sign, typename Series, typename T>
-		static typename result_type<Series,T>::type dispatch_binary_add(Series &&s, T &&x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
-		{
-			return mixed_binary_add<Sign,false>(std::forward<Series>(s),std::forward<T>(x));
-		}
-		template <bool Sign, typename T, typename Series>
-		static typename result_type<T,Series>::type dispatch_binary_add(T &&x, Series &&s,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
-		{
-			return mixed_binary_add<Sign,true>(std::forward<Series>(s),std::forward<T>(x));
-		}
-		template <bool Sign, bool Swapped, typename Series, typename T>
-		static typename std::decay<Series>::type mixed_binary_add(Series &&s, T &&x)
-		{
-			static_assert(std::is_same<typename std::decay<Series>::type,typename result_type<Series,T>::type>::value,"Inconsistent return value type.");
-			static_assert(std::is_same<typename std::decay<Series>::type,typename result_type<T,Series>::type>::value,"Inconsistent return value type.");
-			typename std::decay<Series>::type retval(std::forward<Series>(s));
-			if (Sign) {
-				retval += std::forward<T>(x);
-			} else {
-				retval -= std::forward<T>(x);
-				// If the order of operands was swapped in a subtraction, negate the result.
-				if (Swapped) {
-					retval.negate();
-				}
-			}
-			return retval;
-		}
+		// NOTE: here we can probably optimize better: use +=/-= only if we can steal enough resources for return value. Otherwsise,
+		// create return value with enough buckets - possibly copying it from one of the input lvalues to perform a copy instead of
+		// repeated insertions - and insert the rest. Or something like it. Preparing the return value in a similar way might also
+		// be appropriate for the implementation of +=/-=.
 		// NOTE: the idea here is that we need to try to optimize only the creation of the return value, as in-place operations
 		// take care of optimizing the actual operation.
 		// Overload if either:
-		// - return type is first series and series types are not the same,
-		// - series type are the same and first series is nonconst rvalue ref.
-		template <bool Sign, typename Series1, typename Series2>
-		static typename result_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
-			(std::is_same<typename result_type<Series1,Series2>::type,typename std::decay<Series1>::type>::value &&
-			!std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value) ||
-			(std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value &&
-			is_nonconst_rvalue_ref<Series1 &&>::value)
+		// - return type is first one and types are not the same,
+		// - series types are the same and first series is nonconst rvalue ref,
+		// - series types are the same and no type is nonconst rvalue ref.
+		template <bool Sign, typename Series1, typename U>
+		static typename result_type<Series1,U>::type dispatch_binary_add(Series1 &&s1, U &&other, typename std::enable_if<
+			(std::is_same<typename result_type<Series1,U>::type,typename std::decay<Series1>::type>::value &&
+			!std::is_same<typename std::decay<Series1>::type,typename std::decay<U>::type>::value) ||
+			(std::is_same<typename std::decay<Series1>::type,typename std::decay<U>::type>::value &&
+			is_nonconst_rvalue_ref<Series1 &&>::value) ||
+			(std::is_same<typename std::decay<Series1>::type,typename std::decay<U>::type>::value &&
+			!is_nonconst_rvalue_ref<Series1 &&>::value && !is_nonconst_rvalue_ref<U &&>::value)
 			>::type * = piranha_nullptr)
 		{
-			typename result_type<Series1,Series2>::type retval(std::forward<Series1>(s1));
+			typename result_type<Series1,U>::type retval(std::forward<Series1>(s1));
 			if (Sign) {
-				retval += std::forward<Series2>(s2);
+				retval += std::forward<U>(other);
 			} else {
-				retval -= std::forward<Series2>(s2);
+				retval -= std::forward<U>(other);
 			}
 			return retval;
 		}
 		// Overload if either:
-		// - return type is second series and series types are not the same,
-		// - series type are the same and first series is not a nonconst rvalue ref.
-		template <bool Sign, typename Series1, typename Series2>
-		static typename result_type<Series1,Series2>::type series_binary_add(Series1 &&s1, Series2 &&s2, typename std::enable_if<
-			(std::is_same<typename result_type<Series1,Series2>::type,typename std::decay<Series2>::type>::value &&
-			!std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value) ||
-			(std::is_same<typename std::decay<Series1>::type,typename std::decay<Series2>::type>::value &&
-			!is_nonconst_rvalue_ref<Series1 &&>::value)
+		// - return type is second one and types are not the same,
+		// - series type are the same and first series is not a nonconst rvalue ref, while second one is.
+		template <bool Sign, typename U, typename Series2>
+		static typename result_type<U,Series2>::type dispatch_binary_add(U &&other, Series2 &&s2, typename std::enable_if<
+			(std::is_same<typename result_type<U,Series2>::type,typename std::decay<Series2>::type>::value &&
+			!std::is_same<typename std::decay<U>::type,typename std::decay<Series2>::type>::value) ||
+			(std::is_same<typename std::decay<U>::type,typename std::decay<Series2>::type>::value &&
+			!is_nonconst_rvalue_ref<U &&>::value && is_nonconst_rvalue_ref<Series2 &&>::value)
 			>::type * = piranha_nullptr)
 		{
-			typename result_type<Series1,Series2>::type retval(std::forward<Series2>(s2));
+			typename result_type<U,Series2>::type retval(std::forward<Series2>(s2));
 			if (Sign) {
-				retval += std::forward<Series1>(s1);
+				retval += std::forward<U>(other);
 			} else {
-				retval -= std::forward<Series1>(s1);
+				retval -= std::forward<U>(other);
 				// We need to change sign, since the order of operands was inverted.
 				retval.negate();
 			}
 			return retval;
-		}
-		template <bool Sign, typename Series1, typename Series2>
-		static typename result_type<Series1,Series2>::type dispatch_binary_add(Series1 &&s1, Series2 &&s2,
-			typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
-			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value
-			>::type * = piranha_nullptr)
-		{
-			return series_binary_add<Sign>(std::forward<Series1>(s1),std::forward<Series2>(s2));
 		}
 #if 0
 		// Binary multiplication.
@@ -446,11 +415,10 @@ std::cout << "BLAH BLAH\n";
 		 *     it is \p c2 if <tt>decltype(c1 + c2)</tt> is \p c2. If \p c1 and \p c2 are different types and <tt>decltype(c1 + c2)</tt>
 		 *     is neither \p c1 or \p c2, a compile-time error will be produced;
 		 *   - the return value is built from either \p s1 or \p s2 (depending on its type);
-		 *   - piranha::series::operator+=() is called on the return value, with either \p s1 or \p s2 forwarded as argument;
 		 * - else:
 		 *   - the return type is the type of the series operand with largest echelon size;
 		 *   - the return value is built from the series operand with largest echelon size;
-		 *   - piranha::series::operator+=() is called on the return value;
+		 * - piranha::series::operator+=() is called on the return value;
 		 * - the return value is returned.
 		 * 
 		 * Note that the return type is determined solely by the coefficient types, and that the rules determining the return type and
