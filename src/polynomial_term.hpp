@@ -25,7 +25,7 @@
 #include <type_traits>
 
 #include "base_term.hpp"
-#include "concepts/coefficient.hpp"
+#include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "config.hpp"
 #include "detail/series_fwd.hpp"
@@ -93,7 +93,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Cf must be a model of piranha::concept::Coefficient.
+ * - \p Cf must be a model of piranha::concept::MultipliableCoefficient.
  * - \p ExpoType must be suitable for use in piranha::monomial, or be piranha::univariate_monomial or piranha::kronecker_monomial.
  * 
  * \section exception_safety Exception safety guarantee
@@ -109,7 +109,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
 template <typename Cf, typename ExpoType>
 class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
 {
-		BOOST_CONCEPT_ASSERT((concept::Coefficient<Cf>));
+		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
 		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>

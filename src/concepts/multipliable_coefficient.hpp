@@ -18,16 +18,13 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPT_COEFFICIENT_HPP
-#define PIRANHA_CONCEPT_COEFFICIENT_HPP
+#ifndef PIRANHA_CONCEPT_MULTIPLIABLE_COEFFICIENT_HPP
+#define PIRANHA_CONCEPT_MULTIPLIABLE_COEFFICIENT_HPP
 
 #include <boost/concept_check.hpp>
-#include <iostream>
-#include <type_traits>
 
-#include "../config.hpp"
 #include "../math.hpp"
-#include "container_element.hpp"
+#include "coefficient.hpp"
 
 namespace piranha
 {
@@ -35,35 +32,24 @@ namespace piranha
 namespace concept
 {
 
-/// Concept for series coefficients.
+/// Concept for multipliable series coefficients.
 /**
  * The requisites for type \p T are the following:
  * 
- * - must be a model of piranha::concept::ContainerElement,
- * - must not be a pointer,
- * - must be directable to output stream,
- * - must be suitable as argument type of piranha::math::is_zero() and piranha::math::negate(),
- * - must be equality comparable,
- * - must be addable and subtractable.
+ * - must be a model of piranha::concept::Coefficient,
+ * - must be multipliable and suitable for use in piranha::math::multiply_accumulate().
  */
 template <typename T>
-struct Coefficient:
-	ContainerElement<T>,
-	boost::EqualityComparable<T>
+struct MultipliableCoefficient:
+	Coefficient<T>
 {
 	/// Concept usage pattern.
-	BOOST_CONCEPT_USAGE(Coefficient)
+	BOOST_CONCEPT_USAGE(MultipliableCoefficient)
 	{
-		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
-		std::cout << *(static_cast<T *>(piranha_nullptr));
-		const T inst = T();
-		math::is_zero(inst);
 		T inst_mut = T();
-		math::negate(inst_mut);
-		(void)(inst_mut + inst_mut);
-		inst_mut += inst_mut;
-		(void)(inst_mut - inst_mut);
-		inst_mut -= inst_mut;
+		(void)(inst_mut * inst_mut);
+		inst_mut *= inst_mut;
+		math::multiply_accumulate(inst_mut,inst_mut,inst_mut);
 	}
 };
 
