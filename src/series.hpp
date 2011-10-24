@@ -40,7 +40,7 @@
 #include "echelon_size.hpp"
 #include "hash_set.hpp"
 #include "math.hpp" // For negate() and math specialisations.
-// #include "series_multiplier.hpp"
+#include "series_multiplier.hpp"
 #include "series_binary_operators.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -470,6 +470,77 @@ class series: series_binary_operators, detail::series_tag
 				}
 			}
 		}
+		// In-place multiply
+		// =================
+		// Overloads for non-series and series with smaller echelon size.
+		template <typename T>
+		void mixed_multiply(T &&x)
+		{
+			const auto it_f = m_container.end();
+			try {
+				for (auto it = m_container.begin(); it != it_f;) {
+					// NOTE: no forwarding here, as x is needed in multiple places.
+					// Maybe it could be forwarded just for the last term?
+					it->m_cf *= x;
+					if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+						// Erase will return the next iterator.
+						it = m_container.erase(it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				// In case of any error, just clear the series out.
+				m_container.clear();
+				throw;
+			}
+		}
+		template <typename T>
+		void dispatch_multiply(T &&x, typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			mixed_multiply(std::forward<T>(x));
+		}
+		template <typename T>
+		void dispatch_multiply(T &&x, typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<term_type>::value
+			>::type * = piranha_nullptr)
+		{
+			mixed_multiply(std::forward<T>(x));
+		}
+		// Overload for series with same echelon size.
+		// Multiply by series.
+		template <typename T>
+		series multiply_by_series(const T &series) const
+		{
+			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
+			return sm();
+		}
+		template <typename T>
+		void dispatch_multiply(T &&other, typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value
+			>::type * = piranha_nullptr)
+		{
+			if (likely(m_symbol_set == other.m_symbol_set)) {
+				operator=(multiply_by_series(other));
+			} else {
+				// Let's deal with the first series.
+				auto merge1 = m_symbol_set.merge(other.m_symbol_set);
+				if (merge1 != m_symbol_set) {
+					operator=(merge_args(merge1));
+				}
+				// Second series.
+				auto merge2 = other.m_symbol_set.merge(m_symbol_set);
+				piranha_assert(merge2 == m_symbol_set);
+				if (merge2 != other.m_symbol_set) {
+					auto other_copy = other.merge_args(merge2);
+					operator=(multiply_by_series(other_copy));
+				} else {
+					operator=(multiply_by_series(other));
+				}
+			}
+		}
 	public:
 		/// Size type.
 		/**
@@ -714,6 +785,20 @@ class series: series_binary_operators, detail::series_tag
 			dispatch_in_place_add<false>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
+		/// Negation operator.
+		/**
+		 * @return a copy of \p this on which negate() has been called.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - negate(),
+		 * - the copy constructor of \p Derived.
+		 */
+		Derived operator-() const
+		{
+			Derived retval(*static_cast<Derived const *>(this));
+			retval.negate();
+			return retval;
+		}
 		/// Negate series in-place.
 		/**
 		 * This method will call math::negate() on the coefficients of all terms. In case of exceptions,
@@ -739,6 +824,44 @@ class series: series_binary_operators, detail::series_tag
 				m_container.clear();
 				throw;
 			}
+		}
+		/// In-place multiplication.
+		/**
+		 * The multiplication algorithm proceeds as follows:
+		 * 
+		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
+		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
+		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
+		 *     (a copy of \p other might be created if it requires modifications);
+		 *   - an instance of piranha::series_multiplier of \p Derived and \p T is created, its function call operator invoked,
+		 *     and the result assigned back to \p this using piranha::series::operator=();
+		 * - else:
+		 *   - the coefficients of all terms of the series are multiplied in-place by \p other. If a
+		 *     term is rendered ignorable or incompatible by the multiplication (e.g., multiplication by zero), it will be erased from the series.
+		 * 
+		 * If \p other is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
+		 * 
+		 * If any exception is thrown when multiplying by a non-series type, \p this will be left in a valid but unspecified state.
+		 * 
+		 * @param[in] other object by which the series will be multiplied.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * TODO fix here.
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>multiply_by()</tt> method of the coefficient type,
+		 * - the <tt>is_ignorable()</tt> method of the term type,
+		 * - piranha::base_series::multiply_by_series(),
+		 * - memory allocation errors in standard containers,
+		 * - hop_table::erase().
+		 *
+		 * @return reference to \p this, cast to type \p Derived.
+		 */
+		template <typename T>
+		Derived &operator*=(T &&other)
+		{
+			dispatch_multiply(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
 		}
 		/// Overload stream operator for piranha::series.
 		/**
@@ -781,36 +904,6 @@ class series: series_binary_operators, detail::series_tag
 				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
 			}
 			return retval;
-		}
-		// TODO: fix this.
-		// Multiply by series.
-		/*
-		 * This method multiplies input \p series by \p this (cast to its \p Derived type), returning an instance of this type containing
-		 * the result of the multiplication.
-		 * 
-		 * The multiplication is actually performed by an instance of piranha::series_multiplier, parametrized on the types \p Derived and \p T.
-		 * The piranha::series_multiplier instance will be constructed using \p this (cast to its \p Derived type) and \p series as
-		 * arguments; after construction, <tt>operator()</tt> (with no arguments) will be called on the series multiplier instance, and its
-		 * return value will be returned.
-		 * 
-		 * Note that the type of the result of the multiplication is this type, regardless of the promotion rules for coefficient type arithmetics.
-		 * 
-		 * This template method is activated only if \p series is an instance of piranha::series.
-		 * 
-		 * @param[in] series series by which \p this will be multiplied.
-		 * 
-		 * @return result of the multiplication of \p this by \p series.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the constructor of piranha::series_multiplier,
-		 * - piranha::series_multiplier::operator()().
-		 */
-		template <typename T>
-		series multiply_by_series(const T &series,
-			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr) const
-		{
-// 			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
-// 			return sm();
 		}
 		// Set of checks to be run on destruction in debug mode.
 		bool destruction_checks() const

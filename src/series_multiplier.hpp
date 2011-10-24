@@ -33,6 +33,7 @@
 #include <new> // For bad_alloc.
 #include <numeric>
 #include <random>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -42,6 +43,7 @@
 #include "concepts/multipliable_term.hpp"
 #include "concepts/series.hpp"
 #include "config.hpp"
+#include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
@@ -56,17 +58,18 @@
 namespace piranha
 {
 
-// TODO everything needs to be ported here.
 /// Default series multiplier.
 /**
- * This class is used within piranha::base_series::multiply_by_series() to multiply two series as follows:
+ * This class is used by the multiplication operators involving two series operands with the same echelon size. The class works as follows:
  * 
- * - an instance of series multiplier is created using two series (possibly of different types) as construction arguments,
- * - operator()() is called with a generic piranha::echelon_descriptor as argument, returning an instance
- *   of \p Series1 as result of the multiplication of the two series used for construction.
+ * - an instance of series multiplier is created using two series (possibly of different types) as construction arguments;
+ * - when operator()() is called, an instance of the piranha::series type from which \p Series1 derives is returned, representing
+ *   the result of the multiplication of the two series used for construction.
  * 
  * Any specialisation of this class must respect the protocol described above (i.e., construction from series
  * instances and operator()() to compute the result).
+ * 
+ * Note that the return type of the multiplication is the piranha::series base type of \p Series1, independently from the rules governing coefficient arithmetics.
  * 
  * \section type_requirements Type requirements
  * 
@@ -80,6 +83,7 @@ namespace piranha
  * 
  * \section move_semantics Move semantics
  * 
+ * TODO: fix this!
  * Move construction and move assignment will have no effect on an existing object.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
@@ -105,24 +109,28 @@ class series_multiplier
 		typedef typename Series1::term_type term_type1;
 		/// Alias for term type of \p Series2.
 		typedef typename Series2::term_type term_type2;
-	private:
-		// Define it here and typedef it below, otherwise doxygen gets confused.
-		typedef decltype(std::declval<Series1>().multiply_by_series(
-			std::declval<Series1>())) determined_return_type;
-	protected:
 		/// Type of the result of the multiplication.
 		/**
-		 * Return type is the base series type of \p Series1.
+		 * Return type is the base piranha::series type of \p Series1.
 		 */
-		typedef determined_return_type return_type;
+		typedef series<term_type1,Series1> return_type;
+	private:
+		static_assert(std::is_same<return_type,decltype(std::declval<Series1>().multiply_by_series(std::declval<Series1>()))>::value,
+			"Invalid return_type.");
 	public:
 		/// Constructor.
 		/**
 		 * @param[in] s1 first series.
 		 * @param[in] s2 second series.
+		 * 
+		 * @throws std::invalid_argument if the symbol sets of \p s1 and \p s2 differ.
+		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
 		 */
 		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(s1),m_s2(s2)
 		{
+			if (unlikely(s1.m_symbol_set != s2.m_symbol_set)) {
+				piranha_throw(std::invalid_argument,"incompatible arguments sets");
+			}
 			if (unlikely(m_s1.empty() || m_s2.empty())) {
 				return;
 			}
@@ -138,24 +146,18 @@ class series_multiplier
 		/**
 		 * This method will call execute() with a \p Functor type that uses the <tt>multiply()</tt> method
 		 * of the first series' term type to produce the results of term-by-term multiplications, and
-		 * piranha::base_series::insert() to insert such results in the return value.
-		 * 
-		 * @param[in] ed piranha::echelon_descriptor that will be used to build (via repeated insertions)
-		 * the result of the series multiplication.
+		 * piranha::series::insert() to insert such results into the return value.
 		 * 
 		 * @return the result of multiplying the two series.
 		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - piranha::base_series::insert(),
-		 * - the <tt>multiply()</tt> method of the term type of \p Series1,
-		 * - execute().
+		 * @throws unspecified any exception thrown by execute().
 		 */
-		template <typename Term>
 		return_type operator()() const
 		{
-			return execute<plain_functor<Term>>();
+			return execute<plain_functor>();
 		}
 	protected:
+		// TODO fix docs
 		/// Low-level implementation of series multiplication.
 		/**
 		 * The multiplication algorithm proceeds as follows:
@@ -198,7 +200,7 @@ class series_multiplier
 		 * - errors in threading primitives,
 		 * - piranha::base_series::insert().
 		 */
-		template <typename Functor, typename Term>
+		template <typename Functor>
 		return_type execute() const
 		{
 			// Do not do anything if one of the two series is empty.
@@ -228,9 +230,11 @@ class series_multiplier
 				n_threads = size1;
 			}
 			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
+			// NOTE: the check on the thread id might go above, to avoid allocating memory when using integers.
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
-				Functor f(m_v1,m_v2,ed,retval);
+				retval.m_symbol_set = m_s1.m_symbol_set;
+				Functor f(m_v1,m_v2,retval);
 				const auto tmp = rehasher(f,retval,size1,size2);
 				blocked_multiplication(f,size_type(0u),size1,size_type(0u),size2);
 				if (tmp.first) {
@@ -248,11 +252,12 @@ class series_multiplier
 				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
 				std::list<return_type,cache_aligning_allocator<return_type>> retval_list;
-				std::list<Functor,cache_aligning_allocator<return_type>> functor_list;
+				std::list<Functor,cache_aligning_allocator<Functor>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					retval_list.push_back(return_type{});
-					functor_list.push_back(Functor(m_v1,m_v2,ed,retval_list.back()));
+					retval_list.back().m_symbol_set = m_s1.m_symbol_set;
+					functor_list.push_back(Functor(m_v1,m_v2,retval_list.back()));
 				}
 				thread_group tg;
 				auto f_it = functor_list.begin();
@@ -288,7 +293,8 @@ class series_multiplier
 				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				auto final_estimate = estimate_final_series_size(Functor(m_v1,m_v2,ed,retval),size1,size2,retval);
+				retval.m_symbol_set = m_s1.m_symbol_set;
+				auto final_estimate = estimate_final_series_size(Functor(m_v1,m_v2,retval),size1,size2,retval);
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -315,7 +321,7 @@ class series_multiplier
 				};
 std::cout << "going for final\n";
 				try {
-					final_merge(retval,retval_list,n_threads,ed);
+					final_merge(retval,retval_list,n_threads);
 					// Here the estimate will be correct if the initial estimate (corrected for load factor)
 					// is at least equal to the final real bucket count.
 std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate << '\n';
@@ -365,7 +371,7 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 				}
 			});
 		}
-		template <typename RetvalList, typename Size, typename Term>
+		template <typename RetvalList, typename Size>
 		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads)
 		{
 			piranha_assert(n_threads > 1u);
@@ -426,7 +432,7 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 			for (Size n = 0u; n < n_threads; ++n) {
 				// These are the bucket indices allowed to the current thread.
 				const bucket_size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
-				auto f = [start,end,&size,&retval,&ed,&idx,&m,&new_sizes,&e_mutex,&e_vector]() -> void {
+				auto f = [start,end,&size,&retval,&idx,&m,&new_sizes,&e_mutex,&e_vector]() -> void {
 					try {
 						thread_management::binder b;
 						size_type count_plus = 0u, count_minus = 0u;
@@ -434,8 +440,8 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 							const auto &bucket_idx = idx[i].first;
 							auto &term_it = idx[i].second;
 							if (bucket_idx >= start && bucket_idx < end) {
-								// Reconstruct part of base_series insertion, without the update in the number of elements.
-								// NOTE: compatibility and ignorability do not matter, as terms being inserted come from base_series
+								// Reconstruct part of series insertion, without the update in the number of elements.
+								// NOTE: compatibility and ignorability do not matter, as terms being inserted come from series
 								// anyway. Same for check on bucket_count.
 								const auto it = retval.m_container._find(*term_it,bucket_idx);
 								if (it == retval.m_container.end()) {
@@ -446,10 +452,10 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 									++count_plus;
 								} else {
 									// Assert the existing term is not ignorable and it is compatible.
-									piranha_assert(!it->is_ignorable(ed) && it->is_compatible(ed));
+									piranha_assert(!it->is_ignorable(retval.m_symbol_set) && it->is_compatible(retval.m_symbol_set));
 									// Cleanup function.
 									auto cleanup = [&]() -> void {
-										if (unlikely(!it->is_compatible(ed) || it->is_ignorable(ed))) {
+										if (unlikely(!it->is_compatible(retval.m_symbol_set) || it->is_ignorable(retval.m_symbol_set))) {
 											retval.m_container._erase(it);
 											// After term is erased, update count.
 											piranha_assert(count_minus < boost::integer_traits<size_type>::const_max);
@@ -458,7 +464,7 @@ std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate 
 									};
 									try {
 										// The term exists already, update it.
-										retval.template insertion_cf_arithmetics<true>(it,std::move(*term_it),ed);
+										retval.template insertion_cf_arithmetics<true>(it,std::move(*term_it));
 										// Check if the term has become ignorable or incompatible after the modification.
 										cleanup();
 									} catch (...) {
@@ -494,19 +500,18 @@ std::cout << "new size is " << new_size << '\n';
 				);
 			}
 		}
-		template <typename Term>
 		struct plain_functor
 		{
 			explicit plain_functor(const std::vector<term_type1 const *> &v1, const std::vector<term_type2 const *> &v2,
 				return_type &retval):
-				m_v1(v1),m_v2(v2),m_ed(ed),m_retval(retval)
+				m_v1(v1),m_v2(v2),m_retval(retval)
 			{}
 			template <typename Size>
 			void operator()(const Size &i, const Size &j) const
 			{
 				piranha_assert(i < m_v1.size() && j < m_v2.size());
-				(m_v1[i])->multiply(m_tmp,*(m_v2[j]),m_ed);
-				series_multiplier::insert_impl(m_retval,m_tmp,m_ed);
+				(m_v1[i])->multiply(m_tmp,*(m_v2[j]),m_retval.m_symbol_set);
+				series_multiplier::insert_impl(m_retval,m_tmp);
 			}
 			const std::vector<term_type1 const *>			&m_v1;
 			const std::vector<term_type2 const *>			&m_v2;
@@ -653,11 +658,10 @@ std::cout << "new size is " << new_size << '\n';
 		template <typename Tuple, std::size_t N = 0, typename Enable2 = void>
 		struct inserter
 		{
-			template <typename Term>
 			static void run(Tuple &t, return_type &retval)
 			{
-				retval.insert(std::get<N>(t),ed);
-				inserter<Tuple,N + static_cast<std::size_t>(1)>::run(t,retval,ed);
+				retval.insert(std::get<N>(t));
+				inserter<Tuple,N + static_cast<std::size_t>(1)>::run(t,retval);
 			}
 		};
 		template <typename Tuple, std::size_t N>
@@ -670,12 +674,11 @@ std::cout << "new size is " << new_size << '\n';
 		template <typename Term, typename... Args>
 		static void insert_impl(return_type &retval,std::tuple<Args...> &mult_res)
 		{
-			inserter<std::tuple<Args...>>::run(mult_res,retval,ed);
+			inserter<std::tuple<Args...>>::run(mult_res,retval);
 		}
-		template <typename Term>
 		static void insert_impl(return_type &retval, typename Series1::term_type &mult_res)
 		{
-			retval.insert(mult_res,ed);
+			retval.insert(mult_res);
 		}
 	private:
 		const Series1			&m_s1;

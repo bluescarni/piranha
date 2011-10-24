@@ -27,21 +27,18 @@
 #include <boost/mpl/vector.hpp>
 
 #include "../src/debug_access.hpp"
-#include "../src/echelon_descriptor.hpp"
 #include "../src/integer.hpp"
-#include "../src/numerical_coefficient.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/series.hpp"
 #include "../src/settings.hpp"
-#include "../src/top_level_series.hpp"
 
 using namespace piranha;
 
 template <typename Cf, typename Expo>
-class polynomial:
-	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>
+class polynomial: public series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>
 {
-		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
 	public:
+		typedef series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
 		polynomial() = default;
 		polynomial(const polynomial &) = default;
 		polynomial(polynomial &&) = default;
@@ -49,21 +46,30 @@ class polynomial:
 		{
 			typedef typename base::term_type term_type;
 			// Insert the symbol.
-			this->m_ed.template add_symbol<term_type>(symbol(name));
+			this->m_symbol_set.add(name);
 			// Construct and insert the term.
-			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
-		~polynomial() = default;
 		polynomial &operator=(const polynomial &) = default;
-		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
+		polynomial &operator=(polynomial &&other)
 		{
-			base::operator=(std::move(other));
+			if (this != &other) {
+				base::operator=(std::move(other));
+			}
+			return *this;
+		}
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename std::decay<T>::type>::value>::type*& = enabler>
+		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		template <typename T>
+		typename std::enable_if<!std::is_same<polynomial,typename std::decay<T>::type>::value,polynomial &>::type operator=(T &&x)
+		{
+			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
 
-typedef polynomial<numerical_coefficient<double>,int> p_type1;
-typedef polynomial<numerical_coefficient<integer>,int> p_type2;
+typedef polynomial<double,int> p_type1;
+typedef polynomial<integer,int> p_type2;
 
 typedef boost::mpl::vector<p_type1,p_type2> p_types;
 
@@ -77,24 +83,22 @@ struct debug_access<operator_tag>
 	debug_access()
 	{
 		p_type1 p1("x"), p2("x");
-		echelon_descriptor<p_type1::term_type> ed;
-		ed.add_symbol<p_type1::term_type>("x");
-		p1.m_container.begin()->m_cf.multiply_by(2,ed);
-		p2.m_container.begin()->m_cf.multiply_by(3,ed);
+		p1.m_container.begin()->m_cf *= 2;
+		p2.m_container.begin()->m_cf *= 3;
 		series_multiplier<p_type1,p_type1> sm1(p1,p2);
-		auto retval = sm1(ed);
+		auto retval = sm1();
 		BOOST_CHECK(retval.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key[0] == 2);
-		BOOST_CHECK(retval.m_container.begin()->m_cf.get_value() == (double(3) * double(1)) * (double(2) * double(1)));
+		BOOST_CHECK(retval.m_container.begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
 		p_type2 p3("x");
-		p3.m_container.begin()->m_cf.multiply_by(4,ed);
+		p3.m_container.begin()->m_cf *= 4;
 		series_multiplier<p_type1,p_type2> sm2(p1,p3);
-		retval = sm2(ed);
+		retval = sm2();
 		BOOST_CHECK(retval.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key[0] == 2);
-		BOOST_CHECK(retval.m_container.begin()->m_cf.get_value() == double((double(2) * double(1)) * (integer(1) * 4)));
+		BOOST_CHECK(retval.m_container.begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
 	}
 };
 }

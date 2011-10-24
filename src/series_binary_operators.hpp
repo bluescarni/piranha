@@ -111,7 +111,7 @@ class series_binary_operators
 		// NOTE: here we can probably optimize better: use +=/-= only if we can steal enough resources for return value. Otherwsise,
 		// create return value with enough buckets - possibly copying it from one of the input lvalues to perform a copy instead of
 		// repeated insertions - and insert the rest. Or something like it. Preparing the return value in a similar way might also
-		// be appropriate for the implementation of +=/-=.
+		// be appropriate for the implementation of +=/-=, even if though we need some kind of cost model for that.
 		// NOTE: the idea here is that we need to try to optimize only the creation of the return value, as in-place operations
 		// take care of optimizing the actual operation.
 		// Overload if either:
@@ -157,60 +157,80 @@ class series_binary_operators
 			}
 			return retval;
 		}
-#if 0
 		// Binary multiplication.
+		// NOTE: for binary mult we want to diversify the cases between series multiplication and mixed multiplication,
+		// as in the latter case we implement in terms of *= while in the former we do not.
+		// Binary multiplication.
+		// Series vs non-series.
 		template <typename Series, typename T>
-		static typename series_op_return_type<Series,T>::type dispatch_binary_multiply(Series &&s, T &&x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		static typename result_type<Series,T>::type dispatch_binary_multiply(Series &&s, T &&x,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
+		// Series with larger echelon size vs series.
+		template <typename Series, typename T>
+		static typename result_type<Series,T>::type dispatch_binary_multiply(Series &&s, T &&x,
+			typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+		{
+			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
+		}
+		// Non-series vs series.
 		template <typename T, typename Series>
-		static typename series_op_return_type<T,Series>::type dispatch_binary_multiply(T &&x, Series &&s,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename strip_cv_ref<T>::type>::value>::type * = piranha_nullptr)
+		static typename result_type<T,Series>::type dispatch_binary_multiply(T &&x, Series &&s,
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
+		}
+		// Series with smaller echelon size vs series.
+		template <typename T, typename Series>
+		static typename result_type<T,Series>::type dispatch_binary_multiply(T &&x, Series &&s,
+			typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
 		template <typename Series, typename T>
-		static typename strip_cv_ref<Series>::type mixed_binary_multiply(Series &&s, T &&x)
+		static typename std::decay<Series>::type mixed_binary_multiply(Series &&s, T &&x)
 		{
 			// NOTE: here it might be potentially possible to improve performance in certain cases as follows:
 			// - create empty series,
 			// - insert terms constructed by multiplying coefficient by x and same keys as in s.
 			// This way in case of, e.g., integer GMP coefficients, we can avoid allocating space in the copy of the series
 			// below and again allocation for the multiplication.
-			static_assert(std::is_same<typename strip_cv_ref<Series>::type,typename series_op_return_type<Series,T>::type>::value,"Inconsistent return value type.");
-			static_assert(std::is_same<typename strip_cv_ref<Series>::type,typename series_op_return_type<T,Series>::type>::value,"Inconsistent return value type.");
-			typename strip_cv_ref<Series>::type retval(std::forward<Series>(s));
+			typename std::decay<Series>::type retval(std::forward<Series>(s));
 			retval *= std::forward<T>(x);
 			return retval;
 		}
 		template <typename Series1, typename Series2>
 		static Series1 series_multiply_first(const Series1 &s1, const Series2 &s2)
 		{
-			static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
-				"Cannot multiply series with different echelon sizes.");
-			// Determine base series types using the multiply_by_series() method.
-			typedef decltype(s1.multiply_by_series(s2,s1.m_ed)) base_type1;
-			typedef decltype(s2.multiply_by_series(s1,s2.m_ed)) base_type2;
+			// Base series types.
+			typedef series<typename Series1::term_type,Series1> base_type1;
+			typedef series<typename Series2::term_type,Series2> base_type2;
 			Series1 retval;
-			if (likely(s1.m_ed.get_args_tuple() == s2.m_ed.get_args_tuple())) {
-				retval.m_ed = s1.m_ed;
-				static_cast<base_type1 &>(retval) = s1.multiply_by_series(s2,s1.m_ed);
+			if (likely(s1.m_symbol_set == s2.m_symbol_set)) {
+				retval.m_symbol_set = s1.m_symbol_set;
+				static_cast<base_type1 &>(retval) = s1.multiply_by_series(s2);
 			} else {
 				// Let's deal with the first series.
-				auto merge1 = s1.m_ed.merge(s2.m_ed);
-				const bool need_copy1 = merge1.first.get_args_tuple() != s1.m_ed.get_args_tuple();
-				auto merge2 = s2.m_ed.merge(merge1.first);
-				const bool need_copy2 = merge2.first.get_args_tuple() != s2.m_ed.get_args_tuple();
-				retval.m_ed = merge1.first;
+				auto merge1 = s1.m_symbol_set.merge(s2.m_symbol_set);
+				const bool need_copy1 = (merge1 != s1.m_symbol_set);
+				auto merge2 = s2.m_symbol_set.merge(merge1);
+				const bool need_copy2 = (merge2 != s2.m_symbol_set);
+				retval.m_symbol_set = merge1;
 				if (need_copy1) {
-					static_cast<base_type1 &>(retval) = s1.merge_args(s1.m_ed,merge1.first).multiply_by_series(
-						(need_copy2 ? s2.merge_args(s2.m_ed,merge2.first) : static_cast<base_type2 const &>(s2)),merge1.first
+					static_cast<base_type1 &>(retval) = s1.merge_args(merge1).multiply_by_series(
+						(need_copy2 ? s2.merge_args(merge2) : static_cast<base_type2 const &>(s2))
 					);
 				} else {
 					static_cast<base_type1 &>(retval) = s1.multiply_by_series(
-						(need_copy2 ? s2.merge_args(s2.m_ed,merge2.first) : static_cast<base_type2 const &>(s2)),merge1.first
+						(need_copy2 ? s2.merge_args(merge2) : static_cast<base_type2 const &>(s2))
 					);
 				}
 			}
@@ -218,8 +238,8 @@ class series_binary_operators
 		}
 		// Overload if types are the same or return type is Series1.
 		template <typename Series1, typename Series2>
-		static typename series_op_return_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_same<typename series_op_return_type<Series1,Series2>::type,Series1>::value ||
+		static typename result_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
+			std::is_same<typename result_type<Series1,Series2>::type,Series1>::value ||
 			std::is_same<Series1,Series2>::value
 			>::type * = piranha_nullptr)
 		{
@@ -228,15 +248,14 @@ std::cout << "BLUH BLUH\n";
 		}
 		// Overload if types are not the the same and return type is Series2.
 		template <typename Series1, typename Series2>
-		static typename series_op_return_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_same<typename series_op_return_type<Series1,Series2>::type,Series2>::value &&
+		static typename result_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
+			std::is_same<typename result_type<Series1,Series2>::type,Series2>::value &&
 			!std::is_same<Series1,Series2>::value
 			>::type * = piranha_nullptr)
 		{
 std::cout << "BLAH BLAH\n";
 			return series_multiply_first(s2,s1);
 		}
-#endif
 		// Equality.
 		template <typename Series, typename T>
 		static bool mixed_equality(const Series &s, const T &x)
@@ -458,7 +477,7 @@ std::cout << "BLAH BLAH\n";
 		{
 			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
 		}
-#if 0
+		// TODO fix
 		/// Binary multiplication involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
@@ -492,11 +511,10 @@ std::cout << "BLAH BLAH\n";
 		 * - piranha::base_series::merge_args().
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_series_operands<T,U>::value,typename series_op_return_type<T,U>::type>::type operator*(T &&s1, U &&s2)
+		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator*(T &&s1, U &&s2)
 		{
 			return dispatch_binary_multiply(std::forward<T>(s1),std::forward<U>(s2));
 		}
-#endif
 		/// Equality operator involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.

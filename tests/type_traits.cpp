@@ -160,15 +160,6 @@ BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 
 #endif
 
-BOOST_AUTO_TEST_CASE(type_traits_binary_op_promotion_rule)
-{
-	BOOST_CHECK((binary_op_promotion_rule<int,int>::value));
-	BOOST_CHECK((binary_op_promotion_rule<int,double>::value));
-	BOOST_CHECK((!binary_op_promotion_rule<double,int>::value));
-	BOOST_CHECK((!binary_op_promotion_rule<integer,int>::value));
-	BOOST_CHECK((binary_op_promotion_rule<int,integer>::value));
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_is_tuple)
 {
 	BOOST_CHECK(is_tuple<std::tuple<>>::value);
