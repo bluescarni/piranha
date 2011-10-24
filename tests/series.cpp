@@ -727,12 +727,12 @@ class debug_access<arithmetics_tag>
 				BOOST_CHECK(itt->m_key.size() == 2u);
 				BOOST_CHECK((itt->m_key[0] == 1 && itt->m_key[1] == 1) || (itt->m_key[0] == 0 && itt->m_key[1] == 2));
 				// In-place with coefficient series.
-				p11 = p_type11("x");
+				p11 = 2 * p_type11("x");
 				p11 *= p_type1("y");
 				BOOST_CHECK(p11.size() == 1u);
 				BOOST_CHECK(p11.m_container.begin()->m_cf.size() == 1u);
-				BOOST_CHECK(p11.m_container.begin()->m_cf == p_type1("y"));
-				BOOST_CHECK(p11.m_container.begin()->m_cf.m_container.begin()->m_cf == 1);
+				BOOST_CHECK(p11.m_container.begin()->m_cf == 2 * p_type1("y"));
+				BOOST_CHECK(p11.m_container.begin()->m_cf.m_container.begin()->m_cf == 2);
 			}
 		};
 		template <typename Cf>
@@ -902,7 +902,6 @@ class debug_access<binary_arithmetics_tag>
 				BOOST_CHECK(n4.m_symbol_set.size() == 1u);
 				BOOST_CHECK(n4.m_symbol_set[0] == symbol("m"));
 				BOOST_CHECK((n3 + n4).empty());
-#if 0
 				// Multiplication.
 				auto res = x * 0;
 				BOOST_CHECK(res.empty());
@@ -910,29 +909,29 @@ class debug_access<binary_arithmetics_tag>
 				BOOST_CHECK(res.empty());
 				res = 2 * x;
 				BOOST_CHECK(res.size() == 1u);
-				BOOST_CHECK(res.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * typename Cf::type(2));
+				BOOST_CHECK(res.m_container.begin()->m_cf == Cf(1) * Cf(2));
 				BOOST_CHECK(res.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(res.m_container.begin()->m_key[0] == 1);
 				res = x * 2;
 				BOOST_CHECK(res.size() == 1u);
-				BOOST_CHECK(res.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * typename Cf::type(2));
+				BOOST_CHECK(res.m_container.begin()->m_cf == Cf(1) * Cf(2));
 				BOOST_CHECK(res.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(res.m_container.begin()->m_key[0] == 1);
 				res = x * x;
 				BOOST_CHECK(res.size() == 1u);
-				BOOST_CHECK(res.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * typename Cf::type(1));
+				BOOST_CHECK(res.m_container.begin()->m_cf == Cf(1) * Cf(1));
 				BOOST_CHECK(res.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(res.m_container.begin()->m_key[0] == 2);
 				res = x * y;
 				BOOST_CHECK(res.size() == 1u);
-				BOOST_CHECK(res.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * typename Cf::type(1));
+				BOOST_CHECK(res.m_container.begin()->m_cf == Cf(1) * Cf(1));
 				BOOST_CHECK(res.m_container.begin()->m_key.size() == 2u);
 				BOOST_CHECK(res.m_container.begin()->m_key[0] == 1);
 				BOOST_CHECK(res.m_container.begin()->m_key[1] == 1);
 				res = (x + y) * (y * 2);
 				BOOST_CHECK(res.size() == 2u);
 				it = res.m_container.begin();
-				BOOST_CHECK(it->m_cf.get_value() == typename Cf::type(1) * (typename Cf::type(1) * 2));
+				BOOST_CHECK(it->m_cf == Cf(1) * (Cf(1) * 2));
 				BOOST_CHECK(it->m_key.size() == 2u);
 				BOOST_CHECK((it->m_key[0] == 1 && it->m_key[1] == 1) || (it->m_key[0] == 0 && it->m_key[1] == 2));
 				++it;
@@ -941,7 +940,7 @@ class debug_access<binary_arithmetics_tag>
 				res = (y * 2) * (x + y);
 				BOOST_CHECK(res.size() == 2u);
 				it = res.m_container.begin();
-				BOOST_CHECK(it->m_cf.get_value() == typename Cf::type(1) * (typename Cf::type(1) * 2));
+				BOOST_CHECK(it->m_cf == Cf(1) * (Cf(1) * 2));
 				BOOST_CHECK(it->m_key.size() == 2u);
 				BOOST_CHECK((it->m_key[0] == 1 && it->m_key[1] == 1) || (it->m_key[0] == 0 && it->m_key[1] == 2));
 				++it;
@@ -949,15 +948,25 @@ class debug_access<binary_arithmetics_tag>
 				BOOST_CHECK((it->m_key[0] == 1 && it->m_key[1] == 1) || (it->m_key[0] == 0 && it->m_key[1] == 2));
 				auto mix = x * p_type2{"x"};
 				BOOST_CHECK(mix.size() == 1u);
-				BOOST_CHECK(mix.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * 1.f);
+				BOOST_CHECK(mix.m_container.begin()->m_cf == Cf(1) * 1.f);
 				BOOST_CHECK(mix.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(mix.m_container.begin()->m_key[0] == 2);
 				mix = p_type2{"x"} * x;
 				BOOST_CHECK(mix.size() == 1u);
-				BOOST_CHECK(mix.m_container.begin()->m_cf.get_value() == typename Cf::type(1) * 1.f);
+				BOOST_CHECK(mix.m_container.begin()->m_cf == Cf(1) * 1.f);
 				BOOST_CHECK(mix.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(mix.m_container.begin()->m_key[0] == 2);
-#endif
+				// Multiplication with coefficient series.
+				m = p_type11("m");
+				BOOST_CHECK((m * x).size() == 1u);
+				BOOST_CHECK((x * m).size() == 1u);
+				BOOST_CHECK((x * m) == (m * x));
+				BOOST_CHECK((m * x * 2).size() == 1u);
+				BOOST_CHECK((m * 2 * m).size() == 1u);
+				BOOST_CHECK((2 * m * x).size() == 1u);
+				BOOST_CHECK((2 * m * x).m_container.begin()->m_cf.size() == 1u);
+				BOOST_CHECK((2 * m * x).m_container.begin()->m_cf.m_container.begin()->m_cf == 2 * Cf(1) * Cf(1));
+				BOOST_CHECK((x * m * 0).size() == 0u);
 			}
 		};
 		template <typename Cf>
@@ -1064,4 +1073,60 @@ struct equality_tester
 BOOST_AUTO_TEST_CASE(series_equality_test)
 {
 	boost::mpl::for_each<cf_types>(equality_tester());
+}
+
+struct identity_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			+p_type1{} == +p_type1{};
+			+p_type1{} == p_type1{};
+			p_type1{} == +p_type1{};
+			p_type1("x") == +p_type1("x");
+			+p_type1("x") == p_type1("x");
+			+p_type1("x") == +p_type1("x");
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_identity_test)
+{
+	boost::mpl::for_each<cf_types>(identity_tester());
+}
+
+struct negation_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			+p_type1{} == -(-(+p_type1{}));
+			-(-(+p_type1{})) == p_type1{};
+			-p_type1("x") == -(+p_type1("x"));
+			-(+p_type1("x")) == -p_type1("x");
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_negation_test)
+{
+	boost::mpl::for_each<cf_types>(negation_tester());
 }

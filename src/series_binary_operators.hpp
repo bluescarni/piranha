@@ -174,7 +174,7 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
-			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -191,7 +191,7 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
-			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = piranha_nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -236,24 +236,26 @@ class series_binary_operators
 			}
 			return retval;
 		}
-		// Overload if types are the same or return type is Series1.
+		// Overload for same echelon size series, and types are the same or return type is Series1.
 		template <typename Series1, typename Series2>
 		static typename result_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_same<typename result_type<Series1,Series2>::type,Series1>::value ||
-			std::is_same<Series1,Series2>::value
+			(std::is_same<typename result_type<Series1,Series2>::type,Series1>::value || std::is_same<Series1,Series2>::value) &&
+			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value &&
+			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "BLUH BLUH\n";
 			return series_multiply_first(s1,s2);
 		}
-		// Overload if types are not the the same and return type is Series2.
+		// Overload for same echelon size series if types are not the the same and return type is Series2.
 		template <typename Series1, typename Series2>
 		static typename result_type<Series1,Series2>::type dispatch_binary_multiply(const Series1 &s1, const Series2 &s2, typename std::enable_if<
-			std::is_same<typename result_type<Series1,Series2>::type,Series2>::value &&
-			!std::is_same<Series1,Series2>::value
+			std::is_same<typename result_type<Series1,Series2>::type,Series2>::value && !std::is_same<Series1,Series2>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
+			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value &&
+			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value
 			>::type * = piranha_nullptr)
 		{
-std::cout << "BLAH BLAH\n";
 			return series_multiply_first(s2,s1);
 		}
 		// Equality.
@@ -477,25 +479,20 @@ std::cout << "BLAH BLAH\n";
 		{
 			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
 		}
-		// TODO fix
 		/// Binary multiplication involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
-		 * The binary addition algorithm proceeds as follows:
+		 * The binary multiplication algorithm proceeds as follows:
 		 * 
-		 * - if both operands are series:
-		 *   - the return type is \p T if the value of piranha::binary_op_promotion_rule of the coefficient types of \p T and \p U is \p false,
-		 *     \p U otherwise;
-		 *   - base_series::multiply_by_series() is called on \p s1 or \p s2, depending on the promotion rule above,
-		 *     and the result used to build the return value after the echelon descriptors of the two series have been merged as necessary;
+		 * - if both operands are series with same echelon size:
+		 *   - the return type is determined in the same way as for the binary addition operator;
+		 *   - the same sequence of operations described in piranha::series::operator*=()
+		 *     is performed;
 		 * - else:
-		 *   - the return type is the type of the series operand;
-		 *   - the return value is built from the series operand;
-		 *   - piranha::series::operator*=() is called on the return value, the non-series operand as argument;
+		 *   - the return type is the type of the series operand with largest echelon size;
+		 *   - the return value is built from the series operand with largest echelon size;
+		 *   - piranha::series::operator*=() is called on the return value with the other operand as argument;
 		 * - the return value is returned.
-		 * 
-		 * Note that in case of two series operands of different type but with same coefficient types, the return type will depend on the order
-		 * of the operands.
 		 * 
 		 * @param[in] s1 first operand.
 		 * @param[in] s2 second operand.
@@ -504,11 +501,7 @@ std::cout << "BLAH BLAH\n";
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - copy-construction of return value type,
-		 * - piranha::series::operator*=(),
-		 * - the assignment operator of piranha::echelon_descriptor,
-		 * - piranha::echelon_descriptor::merge_args(),
-		 * - piranha::base_series::multiply_by_series(),
-		 * - piranha::base_series::merge_args().
+		 * - piranha::series::operator*=().
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator*(T &&s1, U &&s2)

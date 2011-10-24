@@ -769,6 +769,22 @@ class series: series_binary_operators, detail::series_tag
 			dispatch_in_place_add<true>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
+		/// Const identity operator.
+		/**
+		 * @return const reference to \p this, cast to \p Derived.
+		 */
+		const Derived &operator+() const
+		{
+			return *static_cast<Derived const *>(this);
+		}
+		/// Mutable identity operator.
+		/**
+		 * @return reference to \p this, cast to \p Derived.
+		 */
+		Derived &operator+()
+		{
+			return *static_cast<Derived *>(this);
+		}
 		/// In-place addition.
 		/**
 		 * Analogous to operator+=(), apart from a change in sign.
@@ -847,14 +863,16 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * @return reference to \p this, cast to type \p Derived.
 		 * 
-		 * TODO fix here.
 		 * @throws unspecified any exception thrown by:
-		 * - the <tt>multiply_by()</tt> method of the coefficient type,
-		 * - the <tt>is_ignorable()</tt> method of the term type,
-		 * - piranha::base_series::multiply_by_series(),
+		 * - the multiplication operators of the coefficient type(s),
+		 * - piranha::hash_set::erase(),
+		 * - the constructor and function call operator of piranha::series_multiplier,
 		 * - memory allocation errors in standard containers,
-		 * - hop_table::erase().
-		 *
+		 * - insert(),
+		 * - the <tt>merge_args()</tt> method of the key type,
+		 * - the constructors of \p term_type, coefficient and key types,
+		 * - piranha::symbol_set::merge().
+		 * 
 		 * @return reference to \p this, cast to type \p Derived.
 		 */
 		template <typename T>
