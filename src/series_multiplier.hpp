@@ -81,11 +81,6 @@ namespace piranha
  * 
  * This class provides the strong exception safety guarantee.
  * 
- * \section move_semantics Move semantics
- * 
- * TODO: fix this!
- * Move construction and move assignment will have no effect on an existing object.
- * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo series multiplier concept?
@@ -142,6 +137,10 @@ class series_multiplier
 			std::back_insert_iterator<decltype(m_v2)> bii2(m_v2);
 			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
 		}
+		/// Deleted copy constructor.
+		series_multiplier(const series_multiplier &) = delete;
+		/// Deleted move constructor.
+		series_multiplier(series_multiplier &&) = delete;
 		/// Compute result of series multiplication.
 		/**
 		 * This method will call execute() with a \p Functor type that uses the <tt>multiply()</tt> method
@@ -157,7 +156,6 @@ class series_multiplier
 			return execute<plain_functor>();
 		}
 	protected:
-		// TODO fix docs
 		/// Low-level implementation of series multiplication.
 		/**
 		 * The multiplication algorithm proceeds as follows:
@@ -170,12 +168,12 @@ class series_multiplier
 		 * - in multi-threaded mode:
 		 *   - the first series is subdivided into segments and the same process described for single-threaded mode is run in parallel,
 		 *     storing the multiple resulting series in a list;
-		 *   - the series in the result list are merged into a single series via piranha::base_series::insert().
+		 *   - the series in the result list are merged into a single series via piranha::series::insert().
 		 * 
 		 * The protocol expected by an instance of type \p Functor is the following:
 		 * 
-		 * - it must be constructible from two vectors of const pointers to the terms in the input series, an echelon
-		 *   descriptor of the type of \p ed, and an instance of type \p return_type that will be used to
+		 * - it must be constructible from two vectors of const pointers to the terms in the input series
+		 *   and an instance of type \p return_type that will be used to
 		 *   accumulate the terms during multiplication;
 		 * - it must be provided with an <tt>operator()()</tt>, taking two unsigned integers (e.g., \p i and \p j) as input
 		 *   parameters and returning void. A call of this operator will multiply the <tt>i</tt>-th term of the first series
@@ -188,8 +186,6 @@ class series_multiplier
 		 * Instances of \p Functor are created sequentially (when operating in multi-threaded mode), and they are
 		 * allowed to mutate the vectors of terms pointers (in particular, they are allowed to reorder them).
 		 * 
-		 * @param[in] ed piranha::echelon_descriptor that will be passed to \p Functor to perform term-by-term multiplications.
-		 * 
 		 * @return the result of multiplying the first series by the second series.
 		 * 
 		 * @throws unspecified any exception thrown by:
@@ -198,7 +194,7 @@ class series_multiplier
 		 * - the cast operator of piranha::integer to integral types,
 		 * - the constructor and call operator of \p Functor,
 		 * - errors in threading primitives,
-		 * - piranha::base_series::insert().
+		 * - piranha::series::insert().
 		 */
 		template <typename Functor>
 		return_type execute() const
