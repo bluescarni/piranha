@@ -40,8 +40,6 @@ namespace concept {}
 #include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
-#include "concepts/multaddable_coefficient.hpp"
-#include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/series.hpp"
 #include "concepts/term.hpp"
