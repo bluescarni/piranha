@@ -20,6 +20,11 @@
 
 #if defined(__linux__)
 
+#include <boost/lexical_cast.hpp>
+#include <fstream>
+#include <iostream>
+#include <string>
+
 extern "C"
 {
 #include <sys/sysinfo.h>
@@ -121,7 +126,19 @@ unsigned runtime_info::get_cache_line_size()
 unsigned runtime_info::determine_cache_line_size()
 {
 #if defined(__linux__)
-	const auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+	auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+	// This can fail on some systems, resort to try reading the /sys entry.
+	// NOTE: here we could iterate over all cpus and take the maximum cache line size.
+	if (!ls) {
+		std::ifstream sys_file("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size");
+		if (sys_file.is_open() && sys_file.good()) {
+			std::string line;
+			std::getline(sys_file,line);
+			try {
+				ls = boost::lexical_cast<decltype(ls)>(line);
+			} catch (...) {}
+		}
+	}
 	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
 #elif defined(_WIN32) && defined(PIRANHA_HAVE_SYSTEM_LOGICAL_PROCESSOR_INFORMATION)
 	// Adapted from:
