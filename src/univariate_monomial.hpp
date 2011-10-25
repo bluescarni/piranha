@@ -219,12 +219,12 @@ class univariate_monomial
 		 */
 		univariate_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			piranha_assert(math::is_zero(m_value));
 			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
 			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
 			if (unlikely(new_args.size() != 1u || orig_args.size())) {
 				piranha_throw(std::invalid_argument,"invalid symbol set");
 			}
+			piranha_assert(math::is_zero(m_value));
 			// The only valid possibility here is that a monomial with zero args is extended
 			// to one arg. Default construction is ok.
 			return univariate_monomial();
