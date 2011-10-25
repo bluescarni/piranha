@@ -85,12 +85,13 @@ class polynomial:
 		polynomial(const polynomial &) = default;
 		/// Defaulted move constructor.
 		polynomial(polynomial &&) = default;
+		// FIXME docs here
 		/// Constructor from symbol name.
 		/**
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name.
 		 * 
-		 * For this constructor to work, the coefficient type must be provided with a 2-arguments constructor from
+		 * The coefficient type must be provided with a 2-arguments constructor from
 		 * the literal constant 1 and the piranha::echelon_descriptor of \p this. The key will be constructed by invoking
 		 * the constructor from the initializer list <tt>{1}</tt>.
 		 * 
