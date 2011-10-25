@@ -41,7 +41,6 @@
  * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
  * reference collapsing rules, etc. etc.
  * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
- * \todo inline friend functions in class scope: is inline redundant? yes: http://stackoverflow.com/questions/3980627/is-a-friend-function-defined-in-class-automatically-inline
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that

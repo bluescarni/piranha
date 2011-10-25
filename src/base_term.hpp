@@ -205,7 +205,7 @@ class base_term: detail::base_term_tag
 		 * @throws unspecified any exception thrown by directing to the stream the term's
 		 * coefficient and/or key.
 		 */
-		friend inline std::ostream &operator<<(std::ostream &os, const base_term<Cf,Key,Derived> &t)
+		friend std::ostream &operator<<(std::ostream &os, const base_term<Cf,Key,Derived> &t)
 		{
 			os << t.m_cf << " - " << t.m_key;
 			return os;

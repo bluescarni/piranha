@@ -161,7 +161,7 @@ class symbol
 		 * 
 		 * @return reference to \p os.
 		 */
-		friend inline std::ostream &operator<<(std::ostream &os, const symbol &s)
+		friend std::ostream &operator<<(std::ostream &os, const symbol &s)
 		{
 			os << "name = \"" << s.get_name() << "\", value = " << s.get_value();
 			return os;

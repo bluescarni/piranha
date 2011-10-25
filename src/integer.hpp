@@ -1244,7 +1244,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator+=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) + x);
@@ -1269,7 +1269,7 @@ class integer
 		 * @return <tt>x + y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator+(T &&x, U &&y)
 		{
 			return binary_plus(std::forward<T>(x),std::forward<U>(y));
@@ -1341,7 +1341,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator-=(T &x, I &&n)
 		{
 			x = static_cast<T>(x - std::forward<I>(n));
@@ -1366,7 +1366,7 @@ class integer
 		 * @return <tt>x - y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator-(T &&x, U &&y)
 		{
 			return binary_minus(std::forward<T>(x),std::forward<U>(y));
@@ -1440,7 +1440,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator*=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) * x);
@@ -1465,7 +1465,7 @@ class integer
 		 * @return <tt>x * y</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator*(T &&x, U &&y)
 		{
 			return binary_mul(std::forward<T>(x),std::forward<U>(y));
@@ -1504,7 +1504,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator/=(T &x, I &&n)
 		{
 			x = static_cast<T>(x / std::forward<I>(n));
@@ -1531,7 +1531,7 @@ class integer
 		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator/(T &&x, U &&y)
 		{
 			return binary_div(std::forward<T>(x),std::forward<U>(y));
@@ -1572,7 +1572,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+		friend typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator%=(T &x, I &&n)
 		{
 			x = static_cast<T>(x % std::forward<I>(n));
@@ -1596,7 +1596,7 @@ class integer
 		 * @throws std::invalid_argument if <tt>y <= 0</tt> or <tt>x < 0</tt>.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<
+		friend typename std::enable_if<
 			are_binary_op_types<T,U>::value && !std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value,
 			typename deduce_binary_op_result_type<T,U>::type>::type
 			operator%(T &&x, U &&y)
@@ -1622,7 +1622,7 @@ class integer
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
 		{
 			return binary_equality(x,y);
 		}
@@ -1645,7 +1645,7 @@ class integer
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
 		{
 			return !(x == y);
 		}
@@ -1668,7 +1668,7 @@ class integer
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
 		{
 			return binary_less_than(x,y);
 		}
@@ -1691,7 +1691,7 @@ class integer
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
 		{
 			return binary_leq(x,y);
 		}
@@ -1714,7 +1714,7 @@ class integer
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
 		{
 			return (y < x);
 		}
@@ -1737,7 +1737,7 @@ class integer
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend inline typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
 		{
 			return (y <= x);
 		}
@@ -1851,7 +1851,7 @@ class integer
 		 * 
 		 * @return reference to \p os.
 		 */
-		friend inline std::ostream &operator<<(std::ostream &os, const integer &n)
+		friend std::ostream &operator<<(std::ostream &os, const integer &n)
 		{
 			const std::size_t size_base10 = ::mpz_sizeinbase(n.m_value,10);
 			if (size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2)) {
@@ -1873,7 +1873,7 @@ class integer
 		 * 
 		 * @return reference to \p is.
 		 */
-		friend inline std::istream &operator>>(std::istream &is, integer &n)
+		friend std::istream &operator>>(std::istream &is, integer &n)
 		{
 			std::string tmp_str;
 			std::getline(is,tmp_str);
