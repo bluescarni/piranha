@@ -46,8 +46,6 @@
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that
  * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
- * \todo strip_cv_ref should be std::decay probably.
- * \todo try to get away with the friendship to binary series operators by base series.
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer.
  * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  * \todo assert that concepts are respected in models.

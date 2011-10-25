@@ -36,23 +36,6 @@ using namespace piranha;
 
 PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
 
-BOOST_AUTO_TEST_CASE(type_traits_strip_cv_test)
-{
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const int>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<volatile int>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const volatile int>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const int &>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<volatile int &>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const volatile int &>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<int &&>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const int &&>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<volatile int &&>::type>::value));
-	BOOST_CHECK((std::is_same<int,strip_cv_ref<const volatile int &&>::type>::value));
-	BOOST_CHECK((std::is_same<int *,strip_cv_ref<int * const>::type>::value));
-	BOOST_CHECK((std::is_same<int *,strip_cv_ref<int * volatile>::type>::value));
-	BOOST_CHECK((std::is_same<int *,strip_cv_ref<int * const volatile>::type>::value));
-}
-
 struct foo
 {
 	typedef int foo_type;

@@ -56,17 +56,6 @@ struct is_tuple: std::false_type {};
 template <typename... Args>
 struct is_tuple<std::tuple<Args...>>: std::true_type {};
 
-/// Strip reference and top-level cv-qualifiers.
-/**
- * This type trait removes top-level cv-qualifiers and, if \p T is a reference, transforms it into the referred-to type.
- */
-template <typename T>
-struct strip_cv_ref
-{
-	/// Type-trait type definition.
-	typedef typename std::remove_cv<typename std::remove_reference<T>::type>::type type;
-};
-
 /// Type is reference or is cv-qualified.
 /**
  * This type trait defines a static const boolean \p value flag which is \p true if either \p T is a reference or it is cv-qualified, \p false otherwise.

@@ -87,7 +87,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws unspecified any exception thrown by the invoked constructor from piranha::array_key.
 		 */
-		template <typename U, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<monomial,typename strip_cv_ref<U>::type>::value>::type*& = enabler>
+		template <typename U, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<monomial,typename std::decay<U>::type>::value>::type*& = enabler>
 		explicit monomial(U &&arg1, Args && ... params):
 			base(std::forward<U>(arg1),std::forward<Args>(params)...) {}
 		/// Trivial destructor.

@@ -112,7 +112,7 @@ class array_key: detail::array_key_tag
 	private:
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
-			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
+			typename std::enable_if<std::is_same<value_type,typename std::decay<U>::type::value_type>::value &&
 			is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
@@ -122,7 +122,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
-			typename std::enable_if<std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value &&
+			typename std::enable_if<std::is_same<value_type,typename std::decay<U>::type::value_type>::value &&
 			!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
@@ -148,7 +148,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
-			typename std::enable_if<!std::is_same<value_type,typename strip_cv_ref<U>::type::value_type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_same<value_type,typename std::decay<U>::type::value_type>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -231,7 +231,7 @@ class array_key: detail::array_key_tag
 		 */
 		template <typename U>
 		explicit array_key(U &&x, const symbol_set &args,
-			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
 		{
 			piranha_assert(std::is_sorted(args.begin(),args.end()));

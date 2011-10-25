@@ -40,7 +40,6 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "exceptions.hpp"
-#include "type_traits.hpp" // For strip_cv_ref.
 
 namespace piranha
 {
@@ -640,7 +639,7 @@ class hash_set
 		 * maximum number of buckets.
 		 */
 		template <typename U>
-		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
 		{
 			// Handle the case of a table with no buckets.
 			if (unlikely(!bucket_count())) {
@@ -842,7 +841,7 @@ class hash_set
 		 */
 		template <typename U>
 		iterator _unique_insert(U &&k, const size_type &bucket_idx,
-			typename std::enable_if<std::is_same<T,typename strip_cv_ref<U>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
 		{
 			// Assert that key is not present already in the table.
 			piranha_assert(find(std::forward<U>(k)) == end());

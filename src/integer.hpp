@@ -499,9 +499,9 @@ class integer
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
 		struct are_binary_op_types: std::integral_constant<bool,
-			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && is_interop_type<typename strip_cv_ref<U>::type>::value) ||
-			(std::is_same<typename strip_cv_ref<U>::type,integer>::value && is_interop_type<typename strip_cv_ref<T>::type>::value) ||
-			(std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value)>
+			(std::is_same<typename std::decay<T>::type,integer>::value && is_interop_type<typename std::decay<U>::type>::value) ||
+			(std::is_same<typename std::decay<U>::type,integer>::value && is_interop_type<typename std::decay<T>::type>::value) ||
+			(std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value)>
 		{};
 		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
 		// Default result type will be integer itself; for consistency with C/C++ when one of the arguments
@@ -512,19 +512,19 @@ class integer
 			typedef integer type;
 		};
 		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename strip_cv_ref<T>::type>::value>::type>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value>::type>
 		{
-			typedef typename strip_cv_ref<T>::type type;
+			typedef typename std::decay<T>::type type;
 		};
 		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename strip_cv_ref<U>::type>::value>::type>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<U>::type>::value>::type>
 		{
-			typedef typename strip_cv_ref<U>::type type;
+			typedef typename std::decay<U>::type type;
 		};
 		// Binary addition.
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value
+			std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
@@ -562,7 +562,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
+			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			const std::size_t target_size = n1.size() + std::size_t(1);
@@ -574,7 +574,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(1);
@@ -597,7 +597,7 @@ class integer
 		// Binary subtraction.
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_same<typename strip_cv_ref<U>::type,integer>::value
+			std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
@@ -641,7 +641,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
+			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			const std::size_t target_size = n1.size() + std::size_t(1);
@@ -653,7 +653,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(1);
@@ -676,8 +676,8 @@ class integer
 		// Binary multiplication.
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value &&
-			std::is_same<typename strip_cv_ref<U>::type,integer>::value
+			std::is_same<typename std::decay<T>::type,integer>::value &&
+			std::is_same<typename std::decay<U>::type,integer>::value
 			>::type * = piranha_nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
@@ -722,7 +722,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<T>::type,integer>::value && std::is_integral<typename strip_cv_ref<U>::type>::value
+			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			// NOTE: here the formula would be: n1.size() + size_in_limbs_of_U + 1, but we
@@ -736,7 +736,7 @@ class integer
 		}
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
-			std::is_same<typename strip_cv_ref<U>::type,integer>::value && std::is_integral<typename strip_cv_ref<T>::type>::value
+			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(2);
@@ -760,7 +760,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_div(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
+			!std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			// NOTE: here it makes sense only to attempt to steal n1's storage, not n2's, because the operation is not commutative.
@@ -789,7 +789,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_mod(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
-			!std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value
+			!std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value
 			>::type * = piranha_nullptr)
 		{
 			integer retval(std::forward<T>(n1));
@@ -1225,8 +1225,8 @@ class integer
 		 */
 		template <typename T>
 		typename std::enable_if<
-			is_interop_type<typename strip_cv_ref<T>::type>::value ||
-			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator+=(T &&x)
+			is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator+=(T &&x)
 		{
 			in_place_add(std::forward<T>(x));
 			return *this;
@@ -1244,7 +1244,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator+=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) + x);
@@ -1322,8 +1322,8 @@ class integer
 		 */
 		template <typename T>
 		typename std::enable_if<
-			is_interop_type<typename strip_cv_ref<T>::type>::value ||
-			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator-=(T &&x)
+			is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator-=(T &&x)
 		{
 			in_place_sub(std::forward<T>(x));
 			return *this;
@@ -1341,7 +1341,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator-=(T &x, I &&n)
 		{
 			x = static_cast<T>(x - std::forward<I>(n));
@@ -1421,8 +1421,8 @@ class integer
 		 */
 		template <typename T>
 		typename std::enable_if<
-			is_interop_type<typename strip_cv_ref<T>::type>::value ||
-			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator*=(T &&x)
+			is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator*=(T &&x)
 		{
 			in_place_mul(std::forward<T>(x));
 			return *this;
@@ -1440,7 +1440,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator*=(T &x, I &&n)
 		{
 			x = static_cast<T>(std::forward<I>(n) * x);
@@ -1484,8 +1484,8 @@ class integer
 		 */
 		template <typename T>
 		typename std::enable_if<
-			is_interop_type<typename strip_cv_ref<T>::type>::value ||
-			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator/=(T &&x)
+			is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator/=(T &&x)
 		{
 			in_place_div(std::forward<T>(x));
 			return *this;
@@ -1504,7 +1504,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator/=(T &x, I &&n)
 		{
 			x = static_cast<T>(x / std::forward<I>(n));
@@ -1549,8 +1549,8 @@ class integer
 		 */
 		template <typename T>
 		typename std::enable_if<
-			(std::is_integral<typename strip_cv_ref<T>::type>::value && is_interop_type<typename strip_cv_ref<T>::type>::value) ||
-			std::is_same<integer,typename strip_cv_ref<T>::type>::value,integer &>::type operator%=(T &&n)
+			(std::is_integral<typename std::decay<T>::type>::value && is_interop_type<typename std::decay<T>::type>::value) ||
+			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator%=(T &&n)
 		{
 			if (unlikely(mpz_sgn(m_value) < 0)) {
 				piranha_throw(std::invalid_argument,"negative dividend");
@@ -1572,7 +1572,7 @@ class integer
 		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
-		friend inline typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename strip_cv_ref<I>::type,integer>::value,T &>::type
+		friend inline typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
 			operator%=(T &x, I &&n)
 		{
 			x = static_cast<T>(x % std::forward<I>(n));
@@ -1597,7 +1597,7 @@ class integer
 		 */
 		template <typename T, typename U>
 		friend inline typename std::enable_if<
-			are_binary_op_types<T,U>::value && !std::is_floating_point<typename strip_cv_ref<T>::type>::value && !std::is_floating_point<typename strip_cv_ref<U>::type>::value,
+			are_binary_op_types<T,U>::value && !std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value,
 			typename deduce_binary_op_result_type<T,U>::type>::type
 			operator%(T &&x, U &&y)
 		{
@@ -1831,9 +1831,9 @@ class integer
 		 * @return number of GMP limbs currently allocated in \p this. The return type is the unsigned counterpart of the integer
 		 * type used to represent the allocated size in GMP's integer type.
 		 */
-		auto allocated_size() const -> typename strip_cv_ref<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type
+		auto allocated_size() const -> typename std::decay<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type
 		{
-			typedef typename strip_cv_ref<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type return_type;
+			typedef typename std::decay<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type return_type;
 			return return_type(m_value->_mp_alloc);
 		}
 		/// Sign.

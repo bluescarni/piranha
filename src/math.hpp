@@ -25,8 +25,6 @@
 #include <cmath>
 #include <type_traits>
 
-#include "type_traits.hpp"
-
 namespace piranha
 {
 
@@ -127,7 +125,7 @@ inline bool is_zero(const T &x)
 template <typename T>
 inline void negate(T &x)
 {
-	piranha::detail::math_negate_impl<typename strip_cv_ref<T>::type>::run(x);
+	piranha::detail::math_negate_impl<typename std::decay<T>::type>::run(x);
 }
 
 /// Multiply-accumulate.
