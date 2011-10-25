@@ -28,23 +28,22 @@
 #include <type_traits>
 
 #include "../src/integer.hpp"
-#include "../src/numerical_coefficient.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
-#include "../src/top_level_series.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<numerical_coefficient<double>,numerical_coefficient<integer>> cf_types;
+typedef boost::mpl::vector<double,integer> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
 class polynomial_alt:
-	public top_level_series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>>
+	public series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>>
 {
-		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>> base;
+		typedef series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>> base;
 	public:
 		polynomial_alt() = default;
 		polynomial_alt(const polynomial_alt &) = default;
@@ -53,11 +52,11 @@ class polynomial_alt:
 		{
 			typedef typename base::term_type term_type;
 			// Insert the symbol.
-			this->m_ed.template add_symbol<term_type>(symbol(name));
+			this->m_symbol_set.add(symbol(name));
 			// Construct and insert the term.
-			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{Expo(1)}),this->m_ed);
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_alt,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_alt,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit polynomial_alt(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		~polynomial_alt() = default;
 		polynomial_alt &operator=(const polynomial_alt &) = default;
@@ -97,8 +96,8 @@ struct constructor_tester
 			BOOST_CHECK(p3a == p3);
 			BOOST_CHECK(p3 == p3a);
 			// Construction from polynomial of different type.
-			typedef polynomial<numerical_coefficient<long>,int> p_type1;
-			typedef polynomial<numerical_coefficient<int>,short> p_type2;
+			typedef polynomial<long,int> p_type1;
+			typedef polynomial<int,short> p_type2;
 			p_type1 p4(1);
 			p_type2 p5(p4);
 			BOOST_CHECK(p4 == p5);

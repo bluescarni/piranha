@@ -28,13 +28,14 @@
 #include <type_traits>
 #include <vector>
 
-#include "concepts/multaddable_coefficient.hpp"
+#include "concepts/multipliable_coefficient.hpp"
+#include "concepts/series.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "polynomial_term.hpp"
+#include "series.hpp"
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
-#include "top_level_series.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -55,26 +56,27 @@ struct polynomial_tag {};
  * the value of the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
  * Laurent polynomials and Puiseux polynomials.
  * 
+ * This class is a model of the piranha::concept::Series and piranha::concept::MultipliableCoefficient concepts.
+ * 
  * \section type_requirements Type requirements
  * 
- * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term. Additionally, \p Cf must also be a model of piranha::concept::MultaddableCoefficient.
+ * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term.
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same guarantee as piranha::top_level_series.
+ * This class provides the same guarantee as piranha::series.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to piranha::top_level_series's move semantics.
+ * Move semantics is equivalent to piranha::series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Expo>
 class polynomial:
-	public top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,detail::polynomial_tag
+	public series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,detail::polynomial_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::MultaddableCoefficient<Cf>));
-		typedef top_level_series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
+		typedef series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -85,27 +87,24 @@ class polynomial:
 		polynomial(const polynomial &) = default;
 		/// Defaulted move constructor.
 		polynomial(polynomial &&) = default;
-		// FIXME docs here
 		/// Constructor from symbol name.
 		/**
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name.
 		 * 
-		 * The coefficient type must be provided with a 2-arguments constructor from
-		 * the literal constant 1 and the piranha::echelon_descriptor of \p this. The key will be constructed by invoking
-		 * the constructor from the initializer list <tt>{1}</tt>.
+		 * The coefficient type must be constructible from the literal constant 1.
 		 * 
 		 * This template constructor is activated iff the type <tt>String &&</tt> can be used to construct a piranha::symbol.
 		 * 
 		 * @param[in] name name of the symbolic variable that the polynomial will represent.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::echelon_descriptor::add_symbol,
+		 * - piranha::symbol_set::add(),
 		 * - the constructor of piranha::symbol from <tt>String &&</tt>,
 		 * - the invoked constructor of the coefficient type,
 		 * - the invoked constructor of the key type,
 		 * - the constructor of the term type from coefficient and key,
-		 * - piranha::base_series::insert().
+		 * - piranha::series::insert().
 		 */
 		template <typename String>
 		explicit polynomial(String &&name,
@@ -113,9 +112,9 @@ class polynomial:
 		{
 			typedef typename base::term_type term_type;
 			// Insert the symbol.
-			this->m_ed.template add_symbol<term_type>(symbol(std::forward<String>(name)));
+			this->m_symbol_set.add(symbol(std::forward<String>(name)));
 			// Construct and insert the term.
-			this->insert(term_type(Cf(1,this->m_ed),typename term_type::key_type{1}),this->m_ed);
+			this->insert(term_type(Cf(1),typename term_type::key_type{1}));
 		}
 		/// Generic constructor.
 		/**
@@ -127,10 +126,14 @@ class polynomial:
 		 * 
 		 * @throws unspecified any exception thrown by the invoked base constructor.
 		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename strip_cv_ref<T>::type>::value>::type*& = enabler>
-		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {std::cout << "generic polyctor\n";}
-		/// Defaulted destructor.
-		~polynomial() = default;
+		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename std::decay<T>::type>::value>::type*& = enabler>
+		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		/// Trivial destructor.
+		~polynomial()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
+			BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<polynomial>));
+		}
 		/// Defaulted copy assignment operator.
 		polynomial &operator=(const polynomial &) = default;
 		/// Move assignment operator.
@@ -172,13 +175,14 @@ class polynomial:
 		 * @throws unspecified any exception thrown by the assignment operator in the base class.
 		 */
 		template <typename T>
-		typename std::enable_if<!std::is_constructible<symbol,T &&>::value && !std::is_same<polynomial,typename strip_cv_ref<T>::type>::value,polynomial &>::type operator=(T &&x)
+		typename std::enable_if<!std::is_constructible<symbol,T &&>::value && !std::is_same<polynomial,typename std::decay<T>::type>::value,polynomial &>::type operator=(T &&x)
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
 		}
 };
 
+#if 0
 /// Series multiplier tuned for polynomials.
 /**
  * This piranha::series_multiplier specialisation is activated when both series are instances of
@@ -295,6 +299,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<
 			mutable typename base::term_type1			m_tmp;
 		};
 };
+
+#endif
 
 }
 
