@@ -42,6 +42,7 @@ namespace concept {}
 #include "concepts/key.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
+#include "concepts/power_series_term.hpp"
 #include "concepts/series.hpp"
 #include "concepts/term.hpp"
 

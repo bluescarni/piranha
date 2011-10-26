@@ -33,6 +33,7 @@
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "polynomial_term.hpp"
+#include "power_series.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
@@ -64,19 +65,20 @@ struct polynomial_tag {};
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the same guarantee as piranha::series.
+ * This class provides the same guarantee as piranha::power_series.
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to piranha::series's move semantics.
+ * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename Expo>
 class polynomial:
-	public series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,detail::polynomial_tag
+	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>,
+	detail::polynomial_tag
 {
-		typedef series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> base;
+		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
 	public:
 		/// Defaulted default constructor.
 		/**

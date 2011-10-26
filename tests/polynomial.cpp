@@ -25,6 +25,7 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
 #include <type_traits>
 
 #include "../src/integer.hpp"
@@ -33,6 +34,7 @@
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/type_traits.hpp"
+#include "../src/univariate_monomial.hpp"
 
 using namespace piranha;
 
@@ -151,6 +153,31 @@ struct assignment_tester
 BOOST_AUTO_TEST_CASE(polynomial_assignment_test)
 {
 	boost::mpl::for_each<cf_types>(assignment_tester());
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
+{
+	typedef polynomial<double,univariate_monomial<int>> p_type1;
+	typedef polynomial<p_type1,univariate_monomial<int>> p_type11;
+	typedef polynomial<p_type11,univariate_monomial<int>> p_type111;
+	p_type1 x("x");
+	p_type11 y("y");
+	p_type111 z("z");
+	BOOST_CHECK((std::is_same<decltype(x+y),p_type11>::value));
+	BOOST_CHECK((std::is_same<decltype(y+x),p_type11>::value));
+	BOOST_CHECK((std::is_same<decltype(z+y),p_type111>::value));
+	BOOST_CHECK((std::is_same<decltype(y+z),p_type111>::value));
+	BOOST_CHECK((std::is_same<decltype(z+x),p_type111>::value));
+	BOOST_CHECK((std::is_same<decltype(x+z),p_type111>::value));
+	BOOST_CHECK_THROW(x + p_type1("y"),std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_degree_test)
+{
+	typedef polynomial<double,univariate_monomial<int>> p_type1;
+	p_type1 x("x");
+	std::cout << x.degree() << '\n';
+	std::cout << (x * x).degree() << '\n';
 }
 
 struct multiplication_tester
