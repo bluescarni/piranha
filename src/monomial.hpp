@@ -182,7 +182,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * of the monomial is zero.
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by the addition and assignment operators of \p value_type.
+		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
 		 */
 		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &args) const
 		{
@@ -191,6 +191,42 @@ class monomial: public array_key<T,monomial<T>>
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
+		}
+		/// Partial degree.
+		/**
+		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
+		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
+		 * 
+		 * @param[in] active_args symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
+		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by constructor and the addition and assignment operators of \p value_type.
+		 */
+		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &active_args, const symbol_set &args) const
+		{
+			typedef typename base::value_type value_type;
+			if(unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			value_type retval(0);
+			auto it1 = args.begin(), it2 = active_args.begin();
+			for (typename base::size_type i = 0u; i < this->size(); ++i, ++it1) {
+				// Move forward the it2 iterator until it does not preceed the iterator in args,
+				// or we run out of symbols.
+				while (it2 != active_args.end() && *it2 < *it1) {
+					++it2;
+				}
+				if (it2 == active_args.end()) {
+					break;
+				} else if (*it2 == *it1) {
+					retval += (*this)[i];
+				}
+			}
+			return retval;
 		}
 		/// Multiply monomial.
 		/**

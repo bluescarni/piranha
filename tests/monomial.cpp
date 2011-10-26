@@ -267,6 +267,30 @@ struct degree_tester
 		k2[1] = T(3);
 		BOOST_CHECK_EQUAL(k2.degree(v),T(2) + T(3));
 		BOOST_CHECK_THROW(k2.degree(symbol_set{}),std::invalid_argument);
+		// Partial degree.
+		BOOST_CHECK(k2.degree(symbol_set{},v) == T(0));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("a")},v) == T(2));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("A")},v) == T(0));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("z")},v) == T(0));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("z"),symbol("A"),symbol("a")},v) == T(2));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("z"),symbol("A"),symbol("b")},v) == T(3));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("B"),symbol("A"),symbol("b")},v) == T(3));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("a"),symbol("b"),symbol("z")},v) == T(3) + T(2));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("a"),symbol("b"),symbol("A")},v) == T(3) + T(2));
+		BOOST_CHECK(k2.degree(symbol_set{symbol("a"),symbol("b"),symbol("A"),symbol("z")},v) == T(3) + T(2));
+		v.add(symbol("c"));
+		key_type k3(v);
+		k3[0] = T(2);
+		k3[1] = T(3);
+		k3[2] = T(4);
+		BOOST_CHECK(k3.degree(symbol_set{symbol("a"),symbol("b"),symbol("A"),symbol("z")},v) == T(3) + T(2));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("a"),symbol("c"),symbol("A"),symbol("z")},v) == T(4) + T(2));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("a"),symbol("c"),symbol("b"),symbol("z")},v) == T(4) + T(2) + T(3));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("a"),symbol("c"),symbol("b"),symbol("A")},v) == T(4) + T(2) + T(3));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("c"),symbol("b"),symbol("A")},v) == T(4) + T(3));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("A"),symbol("B"),symbol("C")},v) == T(0));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("x"),symbol("y"),symbol("z")},v) == T(0));
+		BOOST_CHECK(k3.degree(symbol_set{symbol("x"),symbol("y"),symbol("z"),symbol("A"),symbol("B"),symbol("C"),symbol("a")},v) == T(2));
 	}
 };
 
