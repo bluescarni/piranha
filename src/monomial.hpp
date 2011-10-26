@@ -172,8 +172,6 @@ class monomial: public array_key<T,monomial<T>>
 			return std::all_of(this->m_container.begin(),this->m_container.end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
-		// NOTE: in the doc here we might need to add the assignable requirement, if this is not included
-		// in the element container concept.
 		/// Degree.
 		/**
 		 * Degree of the monomial.
