@@ -21,17 +21,15 @@
 #ifndef PIRANHA_UNIVARIATE_MONOMIAL_HPP
 #define PIRANHA_UNIVARIATE_MONOMIAL_HPP
 
-#include <boost/concept/assert.hpp>
-
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/key.hpp"
-
 #include <algorithm>
+#include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <stdexcept>
 #include <unordered_set>
 
+#include "concepts/array_key_value_type.hpp"
+#include "concepts/key.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -237,27 +235,66 @@ class univariate_monomial
 		 * 
 		 * @return \p true if the monomial is unitary, \p false otherwise.
 		 * 
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and the exponent is not zero.
 		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
 		bool is_unitary(const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
-			return math::is_zero(m_value);
+			const bool is_zero = math::is_zero(m_value);
+			if (unlikely(args.size() > 1u || (!args.size() && !is_zero))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
+			return is_zero;
 		}
 		/// Degree.
 		/**
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return degree of the monomial.
-		 *
-		 * @throws unspecified any exception thrown by the copy constructor of \p T.
+		 * 
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and the exponent is not zero.
+		 * @throws unspecified any exception thrown by piranha::math::is_zero().
 		 */
 		T degree(const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
+			if (unlikely(args.size() > 1u || (!args.size() && !math::is_zero(m_value)))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
 			return m_value;
+		}
+		/// Partial degree.
+		/**
+		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
+		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
+		 * 
+		 * @param[in] active_args symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
+		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
+		 * 
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and the exponent is not zero.
+		 * @throws unspecified any exception thrown by piranha::math::is_zero() or by constructing an instance of \p T from zero.
+		 */
+		T degree(const symbol_set &active_args, const symbol_set &args) const
+		{
+			if (unlikely(args.size() > 1u || (!args.size() && !math::is_zero(m_value)))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
+			if (!args.size()) {
+				return T(0);
+			}
+			piranha_assert(args.size() == 1u);
+			// Look for the only symbol in active args, if we find it return its exponent.
+			const bool is_present = std::binary_search(active_args.begin(),active_args.end(),args[0]);
+			if (is_present) {
+				return m_value;
+			} else {
+				return T(0);
+			}
 		}
 		/// Multiply monomials.
 		/**
@@ -267,13 +304,16 @@ class univariate_monomial
 		 * @param[in] other multiplication argument.
 		 * @param[in] args reference arguments set.
 		 * 
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and one of the two exponents is not zero.
 		 * @throws unspecified any exception thrown by copy-assignment of \p T and by in-place addition of \p T with \p U.
 		 */
 		template <typename U>
 		void multiply(univariate_monomial &retval, const univariate_monomial<U> &other, const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(args.size() == 1u || (!args.size() && math::is_zero(m_value)));
+			if (unlikely(args.size() > 1u || (!args.size() && (!math::is_zero(m_value) || !math::is_zero(other.m_value))))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
 			retval.m_value = m_value;
 			retval.m_value += other.m_value;
 		}
@@ -297,23 +337,6 @@ class univariate_monomial
 		void set_exponent(U &&x)
 		{
 			m_value = std::forward<U>(x);
-		}
-		/// Random-access getter.
-		/**
-		 * Equivalent to get_exponent(). This method is provided for use in the series class.
-		 * 
-		 * @param[in] n index of the exponent to get (must be 0).
-		 * @param[in] args reference set of arguments.
-		 * 
-		 * @return const reference to the exponent at index \p n.
-		 */
-		const T &get_element(const size_type &n, const symbol_set &args) const
-		{
-			(void)n;
-			(void)args;
-			piranha_assert(n == 0u);
-			piranha_assert(args.size() == 1u);
-			return m_value;
 		}
 		/// Stream operator for piranha::univariate_monomial.
 		/**

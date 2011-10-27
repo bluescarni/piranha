@@ -188,6 +188,10 @@ struct is_unitary_tester
 		BOOST_CHECK(!k2.is_unitary(v2));
 		k2.set_exponent(0);
 		BOOST_CHECK(k2.is_unitary(v2));
+		k2.set_exponent(1);
+		BOOST_CHECK_THROW(k2.is_unitary(v1),std::invalid_argument);
+		v2.add(symbol("b"));
+		BOOST_CHECK_THROW(k2.is_unitary(v2),std::invalid_argument);
 	}
 };
 
@@ -211,6 +215,14 @@ struct multiply_tester
 		v.add(symbol("a"));
 		k1.multiply(k0,k2,v);
 		BOOST_CHECK(k0.get_exponent() == T(3));
+		BOOST_CHECK_THROW(k1.multiply(k0,k2,symbol_set{}),std::invalid_argument);
+		k2.set_exponent(0);
+		BOOST_CHECK_THROW(k1.multiply(k0,k2,symbol_set{}),std::invalid_argument);
+		k2.set_exponent(2);
+		k1.set_exponent(0);
+		BOOST_CHECK_THROW(k1.multiply(k0,k2,symbol_set{}),std::invalid_argument);
+		k1.set_exponent(1);
+		BOOST_CHECK_THROW(k1.multiply(k0,k2,symbol_set{symbol("a"),symbol("b")}),std::invalid_argument);
 	}
 };
 
@@ -249,30 +261,24 @@ struct degree_tester
 		k0.set_exponent(4);
 		v.add(symbol("a"));
 		BOOST_CHECK(k0.degree(v) == T(4));
+		symbol_set v2;
+		BOOST_CHECK_THROW(k0.degree(v2),std::invalid_argument);
+		v.add(symbol("b"));
+		BOOST_CHECK_THROW(k0.degree(v),std::invalid_argument);
+		// Partial degree.
+		BOOST_CHECK_THROW(k0.degree(v2,v),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.degree(v,v2),std::invalid_argument);
+		k0.set_exponent(0);
+		BOOST_CHECK(k0.degree(v,v2) == T(0));
+		k0.set_exponent(7);
+		BOOST_CHECK(k0.degree(symbol_set{symbol("y")},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.degree(symbol_set{symbol("y"),symbol("a")},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.degree(symbol_set{symbol("x"),symbol("a")},symbol_set{symbol("x")}) == T(7));
+		BOOST_CHECK(k0.degree(symbol_set{symbol("b"),symbol("x")},symbol_set{symbol("x")}) == T(7));
 	}
 };
 
 BOOST_AUTO_TEST_CASE(univariate_monomial_degree_test)
 {
 	boost::mpl::for_each<expo_types>(degree_tester());
-}
-
-struct get_element_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef univariate_monomial<T> k_type;
-		symbol_set vs1;
-		vs1.add(symbol("a"));
-		k_type k1({0});
-		BOOST_CHECK(k1.get_element(0,vs1) == 0);
-		k_type k2({1});
-		BOOST_CHECK(k2.get_element(0,vs1) == 1);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(univariate_monomial_get_element_test)
-{
-	boost::mpl::for_each<expo_types>(get_element_tester());
 }
