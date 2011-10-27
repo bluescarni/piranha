@@ -47,7 +47,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p SignedInteger must be a C++ signed integral type.
+ * \p SignedInteger must be a C++ signed integral type with finite bounds.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -70,7 +70,7 @@ class kronecker_array
 	private:
 		// Unsigned counterpart of the signed integer type used for encoding.
 		typedef typename std::make_unsigned<int_type>::type uint_type;
-		static_assert(std::is_signed<int_type>::value,"This class can be used only with signed integers.");
+		static_assert(std::is_signed<int_type>::value && std::numeric_limits<int_type>::is_bounded,"This class can be used only with bounded signed integers.");
 		static_assert(std::numeric_limits<int_type>::digits <= boost::integer_traits<int_type>::const_max,"Incompatible numerical limits.");
 		static const int_type nbits = std::numeric_limits<int_type>::digits;
 		// This is a 6-tuple of int_type built as follows:
