@@ -162,6 +162,7 @@ struct is_unitary_tester
 	void operator()(const T &)
 	{
 		typedef kronecker_monomial<T> k_type;
+		typedef kronecker_array<T> ka;
 		k_type k1;
 		symbol_set vs1;
 		BOOST_CHECK(k1.is_unitary(vs1));
@@ -175,6 +176,14 @@ struct is_unitary_tester
 		BOOST_CHECK(k4.is_unitary(vs1));
 		k_type k5({0,1});
 		BOOST_CHECK(!k5.is_unitary(vs1));
+		BOOST_CHECK_THROW(k5.is_unitary(symbol_set{}),std::invalid_argument);
+		symbol_set vs2;
+		const auto &l = ka::get_limits();
+		typedef decltype(l.size()) size_type;
+		for (size_type i = 0u; i <= l.size(); ++i) {
+			vs2.add(boost::lexical_cast<std::string>(i));
+		}
+		BOOST_CHECK_THROW(k5.is_unitary(vs2),std::invalid_argument);
 	}
 };
 
@@ -202,6 +211,14 @@ struct degree_tester
 		BOOST_CHECK(k4.degree(vs1) == 0);
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.degree(vs1) == -2);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("a")},vs1) == -1);
+		BOOST_CHECK(k5.degree(symbol_set{},vs1) == 0);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("f")},vs1) == 0);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("a"),symbol("b")},vs1) == -2);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("a"),symbol("c")},vs1) == -1);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("d"),symbol("c")},vs1) == 0);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("d"),symbol("b")},vs1) == -1);
+		BOOST_CHECK(k5.degree(symbol_set{symbol("A"),symbol("a")},vs1) == -1);
 	}
 };
 
@@ -317,30 +334,6 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_hash_test)
 {
 	boost::mpl::for_each<int_types>(hash_tester());
-}
-
-struct get_element_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef kronecker_monomial<T> k_type;
-		symbol_set vs1;
-		vs1.add(symbol("a"));
-		k_type k1({0});
-		BOOST_CHECK(k1.get_element(0,vs1) == 0);
-		k_type k2({-1});
-		BOOST_CHECK(k2.get_element(0,vs1) == -1);
-		k_type k3({-1,0});
-		vs1.add(symbol("b"));
-		BOOST_CHECK(k3.get_element(0,vs1) == -1);
-		BOOST_CHECK(k3.get_element(1,vs1) == 0);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_get_element_test)
-{
-	boost::mpl::for_each<int_types>(get_element_tester());
 }
 
 struct unpack_tester

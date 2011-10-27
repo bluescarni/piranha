@@ -69,7 +69,6 @@ namespace piranha
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag
 {
-		static_assert(std::is_signed<T>::value,"kronecker_monomial requires a signed integer type.");
 	public:
 		/// Alias for \p T.
 		typedef T value_type;
@@ -213,14 +212,10 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * A monomial is never considered ignorable.
 		 * 
-		 * @param[in] args reference set of piranha::symbol (ignored).
-		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &) const piranha_noexcept_spec(true)
 		{
-			(void)args;
-			piranha_assert(is_compatible(args));
 			return false;
 		}
 		/// Merge arguments.
@@ -276,14 +271,17 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Check if monomial is unitary.
 		/**
-		 * @param[in] args reference set of piranha::symbol (ignored).
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return \p true if the internal integer instance is zero, \p false otherwise.
+		 * 
+		 * @throws std::invalid_argument if \p this is not compatible with \p args.
 		 */
 		bool is_unitary(const symbol_set &args) const
 		{
-			(void)args;
-			piranha_assert(args.size() || !m_value);
+			if (unlikely(!is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
 			// A kronecker code will be zero if all components are zero.
 			return !m_value;
 		}
@@ -301,22 +299,38 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			const auto tmp = unpack(args);
 			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),safe_adder);
 		}
-		/// Random-access getter.
+		/// Partial degree.
 		/**
-		 * Will decode the internal integer instance and return the element at index \p n of the decoded vector.
+		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
+		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
 		 * 
-		 * @param[in] n index of the exponent to get.
-		 * @param[in] args reference set of arguments.
+		 * @param[in] active_args symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return exponent at index \p n.
+		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
+		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
 		 * 
+		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type get_element(const size_type &n, const symbol_set &args) const
+		value_type degree(const symbol_set &active_args, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
-			piranha_assert(n < tmp.size());
-			return tmp[n];
+			value_type retval(0);
+			auto it1 = args.begin(), it2 = active_args.begin();
+			for (size_type i = 0u; i < tmp.size(); ++i, ++it1) {
+				// Move forward the it2 iterator until it does not preceed the iterator in args,
+				// or we run out of symbols.
+				while (it2 != active_args.end() && *it2 < *it1) {
+					++it2;
+				}
+				if (it2 == active_args.end()) {
+					break;
+				} else if (*it2 == *it1) {
+					retval = safe_adder(retval,tmp[i]);
+				}
+			}
+			return retval;
 		}
 		/// Multiply monomial.
 		/**
