@@ -299,30 +299,6 @@ BOOST_AUTO_TEST_CASE(monomial_degree_test)
 	boost::mpl::for_each<expo_types>(degree_tester());
 }
 
-struct get_element_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef monomial<T> k_type;
-		symbol_set vs1;
-		vs1.add(symbol("a"));
-		k_type k1({0});
-		BOOST_CHECK(k1.get_element(0,vs1) == 0);
-		k_type k2({1});
-		BOOST_CHECK(k2.get_element(0,vs1) == 1);
-		k_type k3({1,0});
-		vs1.add(symbol("b"));
-		BOOST_CHECK(k3.get_element(0,vs1) == 1);
-		BOOST_CHECK(k3.get_element(1,vs1) == 0);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(monomial_get_element_test)
-{
-	boost::mpl::for_each<expo_types>(get_element_tester());
-}
-
 struct multiply_tester
 {
 	template <typename T>

@@ -204,7 +204,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by constructor and the addition and assignment operators of \p value_type.
+		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
 		 */
 		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &active_args, const symbol_set &args) const
 		{
@@ -247,23 +247,6 @@ class monomial: public array_key<T,monomial<T>>
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			this->add(retval,other);
-		}
-		/// Random-access getter.
-		/**
-		 * Equivalent to operator[](). This method is used by the series class. For performance reasons, this method is
-		 * protected by checks on \p n and \p args only in debug mode (via asserts).
-		 * 
-		 * @param[in] n index of the exponent to get.
-		 * @param[in] args reference set of arguments.
-		 * 
-		 * @return const reference to the exponent at index \p n.
-		 */
-		const typename base::value_type &get_element(const typename base::size_type &n, const symbol_set &args) const
-		{
-			(void)args;
-			piranha_assert(args.size() == this->size());
-			piranha_assert(n < this->size());
-			return (*this)[n];
 		}
 };
 
