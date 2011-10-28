@@ -165,6 +165,32 @@ template <typename T>
 struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
 {};
 
+/// Type has degree.
+/**
+ * This type trait establishes if a type is provided with a "degree" property (in the mathematical sense,
+ * as in polynomial degree),
+ * and how such property can be queried. The default implementation's value is \p false.
+ * 
+ * Any specialisation which sets the value to \p true shall also provide two static methods
+ * (or a single method with defaulted second parameter)
+ * to query the total or partial degree of an instance of type \p T as follows:
+ * 
+ * - a <tt>get(const T &x)</tt> static method, returning the total degree of \p x,
+ * - a <tt>get(const T &x, const std::set<std::string> &s)</tt> static method, returning
+ *   the partial degree of \p x when only the literal variables with names in \p s are considered
+ *   in the computation of the degree.
+ */
+template <typename T, typename Enable = void>
+class has_degree
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = false;
+};
+
+template <typename T, typename Enable>
+const bool has_degree<T,Enable>::value;
+
 }
 
 /// Macro to test if class has type definition.

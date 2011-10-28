@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE type_traits_test
 #include <boost/test/unit_test.hpp>
 
+#include <set>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -148,4 +149,25 @@ BOOST_AUTO_TEST_CASE(type_traits_is_tuple)
 	BOOST_CHECK(is_tuple<std::tuple<>>::value);
 	BOOST_CHECK(is_tuple<std::tuple<int>>::value);
 	BOOST_CHECK(!is_tuple<std::string>::value);
+}
+
+namespace piranha
+{
+
+template <typename T>
+class has_degree<T,typename std::enable_if<std::is_same<trivial,T>::value>::type>
+{
+	public:
+		static const bool value = true;
+		int get(const T &, const std::set<std::string> & = std::set<std::string>{});
+};
+
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_has_degree)
+{
+	BOOST_CHECK(!has_degree<int>::value);
+	BOOST_CHECK(!has_degree<double>::value);
+	BOOST_CHECK(!has_degree<integer>::value);
+	BOOST_CHECK(has_degree<trivial>::value);
 }
