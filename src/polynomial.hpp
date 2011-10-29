@@ -131,7 +131,7 @@ class polynomial:
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		/// Trivial destructor.
-		~polynomial()
+		~polynomial() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
 			BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<polynomial>));
