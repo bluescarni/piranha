@@ -33,6 +33,7 @@
 
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
+#include "detail/sfinae_types.hpp"
 
 // TODO:
 // - check inclusion of this header -> only uses are in concept, the enabler thing and the has_type.
@@ -190,6 +191,42 @@ class has_degree
 
 template <typename T, typename Enable>
 const bool has_degree<T,Enable>::value;
+
+/// Addable type trait.
+/**
+ * Will be \p true if adding an instance of \p T to an instance of \p U is a valid expression, \p false otherwise.
+ */
+template <typename T, typename U>
+class is_addable: detail::sfinae_types
+{
+		template <typename V>
+		static auto test(const V *t) -> decltype(*t + std::declval<U>(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+};
+
+template <typename T, typename U>
+const bool is_addable<T,U>::value;
+
+/// In-place addable type trait.
+/**
+ * Will be \p true if adding in-place an instance of \p U to an instance of \p T is a valid expression, \p false otherwise.
+ */
+template <typename T, typename U>
+class is_addable_in_place: detail::sfinae_types
+{
+		template <typename V>
+		static auto test(V *t) -> decltype(*t += std::declval<U>(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+};
+
+template <typename T, typename U>
+const bool is_addable_in_place<T,U>::value;
 
 }
 

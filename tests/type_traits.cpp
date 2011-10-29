@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE type_traits_test
 #include <boost/test/unit_test.hpp>
 
+#include <complex>
 #include <set>
 #include <string>
 #include <tuple>
@@ -170,4 +171,30 @@ BOOST_AUTO_TEST_CASE(type_traits_has_degree)
 	BOOST_CHECK(!has_degree<double>::value);
 	BOOST_CHECK(!has_degree<integer>::value);
 	BOOST_CHECK(has_degree<trivial>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_addable)
+{
+	BOOST_CHECK((is_addable<int,int>::value));
+	BOOST_CHECK((is_addable<int,double>::value));
+	BOOST_CHECK((is_addable<double,int>::value));
+	BOOST_CHECK((is_addable<std::complex<double>,double>::value));
+	BOOST_CHECK((is_addable<double,std::complex<double>>::value));
+	BOOST_CHECK((is_addable<double,integer>::value));
+	BOOST_CHECK((is_addable<integer,double>::value));
+	BOOST_CHECK((!is_addable<trivial,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable<int,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable<integer,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable<std::complex<double>,int>::value));
+	BOOST_CHECK((!is_addable<std::complex<double>,integer>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
+{
+	BOOST_CHECK((is_addable_in_place<int,int>::value));
+	BOOST_CHECK((is_addable_in_place<int,double>::value));
+	BOOST_CHECK((is_addable_in_place<double,int>::value));
+	BOOST_CHECK((is_addable_in_place<std::complex<double>,double>::value));
+	BOOST_CHECK((!is_addable_in_place<double,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable_in_place<trivial,std::complex<double>>::value));
 }
