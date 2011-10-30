@@ -33,7 +33,7 @@
 #include <type_traits>
 #include <unordered_set>
 
-#include "concepts/key.hpp"
+#include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
 #include "kronecker_array.hpp"
@@ -48,6 +48,8 @@ namespace piranha
  * This class represents a multivariate monomial with integral exponents.
  * The values of the exponents are packed in a signed integer using Kronecker substitution, using the facilities provided
  * by piranha::kronecker_array.
+ * 
+ * This class is a model of the piranha::concept::DegreeKey concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -144,7 +146,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/// Trivial destructor.
 		~kronecker_monomial() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Key<kronecker_monomial>));
+			BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		kronecker_monomial &operator=(const kronecker_monomial &) = default;

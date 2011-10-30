@@ -29,7 +29,7 @@
 #include <unordered_set>
 
 #include "array_key.hpp"
-#include "concepts/key.hpp"
+#include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
@@ -41,7 +41,8 @@ namespace piranha
 /// Monomial class.
 /**
  * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
- * This class is a model of the piranha::concept::Key concept.
+ * 
+ * This class is a model of the piranha::concept::DegreeKey concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -93,7 +94,7 @@ class monomial: public array_key<T,monomial<T>>
 		/// Trivial destructor.
 		~monomial() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Key<monomial>));
+			BOOST_CONCEPT_ASSERT((concept::DegreeKey<monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;

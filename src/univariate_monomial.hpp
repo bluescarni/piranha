@@ -29,7 +29,7 @@
 #include <unordered_set>
 
 #include "concepts/array_key_value_type.hpp"
-#include "concepts/key.hpp"
+#include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -43,7 +43,7 @@ namespace piranha
  * This class represents a univariate monomial with exponent of type \p T. The exponent is represented
  * by an instance of \p T stored within the object.
  * 
- * This class is a model of the piranha::concept::Key concept.
+ * This class is a model of the piranha::concept::DegreeKey concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -124,7 +124,7 @@ class univariate_monomial
 		/// Trivial destructor.
 		~univariate_monomial() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Key<univariate_monomial>));
+			BOOST_CONCEPT_ASSERT((concept::DegreeKey<univariate_monomial>));
 		}
 		/// Copy assignment operator.
 		/**
