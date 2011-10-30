@@ -299,6 +299,20 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			const auto tmp = unpack(args);
 			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),safe_adder);
 		}
+		/// Low degree.
+		/**
+		 * Equivalent to the degree.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return low degree of the monomial.
+		 * 
+		 * @throws unspecified any exception thrown by degree().
+		 */
+		value_type ldegree(const symbol_set &args) const
+		{
+			return degree(args);
+		}
 		/// Partial degree.
 		/**
 		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
@@ -331,6 +345,21 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				}
 			}
 			return retval;
+		}
+		/// Partial low degree.
+		/**
+		 * Equivalent to the partial degree.
+		 * 
+		 * @param[in] active_args symbols that will be considered in the computation of the partial low degree of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the partial low degree.
+		 * 
+		 * @throws unspecified any exception thrown by degree().
+		 */
+		value_type ldegree(const symbol_set &active_args, const symbol_set &args) const
+		{
+			return degree(active_args,args);
 		}
 		/// Multiply monomial.
 		/**

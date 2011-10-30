@@ -201,14 +201,18 @@ struct degree_tester
 		k_type k1;
 		symbol_set vs1;
 		BOOST_CHECK(k1.degree(vs1) == 0);
+		BOOST_CHECK(k1.ldegree(vs1) == 0);
 		k_type k2({0});
 		vs1.add(symbol("a"));
 		BOOST_CHECK(k2.degree(vs1) == 0);
+		BOOST_CHECK(k2.ldegree(vs1) == 0);
 		k_type k3({-1});
 		BOOST_CHECK(k3.degree(vs1) == -1);
+		BOOST_CHECK(k3.ldegree(vs1) == -1);
 		vs1.add(symbol("b"));
 		k_type k4({0,0});
 		BOOST_CHECK(k4.degree(vs1) == 0);
+		BOOST_CHECK(k4.ldegree(vs1) == 0);
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.degree(vs1) == -2);
 		BOOST_CHECK(k5.degree(symbol_set{symbol("a")},vs1) == -1);
@@ -219,6 +223,15 @@ struct degree_tester
 		BOOST_CHECK(k5.degree(symbol_set{symbol("d"),symbol("c")},vs1) == 0);
 		BOOST_CHECK(k5.degree(symbol_set{symbol("d"),symbol("b")},vs1) == -1);
 		BOOST_CHECK(k5.degree(symbol_set{symbol("A"),symbol("a")},vs1) == -1);
+		BOOST_CHECK(k5.ldegree(vs1) == -2);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("a")},vs1) == -1);
+		BOOST_CHECK(k5.ldegree(symbol_set{},vs1) == 0);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("f")},vs1) == 0);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("a"),symbol("b")},vs1) == -2);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("a"),symbol("c")},vs1) == -1);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("d"),symbol("c")},vs1) == 0);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("d"),symbol("b")},vs1) == -1);
+		BOOST_CHECK(k5.ldegree(symbol_set{symbol("A"),symbol("a")},vs1) == -1);
 	}
 };
 

@@ -192,6 +192,20 @@ class monomial: public array_key<T,monomial<T>>
 			}
 			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
 		}
+		/// Low degree.
+		/**
+		 * Analogous to the degree.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the output of degree().
+		 * 
+		 * @throws unspecified any exception thrown by degree().
+		 */
+		typename array_key<T,monomial<T>>::value_type ldegree(const symbol_set &args) const
+		{
+			return degree(args);
+		}
 		/// Partial degree.
 		/**
 		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
@@ -227,6 +241,21 @@ class monomial: public array_key<T,monomial<T>>
 				}
 			}
 			return retval;
+		}
+		/// Partial low degree.
+		/**
+		 * Analogous to the partial degree.
+		 * 
+		 * @param[in] active_args symbols that will be considered in the computation of the partial low degree of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the output of degree().
+		 * 
+		 * @throws unspecified any exception thrown by degree().
+		 */
+		typename array_key<T,monomial<T>>::value_type ldegree(const symbol_set &active_args, const symbol_set &args) const
+		{
+			return degree(active_args,args);
 		}
 		/// Multiply monomial.
 		/**
