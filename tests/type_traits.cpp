@@ -161,6 +161,7 @@ class has_degree<T,typename std::enable_if<std::is_same<trivial,T>::value>::type
 	public:
 		static const bool value = true;
 		int get(const T &, const std::set<std::string> & = std::set<std::string>{});
+		int lget(const T &, const std::set<std::string> & = std::set<std::string>{});
 };
 
 }
