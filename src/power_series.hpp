@@ -25,6 +25,7 @@
 #include <string>
 #include <type_traits>
 
+#include "concepts/degree_key.hpp"
 #include "detail/series_fwd.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
