@@ -22,6 +22,8 @@
 #define PIRANHA_CONCEPT_DEGREE_KEY_HPP
 
 #include <boost/concept_check.hpp>
+#include <set>
+#include <string>
 
 #include "../config.hpp"
 #include "../detail/sfinae_types.hpp"
@@ -41,13 +43,13 @@ struct key_has_degree: sfinae_types
 	static auto test1(const T *t) -> decltype(t->degree(std::declval<symbol_set>()),yes());
 	static no test1(...);
 	template <typename T>
-	static auto test2(const T *t) -> decltype(t->degree(std::declval<symbol_set>(),std::declval<symbol_set>()),yes());
+	static auto test2(const T *t) -> decltype(t->degree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),yes());
 	static no test2(...);
 	template <typename T>
 	static auto test3(const T *t) -> decltype(t->ldegree(std::declval<symbol_set>()),yes());
 	static no test3(...);
 	template <typename T>
-	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<symbol_set>(),std::declval<symbol_set>()),yes());
+	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),yes());
 	static no test4(...);
 	static const bool value = (sizeof(test1((Key *)piranha_nullptr)) == sizeof(yes)) &&
 		(sizeof(test2((Key *)piranha_nullptr)) == sizeof(yes)) && (sizeof(test3((Key *)piranha_nullptr)) == sizeof(yes)) &&
@@ -69,9 +71,9 @@ namespace concept
  * - must be a model of piranha::concept::Key,
  * - must be provided with the following methods to query the degree of the key:
  *   - <tt>degree(const piranha::symbol_set &args) const</tt>, to query the total degree,
- *   - <tt>degree(const piranha::symbol_set &active_args, const piranha::symbol_set &args) const</tt>, to query the partial degree,
+ *   - <tt>degree(const std::set<std::string> &active_args, const piranha::symbol_set &args) const</tt>, to query the partial degree,
  *   - <tt>ldegree(const piranha::symbol_set &args) const</tt>, to query the total low degree,
- *   - <tt>ldegree(const piranha::symbol_set &active_args, const piranha::symbol_set &args) const</tt>, to query the partial low degree.
+ *   - <tt>ldegree(const std::set<std::string> &active_args, const piranha::symbol_set &args) const</tt>, to query the partial low degree.
  */
 template <typename T>
 struct DegreeKey:

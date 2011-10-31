@@ -268,21 +268,21 @@ struct degree_tester
 		v.add(symbol("b"));
 		BOOST_CHECK_THROW(k0.degree(v),std::invalid_argument);
 		// Partial degree.
-		BOOST_CHECK_THROW(k0.degree(v2,v),std::invalid_argument);
-		BOOST_CHECK_THROW(k0.ldegree(v2,v),std::invalid_argument);
-		BOOST_CHECK_THROW(k0.degree(v,v2),std::invalid_argument);
-		BOOST_CHECK_THROW(k0.ldegree(v,v2),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.degree({},v),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.ldegree({},v),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.degree({"a","b"},v2),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.ldegree({"a","b"},v2),std::invalid_argument);
 		k0.set_exponent(0);
-		BOOST_CHECK(k0.degree(v,v2) == T(0));
+		BOOST_CHECK(k0.degree({"a","b"},v2) == T(0));
 		k0.set_exponent(7);
-		BOOST_CHECK(k0.degree(symbol_set{symbol("y")},symbol_set{symbol("x")}) == T(0));
-		BOOST_CHECK(k0.degree(symbol_set{symbol("y"),symbol("a")},symbol_set{symbol("x")}) == T(0));
-		BOOST_CHECK(k0.degree(symbol_set{symbol("x"),symbol("a")},symbol_set{symbol("x")}) == T(7));
-		BOOST_CHECK(k0.degree(symbol_set{symbol("b"),symbol("x")},symbol_set{symbol("x")}) == T(7));
-		BOOST_CHECK(k0.ldegree(symbol_set{symbol("y")},symbol_set{symbol("x")}) == T(0));
-		BOOST_CHECK(k0.ldegree(symbol_set{symbol("y"),symbol("a")},symbol_set{symbol("x")}) == T(0));
-		BOOST_CHECK(k0.ldegree(symbol_set{symbol("x"),symbol("a")},symbol_set{symbol("x")}) == T(7));
-		BOOST_CHECK(k0.ldegree(symbol_set{symbol("b"),symbol("x")},symbol_set{symbol("x")}) == T(7));
+		BOOST_CHECK(k0.degree({"y"},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.degree({"y","a"},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.degree({"x","a"},symbol_set{symbol("x")}) == T(7));
+		BOOST_CHECK(k0.degree({"b","x"},symbol_set{symbol("x")}) == T(7));
+		BOOST_CHECK(k0.ldegree({"y"},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.ldegree({"y","a"},symbol_set{symbol("x")}) == T(0));
+		BOOST_CHECK(k0.ldegree({"x","a"},symbol_set{symbol("x")}) == T(7));
+		BOOST_CHECK(k0.ldegree({"b","x"},symbol_set{symbol("x")}) == T(7));
 	}
 };
 

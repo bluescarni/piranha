@@ -28,7 +28,9 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <unordered_set>
@@ -317,10 +319,10 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Partial degree.
 		/**
-		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
+		 * Partial degree of the monomial: only the symbols with names in \p active_args are considered during the computation
 		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
 		 * 
-		 * @param[in] active_args symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
@@ -329,20 +331,21 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type degree(const symbol_set &active_args, const symbol_set &args) const
+		value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			value_type retval(0);
-			auto it1 = args.begin(), it2 = active_args.begin();
+			auto it1 = args.begin();
+			auto it2 = active_args.begin();
 			for (size_type i = 0u; i < tmp.size(); ++i, ++it1) {
 				// Move forward the it2 iterator until it does not preceed the iterator in args,
 				// or we run out of symbols.
-				while (it2 != active_args.end() && *it2 < *it1) {
+				while (it2 != active_args.end() && *it2 < it1->get_name()) {
 					++it2;
 				}
 				if (it2 == active_args.end()) {
 					break;
-				} else if (*it2 == *it1) {
+				} else if (*it2 == it1->get_name()) {
 					retval = safe_adder(retval,tmp[i]);
 				}
 			}
@@ -352,14 +355,14 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * Equivalent to the partial degree.
 		 * 
-		 * @param[in] active_args symbols that will be considered in the computation of the partial low degree of the monomial.
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low degree of the monomial.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return the partial low degree.
 		 * 
 		 * @throws unspecified any exception thrown by degree().
 		 */
-		value_type ldegree(const symbol_set &active_args, const symbol_set &args) const
+		value_type ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			return degree(active_args,args);
 		}

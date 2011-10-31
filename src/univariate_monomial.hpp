@@ -25,7 +25,9 @@
 #include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <unordered_set>
 
 #include "concepts/array_key_value_type.hpp"
@@ -280,10 +282,10 @@ class univariate_monomial
 		}
 		/// Partial degree.
 		/**
-		 * Partial degree of the monomial: only the symbols in \p active_args are considered during the computation
+		 * Partial degree of the monomial: only the symbols with names in \p active_args are considered during the computation
 		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
 		 * 
-		 * @param[in] active_args symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
@@ -293,7 +295,7 @@ class univariate_monomial
 		 * if the size is zero and the exponent is not zero.
 		 * @throws unspecified any exception thrown by piranha::math::is_zero() or by constructing an instance of \p T from zero.
 		 */
-		T degree(const symbol_set &active_args, const symbol_set &args) const
+		T degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			if (unlikely(args.size() > 1u || (!args.size() && !math::is_zero(m_value)))) {
 				piranha_throw(std::invalid_argument,"invalid symbol set");
@@ -303,7 +305,7 @@ class univariate_monomial
 			}
 			piranha_assert(args.size() == 1u);
 			// Look for the only symbol in active args, if we find it return its exponent.
-			const bool is_present = std::binary_search(active_args.begin(),active_args.end(),args[0]);
+			const bool is_present = std::binary_search(active_args.begin(),active_args.end(),args[0].get_name());
 			if (is_present) {
 				return m_value;
 			} else {
@@ -314,14 +316,14 @@ class univariate_monomial
 		/**
 		 * Equivalent to the partial degree.
 		 * 
-		 * @param[in] active_args symbols that will be considered in the computation of the partial low degree of the monomial.
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low degree of the monomial.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return partial low degree of the monomial.
 		 * 
 		 * @throws unspecified any exception thrown by degree().
 		 */
-		T ldegree(const symbol_set &active_args, const symbol_set &args) const
+		T ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			return degree(active_args,args);
 		}
