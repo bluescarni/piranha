@@ -175,9 +175,41 @@ BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 {
 	typedef polynomial<double,univariate_monomial<int>> p_type1;
+	typedef polynomial<p_type1,univariate_monomial<int>> p_type11;
+	typedef polynomial<p_type11,univariate_monomial<int>> p_type111;
 	p_type1 x("x");
-	std::cout << x.degree() << '\n';
-	std::cout << (x * x).degree() << '\n';
+	BOOST_CHECK(x.degree() == 1);
+	BOOST_CHECK(x.ldegree() == 1);
+	BOOST_CHECK((x * x).degree() == 2);
+	BOOST_CHECK((x * x).ldegree() == 2);
+	BOOST_CHECK((x * x).degree({"y","z"}) == 0);
+	BOOST_CHECK((x * x).ldegree({"y","z"}) == 0);
+	p_type11 y("y");
+	p_type111 z("z");
+	BOOST_CHECK((x * y* z).degree() == 3);
+	BOOST_CHECK((x * y* z).ldegree() == 3);
+	BOOST_CHECK((x * y* z).degree({"x"}) == 1);
+	BOOST_CHECK((x * y* z).ldegree({"x"}) == 1);
+	BOOST_CHECK((x * y* z).degree({"y"}) == 1);
+	BOOST_CHECK((x * y* z).ldegree({"y"}) == 1);
+	BOOST_CHECK((x * y* z).degree({"z"}) == 1);
+	BOOST_CHECK((x * y* z).ldegree({"z"}) == 1);
+	BOOST_CHECK((x * y* z).degree({"z","y"}) == 2);
+	BOOST_CHECK((x * y* z).ldegree({"z","y"}) == 2);
+	BOOST_CHECK((x * y* z).degree({"z","x"}) == 2);
+	BOOST_CHECK((x * y* z).ldegree({"z","x"}) == 2);
+	BOOST_CHECK((x * y* z).degree({"y","x"}) == 2);
+	BOOST_CHECK((x * y* z).ldegree({"y","x"}) == 2);
+	BOOST_CHECK((x * y* z).degree({"y","x","z"}) == 3);
+	BOOST_CHECK((x * y* z).ldegree({"y","x","z"}) == 3);
+	BOOST_CHECK((x + y + z).degree() == 1);
+	BOOST_CHECK((x + y + z).ldegree() == 1);
+	BOOST_CHECK((x + y + z).degree({"x"}) == 1);
+	BOOST_CHECK((x + y + z).ldegree({"x"}) == 0);
+	BOOST_CHECK((x + y + z).ldegree({"x","y"}) == 0);
+	BOOST_CHECK((x + y + 1).ldegree({"x","y"}) == 0);
+	BOOST_CHECK((x + y + 1).ldegree({"x","y","t"}) == 0);
+	BOOST_CHECK((x + y + 1).ldegree() == 0);
 }
 
 struct multiplication_tester
