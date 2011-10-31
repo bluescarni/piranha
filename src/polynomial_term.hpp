@@ -137,7 +137,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_term,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit polynomial_term(T &&arg1, Args && ... params):base(std::forward<T>(arg1),std::forward<Args>(params)...) {}
 		/// Trivial destructor.
-		~polynomial_term()
+		~polynomial_term() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<polynomial_term>));
 		}

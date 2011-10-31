@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
@@ -56,7 +57,7 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
 		g_series_type &operator=(const g_series_type &) = default;
-		g_series_type &operator=(g_series_type &&other)
+		g_series_type &operator=(g_series_type &&other) piranha_noexcept_spec(true)
 		{
 			if (this != &other) {
 				base::operator=(std::move(other));
@@ -90,7 +91,7 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
 		g_series_type2 &operator=(const g_series_type2 &) = default;
-		g_series_type2 &operator=(g_series_type2 &&other)
+		g_series_type2 &operator=(g_series_type2 &&other) piranha_noexcept_spec(true)
 		{
 			if (this != &other) {
 				base::operator=(std::move(other));

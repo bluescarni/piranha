@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 
+#include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
@@ -51,7 +52,7 @@ class polynomial: public series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
 		polynomial &operator=(const polynomial &) = default;
-		polynomial &operator=(polynomial &&other)
+		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
 		{
 			if (this != &other) {
 				base::operator=(std::move(other));
