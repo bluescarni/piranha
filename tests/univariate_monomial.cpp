@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <initializer_list>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -35,7 +36,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<unsigned,integer> expo_types;
+typedef boost::mpl::vector<int,integer> expo_types;
 
 // Constructors, assignments and element access.
 struct constructor_tester
@@ -289,4 +290,41 @@ struct degree_tester
 BOOST_AUTO_TEST_CASE(univariate_monomial_degree_test)
 {
 	boost::mpl::for_each<expo_types>(degree_tester());
+}
+
+struct print_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef univariate_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(-1)});
+		k3.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1");
+		k_type k4({T(1)});
+		oss.str("");
+		k4.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x");
+		k_type k5;
+		vs.add("y");
+		BOOST_CHECK_THROW(k5.print(oss,vs),std::invalid_argument);
+		vs = symbol_set();
+		k_type k6;
+		k6.set_exponent(T(1));
+		BOOST_CHECK_THROW(k6.print(oss,vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(univariate_monomial_print_test)
+{
+	boost::mpl::for_each<expo_types>(print_tester());
 }

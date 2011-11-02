@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <initializer_list>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -280,6 +281,35 @@ class monomial: public array_key<T,monomial<T>>
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			this->add(retval,other);
+		}
+		/// Print.
+		/**
+		 * Will print to stream a human-readable representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception resulting from:
+		 * - construction of the exponent type from \p int,
+		 * - comparison of exponents,
+		 * - printing exponents to stream.
+		 */
+		void print(std::ostream &os, const symbol_set &args) const
+		{
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			typedef typename base::value_type value_type;
+			const value_type zero(0), one(1);
+			for (typename base::size_type i = 0u; i < this->size(); ++i) {
+				if ((*this)[i] != zero) {
+					os << args[i].get_name();
+					if ((*this)[i] != one) {
+						os << "**" << (*this)[i];
+					}
+				}
+			}
 		}
 };
 

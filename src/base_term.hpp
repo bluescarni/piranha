@@ -23,7 +23,6 @@
 
 #include <boost/concept/assert.hpp>
 #include <cstddef>
-#include <iostream>
 #include <type_traits>
 #include <unordered_set>
 
@@ -192,23 +191,6 @@ class base_term: detail::base_term_tag
 		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
 			return (math::is_zero(m_cf) || m_key.is_ignorable(args));
-		}
-		/// Overload of stream operator for piranha::base_term.
-		/**
-		 * Will direct to stream a human-readable representation of the term.
-		 * 
-		 * @param[in,out] os target stream.
-		 * @param[in] t piranha::base_term that will be directed to \p os.
-		 * 
-		 * @return reference to \p os.
-		 * 
-		 * @throws unspecified any exception thrown by directing to the stream the term's
-		 * coefficient and/or key.
-		 */
-		friend std::ostream &operator<<(std::ostream &os, const base_term<Cf,Key,Derived> &t)
-		{
-			os << t.m_cf << " - " << t.m_key;
-			return os;
 		}
 		/// Coefficient member.
 		mutable Cf	m_cf;

@@ -25,6 +25,7 @@
 #include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -337,7 +338,10 @@ class univariate_monomial
 		 * 
 		 * @throws std::invalid_argument if the size of \p args is greater than one or
 		 * if the size is zero and one of the two exponents is not zero.
-		 * @throws unspecified any exception thrown by copy-assignment of \p T and by in-place addition of \p T with \p U.
+		 * @throws unspecified any exception thrown by:
+		 * - copy-assignment of \p T,
+		 * - in-place addition of \p T with \p U,
+		 * - piranha::math::is_zero().
 		 */
 		template <typename U>
 		void multiply(univariate_monomial &retval, const univariate_monomial<U> &other, const symbol_set &args) const
@@ -369,22 +373,35 @@ class univariate_monomial
 		{
 			m_value = std::forward<U>(x);
 		}
-		/// Stream operator for piranha::univariate_monomial.
+		/// Print.
 		/**
-		 * Will output to stream a human-readable representation of the monomial.
+		 * Will print to stream a human-readable representation of the monomial.
 		 * 
 		 * @param[in] os target stream.
-		 * @param[in] m input piranha::univariate_monomial.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return reference to \p os.
-		 * 
-		 * @throws unspecified any exception thrown by streaming to \p os an instance of the type
-		 * of the exponent of the monomial.
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and the exponent is not zero.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::is_zero(),
+		 * - construction of the exponent type from \p int,
+		 * - comparison of exponents,
+		 * - printing exponents to stream.
 		 */
-		friend std::ostream &operator<<(std::ostream &os, const univariate_monomial &m)
+		void print(std::ostream &os, const symbol_set &args) const
 		{
-			os << '[' << m.m_value << ']';
-			return os;
+			if (unlikely(args.size() > 1u || (!args.size() && !math::is_zero(m_value)))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
+			const value_type zero(0), one(1);
+			if (args.size()) {
+				if (m_value != zero) {
+					os << args[0u].get_name();
+					if (m_value != one) {
+						os << "**" << m_value;
+					}
+				}
+			}
 		}
 	private:
 		T m_value;

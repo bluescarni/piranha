@@ -38,7 +38,7 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::ContainerElement,
- * - must be constructible from the integral constant 0,
+ * - must be constructible from \p int,
  * - must be assignable,
  * - must be equality-comparable,
  * - must be addable (both in binary and unary form),

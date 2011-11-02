@@ -27,7 +27,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
-#include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_set>
@@ -428,30 +427,6 @@ class array_key: detail::array_key_tag
 		bool operator!=(const array_key &other) const
 		{
 			return !operator==(other);
-		}
-		/// Overload of stream operator for piranha::array_key.
-		/**
-		 * Will direct to stream a human-readable representation of the key.
-		 * 
-		 * @param[in,out] os target stream.
-		 * @param[in] a piranha::array_key that will be directed to \p os.
-		 * 
-		 * @return reference to \p os.
-		 * 
-		 * @throws unspecified any exception thrown by directing to the stream instances of piranha::array_key::value_type.
-		 */
-		friend std::ostream &operator<<(std::ostream &os, const array_key &a)
-		{
-			typedef decltype(a.m_container.size()) size_type;
-			os << '[';
-			for (size_type i = 0u; i < a.m_container.size(); ++i) {
-				os << a[i];
-				if (i != a.m_container.size() - static_cast<size_type>(1)) {
-					os << ',';
-				}
-			}
-			os << ']';
-			return os;
 		}
 	protected:
 		/// Merge arguments.

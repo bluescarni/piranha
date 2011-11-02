@@ -73,16 +73,16 @@ struct constructor_tester
 			args.add("x");
 			// Default constructor.
 			BOOST_CHECK_EQUAL(term_type().m_cf,Cf());
-			BOOST_CHECK_EQUAL(term_type().m_key,Key());
+			BOOST_CHECK(term_type().m_key == Key());
 			// Generic constructor.
 			BOOST_CHECK_EQUAL(term_type(Cf(1),Key{value_type(1)}).m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(term_type(Cf(1),Key{value_type(1)}).m_key,Key{value_type(1)});
+			BOOST_CHECK(term_type(Cf(1),Key{value_type(1)}).m_key == Key{value_type(1)});
 			// Constructor from term of different type.
 			typedef long Cf2;
 			typedef g_term_type<Cf2,Key> other_term_type;
 			other_term_type other(Cf2(1),Key{value_type(1)});
 			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_cf,Cf(Cf2(1)));
-			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_key[0],Key{value_type(1)}[0]);
+			BOOST_CHECK(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_key[0] == Key{value_type(1)}[0]);
 			// Move assignment.
 			term_type term(Cf(1),Key{value_type(2)});
 			term = term_type(Cf(2),Key{value_type(1)});
@@ -225,11 +225,11 @@ struct ignorability_tester
 			typedef typename Key::value_type value_type;
 			symbol_set args;
 			term_type t1;
-			BOOST_CHECK_EQUAL(t1.is_ignorable(args),t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf));
+			BOOST_CHECK_EQUAL(t1.is_ignorable(args),(t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf)));
 			BOOST_CHECK(t1.is_ignorable(args));
 			term_type t2;
 			t2.m_cf = 1;
-			BOOST_CHECK_EQUAL(t2.is_ignorable(args),t2.m_key.is_ignorable(args) || math::is_zero(t2.m_cf));
+			BOOST_CHECK_EQUAL(t2.is_ignorable(args),(t2.m_key.is_ignorable(args) || math::is_zero(t2.m_cf)));
 			BOOST_CHECK(!t2.is_ignorable(args));
 		}
 	};

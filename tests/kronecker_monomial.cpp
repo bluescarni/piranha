@@ -27,6 +27,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <initializer_list>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -312,23 +313,6 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_equality_test)
 	boost::mpl::for_each<int_types>(equality_tester());
 }
 
-struct stream_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef kronecker_monomial<T> k_type;
-		std::ostringstream oss;
-		oss << k_type({});
-		BOOST_CHECK(!oss.str().empty());
-	}
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_monomial_stream_test)
-{
-	boost::mpl::for_each<int_types>(stream_tester());
-}
-
 struct hash_tester
 {
 	template <typename T>
@@ -370,4 +354,43 @@ struct unpack_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_unpack_test)
 {
 	boost::mpl::for_each<int_types>(unpack_tester());
+}
+
+struct print_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(-1)});
+		k3.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1");
+		k_type k4({T(1)});
+		oss.str("");
+		k4.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x");
+		k_type k5({T(-1),T(1)});
+		vs.add("y");
+		oss.str("");
+		k5.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1y");
+		k_type k6({T(-1),T(-2)});
+		oss.str("");
+		k6.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1y**-2");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
+{
+	boost::mpl::for_each<int_types>(print_tester());
 }

@@ -27,6 +27,7 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
@@ -39,9 +40,12 @@
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
 #include "hash_set.hpp"
+#include "integer.hpp"
 #include "math.hpp" // For negate() and math specialisations.
+#include "print_coefficient.hpp"
 #include "series_multiplier.hpp"
 #include "series_binary_operators.hpp"
+#include "settings.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -885,18 +889,90 @@ class series: series_binary_operators, detail::series_tag
 		/**
 		 * Will direct to stream a human-readable representation of the series.
 		 * 
+		 * The human-readable representation of the series is built as follows:
+		 * 
+		 * - the coefficient and key of each term are printed adjacent to each other,
+		 *   the former via the piranha::print_coefficient() function, the latter via its <tt>print()</tt> method;
+		 * - terms are separated by a "+" sign.
+		 * 
+		 * The following additional transformations take place on the printed output:
+		 * 
+		 * - if the printed output of a key is empty, any parentheses enclosing the printed output of
+		 *   its coefficient are removed;
+		 * - if the printed output of a coefficient is the string "1" and the printed output of its key
+		 *   is not empty, the coefficient is not printed;
+		 * - if the printed output of a coefficient is the string "-1" and the printed output of its key
+		 *   is not empty, the printed output of the coefficient is transformed into "-";
+		 * - the sequence of characters "+-" is transformed into "-";
+		 * - if the total number of characters that would be printed exceeds the limit set in piranha::settings::get_max_char_output(),
+		 *   the output if resize to that limit and ellipsis "..." added at the end of the output.
+		 * 
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
 		 * 
 		 * @return reference to \p os.
 		 * 
-		 * @throws unspecified any exception resulting from directing to stream instances of piranha::series::term_type.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::print_coefficient(),
+		 * - the <tt>print()</tt> method of the key type,
+		 * - memory allocation errors in standard containers.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const series &s)
 		{
-			for (auto it = s.m_container.begin(); it != s.m_container.end(); ++it) {
-				os << *it << '\n';
+			const auto limit = settings::get_max_char_output();
+			integer count(0);
+			std::ostringstream oss;
+			for (auto it = s.m_container.begin(); it != s.m_container.end();) {
+				std::ostringstream oss_cf;
+				print_coefficient(oss_cf,it->m_cf);
+				auto str_cf = oss_cf.str();
+				std::ostringstream oss_key;
+				it->m_key.print(oss_key,s.m_symbol_set);
+				auto str_key = oss_key.str();
+				// If the key is empty, remove enclosing parentheses from the coefficient.
+				if (str_key.empty()) {
+					if (str_cf.size() >= 2u && str_cf[0u] == '(' &&
+						str_cf[str_cf.size() - 1u] == ')')
+					{
+						str_cf.erase(str_cf.begin());
+						str_cf.resize(str_cf.size() - 1u);
+					}
+				}
+				if (str_cf == "1" && !str_key.empty()) {
+					str_cf = "";
+				} else if (str_cf == "-1" && !str_key.empty()) {
+					str_cf = "-";
+				}
+				count += str_cf.size();
+				oss << str_cf;
+				if (count > limit) {
+					break;
+				}
+				count += str_key.size();
+				oss << str_key;
+				if (count > limit) {
+					break;
+				}
+				++it;
+				if (it != s.m_container.end()) {
+					oss << "+";
+				}
 			}
+			auto str = oss.str();
+			if (str.size() > limit) {
+				str.resize(limit);
+				str += "...";
+			}
+			std::string::size_type index;
+			while (true) {
+				index = str.find("+-",index);
+				if (index == std::string::npos) {
+					break;
+				}
+				str.replace(index,2u,"-");
+				++index;
+			}
+			os << str;
 			return os;
 		}
 	private:
@@ -968,6 +1044,21 @@ struct math_negate_impl<Series,typename std::enable_if<
 	}
 };
 
+template <typename Series>
+struct print_coefficient_impl<Series,typename std::enable_if<
+	std::is_base_of<series_tag,Series>::value>::type>
+{
+	static void run(std::ostream &os, const Series &s)
+	{
+		if (s.size() > 1u) {
+			os << '(';
+		}
+		os << s;
+		if (s.size() > 1u) {
+			os << ')';
+		}
+	}
+};
 
 }
 

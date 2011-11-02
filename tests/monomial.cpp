@@ -27,6 +27,8 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <initializer_list>
+#include <sstream>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -37,7 +39,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<unsigned,integer> expo_types;
+typedef boost::mpl::vector<int,integer> expo_types;
 
 // Constructors, assignments and element access.
 struct constructor_tester
@@ -55,14 +57,14 @@ struct constructor_tester
 		monomial_type m1{T(0),T(1),T(2),T(3)};
 		BOOST_CHECK_EQUAL(m1.size(),static_cast<decltype(m1.size())>(4));
 		for (typename monomial_type::size_type i = 0; i < m1.size(); ++i) {
-			BOOST_CHECK_EQUAL(m1[i],i);
+			BOOST_CHECK_EQUAL(m1[i],T(i));
 			BOOST_CHECK_NO_THROW(m1[i] = T(i) + T(1));
 			BOOST_CHECK_EQUAL(m1[i],T(i) + T(1));
 		}
 		monomial_type m1a{0,1,2,3};
 		BOOST_CHECK_EQUAL(m1a.size(),static_cast<decltype(m1a.size())>(4));
 		for (typename monomial_type::size_type i = 0; i < m1a.size(); ++i) {
-			BOOST_CHECK_EQUAL(m1a[i],i);
+			BOOST_CHECK_EQUAL(m1a[i],T(i));
 			BOOST_CHECK_NO_THROW(m1a[i] = T(i) + T(1));
 			BOOST_CHECK_EQUAL(m1a[i],T(i) + T(1));
 		}
@@ -328,4 +330,45 @@ struct multiply_tester
 BOOST_AUTO_TEST_CASE(monomial_multiply_test)
 {
 	boost::mpl::for_each<expo_types>(multiply_tester());
+}
+
+struct print_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(-1)});
+		k3.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1");
+		k_type k4({T(1)});
+		oss.str("");
+		k4.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x");
+		k_type k5({T(-1),T(1)});
+		vs.add("y");
+		oss.str("");
+		k5.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1y");
+		k_type k6({T(-1),T(-2)});
+		oss.str("");
+		k6.print(oss,vs);
+		BOOST_CHECK(oss.str() == "x**-1y**-2");
+		k_type k7;
+		BOOST_CHECK_THROW(k7.print(oss,vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_print_test)
+{
+	boost::mpl::for_each<expo_types>(print_tester());
 }

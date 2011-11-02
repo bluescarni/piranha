@@ -53,25 +53,25 @@ struct constructor_tester
 			ed.add("x");
 			// Default constructor.
 			BOOST_CHECK_EQUAL(term_type().m_cf,Cf());
-			BOOST_CHECK_EQUAL(term_type().m_key,key_type());
+			BOOST_CHECK(term_type().m_key == key_type());
 			// Copy constructor.
 			term_type t;
 			t.m_cf = Cf(1);
 			t.m_key = key_type{Expo(2)};
 			BOOST_CHECK_EQUAL(term_type(t).m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(term_type(t).m_key,key_type{Expo(2)});
+			BOOST_CHECK(term_type(t).m_key == key_type{Expo(2)});
 			// Move constructor.
 			term_type t_copy1(t), t_copy2 = t;
 			BOOST_CHECK_EQUAL(term_type(std::move(t_copy1)).m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(term_type(std::move(t_copy2)).m_key,key_type{Expo(2)});
+			BOOST_CHECK(term_type(std::move(t_copy2)).m_key == key_type{Expo(2)});
 			// Copy assignment.
 			t_copy1 = t;
 			BOOST_CHECK_EQUAL(t_copy1.m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(t_copy1.m_key,key_type{Expo(2)});
+			BOOST_CHECK(t_copy1.m_key == key_type{Expo(2)});
 			// Move assignment.
 			t = std::move(t_copy1);
 			BOOST_CHECK_EQUAL(t.m_cf,Cf(1));
-			BOOST_CHECK_EQUAL(t.m_key,key_type{Expo(2)});
+			BOOST_CHECK(t.m_key == key_type{Expo(2)});
 			// Generic constructor.
 			typedef polynomial_term<float,Expo> other_term_type;
 			symbol_set other_ed;
@@ -79,7 +79,7 @@ struct constructor_tester
 			other_term_type ot{float(7),key_type{Expo(2)}};
 			term_type t_from_ot(Cf(ot.m_cf),key_type(ot.m_key,ed));
 			BOOST_CHECK_EQUAL(t_from_ot.m_cf,Cf(float(7)));
-			BOOST_CHECK_EQUAL(t_from_ot.m_key,key_type{Expo(2)});
+			BOOST_CHECK(t_from_ot.m_key == key_type{Expo(2)});
 		}
 	};
 	template <typename Cf>

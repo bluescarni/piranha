@@ -440,19 +440,28 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			ka::decode(retval,m_value);
 			return retval;
 		}
-		/// Stream operator overload for piranha::kronecker_monomial.
+		/// Print.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.
 		 * 
 		 * @param[in] os target stream.
-		 * @param[in] k monomial argument.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return reference to \p os.
+		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
 		 */
-		friend std::ostream &operator<<(std::ostream &os, const kronecker_monomial &k)
+		void print(std::ostream &os, const symbol_set &args) const
 		{
-			os << k.m_value;
-			return os;
+			const auto tmp = unpack(args);
+			piranha_assert(tmp.size() == args.size());
+			const value_type zero(0), one(1);
+			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+				if (tmp[i] != zero) {
+					os << args[i].get_name();
+					if (tmp[i] != one) {
+						os << "**" << tmp[i];
+					}
+				}
+			}
 		}
 	private:
 		static value_type safe_adder(const value_type &a, const value_type &b)
