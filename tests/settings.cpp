@@ -44,3 +44,11 @@ BOOST_AUTO_TEST_CASE(settings_reset_thread_number)
 	piranha::settings::reset_n_threads();
 	BOOST_CHECK_EQUAL(piranha::settings::get_n_threads(),piranha::runtime_info::get_hardware_concurrency());
 }
+
+BOOST_AUTO_TEST_CASE(settings_max_char_output)
+{
+	piranha::settings::set_max_char_output(10u);
+	BOOST_CHECK_EQUAL(10u,piranha::settings::get_max_char_output());
+	piranha::settings::reset_max_char_output();
+	BOOST_CHECK_EQUAL(10000u,piranha::settings::get_max_char_output());
+}

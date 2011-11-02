@@ -36,6 +36,8 @@ mutex settings::m_mutex;
 unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
 bool settings::m_tracing = false;
 settings::startup settings::m_startup;
+static const unsigned default_max_char_output = 10000u;
+unsigned settings::m_max_char_output = default_max_char_output;
 
 settings::startup::startup()
 {
@@ -123,6 +125,40 @@ void settings::set_tracing(bool flag)
 {
 	lock_guard<mutex>::type lock(m_mutex);
 	m_tracing = flag;
+}
+
+/// Get max char output.
+/**
+ * @return the maximum number of character displayed when printing series.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+unsigned settings::get_max_char_output()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	return m_max_char_output;
+}
+
+/// Set max char output.
+/**
+ * @param[in] n the maximum number of character to be displayed when printing series.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+void settings::set_max_char_output(unsigned n)
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_max_char_output = n;
+}
+
+/// Reset max char output.
+/**
+ * Will set the max char output value to the default.
+ */
+void settings::reset_max_char_output()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_max_char_output = default_max_char_output;
 }
 
 }

@@ -41,6 +41,9 @@ class settings
 		static void reset_n_threads();
 		static bool get_tracing();
 		static void set_tracing(bool);
+		static unsigned get_max_char_output();
+		static void set_max_char_output(unsigned);
+		static void reset_max_char_output();
 	private:
 		struct startup
 		{
@@ -51,6 +54,7 @@ class settings
 		static unsigned	m_n_threads;
 		static bool	m_tracing;
 		static startup	m_startup;
+		static unsigned m_max_char_output;
 };
 
 }
