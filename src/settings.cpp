@@ -32,12 +32,18 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+static const unsigned default_max_char_output = 10000u;
+
+}
+
 mutex settings::m_mutex;
 unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
 bool settings::m_tracing = false;
 settings::startup settings::m_startup;
-static const unsigned default_max_char_output = 10000u;
-unsigned settings::m_max_char_output = default_max_char_output;
+unsigned settings::m_max_char_output = detail::default_max_char_output;
 
 settings::startup::startup()
 {
@@ -158,7 +164,7 @@ void settings::set_max_char_output(unsigned n)
 void settings::reset_max_char_output()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_max_char_output = default_max_char_output;
+	m_max_char_output = detail::default_max_char_output;
 }
 
 }
