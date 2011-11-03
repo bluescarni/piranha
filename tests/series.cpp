@@ -25,6 +25,8 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <initializer_list>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
@@ -1130,4 +1132,75 @@ struct negation_tester
 BOOST_AUTO_TEST_CASE(series_negation_test)
 {
 	boost::mpl::for_each<cf_types>(negation_tester());
+}
+
+struct stream_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			std::ostringstream oss;
+			oss << p_type1{};
+			BOOST_CHECK(oss.str().empty());
+			oss << p_type1{1};
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			oss << p_type1{-1};
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			oss << p_type1{"x"};
+			BOOST_CHECK(oss.str() == "x");
+			oss.str("");
+			oss << (-p_type1{"x"});
+			BOOST_CHECK(oss.str() == "-x");
+			oss.str("");
+			oss << (-p_type1{"x"} * p_type1{"y"});
+			BOOST_CHECK(oss.str() == "-xy");
+			oss.str("");
+			oss << (-p_type1{"x"} + 1);
+			BOOST_CHECK(oss.str() == "1-x" || oss.str() == "-x+1");
+			oss.str("");
+			oss << p_type11{};
+			BOOST_CHECK(oss.str().empty());
+			oss.str("");
+			oss << p_type11{"x"};
+			BOOST_CHECK(oss.str() == "x");
+			oss.str("");
+			oss << (-p_type11{"x"});
+			BOOST_CHECK(oss.str() == "-x");
+			oss.str("");
+			oss << (p_type11{1});
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			oss << (p_type11{-1});
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			oss << (p_type11{"x"} * p_type11{"y"});
+			BOOST_CHECK(oss.str() == "xy");
+			oss.str("");
+			oss << (-p_type11{"x"} * p_type11{"y"});
+			BOOST_CHECK(oss.str() == "-xy");
+			oss.str("");
+			oss << (-p_type11{"x"} + 1);
+			BOOST_CHECK(oss.str() == "1-x" || oss.str() == "-x+1");
+			oss.str("");
+			oss << (p_type11{"x"} - 1);
+			BOOST_CHECK(oss.str() == "x-1" || oss.str() == "-1+x");
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_stream_test)
+{
+	boost::mpl::for_each<cf_types>(stream_tester());
 }

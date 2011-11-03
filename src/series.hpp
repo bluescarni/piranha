@@ -963,7 +963,7 @@ class series: series_binary_operators, detail::series_tag
 				str.resize(limit);
 				str += "...";
 			}
-			std::string::size_type index;
+			std::string::size_type index = 0u;
 			while (true) {
 				index = str.find("+-",index);
 				if (index == std::string::npos) {
