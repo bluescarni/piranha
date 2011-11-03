@@ -34,6 +34,7 @@
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -1191,6 +1192,30 @@ struct stream_tester
 			oss.str("");
 			oss << (p_type11{"x"} - 1);
 			BOOST_CHECK(oss.str() == "x-1" || oss.str() == "-1+x");
+			// Test wih less char output.
+			settings::set_max_char_output(3u);
+			oss.str("");
+			oss << p_type11{};
+			BOOST_CHECK(oss.str().empty());
+			oss.str("");
+			oss << p_type11{"x"};
+			BOOST_CHECK(oss.str() == "x");
+			oss.str("");
+			oss << (-p_type11{"x"});
+			BOOST_CHECK(oss.str() == "-x");
+			oss.str("");
+			oss << (p_type11{1});
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			oss << (p_type11{-1});
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			oss << (p_type11{"x"} * p_type11{"y"});
+			BOOST_CHECK(oss.str() == "xy");
+			oss.str("");
+			oss << (-p_type11{"x"} * p_type11{"y"});
+			BOOST_CHECK(oss.str() == "-xy");
+			settings::reset_max_char_output();
 		}
 	};
 	template <typename Cf>
