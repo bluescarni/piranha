@@ -141,6 +141,10 @@ class series_multiplier
 		series_multiplier(const series_multiplier &) = delete;
 		/// Deleted move constructor.
 		series_multiplier(series_multiplier &&) = delete;
+		/// Deleted copy assignment operator.
+		series_multiplier &operator=(const series_multiplier &) = delete;
+		/// Deleted move assignment operator.
+		series_multiplier &operator=(series_multiplier &&) = delete;
 		/// Compute result of series multiplication.
 		/**
 		 * This method will call execute() with a \p Functor type that uses the <tt>multiply()</tt> method
