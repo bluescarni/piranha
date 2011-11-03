@@ -905,7 +905,7 @@ class series: series_binary_operators, detail::series_tag
 		 *   is not empty, the printed output of the coefficient is transformed into "-";
 		 * - the sequence of characters "+-" is transformed into "-";
 		 * - if the total number of characters that would be printed exceeds the limit set in piranha::settings::get_max_char_output(),
-		 *   the output if resize to that limit and ellipsis "..." added at the end of the output.
+		 *   the output is resized to that limit and ellipsis "..." are added at the end of the output.
 		 * 
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
