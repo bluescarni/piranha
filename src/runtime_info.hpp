@@ -32,6 +32,8 @@ namespace piranha
  * All methods are thread-safe, unless otherwise specified.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo think about adding a way to set the cache line size at runtime, in case we cannot detect it.
  */
 class runtime_info
 {

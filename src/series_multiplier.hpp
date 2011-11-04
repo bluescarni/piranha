@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_SERIES_MULTIPLIER_H
-#define PIRANHA_SERIES_MULTIPLIER_H
+#ifndef PIRANHA_SERIES_MULTIPLIER_HPP
+#define PIRANHA_SERIES_MULTIPLIER_HPP
 
 #include <algorithm>
 #include <boost/any.hpp>
