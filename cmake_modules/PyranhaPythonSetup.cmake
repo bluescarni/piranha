@@ -26,7 +26,6 @@ INCLUDE(FindPythonInterp)
 # Find Python libraries
 FIND_PACKAGE(PythonLibs REQUIRED)
 MESSAGE(STATUS "Python libraries: " "${PYTHON_LIBRARIES}")
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 MESSAGE(STATUS "Python library: " "${PYTHON_LIBRARY}")
 
 # These flags are used to signal the need to override the default extension of the Python modules

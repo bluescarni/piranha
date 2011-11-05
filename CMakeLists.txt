@@ -33,6 +33,9 @@ OPTION(BUILD_MAIN "Build 'main.cpp'." OFF)
 # Build option: enable test set.
 OPTION(BUILD_TESTS "Build test set." ON)
 
+# Build option: build the Python bindings.
+OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
+
 # Initialise (empty) list of libraries to link against.
 SET(MANDATORY_LIBRARIES "")
 
@@ -44,6 +47,9 @@ SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # Include these macros here as they reference variables defined above.
 INCLUDE(PiranhaCompilerLinkerSettings)
 INCLUDE(PiranhaPlatformSettings)
+IF(BUILD_PYRANHA)
+	INCLUDE(PyranhaPythonSetup)
+ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
 SET(REQUIRED_BOOST_LIBS serialization unit_test_framework)
@@ -52,6 +58,9 @@ IF(PIRANHA_ENABLE_BOOST_THREAD)
 	SET(PIRANHA_USE_BOOST_THREAD "#define PIRANHA_USE_BOOST_THREAD")
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} thread)
 ENDIF(PIRANHA_ENABLE_BOOST_THREAD)
+IF(BUILD_PYRANHA)
+	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
+ENDIF(BUILD_PYRANHA)
 MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
 IF(PIRANHA_ENABLE_BOOST_THREAD)
 	# NOTE: it seems like proper c++0x support in Boost.thread is there from around 1.45.0. Possibly earlier,
@@ -106,3 +115,7 @@ ENDIF(BUILD_MAIN)
 IF(BUILD_TESTS)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/tests")
 ENDIF(BUILD_TESTS)
+
+IF(BUILD_PYRANHA)
+	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
+ENDIF(BUILD_PYRANHA)
