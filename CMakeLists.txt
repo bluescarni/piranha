@@ -40,9 +40,13 @@ OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 SET(MANDATORY_LIBRARIES "")
 
 # Initial thread setup.
-FIND_PACKAGE(Threads REQUIRED)
-MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+# NOTE: we do it only on Unix for now, as on MinGW it might find and try to use the internal libpthread
+# implementation, which is not what we want (we want the native Win32 threads).
+IF(NOT WIN32)
+	FIND_PACKAGE(Threads REQUIRED)
+	MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
+	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+ENDIF(NOT WIN32)
 
 # Include these macros here as they reference variables defined above.
 INCLUDE(PiranhaCompilerLinkerSettings)
