@@ -21,6 +21,7 @@
 #ifndef PIRANHA_SETTINGS_HPP
 #define PIRANHA_SETTINGS_HPP
 
+#include "config.hpp"
 #include "threading.hpp"
 
 namespace piranha
@@ -33,7 +34,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class settings
+class PIRANHA_PUBLIC settings
 {
 	public:
 		static unsigned get_n_threads();

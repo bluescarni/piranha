@@ -74,4 +74,9 @@
 #include <boost/integer_traits.hpp>
 static_assert(boost::integer_traits<long long>::const_max >= 0,"Buggy integer_traits implementation: please update the Boost libraries.");
 
+// Visibility support.
+#ifdef __GNUC__
+	#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
+#endif
+
 #endif
