@@ -18,6 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+// NOTE: we need to include cmath here because of this issue with pyconfig.h and hypot:
+// http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+#include <cmath>
 #include <boost/python/class.hpp>
 #include <boost/python/module.hpp>
 #include <boost/python/operators.hpp>
