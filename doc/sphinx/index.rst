@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 2
 
 
+.. automodule:: pyranha
+   :members:
+
 
 Indices and tables
 ==================

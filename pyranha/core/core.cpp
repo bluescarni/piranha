@@ -20,13 +20,35 @@
 
 #include <boost/python/class.hpp>
 #include <boost/python/module.hpp>
+#include <boost/python/operators.hpp>
+#include <string>
 
 #include "../../src/integer.hpp"
+#include "../../src/runtime_info.hpp"
+#include "../../src/settings.hpp"
 
 using namespace boost::python;
 using namespace piranha;
 
 BOOST_PYTHON_MODULE(_core)
 {
-	class_<integer>("integer", "Arbitrary precision integer class.", init<>());
+	class_<integer>("integer", "Arbitrary precision integer class.", init<>())
+		.def(init<integer>())
+		.def(init<double>())
+		.def(init<std::string>())
+		.def(float_(self))
+		.def(str(self))
+		.def(repr(self))
+		.def(self + self)
+		.def(self + double())
+		.def(double() + self);
+
+	class_<settings>("settings", "Global piranha settings.", init<>())
+		.add_static_property("n_threads",&settings::get_n_threads,&settings::set_n_threads)
+		.def("reset_n_threads",&settings::reset_n_threads,"Reset the number of threads to the default value determined on startup.")
+		.staticmethod("reset_n_threads");
+
+	class_<runtime_info>("runtime_info", "Runtime information.", init<>())
+		.add_static_property("hardware_concurrency",&runtime_info::get_hardware_concurrency)
+		.add_static_property("cache_line_size",&runtime_info::get_cache_line_size);
 }
