@@ -76,7 +76,12 @@ static_assert(boost::integer_traits<long long>::const_max >= 0,"Buggy integer_tr
 
 // Visibility support.
 #ifdef __GNUC__
-	#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
+	#if defined(_WIN32)
+		// TODO: to be completed with dll stuff here.
+		#define PIRANHA_PUBLIC
+	#else
+		#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
+	#endif
 #endif
 
 #endif
