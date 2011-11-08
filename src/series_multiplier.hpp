@@ -268,7 +268,7 @@ class series_multiplier
 					// Functor for use in the thread.
 					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
 					// because of a GCC bug in 4.6.
-					auto f = [&m_v1,&m_v2,f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
+					auto f = [f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
 						try {
 							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
