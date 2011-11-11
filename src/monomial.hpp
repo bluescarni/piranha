@@ -59,6 +59,9 @@ namespace piranha
  * 
  * Move semantics is equivalent to piranha::array_key's move semantics.
  * 
+ * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
+ * monomial classes arises.
+ * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
