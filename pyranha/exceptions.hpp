@@ -18,46 +18,27 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_SETTINGS_HPP
-#define PIRANHA_SETTINGS_HPP
+#ifndef PIRANHA_PYRANHA_EXCEPTIONS_HPP
+#define PIRANHA_PYRANHA_EXCEPTIONS_HPP
 
-#include "config.hpp"
-#include "threading.hpp"
+#include <boost/python/exception_translator.hpp>
 
-namespace piranha
+#include "../src/exceptions.hpp"
+
+namespace piranha { namespace pyranha {
+
+// inline void std_invalid_argument_translator(const std::invalid_argument &ia)
+// {
+// 	PyErr_SetString(PyExc_ValueError,ia.what());
+// }
+
+// Translate our C++ exceptions into Python exceptions.
+inline void translate_exceptions()
 {
-
-/// Global settings.
-/**
- * This class stores the global settings of piranha's runtime environment.
- * The methods of this class, unless otherwise specified, are thread-safe.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
- */
-class PIRANHA_PUBLIC settings
-{
-	public:
-		static unsigned get_n_threads();
-		static void set_n_threads(unsigned);
-		static void reset_n_threads();
-		static bool get_tracing();
-		static void set_tracing(bool);
-		static unsigned get_max_char_output();
-		static void set_max_char_output(unsigned);
-		static void reset_max_char_output();
-	private:
-		struct startup
-		{
-			startup();
-		};
-	private:
-		static mutex	m_mutex;
-		static unsigned	m_n_threads;
-		static bool	m_tracing;
-		static startup	m_startup;
-		static unsigned m_max_char_output;
-};
-
+// 	boost::python::register_exception_translator<std::invalid_argument>(ie_translator);
+	
 }
+
+}}
 
 #endif

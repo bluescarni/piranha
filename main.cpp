@@ -4,7 +4,6 @@ using namespace piranha;
 
 int main()
 {
-	settings::set_max_char_output(3);
 	polynomial<double,unsigned> p{"x"}, q{1}, mq{-1}, l{"y"};
 	std::cout << p << '\n';
 	std::cout << q << '\n';

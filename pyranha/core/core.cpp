@@ -18,46 +18,40 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_SETTINGS_HPP
-#define PIRANHA_SETTINGS_HPP
+// NOTE: we need to include cmath here because of this issue with pyconfig.h and hypot:
+// http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+#include <cmath>
+#include <boost/python/class.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/operators.hpp>
+#include <string>
 
-#include "config.hpp"
-#include "threading.hpp"
+#include "../../src/integer.hpp"
+#include "../../src/runtime_info.hpp"
+#include "../../src/settings.hpp"
 
-namespace piranha
+using namespace boost::python;
+using namespace piranha;
+
+BOOST_PYTHON_MODULE(_core)
 {
+	class_<integer>("integer", "Arbitrary precision integer class.", init<>())
+		.def(init<integer>())
+		.def(init<double>())
+		.def(init<std::string>())
+		.def(float_(self))
+		.def(str(self))
+		.def(repr(self))
+		.def(self + self)
+		.def(self + double())
+		.def(double() + self);
 
-/// Global settings.
-/**
- * This class stores the global settings of piranha's runtime environment.
- * The methods of this class, unless otherwise specified, are thread-safe.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
- */
-class PIRANHA_PUBLIC settings
-{
-	public:
-		static unsigned get_n_threads();
-		static void set_n_threads(unsigned);
-		static void reset_n_threads();
-		static bool get_tracing();
-		static void set_tracing(bool);
-		static unsigned get_max_char_output();
-		static void set_max_char_output(unsigned);
-		static void reset_max_char_output();
-	private:
-		struct startup
-		{
-			startup();
-		};
-	private:
-		static mutex	m_mutex;
-		static unsigned	m_n_threads;
-		static bool	m_tracing;
-		static startup	m_startup;
-		static unsigned m_max_char_output;
-};
+	class_<settings>("settings", "Global piranha settings.", init<>())
+		.add_static_property("n_threads",&settings::get_n_threads,&settings::set_n_threads)
+		.def("reset_n_threads",&settings::reset_n_threads,"Reset the number of threads to the default value determined on startup.")
+		.staticmethod("reset_n_threads");
 
+	class_<runtime_info>("runtime_info", "Runtime information.", init<>())
+		.add_static_property("hardware_concurrency",&runtime_info::get_hardware_concurrency)
+		.add_static_property("cache_line_size",&runtime_info::get_cache_line_size);
 }
-
-#endif

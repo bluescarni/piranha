@@ -21,6 +21,7 @@
 #ifndef PIRANHA_RUNTIME_INFO_HPP
 #define PIRANHA_RUNTIME_INFO_HPP
 
+#include "config.hpp"
 #include "threading.hpp"
 
 namespace piranha
@@ -35,7 +36,7 @@ namespace piranha
  * 
  * \todo think about adding a way to set the cache line size at runtime, in case we cannot detect it.
  */
-class runtime_info
+class PIRANHA_PUBLIC runtime_info
 {
 	public:
 		/// Main thread ID.

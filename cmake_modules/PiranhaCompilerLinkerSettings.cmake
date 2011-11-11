@@ -15,6 +15,12 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	ELSE(GNUCXX_STD_CPP0X)
 		MESSAGE(FATAL_ERROR "c++0x support could not be detected.")
 	ENDIF(GNUCXX_STD_CPP0X)
+	CHECK_CXX_COMPILER_FLAG(-fvisibility-inlines-hidden GNUCXX_VISIBILITY_INLINES_HIDDEN)
+	CHECK_CXX_COMPILER_FLAG(-fvisibility=hidden GNUCXX_VISIBILITY_HIDDEN)
+	IF(GNUCXX_VISIBILITY_INLINES_HIDDEN AND GNUCXX_VISIBILITY_HIDDEN AND NOT MINGW)
+		MESSAGE(STATUS "Enabling GCC visibility support.")
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
+	ENDIF(GNUCXX_VISIBILITY_INLINES_HIDDEN AND GNUCXX_VISIBILITY_HIDDEN AND NOT MINGW)
 	# Add to the base flags extra warnings. Also, additional flags to turn off some GCC warnings that in practice clutter the compilation output.
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Wdisabled-optimization")
 	# Suggested for multithreaded code.
