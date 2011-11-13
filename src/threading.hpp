@@ -28,6 +28,12 @@
  * If standard C++ threading support is available, it will be used, otherwise Boost.Thread will be used.
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread.html
+ * 
+ * \todo rework the threading support as follows:
+ * - introduce thread class that inherits from boost/std thread, and make it detach() on destruction -> eventually include in the
+ *   dtor also the MPFR cleanup functions for threading;
+ * - rework the parallel algorithms to use futures, promises and packaged tasks - it seems that by employing these we can
+ *   avoid thread barriers, thread groups, multi-thrad exception handling, etc.
  */
 
 #include "config.hpp"
