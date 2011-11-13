@@ -26,18 +26,25 @@ from _core import *
 # TODO: generalize to other types, e.g., the new Python rationals. How can we generalize this for arbitrary
 # Python types? Thinking, e.g., of gmpy mpf types and the likes.
 def switch_int_to_integer(f):
-	def _inner(*args,**kwargs):
-		def change_arg(x):
-			if isinstance(x,int) or isinstance(x,long):
-				return integer(str(x))
-			else:
-				return x
-		new_args = [change_arg(arg) for arg in args]
-		for k in kwargs:
-			kwargs[k] = change_arg(kwargs[k])
-		return f(*tuple(new_args),**kwargs)
-	# Retain the original documentation.
-	_inner.__doc__ = f.__doc__
+	from functools import wraps
+	from inspect import isfunction
+	def change_arg(x):
+		if isinstance(x,int) or isinstance(x,long):
+			return integer(str(x))
+		else:
+			return x
+	if isfunction(f):
+		@wraps(f)
+		def _inner(*args,**kwargs):
+			new_args = [change_arg(arg) for arg in args]
+			for k in kwargs:
+				kwargs[k] = change_arg(kwargs[k])
+			return f(*tuple(new_args),**kwargs)
+	else:
+		@wraps(f)
+		def _inner(*args):
+			new_args = [change_arg(arg) for arg in args]
+			return f(*tuple(new_args))
 	return _inner
 
 integer.__init__ = switch_int_to_integer(integer.__init__)

@@ -58,6 +58,7 @@
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
+ * \todo think about the startup report, it might end up being too noisy.
  */
 namespace piranha
 {
