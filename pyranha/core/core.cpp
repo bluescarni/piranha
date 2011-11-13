@@ -22,6 +22,7 @@
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
 #include <cmath>
 #include <boost/python/class.hpp>
+#include <boost/python/docstring_options.hpp>
 #include <boost/python/module.hpp>
 #include <boost/python/operators.hpp>
 #include <string>
@@ -35,6 +36,8 @@ using namespace piranha;
 
 BOOST_PYTHON_MODULE(_core)
 {
+	docstring_options doc_options(true,true,false);
+
 	class_<integer>("integer", "Arbitrary precision integer class.", init<>())
 		.def(init<integer>())
 		.def(init<double>())
@@ -44,7 +47,8 @@ BOOST_PYTHON_MODULE(_core)
 		.def(repr(self))
 		.def(self + self)
 		.def(self + double())
-		.def(double() + self);
+		.def(double() + self)
+		.def("size",&integer::size,"Integer size.");
 
 	class_<settings>("settings", "Global piranha settings.", init<>())
 		.add_static_property("n_threads",&settings::get_n_threads,&settings::set_n_threads)

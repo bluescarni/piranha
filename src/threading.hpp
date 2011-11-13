@@ -25,7 +25,7 @@
  * \brief Threading primitives.
  * 
  * The functions, classes and typedefs in this file provide an abstraction layer to threading primitives on the host platform.
- * If standard C++ threading support is available, it will be used, otherwise Boost.thread will be used.
+ * If standard C++ threading support is available, it will be used, otherwise Boost.Thread will be used.
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread.html
  */
