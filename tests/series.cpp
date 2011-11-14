@@ -1147,7 +1147,8 @@ struct stream_tester
 			typedef g_series_type<p_type1,Expo> p_type11;
 			std::ostringstream oss;
 			oss << p_type1{};
-			BOOST_CHECK(oss.str().empty());
+			BOOST_CHECK(oss.str() == "0");
+			oss.str("");
 			oss << p_type1{1};
 			BOOST_CHECK(oss.str() == "1");
 			oss.str("");
@@ -1167,7 +1168,7 @@ struct stream_tester
 			BOOST_CHECK(oss.str() == "1-x" || oss.str() == "-x+1");
 			oss.str("");
 			oss << p_type11{};
-			BOOST_CHECK(oss.str().empty());
+			BOOST_CHECK(oss.str() == "0");
 			oss.str("");
 			oss << p_type11{"x"};
 			BOOST_CHECK(oss.str() == "x");
@@ -1196,7 +1197,7 @@ struct stream_tester
 			settings::set_max_char_output(3u);
 			oss.str("");
 			oss << p_type11{};
-			BOOST_CHECK(oss.str().empty());
+			BOOST_CHECK(oss.str() == "0");
 			oss.str("");
 			oss << p_type11{"x"};
 			BOOST_CHECK(oss.str() == "x");
