@@ -919,6 +919,11 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const series &s)
 		{
+			// If the series is empty, print zero and exit.
+			if (s.empty()) {
+				os << "0";
+				return os;
+			}
 			const auto limit = settings::get_max_char_output();
 			integer count(0);
 			std::ostringstream oss;
