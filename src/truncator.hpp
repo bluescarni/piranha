@@ -24,38 +24,96 @@
 #include <boost/concept/assert.hpp>
 
 #include "concepts/series.hpp"
+#include "config.hpp"
+#include "detail/sfinae_types.hpp"
 
 namespace piranha
 {
 
+/// Default truncator class.
+/**
+ * A truncator is an object that is intended to establish an order over the terms of a series and truncate the result of series multiplication.
+ * The minimal interface that must be provided by a truncator class is the following:
+ * 
+ * - a constructor from a \p Series object (the series on which the truncator will operate),
+ * - an is_active() method, signalling whether the truncator is active
+ *   or not (this method is provided for optimisation purposes: by knowing if the truncator is active or not
+ *   it is possible to avoid querying the truncator repeatedly during certain time-critical operations).
+ * 
+ * Additionally, the following optional methods can be implemented by truncator classes:
+ * 
+ * - a <tt>bool compare_terms(const term_type &t1, const term_type &t2) const</tt> method, which must be a strict
+ *   weak ordering comparison function on the term type of \p Series
+ *   that returns \p true if \p t1 comes before \p t2, \p false otherwise. This method
+ *   is used to rank the terms of the series used for construction. A truncator implementing
+ *   this method is a <em>sorting</em> truncator.
+ * 
+ * The presence of the optional methods can be queried at compile time using the piranha::truncator_traits class. The default
+ * implementation of piranha::truncator does not implement any of the optional methods, and its is_active() method will always
+ * return \p false.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * \p Series must be a model of the piranha::concept::Series concept.
+ * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee for all operations.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * This class is stateless and hence provides trivial move semantics.
+ * 
+ * \todo truncator concept?
+ * \todo require copy-constructability?
+ * \todo mention this must be specialised using enable_if, and do the same in series multiplier.
+ */
 template <typename Series, typename Enable = void>
 class truncator
 {
 		BOOST_CONCEPT_ASSERT((concept::Series<Series>));
 	public:
-		typedef typename Series::term_type term_type;
-		explicit truncator(const Series &s):m_s(s) {}
-		truncator(const truncator &) = delete;
-		truncator(truncator &&) = delete;
-		truncator &operator=(const truncator &) = delete;
-		truncator &operator=(truncator &&) = delete;
+		/// Constructor from series.
+		explicit truncator(const Series &) {}
+		/// Query the status of the truncator.
+		/**
+		 * @return \p false.
+		 */
 		bool is_active() const
 		{
 			return false;
 		}
-		bool truncate(const term_type &) const
-		{
-			return false;
-		}
-	private:
-		const Series &m_s;
 };
 
-template <typename Truncator>
-class truncator_traits
+/// Truncator traits.
+/**
+ * This traits class is used to query which optional methods are implemented in piranha::truncator of \p Series.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * \p Series must be a model of the piranha::concept::Series concept.
+ * 
+ * @see piranha::truncator for the description of the optional interface.
+ */
+template <typename Series>
+class truncator_traits: detail::sfinae_types
 {
-	
+		BOOST_CONCEPT_ASSERT((concept::Series<Series>));
+		typedef truncator<Series> truncator_type;
+		typedef typename Series::term_type term_type;
+		template <typename T>
+		static auto test_sorting(const T *t) -> decltype(t->compare_terms(std::declval<term_type>(),std::declval<term_type>()),yes());
+		static no test_sorting(...);
+	public:
+		/// Sorting flag.
+		/**
+		 * Will be \p true if the truncator type of \p Series is a sorting truncator, \p false otherwise.
+		 */
+		static const bool is_sorting = (sizeof(test_sorting((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 };
+
+template <typename Series>
+const bool truncator_traits<Series>::is_sorting;
 
 }
 

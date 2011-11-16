@@ -24,12 +24,15 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include "base_term.hpp"
 #include "concepts/container_element.hpp"
@@ -47,6 +50,7 @@
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
 #include "symbol_set.hpp"
+#include "truncator.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -115,6 +119,9 @@ class series: series_binary_operators, detail::series_tag
 		// Make friend with series multiplier class.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
+		// Make friend with all truncator classes.
+		template <typename Series, typename Enable>
+		friend class truncator;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
 	protected:
@@ -733,6 +740,16 @@ class series: series_binary_operators, detail::series_tag
 		{
 			insert<true>(std::forward<T>(term));
 		}
+		/// Truncator getter.
+		/**
+		 * @return an instance of piranha::truncator of \p Derived constructed using \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor of piranha::truncator.
+		 */
+		truncator<Derived> get_truncator() const
+		{
+			return truncator<Derived>(*static_cast<Derived const *>(this));
+		}
 		/// In-place addition.
 		/**
 		 * The addition algorithm proceeds as follows:
@@ -897,8 +914,6 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * The following additional transformations take place on the printed output:
 		 * 
-		 * - if the printed output of a key is empty, any parentheses enclosing the printed output of
-		 *   its coefficient are removed;
 		 * - if the printed output of a coefficient is the string "1" and the printed output of its key
 		 *   is not empty, the coefficient is not printed;
 		 * - if the printed output of a coefficient is the string "-1" and the printed output of its key
@@ -924,25 +939,49 @@ class series: series_binary_operators, detail::series_tag
 				os << "0";
 				return os;
 			}
+			return print_helper_0(os,*static_cast<Derived const *>(&s));
+		}
+	private:
+		template <typename Series>
+		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
+			truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
+		{
+			typedef typename Series::term_type term_type;
+			truncator<Series> t(s);
+			if (t.is_active()) {
+std::cout << "lol active\n";
+				std::vector<term_type const *> v;
+				v.reserve(s.size());
+				std::transform(s.m_container.begin(),s.m_container.end(),
+					std::back_insert_iterator<decltype(v)>(v),[](const term_type &t) {return &t;});
+				std::sort(v.begin(),v.end(),[&t](const term_type *t1, const term_type *t2) {return t.compare_terms(*t1,*t2);});
+				return print_helper_1(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
+					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
+			} else {
+std::cout << "lol inactive\n";
+				return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+			}
+		}
+		template <typename Series>
+		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
+			!truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
+		{
+			return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+		}
+		template <typename Iterator>
+		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
+		{
+			piranha_assert(start != end);
 			const auto limit = settings::get_max_char_output();
 			integer count(0);
 			std::ostringstream oss;
-			for (auto it = s.m_container.begin(); it != s.m_container.end();) {
+			for (auto it = start; it != end;) {
 				std::ostringstream oss_cf;
 				print_coefficient(oss_cf,it->m_cf);
 				auto str_cf = oss_cf.str();
 				std::ostringstream oss_key;
-				it->m_key.print(oss_key,s.m_symbol_set);
+				it->m_key.print(oss_key,args);
 				auto str_key = oss_key.str();
-				// If the key is empty, remove enclosing parentheses from the coefficient.
-				if (str_key.empty()) {
-					if (str_cf.size() >= 2u && str_cf[0u] == '(' &&
-						str_cf[str_cf.size() - 1u] == ')')
-					{
-						str_cf.erase(str_cf.begin());
-						str_cf.resize(str_cf.size() - 1u);
-					}
-				}
 				if (str_cf == "1" && !str_key.empty()) {
 					str_cf = "";
 				} else if (str_cf == "-1" && !str_key.empty()) {
@@ -959,7 +998,7 @@ class series: series_binary_operators, detail::series_tag
 					break;
 				}
 				++it;
-				if (it != s.m_container.end()) {
+				if (it != end) {
 					oss << "+";
 				}
 			}
@@ -980,7 +1019,6 @@ class series: series_binary_operators, detail::series_tag
 			os << str;
 			return os;
 		}
-	private:
 		// Merge all terms from another series. Works if s is this (in which case a copy is maed). Basic exception safety guarantee.
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
