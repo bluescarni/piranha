@@ -22,6 +22,7 @@
 #define PIRANHA_TRUNCATOR_HPP
 
 #include <boost/concept/assert.hpp>
+#include <iostream>
 
 #include "concepts/series.hpp"
 #include "config.hpp"
@@ -82,6 +83,20 @@ class truncator
 		bool is_active() const
 		{
 			return false;
+		}
+		/// Stream operator overload for the default implementatin of piranha::truncator.
+		/**
+		 * Will send to stream \p os a human-readable representation of the truncator.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] t piranha::truncator argument.
+		 * 
+		 * @return reference to \p os.
+		 */
+		friend std::ostream &operator<<(std::ostream &os, const truncator &t)
+		{
+			os <<	"Null truncator\n";
+			return os;
 		}
 };
 
