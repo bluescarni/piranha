@@ -117,6 +117,9 @@ class degree_truncator_settings
 	protected:
 		/// Get truncator state.
 		/**
+		 * The construction of the return value is protected by a mutex, so that this method
+		 * is atomic and thread-safe.
+		 * 
 		 * @return an \p std::tuple containing the mode, limit and arguments of truncation.
 		 * 
 		 * @throws unspecified any exception thrown by threading primitives or memory allocation
