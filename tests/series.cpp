@@ -34,6 +34,7 @@
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -1219,6 +1220,15 @@ struct stream_tester
 			oss << (-p_type11{"x"} * p_type11{"y"});
 			BOOST_CHECK(oss.str() == "-xy");
 			settings::reset_max_char_output();
+			// Check printing with a truncator.
+			typedef polynomial<Cf,Expo> poly_type;
+			poly_type poly1{"x"};
+			poly1.get_truncator().set(5);
+			poly1 += 1;
+			oss.str("");
+			oss << poly1;
+			BOOST_CHECK(oss.str() == "1+x");
+			poly1.get_truncator().unset();
 		}
 	};
 	template <typename Cf>

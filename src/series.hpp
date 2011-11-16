@@ -953,7 +953,6 @@ class series: series_binary_operators, detail::series_tag
 			typedef typename Series::term_type term_type;
 			truncator<Series> t(s);
 			if (t.is_active()) {
-std::cout << "lol active\n";
 				std::vector<term_type const *> v;
 				v.reserve(s.size());
 				std::transform(s.m_container.begin(),s.m_container.end(),
@@ -962,7 +961,6 @@ std::cout << "lol active\n";
 				return print_helper_1(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
 					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
 			} else {
-std::cout << "lol inactive\n";
 				return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
 			}
 		}
