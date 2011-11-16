@@ -922,6 +922,10 @@ class series: series_binary_operators, detail::series_tag
 		 * - if the total number of characters that would be printed exceeds the limit set in piranha::settings::get_max_char_output(),
 		 *   the output is resized to that limit and ellipsis "..." are added at the end of the output.
 		 * 
+		 * The order in which terms are printed is determined by an instance of
+		 * piranha::truncator of \p Derived constructed from \p this, in case the truncator
+		 * is sorting and active. Otherwise, the print order will be undefined.
+		 * 
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
 		 * 
