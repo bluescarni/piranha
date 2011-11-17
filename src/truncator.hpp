@@ -65,8 +65,10 @@ namespace piranha
  * 
  * This class is stateless and hence provides trivial move semantics.
  * 
- * \todo truncator concept?
- * \todo require copy-constructability?
+ * \todo truncator concept? Probably need is_instance_of to work out, as we require truncators to be specialisatios
+ * of piranha::truncator.
+ * \todo require unset() method?
+ * \todo require copy-constructability? -> this should go in the concept.
  * \todo mention this must be specialised using enable_if, and do the same in series multiplier.
  */
 template <typename Series, typename Enable = void>
