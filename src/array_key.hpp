@@ -81,6 +81,9 @@ struct static_size {};
  * Move semantics is equivalent to <tt>std::vector</tt>'s or piranha::static_vector's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo think about introducing range-checking in element access not only in debug mode, to make it completely
+ * safe to use.
  */
 template <typename T, typename Derived>
 class array_key: detail::array_key_tag
