@@ -357,8 +357,13 @@ class power_series<Series,typename std::enable_if<!has_degree<typename Series::t
 
 /// Specialization of piranha::has_degree for piranha::power_series.
 /**
- * This specialization is enabled for types deriving from piranha::power_series and fulfilling the requirements
- * described in the piranha::power_series documentation. The degree property is queried via the series' methods
+ * This specialization is enabled for instances of piranha::power_series fulfilling the following requirements
+ * (described in the piranha::power_series documentation):
+ * 
+ * - the piranha::has_degree type trait is specialised to be \p true for the coefficient type, as indicated in the type trait's documentation;
+ * - the key type is a model of piranha::concept::DegreeKey.
+ * 
+ * The degree property is queried via the series' methods
  * piranha::power_series::degree() and piranha::power_series::ldegree().
  */
 template <typename PowerSeries>
