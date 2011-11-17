@@ -212,6 +212,64 @@ BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 	BOOST_CHECK((x + y + 1).ldegree() == 0);
 }
 
+struct truncator_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,int> p_type;
+			typedef typename p_type::term_type term_type;
+			typedef typename term_type::key_type key_type;
+			p_type p1;
+			BOOST_CHECK(!p1.get_truncator().is_active());
+			p1.get_truncator().set(5);
+			BOOST_CHECK(p1.get_truncator().is_active());
+			p1.get_truncator().set("x",5);
+			BOOST_CHECK(p1.get_truncator().is_active());
+			p1.get_truncator().unset();
+			BOOST_CHECK(!p1.get_truncator().is_active());
+			p1.get_truncator().set("x",5);
+			term_type t1{Cf(1),key_type{Expo(1)}}, t2(t1);
+			BOOST_CHECK_THROW(p1.get_truncator().compare_terms(t1,t2),std::invalid_argument);
+			p1 = "x";
+			BOOST_CHECK(!p1.get_truncator().compare_terms(t1,t2));
+			term_type t3{Cf(1),key_type{Expo(2)}};
+			BOOST_CHECK(p1.get_truncator().compare_terms(t1,t3));
+			BOOST_CHECK(!p1.get_truncator().compare_terms(t3,t1));
+			p1.get_truncator().set(5);
+			BOOST_CHECK(p1.get_truncator().compare_terms(t1,t3));
+			BOOST_CHECK(!p1.get_truncator().compare_terms(t3,t1));
+			typedef polynomial<p_type,int> p_type1;
+			typedef typename p_type1::term_type term_type1;
+			term_type1 tt1{p_type(1),key_type{Expo(1)}}, tt2(tt1);
+			p_type1 pp1{"x"};
+			pp1.get_truncator().set("x",5);
+			BOOST_CHECK(!pp1.get_truncator().compare_terms(tt1,tt2));
+			term_type1 tt3{p_type(1),key_type{Expo(2)}};
+			BOOST_CHECK(pp1.get_truncator().compare_terms(tt1,tt3));
+			BOOST_CHECK(!pp1.get_truncator().compare_terms(tt3,tt1));
+			p1.get_truncator().set(5);
+			BOOST_CHECK(pp1.get_truncator().compare_terms(tt1,tt3));
+			BOOST_CHECK(!pp1.get_truncator().compare_terms(tt3,tt1));
+			p1.get_truncator().unset();
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_truncator_test)
+{
+	boost::mpl::for_each<cf_types>(truncator_tester());
+}
+
+
 struct multiplication_tester
 {
 	// NOTE: this test is going to be exact in case of coefficients cancellations with double
