@@ -790,21 +790,13 @@ class series: series_binary_operators, detail::series_tag
 			dispatch_in_place_add<true>(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
-		/// Const identity operator.
+		/// Identity operator.
 		/**
-		 * @return const reference to \p this, cast to \p Derived.
+		 * @return copy of \p this, cast to \p Derived.
 		 */
-		const Derived &operator+() const
+		Derived operator+() const
 		{
-			return *static_cast<Derived const *>(this);
-		}
-		/// Mutable identity operator.
-		/**
-		 * @return reference to \p this, cast to \p Derived.
-		 */
-		Derived &operator+()
-		{
-			return *static_cast<Derived *>(this);
+			return Derived(*static_cast<Derived const *>(this));
 		}
 		/// In-place addition.
 		/**
