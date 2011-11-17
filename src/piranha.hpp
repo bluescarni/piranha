@@ -48,7 +48,6 @@
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer.
  * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  * \todo assert that concepts are respected in models.
- * \todo do we need an is_assignable_concept? it is used in monomial, for instance, or when doing std::copy -> maybe we should require it in container_element?
  * \todo check the include of pure C stuff (GMP is already fine, maybe the platform-specific stuff needs to be reviewed - aligning alloc, cache size, number of
  * threads, etc.). http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
  * \todo type-trait and report on startup if thread management primitives are available?
