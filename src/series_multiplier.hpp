@@ -167,7 +167,7 @@ class series_multiplier
 		 * - if one of the two series is empty, a default-constructed instance of \p return_type is returned;
 		 * - a heuristic determines whether to enable multi-threaded mode or not;
 		 * - in single-threaded mode:
-		 *   - an instance of \p Functor is created and its <tt>operator()</tt> is run iteratively over the terms
+		 *   - an instance of \p Functor is created and its <tt>operator()</tt> is run iteratively over all the terms
 		 *     of the two series to construct the return value;
 		 * - in multi-threaded mode:
 		 *   - the first series is subdivided into segments and the same process described for single-threaded mode is run in parallel,
@@ -176,19 +176,20 @@ class series_multiplier
 		 * 
 		 * The protocol expected by an instance of type \p Functor is the following:
 		 * 
-		 * - it must be constructible from two vectors of const pointers to the terms in the input series
-		 *   and an instance of type \p return_type that will be used to
-		 *   accumulate the terms during multiplication;
+		 * - it must be constructible from a 5-ary constructor from:
+		 *   - a pointer to an array of const pointers to terms in the first input series, and the array's size;
+		 *   - the same quantities for the second series,
+		 *   - an instance of type \p return_type that will be used to accumulate the terms during multiplication;
 		 * - it must be provided with an <tt>operator()()</tt>, taking two unsigned integers (e.g., \p i and \p j) as input
-		 *   parameters and returning void. A call of this operator will multiply the <tt>i</tt>-th term of the first series
-		 *   by the <tt>j</tt>-th term of the second series (as they appear in the pointers vectors),
+		 *   parameters and returning void. A call of this operator will multiply the <tt>i</tt>-th term in the first array
+		 *   by the <tt>j</tt>-th term in the second array,
 		 *   and insert the result into the the instance of \p return_type used for construction.
 		 * 
 		 * Note that the parameters passed to the constructor exist outside the \p Functor. In particular,
 		 * the \p return_type instance used for construction will then be used to create the return value (and
 		 * thus \p Functor is expected to use a reference or a pointer to such object in its operations).
 		 * Instances of \p Functor are created sequentially (when operating in multi-threaded mode), and they are
-		 * allowed to mutate the vectors of terms pointers (in particular, they are allowed to reorder them).
+		 * allowed to mutate the arrays of terms pointers (in particular, they are allowed to reorder them).
 		 * 
 		 * @return the result of multiplying the first series by the second series.
 		 * 
@@ -234,9 +235,9 @@ class series_multiplier
 			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
 				return_type retval;
 				retval.m_symbol_set = m_s1.m_symbol_set;
-				Functor f(m_v1,m_v2,retval);
+				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,retval);
 				const auto tmp = rehasher(f,retval,size1,size2);
-				blocked_multiplication(f,size_type(0u),size1,size_type(0u),size2);
+				blocked_multiplication(f,size1,size2);
 				if (tmp.first) {
 					trace_estimates(retval.size(),tmp.second);
 				}
@@ -255,9 +256,11 @@ class series_multiplier
 				std::list<Functor,cache_aligning_allocator<Functor>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
+					// Last thread needs a different size from block_size.
+					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					retval_list.push_back(return_type{});
 					retval_list.back().m_symbol_set = m_s1.m_symbol_set;
-					functor_list.push_back(Functor(m_v1,m_v2,retval_list.back()));
+					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,retval_list.back()));
 				}
 				thread_group tg;
 				auto f_it = functor_list.begin();
@@ -273,8 +276,7 @@ class series_multiplier
 							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
-							this->blocked_multiplication(*f_it,
-								i * block_size,s1,size_type(0u),size2);
+							this->blocked_multiplication(*f_it,s1,size2);
 							if (tmp.first) {
 								this->trace_estimates(r_it->m_container.size(),tmp.second);
 							}
@@ -294,7 +296,7 @@ class series_multiplier
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
 				retval.m_symbol_set = m_s1.m_symbol_set;
-				auto final_estimate = estimate_final_series_size(Functor(m_v1,m_v2,retval),size1,size2,retval);
+				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0],size1,&m_v2[0],size2,retval),size1,size2,retval);
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -502,19 +504,22 @@ std::cout << "new size is " << new_size << '\n';
 		}
 		struct plain_functor
 		{
-			explicit plain_functor(const std::vector<term_type1 const *> &v1, const std::vector<term_type2 const *> &v2,
+			typedef typename std::vector<term_type1 const *>::size_type size_type;
+			explicit plain_functor(term_type1 const **ptr1, const size_type &s1,
+				term_type2 const **ptr2, const size_type &s2,
 				return_type &retval):
-				m_v1(v1),m_v2(v2),m_retval(retval)
+				m_ptr1(ptr1),m_s1(s1),m_ptr2(ptr2),m_s2(s2),m_retval(retval)
 			{}
-			template <typename Size>
-			void operator()(const Size &i, const Size &j) const
+			void operator()(const size_type &i, const size_type &j) const
 			{
-				piranha_assert(i < m_v1.size() && j < m_v2.size());
-				(m_v1[i])->multiply(m_tmp,*(m_v2[j]),m_retval.m_symbol_set);
+				piranha_assert(i < m_s1 && j < m_s2);
+				(m_ptr1[i])->multiply(m_tmp,*(m_ptr2[j]),m_retval.m_symbol_set);
 				series_multiplier::insert_impl(m_retval,m_tmp);
 			}
-			const std::vector<term_type1 const *>			&m_v1;
-			const std::vector<term_type2 const *>			&m_v2;
+			term_type1 const **					m_ptr1;
+			const size_type						m_s1;
+			term_type2 const **					m_ptr2;
+			const size_type						m_s2;
 			return_type						&m_retval;
 			mutable typename term_type1::multiplication_result_type	m_tmp;
 		};
@@ -612,20 +617,19 @@ std::cout << "new size is " << new_size << '\n';
 			return static_cast<bucket_size_type>(M);
 		}
 		template <typename Functor, typename Size>
-		static void blocked_multiplication(const Functor &f, const Size &start1, const Size &size1,
-			const Size &start2, const Size &size2)
+		static void blocked_multiplication(const Functor &f, const Size &size1, const Size &size2)
 		{
 			// NOTE: hard-coded block size of 256.
 			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
 			const Size bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
 			// Start and end of last (possibly irregular) blocks.
-			const Size i_ir_start = start1 + nblocks1 * bsize1, i_ir_end = start1 + size1;
-			const Size j_ir_start = start2 + nblocks2 * bsize2, j_ir_end = start2 + size2;
+			const Size i_ir_start = nblocks1 * bsize1, i_ir_end = size1;
+			const Size j_ir_start = nblocks2 * bsize2, j_ir_end = size2;
 			for (Size n1 = 0u; n1 < nblocks1; ++n1) {
-				const Size i_start = start1 + n1 * bsize1, i_end = i_start + bsize1;
+				const Size i_start = n1 * bsize1, i_end = i_start + bsize1;
 				// regulars1 * regulars2
 				for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-					const Size j_start = start2 + n2 * bsize2, j_end = j_start + bsize2;
+					const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
 					for (Size i = i_start; i < i_end; ++i) {
 						for (Size j = j_start; j < j_end; ++j) {
 							f(i,j);
@@ -641,7 +645,7 @@ std::cout << "new size is " << new_size << '\n';
 			}
 			// rem1 * regulars2
 			for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-				const Size j_start = start2 + n2 * bsize2, j_end = j_start + bsize2;
+				const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
 				for (Size i = i_ir_start; i < i_ir_end; ++i) {
 					for (Size j = j_start; j < j_end; ++j) {
 						f(i,j);
@@ -681,10 +685,10 @@ std::cout << "new size is " << new_size << '\n';
 			retval.insert(mult_res);
 		}
 	private:
-		const Series1			&m_s1;
-		const Series2			&m_s2;
-		std::vector<term_type1 const *>	m_v1;
-		std::vector<term_type2 const *>	m_v2;
+		const Series1				&m_s1;
+		const Series2				&m_s2;
+		mutable std::vector<term_type1 const *>	m_v1;
+		mutable std::vector<term_type2 const *>	m_v2;
 };
 
 }
