@@ -84,7 +84,6 @@ namespace detail {}
 #include "cache_aligning_allocator.hpp"
 #include "concepts.hpp"
 #include "config.hpp"
-#include "cvector.hpp"
 #include "debug_access.hpp"
 #include "degree_truncator_settings.hpp"
 #include "echelon_size.hpp"
