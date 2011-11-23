@@ -264,7 +264,7 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s5o.m_container.begin()->m_cf.size() == 1u);
 			BOOST_CHECK(s5o.m_container.begin()->m_cf.m_container.begin()->m_cf == 1);
 			// Truncator getter.
-			BOOST_CHECK(!s5o.get_truncator().is_active());
+			BOOST_CHECK_NO_THROW(s5o.get_truncator());
 		}
 	};
 	template <typename Cf>

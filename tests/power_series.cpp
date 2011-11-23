@@ -37,6 +37,7 @@ typedef boost::mpl::vector<double,integer> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 // TODO missing tests with degree only in the coefficient -> implement them once we have poisson series.
+// Also, implement tests for power series that do not satisfy the requirements.
 
 struct degree_tester
 {
