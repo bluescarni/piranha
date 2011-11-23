@@ -32,6 +32,7 @@
 #include "detail/series_multiplier_fwd.hpp"
 #include "kronecker_monomial.hpp"
 #include "monomial.hpp"
+#include "power_series_term.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
@@ -107,10 +108,10 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename ExpoType>
-class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
+class polynomial_term: public power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>>
 {
 		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
-		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
+		typedef power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;

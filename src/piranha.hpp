@@ -30,7 +30,8 @@
 /// Root piranha namespace.
 /**
  * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
- * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment)
+ * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment) ->
+ * keep in mind in some cases the tags are actually used for discriminating between types, adjust it accordingly (e.g., power series).
  * \todo better piranha_throw macro with support of boost_throw when using boost thread instead of native c++0x threads.
  * \todo switch to auto -> decltype declarations of member functions for complicated types (e.g., tuples) when decltype on this
  * becomes available.
@@ -98,6 +99,8 @@ namespace detail {}
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "power_series.hpp"
+#include "power_series_term.hpp"
+#include "print_coefficient.hpp"
 #include "runtime_info.hpp"
 #include "series.hpp"
 #include "series_binary_operators.hpp"
