@@ -18,34 +18,40 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_CONCEPT_POWER_SERIES_TERM_HPP
+#define PIRANHA_CONCEPT_POWER_SERIES_TERM_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+
+#include "../power_series_term.hpp"
+#include "term.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/degree_key.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/power_series.hpp"
-#include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
+namespace concept
+{
+
+/// Concept for power series terms.
+/**
+ * The requisites for type \p T are the following:
+ * 
+ * - must be a model of piranha::concept::Term,
+ * - must have a \p true value for the type-trait piranha::is_power_series_term.
+ */
+template <typename T>
+class PowerSeriesTerm:
+	Term<T>
+{
+	public:
+		/// Concept usage pattern.
+		BOOST_CONCEPT_USAGE(PowerSeriesTerm)
+		{
+			static_assert(is_power_series_term<T>::value,"Term is not a power series term.");
+		}
+};
+
+}
+}
 
 #endif

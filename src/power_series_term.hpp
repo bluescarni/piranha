@@ -61,7 +61,8 @@ struct power_series_term_tag {};
  * If neither the coefficient nor the key satisfy the above requirements, this class will not add any new functionality to the \p Term class and
  * will just provide generic constructors that will forward their arguments to the constructors of \p Term.
  * 
- * This class is a model of the piranha::concept::Term concept.
+ * This class is a model of the piranha::concept::Term concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeriesTerm
+ * concept.
  * 
  * \section type_requirements Type requirements
  * 

@@ -25,8 +25,10 @@
 #include <string>
 #include <type_traits>
 
-#include "concepts/degree_key.hpp"
+#include "concepts/power_series_term.hpp"
+#include "concepts/series.hpp"
 #include "detail/series_fwd.hpp"
+#include "power_series_term.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -45,18 +47,17 @@ struct power_series_tag {};
  * This toolbox is intended to extend the \p Series type with properties of formal power series.
  * 
  * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and partial (low) degree
- * of a \p Series object. Such augmentation takes place if the coefficient and/or key type of \p Series satisfy the following
- * requirements:
+ * of a \p Series object. Such augmentation takes place if the series term satisfies the piranha::is_power_series_term type-trait.
  * 
- * - the piranha::has_degree type trait is specialised to be \p true for the coefficient type, as indicated in the type trait's documentation;
- * - the key type is a model of piranha::concept::DegreeKey.
- * 
- * As an additional requirement, the types returned when querying total and partial (low) degree must be default-constructible, addable,
+ * As an additional requirement, the types returned when querying total and partial (low) degree must be default-constructible,
  * move-assignable, constructible from \p int, and less-than and greater-than comparable. If these additional requirements are not satisfied,
  * a compile-time error will be produced.
  * 
- * If neither the coefficient nor the key satisfy the above requirements, this class will not add any new functionality to the \p Series class and
+ * If the term type does not satisfy the piranha::is_power_series_term type-trait, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors that will forward their arguments to the constructors of \p Series.
+ * 
+ * This class is a model of the piranha::concept::Series concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeries
+ * concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -78,84 +79,17 @@ template <typename Series, typename Enable = void>
 class power_series: public Series,detail::power_series_tag
 {
 		static_assert(std::is_base_of<detail::series_tag,Series>::value,"Base class must be an instance of piranha::series.");
+		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
 		typedef Series base;
-		template <typename Term, typename Enable2 = void>
-		struct degree_utils
-		{
-			static auto compute(const Term &t, const symbol_set &ss) -> decltype(has_degree<typename Term::cf_type>::get(t.m_cf) + t.m_key.degree(ss))
-			{
-				return has_degree<typename Term::cf_type>::get(t.m_cf) + t.m_key.degree(ss);
-			}
-			static auto compute(const Term &t, const symbol_set &ss, const std::set<std::string> &as) ->
-				decltype(has_degree<typename Term::cf_type>::get(t.m_cf,as) + t.m_key.degree(as,ss))
-			{
-				return has_degree<typename Term::cf_type>::get(t.m_cf,as) + t.m_key.degree(as,ss);
-			}
-			static auto lcompute(const Term &t, const symbol_set &ss) -> decltype(has_degree<typename Term::cf_type>::lget(t.m_cf) + t.m_key.ldegree(ss))
-			{
-				return has_degree<typename Term::cf_type>::lget(t.m_cf) + t.m_key.ldegree(ss);
-			}
-			static auto lcompute(const Term &t, const symbol_set &ss, const std::set<std::string> &as) ->
-				decltype(has_degree<typename Term::cf_type>::lget(t.m_cf,as) + t.m_key.ldegree(as,ss))
-			{
-				return has_degree<typename Term::cf_type>::lget(t.m_cf,as) + t.m_key.ldegree(as,ss);
-			}
-		};
-		template <typename Term>
-		struct degree_utils<Term,typename std::enable_if<!detail::key_has_degree<typename Term::key_type>::value>::type>
-		{
-			static auto compute(const Term &t, const symbol_set &) -> decltype(has_degree<typename Term::cf_type>::get(t.m_cf))
-			{
-				return has_degree<typename Term::cf_type>::get(t.m_cf);
-			}
-			static auto compute(const Term &t, const symbol_set &, const std::set<std::string> &as) ->
-				decltype(has_degree<typename Term::cf_type>::get(t.m_cf,as))
-			{
-				return has_degree<typename Term::cf_type>::get(t.m_cf,as);
-			}
-			static auto lcompute(const Term &t, const symbol_set &) -> decltype(has_degree<typename Term::cf_type>::lget(t.m_cf))
-			{
-				return has_degree<typename Term::cf_type>::lget(t.m_cf);
-			}
-			static auto lcompute(const Term &t, const symbol_set &, const std::set<std::string> &as) ->
-				decltype(has_degree<typename Term::cf_type>::lget(t.m_cf,as))
-			{
-				return has_degree<typename Term::cf_type>::lget(t.m_cf,as);
-			}
-		};
-		template <typename Term>
-		struct degree_utils<Term,typename std::enable_if<!has_degree<typename Term::cf_type>::value>::type>
-		{
-			static auto compute(const Term &t, const symbol_set &ss) -> decltype(t.m_key.degree(ss))
-			{
-				return t.m_key.degree(ss);
-			}
-			static auto compute(const Term &t, const symbol_set &ss, const std::set<std::string> &as) ->
-				decltype(t.m_key.degree(as,ss))
-			{
-				return t.m_key.degree(as,ss);
-			}
-			static auto lcompute(const Term &t, const symbol_set &ss) -> decltype(t.m_key.ldegree(ss))
-			{
-				return t.m_key.ldegree(ss);
-			}
-			static auto lcompute(const Term &t, const symbol_set &ss, const std::set<std::string> &as) ->
-				decltype(t.m_key.ldegree(as,ss))
-			{
-				return t.m_key.ldegree(as,ss);
-			}
-		};
 		template <typename... Args>
 		struct determine_dtype
 		{
-			typedef decltype(degree_utils<typename Series::term_type>::compute(std::declval<typename Series::term_type>(),
-				std::declval<symbol_set>(),std::declval<Args>()...)) type;
+			typedef decltype(std::declval<typename Series::term_type>().degree(std::declval<Args>()...,std::declval<symbol_set>())) type;
 		};
 		template <typename... Args>
 		struct determine_ldtype
 		{
-			typedef decltype(degree_utils<typename Series::term_type>::lcompute(std::declval<typename Series::term_type>(),
-				std::declval<symbol_set>(),std::declval<Args>()...)) type;
+			typedef decltype(std::declval<typename Series::term_type>().ldegree(std::declval<Args>()...,std::declval<symbol_set>())) type;
 		};
 		template <typename... Args>
 		typename determine_dtype<Args ...>::type degree_impl(Args && ... params) const
@@ -166,11 +100,11 @@ class power_series: public Series,detail::power_series_tag
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<typename Series::term_type>::compute(*it,this->m_symbol_set,std::forward<Args>(params)...);
+			return_type retval = it->degree(std::forward<Args>(params)...,this->m_symbol_set);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<typename Series::term_type>::compute(*it,this->m_symbol_set,std::forward<Args>(params)...);
+				tmp = it->degree(std::forward<Args>(params)...,this->m_symbol_set);
 				if (tmp > retval) {
 					retval = std::move(tmp);
 				}
@@ -186,11 +120,11 @@ class power_series: public Series,detail::power_series_tag
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<typename Series::term_type>::lcompute(*it,this->m_symbol_set,std::forward<Args>(params)...);
+			return_type retval = it->ldegree(std::forward<Args>(params)...,this->m_symbol_set);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<typename Series::term_type>::lcompute(*it,this->m_symbol_set,std::forward<Args>(params)...);
+				tmp = it->ldegree(std::forward<Args>(params)...,this->m_symbol_set);
 				if (tmp < retval) {
 					retval = std::move(tmp);
 				}
@@ -216,6 +150,11 @@ class power_series: public Series,detail::power_series_tag
 		 */
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit power_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		/// Trivial destructor.
+		~power_series()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
+		}
 		/// Defaulted copy assignment operator.
 		power_series &operator=(const power_series &) = default;
 		/// Trivial move assignment operator.
@@ -248,8 +187,7 @@ class power_series: public Series,detail::power_series_tag
 		}
 		/// Total degree.
 		/**
-		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated by adding the degree of the coefficient
-		 * (if applicable) to the degree of the key (if applicable), and the return type is determined in the same way.
+		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated using power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -268,8 +206,7 @@ class power_series: public Series,detail::power_series_tag
 		/**
 		 * The partial degree of the series is the maximum partial degree of its terms
 		 * (i.e., the total degree when only variables with names in \p s are considered).
-		 * The partial degree of each term is calculated by adding the partial degree of the coefficient
-		 * (if applicable) to the partial degree of the key (if applicable), and the return type is determined in the same way.
+		 * The partial degree of each term is calculated using power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -288,8 +225,8 @@ class power_series: public Series,detail::power_series_tag
 		}
 		/// Low degree.
 		/**
-		 * The low degree of the series is the minimum low degree of its terms. The low degree of each term is calculated by adding the low degree of the coefficient
-		 * (if applicable) to the low degree of the key (if applicable), and the return type is determined in the same way.
+		 * The low degree of the series is the minimum low degree of its terms. The low degree of each term is calculated
+		 * using power_series_term::ldegree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -308,8 +245,7 @@ class power_series: public Series,detail::power_series_tag
 		/**
 		 * The partial low degree of the series is the minimum partial low degree of its terms
 		 * (i.e., the total low degree when only variables with names in \p s are considered).
-		 * The partial low degree of each term is calculated by adding the partial low degree of the coefficient
-		 * (if applicable) to the partial low degree of the key (if applicable), and the return type is determined in the same way.
+		 * The partial low degree of each term is calculated using power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -329,8 +265,7 @@ class power_series: public Series,detail::power_series_tag
 };
 
 template <typename Series>
-class power_series<Series,typename std::enable_if<!has_degree<typename Series::term_type::cf_type>::value &&
-	!detail::key_has_degree<typename Series::term_type::key_type>::value>::type>:
+class power_series<Series,typename std::enable_if<!is_power_series_term<typename Series::term_type>::value>::type>:
 	public Series
 {
 		static_assert(std::is_base_of<detail::series_tag,Series>::value,"Base class must derive from piranha::series.");
@@ -341,6 +276,10 @@ class power_series<Series,typename std::enable_if<!has_degree<typename Series::t
 		power_series(power_series &&) = default;
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit power_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		~power_series()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
+		}
 		power_series &operator=(const power_series &) = default;
 		power_series &operator=(power_series &&other)
 		{
@@ -355,20 +294,34 @@ class power_series<Series,typename std::enable_if<!has_degree<typename Series::t
 		}
 };
 
-/// Specialization of piranha::has_degree for piranha::power_series.
+/// Type-trait for power series.
 /**
- * This specialization is enabled for instances of piranha::power_series fulfilling the following requirements
- * (described in the piranha::power_series documentation):
+ * The value of the type-trait will be \p true if \p Series is an instance of piranha::power_series that provides the methods
+ * for querying the degree of the series, \p false otherwise.
+ */
+template <typename Series>
+class is_power_series
+{
+	public:
+		/// Type-trait value.
+		static const bool value = std::is_base_of<detail::power_series_tag,Series>::value;
+};
+
+template <typename Series>
+const bool is_power_series<Series>::value;
+
+/// Specialization of piranha::has_degree for power series.
+/**
+ * This specialization is enabled for types satisfying the type-trait piranha::is_power_series.
  * 
- * - the piranha::has_degree type trait is specialised to be \p true for the coefficient type, as indicated in the type trait's documentation;
- * - the key type is a model of piranha::concept::DegreeKey.
+ * \section type_requirements Type requirements
  * 
- * The degree property is queried via the series' methods
- * piranha::power_series::degree() and piranha::power_series::ldegree().
+ * \p Series must be a model of the piranha::concept::Series concept.
  */
 template <typename PowerSeries>
-class has_degree<PowerSeries,typename std::enable_if<std::is_base_of<detail::power_series_tag,PowerSeries>::value>::type>
+class has_degree<PowerSeries,typename std::enable_if<is_power_series<PowerSeries>::value>::type>
 {
+		BOOST_CONCEPT_ASSERT((concept::Series<PowerSeries>));
 	public:
 		/// Type trait value.
 		static const bool value = true;
