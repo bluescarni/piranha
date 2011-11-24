@@ -67,9 +67,9 @@ namespace piranha
  *   the result of the multiplication of the two series used for construction.
  * 
  * Any specialisation of this class must respect the protocol described above (i.e., construction from series
- * instances and operator()() to compute the result).
- * 
- * Note that the return type of the multiplication is the piranha::series base type of \p Series1, independently from the rules governing coefficient arithmetics.
+ * instances and operator()() to compute the result). Note that this class is guaranteed to be used after the symbolic arguments of the series used for construction
+ * have been merged (in other words, the two series have identical symbolic arguments sets).
+ * Note also that the return type of the multiplication is the piranha::series base type of \p Series1, independently from the rules governing coefficient arithmetics.
  * 
  * \section type_requirements Type requirements
  * 
