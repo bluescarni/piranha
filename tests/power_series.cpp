@@ -30,6 +30,7 @@
 #include <type_traits>
 
 #include "../src/polynomial.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -103,6 +104,11 @@ struct degree_tester
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"} + 1).ldegree() == 0);
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"}).ldegree({"x"}) == 0);
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} * p_type1{"y"} + 2 * p_type1{"y"}).ldegree({"y"}) == 1);
+			// Test the type traits.
+			BOOST_CHECK(is_power_series<p_type1>::value);
+			BOOST_CHECK(is_power_series<p_type11>::value);
+			BOOST_CHECK(has_degree<p_type1>::value);
+			BOOST_CHECK(has_degree<p_type11>::value);
 		}
 	};
 	template <typename Cf>
