@@ -18,35 +18,65 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_CONCEPT_TRUNCATOR_HPP
+#define PIRANHA_CONCEPT_TRUNCATOR_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+#include <iostream>
+#include <type_traits>
+
+#include "../detail/truncator_fwd.hpp"
+#include "series.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/degree_key.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/power_series.hpp"
-#include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
+namespace concept
+{
+
+/// Truncator concept.
+/**
+ * Will check that piranha::truncator of <tt>Series...</tt> satisfies the truncator requirements.
+ */
+template <typename... Series>
+class Truncator
+{
+		static_assert(sizeof...(Series) == 1u || sizeof...(Series) == 2u,"Invalid number of template parameters.");
+		template <typename T>
+		static truncator<T> check_ctor()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Series<T>));
+			const T s;
+			const truncator<T> retval(s);
+			return retval;
+		}
+		template <typename T, typename U>
+		static truncator<T,U> check_ctor()
+		{
+			BOOST_CONCEPT_ASSERT((concept::Series<T>));
+			BOOST_CONCEPT_ASSERT((concept::Series<U>));
+			const T s1;
+			const U s2;
+			const truncator<T,U> retval(s1,s2);
+			return retval;
+		}
+	public:
+		/// Concept usage pattern.
+		BOOST_CONCEPT_USAGE(Truncator)
+		{
+			typedef truncator<Series...> truncator_type;
+			const truncator_type t = check_ctor<Series...>();
+			auto t2(t);
+			std::cout << t;
+			t.is_active();
+			static_assert(std::is_same<decltype(t.is_active()),bool>::value,"Invalid return type for is_active() method.");
+			// This should check the consistency of the traits.
+			truncator_traits<Series...> tt;
+			(void)tt;
+		}
+};
+
+}
+}
 
 #endif

@@ -18,35 +18,20 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
-
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#ifndef PIRANHA_TRUNCATOR_FWD_HPP
+#define PIRANHA_TRUNCATOR_FWD_HPP
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/degree_key.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/power_series.hpp"
-#include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
+// Forward-declaration of truncator.
+template <typename... Series>
+class truncator;
+
+// Forward-declaration of truncator traits.
+template <typename... Series>
+class truncator_traits;
+
+}
 
 #endif
