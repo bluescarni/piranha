@@ -83,7 +83,8 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo series multiplier concept?
+ * \todo series multiplier concept? -> do the same thing done for truncator class.
+ * \todo mention this must be specialised using enable_if.
  * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
  * means via template specialisation to customise the behaviour for different types of coefficients.
  * \todo when estimating series size, we should take into account that term-by-term multiplication can generate multiple terms (e.g., Poisson series).
