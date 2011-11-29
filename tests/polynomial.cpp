@@ -221,10 +221,12 @@ struct truncator_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
+			// Unary truncator.
 			typedef polynomial<Cf,int> p_type;
 			typedef typename p_type::term_type term_type;
 			typedef typename term_type::key_type key_type;
 			p_type p1;
+			BOOST_CHECK(truncator_traits<p_type>::is_sorting);
 			BOOST_CHECK(!p1.get_truncator().is_active());
 			p1.get_truncator().set(5);
 			BOOST_CHECK(p1.get_truncator().is_active());
@@ -245,6 +247,7 @@ struct truncator_tester
 			BOOST_CHECK(!p1.get_truncator().compare_terms(t3,t1));
 			typedef polynomial<p_type,int> p_type1;
 			typedef typename p_type1::term_type term_type1;
+			BOOST_CHECK(truncator_traits<p_type1>::is_sorting);
 			term_type1 tt1{p_type(1),key_type{Expo(1)}}, tt2(tt1);
 			p_type1 pp1{"x"};
 			pp1.get_truncator().set("x",5);
@@ -255,6 +258,52 @@ struct truncator_tester
 			p1.get_truncator().set(5);
 			BOOST_CHECK(pp1.get_truncator().compare_terms(tt1,tt3));
 			BOOST_CHECK(!pp1.get_truncator().compare_terms(tt3,tt1));
+			p1.get_truncator().unset();
+			// Binary truncator.
+			typedef polynomial<Cf,Expo> p_typea;
+			typedef polynomial<Cf,int> p_typeb;
+			p_typea x{"x"}, y{"y"};
+			p_typeb xb{"x"};
+			typedef typename p_typea::term_type::key_type key_typea;
+			typedef typename p_typeb::term_type::key_type key_typeb;
+			BOOST_CHECK((truncator_traits<p_typea,p_typea>::is_sorting));
+			BOOST_CHECK((truncator_traits<p_typea,p_typeb>::is_sorting));
+			BOOST_CHECK((truncator_traits<p_typea,p_typea>::is_skipping));
+			BOOST_CHECK((truncator_traits<p_typea,p_typeb>::is_skipping));
+			BOOST_CHECK((!truncator<p_typea,p_typea>(p_typea{},p_typea{}).is_active()));
+			BOOST_CHECK((!truncator<p_typea,p_typeb>(p_typea{},p_typeb{}).is_active()));
+			typedef truncator<p_typea,p_typea> trunc1;
+			typedef truncator<p_typea,p_typeb> trunc2;
+			trunc1 tr0{p_typea{},p_typea{}};
+			BOOST_CHECK_THROW(tr0.compare_terms(typename p_typea::term_type{},typename p_typea::term_type{}),std::invalid_argument);
+			BOOST_CHECK(!tr0.skip(typename p_typea::term_type{},typename p_typea::term_type{}));
+			p1.get_truncator().set(5);
+			p_typea empty;
+			trunc1 tr1{empty,empty};
+			BOOST_CHECK((truncator<p_typea,p_typea>(p_typea{},p_typea{}).is_active()));
+			BOOST_CHECK((truncator<p_typea,p_typeb>(p_typea{},p_typeb{}).is_active()));
+			BOOST_CHECK(!tr1.compare_terms(typename p_typea::term_type{},typename p_typea::term_type{}));
+			BOOST_CHECK(!tr1.skip(typename p_typea::term_type{},typename p_typea::term_type{}));
+			trunc1 tr2{x,x};
+			BOOST_CHECK(!tr2.compare_terms(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{1}}));
+			BOOST_CHECK(tr2.compare_terms(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{2}}));
+			BOOST_CHECK(!tr2.compare_terms(typename p_typea::term_type{1,key_typea{2}},typename p_typea::term_type{1,key_typea{1}}));
+			BOOST_CHECK(!tr2.skip(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{1}}));
+			BOOST_CHECK(tr2.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typea::term_type{1,key_typea{2}}));
+			BOOST_CHECK(tr2.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typea::term_type{1,key_typea{3}}));
+			trunc2 tr3{x,xb};
+			BOOST_CHECK(!tr3.skip(typename p_typea::term_type{1,key_typea{1}},typename p_typeb::term_type{1,key_typeb{1}}));
+			BOOST_CHECK(tr3.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typeb::term_type{1,key_typeb{2}}));
+			BOOST_CHECK(tr3.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typeb::term_type{1,key_typeb{3}}));
+			p1.get_truncator().set("y",5);
+			auto xy = x*y;
+			trunc1 tr4{xy,xy};
+			BOOST_CHECK(!tr4.compare_terms(typename p_typea::term_type{1,key_typea{1,1}},typename p_typea::term_type{1,key_typea{1,1}}));
+			BOOST_CHECK(!tr4.compare_terms(typename p_typea::term_type{1,key_typea{10,1}},typename p_typea::term_type{1,key_typea{1,1}}));
+			BOOST_CHECK(tr4.compare_terms(typename p_typea::term_type{1,key_typea{10,1}},typename p_typea::term_type{1,key_typea{1,2}}));
+			BOOST_CHECK(!tr4.skip(typename p_typea::term_type{1,key_typea{10,1}},typename p_typea::term_type{1,key_typea{1,2}}));
+			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,2}}));
+			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,3}}));
 			p1.get_truncator().unset();
 		}
 	};

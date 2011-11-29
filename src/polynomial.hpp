@@ -31,14 +31,18 @@
 
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/series.hpp"
+#include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "degree_truncator_settings.hpp"
+#include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
+#include "power_series_truncator.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
+#include "symbol_set.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
 
@@ -187,36 +191,33 @@ class polynomial:
 		}
 };
 
-/// Specialisation of piranha::truncator for piranha::polynomial.
+/// Specialisation of unary piranha::truncator for piranha::polynomial.
 /**
- * This specialisation will use the global settings in piranha::degree_truncator_settings to determine how to sort and truncate
- * polynomials. Polynomial terms will be sorted in ascending order according to the low degree.
- * 
- * For performance reasons, this truncator will atomically take a snapshot of the current global settings and will use this snapshot
- * in its operations. As such, the settings of an instance of this truncator might differ from the global settings if these are modified
- * after construction.
+ * This specialisation will use piranha::power_series_truncator to rank terms according to their low degree.
  * 
  * \section type_requirements Type requirements
  * 
- * This specialisation is activated only if \p Polynomial is an instance of piranha::polynomial.
+ * This specialisation is activated for instances of piranha::polynomial.
  */
-template <typename Polynomial>
-class truncator<Polynomial,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Polynomial>::value>::type>:
-	public degree_truncator_settings
+template <typename Cf, typename Expo>
+class truncator<polynomial<Cf,Expo>>: public power_series_truncator
 {
-		typedef decltype(degree_truncator_settings::get_state()) state_type;
+		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf,Expo>>));
 	public:
+		/// Alias for the polynomial type.
+		typedef polynomial<Cf,Expo> polynomial_type;
 		/// Alias for the polynomial term type.
-		typedef typename Polynomial::term_type term_type;
+		typedef typename polynomial_type::term_type term_type;
 		/// Constructor from polynomial.
 		/**
-		 * The constructor will store internally a reference to the input series and will copy atomically the state
-		 * of the global truncator settings as a private member variable for future use.
+		 * The constructor will store internally a reference to the input series and will invoke the default
+		 * constructor of piranha::power_series_truncator.
 		 * 
-		 * @throws unspecified any exception thrown by threading primitives or memory allocation
-		 * errors in standard containers.
+		 * @param[in] poly series on which the truncator will operate.
+		 * 
+		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
 		 */
-		explicit truncator(const Polynomial &series):m_series(series),m_state(degree_truncator_settings::get_state()) {}
+		explicit truncator(const polynomial_type &poly):power_series_truncator(),m_poly(poly) {}
 		/// Deleted copy assignment.
 		truncator &operator=(const truncator &) = delete;
 		/// Deleted move assignment.
@@ -237,68 +238,120 @@ class truncator<Polynomial,typename std::enable_if<std::is_base_of<detail::polyn
 		 */
 		bool compare_terms(const term_type &t1, const term_type &t2) const
 		{
-			const auto mode = m_get_mode();
-			switch (mode) {
+			switch (std::get<0u>(m_state)) {
 				case total:
-					return compare_ldegree(t1,t2);
+					return compare_ldegree(t1,t2,m_poly.m_symbol_set);
 				case partial:
-					return compare_pldegree(t1,t2);
+					return compare_pldegree(t1,t2,m_poly.m_symbol_set);
 				default:
 					piranha_throw(std::invalid_argument,"cannot compare terms if truncator is inactive");
 			}
 		}
-		/// Truncator status.
+	private:
+		const polynomial_type &m_poly;
+};
+
+/// Specialisation of binary piranha::truncator for piranha::polynomial.
+/**
+ * This specialisation will use piranha::power_series_truncator to rank terms according to their low degree.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * This specialisation is activated for instances of piranha::polynomial. If the echelon sizes of the two polynomial term types
+ * are not equal, a compile-time error will be produced.
+ */
+template <typename Cf1, typename Expo1, typename Cf2, typename Expo2>
+class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_series_truncator
+{
+		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf1,Expo1>>));
+		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf2,Expo2>>));
+	public:
+		/// Alias for the first polynomial type.
+		typedef polynomial<Cf1,Expo1> polynomial_type1;
+		/// Alias for the second polynomial type.
+		typedef polynomial<Cf2,Expo2> polynomial_type2;
+		/// Alias for the first polynomial term type.
+		typedef typename polynomial_type1::term_type term_type1;
+		/// Alias for the second polynomial term type.
+		typedef typename polynomial_type2::term_type term_type2;
+	private:
+		static_assert(echelon_size<term_type1>::value == echelon_size<term_type2>::value,"Inconsistent echelon sizes.");
+	public:
+		/// Constructor from polynomials.
 		/**
-		 * @return \p true if the truncator mode is total or partial, \p false otherwise.
+		 * The constructor will store internally references to the input series and will invoke the default
+		 * constructor of piranha::power_series_truncator.
+		 * 
+		 * @param[in] poly1 first series on which the truncator will operate.
+		 * @param[in] poly2 second series on which the truncator will operate.
+		 * 
+		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
 		 */
-		bool is_active() const
+		explicit truncator(const polynomial_type1 &poly1, const polynomial_type2 &poly2):power_series_truncator(),
+			m_poly1(poly1),m_poly2(poly2) {}
+		/// Deleted copy assignment.
+		truncator &operator=(const truncator &) = delete;
+		/// Deleted move assignment.
+		truncator &operator=(truncator &&) = delete;
+		/// Term comparison.
+		/**
+		 * This method will compare the partial or total low degree (depending on the truncator settings) of \p t1 and \p t2,
+		 * and will return \p true if the low degree of \p t1 is less than the low degree of \p t2, \p false otherwise.
+		 * If the truncator is inactive, a runtime error will be produced.
+		 * 
+		 * This template method is activated only if \p Term is \p term_type1 or \p term_type2. If \p Term is \p term_type1 the set
+		 * of arguments used to calculate and compare the degree of the terms will be the one of the first series, otherwise the set of arguments
+		 * of the second series will be used.
+		 * 
+		 * @param[in] t1 first term.
+		 * @param[in] t2 second term.
+		 * 
+		 * @return the result of comparing the low degrees of \p t1 and \p t2.
+		 * 
+		 * @throws std::invalid_argument if the truncator is inactive.
+		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
+		 */
+		template <typename Term>
+		bool compare_terms(const Term &t1, const Term &t2, typename std::enable_if<std::is_same<Term,term_type1>::value ||
+			std::is_same<Term,term_type2>::value>::type * = piranha_nullptr) const
 		{
-			return m_get_mode() != inactive;
+			const auto &args = (std::is_same<Term,term_type1>::value) ? m_poly1.m_symbol_set : m_poly2.m_symbol_set;
+			switch (std::get<0u>(m_state)) {
+				case total:
+					return compare_ldegree(t1,t2,args);
+				case partial:
+					return compare_pldegree(t1,t2,args);
+				default:
+					piranha_throw(std::invalid_argument,"cannot compare terms if truncator is inactive");
+			}
+		}
+		/// Skip next term multiplications.
+		/**
+		 * This method will return \p true if the multiplication of all terms following \p t1 and \p t2 in the ordering established by
+		 * compare_terms() can be skipped, given the current truncation settings, \p false otherwise.
+		 * 
+		 * @param[in] t1 first term.
+		 * @param[in] t2 second term.
+		 * 
+		 * @return \p true if all next term-by-term multiplications can be skipped, false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
+		 */
+		bool skip(const term_type1 &t1, const term_type2 &t2) const
+		{
+			switch (std::get<0u>(m_state)) {
+				case total:
+					return (t1.ldegree(m_poly1.m_symbol_set) + t2.ldegree(m_poly2.m_symbol_set)) >= std::get<1u>(m_state);
+				case partial:
+					return (t1.ldegree(std::get<2u>(m_state),m_poly1.m_symbol_set) +
+						t2.ldegree(std::get<2u>(m_state),m_poly2.m_symbol_set)) >= std::get<1u>(m_state);
+				default:
+					return false;
+			}
 		}
 	private:
-		typedef typename std::tuple_element<1u,state_type>::type limit_type;
-		typedef typename std::tuple_element<2u,state_type>::type args_type;
-		mode m_get_mode() const
-		{
-			return std::get<0u>(m_state);
-		}
-		const limit_type &m_get_limit() const
-		{
-			return std::get<1u>(m_state);
-		}
-		const args_type &m_get_args() const
-		{
-			return std::get<2u>(m_state);
-		}
-		template <typename Term>
-		bool compare_ldegree(const Term &t1, const Term &t2, typename std::enable_if<
-			has_degree<typename Term::cf_type>::value>::type * = piranha_nullptr) const
-		{
-			return (has_degree<typename Term::cf_type>::lget(t1.m_cf) + t1.m_key.ldegree(m_series.m_symbol_set)) <
-				(has_degree<typename Term::cf_type>::lget(t2.m_cf) + t2.m_key.ldegree(m_series.m_symbol_set));
-		}
-		template <typename Term>
-		bool compare_ldegree(const Term &t1, const Term &t2, typename std::enable_if<
-			!has_degree<typename Term::cf_type>::value>::type * = piranha_nullptr) const
-		{
-			return t1.m_key.ldegree(m_series.m_symbol_set) < t2.m_key.ldegree(m_series.m_symbol_set);
-		}
-		template <typename Term>
-		bool compare_pldegree(const Term &t1, const Term &t2, typename std::enable_if<
-			has_degree<typename Term::cf_type>::value>::type * = piranha_nullptr) const
-		{
-			return (has_degree<typename Term::cf_type>::lget(t1.m_cf,m_args) + t1.m_key.ldegree(m_args,m_series.m_symbol_set)) <
-				(has_degree<typename Term::cf_type>::lget(t2.m_cf,m_args) + t2.m_key.ldegree(m_args,m_series.m_symbol_set));
-		}
-		template <typename Term>
-		bool compare_pldegree(const Term &t1, const Term &t2, typename std::enable_if<
-			!has_degree<typename Term::cf_type>::value>::type * = piranha_nullptr) const
-		{
-			return t1.m_key.ldegree(m_args,m_series.m_symbol_set) < t2.m_key.ldegree(m_args,m_series.m_symbol_set);
-		}
-	private:
-		const Polynomial	&m_series;
-		const state_type	m_state;
+		const polynomial_type1	&m_poly1;
+		const polynomial_type2	&m_poly2;
 };
 
 #if 0

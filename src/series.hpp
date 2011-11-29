@@ -38,6 +38,7 @@
 #include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "concepts/term.hpp"
+#include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/series_fwd.hpp"
@@ -120,7 +121,7 @@ class series: series_binary_operators, detail::series_tag
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
 		// Make friend with all truncator classes.
-		template <typename Series, typename Enable>
+		template <typename... Series>
 		friend class truncator;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
@@ -748,6 +749,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		truncator<Derived> get_truncator() const
 		{
+			BOOST_CONCEPT_ASSERT((concept::Truncator<Derived>));
 			return truncator<Derived>(*static_cast<Derived const *>(this));
 		}
 		/// In-place addition.
