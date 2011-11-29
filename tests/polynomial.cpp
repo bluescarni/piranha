@@ -25,6 +25,7 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <limits>
 #include <stdexcept>
 #include <type_traits>
 
@@ -272,12 +273,17 @@ BOOST_AUTO_TEST_CASE(polynomial_truncator_test)
 
 struct multiplication_tester
 {
-	// NOTE: this test is going to be exact in case of coefficients cancellations with double
-	// precision coefficients only if the platform has ieee 754 format (integer exactly representable
-	// as doubles up to 2 ** 53).
 	template <typename Cf>
 	void operator()(const Cf &)
 	{
+		// NOTE: this test is going to be exact in case of coefficients cancellations with double
+		// precision coefficients only if the platform has ieee 754 format (integer exactly representable
+		// as doubles up to 2 ** 53).
+		if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 ||
+			std::numeric_limits<double>::digits < 53))
+		{
+			return;
+		}
 		typedef polynomial<Cf,int> p_type;
 		typedef polynomial_alt<Cf,int> p_type_alt;
 		p_type x("x"), y("y"), z("z"), t("t"), u("u");
