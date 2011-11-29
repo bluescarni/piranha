@@ -75,7 +75,7 @@ class power_series_truncator: public degree_truncator_settings
 		/**
 		 * Will return \p true if the total low degree of \p t1 is less than \p t2, \p false otherwise.
 		 * 
-		 * If \p Term1 or \p Term2 are not models of the piranha::concept::PowerSeriesTerm concept, a compile-time
+		 * If \p Term is not a model of the piranha::concept::PowerSeriesTerm concept, a compile-time
 		 * error will be produced.
 		 * 
 		 * @param[in] t1 first term operand.
@@ -86,11 +86,10 @@ class power_series_truncator: public degree_truncator_settings
 		 * 
 		 * @throws unspecified any exception resulting from the computation of the degree.
 		 */
-		template <typename Term1, typename Term2>
-		bool compare_ldegree(const Term1 &t1, const Term2 &t2, const symbol_set &args) const
+		template <typename Term>
+		bool compare_ldegree(const Term &t1, const Term &t2, const symbol_set &args) const
 		{
-			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term1>));
-			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term2>));
+			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term>));
 			return t1.ldegree(args) < t2.ldegree(args);
 		}
 		/// Compare terms by partial low degree.
@@ -99,7 +98,7 @@ class power_series_truncator: public degree_truncator_settings
 		 * The arguments considered for the computation are those copied from piranha::degree_truncator_settings
 		 * upon construction.
 		 * 
-		 * If \p Term1 or \p Term2 are not models of the piranha::concept::PowerSeriesTerm concept, a compile-time
+		 * If \p Term is not a model of the piranha::concept::PowerSeriesTerm concept, a compile-time
 		 * error will be produced.
 		 * 
 		 * @param[in] t1 first term operand.
@@ -110,11 +109,10 @@ class power_series_truncator: public degree_truncator_settings
 		 * 
 		 * @throws unspecified any exception resulting from the computation of the degree.
 		 */
-		template <typename Term1, typename Term2>
-		bool compare_pldegree(const Term1 &t1, const Term2 &t2, const symbol_set &args) const
+		template <typename Term>
+		bool compare_pldegree(const Term &t1, const Term &t2, const symbol_set &args) const
 		{
-			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term1>));
-			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term2>));
+			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term>));
 			return t1.ldegree(std::get<2u>(m_state),args) < t2.ldegree(std::get<2u>(m_state),args);
 		}
 		/// State of the truncator settings.

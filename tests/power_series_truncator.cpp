@@ -49,8 +49,6 @@ struct g_truncator: public power_series_truncator
 		BOOST_CHECK(!compare_ldegree(t1b,t1a,symbol_set{symbol("x")}));
 		BOOST_CHECK(compare_ldegree(t2a,t2b,symbol_set{symbol("x")}));
 		BOOST_CHECK(!compare_ldegree(t2b,t2a,symbol_set{symbol("x")}));
-		BOOST_CHECK(compare_ldegree(t1a,t2b,symbol_set{symbol("x")}));
-		BOOST_CHECK(!compare_ldegree(t1b,t2a,symbol_set{symbol("x")}));
 		if (dts.get_args().size()) {
 			term_type1 t1a(3,key_type1{1,2}), t1b(1,key_type1{2,0});
 			term_type2 t2a(3,key_type2{1,2}), t2b(1,key_type2{2,0});
@@ -58,8 +56,6 @@ struct g_truncator: public power_series_truncator
 			BOOST_CHECK(!compare_pldegree(t1b,t1a,symbol_set{symbol("x"),symbol("y")}));
 			BOOST_CHECK(compare_pldegree(t2a,t2b,symbol_set{symbol("x"),symbol("y")}));
 			BOOST_CHECK(!compare_pldegree(t2b,t2a,symbol_set{symbol("x"),symbol("y")}));
-			BOOST_CHECK(compare_pldegree(t1a,t2b,symbol_set{symbol("x"),symbol("y")}));
-			BOOST_CHECK(!compare_pldegree(t1b,t2a,symbol_set{symbol("x"),symbol("y")}));
 		}
 	}
 };
