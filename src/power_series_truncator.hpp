@@ -44,6 +44,10 @@ namespace piranha
  * on construction and will use this snapshot
  * in its operations. As such, the settings of an instance of this truncator might differ from the global settings if these are modified
  * after construction.
+ * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee.
  */
 class power_series_truncator: public degree_truncator_settings
 {
