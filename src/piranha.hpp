@@ -99,6 +99,7 @@ namespace detail {}
 #include "polynomial.hpp"
 #include "power_series.hpp"
 #include "power_series_term.hpp"
+#include "power_series_truncator.hpp"
 #include "print_coefficient.hpp"
 #include "runtime_info.hpp"
 #include "series.hpp"
