@@ -35,6 +35,9 @@ struct g_truncator: public power_series_truncator
 {
 	g_truncator(): power_series_truncator()
 	{
+		if (!is_active()) {
+			return;
+		}
 		degree_truncator_settings dts;
 		typedef polynomial_term<double,int> term_type1;
 		typedef typename term_type1::key_type key_type1;
@@ -63,9 +66,13 @@ struct g_truncator: public power_series_truncator
 
 BOOST_AUTO_TEST_CASE(power_series_truncator_test)
 {
+	g_truncator gt0;
+	BOOST_CHECK(!gt0.is_active());
 	degree_truncator_settings dts;
 	dts.set(3);
 	g_truncator gt1;
+	BOOST_CHECK(gt1.is_active());
 	dts.set("x",3);
 	g_truncator gt2;
+	BOOST_CHECK(gt2.is_active());
 }

@@ -62,6 +62,14 @@ class power_series_truncator: public degree_truncator_settings
 		 * errors in standard containers.
 		 */
 		power_series_truncator():m_state(degree_truncator_settings::get_state()) {}
+		/// Truncator status.
+		/**
+		 * @return \p true if the truncator mode is total or partial, \p false otherwise.
+		 */
+		bool is_active() const
+		{
+			return std::get<0u>(m_state) != inactive;
+		}
 	protected:
 		/// Compare terms by low degree.
 		/**
