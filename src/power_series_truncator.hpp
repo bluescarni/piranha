@@ -51,6 +51,7 @@ namespace piranha
  */
 class power_series_truncator: public degree_truncator_settings
 {
+		typedef decltype(degree_truncator_settings::get_state()) state_type;
 	public:
 		/// Default constructor.
 		/**
@@ -114,7 +115,7 @@ class power_series_truncator: public degree_truncator_settings
 		/**
 		 * Equivalent to the return type of piranha::degree_truncator_settings::get_state().
 		 */
-		const decltype(degree_truncator_settings::get_state()) m_state;
+		const state_type m_state;
 };
 
 }
