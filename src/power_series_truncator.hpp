@@ -79,20 +79,19 @@ class power_series_truncator: public degree_truncator_settings
 		 * error will be produced.
 		 * 
 		 * @param[in] t1 first term operand.
-		 * @param[in] args1 reference set of symbols that will be used in the computation of the degree for the first term.
 		 * @param[in] t2 second term operand.
-		 * @param[in] args2 reference set of symbols that will be used in the computation of the degree for the second term.
+		 * @param[in] args reference set of symbols that will be used in the computation of the degree.
 		 * 
 		 * @return result of the comparison.
 		 * 
 		 * @throws unspecified any exception resulting from the computation of the degree.
 		 */
 		template <typename Term1, typename Term2>
-		bool compare_ldegree(const Term1 &t1, const symbol_set &args1, const Term2 &t2, const symbol_set &args2) const
+		bool compare_ldegree(const Term1 &t1, const Term2 &t2, const symbol_set &args) const
 		{
 			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term1>));
 			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term2>));
-			return t1.ldegree(args1) < t2.ldegree(args2);
+			return t1.ldegree(args) < t2.ldegree(args);
 		}
 		/// Compare terms by partial low degree.
 		/**
@@ -104,20 +103,19 @@ class power_series_truncator: public degree_truncator_settings
 		 * error will be produced.
 		 * 
 		 * @param[in] t1 first term operand.
-		 * @param[in] args1 reference set of symbols that will be used in the computation of the degree for the first term.
 		 * @param[in] t2 second term operand.
-		 * @param[in] args2 reference set of symbols that will be used in the computation of the degree for the second term.
+		 * @param[in] args reference set of symbols that will be used in the computation of the degree.
 		 * 
 		 * @return result of the comparison.
 		 * 
 		 * @throws unspecified any exception resulting from the computation of the degree.
 		 */
 		template <typename Term1, typename Term2>
-		bool compare_pldegree(const Term1 &t1, const symbol_set &args1, const Term2 &t2, const symbol_set &args2) const
+		bool compare_pldegree(const Term1 &t1, const Term2 &t2, const symbol_set &args) const
 		{
 			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term1>));
 			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term2>));
-			return t1.ldegree(std::get<2u>(m_state),args1) < t2.ldegree(std::get<2u>(m_state),args2);
+			return t1.ldegree(std::get<2u>(m_state),args) < t2.ldegree(std::get<2u>(m_state),args);
 		}
 		/// State of the truncator settings.
 		/**
