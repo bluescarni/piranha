@@ -23,6 +23,9 @@
 #define BOOST_TEST_MODULE degree_truncator_settings_test
 #include <boost/test/unit_test.hpp>
 
+#include <set>
+#include <string>
+
 #include "../src/integer.hpp"
 
 using namespace piranha;
@@ -50,11 +53,11 @@ BOOST_AUTO_TEST_CASE(degree_truncator_settings_get_set_test)
 	BOOST_CHECK(dts.get_mode() == dts_type::partial);
 	BOOST_CHECK(dts.get_limit() == 5);
 	BOOST_CHECK(dts.get_args().size() == 1u && *dts.get_args().begin() == "y");
-	dts.set({"x","y"},5);
+	dts.set(std::set<std::string>{"x","y"},5);
 	BOOST_CHECK(dts.get_mode() == dts_type::partial);
 	BOOST_CHECK(dts.get_limit() == 5);
 	BOOST_CHECK(dts.get_args().size() == 2u && *dts.get_args().begin() == "x");
-	dts.set({"a","b"},integer(5));
+	dts.set(std::set<std::string>{"a","b"},integer(5));
 	BOOST_CHECK(dts.get_mode() == dts_type::partial);
 	BOOST_CHECK(dts.get_limit() == 5);
 	BOOST_CHECK(dts.get_args().size() == 2u && *dts.get_args().begin() == "a");

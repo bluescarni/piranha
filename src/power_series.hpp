@@ -151,7 +151,7 @@ class power_series: public Series,detail::power_series_tag
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit power_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		/// Trivial destructor.
-		~power_series()
+		~power_series() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
 		}

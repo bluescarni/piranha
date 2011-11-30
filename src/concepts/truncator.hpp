@@ -46,7 +46,7 @@ class Truncator
 		static truncator<T> check_ctor()
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<T>));
-			const T s;
+			const T s = T();
 			const truncator<T> retval(s);
 			return retval;
 		}
@@ -55,8 +55,8 @@ class Truncator
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<T>));
 			BOOST_CONCEPT_ASSERT((concept::Series<U>));
-			const T s1;
-			const U s2;
+			const T s1 = T();
+			const U s2 = U();
 			const truncator<T,U> retval(s1,s2);
 			return retval;
 		}
