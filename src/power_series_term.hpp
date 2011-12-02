@@ -173,7 +173,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series_term,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit power_series_term(T &&arg1, Args && ... argn): base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		/// Trivial destructor.
-		~power_series_term()
+		~power_series_term() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
 		}
