@@ -232,7 +232,6 @@ class is_addable_in_place: detail::sfinae_types
 template <typename T, typename U>
 const bool is_addable_in_place<T,U>::value;
 
-
 }
 
 /// Macro to test if class has type definition.
