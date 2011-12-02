@@ -285,10 +285,16 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 		 * @param[in] poly1 first series on which the truncator will operate.
 		 * @param[in] poly2 second series on which the truncator will operate.
 		 * 
+		 * @throws std::invalid_argument if the arguments sets of \p poly1 and \p poly2 differ.
 		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
 		 */
 		explicit truncator(const polynomial_type1 &poly1, const polynomial_type2 &poly2):power_series_truncator(),
-			m_poly1(poly1),m_poly2(poly2) {}
+			m_poly1(poly1),m_poly2(poly2)
+		{
+			if (unlikely(m_poly1.m_symbol_set != m_poly2.m_symbol_set)) {
+				piranha_throw(std::invalid_argument,"incompatible sets of arguments");
+			}
+		}
 		/// Deleted copy assignment.
 		truncator &operator=(const truncator &) = delete;
 		/// Deleted move assignment.

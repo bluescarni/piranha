@@ -304,6 +304,7 @@ struct truncator_tester
 			BOOST_CHECK(!tr4.skip(typename p_typea::term_type{1,key_typea{10,1}},typename p_typea::term_type{1,key_typea{1,2}}));
 			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,2}}));
 			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,3}}));
+			BOOST_CHECK_THROW((trunc1{xy,decltype(xy){}}),std::invalid_argument);
 			p1.get_truncator().unset();
 		}
 	};
