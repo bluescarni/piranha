@@ -23,6 +23,8 @@
 #define BOOST_TEST_MODULE power_series_truncator_test
 #include <boost/test/unit_test.hpp>
 
+#include <stdexcept>
+
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
@@ -35,20 +37,28 @@ struct g_truncator: public power_series_truncator
 {
 	g_truncator(): power_series_truncator()
 	{
-		if (!is_active()) {
-			return;
-		}
-		degree_truncator_settings dts;
 		typedef polynomial_term<double,int> term_type1;
 		typedef typename term_type1::key_type key_type1;
 		typedef polynomial_term<integer,long> term_type2;
 		typedef typename term_type2::key_type key_type2;
+		if (!is_active()) {
+			term_type1 t1a(3,key_type1{1});
+			BOOST_CHECK_THROW(filter_term(t1a,symbol_set{}),std::invalid_argument);
+			return;
+		}
+		degree_truncator_settings dts;
 		term_type1 t1a(3,key_type1{1}), t1b(1,key_type1{2});
 		term_type2 t2a(3,key_type2{1}), t2b(1,key_type2{2});
 		BOOST_CHECK(compare_ldegree(t1a,t1b,symbol_set{symbol("x")}));
 		BOOST_CHECK(!compare_ldegree(t1b,t1a,symbol_set{symbol("x")}));
 		BOOST_CHECK(compare_ldegree(t2a,t2b,symbol_set{symbol("x")}));
 		BOOST_CHECK(!compare_ldegree(t2b,t2a,symbol_set{symbol("x")}));
+		BOOST_CHECK(!filter_term(t1a,symbol_set{symbol("x")}));
+		BOOST_CHECK(!filter_term(t2a,symbol_set{symbol("x")}));
+		term_type1 t3a(3,key_type1{3});
+		BOOST_CHECK(filter_term(t3a,symbol_set{symbol("x")}));
+		term_type1 t4a(3,key_type1{4});
+		BOOST_CHECK(filter_term(t4a,symbol_set{symbol("x")}));
 		if (dts.get_args().size()) {
 			term_type1 t1a(3,key_type1{1,2}), t1b(1,key_type1{2,0});
 			term_type2 t2a(3,key_type2{1,2}), t2b(1,key_type2{2,0});
@@ -56,6 +66,14 @@ struct g_truncator: public power_series_truncator
 			BOOST_CHECK(!compare_pldegree(t1b,t1a,symbol_set{symbol("x"),symbol("y")}));
 			BOOST_CHECK(compare_pldegree(t2a,t2b,symbol_set{symbol("x"),symbol("y")}));
 			BOOST_CHECK(!compare_pldegree(t2b,t2a,symbol_set{symbol("x"),symbol("y")}));
+			BOOST_CHECK(!filter_term(t1a,symbol_set{symbol("x"),symbol("y")}));
+			BOOST_CHECK(!filter_term(t2a,symbol_set{symbol("x"),symbol("y")}));
+			BOOST_CHECK(!filter_term(t1b,symbol_set{symbol("x"),symbol("y")}));
+			BOOST_CHECK(!filter_term(t2b,symbol_set{symbol("x"),symbol("y")}));
+			term_type1 t3a(3,key_type1{3,0});
+			term_type2 t4a(3,key_type2{4,1});
+			BOOST_CHECK(filter_term(t3a,symbol_set{symbol("x"),symbol("y")}));
+			BOOST_CHECK(filter_term(t4a,symbol_set{symbol("x"),symbol("y")}));
 		}
 	}
 };

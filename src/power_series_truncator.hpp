@@ -22,10 +22,12 @@
 #define PIRANHA_POWER_SERIES_TRUNCATOR_HPP
 
 #include <boost/concept/assert.hpp>
+#include <stdexcept>
 #include <tuple>
 
 #include "concepts/power_series_term.hpp"
 #include "degree_truncator_settings.hpp"
+#include "exceptions.hpp"
 #include "symbol_set.hpp"
 
 namespace piranha
@@ -47,7 +49,7 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the strong exception safety guarantee.
+ * This class provides the same exception safety guarantee as the type of piranha::degree_truncator_settings::get_state().
  */
 class power_series_truncator: public degree_truncator_settings
 {
@@ -62,6 +64,10 @@ class power_series_truncator: public degree_truncator_settings
 		 * errors in standard containers.
 		 */
 		power_series_truncator():m_state(degree_truncator_settings::get_state()) {}
+		/// Deleted copy assignment operator.
+		power_series_truncator &operator=(const power_series_truncator &) = delete;
+		/// Deleted move assignment operator.
+		power_series_truncator &operator=(power_series_truncator &&) = delete;
 		/// Truncator status.
 		/**
 		 * @return \p true if the truncator mode is total or partial, \p false otherwise.
@@ -84,7 +90,7 @@ class power_series_truncator: public degree_truncator_settings
 		 * 
 		 * @return result of the comparison.
 		 * 
-		 * @throws unspecified any exception resulting from the computation of the degree.
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree.
 		 */
 		template <typename Term>
 		bool compare_ldegree(const Term &t1, const Term &t2, const symbol_set &args) const
@@ -107,13 +113,42 @@ class power_series_truncator: public degree_truncator_settings
 		 * 
 		 * @return result of the comparison.
 		 * 
-		 * @throws unspecified any exception resulting from the computation of the degree.
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree.
 		 */
 		template <typename Term>
 		bool compare_pldegree(const Term &t1, const Term &t2, const symbol_set &args) const
 		{
 			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term>));
 			return t1.ldegree(std::get<2u>(m_state),args) < t2.ldegree(std::get<2u>(m_state),args);
+		}
+		/// Filter term.
+		/**
+		 * Will return \p true if the (partial) low degree of \p t is greater than or equal to the current truncation limit,
+		 * \p false otherwise. If the truncator is not active, an exception will be thrown.
+		 * 
+		 * If \p Term is not a model of the piranha::concept::PowerSeriesTerm concept, a compile-time
+		 * error will be produced.
+		 * 
+		 * @param[in] t term argument.
+		 * @param[in] args reference set of symbols that will be used in the computation of the degree.
+		 * 
+		 * @return \p true is the term can be filtered out, \p false otherwise.
+		 * 
+		 * @throws std::invalid_argument if the truncator is not active.
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree.
+		 */
+		template <typename Term>
+		bool filter_term(const Term &t, const symbol_set &args) const
+		{
+			BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<Term>));
+			switch (std::get<0u>(m_state)) {
+				case total:
+					return t.ldegree(args) >= std::get<1u>(m_state);
+				case partial:
+					return t.ldegree(std::get<2u>(m_state),args) >= std::get<1u>(m_state);
+				default:
+					piranha_throw(std::invalid_argument,"cannot filter term when truncator is not active");
+			}
 		}
 		/// State of the truncator settings.
 		/**
