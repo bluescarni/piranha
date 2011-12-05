@@ -22,12 +22,10 @@
 #define PIRANHA_POWER_SERIES_TRUNCATOR_HPP
 
 #include <boost/concept/assert.hpp>
-#include <stdexcept>
 #include <tuple>
 
 #include "concepts/power_series_term.hpp"
 #include "degree_truncator_settings.hpp"
-#include "exceptions.hpp"
 #include "symbol_set.hpp"
 
 namespace piranha
@@ -124,7 +122,7 @@ class power_series_truncator: public degree_truncator_settings
 		/// Filter term.
 		/**
 		 * Will return \p true if the (partial) low degree of \p t is greater than or equal to the current truncation limit,
-		 * \p false otherwise. If the truncator is not active, an exception will be thrown.
+		 * \p false otherwise.
 		 * 
 		 * If \p Term is not a model of the piranha::concept::PowerSeriesTerm concept, a compile-time
 		 * error will be produced.
@@ -134,7 +132,6 @@ class power_series_truncator: public degree_truncator_settings
 		 * 
 		 * @return \p true is the term can be filtered out, \p false otherwise.
 		 * 
-		 * @throws std::invalid_argument if the truncator is not active.
 		 * @throws unspecified any exception resulting from the computation and comparison of the degree.
 		 */
 		template <typename Term>
@@ -147,7 +144,7 @@ class power_series_truncator: public degree_truncator_settings
 				case partial:
 					return t.ldegree(std::get<2u>(m_state),args) >= std::get<1u>(m_state);
 				default:
-					piranha_throw(std::invalid_argument,"cannot filter term when truncator is not active");
+					return false;
 			}
 		}
 		/// State of the truncator settings.

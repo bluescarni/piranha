@@ -43,7 +43,7 @@ struct g_truncator: public power_series_truncator
 		typedef typename term_type2::key_type key_type2;
 		if (!is_active()) {
 			term_type1 t1a(3,key_type1{1});
-			BOOST_CHECK_THROW(filter_term(t1a,symbol_set{}),std::invalid_argument);
+			BOOST_CHECK(!filter_term(t1a,symbol_set{}));
 			return;
 		}
 		degree_truncator_settings dts;
