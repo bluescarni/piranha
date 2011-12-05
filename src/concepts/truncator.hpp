@@ -36,7 +36,8 @@ namespace concept
 
 /// Truncator concept.
 /**
- * Will check that piranha::truncator of <tt>Series...</tt> satisfies the truncator requirements.
+ * Will check that piranha::truncator of <tt>Series...</tt> satisfies the truncator requirements (as detailed in the
+ * documentation of piranha::truncator).
  */
 template <typename... Series>
 class Truncator
