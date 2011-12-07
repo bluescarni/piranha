@@ -61,6 +61,8 @@
  * \todo think about the startup report, it might end up being too noisy.
  * \todo probably we should make overflow-safe all operations on keys that currently are not: multiplication, computation of degree (including in truncators), etc.
  * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication).
+ * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
+ * only if T + U produces T.
  */
 namespace piranha
 {
