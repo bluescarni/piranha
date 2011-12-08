@@ -187,7 +187,7 @@ class power_series: public Series,detail::power_series_tag
 		}
 		/// Total degree.
 		/**
-		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated using power_series_term::degree().
+		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated using piranha::power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -206,7 +206,7 @@ class power_series: public Series,detail::power_series_tag
 		/**
 		 * The partial degree of the series is the maximum partial degree of its terms
 		 * (i.e., the total degree when only variables with names in \p s are considered).
-		 * The partial degree of each term is calculated using power_series_term::degree().
+		 * The partial degree of each term is calculated using piranha::power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -226,7 +226,7 @@ class power_series: public Series,detail::power_series_tag
 		/// Low degree.
 		/**
 		 * The low degree of the series is the minimum low degree of its terms. The low degree of each term is calculated
-		 * using power_series_term::ldegree().
+		 * using piranha::power_series_term::ldegree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
@@ -245,7 +245,7 @@ class power_series: public Series,detail::power_series_tag
 		/**
 		 * The partial low degree of the series is the minimum partial low degree of its terms
 		 * (i.e., the total low degree when only variables with names in \p s are considered).
-		 * The partial low degree of each term is calculated using power_series_term::degree().
+		 * The partial low degree of each term is calculated using piranha::power_series_term::degree().
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
