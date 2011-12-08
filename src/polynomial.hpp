@@ -343,15 +343,28 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 					piranha_throw(std::invalid_argument,"cannot compare terms if truncator is inactive");
 			}
 		}
-		/// Skip next term multiplications.
+		/// Filter term.
 		/**
-		 * This method will return \p true if the multiplication of all terms following \p t1 and \p t2 in the ordering established by
+		 * @param[in] t term argument.
+		 * 
+		 * @return \p true if \p t can be discarded given the current truncation settings, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by piranha::power_series_truncator::filter_term().
+		 */
+		bool filter(const term_type1 &t) const
+		{
+			return filter_term(t,m_poly1.m_symbol_set);
+		}
+		/// Skip term multiplications.
+		/**
+		 * This method will return \p true if the multiplication of \p t1 by \p t2 and of all terms following \p t1 and \p t2 in the ordering established by
 		 * compare_terms() can be skipped, given the current truncation settings, \p false otherwise.
 		 * 
 		 * @param[in] t1 first term.
 		 * @param[in] t2 second term.
 		 * 
-		 * @return \p true if all next term-by-term multiplications can be skipped, false otherwise.
+		 * @return \p true if the result of the multiplication of \p t1 by \p t2 and of all subsequent term-by-term multiplications
+		 * can be discarded, \p false otherwise.
 		 * 
 		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
 		 */
@@ -366,18 +379,6 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 				default:
 					return false;
 			}
-		}
-		/// Filter term.
-		/**
-		 * @param[in] t term argument.
-		 * 
-		 * @return \p true if \p t can be discarded given the current truncation settings, \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by piranha::power_series_truncator::filter_term().
-		 */
-		bool filter(const term_type1 &t) const
-		{
-			return filter_term(t,m_poly1.m_symbol_set);
 		}
 	private:
 		const polynomial_type1	&m_poly1;
