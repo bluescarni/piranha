@@ -210,6 +210,9 @@ class series_binary_operators
 		template <typename Series1, typename Series2>
 		static Series1 series_multiply_first(const Series1 &s1, const Series2 &s2)
 		{
+			// NOTE: all this dancing around with base and derived types for series is necessary as the mechanism of
+			// specialization of series_multiplier and truncator depends on the derived types - which must then be preserved and
+			// not casted away to the base types.
 			// Base series types.
 			typedef series<typename Series1::term_type,Series1> base_type1;
 			typedef series<typename Series2::term_type,Series2> base_type2;
@@ -219,19 +222,29 @@ class series_binary_operators
 				static_cast<base_type1 &>(retval) = s1.multiply_by_series(s2);
 			} else {
 				// Let's deal with the first series.
-				auto merge1 = s1.m_symbol_set.merge(s2.m_symbol_set);
-				const bool need_copy1 = (merge1 != s1.m_symbol_set);
-				auto merge2 = s2.m_symbol_set.merge(merge1);
-				const bool need_copy2 = (merge2 != s2.m_symbol_set);
-				retval.m_symbol_set = merge1;
+				auto merge = s1.m_symbol_set.merge(s2.m_symbol_set);
+				piranha_assert(merge == s2.m_symbol_set.merge(s1.m_symbol_set));
+				piranha_assert(merge == s2.m_symbol_set.merge(merge));
+				const bool need_copy1 = (merge != s1.m_symbol_set);
+				const bool need_copy2 = (merge != s2.m_symbol_set);
+				piranha_assert(need_copy1 || need_copy2);
+				retval.m_symbol_set = merge;
 				if (need_copy1) {
-					static_cast<base_type1 &>(retval) = s1.merge_args(merge1).multiply_by_series(
-						(need_copy2 ? s2.merge_args(merge2) : static_cast<base_type2 const &>(s2))
-					);
+					Series1 s1_copy;
+					static_cast<base_type1 &>(s1_copy) = s1.merge_args(merge);
+					if (need_copy2) {
+						Series2 s2_copy;
+						static_cast<base_type2 &>(s2_copy) = s2.merge_args(merge);
+						static_cast<base_type1 &>(retval) = s1_copy.multiply_by_series(s2_copy);
+					} else {
+						static_cast<base_type1 &>(retval) = s1_copy.multiply_by_series(s2);
+					}
+
 				} else {
-					static_cast<base_type1 &>(retval) = s1.multiply_by_series(
-						(need_copy2 ? s2.merge_args(merge2) : static_cast<base_type2 const &>(s2))
-					);
+					piranha_assert(need_copy2);
+					Series2 s2_copy;
+					static_cast<base_type2 &>(s2_copy) = s2.merge_args(merge);
+					static_cast<base_type1 &>(retval) = s1.multiply_by_series(s2_copy);
 				}
 			}
 			return retval;
@@ -391,14 +404,13 @@ class series_binary_operators
 				return series_equality_impl(s1,s2);
 			} else {
 				// Let's deal with the first series.
-				auto merge1 = s1.m_symbol_set.merge(s2.m_symbol_set);
-				const bool s1_needs_copy = (merge1 != s1.m_symbol_set);
-				auto merge2 = s2.m_symbol_set.merge(merge1);
-				piranha_assert(merge1 == merge2);
-				const bool s2_needs_copy = (merge2 != s2.m_symbol_set);
+				auto merge = s1.m_symbol_set.merge(s2.m_symbol_set);
+				const bool s1_needs_copy = (merge != s1.m_symbol_set);
+				const bool s2_needs_copy = (merge != s2.m_symbol_set);
+				piranha_assert(s1_needs_copy || s2_needs_copy);
 				return series_equality_impl(
-					s1_needs_copy ? merge_series_for_equality(s1,merge1) : s1,
-					s2_needs_copy ? merge_series_for_equality(s2,merge2) : s2
+					s1_needs_copy ? merge_series_for_equality(s1,merge) : s1,
+					s2_needs_copy ? merge_series_for_equality(s2,merge) : s2
 				);
 			}
 		}

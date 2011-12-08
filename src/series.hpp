@@ -467,15 +467,13 @@ class series: series_binary_operators, detail::series_tag
 				merge_terms<Sign>(std::forward<T>(other));
 			} else {
 				// Let's deal with the first series.
-				auto merge1 = m_symbol_set.merge(other.m_symbol_set);
-				if (merge1 != m_symbol_set) {
-					operator=(merge_args(merge1));
+				auto merge = m_symbol_set.merge(other.m_symbol_set);
+				if (merge != m_symbol_set) {
+					operator=(merge_args(merge));
 				}
 				// Second series.
-				auto merge2 = other.m_symbol_set.merge(m_symbol_set);
-				piranha_assert(merge2 == m_symbol_set);
-				if (merge2 != other.m_symbol_set) {
-					auto other_copy = other.merge_args(merge2);
+				if (merge != other.m_symbol_set) {
+					auto other_copy = other.merge_args(merge);
 					merge_terms<Sign>(std::move(other_copy));
 				} else {
 					merge_terms<Sign>(std::forward<T>(other));
@@ -534,19 +532,26 @@ class series: series_binary_operators, detail::series_tag
 			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value
 			>::type * = piranha_nullptr)
 		{
+			// NOTE: all this dancing around with base and derived types for series is necessary as the mechanism of
+			// specialization of series_multiplier and truncator depends on the derived types - which must then be preserved and
+			// not casted away to the base types.
+			// Base types of multiplicand series.
+			typedef series base_type1;
+			typedef series<typename std::decay<T>::type::term_type,typename std::decay<T>::type> base_type2;
 			if (likely(m_symbol_set == other.m_symbol_set)) {
 				operator=(multiply_by_series(other));
 			} else {
 				// Let's deal with the first series.
-				auto merge1 = m_symbol_set.merge(other.m_symbol_set);
-				if (merge1 != m_symbol_set) {
-					operator=(merge_args(merge1));
+				auto merge = m_symbol_set.merge(other.m_symbol_set);
+				piranha_assert(merge == other.m_symbol_set.merge(m_symbol_set));
+				if (merge != m_symbol_set) {
+					operator=(merge_args(merge));
 				}
 				// Second series.
-				auto merge2 = other.m_symbol_set.merge(m_symbol_set);
-				piranha_assert(merge2 == m_symbol_set);
-				if (merge2 != other.m_symbol_set) {
-					auto other_copy = other.merge_args(merge2);
+				if (merge != other.m_symbol_set) {
+					typename std::decay<T>::type other_copy;
+					static_cast<base_type2 &>(other_copy) = other.merge_args(merge);
+					static_assert(std::is_same<base_type2,decltype(other.merge_args(merge))>::value,"Inconsistent type.");
 					operator=(multiply_by_series(other_copy));
 				} else {
 					operator=(multiply_by_series(other));
