@@ -95,6 +95,12 @@ struct concept_tester
 			BOOST_CHECK((!t2.is_active()));
 			BOOST_CHECK((!truncator_traits<series_type1>::is_sorting));
 			BOOST_CHECK((!truncator_traits<series_type2>::is_sorting));
+			BOOST_CHECK((!truncator_traits<series_type1>::is_filtering));
+			BOOST_CHECK((!truncator_traits<series_type2>::is_filtering));
+			BOOST_CHECK((!truncator_traits<series_type1,series_type2>::is_sorting));
+			BOOST_CHECK((!truncator_traits<series_type1,series_type1>::is_sorting));
+			BOOST_CHECK((!truncator_traits<series_type1,series_type2>::is_filtering));
+			BOOST_CHECK((!truncator_traits<series_type1,series_type1>::is_filtering));
 			BOOST_CHECK((!truncator_traits<series_type1,series_type2>::is_skipping));
 			BOOST_CHECK((!truncator_traits<series_type1,series_type1>::is_skipping));
 		}

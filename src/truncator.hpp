@@ -51,7 +51,10 @@ namespace piranha
  *   weak ordering comparison function usable on the term types of \p Series1
  *   that returns \p true if \p t1 comes before \p t2, \p false otherwise. This method
  *   is intended to be used to rank the terms of the series used for construction. A truncator implementing
- *   this method is a <em>sorting</em> truncator.
+ *   this method is a <em>sorting</em> truncator;
+ * - a <tt>bool filter(const term_type &t) const</tt> method, which shall return \p true if term \p t
+ *   can be discarded given the current truncator settings, \p false otherwise.
+ *   A truncator implementing this method is a <em>filtering</em> truncator.
  * 
  * <em>Binary</em> truncators are used during series multiplication, and they are parametrised over the operand series types
  * \p Series1 and \p Series2. Binary truncators will provide a binary constructor from \p Series1 and \p Series2 objects,
@@ -64,6 +67,8 @@ namespace piranha
  * - a <tt>bool compare_terms(const term_type &t1, const term_type &t2) const</tt> method equivalent to the method with the same name
  *   for unary truncators. The binary version of this method must be able to compare the term types of both \p Series1 and \p Series2.
  *   A binary truncator implementing this method is a <em>sorting</em> truncator;
+ * - a <tt>bool filter(const term_type &t) const</tt> method, equivalent to the unary version and able to operate on the term types of \p Series1.
+ *   A truncator implementing this method is a <em>filtering</em> truncator.
  * - a <tt>bool skip(const term_type1 &t1, const term_type2 &t2) const</tt> method, which can be used during series multiplication
  *   after the terms of the series operands have been sorted using the <tt>compare_terms()</tt> method.
  *   The <tt>skip()</tt> method will return \p true if the result of the multiplication of \p t1 by \p t2 and of
@@ -72,11 +77,15 @@ namespace piranha
  *   \p false otherwise. For instance, a typical truncator for polynomials will sort the terms by their (partial) degree and will be
  *   able to skip all term-by-term multiplications after the degree limit has been reached.
  *   A truncator implementing this method is a <em>skipping</em> truncator. For consistency reasons, a skipping truncator
- *   must also be a sorting truncator, otherwise compile-time errors will be produced.
+ *   must also be a sorting and filtering truncator, otherwise compile-time errors will be produced.
  * 
  * All truncators must provide a <tt>bool is_active() const</tt> method that returns \p true if the truncator is in effect, \p false if it is not.
  * This method is provided for optimization purposes, in order to allow an implementation to skip all truncator-related operations when there
- * is no need to (e.g., the truncator has a global option set to 'disabled'). All truncators must be copy-constructible.
+ * is no need to (e.g., the truncator has a global option set to 'disabled'). It will be assumed that the <tt>skip()</tt> and
+ * <tt>filter()</tt> methods of an inactive truncator object will always return \p false.
+ * 
+ * All truncators must be copy-constructible. Note that a truncator object used together with the default piranha::series_multiplier implementation
+ * must be usable concurrently from multiple threads.
  * 
  * The presence of the optional methods can be queried at compile time using the piranha::truncator_traits class. The default
  * implementation of piranha::truncator is a valid unary and binary truncator that
@@ -148,13 +157,13 @@ class truncator
 		}
 };
 
-/// Truncator traits.
+/// Binary truncator traits.
 /**
- * This traits class is used to query which optional methods are implemented in piranha::truncator of \p Series.
+ * This traits class is used to query which optional methods are implemented in a binary piranha::truncator.
  * 
  * \section type_requirements Type requirements
  * 
- * - <tt>Series ...</tt> must be a pack of 1 or 2 types suitable for use in piranha::truncator.
+ * - <tt>Series ...</tt> must be a pack 2 types suitable for use in piranha::truncator.
  * - piranha::truncator of <tt>Series ...</tt> must be a model of the piranha::concept::Truncator concept.
  * 
  * @see piranha::truncator for the description of the optional interface.
@@ -179,10 +188,14 @@ class truncator_traits: detail::sfinae_types
 		static auto test_sorting2(const T *t) -> decltype(t->compare_terms(std::declval<term_type2>(),std::declval<term_type2>()),yes());
 		static no test_sorting2(...);
 		template <typename T>
+		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type1>()),yes());
+		static no test_filtering(...);
+		template <typename T>
 		static auto test_skipping(const T *t) -> decltype(t->skip(std::declval<term_type1>(),std::declval<term_type2>()),yes());
 		static no test_skipping(...);
 		static const bool is_sorting_impl = (sizeof(test_sorting1((const truncator_type *)piranha_nullptr)) == sizeof(yes) &&
 			sizeof(test_sorting2((const truncator_type *)piranha_nullptr)) == sizeof(yes));
+		static const bool is_filtering_impl = (sizeof(test_filtering((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 		static const bool is_skipping_impl = (sizeof(test_skipping((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 	public:
 		/// Sorting flag.
@@ -190,21 +203,41 @@ class truncator_traits: detail::sfinae_types
 		 * Will be \p true if the truncator is a sorting truncator, \p false otherwise.
 		 */
 		static const bool is_sorting = is_sorting_impl;
+		/// Filtering flag.
+		/**
+		 * Will be \p true if the truncator is a filtering truncator, \p false otherwise.
+		 */
+		static const bool is_filtering = is_filtering_impl;
 		/// Skipping flag.
 		/**
 		 * Will be \p true if the truncator type of \p Series is a skipping truncator, \p false otherwise.
 		 */
 		static const bool is_skipping = is_skipping_impl;
 	private:
-		static_assert(!is_skipping || (is_skipping && is_sorting),"A skipping truncator must also be a sorting truncator.");
+		static_assert(!is_skipping || (is_skipping && is_sorting && is_filtering),
+			"A skipping truncator must also be a sorting and filtering truncator.");
 };
 
 template <typename... Series>
 const bool truncator_traits<Series...>::is_sorting;
 
 template <typename... Series>
+const bool truncator_traits<Series...>::is_filtering;
+
+template <typename... Series>
 const bool truncator_traits<Series...>::is_skipping;
 
+/// Unary truncator traits.
+/**
+ * This traits class is used to query which optional methods are implemented in a unary piranha::truncator.
+ * 
+ * \section type_requirements Type requirements
+ * 
+ * - <tt>Series</tt> must be a type suitable for use in piranha::truncator.
+ * - piranha::truncator of <tt>Series</tt> must be a model of the piranha::concept::Truncator concept.
+ * 
+ * @see piranha::truncator for the description of the optional interface.
+ */
 template <typename Series>
 class truncator_traits<Series>: detail::sfinae_types
 {
@@ -216,12 +249,28 @@ class truncator_traits<Series>: detail::sfinae_types
 		static auto test_sorting(const T *t) -> decltype(t->compare_terms(std::declval<term_type>(),std::declval<term_type>()),yes());
 		static no test_sorting(...);
 		static const bool is_sorting_impl = (sizeof(test_sorting((const truncator_type *)piranha_nullptr)) == sizeof(yes));
+		template <typename T>
+		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type>()),yes());
+		static no test_filtering(...);
+		static const bool is_filtering_impl = (sizeof(test_filtering((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 	public:
+		/// Sorting flag.
+		/**
+		 * Will be \p true if the truncator is a sorting truncator, \p false otherwise.
+		 */
 		static const bool is_sorting = is_sorting_impl;
+		/// Filtering flag.
+		/**
+		 * Will be \p true if the truncator is a filtering truncator, \p false otherwise.
+		 */
+		static const bool is_filtering = is_filtering_impl;
 };
 
 template <typename Series>
 const bool truncator_traits<Series>::is_sorting;
+
+template <typename Series>
+const bool truncator_traits<Series>::is_filtering;
 
 }
 
