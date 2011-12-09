@@ -63,6 +63,8 @@
  * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication).
  * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
  * only if T + U produces T.
+ * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,
+ * and maybe replace in the high level interface the std::set of string with initializer list, as it seems sometimes {"a","b"} is not picked up as std::set of string.
  */
 namespace piranha
 {
