@@ -82,7 +82,8 @@ namespace piranha
  * All truncators must provide a <tt>bool is_active() const</tt> method that returns \p true if the truncator is in effect, \p false if it is not.
  * This method is provided for optimization purposes, in order to allow an implementation to skip all truncator-related operations when there
  * is no need to (e.g., the truncator has a global option set to 'disabled'). It will be assumed that the <tt>skip()</tt> and
- * <tt>filter()</tt> methods of an inactive truncator object will always return \p false.
+ * <tt>filter()</tt> methods of an inactive truncator object will always return \p false. It will also be assumed that during a series multiplication
+ * a skipping tuncator does all the necessary filtering (i.e., it will not be necessary to filter terms when using a skipping truncator).
  * 
  * All truncators must be copy-constructible. Note that a truncator object used together with the default piranha::series_multiplier implementation
  * must be usable concurrently from multiple threads.
