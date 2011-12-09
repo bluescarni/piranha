@@ -228,8 +228,10 @@ struct truncator_tester
 			p_type p1;
 			BOOST_CHECK(truncator_traits<p_type>::is_sorting);
 			BOOST_CHECK(!p1.get_truncator().is_active());
+			BOOST_CHECK(!p1.get_truncator().filter(term_type{}));
 			p1.get_truncator().set(5);
 			BOOST_CHECK(p1.get_truncator().is_active());
+			BOOST_CHECK(!p1.get_truncator().filter(term_type{Cf(1),key_type()}));
 			p1.get_truncator().set("x",5);
 			BOOST_CHECK(p1.get_truncator().is_active());
 			p1.get_truncator().unset();
@@ -237,17 +239,27 @@ struct truncator_tester
 			p1.get_truncator().set("x",5);
 			term_type t1{Cf(1),key_type{Expo(1)}}, t2(t1);
 			BOOST_CHECK_THROW(p1.get_truncator().compare_terms(t1,t2),std::invalid_argument);
+			BOOST_CHECK_THROW(p1.get_truncator().filter(t1),std::invalid_argument);
 			p1 = "x";
 			BOOST_CHECK(!p1.get_truncator().compare_terms(t1,t2));
+			BOOST_CHECK(!p1.get_truncator().filter(t1));
 			term_type t3{Cf(1),key_type{Expo(2)}};
 			BOOST_CHECK(p1.get_truncator().compare_terms(t1,t3));
 			BOOST_CHECK(!p1.get_truncator().compare_terms(t3,t1));
+			BOOST_CHECK(!p1.get_truncator().filter(t3));
+			term_type t3a{Cf(1),key_type{Expo(4)}};
+			BOOST_CHECK(!p1.get_truncator().filter(t3a));
+			term_type t3b{Cf(1),key_type{Expo(5)}};
+			BOOST_CHECK(p1.get_truncator().filter(t3b));
 			p1.get_truncator().set(5);
 			BOOST_CHECK(p1.get_truncator().compare_terms(t1,t3));
 			BOOST_CHECK(!p1.get_truncator().compare_terms(t3,t1));
 			typedef polynomial<p_type,int> p_type1;
 			typedef typename p_type1::term_type term_type1;
 			BOOST_CHECK(truncator_traits<p_type1>::is_sorting);
+			BOOST_CHECK(truncator_traits<p_type1>::is_filtering);
+			p1.get_truncator().set("y",5);
+			BOOST_CHECK(!p1.get_truncator().filter(t3b));
 			term_type1 tt1{p_type(1),key_type{Expo(1)}}, tt2(tt1);
 			p_type1 pp1{"x"};
 			pp1.get_truncator().set("x",5);
@@ -268,6 +280,8 @@ struct truncator_tester
 			typedef typename p_typeb::term_type::key_type key_typeb;
 			BOOST_CHECK((truncator_traits<p_typea,p_typea>::is_sorting));
 			BOOST_CHECK((truncator_traits<p_typea,p_typeb>::is_sorting));
+			BOOST_CHECK((truncator_traits<p_typea,p_typea>::is_filtering));
+			BOOST_CHECK((truncator_traits<p_typea,p_typeb>::is_filtering));
 			BOOST_CHECK((truncator_traits<p_typea,p_typea>::is_skipping));
 			BOOST_CHECK((truncator_traits<p_typea,p_typeb>::is_skipping));
 			BOOST_CHECK((!truncator<p_typea,p_typea>(p_typea{},p_typea{}).is_active()));
@@ -277,6 +291,7 @@ struct truncator_tester
 			trunc1 tr0{p_typea{},p_typea{}};
 			BOOST_CHECK_THROW(tr0.compare_terms(typename p_typea::term_type{},typename p_typea::term_type{}),std::invalid_argument);
 			BOOST_CHECK(!tr0.skip(typename p_typea::term_type{},typename p_typea::term_type{}));
+			BOOST_CHECK(!tr0.filter(typename p_typea::term_type{}));
 			p1.get_truncator().set(5);
 			p_typea empty;
 			trunc1 tr1{empty,empty};
@@ -284,6 +299,7 @@ struct truncator_tester
 			BOOST_CHECK((truncator<p_typea,p_typeb>(p_typea{},p_typeb{}).is_active()));
 			BOOST_CHECK(!tr1.compare_terms(typename p_typea::term_type{},typename p_typea::term_type{}));
 			BOOST_CHECK(!tr1.skip(typename p_typea::term_type{},typename p_typea::term_type{}));
+			BOOST_CHECK(!tr1.filter(typename p_typea::term_type{}));
 			trunc1 tr2{x,x};
 			BOOST_CHECK(!tr2.compare_terms(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{1}}));
 			BOOST_CHECK(tr2.compare_terms(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{2}}));
@@ -291,10 +307,16 @@ struct truncator_tester
 			BOOST_CHECK(!tr2.skip(typename p_typea::term_type{1,key_typea{1}},typename p_typea::term_type{1,key_typea{1}}));
 			BOOST_CHECK(tr2.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typea::term_type{1,key_typea{2}}));
 			BOOST_CHECK(tr2.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typea::term_type{1,key_typea{3}}));
+			BOOST_CHECK(!tr2.filter(typename p_typea::term_type{1,key_typea{3}}));
+			BOOST_CHECK(tr2.filter(typename p_typea::term_type{1,key_typea{5}}));
+			BOOST_CHECK(tr2.filter(typename p_typea::term_type{1,key_typea{6}}));
 			trunc2 tr3{x,xb};
 			BOOST_CHECK(!tr3.skip(typename p_typea::term_type{1,key_typea{1}},typename p_typeb::term_type{1,key_typeb{1}}));
 			BOOST_CHECK(tr3.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typeb::term_type{1,key_typeb{2}}));
 			BOOST_CHECK(tr3.skip(typename p_typea::term_type{1,key_typea{3}},typename p_typeb::term_type{1,key_typeb{3}}));
+			BOOST_CHECK(!tr3.filter(typename p_typea::term_type{1,key_typea{3}}));
+			BOOST_CHECK(tr3.filter(typename p_typea::term_type{1,key_typea{5}}));
+			BOOST_CHECK(tr3.filter(typename p_typea::term_type{1,key_typea{6}}));
 			p1.get_truncator().set("y",5);
 			auto xy = x*y;
 			trunc1 tr4{xy,xy};
@@ -304,6 +326,10 @@ struct truncator_tester
 			BOOST_CHECK(!tr4.skip(typename p_typea::term_type{1,key_typea{10,1}},typename p_typea::term_type{1,key_typea{1,2}}));
 			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,2}}));
 			BOOST_CHECK(tr4.skip(typename p_typea::term_type{1,key_typea{10,3}},typename p_typea::term_type{1,key_typea{1,3}}));
+			BOOST_CHECK(!tr4.filter(typename p_typea::term_type{1,key_typea{10,3}}));
+			BOOST_CHECK(!tr4.filter(typename p_typea::term_type{1,key_typea{10,4}}));
+			BOOST_CHECK(tr4.filter(typename p_typea::term_type{1,key_typea{0,5}}));
+			BOOST_CHECK(tr4.filter(typename p_typea::term_type{1,key_typea{0,6}}));
 			BOOST_CHECK_THROW((trunc1{xy,decltype(xy){}}),std::invalid_argument);
 			p1.get_truncator().unset();
 		}
@@ -319,7 +345,6 @@ BOOST_AUTO_TEST_CASE(polynomial_truncator_test)
 {
 	boost::mpl::for_each<cf_types>(truncator_tester());
 }
-
 
 struct multiplication_tester
 {
