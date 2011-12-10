@@ -27,10 +27,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstddef>
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
@@ -318,13 +320,25 @@ struct hash_tester
 	template <typename T>
 	void operator()(const T &)
 	{
+		typedef std::make_signed<std::size_t>::type signed_size_t;
 		typedef kronecker_monomial<T> k_type;
-		k_type k1;
-		BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
-		k1 = k_type({0});
-		BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
-		k1 = k_type({0,1});
-		BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
+		if (boost::integer_traits<T>::const_max <= boost::integer_traits<signed_size_t>::const_max &&
+			boost::integer_traits<T>::const_min >= boost::integer_traits<signed_size_t>::const_min)
+		{
+			k_type k1;
+			BOOST_CHECK(k1.hash() == (std::size_t)(signed_size_t)(k1.get_int()));
+			k1 = k_type({0});
+			BOOST_CHECK(k1.hash() == (std::size_t)(signed_size_t)(k1.get_int()));
+			k1 = k_type({0,1});
+			BOOST_CHECK(k1.hash() == (std::size_t)(signed_size_t)(k1.get_int()));
+		} else {
+			k_type k1;
+			BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
+			k1 = k_type({0});
+			BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
+			k1 = k_type({0,1});
+			BOOST_CHECK(k1.hash() == std::hash<k_type>()(k1));
+		}
 	}
 };
 

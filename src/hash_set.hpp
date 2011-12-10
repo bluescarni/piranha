@@ -295,6 +295,10 @@ class hash_set
 		 */
 		typedef typename container_type::size_type size_type;
 	private:
+		// NOTE: this is necessary in order for parallel implementation of sparse multiplication to work. It will be true
+		// on most platforms, but to be 100% sure we should roll our own minimal vector implementation that uses explicitly
+		// std::size_t as size type.
+		static_assert(std::is_same<size_type,std::size_t>::value,"Invalid size type.");
 		template <typename Key>
 		class iterator_impl: public boost::iterator_facade<iterator_impl<Key>,Key,boost::forward_traversal_tag>
 		{
