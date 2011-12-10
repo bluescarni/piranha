@@ -392,24 +392,11 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		}
 		/// Hash value.
 		/**
-		 * In case the range of \p value_type is not wider than the signed counterpart of \p std::size_t, the hash value will be
-		 * computed by casting the internal integer instance first to the signed counterpart of \p std::size_t, and then
-		 * to \p std::size_t.
-		 * 
-		 * Otherwise, the hash value will be computed using a default-constructed instance of \p std::hash.
-		 * 
-		 * @return hash value of the monomial.
+		 * @return the internal integer instance, cast to \p std::size_t.
 		 */
 		std::size_t hash() const
 		{
-			typedef std::make_signed<std::size_t>::type signed_size_t;
-			if (boost::integer_traits<value_type>::const_max <= boost::integer_traits<signed_size_t>::const_max &&
-				boost::integer_traits<value_type>::const_min >= boost::integer_traits<signed_size_t>::const_min)
-			{
-				return static_cast<std::size_t>(static_cast<signed_size_t>(m_value));
-			} else {
-				return std::hash<value_type>()(m_value);
-			}
+			return static_cast<std::size_t>(m_value);
 		}
 		/// Equality operator.
 		/**
