@@ -245,7 +245,7 @@ class series_multiplier
 				retval.m_symbol_set = m_s1.m_symbol_set;
 				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval);
 				const auto tmp = rehasher(f,retval,size1,size2);
-				blocked_multiplication(f,size1,size2);
+				blocked_multiplication(f);
 				if (tmp.first) {
 					trace_estimates(retval.size(),tmp.second);
 				}
@@ -275,6 +275,7 @@ class series_multiplier
 				auto r_it = retval_list.begin();
 				for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
 					// Last thread needs a different size from block_size.
+					// TODO this will go away.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					// Functor for use in the thread.
 					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
@@ -284,7 +285,7 @@ class series_multiplier
 							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
-							this->blocked_multiplication(*f_it,s1,size2);
+							this->blocked_multiplication(*f_it);
 							if (tmp.first) {
 								this->trace_estimates(r_it->m_container.size(),tmp.second);
 							}
@@ -558,6 +559,80 @@ class series_multiplier
 				 */
 				mutable typename term_type1::multiplication_result_type	m_tmp;
 		};
+		/// Block-by-block multiplication.
+		/**
+		 * This method expects a \p Functor type exposing the same inteface as default_functor. Functionally, the method
+		 * is equivalent to repeated calls of the methods of \p Functor that will multiply term-by-term the terms
+		 * of the input series and accumulate the result in the output series. Terms will be inserted respecting the
+		 * skipping and filtering criterions established by the active truncator.
+		 *
+		 * The method will perform the multiplications after logically subdividing the input series in blocks, in order to
+		 * optimize cache memory access patterns.
+		 * 
+		 * @param[in] f multiplication functor.
+		 * 
+		 * @throws unspecified any exception thrown by the public interface of \p Functor.
+		 */
+		template <typename Functor>
+		static void blocked_multiplication(const Functor &f)
+		{
+			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
+			// NOTE: hard-coded block size of 256.
+			static_assert(boost::integer_traits<size_type>::const_max >= 256u, "Invalid size type.");
+			const size_type size1 = f.m_s1, size2 = f.m_s2, bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
+			// Start and end of last (possibly irregular) blocks.
+			const size_type i_ir_start = nblocks1 * bsize1, i_ir_end = size1;
+			const size_type j_ir_start = nblocks2 * bsize2, j_ir_end = size2;
+			for (size_type n1 = 0u; n1 < nblocks1; ++n1) {
+				const size_type i_start = n1 * bsize1, i_end = i_start + bsize1;
+				// regulars1 * regulars2
+				for (size_type n2 = 0u; n2 < nblocks2; ++n2) {
+					const size_type j_start = n2 * bsize2, j_end = j_start + bsize2;
+					for (size_type i = i_start; i < i_end; ++i) {
+						for (size_type j = j_start; j < j_end; ++j) {
+							if (f.skip(i,j)) {
+								break;
+							}
+							f(i,j);
+							f.insert();
+						}
+					}
+				}
+				// regulars1 * rem2
+				for (size_type i = i_start; i < i_end; ++i) {
+					for (size_type j = j_ir_start; j < j_ir_end; ++j) {
+						if (f.skip(i,j)) {
+							break;
+						}
+						f(i,j);
+						f.insert();
+					}
+				}
+			}
+			// rem1 * regulars2
+			for (size_type n2 = 0u; n2 < nblocks2; ++n2) {
+				const size_type j_start = n2 * bsize2, j_end = j_start + bsize2;
+				for (size_type i = i_ir_start; i < i_ir_end; ++i) {
+					for (size_type j = j_start; j < j_end; ++j) {
+						if (f.skip(i,j)) {
+							break;
+						}
+						f(i,j);
+						f.insert();
+					}
+				}
+			}
+			// rem1 * rem2.
+			for (size_type i = i_ir_start; i < i_ir_end; ++i) {
+				for (size_type j = j_ir_start; j < j_ir_end; ++j) {
+					if (f.skip(i,j)) {
+						break;
+					}
+					f(i,j);
+					f.insert();
+				}
+			}
+		}
 	private:
 		typedef decltype(std::declval<return_type>().m_container.bucket_count()) bucket_size_type;
 		static void trace_estimates(const bucket_size_type &real_size, const bucket_size_type &estimate)
@@ -863,69 +938,14 @@ class series_multiplier
 		{
 			return f.filter(std::get<N>(t));
 		}
-		template <typename Functor, typename Size>
-		static void blocked_multiplication(const Functor &f, const Size &size1, const Size &size2)
-		{
-			// NOTE: hard-coded block size of 256.
-			static_assert(std::is_unsigned<Size>::value && boost::integer_traits<Size>::const_max >= 256u, "Invalid size type.");
-			const Size bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
-			// Start and end of last (possibly irregular) blocks.
-			const Size i_ir_start = nblocks1 * bsize1, i_ir_end = size1;
-			const Size j_ir_start = nblocks2 * bsize2, j_ir_end = size2;
-			for (Size n1 = 0u; n1 < nblocks1; ++n1) {
-				const Size i_start = n1 * bsize1, i_end = i_start + bsize1;
-				// regulars1 * regulars2
-				for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-					const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
-					for (Size i = i_start; i < i_end; ++i) {
-						for (Size j = j_start; j < j_end; ++j) {
-							if (f.skip(i,j)) {
-								break;
-							}
-							f(i,j);
-							f.insert();
-						}
-					}
-				}
-				// regulars1 * rem2
-				for (Size i = i_start; i < i_end; ++i) {
-					for (Size j = j_ir_start; j < j_ir_end; ++j) {
-						if (f.skip(i,j)) {
-							break;
-						}
-						f(i,j);
-						f.insert();
-					}
-				}
-			}
-			// rem1 * regulars2
-			for (Size n2 = 0u; n2 < nblocks2; ++n2) {
-				const Size j_start = n2 * bsize2, j_end = j_start + bsize2;
-				for (Size i = i_ir_start; i < i_ir_end; ++i) {
-					for (Size j = j_start; j < j_end; ++j) {
-						if (f.skip(i,j)) {
-							break;
-						}
-						f(i,j);
-						f.insert();
-					}
-				}
-			}
-			// rem1 * rem2.
-			for (Size i = i_ir_start; i < i_ir_end; ++i) {
-				for (Size j = j_ir_start; j < j_ir_end; ++j) {
-					if (f.skip(i,j)) {
-						break;
-					}
-					f(i,j);
-					f.insert();
-				}
-			}
-		}
-	private:
+	protected:
+		/// Const reference to the first series operand.
 		const Series1				&m_s1;
+		/// Const reference to the second series operand.
 		const Series2				&m_s2;
+		/// Vector of const pointers to the terms in the first series.
 		mutable std::vector<term_type1 const *>	m_v1;
+		/// Vector of const pointers to the terms in the second series.
 		mutable std::vector<term_type2 const *>	m_v2;
 };
 
