@@ -244,7 +244,7 @@ class series_multiplier
 				return_type retval;
 				retval.m_symbol_set = m_s1.m_symbol_set;
 				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval);
-				const auto tmp = rehasher(f,retval,size1,size2);
+				const auto tmp = rehasher(f);
 				blocked_multiplication(f);
 				if (tmp.first) {
 					trace_estimates(retval.size(),tmp.second);
@@ -274,16 +274,13 @@ class series_multiplier
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
 				for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
-					// Last thread needs a different size from block_size.
-					// TODO this will go away.
-					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					// Functor for use in the thread.
 					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
 					// because of a GCC bug in 4.6.
-					auto f = [f_it,r_it,i,block_size,s1,size2,&exceptions,&exceptions_mutex,this]() -> void {
+					auto f = [f_it,r_it,&exceptions,&exceptions_mutex,this]() -> void {
 						try {
 							thread_management::binder binder;
-							const auto tmp = this->rehasher(*f_it,*r_it,s1,size2);
+							const auto tmp = this->rehasher(*f_it);
 // std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
 							this->blocked_multiplication(*f_it);
 							if (tmp.first) {
@@ -911,9 +908,11 @@ class series_multiplier
 		}
 		// Functor tasked to prepare return value(s) with estimated bucket sizes (if
 		// it is worth to perform such analysis).
-		template <typename Functor, typename Size>
-		static std::pair<bool,typename Series1::size_type> rehasher(const Functor &f, return_type &r, const Size &s1, const Size &s2)
+		template <typename Functor>
+		static std::pair<bool,typename Series1::size_type> rehasher(const Functor &f)
 		{
+			const auto s1 = f.m_s1, s2 = f.m_s2;
+			auto &r = f.m_retval;
 			// NOTE: hard-coded value of 100000 for minimm number of terms multiplications.
 			if (s2 && s1 >= 100000u / s2) {
 				// NOTE: here we could have (very unlikely) some overflow or memory error in the computation
