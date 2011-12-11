@@ -302,7 +302,7 @@ class series_multiplier
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
 				retval.m_symbol_set = m_s1.m_symbol_set;
-				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0],size1,&m_v2[0],size2,trunc,retval));
+				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval));
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {

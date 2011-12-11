@@ -61,6 +61,7 @@ namespace piranha
  * 
  * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
  * monomial classes arises.
+ * \todo think about fixing printing when T is (unsigned) char: cast to int, otherwise the output will be nasty.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
