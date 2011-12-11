@@ -743,8 +743,13 @@ class series_multiplier
 // std::cout << "total vs filtered: " << total << ',' << filtered << '\n';
 			piranha_assert(total >= filtered);
 			const auto mean = total / ntrials;
-			const integer M = (mean * mean * multiplier * (total - filtered)) / total;
-			return static_cast<bucket_size_type>(M);
+			// Avoid division by zero.
+			if (total.sign()) {
+				const integer M = (mean * mean * multiplier * (total - filtered)) / total;
+				return static_cast<bucket_size_type>(M);
+			} else {
+				return static_cast<bucket_size_type>(mean * mean * multiplier);
+			}
 		}
 	private:
 		static void trace_estimates(const typename Series1::size_type &real_size, const typename Series1::size_type &estimate)
