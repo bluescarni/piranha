@@ -318,8 +318,10 @@ class series_multiplier
 					retval = std::move(*it);
 					retval_list.erase(it);
 				} else {
-					// Otherwise, just rehash to the desired value.
-					retval.m_container.rehash(final_estimate);
+					// Otherwise, just rehash to the desired value, corrected for max load factor.
+					retval.m_container.rehash(
+						boost::numeric_cast<typename Series1::size_type>(std::ceil(final_estimate / retval.m_container.max_load_factor()))
+					);
 // std::cout << "After final estimate: " << retval.m_container.bucket_count() << '\n';
 				}
 // time0 = boost::posix_time::microsec_clock::local_time();
