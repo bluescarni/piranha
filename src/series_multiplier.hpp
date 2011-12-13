@@ -756,9 +756,30 @@ class series_multiplier
 				return static_cast<bucket_size_type>(mean * mean * multiplier);
 			}
 		}
-	private:
+		/// Trace series size estimates.
+		/**
+		 * Record in the piranha::tracing framework the outcome of result size estimation via estimate_final_series_size().
+		 * 
+		 * The string descriptors and associated data are:
+		 * 
+		 * - <tt>number_of_estimates</tt>, <tt>unsigned long long</tt>, corresponding to the total number of times
+		 *   this function has been called;
+		 * - <tt>number_of_correct_estimates</tt>, <tt>unsigned long long</tt>, corresponding to the total number of times
+		 *   this function has been called with <tt>estimate >= real_size</tt>;
+		 * - <tt>accumulated_estimate_ratio</tt>, <tt>double</tt>, corresponding to the accumulated value of <tt>estimate / real_size</tt>.
+		 * 
+		 * In order to avoid potential divisions by zero, if \p real_size is zero no tracing will be performed.
+		 * 
+		 * @param[in] real_size the real size of the output series.
+		 * @param[in] estimate the size of the output series as estimated by estimate_final_series_size().
+		 * 
+		 * @throws unspecified any exception thrown by tracing::trace().
+		 */
 		static void trace_estimates(const typename Series1::size_type &real_size, const typename Series1::size_type &estimate)
 		{
+			if (unlikely(!real_size)) {
+				return;
+			}
 			tracing::trace("number_of_estimates",[](boost::any &x) -> void {
 				if (unlikely(x.empty())) {
 					x = 0ull;
@@ -787,6 +808,7 @@ class series_multiplier
 				}
 			});
 		}
+	private:
 		template <typename RetvalList, typename Size>
 		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads)
 		{
