@@ -128,10 +128,15 @@ class malloc_allocator
 		malloc_allocator(malloc_allocator &&other) piranha_noexcept_spec(true):m_alignment(other.m_alignment) {}
 		/// Trivial destructor.
 		~malloc_allocator() piranha_noexcept_spec(true) {}
-		/// Deleted copy assignment operator.
-		malloc_allocator &operator=(const malloc_allocator &) = delete;
-		/// Deleted move assignment operator.
-		malloc_allocator &operator=(malloc_allocator &&) = delete;
+		/// Defaulted copy assignment operator.
+		// NOTE: the meaning of assignment operators for allocators:
+		// http://msdn.microsoft.com/en-us/library/01des920.aspx
+		malloc_allocator &operator=(const malloc_allocator &) = default;
+		/// Trivial move assignment operator.
+		malloc_allocator &operator=(malloc_allocator &&other) piranha_noexcept_spec(true)
+		{
+			return operator=(other);
+		}
 		/// Memory address of reference.
 		/**
 		 * @param[in] x reference.
@@ -336,7 +341,7 @@ class malloc_allocator
 			}
 		}
 	private:
-		const std::size_t m_alignment;
+		std::size_t m_alignment;
 };
 
 /// Equality operator for piranha::malloc_allocator.

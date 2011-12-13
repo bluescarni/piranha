@@ -60,6 +60,15 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_construction_test)
 	BOOST_CHECK_EQUAL(*ptr,tmp);
 	a.destroy(ptr);
 	a.deallocate(ptr,0);
+	if (malloc_allocator<char>::have_memalign_primitives && !(sizeof(void *) & (sizeof(void *) - 1u))) {
+		malloc_allocator<char> a;
+		malloc_allocator<char> b(sizeof(void *));
+		b = a;
+		BOOST_CHECK(b == a);
+		malloc_allocator<char> c(sizeof(void *));
+		b = std::move(a);
+		BOOST_CHECK(b == a);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
