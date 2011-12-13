@@ -96,6 +96,9 @@ namespace piranha
  * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
  * operations during multiplication. Or: have specialised functors cache degree/norms of terms for truncation purposes, in order to avoid
  * computing them each time.
+ * \todo possibly we could adopt some of the optimizations adopted, e.g., in the Kronecker multiplier. For instance, have a fast mode for the multiplier
+ * to kick in when doing the full computation in order to avoid some branching in the insertion routines. The code though is already quite complex,
+ * so better be very sure it is worth before embarking in this.
  */
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
