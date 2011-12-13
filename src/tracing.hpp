@@ -23,8 +23,8 @@
 
 #include <boost/any.hpp>
 #include <iostream>
+#include <map>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
 #include "config.hpp"
@@ -52,7 +52,7 @@ namespace piranha
  */
 class tracing
 {
-		typedef std::unordered_map<std::string,boost::any> container_type;
+		typedef std::map<std::string,boost::any> container_type;
 	public:
 		/// Trace event.
 		/**
@@ -75,7 +75,7 @@ class tracing
 		 * - failures in threading primitives,
 		 * - the execution of functor \p f.
 		 * 
-		 * @see www.boost.org/doc/libs/release/libs/any
+		 * @see http://www.boost.org/doc/libs/release/libs/any
 		 */
 		template <typename Functor>
 		static void trace(const std::string &str, const Functor &f)
@@ -104,6 +104,7 @@ class tracing
 			}
 			trace_impl(str,f);
 		}
+		static void reset();
 		static boost::any get(const char *s);
 		static boost::any get(const std::string &);
 		static void dump(std::ostream & = std::cout);

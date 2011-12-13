@@ -135,4 +135,15 @@ boost::any tracing::get(const std::string &str)
 	}
 }
 
+/// Reset the contents of the database of events.
+/**
+ * @throws unspecified any exception thrown by threading primitives or by the <tt>clear()</tt> method
+ * of the internal container.
+ */
+void tracing::reset()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_container.clear();
+}
+
 }

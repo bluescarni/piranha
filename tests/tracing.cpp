@@ -83,3 +83,15 @@ BOOST_AUTO_TEST_CASE(tracing_get_test)
 	BOOST_CHECK(tracing::get(std::string("event_n")).empty());
 	BOOST_CHECK((bool)boost::any_cast<int>(tracing::get("event2")));
 }
+
+BOOST_AUTO_TEST_CASE(tracing_reset_test)
+{
+	tracing::reset();
+	settings::set_tracing(true);
+	BOOST_CHECK(tracing::get("event1").empty());
+	BOOST_CHECK(tracing::get(std::string("event1")).empty());
+	BOOST_CHECK(tracing::get("event2").empty());
+	BOOST_CHECK(tracing::get(std::string("event2")).empty());
+	BOOST_CHECK(tracing::get("event_n").empty());
+	BOOST_CHECK(tracing::get(std::string("event_n")).empty());
+}
