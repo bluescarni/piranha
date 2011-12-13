@@ -22,8 +22,11 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
+#include <boost/algorithm/minmax_element.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+#include <cmath> // For std::ceil.
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -36,6 +39,10 @@
 #include "degree_truncator_settings.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
+#include "integer.hpp"
+#include "kronecker_array.hpp"
+#include "kronecker_monomial.hpp"
+#include "math.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
 #include "power_series_truncator.hpp"
@@ -79,6 +86,9 @@ struct polynomial_tag {};
  * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo here we could optimize the comparisons with the state snapshot by creating another snapshot in case the degree_type is not integer ->
+ * cast the degree limit to degree_type for faster comparisons with builtin C++ types.
  */
 template <typename Cf, typename Expo>
 class polynomial:
@@ -385,125 +395,304 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 		const polynomial_type2	&m_poly2;
 };
 
-#if 0
-/// Series multiplier tuned for polynomials.
+namespace detail
+{
+
+template <typename Series1, typename Series2>
+struct kronecker_enabler
+{
+	BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
+	BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+	template <typename Key1, typename Key2>
+	struct are_same_kronecker_monomial
+	{
+		static const bool value = false;
+	};
+	template <typename T>
+	struct are_same_kronecker_monomial<kronecker_monomial<T>,kronecker_monomial<T>>
+	{
+		static const bool value = true;
+	};
+	typedef typename Series1::term_type::key_type key_type1;
+	typedef typename Series2::term_type::key_type key_type2;
+	static const bool value = std::is_base_of<detail::polynomial_tag,Series1>::value &&
+		std::is_base_of<detail::polynomial_tag,Series2>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
+};
+
+}
+
+/// Series multiplier specialisation for polynomials with Kronecker monomials.
 /**
- * This piranha::series_multiplier specialisation is activated when both series are instances of
- * piranha::polynomial. It employs a specialised \p Functor that uses a multiply-accumulate operation
- * during coefficient arithmetic, that can result in faster computations (e.g., with piranha::integer coefficients or when
- * the host platform provides fast implementation of floating-point multiply-add operations).
+ * This specialisation of piranha::series_multiplier is enabled when both \p Series1 and \p Series2 are instances of
+ * piranha::polynomial with monomials represented as piranha::kronecker_monomial of the same type.
+ * This multiplier will employ optimized algorithms that take advantage of the properties of Kronecker monomials.
+ * It will also take advantage of piranha::math::multiply_accumulate() in place of plain coefficient multiplication
+ * when possible.
  * 
- * Exception safety guarantee and move semantics are equivalent to the non-specialised series multiplier.
+ * \section exception_safety Exception safety guarantee
  * 
- * @author Francesco Biscani (bluescarni@gmail.com)
+ * This class provides the same guarantee as the non-specialised piranha::series_multiplier.
  * 
- * \todo use std::vector with custom allocator to make extra sure about cache alignment in m_tmp. NOTE: not sure this can be done,
- * would need hash set to be searchable with non-key types for this to work.
+ * \section move_semantics Move semantics
+ * 
+ * Move semantics is equivalent to piranha::series_multiplier's move semantics.
  */
 template <typename Series1, typename Series2>
-class series_multiplier<Series1,Series2,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series1>::value &&
-	std::is_base_of<detail::polynomial_tag,Series2>::value>::type>:
+class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
 	public series_multiplier<Series1,Series2,int>
 {
-		typedef series_multiplier<Series1,Series2,int> base;
+		BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
+		BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+		typedef typename Series1::term_type::key_type::value_type value_type;
+		typedef kronecker_array<value_type> ka;
 	public:
+		/// Base multiplier type.
+		typedef series_multiplier<Series1,Series2,int> base;
+		/// Alias for term type of \p Series1.
+		typedef typename Series1::term_type term_type1;
+		/// Alias for term type of \p Series2.
+		typedef typename Series2::term_type term_type2;
+		/// Alias for the return type.
+		typedef typename base::return_type return_type;
+		/// Alias for the truncator type.
+		typedef truncator<Series1,Series2> truncator_type;
 		/// Constructor.
 		/**
-		 * Equivalent to the constructor of the non-specialised piranha::series_multiplier.
+		 * Will call the base constructor and additionally check that the result of the multiplication will not overflow
+		 * the representation limits of piranha::kronecker_monomial. In such a case, a runtime error will be produced.
 		 * 
-		 * @param[in] s1 first multiplicand series.
-		 * @param[in] s2 second multiplicand series.
+		 * @param[in] s1 first series operand.
+		 * @param[in] s2 second series operand.
+		 * 
+		 * @throws std::invalid_argument if the the result of the multiplication overflows the representation limits of
+		 * piranha::kronecker_monomial.
+		 * @throws unspecified any exception thrown by the base constructor.
 		 */
-		explicit series_multiplier(const Series1 &s1, const Series2 &s2):base(s1,s2) {}
-		/// Multiplication implementations.
+		explicit series_multiplier(const Series1 &s1, const Series2 &s2):base(s1,s2)
+		{
+			if (unlikely(s1.empty() || s2.empty())) {
+				return;
+			}
+			// NOTE: here we are sure about this since the symbol set in a series should never
+			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
+			// would kick in.
+			piranha_assert(s1.m_symbol_set.size() < ka::get_limits().size());
+			const auto &limits = ka::get_limits()[s1.m_symbol_set.size()];
+			// Check that the multiplication will not overflow the bounds of the Kronecker
+			// representation.
+			const auto min_max_it1 = boost::minmax_element(this->m_v1.begin(),this->m_v1.end(),
+				[](term_type1 const *ptr1, term_type1 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
+			const auto min_max_it2 = boost::minmax_element(this->m_v2.begin(),this->m_v2.end(),
+				[](term_type2 const *ptr1, term_type2 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
+			const auto min1 = (*min_max_it1.first)->m_key.get_int(), max1 = (*min_max_it1.second)->m_key.get_int(),
+				min2 = (*min_max_it2.first)->m_key.get_int(), max2 = (*min_max_it2.second)->m_key.get_int();
+			const integer min_out = integer(min1) + integer(min2), max_out = integer(max1) + integer(max2);
+			// Bounds of the Kronecker representation.
+			const auto m = std::get<3u>(limits), M = std::get<4u>(limits);
+			// NOTE: the check on integer overflow is implicit in the fact that m and M do not overflow.
+			if (unlikely(min_out < m || max_out > M)) {
+				piranha_throw(std::overflow_error,"overflow in the degree of the monomial");
+			}
+		}
+		/// Perform multiplication.
 		/**
-		 * Equivalent to calling piranha::series_multiplier::execute with a specialised \p Functor.
-		 * 
-		 * @param[in] ed piranha::echelon_descriptor that will be used to build (via repeated insertions)
-		 * the result of the series multiplication.
-		 * 
-		 * @return the result of multiplying the two series.
+		 * @return the result of the multiplication of the input series operands.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::base_series::insert(),
-		 * - the <tt>multiply_accumulate()</tt> method of the coefficient type of \p Series1,
-		 * - the <tt>multiply()</tt> method of the term type of \p Series1,
-		 * - execute().
+		 * - (unlikely) conversion errors between numeric types,
+		 * - the public interface of piranha::hash_set,
+		 * - piranha::series_multiplier::estimate_final_series_size(),
+		 * - piranha::series_multiplier::blocked_multiplication(),
+		 * - piranha::math::multiply_accumulate() on the coefficient types.
 		 */
-		template <typename Term>
-		typename base::return_type operator()(const echelon_descriptor<Term> &ed) const
+		typename base::return_type operator()() const
 		{
-			return base::template execute<poly_functor<Term>>(ed);
+			truncator_type trunc(this->m_s1,this->m_s2);
+			if (trunc.is_active()) {
+				return execute<functor<true>>(trunc);
+			} else {
+				return execute<functor<false>>(trunc);
+			}
 		}
 	private:
-		template <typename Term>
-		struct poly_functor
+		template <typename Functor>
+		typename base::return_type execute(const truncator_type &trunc) const
 		{
-			explicit poly_functor(const std::vector<typename base::term_type1 const *> &v1, const std::vector<typename base::term_type2 const *> &v2,
-				const echelon_descriptor<Term> &ed, typename base::return_type &retval):
-				m_v1(v1),m_v2(v2),m_ed(ed),m_retval(retval)
+			// Do not do anything if one of the two series is empty.
+			if (unlikely(this->m_s1.empty() || this->m_s2.empty())) {
+				return return_type{};
+			}
+			// This check is done here to avoid controlling the number of elements of the output series
+			// at every iteration of the functor.
+			const auto max_size = integer(this->m_v1.size()) * this->m_v2.size();
+			if (unlikely(max_size > boost::integer_traits<typename Series1::size_type>::const_max)) {
+				piranha_throw(std::overflow_error,"overflow in series size");
+			}
+			// First, let's get the estimation on the size of the final series.
+			return_type retval;
+			retval.m_symbol_set = this->m_s1.m_symbol_set;
+			auto estimate = base::estimate_final_series_size(Functor(&this->m_v1[0u],this->m_v1.size(),
+				&this->m_v2[0u],this->m_v2.size(),trunc,retval));
+			// Correct the unlikely case of zero estimate.
+			if (unlikely(!estimate)) {
+				estimate = 1u;
+			}
+			// Rehash the retun value's container accordingly.
+			// NOTE: if something goes wrong here, no big deal as retval is still empty.
+			retval.m_container.rehash(boost::numeric_cast<decltype(estimate)>(std::ceil(estimate / retval.m_container.max_load_factor())));
+			piranha_assert(retval.m_container.bucket_count() >= 1u);
+			// Now let's sort the input terms according to the position of the Kronecker keys in the estimated return value.
+			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
+				return retval.m_container.bucket(*ptr1) < retval.m_container.bucket(*ptr2);
+			};
+			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
+				return retval.m_container.bucket(*ptr1) < retval.m_container.bucket(*ptr2);
+			};
+			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
+			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
+			// Now proceed with the blocked multiplication, using the functor in fast mode.
+			typedef typename Functor::fast_rebind fast_functor_type;
+			fast_functor_type ff(&this->m_v1[0u],this->m_v1.size(),&this->m_v2[0u],this->m_v2.size(),trunc,retval);
+			// We need this try/catch because, by using the fast interface, in case of an error the container in retval could be left in
+			// an inconsistent state.
+			try {
+				this->blocked_multiplication(ff);
+				sanitize_series(retval,ff);
+			} catch (...) {
+				retval.m_container.clear();
+				throw;
+			}
+			// Trace the result of estimation.
+			this->trace_estimates(retval.size(),estimate);
+			return retval;
+		}
+		template <typename Series, typename Functor>
+		static void sanitize_series(Series &retval, const Functor &func)
+		{
+			// Here we have to do the following things:
+			// - check ignorability of terms,
+			// - cope with excessive load factor,
+			// - update the size of the series.
+			// Compatibility is not a concern for polynomials.
+			// First, let's fix the size of inserted terms.
+			retval.m_container._update_size(func.m_insertion_count);
+			// Second, erase the ignorable terms.
+			const auto it_f = retval.m_container.end();
+			for (auto it = retval.m_container.begin(); it != it_f;) {
+				if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+					it = retval.m_container.erase(it);
+				} else {
+					++it;
+				}
+			}
+			// Finally, cope with excessive load factor.
+			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
+				retval.m_container.rehash(
+					boost::numeric_cast<typename Series1::size_type>(std::ceil(retval.m_container.size() / retval.m_container.max_load_factor()))
+				);
+			}
+		}
+		template <bool IsActive, bool FastMode = false>
+		struct functor: base::template default_functor<IsActive>
+		{
+			// Fast version of functor.
+			typedef functor<IsActive,true> fast_rebind;
+			typedef typename base::template default_functor<IsActive>::size_type size_type;
+			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
+			explicit functor(term_type1 const **ptr1, const size_type &s1,
+				term_type2 const **ptr2, const size_type &s2, const truncator_type &trunc,
+				return_type &retval):
+				base::template default_functor<IsActive>(ptr1,s1,ptr2,s2,trunc,retval),
+				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
 			{}
-			template <typename Size>
-			void operator()(const Size &i, const Size &j) const
+			void operator()(const size_type &i, const size_type &j) const
 			{
-				piranha_assert(i < m_v1.size() && j < m_v2.size());
-				const auto &t1 = *m_v1[i];
-				const auto &t2 = *m_v2[j];
-				t1.m_key.multiply(m_tmp.m_key,t2.m_key,m_ed.template get_args<typename base::term_type1>());
-				auto &container = m_retval.m_container;
-				typedef decltype(container.bucket_count()) size_type;
+				piranha_assert(i < this->m_s1 && j < this->m_s2);
+				this->m_tmp.m_key.set_int(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int());
+				m_cached_i = i;
+				m_cached_j = j;
+			}
+			typedef typename Series1::size_type bucket_size_type;
+			template <bool CheckFilter = true>
+			void insert() const
+			{
+				// NOTE: be very careful: every kind of optimization in here must involve only the key part,
+				// as the coefficient part is still generic.
+				auto &container = this->m_retval.m_container;
+				auto &tmp = this->m_tmp;
+				const auto &cf1 = this->m_ptr1[m_cached_i]->m_cf;
+				const auto &cf2 = this->m_ptr2[m_cached_j]->m_cf;
+				const auto &args = this->m_retval.m_symbol_set;
 				// Prepare the return series.
-				if (unlikely(!container.bucket_count())) {
+				piranha_assert(!FastMode || container.bucket_count());
+				if (!FastMode && unlikely(!container.bucket_count())) {
 					container._increase_size();
 				}
 				// Try to locate the term into retval.
-				size_type bucket_idx = container._bucket(m_tmp);
-				const auto it = container._find(m_tmp,bucket_idx);
+				auto bucket_idx = container._bucket(tmp);
+				const auto it = container._find(tmp,bucket_idx);
 				if (it == container.end()) {
-					if (unlikely(container.size() == boost::integer_traits<size_type>::const_max)) {
-						piranha_throw(std::overflow_error,"maximum number of elements reached");
-					}
+					// NOTE: the check here is done outside.
+					piranha_assert(container.size() < boost::integer_traits<bucket_size_type>::const_max);
 					// Term is new. Handle the case in which we need to rehash because of load factor.
-					if (unlikely(static_cast<double>(container.size() + size_type(1u)) / container.bucket_count() >
+					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / container.bucket_count() >
 						container.max_load_factor()))
 					{
 						container._increase_size();
 						// We need a new bucket index in case of a rehash.
-						bucket_idx = container._bucket(m_tmp);
+						bucket_idx = container._bucket(tmp);
 					}
+					// TODO optimize this in case of series and integer (?), now it is optimized for simple coefficients.
+					// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
+					// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
+					// a copy anyway, so insertion with move seems ok after all? Mmmh...
+					// TODO: other important thing: for coefficient series, we probably want to insert with move() below,
+					// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
+					// as much as possible.
 					// Take care of multiplying the coefficient.
-					t1.cf_mult_impl(m_tmp,t2,m_ed);
+					tmp.m_cf = cf1;
+					tmp.m_cf *= cf2;
 					// Insert and update size.
-					container._unique_insert(m_tmp,bucket_idx);
-					container._update_size(container.size() + 1u);
+					// NOTE: in fast mode, the check will be done at the end.
+					// NOTE: the counters are protected from overflows by the check done in the operator() of the multiplier.
+					if (FastMode) {
+						container._unique_insert(tmp,bucket_idx);
+						++m_insertion_count;
+					} else if (likely(!tmp.is_ignorable(args))) {
+						container._unique_insert(tmp,bucket_idx);
+						container._update_size(container.size() + 1u);
+					}
 				} else {
-					// Assert the existing term is not ignorable and it is compatible.
-					piranha_assert(!it->is_ignorable(m_ed) && it->is_compatible(m_ed));
-					// Cleanup function.
-					auto cleanup = [&]() -> void {
-						if (unlikely(!it->is_compatible(this->m_ed) || it->is_ignorable(this->m_ed))) {
-							container.erase(it);
+					// Assert the existing term is not ignorable, in non-fast mode.
+					piranha_assert(FastMode || !it->is_ignorable(args));
+					if (FastMode) {
+						// In fast mode we do not care if this throws or produces a null coefficient,
+						// as we will be dealing with that from outside.
+						math::multiply_accumulate(it->m_cf,cf1,cf2);
+					} else {
+						// Cleanup function.
+						auto cleanup = [&it,&args,&container]() -> void {
+							if (unlikely(it->is_ignorable(args))) {
+								container.erase(it);
+							}
+						};
+						try {
+							math::multiply_accumulate(it->m_cf,cf1,cf2);
+							// Check if the term has become ignorable or incompatible after the modification.
+							cleanup();
+						} catch (...) {
+							// In case of exceptions, do the check before re-throwing.
+							cleanup();
+							throw;
 						}
-					};
-					try {
-						it->m_cf.multiply_accumulate(t1.m_cf,t2.m_cf,m_ed);
-						// Check if the term has become ignorable or incompatible after the modification.
-						cleanup();
-					} catch (...) {
-						cleanup();
-						throw;
 					}
 				}
 			}
-			const std::vector<typename base::term_type1 const *>	&m_v1;
-			const std::vector<typename base::term_type2 const *>	&m_v2;
-			const echelon_descriptor<Term>				&m_ed;
-			typename base::return_type				&m_retval;
-			mutable typename base::term_type1			m_tmp;
+			mutable size_type		m_cached_i;
+			mutable size_type		m_cached_j;
+			mutable bucket_size_type	m_insertion_count;
 		};
 };
-
-#endif
 
 }
 
