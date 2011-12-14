@@ -29,11 +29,11 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
-#include <vector>
 #include <type_traits>
 
 #include "concepts/container_element.hpp"
@@ -60,6 +60,9 @@ namespace piranha
  * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and multi-threaded contexts,
  * and, if misused, could lead to data corruption and other unpredictable errors.
  * 
+ * Note that for performance reasons the implementation employs table sizes that are powers of two. Hence, particular care should be taken
+ * that the hash function does not exhibit commensurabilities with powers of 2.
+ * 
  * \section type_requirements Type requirements
  * 
  * \p T must be a model of piranha::concept::ContainerElement. \p Hash and \p Pred must model the
@@ -81,8 +84,6 @@ namespace piranha
  * \todo concept assert for hash and pred. Require non-throwing swap, comparison and hashing operators and modify docs accordingly.
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
- * \todo list of available sizes should be built at runtime: pre-calculated prime sizes stored as strings and converted to numbers using
- * lexical cast at program startup, until out-of-range happens.
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
  * \todo power of 2 sizes: test and see if it is viable.
  */
@@ -280,7 +281,13 @@ class hash_set
 			static node	terminator;
 			node		m_node;
 		};
-		typedef std::vector<list> container_type;
+		// Allocator type.
+		// NOTE: if we move allocator choice in public interface we need to document the exception behaviour of the allocator.
+		typedef std::allocator<list> allocator_type;
+		static_assert(std::is_pointer<typename allocator_type::pointer>::value && std::is_pointer<typename allocator_type::const_pointer>::value,
+			"Invalid allocator.");
+		// The container is a pointer to an array of lists.
+		typedef list *container_type;
 	public:
 		/// Functor type for the calculation of hash values.
 		typedef Hash hasher;
@@ -290,15 +297,10 @@ class hash_set
 		typedef T key_type;
 		/// Size type.
 		/**
-		 * This type is the unsigned integer corresponding to the size type of \p std::vector
-		 * for user-defined classes.
+		 * Alias for \p std::size_t.
 		 */
-		typedef typename container_type::size_type size_type;
+		typedef std::size_t size_type;
 	private:
-		// NOTE: this is necessary in order for parallel implementation of sparse multiplication to work. It will be true
-		// on most platforms, but to be 100% sure we should roll our own minimal vector implementation that uses explicitly
-		// std::size_t as size type.
-		static_assert(std::is_same<size_type,std::size_t>::value,"Invalid size type.");
 		template <typename Key>
 		class iterator_impl: public boost::iterator_facade<iterator_impl<Key>,Key,boost::forward_traversal_tag>
 		{
@@ -316,12 +318,12 @@ class hash_set
 					piranha_assert(m_set);
 					auto &container = m_set->m_container;
 					// Assert that the current iterator is valid.
-					piranha_assert(m_idx < container.size());
+					piranha_assert(m_idx < m_set->bucket_count());
 					piranha_assert(!container[m_idx].empty());
 					piranha_assert(m_it != container[m_idx].end());
 					++m_it;
 					if (m_it == container[m_idx].end()) {
-						const size_type container_size = container.size();
+						const size_type container_size = m_set->bucket_count();
 						while (true) {
 							++m_idx;
 							if (m_idx == container_size) {
@@ -350,6 +352,50 @@ class hash_set
 				size_type	m_idx;
 				it_type		m_it;
 		};
+		void init_from_n_buckets(const size_type &n_buckets)
+		{
+			piranha_assert(!m_container && !m_log2_size && !m_n_elements);
+			// Proceed to actual construction only if the requested number of buckets is nonzero.
+			if (n_buckets) {
+				const size_type log2_size = get_log2_from_hint(n_buckets);
+				const size_type size = size_type(1u) << log2_size;
+				auto new_ptr = m_allocator.allocate(size);
+				if (unlikely(!new_ptr)) {
+					piranha_throw(std::bad_alloc,0);
+				}
+				size_type i = 0u;
+				try {
+					// Default-construct the elements of the array.
+					for (; i < size; ++i) {
+						m_allocator.construct(&new_ptr[i],list{});
+					}
+				} catch (...) {
+					// Unwind the construction and deallocate, before re-throwing.
+					for (size_type j = 0u; j < i; ++j) {
+						m_allocator.destroy(&new_ptr[j]);
+					}
+					m_allocator.deallocate(new_ptr,size);
+					throw;
+				}
+				// Assign the members.
+				m_container = new_ptr;
+				m_log2_size = log2_size;
+			}
+		}
+		// Destroy all elements and deallocate m_container.
+		void destroy_and_deallocate()
+		{
+			// Proceed to destroy all elements and deallocate only if the table is actually storing something.
+			if (m_container) {
+				const size_type size = size_type(1u) << m_log2_size;
+				for (size_type i = 0u; i < size; ++i) {
+					m_allocator.destroy(&m_container[i]);
+				}
+				m_allocator.deallocate(m_container,size);
+			} else {
+				piranha_assert(!m_log2_size && !m_n_elements);
+			}
+		}
 	public:
 		/// Iterator type.
 		typedef iterator_impl<key_type const> iterator;
@@ -365,7 +411,8 @@ class hash_set
 		typedef typename list::const_iterator local_iterator;
 		/// Default constructor.
 		/**
-		 * If not specified, it will default-initialise the hasher and the equality predicate.
+		 * If not specified, it will default-initialise the hasher and the equality predicate. The resulting
+		 * hash set will be empty.
 		 * 
 		 * @param[in] h hasher functor.
 		 * @param[in] k equality predicate.
@@ -373,7 +420,7 @@ class hash_set
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		hash_set(const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(),m_hasher(h),m_key_equal(k),m_n_elements(0u) {}
+			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator() {}
 		/// Constructor from number of buckets.
 		/**
 		 * Will construct a table whose number of buckets is at least equal to \p n_buckets.
@@ -386,12 +433,50 @@ class hash_set
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		explicit hash_set(const size_type &n_buckets, const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0u) {}
-		/// Defaulted copy constructor.
+			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
+		{
+			init_from_n_buckets(n_buckets);
+		}
+		/// Copy constructor.
 		/**
-		 * @throws unspecified any exception thrown by the copy constructors of the internal container type, <tt>Hash</tt> or <tt>Pred</tt>.
+		 * @param[in] other piranha::hash_set that will be copied into \p this.
+		 * 
+		 * @throws unspecified any exception thrown by memory allocation errors,
+		 * the copy constructor of the stored type, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
-		hash_set(const hash_set &) = default;
+		hash_set(const hash_set &other):
+			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(other.m_hasher),
+			m_key_equal(other.m_key_equal),m_n_elements(0u),m_allocator(other.m_allocator)
+		{
+			// Proceed to actual copy only if other has some content.
+			if (other.m_container) {
+				const size_type size = size_type(1u) << other.m_log2_size;
+				auto new_ptr = m_allocator.allocate(size);
+				if (unlikely(!new_ptr)) {
+					piranha_throw(std::bad_alloc,0);
+				}
+				size_type i = 0u;
+				try {
+					// Copy-construct the elements of the array.
+					for (; i < size; ++i) {
+						m_allocator.construct(&new_ptr[i],other.m_container[i]);
+					}
+				} catch (...) {
+					// Unwind the construction and deallocate, before re-throwing.
+					for (size_type j = 0u; j < i; ++j) {
+						m_allocator.destroy(&new_ptr[j]);
+					}
+					m_allocator.deallocate(new_ptr,size);
+					throw;
+				}
+				// Assign the members.
+				m_container = new_ptr;
+				m_log2_size = other.m_log2_size;
+				m_n_elements = other.m_n_elements;
+			} else {
+				piranha_assert(!other.m_log2_size && !other.m_n_elements);
+			}
+		}
 		/// Move constructor.
 		/**
 		 * After the move, \p other will have zero buckets and zero elements, and its hasher and equality predicate
@@ -399,11 +484,14 @@ class hash_set
 		 * 
 		 * @param[in] other table to be moved.
 		 */
-		hash_set(hash_set &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container)),m_hasher(std::move(other.m_hasher)),
-			m_key_equal(std::move(other.m_key_equal)),m_n_elements(std::move(other.m_n_elements))
+		hash_set(hash_set &&other) piranha_noexcept_spec(true) : m_container(other.m_container),m_log2_size(other.m_log2_size),
+			m_hasher(std::move(other.m_hasher)),m_key_equal(std::move(other.m_key_equal)),m_n_elements(other.m_n_elements),
+			m_allocator(std::move(other.m_allocator))
 		{
-			// Clear the other.
-			other.clear();
+			// Clear out the other one.
+			other.m_container = piranha_nullptr;
+			other.m_log2_size = 0u;
+			other.m_n_elements = 0u;
 		}
 		/// Constructor from range.
 		/**
@@ -422,8 +510,9 @@ class hash_set
 		template <typename InputIterator>
 		explicit hash_set(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0u,
 			const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(get_size_from_hint(n_buckets)),m_hasher(h),m_key_equal(k),m_n_elements(0u)
+			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
 		{
+			init_from_n_buckets(n_buckets);
 			for (auto it = begin; it != end; ++it) {
 				insert(*it);
 			}
@@ -439,8 +528,11 @@ class hash_set
 		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		template <typename U>
-		hash_set(std::initializer_list<U> list):m_container(get_size_from_hint(list.size())),m_hasher(),m_key_equal(),m_n_elements(0u)
+		hash_set(std::initializer_list<U> list):
+			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(),m_key_equal(),m_n_elements(0u),m_allocator()
 		{
+			// We do not care here for possible truncation of list.size(), as this is only an optimization.
+			init_from_n_buckets(static_cast<size_type>(list.size()));
 			for (auto it = list.begin(); it != list.end(); ++it) {
 				insert(*it);
 			}
@@ -452,6 +544,7 @@ class hash_set
 		~hash_set() piranha_noexcept_spec(true)
 		{
 			piranha_assert(sanity_check());
+			destroy_and_deallocate();
 		}
 		/// Copy assignment operator.
 		/**
@@ -459,7 +552,7 @@ class hash_set
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the copy constructors of the internal container type, <tt>Hash</tt> or <tt>Pred</tt>.
+		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		hash_set &operator=(const hash_set &other)
 		{
@@ -478,12 +571,16 @@ class hash_set
 		hash_set &operator=(hash_set &&other) piranha_noexcept_spec(true)
 		{
 			if (likely(this != &other)) {
+				m_container = other.m_container;
+				m_log2_size = other.m_log2_size;
 				m_hasher = std::move(other.m_hasher);
 				m_key_equal = std::move(other.m_key_equal);
-				m_n_elements = std::move(other.m_n_elements);
-				m_container = std::move(other.m_container);
+				m_n_elements = other.m_n_elements;
+				m_allocator = std::move(other.m_allocator);
 				// Zero out other.
-				other.clear();
+				other.m_container = piranha_nullptr;
+				other.m_log2_size = 0u;
+				other.m_n_elements = 0u;
 			}
 			return *this;
 		}
@@ -498,14 +595,15 @@ class hash_set
 			const_iterator retval;
 			retval.m_set = this;
 			size_type idx = 0u;
-			for (; idx < bucket_count(); ++idx) {
+			const auto b_count = bucket_count();
+			for (; idx < b_count; ++idx) {
 				if (!m_container[idx].empty()) {
 					break;
 				}
 			}
 			retval.m_idx = idx;
 			// If we are not at the end, assign proper iterator.
-			if (idx != bucket_count()) {
+			if (idx != b_count) {
 				retval.m_it = m_container[idx].begin();
 			}
 			return retval;
@@ -556,7 +654,7 @@ class hash_set
 		 */
 		size_type bucket_count() const
 		{
-			return m_container.size();
+			return (m_container) ? (size_type(1u) << m_log2_size) : size_type(0u);
 		}
 		/// Load factor.
 		/**
@@ -564,8 +662,8 @@ class hash_set
 		 */
 		double load_factor() const
 		{
-
-			return (bucket_count()) ? static_cast<double>(size()) / bucket_count() : 0.;
+			const auto b_count = bucket_count();
+			return (b_count) ? static_cast<double>(size()) / b_count : 0.;
 		}
 		/// Index of destination bucket.
 		/**
@@ -645,9 +743,12 @@ class hash_set
 		template <typename U>
 		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
 		{
+			auto b_count = bucket_count();
 			// Handle the case of a table with no buckets.
-			if (unlikely(!bucket_count())) {
+			if (unlikely(!b_count)) {
 				_increase_size();
+				// Update the bucket count.
+				b_count = 1u;
 			}
 			// Try to locate the element.
 			auto bucket_idx = _bucket(k);
@@ -660,7 +761,7 @@ class hash_set
 				piranha_throw(std::overflow_error,"maximum number of elements reached");
 			}
 			// Item is new. Handle the case in which we need to rehash because of load factor.
-			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / bucket_count() > max_load_factor())) {
+			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / b_count > max_load_factor())) {
 				_increase_size();
 				// We need a new bucket index in case of a rehash.
 				bucket_idx = _bucket(k);
@@ -690,17 +791,20 @@ class hash_set
 			const auto b_it = _erase(it);
 			iterator retval;
 			retval.m_set = this;
+			const auto b_count = bucket_count();
 			// Travel to the next iterator if necessary.
 			if (b_it == m_container[it.m_idx].end()) {
 				size_type idx = it.m_idx + 1u;
-				for (; idx < bucket_count(); ++idx) {
+				// Advance to the first non-empty bucket if necessary,
+				// without going past the end of the table.
+				for (; idx < b_count; ++idx) {
 					if (!m_container[idx].empty()) {
 						break;
 					}
 				}
 				retval.m_idx = idx;
 				// If we are not at the end, assign proper iterator.
-				if (idx != bucket_count()) {
+				if (idx != b_count) {
 					retval.m_it = m_container[idx].begin();
 				}
 			} else {
@@ -717,7 +821,10 @@ class hash_set
 		 */
 		void clear()
 		{
-			m_container = container_type();
+			destroy_and_deallocate();
+			// Reset the members.
+			m_container = piranha_nullptr;
+			m_log2_size = 0u;
 			m_n_elements = 0u;
 		}
 		/// Swap content.
@@ -730,10 +837,12 @@ class hash_set
 		 */
 		void swap(hash_set &other)
 		{
-			m_container.swap(other.m_container);
+			std::swap(m_container,other.m_container);
+			std::swap(m_log2_size,other.m_log2_size);
 			std::swap(m_hasher,other.m_hasher);
 			std::swap(m_key_equal,other.m_key_equal);
-			std::swap<size_type>(m_n_elements,other.m_n_elements);
+			std::swap(m_n_elements,other.m_n_elements);
+			std::swap(m_allocator,other.m_allocator);
 		}
 		/// Rehash table.
 		/**
@@ -750,7 +859,7 @@ class hash_set
 			// If rehash is requested to zero, do something only if there are no items stored in the table.
 			if (!new_size) {
 				if (!size()) {
-					m_container = container_type();
+					clear();
 				}
 				return;
 			}
@@ -799,17 +908,18 @@ class hash_set
 		{
 			// NOTE: this could take a while in case of an empty table with lots of buckets. Take a shortcut
 			// taking into account the number of elements in the table - if zero, go directly to end()?
+			const auto b_count = bucket_count();
 			_m_iterator retval;
 			retval.m_set = this;
 			size_type idx = 0u;
-			for (; idx < bucket_count(); ++idx) {
+			for (; idx < b_count; ++idx) {
 				if (!m_container[idx].empty()) {
 					break;
 				}
 			}
 			retval.m_idx = idx;
 			// If we are not at the end, assign proper iterator.
-			if (idx != bucket_count()) {
+			if (idx != b_count) {
 				retval.m_it = m_container[idx].begin();
 			}
 			return retval;
@@ -888,7 +998,7 @@ class hash_set
 		/// Index of destination bucket (low-level).
 		/**
 		 * Equivalent to bucket(), with the exception that this method will not check
-		 * if the number of buckets is zero. In such a case, an integral division by zero will occur.
+		 * if the number of buckets is zero.
 		 * 
 		 * @param[in] k input argument.
 		 * 
@@ -899,7 +1009,7 @@ class hash_set
 		size_type _bucket(const key_type &k) const
 		{
 			piranha_assert(bucket_count());
-			return m_hasher(k) % bucket_count();
+			return m_hasher(k) & ((size_type(1u) << m_log2_size) - size_type(1u));
 		}
 		/// Force update of the number of elements.
 		/**
@@ -921,14 +1031,15 @@ class hash_set
 		 */
 		void _increase_size()
 		{
-// std::cout << "lol increase\n";
-			auto cur_size_index = get_size_index();
-			if (unlikely(cur_size_index == n_available_sizes - static_cast<decltype(cur_size_index)>(1))) {
-				throw std::bad_alloc();
+			if (unlikely(m_log2_size >= m_n_nonzero_sizes - 1u)) {
+				piranha_throw(std::bad_alloc,0);
 			}
-			++cur_size_index;
+			// We must take care here: if the table has zero buckets,
+			// the next log2_size is 0u. Otherwise increase current log2_size.
+			piranha_assert(m_container || (!m_container && !m_log2_size));
+			const auto new_log2_size = (m_container) ? (m_log2_size + 1u) : 0u;
 			// Rehash to the new size.
-			rehash(table_sizes[cur_size_index]);
+			rehash(size_type(1u) << new_log2_size);
 		}
 		/// Erase element.
 		/**
@@ -1020,7 +1131,12 @@ class hash_set
 			if (count != m_n_elements) {
 				return false;
 			}
-			if (bucket_count() != table_sizes[get_size_index()]) {
+			// m_log2_size must not be equal to or greater than the number of bits of size_type.
+			if (m_log2_size >= unsigned(std::numeric_limits<size_type>::digits)) {
+				return false;
+			}
+			// The container pointer must be consistent with the other members.
+			if (!m_container && (m_log2_size || m_n_elements)) {
 				return false;
 			}
 			// Check size is consistent with number of iterator traversals.
@@ -1035,94 +1151,34 @@ class hash_set
 			}
 			return true;
 		}
-		static const std::size_t n_available_sizes =
-#if defined(PIRANHA_64BIT_MODE)
-			41u;
-#else
-			33u;
-#endif
-		typedef std::array<size_type,n_available_sizes> table_sizes_type;
-		static const table_sizes_type table_sizes;
-		// Return the index in the table_sizes array of the current table size.
-		std::size_t get_size_index() const
+		// The number of available nonzero sizes will be the number of bits in the size type. Possible nonzero sizes will be in
+		// the [2 ** 0, 2 ** (n-1)] range.
+		static const size_type m_n_nonzero_sizes = static_cast<size_type>(std::numeric_limits<size_type>::digits);
+		// Get log2 of table size at least equal to hint. To be used only when hint is not zero.
+		static size_type get_log2_from_hint(const size_type &hint)
 		{
-			auto range = std::equal_range(table_sizes.begin(),table_sizes.end(),bucket_count());
-			// Paranoia check.
-			typedef typename std::iterator_traits<typename table_sizes_type::iterator>::difference_type difference_type;
-			static_assert(
-				static_cast<typename std::make_unsigned<difference_type>::type>(boost::integer_traits<difference_type>::const_max) >=
-				n_available_sizes,"Overflow error."
-			);
-			piranha_assert(range.second - range.first == 1);
-			return std::distance(table_sizes.begin(),range.first);
-		}
-		// Get table size at least equal to hint.
-		static size_type get_size_from_hint(const size_type &hint)
-		{
-			auto it = std::lower_bound(table_sizes.begin(),table_sizes.end(),hint);
-			if (it == table_sizes.end()) {
-				throw std::bad_alloc();
+			piranha_assert(hint);
+			for (size_type i = 0u; i < m_n_nonzero_sizes; ++i) {
+				if ((size_type(1u) << i) >= hint) {
+					return i;
+				}
 			}
-			piranha_assert(*it >= hint);
-			return *it;
+			piranha_throw(std::bad_alloc,0);
 		}
 	private:
 		container_type	m_container;
+		size_type	m_log2_size;
 		hasher		m_hasher;
 		key_equal	m_key_equal;
 		size_type	m_n_elements;
+		allocator_type	m_allocator;
 };
 
 template <typename T, typename Hash, typename Pred>
 typename hash_set<T,Hash,Pred>::node hash_set<T,Hash,Pred>::list::terminator;
 
 template <typename T, typename Hash, typename Pred>
-const typename hash_set<T,Hash,Pred>::table_sizes_type hash_set<T,Hash,Pred>::table_sizes = { {
-	0ull,
-	1ull,
-	3ull,
-	5ull,
-	11ull,
-	23ull,
-	53ull,
-	97ull,
-	193ull,
-	389ull,
-	769ull,
-	1543ull,
-	3079ull,
-	6151ull,
-	12289ull,
-	24593ull,
-	49157ull,
-	98317ull,
-	196613ull,
-	393241ull,
-	786433ull,
-	1572869ull,
-	3145739ull,
-	6291469ull,
-	12582917ull,
-	25165843ull,
-	50331653ull,
-	100663319ull,
-	201326611ull,
-	402653189ull,
-	805306457ull,
-	1610612741ull,
-	3221225473ull
-#if defined(PIRANHA_64BIT_MODE)
-	,
-	6442450939ull,
-	12884901893ull,
-	25769803799ull,
-	51539607551ull,
-	103079215111ull,
-	206158430209ull,
-	412316860441ull,
-	824633720831ull
-#endif
-} };
+const typename hash_set<T,Hash,Pred>::size_type hash_set<T,Hash,Pred>::m_n_nonzero_sizes;
 
 }
 
