@@ -571,6 +571,7 @@ class hash_set
 		hash_set &operator=(hash_set &&other) piranha_noexcept_spec(true)
 		{
 			if (likely(this != &other)) {
+				destroy_and_deallocate();
 				m_container = other.m_container;
 				m_log2_size = other.m_log2_size;
 				m_hasher = std::move(other.m_hasher);
