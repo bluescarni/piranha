@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE kronecker_array_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
@@ -30,6 +31,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -88,6 +90,7 @@ struct coding_tester
 		const auto emin1 = std::get<1u>(l[1u]), emax1 = std::get<2u>(l[1u]);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emin1}) == emin1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emax1}) == emax1);
+		std::mt19937 rng;
 		// Test with max/min vectors in various sizes.
 		for (std::uint_least8_t i = 1u; i < l.size(); ++i) {
 			const auto emin = std::get<1u>(l[i]), emax = std::get<2u>(l[i]);
@@ -101,6 +104,18 @@ struct coding_tester
 			ka_type::decode(v1,c);
 			BOOST_CHECK(v2 == v1);
 			v1 = std::vector<T>(i,0);
+			v2 = v1;
+			c = ka_type::encode(v1);
+			ka_type::decode(v1,c);
+			BOOST_CHECK(v2 == v1);
+			v1 = std::vector<T>(i,-1);
+			v2 = v1;
+			c = ka_type::encode(v1);
+			ka_type::decode(v1,c);
+			BOOST_CHECK(v2 == v1);
+			// Test with random values within the bounds.
+			std::uniform_int_distribution<T> dist(emin,emax);
+			std::generate(v1.begin(),v1.end(),[&dist,&rng](){return dist(rng);});
 			v2 = v1;
 			c = ka_type::encode(v1);
 			ka_type::decode(v1,c);
