@@ -1782,6 +1782,40 @@ class integer
 		{
 			return pow_impl(exp);
 		}
+		/// Compute next prime number.
+		/**
+		 * Compute the next prime number after \p this. The method uses the GMP function <tt>mpz_nextprime()</tt>.
+		 * 
+		 * @return next prime.
+		 * 
+		 * @throws std::invalid_argument if the sign of this is negative.
+		 */
+		integer nextprime() const
+		{
+			if (unlikely(sign() < 0)) {
+				piranha_throw(std::invalid_argument,"cannot compute the next prime of a negative number");
+			}
+			integer retval;
+			::mpz_nextprime(retval.m_value,m_value);
+			return retval;
+		}
+		/// Check if \p this is a prime number
+		/**
+		 * The method uses the GMP function <tt>mpz_probab_prime_p()</tt>.
+		 * 
+		 * @param[in] reps number of primality tests to be run.
+		 * 
+		 * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
+		 * 
+		 * @throws std::invalid_argument if \p reps is negative.
+		 */
+		int probab_prime_p(int reps = 8) const
+		{
+			if (unlikely(reps < 0)) {
+				piranha_throw(std::invalid_argument,"invalid number of primality tests");
+			}
+			return ::mpz_probab_prime_p(m_value,reps);
+		}
 		/// Integer square root.
 		/**
 		 * @return the truncated integer part of the square root of \p this.

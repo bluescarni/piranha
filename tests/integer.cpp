@@ -790,3 +790,16 @@ BOOST_AUTO_TEST_CASE(integer_sqrt_test)
 	n = 17;
 	BOOST_CHECK(n.sqrt() == 4);
 }
+
+BOOST_AUTO_TEST_CASE(integer_primes_test)
+{
+	piranha::integer n(2);
+	BOOST_CHECK(n.nextprime() == 3);
+	n = -1;
+	BOOST_CHECK_THROW(n.nextprime(),std::invalid_argument);
+	n = 5;
+	BOOST_CHECK(n.probab_prime_p() == 2);
+	n = 6;
+	BOOST_CHECK(n.probab_prime_p() == 0);
+	BOOST_CHECK_THROW(n.probab_prime_p(-1),std::invalid_argument);
+}
