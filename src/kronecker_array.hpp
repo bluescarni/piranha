@@ -40,9 +40,9 @@ namespace piranha
 /// Kronecker array.
 /**
  * This class offers static methods to encode (and decode) arrays of integral values as instances of \p SignedInteger type,
- * using a technique known as "Kronecker's trick".
+ * using a technique known as "Kronecker substitution".
  * 
- * Depending on the width and numerical limits of \p SignedInteger, the class will be able to operate on vectors of integers up to a certain
+ * Depending on the bit width and numerical limits of \p SignedInteger, the class will be able to operate on vectors of integers up to a certain
  * dimension and within certain bounds on the vector's components. Such limits can be queried with the get_limits() static method.
  * 
  * \section type_requirements Type requirements
@@ -68,62 +68,80 @@ class kronecker_array
 		/// Signed integer type used for encoding.
 		typedef SignedInteger int_type;
 	private:
-		// Unsigned counterpart of the signed integer type used for encoding.
-		typedef typename std::make_unsigned<int_type>::type uint_type;
 		static_assert(std::is_signed<int_type>::value && std::numeric_limits<int_type>::is_bounded,"This class can be used only with bounded signed integers.");
 		static_assert(std::numeric_limits<int_type>::digits <= boost::integer_traits<int_type>::const_max,"Incompatible numerical limits.");
 		static const int_type nbits = std::numeric_limits<int_type>::digits;
-		// This is a 6-tuple of int_type built as follows:
-		// 0. n (i.e., degree of the power-of-two),
-		// 1. -(2**(n-1)) (lower limit),
-		// 2. 2**(n-1) - 1 (upper limit),
-		// 3. h_min,
-		// 4. h_max,
-		// 5. h_max - h_min.
-		typedef std::tuple<int_type,int_type,int_type,int_type,int_type,int_type> limit_type;
+		// This is a 5-tuple of int_type built as follows:
+		// 0. lower limit of each component,
+		// 1. upper limit of each component,
+		// 2. h_min,
+		// 3. h_max,
+		// 4. h_max - h_min.
+		typedef std::tuple<int_type,int_type,int_type,int_type,int_type> limit_type;
 		// Vector of limits (actual size will depend on the width and limits of int_type, never greater than nbits).
-		typedef static_vector<limit_type,nbits> limits_type;
+		typedef static_vector<limit_type,unsigned(nbits)> limits_type;
 		static_assert(unsigned(nbits) <= boost::integer_traits<typename limits_type::size_type>::const_max,"Incompatible numerical limits.");
-		static const limits_type log2_limits;
+		// Static vector of limits built at startup.
+		static const limits_type m_limits;
 		// Determine limits for m-dimensional vectors.
 		static limit_type determine_limit(const int_type &m)
 		{
-			auto f_h_min = [&m](const int_type &n) {return ((integer(2).pow(n).pow(m) - 1) * -integer(2).pow(n - int_type(1))) / (integer(2).pow(n) - 1);};
-			auto f_h_max = [&m](const int_type &n) {return ((integer(2).pow(n).pow(m) - 1) * (integer(2).pow(n - int_type(1)) - 1)) / (integer(2).pow(n) - 1);};
-			int_type n = 1;
+			piranha_assert(m >= 1);
+			auto f_h_min = [&m](const integer &n) {
+				return (-n * (1 - (2 * n).pow(m))) / (1 - 2 * n);
+			};
+			auto f_h_max = [&m](const integer &n) {
+				return (n - 1) * (1 - (2 * n).pow(m)) / (1 - 2 * n);
+			};
+			integer log2(0), cur_n(1), prev_n(0);
 			while (true) {
-				integer h_min = f_h_min(n);
-				integer h_max = f_h_max(n);
+				integer h_min = f_h_min(cur_n);
+				integer h_max = f_h_max(cur_n);
 				integer diff = h_max - h_min;
+				piranha_assert(diff >= 0);
 				try {
 					static_cast<int_type>(h_min);
 					static_cast<int_type>(h_max);
-					static_cast<int_type>(diff);
+					// Here it is +1 because h_max - h_min must be strictly less than the maximum value
+					// of int_type - see paper.
+					static_cast<int_type>(diff + 1);
 				} catch (const std::overflow_error &) {
-					const int_type old_n = n - int_type(1);
-					return std::make_tuple(
-						old_n,
-						old_n ? static_cast<int_type>(-(integer(2).pow(old_n - int_type(1)))) : int_type(0),
-						old_n ? static_cast<int_type>(integer(2).pow(old_n - int_type(1)) - 1) : int_type(0),
-						old_n ? static_cast<int_type>(f_h_min(old_n)) : int_type(0),
-						old_n ? static_cast<int_type>(f_h_max(old_n)) : int_type(0),
-						old_n ? static_cast<int_type>(f_h_max(old_n) - f_h_min(old_n)) : int_type(0)
-					);
+					const int_type n_min = static_cast<int_type>(-prev_n), n_max = static_cast<int_type>(prev_n - 1);
+					if (n_min < n_max) {
+						// Condition for which m-variate representation is viable.
+						return std::make_tuple(
+							n_min,
+							n_max,
+							static_cast<int_type>(f_h_min(prev_n)),
+							static_cast<int_type>(f_h_max(prev_n)),
+							static_cast<int_type>(f_h_max(prev_n) - f_h_min(prev_n))
+						);
+					} else {
+						// Here it means m variables are too many, and we stopped at the first iteration
+						// of the cycle. Return tuple filled with zeroes.
+						return std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0));
+					}
 				}
-				piranha_assert(n < boost::integer_traits<int_type>::const_max);
-				++n;
+				++log2;
+				prev_n = cur_n;
+				// Take as cur_n the middle point between powers of 2.
+				cur_n = (integer(2).pow(log2) + integer(2).pow(log2 + 1)) / 2;
+				// If it is not definitely a prime, take the next prime.
+				if (cur_n.probab_prime_p() != 2) {
+					cur_n = cur_n.nextprime();
+				}
 			}
 		}
 		static limits_type determine_limits()
 		{
 			limits_type retval;
-			retval.push_back(std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0),int_type(0)));
+			retval.push_back(std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0)));
 			for (int_type i = 1; i < nbits; ++i) {
 				const auto tmp = determine_limit(i);
-				if (std::get<0u>(tmp)) {
-					retval.push_back(tmp);
-				} else {
+				if (std::get<0u>(tmp) == 0 && std::get<1u>(tmp) == 0) {
 					break;
+				} else {
+					retval.push_back(tmp);
 				}
 			}
 			return retval;
@@ -142,15 +160,13 @@ class kronecker_array
 		 * so that the object at index \f$i\f$ in the returned vector describes the limits for the codification of \f$i\f$-dimensional arrays
 		 * of integers.
 		 * 
-		 * Each element of the returned vector is an \p std::tuple of 6 \p SignedInteger instances built as follows:
+		 * Each element of the returned vector is an \p std::tuple of 5 \p SignedInteger instances built as follows:
 		 * 
-		 * - position 0: \f$n\f$, with \f$2^n\f$ being the width of the closed interval \f$I\f$ in which the components of the array to be
-		 *   encoded are allowed to exist,
-		 * - position 1: the lower bound of \f$I\f$, which is \f$-2^{n-1}\f$,
-		 * - position 2: the upper bound of \f$I\f$, which is \f$2^{n-1}-1\f$,
-		 * - position 3: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
-		 * - position 4: \f$h_\textnormal{max}\f$, the maximum value for the integer encoding the array,
-		 * - position 5: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
+		 * - position 0: the lower bound of the array's components,
+		 * - position 1: the upper bound of the array's components,
+		 * - position 2: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
+		 * - position 3: \f$h_\textnormal{max}\f$, the maximum value for the integer encoding the array,
+		 * - position 4: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
 		 * 
 		 * The tuple at index 0 of the returned vector is filled with zeroes. The size of the returned vector determines the maximum
 		 * dimension of the vectors to be encoded.
@@ -159,7 +175,7 @@ class kronecker_array
 		 */
 		static const limits_type &get_limits()
 		{
-			return log2_limits;
+			return m_limits;
 		}
 		/// Encode vector.
 		/**
@@ -170,7 +186,7 @@ class kronecker_array
 		 * 
 		 * @param[in] v vector to be encoded.
 		 * 
-		 * @return \p v encoded as a \p SignedInteger using Kronecker's trick.
+		 * @return \p v encoded as a \p SignedInteger using Kronecker substitution.
 		 * 
 		 * @throws std::invalid_argument if any of these conditions hold:
 		 * - the size of \p v is equal to or greater than the size of the output of get_limits(),
@@ -183,29 +199,27 @@ class kronecker_array
 		{
 			const auto size = v.size();
 			// NOTE: here the check is >= because indices in the limits vector correspond to the sizes of the vectors to be coded.
-			if (unlikely(size >= log2_limits.size())) {
+			if (unlikely(size >= m_limits.size())) {
 				piranha_throw(std::invalid_argument,"size of vector to be encoded is too large");
 			}
 			if (unlikely(!size)) {
 				return int_type(0);
 			}
 			// Cache quantities.
-			const auto &limit = log2_limits[size];
-			int_type shift = std::get<0u>(limit);
-			piranha_assert(shift > 0);
-			const int_type d_shift = shift, emin = std::get<1u>(limit), emax = std::get<2u>(limit), hmin = std::get<3u>(limit);
+			const auto &limit = m_limits[size];
+			const int_type emin = std::get<0u>(limit), emax = std::get<1u>(limit), hmin = std::get<2u>(limit), delta = (emax - emin) + 1;
+			int_type mult = delta;
 			// Check that the vector's components are compatible with the limits.
 			for (size_type i = 0u; i < size; ++i) {
 				if (unlikely(boost::numeric_cast<int_type>(v[i]) < emin || boost::numeric_cast<int_type>(v[i]) > emax)) {
 					piranha_throw(std::invalid_argument,"a component of the vector to be encoded is out of bounds");
 				}
 			}
-			// NOTE: here we are sure this is valid because this quantity is always positive and less than h_max - h_min, which is representable.
 			int_type retval = boost::numeric_cast<int_type>(v[0u]) - emin;
 			piranha_assert(retval >= 0);
-			for (decltype(v.size()) i = 1u; i < size; ++i, shift += d_shift) {
-				piranha_assert(shift < std::numeric_limits<int_type>::digits);
-				retval += (boost::numeric_cast<int_type>(v[i]) - emin) << shift;
+			piranha_assert(delta > 0);
+			for (decltype(v.size()) i = 1u; i < size; ++i, mult *= delta) {
+				retval += (boost::numeric_cast<int_type>(v[i]) - emin) * mult;
 			}
 			return retval + hmin;
 		}
@@ -234,7 +248,7 @@ class kronecker_array
 		{
 			typedef typename Vector::value_type v_type;
 			const auto m = retval.size();
-			if (unlikely(m >= log2_limits.size())) {
+			if (unlikely(m >= m_limits.size())) {
 				piranha_throw(std::invalid_argument,"size of vector to be decoded is too large");
 			}
 			if (unlikely(!m)) {
@@ -244,30 +258,26 @@ class kronecker_array
 				return;
 			}
 			// Cache values.
-			const auto &limit = log2_limits[m];
-			uint_type shift = static_cast<uint_type>(std::get<0u>(limit));
-			piranha_assert(shift > 0);
-			const uint_type d_shift = shift;
-			const int_type emin = std::get<1u>(limit), hmin = std::get<3u>(limit), hmax = std::get<4u>(limit);
+			const auto &limit = m_limits[m];
+			const int_type emin = std::get<0u>(limit), emax = std::get<1u>(limit), hmin = std::get<2u>(limit),
+				hmax = std::get<3u>(limit), delta = (emax - emin) + 1;
+			int_type mod_arg = delta;
 			if (unlikely(n < hmin || n > hmax)) {
 				piranha_throw(std::invalid_argument,"the integer to be decoded is out of bounds");
 			}
-			const uint_type code = static_cast<uint_type>(n - hmin);
+			const int_type code = n - hmin;
+			piranha_assert(code >= 0);
+			piranha_assert(delta > 0);
 			// Do the first value manually.
-			piranha_assert(shift < unsigned(std::numeric_limits<uint_type>::digits));
-			const auto mod_arg = (uint_type(1u) << shift) - uint_type(1u);
-			retval[0u] = boost::numeric_cast<v_type>(static_cast<int_type>(code & mod_arg) + emin);
-			for (size_type i = 1u; i < m; ++i, shift += d_shift) {
-				piranha_assert(shift <= boost::integer_traits<uint_type>::const_max - d_shift);
-				piranha_assert((shift + d_shift) < unsigned(std::numeric_limits<uint_type>::digits));
-				const auto mod_arg = (uint_type(1u) << (shift + d_shift)) - uint_type(1u);
-				retval[i] = boost::numeric_cast<v_type>(static_cast<int_type>((code & mod_arg) >> shift) + emin);
+			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) + emin);
+			for (size_type i = 1u; i < m; ++i, mod_arg *= delta) {
+				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * delta)) / mod_arg + emin);
 			}
 		}
 };
 
 template <typename SignedInteger>
-const typename kronecker_array<SignedInteger>::limits_type kronecker_array<SignedInteger>::log2_limits = kronecker_array<SignedInteger>::determine_limits();
+const typename kronecker_array<SignedInteger>::limits_type kronecker_array<SignedInteger>::m_limits = kronecker_array<SignedInteger>::determine_limits();
 
 }
 

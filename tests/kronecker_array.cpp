@@ -55,15 +55,14 @@ struct limits_tester
 		BOOST_CHECK(l.size() <= unsigned(std::numeric_limits<T>::digits));
 		BOOST_CHECK(l.size() > 1u);
 		BOOST_CHECK(l[0u] == v_type());
+		BOOST_CHECK(std::get<0u>(l[1u]) == std::get<2u>(l[1u]));
 		BOOST_CHECK(std::get<1u>(l[1u]) == std::get<3u>(l[1u]));
-		BOOST_CHECK(std::get<2u>(l[1u]) == std::get<4u>(l[1u]));
 		for (size_type i = 1u; i < l.size(); ++i) {
-			BOOST_CHECK(std::get<0u>(l[i]) > 0);
-			BOOST_CHECK(std::get<1u>(l[i]) < 0);
-			BOOST_CHECK(std::get<2u>(l[i]) >= 0);
-			BOOST_CHECK(std::get<3u>(l[i]) < 0);
+			BOOST_CHECK(std::get<0u>(l[i]) < 0);
+			BOOST_CHECK(std::get<1u>(l[i]) >= 0);
+			BOOST_CHECK(std::get<2u>(l[i]) < 0);
+			BOOST_CHECK(std::get<3u>(l[i]) >= 0);
 			BOOST_CHECK(std::get<4u>(l[i]) >= 0);
-			BOOST_CHECK(std::get<5u>(l[i]) >= 0);
 		}
 	}
 };
@@ -87,13 +86,13 @@ struct coding_tester
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-1}) == -1);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-10}) == -10);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{10}) == 10);
-		const auto emin1 = std::get<1u>(l[1u]), emax1 = std::get<2u>(l[1u]);
+		const auto emin1 = std::get<0u>(l[1u]), emax1 = std::get<1u>(l[1u]);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emin1}) == emin1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emax1}) == emax1);
 		std::mt19937 rng;
 		// Test with max/min vectors in various sizes.
 		for (std::uint_least8_t i = 1u; i < l.size(); ++i) {
-			const auto emin = std::get<1u>(l[i]), emax = std::get<2u>(l[i]);
+			const auto emin = std::get<0u>(l[i]), emax = std::get<1u>(l[i]);
 			std::vector<T> v1(i,emin), v2(v1);
 			auto c = ka_type::encode(v1);
 			ka_type::decode(v1,c);

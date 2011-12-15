@@ -210,7 +210,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			const auto &l = limits[s];
 			// Value is compatible if it is within the bounds for the given size.
-			return (m_value >= std::get<3u>(l) && m_value <= std::get<4u>(l));
+			return (m_value >= std::get<2u>(l) && m_value <= std::get<3u>(l));
 		}
 		/// Ignorability check.
 		/**

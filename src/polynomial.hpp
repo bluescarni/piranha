@@ -488,7 +488,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				min2 = (*min_max_it2.first)->m_key.get_int(), max2 = (*min_max_it2.second)->m_key.get_int();
 			const integer min_out = integer(min1) + integer(min2), max_out = integer(max1) + integer(max2);
 			// Bounds of the Kronecker representation.
-			const auto m = std::get<3u>(limits), M = std::get<4u>(limits);
+			const auto m = std::get<2u>(limits), M = std::get<3u>(limits);
 			// NOTE: the check on integer overflow is implicit in the fact that m and M do not overflow.
 			if (unlikely(min_out < m || max_out > M)) {
 				piranha_throw(std::overflow_error,"overflow in the degree of the monomial");
