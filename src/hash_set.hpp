@@ -668,7 +668,8 @@ class hash_set
 		}
 		/// Index of destination bucket.
 		/**
-		 * Index to which \p k would belong, were it to be inserted into the table.
+		 * Index to which \p k would belong, were it to be inserted into the table. The index of the
+		 * destination bucket is the hash value reduced modulo the bucket count.
 		 * 
 		 * @param[in] k input argument.
 		 * 
