@@ -71,7 +71,8 @@ class static_vector
 		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
 		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
 		// This check is against overflows when using memcpy.
-		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),"The size type for static_vector might overflow.");
+		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),
+			"The size type for static_vector might overflow.");
 		typedef typename std::aligned_storage<sizeof(T[MaxSize]),alignof(T[MaxSize])>::type storage_type;
 	public:
 		/// Maximum size.
@@ -429,6 +430,9 @@ class static_vector
 		storage_type	m_storage;
 		size_type	m_size;
 };
+
+template <typename T, std::uint_least8_t MaxSize>
+const typename static_vector<T,MaxSize>::size_type static_vector<T,MaxSize>::max_size;
 
 }
 
