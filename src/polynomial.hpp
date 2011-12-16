@@ -485,14 +485,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				[](term_type1 const *ptr1, term_type1 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
 			const auto min_max_it2 = boost::minmax_element(this->m_v2.begin(),this->m_v2.end(),
 				[](term_type2 const *ptr1, term_type2 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
-			const auto min1 = (*min_max_it1.first)->m_key.get_int(), max1 = (*min_max_it1.second)->m_key.get_int(),
-				min2 = (*min_max_it2.first)->m_key.get_int(), max2 = (*min_max_it2.second)->m_key.get_int();
-			const integer min_out = integer(min1) + integer(min2), max_out = integer(max1) + integer(max2);
-			// Bounds of the Kronecker representation.
-			const auto m = std::get<2u>(limits), M = std::get<3u>(limits);
-			// NOTE: the check on integer overflow is implicit in the fact that m and M do not overflow.
-			if (unlikely(min_out < m || max_out > M)) {
-				piranha_throw(std::overflow_error,"overflow in the degree of the monomial");
+			// Bounds of the Kronecker representation for each component.
+			const auto m = std::get<0u>(limits), M = std::get<1u>(limits);
+			// Decode the min-max values from the two series.
+			const auto min_vec1 = (*min_max_it1.first)->m_key.unpack(s1.m_symbol_set), max_vec1 = (*min_max_it1.second)->m_key.unpack(s1.m_symbol_set),
+				min_vec2 = (*min_max_it2.first)->m_key.unpack(s1.m_symbol_set), max_vec2 = (*min_max_it2.second)->m_key.unpack(s1.m_symbol_set);
+			// Determine the ranges of the components of the monomials in retval.
+			integer tmp_min(0), tmp_max(0);
+			for (decltype(min_vec1.size()) i = 0u; i < min_vec1.size(); ++i) {
+				tmp_min = min_vec1[i];
+				tmp_min += min_vec2[i];
+				tmp_max = max_vec1[i];
+				tmp_max += max_vec2[i];
+				if (unlikely(tmp_min < m || tmp_max > M)) {
+					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
+				}
 			}
 		}
 		/// Perform multiplication.

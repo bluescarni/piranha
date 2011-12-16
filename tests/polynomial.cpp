@@ -467,16 +467,17 @@ struct kronecker_multiplication_tester
 		typedef polynomial<Cf,kronecker_monomial<std::int_least8_t>> p_type1;
 		// Test for empty series.
 		BOOST_CHECK((p_type1{} * p_type1{}).empty());
-		p_type1 tmp("x"), x(tmp);
-		BOOST_CHECK((p_type1{} * x).empty());
-		BOOST_CHECK((x * p_type1{}).empty());
+		p_type1 tmp = p_type1("x") * p_type1("y"), xy(tmp);
+		BOOST_CHECK((p_type1{} * xy).empty());
+		BOOST_CHECK((xy * p_type1{}).empty());
 		// Check for correct throwing on overflow.
-		for (std::int_least8_t i = 2; tmp.degree() < std::get<4u>(ka1::get_limits()[1u]); ++i) {
-			tmp *= x;
-			BOOST_CHECK_EQUAL(i,tmp.degree());
+		for (std::int_least8_t i = 2; tmp.degree({"x"}) < std::get<1u>(ka1::get_limits()[2u]); ++i) {
+			tmp *= p_type1("x");
+			BOOST_CHECK_EQUAL(i,tmp.degree({"x"}));
+			BOOST_CHECK_EQUAL(1,tmp.degree({"y"}));
 		}
-		BOOST_CHECK_THROW(tmp * x,std::overflow_error);
-		BOOST_CHECK_THROW(tmp * tmp,std::overflow_error);
+		BOOST_CHECK_THROW(tmp * xy,std::overflow_error);
+		BOOST_CHECK_THROW(xy * tmp,std::overflow_error);
 		typedef polynomial<Cf,kronecker_monomial<std::int_least32_t>> p_type2;
 		p_type2 y("y"), z("z"), t("t"), u("u");
 		auto f = 1 + p_type2("x") + y + z + t;
