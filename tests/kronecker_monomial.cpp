@@ -34,6 +34,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -342,12 +343,20 @@ struct unpack_tester
 		symbol_set vs1;
 		k_type k1({0});
 		auto t1 = k1.unpack(vs1);
+		typedef decltype(t1) s_vector_type;
 		BOOST_CHECK(!t1.size());
 		vs1.add(symbol("a"));
 		k1.set_int(-1);
 		auto t2 = k1.unpack(vs1);
 		BOOST_CHECK(t2.size());
 		BOOST_CHECK(t2[0u] == -1);
+		// Check for overflow condition.
+		std::string tmp = "";
+		for (integer i(0u); i < integer(s_vector_type::max_size) + 1; ++i) {
+			tmp += "b";
+			vs1.add(symbol(tmp));
+		}
+		BOOST_CHECK_THROW(k1.unpack(vs1),std::invalid_argument);
 	}
 };
 

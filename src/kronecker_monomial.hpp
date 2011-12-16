@@ -433,10 +433,11 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		v_type unpack(const symbol_set &args) const
 		{
-			v_type retval(args.size(),0);
-			if (unlikely(retval.size() != args.size())) {
-				piranha_throw(std::invalid_argument,"error creating the unpacked vector");
+			if (unlikely(args.size() > v_type::max_size)) {
+				piranha_throw(std::invalid_argument,"input set of arguments is too large for unpacking");
 			}
+			v_type retval(args.size(),0);
+			piranha_assert(args.size() == retval.size());
 			ka::decode(retval,m_value);
 			return retval;
 		}
