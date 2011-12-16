@@ -371,6 +371,7 @@ class hash_set
 					}
 				} catch (...) {
 					// Unwind the construction and deallocate, before re-throwing.
+					// NOTE: this should never happen, as the default constructor of list is non-throwing.
 					for (size_type j = 0u; j < i; ++j) {
 						m_allocator.destroy(&new_ptr[j]);
 					}

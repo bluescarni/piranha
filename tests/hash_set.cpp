@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <boost/integer_traits.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/lexical_cast.hpp>
@@ -31,8 +32,12 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <new>
+#include <random>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 
 #include "../src/config.hpp"
 #include "../src/exceptions.hpp"
@@ -184,6 +189,49 @@ struct initializer_list_tester
 	}
 };
 
+std::mt19937 rng;
+std::uniform_int_distribution<int> dist(0,9);
+
+// Struct that randomly fails on copy.
+struct random_failure
+{
+	random_failure()
+	{
+		throw;
+	}
+	random_failure(int n):m_str(boost::lexical_cast<std::string>(n)) {}
+	random_failure(const random_failure &rf):m_str(rf.m_str)
+	{
+		if (!dist(rng)) {
+			throw std::runtime_error("fail!");
+		}
+	}
+	random_failure(random_failure &&rf):m_str(std::move(rf.m_str)) {}
+	std::size_t hash() const
+	{
+		return boost::lexical_cast<int>(m_str);
+	}
+	bool operator==(const random_failure &rf) const
+	{
+		return m_str == rf.m_str;
+	}
+	std::string m_str;
+};
+
+namespace std
+{
+template <>
+struct hash<random_failure>
+{
+	typedef size_t result_type;
+	typedef random_failure argument_type;
+	result_type operator()(const random_failure &rf) const
+	{
+		return rf.hash();
+	}
+};
+}
+
 BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 {
 	// Def ctor.
@@ -227,6 +275,17 @@ BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 	boost::mpl::for_each<key_types>(move_assignment_tester());
 	// Initializer list.
 	boost::mpl::for_each<key_types>(initializer_list_tester());
+	// Check that requesting too many buckets throws.
+	BOOST_CHECK_THROW(ht6 = hash_set<custom_string>(boost::integer_traits<std::size_t>::const_max),std::bad_alloc);
+	// Check unwind on throw.
+	// NOTE: prepare table with large number of buckets, so we are sure the first copy of random_failure will be performed
+	// in the assignment below.
+	hash_set<random_failure> ht7(10000);
+	for (int i = 0; i < 1000; ++i) {
+		ht7.insert(random_failure(i));
+	}
+	hash_set<random_failure> ht8;
+	BOOST_CHECK_THROW(ht8 = ht7,std::runtime_error);
 }
 
 struct iterator_tester
@@ -283,15 +342,12 @@ struct insert_tester
 	}
 };
 
+// NOTE: this test had a meaning in a previous implementation of hash_set, now it is jut a simple
+// insertion test.
 BOOST_AUTO_TEST_CASE(hash_set_insert_test)
 {
 	// Check insert when the resize operation fails on the first try.
-	const std::size_t critical_size =
-#if defined(PIRANHA_64BIT_MODE)
-		193;
-#else
-		97;
-#endif
+	const std::size_t critical_size = 193;
 	struct custom_hash
 	{
 		std::size_t operator()(std::size_t i) const
