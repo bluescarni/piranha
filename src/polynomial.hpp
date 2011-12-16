@@ -86,9 +86,6 @@ struct polynomial_tag {};
  * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo here we could optimize the comparisons with the state snapshot by creating another snapshot in case the degree_type is not integer ->
- * cast the degree limit to degree_type for faster comparisons with builtin C++ types.
  */
 template <typename Cf, typename Expo>
 class polynomial:
@@ -208,6 +205,10 @@ class polynomial:
  * \section type_requirements Type requirements
  * 
  * This specialisation is activated for instances of piranha::polynomial.
+ * 
+ * \todo here we could optimize the comparisons with the state snapshot by creating another snapshot in case the degree_type is not integer ->
+ * cast the degree limit to degree_type for faster comparisons with builtin C++ types.
+ * \todo also, hash_set on the degrees of the terms of the input series for optimization.
  */
 template <typename Cf, typename Expo>
 class truncator<polynomial<Cf,Expo>>: public power_series_truncator

@@ -60,7 +60,8 @@
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
  * \todo think about the startup report, it might end up being too noisy.
  * \todo probably we should make overflow-safe all operations on keys that currently are not: multiplication, computation of degree (including in truncators), etc.
- * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication).
+ * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication) -> this probably becomes null in case the caching of degree
+ * values in the truncators turns out to work ok.
  * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
  * only if T + U produces T.
  * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,
