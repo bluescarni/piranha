@@ -181,6 +181,53 @@ class series_multiplier
 			}
 		}
 	protected:
+		/// Determine the number of threads to use in the multiplication.
+		/**
+		 * The number of threads that will be opened will never exceed \p n, the output of piranha::settings::get_n_threads(),
+		 * and it is determined as follows:
+		 * 
+		 * - if the method is not called from the main thread, then 1 wil be returned;
+		 * - if the number of term-by-term multiplications that would be performed per thread using \p n
+		 *   threads is greater than an implementation-defined minimum, then \p n is returned;
+		 * - otherwise, the number of threads is decreased as necessary to meet the minimum thread workload.
+		 * 
+		 * The minimum threshold is determined by comparing the typical cost of thread creation and join
+		 * with the cost of a single term-by-term multiplication in the best-case scenario. Currently, the
+		 * value of the threshold is 100000.
+		 * 
+		 * @return the number of threads to use in the multiplication.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::runtime_info::get_main_thread_id(),
+		 * - piranha::this_thread::get_id(),
+		 * - piranha::settings::get_n_threads(),
+		 * - the cast operator of piranha::integer to integral types.
+		 */
+		unsigned determine_n_threads() const
+		{
+			// Use just one thread if we are not in the main thread.
+			if (runtime_info::get_main_thread_id() != this_thread::get_id()) {
+				return 1u;
+			}
+			const unsigned candidate = settings::get_n_threads();
+			piranha_assert(candidate);
+			// Avoid further calculations for just 1 thread.
+			if (candidate == 1u) {
+				return 1u;
+			}
+			// Minimum amount of term-by-term multiplications.
+			// NOTE: this corresponds to roughly a 10% overhead of thread creation/join
+			// in the fastest multiplication scenario (polynomials with double-precision
+			// coefficients suitable for Kronecker multiplication in lookup array - e.g.,
+			// Fateman benchmarks) on an Intel Sandy Bridge from 2011.
+			const auto min_work = 100000u;
+			const auto work_size = integer(m_s1.size()) * m_s2.size();
+			if (work_size / candidate >= min_work) {
+				return candidate;
+			} else {
+				return static_cast<unsigned>(std::max<integer>(integer(1),work_size / min_work));
+			}
+		}
 		/// Low-level implementation of series multiplication.
 		/**
 		 * The multiplication algorithm proceeds as follows:
@@ -207,7 +254,6 @@ class series_multiplier
 		 * @throws unspecified any exception thrown by:
 		 * - memory allocation errors in standard containers,
 		 * - \p boost::numeric_cast (in case of out-of-range convertions from one integral type to another),
-		 * - the cast operator of piranha::integer to integral types,
 		 * - the public methods of \p Functor,
 		 * - errors in threading primitives,
 		 * - piranha::series::insert().
@@ -224,26 +270,15 @@ class series_multiplier
 			const auto size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
-			auto n_threads = boost::numeric_cast<size_type>(settings::get_n_threads());
-			piranha_assert(n_threads >= 1u);
-			// Make sure that each thread has a minimum amount of work to do, otherwise reduce thread number.
-			if (n_threads != 1u) {
-				// NOTE: hard-coded minimum work of 100000 term-by-terms per thread.
-				const auto min_work = 100000u;
-				const auto work_size = integer(size1) * size2;
-				n_threads = (work_size / n_threads >= min_work) ? n_threads :
-					static_cast<size_type>(std::max<integer>(integer(1),work_size / min_work));
-			}
-			// Check we did not actually increase the number of threads...
-			piranha_assert(n_threads <= settings::get_n_threads());
-			// Final check on n_threads is that its size is not greater than the size of the first series,
+			auto n_threads = boost::numeric_cast<size_type>(determine_n_threads());
+			piranha_assert(n_threads);
+			// An additional check on n_threads is that its size is not greater than the size of the first series,
 			// as we are using the first operand to split up the work.
 			if (n_threads > size1) {
 				n_threads = size1;
 			}
-			// Go single-thread if heurisitcs says so or if we are already in a different thread from the main one.
-			// NOTE: the check on the thread id might go above, to avoid allocating memory when using integers.
-			if (likely(n_threads == 1u || runtime_info::get_main_thread_id() != this_thread::get_id())) {
+			piranha_assert(n_threads >= 1u);
+			if (likely(n_threads == 1u)) {
 				return_type retval;
 				retval.m_symbol_set = m_s1.m_symbol_set;
 				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval);
