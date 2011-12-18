@@ -33,7 +33,7 @@
  * - introduce thread class that inherits from boost/std thread, and make it detach() on destruction -> eventually include in the
  *   dtor also the MPFR cleanup functions for threading;
  * - rework the parallel algorithms to use futures, promises and packaged tasks - it seems that by employing these we can
- *   avoid thread barriers, thread groups, multi-thrad exception handling, etc.
+ *   avoid thread barriers, thread groups, multi-thread exception handling, etc.
  */
 
 #include "config.hpp"
