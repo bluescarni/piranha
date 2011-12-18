@@ -515,7 +515,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 */
 		typename base::return_type operator()() const
 		{
-			truncator_type trunc(this->m_s1,this->m_s2);
+			truncator_type trunc(*this->m_s1,*this->m_s2);
 			if (trunc.is_active()) {
 				return execute<functor<true>>(trunc);
 			} else {
@@ -527,7 +527,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		typename base::return_type execute(const truncator_type &trunc) const
 		{
 			// Do not do anything if one of the two series is empty.
-			if (unlikely(this->m_s1.empty() || this->m_s2.empty())) {
+			if (unlikely(this->m_s1->empty() || this->m_s2->empty())) {
 				return return_type{};
 			}
 			// This check is done here to avoid controlling the number of elements of the output series
@@ -538,7 +538,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			// First, let's get the estimation on the size of the final series.
 			return_type retval;
-			retval.m_symbol_set = this->m_s1.m_symbol_set;
+			retval.m_symbol_set = this->m_s1->m_symbol_set;
 			auto estimate = base::estimate_final_series_size(Functor(&this->m_v1[0u],this->m_v1.size(),
 				&this->m_v2[0u],this->m_v2.size(),trunc,retval));
 			// Correct the unlikely case of zero estimate.

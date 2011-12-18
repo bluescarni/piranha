@@ -134,21 +134,21 @@ class series_multiplier
 		 * @throws std::invalid_argument if the symbol sets of \p s1 and \p s2 differ.
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
 		 */
-		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(s1),m_s2(s2)
+		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(&s1),m_s2(&s2)
 		{
 			if (unlikely(s1.m_symbol_set != s2.m_symbol_set)) {
 				piranha_throw(std::invalid_argument,"incompatible arguments sets");
 			}
-			if (unlikely(m_s1.empty() || m_s2.empty())) {
+			if (unlikely(m_s1->empty() || m_s2->empty())) {
 				return;
 			}
-			m_v1.reserve(m_s1.size());
-			m_v2.reserve(m_s2.size());
+			m_v1.reserve(m_s1->size());
+			m_v2.reserve(m_s2->size());
 			// Fill in the vectors of pointers.
 			std::back_insert_iterator<decltype(m_v1)> bii1(m_v1);
-			std::transform(m_s1.m_container.begin(),m_s1.m_container.end(),bii1,[](const term_type1 &t) {return &t;});
+			std::transform(m_s1->m_container.begin(),m_s1->m_container.end(),bii1,[](const term_type1 &t) {return &t;});
 			std::back_insert_iterator<decltype(m_v2)> bii2(m_v2);
-			std::transform(m_s2.m_container.begin(),m_s2.m_container.end(),bii2,[](const term_type2 &t) {return &t;});
+			std::transform(m_s2->m_container.begin(),m_s2->m_container.end(),bii2,[](const term_type2 &t) {return &t;});
 		}
 		/// Deleted copy constructor.
 		series_multiplier(const series_multiplier &) = delete;
@@ -173,7 +173,7 @@ class series_multiplier
 		 */
 		return_type operator()() const
 		{
-			const auto t = truncator_type(m_s1,m_s2);
+			const auto t = truncator_type(*m_s1,*m_s2);
 			if (t.is_active()) {
 				return execute<default_functor<true>>(t);
 			} else {
@@ -221,7 +221,7 @@ class series_multiplier
 			// coefficients suitable for Kronecker multiplication in lookup array - e.g.,
 			// Fateman benchmarks) on an Intel Sandy Bridge from 2011.
 			const auto min_work = 100000u;
-			const auto work_size = integer(m_s1.size()) * m_s2.size();
+			const auto work_size = integer(m_s1->size()) * m_s2->size();
 			if (work_size / candidate >= min_work) {
 				return candidate;
 			} else {
@@ -262,7 +262,7 @@ class series_multiplier
 		return_type execute(const truncator_type &trunc) const
 		{
 			// Do not do anything if one of the two series is empty.
-			if (unlikely(m_s1.empty() || m_s2.empty())) {
+			if (unlikely(m_s1->empty() || m_s2->empty())) {
 				return return_type{};
 			}
 			// This is the size type that will be used throughout the calculations.
@@ -280,7 +280,7 @@ class series_multiplier
 			piranha_assert(n_threads >= 1u);
 			if (likely(n_threads == 1u)) {
 				return_type retval;
-				retval.m_symbol_set = m_s1.m_symbol_set;
+				retval.m_symbol_set = m_s1->m_symbol_set;
 				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval);
 				const auto tmp = rehasher(f);
 				blocked_multiplication(f);
@@ -305,7 +305,7 @@ class series_multiplier
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					retval_list.push_back(return_type{});
-					retval_list.back().m_symbol_set = m_s1.m_symbol_set;
+					retval_list.back().m_symbol_set = m_s1->m_symbol_set;
 					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,trunc,retval_list.back()));
 				}
 				thread_group tg;
@@ -339,7 +339,7 @@ class series_multiplier
 				}
 // std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
-				retval.m_symbol_set = m_s1.m_symbol_set;
+				retval.m_symbol_set = m_s1->m_symbol_set;
 				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval));
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
@@ -1026,10 +1026,10 @@ class series_multiplier
 			return f.filter(std::get<N>(t));
 		}
 	protected:
-		/// Const reference to the first series operand.
-		const Series1				&m_s1;
-		/// Const reference to the second series operand.
-		const Series2				&m_s2;
+		/// Const pointer to the first series operand.
+		Series1 const				*m_s1;
+		/// Const pointer to the second series operand.
+		Series2 const				*m_s2;
 		/// Vector of const pointers to the terms in the first series.
 		mutable std::vector<term_type1 const *>	m_v1;
 		/// Vector of const pointers to the terms in the second series.
