@@ -204,6 +204,9 @@ struct multiplication_tester
 		auto g = f + 1;
 		auto retval = f * g;
 		BOOST_CHECK_EQUAL(retval.size(),10626u);
+		// Test swapping.
+		BOOST_CHECK(x * (1 + x) == (1 + x) * x);
+		BOOST_CHECK(T(1) * retval == retval);
 		// Dense case, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);

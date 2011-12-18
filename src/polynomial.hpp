@@ -471,14 +471,14 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 */
 		explicit series_multiplier(const Series1 &s1, const Series2 &s2):base(s1,s2)
 		{
-			if (unlikely(s1.empty() || s2.empty())) {
+			if (unlikely(this->m_s1->empty() || this->m_s2->empty())) {
 				return;
 			}
 			// NOTE: here we are sure about this since the symbol set in a series should never
 			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
 			// would kick in.
-			piranha_assert(s1.m_symbol_set.size() < ka::get_limits().size());
-			const auto &limits = ka::get_limits()[s1.m_symbol_set.size()];
+			piranha_assert(this->m_s1->m_symbol_set.size() < ka::get_limits().size());
+			const auto &limits = ka::get_limits()[this->m_s1->m_symbol_set.size()];
 			// Check that the multiplication will not overflow the bounds of the Kronecker
 			// representation.
 			const auto min_max_it1 = boost::minmax_element(this->m_v1.begin(),this->m_v1.end(),
@@ -488,8 +488,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Bounds of the Kronecker representation for each component.
 			const auto m = std::get<0u>(limits), M = std::get<1u>(limits);
 			// Decode the min-max values from the two series.
-			const auto min_vec1 = (*min_max_it1.first)->m_key.unpack(s1.m_symbol_set), max_vec1 = (*min_max_it1.second)->m_key.unpack(s1.m_symbol_set),
-				min_vec2 = (*min_max_it2.first)->m_key.unpack(s1.m_symbol_set), max_vec2 = (*min_max_it2.second)->m_key.unpack(s1.m_symbol_set);
+			const auto min_vec1 = (*min_max_it1.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec1 = (*min_max_it1.second)->m_key.unpack(this->m_s1->m_symbol_set),
+				min_vec2 = (*min_max_it2.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec2 = (*min_max_it2.second)->m_key.unpack(this->m_s1->m_symbol_set);
 			// Determine the ranges of the components of the monomials in retval.
 			integer tmp_min(0), tmp_max(0);
 			for (decltype(min_vec1.size()) i = 0u; i < min_vec1.size(); ++i) {

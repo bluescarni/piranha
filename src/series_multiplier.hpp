@@ -90,7 +90,6 @@ namespace piranha
  * means via template specialisation to customise the behaviour for different types of coefficients -> probably the easiest thing is to benchmark
  * the thread overhead in the simplest case (e.g., polynomial with double precision cf and univariate) and use that as heuristic. Might not be optimal
  * but should avoid excessive overhead practically always (which probably is what we want).
- * \todo swap series if they are the same type and if first one is smaller than second -> more opportunity for subdivision in mt mode
  * \todo try to abstract exception handling in mt-mode into a generic functor that re-throws exceptions transported from threads -> this goes with the async/future rework.
  * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
  * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
@@ -125,6 +124,18 @@ class series_multiplier
 			"Invalid return_type.");
 		// Alias for truncator traits.
 		typedef truncator_traits<Series1,Series2> ttraits;
+		// Swap operands if series types are the same and first series is shorter than the second,
+		// as the first series is used to split work among threads in mt mode.
+		template <typename T>
+		void swap_operands(const T &s1, const T &s2)
+		{
+			if (s1.size() < s2.size()) {
+				std::swap(m_s1,m_s2);
+			}
+		}
+		template <typename T, typename U>
+		void swap_operands(const T &, const U &)
+		{}
 	public:
 		/// Constructor.
 		/**
@@ -136,7 +147,8 @@ class series_multiplier
 		 */
 		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(&s1),m_s2(&s2)
 		{
-			if (unlikely(s1.m_symbol_set != s2.m_symbol_set)) {
+			swap_operands(s1,s2);
+			if (unlikely(m_s1->m_symbol_set != m_s2->m_symbol_set)) {
 				piranha_throw(std::invalid_argument,"incompatible arguments sets");
 			}
 			if (unlikely(m_s1->empty() || m_s2->empty())) {
