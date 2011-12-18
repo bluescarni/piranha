@@ -22,6 +22,7 @@
 #define PIRANHA_SERIES_HPP
 
 #include <algorithm>
+#include <boost/any.hpp>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
@@ -51,6 +52,7 @@
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
 #include "symbol_set.hpp"
+#include "tracing.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
 
@@ -524,7 +526,26 @@ class series: series_binary_operators, detail::series_tag
 		series multiply_by_series(const T &series) const
 		{
 			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
-			return sm();
+			auto retval = sm();
+			tracing::trace("number_of_series_multiplications",[&retval](boost::any &x) -> void {
+				if (unlikely(x.empty())) {
+					x = 0ull;
+				}
+				auto ptr = boost::any_cast<unsigned long long>(&x);
+				if (likely((bool)ptr && retval.size())) {
+					++*ptr;
+				}
+			});
+			tracing::trace("accumulated_sparsity",[this,&series,&retval](boost::any &x) -> void {
+				if (unlikely(x.empty())) {
+					x = 0.;
+				}
+				auto ptr = boost::any_cast<double>(&x);
+				if (likely((bool)ptr && retval.size())) {
+					*ptr += (static_cast<double>(this->size()) * series.size()) / retval.size();
+				}
+			});
+			return retval;
 		}
 		template <typename T>
 		void dispatch_multiply(T &&other, typename std::enable_if<
