@@ -60,6 +60,8 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
+ * \todo consider generating full vectors of different primes for encoding if issues of commensurability
+ * with hash set arise.
  */
 template <typename SignedInteger>
 class kronecker_array
@@ -87,17 +89,14 @@ class kronecker_array
 		static limit_type determine_limit(const int_type &m)
 		{
 			piranha_assert(m >= 1);
-			auto f_h_min = [&m](const integer &n) {
-				return (-n * (1 - (2 * n).pow(m))) / (1 - 2 * n);
+			auto f_h_min = [&m](const integer &delta) {
+				return (1 - delta) / 2 * ((1 - delta.pow(m)) / (1 - delta));
 			};
-			auto f_h_max = [&m](const integer &n) {
-				return (n - 1) * (1 - (2 * n).pow(m)) / (1 - 2 * n);
-			};
-			integer log2(0), cur_n(1), prev_n(0);
+			integer cur_delta(3), prev_delta(1);
 			while (true) {
-				integer h_min = f_h_min(cur_n);
-				integer h_max = f_h_max(cur_n);
-				integer diff = h_max - h_min;
+				integer h_min = f_h_min(cur_delta);
+				integer h_max = -h_min;
+				integer diff = 2 * h_max;
 				piranha_assert(diff >= 0);
 				try {
 					static_cast<int_type>(h_min);
@@ -106,15 +105,16 @@ class kronecker_array
 					// of int_type - see paper.
 					static_cast<int_type>(diff + 1);
 				} catch (const std::overflow_error &) {
-					const int_type n_min = static_cast<int_type>(-prev_n), n_max = static_cast<int_type>(prev_n - 1);
+					const int_type n_min = static_cast<int_type>((1 - prev_delta) / 2), n_max = static_cast<int_type>((prev_delta - 1) / 2);
 					if (n_min < n_max) {
-						// Condition for which m-variate representation is viable.
+						// Condition for which m-variate representation is viable, implies prev_delta > 1.
+						const auto h_min = f_h_min(prev_delta), h_max = -h_min;
 						return std::make_tuple(
 							n_min,
 							n_max,
-							static_cast<int_type>(f_h_min(prev_n)),
-							static_cast<int_type>(f_h_max(prev_n)),
-							static_cast<int_type>(f_h_max(prev_n) - f_h_min(prev_n))
+							static_cast<int_type>(h_min),
+							static_cast<int_type>(h_max),
+							static_cast<int_type>(h_max - h_min)
 						);
 					} else {
 						// Here it means m variables are too many, and we stopped at the first iteration
@@ -122,13 +122,11 @@ class kronecker_array
 						return std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0));
 					}
 				}
-				++log2;
-				prev_n = cur_n;
-				// Take as cur_n the middle point between powers of 2.
-				cur_n = (integer(2).pow(log2) + integer(2).pow(log2 + 1)) / 2;
-				// If it is not definitely a prime, take the next prime.
-				if (cur_n.probab_prime_p() != 2) {
-					cur_n = cur_n.nextprime();
+				prev_delta = cur_delta;
+				cur_delta *= 2;
+				// If it is not a prime, take the next prime.
+				while (!cur_delta.probab_prime_p()) {
+					cur_delta = cur_delta.nextprime();
 				}
 			}
 		}
