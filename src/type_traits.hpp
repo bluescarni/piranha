@@ -101,7 +101,7 @@ struct is_nothrow_move_constructible
 // TODO: this will have to be removed once GCC support improves. It is used in kronecker_array
 // when dealing with vectors of tuples representing the limits.
 template <typename T>
-struct is_nothrow_move_constructible<std::tuple<T,T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
+struct is_nothrow_move_constructible<std::tuple<T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
 {
 	static const bool value = true;
 };
@@ -124,7 +124,7 @@ struct is_nothrow_move_assignable
 
 // TODO: same as is_nothrow_move_constructible above.
 template <typename T>
-struct is_nothrow_move_assignable<std::tuple<T,T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
+struct is_nothrow_move_assignable<std::tuple<T,T,T,T,T>,typename std::enable_if<std::is_integral<T>::value>::type>
 {
 	static const bool value = true;
 };
