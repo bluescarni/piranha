@@ -23,14 +23,11 @@
 #define BOOST_TEST_MODULE kronecker_array_test
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
-#include <limits>
 #include <random>
 #include <stdexcept>
 #include <tuple>
@@ -52,17 +49,17 @@ struct limits_tester
 		typedef decltype(l) l_type;
 		typedef typename l_type::value_type v_type;
 		typedef typename l_type::size_type size_type;
-		BOOST_CHECK(l.size() <= unsigned(std::numeric_limits<T>::digits));
 		BOOST_CHECK(l.size() > 1u);
 		BOOST_CHECK(l[0u] == v_type());
-		BOOST_CHECK(std::get<0u>(l[1u]) == std::get<2u>(l[1u]));
-		BOOST_CHECK(std::get<1u>(l[1u]) == std::get<3u>(l[1u]));
+		BOOST_CHECK(std::get<0u>(l[1u])[0u] == -std::get<1u>(l[1u]));
+		BOOST_CHECK(std::get<0u>(l[1u])[0u] == std::get<2u>(l[1u]));
 		for (size_type i = 1u; i < l.size(); ++i) {
-			BOOST_CHECK(std::get<0u>(l[i]) < 0);
-			BOOST_CHECK(std::get<1u>(l[i]) >= 0);
-			BOOST_CHECK(std::get<2u>(l[i]) < 0);
-			BOOST_CHECK(std::get<3u>(l[i]) >= 0);
-			BOOST_CHECK(std::get<4u>(l[i]) >= 0);
+			for (size_type j = 0u; j < std::get<0u>(l[i]).size(); ++j) {
+				BOOST_CHECK(std::get<0u>(l[i])[j] > 0);
+			}
+			BOOST_CHECK(std::get<1u>(l[i]) < 0);
+			BOOST_CHECK(std::get<2u>(l[i]) > 0);
+			BOOST_CHECK(std::get<3u>(l[i]) > 0);
 		}
 	}
 };
@@ -79,31 +76,34 @@ struct coding_tester
 	void operator()(const T &)
 	{
 		typedef kronecker_array<T> ka_type;
-		auto l = ka_type::get_limits();
+		auto &l = ka_type::get_limits();
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{}) == 0);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{0}) == 0);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{1}) == 1);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-1}) == -1);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-10}) == -10);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{10}) == 10);
-		const auto emin1 = std::get<0u>(l[1u]), emax1 = std::get<1u>(l[1u]);
+		const T emax1 = std::get<0u>(l[1u])[0u], emin1 = -emax1;
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emin1}) == emin1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emax1}) == emax1);
 		std::mt19937 rng;
 		// Test with max/min vectors in various sizes.
 		for (std::uint_least8_t i = 1u; i < l.size(); ++i) {
-			const auto emin = std::get<0u>(l[i]), emax = std::get<1u>(l[i]);
-			std::vector<T> v1(i,emin), v2(v1);
-			auto c = ka_type::encode(v1);
-			ka_type::decode(v1,c);
-			BOOST_CHECK(v2 == v1);
-			v1 = std::vector<T>(i,emax);
-			v2 = v1;
-			c = ka_type::encode(v1);
-			ka_type::decode(v1,c);
-			BOOST_CHECK(v2 == v1);
-			v1 = std::vector<T>(i,0);
-			v2 = v1;
+			auto M = std::get<0u>(l[i]);
+			auto m = M;
+			for (auto it = m.begin(); it != m.end(); ++it) {
+				*it = -(*it);
+			}
+			auto tmp(m);
+			auto c = ka_type::encode(m);
+			ka_type::decode(tmp,c);
+			BOOST_CHECK(m == tmp);
+			tmp = M;
+			c = ka_type::encode(M);
+			ka_type::decode(tmp,c);
+			BOOST_CHECK(M == tmp);
+			auto v1 = std::vector<T>(i,0);
+			auto v2 = v1;
 			c = ka_type::encode(v1);
 			ka_type::decode(v1,c);
 			BOOST_CHECK(v2 == v1);
@@ -113,12 +113,16 @@ struct coding_tester
 			ka_type::decode(v1,c);
 			BOOST_CHECK(v2 == v1);
 			// Test with random values within the bounds.
-			std::uniform_int_distribution<T> dist(emin,emax);
-			std::generate(v1.begin(),v1.end(),[&dist,&rng](){return dist(rng);});
-			v2 = v1;
-			c = ka_type::encode(v1);
-			ka_type::decode(v1,c);
-			BOOST_CHECK(v2 == v1);
+			for (auto j = 0; j < 10000; ++j) {
+				for (decltype(v1.size()) i = 0u; i < v1.size(); ++i) {
+					std::uniform_int_distribution<T> dist(m[i],M[i]);
+					v1[i] = dist(rng);
+				}
+				v2 = v1;
+				c = ka_type::encode(v1);
+				ka_type::decode(v1,c);
+				BOOST_CHECK(v2 == v1);
+			}
 		}
 		// Exceptions tests.
 		BOOST_CHECK_THROW(ka_type::encode(std::vector<T>(l.size())),std::invalid_argument);

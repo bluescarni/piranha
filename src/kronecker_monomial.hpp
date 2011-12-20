@@ -78,9 +78,8 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		typedef T value_type;
 	private:
 		typedef kronecker_array<value_type> ka;
-		typedef typename std::decay<decltype(ka::get_limits())>::type _v_type;
 		// Vector type used for temporary packing/unpacking.
-		typedef static_vector<value_type,_v_type::max_size> v_type;
+		typedef static_vector<value_type,255u> v_type;
 	public:
 		/// Size type.
 		/**
@@ -210,7 +209,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			const auto &l = limits[s];
 			// Value is compatible if it is within the bounds for the given size.
-			return (m_value >= std::get<2u>(l) && m_value <= std::get<3u>(l));
+			return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
 		}
 		/// Ignorability check.
 		/**

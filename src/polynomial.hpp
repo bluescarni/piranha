@@ -486,7 +486,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const auto min_max_it2 = boost::minmax_element(this->m_v2.begin(),this->m_v2.end(),
 				[](term_type2 const *ptr1, term_type2 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
 			// Bounds of the Kronecker representation for each component.
-			const auto m = std::get<0u>(limits), M = std::get<1u>(limits);
+			const auto &minmax_vec = std::get<0u>(limits);
 			// Decode the min-max values from the two series.
 			const auto min_vec1 = (*min_max_it1.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec1 = (*min_max_it1.second)->m_key.unpack(this->m_s1->m_symbol_set),
 				min_vec2 = (*min_max_it2.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec2 = (*min_max_it2.second)->m_key.unpack(this->m_s1->m_symbol_set);
@@ -497,7 +497,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				tmp_min += min_vec2[i];
 				tmp_max = max_vec1[i];
 				tmp_max += max_vec2[i];
-				if (unlikely(tmp_min < m || tmp_max > M)) {
+				if (unlikely(tmp_min < -minmax_vec[i] || tmp_max > minmax_vec[i])) {
 					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
 				}
 			}

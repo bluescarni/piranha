@@ -471,7 +471,7 @@ struct kronecker_multiplication_tester
 		BOOST_CHECK((p_type1{} * xy).empty());
 		BOOST_CHECK((xy * p_type1{}).empty());
 		// Check for correct throwing on overflow.
-		for (std::int_least8_t i = 2; tmp.degree({"x"}) < std::get<1u>(ka1::get_limits()[2u]); ++i) {
+		for (std::int_least8_t i = 2; tmp.degree({"x"}) < std::get<0u>(ka1::get_limits()[2u])[0u]; ++i) {
 			tmp *= p_type1("x");
 			BOOST_CHECK_EQUAL(i,tmp.degree({"x"}));
 			BOOST_CHECK_EQUAL(1,tmp.degree({"y"}));

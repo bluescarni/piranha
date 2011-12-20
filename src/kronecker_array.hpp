@@ -21,18 +21,20 @@
 #ifndef PIRANHA_KRONECKER_ARRAY_HPP
 #define PIRANHA_KRONECKER_ARRAY_HPP
 
-#include <boost/integer_traits.hpp>
+#include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
-#include <cstddef>
+#include <iterator>
 #include <limits>
+#include <numeric>
+#include <random>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
-#include "static_vector.hpp"
 
 namespace piranha
 {
@@ -60,8 +62,6 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
- * \todo consider generating full vectors of different primes for encoding if issues of commensurability
- * with hash set arise.
  */
 template <typename SignedInteger>
 class kronecker_array
@@ -71,47 +71,81 @@ class kronecker_array
 		typedef SignedInteger int_type;
 	private:
 		static_assert(std::is_signed<int_type>::value && std::numeric_limits<int_type>::is_bounded,"This class can be used only with bounded signed integers.");
-		static_assert(std::numeric_limits<int_type>::digits <= boost::integer_traits<int_type>::const_max,"Incompatible numerical limits.");
-		static const int_type nbits = std::numeric_limits<int_type>::digits;
-		// This is a 5-tuple of int_type built as follows:
-		// 0. lower limit of each component,
-		// 1. upper limit of each component,
-		// 2. h_min,
-		// 3. h_max,
-		// 4. h_max - h_min.
-		typedef std::tuple<int_type,int_type,int_type,int_type,int_type> limit_type;
-		// Vector of limits (actual size will depend on the width and limits of int_type, never greater than nbits).
-		typedef static_vector<limit_type,unsigned(nbits)> limits_type;
-		static_assert(unsigned(nbits) <= boost::integer_traits<typename limits_type::size_type>::const_max,"Incompatible numerical limits.");
+		// This is a 4-tuple of int_type built as follows:
+		// 0. vector of absolute values of the upper/lower limit for each component,
+		// 1. h_min,
+		// 2. h_max,
+		// 3. h_max - h_min.
+		typedef std::tuple<std::vector<int_type>,int_type,int_type,int_type> limit_type;
+		// Vector of limits.
+		typedef std::vector<limit_type> limits_type;
+	public:
+		/// Size type.
+		/**
+		 * Unsigned integer type equivalent to the size type of \p std::vector. Used to represent the
+		 * dimension of the vectors on which the class can operate.
+		 */
+		typedef typename limits_type::size_type size_type;
+	private:
 		// Static vector of limits built at startup.
 		static const limits_type m_limits;
 		// Determine limits for m-dimensional vectors.
-		static limit_type determine_limit(const int_type &m)
+		static limit_type determine_limit(const size_type &m)
 		{
-			piranha_assert(m >= 1);
-			auto f_h_min = [&m](const integer &delta) {
-				return (1 - delta) / 2 * ((1 - delta.pow(m)) / (1 - delta));
+			piranha_assert(m >= 1u);
+			std::mt19937 engine(static_cast<unsigned long>(m));
+			std::uniform_int_distribution<int> dist(-5,5);
+			// Perturb integer value: add random quantity and then take next prime.
+			auto perturb = [&engine,&dist] (integer &arg) -> void {
+				arg += (dist(engine) * (arg)) / 100;
+				arg = arg.nextprime();
 			};
-			integer cur_delta(3), prev_delta(1);
+			// Build initial minmax and coding vectors: all elements in the [-1,1] range.
+			std::vector<integer> m_vec, M_vec, c_vec, prev_c_vec, prev_m_vec, prev_M_vec;
+			c_vec.push_back(integer(1));
+			m_vec.push_back(integer(-1));
+			M_vec.push_back(integer(1));
+			for (size_type i = 1u; i < m; ++i) {
+				m_vec.push_back(integer(-1));
+				M_vec.push_back(integer(1));
+				c_vec.push_back(c_vec.back() * integer(3));
+			}
+			// Functor for scalar product of two vectors.
+			auto dot_prod = [](const std::vector<integer> &v1, const std::vector<integer> &v2) -> integer {
+				piranha_assert(v1.size() && v1.size() == v2.size());
+				return std::inner_product(v1.begin(),v1.end(),v2.begin(),integer(0));
+			};
 			while (true) {
-				integer h_min = f_h_min(cur_delta);
-				integer h_max = -h_min;
-				integer diff = 2 * h_max;
+				// Compute the current h_min/max and diff.
+				integer h_min = dot_prod(c_vec,m_vec);
+				integer h_max = dot_prod(c_vec,M_vec);
+				integer diff = h_max - h_min;
 				piranha_assert(diff >= 0);
 				try {
+					// Try to cast everything to hardware integers.
 					static_cast<int_type>(h_min);
 					static_cast<int_type>(h_max);
 					// Here it is +1 because h_max - h_min must be strictly less than the maximum value
 					// of int_type - see paper.
 					static_cast<int_type>(diff + 1);
+					// NOTE: check casting individual elements too of m/M vec. This is because in the paper we assume
+					// m and M representable, but here we do not know really.
+					for (size_type i = 0u; i < M_vec.size(); ++i) {
+						static_cast<int_type>(M_vec[i]);
+						static_cast<int_type>(m_vec[i]);
+					}
 				} catch (const std::overflow_error &) {
-					const int_type n_min = static_cast<int_type>((1 - prev_delta) / 2), n_max = static_cast<int_type>((prev_delta - 1) / 2);
-					if (n_min < n_max) {
-						// Condition for which m-variate representation is viable, implies prev_delta > 1.
-						const auto h_min = f_h_min(prev_delta), h_max = -h_min;
+					std::vector<int_type> tmp;
+					// Check if we are at the first iteration.
+					if (prev_c_vec.size()) {
+						const auto h_min = dot_prod(prev_c_vec,prev_m_vec), h_max = dot_prod(prev_c_vec,prev_M_vec);
+						// NOTE here that the check above on the components is such that here we are sure we can
+						// both cast to int_type and take the negative safely.
+						std::transform(prev_M_vec.begin(),prev_M_vec.end(),std::back_inserter(tmp),[](const integer &n) {
+							return static_cast<int_type>(n);
+						});
 						return std::make_tuple(
-							n_min,
-							n_max,
+							tmp,
 							static_cast<int_type>(h_min),
 							static_cast<int_type>(h_max),
 							static_cast<int_type>(h_max - h_min)
@@ -119,24 +153,46 @@ class kronecker_array
 					} else {
 						// Here it means m variables are too many, and we stopped at the first iteration
 						// of the cycle. Return tuple filled with zeroes.
-						return std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0));
+						return std::make_tuple(tmp,int_type(0),int_type(0),int_type(0));
 					}
 				}
-				prev_delta = cur_delta;
-				cur_delta *= 2;
-				// If it is not a prime, take the next prime.
-				while (!cur_delta.probab_prime_p()) {
-					cur_delta = cur_delta.nextprime();
+				// Store old vectors.
+				prev_c_vec = c_vec;
+				prev_m_vec = m_vec;
+				prev_M_vec = M_vec;
+				// Generate new coding vector for next iteration.
+				auto it = c_vec.begin() + 1, prev_it = prev_c_vec.begin();
+				for (; it != c_vec.end(); ++it, ++prev_it) {
+					// Recover original delta.
+					*it /= *prev_it;
+					// Multiply by two and perturb.
+					*it *= 2;
+					perturb(*it);
+					// Multiply by the new accumulated delta product.
+					*it *= *(it - 1);
 				}
+				// Fill in the minmax vectors, apart from the last component.
+				it = c_vec.begin() + 1;
+				piranha_assert(M_vec.size() && M_vec.size() == m_vec.size());
+				for (size_type i = 0u; i < M_vec.size() - 1u; ++i, ++it) {
+					M_vec[i] = ((*it) / *(it - 1) - 1) / 2;
+					m_vec[i] = -M_vec[i];
+				}
+				// We need to generate the last interval, which does not appear in the coding vector.
+				// Take the previous interval and enlarge it so that the corresponding delta is increased by a
+				// perturbed factor of 2.
+				M_vec.back() = (4 * M_vec.back() + 1) / 2;
+				perturb(M_vec.back());
+				m_vec.back() = -M_vec.back();
 			}
 		}
 		static limits_type determine_limits()
 		{
 			limits_type retval;
-			retval.push_back(std::make_tuple(int_type(0),int_type(0),int_type(0),int_type(0),int_type(0)));
-			for (int_type i = 1; i < nbits; ++i) {
+			retval.push_back(std::make_tuple(std::vector<int_type>{},int_type(0),int_type(0),int_type(0)));
+			for (size_type i = 1u; ; ++i) {
 				const auto tmp = determine_limit(i);
-				if (std::get<0u>(tmp) == 0 && std::get<1u>(tmp) == 0) {
+				if (std::get<0u>(tmp).empty()) {
 					break;
 				} else {
 					retval.push_back(tmp);
@@ -145,31 +201,24 @@ class kronecker_array
 			return retval;
 		}
 	public:
-		/// Size type.
-		/**
-		 * Unisigned integer type equivalent to the size type of piranha::static_vector. Used to represent the
-		 * dimension of the vectors on which the class can operate.
-		 */
-		typedef typename limits_type::size_type size_type;
 		/// Get the limits of the Kronecker codification.
 		/**
-		 * Will return a const reference to a piranha::static_vector of tuples describing the limits for the Kronecker
+		 * Will return a const reference to an \p std::vector of tuples describing the limits for the Kronecker
 		 * codification of arrays of integer. The indices in this vector correspond to the dimension of the array to be encoded,
 		 * so that the object at index \f$i\f$ in the returned vector describes the limits for the codification of \f$i\f$-dimensional arrays
 		 * of integers.
 		 * 
-		 * Each element of the returned vector is an \p std::tuple of 5 \p SignedInteger instances built as follows:
+		 * Each element of the returned vector is an \p std::tuple of 4 elements built as follows:
 		 * 
-		 * - position 0: the lower bound of the array's components,
-		 * - position 1: the upper bound of the array's components,
-		 * - position 2: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
-		 * - position 3: \f$h_\textnormal{max}\f$, the maximum value for the integer encoding the array,
-		 * - position 4: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
+		 * - position 0: a vector containing the absolute value of the lower/upper bounds for each component,
+		 * - position 1: \f$h_\textnormal{min}\f$, the minimum value for the integer encoding the array,
+		 * - position 2: \f$h_\textnormal{max}\f$, the maximum value for the integer encoding the array,
+		 * - position 3: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
 		 * 
 		 * The tuple at index 0 of the returned vector is filled with zeroes. The size of the returned vector determines the maximum
 		 * dimension of the vectors to be encoded.
 		 * 
-		 * @return const reference to a piranha::static_vector of limits for the kronecker codification of arrays of integers.
+		 * @return const reference to an \p std::vector of limits for the Kronecker codification of arrays of integers.
 		 */
 		static const limits_type &get_limits()
 		{
@@ -196,7 +245,7 @@ class kronecker_array
 		static int_type encode(const Vector &v)
 		{
 			const auto size = v.size();
-			// NOTE: here the check is >= because indices in the limits vector correspond to the sizes of the vectors to be coded.
+			// NOTE: here the check is >= because indices in the limits vector correspond to the sizes of the vectors to be encoded.
 			if (unlikely(size >= m_limits.size())) {
 				piranha_throw(std::invalid_argument,"size of vector to be encoded is too large");
 			}
@@ -205,21 +254,23 @@ class kronecker_array
 			}
 			// Cache quantities.
 			const auto &limit = m_limits[size];
-			const int_type emin = std::get<0u>(limit), emax = std::get<1u>(limit), hmin = std::get<2u>(limit), delta = (emax - emin) + 1;
-			int_type mult = delta;
+			const auto &minmax_vec = std::get<0u>(limit);
 			// Check that the vector's components are compatible with the limits.
+			// NOTE: here size is not greater than m_limits.size(), which in turn is compatible with the minmax vectors.
 			for (size_type i = 0u; i < size; ++i) {
-				if (unlikely(boost::numeric_cast<int_type>(v[i]) < emin || boost::numeric_cast<int_type>(v[i]) > emax)) {
+				if (unlikely(boost::numeric_cast<int_type>(v[i]) < -minmax_vec[i] || boost::numeric_cast<int_type>(v[i]) > minmax_vec[i])) {
 					piranha_throw(std::invalid_argument,"a component of the vector to be encoded is out of bounds");
 				}
 			}
-			int_type retval = boost::numeric_cast<int_type>(v[0u]) - emin;
+			piranha_assert(minmax_vec[0u] > 0);
+			int_type retval = boost::numeric_cast<int_type>(v[0u]) + minmax_vec[0u], cur_c = 2 * minmax_vec[0u] + 1;
 			piranha_assert(retval >= 0);
-			piranha_assert(delta > 0);
-			for (decltype(v.size()) i = 1u; i < size; ++i, mult *= delta) {
-				retval += (boost::numeric_cast<int_type>(v[i]) - emin) * mult;
+			for (decltype(v.size()) i = 1u; i < size; ++i) {
+				retval += (boost::numeric_cast<int_type>(v[i]) + minmax_vec[i]) * cur_c;
+				piranha_assert(minmax_vec[i] > 0);
+				cur_c *= 2 * minmax_vec[i] + 1;
 			}
-			return retval + hmin;
+			return retval + std::get<1u>(limit);
 		}
 		/// Decode into vector.
 		/**
@@ -257,19 +308,21 @@ class kronecker_array
 			}
 			// Cache values.
 			const auto &limit = m_limits[m];
-			const int_type emin = std::get<0u>(limit), emax = std::get<1u>(limit), hmin = std::get<2u>(limit),
-				hmax = std::get<3u>(limit), delta = (emax - emin) + 1;
-			int_type mod_arg = delta;
+			const auto &minmax_vec = std::get<0u>(limit);
+			const auto hmin = std::get<1u>(limit), hmax = std::get<2u>(limit);
 			if (unlikely(n < hmin || n > hmax)) {
 				piranha_throw(std::invalid_argument,"the integer to be decoded is out of bounds");
 			}
 			const int_type code = n - hmin;
 			piranha_assert(code >= 0);
-			piranha_assert(delta > 0);
+			piranha_assert(minmax_vec[0u] > 0);
+			int_type mod_arg = 2 * minmax_vec[0u] + 1;
 			// Do the first value manually.
-			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) + emin);
-			for (size_type i = 1u; i < m; ++i, mod_arg *= delta) {
-				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * delta)) / mod_arg + emin);
+			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
+			for (size_type i = 1u; i < m; ++i) {
+				piranha_assert(minmax_vec[i] > 0);
+				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
+				mod_arg *= (2 * minmax_vec[i] + 1);
 			}
 		}
 };
