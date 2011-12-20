@@ -41,6 +41,4 @@ BOOST_AUTO_TEST_CASE(fateman1_test)
 	}
 	auto retval = f * (f + 1);
 	BOOST_CHECK_EQUAL(retval.size(),135751u);
-auto sp = retval.evaluate_sparsity();
-std::cout << std::get<0u>(sp) << ',' << std::get<1u>(sp) << '\n';
 }
