@@ -34,6 +34,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
+#include <tuple>
 #include <type_traits>
 
 #include "concepts/container_element.hpp"
@@ -890,6 +891,30 @@ class hash_set
 			clear();
 			// Assign the new table.
 			*this = std::move(new_table);
+		}
+		/// Get information on the sparsity of the table.
+		/**
+		 * @return \p std::tuple built as follows:
+		 * - position 0: total number of occupied buckets (i.e., buckets storing at least 1 item),
+		 * - position 1: maximum number of items in a single bucket.
+		 */
+		std::tuple<size_type,size_type> evaluate_sparsity() const
+		{
+			size_type n_occupied = 0u, n_max_items = 0u;
+			const auto it_f = m_container + bucket_count();
+			for (auto it = m_container; it != it_f; ++it) {
+				if (!it->empty()) {
+					++n_occupied;
+					size_type counter = 0u;
+					for (auto l_it = it->begin(); l_it != it->end(); ++l_it) {
+						++counter;
+					}
+					if (counter > n_max_items) {
+						n_max_items = counter;
+					}
+				}
+			}
+			return std::make_tuple(n_occupied,n_max_items);
 		}
 		/** @name Low-level interface
 		 * Low-level methods and types.

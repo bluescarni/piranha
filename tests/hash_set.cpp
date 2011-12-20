@@ -37,6 +37,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <tuple>
 #include <unordered_set>
 
 #include "../src/config.hpp"
@@ -517,4 +518,24 @@ struct rehash_tester
 BOOST_AUTO_TEST_CASE(hash_set_rehash_test)
 {
 	boost::mpl::for_each<key_types>(rehash_tester());
+}
+
+struct evaluate_sparsity_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		hash_set<T> h;
+		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 0u);
+		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 0u);
+		T tmp;
+		h.insert(tmp);
+		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 1u);
+		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 1u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hash_set_evaluate_sparsity_test)
+{
+	boost::mpl::for_each<key_types>(evaluate_sparsity_tester());
 }

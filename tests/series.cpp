@@ -28,6 +28,7 @@
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 
 #include "../src/config.hpp"
@@ -1242,3 +1243,33 @@ BOOST_AUTO_TEST_CASE(series_stream_test)
 {
 	boost::mpl::for_each<cf_types>(stream_tester());
 }
+
+struct evaluate_sparsity_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			p_type1 p;
+			BOOST_CHECK(std::get<0u>(p.evaluate_sparsity()) == 0u);
+			BOOST_CHECK(std::get<1u>(p.evaluate_sparsity()) == 0u);
+			p_type1 q{"x"};
+			BOOST_CHECK(std::get<0u>(q.evaluate_sparsity()) == 1u);
+			BOOST_CHECK(std::get<1u>(q.evaluate_sparsity()) == 1u);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_evaluate_sparsity_test)
+{
+	boost::mpl::for_each<cf_types>(evaluate_sparsity_tester());
+}
+

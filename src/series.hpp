@@ -131,6 +131,8 @@ class series: series_binary_operators, detail::series_tag
 		/// Container type for terms.
 		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
 	private:
+		// Avoid confusing doxygen.
+		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
 		// Overload for completely different term type: copy-convert to term_type and proceed.
 		template <bool Sign, typename T>
 		void dispatch_insertion(T &&term, typename std::enable_if<
@@ -921,6 +923,16 @@ class series: series_binary_operators, detail::series_tag
 		{
 			dispatch_multiply(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
+		}
+		/// Evaluate series sparsity.
+		/**
+		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container.
+		 * 
+		 * @return an \p std::tuple containing information about the sparsity of the internal container.
+		 */
+		sparsity_info_type evaluate_sparsity() const
+		{
+			return m_container.evaluate_sparsity();
 		}
 		/// Overload stream operator for piranha::series.
 		/**
