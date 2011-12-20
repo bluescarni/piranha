@@ -523,24 +523,50 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 	private:
+		// Have to place this here because if created as a lambda, it will result in a
+		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
+		struct task_sorter
+		{
+			explicit task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
+				const std::vector<term_type2 const *> &v2):
+				m_retval(retval),m_v1(v1),m_v2(v2)
+			{}
+			template <typename T>
+			bool operator()(const T &t1, const T &t2) const
+			{
+				piranha_assert(m_retval.m_container.bucket_count());
+				// NOTE: here we are sure there is no overflow as the max size of the hash table is 2 ** (n - 1), hence the highest
+				// possible bucket is 2 ** (n - 1) - 1, so the highest value of the sum will be 2 ** n - 2. But the range of the size type
+				// is [0, 2 ** n - 1], so it is safe.
+				// NOTE: might use faster mod calculation here, but probably not worth it.
+				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
+					m_retval.m_container.bucket_count() <
+					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
+					m_retval.m_container.bucket_count();
+			}
+			const return_type			&m_retval;
+			const std::vector<term_type1 const *>	&m_v1;
+			const std::vector<term_type2 const *>	&m_v2;
+		};
 		template <typename Functor>
 		typename base::return_type execute(const truncator_type &trunc) const
 		{
+			typedef decltype(this->m_v1.size()) size_type;
+			const size_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(this->m_s1->empty() || this->m_s2->empty())) {
 				return return_type{};
 			}
 			// This check is done here to avoid controlling the number of elements of the output series
 			// at every iteration of the functor.
-			const auto max_size = integer(this->m_v1.size()) * this->m_v2.size();
+			const auto max_size = integer(size1) * size2;
 			if (unlikely(max_size > boost::integer_traits<typename Series1::size_type>::const_max)) {
 				piranha_throw(std::overflow_error,"overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
 			return_type retval;
 			retval.m_symbol_set = this->m_s1->m_symbol_set;
-			auto estimate = base::estimate_final_series_size(Functor(&this->m_v1[0u],this->m_v1.size(),
-				&this->m_v2[0u],this->m_v2.size(),trunc,retval));
+			auto estimate = base::estimate_final_series_size(Functor(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
 			// Correct the unlikely case of zero estimate.
 			if (unlikely(!estimate)) {
 				estimate = 1u;
@@ -551,21 +577,60 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			piranha_assert(retval.m_container.bucket_count() >= 1u);
 			// Now let's sort the input terms according to the position of the Kronecker keys in the estimated return value.
 			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
-				return retval.m_container.bucket(*ptr1) < retval.m_container.bucket(*ptr2);
+				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
 			};
 			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
-				return retval.m_container.bucket(*ptr1) < retval.m_container.bucket(*ptr2);
+				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
 			};
 			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
 			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
-			// Now proceed with the blocked multiplication, using the functor in fast mode.
+			// Start defining the blocks for series multiplication.
+			const integer block_size(256u), job_size = block_size.pow(2u);
+			// Rescale the block sizes according to the relative sizes of the input series.
+			auto block_size1 = (block_size * size1) / size2,
+				block_size2 = (block_size * size2) / size1;
+			// Avoid having zero block sizes, or block sizes exceeding job_size.
+			if (!block_size1) {
+				block_size1 = 1u;
+			} else if (block_size1 > job_size) {
+				block_size1 = job_size;
+			}
+			if (!block_size2) {
+				block_size2 = 1u;
+			} else if (block_size2 > job_size) {
+				block_size2 = job_size;
+			}
+			// Cast to hardware integers.
+			const auto bsize1 = static_cast<size_type>(block_size1), bsize2 = static_cast<size_type>(block_size2);
+			// This is a multiplication task: (Block1,Block2), where Block1(2) is a range of this->m_v1(2).
+			typedef std::pair<std::pair<size_type,size_type>,std::pair<size_type,size_type>> task_type;
+			// Create the list of tasks.
+			std::vector<task_type> task_list;
+			for (size_type i = 0u; i < size1 / bsize1; ++i) {
+				for (size_type j = 0u; j < size2 / bsize2; ++j) {
+					task_list.push_back({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
+				}
+				if (size2 % bsize2) {
+					task_list.push_back({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
+				}
+			}
+			if (size1 % bsize1) {
+				for (size_type j = 0u; j < size2 / bsize2; ++j) {
+					task_list.push_back({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
+				}
+				if (size2 % bsize2) {
+					task_list.push_back({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
+				}
+			}
+			// Sort the task list according to where each task would start writing in the output series.
+			std::sort(task_list.begin(),task_list.end(),task_sorter(retval,this->m_v1,this->m_v2));
+			// Perform the multiplication.
 			typedef typename Functor::fast_rebind fast_functor_type;
-			fast_functor_type ff(&this->m_v1[0u],this->m_v1.size(),&this->m_v2[0u],this->m_v2.size(),trunc,retval);
+			fast_functor_type ff(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval);
 			// We need this try/catch because, by using the fast interface, in case of an error the container in retval could be left in
 			// an inconsistent state.
 			try {
-				this->blocked_multiplication(ff);
-				sanitize_series(retval,ff);
+				task_multiplication(ff,task_list);
 			} catch (...) {
 				retval.m_container.clear();
 				throw;
@@ -574,9 +639,29 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			this->trace_estimates(retval.size(),estimate);
 			return retval;
 		}
-		template <typename Series, typename Functor>
-		static void sanitize_series(Series &retval, const Functor &func)
+		template <typename Functor, typename TaskList>
+		void task_multiplication(const Functor &f, const TaskList &task_list) const
 		{
+			const auto it_f = task_list.end();
+			for (auto it = task_list.begin(); it != it_f; ++it) {
+				const auto i_end = it->first.second;
+				for (auto i = it->first.first; i < i_end; ++i) {
+					const auto j_end = it->second.second;
+					for (auto j = it->second.first; j < j_end; ++j) {
+						if (f.skip(i,j)) {
+							break;
+						}
+						f(i,j);
+						f.insert();
+					}
+				}
+			}
+			sanitize_series(f);
+		}
+		template <typename Functor>
+		static void sanitize_series(const Functor &func)
+		{
+			auto &retval = func.m_retval;
 			// Here we have to do the following things:
 			// - check ignorability of terms,
 			// - cope with excessive load factor,
