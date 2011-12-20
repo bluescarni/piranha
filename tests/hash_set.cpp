@@ -528,7 +528,7 @@ struct evaluate_sparsity_tester
 		hash_set<T> h;
 		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 0u);
 		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 0u);
-		T tmp;
+		T tmp = T();
 		h.insert(tmp);
 		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 1u);
 		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 1u);
