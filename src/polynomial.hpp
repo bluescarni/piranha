@@ -525,16 +525,24 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 	private:
+		typedef typename std::vector<term_type1 const *>::size_type index_type;
+		typedef typename Series1::size_type bucket_size_type;
+		// This is a multiplication task: a (Block1,Block2) pair, where Block1(2) is a range (i.e., in the [a,b[ form) of
+		// indices in this->m_v1(2).
+		typedef std::pair<std::pair<index_type,index_type>,std::pair<index_type,index_type>> task_type;
+		// This is a bucket region, i.e., a _closed_ interval [a,b] of bucket indices in a hash set.
+		typedef std::pair<bucket_size_type,bucket_size_type> region_type;
 		// Have to place this here because if created as a lambda, it will result in a
 		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
+		// This will sort tasks according to the sum of the bucket positions of the terms at the starting indices,
+		// modulo the bucket count.
 		struct task_sorter
 		{
 			explicit task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
 				const std::vector<term_type2 const *> &v2):
 				m_retval(retval),m_v1(v1),m_v2(v2)
 			{}
-			template <typename T>
-			bool operator()(const T &t1, const T &t2) const
+			bool operator()(const task_type &t1, const task_type &t2) const
 			{
 				piranha_assert(m_retval.m_container.bucket_count());
 				// NOTE: here we are sure there is no overflow as the max size of the hash table is 2 ** (n - 1), hence the highest
@@ -544,7 +552,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// NOTE: because tasks cannot contain empty intervals, the start of each interval will be a valid index (i.e., not end())
 				// in the term pointers vectors.
 				piranha_assert(t1.first.first < m_v1.size() && t2.first.first < m_v1.size() &&
-					t1.second.first < m_v2.size() && t2.second.first < m_v2.size());
+					t1.second.first < m_v2.size() && t2.second.first < m_v2.size() &&
+					t1.first.first < t1.first.second && t1.second.first < t1.second.second &&
+					t2.first.first < t2.first.second && t2.second.first < t2.second.second
+				);
 				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
 					m_retval.m_container.bucket_count() <
 					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
@@ -557,8 +568,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		template <typename Functor>
 		typename base::return_type execute(const truncator_type &trunc) const
 		{
-			typedef decltype(this->m_v1.size()) size_type;
-			const size_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
+			const index_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
 				return return_type{};
@@ -566,7 +576,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// This check is done here to avoid controlling the number of elements of the output series
 			// at every iteration of the functor.
 			const auto max_size = integer(size1) * size2;
-			if (unlikely(max_size > boost::integer_traits<typename Series1::size_type>::const_max)) {
+			if (unlikely(max_size > boost::integer_traits<bucket_size_type>::const_max)) {
 				piranha_throw(std::overflow_error,"overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
@@ -607,17 +617,15 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				block_size2 = job_size;
 			}
 			// Cast to hardware integers.
-			const auto bsize1 = static_cast<size_type>(block_size1), bsize2 = static_cast<size_type>(block_size2);
-			// This is a multiplication task: (Block1,Block2), where Block1(2) is a range of this->m_v1(2).
-			typedef std::pair<std::pair<size_type,size_type>,std::pair<size_type,size_type>> task_type;
+			const auto bsize1 = static_cast<index_type>(block_size1), bsize2 = static_cast<index_type>(block_size2);
 			// Create the list of tasks.
 			// NOTE: the way tasks are created, there is never an empty task - all intervals have nonzero sizes.
 			// The task are sorted according to the index of the first bucket of retval that will be written to,
 			// so we need a multiset as different tasks might have the same starting position.
 			std::multiset<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
 			decltype(task_list.insert(task_type{})) ins_result;
-			for (size_type i = 0u; i < size1 / bsize1; ++i) {
-				for (size_type j = 0u; j < size2 / bsize2; ++j) {
+			for (index_type i = 0u; i < size1 / bsize1; ++i) {
+				for (index_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
 					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
@@ -627,7 +635,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 			if (size1 % bsize1) {
-				for (size_type j = 0u; j < size2 / bsize2; ++j) {
+				for (index_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
 					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
@@ -651,18 +659,17 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		template <typename Functor, typename Truncator, typename TaskList>
 		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
-			typedef decltype(this->m_v1.size()) size_type;
 			typedef typename Functor::fast_rebind fast_functor_type;
-			typename Series1::size_type insertion_count = 0u;
+			bucket_size_type insertion_count = 0u;
 			const auto it_f = task_list.end();
 			for (auto it = task_list.begin(); it != it_f; ++it) {
-				const size_type i_start = it->first.first, j_start = it->second.first,
+				const index_type i_start = it->first.first, j_start = it->second.first,
 					i_end = it->first.second, j_end = it->second.second;
 				piranha_assert(i_end >= i_start && j_end >= j_start);
-				const size_type i_size = i_end - i_start, j_size = j_end - j_start;
+				const index_type i_size = i_end - i_start, j_size = j_end - j_start;
 				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
-				for (size_type i = 0u; i < i_size; ++i) {
-					for (size_type j = 0u; j < j_size; ++j) {
+				for (index_type i = 0u; i < i_size; ++i) {
+					for (index_type j = 0u; j < j_size; ++j) {
 						if (f.skip(i,j)) {
 							break;
 						}
@@ -674,7 +681,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			sanitize_series(retval,insertion_count);
 		}
-		static void sanitize_series(return_type &retval, const typename Series1::size_type &insertion_count)
+		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count)
 		{
 			// Here we have to do the following things:
 			// - check ignorability of terms,
@@ -695,7 +702,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Finally, cope with excessive load factor.
 			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					boost::numeric_cast<typename Series1::size_type>(std::ceil(retval.m_container.size() / retval.m_container.max_load_factor()))
+					boost::numeric_cast<bucket_size_type>(std::ceil(retval.m_container.size() / retval.m_container.max_load_factor()))
 				);
 			}
 		}
@@ -704,22 +711,20 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			// Fast version of functor.
 			typedef functor<IsActive,true> fast_rebind;
-			typedef typename base::template default_functor<IsActive>::size_type size_type;
 			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
-			explicit functor(term_type1 const **ptr1, const size_type &s1,
-				term_type2 const **ptr2, const size_type &s2, const truncator_type &trunc,
+			explicit functor(term_type1 const **ptr1, const index_type &s1,
+				term_type2 const **ptr2, const index_type &s2, const truncator_type &trunc,
 				return_type &retval):
 				base::template default_functor<IsActive>(ptr1,s1,ptr2,s2,trunc,retval),
 				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
 			{}
-			void operator()(const size_type &i, const size_type &j) const
+			void operator()(const index_type &i, const index_type &j) const
 			{
 				piranha_assert(i < this->m_s1 && j < this->m_s2);
 				this->m_tmp.m_key.set_int(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int());
 				m_cached_i = i;
 				m_cached_j = j;
 			}
-			typedef typename Series1::size_type bucket_size_type;
 			template <bool CheckFilter = true>
 			void insert() const
 			{
@@ -795,8 +800,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					}
 				}
 			}
-			mutable size_type		m_cached_i;
-			mutable size_type		m_cached_j;
+			mutable index_type		m_cached_i;
+			mutable index_type		m_cached_j;
 			mutable bucket_size_type	m_insertion_count;
 		};
 };
