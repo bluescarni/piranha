@@ -541,6 +541,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// possible bucket is 2 ** (n - 1) - 1, so the highest value of the sum will be 2 ** n - 2. But the range of the size type
 				// is [0, 2 ** n - 1], so it is safe.
 				// NOTE: might use faster mod calculation here, but probably not worth it.
+				// NOTE: because tasks cannot contain empty intervals, the start of each interval will be a valid index (i.e., not end())
+				// in the term pointers vectors.
+				piranha_assert(t1.first.first < m_v1.size() && t2.first.first < m_v1.size() &&
+					t1.second.first < m_v2.size() && t2.second.first < m_v2.size());
 				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
 					m_retval.m_container.bucket_count() <
 					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
@@ -607,26 +611,31 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// This is a multiplication task: (Block1,Block2), where Block1(2) is a range of this->m_v1(2).
 			typedef std::pair<std::pair<size_type,size_type>,std::pair<size_type,size_type>> task_type;
 			// Create the list of tasks.
+			// NOTE: the way tasks are created, there is never an empty task - all intervals have nonzero sizes.
 			std::set<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
 			decltype(task_list.insert(task_type{})) ins_result;
 			for (size_type i = 0u; i < size1 / bsize1; ++i) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
 					piranha_assert(ins_result.second);
+					piranha_assert(ins_result.first->first != ins_result.first->second);
 				}
 				if (size2 % bsize2) {
 					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
 					piranha_assert(ins_result.second);
+					piranha_assert(ins_result.first->first != ins_result.first->second);
 				}
 			}
 			if (size1 % bsize1) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
 					piranha_assert(ins_result.second);
+					piranha_assert(ins_result.first->first != ins_result.first->second);
 				}
 				if (size2 % bsize2) {
 					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
 					piranha_assert(ins_result.second);
+					piranha_assert(ins_result.first->first != ins_result.first->second);
 				}
 			}
 			// Perform the multiplication. We need this try/catch because, by using the fast interface,
