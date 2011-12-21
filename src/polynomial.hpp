@@ -612,7 +612,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			typedef std::pair<std::pair<size_type,size_type>,std::pair<size_type,size_type>> task_type;
 			// Create the list of tasks.
 			// NOTE: the way tasks are created, there is never an empty task - all intervals have nonzero sizes.
-			std::set<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
+			// The task are sorted according to the index of the first bucket of retval that will be written to,
+			// so we need a multiset as different tasks might have the same starting position.
+			std::multiset<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
 			decltype(task_list.insert(task_type{})) ins_result;
 			for (size_type i = 0u; i < size1 / bsize1; ++i) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
