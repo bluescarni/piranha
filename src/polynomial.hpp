@@ -619,25 +619,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			for (size_type i = 0u; i < size1 / bsize1; ++i) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
-					piranha_assert(ins_result.second);
-					piranha_assert(ins_result.first->first != ins_result.first->second);
+					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 				if (size2 % bsize2) {
 					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
-					piranha_assert(ins_result.second);
-					piranha_assert(ins_result.first->first != ins_result.first->second);
+					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 			}
 			if (size1 % bsize1) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
 					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
-					piranha_assert(ins_result.second);
-					piranha_assert(ins_result.first->first != ins_result.first->second);
+					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 				if (size2 % bsize2) {
 					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
-					piranha_assert(ins_result.second);
-					piranha_assert(ins_result.first->first != ins_result.first->second);
+					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 			}
 			// Perform the multiplication. We need this try/catch because, by using the fast interface,
