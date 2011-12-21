@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <set>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
@@ -606,25 +607,28 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// This is a multiplication task: (Block1,Block2), where Block1(2) is a range of this->m_v1(2).
 			typedef std::pair<std::pair<size_type,size_type>,std::pair<size_type,size_type>> task_type;
 			// Create the list of tasks.
-			std::vector<task_type> task_list;
+			std::set<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
+			decltype(task_list.insert(task_type{})) ins_result;
 			for (size_type i = 0u; i < size1 / bsize1; ++i) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
-					task_list.push_back({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
+					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
+					piranha_assert(ins_result.second);
 				}
 				if (size2 % bsize2) {
-					task_list.push_back({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
+					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
+					piranha_assert(ins_result.second);
 				}
 			}
 			if (size1 % bsize1) {
 				for (size_type j = 0u; j < size2 / bsize2; ++j) {
-					task_list.push_back({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
+					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
+					piranha_assert(ins_result.second);
 				}
 				if (size2 % bsize2) {
-					task_list.push_back({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
+					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
+					piranha_assert(ins_result.second);
 				}
 			}
-			// Sort the task list according to where each task would start writing in the output series.
-			std::sort(task_list.begin(),task_list.end(),task_sorter(retval,this->m_v1,this->m_v2));
 			// Perform the multiplication. We need this try/catch because, by using the fast interface,
 			// in case of an error the container in retval could be left in an inconsistent state.
 			try {
