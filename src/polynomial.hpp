@@ -553,8 +553,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			typedef decltype(this->m_v1.size()) size_type;
 			const size_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
-			// Do not do anything if one of the two series is empty.
-			if (unlikely(this->m_s1->empty() || this->m_s2->empty())) {
+			// Do not do anything if one of the two series is empty, just return an empty series.
+			if (unlikely(!size1 || !size2)) {
 				return return_type{};
 			}
 			// This check is done here to avoid controlling the number of elements of the output series
@@ -641,7 +641,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			typedef decltype(this->m_v1.size()) size_type;
 			typedef typename Functor::fast_rebind fast_functor_type;
-			size_type insertion_count = 0u;
+			typename Series1::size_type insertion_count = 0u;
 			const auto it_f = task_list.end();
 			for (auto it = task_list.begin(); it != it_f; ++it) {
 				const size_type i_start = it->first.first, j_start = it->second.first,
@@ -662,8 +662,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			sanitize_series(retval,insertion_count);
 		}
-		template <typename Size>
-		static void sanitize_series(return_type &retval, const Size &insertion_count)
+		static void sanitize_series(return_type &retval, const typename Series1::size_type &insertion_count)
 		{
 			// Here we have to do the following things:
 			// - check ignorability of terms,
