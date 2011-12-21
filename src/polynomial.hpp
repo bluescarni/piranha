@@ -624,13 +624,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			// Sort the task list according to where each task would start writing in the output series.
 			std::sort(task_list.begin(),task_list.end(),task_sorter(retval,this->m_v1,this->m_v2));
-			// Perform the multiplication.
-			typedef typename Functor::fast_rebind fast_functor_type;
-			fast_functor_type ff(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval);
-			// We need this try/catch because, by using the fast interface, in case of an error the container in retval could be left in
-			// an inconsistent state.
+			// Perform the multiplication. We need this try/catch because, by using the fast interface,
+			// in case of an error the container in retval could be left in an inconsistent state.
 			try {
-				task_multiplication(ff,task_list);
+				task_multiplication<Functor>(retval,trunc,task_list);
 			} catch (...) {
 				retval.m_container.clear();
 				throw;
@@ -639,15 +636,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			this->trace_estimates(retval.size(),estimate);
 			return retval;
 		}
-		template <typename Functor, typename TaskList>
-		void task_multiplication(const Functor &f, const TaskList &task_list) const
+		template <typename Functor, typename Truncator, typename TaskList>
+		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
+			typedef decltype(this->m_v1.size()) size_type;
+			typedef typename Functor::fast_rebind fast_functor_type;
+			size_type insertion_count = 0u;
 			const auto it_f = task_list.end();
 			for (auto it = task_list.begin(); it != it_f; ++it) {
-				const auto i_end = it->first.second;
-				for (auto i = it->first.first; i < i_end; ++i) {
-					const auto j_end = it->second.second;
-					for (auto j = it->second.first; j < j_end; ++j) {
+				const size_type i_start = it->first.first, j_start = it->second.first,
+					i_end = it->first.second, j_end = it->second.second;
+				piranha_assert(i_end >= i_start && j_end >= j_start);
+				const size_type i_size = i_end - i_start, j_size = j_end - j_start;
+				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
+				for (size_type i = 0u; i < i_size; ++i) {
+					for (size_type j = 0u; j < j_size; ++j) {
 						if (f.skip(i,j)) {
 							break;
 						}
@@ -655,20 +658,20 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						f.insert();
 					}
 				}
+				insertion_count += f.m_insertion_count;
 			}
-			sanitize_series(f);
+			sanitize_series(retval,insertion_count);
 		}
-		template <typename Functor>
-		static void sanitize_series(const Functor &func)
+		template <typename Size>
+		static void sanitize_series(return_type &retval, const Size &insertion_count)
 		{
-			auto &retval = func.m_retval;
 			// Here we have to do the following things:
 			// - check ignorability of terms,
 			// - cope with excessive load factor,
 			// - update the size of the series.
 			// Compatibility is not a concern for polynomials.
 			// First, let's fix the size of inserted terms.
-			retval.m_container._update_size(func.m_insertion_count);
+			retval.m_container._update_size(insertion_count);
 			// Second, erase the ignorable terms.
 			const auto it_f = retval.m_container.end();
 			for (auto it = retval.m_container.begin(); it != it_f;) {
