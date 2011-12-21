@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(rectangular_test)
 		2*y*y*z*z + 2*x*y*z + y*y*z + y*z*z + y*y + 2*y*z + z;
 	p_type curr(1);
 	for (auto i = 1; i <= 70; ++i) {
-		curr *= f;           
+		curr *= f;
 	}
 	BOOST_CHECK_EQUAL(curr.size(),1284816u);
 }
