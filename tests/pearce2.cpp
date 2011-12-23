@@ -24,6 +24,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../src/kronecker_monomial.hpp"
+#include "../src/settings.hpp"
+#include "../src/timeit.hpp"
 
 using namespace piranha;
 
@@ -35,6 +37,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(pearce2_test)
 {
+	settings::set_n_threads(1);
 	typedef polynomial<double,kronecker_monomial<>> p_type;
 	p_type x("x"), y("y"), z("z"), t("t"), u("u");
 
@@ -46,6 +49,5 @@ BOOST_AUTO_TEST_CASE(pearce2_test)
 		f *= tmp_f;
 		g *= tmp_g;
 	}
-	auto retval = f * g;
-	BOOST_CHECK_EQUAL(retval.size(),28398035u);
+	BOOST_CHECK_EQUAL(timeit([&f,&g](){return f * g;}).size(),28398035u);
 }
