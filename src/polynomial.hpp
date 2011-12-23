@@ -761,11 +761,14 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
 					task_type task;
 					decltype(this->regions_from_task(task,retval)) regions;
-					// Functor to remove the regions from the set of busy regions.
+					// Functor to remove the regions gotten via region_checker() from the set of busy regions.
 					auto cleanup_regions = [&regions,&busy_regions,this]() {
 						auto tmp_it = busy_regions.find(std::get<0u>(regions));
 						if (tmp_it != busy_regions.end()) {
 							busy_regions.erase(tmp_it);
+						}
+						if (!std::get<2u>(regions)) {
+							return;
 						}
 						tmp_it = busy_regions.find(std::get<1u>(regions));
 						if (tmp_it != busy_regions.end()) {
@@ -800,9 +803,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 										}
 										piranha_assert(this->region_set_checker(busy_regions));
 									} catch (...) {
-										// NOTE: the idea here is that if we do not cleanup the regions,
-										// nobody will and threads waiting for work might never complete.
-										// Take out any region we might have inserted before re-throwing.
+										// NOTE: the idea here is that in case of errors
+										// we want to restore the original situation
+										// as if nothing happened.
 										cleanup_regions();
 										throw;
 									}
