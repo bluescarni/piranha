@@ -28,7 +28,7 @@
 namespace piranha
 {
 
-/// Simple timing method.
+/// Simple timing function.
 /**
  * Will print to \p std::cout the wall clock time (in milliseconds) elapsed during the invocation of function \p f
  * with \p args as its arguments. The output of <tt>f(args)</tt> will be returned.
@@ -40,7 +40,7 @@ namespace piranha
  * 
  * @throws unspecified any exception thrown by:
  * - the invocation of \p f,
- * - timing primitives in the standard library.
+ * - clock primitives in the standard library.
  */
 template <typename F, typename... Args>
 inline auto timeit(F &&f, Args && ... args) -> decltype(f(std::forward<Args>(args)...))
