@@ -52,6 +52,23 @@
 	#define piranha_noexcept_op(expr) (true)
 #endif
 
+#include <chrono>
+
+namespace piranha
+{
+namespace detail
+{
+// Steady vs monotonic clock.
+typedef
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+std::chrono::steady_clock
+#else
+std::chrono::monotonic_clock
+#endif
+steady_clock;
+}
+}
+
 // No override available so far in GCC.
 #define piranha_override
 
