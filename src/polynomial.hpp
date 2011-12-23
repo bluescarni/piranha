@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <list>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -34,6 +35,7 @@
 #include <utility>
 #include <vector>
 
+#include "cache_aligning_allocator.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/series.hpp"
 #include "concepts/truncator.hpp"
@@ -52,6 +54,7 @@
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "threading.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
 
@@ -532,6 +535,93 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		typedef std::pair<std::pair<index_type,index_type>,std::pair<index_type,index_type>> task_type;
 		// This is a bucket region, i.e., a _closed_ interval [a,b] of bucket indices in a hash set.
 		typedef std::pair<bucket_size_type,bucket_size_type> region_type;
+		// Compute bucket regions from a task. There
+		// are at most two disjoint regions, depending on whether the sum of the hash values
+		// wraps around the bucket count or not.
+		std::tuple<region_type,region_type,bool> regions_from_task(const task_type &t, const return_type &retval) const
+		{
+			const auto &v1 = this->m_v1;
+			const auto &v2 = this->m_v2;
+			const auto b_count = retval.m_container.bucket_count();
+			region_type r1{0u,0u}, r2{0u,0u};
+			bool second_region = false;
+			piranha_assert(t.first.first < t.first.second && t.second.first < t.second.second);
+			piranha_assert(t.first.first < v1.size() && t.second.first < v2.size());
+			piranha_assert(t.first.second - 1u < v1.size() && t.second.second - 1u < v2.size());
+			// Addition is safe because of the limits on the max bucket count of hash_set.
+			const auto a = retval.m_container._bucket(*v1[t.first.first]) +
+				retval.m_container._bucket(*v2[t.second.first]),
+				// NOTE: we are sure that the tasks are not empty, so the -1 is safe.
+				b = retval.m_container._bucket(*v1[t.first.second - 1u]) +
+				retval.m_container._bucket(*v2[t.second.second - 1u]);
+			// NOTE: using <= here as [a,b] is now a closed interval.
+			piranha_assert(a <= b);
+			piranha_assert(b <= b_count * 2u - 2u);
+			if (b < b_count || a >= b_count) {
+				r1.first = a % b_count;
+				r1.second = b % b_count;
+			} else {
+				second_region = true;
+				r1.first = a;
+				r1.second = b_count - 1u;
+				r2.first = 0u;
+				r2.second = b % b_count;
+			}
+			return std::make_tuple(r1,r2,second_region);
+		}
+		// Functor to check if region r does not overlap any of the busy ones.
+		template <typename RegionSet>
+		static bool region_checker(const region_type &r, const RegionSet &busy_regions)
+		{
+			if (busy_regions.empty()) {
+				return true;
+			}
+			// NOTE: lower bound means that it_b->first >= r.first.
+			auto it_b = busy_regions.lower_bound(r);
+			// Handle end().
+			if (it_b == busy_regions.end()) {
+				// NOTE: safe because busy_regions is not empty.
+				--it_b;
+				// Now check that the region in it_b does not overlap with
+				// the current one.
+				piranha_assert(it_b->first < r.first);
+				return it_b->second < r.first;
+			}
+			if (r.second >= it_b->first) {
+				// The end point of r1 overlaps the start point of *it_b, no good.
+				return false;
+			}
+			// Lastly, we have to check that the previous element (if any) does not
+			// overlap r.first.
+			if (it_b != busy_regions.begin()) {
+				--it_b;
+				if (it_b->second >= r.first) {
+					return false;
+				}
+			}
+			return true;
+		}
+		// Check that a set of busy regions is well-formed, for debug purposes.
+		template <typename RegionSet>
+		static bool region_set_checker(const RegionSet &busy_regions)
+		{
+			if (busy_regions.empty()) {
+				return true;
+			}
+			const auto it_f = busy_regions.end();
+			auto it = busy_regions.begin();
+			auto prev_it(it);
+			++it;
+			for (; it != it_f; ++it, ++prev_it) {
+				if (it->first > it->second || prev_it->first > prev_it->second) {
+					return false;
+				}
+				if (prev_it->second >= it->first) {
+					return false;
+				}
+			}
+			return true;
+		}
 		// Have to place this here because if created as a lambda, it will result in a
 		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
 		// This will sort tasks according to the sum of the bucket positions of the terms at the starting indices,
@@ -556,10 +646,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					t1.first.first < t1.first.second && t1.second.first < t1.second.second &&
 					t2.first.first < t2.first.second && t2.second.first < t2.second.second
 				);
-				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
-					m_retval.m_container.bucket_count() <
-					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
-					m_retval.m_container.bucket_count();
+// 				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
+// 					m_retval.m_container.bucket_count() <
+// 					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
+// 					m_retval.m_container.bucket_count();
+				return m_retval.m_container._bucket(*m_v1[t1.first.first]) < m_retval.m_container._bucket(*m_v1[t2.first.first]);
+// 				return t1.second.first < t2.second.first;
 			}
 			const return_type			&m_retval;
 			const std::vector<term_type1 const *>	&m_v1;
@@ -644,13 +736,192 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 			}
-			// Perform the multiplication. We need this try/catch because, by using the fast interface,
-			// in case of an error the container in retval could be left in an inconsistent state.
-			try {
-				task_multiplication<Functor>(retval,trunc,task_list);
-			} catch (...) {
-				retval.m_container.clear();
-				throw;
+			const auto n_threads = this->determine_n_threads();
+			if (n_threads == 1u) {
+				// Perform the multiplication. We need this try/catch because, by using the fast interface,
+				// in case of an error the container in retval could be left in an inconsistent state.
+				try {
+					task_multiplication<Functor>(retval,trunc,task_list);
+				} catch (...) {
+					retval.m_container.clear();
+					throw;
+				}
+			} else {
+				// Insertion counter.
+				bucket_size_type insertion_count = 0u;
+				// Set of busy bucket regions, ordered by starting point.
+				// NOTE: we do not need a multiset, as regions that compare equal (i.e., same starting point) will not exist
+				// at the same time in the set by design.
+				auto region_comparer = [](const region_type &r1, const region_type &r2) {return r1.first < r2.first;};
+				std::set<region_type,decltype(region_comparer)> busy_regions(region_comparer);
+				// Synchronization.
+				mutex m;
+				condition_variable cond;
+				// Thread function.
+				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
+					task_type task;
+					decltype(this->regions_from_task(task,retval)) regions;
+					// Functor to remove the regions from the set of busy regions.
+					auto cleanup_regions = [&regions,&busy_regions,this]() {
+						auto tmp_it = busy_regions.find(std::get<0u>(regions));
+						if (tmp_it != busy_regions.end()) {
+							busy_regions.erase(tmp_it);
+						}
+						tmp_it = busy_regions.find(std::get<1u>(regions));
+						if (tmp_it != busy_regions.end()) {
+							busy_regions.erase(tmp_it);
+						}
+						piranha_assert(this->region_set_checker(busy_regions));
+					};
+					while (true) {
+						{
+							// First, lock down everything.
+							unique_lock<mutex>::type lock(m);
+							if (task_list.empty()) {
+								break;
+							}
+							// Look for a suitable task.
+							const auto it_f = task_list.end();
+							auto it = task_list.begin();
+							for (; it != it_f; ++it) {
+								// Get the regions.
+								regions = this->regions_from_task(*it,retval);
+								// Check the regions.
+								if (this->region_checker(std::get<0u>(regions),busy_regions) &&
+									(!std::get<2u>(regions) || this->region_checker(std::get<1u>(regions),busy_regions)))
+								{
+									try {
+										// The regions are ok, insert them and break the cycle.
+										auto tmp = busy_regions.insert(std::get<0u>(regions));
+										piranha_assert(tmp.second);
+										if (std::get<2u>(regions)) {
+											tmp = busy_regions.insert(std::get<1u>(regions));
+											piranha_assert(tmp.second);
+										}
+										piranha_assert(this->region_set_checker(busy_regions));
+									} catch (...) {
+										// NOTE: the idea here is that if we do not cleanup the regions,
+										// nobody will and threads waiting for work might never complete.
+										// Take out any region we might have inserted before re-throwing.
+										cleanup_regions();
+										throw;
+									}
+									break;
+								}
+							}
+							// We might have identified a suitable task, check it is not end().
+							if (it == it_f) {
+std::cout << "lol can't do shit\n";
+std::cout << "would be: " << retval.m_container.bucket_count() << '\n';
+std::cout << "size: " << task_list.size() << '\n';
+std::cout << "-------\n";
+for (auto it = busy_regions.begin(); it != busy_regions.end(); ++it) {
+	std::cout << std::get<0>(*it) << ',' << std::get<1>(*it) << '\n';
+}
+std::cout << "-------\n";
+								// The thread can't do anything, will have to wait until something happens
+								// and then re-identify a good task.
+								cond.wait(lock);
+								continue;
+							}
+							// Now we have a good task, pop it from the task list.
+							task = *it;
+							task_list.erase(it);
+						}
+						bucket_size_type tmp_ins_count = 0u;
+						try {
+							// Perform the multiplication on the selected task.
+							typedef typename Functor::fast_rebind fast_functor_type;
+							const index_type i_start = task.first.first, j_start = task.second.first,
+								i_end = task.first.second, j_end = task.second.second;
+							piranha_assert(i_end > i_start && j_end > j_start);
+							const index_type i_size = i_end - i_start, j_size = j_end - j_start;
+							fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
+							for (index_type i = 0u; i < i_size; ++i) {
+								for (index_type j = 0u; j < j_size; ++j) {
+									if (f.skip(i,j)) {
+										break;
+									}
+									f(i,j);
+									f.insert();
+								}
+							}
+							tmp_ins_count = f.m_insertion_count;
+						} catch (...) {
+							// Re-acquire the lock.
+							lock_guard<mutex>::type lock(m);
+							// Cleanup the regions.
+							cleanup_regions();
+							// Notify all waiting threads that a region was removed from the busy set.
+							cond.notify_all();
+							throw;
+						}
+						{
+							// Re-acquire the lock.
+							lock_guard<mutex>::type lock(m);
+							// Update the insertion count.
+							insertion_count += tmp_ins_count;
+							// Take out the regions in which we just wrote from the set of busy regions.
+							cleanup_regions();
+							// Notify all waiting threads that a region was removed from the busy set.
+							cond.notify_all();
+						}
+					}
+				};
+				typedef std::tuple<packaged_task<void()>::type,future<void>::type> tuple_type;
+				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				// Functor to wait for completion of all threads.
+				auto waiter = [&pf_list] () {std::for_each(pf_list.begin(),pf_list.end(),[](tuple_type &t) {std::get<1u>(t).wait();});};
+				try {
+					for (decltype(this->determine_n_threads()) i = 0u; i < n_threads; ++i) {
+						try {
+							// First let's try to append an empty item.
+							pf_list.push_back(tuple_type{});
+							// Second, create the real tuple.
+							tuple_type t;
+							std::get<0u>(t) = packaged_task<void()>::type(thread_function);
+							std::get<1u>(t) = std::get<0u>(t).get_future();
+							// Try launching the thread.
+							thread thr(std::move(std::get<0u>(t)));
+							piranha_assert(thr.joinable());
+							try {
+								thr.detach();
+							} catch (...) {
+								// Last ditch effort: try joining before re-throwing.
+								thr.join();
+								throw;
+							}
+							// If everything went ok, move in the real tuple.
+							pf_list.back() = std::move(t);
+						} catch (...) {
+							// If the error happened *after* the empty tuple was added,
+							// then we have to remove it as it is invalid.
+							if (pf_list.size() != i) {
+								auto it_f = pf_list.end();
+								--it_f;
+								pf_list.erase(it_f);
+							}
+							throw;
+						}
+					}
+					piranha_assert(pf_list.size() == n_threads);
+					// First let's wait for everything to finish.
+					waiter();
+					// Then, let's handle the exceptions.
+					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
+						std::get<1u>(*it).get();
+					}
+					// Finally, fix the series.
+					sanitize_series(retval,insertion_count);
+				} catch (...) {
+					// Make sure any pending task is finished -> this is for
+					// the case the exception was thrown in the thread creation
+					// loop.
+					waiter();
+					// Clean up and re-throw.
+					retval.m_container.clear();
+					throw;
+				}
 			}
 			// Trace the result of estimation.
 			this->trace_estimates(retval.size(),estimate);
@@ -665,7 +936,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			for (auto it = task_list.begin(); it != it_f; ++it) {
 				const index_type i_start = it->first.first, j_start = it->second.first,
 					i_end = it->first.second, j_end = it->second.second;
-				piranha_assert(i_end >= i_start && j_end >= j_start);
+				piranha_assert(i_end > i_start && j_end > j_start);
 				const index_type i_size = i_end - i_start, j_size = j_end - j_start;
 				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
 				for (index_type i = 0u; i < i_size; ++i) {
