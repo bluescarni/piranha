@@ -23,6 +23,8 @@
 #define BOOST_TEST_MODULE pearce1_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
+
 #include "../src/kronecker_monomial.hpp"
 #include "../src/settings.hpp"
 #include "../src/timeit.hpp"
@@ -37,8 +39,9 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-	settings::set_n_threads(1);
-
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
 	typedef polynomial<double,kronecker_monomial<>> p_type;
 	p_type x("x"), y("y"), z("z"), t("t"), u("u");
 
