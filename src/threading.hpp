@@ -41,12 +41,14 @@
 #if defined(PIRANHA_USE_BOOST_THREAD)
 	#include <boost/exception_ptr.hpp>
 	#include <boost/thread/condition_variable.hpp>
+	#include <boost/thread/future.hpp>
 	#include <boost/thread/locks.hpp>
 	#include <boost/thread/mutex.hpp>
 	#include <boost/thread/thread.hpp>
 #else
 	#include <condition_variable>
 	#include <exception>
+	#include <future>
 	#include <mutex>
 	#include <thread>
 #endif
@@ -188,6 +190,40 @@ typedef boost::thread::id thread_id;
 #else
 typedef std::thread::id thread_id;
 #endif
+
+/// Future selector.
+/**
+ * Provides a typedef for either <tt>std::future<T></tt> or <tt>boost::unique_future<T></tt>.
+ * 
+ * @see http://www.boost.org/doc/libs/release/doc/html/thread/synchronization.html#thread.synchronization.futures
+ */
+template <typename T>
+struct future
+{
+	/// Type definition.
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	typedef boost::unique_future<T> type;
+#else
+	typedef std::future<T> type;
+#endif
+};
+
+/// Packaged task selector.
+/**
+ * Provides a typedef for either <tt>std::packaged_task<T></tt> or <tt>boost::packaged_task<T></tt>.
+ * 
+ * @see http://www.boost.org/doc/libs/release/doc/html/thread/synchronization.html#thread.synchronization.futures
+ */
+template <typename T>
+struct packaged_task
+{
+	/// Type definition.
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	typedef boost::packaged_task<T> type;
+#else
+	typedef std::packaged_task<T> type;
+#endif
+};
 
 /// Calling thread namespace.
 /**
