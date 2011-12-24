@@ -813,14 +813,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							}
 							// We might have identified a suitable task, check it is not end().
 							if (it == it_f) {
-std::cout << "lol can't do shit\n";
-std::cout << "would be: " << retval.m_container.bucket_count() << '\n';
-std::cout << "size: " << task_list.size() << '\n';
-std::cout << "-------\n";
-for (auto it = busy_regions.begin(); it != busy_regions.end(); ++it) {
-	std::cout << std::get<0>(*it) << ',' << std::get<1>(*it) << '\n';
-}
-std::cout << "-------\n";
 								// The thread can't do anything, will have to wait until something happens
 								// and then re-identify a good task.
 								cond.wait(lock);
