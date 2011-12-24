@@ -646,12 +646,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					t1.first.first < t1.first.second && t1.second.first < t1.second.second &&
 					t2.first.first < t2.first.second && t2.second.first < t2.second.second
 				);
-// 				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
-// 					m_retval.m_container.bucket_count() <
-// 					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
-// 					m_retval.m_container.bucket_count();
-				return m_retval.m_container._bucket(*m_v1[t1.first.first]) < m_retval.m_container._bucket(*m_v1[t2.first.first]);
-// 				return t1.second.first < t2.second.first;
+				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
+					m_retval.m_container.bucket_count() <
+					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
+					m_retval.m_container.bucket_count();
 			}
 			const return_type			&m_retval;
 			const std::vector<term_type1 const *>	&m_v1;
@@ -736,7 +734,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 			}
-			const auto n_threads = this->determine_n_threads();
+			typedef decltype(this->determine_n_threads()) thread_size_type;
+			const thread_size_type n_threads = this->determine_n_threads();
 			if (n_threads == 1u) {
 				// Perform the multiplication. We need this try/catch because, by using the fast interface,
 				// in case of an error the container in retval could be left in an inconsistent state.
@@ -876,7 +875,7 @@ std::cout << "-------\n";
 				// Functor to wait for completion of all threads.
 				auto waiter = [&pf_list] () {std::for_each(pf_list.begin(),pf_list.end(),[](tuple_type &t) {std::get<1u>(t).wait();});};
 				try {
-					for (decltype(this->determine_n_threads()) i = 0u; i < n_threads; ++i) {
+					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						try {
 							// First let's try to append an empty item.
 							pf_list.push_back(tuple_type{});
