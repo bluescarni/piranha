@@ -410,8 +410,10 @@ class series_multiplier
 		 * be avoided because the truncator itself is not active. In such a case, the functor must be instantiated with
 		 * \p IsActive set to \p false, so that frequent truncation-related operations
 		 * can be skipped altogether, hence improving performance.
+		 * 
+		 * The \p SortOnConstruction boolean flag is used during construction to conditionally prevent the sorting of input terms.
 		 */
-		template <bool IsActive>
+		template <bool IsActive, bool SortOnConstruction = true>
 		class default_functor
 		{
 			public:
@@ -496,8 +498,11 @@ class series_multiplier
 				 * multiplications will be accumulated. The input parameters (or references to them) are stored as public
 				 * class members for later use.
 				 * 
-				 * If the associated truncator object is a skipping truncator and the \p IsActive flag is \p true, the arrays of
-				 * pointers to terms will be sorted according to the truncator.
+				 * If the associated truncator object is a skipping truncator, the \p IsActive flag is \p true
+				 * and the \p SortOnConstruction flag is true, the arrays of
+				 * pointers to terms will be sorted according to the truncator. Otherwise, the input term pointers arrays
+				 * will be unmodified and it will be up to the user of the functor to sort them according to the active
+				 * truncator.
 				 * 
 				 * @param[in] ptr1 start of the first array of pointers.
 				 * @param[in] s1 size of the first array of pointers.
@@ -518,7 +523,7 @@ class series_multiplier
 					if (unlikely(IsActive != trunc.is_active())) {
 						piranha_throw(std::invalid_argument,"inconsistent activity flags for truncator");
 					}
-					sort_for_skip(std::integral_constant<bool,IsActive && ttraits::is_skipping>());
+					sort_for_skip(std::integral_constant<bool,IsActive && ttraits::is_skipping && SortOnConstruction>());
 				}
 				/// Check skipping condition.
 				/**

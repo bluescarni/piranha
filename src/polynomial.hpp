@@ -530,30 +530,40 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 	private:
 		typedef typename std::vector<term_type1 const *>::size_type index_type;
 		typedef typename Series1::size_type bucket_size_type;
-		// This is a multiplication task: a (Block1,Block2) pair, where Block1(2) is a range (i.e., in the [a,b[ form) of
-		// indices in this->m_v1(2).
-		typedef std::pair<std::pair<index_type,index_type>,std::pair<index_type,index_type>> task_type;
 		// This is a bucket region, i.e., a _closed_ interval [a,b] of bucket indices in a hash set.
 		typedef std::pair<bucket_size_type,bucket_size_type> region_type;
-		// Compute bucket regions from a task. There
-		// are at most two disjoint regions, depending on whether the sum of the hash values
-		// wraps around the bucket count or not.
-		std::tuple<region_type,region_type,bool> regions_from_task(const task_type &t, const return_type &retval) const
+		// Block-by-block multiplication task.
+		struct task_type
+		{
+			// First block: semi-open range [a,b[ of indices in this->m_v1.
+			std::pair<index_type,index_type>	m_b1;
+			// Second block (indices in this->m_v2).
+			std::pair<index_type,index_type>	m_b2;
+			// First region in the return hash set involved in the multiplication.
+			region_type				m_r1;
+			// Second region.
+			region_type				m_r2;
+			// Boolean flag to signal if the second region is present or not.
+			bool					m_second_region;
+		};
+		// Create task from indices i in first series, j in second series (semi-open intervals).
+		task_type task_from_indices(const index_type &i_start, const index_type &i_end,
+			const index_type &j_start, const index_type &j_end, const return_type &retval) const
 		{
 			const auto &v1 = this->m_v1;
 			const auto &v2 = this->m_v2;
+			piranha_assert(i_start < i_end && j_start < j_end);
+			piranha_assert(i_end <= v1.size() && j_end <= v2.size());
 			const auto b_count = retval.m_container.bucket_count();
+			piranha_assert(b_count > 0u);
 			region_type r1{0u,0u}, r2{0u,0u};
 			bool second_region = false;
-			piranha_assert(t.first.first < t.first.second && t.second.first < t.second.second);
-			piranha_assert(t.first.first < v1.size() && t.second.first < v2.size());
-			piranha_assert(t.first.second - 1u < v1.size() && t.second.second - 1u < v2.size());
 			// Addition is safe because of the limits on the max bucket count of hash_set.
-			const auto a = retval.m_container._bucket(*v1[t.first.first]) +
-				retval.m_container._bucket(*v2[t.second.first]),
+			const auto a = retval.m_container._bucket(*v1[i_start]) +
+				retval.m_container._bucket(*v2[j_start]),
 				// NOTE: we are sure that the tasks are not empty, so the -1 is safe.
-				b = retval.m_container._bucket(*v1[t.first.second - 1u]) +
-				retval.m_container._bucket(*v2[t.second.second - 1u]);
+				b = retval.m_container._bucket(*v1[i_end - 1u]) +
+				retval.m_container._bucket(*v2[j_end - 1u]);
 			// NOTE: using <= here as [a,b] is now a closed interval.
 			piranha_assert(a <= b);
 			piranha_assert(b <= b_count * 2u - 2u);
@@ -567,7 +577,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				r2.first = 0u;
 				r2.second = b % b_count;
 			}
-			return std::make_tuple(r1,r2,second_region);
+			return task_type{{i_start,i_end},{j_start,j_end},r1,r2,second_region};
 		}
 		// Functor to check if region r does not overlap any of the busy ones.
 		template <typename RegionSet>
@@ -641,14 +651,14 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// NOTE: might use faster mod calculation here, but probably not worth it.
 				// NOTE: because tasks cannot contain empty intervals, the start of each interval will be a valid index (i.e., not end())
 				// in the term pointers vectors.
-				piranha_assert(t1.first.first < m_v1.size() && t2.first.first < m_v1.size() &&
-					t1.second.first < m_v2.size() && t2.second.first < m_v2.size() &&
-					t1.first.first < t1.first.second && t1.second.first < t1.second.second &&
-					t2.first.first < t2.first.second && t2.second.first < t2.second.second
+				piranha_assert(t1.m_b1.first < m_v1.size() && t2.m_b1.first < m_v1.size() &&
+					t1.m_b2.first < m_v2.size() && t2.m_b2.first < m_v2.size() &&
+					t1.m_b1.first < t1.m_b1.second && t1.m_b2.first < t1.m_b2.second &&
+					t2.m_b1.first < t2.m_b1.second && t2.m_b2.first < t2.m_b2.second
 				);
-				return (m_retval.m_container._bucket(*m_v1[t1.first.first]) + m_retval.m_container._bucket(*m_v2[t1.second.first])) %
+				return (m_retval.m_container._bucket(*m_v1[t1.m_b1.first]) + m_retval.m_container._bucket(*m_v2[t1.m_b2.first])) %
 					m_retval.m_container.bucket_count() <
-					(m_retval.m_container._bucket(*m_v1[t2.first.first]) + m_retval.m_container._bucket(*m_v2[t2.second.first])) %
+					(m_retval.m_container._bucket(*m_v1[t2.m_b1.first]) + m_retval.m_container._bucket(*m_v2[t2.m_b2.first])) %
 					m_retval.m_container.bucket_count();
 			}
 			const return_type			&m_retval;
@@ -666,6 +676,23 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			if (!trunc.is_active()) {
 				return;
+			}
+			auto &v1 = this->m_v1;
+			auto &v2 = this->m_v2;
+			const auto size1 = v1.size(), size2 = v2.size();
+			auto sorter1 = [&trunc](const term_type1 *t1, const term_type1 *t2) {return trunc.compare_terms(*t1,*t2);};
+			auto sorter2 = [&trunc](const term_type2 *t1, const term_type2 *t2) {return trunc.compare_terms(*t1,*t2);};
+			for (index_type i = 0u; i < size1 / bsize1; ++i) {
+				std::sort(&v1[0u] + i * bsize1,&v1[0u] + (i + 1u) * bsize1,sorter1);
+			}
+			if (size1 % bsize1) {
+				std::sort(&v1[0u] + (size1 / bsize1) * bsize1,&v1[0u] + size1,sorter1);
+			}
+			for (index_type i = 0u; i < size2 / bsize2; ++i) {
+				std::sort(&v2[0u] + i * bsize2,&v2[0u] + (i + 1u) * bsize2,sorter2);
+			}
+			if (size2 % bsize2) {
+				std::sort(&v2[0u] + (size2 / bsize2) * bsize2,&v2[0u] + size2,sorter2);
 			}
 		}
 		template <typename Functor>
@@ -693,7 +720,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Rehash the retun value's container accordingly.
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<decltype(estimate)>(std::ceil(estimate / retval.m_container.max_load_factor())));
-			piranha_assert(retval.m_container.bucket_count() >= 1u);
+			piranha_assert(retval.m_container.bucket_count());
 			// Now let's sort the input terms according to the position of the Kronecker keys in the estimated return value.
 			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
 				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
@@ -726,30 +753,29 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// The task are sorted according to the index of the first bucket of retval that will be written to,
 			// so we need a multiset as different tasks might have the same starting position.
 			std::multiset<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
-			decltype(task_list.insert(task_type{})) ins_result;
+			decltype(task_list.insert(std::declval<task_type>())) ins_result;
 			for (index_type i = 0u; i < size1 / bsize1; ++i) {
 				for (index_type j = 0u; j < size2 / bsize2; ++j) {
-					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{j * bsize2,(j + 1u) * bsize2}});
-					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
+					ins_result = task_list.insert(task_from_indices(i * bsize1,(i + 1u) * bsize1,j * bsize2,(j + 1u) * bsize2,retval));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 				if (size2 % bsize2) {
-					ins_result = task_list.insert({{i * bsize1,(i + 1u) * bsize1},{(size2 / bsize2) * bsize2,size2}});
-					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
+					ins_result = task_list.insert(task_from_indices(i * bsize1,(i + 1u) * bsize1,(size2 / bsize2) * bsize2,size2,retval));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 			}
 			if (size1 % bsize1) {
 				for (index_type j = 0u; j < size2 / bsize2; ++j) {
-					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{j * bsize2,(j + 1u) * bsize2}});
-					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
+					ins_result = task_list.insert(task_from_indices((size1 / bsize1) * bsize1,size1,j * bsize2,(j + 1u) * bsize2,retval));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 				if (size2 % bsize2) {
-					ins_result = task_list.insert({{(size1 / bsize1) * bsize1,size1},{(size2 / bsize2) * bsize2,size2}});
-					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
+					ins_result = task_list.insert(task_from_indices((size1 / bsize1) * bsize1,size1,(size2 / bsize2) * bsize2,size2,retval));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 			}
-			// TODO
-			// Sort internally each block according to the truncator, if necessary.
-			//sort_blocks(bsize1,bsize2,trunc);
+			// Pre-sort each block according to the truncator, if necessary.
+			sort_blocks(bsize1,bsize2,trunc);
 			typedef decltype(this->determine_n_threads()) thread_size_type;
 			const thread_size_type n_threads = this->determine_n_threads();
 			if (n_threads == 1u) {
@@ -775,17 +801,17 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// Thread function.
 				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
 					task_type task;
-					decltype(this->regions_from_task(task,retval)) regions;
-					// Functor to remove the regions gotten via region_checker() from the set of busy regions.
-					auto cleanup_regions = [&regions,&busy_regions,this]() {
-						auto tmp_it = busy_regions.find(std::get<0u>(regions));
+					// Functor to remove the regions associated to a task from the set of busy regions.
+					auto cleanup_regions = [&busy_regions,this](const task_type &task) {
+						auto tmp_it = busy_regions.find(task.m_r1);
 						if (tmp_it != busy_regions.end()) {
 							busy_regions.erase(tmp_it);
 						}
-						if (!std::get<2u>(regions)) {
+						// Deal with second region only if present.
+						if (!task.m_second_region) {
 							return;
 						}
-						tmp_it = busy_regions.find(std::get<1u>(regions));
+						tmp_it = busy_regions.find(task.m_r2);
 						if (tmp_it != busy_regions.end()) {
 							busy_regions.erase(tmp_it);
 						}
@@ -802,18 +828,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							const auto it_f = task_list.end();
 							auto it = task_list.begin();
 							for (; it != it_f; ++it) {
-								// Get the regions.
-								regions = this->regions_from_task(*it,retval);
 								// Check the regions.
-								if (this->region_checker(std::get<0u>(regions),busy_regions) &&
-									(!std::get<2u>(regions) || this->region_checker(std::get<1u>(regions),busy_regions)))
+								if (this->region_checker(it->m_r1,busy_regions) &&
+									(!it->m_second_region || this->region_checker(it->m_r2,busy_regions)))
 								{
 									try {
 										// The regions are ok, insert them and break the cycle.
-										auto tmp = busy_regions.insert(std::get<0u>(regions));
+										auto tmp = busy_regions.insert(it->m_r1);
 										piranha_assert(tmp.second);
-										if (std::get<2u>(regions)) {
-											tmp = busy_regions.insert(std::get<1u>(regions));
+										if (it->m_second_region) {
+											tmp = busy_regions.insert(it->m_r2);
 											piranha_assert(tmp.second);
 										}
 										piranha_assert(this->region_set_checker(busy_regions));
@@ -821,7 +845,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 										// NOTE: the idea here is that in case of errors
 										// we want to restore the original situation
 										// as if nothing happened.
-										cleanup_regions();
+										cleanup_regions(*it);
 										throw;
 									}
 									break;
@@ -842,8 +866,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						try {
 							// Perform the multiplication on the selected task.
 							typedef typename Functor::fast_rebind fast_functor_type;
-							const index_type i_start = task.first.first, j_start = task.second.first,
-								i_end = task.first.second, j_end = task.second.second;
+							const index_type i_start = task.m_b1.first, j_start = task.m_b2.first,
+								i_end = task.m_b1.second, j_end = task.m_b2.second;
 							piranha_assert(i_end > i_start && j_end > j_start);
 							const index_type i_size = i_end - i_start, j_size = j_end - j_start;
 							fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
@@ -861,7 +885,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							// Re-acquire the lock.
 							lock_guard<mutex>::type lock(m);
 							// Cleanup the regions.
-							cleanup_regions();
+							cleanup_regions(task);
 							// Notify all waiting threads that a region was removed from the busy set.
 							cond.notify_all();
 							throw;
@@ -872,7 +896,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							// Update the insertion count.
 							insertion_count += tmp_ins_count;
 							// Take out the regions in which we just wrote from the set of busy regions.
-							cleanup_regions();
+							cleanup_regions(task);
 							// Notify all waiting threads that a region was removed from the busy set.
 							cond.notify_all();
 						}
@@ -944,8 +968,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			bucket_size_type insertion_count = 0u;
 			const auto it_f = task_list.end();
 			for (auto it = task_list.begin(); it != it_f; ++it) {
-				const index_type i_start = it->first.first, j_start = it->second.first,
-					i_end = it->first.second, j_end = it->second.second;
+				const index_type i_start = it->m_b1.first, j_start = it->m_b2.first,
+					i_end = it->m_b1.second, j_end = it->m_b2.second;
 				piranha_assert(i_end > i_start && j_end > j_start);
 				const index_type i_size = i_end - i_start, j_size = j_end - j_start;
 				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
@@ -988,7 +1012,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		template <bool IsActive, bool FastMode = false>
-		struct functor: base::template default_functor<IsActive>
+		struct functor: base::template default_functor<IsActive,false>
 		{
 			// Fast version of functor.
 			typedef functor<IsActive,true> fast_rebind;
@@ -996,7 +1020,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			explicit functor(term_type1 const **ptr1, const index_type &s1,
 				term_type2 const **ptr2, const index_type &s2, const truncator_type &trunc,
 				return_type &retval):
-				base::template default_functor<IsActive>(ptr1,s1,ptr2,s2,trunc,retval),
+				base::template default_functor<IsActive,false>(ptr1,s1,ptr2,s2,trunc,retval),
 				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
 			{}
 			void operator()(const index_type &i, const index_type &j) const
