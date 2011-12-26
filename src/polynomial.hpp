@@ -624,8 +624,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		}
 		// Have to place this here because if created as a lambda, it will result in a
 		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
-		// This will sort tasks according to the sum of the bucket positions of the terms at the starting indices,
-		// modulo the bucket count.
+		// This will sort tasks according to the initial writing position in the hash table
+		// of the result.
 		struct task_sorter
 		{
 			explicit task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
@@ -655,6 +655,19 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const std::vector<term_type1 const *>	&m_v1;
 			const std::vector<term_type2 const *>	&m_v2;
 		};
+		// Pre-sort individual blocks if truncator is skipping and active.
+		template <typename S1, typename S2>
+		void sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
+			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
+		{}
+		template <typename S1, typename S2>
+		void sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
+			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
+		{
+			if (!trunc.is_active()) {
+				return;
+			}
+		}
 		template <typename Functor>
 		typename base::return_type execute(const truncator_type &trunc) const
 		{
@@ -734,6 +747,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->first.first != ins_result->first.second && ins_result->second.first != ins_result->second.second);
 				}
 			}
+			// TODO
+			// Sort internally each block according to the truncator, if necessary.
+			//sort_blocks(bsize1,bsize2,trunc);
 			typedef decltype(this->determine_n_threads()) thread_size_type;
 			const thread_size_type n_threads = this->determine_n_threads();
 			if (n_threads == 1u) {
