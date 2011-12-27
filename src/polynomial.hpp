@@ -906,10 +906,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 				};
-				typedef std::tuple<packaged_task<void()>::type,future<void>::type> tuple_type;
+				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
 				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
 				// Functor to wait for completion of all threads.
-				auto waiter = [&pf_list] () {std::for_each(pf_list.begin(),pf_list.end(),[](tuple_type &t) {std::get<1u>(t).wait();});};
+				auto waiter = [&pf_list] () {std::for_each(pf_list.begin(),pf_list.end(),[](tuple_type &t) {std::get<1u>(t)->wait();});};
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						try {
@@ -917,10 +917,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							pf_list.push_back(tuple_type{});
 							// Second, create the real tuple.
 							tuple_type t;
-							std::get<0u>(t) = packaged_task<void()>::type(thread_function);
-							std::get<1u>(t) = std::get<0u>(t).get_future();
+							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
+							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
+							auto tmp_pt = std::get<0u>(t);
+							//auto tmp_func = [](std::shared_ptr<packaged_task<void()>::type> pt) -> void {(*pt)();};
 							// Try launching the thread.
-							thread thr(std::move(std::get<0u>(t)));
+							thread thr(tmp_func,tmp_pt);
 							piranha_assert(thr.joinable());
 							try {
 								thr.detach();
@@ -947,7 +949,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					waiter();
 					// Then, let's handle the exceptions.
 					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
-						std::get<1u>(*it).get();
+						std::get<1u>(*it)->get();
 					}
 					// Finally, fix the series.
 					sanitize_series(retval,insertion_count);
@@ -964,6 +966,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Trace the result of estimation.
 			this->trace_estimates(retval.size(),estimate);
 			return retval;
+		}
+		static void tmp_func(std::shared_ptr<packaged_task<void()>::type> pt)
+		{
+			(*pt)();
 		}
 		template <typename Functor, typename Truncator, typename TaskList>
 		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
