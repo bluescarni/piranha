@@ -906,6 +906,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 				};
+				// NOTE: we need to wrap the task and the future in shared pointers because
+				// of a GCC 4.6 bug (will try to copy move-only objects because of internal use
+				// of std::bind).
 				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
 				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
 				try {
@@ -917,10 +920,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							tuple_type t;
 							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
 							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
-							auto tmp_pt = std::get<0u>(t);
-							//auto tmp_func = [](std::shared_ptr<packaged_task<void()>::type> pt) -> void {(*pt)();};
+							auto pt_ptr = std::get<0u>(t);
 							// Try launching the thread.
-							thread thr(tmp_func,tmp_pt);
+							thread thr(pt_launcher,pt_ptr);
 							piranha_assert(thr.joinable());
 							try {
 								thr.detach();
@@ -965,9 +967,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			this->trace_estimates(retval.size(),estimate);
 			return retval;
 		}
-		static void tmp_func(std::shared_ptr<packaged_task<void()>::type> pt)
+		// NOTE: these two static functions are for internal use above, we have to place them
+		// here because of GCC bugs (in the first case it is the same std::bind problem above,
+		// in the second case a problem cropping up when using LTO).
+		// Helper function for use above.
+		static void pt_launcher(std::shared_ptr<packaged_task<void()>::type> pt_ptr)
 		{
-			(*pt)();
+			(*pt_ptr)();
 		}
 		// Functor to wait for completion of all threads.
 		template <typename PfList>
@@ -975,6 +981,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			std::for_each(pf_list.begin(),pf_list.end(),[](typename PfList::value_type &t) {std::get<1u>(t)->wait();});
 		}
+		// Single thread function.
 		template <typename Functor, typename Truncator, typename TaskList>
 		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
