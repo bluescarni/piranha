@@ -1100,9 +1100,8 @@ class integer
 		 */
 		integer &operator=(integer &&other) piranha_noexcept_spec(true)
 		{
-			if (likely(this != &other)) {
-				swap(other);
-			}
+			// NOTE: swap() already has the check for this.
+			swap(other);
 			return *this;
 		}
 		/// Assignment operator.

@@ -54,6 +54,13 @@ const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned
 
 const std::vector<std::string> invalid_strings{"-0","+0","01","+1","123f"," 123","123 ","123.56"};
 
+static inline piranha::integer get_big_int()
+{
+	std::string tmp = boost::lexical_cast<std::string>(boost::integer_traits<unsigned long long>::const_max);
+	tmp += "123456789";
+	return piranha::integer(tmp);
+}
+
 struct check_arithmetic_construction
 {
 	template <typename T>
@@ -78,8 +85,16 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(*it)),std::invalid_argument);
 	}
 	// Copy construction
-	piranha::integer i("-30000"), j(i);
-	BOOST_CHECK_EQUAL(-30000,static_cast<int>(j));
+	piranha::integer i("-30"), j(i);
+	BOOST_CHECK_EQUAL(-30,static_cast<int>(j));
+	// Large value.
+	piranha::integer i2(get_big_int()), j2(i2);
+	BOOST_CHECK_EQUAL(i2,j2);
+	// Move construction.
+	piranha::integer i3("-30"), j3(std::move(i3));
+	BOOST_CHECK(j3 == -30);
+	piranha::integer i4(get_big_int()), j4(std::move(i4));
+	BOOST_CHECK(j4 == i2);
 	// Construction with non-finite floating-point.
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
@@ -97,6 +112,11 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	piranha::integer k(piranha::integer::nlimbs(4));
 	BOOST_CHECK_EQUAL(k,0);
 	BOOST_CHECK_NO_THROW(piranha::integer{piranha::integer::nlimbs(0)});
+	piranha::integer k3(piranha::integer::nlimbs(1));
+	BOOST_CHECK(k3.allocated_size() >= 1u);
+	// High number of limbs.
+	piranha::integer k2(piranha::integer::nlimbs(400));
+	BOOST_CHECK_EQUAL(k2.allocated_size(),400u);
 }
 
 struct check_arithmetic_assignment
@@ -203,6 +223,14 @@ BOOST_AUTO_TEST_CASE(integer_swap_test)
 	piranha::integer i(42), j(43);
 	i.swap(j);
 	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
+	piranha::integer k(get_big_int());
+	i.swap(k);
+	BOOST_CHECK_EQUAL(43,static_cast<int>(k));
+	k.swap(i);
+	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
+	piranha::integer l(get_big_int() + 1);
+	l.swap(k);
+	BOOST_CHECK_EQUAL(get_big_int(),l);
 }
 
 template <typename T>
@@ -226,7 +254,7 @@ static inline void inf_conversion_test()
 
 BOOST_AUTO_TEST_CASE(integer_conversion_test)
 {
-	piranha::integer bigint("6456895768945764589283127342389472389472389423799923942394823749238472394872389472389472389748923749223947234892374897");
+	piranha::integer bigint(get_big_int());
 	BOOST_CHECK_THROW(static_cast<int>(bigint),std::overflow_error);
 	piranha::integer max_unsigned(boost::numeric::bounds<unsigned>::highest());
 	BOOST_CHECK_THROW(static_cast<int>(max_unsigned),std::overflow_error);
