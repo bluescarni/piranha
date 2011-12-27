@@ -25,20 +25,12 @@
 #include "threading.hpp"
 
 // Translation unit to enforce order of initialisation of static variables.
-// NOTE: the important thing here so far is that memory allocation functions of GMP
-// are set up correctly before any GMP object is used. Namely:
-// - degree truncator setup,
-// - kronecker array codification limits.
-// IOW, the startup class must be created before any GMP object is initialised.
 
 namespace piranha
 {
 
-// Instantiate the thread id, in case in the future we need to check on this in GMP related checks.
+// Instantiate the thread id, in case in the future we need to check on this.
 const thread_id runtime_info::m_main_thread_id = this_thread::get_id();
-
-// This will be set to true in the startup code below.
-bool settings::m_status = false;
 
 // Piranha runtime environment initial setup.
 const settings::startup settings::m_startup;
