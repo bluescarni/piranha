@@ -427,11 +427,11 @@ class series_multiplier
 				// Meta-programmed helpers for skipping and filtering.
 				void sort_for_skip(const std::true_type &) const
 				{
-					auto sorter1 = [&m_trunc](const term_type1 *t1, const term_type1 *t2) {
-						return m_trunc.compare_terms(*t1,*t2);
+					auto sorter1 = [this](const term_type1 *t1, const term_type1 *t2) {
+						return this->m_trunc.compare_terms(*t1,*t2);
 					};
-					auto sorter2 = [&m_trunc](const term_type2 *t1, const term_type2 *t2) {
-						return m_trunc.compare_terms(*t1,*t2);
+					auto sorter2 = [this](const term_type2 *t1, const term_type2 *t2) {
+						return this->m_trunc.compare_terms(*t1,*t2);
 					};
 					std::sort(m_ptr1,m_ptr1 + m_s1,sorter1);
 					std::sort(m_ptr2,m_ptr2 + m_s2,sorter2);
@@ -888,7 +888,7 @@ class series_multiplier
 					try {
 						thread_management::binder b;
 						const auto it_f = r_it->m_container._m_end();
-						auto tmp_i = i;
+						size_type tmp_i = i;
 						for (auto it = r_it->m_container._m_begin(); it != it_f; ++it, ++tmp_i) {
 							piranha_assert(tmp_i < idx.size());
 							idx[tmp_i] = std::make_pair(retval.m_container._bucket(*it),it);

@@ -234,6 +234,8 @@ class truncator<polynomial<Cf,Expo>>: public power_series_truncator
 		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
 		 */
 		explicit truncator(const polynomial_type &poly):power_series_truncator(),m_poly(poly) {}
+		/// Defaulted copy constructor.
+		truncator(const truncator &) = default;
 		/// Deleted copy assignment.
 		truncator &operator=(const truncator &) = delete;
 		/// Deleted move assignment.
@@ -323,6 +325,8 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 				piranha_throw(std::invalid_argument,"incompatible sets of arguments");
 			}
 		}
+		/// Defaulted copy constructor.
+		truncator(const truncator &) = default;
 		/// Deleted copy assignment.
 		truncator &operator=(const truncator &) = delete;
 		/// Deleted move assignment.

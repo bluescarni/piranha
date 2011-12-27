@@ -62,6 +62,8 @@ class power_series_truncator: public degree_truncator_settings
 		 * errors in standard containers.
 		 */
 		power_series_truncator():m_state(degree_truncator_settings::get_state()) {}
+		/// Defaulted copy constructor.
+		power_series_truncator(const power_series_truncator &) = default;
 		/// Deleted copy assignment operator.
 		power_series_truncator &operator=(const power_series_truncator &) = delete;
 		/// Deleted move assignment operator.
