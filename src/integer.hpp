@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/integer_traits.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -31,7 +32,6 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cctype> // For std::isdigit().
 #include <cstddef>
-#include <cstring>
 // NOTE: GMP docs say gmp.h already includes the extern "C" parts.
 #include <gmp.h>
 #include <iostream>
@@ -45,6 +45,7 @@
 #include "config.hpp" // For (un)likely.
 #include "exceptions.hpp"
 #include "math.hpp"
+#include "settings.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -88,7 +89,6 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo check out the impact of the unlikely() on destruction, maybe that's a contributor to weak performance in parallel destruction of cvector?
  * \todo memory optimisations for division (same as those for mult and add)
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations: such tests should re-defined GMP memory allocation functions so that they count the allocations, and report
@@ -101,6 +101,15 @@ namespace piranha
  */
 class integer
 {
+		// Number of limbs stored inline in the class.
+		static const std::size_t static_storage_size = 2u;
+		// NOTE: _mp_alloc is int.
+		static_assert(static_storage_size && static_storage_size <= (unsigned)boost::integer_traits<int>::const_max &&
+			// NOTE: the mp_limb_t part comes in when we have to compute the array index to set the storage flag.
+			static_storage_size < boost::integer_traits<std::size_t>::const_max / sizeof(::mp_limb_t),
+			"Invalid static storage size.");
+		typedef std::aligned_storage<sizeof(::mp_limb_t[static_storage_size]) + 1u,alignof(::mp_limb_t[static_storage_size])>::type
+			static_storage_type;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>
 		struct is_interop_type
@@ -143,47 +152,6 @@ class integer
 			}
 			// Check that each character is a digit.
 			std::for_each(str + has_minus, str + size,[](char c){if (!std::isdigit(c)) {piranha_throw(std::invalid_argument,"invalid string input for integer type");}});
-		}
-		// Construction.
-		void construct_from_string(const char *str)
-		{
-			validate_string(str);
-			// String is OK.
-			const int retval = ::mpz_init_set_str(m_value,str,10);
-			if (retval == -1) {
-				// Clear it and throw.
-				::mpz_clear(m_value);
-				piranha_throw(std::invalid_argument,"invalid string input for integer type");
-			}
-			piranha_assert(retval == 0);
-		}
-		template <typename T>
-		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
-		{
-			fp_normal_check(x);
-			::mpz_init_set_d(m_value,static_cast<double>(x));
-		}
-		template <typename T>
-		void construct_from_arithmetic(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
-		{
-			::mpz_init_set_si(m_value,static_cast<long>(si));
-		}
-		template <typename T>
-		void construct_from_arithmetic(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
-		{
-			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
-		}
-		template <typename T>
-		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
-		{
-			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
-		}
-		void construct_from_arithmetic(const long double &x)
-		{
-			fp_normal_check(x);
-			construct_from_string(ld_to_string(x).c_str());
 		}
 		// Assignment.
 		void assign_from_string(const char *str)
@@ -953,6 +921,12 @@ class integer
 				return (1 / *this).pow(exp);
 			}
 		}
+		static void check_memory_functions()
+		{
+			if (unlikely(!settings::status())) {
+				piranha_throw(std::runtime_error,"GMP memory functions initialisation failed");
+			}
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -960,7 +934,8 @@ class integer
 		 */
 		integer()
 		{
-			::mpz_init(m_value);
+			check_memory_functions();
+			default_initialization();
 		}
 		/// Class for the representation of the number of limbs in a piranha::integer.
 		/**
@@ -991,10 +966,12 @@ class integer
 		};
 		/// Constructor from number of limbs.
 		/**
-		 * Construct an integer object initialised to zero and with pre-allocated space of \p n limbs.
+		 * Construct an integer object trying to allocate at least \p n limbs for it.
 		 * A limb is, in the jargon of the GMP library, "the part of a multi-precision number that fits into a single
 		 * machine word". The GMP global variable \p mp_bits_per_limb represents the number of bits contained in a limb
 		 * (typically 32 or 64).
+		 * 
+		 * The integer will be initialised to zero.
 		 * 
 		 * Example usage:
 		 * @code
@@ -1006,10 +983,16 @@ class integer
 		 * 
 		 * @see http://gmplib.org/manual/Nomenclature-and-Types.html.
 		 */
-		integer(const nlimbs &n)
+		explicit integer(const nlimbs &n)
 		{
-			// NOTE: use unsigned types everywhere, so that in case of overflow we just allocate a different amount of memory.
-			::mpz_init2(m_value,n.m_n * std::make_unsigned<decltype(::mp_bits_per_limb)>::type(::mp_bits_per_limb));
+			check_memory_functions();
+			if (n.m_n <= static_storage_size) {
+				default_initialization();
+			} else {
+				// NOTE: use unsigned types everywhere, so that in case of overflow we just allocate a different amount of memory.
+				::mpz_init2(m_value,n.m_n * std::make_unsigned<decltype(::mp_bits_per_limb)>::type(::mp_bits_per_limb));
+				set_static_storage(false);
+			}
 		}
 		/// Copy constructor.
 		/**
@@ -1017,7 +1000,19 @@ class integer
 		 */
 		integer(const integer &other)
 		{
-			::mpz_init_set(m_value,other.m_value);
+			if (other.get_static_storage()) {
+				m_value->_mp_size = other.m_value->_mp_size;
+				m_value->_mp_d = static_ptr();
+				m_value->_mp_alloc = (int)static_storage_size;
+				// NOTE: here and elsewhere we could be copying uninitialised data, which shuold be fine (8.5):
+				// "Otherwise, if no initializer is specified for a nonstatic object, the object and its subobjects,
+				// if any, have an indeterminate initial value".
+				std::copy(other.static_ptr(),other.static_ptr() + static_storage_size,static_ptr());
+				set_static_storage(true);
+			} else {
+				::mpz_init_set(m_value,other.m_value);
+				set_static_storage(false);
+			}
 		}
 		/// Move constructor.
 		/**
@@ -1025,13 +1020,22 @@ class integer
 		 */
 		integer(integer &&other) piranha_noexcept_spec(true)
 		{
-			m_value->_mp_size = other.m_value->_mp_size;
-			m_value->_mp_d = other.m_value->_mp_d;
-			m_value->_mp_alloc = other.m_value->_mp_alloc;
-			// Erase other.
-			other.m_value->_mp_size = 0;
-			other.m_value->_mp_d = 0;
-			other.m_value->_mp_alloc = 0;
+			if (other.get_static_storage()) {
+				// This is the same as the copy constructor.
+				m_value->_mp_size = other.m_value->_mp_size;
+				m_value->_mp_d = static_ptr();
+				m_value->_mp_alloc = (int)static_storage_size;
+				std::copy(other.static_ptr(),other.static_ptr() + static_storage_size,static_ptr());
+				set_static_storage(true);
+			} else {
+				// Set this as dynamic storage, stealing resources from the other.
+				m_value->_mp_size = other.m_value->_mp_size;
+				m_value->_mp_d = other.m_value->_mp_d;
+				m_value->_mp_alloc = other.m_value->_mp_alloc;
+				set_static_storage(false);
+				// Set other as static storage.
+				other.default_initialization();
+			}
 		}
 		/// Generic constructor.
 		/**
@@ -1047,7 +1051,9 @@ class integer
 		template <typename T>
 		explicit integer(const T &x, typename std::enable_if<is_interop_type<T>::value>::type * = piranha_nullptr)
 		{
-			construct_from_arithmetic(x);
+			check_memory_functions();
+			default_initialization();
+			assign_from_arithmetic(x);
 		}
 		/// Constructor from string.
 		/**
@@ -1061,7 +1067,9 @@ class integer
 		 */
 		explicit integer(const std::string &str)
 		{
-			construct_from_string(str.c_str());
+			check_memory_functions();
+			default_initialization();
+			assign_from_string(str.c_str());
 		}
 		/// Constructor from C string.
 		/**
@@ -1071,7 +1079,9 @@ class integer
 		 */
 		explicit integer(const char *str)
 		{
-			construct_from_string(str);
+			check_memory_functions();
+			default_initialization();
+			assign_from_string(str);
 		}
 		/// Destructor.
 		/**
@@ -1079,14 +1089,8 @@ class integer
 		 */
 		~integer() piranha_noexcept_spec(true)
 		{
-			piranha_assert(m_value->_mp_alloc >= 0);
-			// The rationale for using unlikely here is that mpz_clear is an expensive operation
-			// which is going to dominate anyway the branch penalty.
-			if (unlikely(m_value->_mp_d != 0)) {
-				::mpz_clear(m_value);
-			} else {
-				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
-			}
+			piranha_assert(consistency_check());
+			::mpz_clear(m_value);
 		}
 		/// Move assignment operator.
 		/**
@@ -1110,13 +1114,7 @@ class integer
 		integer &operator=(const integer &other)
 		{
 			if (likely(this != &other)) {
-				// Handle assignment to moved-from objects.
-				if (m_value->_mp_d) {
-					::mpz_set(m_value,other.m_value);
-				} else {
-					piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
-					::mpz_init_set(m_value,other.m_value);
-				}
+				::mpz_set(m_value,other.m_value);
 			}
 			return *this;
 		}
@@ -1142,12 +1140,7 @@ class integer
 		 */
 		integer &operator=(const char *str)
 		{
-			if (m_value->_mp_d) {
-				assign_from_string(str);
-			} else {
-				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
-				construct_from_string(str);
-			}
+			assign_from_string(str);
 			return *this;
 		}
 		/// Generic assignment from arithmetic types.
@@ -1166,12 +1159,7 @@ class integer
 		template <typename T>
 		typename std::enable_if<is_interop_type<T>::value,integer &>::type operator=(const T &x)
 		{
-			if (m_value->_mp_d) {
-				assign_from_arithmetic(x);
-			} else {
-				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
-				construct_from_arithmetic(x);
-			}
+			assign_from_arithmetic(x);
 			return *this;
 		}
 		/// Swap.
@@ -1182,7 +1170,22 @@ class integer
 		 */
 		void swap(integer &n) piranha_noexcept_spec(true)
 		{
-			::mpz_swap(m_value,n.m_value);
+			if (unlikely(this == &n)) {
+				return;
+			}
+			if (n.get_static_storage()) {
+				if (get_static_storage()) {
+					ss_swap(n);
+				} else {
+					ds_swap(n);
+				}
+			} else {
+				if (get_static_storage()) {
+					n.ds_swap(*this);
+				} else {
+					::mpz_swap(m_value,n.m_value);
+				}
+			}
 		}
 		/// Conversion to arithmetic types.
 		/**
@@ -1917,7 +1920,75 @@ class integer
 			return is;
 		}
 	private:
-		mpz_t m_value;
+		void default_initialization()
+		{
+			m_value->_mp_size = 0;
+			m_value->_mp_d = static_ptr();
+			m_value->_mp_alloc = (int)static_storage_size;
+			set_static_storage(true);
+		}
+		bool consistency_check() const
+		{
+			const auto flag = get_static_storage();
+			// Make sure that either:
+			// - nonstatic storage and _mp_d not in the static region, or
+			// - static storage, with allocated == static and _mp_d pointing to correct place.
+			return (!flag && m_value->_mp_d != static_ptr()) ||
+				(flag && m_value->_mp_alloc == (int)static_storage_size && m_value->_mp_d == static_ptr());
+		}
+		// Setter for static storage flag.
+		void set_static_storage(bool flag)
+		{
+			static_cast<char *>(static_cast<void *>(&m_storage))[static_storage_size * sizeof(::mp_limb_t)] = flag;
+		}
+		// Getter for static storage flag.
+		bool get_static_storage() const
+		{
+			return static_cast<char const *>(static_cast<void const *>(&m_storage))[static_storage_size * sizeof(::mp_limb_t)];
+		}
+		// Const and mutable getter for the _mp_limb_t pointer.
+		const ::mp_limb_t *static_ptr() const
+		{
+			return static_cast< ::mp_limb_t const *>(static_cast<void const *>(&m_storage));
+		}
+		::mp_limb_t *static_ptr()
+		{
+			return static_cast< ::mp_limb_t *>(static_cast<void *>(&m_storage));
+		}
+		// static-static swap.
+		void ss_swap(integer &n)
+		{
+			piranha_assert(get_static_storage() && n.get_static_storage());
+			piranha_assert(consistency_check() && n.consistency_check());
+			std::swap(m_value->_mp_size,n.m_value->_mp_size);
+			::mp_limb_t tmp[static_storage_size];
+			// Copy this in tmp.
+			std::copy(static_ptr(),static_ptr() + static_storage_size,tmp);
+			// Copy other into this.
+			std::copy(n.static_ptr(),n.static_ptr() + static_storage_size,static_ptr());
+			// Copy tmp into other.
+			std::copy(tmp,tmp + static_storage_size,n.static_ptr());
+		}
+		// dynamic-static swap.
+		void ds_swap(integer &n)
+		{
+			piranha_assert(!get_static_storage() && n.get_static_storage());
+			piranha_assert(consistency_check() && n.consistency_check());
+			std::swap(m_value->_mp_size,n.m_value->_mp_size);
+			std::swap(m_value->_mp_alloc,n.m_value->_mp_alloc);
+			// Steal the pointer from dynamic storage.
+			n.m_value->_mp_d = m_value->_mp_d;
+			// Set the pointer in this.
+			m_value->_mp_d = static_ptr();
+			// Copy into this the static content of n and mark as static.
+			std::copy(n.static_ptr(),n.static_ptr() + static_storage_size,static_ptr());
+			set_static_storage(true);
+			// Mark the other as dynamic storage.
+			n.set_static_storage(false);
+		}
+	private:
+		mpz_t			m_value;
+		static_storage_type	m_storage;
 };
 
 
