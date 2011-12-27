@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstdlib>
@@ -60,6 +61,9 @@ void gmp_free_function(void *ptr, std::size_t size)
 
 void *gmp_reallocate_function(void *ptr, std::size_t old_size, std::size_t new_size)
 {
+	if (unlikely(old_size == new_size)) {
+		return ptr;
+	}
 	// This will already have the tag byte set properly.
 	void *new_ptr = gmp_allocate_function(new_size);
 	// Copy old content.
