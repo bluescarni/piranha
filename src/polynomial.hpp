@@ -522,7 +522,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 * - piranha::series_multiplier::blocked_multiplication(),
 		 * - piranha::math::multiply_accumulate() on the coefficient types.
 		 */
-		typename base::return_type operator()() const
+		return_type operator()() const
 		{
 			truncator_type trunc(*this->m_s1,*this->m_s2);
 			if (trunc.is_active()) {
@@ -700,7 +700,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		template <typename Functor>
-		typename base::return_type execute(const truncator_type &trunc) const
+		return_type execute(const truncator_type &trunc) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
@@ -908,8 +908,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				};
 				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
 				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
-				// Functor to wait for completion of all threads.
-				auto waiter = [&pf_list] () {std::for_each(pf_list.begin(),pf_list.end(),[](tuple_type &t) {std::get<1u>(t)->wait();});};
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						try {
@@ -946,7 +944,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					}
 					piranha_assert(pf_list.size() == n_threads);
 					// First let's wait for everything to finish.
-					waiter();
+					waiter(pf_list);
 					// Then, let's handle the exceptions.
 					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
 						std::get<1u>(*it)->get();
@@ -957,7 +955,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
 					// loop.
-					waiter();
+					waiter(pf_list);
 					// Clean up and re-throw.
 					retval.m_container.clear();
 					throw;
@@ -970,6 +968,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		static void tmp_func(std::shared_ptr<packaged_task<void()>::type> pt)
 		{
 			(*pt)();
+		}
+		// Functor to wait for completion of all threads.
+		template <typename PfList>
+		static void waiter(PfList &pf_list)
+		{
+			std::for_each(pf_list.begin(),pf_list.end(),[](typename PfList::value_type &t) {std::get<1u>(t)->wait();});
 		}
 		template <typename Functor, typename Truncator, typename TaskList>
 		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
