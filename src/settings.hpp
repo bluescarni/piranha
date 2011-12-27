@@ -45,15 +45,6 @@ class PIRANHA_PUBLIC settings
 		static unsigned get_max_char_output();
 		static void set_max_char_output(unsigned);
 		static void reset_max_char_output();
-		/// Piranha status.
-		/**
-		 * @return \p true if the runtime environment of Piranha
-		 * could be configured correctly on startup, \p false otherwise.
-		 */
-		static bool status()
-		{
-			return m_status;
-		}
 	private:
 		struct startup
 		{

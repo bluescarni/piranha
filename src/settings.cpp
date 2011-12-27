@@ -19,13 +19,11 @@
  ***************************************************************************/
 
 #include <algorithm>
-#include <gmp.h>
 #include <iostream>
 #include <stdexcept>
 
 #include "config.hpp"
 #include "exceptions.hpp"
-#include "gmp_memory.hpp"
 #include "malloc_allocator.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
@@ -48,7 +46,6 @@ unsigned settings::m_max_char_output = detail::default_max_char_output;
 
 settings::startup::startup()
 {
-	::mp_set_memory_functions(detail::gmp_allocate_function,detail::gmp_reallocate_function,detail::gmp_free_function);
 	std::cout << "Piranha version: " << PIRANHA_VERSION << '\n';
 	std::cout << "Hardware concurrency: " << runtime_info::determine_hardware_concurrency() << '\n';
 	std::cout << "Cache line size: " << runtime_info::determine_cache_line_size() << '\n';
@@ -61,10 +58,8 @@ settings::startup::startup()
 		"native C++"
 #endif
 		<< '\n';
-	std::cout << "Default GMP memory functions overridden\n";
-	std::cout << "Piranha is ready\n";
+	std::cout << "Piranha is ready.\n";
 	std::cout << "__________________________________\n";
-	m_status = true;
 }
 
 /// Get the number of threads available for use by piranha.
