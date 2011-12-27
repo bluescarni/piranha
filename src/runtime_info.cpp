@@ -57,12 +57,10 @@ extern "C"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
 
-const thread_id runtime_info::m_main_thread_id = {this_thread::get_id()};
 const unsigned runtime_info::m_hardware_concurrency = runtime_info::determine_hardware_concurrency();
 const unsigned runtime_info::m_cache_line_size = runtime_info::determine_cache_line_size();
 

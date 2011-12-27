@@ -42,7 +42,6 @@ static const unsigned default_max_char_output = 10000u;
 mutex settings::m_mutex;
 unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
 bool settings::m_tracing = false;
-settings::startup settings::m_startup;
 unsigned settings::m_max_char_output = detail::default_max_char_output;
 
 settings::startup::startup()

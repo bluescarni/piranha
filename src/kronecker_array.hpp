@@ -327,9 +327,6 @@ class kronecker_array
 		}
 };
 
-template <typename SignedInteger>
-const typename kronecker_array<SignedInteger>::limits_type kronecker_array<SignedInteger>::m_limits = kronecker_array<SignedInteger>::determine_limits();
-
 }
 
 #endif

@@ -1,8 +1,10 @@
 SET(SRC_LIST
 	degree_truncator_settings.cpp
 	exceptions.cpp
+	gmp_memory.cpp
 	runtime_info.cpp
 	settings.cpp
+	static_initialisation.cpp
 	symbol.cpp
 	thread_barrier.cpp
 	thread_group.cpp

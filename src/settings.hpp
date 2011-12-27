@@ -51,11 +51,12 @@ class PIRANHA_PUBLIC settings
 			startup();
 		};
 	private:
-		static mutex	m_mutex;
-		static unsigned	m_n_threads;
-		static bool	m_tracing;
-		static startup	m_startup;
-		static unsigned m_max_char_output;
+		static mutex		m_mutex;
+		static unsigned		m_n_threads;
+		static bool		m_tracing;
+		static const startup	m_startup;
+		static unsigned		m_max_char_output;
+		static bool		m_status;
 };
 
 }
