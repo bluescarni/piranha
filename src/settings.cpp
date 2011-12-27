@@ -58,7 +58,7 @@ settings::startup::startup()
 		"native C++"
 #endif
 		<< '\n';
-	std::cout << "Piranha is ready.\n";
+	std::cout << "Piranha is ready\n";
 	std::cout << "__________________________________\n";
 }
 

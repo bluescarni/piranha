@@ -31,7 +31,6 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cctype> // For std::isdigit().
 #include <cstddef>
-#include <cstring>
 // NOTE: GMP docs say gmp.h already includes the extern "C" parts.
 #include <gmp.h>
 #include <iostream>
@@ -88,7 +87,6 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo check out the impact of the unlikely() on destruction, maybe that's a contributor to weak performance in parallel destruction of cvector?
  * \todo memory optimisations for division (same as those for mult and add)
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations: such tests should re-defined GMP memory allocation functions so that they count the allocations, and report
@@ -1006,7 +1004,7 @@ class integer
 		 * 
 		 * @see http://gmplib.org/manual/Nomenclature-and-Types.html.
 		 */
-		integer(const nlimbs &n)
+		explicit integer(const nlimbs &n)
 		{
 			// NOTE: use unsigned types everywhere, so that in case of overflow we just allocate a different amount of memory.
 			::mpz_init2(m_value,n.m_n * std::make_unsigned<decltype(::mp_bits_per_limb)>::type(::mp_bits_per_limb));
@@ -1181,6 +1179,9 @@ class integer
 		 */
 		void swap(integer &n) piranha_noexcept_spec(true)
 		{
+			if (unlikely(this == &n)) {
+			    return;
+			}
 			::mpz_swap(m_value,n.m_value);
 		}
 		/// Conversion to arithmetic types.

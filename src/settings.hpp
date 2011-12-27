@@ -56,7 +56,6 @@ class PIRANHA_PUBLIC settings
 		static bool		m_tracing;
 		static const startup	m_startup;
 		static unsigned		m_max_char_output;
-		static bool		m_status;
 };
 
 }
