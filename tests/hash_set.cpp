@@ -207,7 +207,8 @@ struct random_failure
 			throw std::runtime_error("fail!");
 		}
 	}
-	random_failure(random_failure &&rf):m_str(std::move(rf.m_str)) {}
+	random_failure(random_failure &&rf) piranha_noexcept_spec(true) :m_str(std::move(rf.m_str)) {}
+	~random_failure() piranha_noexcept_spec(true) {}
 	std::size_t hash() const
 	{
 		return boost::lexical_cast<int>(m_str);
@@ -215,6 +216,11 @@ struct random_failure
 	bool operator==(const random_failure &rf) const
 	{
 		return m_str == rf.m_str;
+	}
+	random_failure &operator=(random_failure &&other) piranha_noexcept_spec(true)
+	{
+		m_str = std::move(other.m_str);
+		return *this;
 	}
 	std::string m_str;
 };
