@@ -702,7 +702,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		template <typename Functor>
 		return_type execute(const truncator_type &trunc) const
 		{
-			const index_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
+			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
 				return return_type{};

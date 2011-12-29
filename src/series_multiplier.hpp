@@ -279,10 +279,10 @@ class series_multiplier
 			}
 			// This is the size type that will be used throughout the calculations.
 			typedef decltype(m_v1.size()) size_type;
-			const auto size1 = m_v1.size(), size2 = m_v2.size();
+			const size_type size1 = m_v1.size(), size2 = boost::numeric_cast<size_type>(m_v2.size());
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
-			auto n_threads = boost::numeric_cast<size_type>(determine_n_threads());
+			size_type n_threads = boost::numeric_cast<size_type>(determine_n_threads());
 			piranha_assert(n_threads);
 			// An additional check on n_threads is that its size is not greater than the size of the first series,
 			// as we are using the first operand to split up the work.
@@ -423,7 +423,6 @@ class series_multiplier
 				 */
 				typedef typename std::vector<term_type1 const *>::size_type size_type;
 			private:
-				static_assert(std::is_same<typename std::vector<term_type2 const *>::size_type,size_type>::value,"Inconsistent size types.");
 				// Meta-programmed helpers for skipping and filtering.
 				void sort_for_skip(const std::true_type &) const
 				{
@@ -454,9 +453,11 @@ class series_multiplier
 					return false;
 				}
 				// Functor for the insertion of the terms.
-				template <bool CheckFilter, typename Tuple, std::size_t N = 0, typename Enable2 = void>
+				template <bool CheckFilter, typename Tuple, std::size_t N = 0u, typename Enable2 = void>
 				struct inserter
 				{
+					static_assert(N < boost::integer_traits<std::size_t>::const_max,
+							"Overflow error.");
 					static void run(const default_functor &f, Tuple &t)
 					{
 						if (!ttraits::is_skipping && CheckFilter && f.filter(std::get<N>(t))) {
@@ -464,7 +465,7 @@ class series_multiplier
 						} else {
 							f.m_retval.insert(std::get<N>(t));
 						}
-						inserter<CheckFilter,Tuple,N + static_cast<std::size_t>(1)>::run(f,t);
+						inserter<CheckFilter,Tuple,N + 1u>::run(f,t);
 					}
 				};
 				template <bool CheckFilter, typename Tuple, std::size_t N>
@@ -888,6 +889,8 @@ class series_multiplier
 					try {
 						thread_management::binder b;
 						const auto it_f = r_it->m_container._m_end();
+						// NOTE: size_type can represent the sum of the sizes of all retvals,
+						// so it will not overflow here.
 						size_type tmp_i = i;
 						for (auto it = r_it->m_container._m_begin(); it != it_f; ++it, ++tmp_i) {
 							piranha_assert(tmp_i < idx.size());
@@ -1034,6 +1037,7 @@ class series_multiplier
 		static std::size_t count_n_filtered(const std::tuple<T...> &t, const Functor &f,
 			typename std::enable_if<(N != std::tuple_size<std::tuple<T...>>::value - 1u)>::type * = piranha_nullptr)
 		{
+			static_assert(N < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
 			return ((std::size_t)f.filter(std::get<N>(t))) + count_n_filtered<N + 1u>(t,f);
 		}
 		template <std::size_t N, typename Functor, typename... T>

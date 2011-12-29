@@ -29,6 +29,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_set>
 
 #include "concepts/array_key_value_type.hpp"
@@ -153,13 +154,14 @@ class univariate_monomial
 		}
 		/// Hash value.
 		/**
-		 * @return the hash value of the exponent, calculated via \p std::hash.
+		 * @return the hash value of the exponent, calculated via \p std::hash in case \p T is not an integral
+		 * type, via direct casting of the exponent to \p std::size_t otherwise.
 		 * 
 		 * @throws unspecified any exception thrown by \p std::hash of type \p T.
 		 */
 		std::size_t hash() const
 		{
-			return std::hash<T>()(m_value);
+			return compute_hash(m_value);
 		}
 		/// Equality operator.
 		/**
@@ -402,6 +404,17 @@ class univariate_monomial
 					}
 				}
 			}
+		}
+	private:
+		template <typename U>
+		static std::size_t compute_hash(const U &value,typename std::enable_if<std::is_integral<U>::value>::type * = piranha_nullptr)
+		{
+			return static_cast<std::size_t>(value);
+		}
+		template <typename U>
+		static std::size_t compute_hash(const U &value,typename std::enable_if<!std::is_integral<U>::value>::type * = piranha_nullptr)
+		{
+			return std::hash<U>()(value);
 		}
 	private:
 		T m_value;

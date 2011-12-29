@@ -27,6 +27,7 @@
 #include <system_error>
 #include <vector>
 
+#include "config.hpp"
 #include "exceptions.hpp"
 #include "threading.hpp"
 
@@ -77,14 +78,14 @@ class thread_group
 		void create_thread(Functor &&f, Args && ... params)
 		{
 			lock_guard<mutex>::type lock(m_mutex);
-			if (m_threads.size() == boost::integer_traits<size_type>::const_max) {
-				throw std::bad_alloc();
+			if (unlikely(m_threads.size() == boost::integer_traits<size_type>::const_max)) {
+				piranha_throw(std::bad_alloc,0);
 			}
 			// Make space for the new thread.
 			const size_type new_size = m_threads.size() + static_cast<size_type>(1);
 			m_threads.reserve(new_size);
-			if (m_threads.capacity() < new_size) {
-				throw std::bad_alloc();
+			if (unlikely(m_threads.capacity() < new_size)) {
+				piranha_throw(std::bad_alloc,0);
 			}
 			m_threads.push_back(std::unique_ptr<thread>(new thread(std::forward<Functor>(f),std::forward<Args>(params)...)));
 		}

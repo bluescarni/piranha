@@ -66,9 +66,6 @@ namespace piranha
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo investigate if we can leave the type parametrized or not: is it consistent with the size_type of hash set? What
- * are the effects on parallel kronecker multiplication (i.e., on the barriers that make the parallel algorithm work)?
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag
@@ -78,8 +75,6 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		typedef T value_type;
 	private:
 		typedef kronecker_array<value_type> ka;
-		// Vector type used for temporary packing/unpacking.
-		typedef static_vector<value_type,255u> v_type;
 	public:
 		/// Size type.
 		/**
@@ -87,6 +82,13 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * piranha::kronecker_array.
 		 */
 		typedef typename ka::size_type size_type;
+		/// Maximum monomial size.
+		static const size_type max_size = 255u;
+	private:
+		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		// Vector type used for temporary packing/unpacking.
+		typedef static_vector<value_type,max_size> v_type;
+	public:
 		/// Default constructor.
 		/**
 		 * After construction all exponents in the monomial will be zero.

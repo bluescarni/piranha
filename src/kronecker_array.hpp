@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
+#include <cstddef>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -82,10 +83,10 @@ class kronecker_array
 	public:
 		/// Size type.
 		/**
-		 * Unsigned integer type equivalent to the size type of \p std::vector. Used to represent the
+		 * Equivalent to \p std::size_t, used to represent the
 		 * dimension of the vectors on which the class can operate.
 		 */
-		typedef typename limits_type::size_type size_type;
+		typedef std::size_t size_type;
 	private:
 		// Static vector of limits built at startup.
 		static const limits_type m_limits;
