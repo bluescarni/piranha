@@ -126,6 +126,5 @@ namespace detail {}
 #include "truncator.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
-#include "utils.hpp"
 
 #endif
