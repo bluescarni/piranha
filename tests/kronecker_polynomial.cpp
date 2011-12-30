@@ -134,3 +134,26 @@ BOOST_AUTO_TEST_CASE(kronecker_polynomial_multiplier_test)
 		boost::mpl::for_each<cf_types>(multiplication_tester());
 	}
 }
+
+struct overflow_tester
+{
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		polynomial<Cf,kronecker_monomial<std::int_least32_t>> x{"x"}, y{"y"}, z{"z"}, t{"t"}, u{"u"};
+		auto prod = x * y * z * t * u;
+		auto tmp_t(t);
+		auto l = std::get<0u>(kronecker_array<std::int_least32_t>::get_limits()[5u])[0u] / 2;
+		for (decltype(l) i = 1; i < l; ++i) {
+			prod *= t;
+			tmp_t *= t;
+		}
+		tmp_t *= tmp_t;
+		BOOST_CHECK_THROW((prod + tmp_t) * prod,std::overflow_error);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_polynomial_overflow_test)
+{
+	boost::mpl::for_each<cf_types>(overflow_tester());
+}

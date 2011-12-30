@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <iterator>
 #include <list>
 #include <set>
 #include <stdexcept>
@@ -487,26 +488,61 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// overflow the size of the limits, as the check for compatibility in Kronecker monomial
 			// would kick in.
 			piranha_assert(this->m_s1->m_symbol_set.size() < ka::get_limits().size());
+			piranha_assert(this->m_s1->m_symbol_set == this->m_s2->m_symbol_set);
 			const auto &limits = ka::get_limits()[this->m_s1->m_symbol_set.size()];
-			// Check that the multiplication will not overflow the bounds of the Kronecker
-			// representation.
-			const auto min_max_it1 = boost::minmax_element(this->m_v1.begin(),this->m_v1.end(),
-				[](term_type1 const *ptr1, term_type1 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
-			const auto min_max_it2 = boost::minmax_element(this->m_v2.begin(),this->m_v2.end(),
-				[](term_type2 const *ptr1, term_type2 const *ptr2) {return ptr1->m_key.get_int() < ptr2->m_key.get_int();});
+			// NOTE: We need to check that the exponents of the monomials in the result do not
+			// go outside the bounds of the Kronecker codification. We need to unpack all monomials
+			// in the operands and examine them, we cannot operate on the codes for this.
+			auto it1 = this->m_v1.begin();
+			auto it2 = this->m_v2.begin();
+			typedef typename term_type1::key_type::value_type value_type1;
+			typedef typename term_type2::key_type::value_type value_type2;
+			// Initialise minmax values.
+			std::vector<std::pair<value_type1,value_type1>> minmax_values1;
+			std::vector<std::pair<value_type2,value_type2>> minmax_values2;
+			auto tmp_vec1 = (*it1)->m_key.unpack(this->m_s1->m_symbol_set);
+			auto tmp_vec2 = (*it2)->m_key.unpack(this->m_s1->m_symbol_set);
 			// Bounds of the Kronecker representation for each component.
 			const auto &minmax_vec = std::get<0u>(limits);
-			// Decode the min-max values from the two series.
-			const auto min_vec1 = (*min_max_it1.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec1 = (*min_max_it1.second)->m_key.unpack(this->m_s1->m_symbol_set),
-				min_vec2 = (*min_max_it2.first)->m_key.unpack(this->m_s1->m_symbol_set), max_vec2 = (*min_max_it2.second)->m_key.unpack(this->m_s1->m_symbol_set);
-			// Determine the ranges of the components of the monomials in retval.
-			integer tmp_min(0), tmp_max(0);
-			for (decltype(min_vec1.size()) i = 0u; i < min_vec1.size(); ++i) {
-				tmp_min = min_vec1[i];
-				tmp_min += min_vec2[i];
-				tmp_max = max_vec1[i];
-				tmp_max += max_vec2[i];
-				if (unlikely(tmp_min < -minmax_vec[i] || tmp_max > minmax_vec[i])) {
+			std::transform(tmp_vec1.begin(),tmp_vec1.end(),std::back_inserter(minmax_values1),[](const value_type &v) {
+				return std::make_pair(v,v);
+			});
+			std::transform(tmp_vec2.begin(),tmp_vec2.end(),std::back_inserter(minmax_values2),[](const value_type &v) {
+				return std::make_pair(v,v);
+			});
+			// Find the minmaxs.
+			for (; it1 != this->m_v1.end(); ++it1) {
+				tmp_vec1 = (*it1)->m_key.unpack(this->m_s1->m_symbol_set);
+				piranha_assert(tmp_vec1.size() == minmax_values1.size());
+				std::transform(minmax_values1.begin(),minmax_values1.end(),tmp_vec1.begin(),minmax_values1.begin(),
+					[](const std::pair<value_type1,value_type1> &p, const value_type1 &v) {
+						return std::make_pair(
+							v < p.first ? v : p.first,
+							v > p.second ? v : p.second
+						);
+				});
+			}
+			for (; it2 != this->m_v2.end(); ++it2) {
+				tmp_vec2 = (*it2)->m_key.unpack(this->m_s2->m_symbol_set);
+				piranha_assert(tmp_vec2.size() == minmax_values2.size());
+				std::transform(minmax_values2.begin(),minmax_values2.end(),tmp_vec2.begin(),minmax_values2.begin(),
+					[](const std::pair<value_type2,value_type2> &p, const value_type2 &v) {
+						return std::make_pair(
+							v < p.first ? v : p.first,
+							v > p.second ? v : p.second
+						);
+				});
+			}
+			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
+			std::vector<std::pair<integer,integer>> minmax_result;
+			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
+				std::back_inserter(minmax_result),[](const std::pair<value_type1,value_type1> &p1,
+				const std::pair<value_type2,value_type2> &p2) {
+					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
+			});
+			piranha_assert(minmax_result.size() == minmax_vec.size());
+			for (decltype(minmax_result.size()) i = 0u; i < minmax_result.size(); ++i) {
+				if (unlikely(minmax_result[i].first < -minmax_vec[i] || minmax_result[i].second > minmax_vec[i])) {
 					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
 				}
 			}
