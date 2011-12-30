@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <initializer_list> // NOTE: this could go away when there's no need to use it explicitly, see below.
 #include <iterator>
 #include <list>
 #include <set>
@@ -534,17 +535,26 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				});
 			}
 			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
-			std::vector<std::pair<integer,integer>> minmax_result;
+			// NOTE: use m_minmax_values for the ranges of the result only, update it to include
+			// the ranges of the operands below.
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
-				std::back_inserter(minmax_result),[](const std::pair<value_type1,value_type1> &p1,
+				std::back_inserter(m_minmax_values),[](const std::pair<value_type1,value_type1> &p1,
 				const std::pair<value_type2,value_type2> &p2) {
 					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
 			});
-			piranha_assert(minmax_result.size() == minmax_vec.size());
-			for (decltype(minmax_result.size()) i = 0u; i < minmax_result.size(); ++i) {
-				if (unlikely(minmax_result[i].first < -minmax_vec[i] || minmax_result[i].second > minmax_vec[i])) {
+			piranha_assert(m_minmax_values.size() == minmax_vec.size());
+			piranha_assert(m_minmax_values.size() == minmax_values1.size());
+			piranha_assert(m_minmax_values.size() == minmax_values2.size());
+			for (decltype(m_minmax_values.size()) i = 0u; i < m_minmax_values.size(); ++i) {
+				if (unlikely(m_minmax_values[i].first < -minmax_vec[i] || m_minmax_values[i].second > minmax_vec[i])) {
 					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
 				}
+				// Update with the ranges of the operands.
+				// NOTE: the fact that we have to use std::initializer_list explicitly here seems
+				// a compiler bug, should probably investigate with GCC > 4.5.
+				m_minmax_values[i] = std::minmax(std::initializer_list<integer>({m_minmax_values[i].first,
+					integer(minmax_values1[i].first),integer(minmax_values2[i].first),m_minmax_values[i].second,
+					integer(minmax_values1[i].second),integer(minmax_values2[i].second)}));
 			}
 		}
 		/// Perform multiplication.
@@ -1166,6 +1176,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			mutable index_type		m_cached_j;
 			mutable bucket_size_type	m_insertion_count;
 		};
+	private:
+		// Vector of closed ranges of the exponents in both the operands and the result.
+		std::vector<std::pair<integer,integer>> m_minmax_values;
 };
 
 }
