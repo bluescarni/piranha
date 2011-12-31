@@ -802,7 +802,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(estimate / retval.m_container.max_load_factor())));
 			piranha_assert(retval.m_container.bucket_count());
-			if ((integer(size1) * integer(size2)) / estimate > 10) {
+			if ((integer(size1) * integer(size2)) / estimate > 500) {
 				if (trunc.is_active()) {
 					dense_multiplication<true>(retval,trunc);
 				} else {
