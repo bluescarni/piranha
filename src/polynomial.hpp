@@ -30,6 +30,7 @@
 #include <initializer_list> // NOTE: this could go away when there's no need to use it explicitly, see below.
 #include <iterator>
 #include <list>
+#include <numeric>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -571,11 +572,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		return_type operator()() const
 		{
 			truncator_type trunc(*this->m_s1,*this->m_s2);
-			if (trunc.is_active()) {
-				return execute<functor<true>>(trunc);
-			} else {
-				return execute<functor<false>>(trunc);
-			}
+			return execute(trunc);
 		}
 	private:
 		typedef typename std::vector<term_type1 const *>::size_type index_type;
@@ -585,13 +582,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// Block-by-block multiplication task.
 		struct task_type
 		{
-			// First block: semi-open range [a,b[ of indices in this->m_v1.
+			// First block: semi-open range [a,b[ of indices in first input series.
 			std::pair<index_type,index_type>	m_b1;
-			// Second block (indices in this->m_v2).
+			// Second block (indices in second input series).
 			std::pair<index_type,index_type>	m_b2;
-			// First region in the return hash set involved in the multiplication.
+			// First region memory region involved in the multiplication.
 			region_type				m_r1;
-			// Second region.
+			// Second memory region.
 			region_type				m_r2;
 			// Boolean flag to signal if the second region is present or not.
 			bool					m_second_region;
@@ -686,9 +683,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
 		// This will sort tasks according to the initial writing position in the hash table
 		// of the result.
-		struct task_sorter
+		struct sparse_task_sorter
 		{
-			explicit task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
+			explicit sparse_task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
 				const std::vector<term_type2 const *> &v2):
 				m_retval(retval),m_v1(v1),m_v2(v2)
 			{}
@@ -717,11 +714,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		};
 		// Pre-sort individual blocks if truncator is skipping and active.
 		template <typename S1, typename S2>
-		void sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
+		void sparse_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
 			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
 		{}
 		template <typename S1, typename S2>
-		void sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
+		void sparse_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
 			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
 		{
 			if (!trunc.is_active()) {
@@ -745,7 +742,35 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				std::sort(&v2[0u] + (size2 / bsize2) * bsize2,&v2[0u] + size2,sorter2);
 			}
 		}
-		template <typename Functor>
+		template <typename S1, typename S2, typename Keys1, typename Keys2>
+		static void dense_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
+			Keys1 &, Keys2 &, typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+		{}
+		template <typename S1, typename S2, typename Keys1, typename Keys2>
+		static void dense_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
+			Keys1 &new_keys1, Keys2 &new_keys2, typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+		{
+			if (!trunc.is_active()) {
+				return;
+			}
+			typedef typename Keys1::value_type pair_type1;
+			typedef typename Keys2::value_type pair_type2;
+			const auto size1 = new_keys1.size(), size2 = new_keys2.size();
+			auto sorter1 = [&trunc](const pair_type1 &p1, const pair_type1 &p2) {return trunc.compare_terms(*p1.second,*p2.second);};
+			auto sorter2 = [&trunc](const pair_type2 &p1, const pair_type2 &p2) {return trunc.compare_terms(*p1.second,*p2.second);};
+			for (index_type i = 0u; i < size1 / bsize1; ++i) {
+				std::sort(&new_keys1[0u] + i * bsize1,&new_keys1[0u] + (i + 1u) * bsize1,sorter1);
+			}
+			if (size1 % bsize1) {
+				std::sort(&new_keys1[0u] + (size1 / bsize1) * bsize1,&new_keys1[0u] + size1,sorter1);
+			}
+			for (index_type i = 0u; i < size2 / bsize2; ++i) {
+				std::sort(&new_keys2[0u] + i * bsize2,&new_keys2[0u] + (i + 1u) * bsize2,sorter2);
+			}
+			if (size2 % bsize2) {
+				std::sort(&new_keys2[0u] + (size2 / bsize2) * bsize2,&new_keys2[0u] + size2,sorter2);
+			}
+		}
 		return_type execute(const truncator_type &trunc) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
@@ -757,30 +782,46 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// at every iteration of the functor.
 			const auto max_size = integer(size1) * size2;
 			if (unlikely(max_size > boost::integer_traits<bucket_size_type>::const_max)) {
-				piranha_throw(std::overflow_error,"overflow in series size");
+				piranha_throw(std::overflow_error,"possible overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
 			return_type retval;
 			retval.m_symbol_set = this->m_s1->m_symbol_set;
-			auto estimate = base::estimate_final_series_size(Functor(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
+			typename Series1::size_type estimate;
+			// Use the sparse functor for the estimation.
+			if (trunc.is_active()) {
+				estimate = base::estimate_final_series_size(sparse_functor<true>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
+			} else {
+				estimate = base::estimate_final_series_size(sparse_functor<false>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
+			}
 			// Correct the unlikely case of zero estimate.
 			if (unlikely(!estimate)) {
 				estimate = 1u;
 			}
 			// Rehash the retun value's container accordingly.
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval.m_container.rehash(boost::numeric_cast<decltype(estimate)>(std::ceil(estimate / retval.m_container.max_load_factor())));
+			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(estimate / retval.m_container.max_load_factor())));
 			piranha_assert(retval.m_container.bucket_count());
-			// Now let's sort the input terms according to the position of the Kronecker keys in the estimated return value.
-			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
-				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
-			};
-			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
-				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
-			};
-			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
-			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
-			// Start defining the blocks for series multiplication.
+			if ((integer(size1) * integer(size2)) / estimate > 10) {
+				if (trunc.is_active()) {
+					dense_multiplication<true>(retval,trunc);
+				} else {
+					dense_multiplication<false>(retval,trunc);
+				}
+			} else {
+				if (trunc.is_active()) {
+					sparse_multiplication<sparse_functor<true>>(retval,trunc);
+				} else {
+					sparse_multiplication<sparse_functor<false>>(retval,trunc);
+				}
+			}
+			// Trace the result of estimation.
+			this->trace_estimates(retval.size(),estimate);
+			return retval;
+		}
+		// Utility function to determine block sizes.
+		static std::pair<integer,integer> get_block_sizes(const index_type &size1, const index_type &size2)
+		{
 			const integer block_size(256u), job_size = block_size.pow(2u);
 			// Rescale the block sizes according to the relative sizes of the input series.
 			auto block_size1 = (block_size * size1) / size2,
@@ -796,13 +837,226 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			} else if (block_size2 > job_size) {
 				block_size2 = job_size;
 			}
+			return std::make_pair(std::move(block_size1),std::move(block_size2));
+		}
+		template <bool IsActive,typename S1, typename S2>
+		static bool dense_skip(const term_type1 &t1,const term_type2 &t2, const truncator<S1,S2> &trunc,
+			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+		{
+			return IsActive && trunc.skip(t1,t2);
+		}
+		template <bool IsActive,typename S1, typename S2>
+		static bool dense_skip(const term_type1 &,const term_type2 &, const truncator<S1,S2> &,
+			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+		{
+			return false;
+		}
+		// Dense multiplication method.
+		template <bool IsActive>
+		void dense_multiplication(return_type &retval, const truncator_type &trunc) const
+		{
+			piranha_assert(IsActive == trunc.is_active());
+			typedef typename term_type1::key_type::value_type value_type;
+			// Vectors of minimum / maximum values, cast to hardware int.
+			std::vector<value_type> mins;
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(mins),[](const std::pair<integer,integer> &p) {
+				return static_cast<value_type>(p.first);
+			});
+			std::vector<value_type> maxs;
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(maxs),[](const std::pair<integer,integer> &p) {
+				return static_cast<value_type>(p.second);
+			});
+			// Build the encoding vector.
+			std::vector<value_type> c_vec;
+			integer f_delta(1);
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(c_vec),
+				[&f_delta](const std::pair<integer,integer> &p) -> value_type {
+					auto old(f_delta);
+					f_delta *= p.second - p.first + 1;
+					return static_cast<value_type>(old);
+			});
+			// Try casting final delta.
+			static_cast<value_type>(f_delta);
+			// Compute hmax and hmin.
+			piranha_assert(m_minmax_values.size() == c_vec.size());
+			const auto h_minmax = std::inner_product(m_minmax_values.begin(),m_minmax_values.end(),c_vec.begin(),
+				std::make_pair(integer(0),integer(0)),
+				[](const std::pair<integer,integer> &p1, const std::pair<integer,integer> &p2) {
+					return std::make_pair(p1.first + p2.first,p1.second + p2.second);
+				},[](const std::pair<integer,integer> &p, const value_type &value) {
+					return std::make_pair(p.first * value,p.second * value);
+				}
+			);
+			piranha_assert(f_delta == h_minmax.second - h_minmax.first + 1);
+			// Try casting hmax and hmin.
+			const auto hmin = static_cast<value_type>(h_minmax.first);
+			const auto hmax = static_cast<value_type>(h_minmax.second);
+			// Encoding functor.
+			typedef typename term_type1::key_type::v_type unpack_type;
+			auto encoder = [&c_vec,hmin,&mins](const unpack_type &v) -> value_type {
+				piranha_assert(c_vec.size() == v.size());
+				piranha_assert(c_vec.size() == mins.size());
+				decltype(mins.size()) i = 0u;
+				value_type retval = std::inner_product(c_vec.begin(),c_vec.end(),v.begin(),value_type(0),
+					std::plus<value_type>(),[&i,&mins](const value_type &c, const value_type &n) -> value_type {
+						const auto old_i(i);
+						++i;
+						piranha_assert(n >= mins[old_i]);
+						return c * (n - mins[old_i]);
+					}
+				);
+				return retval + hmin;
+			};
+			// Build copies of the input keys repacked according to the new Kronecker substitution. Attach
+			// also a pointer to the term.
+			typedef std::pair<value_type,term_type1 const *> new_key_type1;
+			typedef std::pair<value_type,term_type2 const *> new_key_type2;
+			std::vector<new_key_type1> new_keys1;
+			std::vector<new_key_type2> new_keys2;
+			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(new_keys1),
+				[this,encoder](term_type1 const *ptr) {
+				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
+			});
+			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(new_keys2),
+				[this,encoder](term_type2 const *ptr) {
+				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
+			});
+			// Sort the the new keys.
+			std::sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type1 &p1, const new_key_type1 &p2) {
+				return p1.first < p2.first;
+			});
+			std::sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type2 &p1, const new_key_type2 &p2) {
+				return p1.first < p2.first;
+			});
+			// Store the sizes and compute the block sizes.
+			const index_type size1 = boost::numeric_cast<index_type>(new_keys1.size()),
+				size2 = boost::numeric_cast<index_type>(new_keys2.size());
+			piranha_assert(size1 == this->m_s1->size());
+			piranha_assert(size2 == this->m_s2->size());
+			const auto bsizes = get_block_sizes(size1,size2);
 			// Cast to hardware integers.
-			const auto bsize1 = static_cast<index_type>(block_size1), bsize2 = static_cast<index_type>(block_size2);
+			const auto bsize1 = static_cast<index_type>(bsizes.first), bsize2 = static_cast<index_type>(bsizes.second);
+			// Build the list of tasks.
+			auto dense_task_sorter = [&new_keys1,&new_keys2](const task_type &t1, const task_type &t2) {
+				return new_keys1[t1.m_b1.first].first + new_keys2[t1.m_b2.first].first <
+					new_keys1[t2.m_b1.first].first + new_keys2[t2.m_b2.first].first;
+			};
+			std::multiset<task_type,decltype(dense_task_sorter)> task_list(dense_task_sorter);
+			decltype(task_list.insert(std::declval<task_type>())) ins_result;
+			auto dense_task_from_indices = [hmin,hmax,&new_keys1,&new_keys2](const index_type &i_start, const index_type &i_end,
+				const index_type &j_start, const index_type &j_end) -> task_type
+			{
+				piranha_assert(i_end <= new_keys1.size() && j_end <= new_keys2.size());
+				piranha_assert(i_start < i_end && j_start < j_end);
+				const bucket_size_type a = boost::numeric_cast<bucket_size_type>((new_keys1[i_start].first + new_keys2[j_start].first) - hmin);
+				const bucket_size_type b = boost::numeric_cast<bucket_size_type>((new_keys1[i_end - 1u].first + new_keys2[j_end - 1u].first) - hmin);
+				piranha_assert(a <= b);
+				piranha_assert(b <= boost::numeric_cast<bucket_size_type>(hmax - hmin));
+				return task_type{{i_start,i_end},{j_start,j_end},{a,b},{0u,0u},false};
+			};
+			for (index_type i = 0u; i < size1 / bsize1; ++i) {
+				for (index_type j = 0u; j < size2 / bsize2; ++j) {
+					ins_result = task_list.insert(dense_task_from_indices(i * bsize1,(i + 1u) * bsize1,j * bsize2,(j + 1u) * bsize2));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
+				}
+				if (size2 % bsize2) {
+					ins_result = task_list.insert(dense_task_from_indices(i * bsize1,(i + 1u) * bsize1,(size2 / bsize2) * bsize2,size2));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
+				}
+			}
+			if (size1 % bsize1) {
+				for (index_type j = 0u; j < size2 / bsize2; ++j) {
+					ins_result = task_list.insert(dense_task_from_indices((size1 / bsize1) * bsize1,size1,j * bsize2,(j + 1u) * bsize2));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
+				}
+				if (size2 % bsize2) {
+					ins_result = task_list.insert(dense_task_from_indices((size1 / bsize1) * bsize1,size1,(size2 / bsize2) * bsize2,size2));
+					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
+				}
+			}
+			// Pre-sort each block according to the truncator, if necessary.
+			dense_sort_blocks(bsize1,bsize2,trunc,new_keys1,new_keys2);
+// for (auto it = task_list.begin(); it != task_list.end(); ++it) {
+// 	std::cout << it->m_b1.first << ',' << it->m_b1.second << ' ' << it->m_b2.first << ',' << it->m_b2.second << ' ' <<
+// 	it->m_r1.first << ',' << it->m_r1.second << ' ' << it->m_r2.first << ',' << it->m_r2.second << '\n';
+// }
+			// Prepare the storage for multiplication.
+			std::vector<typename term_type1::cf_type> cf_vector;
+			cf_vector.resize(boost::numeric_cast<decltype(cf_vector.size())>((hmax - hmin) + 1));
+// std::cout << cf_vector.size() << '\n';
+			const auto it_f = task_list.end();
+			for (auto it = task_list.begin(); it != it_f; ++it) {
+				const index_type i_start = it->m_b1.first, j_start = it->m_b2.first,
+					i_end = it->m_b1.second, j_end = it->m_b2.second;
+				piranha_assert(i_end > i_start && j_end > j_start);
+				for (index_type i = i_start; i < i_end; ++i) {
+					for (index_type j = j_start; j < j_end; ++j) {
+						if (dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
+							break;
+						}
+						const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
+						piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
+						math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
+							new_keys1[i].second->m_cf,new_keys2[j].second->m_cf);
+					}
+				}
+			}
+			// Build the return value.
+			// NOTE: the thing here is that if the truncator were not skipping, we would need to filter out
+			// the terms when building the return value. This is here as a reminder if we use this code,
+			// e.g., in Poisson series multiplication where the truncator could be filtering but not skipping.
+			static_assert(truncator_traits<Series1,Series2>::is_skipping,"Skipping truncator expected.");
+			// Append the final delta to the coding vector for use in the decoding routine.
+			c_vec.push_back(static_cast<value_type>(f_delta));
+			// Temp vector for decoding.
+			std::vector<value_type> tmp_v;
+			tmp_v.resize(boost::numeric_cast<decltype(tmp_v.size())>(this->m_s1->m_symbol_set.size()));
+			piranha_assert(c_vec.size() - 1u == tmp_v.size());
+			piranha_assert(mins.size() == tmp_v.size());
+			auto decoder = [&tmp_v,&c_vec,&mins,&maxs](const value_type &n) {
+				decltype(c_vec.size()) i = 0u;
+				std::generate(tmp_v.begin(),tmp_v.end(),
+					[&n,&i,&mins,&maxs,&c_vec]() -> value_type
+				{
+					auto retval = (n % c_vec[i + 1u]) / c_vec[i] + mins[i];
+					piranha_assert(retval >= mins[i] && retval <= maxs[i]);
+					++i;
+					return retval;
+				});
+			};
+			const auto cf_size = cf_vector.size();
+			term_type1 tmp_term;
+			for (decltype(cf_vector.size()) i = 0u; i < cf_size; ++i) {
+				if (!math::is_zero(cf_vector[i])) {
+					tmp_term.m_cf = std::move(cf_vector[i]);
+					decoder(boost::numeric_cast<value_type>(i));
+					tmp_term.m_key = decltype(tmp_term.m_key)(tmp_v.begin(),tmp_v.end());
+					retval.insert(std::move(tmp_term));
+				}
+			}
+		}
+		template <typename Functor>
+		void sparse_multiplication(return_type &retval, const truncator_type &trunc) const
+		{
+			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
+			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
+			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
+				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
+			};
+			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
+				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
+			};
+			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
+			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
+			// Start defining the blocks for series multiplication.
+			const auto bsizes = get_block_sizes(size1,size2);
+			// Cast to hardware integers.
+			const auto bsize1 = static_cast<index_type>(bsizes.first), bsize2 = static_cast<index_type>(bsizes.second);
 			// Create the list of tasks.
 			// NOTE: the way tasks are created, there is never an empty task - all intervals have nonzero sizes.
 			// The task are sorted according to the index of the first bucket of retval that will be written to,
 			// so we need a multiset as different tasks might have the same starting position.
-			std::multiset<task_type,task_sorter> task_list(task_sorter(retval,this->m_v1,this->m_v2));
+			std::multiset<task_type,sparse_task_sorter> task_list(sparse_task_sorter(retval,this->m_v1,this->m_v2));
 			decltype(task_list.insert(std::declval<task_type>())) ins_result;
 			for (index_type i = 0u; i < size1 / bsize1; ++i) {
 				for (index_type j = 0u; j < size2 / bsize2; ++j) {
@@ -825,7 +1079,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 			// Pre-sort each block according to the truncator, if necessary.
-			sort_blocks(bsize1,bsize2,trunc);
+			sparse_sort_blocks(bsize1,bsize2,trunc);
 			typedef decltype(this->determine_n_threads()) thread_size_type;
 			const thread_size_type n_threads = this->determine_n_threads();
 			if (n_threads == 1u) {
@@ -1009,9 +1263,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					throw;
 				}
 			}
-			// Trace the result of estimation.
-			this->trace_estimates(retval.size(),estimate);
-			return retval;
 		}
 		// NOTE: these two static functions are for internal use above, we have to place them
 		// here because of GCC bugs (in the first case it is the same std::bind problem above,
@@ -1079,12 +1330,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		template <bool IsActive, bool FastMode = false>
-		struct functor: base::template default_functor<IsActive,false>
+		struct sparse_functor: base::template default_functor<IsActive,false>
 		{
 			// Fast version of functor.
-			typedef functor<IsActive,true> fast_rebind;
+			typedef sparse_functor<IsActive,true> fast_rebind;
 			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
-			explicit functor(term_type1 const **ptr1, const index_type &s1,
+			explicit sparse_functor(term_type1 const **ptr1, const index_type &s1,
 				term_type2 const **ptr2, const index_type &s2, const truncator_type &trunc,
 				return_type &retval):
 				base::template default_functor<IsActive,false>(ptr1,s1,ptr2,s2,trunc,retval),
