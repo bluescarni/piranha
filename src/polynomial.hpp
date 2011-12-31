@@ -851,6 +851,32 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		{
 			return false;
 		}
+		// Compare regions by lower bound.
+		struct region_comparer
+		{
+			bool operator()(const region_type &r1, const region_type &r2) const
+			{
+				return r1.first < r2.first;
+			}
+		};
+		// Function to remove the regions associated to a task from the set of busy regions.
+		template <typename RegionSet>
+		static void cleanup_regions(RegionSet &busy_regions, const task_type &task)
+		{
+			auto tmp_it = busy_regions.find(task.m_r1);
+			if (tmp_it != busy_regions.end()) {
+				busy_regions.erase(tmp_it);
+			}
+			// Deal with second region only if present.
+			if (!task.m_second_region) {
+				return;
+			}
+			tmp_it = busy_regions.find(task.m_r2);
+			if (tmp_it != busy_regions.end()) {
+				busy_regions.erase(tmp_it);
+			}
+			piranha_assert(region_set_checker(busy_regions));
+		}
 		// Dense multiplication method.
 		template <bool IsActive>
 		void dense_multiplication(return_type &retval, const truncator_type &trunc) const
@@ -976,29 +1002,170 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			// Pre-sort each block according to the truncator, if necessary.
 			dense_sort_blocks(bsize1,bsize2,trunc,new_keys1,new_keys2);
-// for (auto it = task_list.begin(); it != task_list.end(); ++it) {
-// 	std::cout << it->m_b1.first << ',' << it->m_b1.second << ' ' << it->m_b2.first << ',' << it->m_b2.second << ' ' <<
-// 	it->m_r1.first << ',' << it->m_r1.second << ' ' << it->m_r2.first << ',' << it->m_r2.second << '\n';
-// }
 			// Prepare the storage for multiplication.
 			std::vector<typename term_type1::cf_type> cf_vector;
 			cf_vector.resize(boost::numeric_cast<decltype(cf_vector.size())>((hmax - hmin) + 1));
-// std::cout << cf_vector.size() << '\n';
-			const auto it_f = task_list.end();
-			for (auto it = task_list.begin(); it != it_f; ++it) {
-				const index_type i_start = it->m_b1.first, j_start = it->m_b2.first,
-					i_end = it->m_b1.second, j_end = it->m_b2.second;
-				piranha_assert(i_end > i_start && j_end > j_start);
-				for (index_type i = i_start; i < i_end; ++i) {
-					for (index_type j = j_start; j < j_end; ++j) {
-						if (dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
-							break;
+			// Get the number of threads.
+			typedef decltype(this->determine_n_threads()) thread_size_type;
+			const thread_size_type n_threads = this->determine_n_threads();
+			if (n_threads == 1u) {
+				// Single-thread multiplication.
+				const auto it_f = task_list.end();
+				for (auto it = task_list.begin(); it != it_f; ++it) {
+					const index_type i_start = it->m_b1.first, j_start = it->m_b2.first,
+						i_end = it->m_b1.second, j_end = it->m_b2.second;
+					piranha_assert(i_end > i_start && j_end > j_start);
+					for (index_type i = i_start; i < i_end; ++i) {
+						for (index_type j = j_start; j < j_end; ++j) {
+							if (dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
+								break;
+							}
+							const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
+							piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
+							math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
+								new_keys1[i].second->m_cf,new_keys2[j].second->m_cf);
 						}
-						const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
-						piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
-						math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
-							new_keys1[i].second->m_cf,new_keys2[j].second->m_cf);
 					}
+				}
+			} else {
+				// Set of busy bucket regions, ordered by starting point.
+				// NOTE: we do not need a multiset, as regions that compare equal (i.e., same starting point) will not exist
+				// at the same time in the set by design.
+				region_comparer rc;
+				std::set<region_type,region_comparer> busy_regions(rc);
+				// Synchronization.
+				mutex m;
+				condition_variable cond;
+				// Thread function.
+				auto thread_function = [&trunc,&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
+					task_type task;
+					while (true) {
+						{
+							// First, lock down everything.
+							unique_lock<mutex>::type lock(m);
+							if (task_list.empty()) {
+								break;
+							}
+							// Look for a suitable task.
+							const auto it_f = task_list.end();
+							auto it = task_list.begin();
+							for (; it != it_f; ++it) {
+								piranha_assert(!it->m_second_region);
+								// Check the region.
+								if (this->region_checker(it->m_r1,busy_regions)) {
+									try {
+										// The region is ok, insert it and break the cycle.
+										auto tmp = busy_regions.insert(it->m_r1);
+										(void)tmp;
+										piranha_assert(tmp.second);
+										piranha_assert(this->region_set_checker(busy_regions));
+									} catch (...) {
+										// NOTE: the idea here is that in case of errors
+										// we want to restore the original situation
+										// as if nothing happened.
+										this->cleanup_regions(busy_regions,*it);
+										throw;
+									}
+									break;
+								}
+							}
+							// We might have identified a suitable task, check it is not end().
+							if (it == it_f) {
+								// The thread can't do anything, will have to wait until something happens
+								// and then re-identify a good task.
+								cond.wait(lock);
+								continue;
+							}
+							// Now we have a good task, pop it from the task list.
+							task = *it;
+							task_list.erase(it);
+						}
+						try {
+							// Perform the multiplication on the selected task.
+							const index_type i_start = task.m_b1.first, j_start = task.m_b2.first,
+								i_end = task.m_b1.second, j_end = task.m_b2.second;
+							piranha_assert(i_end > i_start && j_end > j_start);
+							for (index_type i = i_start; i < i_end; ++i) {
+								for (index_type j = j_start; j < j_end; ++j) {
+									if (this->dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
+										break;
+									}
+									const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
+									piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
+									math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
+										new_keys1[i].second->m_cf,new_keys2[j].second->m_cf);
+								}
+							}
+						} catch (...) {
+							// Re-acquire the lock.
+							lock_guard<mutex>::type lock(m);
+							// Cleanup the regions.
+							this->cleanup_regions(busy_regions,task);
+							// Notify all waiting threads that a region was removed from the busy set.
+							cond.notify_all();
+							throw;
+						}
+						{
+							// Re-acquire the lock.
+							lock_guard<mutex>::type lock(m);
+							// Take out the regions in which we just wrote from the set of busy regions.
+							this->cleanup_regions(busy_regions,task);
+							// Notify all waiting threads that a region was removed from the busy set.
+							cond.notify_all();
+						}
+					}
+				};
+				// NOTE: we need to wrap the task and the future in shared pointers because
+				// of a GCC 4.6 bug (will try to copy move-only objects because of internal use
+				// of std::bind).
+				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
+				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				try {
+					for (thread_size_type i = 0u; i < n_threads; ++i) {
+						try {
+							// First let's try to append an empty item.
+							pf_list.push_back(tuple_type{});
+							// Second, create the real tuple.
+							tuple_type t;
+							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
+							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
+							auto pt_ptr = std::get<0u>(t);
+							// Try launching the thread.
+							thread thr(pt_launcher,pt_ptr);
+							piranha_assert(thr.joinable());
+							try {
+								thr.detach();
+							} catch (...) {
+								// Last ditch effort: try joining before re-throwing.
+								thr.join();
+								throw;
+							}
+							// If everything went ok, move in the real tuple.
+							pf_list.back() = std::move(t);
+						} catch (...) {
+							// If the error happened *after* the empty tuple was added,
+							// then we have to remove it as it is invalid.
+							if (pf_list.size() != i) {
+								auto it_f = pf_list.end();
+								--it_f;
+								pf_list.erase(it_f);
+							}
+							throw;
+						}
+					}
+					piranha_assert(pf_list.size() == n_threads);
+					// First let's wait for everything to finish.
+					waiter(pf_list);
+					// Then, let's handle the exceptions.
+					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
+						std::get<1u>(*it)->get();
+					}
+				} catch (...) {
+					// Make sure any pending task is finished -> this is for
+					// the case the exception was thrown in the thread creation
+					// loop.
+					waiter(pf_list);
+					throw;
 				}
 			}
 			// Build the return value.
@@ -1086,7 +1253,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// Perform the multiplication. We need this try/catch because, by using the fast interface,
 				// in case of an error the container in retval could be left in an inconsistent state.
 				try {
-					task_multiplication<Functor>(retval,trunc,task_list);
+					sparse_single_thread<Functor>(retval,trunc,task_list);
 				} catch (...) {
 					retval.m_container.clear();
 					throw;
@@ -1097,30 +1264,14 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// Set of busy bucket regions, ordered by starting point.
 				// NOTE: we do not need a multiset, as regions that compare equal (i.e., same starting point) will not exist
 				// at the same time in the set by design.
-				auto region_comparer = [](const region_type &r1, const region_type &r2) {return r1.first < r2.first;};
-				std::set<region_type,decltype(region_comparer)> busy_regions(region_comparer);
+				region_comparer rc;
+				std::set<region_type,region_comparer> busy_regions(rc);
 				// Synchronization.
 				mutex m;
 				condition_variable cond;
 				// Thread function.
 				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
 					task_type task;
-					// Functor to remove the regions associated to a task from the set of busy regions.
-					auto cleanup_regions = [&busy_regions,this](const task_type &task) {
-						auto tmp_it = busy_regions.find(task.m_r1);
-						if (tmp_it != busy_regions.end()) {
-							busy_regions.erase(tmp_it);
-						}
-						// Deal with second region only if present.
-						if (!task.m_second_region) {
-							return;
-						}
-						tmp_it = busy_regions.find(task.m_r2);
-						if (tmp_it != busy_regions.end()) {
-							busy_regions.erase(tmp_it);
-						}
-						piranha_assert(this->region_set_checker(busy_regions));
-					};
 					while (true) {
 						{
 							// First, lock down everything.
@@ -1149,7 +1300,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 										// NOTE: the idea here is that in case of errors
 										// we want to restore the original situation
 										// as if nothing happened.
-										cleanup_regions(*it);
+										this->cleanup_regions(busy_regions,*it);
 										throw;
 									}
 									break;
@@ -1189,7 +1340,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							// Re-acquire the lock.
 							lock_guard<mutex>::type lock(m);
 							// Cleanup the regions.
-							cleanup_regions(task);
+							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
 							cond.notify_all();
 							throw;
@@ -1200,7 +1351,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							// Update the insertion count.
 							insertion_count += tmp_ins_count;
 							// Take out the regions in which we just wrote from the set of busy regions.
-							cleanup_regions(task);
+							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
 							cond.notify_all();
 						}
@@ -1280,7 +1431,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		}
 		// Single thread function.
 		template <typename Functor, typename Truncator, typename TaskList>
-		void task_multiplication(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
+		void sparse_single_thread(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
 			typedef typename Functor::fast_rebind fast_functor_type;
 			bucket_size_type insertion_count = 0u;
@@ -1304,6 +1455,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			sanitize_series(retval,insertion_count);
 		}
+		// Sanitize series after completion of sparse multi-thread multiplication.
 		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count)
 		{
 			// Here we have to do the following things:
@@ -1329,6 +1481,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				);
 			}
 		}
+		// Functor for use in sparse multiplication.
 		template <bool IsActive, bool FastMode = false>
 		struct sparse_functor: base::template default_functor<IsActive,false>
 		{
