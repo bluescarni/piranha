@@ -80,6 +80,22 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k11.get_int(),10);
 		k11 = std::move(k9);
 		BOOST_CHECK_EQUAL(k9.get_int(),1);
+		// Constructor from iterators.
+		v2 = {};
+		k_type k12(v2.begin(),v2.end());
+		BOOST_CHECK_EQUAL(k12.get_int(),0);
+		v2 = {42};
+		k_type k13(v2.begin(),v2.end());
+		BOOST_CHECK_EQUAL(k13.get_int(),42);
+		v2 = {-42};
+		k_type k14(v2.begin(),v2.end());
+		BOOST_CHECK_EQUAL(k14.get_int(),-42);
+		v2 = {1,-2};
+		k_type k15(v2.begin(),v2.end());
+		auto v = k15.unpack(symbol_set({symbol("a"),symbol("b")}));
+		BOOST_CHECK(v.size() == 2u);
+		BOOST_CHECK(v[0u] == 1);
+		BOOST_CHECK(v[1u] == -2);
 	}
 };
 

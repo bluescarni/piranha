@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -86,9 +87,9 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		static const size_type max_size = 255u;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
-		// Vector type used for temporary packing/unpacking.
-		typedef static_vector<value_type,max_size> v_type;
 	public:
+		/// Vector type used for temporary packing/unpacking.
+		typedef static_vector<value_type,max_size> v_type;
 		/// Default constructor.
 		/**
 		 * After construction all exponents in the monomial will be zero.
@@ -118,6 +119,28 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			for (auto it = list.begin(); it != list.end(); ++it) {
 				tmp.push_back(boost::numeric_cast<value_type>(*it));
 			}
+			m_value = ka::encode(tmp);
+		}
+		/// Constructor from range.
+		/**
+		 * Will build internally a vector of values from the input iterators, encode it and assign the result
+		 * to the internal integer instance. The value type of the iterator is converted to \p T using
+		 * \p boost::numeric_cast.
+		 * 
+		 * @param[in] start beginning of the range.
+		 * @param[in] end end of the range.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::kronecker_array::encode(),
+		 * - \p boost::numeric_cast (in case the value type of \p Iterator is not the same as \p T),
+		 * - piranha::static_vector::push_back().
+		 */
+		template <typename Iterator>
+		explicit kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0)
+		{
+			typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
+			v_type tmp;
+			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return boost::numeric_cast<value_type>(v);});
 			m_value = ka::encode(tmp);
 		}
 		/// Constructor from set of symbols.
