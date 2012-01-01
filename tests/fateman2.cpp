@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/polynomial.hpp"
+#include "fateman2.hpp"
 
 #define BOOST_TEST_MODULE fateman2_test
 #include <boost/test/unit_test.hpp>
@@ -27,7 +27,6 @@
 
 #include "../src/kronecker_monomial.hpp"
 #include "../src/settings.hpp"
-#include "../src/timeit.hpp"
 
 using namespace piranha;
 
@@ -40,11 +39,5 @@ BOOST_AUTO_TEST_CASE(fateman2_test)
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	typedef polynomial<double,kronecker_monomial<>> p_type;
-	p_type x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1, tmp(f);
-	for (auto i = 1; i < 30; ++i) {
-		f *= tmp;
-	}
-	BOOST_CHECK_EQUAL(timeit([&f](){return f * (f + 1);}).size(),635376u);
+	BOOST_CHECK_EQUAL((fateman2<double,kronecker_monomial<>>().size()),635376u);
 }
