@@ -24,6 +24,7 @@
 #define BOOST_TEST_MODULE benchmark_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
@@ -81,7 +82,10 @@ struct benchmark_runner
 		const unsigned n_trials = 10u;
 		std::cout << ">>>>>>>>" << cf_name(cf) << '\n';
 		settings::reset_n_threads();
-		const unsigned def_n_threads = settings::get_n_threads();
+		unsigned def_n_threads = settings::get_n_threads();
+		if (boost::unit_test::framework::master_test_suite().argc > 1) {
+			def_n_threads = boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]);
+		}
 		for (auto i = 1u; i <= def_n_threads; ++i) {
 			settings::set_n_threads(i);
 			std::cout << "Dense," << i << '\n';
