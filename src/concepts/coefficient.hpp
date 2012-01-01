@@ -55,8 +55,8 @@ struct Coefficient:
 	BOOST_CONCEPT_USAGE(Coefficient)
 	{
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
-		std::cout << *(static_cast<T *>(piranha_nullptr));
 		const T inst = T();
+		std::cout << inst;
 		math::is_zero(inst);
 		T inst_mut = T();
 		math::negate(inst_mut);
