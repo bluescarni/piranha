@@ -606,11 +606,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			region_type r1{0u,0u}, r2{0u,0u};
 			bool second_region = false;
 			// Addition is safe because of the limits on the max bucket count of hash_set.
-			const auto a = retval.m_container._bucket(*v1[i_start]) +
-				retval.m_container._bucket(*v2[j_start]),
+			const auto a = retval.m_container._bucket_from_hash(v1[i_start]->hash()) +
+				retval.m_container._bucket_from_hash(v2[j_start]->hash()),
 				// NOTE: we are sure that the tasks are not empty, so the -1 is safe.
-				b = retval.m_container._bucket(*v1[i_end - 1u]) +
-				retval.m_container._bucket(*v2[j_end - 1u]);
+				b = retval.m_container._bucket_from_hash(v1[i_end - 1u]->hash()) +
+				retval.m_container._bucket_from_hash(v2[j_end - 1u]->hash());
 			// NOTE: using <= here as [a,b] is now a closed interval.
 			piranha_assert(a <= b);
 			piranha_assert(b <= b_count * 2u - 2u);
@@ -703,9 +703,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					t1.m_b1.first < t1.m_b1.second && t1.m_b2.first < t1.m_b2.second &&
 					t2.m_b1.first < t2.m_b1.second && t2.m_b2.first < t2.m_b2.second
 				);
-				return (m_retval.m_container._bucket(*m_v1[t1.m_b1.first]) + m_retval.m_container._bucket(*m_v2[t1.m_b2.first])) %
+				return (m_retval.m_container._bucket_from_hash(m_v1[t1.m_b1.first]->hash()) +
+					m_retval.m_container._bucket_from_hash(m_v2[t1.m_b2.first]->hash())) %
 					m_retval.m_container.bucket_count() <
-					(m_retval.m_container._bucket(*m_v1[t2.m_b1.first]) + m_retval.m_container._bucket(*m_v2[t2.m_b2.first])) %
+					(m_retval.m_container._bucket_from_hash(m_v1[t2.m_b1.first]->hash()) +
+					m_retval.m_container._bucket_from_hash(m_v2[t2.m_b2.first]->hash())) %
 					m_retval.m_container.bucket_count();
 			}
 			const return_type			&m_retval;
@@ -802,7 +804,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(estimate / retval.m_container.max_load_factor())));
 			piranha_assert(retval.m_container.bucket_count());
-			if ((integer(size1) * integer(size2)) / estimate > 500) {
+			if ((integer(size1) * integer(size2)) / estimate > 200) {
 				if (trunc.is_active()) {
 					dense_multiplication<true>(retval,trunc);
 				} else {
@@ -1208,10 +1210,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
 			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
 			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
-				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
+				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
 			};
 			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
-				return retval.m_container._bucket(*ptr1) < retval.m_container._bucket(*ptr2);
+				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
 			};
 			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
 			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
