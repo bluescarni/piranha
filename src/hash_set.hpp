@@ -1023,6 +1023,19 @@ class hash_set
 			}
 			return retval;
 		}
+		/// Index of destination bucket from hash value.
+		/**
+		 * Note that this method will not check if the number of buckets is zero.
+		 * 
+		 * @param[in] hash input hash value.
+		 * 
+		 * @return index of the destination bucket for an object with hash value \p hash.
+		 */
+		size_type _bucket_from_hash(const std::size_t &hash) const
+		{
+			piranha_assert(bucket_count());
+			return hash & ((size_type(1u) << m_log2_size) - size_type(1u));
+		}
 		/// Index of destination bucket (low-level).
 		/**
 		 * Equivalent to bucket(), with the exception that this method will not check
@@ -1036,8 +1049,7 @@ class hash_set
 		 */
 		size_type _bucket(const key_type &k) const
 		{
-			piranha_assert(bucket_count());
-			return m_hasher(k) & ((size_type(1u) << m_log2_size) - size_type(1u));
+			return _bucket_from_hash(m_hasher(k));
 		}
 		/// Force update of the number of elements.
 		/**
