@@ -96,6 +96,7 @@ class univariate_monomial
 		 * \p m is compatible with \p args.
 		 * 
 		 * @param[in] m construction argument.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws std::invalid_argument if \p m is not compatible with \p args.
 		 */

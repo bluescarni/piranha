@@ -168,6 +168,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * \p other is compatible with \p args.
 		 * 
 		 * @param[in] other construction argument.
+		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws std::invalid_argument if \p other is not compatible with \p args.
 		 */
