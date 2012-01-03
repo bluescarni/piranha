@@ -63,6 +63,8 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo confirm experimentally that boost numeric_cast does not influence performance.
+ * \todo for the generation of the deltas instead of multiplying by two, try multiply by (2*delta - 1)/delta,
+ * so that the resulting delta has m,M multiplied by two instead. This might improve limits behaviour at higher dimensions.
  */
 template <typename SignedInteger>
 class kronecker_array
