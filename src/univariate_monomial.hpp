@@ -89,6 +89,22 @@ class univariate_monomial
 		univariate_monomial(const univariate_monomial &) = default;
 		/// Defaulted move constructor.
 		univariate_monomial(univariate_monomial &&) = default;
+		/// Converting constructor.
+		/**
+		 * This constructor is for use when converting from one term type to another in piranha::series. It will
+		 * set the internal integer instance to the same value of \p m, after having checked that
+		 * \p m is compatible with \p args.
+		 * 
+		 * @param[in] m construction argument.
+		 * 
+		 * @throws std::invalid_argument if \p m is not compatible with \p args.
+		 */
+		explicit univariate_monomial(const univariate_monomial &m, const symbol_set &args):m_value(m.m_value)
+		{
+			if (unlikely(!m.is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"incompatible arguments set");
+			}
+		}
 		/// Constructor from set of symbols.
 		/**
 		 * This constructor will initialise the value of the exponent to 0.

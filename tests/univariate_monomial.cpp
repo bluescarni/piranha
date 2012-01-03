@@ -63,6 +63,13 @@ struct constructor_tester
 		BOOST_CHECK(u0.get_exponent() == T(3));
 		u0 = um_type{2};
 		BOOST_CHECK(u0.get_exponent() == T(2));
+		// Converting constructor.
+		um_type u5, u6(u5,symbol_set({}));
+		BOOST_CHECK(u5 == u6);
+		u5.set_exponent(T(10));
+		um_type u7(u5,symbol_set({symbol("a")}));
+		BOOST_CHECK(u7 == u5);
+		BOOST_CHECK_THROW((um_type(u7,symbol_set({symbol("a"),symbol("b")}))),std::invalid_argument);
 	}
 };
 
