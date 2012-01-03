@@ -48,6 +48,8 @@ namespace piranha
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same exception safety guarantee as the type of piranha::degree_truncator_settings::get_state().
+ * 
+ * \todo cache values of degrees for faster calculations, and also convert to hardware integer type in the snapshot as needed?
  */
 class power_series_truncator: public degree_truncator_settings
 {

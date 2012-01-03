@@ -65,6 +65,8 @@
  * values in the truncators turns out to work ok.
  * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
  * only if T + U produces T.
+ * \todo start experimenting with parallel sort in multipliers and truncators (e.g., for the rectangular benchmark).
+ * \todo forbid interoperability in +-* between series with different keys?
  * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,
  * and maybe replace in the high level interface the std::set of string with initializer list, as it seems sometimes {"a","b"} is not picked up as std::set of string.
  */

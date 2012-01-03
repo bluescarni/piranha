@@ -449,6 +449,8 @@ struct kronecker_enabler
  * \section move_semantics Move semantics
  * 
  * Move semantics is equivalent to piranha::series_multiplier's move semantics.
+ * 
+ * \todo optimize task list in single thread and maybe also for small operands.
  */
 template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
