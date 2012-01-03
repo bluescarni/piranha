@@ -96,6 +96,13 @@ struct constructor_tester
 		BOOST_CHECK(v.size() == 2u);
 		BOOST_CHECK(v[0u] == 1);
 		BOOST_CHECK(v[1u] == -2);
+		// Converting constructor.
+		k_type k16, k17(k16,symbol_set{});
+		BOOST_CHECK(k16 == k17);
+		k16.set_int(10);
+		k_type k18(k16,symbol_set({symbol("a")}));
+		BOOST_CHECK(k16 == k18);
+		BOOST_CHECK_THROW((k_type(k16,symbol_set({}))),std::invalid_argument);
 	}
 };
 

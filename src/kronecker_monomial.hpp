@@ -161,6 +161,22 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			m_value = ka::encode(tmp);
 		}
+		/// Converting constructor.
+		/**
+		 * This constructor is for use when converting from one term type to another in piranha::series. It will
+		 * set the internal integer instance to the same value of \p other, after having checked that
+		 * \p other is compatible with \p args.
+		 * 
+		 * @param[in] other construction argument.
+		 * 
+		 * @throws std::invalid_argument if \p other is not compatible with \p args.
+		 */
+		explicit kronecker_monomial(const kronecker_monomial &other, const symbol_set &args):m_value(other.m_value)
+		{
+			if (unlikely(!other.is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"incompatible arguments");
+			}
+		}
 		/// Constructor from \p value_type.
 		/**
 		 * This constructor will initialise the internal integer instance
@@ -186,8 +202,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		kronecker_monomial &operator=(kronecker_monomial &&other) piranha_noexcept_spec(true)
 		{
-			// NOTE: replace with std::move and update docs if we ever allow for arbitrary integer types.
-			m_value = other.m_value;
+			m_value = std::move(other.m_value);
 			return *this;
 		}
 		/// Set the internal integer instance.
