@@ -70,6 +70,7 @@ struct Key:
 	{
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
 		T tmp = T(symbol_set{});
+		T tmp_conv(tmp,symbol_set{});
 		std::cout << (static_cast<T *>(piranha_nullptr));
 		const T inst = T();
 		static_assert(piranha_noexcept_op(inst.is_compatible(std::declval<symbol_set>())),"is_compatible() must be non-throwing.");
