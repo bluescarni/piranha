@@ -157,3 +157,84 @@ BOOST_AUTO_TEST_CASE(kronecker_polynomial_overflow_test)
 {
 	boost::mpl::for_each<cf_types>(overflow_tester());
 }
+
+struct st_vs_mt_tester
+{
+	void operator()()
+	{
+		// Sparse case.
+		// Compute result in st mode.
+		// NOTE: do not check for size as via unsigned wrapover some coefficients
+		// might go to zero.
+		settings::set_n_threads(1u);
+		degree_truncator_settings::unset();
+		typedef polynomial<std::size_t,kronecker_monomial<>> p_type;
+		p_type x("x"), y("y"), z("z"), t("t");
+		auto f = 1 + x + y + z + t;
+		auto tmp2 = f;
+		for (int i = 1; i < 10; ++i) {
+			f *= tmp2;
+		}
+		auto g = f + 1;
+		auto st = f * g;
+		for (auto i = 2u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto mt = f * g;
+			BOOST_CHECK(mt == st);
+		}
+		// With truncation.
+		degree_truncator_settings::set(15);
+		settings::set_n_threads(1u);
+		st = f * g;
+		BOOST_CHECK(st.degree() == 14);
+		for (auto i = 2u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto mt = f * g;
+			BOOST_CHECK(mt == st);
+		}
+		// Dense case.
+		settings::set_n_threads(1u);
+		degree_truncator_settings::unset();
+		f *= f;
+		g *= g;
+		st = f * g;
+		for (auto i = 2u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto mt = f * g;
+			BOOST_CHECK(mt == st);
+		}
+		// With truncation.
+		degree_truncator_settings::set(25);
+		settings::set_n_threads(1u);
+		st = f * g;
+		BOOST_CHECK(st.degree() == 24);
+		for (auto i = 2u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto mt = f * g;
+			BOOST_CHECK(mt == st);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_polynomial_st_vs_mt_test)
+{
+	st_vs_mt_tester t;
+	t();
+}
+
+BOOST_AUTO_TEST_CASE(kronecker_polynomial_different_cf_test)
+{
+	settings::set_n_threads(1u);
+	degree_truncator_settings::unset();
+	typedef polynomial<std::size_t,kronecker_monomial<>> p_type1;
+	typedef polynomial<integer,kronecker_monomial<>> p_type2;
+	p_type1 x("x"), y("y"), z("z"), t("t");
+	auto f = 1 + x + y + z + t;
+	p_type2 tmp2(f);
+	for (int i = 1; i < 10; ++i) {
+		f *= tmp2;
+	}
+	auto g = f + 1;
+	auto st = f * g;
+	BOOST_CHECK_EQUAL(st.size(),10626u);
+}
