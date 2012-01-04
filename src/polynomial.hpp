@@ -1135,7 +1135,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
 							auto pt_ptr = std::get<0u>(t);
 							// Try launching the thread.
-							thread thr(pt_launcher,pt_ptr);
+							thread thr(pt_launcher_dense,pt_ptr);
 							piranha_assert(thr.joinable());
 							try {
 								thr.detach();
@@ -1273,8 +1273,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// Synchronization.
 				mutex m;
 				condition_variable cond;
+				typedef std::set<bucket_size_type> b_set_type;
 				// Thread function.
-				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
+				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this]() -> b_set_type {
+					b_set_type b_check;
 					task_type task;
 					while (true) {
 						{
@@ -1340,6 +1342,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 								}
 							}
 							tmp_ins_count = f.m_insertion_count;
+							b_check.insert(f.m_bucket_check.begin(),f.m_bucket_check.end());
 						} catch (...) {
 							// Re-acquire the lock.
 							lock_guard<mutex>::type lock(m);
@@ -1360,12 +1363,14 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							cond.notify_all();
 						}
 					}
+					return b_check;
 				};
 				// NOTE: we need to wrap the task and the future in shared pointers because
 				// of a GCC 4.6 bug (will try to copy move-only objects because of internal use
 				// of std::bind).
-				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
+				typedef std::tuple<std::shared_ptr<typename packaged_task<b_set_type ()>::type>,std::shared_ptr<typename future<b_set_type>::type>> tuple_type;
 				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				b_set_type b_check_list;
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						try {
@@ -1373,11 +1378,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							pf_list.push_back(tuple_type{});
 							// Second, create the real tuple.
 							tuple_type t;
-							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
-							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
+							std::get<0u>(t).reset(new typename packaged_task<b_set_type ()>::type(thread_function));
+							std::get<1u>(t).reset(new typename future<b_set_type>::type(std::get<0u>(t)->get_future()));
 							auto pt_ptr = std::get<0u>(t);
 							// Try launching the thread.
-							thread thr(pt_launcher,pt_ptr);
+							thread thr(pt_launcher_sparse,pt_ptr);
 							piranha_assert(thr.joinable());
 							try {
 								thr.detach();
@@ -1402,12 +1407,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(pf_list.size() == n_threads);
 					// First let's wait for everything to finish.
 					waiter(pf_list);
-					// Then, let's handle the exceptions.
+					// Then, let's handle the exceptions and retvals.
 					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
-						std::get<1u>(*it)->get();
+						auto tmp_b_set = std::get<1u>(*it)->get();
+						b_check_list.insert(tmp_b_set.begin(),tmp_b_set.end());
 					}
 					// Finally, fix the series.
-					sanitize_series(retval,insertion_count);
+					sanitize_series(retval,insertion_count,b_check_list);
 				} catch (...) {
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
@@ -1423,7 +1429,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// here because of GCC bugs (in the first case it is the same std::bind problem above,
 		// in the second case a problem cropping up when using LTO).
 		// Helper function for use above.
-		static void pt_launcher(std::shared_ptr<packaged_task<void()>::type> pt_ptr)
+		static void pt_launcher_dense(std::shared_ptr<packaged_task<void()>::type> pt_ptr)
+		{
+			(*pt_ptr)();
+		}
+		static void pt_launcher_sparse(std::shared_ptr<typename packaged_task<std::set<bucket_size_type> ()>::type> pt_ptr)
 		{
 			(*pt_ptr)();
 		}
@@ -1438,6 +1448,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		void sparse_single_thread(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
 			typedef typename Functor::fast_rebind fast_functor_type;
+			std::set<bucket_size_type> b_check;
 			bucket_size_type insertion_count = 0u;
 			const auto it_f = task_list.end();
 			for (auto it = task_list.begin(); it != it_f; ++it) {
@@ -1456,11 +1467,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					}
 				}
 				insertion_count += f.m_insertion_count;
+				b_check.insert(f.m_bucket_check.begin(),f.m_bucket_check.end());
 			}
-			sanitize_series(retval,insertion_count);
+			sanitize_series(retval,insertion_count,b_check);
 		}
 		// Sanitize series after completion of sparse multi-thread multiplication.
-		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count)
+		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count, const std::set<bucket_size_type> &b_check)
 		{
 			// Here we have to do the following things:
 			// - check ignorability of terms,
@@ -1469,13 +1481,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Compatibility is not a concern for polynomials.
 			// First, let's fix the size of inserted terms.
 			retval.m_container._update_size(insertion_count);
-			// Second, erase the ignorable terms.
-			const auto it_f = retval.m_container.end();
-			for (auto it = retval.m_container.begin(); it != it_f;) {
-				if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
-					it = retval.m_container.erase(it);
-				} else {
-					++it;
+			// Second, check flagged buckets.
+			// TODO improve performance here by really checking only the buckets.
+			if (!b_check.empty()) {
+				const auto it_f = retval.m_container.end();
+				for (auto it = retval.m_container.begin(); it != it_f;) {
+					if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+						it = retval.m_container.erase(it);
+					} else {
+						++it;
+					}
 				}
 			}
 			// Finally, cope with excessive load factor.
@@ -1545,22 +1560,29 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					tmp.m_cf = cf1;
 					tmp.m_cf *= cf2;
 					// Insert and update size.
-					// NOTE: in fast mode, the check will be done at the end.
 					// NOTE: the counters are protected from overflows by the check done in the operator() of the multiplier.
-					if (FastMode) {
+					const auto not_ignorable = !tmp.is_ignorable(args);
+					if (likely(not_ignorable)) {
 						container._unique_insert(tmp,bucket_idx);
-						++m_insertion_count;
-					} else if (likely(!tmp.is_ignorable(args))) {
-						container._unique_insert(tmp,bucket_idx);
-						container._update_size(container.size() + 1u);
+						if (FastMode) {
+							++m_insertion_count;
+						} else {
+							container._update_size(container.size() + 1u);
+						}
 					}
 				} else {
 					// Assert the existing term is not ignorable, in non-fast mode.
 					piranha_assert(FastMode || !it->is_ignorable(args));
 					if (FastMode) {
-						// In fast mode we do not care if this throws or produces a null coefficient,
+						// In fast mode we do not care if this throws,
 						// as we will be dealing with that from outside.
+						// If the coefficient is null, add the bucket
+						// to the check list for later use.
 						math::multiply_accumulate(it->m_cf,cf1,cf2);
+						const auto ignorable = it->is_ignorable(args);
+						if (unlikely(ignorable)) {
+							m_bucket_check.insert(bucket_idx);
+						}
 					} else {
 						// Cleanup function.
 						auto cleanup = [&it,&args,&container]() -> void {
@@ -1580,9 +1602,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					}
 				}
 			}
-			mutable index_type		m_cached_i;
-			mutable index_type		m_cached_j;
-			mutable bucket_size_type	m_insertion_count;
+			mutable index_type			m_cached_i;
+			mutable index_type			m_cached_j;
+			mutable bucket_size_type		m_insertion_count;
+			mutable std::set<bucket_size_type>	m_bucket_check;
 		};
 	private:
 		// Vector of closed ranges of the exponents in both the operands and the result.
