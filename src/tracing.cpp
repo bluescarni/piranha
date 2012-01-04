@@ -71,9 +71,6 @@ struct generic_printer
 
 }
 
-tracing::container_type tracing::m_container;
-mutex tracing::m_mutex;
-
 /// Dump contents of the events database.
 /**
  * Write the contents of the events database to stream in human-readable

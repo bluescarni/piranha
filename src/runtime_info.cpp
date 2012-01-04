@@ -61,9 +61,6 @@ extern "C"
 namespace piranha
 {
 
-const unsigned runtime_info::m_hardware_concurrency = runtime_info::determine_hardware_concurrency();
-const unsigned runtime_info::m_cache_line_size = runtime_info::determine_cache_line_size();
-
 /// Get hardware concurrency.
 /**
  * @return the value of determine_hardware_concurrency() computed at the startup of the program.

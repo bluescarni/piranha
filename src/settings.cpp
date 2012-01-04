@@ -32,21 +32,12 @@
 namespace piranha
 {
 
-namespace detail
-{
-
-static const unsigned default_max_char_output = 10000u;
-
-}
-
-mutex settings::m_mutex;
-unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
-bool settings::m_tracing = false;
-unsigned settings::m_max_char_output = detail::default_max_char_output;
-
 settings::startup::startup()
 {
 	std::cout << "Piranha version: " << PIRANHA_VERSION << '\n';
+#if defined(PIRANHA_USE_TCMALLOC)
+	std::cout << "Piranha configured to use TCMalloc.\n";
+#endif
 	std::cout << "Hardware concurrency: " << runtime_info::determine_hardware_concurrency() << '\n';
 	std::cout << "Cache line size: " << runtime_info::determine_cache_line_size() << '\n';
 	std::cout << "Memory alignment primitives: " <<
@@ -163,7 +154,7 @@ void settings::set_max_char_output(unsigned n)
 void settings::reset_max_char_output()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_max_char_output = detail::default_max_char_output;
+	m_max_char_output = m_default_max_char_output;
 }
 
 }

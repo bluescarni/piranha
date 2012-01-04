@@ -18,11 +18,19 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <algorithm>
+#include <set>
+#include <string>
+#include <unordered_set>
+
 #include "degree_truncator_settings.hpp"
 #include "kronecker_array.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
+#include "symbol.hpp"
+#include "thread_management.hpp"
 #include "threading.hpp"
+#include "tracing.hpp"
 
 // Translation unit to enforce order of initialisation of static variables.
 
@@ -35,7 +43,34 @@ const thread_id runtime_info::m_main_thread_id = this_thread::get_id();
 // Piranha runtime environment initial setup.
 const settings::startup settings::m_startup;
 
+// Settings.
+mutex settings::m_mutex;
+unsigned settings::m_n_threads = std::max<unsigned>(runtime_info::determine_hardware_concurrency(),1u);
+bool settings::m_tracing = false;
+unsigned settings::m_max_char_output = settings::m_default_max_char_output;
+
+// Symbol.
+symbol::container_type symbol::m_symbol_list;
+mutex symbol::m_mutex;
+
+// Thread management.
+mutex thread_management::m_mutex;
+mutex thread_management::binder::m_binder_mutex;
+std::unordered_set<unsigned> thread_management::binder::m_used_procs;
+
+// Runtime info.
+const unsigned runtime_info::m_hardware_concurrency = runtime_info::determine_hardware_concurrency();
+const unsigned runtime_info::m_cache_line_size = runtime_info::determine_cache_line_size();
+
+// Tracing.
+tracing::container_type tracing::m_container;
+mutex tracing::m_mutex;
+
+// Degree truncator.
+degree_truncator_settings::mode degree_truncator_settings::m_mode = degree_truncator_settings::inactive;
+mutex degree_truncator_settings::m_mutex;
 integer degree_truncator_settings::m_limit = integer(0);
+std::set<std::string> degree_truncator_settings::m_args = {};
 
 // Instantiate explicitly the static data of kronecker array for all valid types, i.e., all signed integer types.
 template <>

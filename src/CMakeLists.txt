@@ -4,7 +4,6 @@ SET(SRC_LIST
 	runtime_info.cpp
 	settings.cpp
 	static_initialisation.cpp
-	symbol.cpp
 	thread_barrier.cpp
 	thread_group.cpp
 	thread_management.cpp

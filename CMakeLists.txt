@@ -27,6 +27,9 @@ OPTION(BUILD_TESTS "Build test set." ON)
 # Build option: build the Python bindings.
 OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
+# Use TCMalloc as allocator.
+OPTION(USE_TCMALLOC "Enable use of TCMalloc." OFF)
+
 # Initialise (empty) list of libraries to link against.
 SET(MANDATORY_LIBRARIES "")
 
@@ -81,6 +84,16 @@ FIND_PACKAGE(GMP REQUIRED)
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${GMP_LIBRARIES})
 INCLUDE_DIRECTORIES(${GMP_INCLUDE_DIR})
 
+# TCMalloc setup.
+IF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
+	FIND_LIBRARY(TCMALLOC_LIBRARY NAMES tcmalloc tcmalloc_minimal)
+	IF(NOT TCMALLOC_LIBRARY)
+		MESSAGE(FATAL_ERROR "TCMalloc use was requested but the library could not be located.")
+	ENDIF(NOT TCMALLOC_LIBRARY)
+	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${TCMALLOC_LIBRARY})
+	SET(PIRANHA_USE_TCMALLOC "#define PIRANHA_USE_TCMALLOC")
+ENDIF(USE_TCMALLOC AND CMAKE_BUILD_TYPE STREQUAL "Release")
+
 FIND_PROGRAM(PIRANHA_GIT_EXECUTABLE "git" DOC "Path to the git binary.")
 IF(PIRANHA_GIT_EXECUTABLE)
 	MESSAGE(STATUS "Git executable: ${PIRANHA_GIT_EXECUTABLE}")
@@ -104,7 +117,7 @@ ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
 # Link main to piranha_static library.
 IF(BUILD_MAIN)
 	ADD_EXECUTABLE(main main.cpp)
-	TARGET_LINK_LIBRARIES(main  piranha_static)
+	TARGET_LINK_LIBRARIES(main piranha_static)
 ENDIF(BUILD_MAIN)
 
 IF(BUILD_TESTS)
