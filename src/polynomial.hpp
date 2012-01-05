@@ -1407,7 +1407,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						std::get<1u>(*it)->get();
 					}
 					// Finally, fix the series.
-					sanitize_series(retval,insertion_count);
+					sanitize_series(retval,insertion_count,n_threads);
 				} catch (...) {
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
@@ -1460,7 +1460,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			sanitize_series(retval,insertion_count);
 		}
 		// Sanitize series after completion of sparse multi-thread multiplication.
-		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count)
+		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count, unsigned n_threads = 1u)
 		{
 			// Here we have to do the following things:
 			// - check ignorability of terms,
@@ -1470,12 +1470,97 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// First, let's fix the size of inserted terms.
 			retval.m_container._update_size(insertion_count);
 			// Second, erase the ignorable terms.
-			const auto it_f = retval.m_container.end();
-			for (auto it = retval.m_container.begin(); it != it_f;) {
-				if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
-					it = retval.m_container.erase(it);
-				} else {
-					++it;
+			if (n_threads == 1u) {
+				const auto it_f = retval.m_container.end();
+				for (auto it = retval.m_container.begin(); it != it_f;) {
+					if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+						it = retval.m_container.erase(it);
+					} else {
+						++it;
+					}
+				}
+			} else {
+				const auto b_count = retval.m_container.bucket_count();
+				piranha_assert(b_count);
+				// Adjust the number of threads if they are more than the bucket count.
+				const unsigned nt = (n_threads <= b_count) ? n_threads : b_count;
+				mutex m;
+				auto eraser = [b_count,&retval,&m](const bucket_size_type &start, const bucket_size_type &end) {
+					piranha_assert(start < end && end <= b_count);
+					bucket_size_type erase_count = 0u;
+					std::vector<term_type1> term_list;
+					for (bucket_size_type i = start; i != end; ++i) {
+						term_list.clear();
+						const auto &bl = retval.m_container._get_bucket_list(i);
+						const auto it_f = bl.end();
+						for (auto it = bl.begin(); it != it_f; ++it) {
+							if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+								term_list.push_back(*it);
+							}
+						}
+						for (auto it = term_list.begin(); it != term_list.end(); ++it) {
+							// NOTE: must use _erase to avoid concurrent modifications
+							// to the number of elements in the table.
+							retval.m_container._erase(retval.m_container._find(*it,i));
+							++erase_count;
+						}
+					}
+					if (erase_count) {
+						lock_guard<mutex>::type lock(m);
+						piranha_assert(erase_count <= retval.m_container.size());
+						retval.m_container._update_size(retval.m_container.size() - erase_count);
+					}
+				};
+				typedef typename packaged_task<void (const bucket_size_type &, const bucket_size_type &)>::type pt_type;
+				typedef std::tuple<std::shared_ptr<pt_type>,std::shared_ptr<future<void>::type>> tuple_type;
+				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				try {
+					for (unsigned i = 0u; i < nt; ++i) {
+						try {
+							const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
+							// Try appending an empty tuple.
+							pf_list.push_back(tuple_type{});
+							// Second, create the real tuple.
+							tuple_type t;
+							std::get<0u>(t).reset(new pt_type(eraser));
+							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
+							auto pt_ptr = std::get<0u>(t);
+							// Try launching the thread.
+							thread thr([start,end,pt_ptr]() {(*pt_ptr)(start,end);});
+							piranha_assert(thr.joinable());
+							try {
+								thr.detach();
+							} catch (...) {
+								thr.join();
+								throw;
+							}
+							pf_list.back() = std::move(t);
+						} catch (...) {
+							// If the error happened *after* the empty tuple was added,
+							// then we have to remove it as it is invalid.
+							if (pf_list.size() != i) {
+								auto it_f = pf_list.end();
+								--it_f;
+								pf_list.erase(it_f);
+							}
+							throw;
+						}
+					}
+					piranha_assert(pf_list.size() == nt);
+					// First let's wait for everything to finish.
+					waiter(pf_list);
+					// Then, let's handle the exceptions.
+					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
+						std::get<1u>(*it)->get();
+					}
+				} catch (...) {
+					// Make sure any pending task is finished -> this is for
+					// the case the exception was thrown in the thread creation
+					// loop.
+					waiter(pf_list);
+					// Clean up and re-throw.
+					retval.m_container.clear();
+					throw;
 				}
 			}
 			// Finally, cope with excessive load factor.

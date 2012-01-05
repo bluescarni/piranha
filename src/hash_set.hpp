@@ -1087,6 +1087,18 @@ class hash_set
 			// Rehash to the new size.
 			rehash(size_type(1u) << new_log2_size);
 		}
+		/// Const reference to list in bucket.
+		/**
+		 * @param[in] idx index of the bucket whose list will be returned.
+		 * 
+		 * @return a const reference to the list of items contained in the bucket positioned
+		 * at index \p idx.
+		 */
+		const list &_get_bucket_list(const size_type &idx) const
+		{
+			piranha_assert(idx < bucket_count());
+			return m_container[idx];
+		}
 		/// Erase element.
 		/**
 		 * Erase the element to which \p it points. \p it must be a valid iterator
@@ -1095,7 +1107,8 @@ class hash_set
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
 		 * 
-		 * This method will not update the number of elements in the table.
+		 * This method will not update the number of elements in the table, nor it will try to access elements
+		 * outside the bucket to which \p it refers.
 		 * 
 		 * @param[in] it iterator to the element of the table to be removed.
 		 * 
