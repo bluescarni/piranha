@@ -1459,7 +1459,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			sanitize_series(retval,insertion_count);
 		}
-		// Sanitize series after completion of sparse multi-thread multiplication.
+		// Sanitize series after completion of sparse multiplication.
 		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count, unsigned n_threads = 1u)
 		{
 			// Here we have to do the following things:
