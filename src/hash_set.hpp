@@ -86,7 +86,7 @@ namespace piranha
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
- * \todo power of 2 sizes: test and see if it is viable.
+ * \todo see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list).
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
@@ -114,6 +114,10 @@ class hash_set
 			node		*m_next;
 		};
 		// List constituting the bucket.
+		// NOTE: in this list implementation the m_next pointer is used as a flag to signal if the current node
+		// stores an item: the pointer is not null if it does contain something. The value of m_next pointer in a node is set to a constant
+		// &terminator node if it is the last node of the list. I.e., the terminator is end() in all cases
+		// except when the list is empty (in that case the m_node member is end()).
 		struct list
 		{
 			template <typename U>
@@ -165,6 +169,8 @@ class hash_set
 					auto other_cur = &other.m_node;
 					while (other_cur->m_next) {
 						if (cur->m_next) {
+							// This assert means we are operating on the last element
+							// of the list, as we are doing back-insertions.
 							piranha_assert(cur->m_next == &terminator);
 							// Create a new node with content equal to other_cur
 							// and linking forward to the terminator.
