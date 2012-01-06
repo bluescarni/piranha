@@ -127,9 +127,9 @@ unsigned runtime_info::determine_cache_line_size()
 	if (!ls) {
 		std::ifstream sys_file("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size");
 		if (sys_file.is_open() && sys_file.good()) {
-			std::string line;
-			std::getline(sys_file,line);
 			try {
+				std::string line;
+				std::getline(sys_file,line);
 				ls = boost::lexical_cast<decltype(ls)>(line);
 			} catch (...) {}
 		}
