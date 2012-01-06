@@ -238,3 +238,22 @@ BOOST_AUTO_TEST_CASE(kronecker_polynomial_different_cf_test)
 	auto st = f * g;
 	BOOST_CHECK_EQUAL(st.size(),10626u);
 }
+
+// Test cancellations in sparse multiplication with multiple threads.
+BOOST_AUTO_TEST_CASE(kronecker_polynomial_sparse_cancellation_mt_test)
+{
+	settings::set_n_threads(4);
+	typedef polynomial<double,kronecker_monomial<>> p_type;
+	p_type{}.get_truncator().unset();
+	// Dense case with cancellations, default setup.
+	auto h = 1 - p_type("x") + p_type("y") + p_type("z") + p_type("t");
+	auto f = 1 + p_type("x") + p_type("y") + p_type("z") + p_type("t");
+	auto tmp2 = h;
+	auto tmp3 = f;
+	for (int i = 1; i < 10; ++i) {
+		h *= tmp2;
+		f *= tmp3;
+	}
+	auto retval = f * h;
+	BOOST_CHECK_EQUAL(retval.size(),5786u);
+}
