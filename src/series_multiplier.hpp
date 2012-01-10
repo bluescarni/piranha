@@ -724,7 +724,7 @@ class series_multiplier
 			const auto ntrials = 10u;
 			// NOTE: Hard-coded value for the estimation multiplier.
 			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
-			const auto multiplier = 4;
+			const auto multiplier = 2;
 			// Size of the multiplication result
 			// Vectors of indices.
 			std::vector<size_type> v_idx1, v_idx2;

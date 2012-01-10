@@ -99,7 +99,7 @@ class hash_set
 		struct node
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
-			node():m_storage(),m_next(piranha_nullptr) {}
+			node():m_next(piranha_nullptr) {}
 			const T *ptr() const
 			{
 				piranha_assert(m_next);
@@ -1040,7 +1040,7 @@ class hash_set
 		size_type _bucket_from_hash(const std::size_t &hash) const
 		{
 			piranha_assert(bucket_count());
-			return hash & ((size_type(1u) << m_log2_size) - size_type(1u));
+			return hash % (size_type(1u) << m_log2_size);
 		}
 		/// Index of destination bucket (low-level).
 		/**
