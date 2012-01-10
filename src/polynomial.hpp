@@ -57,6 +57,7 @@
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "thread_management.hpp"
 #include "threading.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
@@ -826,7 +827,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// Utility function to determine block sizes.
 		static std::pair<integer,integer> get_block_sizes(const index_type &size1, const index_type &size2)
 		{
-			const integer block_size(256u), job_size = block_size.pow(2u);
+			const integer block_size(512u), job_size = block_size.pow(2u);
 			// Rescale the block sizes according to the relative sizes of the input series.
 			auto block_size1 = (block_size * size1) / size2,
 				block_size2 = (block_size * size2) / size1;
@@ -1042,6 +1043,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				condition_variable cond;
 				// Thread function.
 				auto thread_function = [&trunc,&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
+					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{
@@ -1275,6 +1277,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				condition_variable cond;
 				// Thread function.
 				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
+					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{

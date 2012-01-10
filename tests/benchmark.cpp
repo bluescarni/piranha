@@ -27,7 +27,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
-#include <cstddef>
 #include <iostream>
 
 #include "../src/integer.hpp"
@@ -38,20 +37,20 @@
 // TODO: this is illegal, remove once we have 128bit integer class.
 namespace std
 {
-inline ostream &operator<<(ostream &os, const __uint128_t &)
+inline ostream &operator<<(ostream &os, const __int128_t &)
 {
 	return os;
 }
 }
 
-inline std::string cf_name(const __uint128_t &)
+inline std::string cf_name(const __int128_t &)
 {
 	return "128-bit integer";
 }
 
 #endif
 
-inline std::string cf_name(const std::size_t &)
+inline std::string cf_name(const long long &)
 {
 	return "Word-size integer";
 }
@@ -68,9 +67,9 @@ inline std::string cf_name(const piranha::integer &)
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,std::size_t,
+typedef boost::mpl::vector<double,long long,
 #ifdef __GNUC__
-	__uint128_t,
+	__int128_t,
 #endif
 integer> cf_types;
 
