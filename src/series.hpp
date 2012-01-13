@@ -1053,7 +1053,7 @@ class series: series_binary_operators, detail::series_tag
 			os << str;
 			return os;
 		}
-		// Merge all terms from another series. Works if s is this (in which case a copy is maed). Basic exception safety guarantee.
+		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
 			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
