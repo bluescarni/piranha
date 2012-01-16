@@ -141,6 +141,24 @@ inline exception_ptr current_exception()
 #endif
 }
 
+/// Copy exception.
+/**
+ * Wrapper around either <tt>std::copy_exception()</tt> or <tt>boost::copy_exception()</tt>
+ * 
+ * @return a piranha::exception_ptr instance referencing a stored exception that is a copy of the supplied object.
+ * 
+ * @see http://www.boost.org/doc/libs/release/libs/exception/doc/copy_exception.html
+ */
+template <typename T>
+inline exception_ptr copy_exception(const T &e)
+{
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	return boost::copy_exception(e);
+#else
+	return std::copy_exception(e);
+#endif
+}
+
 /// Lock guard selector.
 /**
  * Provides a typedef for either <tt>std::lock_guard<Lockable></tt> or <tt>boost::lock_guard<Lockable></tt>.
@@ -208,20 +226,20 @@ struct future
 #endif
 };
 
-/// Packaged task selector.
+/// Promise selector.
 /**
- * Provides a typedef for either <tt>std::packaged_task<T></tt> or <tt>boost::packaged_task<T></tt>.
+ * Provides a typedef for either <tt>std::promise<T></tt> or <tt>boost::promise<T></tt>.
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread/synchronization.html#thread.synchronization.futures
  */
 template <typename T>
-struct packaged_task
+struct promise
 {
 	/// Type definition.
 #if defined(PIRANHA_USE_BOOST_THREAD)
-	typedef boost::packaged_task<T> type;
+	typedef boost::promise<T> type;
 #else
-	typedef std::packaged_task<T> type;
+	typedef std::promise<T> type;
 #endif
 };
 

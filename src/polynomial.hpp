@@ -27,6 +27,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <functional> // For std::bind.
 #include <initializer_list> // NOTE: this could go away when there's no need to use it explicitly, see below.
 #include <iterator>
 #include <list>
@@ -57,6 +58,7 @@
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "task_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "truncator.hpp"
@@ -1121,56 +1123,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 				};
-				// NOTE: we need to wrap the task and the future in shared pointers because
-				// of a GCC 4.6 bug (will try to copy move-only objects because of internal use
-				// of std::bind).
-				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
-				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				task_group tg;
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
-						try {
-							// First let's try to append an empty item.
-							pf_list.push_back(tuple_type{});
-							// Second, create the real tuple.
-							tuple_type t;
-							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
-							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
-							auto pt_ptr = std::get<0u>(t);
-							// Try launching the thread.
-							thread thr(pt_launcher,pt_ptr);
-							piranha_assert(thr.joinable());
-							try {
-								thr.detach();
-							} catch (...) {
-								// Last ditch effort: try joining before re-throwing.
-								thr.join();
-								throw;
-							}
-							// If everything went ok, move in the real tuple.
-							pf_list.back() = std::move(t);
-						} catch (...) {
-							// If the error happened *after* the empty tuple was added,
-							// then we have to remove it as it is invalid.
-							if (pf_list.size() != i) {
-								auto it_f = pf_list.end();
-								--it_f;
-								pf_list.erase(it_f);
-							}
-							throw;
-						}
+						tg.add_task(thread_function);
 					}
-					piranha_assert(pf_list.size() == n_threads);
+					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
-					waiter(pf_list);
+					tg.wait_all();
 					// Then, let's handle the exceptions.
-					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
-						std::get<1u>(*it)->get();
-					}
+					tg.get_all();
 				} catch (...) {
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
 					// loop.
-					waiter(pf_list);
+					tg.wait_all();
 					throw;
 				}
 			}
@@ -1364,79 +1331,30 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 				};
-				// NOTE: we need to wrap the task and the future in shared pointers because
-				// of a GCC 4.6 bug (will try to copy move-only objects because of internal use
-				// of std::bind).
-				typedef std::tuple<std::shared_ptr<packaged_task<void()>::type>,std::shared_ptr<future<void>::type>> tuple_type;
-				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				task_group tg;
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
-						try {
-							// First let's try to append an empty item.
-							pf_list.push_back(tuple_type{});
-							// Second, create the real tuple.
-							tuple_type t;
-							std::get<0u>(t).reset(new packaged_task<void()>::type(thread_function));
-							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
-							auto pt_ptr = std::get<0u>(t);
-							// Try launching the thread.
-							thread thr(pt_launcher,pt_ptr);
-							piranha_assert(thr.joinable());
-							try {
-								thr.detach();
-							} catch (...) {
-								// Last ditch effort: try joining before re-throwing.
-								thr.join();
-								throw;
-							}
-							// If everything went ok, move in the real tuple.
-							pf_list.back() = std::move(t);
-						} catch (...) {
-							// If the error happened *after* the empty tuple was added,
-							// then we have to remove it as it is invalid.
-							if (pf_list.size() != i) {
-								auto it_f = pf_list.end();
-								--it_f;
-								pf_list.erase(it_f);
-							}
-							throw;
-						}
+						tg.add_task(thread_function);
 					}
-					piranha_assert(pf_list.size() == n_threads);
+					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
-					waiter(pf_list);
+					tg.wait_all();
 					// Then, let's handle the exceptions.
-					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
-						std::get<1u>(*it)->get();
-					}
+					tg.get_all();
 					// Finally, fix the series.
 					sanitize_series(retval,insertion_count,n_threads);
 				} catch (...) {
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
 					// loop.
-					waiter(pf_list);
+					tg.wait_all();
 					// Clean up and re-throw.
 					retval.m_container.clear();
 					throw;
 				}
 			}
 		}
-		// NOTE: these two static functions are for internal use above, we have to place them
-		// here because of GCC bugs (in the first case it is the same std::bind problem above,
-		// in the second case a problem cropping up when using LTO).
-		// Helper function for use above.
-		static void pt_launcher(std::shared_ptr<packaged_task<void()>::type> pt_ptr)
-		{
-			(*pt_ptr)();
-		}
-		// Functor to wait for completion of all threads.
-		template <typename PfList>
-		static void waiter(PfList &pf_list)
-		{
-			std::for_each(pf_list.begin(),pf_list.end(),[](typename PfList::value_type &t) {std::get<1u>(t)->wait();});
-		}
-		// Single thread function.
+		// Single-thread sparse multiplication.
 		template <typename Functor, typename Truncator, typename TaskList>
 		void sparse_single_thread(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
 		{
@@ -1514,53 +1432,22 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						retval.m_container._update_size(retval.m_container.size() - erase_count);
 					}
 				};
-				typedef typename packaged_task<void (const bucket_size_type &, const bucket_size_type &)>::type pt_type;
-				typedef std::tuple<std::shared_ptr<pt_type>,std::shared_ptr<future<void>::type>> tuple_type;
-				std::list<tuple_type,cache_aligning_allocator<tuple_type>> pf_list;
+				task_group tg;
 				try {
 					for (unsigned i = 0u; i < nt; ++i) {
-						try {
-							const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
-							// Try appending an empty tuple.
-							pf_list.push_back(tuple_type{});
-							// Second, create the real tuple.
-							tuple_type t;
-							std::get<0u>(t).reset(new pt_type(eraser));
-							std::get<1u>(t).reset(new future<void>::type(std::get<0u>(t)->get_future()));
-							auto pt_ptr = std::get<0u>(t);
-							// Try launching the thread.
-							thread thr([start,end,pt_ptr]() {(*pt_ptr)(start,end);});
-							piranha_assert(thr.joinable());
-							try {
-								thr.detach();
-							} catch (...) {
-								thr.join();
-								throw;
-							}
-							pf_list.back() = std::move(t);
-						} catch (...) {
-							// If the error happened *after* the empty tuple was added,
-							// then we have to remove it as it is invalid.
-							if (pf_list.size() != i) {
-								auto it_f = pf_list.end();
-								--it_f;
-								pf_list.erase(it_f);
-							}
-							throw;
-						}
+						const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
+						tg.add_task(std::bind(eraser,start,end));
 					}
-					piranha_assert(pf_list.size() == nt);
+					piranha_assert(tg.size() == nt);
 					// First let's wait for everything to finish.
-					waiter(pf_list);
+					tg.wait_all();
 					// Then, let's handle the exceptions.
-					for (auto it = pf_list.begin(); it != pf_list.end(); ++it) {
-						std::get<1u>(*it)->get();
-					}
+					tg.get_all();
 				} catch (...) {
 					// Make sure any pending task is finished -> this is for
 					// the case the exception was thrown in the thread creation
 					// loop.
-					waiter(pf_list);
+					tg.wait_all();
 					// Clean up and re-throw.
 					retval.m_container.clear();
 					throw;
