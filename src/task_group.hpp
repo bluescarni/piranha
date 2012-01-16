@@ -137,7 +137,7 @@ class task_group
 		}
 		/// Wait for completion of all tasks.
 		void wait_all()
-		{			
+		{
 			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {fp->wait();});
 		}
 		/// Get an exception thrown by a task.
