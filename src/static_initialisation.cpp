@@ -72,20 +72,4 @@ mutex degree_truncator_settings::m_mutex;
 integer degree_truncator_settings::m_limit = integer(0);
 std::set<std::string> degree_truncator_settings::m_args = {};
 
-// Instantiate explicitly the static data of kronecker array for all valid types, i.e., all signed integer types.
-template <>
-const typename kronecker_array<signed char>::limits_type kronecker_array<signed char>::m_limits = kronecker_array<signed char>::determine_limits();
-
-template <>
-const typename kronecker_array<signed short>::limits_type kronecker_array<signed short>::m_limits = kronecker_array<signed short>::determine_limits();
-
-template <>
-const typename kronecker_array<signed int>::limits_type kronecker_array<signed int>::m_limits = kronecker_array<signed int>::determine_limits();
-
-template <>
-const typename kronecker_array<signed long>::limits_type kronecker_array<signed long>::m_limits = kronecker_array<signed long>::determine_limits();
-
-template <>
-const typename kronecker_array<signed long long>::limits_type kronecker_array<signed long long>::m_limits = kronecker_array<signed long long>::determine_limits();
-
 }

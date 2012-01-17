@@ -28,7 +28,7 @@ OPTION(BUILD_TESTS "Build test set." ON)
 OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
 # Use TCMalloc as allocator.
-OPTION(USE_TCMALLOC "Enable use of TCMalloc." OFF)
+OPTION(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 
 # Initialise (empty) list of libraries to link against.
 SET(MANDATORY_LIBRARIES "")
