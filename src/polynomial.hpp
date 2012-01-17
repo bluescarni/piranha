@@ -629,6 +629,17 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				r2.first = 0u;
 				r2.second = b % b_count;
 			}
+			// Correct the case in which a second region reaches the first one (thus
+			// covering the whole range of buckets).
+			if (second_region && r2.second >= r1.first) {
+				second_region = false;
+				r1.first = 0u;
+				r1.second = b_count - 1u;
+				r2.first = 0u;
+				r2.second = 0u;
+			}
+			piranha_assert(r1.first <= r1.second);
+			piranha_assert(!second_region || (r2.first <= r2.second && r2.second < r1.first));
 			return task_type{{i_start,i_end},{j_start,j_end},r1,r2,second_region};
 		}
 		// Functor to check if region r does not overlap any of the busy ones.
