@@ -136,17 +136,30 @@ class task_group
 			}
 		}
 		/// Wait for completion of all tasks.
+		/**
+		 * It is safe to call this method multiple times, even if get_all() has been called before.
+		 */
 		void wait_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {fp->wait();});
+			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {
+				if (future_is_valid(*fp)) {
+					fp->wait();
+				}
+			});
 		}
 		/// Get an exception thrown by a task.
 		/**
+		 * It is safe to call this method multiple times.
+		 * 
 		 * @throws unspecified an exception thrown by a task.
 		 */
 		void get_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {fp->get();});
+			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {
+				if (future_is_valid(*fp)) {
+					fp->get();
+				}
+			});
 		}
 		/// Number of tasks.
 		/**
@@ -155,6 +168,17 @@ class task_group
 		size_type size() const
 		{
 			return m_container.size();
+		}
+	private:
+		// NOTE: the semantics to check if a future is valid are slightly different
+		// in Boost and std c++.
+		static bool future_is_valid(f_type &f)
+		{
+#if defined(PIRANHA_USE_BOOST_THREAD)
+			return f.get_state() != boost::future_state::uninitialized;
+#else
+			return f.valid();
+#endif
 		}
 	private:
 		container_type m_container;
