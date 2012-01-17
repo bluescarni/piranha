@@ -100,6 +100,7 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 				piranha_throw(std::invalid_argument,"incompatible sets of arguments");
 			}
 		}
+		truncator(const truncator &) = default;
 		truncator &operator=(const truncator &) = delete;
 		truncator &operator=(truncator &&) = delete;
 		template <typename Term>
@@ -395,6 +396,7 @@ class truncator<polynomial2<Cf1,Expo1>,polynomial2<Cf2,Expo2>>: public power_ser
 				piranha_throw(std::invalid_argument,"incompatible sets of arguments");
 			}
 		}
+		truncator(const truncator &) = default;
 		truncator &operator=(const truncator &) = delete;
 		truncator &operator=(truncator &&) = delete;
 		template <typename Term>

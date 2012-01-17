@@ -185,7 +185,7 @@ class series_multiplier
 		 */
 		return_type operator()() const
 		{
-			const auto t = truncator_type(*m_s1,*m_s2);
+			const truncator_type t(*m_s1,*m_s2);
 			if (t.is_active()) {
 				return execute<default_functor<true>>(t);
 			} else {

@@ -141,8 +141,8 @@ class task_group
 		 */
 		void wait_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {
-				if (future_is_valid(*fp)) {
+			std::for_each(m_container.begin(),m_container.end(),[this](std::shared_ptr<f_type> &fp) {
+				if (this->future_is_valid(*fp)) {
 					fp->wait();
 				}
 			});
@@ -155,8 +155,8 @@ class task_group
 		 */
 		void get_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[](std::shared_ptr<f_type> &fp) {
-				if (future_is_valid(*fp)) {
+			std::for_each(m_container.begin(),m_container.end(),[this](std::shared_ptr<f_type> &fp) {
+				if (this->future_is_valid(*fp)) {
 					fp->get();
 				}
 			});

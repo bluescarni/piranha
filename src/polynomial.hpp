@@ -943,7 +943,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				decltype(mins.size()) i = 0u;
 				value_type retval = std::inner_product(c_vec.begin(),c_vec.end(),v.begin(),value_type(0),
 					std::plus<value_type>(),[&i,&mins](const value_type &c, const value_type &n) -> value_type {
-						const auto old_i(i);
+						const decltype(mins.size()) old_i = i;
 						++i;
 						piranha_assert(n >= mins[old_i]);
 						return c * (n - mins[old_i]);
