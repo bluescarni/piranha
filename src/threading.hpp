@@ -34,6 +34,8 @@
  *   dtor also the MPFR cleanup functions for threading;
  * - rework the parallel algorithms to use futures, promises and packaged tasks - it seems that by employing these we can
  *   avoid thread barriers, thread groups, multi-thread exception handling, etc.
+ * \todo review the semantics of boost stuff vs std c++, we know for instance that future::get() is a bit different, check
+ * there are no other surprises.
  */
 
 #include "config.hpp"
@@ -138,24 +140,6 @@ inline exception_ptr current_exception()
 	return boost::current_exception();
 #else
 	return std::current_exception();
-#endif
-}
-
-/// Copy exception.
-/**
- * Wrapper around either <tt>std::copy_exception()</tt> or <tt>boost::copy_exception()</tt>
- * 
- * @return a piranha::exception_ptr instance referencing a stored exception that is a copy of the supplied object.
- * 
- * @see http://www.boost.org/doc/libs/release/libs/exception/doc/copy_exception.html
- */
-template <typename T>
-inline exception_ptr copy_exception(const T &e)
-{
-#if defined(PIRANHA_USE_BOOST_THREAD)
-	return boost::copy_exception(e);
-#else
-	return std::copy_exception(e);
 #endif
 }
 

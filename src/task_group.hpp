@@ -91,7 +91,7 @@ class task_group
 		 * @param[in] f nullary function to be invoked.
 		 * 
 		 * @throws unspecified any exception thrown by threading primitives or by memory allocation errors
-		 * in standard containers.
+		 * in standard containers or when copying \p f into the thread object.
 		 */
 		void add_task(std::function<void()> f)
 		{
@@ -107,9 +107,7 @@ class task_group
 						f();
 						pp->set_value();
 					} catch (...) {
-						// NOTE: here piranha:: is necessary otherwise ADL becomes
-						// ambiguous with boost/std::copy_exception.
-						pp->set_exception(piranha::copy_exception(current_exception()));
+						pp->set_exception(current_exception());
 					}
 				};
 				// Launch the thread.
@@ -149,7 +147,8 @@ class task_group
 		}
 		/// Get an exception thrown by a task.
 		/**
-		 * It is safe to call this method multiple times.
+		 * Depending on the threading model (C++ vs Boost.Thread), calling this method multiple times
+		 * can either re-throw the same exception or be a no-op.
 		 * 
 		 * @throws unspecified an exception thrown by a task.
 		 */
