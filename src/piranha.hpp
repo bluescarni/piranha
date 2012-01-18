@@ -118,7 +118,6 @@ namespace detail {}
 #include "symbol_set.hpp"
 #include "task_group.hpp"
 #include "thread_barrier.hpp"
-#include "thread_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "timeit.hpp"

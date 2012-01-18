@@ -23,16 +23,18 @@
 #define BOOST_TEST_MODULE thread_barrier_test
 #include <boost/test/unit_test.hpp>
 
-#include "../src/thread_group.hpp"
+#include <functional>
+
+#include "../src/task_group.hpp"
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {
 	const unsigned n_threads = 100;
 	piranha::thread_barrier tb(n_threads);
-	piranha::thread_group tg;
+	piranha::task_group tg;
 	for (unsigned i = 0; i < n_threads; ++i) {
-		BOOST_CHECK_NO_THROW(tg.create_thread([&tb](unsigned x, unsigned y) -> unsigned {tb.wait();return x + y;},i,i + 1));
+		BOOST_CHECK_NO_THROW(tg.add_task(std::bind([&tb](unsigned x, unsigned y) -> unsigned {tb.wait();return x + y;},i,i + 1)));
 	}
-	BOOST_CHECK_NO_THROW(tg.join_all());
-	BOOST_CHECK_NO_THROW(tg.join_all());
+	BOOST_CHECK_NO_THROW(tg.wait_all());
+	BOOST_CHECK_NO_THROW(tg.wait_all());
 }

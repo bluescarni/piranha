@@ -5,7 +5,6 @@ SET(SRC_LIST
 	settings.cpp
 	symbol.cpp
 	thread_barrier.cpp
-	thread_group.cpp
 	thread_management.cpp
 	tracing.cpp
 )
