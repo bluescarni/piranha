@@ -1121,11 +1121,27 @@ struct math_negate_impl<Series,typename std::enable_if<
 	}
 };
 
+}
+
+/// Specialisation of piranha::print_coefficient_impl for series.
+/**
+ * This specialisation is enabled if \p Series is an instance of piranha::series.
+ */
 template <typename Series>
 struct print_coefficient_impl<Series,typename std::enable_if<
-	std::is_base_of<series_tag,Series>::value>::type>
+	std::is_base_of<detail::series_tag,Series>::value>::type>
 {
-	static void run(std::ostream &os, const Series &s)
+	/// Call operator.
+	/**
+	 * Equivalent to the stream operator overload of piranha::series, apart from a couple
+	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
+	 * 
+	 * @param[in] os target stream.
+	 * @param[in] s coefficient series to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by the stream operator overload of piranha::series.
+	 */
+	void operator()(std::ostream &os, const Series &s) const
 	{
 		if (s.size() > 1u) {
 			os << '(';
@@ -1136,8 +1152,6 @@ struct print_coefficient_impl<Series,typename std::enable_if<
 		}
 	}
 };
-
-}
 
 }
 

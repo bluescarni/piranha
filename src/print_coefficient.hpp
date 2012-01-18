@@ -26,37 +26,45 @@
 namespace piranha
 {
 
-namespace detail
-{
-
+/// Default functor for piranha::print_coefficient().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism.
+ */
 template <typename T, typename Enable = void>
 struct print_coefficient_impl
 {
-	static void run(std::ostream &os, const T &cf)
+	/// Call operator.
+	/**
+	 * The default call operator will print to stream the object.
+	 * 
+	 * @param[in] os target stream.
+	 * @param[in] cf coefficient to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by printing \p cf to stream \p os.
+	 */
+	void operator()(std::ostream &os, const T &cf) const
 	{
 		os << cf;
 	}
 };
-
-}
 
 /// Print series coefficient.
 /**
  * This function is used in the stream operator overload for piranha::series when
  * printing coefficients.
  * 
- * Default implementation will simply direct to stream \p os the object \p cf. For series types
- * of size greater than one, the output of the stream operator will be enclosed in parentheses.
+ * The implementation uses the call operator of the piranha::print_coefficient_impl functor.
+ * Specialisations of piranha::print_coefficient_impl can be defined to customize the behaviour.
  * 
  * @param[in] os target stream.
  * @param[in] cf coefficient object to be printed.
  * 
- * @throws unspecified any exception thrown by the stream operator of \p cf.
+ * @throws unspecified any exception thrown by the call operator of piranha::print_coefficient_impl.
  */
 template <typename T>
 inline void print_coefficient(std::ostream &os, const T &cf)
 {
-	detail::print_coefficient_impl<T>::run(os,cf);
+	print_coefficient_impl<T>()(os,cf);
 }
 
 }

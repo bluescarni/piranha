@@ -27,6 +27,7 @@
 
 #include "../config.hpp"
 #include "../math.hpp"
+#include "../print_coefficient.hpp"
 #include "container_element.hpp"
 
 namespace piranha
@@ -41,7 +42,7 @@ namespace concept
  * 
  * - must be a model of piranha::concept::ContainerElement,
  * - must not be a pointer,
- * - must be directable to output stream,
+ * - must be suitable as argument type of piranha::print_coefficient(),
  * - must be suitable as argument type of piranha::math::is_zero() and piranha::math::negate(),
  * - must be equality comparable,
  * - must be addable and subtractable.
@@ -56,7 +57,7 @@ struct Coefficient:
 	{
 		static_assert(!std::is_pointer<T>::value,"Coefficient type cannot be a pointer.");
 		const T inst = T();
-		std::cout << inst;
+		print_coefficient(std::cout,inst);
 		math::is_zero(inst);
 		T inst_mut = T();
 		math::negate(inst_mut);
