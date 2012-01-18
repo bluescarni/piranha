@@ -32,8 +32,6 @@
  * \todo rework the threading support as follows:
  * - introduce thread class that inherits from boost/std thread, and make it detach() on destruction -> eventually include in the
  *   dtor also the MPFR cleanup functions for threading;
- * - rework the parallel algorithms to use futures, promises and packaged tasks - it seems that by employing these we can
- *   avoid thread barriers, thread groups, multi-thread exception handling, etc.
  * \todo review the semantics of boost stuff vs std c++, we know for instance that future::get() is a bit different, check
  * there are no other surprises.
  */
