@@ -119,6 +119,7 @@ namespace detail {}
 #include "static_vector.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "task_group.hpp"
 #include "thread_barrier.hpp"
 #include "thread_group.hpp"
 #include "thread_management.hpp"
