@@ -50,7 +50,7 @@
 #include "integer.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
-#include "thread_group.hpp"
+#include "task_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "tracing.hpp"
@@ -90,7 +90,6 @@ namespace piranha
  * means via template specialisation to customise the behaviour for different types of coefficients -> probably the easiest thing is to benchmark
  * the thread overhead in the simplest case (e.g., polynomial with double precision cf and univariate) and use that as heuristic. Might not be optimal
  * but should avoid excessive overhead practically always (which probably is what we want).
- * \todo try to abstract exception handling in mt-mode into a generic functor that re-throws exceptions transported from threads -> this goes with the async/future rework.
  * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
  * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
  * operations during multiplication. Or: have specialised functors cache degree/norms of terms for truncation purposes, in order to avoid
@@ -299,14 +298,6 @@ class series_multiplier
 				}
 				return retval;
 			} else {
-// boost::posix_time::ptime time0 = boost::posix_time::microsec_clock::local_time();
-				// Tools to handle exceptions thrown in the threads.
-				std::vector<exception_ptr> exceptions;
-				exceptions.reserve(n_threads);
-				if (exceptions.capacity() != n_threads) {
-					piranha_throw(std::bad_alloc,0);
-				}
-				mutex exceptions_mutex;
 				// Build the return values and the multiplication functors.
 				std::list<return_type,cache_aligning_allocator<return_type>> retval_list;
 				std::list<Functor,cache_aligning_allocator<Functor>> functor_list;
@@ -318,36 +309,29 @@ class series_multiplier
 					retval_list.back().m_symbol_set = m_s1->m_symbol_set;
 					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,trunc,retval_list.back()));
 				}
-				thread_group tg;
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
-				for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
-					// Functor for use in the thread.
-					// NOTE: here we need to pass in and use this for the static methods (instead of using them directly)
-					// because of a GCC bug in 4.6.
-					auto f = [f_it,r_it,&exceptions,&exceptions_mutex,this]() -> void {
-						try {
+				task_group tg;
+				try {
+					for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
+						// Functor for use in the thread.
+						auto f = [f_it,r_it,this]() {
 							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it);
-// std::cout << "bsize : " << r_it->m_container.bucket_count() << '\n';
 							this->blocked_multiplication(*f_it);
 							if (tmp.first) {
 								this->trace_estimates(r_it->m_container.size(),tmp.second);
 							}
-// std::cout << "final series size: " << f_it->m_retval.size() << '\n';
-						} catch (...) {
-							lock_guard<mutex>::type lock(exceptions_mutex);
-							exceptions.push_back(current_exception());
-						}
-					};
-					tg.create_thread(f);
+						};
+						tg.add_task(f);
+					}
+					piranha_assert(tg.size() == n_threads);
+					tg.wait_all();
+					tg.get_all();
+				} catch (...) {
+					tg.wait_all();
+					throw;
 				}
-				tg.join_all();
-				if (unlikely(exceptions.size())) {
-					// Re-throw the first exception found.
-					piranha::rethrow_exception(exceptions[0u]);
-				}
-// std::cout << "Elapsed time for multimul: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				return_type retval;
 				retval.m_symbol_set = m_s1->m_symbol_set;
 				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval));
@@ -356,13 +340,11 @@ class series_multiplier
 				if (unlikely(!final_estimate)) {
 					final_estimate = 1u;
 				}
-// std::cout << "Final estimate: " <<  final_estimate << '\n';
 				// Try to see if a series already has enough buckets.
 				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {
 					return r.m_container.bucket_count() * r.m_container.max_load_factor() >= final_estimate;
 				});
 				if (it != retval_list.end()) {
-// std::cout << "Found candidate series for final summation\n";
 					retval = std::move(*it);
 					retval_list.erase(it);
 				} else {
@@ -370,19 +352,15 @@ class series_multiplier
 					retval.m_container.rehash(
 						boost::numeric_cast<typename Series1::size_type>(std::ceil(final_estimate / retval.m_container.max_load_factor()))
 					);
-// std::cout << "After final estimate: " << retval.m_container.bucket_count() << '\n';
 				}
-// time0 = boost::posix_time::microsec_clock::local_time();
 				// Cleanup functor that will erase all elements in retval_list.
 				auto cleanup = [&retval_list]() -> void {
-					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) -> void {r.m_container.clear();});
+					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) {r.m_container.clear();});
 				};
-// std::cout << "going for final\n";
 				try {
 					final_merge(retval,retval_list,n_threads);
 					// Here the estimate will be correct if the initial estimate (corrected for load factor)
 					// is at least equal to the final real bucket count.
-// std::cout << "final: " << retval.m_container.size() << " vs " << final_estimate << '\n';
 					trace_estimates(retval.m_container.size(),final_estimate);
 				} catch (...) {
 					// Do the cleanup before re-throwing, as we use mutable iterators in final_merge.
@@ -391,7 +369,6 @@ class series_multiplier
 					retval.m_container.clear();
 					throw;
 				}
-// std::cout << "Elapsed time for summation: " << (double)(boost::posix_time::microsec_clock::local_time() - time0).total_microseconds() / 1000 << '\n';
 				// Clean up the temporary series.
 				cleanup();
 				return retval;
@@ -796,7 +773,6 @@ class series_multiplier
 				// Reset retval.
 				retval.m_container.clear();
 			}
-// std::cout << "total vs filtered: " << total << ',' << filtered << '\n';
 			piranha_assert(total >= filtered);
 			const auto mean = total / ntrials;
 			// Avoid division by zero.
@@ -865,26 +841,18 @@ class series_multiplier
 		{
 			piranha_assert(n_threads > 1u);
 			piranha_assert(retval.m_container.bucket_count());
-			// Misc for exception handling.
-			mutex e_mutex;
-			std::vector<exception_ptr> e_vector;
-			// We never need more capacity than the number of threads.
-			e_vector.reserve(n_threads);
-			if (unlikely(e_vector.capacity() != n_threads)) {
-				piranha_throw(std::bad_alloc,0);
-			}
 			typedef typename std::vector<std::pair<typename Series1::size_type,decltype(retval.m_container._m_begin())>> container_type;
 			typedef typename container_type::size_type size_type;
 			// First, let's fill a vector assigning each term of each element in retval_list to a bucket in retval.
 			const size_type size = static_cast<size_type>(
 				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const return_type &r) {return n + r.size();}));
 			container_type idx(size);
-			thread_group tg1;
+			task_group tg1;
 			size_type i = 0u;
 			piranha_assert(retval_list.size() <= n_threads);
-			for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
-				auto f = [&idx,&retval,&e_mutex,&e_vector,i,r_it]() -> void {
-					try {
+			try {
+				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
+					auto f = [&idx,&retval,i,r_it]() {
 						thread_management::binder b;
 						const auto it_f = r_it->m_container._m_end();
 						// NOTE: size_type can represent the sum of the sizes of all retvals,
@@ -894,25 +862,17 @@ class series_multiplier
 							piranha_assert(tmp_i < idx.size());
 							idx[tmp_i] = std::make_pair(retval.m_container._bucket(*it),it);
 						}
-					} catch (...) {
-						lock_guard<mutex>::type lock(e_mutex);
-						e_vector.push_back(current_exception());
-					}
-				};
-				tg1.create_thread(f);
-				i += r_it->size();
+					};
+					tg1.add_task(f);
+					i += r_it->size();
+				}
+				tg1.wait_all();
+				tg1.get_all();
+			} catch (...) {
+				tg1.wait_all();
+				throw;
 			}
-			tg1.join_all();
-			if (unlikely(e_vector.size())) {
-				piranha::rethrow_exception(e_vector[0u]);
-			}
-			// Reset exception vector.
-			e_vector.clear();
-			e_vector.reserve(n_threads);
-			if (unlikely(e_vector.capacity() != n_threads)) {
-				piranha_throw(std::bad_alloc,0);
-			}
-			thread_group tg2;
+			task_group tg2;
 			mutex m;
 			std::vector<integer> new_sizes;
 			new_sizes.reserve(n_threads);
@@ -920,11 +880,11 @@ class series_multiplier
 				piranha_throw(std::bad_alloc,0);
 			}
 			const typename Series1::size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
-			for (Size n = 0u; n < n_threads; ++n) {
-				// These are the bucket indices allowed to the current thread.
-				const typename Series1::size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
-				auto f = [start,end,&size,&retval,&idx,&m,&new_sizes,&e_mutex,&e_vector]() -> void {
-					try {
+			try {
+				for (Size n = 0u; n < n_threads; ++n) {
+					// These are the bucket indices allowed to the current thread.
+					const typename Series1::size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
+					auto f = [start,end,&size,&retval,&idx,&m,&new_sizes]() {
 						thread_management::binder b;
 						size_type count_plus = 0u, count_minus = 0u;
 						for (size_type i = 0u; i < size; ++i) {
@@ -968,20 +928,18 @@ class series_multiplier
 						// Store the new size.
 						lock_guard<mutex>::type lock(m);
 						new_sizes.push_back(integer(count_plus) - integer(count_minus));
-					} catch (...) {
-						lock_guard<mutex>::type lock(e_mutex);
-						e_vector.push_back(current_exception());
-					}
-				};
-				tg2.create_thread(f);
-			}
-			tg2.join_all();
-			if (unlikely(e_vector.size())) {
-				piranha::rethrow_exception(e_vector[0u]);
+					};
+					tg2.add_task(f);
+				}
+				piranha_assert(tg2.size() == n_threads);
+				tg2.wait_all();
+				tg2.get_all();
+			} catch (...) {
+				tg2.wait_all();
+				throw;
 			}
 			// Final update of retval's size.
 			const auto new_size = std::accumulate(new_sizes.begin(),new_sizes.end(),integer(0));
-// std::cout << "new size is " << new_size << '\n';
 			piranha_assert(new_size + retval.m_container.size() >= 0);
 			retval.m_container._update_size(static_cast<decltype(retval.m_container.size())>(new_size + retval.m_container.size()));
 			// Take care of rehashing, if needed.
