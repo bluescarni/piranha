@@ -48,18 +48,15 @@
  * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer -> note that this becomes
  * moot in case the homomorphic hashing thing works out.
- * \todo use cache aligning allocator by default in GMP memory allocation functions if in mt mode? investigate performance impact.
  * \todo assert that concepts are respected in models.
  * \todo check the include of pure C stuff (GMP is already fine, maybe the platform-specific stuff needs to be reviewed - aligning alloc, cache size, number of
  * threads, etc.). http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
- * \todo type-trait and report on startup if thread management primitives are available?
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
- * \todo think about the startup report, it might end up being too noisy.
  * \todo probably we should make overflow-safe all operations on keys that currently are not: multiplication, computation of degree (including in truncators), etc.
  * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication) -> this probably becomes null in case the caching of degree
  * values in the truncators turns out to work ok.
