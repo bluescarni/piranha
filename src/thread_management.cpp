@@ -70,6 +70,8 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
  * Upon successful completion of this method, the calling thread will be confined on the specified processor.
  * This method requires platform-specific functions and thus might not be available on all configurations.
  * 
+ * In case of exceptions, the thread will not have been bound to any processor.
+ * 
  * @param[in] n index of the processor to which the thread will be bound (starting from index 0).
  * 
  * @throws std::invalid_argument if one of these conditions arises:
@@ -234,7 +236,8 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 
 /// Default constructor.
 /**
- * Will attempt to bind the calling thread to the first available processor.
+ * Will attempt to bind the calling thread to the first available processor. The available processors
+ * are determined via piranha::settings::get_n_threads().
  */
 thread_management::binder::binder():m_result(false,0)
 {
@@ -242,31 +245,42 @@ thread_management::binder::binder():m_result(false,0)
 	if (this_thread::get_id() == runtime_info::get_main_thread_id()) {
 		return;
 	}
-	lock_guard<mutex>::type lock(m_binder_mutex);
-	unsigned candidate = 0u, n_threads = settings::get_n_threads();
-	for (; candidate < n_threads; ++candidate) {
-		// If the processor is not taken, bail out and try to use it.
-		if (m_used_procs.find(candidate) == m_used_procs.end()) {
-			break;
-		}
-	}
-	// If all procs were already taken, do not try to do any binding.
-	if (candidate == n_threads) {
-		return;
-	}
-	// Try to do the binding.
+	// This try/catch is to guard against failure in lock_guard.
 	try {
-		bind_to_proc(candidate);
-	} catch (...) {
-		// Ignore any error and return.
-		return;
-	}
-	// Bind was successful, record it.
-	auto result = m_used_procs.insert(candidate);
-	(void)result;
-	piranha_assert(result.second);
-	m_result.first = true;
-	m_result.second = candidate;
+		lock_guard<mutex>::type lock(m_binder_mutex);
+		unsigned candidate = 0u, n_threads = settings::get_n_threads();
+		for (; candidate < n_threads; ++candidate) {
+			// If the processor is not taken, bail out and try to use it.
+			if (m_used_procs.find(candidate) == m_used_procs.end()) {
+				break;
+			}
+		}
+		// If all procs were already taken, do not try to do any binding.
+		if (candidate == n_threads) {
+			return;
+		}
+		// First, try to record the candidate.
+		try {
+			const auto result = m_used_procs.insert(candidate);
+			(void)result;
+			piranha_assert(result.second);
+		} catch (...) {
+			// Nothing has happened, just return.
+			return;
+		}
+		// Try to do the binding.
+		try {
+			bind_to_proc(candidate);
+			// If successful, mark it as such.
+			m_result.first = true;
+			m_result.second = candidate;
+		} catch (...) {
+			// In face of errors, pull out the candidate from the set.
+			const auto it = m_used_procs.find(candidate);
+			piranha_assert(it != m_used_procs.end());
+			m_used_procs.erase(it);
+		}
+	} catch (...) {}
 }
 
 /// Destructor.
@@ -276,16 +290,14 @@ thread_management::binder::binder():m_result(false,0)
  */
 thread_management::binder::~binder()
 {
-	// Do nothing if we are not in a different thread.
-	if (this_thread::get_id() == runtime_info::get_main_thread_id()) {
-		return;
-	}
-	lock_guard<mutex>::type lock(m_binder_mutex);
-	if (m_result.first) {
-		auto it = m_used_procs.find(m_result.second);
-		piranha_assert(it != m_used_procs.end());
-		m_used_procs.erase(it);
-	}
+	try {
+		if (m_result.first) {
+			lock_guard<mutex>::type lock(m_binder_mutex);
+			auto it = m_used_procs.find(m_result.second);
+			piranha_assert(it != m_used_procs.end());
+			m_used_procs.erase(it);
+		}
+	} catch (...) {}
 }
 
 }

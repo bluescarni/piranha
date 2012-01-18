@@ -51,8 +51,6 @@ class thread_management
 		 * If the call to thread_management::bind_to_proc() generates an error, or all processors are already in use,
 		 * or the calling thread is the main thread, then no action will be taken in the constructor or in the destructor.
 		 * 
-		 * \todo make more exception safe in ctor/dtor: if *anything* fails on construction, init with (0,false). In dtor, check
-		 * for (0,false) before doing anything. This way potential problems with mutexes throwing are avoided.
 		 * \todo different binding strategies depending on the topology of the multicore architecture? E.g., avoid hyperthreading
 		 * cores, distribute among different processores according to cache memory hierarchies, etc.
 		 */
