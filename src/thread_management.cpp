@@ -76,7 +76,8 @@ namespace piranha
 void thread_management::bind_to_proc(unsigned n)
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	if (runtime_info::get_hardware_concurrency() != 0 && n >= runtime_info::get_hardware_concurrency()) {
+	const auto hc = runtime_info::get_hardware_concurrency();
+	if (hc != 0u && n >= hc) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
 	}
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
@@ -126,7 +127,7 @@ void thread_management::bind_to_proc(unsigned n)
 	}
 #else
 	(void)n;
-	piranha_throw(not_implemented_error,"bind_to_proc is not available on this platform");
+	piranha_throw(not_implemented_error,"bind_to_proc() is not available on this platform");
 #endif
 }
 
@@ -221,7 +222,7 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 		return std::make_pair(true,candidate);
 	}
 #else
-	piranha_throw(not_implemented_error,"bound_proc is not available on this platform");
+	piranha_throw(not_implemented_error,"bound_proc() is not available on this platform");
 #endif
 }
 
@@ -236,7 +237,7 @@ thread_management::binder::binder():m_result(false,0)
 		return;
 	}
 	lock_guard<mutex>::type lock(m_binder_mutex);
-	unsigned candidate = 0, n_threads = settings::get_n_threads();
+	unsigned candidate = 0u, n_threads = settings::get_n_threads();
 	for (; candidate < n_threads; ++candidate) {
 		// If the processor is not taken, bail out and try to use it.
 		if (m_used_procs.find(candidate) == m_used_procs.end()) {
