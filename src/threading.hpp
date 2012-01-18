@@ -106,25 +106,6 @@ typedef boost::exception_ptr exception_ptr;
 typedef std::exception_ptr exception_ptr;
 #endif
 
-/// Rethrow exception.
-/**
- * Wrapper around either <tt>std::rethrow_exception</tt> or <tt>boost::rethrow_exception</tt>.
- * 
- * @param[in] ep piranha::exception_ptr to the exception to be rethrown.
- * 
- * @throws unspecified the exception to which \p ep refers.
- * 
- * @see http://www.boost.org/doc/libs/release/libs/exception/doc/rethrow_exception.html
- */
-inline void rethrow_exception(exception_ptr const &ep)
-{
-#if defined(PIRANHA_USE_BOOST_THREAD)
-	boost::rethrow_exception(ep);
-#else
-	std::rethrow_exception(ep);
-#endif
-}
-
 /// Current exception.
 /**
  * Wrapper around either <tt>std::current_exception()</tt> or <tt>boost::current_exception()</tt>
