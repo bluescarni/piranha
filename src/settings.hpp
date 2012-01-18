@@ -21,6 +21,8 @@
 #ifndef PIRANHA_SETTINGS_HPP
 #define PIRANHA_SETTINGS_HPP
 
+#include <utility>
+
 #include "config.hpp"
 #include "threading.hpp"
 
@@ -30,7 +32,7 @@ namespace piranha
 /// Global settings.
 /**
  * This class stores the global settings of piranha's runtime environment.
- * The methods of this class, unless otherwise specified, are thread-safe.
+ * The methods of this class are thread-safe.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -40,23 +42,21 @@ class PIRANHA_PUBLIC settings
 		static unsigned get_n_threads();
 		static void set_n_threads(unsigned);
 		static void reset_n_threads();
+		static unsigned get_cache_line_size();
+		static void set_cache_line_size(unsigned);
+		static void reset_cache_line_size();
 		static bool get_tracing();
 		static void set_tracing(bool);
 		static unsigned get_max_char_output();
 		static void set_max_char_output(unsigned);
 		static void reset_max_char_output();
 	private:
-		struct startup
-		{
-			startup();
-		};
-	private:
-		static mutex		m_mutex;
-		static unsigned		m_n_threads;
-		static bool		m_tracing;
-		static const startup	m_startup;
-		static unsigned		m_max_char_output;
-		static const unsigned	m_default_max_char_output = 10000u;
+		static mutex			m_mutex;
+		static std::pair<bool,unsigned>	m_n_threads;
+		static std::pair<bool,unsigned>	m_cache_line_size;
+		static bool			m_tracing;
+		static unsigned			m_max_char_output;
+		static const unsigned		m_default_max_char_output = 10000u;
 };
 
 }

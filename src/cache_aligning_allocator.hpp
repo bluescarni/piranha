@@ -25,14 +25,14 @@
 #include <cstddef>
 
 #include "malloc_allocator.hpp"
-#include "runtime_info.hpp"
+#include "settings.hpp"
 
 namespace piranha
 {
 
 /// Allocator that tries to align memory to the cache line size.
 /**
- * This allocator will try to allocate memory aligned to the cache line size (as reported by piranha::runtime_info).
+ * This allocator will try to allocate memory aligned to the cache line size (as reported by piranha::settings).
  * If the cache line size cannot be detected, or if it is incompatible with the alignment requirements on the platform,
  * or if no memory aligning primitives are available, memory will be allocated via <tt>std::malloc()</tt>.
  * 
@@ -47,7 +47,7 @@ class cache_aligning_allocator: public malloc_allocator<T>
 		static std::size_t determine_alignment()
 		{
 			try {
-				const std::size_t alignment = boost::numeric_cast<std::size_t>(runtime_info::get_cache_line_size());
+				const std::size_t alignment = boost::numeric_cast<std::size_t>(settings::get_cache_line_size());
 				base::check_alignment(alignment);
 				return alignment;
 			} catch (...) {

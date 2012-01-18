@@ -210,8 +210,6 @@ class series_multiplier
 		 * @return the number of threads to use in the multiplication.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::runtime_info::get_main_thread_id(),
-		 * - piranha::this_thread::get_id(),
 		 * - piranha::settings::get_n_threads(),
 		 * - the cast operator of piranha::integer to integral types.
 		 */

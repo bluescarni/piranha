@@ -53,73 +53,65 @@ extern "C"
 #endif
 
 #include <boost/numeric/conversion/cast.hpp>
+#include <memory>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
+#include "threading.hpp"
 
 namespace piranha
 {
 
-/// Get hardware concurrency.
+// Static init of mutex.
+mutex runtime_info::m_mutex;
+
+// ID of the main thread.
+const thread_id runtime_info::m_main_thread_id = this_thread::get_id();
+
+/// Hardware concurrency.
 /**
- * @return the value of determine_hardware_concurrency() computed at the startup of the program.
+ * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
+ * the detection fails.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 unsigned runtime_info::get_hardware_concurrency()
 {
-	return m_hardware_concurrency;
-}
-
-/// Determine hardware concurrency.
-/**
- * This method is not thread-safe.
- * 
- * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
- * the detection fails.
- *
- * @throws unspecified any exception thrown by <tt>boost::numeric_cast()</tt>.
- */
-unsigned runtime_info::determine_hardware_concurrency()
-{
+	lock_guard<mutex>::type lock(m_mutex);
 #if defined(__linux__)
 	int candidate = ::get_nprocs();
 	return (candidate <= 0) ? 0u : static_cast<unsigned>(candidate);
 #elif defined(__FreeBSD__)
 	int count;
 	std::size_t size = sizeof(count);
-	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0 : static_cast<unsigned>(count);
+	return ::sysctlbyname("hw.ncpu",&count,&size,NULL,0) ? 0u : static_cast<unsigned>(count);
 #elif defined(_WIN32)
 	::SYSTEM_INFO info = ::SYSTEM_INFO();
 	::GetSystemInfo(&info);
 	// info.dwNumberOfProcessors is a dword, i.e., a long unsigned integer.
 	// http://msdn.microsoft.com/en-us/library/cc230318(v=prot.10).aspx
-	return boost::numeric_cast<unsigned>(info.dwNumberOfProcessors);
+	unsigned retval = 0u;
+	try {
+		retval = boost::numeric_cast<unsigned>(info.dwNumberOfProcessors);
+	} catch (...) {
+		// Do not do anything, just keep zero.
+	}
+	return retval;
 #else
 	return 0u;
 #endif
 }
 
-/// Get size of the data cache line.
+/// Size of the data cache line.
 /**
- * @return the value of determine_cache_line_size() computed at the startup of the program.
+ * @return data cache line size (in bytes), or 0 if the value cannot be determined.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 unsigned runtime_info::get_cache_line_size()
 {
-	return m_cache_line_size;
-}
-
-/// Determine size of the data cache line.
-/**
- * Will return the data cache line size (in bytes), or 0 if the value cannot be determined.
- * This method is not thread-safe.
- * 
- * @return data cache line size in bytes.
- *
- * @throws unspecified any exception thrown by <tt>boost::numeric_cast()</tt>.
- * @throws std::bad_alloc on Windows platforms, in case of memory allocation failures.
- */
-unsigned runtime_info::determine_cache_line_size()
-{
+	lock_guard<mutex>::type lock(m_mutex);
 #if defined(__linux__)
 	auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	// This can fail on some systems, resort to try reading the /sys entry.
@@ -134,27 +126,44 @@ unsigned runtime_info::determine_cache_line_size()
 			} catch (...) {}
 		}
 	}
-	return (ls > 0) ? boost::numeric_cast<unsigned>(ls) : 0u;
+	if (ls > 0) {
+		unsigned retval = 0u;
+		try {
+			retval = boost::numeric_cast<unsigned>(ls);
+		} catch (...) {}
+		return retval;
+	} else {
+		return 0u;
+	}
 #elif defined(_WIN32) && defined(PIRANHA_HAVE_SYSTEM_LOGICAL_PROCESSOR_INFORMATION)
 	// Adapted from:
 	// http://strupat.ca/2010/10/cross-platform-function-to-get-the-line-size-of-your-cache
 	std::size_t line_size = 0u;
 	::DWORD buffer_size = 0u;
 	::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = 0;
-	::GetLogicalProcessorInformation(0,&buffer_size);
-	buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(boost::numeric_cast<std::size_t>(buffer_size));
-	if (unlikely(!buffer)) {
-		piranha_throw(std::bad_alloc,0);
+	// This could fail, check it.
+	if (!::GetLogicalProcessorInformation(0,&buffer_size)) {
+		return 0u;
 	}
-	::GetLogicalProcessorInformation(&buffer[0u],&buffer_size);
-	for (::DWORD i = 0u; i != buffer_size / sizeof(::SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
-		if (buffer[i].Relationship == RelationCache && buffer[i].Cache.Level == 1) {
-			line_size = buffer[i].Cache.LineSize;
-			break;
+	try {
+		buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(boost::numeric_cast<std::size_t>(buffer_size));
+		if (unlikely(!buffer)) {
+			piranha_throw(std::bad_alloc,0);
 		}
-	}
-	std::free(buffer);
-	return boost::numeric_cast<unsigned>(line_size);
+		if (!::GetLogicalProcessorInformation(&buffer[0u],&buffer_size)) {
+			std::free(buffer);
+			return 0u;
+		}
+		for (::DWORD i = 0u; i != buffer_size / sizeof(::SYSTEM_LOGICAL_PROCESSOR_INFORMATION); ++i) {
+			if (buffer[i].Relationship == ::_LOGICAL_PROCESSOR_RELATIONSHIP::RelationCache && buffer[i].Cache.Level == 1) {
+				line_size = buffer[i].Cache.LineSize;
+				break;
+			}
+		}
+		std::free(buffer);
+		return boost::numeric_cast<unsigned>(line_size);
+	} catch (...) {}
+	return 0u;
 #else
 	// TODO: FreeBSD, OSX, etc.?
 	return 0u;

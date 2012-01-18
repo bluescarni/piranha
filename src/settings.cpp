@@ -18,13 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <algorithm>
-#include <iostream>
 #include <stdexcept>
+#include <utility>
 
 #include "config.hpp"
 #include "exceptions.hpp"
-#include "malloc_allocator.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "threading.hpp"
@@ -32,30 +30,16 @@
 namespace piranha
 {
 
-settings::startup::startup()
-{
-	std::cout << "Piranha version: " << PIRANHA_VERSION << '\n';
-#if defined(PIRANHA_USE_TCMALLOC)
-	std::cout << "Piranha configured to use TCMalloc.\n";
-#endif
-	std::cout << "Hardware concurrency: " << runtime_info::determine_hardware_concurrency() << '\n';
-	std::cout << "Cache line size: " << runtime_info::determine_cache_line_size() << '\n';
-	std::cout << "Memory alignment primitives: " <<
-		(malloc_allocator<char>::have_memalign_primitives ? "available" : "unavailable") << '\n';
-	std::cout << "Threading primitives: " <<
-#ifdef PIRANHA_USE_BOOST_THREAD
-		"Boost.Thread"
-#else
-		"native C++"
-#endif
-		<< '\n';
-	std::cout << "Piranha is ready\n";
-	std::cout << "__________________________________\n";
-}
+// Static init.
+mutex settings::m_mutex;
+std::pair<bool,unsigned> settings::m_n_threads(false,0u);
+std::pair<bool,unsigned> settings::m_cache_line_size(false,0u);
+bool settings::m_tracing = false;
+unsigned settings::m_max_char_output = settings::m_default_max_char_output;
 
 /// Get the number of threads available for use by piranha.
 /**
- * The initial value upon program startup is set to the maximum between 1 and piranha::runtime_info::determine_hardware_concurrency().
+ * The initial value is set to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
  * 
  * @return the number of threads that will be available for use by piranha.
  * 
@@ -64,7 +48,12 @@ settings::startup::startup()
 unsigned settings::get_n_threads()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	return m_n_threads;
+	if (unlikely(!m_n_threads.first)) {
+		const auto candidate = runtime_info::get_hardware_concurrency();
+		m_n_threads.second = (candidate > 0u) ? candidate : 1u;
+		m_n_threads.first = true;
+	}
+	return m_n_threads.second;
 }
 
 /// Set the number of threads available for use by piranha.
@@ -76,11 +65,12 @@ unsigned settings::get_n_threads()
  */
 void settings::set_n_threads(unsigned n)
 {
-	lock_guard<mutex>::type lock(m_mutex);
-	if (n == 0) {
+	if (n == 0u) {
 		piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
 	}
-	m_n_threads = n;
+	lock_guard<mutex>::type lock(m_mutex);
+	m_n_threads.first = true;
+	m_n_threads.second = n;
 }
 
 /// Reset the number of threads available for use by piranha.
@@ -92,7 +82,57 @@ void settings::set_n_threads(unsigned n)
 void settings::reset_n_threads()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_n_threads = std::max<unsigned>(runtime_info::get_hardware_concurrency(),static_cast<unsigned>(1));
+	const auto candidate = runtime_info::get_hardware_concurrency();
+	m_n_threads.second = (candidate > 0u) ? candidate : 1u;
+	m_n_threads.first = true;
+}
+
+/// Get the cache line size.
+/**
+ * The initial value is set to the output of piranha::runtime_info::get_cache_line_size(). The value
+ * can be overridden with set_cache_line_size() in case the detection fails and the value is set to zero.
+ * 
+ * @return data cache line size (in bytes).
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+unsigned settings::get_cache_line_size()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	if (unlikely(!m_cache_line_size.first)) {
+		m_cache_line_size.second = runtime_info::get_cache_line_size();
+		m_cache_line_size.first = true;
+	}
+	return m_cache_line_size.second;
+}
+
+/// Set the cache line size.
+/**
+ * Overrides the detected cache line size. This method should be used only if the automatic
+ * detection fails.
+ * 
+ * @param[in] n data cache line size (in bytes).
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+void settings::set_cache_line_size(unsigned n)
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_cache_line_size.first = true;
+	m_cache_line_size.second = n;
+}
+
+/// Reset the cache line size.
+/**
+ * Will set the value to the output of piranha::runtime_info::get_cache_line_size().
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
+ */
+void settings::reset_cache_line_size()
+{
+	lock_guard<mutex>::type lock(m_mutex);
+	m_cache_line_size.second = runtime_info::get_cache_line_size();
+	m_cache_line_size.first = true;
 }
 
 /// Get tracing status.

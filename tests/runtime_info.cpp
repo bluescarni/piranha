@@ -23,24 +23,29 @@
 #define BOOST_TEST_MODULE runtime_info_test
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
+
+#include "../src/settings.hpp"
 #include "../src/threading.hpp"
+
+using namespace piranha;
 
 // Simple check on the thread id.
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
-	BOOST_CHECK_EQUAL(piranha::runtime_info::get_main_thread_id(),piranha::this_thread::get_id());
+	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),this_thread::get_id());
 }
 
-// Simple check on the thread concurrency.
-BOOST_AUTO_TEST_CASE(runtime_info_hardware_concurrency_test)
+BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 {
-	BOOST_CHECK_NO_THROW(piranha::runtime_info::get_hardware_concurrency());
-	BOOST_CHECK(piranha::runtime_info::determine_hardware_concurrency() == piranha::runtime_info::get_hardware_concurrency());
+	std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
+	std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
+	std::cout << "Memory alignment primitives: " << (runtime_info::have_memalign_primitives() ? "available" : "unavailable") << '\n';
+	std::cout << "Threading primitives: " << ((runtime_info::threading_primitives() == 0) ? "C++11" : "Boost.Thread") << '\n';
 }
 
-// Simple check on cache line size.
-BOOST_AUTO_TEST_CASE(runtime_info_get_cache_line_size)
+BOOST_AUTO_TEST_CASE(runtime_info_settings_test)
 {
-	BOOST_CHECK_NO_THROW(piranha::runtime_info::get_cache_line_size());
-	BOOST_CHECK(piranha::runtime_info::determine_cache_line_size() == piranha::runtime_info::get_cache_line_size());
+	BOOST_CHECK_EQUAL(runtime_info::get_hardware_concurrency(),settings::get_n_threads());
+	BOOST_CHECK_EQUAL(runtime_info::get_cache_line_size(),settings::get_cache_line_size());
 }

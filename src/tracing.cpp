@@ -30,6 +30,10 @@
 namespace piranha
 {
 
+// Static init.
+tracing::container_type tracing::m_container;
+mutex tracing::m_mutex;
+
 namespace detail
 {
 

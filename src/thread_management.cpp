@@ -21,6 +21,7 @@
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 #include "config.hpp"
@@ -58,6 +59,11 @@ extern "C"
 
 namespace piranha
 {
+
+// Static init.
+mutex thread_management::m_mutex;
+mutex thread_management::binder::m_binder_mutex;
+std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 
 /// Bind thread to specific processor.
 /**
