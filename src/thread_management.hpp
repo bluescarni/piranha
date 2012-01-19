@@ -53,6 +53,9 @@ class thread_management
 		 * 
 		 * \todo different binding strategies depending on the topology of the multicore architecture? E.g., avoid hyperthreading
 		 * cores, distribute among different processores according to cache memory hierarchies, etc.
+		 * \todo think of throwing on destruction if locking the mutex fails, probably we want to know something is wrong
+		 * instead of failing silently. For the constructor no need, as long as in the destructor we check if thread
+		 * was bound *before* locking.
 		 */
 		class binder
 		{

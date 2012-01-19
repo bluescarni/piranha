@@ -53,6 +53,8 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo drop the value, does not make much sense anymore.
+ * \todo drop also the iterator and global map mechanism, as it is not guaranteed to be thread safe. Just replace it with plain strings,
+ * and assume that equal names == equal symbols.
  */
 class symbol
 {
