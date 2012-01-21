@@ -96,6 +96,8 @@ namespace piranha
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
  * \todo reduce interop types: remove long double and keep long long only if it is not wider than long.
+ * \todo investigate replacing lexical_cast with boost::format, as it seems like boost::format might offer better guarantees
+ * on the printed value -> but maybe not: http://www.gotw.ca/publications/mill19.htm it seems it should be ok for int types.
  */
 class integer
 {
