@@ -46,8 +46,8 @@
 
 #include "../src/exceptions.hpp"
 
-const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_values(
-	(char)-42,(short)42,-42,42L,-42LL,
+const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_values(
+	(char)42,(signed char)42,(short)42,-42,42L,-42LL,
 	(unsigned char)42,(unsigned short)42,42U,42UL,42ULL,
 	23.456f,-23.456
 );
@@ -492,8 +492,8 @@ BOOST_AUTO_TEST_CASE(integer_multiplication_test)
 	}
 }
 
-const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_zeroes(
-	(char)0,(short)0,0,0L,0LL,
+const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_zeroes(
+	(char)0,(signed char)0,(short)0,0,0L,0LL,
 	(unsigned char)0,(unsigned short)0,0U,0UL,0ULL,
 	0.f,-0.
 );
