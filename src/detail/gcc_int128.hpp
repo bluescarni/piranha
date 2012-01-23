@@ -80,4 +80,14 @@ struct integer_traits<PIRANHA_GCC_INT128_T>
 
 }
 
+namespace piranha
+{
+	/// 128-bit integer type.
+	/**
+	 * This type is available on certain versions of the GCC compiler (typically on 64-bit platforms).
+	 * Its availability is signalled by the presence of the \p PIRANHA_GCC_INT128_T definition.
+	 */
+	typedef PIRANHA_GCC_INT128_T gcc_int128;
+}
+
 #endif
