@@ -38,4 +38,7 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 	BOOST_CHECK_EQUAL(caa2.get_alignment(),runtime_info::get_cache_line_size());
 	cache_aligning_allocator<std::string> caa3;
 	BOOST_CHECK_EQUAL(caa3.get_alignment(),runtime_info::get_cache_line_size());
+	// Constructor from different instance.
+	cache_aligning_allocator<char> caa4(caa1);
+	BOOST_CHECK_EQUAL(caa4.get_alignment(),caa1.get_alignment());
 }

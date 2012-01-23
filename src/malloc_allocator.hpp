@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <new>
 #include <stdexcept>
+#include <type_traits>
 
 #if defined(_WIN32)
 extern "C"
@@ -74,6 +75,8 @@ namespace piranha
 template <typename T>
 class malloc_allocator
 {
+		template <typename U>
+		friend class malloc_allocator;
 	public:
 		/// Size type.
 		typedef std::size_t size_type;
@@ -102,6 +105,10 @@ class malloc_allocator
 		 * Memory allocation will use the standard <tt>std::malloc()</tt> function.
 		 */
 		malloc_allocator():m_alignment(0u) {}
+		/// Trivial copy constructor.
+		malloc_allocator(const malloc_allocator &other):m_alignment(other.m_alignment) {}
+		/// Trivial move constructor.
+		malloc_allocator(malloc_allocator &&other) piranha_noexcept_spec(true):m_alignment(other.m_alignment) {}
 		/// Constructor from alignment value.
 		/**
 		 * The allocated memory will be aligned to the specified \p alignment value.
@@ -118,14 +125,22 @@ class malloc_allocator
 		 * 
 		 * @throws std::invalid_argument in case of an invalid nonzero \p alignment.
 		 */
-		malloc_allocator(const std::size_t &alignment):m_alignment(alignment)
+		explicit malloc_allocator(const std::size_t &alignment):m_alignment(alignment)
 		{
 			check_alignment(alignment);
 		}
-		/// Trivial copy constructor.
-		malloc_allocator(const malloc_allocator &other):m_alignment(other.m_alignment) {}
-		/// Trivial move constructor.
-		malloc_allocator(malloc_allocator &&other) piranha_noexcept_spec(true):m_alignment(other.m_alignment) {}
+		/// Constructor from different instance.
+		/**
+		 * This constructor is enabled only if \p T has an alignment requirement equal to or weaker than \p U. The alignment
+		 * value of \p other will be used for construction.
+		 * 
+		 * @param[in] other construction argument.
+		 */
+		// NOTE: has we know that other has valid alignment, any weaker alignment is supported too.
+		template <typename U>
+		malloc_allocator(const malloc_allocator<U> &other, typename std::enable_if<
+			(alignof(T) <= alignof(U))>::type * = piranha_nullptr):m_alignment(other.m_alignment)
+		{}
 		/// Trivial destructor.
 		~malloc_allocator() piranha_noexcept_spec(true) {}
 		/// Defaulted copy assignment operator.
@@ -329,6 +344,7 @@ class malloc_allocator
 				if (unlikely(alignment < alignof(T))) {
 					piranha_throw(std::invalid_argument,"invalid alignment: smaller than alignof(T)");
 				}
+				// NOTE: also extended alignments are required to be powers of 2 according to 3.11.
 				if (unlikely(alignment & (alignment - 1u))) {
 					piranha_throw(std::invalid_argument,"invalid alignment: not a power of 2");
 				}

@@ -68,6 +68,10 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_construction_test)
 		malloc_allocator<char> c(sizeof(void *));
 		b = std::move(a);
 		BOOST_CHECK(b == a);
+		// Constructor from different instance.
+		malloc_allocator<integer> d(alignof(integer));
+		malloc_allocator<char> e(d);
+		BOOST_CHECK(e.get_alignment() == d.get_alignment());
 	}
 }
 

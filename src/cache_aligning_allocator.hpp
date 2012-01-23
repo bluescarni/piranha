@@ -71,6 +71,18 @@ class cache_aligning_allocator: public malloc_allocator<T>
 		 * successful.
 		 */
 		cache_aligning_allocator():base(determine_alignment()) {}
+		/// Defaulted copy constructor.
+		cache_aligning_allocator(const cache_aligning_allocator &) = default;
+		/// Constructor from different instance.
+		/**
+		 * Will forward the call to the corresponding constructor in piranha::malloc_allocator.
+		 * 
+		 * @param[in] other construction argument.
+		 */
+		template <typename U>
+		cache_aligning_allocator(const cache_aligning_allocator<U> &other):base(other) {}
+		/// Defaulted copy assignment operator.
+		cache_aligning_allocator &operator=(const cache_aligning_allocator &) = default;
 };
 
 }
