@@ -110,6 +110,27 @@ class integer
 				std::is_same<T,unsigned char>::value || std::is_same<T,unsigned short>::value || std::is_same<T,unsigned>::value ||
 				std::is_same<T,unsigned long>::value || std::is_same<T,unsigned long long>::value;
 		};
+		// Type-trait to detect integral types that can interoperate directly with GMP routines.
+		template <typename T, typename = void>
+		struct is_gmp_int
+		{
+			static const bool value = false;
+		};
+		template <typename Int>
+		struct is_gmp_int<Int,typename std::enable_if<is_interop_type<Int>::value && std::is_integral<Int>::value &&
+			std::is_signed<Int>::value>::type>
+		{
+			// NOTE: in order to interoperate with GMP, it must not be wider than long.
+			static const bool value = boost::integer_traits<Int>::const_max <= boost::integer_traits<long>::const_max &&
+				boost::integer_traits<Int>::const_min >= boost::integer_traits<long>::const_min;
+		};
+		template <typename Uint>
+		struct is_gmp_int<Uint,typename std::enable_if<is_interop_type<Uint>::value && std::is_integral<Uint>::value &&
+			std::is_unsigned<Uint>::value>::type>
+		{
+			static const bool value = boost::integer_traits<Uint>::const_max <= boost::integer_traits<unsigned long>::const_max &&
+				boost::integer_traits<Uint>::const_min >= boost::integer_traits<unsigned long>::const_min;
+		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
 		template <typename T>
@@ -157,19 +178,19 @@ class integer
 			::mpz_init_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -191,26 +212,26 @@ class integer
 			::mpz_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
 		// Conversion.
 		template <typename T>
-		typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value &&
-			!std::is_same<T,long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_signed<T>::value && is_gmp_int<T>::value &&
+			!std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_slong_p(m_value)) {
 				try {
@@ -220,8 +241,8 @@ class integer
 			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 		}
 		template <typename T>
-		typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value &&
-			!std::is_same<T,unsigned long long>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_unsigned<T>::value && is_gmp_int<T>::value &&
+			!std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
 			if (::mpz_fits_ulong_p(m_value)) {
 				try {
@@ -231,7 +252,7 @@ class integer
 			piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 		}
 		template <typename T>
-		typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value,T>::type convert_to_impl() const
 		{
 			try {
 				return boost::lexical_cast<T>(*this);
@@ -277,10 +298,12 @@ class integer
 			in_place_add(n);
 		}
 		template <typename T>
-		void in_place_add(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
+				// NOTE: here we know that whatever type si is, it can be represented by long,
+				// and thus also by unsigned long (as si is positive).
 				::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(si));
 			} else {
 				// Neat trick here. See:
@@ -289,14 +312,14 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_add(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
-		// For (unsigned) long long create a temporary integer and add it.
+		// For non-gmp ints create a temporary integer and add it.
 		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			in_place_add(integer(n));
 		}
@@ -321,8 +344,8 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_sub(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (si >= 0) {
 				::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(si));
@@ -331,13 +354,13 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_sub(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			in_place_sub(integer(n));
 		}
@@ -367,19 +390,19 @@ class integer
 			in_place_mul(n);
 		}
 		template <typename T>
-		void in_place_mul(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_si(m_value,m_value,static_cast<long>(si));
 		}
 		template <typename T>
-		void in_place_mul(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			::mpz_mul_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			in_place_mul(integer(n));
 		}
@@ -397,8 +420,8 @@ class integer
 			::mpz_tdiv_q(m_value,m_value,n.m_value);
 		}
 		template <typename T>
-		void in_place_div(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si == 0)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -411,8 +434,8 @@ class integer
 			}
 		}
 		template <typename T>
-		void in_place_div(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0u)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
@@ -420,7 +443,7 @@ class integer
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			in_place_div(integer(n));
 		}
@@ -441,8 +464,8 @@ class integer
 			::mpz_mod(m_value,m_value,n.m_value);
 		}
 		template <typename T>
-		void in_place_mod(const T &si, typename std::enable_if<std::is_integral<T>::value
-			&& std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		void in_place_mod(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si <= 0)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
@@ -450,8 +473,8 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(si));
 		}
 		template <typename T>
-		void in_place_mod(const T &ui, typename std::enable_if<std::is_integral<T>::value
-			&& !std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mod(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0u)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
@@ -459,7 +482,7 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mod(const T &n, typename std::enable_if<std::is_same<T,long long>::value || std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		void in_place_mod(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			in_place_mod(integer(n));
 		}
@@ -770,20 +793,19 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(n1,integer(n2));
 		}
@@ -803,20 +825,20 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
+			!is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_less_than(n1,integer(n2));
 		}
@@ -831,20 +853,20 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			std::is_signed<T>::value && !std::is_same<T,long long>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_integral<T>::value &&
-			!std::is_signed<T>::value && !std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_same<T,long long>::value ||
-			std::is_same<T,unsigned long long>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
+			!is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_leq(n1,integer(n2));
 		}
