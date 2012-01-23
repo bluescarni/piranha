@@ -22,7 +22,6 @@
 #define PIRANHA_INTEGER_HPP
 
 #include <algorithm>
-#include <boost/format.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -52,7 +51,7 @@ namespace piranha
 /// Arbitrary precision integer class.
 /**
  * This class represents integer numbers of arbitrary size (i.e., the size is limited only by the available memory).
- * The implementation employs the \p mpz_t type from the multiprecision GMP library.
+ * The implementation consists of a C++ wrapper around the \p mpz_t type from the multiprecision GMP library.
  * 
  * \section interop Interoperability with fundamental types
  * 
@@ -60,11 +59,11 @@ namespace piranha
  * 
  * - all signed integer types,
  * - all unsigned integer types,
- * - all floating-point types,
+ * - \p float and \p double,
  * - \p bool and \p char.
  * 
  * Please note that since the GMP API does not directly provide interoperability
- * with <tt>long long</tt> and <tt>long double</tt>, interaction with this types will be slower due to the extra workload of converting such types
+ * with <tt>long long</tt> and <tt>unsigned long long</tt>, interaction with this types will be slower due to the extra workload of converting such types
  * to GMP-compatible types. Also, every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
  * 
@@ -95,7 +94,6 @@ namespace piranha
  * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
- * \todo reduce interop types: remove long double and keep long long only if it is not wider than long.
  * \todo investigate replacing lexical_cast with boost::format, as it seems like boost::format might offer better guarantees
  * on the printed value -> but maybe not: http://www.gotw.ca/publications/mill19.htm it seems it should be ok for int types.
  */
@@ -106,6 +104,7 @@ class integer
 		struct is_interop_type
 		{
 			static const bool value = std::is_arithmetic<T>::value &&
+				!std::is_same<T,long double>::value &&
 				!std::is_same<T,wchar_t>::value && !std::is_same<T,char16_t>::value &&
 				!std::is_same<T,char32_t>::value;
 		};
@@ -117,14 +116,6 @@ class integer
 			if (unlikely(!boost::math::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
 			}
-		}
-		// Convert input long double into text representation of the corresponding truncated integer.
-		static std::string ld_to_string(const long double &x)
-		{
-			piranha_assert(boost::math::isfinite(x));
-			boost::format f("%.0Lf");
-			f % x;
-			return f.str();
 		}
 		// Validate the string format for integers.
 		static void validate_string(const char *str)
@@ -158,7 +149,7 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_init_set_d(m_value,static_cast<double>(x));
@@ -180,11 +171,6 @@ class integer
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
-		void construct_from_arithmetic(const long double &x)
-		{
-			fp_normal_check(x);
-			construct_from_string(ld_to_string(x).c_str());
-		}
 		// Assignment.
 		void assign_from_string(const char *str)
 		{
@@ -197,7 +183,7 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_set_d(m_value,static_cast<double>(x));
@@ -218,11 +204,6 @@ class integer
 		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_same<long long,T>::value || std::is_same<unsigned long long,T>::value>::type * = piranha_nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
-		}
-		void assign_from_arithmetic(const long double &x)
-		{
-			fp_normal_check(x);
-			assign_from_string(ld_to_string(x).c_str());
 		}
 		// Conversion.
 		template <typename T>
@@ -257,7 +238,7 @@ class integer
 			}
 		}
 		template <typename T>
-		typename std::enable_if<std::is_floating_point<T>::value && !std::is_same<T,long double>::value,T>::type convert_to_impl() const
+		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
 		{
 			// Extract always the double-precision value, and cast as needed.
 			// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
@@ -269,21 +250,6 @@ class integer
 				return std::numeric_limits<T>::infinity();
 			} else {
 				return static_cast<T>(::mpz_get_d(m_value));
-			}
-		}
-		template <typename T>
-		typename std::enable_if<std::is_same<T,long double>::value,T>::type convert_to_impl() const
-		{
-			try {
-				return boost::lexical_cast<long double>(*this);
-			} catch (const boost::bad_lexical_cast &) {
-				// If the conversion fails, it means we are at +-Inf.
-				piranha_assert(mpz_sgn(m_value) != 0);
-				if (mpz_sgn(m_value) > 0) {
-					return std::numeric_limits<long double>::infinity();
-				} else {
-					return -std::numeric_limits<long double>::infinity();
-				}
 			}
 		}
 		// Special handling for bool.
@@ -935,8 +901,11 @@ class integer
 		template <typename T>
 		integer pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
 		{
-			if (!boost::math::isfinite(x) || boost::math::trunc(x) != x) {
-				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			if (!boost::math::isfinite(x)) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation: non-finite floating-point");
+			}
+			if (boost::math::trunc(x) != x) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation: floating-point with non-zero fractional part");
 			}
 			unsigned long exp;
 			try {

@@ -36,7 +36,7 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
-typedef long double other_type;
+typedef float other_cf_type;
 
 struct constructor_tester
 {
@@ -115,11 +115,11 @@ struct multiplication_tester
 			t1.multiply(t3,t2,ed);
 			BOOST_CHECK_EQUAL(t3.m_cf,t1.m_cf * t2.m_cf);
 			BOOST_CHECK_EQUAL(t3.m_key[0],Expo(5));
-			typedef polynomial_term<other_type,Expo> other_term_type;
+			typedef polynomial_term<other_cf_type,Expo> other_term_type;
 			symbol_set other_ed;
 			other_ed.add("x");
 			other_term_type t4, t5;
-			t4.m_cf = other_type(2);
+			t4.m_cf = other_cf_type(2);
 			t4.m_key = key_type{Expo(2)};
 			t4.multiply(t5,t2,other_ed);
 			BOOST_CHECK_EQUAL(t5.m_cf,t4.m_cf * t2.m_cf);

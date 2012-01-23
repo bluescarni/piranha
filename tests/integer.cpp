@@ -46,10 +46,10 @@
 
 #include "../src/exceptions.hpp"
 
-const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> arithmetic_values(
+const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_values(
 	(char)-42,(short)42,-42,42L,-42LL,
 	(unsigned char)42,(unsigned short)42,42U,42UL,42ULL,
-	23.456f,-23.456,23.456L
+	23.456f,-23.456
 );
 
 const std::vector<std::string> invalid_strings{"-0","+0","01","+1","123f"," 123","123 ","123.56"};
@@ -98,15 +98,11 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	// Construction with non-finite floating-point.
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
-	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<long double>::infinity())),std::invalid_argument);
 	if (std::numeric_limits<float>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::quiet_NaN())),std::invalid_argument);
 	}
 	if (std::numeric_limits<double>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::quiet_NaN())),std::invalid_argument);
-	}
-	if (std::numeric_limits<long double>::has_quiet_NaN) {
-		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<long double>::quiet_NaN())),std::invalid_argument);
 	}
 	// Constructor from size.
 	piranha::integer k(piranha::integer::nlimbs(4));
@@ -152,15 +148,11 @@ BOOST_AUTO_TEST_CASE(integer_assignment_test)
 	// Assignment from non-finite floating-point.
 	BOOST_CHECK_THROW(j = -std::numeric_limits<float>::infinity(),std::invalid_argument);
 	BOOST_CHECK_THROW(j = std::numeric_limits<double>::infinity(),std::invalid_argument);
-	BOOST_CHECK_THROW(j = -std::numeric_limits<long double>::infinity(),std::invalid_argument);
 	if (std::numeric_limits<float>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(j = std::numeric_limits<float>::quiet_NaN(),std::invalid_argument);
 	}
 	if (std::numeric_limits<double>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(j = std::numeric_limits<double>::quiet_NaN(),std::invalid_argument);
-	}
-	if (std::numeric_limits<long double>::has_quiet_NaN) {
-		BOOST_CHECK_THROW(j = std::numeric_limits<long double>::quiet_NaN(),std::invalid_argument);
 	}
 }
 
@@ -262,7 +254,6 @@ BOOST_AUTO_TEST_CASE(integer_conversion_test)
 	// Conversion that will generate infinity.
 	inf_conversion_test<float>();
 	inf_conversion_test<double>();
-	inf_conversion_test<long double>();
 	// Implicit conversion to bool.
 	piranha::integer true_int(1), false_int(0);
 	if (!true_int) {
@@ -501,10 +492,10 @@ BOOST_AUTO_TEST_CASE(integer_multiplication_test)
 	}
 }
 
-const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> arithmetic_zeroes(
+const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_zeroes(
 	(char)0,(short)0,0,0L,0LL,
 	(unsigned char)0,(unsigned short)0,0U,0UL,0ULL,
-	0.f,-0.,0.L
+	0.f,-0.
 );
 
 struct check_arithmetic_zeroes_div
