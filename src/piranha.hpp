@@ -32,7 +32,6 @@
  * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
  * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment) ->
  * keep in mind in some cases the tags are actually used for discriminating between types, adjust it accordingly (e.g., power series).
- * \todo better piranha_throw macro with support of boost_throw when using boost thread instead of native c++0x threads.
  * \todo switch to auto -> decltype declarations of member functions for complicated types (e.g., tuples) when decltype on this
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
@@ -49,8 +48,6 @@
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer -> note that this becomes
  * moot in case the homomorphic hashing thing works out.
  * \todo assert that concepts are respected in models.
- * \todo check the include of pure C stuff (GMP is already fine, maybe the platform-specific stuff needs to be reviewed - aligning alloc, cache size, number of
- * threads, etc.). http://www.parashift.com/c++-faq-lite/mixing-c-and-cpp.html
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
