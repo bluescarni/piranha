@@ -95,6 +95,7 @@ namespace detail {}
 #include "degree_truncator_settings.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
+#include "extended_integer_types.hpp"
 #include "hash_set.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
