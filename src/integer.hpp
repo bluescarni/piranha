@@ -57,13 +57,13 @@ namespace piranha
  * 
  * Full interoperability with the following C++ types is provided:
  * 
- * - all signed integer types,
- * - all unsigned integer types,
+ * - all standard signed integer types,
+ * - all standard unsigned integer types,
  * - \p float and \p double,
  * - \p bool and \p char.
  * 
  * Please note that since the GMP API does not directly provide interoperability
- * with <tt>long long</tt> and <tt>unsigned long long</tt>, interaction with this types will be slower due to the extra workload of converting such types
+ * with <tt>long long</tt> and <tt>unsigned long long</tt>, interaction with this types could be slower due to the extra workload of converting such types
  * to GMP-compatible types. Also, every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
  * 
@@ -103,10 +103,12 @@ class integer
 		template <typename T>
 		struct is_interop_type
 		{
-			static const bool value = std::is_arithmetic<T>::value &&
-				!std::is_same<T,long double>::value &&
-				!std::is_same<T,wchar_t>::value && !std::is_same<T,char16_t>::value &&
-				!std::is_same<T,char32_t>::value;
+			static const bool value = std::is_same<T,char>::value || std::is_same<T,bool>::value ||
+				std::is_same<T,float>::value || std::is_same<T,double>::value ||
+				std::is_same<T,signed char>::value || std::is_same<T,short>::value || std::is_same<T,int>::value ||
+				std::is_same<T,long>::value || std::is_same<T,long long>::value ||
+				std::is_same<T,unsigned char>::value || std::is_same<T,unsigned short>::value || std::is_same<T,unsigned>::value ||
+				std::is_same<T,unsigned long>::value || std::is_same<T,unsigned long long>::value;
 		};
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
