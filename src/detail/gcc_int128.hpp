@@ -20,7 +20,6 @@
 
 // Snippets of code taken from:
 // http://gcc.gnu.org/viewcvs/trunk/libstdc%2B%2B-v3/include/std/limits?view=markup&pathrev=178969
-
 // Original copyright notice follows.
 
 // The template and inlines for the numeric_limits classes. -*- C++ -*-
@@ -51,43 +50,114 @@
 #ifndef PIRANHA_GCC_INT128_HPP
 #define PIRANHA_GCC_INT128_HPP
 
+#include <algorithm>
 #include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
 #include <climits>
+#include <iostream>
+#include <iterator>
+#include <type_traits>
+#include <vector>
+
+#include "../print_coefficient.hpp"
+
+namespace piranha
+{
+
+/// 128-bit signed integer type.
+/**
+ * This type is available on certain versions of the GCC compiler (typically on 64-bit platforms).
+ * Its availability is signalled by the presence of the \p PIRANHA_GCC_INT128_T definition.
+ */
+typedef PIRANHA_GCC_INT128_T gcc_int128;
+
+/// 128-bit unsigned integer type.
+/**
+ * This type is available on certain versions of the GCC compiler (typically on 64-bit platforms).
+ * Its availability is signalled by the presence of the \p PIRANHA_GCC_INT128_T definition.
+ */
+typedef PIRANHA_GCC_UINT128_T gcc_uint128;
+
+/// Specialisation of piranha::print_coefficient() for piranha::gcc_int128 and piranha::gcc_uint128.
+/**
+ * Will print to stream a decimal representation of the coefficient.
+ */
+template <typename T>
+struct print_coefficient_impl<T,typename std::enable_if<
+	std::is_same<T,gcc_int128>::value || std::is_same<T,gcc_uint128>::value>::type>
+{
+	/// Call operator for piranha::gcc_uint128.
+	/**
+	 * @param[in] os target stream.
+	 * @param[in] n coefficient to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by memory allocation errors in standard containers
+	 * or by streaming instances of \p char to \p os.
+	 */
+	void operator()(std::ostream &os, const gcc_uint128 &n) const
+	{
+		if (!n) {
+			os << '0';
+			return;
+		}
+		std::vector<char> buffer;
+		auto n_copy = n;
+		while (n_copy) {
+			const auto digit = unsigned(n_copy % 10u);
+			buffer.push_back(boost::lexical_cast<char>(digit));
+			n_copy /= 10u;
+		}
+		std::ostream_iterator<char> out_it(os);
+		std::copy(buffer.rbegin(),buffer.rend(),out_it);
+	}
+	/// Call operator for piranha::gcc_int128.
+	/**
+	 * @param[in] os target stream.
+	 * @param[in] n coefficient to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by memory allocation errors in standard containers
+	 * or by streaming instances of \p char to \p os.
+	 */
+	void operator()(std::ostream &os, const gcc_int128 &n) const
+	{
+		if (n >= 0) {
+			operator()(os,gcc_uint128(n));
+		} else {
+			os << '-';
+			operator()(os,-static_cast<gcc_uint128>(n));
+		}
+	}
+};
+
+}
 
 namespace boost
 {
 
-#define __glibcxx_signed(T) ((T)(-1) < 0)
-#define __glibcxx_digits(T) \
-	(sizeof(T) * CHAR_BIT - __glibcxx_signed (T))
-#define __glibcxx_min(T) \
-	(__glibcxx_signed (T) ? (T)1 << __glibcxx_digits (T) : (T)0)
-#define __glibcxx_max(T) \
-	(__glibcxx_signed (T) ? \
-	(((((T)1 << (__glibcxx_digits (T) - 1)) - 1) << 1) + 1) : ~(T)0)
+#define piranha_glibcxx_signed(T) ((T)(-1) < 0)
+#define piranha_glibcxx_digits(T) \
+	(sizeof(T) * CHAR_BIT - piranha_glibcxx_signed (T))
+#define piranha_glibcxx_min(T) \
+	(piranha_glibcxx_signed (T) ? (T)1 << piranha_glibcxx_digits (T) : (T)0)
+#define piranha_glibcxx_max(T) \
+	(piranha_glibcxx_signed (T) ? \
+	(((((T)1 << (piranha_glibcxx_digits (T) - 1)) - 1) << 1) + 1) : ~(T)0)
 
 template <>
-struct integer_traits<PIRANHA_GCC_INT128_T>
+struct integer_traits<piranha::gcc_int128>
 {
-	static const PIRANHA_GCC_INT128_T const_max = __glibcxx_min(PIRANHA_GCC_INT128_T);
-	static const PIRANHA_GCC_INT128_T const_min = __glibcxx_max(PIRANHA_GCC_INT128_T);
+	static const piranha::gcc_int128 const_max = piranha_glibcxx_min(piranha::gcc_int128);
+	static const piranha::gcc_int128 const_min = piranha_glibcxx_max(piranha::gcc_int128);
 };
 
-#undef __glibcxx_digits
-#undef __glibcxx_signed
-#undef __glibcxx_min
-#undef __glibcxx_max
+#undef piranha_glibcxx_digits
+#undef piranha_glibcxx_signed
+#undef piranha_glibcxx_min
+#undef piranha_glibcxx_max
 
-}
+const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_max;
+const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_min;
 
-namespace piranha
-{
-	/// 128-bit integer type.
-	/**
-	 * This type is available on certain versions of the GCC compiler (typically on 64-bit platforms).
-	 * Its availability is signalled by the presence of the \p PIRANHA_GCC_INT128_T definition.
-	 */
-	typedef PIRANHA_GCC_INT128_T gcc_int128;
 }
 
 #endif
