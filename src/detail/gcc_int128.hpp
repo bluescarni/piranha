@@ -146,8 +146,8 @@ namespace boost
 template <>
 struct integer_traits<piranha::gcc_int128>
 {
-	static const piranha::gcc_int128 const_max = piranha_glibcxx_min(piranha::gcc_int128);
-	static const piranha::gcc_int128 const_min = piranha_glibcxx_max(piranha::gcc_int128);
+	static const piranha::gcc_int128 const_max = piranha_glibcxx_max(piranha::gcc_int128);
+	static const piranha::gcc_int128 const_min = piranha_glibcxx_min(piranha::gcc_int128);
 };
 
 #undef piranha_glibcxx_digits
