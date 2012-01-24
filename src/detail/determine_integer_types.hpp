@@ -117,9 +117,8 @@ if (std::is_same<T,U>::value) { \
 					return;
 				}
 				print_type<Int>();
-				std::cout << '\n';
+				std::cout << ',';
 				print_type<WideInt>();
-				std::cout << '\n';
 				std::exit(0);
 			}
 		};
