@@ -139,6 +139,7 @@ if (std::is_same<T,U>::value) { \
 inline void determine_integer_types()
 {
 	int_determiner d = int_determiner();
+	(void)d;
 }
 
 }
