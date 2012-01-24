@@ -37,7 +37,7 @@ mutex tracing::m_mutex;
 namespace detail
 {
 
-#define print_case(T) \
+#define piranha_tracing_print_case(T) \
 if (typeid(T) == x.type()) { \
 	os << boost::any_cast<T>(x); \
 } else
@@ -46,32 +46,32 @@ struct generic_printer
 {
 	static void run(std::ostream &os,const boost::any &x)
 	{
-		print_case(char)
-		print_case(wchar_t)
-		print_case(char16_t)
-		print_case(char32_t)
-		print_case(unsigned char)
-		print_case(signed char)
-		print_case(unsigned short)
-		print_case(short)
-		print_case(unsigned)
-		print_case(int)
-		print_case(unsigned long)
-		print_case(long)
-		print_case(unsigned long long)
-		print_case(long long)
-		print_case(float)
-		print_case(double)
-		print_case(long double)
-		print_case(std::string)
-		print_case(const char *)
+		piranha_tracing_print_case(char)
+		piranha_tracing_print_case(wchar_t)
+		piranha_tracing_print_case(char16_t)
+		piranha_tracing_print_case(char32_t)
+		piranha_tracing_print_case(unsigned char)
+		piranha_tracing_print_case(signed char)
+		piranha_tracing_print_case(unsigned short)
+		piranha_tracing_print_case(short)
+		piranha_tracing_print_case(unsigned)
+		piranha_tracing_print_case(int)
+		piranha_tracing_print_case(unsigned long)
+		piranha_tracing_print_case(long)
+		piranha_tracing_print_case(unsigned long long)
+		piranha_tracing_print_case(long long)
+		piranha_tracing_print_case(float)
+		piranha_tracing_print_case(double)
+		piranha_tracing_print_case(long double)
+		piranha_tracing_print_case(std::string)
+		piranha_tracing_print_case(const char *)
 		{
 			os << "unprintable value of type '" << x.type().name() << "'";
 		}
 	}
 };
 
-#undef print_case
+#undef piranha_tracing_print_case
 
 }
 
