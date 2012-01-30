@@ -99,6 +99,7 @@ namespace piranha
  */
 class integer
 {
+		friend class rational;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>
 		struct is_interop_type
