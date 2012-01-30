@@ -39,7 +39,9 @@ struct math_is_zero_impl
 {
 	static bool run(const T &x)
 	{
-		return x == 0;
+		// NOTE: construct instance from integral constant 0.
+		// http://groups.google.com/group/comp.lang.c++.moderated/msg/328440a86dae8088?dmode=source
+		return x == T(0);
 	}
 };
 
