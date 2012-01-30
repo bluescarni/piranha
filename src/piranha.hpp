@@ -63,6 +63,8 @@
  * \todo forbid interoperability in +-* between series with different keys?
  * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,
  * and maybe replace in the high level interface the std::set of string with initializer list, as it seems sometimes {"a","b"} is not picked up as std::set of string.
+ * \todo look into perfect forwarding of members, for use in series, hash set (?) http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
+ * \todo look into forwarding and delegating constructors when they become available.
  */
 namespace piranha
 {
