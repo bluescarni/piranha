@@ -1879,9 +1879,12 @@ class mp_integer
 		/// Overload output stream operator for piranha::mp_integer.
 		/**
 		 * @param[in] os output stream.
-		 * @param[in] n piranha::mp_integer to be sent to stream.
+		 * @param[in] n piranha::mp_integer to be directed to stream.
 		 * 
 		 * @return reference to \p os.
+		 * 
+		 * @throws std::overflow_error if the number of digits is larger than an implementation-defined maximum.
+		 * @throws unspecified any exception thrown by memory allocation errors in standard container.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
 		{
@@ -1892,8 +1895,11 @@ class mp_integer
 			// TODO: use static vector here.
 			// NOTE: here we can optimize, avoiding one allocation, by using a std::array if
 			// size_base10 is small enough.
-			std::vector<char> tmp(boost::numeric_cast<std::vector<char>::size_type>(size_base10 + static_cast<std::size_t>(2)));
-			os << ::mpz_get_str(&tmp[0],10,n.m_value);
+			std::vector<char> tmp(static_cast<std::vector<char>::size_type>(size_base10 + 2u));
+			if (tmp.size() != size_base10 + 2u) {
+				piranha_throw(std::overflow_error,"number of digits is too large");
+			}
+			os << ::mpz_get_str(&tmp[0u],10,n.m_value);
 			return os;
 		}
 		/// Overload input stream operator for piranha::mp_integer.
@@ -1904,6 +1910,8 @@ class mp_integer
 		 * @param[in,out] n piranha::mp_integer to which the contents of the stream will be assigned.
 		 * 
 		 * @return reference to \p is.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::mp_integer.
 		 */
 		friend std::istream &operator>>(std::istream &is, mp_integer &n)
 		{
