@@ -102,6 +102,7 @@ namespace detail {}
 #include "malloc_allocator.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
+#include "mp_integer.hpp"
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "power_series.hpp"

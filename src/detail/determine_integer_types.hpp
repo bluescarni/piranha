@@ -31,8 +31,8 @@
 #include <type_traits>
 
 #include "../extended_integer_types.hpp"
+#include "../mp_integer.hpp"
 #include "../print_coefficient.hpp" // For converting GCC int128_t.
-#include "../integer.hpp"
 
 namespace piranha
 {
@@ -70,17 +70,17 @@ if (std::is_same<T,U>::value) { \
 #undef piranha_int_determiner_print_case
 	}
 	template <typename T>
-	static integer integer_cast(const T &value)
+	static mp_integer integer_cast(const T &value)
 	{
-		return integer(value);
+		return mp_integer(value);
 	}
 #if defined(PIRANHA_GCC_INT128_T)
 	// For GCC 128-bit integer, go through string conversion.
-	static integer integer_cast(const gcc_int128 &n)
+	static mp_integer integer_cast(const gcc_int128 &n)
 	{
 		std::ostringstream os;
 		print_coefficient(os,n);
-		return integer(os.str());
+		return mp_integer(os.str());
 	}
 #endif
 	struct range_checker
@@ -91,7 +91,7 @@ if (std::is_same<T,U>::value) { \
 			template <typename WideInt>
 			void operator()(const WideInt &)
 			{
-				const integer min = integer_cast(boost::integer_traits<Int>::const_min),
+				const mp_integer min = integer_cast(boost::integer_traits<Int>::const_min),
 					max = integer_cast(boost::integer_traits<Int>::const_max),
 					w_min = integer_cast(boost::integer_traits<WideInt>::const_min),
 					w_max = integer_cast(boost::integer_traits<WideInt>::const_max);
@@ -105,7 +105,7 @@ if (std::is_same<T,U>::value) { \
 					return;
 				}
 				// Multiplication.
-				if (min * max < w_min || std::max<integer>(min * min,max * max) > w_max) {
+				if (min * max < w_min || std::max<mp_integer>(min * min,max * max) > w_max) {
 					return;
 				}
 				// Division.
@@ -113,7 +113,7 @@ if (std::is_same<T,U>::value) { \
 					return;
 				}
 				// Multiply-accumulate.
-				if (min * max + min < w_min || std::max<integer>(min * min,max * max) + max > w_max) {
+				if (min * max + min < w_min || std::max<mp_integer>(min * min,max * max) + max > w_max) {
 					return;
 				}
 				print_type<Int>();

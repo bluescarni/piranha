@@ -138,6 +138,9 @@ MESSAGE(STATUS "Immediate integer type: ${PIRANHA_IMMEDIATE_INTEGER_TYPE}")
 STRING(REGEX REPLACE "[^,]*," "" PIRANHA_WIDE_INTEGER_TYPE "${PIRANHA_DETERMINE_INTS_RUN_OUT_STRIP}")
 MESSAGE(STATUS "Wide integer type: ${PIRANHA_WIDE_INTEGER_TYPE}")
 
+# Configure the file for arbitrary-precision integer,
+CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/integer.hpp.in" "${CMAKE_SOURCE_DIR}/src/integer.hpp")
+
 # Add the directory for the piranha library.
 ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
 

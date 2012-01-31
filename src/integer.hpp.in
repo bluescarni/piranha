@@ -1,0 +1,215 @@
+/***************************************************************************
+ *   Copyright (C) 2009-2011 by Francesco Biscani                          *
+ *   bluescarni@gmail.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PIRANHA_INTEGER_HPP
+#define PIRANHA_INTEGER_HPP
+
+#include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <type_traits>
+
+#include "config.hpp"
+#include "extended_integer_types.hpp"
+#include "mp_integer.hpp"
+
+namespace piranha
+{
+
+class integer
+{
+		// NOTE: here we have the following guarantees on these types:
+		// - int_type is a standard integral type,
+		// - wide_int_type is large enough to hold the result of addition, subtraction,
+		//   multiplication, division and multadd between instances if int_type.
+		typedef @PIRANHA_IMMEDIATE_INTEGER_TYPE@ int_type;
+		typedef @PIRANHA_WIDE_INTEGER_TYPE@ wide_int_type;
+		// Paranoia checks.
+		static_assert(std::is_pod<int_type>::value && std::is_integral<int_type>::value,"Invalid integer type.");
+		typedef std::unique_ptr<mp_integer> ptr_type;
+		// Storage definition: enough space and alignment to accomodate both types.
+		typedef std::aligned_storage<
+			(sizeof(int_type) > sizeof(ptr_type)) ? sizeof(int_type) : sizeof(ptr_type),
+			(alignof(int_type) > alignof(ptr_type)) ? alignof(int_type) : alignof(ptr_type)
+			>::type storage_type;
+		// Getter methods to fetch references to the two types.
+		template <typename T>
+		T &get()
+		{
+			piranha_assert((std::is_same<T,int_type>::value && !get_flag()) ||
+				(std::is_same<T,ptr_type>::value && get_flag()));
+			return *static_cast<T *>(static_cast<void *>(&m_storage));
+		}
+		template <typename T>
+		const T &get() const
+		{
+			piranha_assert((std::is_same<T,int_type>::value && !get_flag()) ||
+				(std::is_same<T,ptr_type>::value && get_flag()));
+			return *static_cast<const T *>(static_cast<const void *>(&m_storage));
+		}
+		// Get/set the flag that tells if the instance is multiprecision (true) or not (false).
+		bool get_flag() const
+		{
+			return m_flag;
+		}
+		void set_flag(bool flag)
+		{
+			m_flag = flag;
+		}
+		// Demote an mp instance to immediate integer, and set it to zero.
+		void demote()
+		{
+			// The operation is valid only for an mp integer which has been emptied.
+			piranha_assert(get_flag() && !(get<ptr_type>()));
+			// Call the destructor of the smart pointer.
+			get<ptr_type>().~ptr_type();
+			// Init the new int.
+			set_flag(false);
+			get<int_type>() = 0;
+		}
+		// Promote immediate integer to mp, copying the value.
+		void promote()
+		{
+			piranha_assert(!get_flag());
+			ptr_type new_ptr(::new mp_integer(get<int_type>()));
+			// No need to destroy int_type, as it is guaranteed to be a POD.
+			set_flag(true);
+			::new (static_cast<void *>(&m_storage)) ptr_type(std::move(new_ptr));
+		}
+		template <typename Operation, typename Operand>
+		integer &generic_in_place(Operation &&op, Operand &&other)
+		{
+			static_assert(std::is_same<integer,typename std::decay<Operand>::type>::value,"Invalid operand.");
+			if (likely(int(get_flag()) + int(other.get_flag()) == 0)) {
+				wide_int_type result = get<int_type>();
+				op(result,other.get<int_type>());
+				if (likely(result <= boost::integer_traits<int_type>::const_max && result >= boost::integer_traits<int_type>::const_min)) {
+					get<int_type>() = static_cast<int_type>(result);
+					return *this;
+				}
+			}
+			if (!get_flag()) {
+				promote();
+			}
+			if (other.get_flag()) {
+				*get<ptr_type>() += *other.get<ptr_type>();
+			} else {
+				*get<ptr_type>() += other.get<int_type>();
+			}
+			return *this;
+		}
+		void construct_from_str(const char *str)
+		{
+			try {
+				set_flag(false);
+				// NOTE: here we cast first to long long and then to int_type because direct use of lexical_cast
+				// in case int_type is char leads to problems:
+				// http://www.boost.org/doc/libs/release/doc/html/boost_lexical_cast/frequently_asked_questions.html
+				// The cast to long long (provided str is well-formatted) is always safe, as int_type cannot be wider.
+				get<int_type>() = boost::numeric_cast<int_type>(boost::lexical_cast<long long>(str));
+			} catch (...) {
+				// The exceptions here could come from either bad lexical cast or numeric cast. Try to construct
+				// the integer from str, if it fails the appropriate exception will be thrown.
+				set_flag(true);
+				::new ((void *)&m_storage) ptr_type(::new mp_integer(str));
+			}
+		}
+	public:
+		integer()
+		{
+			set_flag(false);
+			get<int_type>() = 0;
+		}
+		integer(const integer &other)
+		{
+			set_flag(other.get_flag());
+			if (unlikely(get_flag())) {
+				::new ((void *)&m_storage) ptr_type(::new mp_integer(*other.get<ptr_type>()));
+			} else {
+				get<int_type>() = other.get<int_type>();
+			}
+		}
+		integer(integer &&other)
+		{
+			set_flag(other.get_flag());
+			if (unlikely(get_flag())) {
+				// Construct an empty pointer.
+				::new ((void *)&m_storage) ptr_type();
+				// Swap in the pointer from other.
+				get<ptr_type>().swap(other.get<ptr_type>());
+				// Demote the other.
+				other.demote();
+			} else {
+				// Same as copy construction.
+				get<int_type>() = other.get<int_type>();
+			}
+		}
+		~integer()
+		{
+			if (unlikely(get_flag())) {
+				get<ptr_type>().~ptr_type();
+			}
+		}
+		explicit integer(const std::string &str)
+		{
+			construct_from_str(str.c_str());
+		}
+		explicit integer(const char *str)
+		{
+			construct_from_str(str);
+		}
+		integer &operator+=(const integer &other)
+		{
+			if (likely(int(get_flag()) + int(other.get_flag()) == 0)) {
+				wide_int_type result = get<int_type>();
+				result += other.get<int_type>();
+				if (likely(result <= boost::integer_traits<int_type>::const_max && result >= boost::integer_traits<int_type>::const_min)) {
+					get<int_type>() = static_cast<int_type>(result);
+					return *this;
+				}
+			}
+			if (!get_flag()) {
+				promote();
+			}
+			if (other.get_flag()) {
+				*get<ptr_type>() += *other.get<ptr_type>();
+			} else {
+				*get<ptr_type>() += other.get<int_type>();
+			}
+			return *this;
+		}
+		friend std::ostream &operator<<(std::ostream &os, const integer &n)
+		{
+			if (n.get_flag()) {
+				return (os << (*n.get<ptr_type>()));
+			} else {
+				return (os << n.get<int_type>());
+			}
+		}
+	private:
+		bool		m_flag;
+		storage_type	m_storage;
+};
+
+}
+
+#endif
