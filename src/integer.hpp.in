@@ -21,20 +21,51 @@
 #ifndef PIRANHA_INTEGER_HPP
 #define PIRANHA_INTEGER_HPP
 
+#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/integer_fwd.hpp"
+#include "exceptions.hpp"
 #include "extended_integer_types.hpp"
 #include "mp_integer.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
 
+/// General-purpose integer class.
+/**
+ * This class, similarly to piranha::mp_integer, represents integer numbers of arbitrary size. The difference with
+ * piranha::mp_integer is that this class stores small numbers as standard C++ integers,
+ * thus avoiding runtime memory allocation. Additionally, arithmetics on small operands will avoid calling the GMP routines.
+ * 
+ * Whenever the size of the integer exceeds the range of the C++ integer type, the class will automatically switch
+ * the internal representation of the number to piranha::mp_integer.
+ * 
+ * \section interop Interoperability with other types
+ * 
+ * The class is fully interoperable with the standard C++ types with which piranha::mp_integer is interoperable.
+ * Every function interacting with floating-point types will check that the floating-point values are not
+ * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
+ * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
+ * the program will terminate.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object in a state that is destructible and assignable.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 class integer
 {
 		// NOTE: here we have the following guarantees on these types:
@@ -75,25 +106,22 @@ class integer
 		{
 			m_flag = flag;
 		}
-		// Demote an mp instance to immediate integer, and set it to zero.
-		void demote()
+		// Destructor method.
+		void destroy()
 		{
-			// The operation is valid only for an mp integer which has been emptied.
-			piranha_assert(get_flag() && !(get<ptr_type>()));
-			// Call the destructor of the smart pointer.
-			get<ptr_type>().~ptr_type();
-			// Init the new int.
-			set_flag(false);
-			get<int_type>() = 0;
+			if (unlikely(get_flag())) {
+				// Call the destructor of the smart pointer.
+				get<ptr_type>().~ptr_type();
+			}
 		}
 		// Promote immediate integer to mp, copying the value.
 		void promote()
 		{
 			piranha_assert(!get_flag());
-			ptr_type new_ptr(::new mp_integer(get<int_type>()));
+			auto new_ptr = ::new mp_integer(get<int_type>());
 			// No need to destroy int_type, as it is guaranteed to be a POD.
 			set_flag(true);
-			::new (static_cast<void *>(&m_storage)) ptr_type(std::move(new_ptr));
+			::new (static_cast<void *>(&m_storage)) ptr_type(new_ptr);
 		}
 		template <typename Operation, typename Operand>
 		integer &generic_in_place(Operation &&op, Operand &&other)
@@ -117,8 +145,11 @@ class integer
 			}
 			return *this;
 		}
+		// Construction from string.
 		void construct_from_str(const char *str)
 		{
+			// NOTE: we want to be consistent with the string format of mp_integer.
+			mp_integer::validate_string(str);
 			try {
 				set_flag(false);
 				// NOTE: here we cast first to long long and then to int_type because direct use of lexical_cast
@@ -133,12 +164,70 @@ class integer
 				::new ((void *)&m_storage) ptr_type(::new mp_integer(str));
 			}
 		}
+		// Construction from interoperable types.
+		template <typename T>
+		void construct_from_interop_impl(const T &x)
+		{
+			try {
+				set_flag(false);
+				// NOTE: boost::numeric_cast will truncate the result if x is floating point, and will throw an exception if the truncated
+				// value is not representable by int_type.
+				get<int_type>() = boost::numeric_cast<int_type>(x);
+			} catch (...) {
+				set_flag(true);
+				::new ((void *)&m_storage) ptr_type(::new mp_integer(x));
+			}
+		}
+		template <typename T>
+		void construct_from_interop(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			mp_integer::fp_normal_check(x);
+			construct_from_interop_impl(x);
+		}
+		template <typename T>
+		void construct_from_interop(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+		{
+			construct_from_interop_impl(n);
+		}
+		// Assignment from interoperable type.
+		template <typename T>
+		void assign_from_interop_impl(const T &x)
+		{
+			try {
+				get<int_type>() = boost::numeric_cast<int_type>(x);
+			} catch (...) {
+				// If the casting fails, promote and re-attempt.
+				promote();
+				*get<ptr_type>() = x;
+			}
+		}
+		template <typename T>
+		void assign_from_interop(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			mp_integer::fp_normal_check(x);
+			assign_from_interop_impl(x);
+		}
+		template <typename T>
+		void assign_from_interop(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+		{
+			assign_from_interop_impl(n);
+		}
 	public:
+		/// Default constructor.
+		/**
+		 * Will initialise the integer to zero.
+		 */
 		integer()
 		{
 			set_flag(false);
-			get<int_type>() = 0;
+			get<int_type>() = int_type(0);
 		}
+		/// Copy constructor.
+		/**
+		 * @param[in] other integer to be copied.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation failures.
+		 */
 		integer(const integer &other)
 		{
 			set_flag(other.get_flag());
@@ -148,34 +237,188 @@ class integer
 				get<int_type>() = other.get<int_type>();
 			}
 		}
-		integer(integer &&other)
+		/// Move constructor.
+		/**
+		 * @param[in] other argument for move construction.
+		 */
+		integer(integer &&other) piranha_noexcept_spec(true)
 		{
-			set_flag(other.get_flag());
-			if (unlikely(get_flag())) {
-				// Construct an empty pointer.
-				::new ((void *)&m_storage) ptr_type();
-				// Swap in the pointer from other.
-				get<ptr_type>().swap(other.get<ptr_type>());
-				// Demote the other.
-				other.demote();
+			const auto flag = other.get_flag();
+			set_flag(flag);
+			if (flag) {
+				// Construct a new pointer moving in from other.
+				::new ((void *)&m_storage) ptr_type(std::move(other.get<ptr_type>()));
 			} else {
 				// Same as copy construction.
 				get<int_type>() = other.get<int_type>();
 			}
 		}
-		~integer()
+		/// Generic constructor.
+		/**
+		 * The supported types for \p T are the \ref interop "interoperable types".
+		 * Use of other types will result in a compile-time error.
+		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to construct
+		 * the object.
+		 * 
+		 * @param[in] x object used to construct \p this.
+		 * 
+		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		template <typename T>
+		explicit integer(const T &x, typename std::enable_if<mp_integer::is_interop_type<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(get_flag())) {
-				get<ptr_type>().~ptr_type();
-			}
+			construct_from_interop(x);
 		}
+		/// Destructor.
+		~integer() piranha_noexcept_spec(true)
+		{
+			destroy();
+		}
+		/// Constructor from \p std::string.
+		/**
+		 * The string format is the same expected by piranha::mp_integer.
+		 * 
+		 * @param[in] str string representation of the number in decimal notation.
+		 * 
+		 * @throws std::invalid_argument if the string is malformed.
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
 		explicit integer(const std::string &str)
 		{
 			construct_from_str(str.c_str());
 		}
+		/// Constructor from C string.
+		/**
+		 * The string format is the same expected by piranha::mp_integer.
+		 * 
+		 * @param[in] str string representation of the number in decimal notation.
+		 * 
+		 * @throws std::invalid_argument if the string is malformed.
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
 		explicit integer(const char *str)
 		{
 			construct_from_str(str);
+		}
+		/// Conversion to interoperable types.
+		/**
+		 * The conversion rules are the same as in the conversion operator of piranha::mp_integer.
+		 * 
+		 * @throws std::overflow_error if the conversion results in overflow.
+		 */
+		template <typename T, typename std::enable_if<mp_integer::is_interop_type<T>::value>::type*& = enabler>
+		explicit operator T() const
+		{
+			if (unlikely(get_flag())) {
+				return static_cast<T>(*get<ptr_type>());
+			} else {
+				// NOTE: here if T is integral, it is all good. If T is floating-point, we are relying on
+				// numeric cast to guard against out-of-bounds conversions - even though from the doc it seems they
+				// are not currently contemplated in int-to-float conversions:
+				// http://www.boost.org/doc/libs/release/libs/numeric/conversion/doc/html/boost_numericconversion/converter___function_object.html
+				try {
+					return boost::numeric_cast<T>(get<int_type>());
+				} catch (...) {
+					piranha_throw(std::overflow_error,"overflow error in conversion of integer type");
+				}
+			}
+		}
+		/// Copy assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
+		integer &operator=(const integer &other)
+		{
+			if (likely(this != &other)) {
+				// Copy + move.
+				integer tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		integer &operator=(integer &&other) piranha_noexcept_spec(true)
+		{
+			if (likely(this != &other)) {
+				// Destroy whatever we are holding.
+				destroy();
+				// Set the flag same as other.
+				const auto flag = other.get_flag();
+				set_flag(flag);
+				if (flag) {
+					// Construct a new pointer moving in from other.
+					::new ((void *)&m_storage) ptr_type(std::move(other.get<ptr_type>()));
+				} else {
+					// Simple assignment.
+					get<int_type>() = other.get<int_type>();
+				}
+			}
+			return *this;
+		}
+		/// Assignment operator from interoperable types.
+		/**
+		 * The supported types for \p T are the \ref interop "interoperable types".
+		 * Use of other types will result in a compile-time error.
+		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being assigned
+		 * to the object.
+		 * 
+		 * @param[in] x object that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		template <typename T>
+		typename std::enable_if<mp_integer::is_interop_type<T>::value,integer &>::type operator=(const T &x)
+		{
+			if (unlikely(get_flag())) {
+				*get<ptr_type>() = x;
+			} else {
+				assign_from_interop(x);
+			}
+			return *this;
+		}
+		/// Assignment operator from C string.
+		/**
+		 * Equivalent to construction from string, followed by move assignmnent.
+		 * 
+		 * @param[in] str assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from string.
+		 */
+		integer &operator=(const char *str)
+		{
+			// NOTE: this could be optimized if there is ever the need.
+			integer tmp(str);
+			*this = std::move(tmp);
+			return *this;
+		}
+		/// Assignment operator from \p std::string.
+		/**
+		 * Equivalent to construction from string, followed by move assignmnent.
+		 * 
+		 * @param[in] str assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from string.
+		 */
+		integer &operator=(const std::string &str)
+		{
+			return operator=(str.c_str());
 		}
 		integer &operator+=(const integer &other)
 		{
@@ -197,6 +440,13 @@ class integer
 			}
 			return *this;
 		}
+		/// Stream operator overload for piranha::integer.
+		/**
+		 * @param[in] os output stream.
+		 * @param[in] n piranha::integer to be directed to stream.
+		 * 
+		 * @return reference to \p os.
+		 */
 		friend std::ostream &operator<<(std::ostream &os, const integer &n)
 		{
 			if (n.get_flag()) {
@@ -204,6 +454,24 @@ class integer
 			} else {
 				return (os << n.get<int_type>());
 			}
+		}
+		/// Overload input stream operator for piranha::integer.
+		/**
+		 * Equivalent to extracting a string from the stream and then using it to construct a piranha::integer that will be assigned to \p n.
+		 * 
+		 * @param[in] is input stream.
+		 * @param[in,out] n piranha::integer to which the contents of the stream will be assigned.
+		 * 
+		 * @return reference to \p is.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::integer.
+		 */
+		friend std::istream &operator>>(std::istream &is, integer &n)
+		{
+			std::string tmp_str;
+			std::getline(is,tmp_str);
+			n = integer(tmp_str);
+			return is;
 		}
 	private:
 		bool		m_flag;

@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "config.hpp" // For (un)likely.
+#include "detail/integer_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "type_traits.hpp"
@@ -102,6 +103,8 @@ namespace piranha
  */
 class mp_integer
 {
+		// Make friend with integer.
+		friend class integer;
 		// C++ arithmetic types supported for interaction with mp_integer.
 		template <typename T>
 		struct is_interop_type
