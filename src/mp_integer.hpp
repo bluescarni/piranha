@@ -1152,12 +1152,12 @@ class mp_integer
 			}
 			return *this;
 		}
-		/// Generic assignment from arithmetic types.
+		/// Generic assignment from interoperable types.
 		/**
 		 * The supported types for \p T are the \ref interop "interoperable types".
 		 * Use of other types will result in a compile-time error.
-		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being used to assign
-		 * the object.
+		 * In case a floating-point type is used, \p x will be truncated (i.e., rounded towards zero) before being assigned
+		 * to the object.
 		 * 
 		 * @param[in] x object that will be assigned to \p this.
 		 * 
