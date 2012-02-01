@@ -463,7 +463,7 @@ class mp_integer
 		template <typename T>
 		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(x == 0)) {
+			if (unlikely(x == 0.)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
 			}
 			operator=(static_cast<T>(*this) / x);
@@ -775,7 +775,7 @@ class mp_integer
 		template <typename T>
 		static T binary_div(const mp_integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(x == 0)) {
+			if (unlikely(x == 0.)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
 			}
 			return (static_cast<T>(n) / x);
@@ -784,7 +784,7 @@ class mp_integer
 		static T binary_div(const T &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			const T n_T = static_cast<T>(n);
-			if (unlikely(n_T == 0)) {
+			if (unlikely(n_T == 0.)) {
 				piranha_throw(piranha::zero_division_error,"division by zero");
 			}
 			return (x / n_T);
