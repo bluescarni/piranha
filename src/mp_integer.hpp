@@ -1232,7 +1232,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws std::invalid_argument if \p T is a floating-point type and the result of the operation generates a non-finite value.
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1289,7 +1289,7 @@ class mp_integer
 		}
 		/// Identity operation.
 		/**
-		 * @return reference to \p this.
+		 * @return copy of \p this.
 		 */
 		mp_integer operator+()
 		{
@@ -1297,7 +1297,7 @@ class mp_integer
 		}
 		/// Identity operation (const version).
 		/**
-		 * @return const reference to \p this.
+		 * @return copy of \p this.
 		 */
 		mp_integer operator+() const
 		{
@@ -1332,6 +1332,8 @@ class mp_integer
 		 * @param[in] x argument for the subtraction.
 		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1424,6 +1426,8 @@ class mp_integer
 		 * @param[in] x argument for the multiplication.
 		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1480,6 +1484,7 @@ class mp_integer
 		 * @return reference to \p this.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>x == 0</tt>.
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
 		 */
 		template <typename T>
 		typename std::enable_if<
