@@ -92,14 +92,12 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	BOOST_CHECK_EQUAL(-30,static_cast<int>(j));
 	// Large value.
 	piranha::integer i2(get_big_int()), j2(i2);
-	// FIXME: restore!!!!
-	//BOOST_CHECK_EQUAL(i2,j2);
+	BOOST_CHECK_EQUAL(i2,j2);
 	// Move construction.
 	piranha::integer i3("-30"), j3(std::move(i3));
 	BOOST_CHECK(static_cast<int>(j3) == -30);
 	piranha::integer i4(get_big_int()), j4(std::move(i4));
-	// FIXME: restore!!!!
-	//BOOST_CHECK(j4 == i2);
+	BOOST_CHECK(j4 == i2);
 	// Construction with non-finite floating-point.
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
@@ -216,10 +214,9 @@ BOOST_AUTO_TEST_CASE(integer_swap_test)
 	BOOST_CHECK_EQUAL(43,static_cast<int>(k));
 	std::swap(k,i);
 	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
-	// TODO restore!!!
-// 	piranha::integer l(get_big_int() + 1);
-// 	std::swap(l,k);
-// 	BOOST_CHECK_EQUAL(get_big_int(),l);
+	piranha::integer l(get_big_int() + 1);
+	std::swap(l,k);
+	BOOST_CHECK_EQUAL(get_big_int(),l);
 }
 
 template <typename T>
@@ -646,13 +643,13 @@ BOOST_AUTO_TEST_CASE(integer_modulo_test)
 	}
 	boost::fusion::for_each(arithmetic_values,check_integral_binary_mod());
 }
-#if 0
+
 struct check_arithmetic_comparisons
 {
 	template <typename T>
 	void operator()(const T &x) const
 	{
-		piranha::mp_integer i(x);
+		piranha::integer i(x);
 		BOOST_CHECK(i + 1 > x);
 		BOOST_CHECK(x < i + 1);
 		BOOST_CHECK(i + 1 >= x);
@@ -670,9 +667,9 @@ struct check_arithmetic_comparisons
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_comparisons_test)
+BOOST_AUTO_TEST_CASE(integer_comparisons_test)
 {
-	piranha::mp_integer i(42), j(43);
+	piranha::integer i(42), j(43);
 	BOOST_CHECK(i != j);
 	BOOST_CHECK(i < j);
 	BOOST_CHECK(i <= j);
@@ -683,7 +680,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_comparisons_test)
 	BOOST_CHECK(i + 1 >= j);
 	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
 }
-
+#if 0
 BOOST_AUTO_TEST_CASE(mp_integer_multiply_accumulate_test)
 {
 	piranha::mp_integer i(10);

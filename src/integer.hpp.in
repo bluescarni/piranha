@@ -299,6 +299,86 @@ class integer
 		{
 			return n <= T(0);
 		}
+		// Binary comparisons.
+		// Basic comparison functors.
+		struct eq
+		{
+			template <typename T, typename U>
+			bool operator()(const T &a, const U &b) const
+			{
+				return (a == b);
+			}
+		};
+		struct lt
+		{
+			template <typename T, typename U>
+			bool operator()(const T &a, const U &b) const
+			{
+				return (a < b);
+			}
+		};
+		struct leq
+		{
+			template <typename T, typename U>
+			bool operator()(const T &a, const U &b) const
+			{
+				return (a <= b);
+			}
+		};
+		// (integer op integer).
+		template <typename Comparison>
+		static bool binary_comparison(const integer &a, Comparison &&cmp, const integer &b)
+		{
+			const bool f1 = a.get_flag(), f2 = b.get_flag();
+			if (f1 && f2) {
+				return cmp(*a.get<ptr_type>(),*b.get<ptr_type>());
+			} else if (f1 && !f2) {
+				return cmp(*a.get<ptr_type>(),b.get<int_type>());
+			} else if (!f1 && f2) {
+				return cmp(a.get<int_type>(),*b.get<ptr_type>());
+			} else {
+				return cmp(a.get<int_type>(),b.get<int_type>());
+			}
+		}
+		// (integer op integral).
+		template <typename Comparison, typename T>
+		static bool binary_comparison(const integer &a, Comparison &&cmp, const T &b,
+			typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+		{
+			if (a.get_flag()) {
+				// NOTE: essentially here we want to make direct comparions only between mp_integer and
+				// something else. If a is storing an immediate integer, promote b and go through integer
+				// comparison instead. This avoids issues for instance when comparing signed vs unsigned.
+				return cmp(*a.get<ptr_type>(),b);
+			} else {
+				return cmp(a,integer(b));
+			}
+		}
+		// (integral op integer).
+		template <typename T, typename Comparison>
+		static bool binary_comparison(const T &a, Comparison &&cmp, const integer &b,
+			typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+		{
+			if (b.get_flag()) {
+				return cmp(a,*b.get<ptr_type>());
+			} else {
+				return cmp(integer(a),b);
+			}
+		}
+		// (integer op floating-point).
+		template <typename Comparison, typename T>
+		static bool binary_comparison(const integer &a, Comparison &&cmp, const T &b,
+			typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return cmp(static_cast<T>(a),b);
+		}
+		// (floating-point op integer).
+		template <typename T, typename Comparison>
+		static bool binary_comparison(const T &a, Comparison &&cmp, const integer &b,
+			typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return cmp(a,static_cast<T>(b));
+		}
 		// Construction from string.
 		void construct_from_str(const char *str)
 		{
@@ -1004,6 +1084,117 @@ class integer
 			operator%(T &&x, U &&y)
 		{
 			return binary_op(std::forward<T>(x),modulo(),std::forward<U>(y));
+		}
+		/// Generic equality operator involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		{
+			return binary_comparison(x,eq(),y);
+		}
+		/// Generic inequality operator involving piranha::integer.
+		/**
+		 * Negation of the equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		{
+			return !(x == y);
+		}
+		/// Generic less-than operator involving piranha::integer.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		{
+			return binary_comparison(x,lt(),y);
+		}
+		/// Generic less-than or equal operator involving piranha::integer.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		{
+			return binary_comparison(x,leq(),y);
+		}
+		/// Generic greater-than operator involving piranha::integer.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		{
+			return (y < x);
+		}
+		/// Generic greater-than or equal operator involving piranha::integer.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors when one of the operands is a C++ integral type.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		{
+			return (y <= x);
 		}
 		/// Stream operator overload for piranha::integer.
 		/**
