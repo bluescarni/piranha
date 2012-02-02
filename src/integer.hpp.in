@@ -577,7 +577,11 @@ class integer
 				// are not currently contemplated in int-to-float conversions:
 				// http://www.boost.org/doc/libs/release/libs/numeric/conversion/doc/html/boost_numericconversion/converter___function_object.html
 				try {
-					return boost::numeric_cast<T>(get<int_type>());
+					if (std::is_same<T,bool>::value) {
+						return static_cast<T>(get<int_type>());
+					} else {
+						return boost::numeric_cast<T>(get<int_type>());
+					}
 				} catch (...) {
 					piranha_throw(std::overflow_error,"overflow error in conversion of integer type");
 				}
@@ -1428,7 +1432,7 @@ namespace std
  * @param[in] n2 second argument.
  */
 template <>
-void swap(piranha::integer &n1, piranha::integer &n2)
+inline void swap(piranha::integer &n1, piranha::integer &n2)
 {
 	piranha::integer tmp(std::move(n1));
 	n1 = std::move(n2);
