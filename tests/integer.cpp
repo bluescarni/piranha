@@ -436,20 +436,20 @@ BOOST_AUTO_TEST_CASE(integer_subtraction_test)
 	BOOST_CHECK_EQUAL(static_cast<int>(i--), -124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i), -125);
 }
-#if 0
+
 struct check_arithmetic_in_place_mul
 {
 	template <typename T>
 	void operator()(const T &x) const
 	{
 		{
-			piranha::mp_integer i(1);
+			piranha::integer i(1);
 			i *= x;
 			BOOST_CHECK_EQUAL(static_cast<int>(x), static_cast<int>(i));
 		}
 		{
 			T y(x);
-			piranha::mp_integer i(1);
+			piranha::integer i(1);
 			y *= i;
 			BOOST_CHECK_EQUAL(x, y);
 			y *= std::move(i);
@@ -463,18 +463,18 @@ struct check_arithmetic_binary_mul
 	template <typename T>
 	void operator()(const T &x) const
 	{
-		piranha::mp_integer i(2), j(1);
+		piranha::integer i(2), j(1);
 		BOOST_CHECK_EQUAL(static_cast<T>(i * x),2 * x);
 		BOOST_CHECK_EQUAL(static_cast<T>(x * j),x);
-		BOOST_CHECK_EQUAL(static_cast<T>(piranha::mp_integer(2) * x),2 * x);
-		BOOST_CHECK_EQUAL(static_cast<T>(x * piranha::mp_integer(1)),x);
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) * x),2 * x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x * piranha::integer(1)),x);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_multiplication_test)
+BOOST_AUTO_TEST_CASE(integer_multiplication_test)
 {
 	{
-		piranha::mp_integer i(1), j(42);
+		piranha::integer i(1), j(42);
 		i *= j;
 		BOOST_CHECK_EQUAL(static_cast<int>(i),42);
 		i *= std::move(j);
@@ -482,16 +482,16 @@ BOOST_AUTO_TEST_CASE(mp_integer_multiplication_test)
 		// Mul with self.
 		i = 2;
 		i *= i;
-		BOOST_CHECK_EQUAL(i,4);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),4);
 		// Mul with self + move.
 		i = 3;
 		i *= std::move(i);
-		BOOST_CHECK_EQUAL(i,9);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),9);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_mul());
 	}
 	{
-		piranha::mp_integer i(2);
-		BOOST_CHECK_EQUAL(static_cast<int>(piranha::mp_integer(2) * (i * ((i * i) * i))),32);
+		piranha::integer i(2);
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) * (i * ((i * i) * i))),32);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_mul());
 	}
 }
@@ -507,7 +507,7 @@ struct check_arithmetic_zeroes_div
 	template <typename T>
 	void operator()(const T &x) const
 	{
-		piranha::mp_integer i(2);
+		piranha::integer i(2);
 		BOOST_CHECK_THROW(i /= x,piranha::zero_division_error);
 	}
 };
@@ -517,11 +517,11 @@ struct check_arithmetic_binary_div
 	template <typename T>
 	void operator()(const T &x) const
 	{
-		piranha::mp_integer i(100), j(105);
+		piranha::integer i(100), j(105);
 		BOOST_CHECK_EQUAL(static_cast<T>(i / x),100 / x);
 		BOOST_CHECK_EQUAL(static_cast<T>(x / j),x / 105);
-		BOOST_CHECK_EQUAL(static_cast<T>(piranha::mp_integer(2) / x),2 / x);
-		BOOST_CHECK_EQUAL(static_cast<T>(x / piranha::mp_integer(1)),x);
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) / x),2 / x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x / piranha::integer(1)),x);
 	}
 };
 
@@ -531,34 +531,34 @@ struct check_arithmetic_in_place_div
 	void operator()(const T &x) const
 	{
 		{
-			piranha::mp_integer i(100);
+			piranha::integer i(100);
 			i /= x;
 			BOOST_CHECK_EQUAL(static_cast<int>(100 / x), static_cast<int>(i));
 		}
 		{
 			T y(x);
-			piranha::mp_integer i(1);
+			piranha::integer i(1);
 			y /= i;
 			BOOST_CHECK_EQUAL(x, y);
 		}
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_division_test)
+BOOST_AUTO_TEST_CASE(integer_division_test)
 {
 	{
-		piranha::mp_integer i(42), j(2);
+		piranha::integer i(42), j(2);
 		i /= j;
 		BOOST_CHECK_EQUAL(static_cast<int>(i),21);
 		i /= -j;
 		BOOST_CHECK_EQUAL(static_cast<int>(i),-10);
-		BOOST_CHECK_THROW(i /= piranha::mp_integer(),piranha::zero_division_error);
+		BOOST_CHECK_THROW(i /= piranha::integer(),piranha::zero_division_error);
 		boost::fusion::for_each(arithmetic_zeroes,check_arithmetic_zeroes_div());
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_div());
 	}
 	{
-		piranha::mp_integer i(1);
-		BOOST_CHECK_EQUAL(static_cast<int>(piranha::mp_integer(2) / (i / ((i / i) / i))),2);
+		piranha::integer i(1);
+		BOOST_CHECK_EQUAL(static_cast<int>(piranha::integer(2) / (i / ((i / i) / i))),2);
 		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_div());
 	}
 }
@@ -568,7 +568,7 @@ struct check_integral_zeroes_mod
 	template <typename T>
 	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
 	{
-		piranha::mp_integer i(2);
+		piranha::integer i(2);
 		BOOST_CHECK_THROW(i %= x,std::invalid_argument);
 	}
 	template <typename T>
@@ -582,7 +582,7 @@ struct check_integral_in_place_mod
 	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
 	{
 		{
-			piranha::mp_integer i(100);
+			piranha::integer i(100);
 			if (x > 0) {
 				i %= x;
 				BOOST_CHECK_EQUAL(static_cast<int>(100 % x), static_cast<int>(i));
@@ -594,7 +594,7 @@ struct check_integral_in_place_mod
 		}
 		{
 			T y(::abs(x));
-			piranha::mp_integer i(10);
+			piranha::integer i(10);
 			y %= i;
 			BOOST_CHECK_EQUAL(static_cast<T>(2), y);
 			if (std::is_signed<T>::value) {
@@ -613,11 +613,11 @@ struct check_integral_binary_mod
 	template <typename T>
 	void operator()(const T &x,typename boost::enable_if_c<std::is_integral<T>::value>::type * = 0) const
 	{
-		piranha::mp_integer i(100), j(105);
+		piranha::integer i(100), j(105);
 		BOOST_CHECK_EQUAL(static_cast<T>(i % ::abs(x)),static_cast<T>(100 % ::abs(x)));
 		BOOST_CHECK_EQUAL(static_cast<T>(::abs(x) % j),static_cast<T>(::abs(x) % 105));
-		BOOST_CHECK_EQUAL(static_cast<T>(piranha::mp_integer(2) % ::abs(x)),static_cast<T>(2 % x));
-		BOOST_CHECK_EQUAL(static_cast<T>(::abs(x) % piranha::mp_integer(1)),static_cast<T>(0));
+		BOOST_CHECK_EQUAL(static_cast<T>(piranha::integer(2) % ::abs(x)),static_cast<T>(2 % x));
+		BOOST_CHECK_EQUAL(static_cast<T>(::abs(x) % piranha::integer(1)),static_cast<T>(0));
 		if (std::is_signed<T>::value) {
 			BOOST_CHECK_THROW(-::abs(x) % i,std::invalid_argument);
 			BOOST_CHECK_THROW(i % -::abs(x),std::invalid_argument);
@@ -628,14 +628,14 @@ struct check_integral_binary_mod
 	{}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_modulo_test)
+BOOST_AUTO_TEST_CASE(integer_modulo_test)
 {
 	{
-		piranha::mp_integer i(42), j(33);
+		piranha::integer i(42), j(33);
 		i %= j;
 		BOOST_CHECK_EQUAL(static_cast<int>(i),9);
 		BOOST_CHECK_THROW(i %= -j,std::invalid_argument);
-		BOOST_CHECK_THROW(i %= piranha::mp_integer(),std::invalid_argument);
+		BOOST_CHECK_THROW(i %= piranha::integer(),std::invalid_argument);
 		i.negate();
 		BOOST_CHECK_THROW(i %= j,std::invalid_argument);
 		i = 0;
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_modulo_test)
 	}
 	boost::fusion::for_each(arithmetic_values,check_integral_binary_mod());
 }
-
+#if 0
 struct check_arithmetic_comparisons
 {
 	template <typename T>
