@@ -130,6 +130,15 @@ class integer
 			set_flag(true);
 			::new (static_cast<void *>(&m_storage)) ptr_type(new_ptr);
 		}
+		// Promote to mp moving in input mp_integer.
+		void promote(mp_integer &n)
+		{
+			piranha_assert(!get_flag());
+			auto new_ptr = ::new mp_integer(std::move(n));
+			// No need to destroy int_type, as it is guaranteed to be a POD.
+			set_flag(true);
+			::new (static_cast<void *>(&m_storage)) ptr_type(new_ptr);
+		}
 		// Check if a wide int fits in an int_type.
 		static bool fits_int_type(const wide_int_type &wn)
 		{
@@ -445,6 +454,20 @@ class integer
 		void assign_from_interop(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
 		{
 			assign_from_interop_impl(n);
+		}
+		// Utility function to transform integer exponent into mp_integer exponent for use in pow().
+		template <typename T>
+		static const T &transform_exponent(const T &exp)
+		{
+			return exp;
+		}
+		static mp_integer transform_exponent(const integer &exp)
+		{
+			if (exp.get_flag()) {
+				return *exp.get<ptr_type>();
+			} else {
+				return mp_integer(exp.get<int_type>());
+			}
 		}
 	public:
 		/// Default constructor.
@@ -1226,6 +1249,66 @@ class integer
 			// Last case, do the simple operation.
 			*this += n1 * n2;
 			return *this;
+		}
+		/// Exponentiation.
+		/**
+		 * The rules for exponentiation are the same as in piranha::mp_integer.
+		 * 
+		 * @param[in] exp exponent.
+		 * 
+		 * @return <tt>this ** exp</tt>.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws std::invalid_argument if \p T is a floating-point type and \p exp is not an exact piranha::integer, or if <tt>exp</tt>'s magnitude exceeds
+		 * the range of the <tt>unsigned long</tt> type.
+		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
+		 */
+		template <typename T>
+		typename std::enable_if<mp_integer::is_interop_type<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
+		{
+			// Use the corresponding method in mp_integer and cast back.
+			mp_integer tmp = (get_flag()) ? get<ptr_type>()->pow(transform_exponent(exp)) : mp_integer(get<int_type>()).pow(transform_exponent(exp));
+			integer retval;
+			try {
+				retval = static_cast<int_type>(tmp);
+			} catch (...) {
+				retval.promote(tmp);
+			}
+			return retval;
+		}
+		/// Compute next prime number.
+		/**
+		 * Equivalent to piranha::mp_integer::nextprime().
+		 * 
+		 * @return next prime.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws std::invalid_argument if the sign of this is negative.
+		 */
+		integer nextprime() const
+		{
+			mp_integer tmp = (get_flag()) ? get<ptr_type>()->nextprime() : mp_integer(get<int_type>()).nextprime();
+			integer retval;
+			try {
+				retval = static_cast<int_type>(tmp);
+			} catch (...) {
+				retval.promote(tmp);
+			}
+			return retval;
+		}
+		/// Check if \p this is a prime number
+		/**
+		 * Equivalent to piranha::mp_integer::probab_prime_p().
+		 * 
+		 * @param[in] reps number of primality tests to be run.
+		 * 
+		 * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
+		 * 
+		 * @throws std::invalid_argument if \p reps is negative.
+		 */
+		int probab_prime_p(int reps = 8) const
+		{
+			return (get_flag()) ? get<ptr_type>()->probab_prime_p(reps) : mp_integer(get<int_type>()).probab_prime_p(reps);
 		}
 		/// Stream operator overload for piranha::integer.
 		/**

@@ -699,29 +699,29 @@ BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(-3));
 	BOOST_CHECK_EQUAL(i,0);
 }
-#if 0
-BOOST_AUTO_TEST_CASE(mp_integer_exponentiation_test)
+
+BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 {
-	BOOST_CHECK_EQUAL(piranha::mp_integer(10).pow(2),100);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(10).pow(piranha::mp_integer(2)),100);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(-2),1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(-3),-1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(2LL),1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(3ULL),-1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(-3.),-1);
-	BOOST_CHECK_THROW(piranha::mp_integer(-1).pow(-3.1),std::invalid_argument);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).pow(0.),1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(0).pow(0.),1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(0).pow(3.),0);
-	BOOST_CHECK_THROW(piranha::mp_integer(0).pow(-3.),piranha::zero_division_error);
-	BOOST_CHECK_THROW(piranha::mp_integer(1).pow(static_cast<double>(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
-	BOOST_CHECK_THROW(piranha::mp_integer(1).pow(piranha::mp_integer(boost::integer_traits<unsigned long>::const_max) * -10),std::invalid_argument);
-	BOOST_CHECK_THROW(piranha::mp_integer(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::integer(10).pow(2),100);
+	BOOST_CHECK_EQUAL(piranha::integer(10).pow(piranha::integer(2)),100);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-2),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(2LL),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(3ULL),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3.),-1);
+	BOOST_CHECK_THROW(piranha::integer(-1).pow(-3.1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(0.),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).pow(0.),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).pow(3.),0);
+	BOOST_CHECK_THROW(piranha::integer(0).pow(-3.),piranha::zero_division_error);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(static_cast<double>(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * -10),std::invalid_argument);
+	BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
 	if (std::numeric_limits<double>::has_quiet_NaN) {
-		BOOST_CHECK_THROW(piranha::mp_integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
 }
-
+#if 0
 BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
 {
 	BOOST_CHECK_EQUAL(piranha::mp_integer().hash(),static_cast<std::size_t>(0));
@@ -810,10 +810,10 @@ BOOST_AUTO_TEST_CASE(mp_integer_sqrt_test)
 	n = 17;
 	BOOST_CHECK(n.sqrt() == 4);
 }
-
-BOOST_AUTO_TEST_CASE(mp_integer_primes_test)
+#endif
+BOOST_AUTO_TEST_CASE(integer_primes_test)
 {
-	piranha::mp_integer n(2);
+	piranha::integer n(2);
 	BOOST_CHECK(n.nextprime() == 3);
 	n = -1;
 	BOOST_CHECK_THROW(n.nextprime(),std::invalid_argument);
@@ -823,4 +823,3 @@ BOOST_AUTO_TEST_CASE(mp_integer_primes_test)
 	BOOST_CHECK(n.probab_prime_p() == 0);
 	BOOST_CHECK_THROW(n.probab_prime_p(-1),std::invalid_argument);
 }
-#endif
