@@ -721,81 +721,63 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
 }
-#if 0
-BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
-{
-	BOOST_CHECK_EQUAL(piranha::mp_integer().hash(),static_cast<std::size_t>(0));
-	BOOST_CHECK(piranha::mp_integer(1).hash() != piranha::mp_integer(-1).hash());
-	BOOST_CHECK_EQUAL((piranha::mp_integer() + piranha::mp_integer(1) - piranha::mp_integer(1)).hash(),static_cast<std::size_t>(0));
-	BOOST_CHECK_EQUAL((piranha::mp_integer(1) + piranha::mp_integer(1) - piranha::mp_integer(1)).hash(),piranha::mp_integer(1).hash());
-	BOOST_CHECK_EQUAL((piranha::mp_integer(-1) + piranha::mp_integer(1) - piranha::mp_integer(1)).hash(),piranha::mp_integer(-1).hash());
 
-	std::hash<piranha::mp_integer> hasher;
-	BOOST_CHECK_EQUAL(hasher(piranha::mp_integer()),static_cast<std::size_t>(0));
-	BOOST_CHECK(hasher(piranha::mp_integer(1)) != hasher(piranha::mp_integer(-1)));
-	BOOST_CHECK_EQUAL(hasher(piranha::mp_integer() + piranha::mp_integer(1) - piranha::mp_integer(1)),static_cast<std::size_t>(0));
-	BOOST_CHECK_EQUAL(hasher(piranha::mp_integer(1) + piranha::mp_integer(1) - piranha::mp_integer(1)),hasher(piranha::mp_integer(1)));
-	BOOST_CHECK_EQUAL(hasher(piranha::mp_integer(-1) + piranha::mp_integer(1) - piranha::mp_integer(1)),hasher(piranha::mp_integer(-1)));
+BOOST_AUTO_TEST_CASE(integer_hash_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer().hash(),static_cast<std::size_t>(0));
+	BOOST_CHECK(piranha::integer(1).hash() != piranha::integer(-1).hash());
+	BOOST_CHECK_EQUAL((piranha::integer() + piranha::integer(1) - piranha::integer(1)).hash(),static_cast<std::size_t>(0));
+	BOOST_CHECK_EQUAL((piranha::integer(1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(1).hash());
+	BOOST_CHECK_EQUAL((piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(-1).hash());
+
+	std::hash<piranha::integer> hasher;
+	BOOST_CHECK_EQUAL(hasher(piranha::integer()),static_cast<std::size_t>(0));
+	BOOST_CHECK(hasher(piranha::integer(1)) != hasher(piranha::integer(-1)));
+	BOOST_CHECK_EQUAL(hasher(piranha::integer() + piranha::integer(1) - piranha::integer(1)),static_cast<std::size_t>(0));
+	BOOST_CHECK_EQUAL(hasher(piranha::integer(1) + piranha::integer(1) - piranha::integer(1)),hasher(piranha::integer(1)));
+	BOOST_CHECK_EQUAL(hasher(piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)),hasher(piranha::integer(-1)));
 }
 
-BOOST_AUTO_TEST_CASE(mp_integer_sign_test)
+BOOST_AUTO_TEST_CASE(integer_sign_test)
 {
-	BOOST_CHECK_EQUAL(piranha::mp_integer().sign(),0);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-1).sign(),-1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(-10).sign(),-1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(1).sign(),1);
-	BOOST_CHECK_EQUAL(piranha::mp_integer(10).sign(),1);
+	BOOST_CHECK_EQUAL(piranha::integer().sign(),0);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).sign(),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-10).sign(),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).sign(),1);
+	BOOST_CHECK_EQUAL(piranha::integer(10).sign(),1);
 }
 
-BOOST_AUTO_TEST_CASE(mp_integer_math_overloads_test)
+BOOST_AUTO_TEST_CASE(integer_math_overloads_test)
 {
-	BOOST_CHECK(piranha::math::is_zero(piranha::mp_integer()));
-	BOOST_CHECK(piranha::math::is_zero(piranha::mp_integer(0)));
-	BOOST_CHECK(!piranha::math::is_zero(piranha::mp_integer(-1)));
-	BOOST_CHECK(!piranha::math::is_zero(piranha::mp_integer(-10)));
-	BOOST_CHECK(!piranha::math::is_zero(piranha::mp_integer(1)));
-	BOOST_CHECK(!piranha::math::is_zero(piranha::mp_integer(10)));
-	piranha::mp_integer n(0);
+	BOOST_CHECK(piranha::math::is_zero(piranha::integer()));
+	BOOST_CHECK(piranha::math::is_zero(piranha::integer(0)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(-1)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(-10)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(1)));
+	BOOST_CHECK(!piranha::math::is_zero(piranha::integer(10)));
+	piranha::integer n(0);
 	piranha::math::negate(n);
-	BOOST_CHECK_EQUAL(n,piranha::mp_integer());
+	BOOST_CHECK_EQUAL(n,piranha::integer());
 	n = 10;
 	piranha::math::negate(n);
-	BOOST_CHECK_EQUAL(n,piranha::mp_integer(-10));
+	BOOST_CHECK_EQUAL(n,piranha::integer(-10));
 	piranha::math::negate(n);
-	BOOST_CHECK_EQUAL(n,piranha::mp_integer(10));
+	BOOST_CHECK_EQUAL(n,piranha::integer(10));
 }
 
-BOOST_AUTO_TEST_CASE(mp_integer_vector_accumulate_test)
+BOOST_AUTO_TEST_CASE(integer_vector_accumulate_test)
 {
-	std::vector<piranha::mp_integer> v;
+	std::vector<piranha::integer> v;
 	for (unsigned long i = 0; i < 10000; ++i) {
-		v.push_back(piranha::mp_integer(i));
+		v.push_back(piranha::integer(i));
 	}
-	BOOST_CHECK_EQUAL(std::accumulate(v.begin(),v.end(),piranha::mp_integer(0),
-		[](piranha::mp_integer &n1, const piranha::mp_integer &n2){return(std::move(n1) + n2);}),piranha::mp_integer(10000) * piranha::mp_integer(9999) / 2);
+	BOOST_CHECK_EQUAL(std::accumulate(v.begin(),v.end(),piranha::integer(0),
+		[](piranha::integer &n1, const piranha::integer &n2){return(std::move(n1) + n2);}),piranha::integer(10000) * piranha::integer(9999) / 2);
 }
 
-BOOST_AUTO_TEST_CASE(mp_integer_size_test)
+BOOST_AUTO_TEST_CASE(integer_sqrt_test)
 {
-	piranha::mp_integer k;
-	BOOST_CHECK_EQUAL(k.size(),0u);
-	k = 1;
-	BOOST_CHECK(k.size() > 0u);
-}
-
-BOOST_AUTO_TEST_CASE(mp_integer_allocated_size_test)
-{
-	piranha::mp_integer k(piranha::mp_integer::nlimbs(0));
-	BOOST_CHECK(k.allocated_size() == 1u);
-	k = piranha::mp_integer(piranha::mp_integer::nlimbs(10));
-	BOOST_CHECK(k.allocated_size() == 10u);
-	k = piranha::mp_integer(piranha::mp_integer::nlimbs(100));
-	BOOST_CHECK(k.allocated_size() == 100u);
-}
-
-BOOST_AUTO_TEST_CASE(mp_integer_sqrt_test)
-{
-	piranha::mp_integer n(0);
+	piranha::integer n(0);
 	BOOST_CHECK(n.sqrt() == 0);
 	n = -1;
 	BOOST_CHECK_THROW(n.sqrt(),std::invalid_argument);
@@ -810,7 +792,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_sqrt_test)
 	n = 17;
 	BOOST_CHECK(n.sqrt() == 4);
 }
-#endif
+
 BOOST_AUTO_TEST_CASE(integer_primes_test)
 {
 	piranha::integer n(2);

@@ -24,11 +24,13 @@
 #include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 
 #include "config.hpp"
 #include "detail/integer_fwd.hpp"
@@ -1310,6 +1312,38 @@ class integer
 		{
 			return (get_flag()) ? get<ptr_type>()->probab_prime_p(reps) : mp_integer(get<int_type>()).probab_prime_p(reps);
 		}
+		/// Hash value.
+		/**
+		 * The returned hash value is either computed via \p std::hash or via piranha::mp_integer::hash().
+		 * 
+		 * @return a hash value for \p this.
+		 */
+		std::size_t hash() const
+		{
+			if (get_flag()) {
+				return get<ptr_type>()->hash();
+			} else {
+				return std::hash<int_type>()(get<int_type>());
+			}
+		}
+		/// Integer square root.
+		/**
+		 * @return the truncated integer part of the square root of \p this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws std::invalid_argument if \p this is negative.
+		 */
+		integer sqrt() const
+		{
+			mp_integer tmp = (get_flag()) ? get<ptr_type>()->sqrt() : mp_integer(get<int_type>()).sqrt();
+			integer retval;
+			try {
+				retval = static_cast<int_type>(tmp);
+			} catch (...) {
+				retval.promote(tmp);
+			}
+			return retval;
+		}
 		/// Stream operator overload for piranha::integer.
 		/**
 		 * @param[in] os output stream.
@@ -1371,15 +1405,15 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value
 	}
 };
 
-// Specialise multadd for mp_integer.
-// template <typename T>
-// struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,mp_integer>::value>::type>
-// {
-// 	static void run(T &x, const T &y, const T &z)
-// 	{
-// 		x.multiply_accumulate(y,z);
-// 	}
-// };
+// Specialise multadd for integer.
+template <typename T>
+struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	static void run(T &x, const T &y, const T &z)
+	{
+		x.multiply_accumulate(y,z);
+	}
+};
 
 }
 
@@ -1400,6 +1434,28 @@ void swap(piranha::integer &n1, piranha::integer &n2)
 	n1 = std::move(n2);
 	n2 = std::move(tmp);
 }
+
+/// Specialisation of \p std::hash for piranha::integer.
+template <>
+struct hash<piranha::integer>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::integer argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] n piranha::integer whose hash value will be returned.
+	 * 
+	 * @return <tt>n.hash()</tt>.
+	 * 
+	 * @see piranha::integer::hash()
+	 */
+	result_type operator()(const argument_type &n) const
+	{
+		return n.hash();
+	}
+};
 
 }
 
