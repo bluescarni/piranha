@@ -1,6 +1,7 @@
 SET(SRC_LIST
-# 	degree_truncator_settings.cpp
+	degree_truncator_settings.cpp
 	exceptions.cpp
+	extended_integer_types.cpp
 	runtime_info.cpp
 	settings.cpp
 	symbol.cpp

@@ -155,9 +155,6 @@ struct integer_traits<piranha::gcc_int128>
 #undef piranha_glibcxx_min
 #undef piranha_glibcxx_max
 
-const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_max;
-const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_min;
-
 }
 
 #endif
