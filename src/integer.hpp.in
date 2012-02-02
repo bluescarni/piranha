@@ -68,11 +68,17 @@ namespace piranha
  */
 class integer
 {
+	public:
 		// NOTE: here we have the following guarantees on these types:
 		// - int_type is a standard integral type,
 		// - wide_int_type is large enough to hold the result of addition, subtraction,
 		//   multiplication, division and multadd between instances if int_type.
+		/// Immediate integer type.
+		/**
+		 * Alias for the standard C++ integer type used to store small values.
+		 */
 		typedef @PIRANHA_IMMEDIATE_INTEGER_TYPE@ int_type;
+	private:
 		typedef @PIRANHA_WIDE_INTEGER_TYPE@ wide_int_type;
 		// Paranoia checks.
 		static_assert(std::is_pod<int_type>::value && std::is_integral<int_type>::value,"Invalid integer type.");
@@ -123,27 +129,148 @@ class integer
 			set_flag(true);
 			::new (static_cast<void *>(&m_storage)) ptr_type(new_ptr);
 		}
-		template <typename Operation, typename Operand>
-		integer &generic_in_place(Operation &&op, Operand &&other)
+		// Check if a wide int fits in an int_type.
+		static bool fits_int_type(const wide_int_type &wn)
 		{
-			static_assert(std::is_same<integer,typename std::decay<Operand>::type>::value,"Invalid operand.");
-			if (likely(int(get_flag()) + int(other.get_flag()) == 0)) {
+			return (wn <= boost::integer_traits<int_type>::const_max && wn >= boost::integer_traits<int_type>::const_min);
+		}
+		// Basic arithmetic operations for use in operators.
+		struct plus
+		{
+			template <typename T, typename U>
+			void operator()(T &a, U &&b) const
+			{
+				a += std::forward<U>(b);
+			}
+		};
+		struct minus
+		{
+			template <typename T, typename U>
+			void operator()(T &a, U &&b) const
+			{
+				a -= std::forward<U>(b);
+			}
+		};
+		struct times
+		{
+			template <typename T, typename U>
+			void operator()(T &a, U &&b) const
+			{
+				a *= std::forward<U>(b);
+			}
+		};
+		// Helper to decide whether to move or not input parameter based on the characteristics
+		// of another type. It is used in generic_in_place() to move conditionally the mp integer
+		// in the second operand if the operand is itself movable.
+		template <typename T, typename U>
+		static auto conditional_move(U &&value, typename std::enable_if<
+			is_nonconst_rvalue_ref<T>::value>::type * = piranha_nullptr) -> decltype(std::move(value))
+		{
+			return std::move(value);
+		}
+		template <typename T, typename U>
+		static auto conditional_move(U &&value, typename std::enable_if<
+			!is_nonconst_rvalue_ref<T>::value>::type * = piranha_nullptr) -> decltype(std::forward<U>(value))
+		{
+			return std::forward<U>(value);
+		}
+		// In-place binary operations.
+		// Integer operand.
+		template <typename Operation, typename Operand>
+		integer &in_place(Operation &&op, Operand &&other, typename std::enable_if<
+			std::is_same<integer,typename std::decay<Operand>::type>::value>::type * = piranha_nullptr)
+		{
+			const int f1 = get_flag(), f2 = other.get_flag();
+			if (likely(f1 + f2 == 0)) {
 				wide_int_type result = get<int_type>();
 				op(result,other.get<int_type>());
-				if (likely(result <= boost::integer_traits<int_type>::const_max && result >= boost::integer_traits<int_type>::const_min)) {
+				if (likely(fits_int_type(result))) {
 					get<int_type>() = static_cast<int_type>(result);
 					return *this;
 				}
 			}
-			if (!get_flag()) {
+			if (!f1) {
 				promote();
 			}
-			if (other.get_flag()) {
-				*get<ptr_type>() += *other.get<ptr_type>();
+			if (f2) {
+				// Move the mp_integer inside other if other itself can be moved.
+				op(*get<ptr_type>(),conditional_move<Operand &&>(*other.get<ptr_type>()));
 			} else {
-				*get<ptr_type>() += other.get<int_type>();
+				op(*get<ptr_type>(),other.get<int_type>());
 			}
 			return *this;
+		}
+		// Integral operand.
+		template <typename Operation, typename Operand>
+		integer &in_place(Operation &&op, Operand &&other, typename std::enable_if<
+			std::is_integral<typename std::decay<Operand>::type>::value>::type * = piranha_nullptr)
+		{
+			return in_place(std::forward<Operation>(op),integer(std::forward<Operand>(other)));
+		}
+		// Floating-point operand.
+		template <typename Operation, typename Operand>
+		integer &in_place(Operation &&op, Operand &&other, typename std::enable_if<
+			std::is_floating_point<typename std::decay<Operand>::type>::value>::type * = piranha_nullptr)
+		{
+			auto tmp = static_cast<typename std::decay<Operand>::type>(*this);
+			op(tmp,std::forward<Operand>(other));
+			*this = tmp;
+			return *this;
+		}
+		// Binary operations.
+		// Type trait for allowed arguments in arithmetic binary operations.
+		template <typename T, typename U>
+		struct are_binary_op_types: std::integral_constant<bool,
+			(std::is_same<typename std::decay<T>::type,integer>::value && mp_integer::is_interop_type<typename std::decay<U>::type>::value) ||
+			(std::is_same<typename std::decay<U>::type,integer>::value && mp_integer::is_interop_type<typename std::decay<T>::type>::value) ||
+			(std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value)>
+		{};
+		// Metaprogramming to establish the return type of binary arithmetic operations involving integers.
+		// Default result type will be integer itself; for consistency with C/C++ when one of the arguments
+		// is a floating point type, we will return a value of the same floating point type.
+		template <typename T, typename U, typename Enable = void>
+		struct deduce_binary_op_result_type
+		{
+			typedef integer type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value>::type>
+		{
+			typedef typename std::decay<T>::type type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<U>::type>::value>::type>
+		{
+			typedef typename std::decay<U>::type type;
+		};
+		// (integer op integral) or (integral op integer) or (integer op integer).
+		template <typename T, typename Operation, typename U>
+		static integer binary_op(T &&operand1, Operation &&op, U &&operand2, typename std::enable_if<
+			!std::is_floating_point<typename std::decay<T>::type>::value &&
+			!std::is_floating_point<typename std::decay<U>::type>::value
+			>::type * = piranha_nullptr)
+		{
+			integer retval(std::forward<T>(operand1));
+			op(retval,std::forward<U>(operand2));
+			return retval;
+		}
+		// (integer op floating-point).
+		template <typename T, typename Operation, typename U>
+		static typename std::decay<U>::type binary_op(T &&operand1, Operation &&op, U &&operand2, typename std::enable_if<
+			std::is_floating_point<typename std::decay<U>::type>::value>::type * = piranha_nullptr)
+		{
+			auto retval = static_cast<typename std::decay<U>::type>(operand1);
+			op(retval,std::forward<U>(operand2));
+			return retval;
+		}
+		// (floating-point op integer).
+		template <typename T, typename Operation, typename U>
+		static typename std::decay<T>::type binary_op(T &&operand1, Operation &&op, U &&operand2, typename std::enable_if<
+			std::is_floating_point<typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			typename std::decay<T>::type retval = operand1;
+			op(retval,static_cast<typename std::decay<T>::type>(operand2));
+			return retval;
 		}
 		// Construction from string.
 		void construct_from_str(const char *str)
@@ -420,25 +547,238 @@ class integer
 		{
 			return operator=(str.c_str());
 		}
-		integer &operator+=(const integer &other)
+		/// In-place addition.
+		/**
+		 * Add \p x to the current value of the piranha::integer object. This template operator is activated only if
+		 * \p T is either piranha::integer or an \ref interop "interoperable type".
+		 * 
+		 * If \p T is piranha::integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is added to \p x,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 */
+		template <typename T>
+		typename std::enable_if<std::is_same<integer,typename std::decay<T>::type>::value ||
+			mp_integer::is_interop_type<typename std::decay<T>::type>::value,integer &>::type operator+=(T &&x)
 		{
-			if (likely(int(get_flag()) + int(other.get_flag()) == 0)) {
-				wide_int_type result = get<int_type>();
-				result += other.get<int_type>();
-				if (likely(result <= boost::integer_traits<int_type>::const_max && result >= boost::integer_traits<int_type>::const_min)) {
+			return in_place(plus(),std::forward<T>(x));
+		}
+		/// Generic in-place addition with piranha::integer.
+		/**
+		 * Add a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
+		 * This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 */
+		template <typename T, typename I>
+		friend typename std::enable_if<mp_integer::is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+			operator+=(T &x, I &&n)
+		{
+			x = static_cast<T>(std::forward<I>(n) + x);
+			return x;
+		}
+		/// Generic binary addition involving piranha::integer.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, wich will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws unspecified any exception resulting from the conversion of piranha::mp_integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator+(T &&x, U &&y)
+		{
+			return binary_op(std::forward<T>(x),plus(),std::forward<U>(y));
+		}
+		/// Identity operation.
+		/**
+		 * @return copy of \p this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer operator+() const
+		{
+			return *this;
+		}
+		/// Prefix increment.
+		/**
+		 * Increment \p this by one.
+		 * 
+		 * @return reference to \p this after the increment.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer &operator++()
+		{
+			return operator+=(1);
+		}
+		/// Suffix increment.
+		/**
+		 * Increment \p this by one and return a copy of \p this as it was before the increment.
+		 * 
+		 * @return copy of \p this before the increment.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer operator++(int)
+		{
+			const integer retval(*this);
+			++(*this);
+			return retval;
+		}
+		/// In-place subtraction.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the subtraction.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 */
+		template <typename T>
+		typename std::enable_if<std::is_same<integer,typename std::decay<T>::type>::value ||
+			mp_integer::is_interop_type<typename std::decay<T>::type>::value,integer &>::type operator-=(T &&x)
+		{
+			return in_place(minus(),std::forward<T>(x));
+		}
+		/// Generic in-place subtraction with piranha::integer.
+		/**
+		 * Subtract a piranha::integer in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" and \p I is piranha::integer.
+		 * This method will first compute <tt>n - x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 */
+		template <typename T, typename I>
+		friend typename std::enable_if<mp_integer::is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
+			operator-=(T &x, I &&n)
+		{
+			x = static_cast<T>(x - std::forward<I>(n));
+			return x;
+		}
+		/// Generic binary subtraction involving piranha::integer.
+		/**
+		 * The implementation is equivalent to the generic binary addition operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x - y</tt>.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator-(T &&x, U &&y)
+		{
+			return binary_op(std::forward<T>(x),minus(),std::forward<U>(y));
+		}
+		/// In-place negation.
+		/**
+		 * Set \p this to \p -this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		void negate()
+		{
+			if (unlikely(get_flag())) {
+				get<ptr_type>()->negate();
+			} else {
+				// NOTE: must do the computation in wide int for the
+				// unlikely case in which -value cannot be represented.
+				const wide_int_type result = -static_cast<wide_int_type>(get<int_type>());
+				if (likely(fits_int_type(result))) {
 					get<int_type>() = static_cast<int_type>(result);
-					return *this;
+				} else {
+					promote();
+					get<ptr_type>()->negate();
 				}
 			}
-			if (!get_flag()) {
-				promote();
-			}
-			if (other.get_flag()) {
-				*get<ptr_type>() += *other.get<ptr_type>();
-			} else {
-				*get<ptr_type>() += other.get<int_type>();
-			}
-			return *this;
+		}
+		/// Negated copy.
+		/**
+		 * @return copy of \p -this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer operator-() const
+		{
+			integer retval(*this);
+			retval.negate();
+			return retval;
+		}
+		/// Prefix decrement.
+		/**
+		 * Decrement \p this by one and return.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer &operator--()
+		{
+			return operator-=(1);
+		}
+		/// Suffix decrement.
+		/**
+		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
+		 * 
+		 * @return copy of \p this before the decrement.
+		 * 
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 */
+		integer operator--(int)
+		{
+			const integer retval(*this);
+			--(*this);
+			return retval;
+		}
+		
+		
+		
+		
+		
+		
+		template <typename T>
+		typename std::enable_if<std::is_same<integer,typename std::decay<T>::type>::value ||
+			mp_integer::is_interop_type<typename std::decay<T>::type>::value,integer &>::type operator*=(T &&x)
+		{
+			return in_place(times(),std::forward<T>(x));
 		}
 		/// Stream operator overload for piranha::integer.
 		/**
@@ -477,6 +817,24 @@ class integer
 		bool		m_flag;
 		storage_type	m_storage;
 };
+
+}
+
+namespace std
+{
+
+/// Specialization of \p std::swap for piranha::integer.
+/**
+ * @param[in] n1 first argument.
+ * @param[in] n2 second argument.
+ */
+template <>
+void swap(piranha::integer &n1, piranha::integer &n2)
+{
+	piranha::integer tmp(std::move(n1));
+	n1 = std::move(n2);
+	n2 = std::move(tmp);
+}
 
 }
 

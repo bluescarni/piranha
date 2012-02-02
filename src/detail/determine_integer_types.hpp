@@ -108,7 +108,7 @@ if (std::is_same<T,U>::value) { \
 				if (min * max < w_min || std::max<mp_integer>(min * min,max * max) > w_max) {
 					return;
 				}
-				// Division.
+				// Division and negation.
 				if (-max < w_min || -min > w_max) {
 					return;
 				}
