@@ -30,6 +30,7 @@
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/utility.hpp>
 #include <cstddef>
@@ -359,7 +360,6 @@ BOOST_AUTO_TEST_CASE(mp_integer_addition_test)
 	// Identity operation.
 	piranha::mp_integer i(123);
 	BOOST_CHECK_EQUAL(static_cast<int>(+i), 123);
-	BOOST_CHECK_EQUAL(static_cast<int>(+static_cast<const piranha::mp_integer &>(i)), 123);
 	// Increments.
 	BOOST_CHECK_EQUAL(static_cast<int>(++i), 124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i++), 124);
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_subtraction_test)
 	i.negate();
 	BOOST_CHECK_EQUAL(static_cast<int>(i), -123);
 	BOOST_CHECK_EQUAL(static_cast<int>(-i), 123);
-	// Increments.
+	// Decrements.
 	BOOST_CHECK_EQUAL(static_cast<int>(--i), -124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i--), -124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i), -125);

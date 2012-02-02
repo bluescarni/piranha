@@ -1291,14 +1291,6 @@ class mp_integer
 		/**
 		 * @return copy of \p this.
 		 */
-		mp_integer operator+()
-		{
-			return *this;
-		}
-		/// Identity operation (const version).
-		/**
-		 * @return copy of \p this.
-		 */
 		mp_integer operator+() const
 		{
 			return *this;
