@@ -680,26 +680,26 @@ BOOST_AUTO_TEST_CASE(integer_comparisons_test)
 	BOOST_CHECK(i + 1 >= j);
 	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
 }
-#if 0
-BOOST_AUTO_TEST_CASE(mp_integer_multiply_accumulate_test)
+
+BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 {
-	piranha::mp_integer i(10);
-	i.multiply_accumulate(piranha::mp_integer(10),piranha::mp_integer(-2));
+	piranha::integer i(10);
+	i.multiply_accumulate(piranha::integer(10),piranha::integer(-2));
 	BOOST_CHECK_EQUAL(i,-10);
-	i.multiply_accumulate(piranha::mp_integer(-10),piranha::mp_integer(2));
+	i.multiply_accumulate(piranha::integer(-10),piranha::integer(2));
 	BOOST_CHECK_EQUAL(i,-30);
-	i.multiply_accumulate(piranha::mp_integer(-10),piranha::mp_integer(-3));
+	i.multiply_accumulate(piranha::integer(-10),piranha::integer(-3));
 	BOOST_CHECK_EQUAL(i,0);
 	// Same with function from math.
 	i = 10;
-	piranha::math::multiply_accumulate(i,piranha::mp_integer(10),piranha::mp_integer(-2));
+	piranha::math::multiply_accumulate(i,piranha::integer(10),piranha::integer(-2));
 	BOOST_CHECK_EQUAL(i,-10);
-	piranha::math::multiply_accumulate(i,piranha::mp_integer(-10),piranha::mp_integer(2));
+	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(2));
 	BOOST_CHECK_EQUAL(i,-30);
-	piranha::math::multiply_accumulate(i,piranha::mp_integer(-10),piranha::mp_integer(-3));
+	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(-3));
 	BOOST_CHECK_EQUAL(i,0);
 }
-
+#if 0
 BOOST_AUTO_TEST_CASE(mp_integer_exponentiation_test)
 {
 	BOOST_CHECK_EQUAL(piranha::mp_integer(10).pow(2),100);

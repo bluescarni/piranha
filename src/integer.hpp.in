@@ -1196,6 +1196,37 @@ class integer
 		{
 			return (y <= x);
 		}
+		/// Combined multiply-add.
+		/**
+		 * Sets \p this to <tt>this + (n1 * n2)</tt>.
+		 * 
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		integer &multiply_accumulate(const integer &n1, const integer &n2)
+		{
+			const int total_flag = int(get_flag()) + int(n1.get_flag()) + int(n2.get_flag());
+			// Best case scenario is all 3 hardware integers.
+			if (likely(total_flag == 0)) {
+				// Init wide int with the value of this.
+				wide_int_type result = get<int_type>();
+				result += static_cast<wide_int_type>(n1.get<int_type>()) * static_cast<wide_int_type>(n2.get<int_type>());
+				if (likely(fits_int_type(result))) {
+					get<int_type>() = static_cast<int_type>(result);
+					return *this;
+				}
+			}
+			// If they are all multiprecision, use specialised multadd.
+			if (total_flag == 3) {
+				get<ptr_type>()->multiply_accumulate(*n1.get<ptr_type>(),*n2.get<ptr_type>());
+				return *this;
+			}
+			// Last case, do the simple operation.
+			*this += n1 * n2;
+			return *this;
+		}
 		/// Stream operator overload for piranha::integer.
 		/**
 		 * @param[in] os output stream.
