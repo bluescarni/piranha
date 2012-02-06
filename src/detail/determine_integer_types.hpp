@@ -95,7 +95,8 @@ if (std::is_same<T,U>::value) { \
 					max = integer_cast(boost::integer_traits<Int>::const_max),
 					w_min = integer_cast(boost::integer_traits<WideInt>::const_min),
 					w_max = integer_cast(boost::integer_traits<WideInt>::const_max);
-				// NOTE: these checks assume that mins are strictly negative and maxs are strictly positive.
+				// NOTE: these checks assume that mins are strictly negative and maxs are strictly positive. This seems to be always
+				// the case, given the minimum limits in limits.h.
 				// Addition.
 				if (min * 2 < w_min || max * 2 > w_max) {
 					return;
