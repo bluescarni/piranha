@@ -289,10 +289,9 @@ class hash_set
 			node		m_node;
 		};
 		// Allocator type.
-		// NOTE: if we move allocator choice in public interface we need to document the exception behaviour of the allocator.
+		// NOTE: if we move allocator choice in public interface we need to document the exception behaviour of the allocator. Also, check the validity
+		// of the assumptions on the type returned by allocate(): must it be a pointer or just convertible to pointer?
 		typedef std::allocator<list> allocator_type;
-		static_assert(std::is_pointer<typename allocator_type::pointer>::value && std::is_pointer<typename allocator_type::const_pointer>::value,
-			"Invalid allocator.");
 		// The container is a pointer to an array of lists.
 		typedef list *container_type;
 	public:
