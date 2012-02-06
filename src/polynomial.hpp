@@ -454,7 +454,6 @@ struct kronecker_enabler
  * Move semantics is equivalent to piranha::series_multiplier's move semantics.
  * 
  * \todo optimize task list in single thread and maybe also for small operands -> make it a vector I guess, instead of a set.
- * \todo try to understand if it makes sense to use notify_one() in place of notify_all() for the monitor, it might perform better.
  */
 template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
