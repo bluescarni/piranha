@@ -264,14 +264,21 @@ class integer
 		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
 		{
 			// Extract always the double-precision value, and cast as needed.
-			// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
-			// so far never had problems, but if this becomes an issue we can resort to
-			// the good old lexical casting.
 			if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::lowest())) < 0) {
-				return -std::numeric_limits<T>::infinity();
+				if (std::numeric_limits<T>::has_infinity) {
+					return -std::numeric_limits<T>::infinity();
+				} else {
+					piranha_throw(std::overflow_error,"cannot convert to floating point type");
+				}
 			} else if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::highest())) > 0) {
-				return std::numeric_limits<T>::infinity();
+				if (std::numeric_limits<T>::has_infinity) {
+					return std::numeric_limits<T>::infinity();
+				} else {
+					piranha_throw(std::overflow_error,"cannot convert to floating point type");
+				}
 			} else {
+				// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
+				// so far never had problems, but keep this in mind...
 				return static_cast<T>(::mpz_get_d(m_value));
 			}
 		}
@@ -1035,7 +1042,7 @@ class integer
 		 * 
 		 * @param[in] x object used to construct \p this.
 		 * 
-		 * @throw std::invalid_argument if \p x is a non-finite floating-point number.
+		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
 		explicit integer(const T &x, typename std::enable_if<is_interop_type<T>::value>::type * = piranha_nullptr)
@@ -1179,9 +1186,9 @@ class integer
 			}
 			::mpz_swap(m_value,n.m_value);
 		}
-		/// Conversion to arithmetic types.
+		/// Conversion to interoperable types.
 		/**
-		 * Extract an instance of arithmetic type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types".
+		 * Extract an instance of type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types".
 		 * 
 		 * Conversion to \p bool is always successful, and returns <tt>this != 0</tt>.
 		 * Conversion to the other integral types is exact, its success depending on whether or not
@@ -1189,11 +1196,14 @@ class integer
 		 * 
 		 * Conversion to floating point types is exact if the target type can represent exactly the current value of the integer.
 		 * If that is not the case, the output value will be one of the two adjacents (with an unspecified rounding direction).
-		 * Return values of +-inf will be produced if the current value of the integer overflows the range of the floating-point type.
+		 * 
+		 * Return values of +-inf will be produced if the current value of the piranha::integer overflows the range of the floating-point type
+		 * and the floating-point type can represent infinity. Otherwise, an overflow error will be produced.
 		 * 
 		 * @return result of the conversion to target type T.
 		 * 
-		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow.
+		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow, or if
+		 * conversion to a floating-point type lacking infinity overflows.
 		 */
 		template <typename T, typename std::enable_if<is_interop_type<T>::value>::type*& = enabler>
 		explicit operator T() const
