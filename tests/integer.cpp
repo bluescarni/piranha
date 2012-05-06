@@ -359,7 +359,6 @@ BOOST_AUTO_TEST_CASE(integer_addition_test)
 	// Identity operation.
 	piranha::integer i(123);
 	BOOST_CHECK_EQUAL(static_cast<int>(+i), 123);
-	BOOST_CHECK_EQUAL(static_cast<int>(+static_cast<const piranha::integer &>(i)), 123);
 	// Increments.
 	BOOST_CHECK_EQUAL(static_cast<int>(++i), 124);
 	BOOST_CHECK_EQUAL(static_cast<int>(i++), 124);

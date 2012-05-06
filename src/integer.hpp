@@ -1266,12 +1266,14 @@ class integer
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and combined with \p f to generate the return value, wich will then be of type \p F.
+		 * and added to \p f to generate the return value, which will then be of type \p F.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1281,17 +1283,9 @@ class integer
 		}
 		/// Identity operation.
 		/**
-		 * @return reference to \p this.
+		 * @return copy of \p this.
 		 */
-		integer &operator+()
-		{
-			return *this;
-		}
-		/// Identity operation (const version).
-		/**
-		 * @return const reference to \p this.
-		 */
-		const integer &operator+() const
+		integer operator+() const
 		{
 			return *this;
 		}
@@ -1354,21 +1348,14 @@ class integer
 		}
 		/// Generic binary subtraction involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and combined with \p f to generate the return value, wich will then be of type \p F.
+		 * The implementation is equivalent to the generic binary addition operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x - y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1453,21 +1440,14 @@ class integer
 		}
 		/// Generic binary multiplication involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::integer.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and combined with \p f to generate the return value, wich will then be of type \p F.
+		 * The implementation is equivalent to the generic binary addition operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x * y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1517,16 +1497,8 @@ class integer
 		}
 		/// Generic binary division involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the result of the operation, truncated to zero, will be returned as a piranha::integer.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and combined with \p f to generate the return value, wich will then be of type \p F.
+		 * The implementation is equivalent to the generic binary addition operator. When integral operands are involved, the division
+		 * will be truncated.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1534,6 +1506,7 @@ class integer
 		 * @return <tt>x / y</tt>.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1565,8 +1538,10 @@ class integer
 		}
 		/// Generic in-place modulo operation with piranha::integer.
 		/**
-		 * Apply the modulo operation by a piranha::integer in-place. This template operator is activated only if \p T is an integral type among the \ref interop "interoperable types"
-		 * and \p I is piranha::integer. This method will first compute <tt>x % n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * Apply the modulo operation by a piranha::integer in-place. This template operator is activated only if \p T is an integral type
+		 * among the \ref interop "interoperable types"
+		 * and \p I is piranha::integer. This method will first compute <tt>x % n</tt>,
+		 * cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
 		 * @param[in] n second argument.
@@ -1625,6 +1600,8 @@ class integer
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
@@ -1633,21 +1610,14 @@ class integer
 		}
 		/// Generic inequality operator involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and compared to \p f to generate the return value.
+		 * The implementation is equivalent to the generic equality operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
@@ -1656,21 +1626,14 @@ class integer
 		}
 		/// Generic less-than operator involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and compared to \p f to generate the return value.
+		 * The implementation is equivalent to the generic equality operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
@@ -1679,21 +1642,14 @@ class integer
 		}
 		/// Generic less-than or equal operator involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and compared to \p f to generate the return value.
+		 * The implementation is equivalent to the generic equality operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
@@ -1702,21 +1658,14 @@ class integer
 		}
 		/// Generic greater-than operator involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and compared to \p f to generate the return value.
+		 * The implementation is equivalent to the generic equality operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
@@ -1725,21 +1674,14 @@ class integer
 		}
 		/// Generic greater-than or equal operator involving piranha::integer.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::integer and \p T is an \ref interop "interoperable type",
-		 * - both \p T and \p U are piranha::integer.
-		 * 
-		 * If no floating-point types are involved, the exact result of the comparison will be returned.
-		 * 
-		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
-		 * and compared to \p f to generate the return value.
+		 * The implementation is equivalent to the generic equality operator.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
