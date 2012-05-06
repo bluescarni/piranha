@@ -1817,9 +1817,9 @@ class integer
 		 * @return number of GMP limbs currently allocated in \p this. The return type is the unsigned counterpart of the integer
 		 * type used to represent the allocated size in GMP's integer type.
 		 */
-		auto allocated_size() const -> typename std::decay<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type
+		auto allocated_size() const -> typename std::decay<std::make_unsigned<decltype(::mpz_t{}->_mp_alloc)>::type>::type
 		{
-			typedef typename std::decay<std::make_unsigned<decltype(mpz_t{}->_mp_alloc)>::type>::type return_type;
+			typedef typename std::decay<std::make_unsigned<decltype(::mpz_t{}->_mp_alloc)>::type>::type return_type;
 			return return_type(m_value->_mp_alloc);
 		}
 		/// Sign.
@@ -1877,7 +1877,7 @@ class integer
 			return is;
 		}
 	private:
-		mpz_t m_value;
+		::mpz_t m_value;
 };
 
 
