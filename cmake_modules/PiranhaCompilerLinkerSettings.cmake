@@ -56,7 +56,10 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(STATUS "GCC 128-bit integer type detected.")
 	ENDIF(PIRANHA_HAVE_GCC_INT128)
 	# Enable libstdc++ pedantic debug mode in debug builds.
-	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		ADD_DEFINITIONS(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
-	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
+	# flag enabled in order to be reliable (and this is not the case usually):
+	# http://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html
+# 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+# 		ADD_DEFINITIONS(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
+# 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
