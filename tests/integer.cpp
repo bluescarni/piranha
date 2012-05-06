@@ -25,6 +25,7 @@
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <algorithm>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
