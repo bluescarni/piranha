@@ -86,7 +86,10 @@ namespace piranha
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
- * \todo see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list).
+ * \todo see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
+ * implementation.
+ * \todo replace direct use of numeric_limits with explicit routine that computes the max log2 size, for peace of mind (it's not clear if we can rely on 2**(n-1) being the
+ * highest power of two representable.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
