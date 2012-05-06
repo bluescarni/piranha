@@ -141,8 +141,9 @@ unsigned runtime_info::get_cache_line_size()
 	std::size_t line_size = 0u;
 	::DWORD buffer_size = 0u;
 	::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *buffer = 0;
-	// This could fail, check it.
-	if (!::GetLogicalProcessorInformation(0,&buffer_size)) {
+	// This is expected to fail, with a specific error code.
+	const auto retval = ::GetLogicalProcessorInformation(0,&buffer_size);
+	if (retval || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
 		return 0u;
 	}
 	try {
