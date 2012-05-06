@@ -1889,10 +1889,11 @@ class integer
 			if (size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2)) {
 				piranha_throw(std::overflow_error,"number of digits is too large");
 			}
+			const auto total_size = size_base10 + 2u;
 			// NOTE: here we can optimize, avoiding one allocation, by using a static vector if
 			// size_base10 is small enough.
-			std::vector<char> tmp(static_cast<std::vector<char>::size_type>(size_base10 + 2u));
-			if (tmp.size() != size_base10 + 2u) {
+			std::vector<char> tmp(static_cast<std::vector<char>::size_type>(total_size));
+			if (tmp.size() != total_size) {
 				piranha_throw(std::overflow_error,"number of digits is too large");
 			}
 			os << ::mpz_get_str(&tmp[0u],10,n.m_value);
@@ -1900,7 +1901,7 @@ class integer
 		}
 		/// Overload input stream operator for piranha::integer.
 		/**
-		 * Equivalent to extracting a string from the stream and then using it to construct an integer that will be assigned to n.
+		 * Equivalent to extracting a string from the stream and then using it to construct a piranha::integer that will be assigned to \p n.
 		 * 
 		 * @param[in] is input stream.
 		 * @param[in,out] n integer to which the contents of the stream will be assigned.
