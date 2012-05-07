@@ -441,7 +441,6 @@ class series_binary_operators
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * The binary addition algorithm proceeds as follows:
-		 * 
 		 * - if operands are series with same echelon size, the return type is determined by the coefficient types
 		 *   \p c1 and \p c2 of \p T and \p U respectively:
 		 *   - the return type is \p T if \p c1 and \p c2 are the same type or <tt>decltype(c1 + c2)</tt> is \p c1,
@@ -495,7 +494,6 @@ class series_binary_operators
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * The binary multiplication algorithm proceeds as follows:
-		 * 
 		 * - if both operands are series with same echelon size:
 		 *   - the return type is determined in the same way as for the binary addition operator;
 		 *   - the same sequence of operations described in piranha::series::operator*=()
@@ -525,7 +523,6 @@ class series_binary_operators
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
 		 * 
 		 * The comparison algorithm operates as follows:
-		 * 
 		 * - if both operands are instances of piranha::series with the same echelon size:
 		 *   - if the symbol sets of the two series differ, copies of the series
 		 *     are created as necessary, and the algorithm proceeds to the comparison of such

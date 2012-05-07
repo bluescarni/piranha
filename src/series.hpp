@@ -601,7 +601,6 @@ class series: series_binary_operators, detail::series_tag
 		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
 		 * \p Derived (so that it does not compete with the copy and move constructors in overload resolution).
 		 * The generic construction algorithm works as follows:
-		 * 
 		 * - if \p T is an instance of piranha::series with the same echelon size as the calling type:
 		 *   - if the term type of \p T is the same as that of <tt>this</tt>:
 		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
@@ -715,7 +714,6 @@ class series: series_binary_operators, detail::series_tag
 		 * if \p term derives from piranha::base_term.
 		 * 
 		 * The insertion algorithm proceeds as follows:
-		 * 
 		 * - if \p term is not of type series::term_type, its coefficient and key are forwarded to construct a series::term_type
 		 *   as follows:
 		 *     - <tt>term</tt>'s coefficient is forwarded to construct a coefficient of type series::term_type::cf_type;
@@ -783,7 +781,6 @@ class series: series_binary_operators, detail::series_tag
 		/// In-place addition.
 		/**
 		 * The addition algorithm proceeds as follows:
-		 * 
 		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
 		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
 		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
@@ -887,7 +884,6 @@ class series: series_binary_operators, detail::series_tag
 		/// In-place multiplication.
 		/**
 		 * The multiplication algorithm proceeds as follows:
-		 * 
 		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
 		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
 		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
