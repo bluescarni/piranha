@@ -63,7 +63,7 @@ namespace piranha
  * - \p bool and \p char.
  * 
  * Please note that since the GMP API does not directly provide interoperability
- * with <tt>long long</tt> and <tt>unsigned long long</tt>, interaction with this types could be slower due to the extra workload of converting such types
+ * with <tt>long long</tt> and <tt>unsigned long long</tt>, interaction with these types could be slower due to the extra workload of converting such types
  * to GMP-compatible types. Also, every function interacting with floating-point types will check that the floating-point values are not
  * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
  * 
@@ -1030,7 +1030,7 @@ class integer
 			m_value->_mp_alloc = other.m_value->_mp_alloc;
 			// Erase other.
 			other.m_value->_mp_size = 0;
-			other.m_value->_mp_d = 0;
+			other.m_value->_mp_d = piranha_nullptr;
 			other.m_value->_mp_alloc = 0;
 		}
 		/// Generic constructor.
@@ -1080,9 +1080,7 @@ class integer
 		~integer() piranha_noexcept_spec(true)
 		{
 			piranha_assert(m_value->_mp_alloc >= 0);
-			// The rationale for using unlikely here is that mpz_clear is an expensive operation
-			// which is going to dominate anyway the branch penalty.
-			if (unlikely(m_value->_mp_d != 0)) {
+			if (m_value->_mp_d != 0) {
 				::mpz_clear(m_value);
 			} else {
 				piranha_assert(m_value->_mp_size == 0 && m_value->_mp_alloc == 0);
