@@ -65,6 +65,8 @@
  * and maybe replace in the high level interface the std::set of string with initializer list, as it seems sometimes {"a","b"} is not picked up as std::set of string.
  * \todo look into perfect forwarding of members, for use in series, hash set (?) http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
  * \todo look into forwarding and delegating constructors when they become available.
+ * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
+ * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment
  */
 namespace piranha
 {
@@ -108,6 +110,7 @@ namespace detail {}
 #include "power_series_term.hpp"
 #include "power_series_truncator.hpp"
 #include "print_coefficient.hpp"
+#include "rational.hpp"
 #include "runtime_info.hpp"
 #include "series.hpp"
 #include "series_binary_operators.hpp"

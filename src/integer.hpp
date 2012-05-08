@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "config.hpp" // For (un)likely.
+#include "detail/rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "type_traits.hpp"
@@ -99,6 +100,8 @@ namespace piranha
  */
 class integer
 {
+		// Make friends with rational.
+		friend class rational;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>
 		struct is_interop_type
@@ -952,6 +955,11 @@ class integer
 				return (1 / *this).pow(exp);
 			}
 		}
+		// Private constructor for use in rational.
+		explicit integer(const ::mpz_t n)
+		{
+			::mpz_init_set(m_value,n);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1202,6 +1210,9 @@ class integer
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow, or if
 		 * conversion to a floating-point type lacking infinity overflows.
 		 */
+		// NOTE: the reason why conversion to floating point has unspecified rounding direction (despite the fact that for double
+		// the rounding direction is well defined) is that we don't know what happens in the conversion from double to float (there
+		// the rounding direction is unspecified). So let's keep it vague.
 		template <typename T, typename std::enable_if<is_interop_type<T>::value>::type*& = enabler>
 		explicit operator T() const
 		{
