@@ -141,9 +141,8 @@ class integer
 			}
 		}
 		// Validate the string format for integers.
-		static void validate_string(const char *str)
+		static void validate_string(const char *str, const std::size_t &size)
 		{
-			const std::size_t size = std::strlen(str);
 			if (!size) {
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
@@ -161,7 +160,7 @@ class integer
 		// Construction.
 		void construct_from_string(const char *str)
 		{
-			validate_string(str);
+			validate_string(str,std::strlen(str));
 			// String is OK.
 			const int retval = ::mpz_init_set_str(m_value,str,10);
 			if (retval == -1) {
@@ -197,7 +196,7 @@ class integer
 		// Assignment.
 		void assign_from_string(const char *str)
 		{
-			validate_string(str);
+			validate_string(str,std::strlen(str));
 			// String is OK.
 			const int retval = ::mpz_set_str(m_value,str,10);
 			if (retval == -1) {
@@ -422,7 +421,7 @@ class integer
 		void in_place_div(const integer &n)
 		{
 			if (unlikely(mpz_sgn(n.m_value) == 0)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			::mpz_tdiv_q(m_value,m_value,n.m_value);
 		}
@@ -431,7 +430,7 @@ class integer
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(si == 0)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			if (si > 0) {
 				::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(si));
@@ -445,7 +444,7 @@ class integer
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(ui == 0u)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
@@ -458,7 +457,7 @@ class integer
 		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0.)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			operator=(static_cast<T>(*this) / x);
 		}
@@ -770,7 +769,7 @@ class integer
 		static T binary_div(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			if (unlikely(x == 0.)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			return (static_cast<T>(n) / x);
 		}
@@ -779,7 +778,7 @@ class integer
 		{
 			const T n_T = static_cast<T>(n);
 			if (unlikely(n_T == 0.)) {
-				piranha_throw(piranha::zero_division_error,"division by zero");
+				piranha_throw(zero_division_error,"division by zero");
 			}
 			return (x / n_T);
 		}
@@ -914,7 +913,7 @@ class integer
 				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
 			} else {
 				if (*this == 0) {
-					piranha_throw(piranha::zero_division_error,"negative exponentiation of zero");
+					piranha_throw(zero_division_error,"negative exponentiation of zero");
 				}
 				return (1 / *this).pow(-static_cast<typename std::make_unsigned<T>::type>(si));
 			}
@@ -948,7 +947,7 @@ class integer
 				return pow_impl(exp);
 			} else {
 				if (*this == 0) {
-					piranha_throw(piranha::zero_division_error,"negative exponentiation of zero");
+					piranha_throw(zero_division_error,"negative exponentiation of zero");
 				}
 				return (1 / *this).pow(exp);
 			}
@@ -1931,88 +1930,6 @@ inline void swap(piranha::integer &n1, piranha::integer &n2)
 {
 	n1.swap(n2);
 }
-
-#if 0
-/// Specialization of \p std::numeric_limits for piranha::integer.
-template <>
-class numeric_limits<piranha::integer>
-{
-	public:
-		/// Specialisation flag.
-		static piranha_constexpr bool is_specialized = true;
-		/// Minimum representable value.
-		/**
-		 * @return default-constructed piranha::integer.
-		 */
-		static const piranha::integer min() piranha_noexcept_spec(true)
-		{
-			return piranha::integer();
-		}
-		/// Maximum representable value.
-		/**
-		 * @return default-constructed piranha::integer.
-		 */
-		static const piranha::integer max() piranha_noexcept_spec(true)
-		{
-			return piranha::integer();
-		}
-		/// Lowest finite value.
-		/**
-		 * @return default-constructed piranha::integer.
-		 */
-		static const piranha::integer lowest() piranha_noexcept_spec(true)
-		{
-			return piranha::integer();
-		}
-		static piranha_constexpr int digits = 0;
-		static piranha_constexpr int digits10 = 0;
-		static piranha_constexpr bool is_signed = true;
-		static piranha_constexpr bool is_integer = true;
-		static piranha_constexpr bool is_exact = true;
-		static piranha_constexpr int radix = 0;
-		static piranha::integer epsilon() throw()
-		{
-			return piranha::integer(1);
-		}
-		static piranha::integer round_error() throw()
-		{
-			return piranha::integer();
-		}
-		static const int min_exponent = 0;
-		static const int min_exponent10 = 0;
-		static const int max_exponent = 0;
-		static const int max_exponent10 = 0;
-		static const bool has_infinity = false;
-		static const bool has_quiet_NaN = false;
-		static const bool has_signaling_NaN = false;
-		static const float_denorm_style has_denorm = denorm_absent;
-		static const bool has_denorm_loss = false;
-		static piranha::integer infinity() throw()
-		{
-			return piranha::integer();
-		}
-		static piranha::integer quiet_NaN() throw()
-		{
-			return piranha::integer();
-		}
-		static piranha::integer signaling_NaN() throw()
-		{
-			return piranha::integer();
-		}
-		static piranha::integer denorm_min() throw()
-		{
-			return piranha::integer();
-		}
-		static const bool is_iec559 = false;
-		/// Override is_bounded attribute to false.
-		static const bool is_bounded = false;
-		/// Override is_modulo attribute to false.
-		static const bool is_modulo = false;
-		static const bool traps = false;
-		static const bool tinyness_before = false;
-		static const float_round_style round_style = round_toward_zero;
-};
-#endif
 
 /// Specialisation of \p std::hash for piranha::integer.
 template <>
