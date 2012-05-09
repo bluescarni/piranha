@@ -232,6 +232,9 @@ BOOST_AUTO_TEST_CASE(integer_swap_test)
 template <typename T>
 static inline void inf_conversion_test()
 {
+	if (!std::numeric_limits<T>::has_infinity) {
+		return;
+	}
 	{
 		std::ostringstream oss;
 		oss << piranha::integer(boost::numeric::bounds<T>::highest());

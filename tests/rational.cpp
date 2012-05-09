@@ -32,12 +32,12 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
-// #include <boost/numeric/conversion/bounds.hpp>
+#include <boost/numeric/conversion/bounds.hpp>
 // #include <ctgmath>
 #include <limits>
 #include <memory>
 // #include <numeric>
-// #include <sstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 // #include <type_traits>
@@ -45,7 +45,7 @@
 #include <vector>
 
 #include "../src/integer.hpp"
-// #include "../src/exceptions.hpp"
+#include "../src/exceptions.hpp"
 
 using namespace piranha;
 
@@ -79,6 +79,9 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	BOOST_CHECK_EQUAL(0,static_cast<int>(rational()));
 	// Construction from arithmetic types.
 	boost::fusion::for_each(arithmetic_values,check_arithmetic_construction());
+	// Construction from floating point.
+	BOOST_CHECK(static_cast<float>(rational(1.23f)) == 1.23f);
+	BOOST_CHECK(static_cast<double>(rational(1.23)) == 1.23);
 	// Construction from integer.
 	BOOST_CHECK_EQUAL(42,static_cast<int>(rational(integer(42))));
 	BOOST_CHECK_EQUAL(-42,static_cast<int>(rational(integer(-42))));
@@ -126,6 +129,8 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	BOOST_CHECK(static_cast<unsigned long long>(rational(9ull,3ull)) == 3ull);
 	BOOST_CHECK(static_cast<long long>(rational(9ll,-3ll)) == -3ll);
 	BOOST_CHECK(static_cast<int>(rational(integer(-9),integer(3))) == -3);
+	BOOST_CHECK_THROW(ptr.reset(new rational(1,0)),zero_division_error);
+	BOOST_CHECK_THROW(ptr.reset(new rational(integer(0),integer(0))),zero_division_error);
 }
 
 struct check_arithmetic_assignment
@@ -245,3 +250,49 @@ BOOST_AUTO_TEST_CASE(rational_swap_test)
 // 	BOOST_CHECK_EQUAL(get_big_int(),l);
 }
 
+template <typename T>
+static inline void inf_conversion_test()
+{
+	if (!std::numeric_limits<T>::has_infinity) {
+		return;
+	}
+	{
+		std::ostringstream oss;
+		oss << rational(boost::numeric::bounds<T>::highest());
+		std::string tmp(oss.str());
+		tmp.append("0000000");
+		BOOST_CHECK_EQUAL(static_cast<T>(rational(tmp)),std::numeric_limits<T>::infinity());
+	}
+	{
+		std::ostringstream oss;
+		oss << rational(boost::numeric::bounds<T>::lowest());
+		std::string tmp(oss.str());
+		tmp.append("0000000");
+		BOOST_CHECK_EQUAL(static_cast<T>(rational(tmp)),-std::numeric_limits<T>::infinity());
+	}
+}
+
+BOOST_AUTO_TEST_CASE(rational_conversion_test)
+{
+	rational bigint(get_big_int());
+	BOOST_CHECK_THROW(static_cast<int>(bigint),std::overflow_error);
+	rational max_unsigned(boost::numeric::bounds<unsigned>::highest());
+	BOOST_CHECK_THROW(static_cast<int>(max_unsigned),std::overflow_error);
+	BOOST_CHECK_NO_THROW(static_cast<unsigned>(max_unsigned));
+	// Conversion that will generate infinity.
+	inf_conversion_test<float>();
+	inf_conversion_test<double>();
+	// Implicit conversion to bool.
+	rational true_int(1), false_int(0);
+	if (!true_int) {
+		BOOST_CHECK_EQUAL(0,1);
+	}
+	if (false_int) {
+		BOOST_CHECK_EQUAL(0,1);
+	}
+	// Conversion to integrals.
+	BOOST_CHECK(static_cast<integer>(rational(3,2)) == 1);
+	BOOST_CHECK(static_cast<int>(rational(-256,3)) == -85);
+	BOOST_CHECK(static_cast<unsigned>(rational(256,3)) == 85u);
+	BOOST_CHECK_THROW(static_cast<unsigned>(rational(-1)),std::overflow_error);
+}
