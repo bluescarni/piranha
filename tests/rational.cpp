@@ -127,3 +127,121 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	BOOST_CHECK(static_cast<long long>(rational(9ll,-3ll)) == -3ll);
 	BOOST_CHECK(static_cast<int>(rational(integer(-9),integer(3))) == -3);
 }
+
+struct check_arithmetic_assignment
+{
+	check_arithmetic_assignment(rational &i):m_i(i) {}
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		m_i = value;
+		BOOST_CHECK_EQUAL(static_cast<int>(value),static_cast<int>(m_i));
+	}
+	rational &m_i;
+};
+
+BOOST_AUTO_TEST_CASE(rational_assignment_test)
+{
+	rational i, j;
+	// Assignment from arithmetic types.
+	boost::fusion::for_each(arithmetic_values,check_arithmetic_assignment(i));
+	// Assignment from string.
+	i = "123";
+	BOOST_CHECK_EQUAL(123,static_cast<int>(i));
+	i = std::string("-123");
+	BOOST_CHECK_EQUAL(-123,static_cast<int>(i));
+	// Assignment from malformed strings.
+	for (std::vector<std::string>::const_iterator it = invalid_strings.begin(); it != invalid_strings.end(); ++it) {
+		BOOST_CHECK_THROW(i = *it,std::invalid_argument);
+	}
+	// Copy assignment.
+	i = "30000/2";
+	j = i;
+	BOOST_CHECK_EQUAL(15000,static_cast<int>(j));
+	// Assignment from non-finite floating-point.
+	if (std::numeric_limits<float>::has_infinity && std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_THROW(j = -std::numeric_limits<float>::infinity(),std::invalid_argument);
+		BOOST_CHECK_THROW(j = std::numeric_limits<double>::infinity(),std::invalid_argument);
+	}
+	if (std::numeric_limits<float>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(j = std::numeric_limits<float>::quiet_NaN(),std::invalid_argument);
+	}
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(j = std::numeric_limits<double>::quiet_NaN(),std::invalid_argument);
+	}
+	// Assignment from integer.
+	i = integer(100);
+	BOOST_CHECK_EQUAL(100,static_cast<int>(i));
+}
+
+struct check_arithmetic_move_construction
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		rational i(value), j(std::move(i));
+		BOOST_CHECK_EQUAL(static_cast<int>(value),static_cast<int>(j));
+		// Revive i.
+		i = value;
+		BOOST_CHECK_EQUAL(static_cast<int>(value),static_cast<int>(i));
+	}
+};
+
+struct check_arithmetic_move_assignment
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		rational i(value), j;
+		j = std::move(i);
+		BOOST_CHECK_EQUAL(static_cast<int>(value),static_cast<int>(j));
+		// Revive i.
+		i = value;
+		BOOST_CHECK_EQUAL(static_cast<int>(value),static_cast<int>(i));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_move_semantics_test)
+{
+	boost::fusion::for_each(arithmetic_values,check_arithmetic_move_construction());
+	boost::fusion::for_each(arithmetic_values,check_arithmetic_move_assignment());
+	// Revive via plain assignment.
+	{
+		rational i(42), j, k(43);
+		j = std::move(i);
+		j = k;
+		BOOST_CHECK_EQUAL(43,static_cast<int>(j));
+	}
+	// Revive via move assignment.
+	{
+		rational i(42), j, k(43);
+		j = std::move(i);
+		j = std::move(k);
+		BOOST_CHECK_EQUAL(43,static_cast<int>(j));
+	}
+	// Revive via string assignment.
+	{
+		rational i(42), j;
+		j = std::move(i);
+		j = "42";
+		BOOST_CHECK_EQUAL(42,static_cast<int>(j));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(rational_swap_test)
+{
+	rational i(42), j(43), k(10,3);
+	i.swap(j);
+	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
+	i.swap(k);
+	BOOST_CHECK_EQUAL(3,static_cast<int>(i));
+	k = get_big_int();
+	i.swap(k);
+	BOOST_CHECK_EQUAL(3,static_cast<int>(k));
+	k.swap(i);
+	BOOST_CHECK_EQUAL(3,static_cast<int>(i));
+// 	piranha::integer l(get_big_int() + 1);
+// 	l.swap(k);
+// 	BOOST_CHECK_EQUAL(get_big_int(),l);
+}
+

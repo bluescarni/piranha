@@ -169,6 +169,49 @@ class rational
 			// Put in canonical form.
 			::mpq_canonicalize(m_value);
 		}
+		// Assignment.
+		void assign_from_string(const char *str)
+		{
+			validate_string(str);
+			// String is OK.
+			const int retval = ::mpq_set_str(m_value,str,10);
+			if (retval == -1) {
+				piranha_throw(std::invalid_argument,"invalid string input for rational type");
+			}
+			piranha_assert(retval == 0);
+			// Put in canonical form.
+			::mpq_canonicalize(m_value);
+		}
+		template <typename T>
+		void assign_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			integer::fp_normal_check(x);
+			::mpq_set_d(m_value,static_cast<double>(x));
+		}
+		template <typename T>
+		void assign_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_set_si(mpq_numref(m_value),static_cast<long>(si));
+			::mpz_set_ui(mpq_denref(m_value),1ul);
+		}
+		template <typename T>
+		void assign_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_set_ui(mpq_numref(m_value),static_cast<unsigned long>(ui));
+			::mpz_set_ui(mpq_denref(m_value),1ul);
+		}
+		template <typename T>
+		void assign_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
+		}
+		void assign_from_generic(const integer &n)
+		{
+			::mpz_set(mpq_numref(m_value),n.m_value);
+			::mpz_set_ui(mpq_denref(m_value),1ul);
+		}
 		// Conversion.
 		template <typename T>
 		typename std::enable_if<std::is_same<T,integer>::value,T>::type convert_to_impl() const
@@ -325,6 +368,98 @@ class rational
 				piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
 			}
 		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other rational to be moved.
+		 * 
+		 * @return reference to \p this.
+		 */
+		rational &operator=(rational &&other) piranha_noexcept_spec(true)
+		{
+			// NOTE: swap() already has the check for this.
+			swap(other);
+			return *this;
+		}
+		/// Copy assignment operator.
+		/**
+		 * @param[in] other rational to be assigned.
+		 * 
+		 * @return reference to \p this.
+		 */
+		rational &operator=(const rational &other)
+		{
+			if (likely(this != &other)) {
+				// Handle assignment to moved-from objects.
+				if (mpq_numref(m_value)->_mp_d) {
+					piranha_assert(mpq_denref(m_value)->_mp_d);
+					::mpq_set(m_value,other.m_value);
+				} else {
+					piranha_assert(mpq_numref(m_value)->_mp_size == 0 && mpq_numref(m_value)->_mp_alloc == 0);
+					piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
+					::mpz_init_set(mpq_numref(m_value),mpq_numref(other.m_value));
+					::mpz_init_set(mpq_denref(m_value),mpq_denref(other.m_value));
+				}
+			}
+			return *this;
+		}
+		/// Assignment operator from string.
+		/**
+		 * The string parsing rules are the same as in the constructor from string.
+		 * 
+		 * @param[in] str string representation of the rational to be assigned.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::invalid_argument if the string is malformed.
+		 */
+		rational &operator=(const std::string &str)
+		{
+			return operator=(str.c_str());
+		}
+		/// Assignment operator from C string.
+		/**
+		 * @param[in] str string representation of the rational to be assigned.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @see operator=(const std::string &)
+		 */
+		rational &operator=(const char *str)
+		{
+			if (mpq_numref(m_value)->_mp_d) {
+				piranha_assert(mpq_denref(m_value)->_mp_d);
+				assign_from_string(str);
+			} else {
+				piranha_assert(mpq_numref(m_value)->_mp_size == 0 && mpq_numref(m_value)->_mp_alloc == 0);
+				piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
+				construct_from_string(str);
+			}
+			return *this;
+		}
+		/// Generic assignment operator.
+		/**
+		 * The supported types for \p T are the \ref interop "interoperable types" and piranha::integer.
+		 * Use of other types will result in a compile-time error.
+		 * 
+		 * @param[in] x object that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
+		 */
+		template <typename T>
+		typename std::enable_if<integer::is_interop_type<T>::value || std::is_same<T,integer>::value,rational &>::type operator=(const T &x)
+		{
+			if (mpq_numref(m_value)->_mp_d) {
+				piranha_assert(mpq_denref(m_value)->_mp_d);
+				assign_from_generic(x);
+			} else {
+				piranha_assert(mpq_numref(m_value)->_mp_size == 0 && mpq_numref(m_value)->_mp_alloc == 0);
+				piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
+				construct_from_generic(x);
+			}
+			return *this;
+		}
 		/// Conversion operator.
 		/**
 		 * Extract an instance of type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types" and piranha::integer.
@@ -348,6 +483,19 @@ class rational
 		explicit operator T() const
 		{
 			return convert_to_impl<T>();
+		}
+		/// Swap.
+		/**
+		 * Swap the content of \p this and \p q.
+		 * 
+		 * @param[in] q swap argument.
+		 */
+		void swap(rational &q) piranha_noexcept_spec(true)
+		{
+			if (unlikely(this == &q)) {
+			    return;
+			}
+			::mpq_swap(m_value,q.m_value);
 		}
 		/// Overload output stream operator for piranha::rational.
 		/**

@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(integer_assignment_test)
 	// Assignment from string.
 	i = "123";
 	BOOST_CHECK_EQUAL(123,static_cast<int>(i));
-	i = "-123";
+	i = std::string("-123");
 	BOOST_CHECK_EQUAL(-123,static_cast<int>(i));
 	// Assignment from malformed strings.
 	for (std::vector<std::string>::const_iterator it = invalid_strings.begin(); it != invalid_strings.end(); ++it) {
