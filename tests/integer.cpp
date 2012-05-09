@@ -98,8 +98,10 @@ BOOST_AUTO_TEST_CASE(integer_constructors_test)
 	piranha::integer i4(get_big_int()), j4(std::move(i4));
 	BOOST_CHECK(j4 == i2);
 	// Construction with non-finite floating-point.
-	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
-	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
+	if (std::numeric_limits<float>::has_infinity && std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
+		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
+	}
 	if (std::numeric_limits<float>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::quiet_NaN())),std::invalid_argument);
 	}
