@@ -22,6 +22,7 @@
 #define PIRANHA_INTEGER_HPP
 
 #include <algorithm>
+#include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -40,6 +41,7 @@
 #include <unordered_set> // For hash specialisation.
 #include <vector>
 
+#include "concepts/coefficient.hpp"
 #include "config.hpp" // For (un)likely.
 #include "detail/rational_fwd.hpp"
 #include "exceptions.hpp"
@@ -1086,6 +1088,7 @@ class integer
 		 */
 		~integer() piranha_noexcept_spec(true)
 		{
+			BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
 			piranha_assert(m_value->_mp_alloc >= 0);
 			if (m_value->_mp_d != 0) {
 				::mpz_clear(m_value);
