@@ -148,8 +148,10 @@ BOOST_AUTO_TEST_CASE(integer_assignment_test)
 	j = i;
 	BOOST_CHECK_EQUAL(30000,static_cast<int>(j));
 	// Assignment from non-finite floating-point.
-	BOOST_CHECK_THROW(j = -std::numeric_limits<float>::infinity(),std::invalid_argument);
-	BOOST_CHECK_THROW(j = std::numeric_limits<double>::infinity(),std::invalid_argument);
+	if (std::numeric_limits<float>::has_infinity && std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_THROW(j = -std::numeric_limits<float>::infinity(),std::invalid_argument);
+		BOOST_CHECK_THROW(j = std::numeric_limits<double>::infinity(),std::invalid_argument);
+	}
 	if (std::numeric_limits<float>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(j = std::numeric_limits<float>::quiet_NaN(),std::invalid_argument);
 	}
