@@ -137,7 +137,7 @@ class rational
 		{
 			construct_from_numden(integer(num),integer(den));
 		}
-		void construct_from_string(const char *str)
+		static void validate_string(const char *str)
 		{
 			auto ptr = str;
 			std::size_t num_size = 0u;
@@ -153,6 +153,10 @@ class rational
 			} catch (...) {
 				piranha_throw(std::invalid_argument,"invalid string input for rational type");
 			}
+		}
+		void construct_from_string(const char *str)
+		{
+			validate_string(str);
 			// String is OK.
 			::mpq_init(m_value);
 			const int retval = ::mpq_set_str(m_value,str,10);
