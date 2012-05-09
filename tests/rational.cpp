@@ -117,4 +117,13 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	if (std::numeric_limits<double>::has_quiet_NaN) {
 		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<double>::quiet_NaN())),std::invalid_argument);
 	}
+	// Construction from numerator and denominator.
+	BOOST_CHECK(static_cast<int>(rational(9,3)) == 3);
+	BOOST_CHECK(static_cast<int>(rational(-9,3)) == -3);
+	BOOST_CHECK(static_cast<int>(rational(9,-3)) == -3);
+	BOOST_CHECK(static_cast<int>(rational(-9,-3)) == 3);
+	BOOST_CHECK(static_cast<unsigned>(rational(9u,3u)) == 3u);
+	BOOST_CHECK(static_cast<unsigned long long>(rational(9ull,3ull)) == 3ull);
+	BOOST_CHECK(static_cast<long long>(rational(9ll,-3ll)) == -3ll);
+	BOOST_CHECK(static_cast<int>(rational(integer(-9),integer(3))) == -3);
 }
