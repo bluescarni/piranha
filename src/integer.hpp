@@ -1105,7 +1105,7 @@ class integer
 			swap(other);
 			return *this;
 		}
-		/// Assignment operator.
+		/// Copy assignment operator.
 		/**
 		 * @param[in] other integer to be assigned.
 		 * 
@@ -1126,6 +1126,8 @@ class integer
 		}
 		/// Assignment operator from string.
 		/**
+		 * The string parsing rules are the same as in the constructor from string.
+		 * 
 		 * @param[in] str string representation of the integer to be assigned.
 		 * 
 		 * @return reference to \p this.
@@ -1154,7 +1156,7 @@ class integer
 			}
 			return *this;
 		}
-		/// Generic assignment from interoperable types.
+		/// Generic assignment operator.
 		/**
 		 * The supported types for \p T are the \ref interop "interoperable types".
 		 * Use of other types will result in a compile-time error.
