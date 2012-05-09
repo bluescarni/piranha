@@ -30,22 +30,19 @@
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
-// #include <boost/integer_traits.hpp>
-// #include <boost/lexical_cast.hpp>
+#include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
 // #include <boost/numeric/conversion/bounds.hpp>
-// #include <boost/utility.hpp>
-// #include <cstddef>
 // #include <ctgmath>
-// #include <limits>
-// #include <memory>
+#include <limits>
+#include <memory>
 // #include <numeric>
 // #include <sstream>
-// #include <stdexcept>
-// #include <string>
+#include <stdexcept>
+#include <string>
 // #include <type_traits>
 // #include <unordered_set>
-// #include <vector>
-// 
+#include <vector>
 
 #include "../src/integer.hpp"
 // #include "../src/exceptions.hpp"
@@ -57,15 +54,15 @@ const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned c
 	(unsigned char)42,(unsigned short)42,42U,42UL,42ULL,
 	23.456f,-23.456
 );
-// 
-// const std::vector<std::string> invalid_strings{"-0","+0","01","+1","123f"," 123","123 ","123.56"};
-// 
-// static inline piranha::integer get_big_int()
-// {
-// 	std::string tmp = boost::lexical_cast<std::string>(boost::integer_traits<unsigned long long>::const_max);
-// 	tmp += "123456789";
-// 	return piranha::integer(tmp);
-// }
+
+const std::vector<std::string> invalid_strings{"-0","+0","01","+1","123f"," 123","123 ","123.56","123 / 4","212/","/332"};
+
+static inline rational get_big_int()
+{
+	std::string tmp = boost::lexical_cast<std::string>(boost::integer_traits<unsigned long long>::const_max);
+	tmp += "123456789";
+	return rational(tmp);
+}
 
 struct check_arithmetic_construction
 {
@@ -89,39 +86,35 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	BOOST_CHECK_EQUAL(123,static_cast<int>(rational("123")));
 	BOOST_CHECK_EQUAL(-123,static_cast<int>(rational("-123")));
 	BOOST_CHECK_EQUAL(128,static_cast<int>(rational("128/1")));
-	//BOOST_CHECK_EQUAL(-123,static_cast<int>(rational("-123")));
-// 	// Construction from malformed strings.
-// 	std::unique_ptr<piranha::integer> ptr;
-// 	for (std::vector<std::string>::const_iterator it = invalid_strings.begin(); it != invalid_strings.end(); ++it) {
-// 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(*it)),std::invalid_argument);
-// 	}
-// 	// Copy construction
-// 	piranha::integer i("-30"), j(i);
-// 	BOOST_CHECK_EQUAL(-30,static_cast<int>(j));
-// 	// Large value.
-// 	piranha::integer i2(get_big_int()), j2(i2);
+	BOOST_CHECK_EQUAL(-128,static_cast<int>(rational("128/-1")));
+	BOOST_CHECK_EQUAL(128,static_cast<int>(rational("-128/-1")));
+	BOOST_CHECK_EQUAL(128,static_cast<int>(rational("256/2")));
+	BOOST_CHECK_EQUAL(-128,static_cast<int>(rational("256/-2")));
+	// Construction from malformed strings.
+	std::unique_ptr<rational> ptr;
+	for (std::vector<std::string>::const_iterator it = invalid_strings.begin(); it != invalid_strings.end(); ++it) {
+		BOOST_CHECK_THROW(ptr.reset(new rational(*it)),std::invalid_argument);
+	}
+	// Copy construction
+	rational i("-30"), j(i);
+	BOOST_CHECK_EQUAL(-30,static_cast<int>(j));
+	// Large value.
+// 	rational i2(get_big_int()), j2(i2);
 // 	BOOST_CHECK_EQUAL(i2,j2);
-// 	// Move construction.
-// 	piranha::integer i3("-30"), j3(std::move(i3));
-// 	BOOST_CHECK(j3 == -30);
-// 	piranha::integer i4(get_big_int()), j4(std::move(i4));
+	// Move construction.
+	rational i3("-30"), j3(std::move(i3));
+	BOOST_CHECK(static_cast<int>(j3) == -30);
+// 	rational i4(get_big_int()), j4(std::move(i4));
 // 	BOOST_CHECK(j4 == i2);
-// 	// Construction with non-finite floating-point.
-// 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::infinity())),std::invalid_argument);
-// 	BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::infinity())),std::invalid_argument);
-// 	if (std::numeric_limits<float>::has_quiet_NaN) {
-// 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<float>::quiet_NaN())),std::invalid_argument);
-// 	}
-// 	if (std::numeric_limits<double>::has_quiet_NaN) {
-// 		BOOST_CHECK_THROW(ptr.reset(new piranha::integer(std::numeric_limits<double>::quiet_NaN())),std::invalid_argument);
-// 	}
-// 	// Constructor from size.
-// 	piranha::integer k(piranha::integer::nlimbs(4));
-// 	BOOST_CHECK_EQUAL(k,0);
-// 	BOOST_CHECK_NO_THROW(piranha::integer{piranha::integer::nlimbs(0)});
-// 	piranha::integer k3(piranha::integer::nlimbs(1));
-// 	BOOST_CHECK(k3.allocated_size() >= 1u);
-// 	// High number of limbs.
-// 	piranha::integer k2(piranha::integer::nlimbs(400));
-// 	BOOST_CHECK_EQUAL(k2.allocated_size(),400u);
+	// Construction with non-finite floating-point.
+	if (std::numeric_limits<float>::has_infinity && std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<float>::infinity())),std::invalid_argument);
+		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<double>::infinity())),std::invalid_argument);
+	}
+	if (std::numeric_limits<float>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<float>::quiet_NaN())),std::invalid_argument);
+	}
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<double>::quiet_NaN())),std::invalid_argument);
+	}
 }

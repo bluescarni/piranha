@@ -33,8 +33,6 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
-#include <boost/utility.hpp>
-#include <cstddef>
 #include <ctgmath>
 #include <limits>
 #include <memory>
