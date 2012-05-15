@@ -39,13 +39,25 @@ class rational {
 
 	private:
 
-	// C++ arithmetic types supported for interaction with integer.
+	// C++ arithmetic types supported for interaction with rational.
 	template <typename T>
 	struct is_interop_type
 	{
-		static const bool value = std::is_arithmetic<T>::value &&
-			!std::is_same<T,wchar_t>::value && !std::is_same<T,char16_t>::value &&
-			!std::is_same<T,char32_t>::value;
+		static const bool value = std::is_same<T, char>::value ||
+								  std::is_same<T, bool>::value ||
+								  std::is_same<T, float>::value||
+								  std::is_same<T, double>::value||
+								  std::is_same<T, long double>::value||
+								  std::is_same<T, signed char>::value||
+								  std::is_same<T, short>::value||
+								  std::is_same<T, int>::value||
+								  std::is_same<T, long>::value||
+								  std::is_same<T, long long>::value||
+								  std::is_same<T, unsigned char>::value||
+								  std::is_same<T, unsigned short>::value||
+								  std::is_same<T, unsigned int>::value||
+								  std::is_same<T, unsigned long>::value||
+								  std::is_same<T, unsigned long long>::value;
 	};
 
 	static const int NUMBER_BASE = 10;
@@ -167,6 +179,9 @@ class rational {
 	}
 
 	///Copy constructor
+	/**
+	 *  @param[in] other rational to be deep-copied
+	 */
 	rational(rational const &other) piranha_noexcept_spec(true)
 	{
 		::mpq_init(m_value);
@@ -174,6 +189,9 @@ class rational {
 	}
 
 	/// Move constructor
+	/**
+	 *  @param[in] other rational to be moved
+	 */
 	rational(rational &&other) piranha_noexcept_spec(true)
 	{
 		mpq_numref(m_value)->_mp_size  = mpq_numref(other.m_value)->_mp_size;
@@ -184,16 +202,14 @@ class rational {
 		mpq_denref(m_value)->_mp_d     = mpq_denref(other.m_value)->_mp_d;
 		mpq_denref(m_value)->_mp_alloc = mpq_denref(other.m_value)->_mp_alloc;
 
-		mpq_numref(m_value)->_mp_size  = 0;
-		mpq_numref(m_value)->_mp_d     = 0;
-		mpq_numref(m_value)->_mp_alloc = 0;
-
-		mpq_denref(m_value)->_mp_size  = 0;
-		mpq_denref(m_value)->_mp_d     = 0;
-		mpq_denref(m_value)->_mp_alloc = 0;
+		//remove content of other
+		mpq_clear(other.m_value);
 	}
 
 	/// Construct a rational from an integer object
+	/**
+	 *  @param[in] other integer object the rational object to be created from
+	 */
 	rational(integer const & other) piranha_noexcept_spec(true)
 	{
 		::mpq_init(m_value);
@@ -208,7 +224,7 @@ class rational {
 		integer temp(x);
 		::mpq_init(m_value);
 		::mpz_set(mpq_numref(m_value), temp.m_value);
-		::mpz_set(mpq_denref(m_value), static_cast<int>(1));
+		::mpz_set_ui(mpq_denref(m_value), static_cast<unsigned long>(1));
 	}
 
 	/// Constructor from string
@@ -249,7 +265,6 @@ class rational {
 	 */
 	explicit rational(integer && numerator, integer && denumerator)
 	{
-//		::mpq_init(m_value);
 		mpq_numref(m_value)->_mp_size  = numerator.m_value->_mp_size;
 		mpq_numref(m_value)->_mp_d     = numerator.m_value->_mp_d;
 		mpq_numref(m_value)->_mp_alloc = numerator.m_value->_mp_alloc;
@@ -257,14 +272,6 @@ class rational {
 		mpq_denref(m_value)->_mp_size  = denumerator.m_value->_mp_size;
 		mpq_denref(m_value)->_mp_d     = denumerator.m_value->_mp_d;
 		mpq_denref(m_value)->_mp_alloc = denumerator.m_value->_mp_alloc;
-
-//		numerator.m_value->_mp_size  = 0;
-//		numerator.m_value->_mp_d     = 0;
-//		numerator.m_value->_mp_alloc = 0;
-//
-//		denumerator.m_value->_mp_size  = 0;
-//		denumerator.m_value->_mp_d     = 0;
-//		denumerator.m_value->_mp_alloc = 0;
 
 		::mpq_canonicalize(m_value);
 		mpz_clear(numerator.m_value);

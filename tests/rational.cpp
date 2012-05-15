@@ -53,6 +53,7 @@ BOOST_AUTO_TEST_CASE(rational_constructor_tests)
     piranha::rational rat4(numer, denum);
     piranha::rational("123/456");
 //    piranha::rational("1/-1");
-    piranha::rational(3, 4);
+    piranha::rational rat5(3, 4);
+    piranha::rational rat6(6);
 
 }
