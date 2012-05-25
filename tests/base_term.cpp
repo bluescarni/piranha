@@ -25,6 +25,7 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <numeric>
 #include <tuple>
 #include <utility>
 
