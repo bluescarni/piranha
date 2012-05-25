@@ -75,6 +75,33 @@ namespace piranha
  */
 class rational
 {
+		// Type trait for allowed arguments in arithmetic binary operations.
+		template <typename T, typename U>
+		struct are_binary_op_types: std::integral_constant<bool,
+			(std::is_same<typename std::decay<T>::type,rational>::value && integer::is_interop_type<typename std::decay<U>::type>::value) ||
+			(std::is_same<typename std::decay<U>::type,rational>::value && integer::is_interop_type<typename std::decay<T>::type>::value) ||
+			(std::is_same<typename std::decay<T>::type,rational>::value && std::is_same<typename std::decay<U>::type,integer>::value) ||
+			(std::is_same<typename std::decay<U>::type,rational>::value && std::is_same<typename std::decay<T>::type,integer>::value) ||
+			(std::is_same<typename std::decay<T>::type,rational>::value && std::is_same<typename std::decay<U>::type,rational>::value)>
+		{};
+		// Metaprogramming to establish the return type of binary arithmetic operations involving rationals.
+		// Default result type will be rational itself; for consistency with C/C++ when one of the arguments
+		// is a floating point type, we will return a value of the same floating point type.
+		template <typename T, typename U, typename Enable = void>
+		struct deduce_binary_op_result_type
+		{
+			typedef rational type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<T>::type>::value>::type>
+		{
+			typedef typename std::decay<T>::type type;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<typename std::decay<U>::type>::value>::type>
+		{
+			typedef typename std::decay<U>::type type;
+		};
 		// Construction.
 		template <typename T>
 		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -250,6 +277,74 @@ class rational
 			} else {
 				return static_cast<T>(::mpq_get_d(m_value));
 			}
+		}
+		// In-place addition.
+		void in_place_add(const rational &q)
+		{
+			::mpq_add(m_value,m_value,q.m_value);
+		}
+		void in_place_add(const integer &n)
+		{
+			::mpz_addmul(mpq_numref(m_value),mpq_denref(m_value),n.m_value);
+		}
+		template <typename T>
+		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (si >= 0) {
+				::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(si));
+			} else {
+				// Neat trick here. See:
+				// http://stackoverflow.com/questions/4536095/unary-minus-and-signed-to-unsigned-conversion
+				::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),-static_cast<unsigned long>(si));
+			}
+		}
+		template <typename T>
+		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_add(integer(n));
+		}
+		template <typename T>
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			operator=(static_cast<T>(*this) + x);
+		}
+		// Binary addition.
+		template <typename Q, typename T>
+		static rational binary_plus(Q &&q, T &&x, typename std::enable_if<
+			std::is_same<rational,typename std::decay<Q>::type>::value && (
+			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value
+			)>::type * = piranha_nullptr)
+		{
+			rational retval(std::forward<Q>(q));
+			retval += std::forward<T>(x);
+			return retval;
+		}
+		template <typename T, typename Q>
+		static rational binary_plus(T &&x, Q &&q, typename std::enable_if<
+			std::is_same<rational,typename std::decay<Q>::type>::value && (
+			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value &&
+			// Disambiguate when both operands are rationals.
+			!std::is_same<rational,typename std::decay<T>::type>::value
+			)>::type * = piranha_nullptr)
+		{
+			return binary_plus(std::forward<Q>(q),std::forward<T>(x));
+		}
+		template <typename T>
+		static T binary_plus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (static_cast<T>(q) + x);
+		}
+		template <typename T>
+		static T binary_plus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_plus(q,x);
 		}
 	public:
 		/// Default constructor.
@@ -496,6 +591,110 @@ class rational
 			    return;
 			}
 			::mpq_swap(m_value,q.m_value);
+		}
+		/// In-place addition.
+		/**
+		 * Add \p x to the current value of the rational object. This template operator is activated only if
+		 * \p T is either rational, piranha::integer or an \ref interop "interoperable type".
+		 * 
+		 * If \p T is rational or integral, the result will be exact. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is added to \p x,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,rational &>::type operator+=(T &&x)
+		{
+			in_place_add(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place addition with piranha::rational.
+		/**
+		 * Add a piranha::rational in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" or piranha::integer,
+		 * and \p Q is piranha::rational.
+		 * This method will first compute <tt>q + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 */
+		template <typename T, typename Q>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
+			std::is_same<typename std::decay<Q>::type,rational>::value,T &>::type
+			operator+=(T &x, Q &&q)
+		{
+			x = static_cast<T>(std::forward<Q>(q) + x);
+			return x;
+		}
+		/// Generic binary addition involving piranha::rational.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::rational and \p U is an \ref interop "interoperable type" or piranha::integer,
+		 * - \p U is piranha::rational and \p T is an \ref interop "interoperable type" or piranha::integer,
+		 * - both \p T and \p U are piranha::rational.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::rational.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator+(T &&x, U &&y)
+		{
+			return binary_plus(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// Identity operation.
+		/**
+		 * @return copy of \p this.
+		 */
+		rational operator+() const
+		{
+			return *this;
+		}
+		/// Prefix increment.
+		/**
+		 * Increment \p this by one.
+		 * 
+		 * @return reference to \p this after the increment.
+		 */
+		rational &operator++()
+		{
+			return operator+=(1);
+		}
+		/// Suffix increment.
+		/**
+		 * Increment \p this by one and return a copy of \p this as it was before the increment.
+		 * 
+		 * @return copy of \p this before the increment.
+		 */
+		rational operator++(int)
+		{
+			const rational retval(*this);
+			++(*this);
+			return retval;
 		}
 		/// Overload output stream operator for piranha::rational.
 		/**

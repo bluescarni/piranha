@@ -296,3 +296,98 @@ BOOST_AUTO_TEST_CASE(rational_conversion_test)
 	BOOST_CHECK(static_cast<unsigned>(rational(256,3)) == 85u);
 	BOOST_CHECK_THROW(static_cast<unsigned>(rational(-1)),std::overflow_error);
 }
+
+struct check_arithmetic_in_place_add
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			// In-place add, rational on the left.
+			rational i(1);
+			i += x;
+			BOOST_CHECK_EQUAL(static_cast<int>(x) + 1, static_cast<int>(i));
+		}
+		{
+			// In-place add, rational on the right.
+			T y(x);
+			rational i(1);
+			y += i;
+			BOOST_CHECK_EQUAL(x + 1, y);
+			y += std::move(i);
+			BOOST_CHECK_EQUAL(x + 2, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_add
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		rational i(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i + x),x + 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(x + i),x + 1);
+		// Check also with move semantics.
+		BOOST_CHECK_EQUAL(static_cast<T>(rational(1) + x),x + 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(x + rational(1)),x + 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_addition_test)
+{
+	{
+		// In-place addition.
+		rational i(1), j(42);
+		i += j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),43);
+		i += std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),43 + 42);
+		// Add with self.
+		i += i;
+		BOOST_CHECK_EQUAL(static_cast<int>(i), 2 * (43 + 42));
+		// Add with self + move.
+		i = 1;
+		i += std::move(i);
+		BOOST_CHECK_EQUAL(static_cast<int>(i), 2);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_add());
+		// Addition with integer.
+		i = rational(3,4);
+		i += integer(2);
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "11/4");
+		i += 2u;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "19/4");
+		i += -2;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "11/4");
+		i += 0;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "11/4");
+		integer k(3);
+		k += rational(4,2);
+		BOOST_CHECK(k == 5);
+		k += rational(1,2);
+		BOOST_CHECK(k == 5);
+		k += rational(3,2);
+		BOOST_CHECK(k == 6);
+	}
+	{
+		// Binary addition.
+		rational i(1,2);
+		// With this line we check all possible combinations of lvalue/rvalue.
+		BOOST_CHECK_EQUAL(static_cast<int>(rational(1,2) + (i + ((i + i) + i))),2);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_add());
+		// Binary addition with integer.
+		BOOST_CHECK(boost::lexical_cast<std::string>(rational(3,2) + integer(2)) == "7/2");
+		BOOST_CHECK(boost::lexical_cast<std::string>(integer(2) + rational(11,2)) == "15/2");
+	}
+	// Identity operation.
+	rational i(123);
+	BOOST_CHECK_EQUAL(static_cast<int>(+i), 123);
+	// Increments.
+	BOOST_CHECK_EQUAL(static_cast<int>(++i), 124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i++), 124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i), 125);
+	i = rational(5,2);
+	BOOST_CHECK(boost::lexical_cast<std::string>(++i) == "7/2");
+	BOOST_CHECK(boost::lexical_cast<std::string>(i++) == "7/2");
+	BOOST_CHECK(boost::lexical_cast<std::string>(i) == "9/2");
+}
