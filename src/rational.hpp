@@ -346,6 +346,74 @@ class rational
 		{
 			return binary_plus(q,x);
 		}
+		// In-place subtraction.
+		void in_place_sub(const rational &q)
+		{
+			::mpq_sub(m_value,m_value,q.m_value);
+		}
+		void in_place_sub(const integer &n)
+		{
+			::mpz_submul(mpq_numref(m_value),mpq_denref(m_value),n.m_value);
+		}
+		template <typename T>
+		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (si >= 0) {
+				::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(si));
+			} else {
+				::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),-static_cast<unsigned long>(si));
+			}
+		}
+		template <typename T>
+		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
+		}
+		template <typename T>
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_sub(integer(n));
+		}
+		template <typename T>
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			operator=(static_cast<T>(*this) - x);
+		}
+		// Binary subtraction.
+		template <typename Q, typename T>
+		static rational binary_minus(Q &&q, T &&x, typename std::enable_if<
+			std::is_same<rational,typename std::decay<Q>::type>::value && (
+			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value
+			)>::type * = piranha_nullptr)
+		{
+			rational retval(std::forward<Q>(q));
+			retval -= std::forward<T>(x);
+			return retval;
+		}
+		template <typename T, typename Q>
+		static rational binary_minus(T &&x, Q &&q, typename std::enable_if<
+			std::is_same<rational,typename std::decay<Q>::type>::value && (
+			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value &&
+			// Disambiguate when both operands are rationals.
+			!std::is_same<rational,typename std::decay<T>::type>::value
+			)>::type * = piranha_nullptr)
+		{
+			auto retval = binary_minus(std::forward<Q>(q),std::forward<T>(x));
+			retval.negate();
+			return retval;
+		}
+		template <typename T>
+		static T binary_minus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (static_cast<T>(q) - x);
+		}
+		template <typename T>
+		static T binary_minus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return -binary_minus(q,x);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -694,6 +762,103 @@ class rational
 		{
 			const rational retval(*this);
 			++(*this);
+			return retval;
+		}
+		/// In-place subtraction.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the subtraction.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,rational &>::type operator-=(T &&x)
+		{
+			in_place_sub(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place subtraction with piranha::rational.
+		/**
+		 * Subtract a piranha::rational in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" or piranha::integer,
+		 * and \p Q is piranha::rational.
+		 * This method will first compute <tt>x - q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 */
+		template <typename T, typename Q>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
+			std::is_same<typename std::decay<Q>::type,rational>::value,T &>::type
+			operator-=(T &x, Q &&q)
+		{
+			x = static_cast<T>(x - std::forward<Q>(q));
+			return x;
+		}
+		/// Generic binary subtraction involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic binary addition operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x - y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator-(T &&x, U &&y)
+		{
+			return binary_minus(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// In-place negation.
+		/**
+		 * Set \p this to \p -this.
+		 */
+		void negate()
+		{
+			::mpq_neg(m_value,m_value);
+		}
+		/// Negated copy.
+		/**
+		 * @return copy of \p -this.
+		 */
+		rational operator-() const
+		{
+			rational retval(*this);
+			retval.negate();
+			return retval;
+		}
+		/// Prefix decrement.
+		/**
+		 * Decrement \p this by one and return.
+		 * 
+		 * @return reference to \p this.
+		 */
+		rational &operator--()
+		{
+			return operator-=(1);
+		}
+		/// Suffix decrement.
+		/**
+		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
+		 * 
+		 * @return copy of \p this before the decrement.
+		 */
+		rational operator--(int)
+		{
+			const rational retval(*this);
+			--(*this);
 			return retval;
 		}
 		/// Overload output stream operator for piranha::rational.

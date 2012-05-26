@@ -334,7 +334,7 @@ struct check_arithmetic_binary_add
 	}
 };
 
-BOOST_AUTO_TEST_CASE(integer_addition_test)
+BOOST_AUTO_TEST_CASE(rational_addition_test)
 {
 	{
 		// In-place addition.
@@ -361,6 +361,7 @@ BOOST_AUTO_TEST_CASE(integer_addition_test)
 		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "11/4");
 		i += 0;
 		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "11/4");
+		// In-place integer with rational.
 		integer k(3);
 		k += rational(4,2);
 		BOOST_CHECK(k == 5);
@@ -390,4 +391,95 @@ BOOST_AUTO_TEST_CASE(integer_addition_test)
 	BOOST_CHECK(boost::lexical_cast<std::string>(++i) == "7/2");
 	BOOST_CHECK(boost::lexical_cast<std::string>(i++) == "7/2");
 	BOOST_CHECK(boost::lexical_cast<std::string>(i) == "9/2");
+}
+
+struct check_arithmetic_in_place_sub
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			rational i(1);
+			i -= x;
+			BOOST_CHECK_EQUAL(1 - static_cast<int>(x), static_cast<int>(i));
+		}
+		{
+			T y(x);
+			rational i(1);
+			y -= i;
+			BOOST_CHECK_EQUAL(x - 1, y);
+			y -= std::move(i);
+			BOOST_CHECK_EQUAL(x - 2, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_sub
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		rational i(50), j(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i - x),50 - x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x - j),x - 1);
+		BOOST_CHECK_EQUAL(static_cast<T>(rational(50) - x),50 - x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x - rational(1)),x - 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_subtraction_test)
+{
+	{
+		rational i(1), j(42);
+		i -= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),-41);
+		i -= std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),-41 - 42);
+		// Sub with self.
+		i -= i;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),0);
+		// Sub with self + move.
+		i = 1;
+		i -= std::move(i);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),0);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_sub());
+		// Sub with integer.
+		i = rational(3,4);
+		i -= integer(2);
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-5/4");
+		i -= 2u;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-13/4");
+		i -= -2;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-5/4");
+		i += 0;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-5/4");
+		// In-place integer with rational.
+		integer k(3);
+		k -= rational(4,2);
+		BOOST_CHECK(k == 1);
+		k -= rational(1,2);
+		BOOST_CHECK(k == 0);
+		k -= rational(3,2);
+		BOOST_CHECK(k == -1);
+	}
+	{
+		rational i(1);
+		BOOST_CHECK_EQUAL(static_cast<int>(rational(1) - (i - ((i - i) - i))),-1);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_sub());
+		BOOST_CHECK(boost::lexical_cast<std::string>(rational(3,2) - integer(2)) == "-1/2");
+		BOOST_CHECK(boost::lexical_cast<std::string>(integer(2) - rational(11,2)) == "-7/2");
+	}
+	// Negation operation.
+	rational i(123);
+	i.negate();
+	BOOST_CHECK_EQUAL(static_cast<int>(i), -123);
+	BOOST_CHECK_EQUAL(static_cast<int>(-i), 123);
+	// Decrements.
+	BOOST_CHECK_EQUAL(static_cast<int>(--i), -124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i--), -124);
+	BOOST_CHECK_EQUAL(static_cast<int>(i), -125);
+	i = rational(5,2);
+	BOOST_CHECK(boost::lexical_cast<std::string>(--i) == "3/2");
+	BOOST_CHECK(boost::lexical_cast<std::string>(i--) == "3/2");
+	BOOST_CHECK(boost::lexical_cast<std::string>(i) == "1/2");
 }
