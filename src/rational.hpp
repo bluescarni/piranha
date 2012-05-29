@@ -316,25 +316,15 @@ class rational
 			operator=(static_cast<T>(*this) + x);
 		}
 		// Binary addition.
-		template <typename Q, typename T>
-		static rational binary_plus(Q &&q, T &&x, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
+		template <typename T, typename U>
+		static rational binary_plus(T &&x, U &&y, typename std::enable_if<
+			!std::is_floating_point<typename std::decay<T>::type>::value &&
+			!std::is_floating_point<typename std::decay<U>::type>::value
+			>::type * = piranha_nullptr)
 		{
-			rational retval(std::forward<Q>(q));
-			retval += std::forward<T>(x);
+			rational retval(std::forward<T>(x));
+			retval += std::forward<U>(y);
 			return retval;
-		}
-		template <typename T, typename Q>
-		static rational binary_plus(T &&x, Q &&q, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value &&
-			// Disambiguate when both operands are rationals.
-			!std::is_same<rational,typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
-		{
-			return binary_plus(std::forward<Q>(q),std::forward<T>(x));
 		}
 		template <typename T>
 		static T binary_plus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -382,26 +372,14 @@ class rational
 			operator=(static_cast<T>(*this) - x);
 		}
 		// Binary subtraction.
-		template <typename Q, typename T>
-		static rational binary_minus(Q &&q, T &&x, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
+		template <typename T, typename U>
+		static rational binary_minus(T &&x, U &&y, typename std::enable_if<
+			!std::is_floating_point<typename std::decay<T>::type>::value &&
+			!std::is_floating_point<typename std::decay<U>::type>::value
+			>::type * = piranha_nullptr)
 		{
-			rational retval(std::forward<Q>(q));
-			retval -= std::forward<T>(x);
-			return retval;
-		}
-		template <typename T, typename Q>
-		static rational binary_minus(T &&x, Q &&q, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value &&
-			// Disambiguate when both operands are rationals.
-			!std::is_same<rational,typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
-		{
-			auto retval = binary_minus(std::forward<Q>(q),std::forward<T>(x));
-			retval.negate();
+			rational retval(std::forward<T>(x));
+			retval -= std::forward<U>(y);
 			return retval;
 		}
 		template <typename T>
@@ -449,24 +427,15 @@ class rational
 			operator=(static_cast<T>(*this) * x);
 		}
 		// Binary multiplication.
-		template <typename Q, typename T>
-		static rational binary_mul(Q &&q, T &&x, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
+		template <typename T, typename U>
+		static rational binary_mul(T &&x, U &&y, typename std::enable_if<
+			!std::is_floating_point<typename std::decay<T>::type>::value &&
+			!std::is_floating_point<typename std::decay<U>::type>::value
+			>::type * = piranha_nullptr)
 		{
-			rational retval(std::forward<Q>(q));
-			retval *= std::forward<T>(x);
+			rational retval(std::forward<T>(x));
+			retval *= std::forward<U>(y);
 			return retval;
-		}
-		template <typename T, typename Q>
-		static rational binary_mul(T &&x, Q &&q, typename std::enable_if<
-			std::is_same<rational,typename std::decay<Q>::type>::value && (
-			are_binary_op_types<Q,T>::value && !std::is_floating_point<typename std::decay<T>::type>::value &&
-			!std::is_same<rational,typename std::decay<T>::type>::value
-			)>::type * = piranha_nullptr)
-		{
-			return binary_mul(std::forward<Q>(q),std::forward<T>(x));
 		}
 		template <typename T>
 		static T binary_mul(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
@@ -580,7 +549,7 @@ class rational
 		}
 		/// Destructor.
 		/**
-		 * Will clear the internal \p mpz_q type.
+		 * Will clear the internal \p mpq_t type.
 		 */
 		~rational() piranha_noexcept_spec(true)
 		{
@@ -929,7 +898,7 @@ class rational
 		/**
 		 * The same rules described in operator+=() apply.
 		 * 
-		 * @param[in] x argument for the subtraction.
+		 * @param[in] x argument for the multiplication.
 		 * 
 		 * @return reference to \p this.
 		 * 
