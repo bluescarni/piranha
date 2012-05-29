@@ -483,3 +483,83 @@ BOOST_AUTO_TEST_CASE(rational_subtraction_test)
 	BOOST_CHECK(boost::lexical_cast<std::string>(i--) == "3/2");
 	BOOST_CHECK(boost::lexical_cast<std::string>(i) == "1/2");
 }
+
+struct check_arithmetic_in_place_mul
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		{
+			rational i(1);
+			i *= x;
+			BOOST_CHECK_EQUAL(static_cast<int>(x), static_cast<int>(i));
+		}
+		{
+			T y(x);
+			rational i(1);
+			y *= i;
+			BOOST_CHECK_EQUAL(x, y);
+			y *= std::move(i);
+			BOOST_CHECK_EQUAL(x, y);
+		}
+	}
+};
+
+struct check_arithmetic_binary_mul
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		rational i(2), j(1);
+		BOOST_CHECK_EQUAL(static_cast<T>(i * x),2 * x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x * j),x);
+		BOOST_CHECK_EQUAL(static_cast<T>(rational(2) * x),2 * x);
+		BOOST_CHECK_EQUAL(static_cast<T>(x * rational(1)),x);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_multiplication_test)
+{
+	{
+		rational i(1), j(42);
+		i *= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),42);
+		i *= std::move(j);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),42 * 42);
+		// Mul with self.
+		i = 2;
+		i *= i;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),4);
+		// Mul with self + move.
+		i = 3;
+		i *= std::move(i);
+		BOOST_CHECK_EQUAL(static_cast<int>(i),9);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_mul());
+		// Sub with integer.
+		i = rational(3,4);
+		i *= integer(2);
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "3/2");
+		i *= 2u;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "3");
+		i *= -2;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-6");
+		i *= 0;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "0");
+		// In-place integer with rational.
+		integer k(3);
+		k *= rational(4,2);
+		BOOST_CHECK(k == 6);
+		k *= rational(1,2);
+		BOOST_CHECK(k == 3);
+		k *= rational(3,2);
+		BOOST_CHECK(k == 4);
+	}
+	{
+		rational i(2);
+		BOOST_CHECK_EQUAL(static_cast<int>(rational(2) * (i * ((i * i) * i))),32);
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_mul());
+		// Binary multiplication with integer.
+		BOOST_CHECK(boost::lexical_cast<std::string>(rational(3,2) * integer(2)) == "3");
+		BOOST_CHECK(boost::lexical_cast<std::string>(integer(2) * rational(-11,3)) == "-22/3");
+	}
+}
