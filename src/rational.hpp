@@ -24,6 +24,8 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
@@ -626,6 +628,92 @@ class rational
 			std::is_same<T,integer>::value>::type * = piranha_nullptr)
 		{
 			return !binary_less_than(q,x);
+		}
+		// Exponentiation.
+		template <typename T>
+		rational pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = piranha_nullptr) const
+		{
+			unsigned long exp;
+			try {
+				exp = boost::numeric_cast<unsigned long>(ui);
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for rational exponentiation");
+			}
+			rational retval;
+			::mpz_pow_ui(mpq_numref(retval.m_value),mpq_numref(m_value),exp);
+			::mpz_pow_ui(mpq_denref(retval.m_value),mpq_denref(m_value),exp);
+			return retval;
+		}
+		template <typename T>
+		rational pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
+		{
+			if (si >= 0) {
+				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
+			} else {
+				if (sign() == 0) {
+					piranha_throw(zero_division_error,"negative exponentiation of zero");
+				}
+				auto retval = pow_impl(-static_cast<typename std::make_unsigned<T>::type>(si));
+				::mpz_swap(mpq_numref(retval.m_value),mpq_denref(retval.m_value));
+				// Fix signs if needed.
+				if (mpz_sgn(mpq_denref(retval.m_value)) < 0) {
+					::mpz_neg(mpq_numref(retval.m_value),mpq_numref(retval.m_value));
+					::mpz_neg(mpq_denref(retval.m_value),mpq_denref(retval.m_value));
+				}
+				return retval;
+			}
+		}
+		rational pow_impl(const integer &n) const
+		{
+			if (n.sign() >= 0) {
+				unsigned long exp;
+				try {
+					exp = static_cast<unsigned long>(n);
+				} catch (const std::overflow_error &) {
+					piranha_throw(std::invalid_argument,"invalid argument for rational exponentiation");
+				}
+				return pow_impl(exp);
+			} else {
+				auto retval = pow_impl(-n);
+				::mpz_swap(mpq_numref(retval.m_value),mpq_denref(retval.m_value));
+				// Fix signs if needed.
+				if (mpz_sgn(mpq_denref(retval.m_value)) < 0) {
+					::mpz_neg(mpq_numref(retval.m_value),mpq_numref(retval.m_value));
+					::mpz_neg(mpq_denref(retval.m_value),mpq_denref(retval.m_value));
+				}
+				return retval;
+			}
+		}
+		template <typename T>
+		rational pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
+		{
+			if (!boost::math::isfinite(x)) {
+				piranha_throw(std::invalid_argument,"invalid argument for rational exponentiation: non-finite floating-point");
+			}
+			if (boost::math::trunc(x) != x) {
+				piranha_throw(std::invalid_argument,"invalid argument for rational exponentiation: floating-point with non-zero fractional part");
+			}
+			unsigned long exp;
+			try {
+				exp = boost::numeric_cast<unsigned long>((x >= T(0)) ? x : -x);
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			}
+			if (x >= T(0)) {
+				return pow_impl(exp);
+			} else {
+				if (sign() == 0) {
+					piranha_throw(zero_division_error,"negative exponentiation of zero");
+				}
+				auto retval = pow_impl(exp);
+				::mpz_swap(mpq_numref(retval.m_value),mpq_denref(retval.m_value));
+				// Fix signs if needed.
+				if (mpz_sgn(mpq_denref(retval.m_value)) < 0) {
+					::mpz_neg(mpq_numref(retval.m_value),mpq_numref(retval.m_value));
+					::mpz_neg(mpq_denref(retval.m_value),mpq_denref(retval.m_value));
+				}
+				return retval;
+			}
 		}
 	public:
 		/// Default constructor.
@@ -1306,6 +1394,33 @@ class rational
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
 		{
 			return (y <= x);
+		}
+		/// Exponentiation.
+		/**
+		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an \ref interop "interoperable type" or integer.
+		 * 
+		 * If \p T is an integral type or integer, the result will be exact.
+		 * 
+		 * If \p T is a floating-point type, the result will be exact if \p exp can be converted exactly to an integer value,
+		 * otherwise an \p std::invalid_argument exception will be thrown.
+		 * 
+		 * Trying to raise zero to a negative exponent will throw a piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
+		 * 
+		 * In any case, the value of \p exp cannot exceed in magnitude the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
+		 * \p std::invalid_argument exception will be thrown.
+		 * 
+		 * @param[in] exp exponent.
+		 * 
+		 * @return <tt>this ** exp</tt>.
+		 * 
+		 * @throws std::invalid_argument if \p T is a floating-point type and \p exp is not an exact integer, or if <tt>exp</tt>'s magnitude exceeds
+		 * the range of the <tt>unsigned long</tt> type.
+		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
+		 */
+		template <typename T>
+		typename std::enable_if<integer::is_interop_type<T>::value || std::is_same<T,integer>::value,rational>::type pow(const T &exp) const
+		{
+			return pow_impl(exp);
 		}
 		/// Overload output stream operator for piranha::rational.
 		/**

@@ -727,6 +727,36 @@ BOOST_AUTO_TEST_CASE(rational_comparisons_test)
 	BOOST_CHECK(integer(42) >= i);
 }
 
+BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
+{
+	BOOST_CHECK_EQUAL(rational(10).pow(2),100);
+	BOOST_CHECK_EQUAL(rational(10).pow(integer(2)),100);
+	BOOST_CHECK_EQUAL(rational(10).pow(integer(-2)),rational(1,100));
+	BOOST_CHECK_EQUAL(rational(1).pow(integer(-1)),1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(integer(-1)),-1);
+	BOOST_CHECK_EQUAL(rational(1).pow(-1),1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(-2),1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(-3),-1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(2LL),1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(3ULL),-1);
+	BOOST_CHECK_EQUAL(rational(-1).pow(-3.),-1);
+	BOOST_CHECK_THROW(rational(-1).pow(-3.1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(rational(-1).pow(0.),1);
+	BOOST_CHECK_EQUAL(rational(0).pow(0.),1);
+	BOOST_CHECK_EQUAL(rational(0).pow(3.),0);
+	BOOST_CHECK_THROW(rational(0).pow(-3.),piranha::zero_division_error);
+	BOOST_CHECK_THROW(rational(1).pow(integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
+	BOOST_CHECK_THROW(rational(1).pow(integer(boost::integer_traits<unsigned long>::const_max) * -1 - 1),std::invalid_argument);
+	if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_THROW(rational(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
+		BOOST_CHECK_THROW(rational(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+	}
+	BOOST_CHECK_EQUAL(rational(10,3).pow(2),rational(100,9));
+	BOOST_CHECK_EQUAL(rational(10,3).pow(-2),rational(9,100));
+	BOOST_CHECK_EQUAL(rational(10,-3).pow(-3),rational(27,-1000));
+	BOOST_CHECK_EQUAL(rational(10,-3).pow(3),rational(27,-1000).pow(-1));
+}
+
 BOOST_AUTO_TEST_CASE(rational_sign_test)
 {
 	BOOST_CHECK_EQUAL(rational().sign(),0);
