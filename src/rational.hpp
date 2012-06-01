@@ -1051,7 +1051,6 @@ class rational
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p q.
 		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::rational to \p T.
 		 */
 		template <typename T, typename Q>

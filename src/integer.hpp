@@ -425,18 +425,12 @@ class integer
 		// In-place division.
 		void in_place_div(const integer &n)
 		{
-			if (unlikely(n.sign() == 0)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			::mpz_tdiv_q(m_value,m_value,n.m_value);
 		}
 		template <typename T>
 		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(si == 0)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			if (si > 0) {
 				::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(si));
 			} else {
@@ -448,9 +442,6 @@ class integer
 		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(ui == 0u)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
@@ -461,9 +452,6 @@ class integer
 		template <typename T>
 		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(x == 0.)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			operator=(static_cast<T>(*this) / x);
 		}
 		// In-place modulo.
@@ -1482,7 +1470,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws piranha::zero_division_error if <tt>x == 0</tt>.
+		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p x.
 		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
@@ -1490,6 +1478,9 @@ class integer
 			is_interop_type<typename std::decay<T>::type>::value ||
 			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator/=(T &&x)
 		{
+			if (math::is_zero(x)) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
 			in_place_div(std::forward<T>(x));
 			return *this;
 		}
@@ -1503,7 +1494,6 @@ class integer
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
 		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
@@ -1523,7 +1513,7 @@ class integer
 		 * 
 		 * @return <tt>x / y</tt>.
 		 * 
-		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
+		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p y.
 		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
