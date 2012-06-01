@@ -51,9 +51,7 @@
 #define PIRANHA_GCC_INT128_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
-#include <climits>
 #include <iostream>
 #include <iterator>
 #include <type_traits>
@@ -128,35 +126,6 @@ struct print_coefficient_impl<T,typename std::enable_if<
 		}
 	}
 };
-
-}
-
-namespace boost
-{
-
-#define piranha_glibcxx_signed(T) ((T)(-1) < 0)
-#define piranha_glibcxx_digits(T) \
-	(sizeof(T) * CHAR_BIT - piranha_glibcxx_signed (T))
-#define piranha_glibcxx_min(T) \
-	(piranha_glibcxx_signed (T) ? (T)1 << piranha_glibcxx_digits (T) : (T)0)
-#define piranha_glibcxx_max(T) \
-	(piranha_glibcxx_signed (T) ? \
-	(((((T)1 << (piranha_glibcxx_digits (T) - 1)) - 1) << 1) + 1) : ~(T)0)
-
-template <>
-struct integer_traits<piranha::gcc_int128>
-{
-	static const piranha::gcc_int128 const_max = piranha_glibcxx_max(piranha::gcc_int128);
-	static const piranha::gcc_int128 const_min = piranha_glibcxx_min(piranha::gcc_int128);
-};
-
-#undef piranha_glibcxx_digits
-#undef piranha_glibcxx_signed
-#undef piranha_glibcxx_min
-#undef piranha_glibcxx_max
-
-const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_max;
-const piranha::gcc_int128 integer_traits<piranha::gcc_int128>::const_min;
 
 }
 
