@@ -521,13 +521,13 @@ class rational
 			return (mpz_cmp_ui(mpq_denref(q.m_value),1ul) == 0 && ::mpz_cmp(mpq_numref(q.m_value),n.m_value) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const rational &q, const T &n,typename std::enable_if<std::is_signed<T>::value &&
+		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const rational &q, const T &n,typename std::enable_if<std::is_unsigned<T>::value &&
+		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) == 0);
@@ -539,7 +539,7 @@ class rational
 			return binary_equality(q,integer(n));
 		}
 		template <typename T>
-		static bool binary_equality(const rational &q, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(q) == x);
 		}
@@ -549,6 +549,83 @@ class rational
 			std::is_arithmetic<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(q,x);
+		}
+		// Binary less-than.
+		static bool binary_less_than(const rational &q1, const rational &q2)
+		{
+			return (::mpq_cmp(q1.m_value,q2.m_value) < 0);
+		}
+		static bool binary_less_than(const rational &q, const integer &n)
+		{
+			return binary_less_than(q,rational(n));
+		}
+		template <typename T>
+		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_less_than(q,integer(n));
+		}
+		template <typename T>
+		static bool binary_less_than(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (static_cast<T>(q) < x);
+		}
+		// Binary less-than or equal.
+		static bool binary_leq(const rational &q1, const rational &q2)
+		{
+			return (::mpq_cmp(q1.m_value,q2.m_value) <= 0);
+		}
+		static bool binary_leq(const rational &q, const integer &n)
+		{
+			return binary_leq(q,rational(n));
+		}
+		template <typename T>
+		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_leq(q,integer(n));
+		}
+		template <typename T>
+		static bool binary_leq(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (static_cast<T>(q) <= x);
+		}
+		// Inverse forms of less-than and leq.
+		template <typename T>
+		static bool binary_less_than(const T &x, const rational &q, typename std::enable_if<std::is_arithmetic<T>::value ||
+			std::is_same<T,integer>::value>::type * = piranha_nullptr)
+		{
+			return !binary_leq(q,x);
+		}
+		template <typename T>
+		static bool binary_leq(const T &x, const rational &q, typename std::enable_if<std::is_arithmetic<T>::value ||
+			std::is_same<T,integer>::value>::type * = piranha_nullptr)
+		{
+			return !binary_less_than(q,x);
 		}
 	public:
 		/// Default constructor.
@@ -656,8 +733,7 @@ class rational
 		 */
 		~rational() piranha_noexcept_spec(true)
 		{
-			// TODO restore this.
-			//BOOST_CONCEPT_ASSERT((concept::Coefficient<rational>));
+			BOOST_CONCEPT_ASSERT((concept::Coefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
 			piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
 			if (mpq_numref(m_value)->_mp_d != 0) {
@@ -1166,6 +1242,70 @@ class rational
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
 		{
 			return !(x == y);
+		}
+		/// Generic less-than operator involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		{
+			return binary_less_than(x,y);
+		}
+		/// Generic less-than or equal operator involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		{
+			return binary_leq(x,y);
+		}
+		/// Generic greater-than operator involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the less-than operator.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		{
+			return (y < x);
+		}
+		/// Generic greater-than or equal operator involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the less-than or equal operator.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		{
+			return (y <= x);
 		}
 		/// Overload output stream operator for piranha::rational.
 		/**
