@@ -25,7 +25,6 @@
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
-// #include <algorithm>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
@@ -33,19 +32,18 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
-// #include <ctgmath>
 #include <limits>
 #include <memory>
-// #include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-// #include <type_traits>
-// #include <unordered_set>
+#include <type_traits>
 #include <vector>
 
+#include "../src/config.hpp"
 #include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/math.hpp"
 
 using namespace piranha;
 
@@ -562,4 +560,140 @@ BOOST_AUTO_TEST_CASE(rational_multiplication_test)
 		BOOST_CHECK(boost::lexical_cast<std::string>(rational(3,2) * integer(2)) == "3");
 		BOOST_CHECK(boost::lexical_cast<std::string>(integer(2) * rational(-11,3)) == "-22/3");
 	}
+}
+
+const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_zeroes(
+	(char)0,(signed char)0,(short)0,0,0L,0LL,
+	(unsigned char)0,(unsigned short)0,0U,0UL,0ULL,
+	0.f,-0.
+);
+
+struct check_arithmetic_zeroes_div
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		rational i(2);
+		BOOST_CHECK_THROW(i /= x,zero_division_error);
+	}
+};
+
+struct check_arithmetic_binary_div
+{
+	template <typename T>
+	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr) const
+	{
+		rational i(100);
+		BOOST_CHECK(boost::lexical_cast<std::string>(i / x) == "50/21" || boost::lexical_cast<std::string>(i / x) == "-50/21");
+		BOOST_CHECK(boost::lexical_cast<std::string>(x / i) == "21/50" || boost::lexical_cast<std::string>(x / i) == "-21/50");
+	}
+	template <typename T>
+	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = piranha_nullptr) const
+	{
+		if (std::numeric_limits<T>::is_iec559) {
+			rational i(100);
+			BOOST_CHECK(i / T(2) == T(50));
+			BOOST_CHECK(T(200) / i == T(2));
+		}
+	}
+};
+
+struct check_arithmetic_in_place_div
+{
+	template <typename T>
+	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr) const
+	{
+		{
+			rational i(100);
+			i /= x;
+			BOOST_CHECK(boost::lexical_cast<std::string>(i) == "50/21" || boost::lexical_cast<std::string>(i) == "-50/21");
+		}
+		{
+			T y(x);
+			rational i(21);
+			y /= i;
+			BOOST_CHECK(y == x / T(21));
+		}
+	}
+	template <typename T>
+	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = piranha_nullptr) const
+	{
+		if (std::numeric_limits<T>::is_iec559) {
+			rational i(100);
+			i /= T(50);
+			BOOST_CHECK(boost::lexical_cast<std::string>(i) == "2");
+			T x(100);
+			x /= rational(100,2);
+			BOOST_CHECK(x == T(2));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_division_test)
+{
+	{
+		rational i(42), j(2);
+		i /= j;
+		BOOST_CHECK_EQUAL(static_cast<int>(i),21);
+		i /= -j;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(i),"-21/2");
+		BOOST_CHECK_THROW(i /= rational(),zero_division_error);
+		boost::fusion::for_each(arithmetic_zeroes,check_arithmetic_zeroes_div());
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_in_place_div());
+		// Div with integer.
+		i = rational(3,4);
+		i /= integer(2);
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "3/8");
+		i /= 2u;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "3/16");
+		i /= -2;
+		BOOST_CHECK(boost::lexical_cast<std::string>(i) == "-3/32");
+		BOOST_CHECK_THROW(i /= integer(),zero_division_error);
+		BOOST_CHECK(boost::lexical_cast<std::string>(rational(1,2) / 1) == "1/2");
+		BOOST_CHECK(boost::lexical_cast<std::string>(1 / rational(1,2)) == "2");
+		// In-place integer with rational.
+		integer k(3);
+		k /= rational(4,2);
+		BOOST_CHECK(k == 1);
+		k /= rational(1,2);
+		BOOST_CHECK(k == 2);
+		k /= rational(2,3);
+		BOOST_CHECK(k == 3);
+	}
+	{
+		rational i(2);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(2) / (i / ((i / i) / i))),"1/2");
+		boost::fusion::for_each(arithmetic_values,check_arithmetic_binary_div());
+		// Binary division with integer.
+		BOOST_CHECK(boost::lexical_cast<std::string>(rational(3,2) / integer(2)) == "3/4");
+		BOOST_CHECK(boost::lexical_cast<std::string>(integer(2) / rational(-11,3)) == "-6/11");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(rational_sign_test)
+{
+	BOOST_CHECK_EQUAL(rational().sign(),0);
+	BOOST_CHECK_EQUAL(rational(-1).sign(),-1);
+	BOOST_CHECK_EQUAL(rational(-1,2).sign(),-1);
+	BOOST_CHECK_EQUAL(rational(-10).sign(),-1);
+	BOOST_CHECK_EQUAL(rational(1,67).sign(),1);
+	BOOST_CHECK_EQUAL(rational(10).sign(),1);
+}
+
+BOOST_AUTO_TEST_CASE(rational_math_overloads_test)
+{
+	BOOST_CHECK(math::is_zero(rational()));
+	BOOST_CHECK(math::is_zero(rational(0)));
+	BOOST_CHECK(!math::is_zero(rational(-1)));
+	BOOST_CHECK(!math::is_zero(rational(-10)));
+	BOOST_CHECK(!math::is_zero(rational(1)));
+	BOOST_CHECK(!math::is_zero(rational(10)));
+	rational n(0);
+	math::negate(n);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"0");
+	n = 10;
+	math::negate(n);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-10");
+	math::negate(n);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"10");
 }

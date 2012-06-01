@@ -447,6 +447,68 @@ class rational
 		{
 			return binary_mul(q,x);
 		}
+		// In-place division.
+		void in_place_div(const rational &q)
+		{
+			::mpq_div(m_value,m_value,q.m_value);
+		}
+		void in_place_div(const integer &n)
+		{
+			::mpz_mul(mpq_denref(m_value),mpq_denref(m_value),n.m_value);
+			::mpq_canonicalize(m_value);
+		}
+		template <typename T>
+		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_mul_si(mpq_denref(m_value),mpq_denref(m_value),static_cast<long>(si));
+			::mpq_canonicalize(m_value);
+		}
+		template <typename T>
+		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpz_mul_ui(mpq_denref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
+			::mpq_canonicalize(m_value);
+		}
+		template <typename T>
+		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_div(integer(n));
+		}
+		template <typename T>
+		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			operator=(static_cast<T>(*this) / x);
+		}
+		// Binary division.
+		template <typename T, typename U>
+		static rational binary_div(T &&x, U &&y, typename std::enable_if<
+			!std::is_floating_point<typename std::decay<T>::type>::value &&
+			!std::is_floating_point<typename std::decay<U>::type>::value
+			>::type * = piranha_nullptr)
+		{
+			rational retval(std::forward<T>(x));
+			retval /= std::forward<U>(y);
+			return retval;
+		}
+		template <typename T>
+		static T binary_div(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			if (unlikely(math::is_zero(x))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			return (static_cast<T>(q) / x);
+		}
+		template <typename T>
+		static T binary_div(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			const T q_T = static_cast<T>(q);
+			if (unlikely(math::is_zero(q_T))) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			return (x / q_T);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -951,6 +1013,77 @@ class rational
 		{
 			return binary_mul(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// In-place division.
+		/**
+		 * The same rules described in operator+=() apply. Trying to divide by zero will throw a piranha::zero_division_error exception.
+		 * 
+		 * @param[in] x argument for the division.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p x.
+		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,rational &>::type operator/=(T &&x)
+		{
+			if (math::is_zero(x)) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			in_place_div(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place division with piranha::rational.
+		/**
+		 * Divide by a piranha::rational in-place. This template operator is activated only if \p T is an \ref interop "interoperable type" or piranha::integer,
+		 * and \p Q is piranha::rational.
+		 * This method will first compute <tt>x / q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p q.
+		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 */
+		template <typename T, typename Q>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
+			std::is_same<typename std::decay<Q>::type,rational>::value,T &>::type
+			operator/=(T &x, Q &&q)
+		{
+			x = static_cast<T>(x / std::forward<Q>(q));
+			return x;
+		}
+		/// Generic binary division involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic binary addition operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x / y</tt>.
+		 * 
+		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p y.
+		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator/(T &&x, U &&y)
+		{
+			return binary_div(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// Sign.
+		/**
+		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>.
+		 */
+		int sign() const
+		{
+			return mpq_sgn(m_value);
+		}
 		/// Overload output stream operator for piranha::rational.
 		/**
 		 * @param[in] os output stream.
@@ -982,6 +1115,31 @@ class rational
 	private:
 		::mpq_t m_value;
 };
+
+namespace detail
+{
+
+// Specialise implementation of math::is_zero for rational.
+template <typename T>
+struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	static bool run(const T &q)
+	{
+		return q.sign() == 0;
+	}
+};
+
+// Specialise implementation of math::negate for rational.
+template <typename T>
+struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	static void run(T &q)
+	{
+		q.negate();
+	}
+};
+
+}
 
 }
 
