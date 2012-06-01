@@ -804,7 +804,8 @@ class integer
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
+			!is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return binary_equality(n1,integer(n2));
 		}
@@ -813,6 +814,7 @@ class integer
 		{
 			return (static_cast<T>(n) == x);
 		}
+		// NOTE: this is the reverse of above.
 		template <typename T>
 		static bool binary_equality(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
 		{
@@ -1625,7 +1627,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception resulting from the equality operator.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)

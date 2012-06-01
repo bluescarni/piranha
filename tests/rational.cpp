@@ -670,6 +670,51 @@ BOOST_AUTO_TEST_CASE(rational_division_test)
 	}
 }
 
+struct check_arithmetic_comparisons
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		rational i(x);
+// 		BOOST_CHECK(i + 1 > x);
+// 		BOOST_CHECK(x < i + 1);
+// 		BOOST_CHECK(i + 1 >= x);
+// 		BOOST_CHECK(x <= i + 1);
+// 		BOOST_CHECK(i - 1 < x);
+// 		BOOST_CHECK(x > i - 1);
+// 		BOOST_CHECK(i - 1 <= x);
+// 		BOOST_CHECK(x >= i - 1);
+		BOOST_CHECK(i + 1 != x);
+		BOOST_CHECK(x != i + 1);
+		if (std::is_integral<T>::value) {
+			BOOST_CHECK(i + 10 == x + 10);
+			BOOST_CHECK(!(i + 10 != x + 10));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rational_comparisons_test)
+{
+	rational i(42), j(43);
+	BOOST_CHECK(i != j);
+// 	BOOST_CHECK(i < j);
+// 	BOOST_CHECK(i <= j);
+// 	BOOST_CHECK(j > i);
+// 	BOOST_CHECK(j >= i);
+	BOOST_CHECK(i + 1 == j);
+// 	BOOST_CHECK(i + 1 <= j);
+// 	BOOST_CHECK(i + 1 >= j);
+	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
+	// Comparison with integer.
+	BOOST_CHECK(i == integer(42));
+	BOOST_CHECK(integer(42) == i);
+	BOOST_CHECK(j != integer(42));
+	BOOST_CHECK(integer(42) != j);
+	BOOST_CHECK(rational(84,2) == integer(42));
+	BOOST_CHECK(rational(84,4) != integer(42));
+	BOOST_CHECK(integer(42) != rational(84,4));
+}
+
 BOOST_AUTO_TEST_CASE(rational_sign_test)
 {
 	BOOST_CHECK_EQUAL(rational().sign(),0);

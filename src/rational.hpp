@@ -511,6 +511,45 @@ class rational
 			}
 			return (x / q_T);
 		}
+		// Binary equality.
+		static bool binary_equality(const rational &q1, const rational &q2)
+		{
+			return ::mpq_equal(q1.m_value,q2.m_value) != 0;
+		}
+		static bool binary_equality(const rational &q, const integer &n)
+		{
+			return (mpz_cmp_ui(mpq_denref(q.m_value),1ul) == 0 && ::mpz_cmp(mpq_numref(q.m_value),n.m_value) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const rational &q, const T &n,typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const rational &q, const T &n,typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_equality(q,integer(n));
+		}
+		template <typename T>
+		static bool binary_equality(const rational &q, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (static_cast<T>(q) == x);
+		}
+		// NOTE: this is the reverse of above.
+		template <typename T>
+		static bool binary_equality(const T &x, const rational &q, typename std::enable_if<
+			std::is_arithmetic<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr)
+		{
+			return binary_equality(q,x);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1086,6 +1125,47 @@ class rational
 		int sign() const
 		{
 			return mpq_sgn(m_value);
+		}
+		/// Generic equality operator involving piranha::rational.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::rational and \p U is an \ref interop "interoperable type" or piranha::integer,
+		 * - \p U is piranha::rational and \p T is an \ref interop "interoperable type" or piranha::integer,
+		 * - both \p T and \p U are piranha::rational.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		{
+			return binary_equality(x,y);
+		}
+		/// Generic inequality operator involving piranha::rational.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from the equality operator.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		{
+			return !(x == y);
 		}
 		/// Overload output stream operator for piranha::rational.
 		/**
