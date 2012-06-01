@@ -1675,7 +1675,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception resulting from the less-than operator.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
@@ -1691,7 +1691,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception resulting from the less-than or equal operator.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
