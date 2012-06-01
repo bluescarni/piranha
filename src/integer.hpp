@@ -907,7 +907,7 @@ class integer
 			if (si >= 0) {
 				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
 			} else {
-				if (*this == 0) {
+				if (sign() == 0) {
 					piranha_throw(zero_division_error,"negative exponentiation of zero");
 				}
 				return (1 / *this).pow(-static_cast<typename std::make_unsigned<T>::type>(si));
@@ -915,13 +915,17 @@ class integer
 		}
 		integer pow_impl(const integer &n) const
 		{
-			unsigned long exp;
-			try {
-				exp = static_cast<unsigned long>(n);
-			} catch (const std::overflow_error &) {
-				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+			if (n.sign() >= 0) {
+				unsigned long exp;
+				try {
+					exp = static_cast<unsigned long>(n);
+				} catch (const std::overflow_error &) {
+					piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
+				}
+				return pow_impl(exp);
+			} else {
+				return 1 / pow_impl(-n);
 			}
-			return pow_impl(exp);
 		}
 		template <typename T>
 		integer pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const

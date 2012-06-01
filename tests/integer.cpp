@@ -710,6 +710,10 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 {
 	BOOST_CHECK_EQUAL(piranha::integer(10).pow(2),100);
 	BOOST_CHECK_EQUAL(piranha::integer(10).pow(piranha::integer(2)),100);
+	BOOST_CHECK_EQUAL(piranha::integer(10).pow(piranha::integer(-2)),0);
+	BOOST_CHECK_EQUAL(piranha::integer(1).pow(piranha::integer(-1)),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(piranha::integer(-1)),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).pow(-1),1);
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-2),1);
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3),-1);
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(2LL),1);
