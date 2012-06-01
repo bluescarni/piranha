@@ -45,6 +45,7 @@
 #include <vector>
 
 #include "../src/exceptions.hpp"
+#include "../src/math.hpp"
 
 const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_values(
 	(char)42,(signed char)42,(short)42,-42,42L,-42LL,
