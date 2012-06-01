@@ -21,6 +21,7 @@
 #ifndef PIRANHA_RATIONAL_HPP
 #define PIRANHA_RATIONAL_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
@@ -1465,6 +1466,26 @@ class rational
 			os << ::mpq_get_str(&tmp[0u],10,q.m_value);
 			return os;
 		}
+		/// Overload input stream operator for piranha::rational.
+		/**
+		 * Equivalent to extracting a string from the stream and then using it to construct a piranha::rational that will be assigned to \p q.
+		 * 
+		 * @param[in] is input stream.
+		 * @param[in,out] q rational to which the contents of the stream will be assigned.
+		 * 
+		 * @return reference to \p is.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::rational.
+		 */
+		friend std::istream &operator>>(std::istream &is, rational &q)
+		{
+			std::string tmp_str;
+			std::getline(is,tmp_str);
+			// NOTE: here this can probably be optimized via mpz_set_str,
+			// thus avoiding one allocation.
+			q = rational(tmp_str);
+			return is;
+		}
 	private:
 		::mpq_t m_value;
 };
@@ -1498,6 +1519,19 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::valu
 
 namespace std
 {
+
+/// Specialization of \p std::swap for piranha::rational.
+/**
+ * @param[in] q1 first argument.
+ * @param[in] q2 second argument.
+ * 
+ * @see piranha::rational::swap()
+ */
+template <>
+inline void swap(piranha::rational &q1, piranha::rational &q2)
+{
+	q1.swap(q2);
+}
 
 /// Specialisation of \p std::hash for piranha::rational.
 template <>

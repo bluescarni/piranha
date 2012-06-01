@@ -25,6 +25,7 @@
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <algorithm>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
@@ -100,13 +101,13 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	rational i("-30"), j(i);
 	BOOST_CHECK_EQUAL(-30,static_cast<int>(j));
 	// Large value.
-// 	rational i2(get_big_int()), j2(i2);
-// 	BOOST_CHECK_EQUAL(i2,j2);
+	rational i2(get_big_int()), j2(i2);
+	BOOST_CHECK_EQUAL(i2,j2);
 	// Move construction.
 	rational i3("-30"), j3(std::move(i3));
 	BOOST_CHECK(static_cast<int>(j3) == -30);
-// 	rational i4(get_big_int()), j4(std::move(i4));
-// 	BOOST_CHECK(j4 == i2);
+	rational i4(get_big_int()), j4(std::move(i4));
+	BOOST_CHECK(j4 == i2);
 	// Construction with non-finite floating-point.
 	if (std::numeric_limits<float>::has_infinity && std::numeric_limits<double>::has_infinity) {
 		BOOST_CHECK_THROW(ptr.reset(new rational(std::numeric_limits<float>::infinity())),std::invalid_argument);
@@ -239,13 +240,10 @@ BOOST_AUTO_TEST_CASE(rational_swap_test)
 	i.swap(k);
 	BOOST_CHECK_EQUAL(3,static_cast<int>(i));
 	k = get_big_int();
-	i.swap(k);
+	std::swap(i,k);
 	BOOST_CHECK_EQUAL(3,static_cast<int>(k));
 	k.swap(i);
 	BOOST_CHECK_EQUAL(3,static_cast<int>(i));
-// 	piranha::integer l(get_big_int() + 1);
-// 	l.swap(k);
-// 	BOOST_CHECK_EQUAL(get_big_int(),l);
 }
 
 template <typename T>
@@ -796,4 +794,34 @@ BOOST_AUTO_TEST_CASE(rational_math_overloads_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-10");
 	math::negate(n);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"10");
+}
+
+BOOST_AUTO_TEST_CASE(rational_stream_test)
+{
+	{
+		std::ostringstream oss;
+		std::string tmp = "12843748347394832742398472398472389/66786543";
+		oss << rational(tmp);
+		BOOST_CHECK_EQUAL(tmp,oss.str());
+	}
+	{
+		std::ostringstream oss;
+		std::string tmp = "-2389472323272767078540934/13";
+		oss << rational(tmp);
+		BOOST_CHECK_EQUAL(tmp,oss.str());
+	}
+	{
+		rational tmp;
+		std::stringstream ss;
+		ss << "256/2";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,128);
+	}
+	{
+		rational tmp;
+		std::stringstream ss;
+		ss << "-30000";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,-30000);
+	}
 }
