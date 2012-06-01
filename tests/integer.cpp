@@ -735,14 +735,11 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 BOOST_AUTO_TEST_CASE(integer_hash_test)
 {
 	BOOST_CHECK_EQUAL(piranha::integer().hash(),static_cast<std::size_t>(0));
-	BOOST_CHECK(piranha::integer(1).hash() != piranha::integer(-1).hash());
 	BOOST_CHECK_EQUAL((piranha::integer() + piranha::integer(1) - piranha::integer(1)).hash(),static_cast<std::size_t>(0));
 	BOOST_CHECK_EQUAL((piranha::integer(1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(1).hash());
 	BOOST_CHECK_EQUAL((piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)).hash(),piranha::integer(-1).hash());
-
 	std::hash<piranha::integer> hasher;
 	BOOST_CHECK_EQUAL(hasher(piranha::integer()),static_cast<std::size_t>(0));
-	BOOST_CHECK(hasher(piranha::integer(1)) != hasher(piranha::integer(-1)));
 	BOOST_CHECK_EQUAL(hasher(piranha::integer() + piranha::integer(1) - piranha::integer(1)),static_cast<std::size_t>(0));
 	BOOST_CHECK_EQUAL(hasher(piranha::integer(1) + piranha::integer(1) - piranha::integer(1)),hasher(piranha::integer(1)));
 	BOOST_CHECK_EQUAL(hasher(piranha::integer(-1) + piranha::integer(1) - piranha::integer(1)),hasher(piranha::integer(-1)));

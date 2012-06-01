@@ -956,6 +956,16 @@ class integer
 		{
 			::mpz_init_set(m_value,n);
 		}
+		static std::size_t hash_mpz_t(const ::mpz_t n)
+		{
+			const std::size_t size = ::mpz_size(n);
+			// Use the sign as initial seed value.
+			std::size_t retval = static_cast<std::size_t>(mpz_sgn(n));
+			for (std::size_t i = 0u; i < size; ++i) {
+				boost::hash_combine(retval,n->_mp_d[i]);
+			}
+			return retval;
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1800,18 +1810,10 @@ class integer
 		 * @return a hash value for \p this.
 		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/reference.html#boost.hash_combine
-		 * 
-		 * \todo fix this not to throw.
 		 */
 		std::size_t hash() const
 		{
-			const ::mp_size_t size = boost::numeric_cast< ::mp_size_t>(this->size());
-			// Use the sign as initial seed value.
-			std::size_t retval = static_cast<std::size_t>(sign());
-			for (::mp_size_t i = 0; i < size; ++i) {
-				boost::hash_combine(retval,::mpz_getlimbn(m_value,i));
-			}
-			return retval;
+			return hash_mpz_t(m_value);
 		}
 		/// Integer size.
 		/**
