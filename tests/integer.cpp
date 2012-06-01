@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(integer_swap_test)
 	piranha::integer k(get_big_int());
 	i.swap(k);
 	BOOST_CHECK_EQUAL(43,static_cast<int>(k));
-	k.swap(i);
+	std::swap(k,i);
 	BOOST_CHECK_EQUAL(43,static_cast<int>(i));
 	piranha::integer l(get_big_int() + 1);
 	l.swap(k);
