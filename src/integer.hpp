@@ -792,13 +792,13 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
@@ -810,7 +810,7 @@ class integer
 			return binary_equality(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) == x);
 		}
@@ -826,13 +826,13 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
@@ -844,7 +844,7 @@ class integer
 			return binary_less_than(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) < x);
 		}
@@ -854,13 +854,13 @@ class integer
 			return (::mpz_cmp(n1.m_value,n2.m_value) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_signed<T>::value &&
+		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n1, const T &n2,typename std::enable_if<std::is_unsigned<T>::value &&
+		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
@@ -872,7 +872,7 @@ class integer
 			return binary_leq(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n, const T &x,typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
 		{
 			return (static_cast<T>(n) <= x);
 		}
