@@ -21,6 +21,7 @@
 #ifndef PIRANHA_RATIONAL_HPP
 #define PIRANHA_RATIONAL_HPP
 
+#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
@@ -36,6 +37,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "concepts/coefficient.hpp"
 #include "config.hpp"
 #include "detail/rational_fwd.hpp"
 #include "exceptions.hpp"
@@ -615,6 +617,8 @@ class rational
 		 */
 		~rational() piranha_noexcept_spec(true)
 		{
+			// TODO restore this.
+			//BOOST_CONCEPT_ASSERT((concept::Coefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
 			piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
 			if (mpq_numref(m_value)->_mp_d != 0) {
@@ -771,7 +775,7 @@ class rational
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -793,7 +797,7 @@ class rational
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::rational to \p T.
 		 */
 		template <typename T, typename Q>
 		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
@@ -821,7 +825,7 @@ class rational
 		 * 
 		 * @return <tt>x + y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -867,7 +871,7 @@ class rational
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -889,7 +893,7 @@ class rational
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::rational to \p T.
 		 */
 		template <typename T, typename Q>
 		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
@@ -908,7 +912,7 @@ class rational
 		 * 
 		 * @return <tt>x - y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -964,7 +968,7 @@ class rational
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -986,7 +990,7 @@ class rational
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::rational to \p T.
 		 */
 		template <typename T, typename Q>
 		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
@@ -1005,7 +1009,7 @@ class rational
 		 * 
 		 * @return <tt>x * y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1022,7 +1026,7 @@ class rational
 		 * @return reference to \p this.
 		 * 
 		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p x.
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1048,7 +1052,7 @@ class rational
 		 * @return reference to \p x.
 		 * 
 		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p q.
-		 * @throws unspecified any exception resulting from casting piranha::rational to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::rational to \p T.
 		 */
 		template <typename T, typename Q>
 		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value) &&
@@ -1068,7 +1072,7 @@ class rational
 		 * @return <tt>x / y</tt>.
 		 * 
 		 * @throws piranha::zero_division_error if piranha::math::is_zero() returns \p true on \p y.
-		 * @throws unspecified any exception resulting from the conversion of piranha::rational to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type

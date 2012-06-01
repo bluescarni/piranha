@@ -1239,7 +1239,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1259,7 +1259,7 @@ class integer
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
@@ -1286,7 +1286,7 @@ class integer
 		 * 
 		 * @return <tt>x + y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1332,7 +1332,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1352,7 +1352,7 @@ class integer
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
@@ -1370,7 +1370,7 @@ class integer
 		 * 
 		 * @return <tt>x - y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1426,7 +1426,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1446,7 +1446,7 @@ class integer
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
@@ -1464,7 +1464,7 @@ class integer
 		 * 
 		 * @return <tt>x * y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1483,7 +1483,7 @@ class integer
 		 * @return reference to \p this.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>x == 0</tt>.
-		 * @throws unspecified any exception resulting from operating on non-finite floating-point values or from failures in floating-point conversions.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T>
 		typename std::enable_if<
@@ -1504,7 +1504,7 @@ class integer
 		 * @return reference to \p x.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
-		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend typename std::enable_if<is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
@@ -1524,7 +1524,7 @@ class integer
 		 * @return <tt>x / y</tt>.
 		 * 
 		 * @throws piranha::zero_division_error if <tt>y == 0</tt>.
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -1567,7 +1567,7 @@ class integer
 		 * @return reference to \p x.
 		 * 
 		 * @throws std::invalid_argument if <tt>n <= 0</tt> or <tt>x < 0</tt>.
-		 * @throws unspecified any exception resulting from casting piranha::integer to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or from casting piranha::integer to \p T.
 		 */
 		template <typename T, typename I>
 		friend typename std::enable_if<std::is_integral<T>::value && is_interop_type<T>::value && std::is_same<typename std::decay<I>::type,integer>::value,T &>::type
@@ -1619,7 +1619,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
@@ -1635,7 +1635,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
@@ -1651,7 +1651,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
@@ -1667,7 +1667,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
@@ -1683,7 +1683,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
@@ -1699,7 +1699,7 @@ class integer
 		 * 
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from the conversion of piranha::integer to floating-point types.
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
