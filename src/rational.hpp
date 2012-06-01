@@ -37,6 +37,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include "concepts/coefficient.hpp"
@@ -1422,6 +1423,20 @@ class rational
 		{
 			return pow_impl(exp);
 		}
+		/// Hash value.
+		/**
+		 * The value is calculated via \p boost::hash_combine over the limbs of the internal \p mpq_t type.
+		 * 
+		 * @return a hash value for \p this.
+		 * 
+		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/reference.html#boost.hash_combine
+		 */
+		std::size_t hash() const
+		{
+			auto retval = integer::hash_mpz_t(mpq_numref(m_value));
+			boost::hash_combine(retval,integer::hash_mpz_t(mpq_denref(m_value)));
+			return retval;
+		}
 		/// Overload output stream operator for piranha::rational.
 		/**
 		 * @param[in] os output stream.
@@ -1478,6 +1493,33 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::valu
 };
 
 }
+
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::rational.
+template <>
+struct hash<piranha::rational>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::rational argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] q piranha::rational whose hash value will be returned.
+	 * 
+	 * @return <tt>q.hash()</tt>.
+	 * 
+	 * @see piranha::rational::hash()
+	 */
+	result_type operator()(const argument_type &q) const
+	{
+		return q.hash();
+	}
+};
 
 }
 

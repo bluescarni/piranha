@@ -757,6 +757,19 @@ BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
 	BOOST_CHECK_EQUAL(rational(10,-3).pow(3),rational(27,-1000).pow(-1));
 }
 
+BOOST_AUTO_TEST_CASE(rational_hash_test)
+{
+	BOOST_CHECK_EQUAL((rational(1) + rational(1) - rational(1)).hash(),rational(1).hash());
+	BOOST_CHECK_EQUAL((rational(-1) + rational(1) - rational(1)).hash(),rational(-1).hash());
+	BOOST_CHECK_EQUAL((rational(1,2) + rational(1,2) - rational(1,2)).hash(),rational(1,2).hash());
+	BOOST_CHECK_EQUAL((rational(-1,2) + rational(1,2) - rational(1,2)).hash(),rational(1,-2).hash());
+	std::hash<rational> hasher;
+	BOOST_CHECK_EQUAL(hasher(rational(1) + rational(1) - rational(1)),hasher(rational(1)));
+	BOOST_CHECK_EQUAL(hasher(rational(-1) + rational(1) - rational(1)),hasher(rational(-1)));
+	BOOST_CHECK_EQUAL((rational(1,2) + rational(1,2) - rational(1,2)).hash(),hasher(rational(1,2)));
+	BOOST_CHECK_EQUAL((rational(-1,2) + rational(1,2) - rational(1,2)).hash(),hasher(rational(1,-2)));
+}
+
 BOOST_AUTO_TEST_CASE(rational_sign_test)
 {
 	BOOST_CHECK_EQUAL(rational().sign(),0);
