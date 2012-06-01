@@ -938,11 +938,11 @@ class integer
 			}
 			unsigned long exp;
 			try {
-				exp = boost::numeric_cast<unsigned long>((x >= 0) ? x : -x);
+				exp = boost::numeric_cast<unsigned long>((x >= T(0)) ? x : -x);
 			} catch (const boost::numeric::bad_numeric_cast &) {
 				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
 			}
-			if (x >= 0) {
+			if (x >= T(0)) {
 				return pow_impl(exp);
 			} else {
 				if (*this == 0) {
