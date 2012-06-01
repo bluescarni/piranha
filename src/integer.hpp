@@ -290,7 +290,7 @@ class integer
 		template <typename T>
 		typename std::enable_if<std::is_same<T,bool>::value,T>::type convert_to_impl() const
 		{
-			return (mpz_sgn(m_value) != 0);
+			return (sign() != 0);
 		}
 		// In-place addition.
 		void in_place_add(const integer &n)
@@ -425,7 +425,7 @@ class integer
 		// In-place division.
 		void in_place_div(const integer &n)
 		{
-			if (unlikely(mpz_sgn(n.m_value) == 0)) {
+			if (unlikely(n.sign() == 0)) {
 				piranha_throw(zero_division_error,"division by zero");
 			}
 			::mpz_tdiv_q(m_value,m_value,n.m_value);
@@ -469,7 +469,7 @@ class integer
 		// In-place modulo.
 		void in_place_mod(const integer &n)
 		{
-			if (unlikely(mpz_sgn(n.m_value) <= 0)) {
+			if (unlikely(n.sign() <= 0)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
 			}
 			::mpz_mod(m_value,m_value,n.m_value);
@@ -1548,7 +1548,7 @@ class integer
 			(std::is_integral<typename std::decay<T>::type>::value && is_interop_type<typename std::decay<T>::type>::value) ||
 			std::is_same<integer,typename std::decay<T>::type>::value,integer &>::type operator%=(T &&n)
 		{
-			if (unlikely(mpz_sgn(m_value) < 0)) {
+			if (unlikely(sign() < 0)) {
 				piranha_throw(std::invalid_argument,"negative dividend");
 			}
 			in_place_mod(std::forward<T>(n));
@@ -1811,7 +1811,7 @@ class integer
 		{
 			const ::mp_size_t size = boost::numeric_cast< ::mp_size_t>(this->size());
 			// Use the sign as initial seed value.
-			std::size_t retval = static_cast<std::size_t>(mpz_sgn(m_value));
+			std::size_t retval = static_cast<std::size_t>(sign());
 			for (::mp_size_t i = 0; i < size; ++i) {
 				boost::hash_combine(retval,::mpz_getlimbn(m_value,i));
 			}
