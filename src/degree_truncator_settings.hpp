@@ -52,7 +52,7 @@ namespace piranha
 // ovrhead of mutexes here is to use an atomic variable for the mode: when getting
 // the state of the truncator settings, first query the mode and lock+copy the full state
 // only if the truncator is active.
-class degree_truncator_settings
+class PIRANHA_PUBLIC degree_truncator_settings
 {
 	public:
 		/// Truncation mode.

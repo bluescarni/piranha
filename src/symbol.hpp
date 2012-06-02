@@ -56,7 +56,7 @@ namespace piranha
  * \todo drop also the iterator and global map mechanism, as it is not guaranteed to be thread safe. Just replace it with plain strings,
  * and assume that equal names == equal symbols.
  */
-class symbol
+class PIRANHA_PUBLIC symbol
 {
 	public:
 		/// Constructor from name.
