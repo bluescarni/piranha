@@ -23,12 +23,89 @@
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
 #include <Python.h>
 #include <cmath>
-#include <boost/python/docstring_options.hpp>
-#include <boost/python/module.hpp>
+#include <boost/python.hpp>
+#include <stdexcept>
+#include <string>
+
+#include "../src/config.hpp"
+#include "../src/integer.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/rational.hpp"
+#include "../src/polynomial.hpp"
 
 using namespace boost::python;
+using namespace piranha;
+
+struct base_from_python
+{
+	template <typename T>
+	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data, const std::string &name)
+	{
+		PyObject *str_obj = PyObject_Str(obj_ptr);
+		if (!str_obj) {
+			piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+		}
+		handle<> str_rep(str_obj);
+		const char *s = PyString_AsString(str_rep.get());
+		void *storage = reinterpret_cast<converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
+		::new (storage) T(s);
+		data->convertible = storage;
+	}
+};
+
+struct integer_from_python_int: base_from_python
+{
+	integer_from_python_int()
+	{
+		converter::registry::push_back(&convertible,&construct,type_id<integer>());
+	}
+	static void *convertible(PyObject *obj_ptr)
+	{
+		if (!obj_ptr || (!PyInt_CheckExact(obj_ptr) && !PyLong_CheckExact(obj_ptr))) {
+			return piranha_nullptr;
+		}
+		return obj_ptr;
+	}
+	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data)
+	{
+		base_from_python::construct<integer>(obj_ptr,data,"integer");
+	}
+};
+
+struct rational_from_python_fraction: base_from_python
+{
+	rational_from_python_fraction()
+	{
+		converter::registry::push_back(&convertible,&construct,type_id<rational>());
+	}
+	static void *convertible(PyObject *obj_ptr)
+	{
+		if (!obj_ptr) {
+			return piranha_nullptr;
+		}
+		object frac_module = import("fractions");
+		object frac_class = frac_module.attr("Fraction");
+		if (!PyObject_IsInstance(obj_ptr,frac_class.ptr())) {
+			return piranha_nullptr;
+		}
+		return obj_ptr;
+	}
+	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data)
+	{
+		base_from_python::construct<rational>(obj_ptr,data,"rational");
+	}
+};
 
 BOOST_PYTHON_MODULE(_core)
 {
 	docstring_options doc_options(true,true,false);
+
+	integer_from_python_int integer_converter;
+	rational_from_python_fraction rational_converter;
+
+	class_<polynomial<integer,kronecker_monomial<>>>("poly",init<std::string>())
+		.def(init<const double &>())
+		.def(init<const integer &>())
+		.def(init<const rational &>())
+		.def(repr(self));
 }
