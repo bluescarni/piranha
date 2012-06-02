@@ -67,6 +67,7 @@
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
  * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment
+ * \todo read up about strict aliasing with boost python and in conjunction with different Python version.
  */
 namespace piranha
 {

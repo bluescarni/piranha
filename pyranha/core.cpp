@@ -18,44 +18,17 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-// NOTE: we need to include cmath here because of this issue with pyconfig.h and hypot:
+// NOTE: the order of inclusion in the first two items here is forced by these two issues:
+// http://mail.python.org/pipermail/python-list/2004-March/907592.html
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+#include <Python.h>
 #include <cmath>
-#include <boost/python/class.hpp>
 #include <boost/python/docstring_options.hpp>
 #include <boost/python/module.hpp>
-#include <boost/python/operators.hpp>
-#include <string>
-
-#include "../../src/integer.hpp"
-#include "../../src/runtime_info.hpp"
-#include "../../src/settings.hpp"
 
 using namespace boost::python;
-using namespace piranha;
 
 BOOST_PYTHON_MODULE(_core)
 {
 	docstring_options doc_options(true,true,false);
-
-	class_<integer>("integer", "Arbitrary precision integer class.", init<>())
-		.def(init<integer>())
-		.def(init<double>())
-		.def(init<std::string>())
-		.def(float_(self))
-		.def(str(self))
-		.def(repr(self))
-		.def(self + self)
-		.def(self + double())
-		.def(double() + self)
-		.def("size",&integer::size,"Integer size.");
-
-	class_<settings>("settings", "Global piranha settings.", init<>())
-		.add_static_property("n_threads",&settings::get_n_threads,&settings::set_n_threads)
-		.def("reset_n_threads",&settings::reset_n_threads,"Reset the number of threads to the default value determined on startup.")
-		.staticmethod("reset_n_threads");
-
-	class_<runtime_info>("runtime_info", "Runtime information.", init<>())
-		.add_static_property("hardware_concurrency",&runtime_info::get_hardware_concurrency)
-		.add_static_property("cache_line_size",&runtime_info::get_cache_line_size);
 }

@@ -117,10 +117,10 @@ CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/
 # Add the directory for the piranha library.
 ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
 
-# Link main to piranha_static library.
+# Link main to piranha library.
 IF(BUILD_MAIN)
 	ADD_EXECUTABLE(main main.cpp)
-	TARGET_LINK_LIBRARIES(main piranha_static)
+	TARGET_LINK_LIBRARIES(main piranha)
 ENDIF(BUILD_MAIN)
 
 IF(BUILD_TESTS)
