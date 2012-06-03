@@ -50,7 +50,7 @@ namespace piranha
  * \todo settings::get_tracing() should use an atomic variable instead of mutex, to maximize performance
  * in those cases in which we are not tracing.
  */
-class tracing
+class PIRANHA_PUBLIC tracing
 {
 		typedef std::map<std::string,boost::any> container_type;
 	public:

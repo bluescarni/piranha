@@ -36,7 +36,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class thread_management
+class PIRANHA_PUBLIC thread_management
 {
 	public:
 		static void bind_to_proc(unsigned);
