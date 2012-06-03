@@ -21,8 +21,14 @@
 // NOTE: the order of inclusion in the first two items here is forced by these two issues:
 // http://mail.python.org/pipermail/python-list/2004-March/907592.html
 // http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+#if defined(_WIN32)
 #include <cmath>
 #include <Python.h>
+#else
+#include <Python.h>
+#include <cmath>
+#endif
+
 #include <boost/python.hpp>
 #include <stdexcept>
 #include <string>
@@ -36,24 +42,21 @@
 using namespace boost::python;
 using namespace piranha;
 
-struct base_from_python
+template <typename T>
+inline void construct_from_str(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data, const std::string &name)
 {
-	template <typename T>
-	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data, const std::string &name)
-	{
-		PyObject *str_obj = PyObject_Str(obj_ptr);
-		if (!str_obj) {
-			piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
-		}
-		handle<> str_rep(str_obj);
-		const char *s = PyString_AsString(str_rep.get());
-		void *storage = reinterpret_cast<converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
-		::new (storage) T(s);
-		data->convertible = storage;
+	PyObject *str_obj = PyObject_Str(obj_ptr);
+	if (!str_obj) {
+		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
 	}
-};
+	handle<> str_rep(str_obj);
+	const char *s = PyString_AsString(str_rep.get());
+	void *storage = reinterpret_cast<converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
+	::new (storage) T(s);
+	data->convertible = storage;
+}
 
-struct integer_from_python_int: base_from_python
+struct integer_from_python_int
 {
 	integer_from_python_int()
 	{
@@ -68,11 +71,11 @@ struct integer_from_python_int: base_from_python
 	}
 	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data)
 	{
-		base_from_python::construct<integer>(obj_ptr,data,"integer");
+		construct_from_str<integer>(obj_ptr,data,"integer");
 	}
 };
 
-struct rational_from_python_fraction: base_from_python
+struct rational_from_python_fraction
 {
 	rational_from_python_fraction()
 	{
@@ -92,7 +95,7 @@ struct rational_from_python_fraction: base_from_python
 	}
 	static void construct(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data)
 	{
-		base_from_python::construct<rational>(obj_ptr,data,"rational");
+		construct_from_str<rational>(obj_ptr,data,"rational");
 	}
 };
 
