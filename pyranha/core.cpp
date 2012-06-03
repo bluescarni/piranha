@@ -29,9 +29,13 @@
 #include <cmath>
 #endif
 
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/vector.hpp>
 #include <boost/python.hpp>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <typeinfo>
 
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
@@ -41,6 +45,13 @@
 
 using namespace boost::python;
 using namespace piranha;
+
+// NOTE: useful resources for python converters and C API:
+// - http://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
+// - http://svn.felspar.com/public/fost-py/trunk/fost-py/Cpp/fost-python/pystring.cpp
+// - http://svn.felspar.com/public/fost-py/trunk/fost-py/Cpp/fost-python/pyjson.cpp
+// - http://stackoverflow.com/questions/937884/how-do-i-import-modules-in-boostpython-embedded-python-code
+// - http://docs.python.org/c-api/
 
 template <typename T>
 inline void construct_from_str(PyObject *obj_ptr, converter::rvalue_from_python_stage1_data *data, const std::string &name)
@@ -99,16 +110,68 @@ struct rational_from_python_fraction
 	}
 };
 
+typedef boost::mpl::vector<double,integer,rational> cf_types;
+
+struct polynomial_exposer
+{
+	template <typename Class>
+	struct ctor_exposer
+	{
+		ctor_exposer(Class &cl):m_cl(cl) {}
+		template <typename Cf>
+		void operator()(const Cf &) const
+		{
+			m_cl.def(init<const Cf &>());
+		}
+		Class &m_cl;
+	};
+	template <typename Cf>
+	struct arithmetic_exposer
+	{
+		typedef class_<polynomial<Cf,kronecker_monomial<>>> c_type;
+		arithmetic_exposer(c_type &cl):m_cl(cl) {}
+		template <typename Cf2>
+		void operator()(const Cf2 &cf2) const
+		{
+			m_cl.def(self += cf2);
+			m_cl.def(self + cf2);
+			m_cl.def(cf2 + self);
+			m_cl.def(self -= cf2);
+			m_cl.def(self - cf2);
+			m_cl.def(cf2 - self);
+			m_cl.def(self *= cf2);
+			m_cl.def(self * cf2);
+			m_cl.def(cf2 * self);
+		}
+		c_type &m_cl;
+	};
+	template <typename Cf>
+	void operator()(const Cf &cf) const
+	{
+		typedef polynomial<Cf,kronecker_monomial<>> p_type;
+		class_<p_type> p_class((std::string("polynomial_")+typeid(cf).name()).c_str(),init<std::string>());
+		p_class.def(repr(self));
+		boost::mpl::for_each<cf_types>(ctor_exposer<decltype(p_class)>(p_class));
+		// Arithmetic with self.
+		p_class.def(self += self);
+		p_class.def(self + self);
+		p_class.def(self -= self);
+		p_class.def(self - self);
+		p_class.def(self *= self);
+		p_class.def(self * self);
+		// Arithmetic with numeric types.
+		boost::mpl::for_each<cf_types>(arithmetic_exposer<Cf>(p_class));
+	}
+};
+
 BOOST_PYTHON_MODULE(_core)
 {
-	docstring_options doc_options(true,true,false);
-
+	// Arithmetic converters.
 	integer_from_python_int integer_converter;
 	rational_from_python_fraction rational_converter;
 
-	class_<polynomial<integer,kronecker_monomial<>>>("poly",init<std::string>())
-		.def(init<const double &>())
-		.def(init<const integer &>())
-		.def(init<const rational &>())
-		.def(repr(self));
+	// Docstring options setup.
+	docstring_options doc_options(true,true,false);
+
+	boost::mpl::for_each<cf_types>(polynomial_exposer());
 }
