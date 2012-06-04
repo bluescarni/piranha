@@ -55,6 +55,7 @@ class g_series_type: public series<Term,g_series_type<Term>>
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
+		g_series_type(const int &n):base(n) {}
 		g_series_type &operator=(const g_series_type &) = default;
 		g_series_type &operator=(g_series_type &&other) piranha_noexcept_spec(true)
 		{

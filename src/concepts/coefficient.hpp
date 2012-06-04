@@ -45,7 +45,8 @@ namespace concept
  * - must be suitable as argument type of piranha::print_coefficient(),
  * - must be suitable as argument type of piranha::math::is_zero() and piranha::math::negate(),
  * - must be equality comparable,
- * - must be addable and subtractable.
+ * - must be addable and subtractable,
+ * - must be constructible from integer numerals.
  */
 template <typename T>
 struct Coefficient:
@@ -65,6 +66,10 @@ struct Coefficient:
 		inst_mut += inst_mut;
 		(void)(inst_mut - inst_mut);
 		inst_mut -= inst_mut;
+		// Construction from integer numeral.
+		// NOTE: this is used, for instance, in series exponentiation.
+		const T inst2 = T(1);
+		(void)inst2;
 	}
 };
 
