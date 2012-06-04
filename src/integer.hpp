@@ -1928,6 +1928,36 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<
 
 }
 
+namespace math
+{
+
+/// Specialisation of the piranha::math::pow() functor for piranha::integer.
+/**
+ * This specialisation is activated when \p T is piranha::integer.
+ * The result will be computed via piranha::integer::pow().
+ */
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The exponentiation will be computed via piranha::integer::pow().
+	 * 
+	 * @param[in] n base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p n to the power of \p x.
+	 * 
+	 * @throws unspecified any exception resulting from piranha::integer::pow().
+	 */
+	auto operator()(const T &n, const U &x) const -> decltype(n.pow(x))
+	{
+		return n.pow(x);
+	}
+};
+
+}
+
 }
 
 namespace std

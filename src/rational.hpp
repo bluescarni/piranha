@@ -1515,6 +1515,36 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::valu
 
 }
 
+namespace math
+{
+
+/// Specialisation of the piranha::math::pow() functor for piranha::rational.
+/**
+ * This specialisation is activated when \p T is piranha::rational.
+ * The result will be computed via piranha::rational::pow().
+ */
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The exponentiation will be computed via piranha::rational::pow().
+	 * 
+	 * @param[in] q base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p q to the power of \p x.
+	 * 
+	 * @throws unspecified any exception resulting from piranha::rational::pow().
+	 */
+	auto operator()(const T &q, const U &x) const -> decltype(q.pow(x))
+	{
+		return q.pow(x);
+	}
+};
+
+}
+
 }
 
 namespace std

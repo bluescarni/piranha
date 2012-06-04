@@ -718,18 +718,26 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3),-1);
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(2LL),1);
 	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(3ULL),-1);
-	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3.),-1);
-	BOOST_CHECK_THROW(piranha::integer(-1).pow(-3.1),std::invalid_argument);
-	BOOST_CHECK_EQUAL(piranha::integer(-1).pow(0.),1);
-	BOOST_CHECK_EQUAL(piranha::integer(0).pow(0.),1);
-	BOOST_CHECK_EQUAL(piranha::integer(0).pow(3.),0);
-	BOOST_CHECK_THROW(piranha::integer(0).pow(-3.),piranha::zero_division_error);
+	if (std::numeric_limits<double>::is_iec559) {
+		BOOST_CHECK_EQUAL(piranha::integer(-1).pow(-3.),-1);
+		BOOST_CHECK_THROW(piranha::integer(-1).pow(-3.1),std::invalid_argument);
+		BOOST_CHECK_EQUAL(piranha::integer(-1).pow(0.),1);
+		BOOST_CHECK_EQUAL(piranha::integer(0).pow(0.),1);
+		BOOST_CHECK_EQUAL(piranha::integer(0).pow(3.),0);
+		BOOST_CHECK_THROW(piranha::integer(0).pow(-3.),piranha::zero_division_error);
+	}
 	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
 	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * -1 - 1),std::invalid_argument);
 	if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
 		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(piranha::integer(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
+	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),2),100);
+	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),-2),0);
+	if (std::numeric_limits<double>::is_iec559) {
+		BOOST_CHECK_THROW(piranha::math::pow(piranha::integer(-1),-3.1),std::invalid_argument);
+	}
+	BOOST_CHECK_THROW(piranha::math::pow(piranha::integer(1),piranha::integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(integer_hash_test)
