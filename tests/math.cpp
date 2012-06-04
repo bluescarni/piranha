@@ -29,7 +29,13 @@
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
+#include <boost/integer_traits.hpp>
+#include <cmath>
+#include <stdexcept>
 #include <type_traits>
+#include <typeinfo>
+
+#include "../src/integer.hpp"
 
 using namespace piranha;
 
@@ -110,3 +116,23 @@ BOOST_AUTO_TEST_CASE(multiply_accumulate_test)
 	boost::fusion::for_each(arithmetic_values,check_multiply_accumulate());
 }
 
+BOOST_AUTO_TEST_CASE(pow_test)
+{
+	BOOST_CHECK(math::pow(2.,2.) == std::pow(2.,2.));
+	BOOST_CHECK(math::pow(2.f,2.) == std::pow(2.f,2.));
+	BOOST_CHECK(math::pow(2.,2.f) == std::pow(2,2.f));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2.)),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.f)),float>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2.f)),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.)),double>::value));
+	BOOST_CHECK(math::pow(2.,2) == std::pow(2.,2));
+	BOOST_CHECK(math::pow(2.f,2) == std::pow(2.f,2));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2)),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2)),double>::value));
+	BOOST_CHECK(math::pow(2.,integer(2)) == std::pow(2.,2));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.,integer(2))),double>::value));
+	if (boost::integer_traits<long long>::const_max > boost::integer_traits<int>::const_max) {
+		BOOST_CHECK_THROW(math::pow(2.,static_cast<long long>(boost::integer_traits<int>::const_max)+1),std::bad_cast);
+	}
+	BOOST_CHECK_THROW(math::pow(2.,integer(boost::integer_traits<int>::const_max)+1),std::overflow_error);
+}

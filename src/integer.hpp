@@ -43,6 +43,7 @@
 
 #include "concepts/coefficient.hpp"
 #include "config.hpp" // For (un)likely.
+#include "detail/integer_fwd.hpp"
 #include "detail/rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"

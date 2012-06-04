@@ -21,9 +21,13 @@
 #ifndef PIRANHA_MATH_HPP
 #define PIRANHA_MATH_HPP
 
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
 #include <type_traits>
+
+#include "config.hpp"
+#include "detail/integer_fwd.hpp"
 
 namespace piranha
 {
@@ -91,6 +95,28 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_float
 
 #endif
 
+// Implementation of exponentiation with floating-point base.
+template <typename T, typename U>
+inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
+	std::is_integral<U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,boost::numeric_cast<int>(n)))
+{
+	return std::pow(x,boost::numeric_cast<int>(n));
+}
+
+template <typename T, typename U>
+inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
+	std::is_same<integer,U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,static_cast<int>(n)))
+{
+	return std::pow(x,static_cast<int>(n));
+}
+
+template <typename T, typename U>
+inline auto float_pow_impl(const T &x, const U &y, typename std::enable_if<
+	std::is_floating_point<U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,y))
+{
+	return std::pow(x,y);
+}
+
 }
 
 /// Math namespace.
@@ -150,6 +176,62 @@ inline void multiply_accumulate(T &x, U &&y, V &&z)
 {
 	piranha::detail::math_multiply_accumulate_impl<typename std::decay<T>::type,
 		typename std::decay<U>::type,typename std::decay<V>::type>::run(x,std::forward<U>(y),std::forward<V>(z));
+}
+
+/// Default functor for the implementation of piranha::math::pow().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename U, typename Enable = void>
+struct pow_impl
+{};
+
+/// Specialisation of the piranha::math::pow() functor for floating-point bases.
+/**
+ * This specialisation is activated when \p T is a floating-point type and \p U is either a floating-point type,
+ * an integral type or piranha::integer. The result will be computed via the standard <tt>std::pow()</tt> function.
+ */
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
+	(std::is_floating_point<U>::value || std::is_integral<U>::value || std::is_same<U,integer>::value)>::type>
+{
+	/// Call operator.
+	/**
+	 * The exponentiation will be computed via <tt>std::pow()</tt>. In case \p U2 is an integral type or piranha::integer,
+	 * \p y will be converted to \p int via <tt>boost::numeric_cast()</tt> or <tt>static_cast()</tt>.
+	 * 
+	 * @param[in] x base.
+	 * @param[in] y exponent.
+	 * 
+	 * @return \p x to the power of \p y.
+	 * 
+	 * @throws unspecified any exception resulting from numerical conversion failures in <tt>boost::numeric_cast()</tt> or <tt>static_cast()</tt>.
+	 */
+	auto operator()(const T &x, const U &y) const -> decltype(detail::float_pow_impl(x,y))
+	{
+		return detail::float_pow_impl(x,y);
+	}
+};
+
+/// Exponentiation.
+/**
+ * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl functor's
+ * call operator.
+ * 
+ * @param[in] x base.
+ * @param[in] y exponent.
+ * 
+ * @return \p x to the power of \p y.
+ * 
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::pow_impl functor.
+ */
+// NOTE: here the use of trailing decltype gives a nice and compact compilation error in case the specialisation of the functor
+// is missing.
+template <typename T, typename U>
+inline auto pow(T &&x, U &&y) -> decltype(pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y)))
+{
+	return pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y));
 }
 
 }
