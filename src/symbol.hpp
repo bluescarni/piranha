@@ -54,7 +54,9 @@ namespace piranha
  * 
  * \todo drop the value, does not make much sense anymore.
  * \todo drop also the iterator and global map mechanism, as it is not guaranteed to be thread safe. Just replace it with plain strings,
- * and assume that equal names == equal symbols.
+ * and assume that equal names == equal symbols - or at least store the pointer instead of the iterator:
+ * http://stackoverflow.com/questions/9006663/iterators-validity-and-threads
+ * Comparing pointers instead of full strings could provide important performance benefits.
  */
 class PIRANHA_PUBLIC symbol
 {
