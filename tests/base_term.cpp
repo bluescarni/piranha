@@ -33,12 +33,13 @@
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
+#include "../src/rational.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
 // NOTE: maybe once series coefficient is available we can add it here.
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
 template <typename Cf, typename Key>

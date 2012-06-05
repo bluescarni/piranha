@@ -45,7 +45,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
@@ -1290,6 +1290,7 @@ struct pow_tester
 			BOOST_CHECK(p1.pow(1) == 0);
 			p1 = 2;
 			BOOST_CHECK(math::pow(p1,4) == math::pow(Cf(2),4));
+			BOOST_CHECK(math::pow(p1,-4) == math::pow(Cf(2),-4));
 			p1 = p_type1("x");
 			p1 += 1;
 			BOOST_CHECK(math::pow(p1,1) == p1);
@@ -1311,6 +1312,7 @@ struct pow_tester
 			BOOST_CHECK(p11.pow(1) == 0);
 			p11 = 2;
 			BOOST_CHECK(math::pow(p11,4) == math::pow(p_type1(2),4));
+			BOOST_CHECK(math::pow(p11,-4) == math::pow(p_type1(2),-4));
 			p11 = p_type11("x");
 			p11 += 1;
 			BOOST_CHECK(math::pow(p11,1) == p11);
