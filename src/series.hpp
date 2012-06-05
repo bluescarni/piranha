@@ -952,8 +952,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Exponentiation.
 		/**
-		 * Return \p this raised to the <tt>x</tt>-th power. This template method is activated if the coefficient type supports exponentiation
-		 * via math::pow() with exponent of type \p T.
+		 * Return \p this raised to the <tt>x</tt>-th power.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
@@ -980,9 +979,7 @@ class series: series_binary_operators, detail::series_tag
 		 * - series multiplication.
 		 */
 		template <typename T>
-		Derived pow(const T &x, typename std::enable_if<
-			sizeof(decltype(math::pow(std::declval<typename term_type::cf_type>(),x)))
-			>::type * = piranha_nullptr) const
+		Derived pow(const T &x) const
 		{
 			// Shortcuts.
 			typedef typename term_type::cf_type cf_type;
