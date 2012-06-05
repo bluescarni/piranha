@@ -598,18 +598,7 @@ class series: series_binary_operators, detail::series_tag
 			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integer");
 		}
 		template <typename T>
-		Derived pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
-		{
-			if (!boost::math::isfinite(x)) {
-				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-finite floating-point");
-			}
-			if (boost::math::trunc(x) != x) {
-				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: floating-point with non-zero fractional part");
-			}
-			return pow_impl(integer(x));
-		}
-		template <typename T>
-		Derived pow_impl(const T &, typename std::enable_if<!std::is_floating_point<T>::value && !std::is_integral<T>::value &&
+		Derived pow_impl(const T &, typename std::enable_if<!std::is_integral<T>::value &&
 			!std::is_same<T,integer>::value>::type * = piranha_nullptr) const
 		{
 			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: unsupported type");
@@ -963,24 +952,26 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Exponentiation.
 		/**
-		 * Return \p this raised to the <tt>x</tt>-th power.
+		 * Return \p this raised to the <tt>x</tt>-th power. This template method is activated if the coefficient type supports exponentiation
+		 * via math::pow() with exponent of type \p T.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
 		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
 		 *   is 1 - including empty series);
-		 * - if \p this is empty, an empty series is returned;
+		 * - if \p this is empty, a series with a single term
+		 *   with unitary key and coefficient constructed from the integer numeral "0" and raised to the power of \p x (via piranha::math::pow()) is returned;
 		 * - if \p this has a single term with unitary key and coefficient \p cf, a series is returned with a single term with unitary key and coefficient
 		 *   equal to \p cf raised to the power of \p x (via piranha::math::pow());
-		 * - if \p T is an integral type, piranha::integer or a floating-point type and \p x exactly represents a non-negative integer, the return value
+		 * - if \p T is an integral type or piranha::integer and \p x represents a non-negative integer, the return value
 		 *   is constructed via repeated multiplications;
 		 * - otherwise, an exception will be raised.
 		 * 
 		 * @param[in] x exponent.
 		 * @return \p this raised to the power of \p x.
 		 * 
-		 * @throws std::invalid_argument if \p T is not an integral type, piranha::integer or a floating-point, or \p x
-		 * does not represent exactly a non-negative integer.
+		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and either
+		 * \p T is not an integral type or piranha::integer, or \p x does not represent a non-negative integer.
 		 * @throws unspecified any exception thrown by:
 		 * - series, term, coefficient and key construction,
 		 * - the <tt>is_unitary()</tt> method of the key type,
@@ -989,7 +980,9 @@ class series: series_binary_operators, detail::series_tag
 		 * - series multiplication.
 		 */
 		template <typename T>
-		Derived pow(const T &x) const
+		Derived pow(const T &x, typename std::enable_if<
+			sizeof(decltype(math::pow(std::declval<typename term_type::cf_type>(),x)))
+			>::type * = piranha_nullptr) const
 		{
 			// Shortcuts.
 			typedef typename term_type::cf_type cf_type;
@@ -1001,6 +994,7 @@ class series: series_binary_operators, detail::series_tag
 			}
 			if (empty()) {
 				Derived retval;
+				retval.insert(term_type(math::pow(cf_type(0),x),key_type(symbol_set{})));
 				return retval;
 			}
 			if (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)) {

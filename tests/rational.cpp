@@ -737,20 +737,8 @@ BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
 	BOOST_CHECK_EQUAL(rational(-1).pow(-3),-1);
 	BOOST_CHECK_EQUAL(rational(-1).pow(2LL),1);
 	BOOST_CHECK_EQUAL(rational(-1).pow(3ULL),-1);
-	if (std::numeric_limits<double>::is_iec559) {
-		BOOST_CHECK_EQUAL(rational(-1).pow(-3.),-1);
-		BOOST_CHECK_THROW(rational(-1).pow(-3.1),std::invalid_argument);
-		BOOST_CHECK_EQUAL(rational(-1).pow(0.),1);
-		BOOST_CHECK_EQUAL(rational(0).pow(0.),1);
-		BOOST_CHECK_EQUAL(rational(0).pow(3.),0);
-		BOOST_CHECK_THROW(rational(0).pow(-3.),piranha::zero_division_error);
-	}
 	BOOST_CHECK_THROW(rational(1).pow(integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
 	BOOST_CHECK_THROW(rational(1).pow(integer(boost::integer_traits<unsigned long>::const_max) * -1 - 1),std::invalid_argument);
-	if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
-		BOOST_CHECK_THROW(rational(1).pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
-		BOOST_CHECK_THROW(rational(1).pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
-	}
 	BOOST_CHECK_EQUAL(rational(10,3).pow(2),rational(100,9));
 	BOOST_CHECK_EQUAL(rational(10,3).pow(-2),rational(9,100));
 	BOOST_CHECK_EQUAL(rational(10,-3).pow(-3),rational(27,-1000));
@@ -759,11 +747,6 @@ BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
 	BOOST_CHECK_EQUAL(math::pow(rational(10),integer(2)),100);
 	BOOST_CHECK_EQUAL(math::pow(rational(10),integer(-2)),rational(1,100));
 	BOOST_CHECK_EQUAL(math::pow(rational(-1),3ULL),-1);
-	if (std::numeric_limits<double>::is_iec559) {
-		BOOST_CHECK_THROW(math::pow(rational(-1),-3.1),std::invalid_argument);
-		BOOST_CHECK_THROW(math::pow(rational(0),-3.),piranha::zero_division_error);
-		BOOST_CHECK_EQUAL(math::pow(rational(-1),-3.),-1);
-	}
 }
 
 BOOST_AUTO_TEST_CASE(rational_hash_test)

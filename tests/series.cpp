@@ -34,6 +34,7 @@
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
@@ -1297,14 +1298,6 @@ struct pow_tester
 			BOOST_CHECK(p1.pow(2u) == p1 * p1);
 			BOOST_CHECK(math::pow(p1,integer(3)) == p1 * p1 * p1);
 			BOOST_CHECK_THROW(p1.pow(-1),std::invalid_argument);
-			if (std::numeric_limits<double>::is_iec559) {
-				BOOST_CHECK(p1.pow(2.) == p1 * p1);
-				BOOST_CHECK_THROW(p1.pow(0.5),std::invalid_argument);
-			}
-			if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
-				BOOST_CHECK_THROW(p1.pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
-				BOOST_CHECK_THROW(p1.pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
-			}
 			// Coefficient series.
 			typedef g_series_type<p_type1,Expo> p_type11;
 			p_type11 p11;
@@ -1330,4 +1323,14 @@ struct pow_tester
 BOOST_AUTO_TEST_CASE(series_pow_test)
 {
 	boost::mpl::for_each<cf_types>(pow_tester());
+	if (std::numeric_limits<double>::is_iec559) {
+		// Test expo with float-float arguments.
+		typedef g_series_type<double,int> p_type1;
+		BOOST_CHECK(p_type1{2.}.pow(0.5) == std::pow(2.,0.5));
+		BOOST_CHECK(p_type1{3.}.pow(-0.5) == std::pow(3.,-0.5));
+		BOOST_CHECK_THROW(math::pow(p_type1{"x"} + 1,0.5),std::invalid_argument);
+	}
+	// Check division by zero error.
+	typedef g_series_type<rational,int> p_type2;
+	BOOST_CHECK_THROW(math::pow(p_type2{},-1),zero_division_error);
 }

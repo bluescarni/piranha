@@ -26,7 +26,6 @@
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cctype> // For std::isdigit().
@@ -890,7 +889,7 @@ class integer
 		}
 		// Exponentiation.
 		template <typename T>
-		integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && !std::is_signed<T>::value>::type * = piranha_nullptr) const
+		integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = piranha_nullptr) const
 		{
 			unsigned long exp;
 			try {
@@ -926,30 +925,6 @@ class integer
 				return pow_impl(exp);
 			} else {
 				return 1 / pow_impl(-n);
-			}
-		}
-		template <typename T>
-		integer pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
-		{
-			if (!boost::math::isfinite(x)) {
-				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation: non-finite floating-point");
-			}
-			if (boost::math::trunc(x) != x) {
-				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation: floating-point with non-zero fractional part");
-			}
-			unsigned long exp;
-			try {
-				exp = boost::numeric_cast<unsigned long>((x >= T(0)) ? x : -x);
-			} catch (const boost::numeric::bad_numeric_cast &) {
-				piranha_throw(std::invalid_argument,"invalid argument for integer exponentiation");
-			}
-			if (x >= T(0)) {
-				return pow_impl(exp);
-			} else {
-				if (*this == 0) {
-					piranha_throw(zero_division_error,"negative exponentiation of zero");
-				}
-				return (1 / *this).pow(exp);
 			}
 		}
 		// Private constructor for use in rational.
@@ -1729,28 +1704,22 @@ class integer
 		}
 		/// Exponentiation.
 		/**
-		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an \ref interop "interoperable type" or integer.
+		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is an integral type or integer. Negative
+		 * powers are calculated as <tt>(1 / this) ** exp</tt>. Trying to raise zero to a negative exponent will throw a
+		 * piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
 		 * 
-		 * If \p T is an integral type or integer, the result will be exact, with negative powers calculated as <tt>(1 / this) ** exp</tt>.
-		 * 
-		 * If \p T is a floating-point type, the result will be exact if \p exp can be converted exactly to an integer value,
-		 * otherwise an \p std::invalid_argument exception will be thrown.
-		 * 
-		 * Trying to raise zero to a negative exponent will throw a piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
-		 * 
-		 * In any case, the value of \p exp cannot exceed in magnitude the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
+		 * The value of \p exp cannot exceed in absolute value the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
 		 * \p std::invalid_argument exception will be thrown.
 		 * 
 		 * @param[in] exp exponent.
 		 * 
 		 * @return <tt>this ** exp</tt>.
 		 * 
-		 * @throws std::invalid_argument if \p T is a floating-point type and \p exp is not an exact integer, or if <tt>exp</tt>'s magnitude exceeds
-		 * the range of the <tt>unsigned long</tt> type.
+		 * @throws std::invalid_argument if <tt>exp</tt>'s magnitude exceeds the range of the <tt>unsigned long</tt> type.
 		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
 		 */
 		template <typename T>
-		typename std::enable_if<is_interop_type<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
+		typename std::enable_if<std::is_integral<T>::value || std::is_same<T,integer>::value,integer>::type pow(const T &exp) const
 		{
 			return pow_impl(exp);
 		}
