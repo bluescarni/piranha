@@ -747,6 +747,8 @@ BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
 	BOOST_CHECK_EQUAL(math::pow(rational(10),integer(2)),100);
 	BOOST_CHECK_EQUAL(math::pow(rational(10),integer(-2)),rational(1,100));
 	BOOST_CHECK_EQUAL(math::pow(rational(-1),3ULL),-1);
+	BOOST_CHECK_THROW(math::pow(rational(),-1),zero_division_error);
+	BOOST_CHECK_THROW(math::pow(rational(),integer(-1)),zero_division_error);
 }
 
 BOOST_AUTO_TEST_CASE(rational_hash_test)

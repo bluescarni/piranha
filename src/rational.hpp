@@ -674,6 +674,9 @@ class rational
 				}
 				return pow_impl(exp);
 			} else {
+				if (sign() == 0) {
+					piranha_throw(zero_division_error,"negative exponentiation of zero");
+				}
 				auto retval = pow_impl(-n);
 				::mpz_swap(mpq_numref(retval.m_value),mpq_denref(retval.m_value));
 				// Fix signs if needed.
