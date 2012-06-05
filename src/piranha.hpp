@@ -67,9 +67,9 @@
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
  * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment
- * \todo read up about strict aliasing with boost python and in conjunction with different Python version.
- * \todo think of replacing the mechanism of getting degree via type traits (and simialr stuff, e.g., real()/imaginary() from complexes)
- * with what has been done for math::pow(). It seems potentially cleaner and less verbose.
+  * \todo think of replacing the mechanism of getting degree via type traits (and simialr stuff, e.g., real()/imaginary() from complexes)
+ * with what has been done for math::pow(). It seems potentially cleaner and less verbose -> but might not work at all, put it on the
+ * backburner for the moment.
  */
 namespace piranha
 {

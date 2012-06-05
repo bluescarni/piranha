@@ -16,6 +16,14 @@ ENDIF(BUILD_MAIN OR BUILD_TESTS)
 
 IF(BUILD_PYRANHA)
 	ADD_LIBRARY(pyranha SHARED ${SRC_LIST})
+	# NOTE: Python < 3 is not strict C, as per:
+	# http://www.python.org/dev/peps/pep-3123/
+	# When using GCC, we add -fno-strict-aliasing here and when compiling core.cpp to prevent possible problems.
+	# Other compilers should probably use similar flags.
+	IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
+		MESSAGE(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
+		SET_TARGET_PROPERTIES(pyranha PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing")
+	ENDIF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
 	TARGET_LINK_LIBRARIES(pyranha ${MANDATORY_LIBRARIES})
 	# TODO this needs to be fixed in Windows.
 	IF(NOT WIN32)
