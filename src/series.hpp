@@ -26,6 +26,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <iostream>
@@ -581,6 +582,38 @@ class series: series_binary_operators, detail::series_tag
 				}
 			}
 		}
+		// Exponentiation.
+		template <typename T>
+		Derived pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr) const
+		{
+			if (n > T(0)) {
+				// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
+				// exponentiation by squaring - the growth in number of terms seems to be slower.
+				Derived retval(*static_cast<Derived const *>(this));
+				for (T i(1); i < n; ++i) {
+					retval *= *static_cast<Derived const *>(this);
+				}
+				return retval;
+			}
+			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integer");
+		}
+		template <typename T>
+		Derived pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
+		{
+			if (!boost::math::isfinite(x)) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-finite floating-point");
+			}
+			if (boost::math::trunc(x) != x) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: floating-point with non-zero fractional part");
+			}
+			return pow_impl(integer(x));
+		}
+		template <typename T>
+		Derived pow_impl(const T &, typename std::enable_if<!std::is_floating_point<T>::value && !std::is_integral<T>::value &&
+			!std::is_same<T,integer>::value>::type * = piranha_nullptr) const
+		{
+			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: unsupported type");
+		}
 	public:
 		/// Size type.
 		/**
@@ -911,8 +944,6 @@ class series: series_binary_operators, detail::series_tag
 		 * - the <tt>merge_args()</tt> method of the key type,
 		 * - the constructors of \p term_type, coefficient and key types,
 		 * - piranha::symbol_set::merge().
-		 * 
-		 * @return reference to \p this, cast to type \p Derived.
 		 */
 		template <typename T>
 		Derived &operator*=(T &&other)
@@ -929,6 +960,55 @@ class series: series_binary_operators, detail::series_tag
 		sparsity_info_type evaluate_sparsity() const
 		{
 			return m_container.evaluate_sparsity();
+		}
+		/// Exponentiation.
+		/**
+		 * Return \p this raised to the <tt>x</tt>-th power.
+		 * 
+		 * The exponentiation algorithm proceeds as follows:
+		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
+		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
+		 *   is 1 - including empty series);
+		 * - if \p this is empty, an empty series is returned;
+		 * - if \p this has a single term with unitary key and coefficient \p cf, a series is returned with a single term with unitary key and coefficient
+		 *   equal to \p cf raised to the power of \p x (via piranha::math::pow());
+		 * - if \p T is an integral type, piranha::integer or a floating-point type and \p x exactly represents a non-negative integer, the return value
+		 *   is constructed via repeated multiplications;
+		 * - otherwise, an exception will be raised.
+		 * 
+		 * @param[in] x exponent.
+		 * @return \p this raised to the power of \p x.
+		 * 
+		 * @throws std::invalid_argument if \p T is not an integral type, piranha::integer or a floating-point, or \p x
+		 * does not represent exactly a non-negative integer.
+		 * @throws unspecified any exception thrown by:
+		 * - series, term, coefficient and key construction,
+		 * - the <tt>is_unitary()</tt> method of the key type,
+		 * - piranha::math::is_zero() and piranha::math::pow(),
+		 * - insert(),
+		 * - series multiplication.
+		 */
+		template <typename T>
+		Derived pow(const T &x) const
+		{
+			// Shortcuts.
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			if (math::is_zero(x)) {
+				Derived retval;
+				retval.insert(term_type(cf_type(1),key_type(symbol_set{})));
+				return retval;
+			}
+			if (empty()) {
+				Derived retval;
+				return retval;
+			}
+			if (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)) {
+				Derived retval;
+				retval.insert(term_type(math::pow(m_container.begin()->m_cf,x),key_type(symbol_set{})));
+				return retval;
+			}
+			return pow_impl(x);
 		}
 		/// Overload stream operator for piranha::series.
 		/**
@@ -1148,6 +1228,36 @@ struct print_coefficient_impl<Series,typename std::enable_if<
 		}
 	}
 };
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::pow() functor for piranha::series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series.
+ * The result will be computed via the series' <tt>pow()</tt> method.
+ */
+template <typename Series, typename T>
+struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The exponentiation will be computed via the series' <tt>pow()</tt> method.
+	 * 
+	 * @param[in] s base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p s to the power of \p x.
+	 * 
+	 * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
+	 */
+	auto operator()(const Series &s, const T &x) const -> decltype(s.pow(x))
+	{
+		return s.pow(x);
+	}
+};
+
+}
 
 }
 

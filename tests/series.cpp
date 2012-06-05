@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <initializer_list>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>
@@ -34,8 +35,10 @@
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/rational.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -1273,3 +1276,56 @@ BOOST_AUTO_TEST_CASE(series_evaluate_sparsity_test)
 	boost::mpl::for_each<cf_types>(evaluate_sparsity_tester());
 }
 
+struct pow_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			p_type1 p1;
+			BOOST_CHECK(p1.pow(0) == 1);
+			BOOST_CHECK(p1.pow(1) == 0);
+			p1 = 2;
+			BOOST_CHECK(math::pow(p1,4) == math::pow(Cf(2),4));
+			p1 = p_type1("x");
+			p1 += 1;
+			BOOST_CHECK(math::pow(p1,1) == p1);
+			BOOST_CHECK(p1.pow(2u) == p1 * p1);
+			BOOST_CHECK(math::pow(p1,integer(3)) == p1 * p1 * p1);
+			BOOST_CHECK_THROW(p1.pow(-1),std::invalid_argument);
+			if (std::numeric_limits<double>::is_iec559) {
+				BOOST_CHECK(p1.pow(2.) == p1 * p1);
+				BOOST_CHECK_THROW(p1.pow(0.5),std::invalid_argument);
+			}
+			if (std::numeric_limits<double>::has_quiet_NaN && std::numeric_limits<double>::has_infinity) {
+				BOOST_CHECK_THROW(p1.pow(std::numeric_limits<double>::infinity()),std::invalid_argument);
+				BOOST_CHECK_THROW(p1.pow(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+			}
+			// Coefficient series.
+			typedef g_series_type<p_type1,Expo> p_type11;
+			p_type11 p11;
+			BOOST_CHECK(p11.pow(0) == 1);
+			BOOST_CHECK(p11.pow(1) == 0);
+			p11 = 2;
+			BOOST_CHECK(math::pow(p11,4) == math::pow(p_type1(2),4));
+			p11 = p_type11("x");
+			p11 += 1;
+			BOOST_CHECK(math::pow(p11,1) == p11);
+			BOOST_CHECK(p11.pow(2u) == p11 * p11);
+			BOOST_CHECK(math::pow(p11,integer(3)) == p11 * p11 * p11);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_pow_test)
+{
+	boost::mpl::for_each<cf_types>(pow_tester());
+}
