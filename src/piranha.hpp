@@ -47,7 +47,6 @@
  * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
  * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer -> note that this becomes
  * moot in case the homomorphic hashing thing works out.
- * \todo assert that concepts are respected in models.
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
