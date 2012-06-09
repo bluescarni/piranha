@@ -17,6 +17,12 @@
 # Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-__doc__ = 'Root Pyranha module.'
+"""Root Pyranha module.
 
-from _core import *
+.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>
+
+"""
+
+__all__ = ['polynomial']
+
+import polynomial

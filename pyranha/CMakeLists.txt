@@ -22,4 +22,4 @@ INSTALL(TARGETS _core
 )
 
 # Add the global init file.
-INSTALL(FILES __init__.py DESTINATION ${PYRANHA_INSTALL_PATH})
+INSTALL(FILES __init__.py _common.py polynomial.py DESTINATION ${PYRANHA_INSTALL_PATH})
