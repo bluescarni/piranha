@@ -34,6 +34,7 @@
 #endif
 
 #include <algorithm>
+#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/begin_end.hpp>
 #include <boost/mpl/distance.hpp>
@@ -60,6 +61,12 @@ using namespace piranha;
 #include "exceptions.hpp"
 #include "polynomial.hpp"
 
+// Used for debugging on Python side.
+inline integer get_big_int()
+{
+	return integer(boost::integer_traits<int>::const_max) * 100;
+}
+
 BOOST_PYTHON_MODULE(_core)
 {
 	// Arithmetic converters.
@@ -73,6 +80,8 @@ BOOST_PYTHON_MODULE(_core)
 	bp::register_exception_translator<zero_division_error>(zde_translator);
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
+	// Debug functions.
+	bp::def("_get_big_int",&get_big_int);
 	// Expose polynomial types.
 	expose_polynomials();
 }

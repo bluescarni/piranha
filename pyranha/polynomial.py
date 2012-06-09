@@ -26,7 +26,18 @@
 from _common import _get_cf_types, _get_series_type
 import unittest as _ut
 
-cf_types = _get_cf_types('polynomial')
+def get_cf_types():
+	"""Get list of implemented coefficient types.
+	
+	:rtype: list of types that can be used as polynomial coefficients.
+	
+	>>> l = get_cf_types()
+	>>> all([isinstance(t,type) for t in l])
+	True
+	>>> st = get_type(l[0])
+	
+	"""
+	return _get_cf_types('polynomial')
 
 def get_type(cf_type):
 	"""Get a polynomial type.
@@ -53,6 +64,7 @@ class main_test_case(_ut.TestCase):
 	"""
 	def runTest(self):
 		from fractions import Fraction
+		from _core import _get_big_int
 		# Arithmetic with int and Fraction, len, str and comparisons.
 		for t in [int,Fraction]:
 			tp = get_type(t)
@@ -100,6 +112,8 @@ class main_test_case(_ut.TestCase):
 		# NOTE: here we are going to assume that Python's float implementation uses C++ doubles and
 		# the corresponding pow() function.
 		self.assertEqual(tp_f(0.1) ** (0.5),0.1**0.5)
+		# Test integer exponentiation of double triggering bad numeric cast.
+		self.assertRaises(OverflowError,lambda : tp_f(1) ** _get_big_int())
 
 def run_test_suite():
 	"""Run the full test suite for the module.

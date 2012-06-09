@@ -22,7 +22,7 @@ import _core
 # Get a list of coefficients supported by series type named series_name.
 def _get_cf_types(series_name):
 	cf_getter = getattr(_core,'_' + series_name + '_get_cf_types')
-	return set(sorted([type(t[0]) for t in cf_getter()]))
+	return [type(t[0]) for t in cf_getter()]
 
 # Try to fetch a series types for series named series_name with coefficient cf_type.
 def _get_series_type(series_name,cf_type):
