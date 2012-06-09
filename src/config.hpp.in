@@ -33,7 +33,7 @@
 #define piranha_assert assert
 
 #if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5)
-#error Minimum GCC version supported is 4.5.0.
+	#error Minimum GCC version supported is 4.5.0.
 #endif
 
 // c++0x features depending on the GCC version.
