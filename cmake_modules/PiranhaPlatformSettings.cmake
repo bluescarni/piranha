@@ -24,6 +24,10 @@ IF(MINGW)
 	SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -mthreads")
 	# NOTE: in MinGW there is no support for c++0x threads yet.
 	SET(PIRANHA_ENABLE_BOOST_THREAD TRUE)
+	# NOTE: workaround for CMake being unable to locate Boost libraries in certain
+	# configurations. See:
+	# http://www.ogre3d.org/tikiwiki/Setting%20Up%20An%20Application%20-%20Mac%20OSX
+	SET(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES} "")
 ENDIF(MINGW)
 
 # Setup for the machinery to detect cache line size in Windows. It's not supported everywhere, so we
