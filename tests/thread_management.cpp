@@ -35,7 +35,7 @@ piranha::mutex mutex;
 
 static inline void test_function()
 {
-	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::thread_management::bind_to_proc(i);
 		const auto retval = piranha::thread_management::bound_proc();
 		// Lock because Boost unit test is not thread-safe.
@@ -48,7 +48,7 @@ static inline void test_function()
 // Check binding on new threads thread.
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
-	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::thread t(test_function);
 		t.join();
 	}
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 {
 	piranha::task_group tg;
-	for (unsigned i = 0; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
+	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		tg.add_task(test_function);
 	}
 	tg.wait_all();
@@ -67,13 +67,15 @@ BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 // binder tests.
 BOOST_AUTO_TEST_CASE(thread_management_binder)
 {
+	const unsigned hc = piranha::runtime_info::get_hardware_concurrency();
 	// Check we are not binding from main thread.
-	piranha::thread_management::binder b;
-	BOOST_CHECK_EQUAL(false,piranha::thread_management::bound_proc().first);
-	unsigned hc = piranha::runtime_info::get_hardware_concurrency();
-	for (unsigned i = 0; i < hc; ++i) {
+	if (hc > 1u) {
+		piranha::thread_management::binder b;
+		BOOST_CHECK_EQUAL(false,piranha::thread_management::bound_proc().first);
+	}
+	for (unsigned i = 0u; i < hc; ++i) {
 		piranha::task_group tg;
-		for (unsigned j = 0; j < i; ++j) {
+		for (unsigned j = 0u; j < i; ++j) {
 			auto f = []() -> void {
 				piranha::thread_management::binder b;
 				piranha::lock_guard<piranha::mutex>::type lock(mutex);
@@ -83,15 +85,15 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 		}
 		tg.wait_all();
 	}
-	// The following tests make sense only if we can detect hardware_concurrency.
-	if (!hc) {
+	// The following tests make sense only if we can detect hardware_concurrency and we have more than 1 CPU.
+	if (hc <= 1u) {
 		return;
 	}
-	unsigned count = 0;
-	piranha::settings::set_n_threads(hc + 1);
+	unsigned count = 0u;
+	piranha::settings::set_n_threads(hc + 1u);
 	piranha::task_group tg;
-	piranha::thread_barrier tb(hc + 1);
-	for (unsigned i = 0; i < hc + 1; ++i) {
+	piranha::thread_barrier tb(hc + 1u);
+	for (unsigned i = 0u; i < hc + 1u; ++i) {
 		auto f = [&count,&tb,hc]() -> void {
 			piranha::unique_lock<piranha::mutex>::type lock(mutex);
 			piranha::thread_management::binder b;

@@ -145,6 +145,7 @@ void thread_management::bind_to_proc(unsigned n)
  * represented on the system (e.g., in Unix-like system this number will typically correspond to the
  * \p CPU_SETSIZE macro).
  * This method requires platform-specific functions and thus might not be available on all configurations.
+ * Note that if only a single core/cpu is available, the returned value will always be <tt>(true,0)</tt>.
  * 
  * @return the pair <tt>(true,n)</tt> if the calling thread is bound to a single processor with index \p n, <tt>(false,0)</tt>
  * otherwise.
