@@ -27,6 +27,7 @@ IF(MINGW)
 	# NOTE: workaround for CMake being unable to locate Boost libraries in certain
 	# configurations. See:
 	# http://www.ogre3d.org/tikiwiki/Setting%20Up%20An%20Application%20-%20Mac%20OSX
+	# http://www.gccxml.org/Bug/view.php?id=9865
 	SET(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES} "")
 ENDIF(MINGW)
 
