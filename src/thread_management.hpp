@@ -57,7 +57,7 @@ class PIRANHA_PUBLIC thread_management
 		 * instead of failing silently. For the constructor no need, as long as in the destructor we check if thread
 		 * was bound *before* locking.
 		 */
-		class binder
+		class PIRANHA_PUBLIC binder
 		{
 			public:
 				binder();

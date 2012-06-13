@@ -22,7 +22,8 @@ IF(BUILD_PYRANHA)
 	# Other compilers should probably use similar flags.
 	IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
-		SET_TARGET_PROPERTIES(pyranha PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing")
+		SET_TARGET_PROPERTIES(pyranha PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing"
+			COMPILE_DEFINITIONS "PIRANHA_BUILDING_DLL")
 	ENDIF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
 	TARGET_LINK_LIBRARIES(pyranha ${MANDATORY_LIBRARIES})
 	# TODO this needs to be fixed in Windows.
