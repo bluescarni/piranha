@@ -157,6 +157,11 @@ class real
 		}
 		/// Overload output stream operator for piranha::real.
 		/**
+		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
+		 * and suppressed if null.
+		 * 
+		 * For non-finite numbers, the string representation is the one described in the MPFR documentation.
+		 * 
 		 * @param[in] os output stream.
 		 * @param[in] r piranha::real to be directed to stream.
 		 * 
@@ -165,6 +170,8 @@ class real
 		 * @throws std::invalid_argument if the conversion to string via the MPFR API fails.
 		 * @throws std::overflow_error if the exponent is smaller than an implementation-defined minimum.
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
+		 * 
+		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Conversion-Functions
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const real &r)
 		{
@@ -184,15 +191,16 @@ class real
 			::mpfr_free_str(str);
 			// Insert the radix point.
 			auto it = std::find_if(cpp_str->begin(),cpp_str->end(),[](char c) {return std::isdigit(c);});
-			piranha_assert(it != cpp_str->end());
-			++it;
-			cpp_str->insert(it,'.');
-			if (exp == boost::integer_traits< ::mpfr_exp_t>::const_min) {
-				piranha_throw(std::overflow_error,"overflow in conversion of real to string");
-			}
-			--exp;
-			if (exp != ::mpfr_exp_t(0) && r.sign() != 0) {
-				cpp_str->append(std::string("e") + boost::lexical_cast<std::string>(exp));
+			if (it != cpp_str->end()) {
+				++it;
+				cpp_str->insert(it,'.');
+				if (exp == boost::integer_traits< ::mpfr_exp_t>::const_min) {
+					piranha_throw(std::overflow_error,"overflow in conversion of real to string");
+				}
+				--exp;
+				if (exp != ::mpfr_exp_t(0) && r.sign() != 0) {
+					cpp_str->append(std::string("e") + boost::lexical_cast<std::string>(exp));
+				}
 			}
 			os << (*cpp_str);
 			return os;

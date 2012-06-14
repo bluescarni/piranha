@@ -39,6 +39,12 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 		BOOST_CHECK_THROW((real{"1.23",0}),std::invalid_argument);
 	}
 	BOOST_CHECK_THROW((real{"1a"}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"@NaN@"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+@NaN@"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-@NaN@"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"@Inf@"}),"@Inf@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+@Inf@"}),"@Inf@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-@Inf@"}),"-@Inf@");
 }
 
 BOOST_AUTO_TEST_CASE(real_sign_test)
@@ -51,4 +57,17 @@ BOOST_AUTO_TEST_CASE(real_sign_test)
 	BOOST_CHECK_EQUAL(real{"1.23e5"}.sign(),1);
 	BOOST_CHECK_EQUAL(real{"1.23e-5"}.sign(),1);
 	BOOST_CHECK_EQUAL(real{"-1.23e-5"}.sign(),-1);
+}
+
+BOOST_AUTO_TEST_CASE(real_stream_test)
+{
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"nan"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+nan"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-nan"}),"@NaN@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"}),"@Inf@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+inf"}),"@Inf@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-inf"}),"-@Inf@");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"3"}),"3.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"30"}),"3.00000000000000000000000000000000000e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"0.5"}),"5.00000000000000000000000000000000000e-1");
 }
