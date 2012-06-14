@@ -39,6 +39,7 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/power_series.hpp"
 #include "../src/power_series_truncator.hpp"
+#include "../src/rational.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/tracing.hpp"
@@ -141,8 +142,9 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 
 typedef polynomial<double,int> p_type1;
 typedef polynomial<integer,int> p_type2;
+typedef polynomial<rational,int> p_type3;
 
-typedef boost::mpl::vector<p_type1,p_type2> p_types;
+typedef boost::mpl::vector<p_type1,p_type2,p_type3> p_types;
 
 struct operator_tag {};
 

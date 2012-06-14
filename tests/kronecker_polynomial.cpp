@@ -35,11 +35,12 @@
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/rational.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 
 // Tests specific for the polynomial multiplier specialisation for Kronecker monomials.
 struct multiplication_tester

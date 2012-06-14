@@ -34,6 +34,7 @@
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/rational.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -45,7 +46,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>

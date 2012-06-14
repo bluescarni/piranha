@@ -31,12 +31,13 @@
 #include "../src/config.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/rational.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 template <typename Cf, typename Expo>
