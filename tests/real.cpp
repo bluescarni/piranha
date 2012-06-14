@@ -1,0 +1,54 @@
+/***************************************************************************
+ *   Copyright (C) 2009-2011 by Francesco Biscani                          *
+ *   bluescarni@gmail.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#include "../src/real.hpp"
+
+#define BOOST_TEST_MODULE real_test
+#include <boost/test/unit_test.hpp>
+
+#include <boost/lexical_cast.hpp>
+#include <mpfr.h>
+#include <stdexcept>
+#include <string>
+
+using namespace piranha;
+
+BOOST_AUTO_TEST_CASE(real_constructors_test)
+{
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{}),"0.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.23"}),"1.22999999999999999999999999999999998");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.23",4}),"1.25");
+	if (MPFR_PREC_MIN > 0) {
+		BOOST_CHECK_THROW((real{"1.23",0}),std::invalid_argument);
+	}
+	BOOST_CHECK_THROW((real{"1a"}),std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(real_sign_test)
+{
+	BOOST_CHECK_EQUAL(real{}.sign(),0);
+	BOOST_CHECK_EQUAL(real{"1"}.sign(),1);
+	BOOST_CHECK_EQUAL(real{"-10.23"}.sign(),-1);
+	BOOST_CHECK_EQUAL(real{"-0."}.sign(),0);
+	BOOST_CHECK_EQUAL(real{"-.0"}.sign(),0);
+	BOOST_CHECK_EQUAL(real{"1.23e5"}.sign(),1);
+	BOOST_CHECK_EQUAL(real{"1.23e-5"}.sign(),1);
+	BOOST_CHECK_EQUAL(real{"-1.23e-5"}.sign(),-1);
+}

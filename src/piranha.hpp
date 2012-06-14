@@ -68,9 +68,9 @@
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
  * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment
-  * \todo think of replacing the mechanism of getting degree via type traits (and simialr stuff, e.g., real()/imaginary() from complexes)
- * with what has been done for math::pow(). It seems potentially cleaner and less verbose -> but might not work at all, put it on the
- * backburner for the moment.
+ * \todo it seems like default construction of c++ containers might throw :/ We should probably double-check we do not assume any nothrow behaviour in
+ * such cases. For instance, if we use an old-style C allocation function and we need to create a container _before_ calling free(), then the behaviour
+ * might not be exception-safe.
  */
 namespace piranha
 {
@@ -115,6 +115,7 @@ namespace detail {}
 #include "power_series_truncator.hpp"
 #include "print_coefficient.hpp"
 #include "rational.hpp"
+#include "real.hpp"
 #include "runtime_info.hpp"
 #include "series.hpp"
 #include "series_binary_operators.hpp"
