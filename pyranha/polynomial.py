@@ -17,11 +17,7 @@
 # Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-"""Polynomial module.
-
-.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>
-
-"""
+""".. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
 from _common import _get_cf_types, _get_series_type
 import unittest as _ut
@@ -46,9 +42,13 @@ def get_type(cf_type):
 	:rtype: polynomial type.
 	:raises: :exc:`TypeError` if the polynomial type could not be determined.
 	
-	>>> t = get_type(int)
-	>>> print(t('x') * 2)
+	>>> tz = get_type(int)
+	>>> print(tz('x') * 2)
 	2x
+	>>> from fractions import Fraction
+	>>> tq = get_type(Fraction)
+	>>> print(Fraction(1,2) * tq('x')**2)
+	1/2x**2
 	
 	"""
 	return _get_series_type('polynomial',cf_type)
@@ -56,7 +56,8 @@ def get_type(cf_type):
 class main_test_case(_ut.TestCase):
 	"""Main test case.
 	
-	To be used within the :mod:`unittest` framework.
+	To be used within the :mod:`unittest` framework. Will test construction, arithmetic
+	and comparison operators, and exceptions.
 	
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(main_test_case)

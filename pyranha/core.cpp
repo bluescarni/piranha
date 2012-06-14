@@ -64,7 +64,7 @@ using namespace piranha;
 // Used for debugging on Python side.
 inline integer get_big_int()
 {
-	return integer(boost::integer_traits<int>::const_max) * 100;
+	return integer(boost::integer_traits<int>::const_max) + 1;
 }
 
 BOOST_PYTHON_MODULE(_core)
