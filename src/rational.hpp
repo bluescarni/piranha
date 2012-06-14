@@ -1409,7 +1409,7 @@ class rational
 		 * @return reference to \p os.
 		 * 
 		 * @throws std::overflow_error if the number of digits is larger than an implementation-defined maximum.
-		 * @throws unspecified any exception thrown by memory allocation errors in standard container.
+		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const rational &q)
 		{
