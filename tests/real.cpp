@@ -45,6 +45,18 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"@Inf@"}),"@Inf@");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+@Inf@"}),"@Inf@");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-@Inf@"}),"-@Inf@");
+	// Copy constructor.
+	real r1{"1.23",4};
+	real r2{r1};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"1.25");
+	real r3{"-inf"};
+	real r4(r3);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r4),"-@Inf@");
+	// Move constructor.
+	real r5{std::move(r1)};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r5),"1.25");
+	real r6{std::move(r3)};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r6),"-@Inf@");
 }
 
 BOOST_AUTO_TEST_CASE(real_sign_test)

@@ -100,6 +100,34 @@ class real
 			::mpfr_init2(m_value,default_prec);
 			::mpfr_set_ui(m_value,0ul,default_rnd);
 		}
+		/// Copy constructor.
+		/**
+		 * Will deep-copy \p other.
+		 * 
+		 * @param[in] other real to be copied.
+		 */
+		real(const real &other)
+		{
+			// Init with the same precision as other, and then set.
+			::mpfr_init2(m_value,other.get_prec());
+			::mpfr_set(m_value,other.m_value,default_rnd);
+		}
+		/// Move constructor.
+		/**
+		 * @param[in] other real to be moved.
+		 */
+		real(real &&other) piranha_noexcept_spec(true)
+		{
+			m_value->_mpfr_prec = other.m_value->_mpfr_prec;
+			m_value->_mpfr_sign = other.m_value->_mpfr_sign;
+			m_value->_mpfr_exp = other.m_value->_mpfr_exp;
+			m_value->_mpfr_d = other.m_value->_mpfr_d;
+			// Erase other.
+			other.m_value->_mpfr_prec = 0;
+			other.m_value->_mpfr_sign = 0;
+			other.m_value->_mpfr_exp = 0;
+			other.m_value->_mpfr_d = piranha_nullptr;
+		}
 		/// Constructor from C string.
 		/**
 		 * Will use the string \p str and precision \p prec to initialize the number.
@@ -135,9 +163,17 @@ class real
 		/**
 		 * Will clear the internal MPFR variable.
 		 */
-		~real()
+		~real() piranha_noexcept_spec(true)
 		{
-			::mpfr_clear(m_value);
+			// TODO restore.
+			//BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
+			if (m_value->_mpfr_d) {
+				::mpfr_clear(m_value);
+			} else {
+				piranha_assert(!m_value->_mpfr_prec);
+				piranha_assert(!m_value->_mpfr_sign);
+				piranha_assert(!m_value->_mpfr_exp);
+			}
 		}
 		/// Sign.
 		/**
