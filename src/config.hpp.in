@@ -100,8 +100,10 @@ static_assert(boost::integer_traits<long long>::const_max >= 0,"Buggy integer_tr
 	#if defined(_WIN32)
 		#if defined(PIRANHA_BUILDING_DLL)
 			#define PIRANHA_PUBLIC __declspec(dllexport)
-		#else
+		#elif defined(PIRANHA_USING_DLL)
 			#define PIRANHA_PUBLIC __declspec(dllimport)
+		#else
+			#define PIRANHA_PUBLIC
 		#endif
 	#else
 		#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
