@@ -79,6 +79,7 @@ class real
 		// Construction.
 		void construct_from_string(const char *str, const ::mpfr_prec_t &prec)
 		{
+			prec_check(prec);
 			::mpfr_init2(m_value,prec);
 			const int retval = ::mpfr_set_str(m_value,str,10,default_rnd);
 			if (retval != 0) {
@@ -174,7 +175,6 @@ class real
 		 */
 		explicit real(const char *str, const ::mpfr_prec_t &prec = default_prec)
 		{
-			prec_check(prec);
 			construct_from_string(str,prec);
 		}
 		/// Constructor from C++ string.
@@ -188,7 +188,6 @@ class real
 		 */
 		explicit real(const std::string &str, const ::mpfr_prec_t &prec = default_prec)
 		{
-			prec_check(prec);
 			construct_from_string(str.c_str(),prec);
 		}
 		/// Generic constructor.
@@ -197,6 +196,7 @@ class real
 		 * Use of other types will result in a compile-time error.
 		 * 
 		 * @param[in] x object used to construct \p this.
+		 * @param[in] prec desired significand precision.
 		 */
 		template <typename T>
 		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec, typename std::enable_if<

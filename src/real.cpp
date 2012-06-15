@@ -25,6 +25,7 @@
 namespace piranha
 {
 
+const ::mpfr_rnd_t real::default_rnd;
 const ::mpfr_prec_t real::default_prec;
 
 namespace detail

@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.23",4}),"1.25");
 	if (MPFR_PREC_MIN > 0) {
 		BOOST_CHECK_THROW((real{"1.23",0}),std::invalid_argument);
+		BOOST_CHECK_THROW((real{std::string("1.23"),0}),std::invalid_argument);
 	}
 	BOOST_CHECK_THROW((real{"1a"}),std::invalid_argument);
 	BOOST_CHECK_THROW((real{"1.a"}),std::invalid_argument);
