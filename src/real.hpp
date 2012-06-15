@@ -30,8 +30,10 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "config.hpp"
+#include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "rational.hpp"
@@ -74,15 +76,44 @@ class real
 				piranha_throw(std::invalid_argument,"invalid significand precision requested");
 			}
 		}
+		// Construction.
 		void construct_from_string(const char *str, const ::mpfr_prec_t &prec)
 		{
-			prec_check(prec);
 			::mpfr_init2(m_value,prec);
 			const int retval = ::mpfr_set_str(m_value,str,10,default_rnd);
 			if (retval != 0) {
 				::mpfr_clear(m_value);
 				piranha_throw(std::invalid_argument,"invalid string input for real");
 			}
+		}
+		template <typename T>
+		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_set_d(m_value,static_cast<double>(x),default_rnd);
+		}
+		template <typename T>
+		void construct_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value && integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_set_si(m_value,static_cast<long>(si),default_rnd);
+		}
+		template <typename T>
+		void construct_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value && integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_set_ui(m_value,static_cast<unsigned long>(ui),default_rnd);
+		}
+		template <typename T>
+		void construct_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			construct_from_generic(integer(ll));
+		}
+		void construct_from_generic(const integer &n)
+		{
+			::mpfr_set_z(m_value,n.m_value,default_rnd);
+		}
+		void construct_from_generic(const rational &q)
+		{
+			::mpfr_set_q(m_value,q.m_value,default_rnd);
 		}
 	public:
 		/// Default significand precision.
@@ -143,6 +174,7 @@ class real
 		 */
 		explicit real(const char *str, const ::mpfr_prec_t &prec = default_prec)
 		{
+			prec_check(prec);
 			construct_from_string(str,prec);
 		}
 		/// Constructor from C++ string.
@@ -152,12 +184,29 @@ class real
 		 * @param[in] str string representation of the real number.
 		 * @param[in] prec desired significand precision.
 		 * 
-		 * @throws std::invalid_argument if the conversion from string fails or if the significand precision requested
-		 * is not within the range allowed by the MPFR library.
+		 * @throws unspecified any exception thrown by the constructor from C string.
 		 */
 		explicit real(const std::string &str, const ::mpfr_prec_t &prec = default_prec)
 		{
+			prec_check(prec);
 			construct_from_string(str.c_str(),prec);
+		}
+		/// Generic constructor.
+		/**
+		 * The supported types for \p T are the \ref interop "interoperable types", piranha::integer and piranha::rational.
+		 * Use of other types will result in a compile-time error.
+		 * 
+		 * @param[in] x object used to construct \p this.
+		 */
+		template <typename T>
+		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec, typename std::enable_if<
+			integer::is_interop_type<T>::value ||
+			std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+		{
+			prec_check(prec);
+			::mpfr_init2(m_value,prec);
+			construct_from_generic(x);
 		}
 		/// Destructor.
 		/**

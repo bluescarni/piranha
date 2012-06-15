@@ -23,12 +23,39 @@
 #define BOOST_TEST_MODULE real_test
 #include <boost/test/unit_test.hpp>
 
+#define FUSION_MAX_VECTOR_SIZE 20
+
+#include <boost/fusion/algorithm.hpp>
+#include <boost/fusion/include/algorithm.hpp>
+#include <boost/fusion/include/sequence.hpp>
+#include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <mpfr.h>
 #include <stdexcept>
 #include <string>
 
+#include "../src/integer.hpp"
+#include "../src/rational.hpp"
+
 using namespace piranha;
+
+const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long>
+	integral_values((char)42,(signed char)42,(short)42,-42,42L,-42LL,(unsigned char)42,
+	(unsigned short)42,42U,42UL,42ULL
+);
+
+struct check_integral_construction
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL("4.00e1",boost::lexical_cast<std::string>(real(value,4)));
+		} else {
+			BOOST_CHECK_EQUAL("-4.00e1",boost::lexical_cast<std::string>(real(value,4)));
+		}
+	}
+};
 
 BOOST_AUTO_TEST_CASE(real_constructors_test)
 {
@@ -39,6 +66,7 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 		BOOST_CHECK_THROW((real{"1.23",0}),std::invalid_argument);
 	}
 	BOOST_CHECK_THROW((real{"1a"}),std::invalid_argument);
+	BOOST_CHECK_THROW((real{"1.a"}),std::invalid_argument);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"@NaN@"}),"@NaN@");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+@NaN@"}),"@NaN@");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-@NaN@"}),"@NaN@");
@@ -57,6 +85,29 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r5),"1.25");
 	real r6{std::move(r3)};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r6),"-@Inf@");
+	// Generic constructor.
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0.f,4}),"0.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{4.f,4}),"4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-4.f,4}),"-4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{.5f,4}),"5.00e-1");
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0.,4}),"0.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{4.,4}),"4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-4.,4}),"-4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-.5,4}),"-5.00e-1");
+	}
+	// Construction from integral types.
+	boost::fusion::for_each(integral_values,check_integral_construction());
+	// Construction from integer and rational.
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(),4}),"0.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(2),4}),"2.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(-10),4}),"-1.00e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(),4}),"0.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(2),4}),"2.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(-10),4}),"-1.00e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(-1,2),4}),"-5.00e-1");
 }
 
 BOOST_AUTO_TEST_CASE(real_sign_test)
