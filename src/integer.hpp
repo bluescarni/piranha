@@ -44,6 +44,7 @@
 #include "config.hpp" // For (un)likely.
 #include "detail/integer_fwd.hpp"
 #include "detail/rational_fwd.hpp"
+#include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "type_traits.hpp"
@@ -102,7 +103,8 @@ namespace piranha
  */
 class integer
 {
-		// Make friends with rational.
+		// Make friends with real and rational.
+		friend class real;
 		friend class rational;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>

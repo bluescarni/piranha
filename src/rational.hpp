@@ -42,6 +42,7 @@
 #include "concepts/coefficient.hpp"
 #include "config.hpp"
 #include "detail/rational_fwd.hpp"
+#include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "math.hpp"
@@ -79,6 +80,8 @@ namespace piranha
  */
 class rational
 {
+		// Make friends with real.
+		friend class real;
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
 		struct are_binary_op_types: std::integral_constant<bool,
