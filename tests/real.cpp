@@ -37,6 +37,8 @@
 #include "../src/integer.hpp"
 #include "../src/rational.hpp"
 
+static_assert(MPFR_PREC_MIN <= 4,"The unit tests for piranha::real assume that MPFR_MIN is at least 4.");
+
 using namespace piranha;
 
 const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long>
@@ -134,4 +136,17 @@ BOOST_AUTO_TEST_CASE(real_stream_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"3"}),"3.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"30"}),"3.00000000000000000000000000000000000e1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"0.5"}),"5.00000000000000000000000000000000000e-1");
+}
+
+BOOST_AUTO_TEST_CASE(real_precision_test)
+{
+	BOOST_CHECK_EQUAL(real{}.get_prec(),real::default_prec);
+	BOOST_CHECK_EQUAL((real{0.1,MPFR_PREC_MIN + 1}.get_prec()),MPFR_PREC_MIN + 1);
+	real r{1};
+	r.set_prec(4);
+	BOOST_CHECK_EQUAL(r.get_prec(),4);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"0.00");
+	if (MPFR_PREC_MIN > 0) {
+		BOOST_CHECK_THROW(r.set_prec(0),std::invalid_argument);
+	}
 }

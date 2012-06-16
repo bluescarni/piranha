@@ -168,7 +168,7 @@ class real
 		 * @param[in] str string representation of the real number.
 		 * @param[in] prec desired significand precision.
 		 * 
-		 * @throws std::invalid_argument if the conversion from string fails or if the significand precision requested
+		 * @throws std::invalid_argument if the conversion from string fails or if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 * 
 		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Assignment-Functions
@@ -197,6 +197,9 @@ class real
 		 * 
 		 * @param[in] x object used to construct \p this.
 		 * @param[in] prec desired significand precision.
+		 * 
+		 * @throws std::invalid_argument if the requested significand precision
+		 * is not within the range allowed by the MPFR library.
 		 */
 		template <typename T>
 		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec, typename std::enable_if<
@@ -214,6 +217,7 @@ class real
 		 */
 		~real() piranha_noexcept_spec(true)
 		{
+			static_assert(default_prec >= MPFR_PREC_MIN,"Invalid value for default precision.");
 			// TODO restore.
 			//BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
 			if (m_value->_mpfr_d) {
@@ -239,6 +243,21 @@ class real
 		::mpfr_prec_t get_prec() const
 		{
 			return mpfr_get_prec(m_value);
+		}
+		/// Set precision.
+		/**
+		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the real value to zero.
+		 * 
+		 * @param[in] prec desired significand precision.
+		 * 
+		 * @throws std::invalid_argument if the requested significand precision
+		 * is not within the range allowed by the MPFR library.
+		 */
+		void set_prec(const ::mpfr_prec_t &prec)
+		{
+			prec_check(prec);
+			::mpfr_set_prec(m_value,prec);
+			::mpfr_set_ui(m_value,0ul,default_rnd);
 		}
 		/// Overload output stream operator for piranha::real.
 		/**
