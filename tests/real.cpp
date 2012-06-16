@@ -37,7 +37,7 @@
 #include "../src/integer.hpp"
 #include "../src/rational.hpp"
 
-static_assert(MPFR_PREC_MIN <= 4,"The unit tests for piranha::real assume that MPFR_MIN is at least 4.");
+static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
 
 using namespace piranha;
 
@@ -144,9 +144,47 @@ BOOST_AUTO_TEST_CASE(real_precision_test)
 	BOOST_CHECK_EQUAL((real{0.1,MPFR_PREC_MIN + 1}.get_prec()),MPFR_PREC_MIN + 1);
 	real r{1};
 	r.set_prec(4);
-	BOOST_CHECK_EQUAL(r.get_prec(),4);
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"0.00");
+	BOOST_CHECK_EQUAL(r.get_prec(),::mpfr_prec_t(4));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"@NaN@");
 	if (MPFR_PREC_MIN > 0) {
 		BOOST_CHECK_THROW(r.set_prec(0),std::invalid_argument);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(real_swap_test)
+{
+	real r1{-1,4}, r2{0};
+	r1.swap(r1);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	r1.swap(r2);
+	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
+	BOOST_CHECK_EQUAL(r2.get_prec(),::mpfr_prec_t(4));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
+}
+
+BOOST_AUTO_TEST_CASE(real_assignment_test)
+{
+	real r1{-1,4}, r2;
+	r1 = r1;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	r2 = r1;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
+	BOOST_CHECK_EQUAL(r2.get_prec(),::mpfr_prec_t(4));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	real r3;
+	r3 = std::move(r2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r3),"-1.00");
+	BOOST_CHECK_EQUAL(r3.get_prec(),::mpfr_prec_t(4));
+	// Revive r2.
+	r2 = std::move(r1);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
+	BOOST_CHECK_EQUAL(r2.get_prec(),::mpfr_prec_t(4));
+	// Revive r1.
+	r1 = r2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
 }

@@ -217,7 +217,7 @@ class real
 		 */
 		~real() piranha_noexcept_spec(true)
 		{
-			static_assert(default_prec >= MPFR_PREC_MIN,"Invalid value for default precision.");
+			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
 			// TODO restore.
 			//BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
 			if (m_value->_mpfr_d) {
@@ -227,6 +227,58 @@ class real
 				piranha_assert(!m_value->_mpfr_sign);
 				piranha_assert(!m_value->_mpfr_exp);
 			}
+		}
+		/// Copy assignment operator.
+		/**
+		 * The assignment operation will deep-copy \p other (i.e., including its precision).
+		 * 
+		 * @param[in] other real to be copied.
+		 * 
+		 * @return reference to \p this.
+		 */
+		real &operator=(const real &other)
+		{
+			if (this != &other) {
+				// Handle assignment to moved-from objects.
+				if (m_value->_mpfr_d) {
+					// Copy the precision. This will also reset the internal value.
+					set_prec(other.get_prec());
+				} else {
+					piranha_assert(!m_value->_mpfr_prec && !m_value->_mpfr_sign && !m_value->_mpfr_exp);
+					// Reinit before setting.
+					::mpfr_init2(m_value,other.get_prec());
+				}
+				::mpfr_set(m_value,other.m_value,default_rnd);
+			}
+			return *this;
+		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other real to be moved.
+		 * 
+		 * @return reference to \p this.
+		 */
+		real &operator=(real &&other) piranha_noexcept_spec(true)
+		{
+			// NOTE: swap() already has the check for this.
+			swap(other);
+			return *this;
+		}
+		/// Swap.
+		/**
+		 * Swap \p this with \p other.
+		 * 
+		 * @param[in] other swap argument.
+		 */
+		void swap(real &other) piranha_noexcept_spec(true)
+		{
+			if (this == &other) {
+				return;
+			}
+			std::swap(m_value->_mpfr_d,other.m_value->_mpfr_d);
+			std::swap(m_value->_mpfr_prec,other.m_value->_mpfr_prec);
+			std::swap(m_value->_mpfr_sign,other.m_value->_mpfr_sign);
+			std::swap(m_value->_mpfr_exp,other.m_value->_mpfr_exp);
 		}
 		/// Sign.
 		/**
@@ -246,7 +298,7 @@ class real
 		}
 		/// Set precision.
 		/**
-		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the real value to zero.
+		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the value of \p this to nan.
 		 * 
 		 * @param[in] prec desired significand precision.
 		 * 
@@ -257,7 +309,6 @@ class real
 		{
 			prec_check(prec);
 			::mpfr_set_prec(m_value,prec);
-			::mpfr_set_ui(m_value,0ul,default_rnd);
 		}
 		/// Overload output stream operator for piranha::real.
 		/**
