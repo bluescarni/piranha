@@ -944,6 +944,16 @@ class integer
 			}
 			return retval;
 		}
+		// Private implementation of swap.
+		static void swap_mpz_t(::mpz_t n1, ::mpz_t n2)
+		{
+			// NOTE: implement swap manually because this function is used in assignment, and hence when potentially
+			// reviving moved-from objects. It seems like we do not have the guarantee that ::mpz_swap() is gonna work
+			// on uninitialised objects.
+			std::swap(n1->_mp_d,n2->_mp_d);
+			std::swap(n1->_mp_size,n2->_mp_size);
+			std::swap(n1->_mp_alloc,n2->_mp_alloc);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1176,7 +1186,7 @@ class integer
 			if (unlikely(this == &n)) {
 			    return;
 			}
-			::mpz_swap(m_value,n.m_value);
+			swap_mpz_t(m_value,n.m_value);
 		}
 		/// Conversion to interoperable types.
 		/**

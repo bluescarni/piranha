@@ -935,7 +935,8 @@ class rational
 			if (unlikely(this == &q)) {
 			    return;
 			}
-			::mpq_swap(m_value,q.m_value);
+			integer::swap_mpz_t(mpq_numref(m_value),mpq_numref(q.m_value));
+			integer::swap_mpz_t(mpq_denref(m_value),mpq_denref(q.m_value));
 		}
 		/// In-place addition.
 		/**
