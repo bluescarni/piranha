@@ -170,6 +170,28 @@ BOOST_AUTO_TEST_CASE(real_swap_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
 }
 
+struct check_integral_assignment
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		real r{0.,4};
+		r = value;
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL("4.00e1",boost::lexical_cast<std::string>(r));
+		} else {
+			BOOST_CHECK_EQUAL("-4.00e1",boost::lexical_cast<std::string>(r));
+		}
+		real tmp(std::move(r));
+		r = value;
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL("4.20000000000000000000000000000000000e1",boost::lexical_cast<std::string>(r));
+		} else {
+			BOOST_CHECK_EQUAL("-4.20000000000000000000000000000000000e1",boost::lexical_cast<std::string>(r));
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(real_assignment_test)
 {
 	real r1{-1,4}, r2;
@@ -207,4 +229,43 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.22999999999999999999999999999999998");
 	BOOST_CHECK_THROW(r1 = "foo_the_bar",std::invalid_argument);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00000000000000000000000000000000000");
+	// Assignment to floating-point.
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		r1 = 0.f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00000000000000000000000000000000000");
+		r1 = 4.f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00000000000000000000000000000000000");
+		r1 = -.5f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+		real tmp(std::move(r1));
+		r1 = -.5f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+	}
+	r1 = real{0.,4};
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		r1 = 0.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00");
+		r1 = 4.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00");
+		r1 = -.5;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00e-1");
+		real tmp(std::move(r1));
+		r1 = -.5;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+	}
+	// Assignment from integrals.
+	boost::fusion::for_each(integral_values,check_integral_assignment());
+	// Assignment from integer and rational.
+	r1.set_prec(4);
+	r1 = integer(1);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.00");
+	real{std::move(r1)};
+	r1 = integer(2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00000000000000000000000000000000000");
+	r1.set_prec(4);
+	r1 = rational(1,2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"5.00e-1");
+	real{std::move(r1)};
+	r1 = -rational(1,2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
 }

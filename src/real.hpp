@@ -171,22 +171,6 @@ class real
 			other.m_value->_mpfr_exp = 0;
 			other.m_value->_mpfr_d = piranha_nullptr;
 		}
-		/// Copy constructor with different precision.
-		/**
-		 * First \p this will be initialised with precision \p prec, and then \p other will be assigned to \p this.
-		 * 
-		 * @param[in] other real to be copied.
-		 * @param[in] prec desired significand precision.
-		 * 
-		 * @throws std::invalid_argument if the requested significand precision
-		 * is not within the range allowed by the MPFR library.
-		 */
-		explicit real(const real &other, const ::mpfr_prec_t &prec)
-		{
-			prec_check(prec);
-			::mpfr_init2(m_value,prec);
-			::mpfr_set(m_value,other.m_value,default_rnd);
-		}
 		/// Constructor from C string.
 		/**
 		 * Will use the string \p str and precision \p prec to initialize the number.
@@ -216,6 +200,22 @@ class real
 		explicit real(const std::string &str, const ::mpfr_prec_t &prec = default_prec)
 		{
 			construct_from_string(str.c_str(),prec);
+		}
+		/// Copy constructor with different precision.
+		/**
+		 * First \p this will be initialised with precision \p prec, and then \p other will be assigned to \p this.
+		 * 
+		 * @param[in] other real to be copied.
+		 * @param[in] prec desired significand precision.
+		 * 
+		 * @throws std::invalid_argument if the requested significand precision
+		 * is not within the range allowed by the MPFR library.
+		 */
+		explicit real(const real &other, const ::mpfr_prec_t &prec)
+		{
+			prec_check(prec);
+			::mpfr_init2(m_value,prec);
+			::mpfr_set(m_value,other.m_value,default_rnd);
 		}
 		/// Generic constructor.
 		/**
@@ -308,7 +308,8 @@ class real
 		/// Assignment operator from C string.
 		/**
 		 * The parsing rules are the same as in the constructor from string. The precision of \p this
-		 * will not be changed by the assignment operation, unless \p this was the target of a move operation.
+		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
+		 * left it in an uninitialised state.
 		 * In that case, \p this will be re-initialised with the default precision.
 		 * 
 		 * In case \p str is malformed, before an exception is thrown the value of \p this will be reset to zero.
@@ -328,6 +329,32 @@ class real
 				piranha_assert(!m_value->_mpfr_prec && !m_value->_mpfr_sign && !m_value->_mpfr_exp);
 				construct_from_string(str,default_prec);
 			}
+			return *this;
+		}
+		/// Generic assignment operator.
+		/**
+		 * The supported types for \p T are the \ref interop "interoperable types", piranha::integer and piranha::rational.
+		 * Use of other types will result in a compile-time error. The precision of \p this
+		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
+		 * left it in an uninitialised state.
+		 * In that case, \p this will be re-initialised with the default precision.
+		 * 
+		 * @param[in] x object that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 */
+		template <typename T>
+		typename std::enable_if<integer::is_interop_type<T>::value ||
+			std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value,real &>::type operator=(const T &x)
+		{
+			if (!m_value->_mpfr_d) {
+				piranha_assert(!m_value->_mpfr_prec && !m_value->_mpfr_sign && !m_value->_mpfr_exp);
+				// Re-init with default prec if it was moved-from.
+				::mpfr_init2(m_value,default_prec);
+			}
+			// NOTE: all construct_from_generic() methods here are really assignments.
+			construct_from_generic(x);
 			return *this;
 		}
 		/// Swap.
