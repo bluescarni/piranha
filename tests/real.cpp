@@ -187,4 +187,18 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 	r1 = r2;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
 	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	// Assignment from string.
+	r1 = "1.2300000000001";
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.25");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	r1 = std::string("1.2300000000001");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.25");
+	BOOST_CHECK_EQUAL(r1.get_prec(),::mpfr_prec_t(4));
+	// Move r1 away.
+	real r4{std::move(r1)};
+	r1 = std::string("1.23");
+	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.22999999999999999999999999999999998");
+	BOOST_CHECK_THROW(r1 = "foo_the_bar",std::invalid_argument);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00000000000000000000000000000000000");
 }

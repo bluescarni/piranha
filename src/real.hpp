@@ -55,8 +55,8 @@ namespace piranha
  * 
  * \section exception_safety Exception safety guarantee
  * 
- * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP/MPFR routines,
- * the program will terminate.
+ * Unless noted otherwise, this class provides the strong exception safety guarantee for all operations.
+ * In case of memory allocation errors by GMP/MPFR routines, the program will terminate.
  * 
  * \section move_semantics Move semantics
  * 
@@ -116,6 +116,17 @@ class real
 		{
 			::mpfr_set_q(m_value,q.m_value,default_rnd);
 		}
+		// Assignment.
+		void assign_from_string(const char *str)
+		{
+			piranha_assert(m_value->_mpfr_d);
+			const int retval = ::mpfr_set_str(m_value,str,10,default_rnd);
+			if (retval != 0) {
+				// Reset the internal value, as it might have been changed by ::mpfr_set_str().
+				::mpfr_set_ui(m_value,0ul,default_rnd);
+				piranha_throw(std::invalid_argument,"invalid string input for real");
+			}
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -163,7 +174,7 @@ class real
 		/// Constructor from C string.
 		/**
 		 * Will use the string \p str and precision \p prec to initialize the number.
-		 * The expected string format is described in the MPFR documentation.
+		 * The expected string format, assuming representation in base 10, is described in the MPFR documentation.
 		 * 
 		 * @param[in] str string representation of the real number.
 		 * @param[in] prec desired significand precision.
@@ -262,6 +273,45 @@ class real
 		{
 			// NOTE: swap() already has the check for this.
 			swap(other);
+			return *this;
+		}
+		/// Assignment operator from C++ string.
+		/**
+		 * The implementation is equivalent to the assignment operator from C string.
+		 * 
+		 * @param[in] str string representation of the real to be assigned.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the assignment operator from C string.
+		 */
+		real &operator=(const std::string &str)
+		{
+			return operator=(str.c_str());
+		}
+		/// Assignment operator from C string.
+		/**
+		 * The parsing rules are the same as in the constructor from string. The precision of \p this
+		 * will not be changed by the assignment operation, unless \p this was the target of a move operation.
+		 * In that case, \p this will be re-initialised with the default precision.
+		 * 
+		 * In case \p str is malformed, before an exception is thrown the value of \p this will be reset to zero.
+		 * 
+		 * @param[in] str string representation of the real to be assigned.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws std::invalid_argument if the conversion from string fails.
+		 */
+		real &operator=(const char *str)
+		{
+			// Handle moved-from objects.
+			if (m_value->_mpfr_d) {
+				assign_from_string(str);
+			} else {
+				piranha_assert(!m_value->_mpfr_prec && !m_value->_mpfr_sign && !m_value->_mpfr_exp);
+				construct_from_string(str,default_prec);
+			}
 			return *this;
 		}
 		/// Swap.
