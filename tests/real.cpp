@@ -88,6 +88,12 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r5),"1.25");
 	real r6{std::move(r3)};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r6),"-@Inf@");
+	// Copy ctor with different precision.
+	if (MPFR_PREC_MIN > 0) {
+		BOOST_CHECK_THROW((real{real{"1.23"},0}),std::invalid_argument);
+	}
+	BOOST_CHECK_EQUAL((real{real{"1.23"},4}.get_prec()),::mpfr_prec_t(4));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{real{"1.23"},4}),"1.25");
 	// Generic constructor.
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0.f,4}),"0.00");

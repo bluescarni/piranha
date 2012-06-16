@@ -123,7 +123,7 @@ class real
 			const int retval = ::mpfr_set_str(m_value,str,10,default_rnd);
 			if (retval != 0) {
 				// Reset the internal value, as it might have been changed by ::mpfr_set_str().
-				::mpfr_set_ui(m_value,0ul,default_rnd);
+				::mpfr_set_zero(m_value,0);
 				piranha_throw(std::invalid_argument,"invalid string input for real");
 			}
 		}
@@ -141,7 +141,7 @@ class real
 		real()
 		{
 			::mpfr_init2(m_value,default_prec);
-			::mpfr_set_ui(m_value,0ul,default_rnd);
+			::mpfr_set_zero(m_value,0);
 		}
 		/// Copy constructor.
 		/**
@@ -170,6 +170,22 @@ class real
 			other.m_value->_mpfr_sign = 0;
 			other.m_value->_mpfr_exp = 0;
 			other.m_value->_mpfr_d = piranha_nullptr;
+		}
+		/// Copy constructor with different precision.
+		/**
+		 * First \p this will be initialised with precision \p prec, and then \p other will be assigned to \p this.
+		 * 
+		 * @param[in] other real to be copied.
+		 * @param[in] prec desired significand precision.
+		 * 
+		 * @throws std::invalid_argument if the requested significand precision
+		 * is not within the range allowed by the MPFR library.
+		 */
+		explicit real(const real &other, const ::mpfr_prec_t &prec)
+		{
+			prec_check(prec);
+			::mpfr_init2(m_value,prec);
+			::mpfr_set(m_value,other.m_value,default_rnd);
 		}
 		/// Constructor from C string.
 		/**
