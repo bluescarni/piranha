@@ -375,11 +375,15 @@ class real
 		}
 		/// Sign.
 		/**
-		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>.
+		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>. If \p this is NaN, zero will be returned.
 		 */
 		int sign() const
 		{
-			return mpfr_sgn(m_value);
+			if (is_nan()) {
+				return 0;
+			} else {
+				return mpfr_sgn(m_value);
+			}
 		}
 		/// Test for NaN.
 		/**
@@ -407,7 +411,7 @@ class real
 		}
 		/// Set precision.
 		/**
-		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the value of \p this to nan.
+		 * Will set the significand precision of \p this to exactly \p prec bits, and reset the value of \p this to NaN.
 		 * 
 		 * @param[in] prec desired significand precision.
 		 * 

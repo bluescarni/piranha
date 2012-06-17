@@ -129,6 +129,10 @@ BOOST_AUTO_TEST_CASE(real_sign_test)
 	BOOST_CHECK_EQUAL(real{"1.23e5"}.sign(),1);
 	BOOST_CHECK_EQUAL(real{"1.23e-5"}.sign(),1);
 	BOOST_CHECK_EQUAL(real{"-1.23e-5"}.sign(),-1);
+	BOOST_CHECK_EQUAL(real{"inf"}.sign(),1);
+	BOOST_CHECK_EQUAL(real{"-inf"}.sign(),-1);
+	BOOST_CHECK_EQUAL(real{"nan"}.sign(),0);
+	BOOST_CHECK_EQUAL(real{"-nan"}.sign(),0);
 }
 
 BOOST_AUTO_TEST_CASE(real_stream_test)
