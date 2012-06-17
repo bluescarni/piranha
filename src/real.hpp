@@ -381,6 +381,22 @@ class real
 		{
 			return mpfr_sgn(m_value);
 		}
+		/// Test for NaN.
+		/**
+		 * @return \p true if \p this is NaN, \p false otherwise.
+		 */
+		bool is_nan() const
+		{
+			return mpfr_nan_p(m_value) != 0;
+		}
+		/// Test for infinity.
+		/**
+		 * @return \p true if \p this represents infinity, \p false otherwise.
+		 */
+		bool is_inf() const
+		{
+			return mpfr_inf_p(m_value) != 0;
+		}
 		/// Get precision.
 		/**
 		 * @return the number of bits used to represent the significand of \p this.

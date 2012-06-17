@@ -269,3 +269,19 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 	r1 = -rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
 }
+
+BOOST_AUTO_TEST_CASE(real_is_inf_nan_test)
+{
+	BOOST_CHECK(!real{}.is_nan());
+	BOOST_CHECK(!real{}.is_inf());
+	BOOST_CHECK(!real{1}.is_nan());
+	BOOST_CHECK(!real{1}.is_inf());
+	BOOST_CHECK(real{"nan"}.is_nan());
+	BOOST_CHECK(real{"-nan"}.is_nan());
+	BOOST_CHECK(!real{"nan"}.is_inf());
+	BOOST_CHECK(!real{"-nan"}.is_inf());
+	BOOST_CHECK(real{"inf"}.is_inf());
+	BOOST_CHECK(real{"-inf"}.is_inf());
+	BOOST_CHECK(!real{"inf"}.is_nan());
+	BOOST_CHECK(!real{"-inf"}.is_nan());
+}
