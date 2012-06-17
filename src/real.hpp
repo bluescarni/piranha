@@ -22,10 +22,11 @@
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
+#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cctype>
 #include <iostream>
-#include <memory>
+#include <limits>
 #include <mpfr.h>
 #include <sstream>
 #include <stdexcept>
@@ -68,6 +69,18 @@ namespace piranha
  */
 class real
 {
+		// RAII struct to manage strings received via ::mpfr_get_str().
+		struct mpfr_str_manager
+		{
+			explicit mpfr_str_manager(char *str):m_str(str) {}
+			~mpfr_str_manager()
+			{
+				if (m_str) {
+					::mpfr_free_str(m_str);
+				}
+			}
+			char *m_str;
+		};
 		// Default rounding mode.
 		static const ::mpfr_rnd_t default_rnd = MPFR_RNDN;
 		static void prec_check(const ::mpfr_prec_t &prec)
@@ -428,7 +441,7 @@ class real
 		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
 		 * and suppressed if null.
 		 * 
-		 * For non-finite numbers, the string representation is the one described in the MPFR documentation.
+		 * For non-finite numbers, the string representation is one of "nan", "inf" or "-inf".
 		 * 
 		 * @param[in] os output stream.
 		 * @param[in] r piranha::real to be directed to stream.
@@ -438,39 +451,42 @@ class real
 		 * @throws std::invalid_argument if the conversion to string via the MPFR API fails.
 		 * @throws std::overflow_error if the exponent is smaller than an implementation-defined minimum.
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
-		 * 
-		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Conversion-Functions
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const real &r)
 		{
+			if (r.is_nan()) {
+				os << "nan";
+				return os;
+			}
+			if (r.is_inf()) {
+				if (r.sign() > 0) {
+					os << "inf";
+				} else {
+					os << "-inf";
+				}
+				return os;
+			}
 			::mpfr_exp_t exp(0);
-			char *str = ::mpfr_get_str(piranha_nullptr,&exp,10,0,r.m_value,default_rnd);
-			if (!str) {
+			real::mpfr_str_manager m(::mpfr_get_str(piranha_nullptr,&exp,10,0,r.m_value,default_rnd));
+			if (!m.m_str) {
 				piranha_throw(std::invalid_argument,"unable to convert real to string");
 			}
-			// Go through unique_ptr as we are not sure the default constructor of string is nothrow.
-			std::unique_ptr<std::string> cpp_str;
-			try {
-				cpp_str.reset(new std::string(str));
-			} catch (...) {
-				::mpfr_free_str(str);
-				throw;
-			}
-			::mpfr_free_str(str);
+			// Copy into C++ string.
+			std::string cpp_str(m.m_str);
 			// Insert the radix point.
-			auto it = std::find_if(cpp_str->begin(),cpp_str->end(),[](char c) {return std::isdigit(c);});
-			if (it != cpp_str->end()) {
+			auto it = std::find_if(cpp_str.begin(),cpp_str.end(),[](char c) {return std::isdigit(c);});
+			if (it != cpp_str.end()) {
 				++it;
-				cpp_str->insert(it,'.');
+				cpp_str.insert(it,'.');
 				if (exp == boost::integer_traits< ::mpfr_exp_t>::const_min) {
 					piranha_throw(std::overflow_error,"overflow in conversion of real to string");
 				}
 				--exp;
 				if (exp != ::mpfr_exp_t(0) && r.sign() != 0) {
-					cpp_str->append(std::string("e") + boost::lexical_cast<std::string>(exp));
+					cpp_str.append(std::string("e") + boost::lexical_cast<std::string>(exp));
 				}
 			}
-			os << (*cpp_str);
+			os << cpp_str;
 			return os;
 		}
 	private:
