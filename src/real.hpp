@@ -25,6 +25,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cctype>
+#include <cstddef>
 #include <iostream>
 #include <limits>
 #include <mpfr.h>
@@ -38,6 +39,7 @@
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "rational.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -138,6 +140,93 @@ class real
 				// Reset the internal value, as it might have been changed by ::mpfr_set_str().
 				::mpfr_set_zero(m_value,0);
 				piranha_throw(std::invalid_argument,"invalid string input for real");
+			}
+		}
+		// Conversion.
+		template <typename T>
+		typename std::enable_if<std::is_same<T,bool>::value,T>::type convert_to_impl() const
+		{
+			return (sign() != 0);
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T,integer>::value,T>::type convert_to_impl() const
+		{
+			if (is_nan() || is_inf()) {
+				piranha_throw(std::overflow_error,"cannot convert non-finite real to an integral value");
+			}
+			integer retval;
+			// Explicitly request rounding to zero in this case.
+			::mpfr_get_z(retval.m_value,m_value,MPFR_RNDZ);
+			return retval;
+		}
+		template <typename T>
+		typename std::enable_if<std::is_integral<T>::value && !std::is_same<T,bool>::value,T>::type convert_to_impl() const
+		{
+			// NOTE: of course, this can be optimised by avoiding going through the integer conversion and
+			// using directly the MPFR functions.
+			return static_cast<T>(static_cast<integer>(*this));
+		}
+		template <typename T>
+		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
+		{
+			if (is_nan()) {
+				if (std::numeric_limits<T>::has_quiet_NaN) {
+					return std::numeric_limits<T>::quiet_NaN();
+				} else {
+					piranha_throw(std::overflow_error,"cannot convert NaN to floating-point type");
+				}
+			}
+			if (is_inf()) {
+				if (std::numeric_limits<T>::has_infinity) {
+					return (sign() > 0) ? std::numeric_limits<T>::infinity() : -std::numeric_limits<T>::infinity();
+				} else {
+					piranha_throw(std::overflow_error,"cannot convert infinity to floating-point type");
+				}
+			}
+			if (std::is_same<T,double>::value) {
+				return ::mpfr_get_d(m_value,default_rnd);
+			}
+			return ::mpfr_get_flt(m_value,default_rnd);
+		}
+		template <typename T>
+		typename std::enable_if<std::is_same<T,rational>::value,T>::type convert_to_impl() const
+		{
+			if (is_nan()) {
+				piranha_throw(std::overflow_error,"cannot convert NaN to rational");
+			}
+			if (is_inf()) {
+				piranha_throw(std::overflow_error,"cannot convert infinity to rational");
+			}
+			if (sign() == 0) {
+				return rational{};
+			}
+			// Get string representation.
+			::mpfr_exp_t exp(0);
+			mpfr_str_manager m(::mpfr_get_str(piranha_nullptr,&exp,10,0,m_value,default_rnd));
+			auto str = m.m_str;
+			if (!str) {
+				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
+			}
+			// Transform into fraction.
+			std::size_t digits = 0u;
+			for (; *str != '\0'; ++str) {
+				if (std::isdigit(*str)) {
+					++digits;
+				}
+			}
+			if (!digits) {
+				piranha_throw(std::overflow_error,"error in conversion of real to rational: invalid number of digits");
+			}
+			// NOTE: here the only exception that can be thrown is when raising to a power
+			// that cannot be represented by unsigned long.
+			try {
+				rational retval(m.m_str);
+				// NOTE: possible optimizations here include going through direct GMP routines.
+				retval *= rational(1,10).pow(digits);
+				retval *= rational(10).pow(exp);
+				return retval;
+			} catch (...) {
+				piranha_throw(std::overflow_error,"error in conversion of real to rational: exponent is too large");
 			}
 		}
 	public:
@@ -369,6 +458,34 @@ class real
 			// NOTE: all construct_from_generic() methods here are really assignments.
 			construct_from_generic(x);
 			return *this;
+		}
+		/// Conversion operator.
+		/**
+		 * Extract an instance of type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types", piranha::integer
+		 * and piranha::rational.
+		 * 
+		 * Conversion to \p bool is always successful, and returns <tt>sign() != 0</tt>.
+		 * Conversion to the other integral types is truncated (i.e., rounded to zero), its success depending on whether or not
+		 * the target type can represent the truncated value.
+		 * 
+		 * Conversion to floating point types is exact if the target type can represent exactly the current value.
+		 * If that is not the case, the output value will be the nearest adjacent. If \p this is not finite,
+		 * corresponding non-finite values will be produced if the floating-point type supports them, otherwise
+		 * an error will be produced.
+		 * 
+		 * Conversion of finite values to piranha::rational will be exact. Conversion of non-finite values will result in runtime
+		 * errors.
+		 * 
+		 * @return result of the conversion to target type T.
+		 * 
+		 * @throws std::overflow_error if the conversion fails in one of the ways described above.
+		 */
+		template <typename T, typename std::enable_if<integer::is_interop_type<T>::value ||
+			std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value>::type*& = enabler>
+			explicit operator T() const
+		{
+			return convert_to_impl<T>();
 		}
 		/// Swap.
 		/**

@@ -289,3 +289,94 @@ BOOST_AUTO_TEST_CASE(real_is_inf_nan_test)
 	BOOST_CHECK(!real{"inf"}.is_nan());
 	BOOST_CHECK(!real{"-inf"}.is_nan());
 }
+
+struct check_integral_conversion
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		BOOST_CHECK_THROW(static_cast<T>(real{"inf"}),std::overflow_error);
+		BOOST_CHECK_THROW(static_cast<T>(real{"-inf"}),std::overflow_error);
+		BOOST_CHECK_THROW(static_cast<T>(real{"nan"}),std::overflow_error);
+		BOOST_CHECK_THROW(static_cast<T>(real{"-nan"}),std::overflow_error);
+		BOOST_CHECK_EQUAL(static_cast<T>(real{value}),value);
+		if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+			if (value > T(0)) {
+				BOOST_CHECK_EQUAL(static_cast<T>(real{value + 0.5}),value);
+			} else {
+				BOOST_CHECK_EQUAL(static_cast<T>(real{value - 0.5}),value);
+			}
+		}
+		BOOST_CHECK_THROW(static_cast<T>(real{integer(boost::integer_traits<T>::const_max) * 2}),std::overflow_error);
+		if (std::is_signed<T>::value) {
+			BOOST_CHECK_THROW(static_cast<T>(real{integer(boost::integer_traits<T>::const_min) * 2}),std::overflow_error);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_conversion_test)
+{
+	// Test boolean conversion.
+	BOOST_CHECK(!real{});
+	BOOST_CHECK(real{"0.5"});
+	BOOST_CHECK(real{1});
+	// Integer conversion.
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{}),0);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"1.43111e4"}),14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"-1.43111e4"}),-14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"1.43119e4"}),14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"-1.43119e4"}),-14311);
+	BOOST_CHECK_THROW(static_cast<integer>(real{"inf"}),std::overflow_error);
+	BOOST_CHECK_THROW(static_cast<integer>(real{"-inf"}),std::overflow_error);
+	BOOST_CHECK_THROW(static_cast<integer>(real{"nan"}),std::overflow_error);
+	BOOST_CHECK_THROW(static_cast<integer>(real{"-nan"}),std::overflow_error);
+	// Integral conversions.
+	boost::fusion::for_each(integral_values,check_integral_conversion());
+	// FP conversions. Double.
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		BOOST_CHECK_EQUAL(static_cast<double>(real{}),0.);
+		BOOST_CHECK_EQUAL(static_cast<double>(real{-10.}),-10.);
+		BOOST_CHECK_EQUAL(static_cast<double>(real{0.5}),.5);
+	}
+	if (std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK(static_cast<double>(real{"nan"}) != std::numeric_limits<double>::quiet_NaN());
+	} else {
+		BOOST_CHECK_THROW(static_cast<double>(real{"nan"}),std::overflow_error);
+	}
+	if (std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_EQUAL(static_cast<double>(real{"inf"}),std::numeric_limits<double>::infinity());
+		BOOST_CHECK_EQUAL(static_cast<double>(real{"-inf"}),-std::numeric_limits<double>::infinity());
+	} else {
+		BOOST_CHECK_THROW(static_cast<double>(real{"inf"}),std::overflow_error);
+		BOOST_CHECK_THROW(static_cast<double>(real{"-inf"}),std::overflow_error);
+	}
+	// Float.
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		BOOST_CHECK_EQUAL(static_cast<float>(real{}),0.f);
+		BOOST_CHECK_EQUAL(static_cast<float>(real{-10.f}),-10.f);
+		BOOST_CHECK_EQUAL(static_cast<float>(real{0.5f}),.5f);
+	}
+	if (std::numeric_limits<float>::has_quiet_NaN) {
+		BOOST_CHECK(static_cast<float>(real{"nan"}) != std::numeric_limits<float>::quiet_NaN());
+	} else {
+		BOOST_CHECK_THROW(static_cast<float>(real{"nan"}),std::overflow_error);
+	}
+	if (std::numeric_limits<float>::has_infinity) {
+		BOOST_CHECK_EQUAL(static_cast<float>(real{"inf"}),std::numeric_limits<float>::infinity());
+		BOOST_CHECK_EQUAL(static_cast<float>(real{"-inf"}),-std::numeric_limits<float>::infinity());
+	} else {
+		BOOST_CHECK_THROW(static_cast<float>(real{"inf"}),std::overflow_error);
+		BOOST_CHECK_THROW(static_cast<float>(real{"-inf"}),std::overflow_error);
+	}
+	// Rational.
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{}),0);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{1}),1);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{12}),12);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{-1234}),-1234);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"-0.5"}),rational(-1,2));
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"0.03125"}),rational(1,32));
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"-7.59375"}),rational(243,-32));
+	BOOST_CHECK_THROW(static_cast<rational>(real{"nan"}),std::overflow_error);
+	BOOST_CHECK_THROW(static_cast<rational>(real{"inf"}),std::overflow_error);
+	BOOST_CHECK_THROW(static_cast<rational>(real{"-inf"}),std::overflow_error);
+}
