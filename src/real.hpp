@@ -50,7 +50,7 @@ namespace piranha
  * The implementation consists of a C++ wrapper around the \p mpfr_t type from the multiprecision MPFR library. Real numbers
  * are represented in binary format and they consist of an arbitrary-size significand coupled to a fixed-size exponent.
  * 
- * This implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all operations.
+ * Unless noted otherwise, this implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all operations.
  * 
  * \section interop Interoperability with fundamental types
  * 
@@ -229,6 +229,55 @@ class real
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: exponent is too large");
 			}
 		}
+		// In-place addition.
+		void in_place_add(const real &r)
+		{
+			if (r.get_prec() > get_prec()) {
+				// Re-init this with the prec of r.
+				*this = real{*this,r.get_prec()};
+			}
+			::mpfr_add(m_value,m_value,r.m_value,default_rnd);
+		}
+		void in_place_add(const rational &q)
+		{
+			::mpfr_add_q(m_value,m_value,q.m_value,default_rnd);
+		}
+		void in_place_add(const integer &n)
+		{
+			::mpfr_add_z(m_value,m_value,n.m_value,default_rnd);
+		}
+		template <typename T>
+		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (si >= 0) {
+				::mpfr_add_ui(m_value,m_value,static_cast<unsigned long>(si),default_rnd);
+			} else {
+				::mpfr_sub_ui(m_value,m_value,-static_cast<unsigned long>(si),default_rnd);
+			}
+		}
+		template <typename T>
+		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_add_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+		}
+		template <typename T>
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_add(integer(n));
+		}
+		template <typename T>
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
+			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
+			if ((radix & (radix - 1u)) == 0u) {
+				::mpfr_add_d(m_value,m_value,static_cast<double>(x),default_rnd);
+			} else {
+				in_place_add(real(x));
+			}
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -305,7 +354,7 @@ class real
 		}
 		/// Copy constructor with different precision.
 		/**
-		 * First \p this will be initialised with precision \p prec, and then \p other will be assigned to \p this.
+		 * \p this will be first initialised with precision \p prec, and then \p other will be assigned to \p this.
 		 * 
 		 * @param[in] other real to be copied.
 		 * @param[in] prec desired significand precision.
@@ -552,6 +601,43 @@ class real
 		{
 			prec_check(prec);
 			::mpfr_set_prec(m_value,prec);
+		}
+		/// In-place addition.
+		/**
+		 * Add \p x to the current value of the real object. This template operator is activated only if
+		 * \p T is either real, piranha::rational, piranha::integer or an \ref interop "interoperable type".
+		 * 
+		 * If \p T is real, \p x is added in-place to \p this. If the precision \p prec of \p x is greater than the precision of \p this,
+		 * the precision of \p this is changed to \p prec before the operation takes place.
+		 * 
+		 * In-place addition of integral values and piranha::rational objects will use the corresponding MPFR routines.
+		 * 
+		 * If \p T is a floating-point type, the MPFR routine <tt>mpfr_add_d()</tt> is used if the radix of the type is a power
+		 * of 2, otherwise \p x will be converted to a real (using the default significand precision) before being added to \p this.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Basic-Arithmetic-Functions
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<real,typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator+=(T &&x)
+		{
+			in_place_add(std::forward<T>(x));
+			return *this;
+		}
+		/// Identity operator.
+		/**
+		 * @return copy of \p this.
+		 */
+		real operator+() const
+		{
+			return *this;
 		}
 		/// Overload output stream operator for piranha::real.
 		/**

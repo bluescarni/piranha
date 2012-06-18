@@ -380,3 +380,74 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 	BOOST_CHECK_THROW(static_cast<rational>(real{"inf"}),std::overflow_error);
 	BOOST_CHECK_THROW(static_cast<rational>(real{"-inf"}),std::overflow_error);
 }
+
+struct check_in_place_add_integral
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		real r{0.,4};
+		r += value;
+		BOOST_CHECK_EQUAL(r.get_prec(),::mpfr_prec_t(4));
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL("4.00e1",boost::lexical_cast<std::string>(r));
+		} else {
+			BOOST_CHECK_EQUAL("-4.00e1",boost::lexical_cast<std::string>(r));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_addition_test)
+{
+	real r1{1.,4}, r2{2.,4};
+	r1 += r2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00");
+	r1 += real{1.};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
+	r1 += rational(1,2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.50000000000000000000000000000000000");
+	r1 += integer(2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"6.50000000000000000000000000000000000");
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		r1 += 2.f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"8.50000000000000000000000000000000000");
+		r1 += 2.5f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.10000000000000000000000000000000000e1");
+		r1 += -4.5f;
+	}
+	if (std::numeric_limits<float>::has_infinity) {
+		real r;
+		r += std::numeric_limits<float>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"inf");
+		r = 0;
+		r += -std::numeric_limits<float>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"-inf");
+		r += std::numeric_limits<float>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"nan");
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		r1 += 2.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"8.50000000000000000000000000000000000");
+		r1 += 2.5;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.10000000000000000000000000000000000e1");
+		r1 += -4.5;
+	}
+	if (std::numeric_limits<double>::has_infinity) {
+		real r;
+		r += std::numeric_limits<double>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"inf");
+		r = 0;
+		r += -std::numeric_limits<double>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"-inf");
+		r += std::numeric_limits<double>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"nan");
+	}
+	boost::fusion::for_each(integral_values,check_in_place_add_integral());
+}
+
+BOOST_AUTO_TEST_CASE(real_identity_operator)
+{
+	real r{"1.5"};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(+r),"1.50000000000000000000000000000000000");
+}
