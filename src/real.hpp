@@ -384,6 +384,68 @@ class real
 			retval.negate();
 			return retval;
 		}
+		// In-place multiplication.
+		void in_place_mul(const real &r)
+		{
+			if (r.get_prec() > get_prec()) {
+				// Re-init this with the prec of r.
+				*this = real{*this,r.get_prec()};
+			}
+			::mpfr_mul(m_value,m_value,r.m_value,default_rnd);
+		}
+		void in_place_mul(const rational &q)
+		{
+			::mpfr_mul_q(m_value,m_value,q.m_value,default_rnd);
+		}
+		void in_place_mul(const integer &n)
+		{
+			::mpfr_mul_z(m_value,m_value,n.m_value,default_rnd);
+		}
+		template <typename T>
+		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_mul_si(m_value,m_value,static_cast<long>(si),default_rnd);
+		}
+		template <typename T>
+		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_mul_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+		}
+		template <typename T>
+		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_mul(integer(n));
+		}
+		template <typename T>
+		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
+			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
+			if ((radix & (radix - 1u)) == 0u) {
+				::mpfr_mul_d(m_value,m_value,static_cast<double>(x),default_rnd);
+			} else {
+				in_place_mul(real(x));
+			}
+		}
+		template <typename T, typename U>
+		static real binary_mul(T &&a, U &&b, typename std::enable_if<
+			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
+			std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			real retval(std::forward<T>(a));
+			retval *= std::forward<U>(b);
+			return retval;
+		}
+		template <typename T, typename U>
+		static real binary_mul(T &&a, U &&b, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			return binary_mul(std::forward<U>(b),std::forward<T>(a));
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -867,6 +929,67 @@ class real
 			real retval(*this);
 			retval.negate();
 			return retval;
+		}
+		/// In-place multiplication.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the multiplication.
+		 * 
+		 * @return reference to \p this.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<real,typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator*=(T &&x)
+		{
+			in_place_mul(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place multiplication with piranha::real.
+		/**
+		 * Multiply by a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
+		 * or piranha::rational, and \p R is piranha::real.
+		 * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] r second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 */
+		template <typename T, typename R>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value) &&
+			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
+			operator*=(T &x, R &&r)
+		{
+			x = static_cast<T>(x * std::forward<R>(r));
+			return x;
+		}
+		/// Generic binary multiplication involving piranha::real.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * The return type is always real.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x * y</tt>.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
+			operator*(T &&x, U &&y)
+		{
+			return binary_mul(std::forward<T>(x),std::forward<U>(y));
 		}
 		/// Overload output stream operator for piranha::real.
 		/**

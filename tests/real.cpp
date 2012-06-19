@@ -442,13 +442,13 @@ struct check_binary_add_integral
 BOOST_AUTO_TEST_CASE(real_addition_test)
 {
 	// In-place addition.
-	real r1{1.,4}, r2{2.,4};
+	real r1{1,4}, r2{2,4};
 	r1 += r2;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00");
 	// With self.
 	r2 += r2;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"4.00");
-	r1 += real{1.};
+	r1 += real{1};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
 	r1 += rational(1,2);
@@ -619,13 +619,13 @@ struct check_binary_sub_integral
 BOOST_AUTO_TEST_CASE(real_subtraction_test)
 {
 	// In-place subtraction.
-	real r1{1.,4}, r2{2.,4};
+	real r1{1,4}, r2{2,4};
 	r1 -= r2;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-1.00");
 	// With self.
 	r2 -= r2;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"0.00");
-	r1 -= real{1.};
+	r1 -= real{1};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-2.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
 	r1 -= rational(1,2);
@@ -743,4 +743,163 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(std::numeric_limits<double>::infinity() - real{1}),"inf");
 	}
 	boost::fusion::for_each(integral_values,check_binary_sub_integral());
+}
+
+struct check_in_place_mul_integral
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		real r{"1.5",4};
+		r *= value;
+		BOOST_CHECK_EQUAL(r.get_prec(),::mpfr_prec_t(4));
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL("6.40e1",boost::lexical_cast<std::string>(r));
+		} else {
+			BOOST_CHECK_EQUAL("-6.40e1",boost::lexical_cast<std::string>(r));
+		}
+		// Integral on the left.
+		T other(1);
+		other *= real("2.",4);
+		BOOST_CHECK_EQUAL(T(2),other);
+		other *= real("2.5");
+		BOOST_CHECK_EQUAL(T(5),other);
+		BOOST_CHECK_THROW(other *= real("inf"),std::overflow_error);
+	}
+};
+
+struct check_binary_mul_integral
+{
+	template <typename T>
+	void operator()(const T &value) const
+	{
+		if (value > T(0)) {
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.5"} * value),"6.30000000000000000000000000000000000e1");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"1.5"}),"6.30000000000000000000000000000000000e1");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"inf"}),"inf");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * value),"inf");
+		} else {
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"1.5"} * value),"-6.30000000000000000000000000000000000e1");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"1.5"}),"-6.30000000000000000000000000000000000e1");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"inf"}),"-inf");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * value),"-inf");
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_multiplication_test)
+{
+	// In-place multiplication.
+	real r1{1,4}, r2{2,4};
+	r1 *= r2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00");
+	// With self.
+	r2 *= r2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"4.00");
+	r1 *= real{"1.5"};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
+	r1 *= rational(1,2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.50000000000000000000000000000000000");
+	r1 *= integer(2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00000000000000000000000000000000000");
+	// Rational and integer on the left.
+	rational q(1,2);
+	q *= real(2);
+	BOOST_CHECK_EQUAL(1,q);
+	BOOST_CHECK_THROW(q *= real("inf"),std::overflow_error);
+	integer n(4);
+	n *= real("3",4);
+	BOOST_CHECK_EQUAL(n,12);
+	n *= real("1.001");
+	BOOST_CHECK_EQUAL(n,12);
+	n *= real("0.99");
+	BOOST_CHECK_EQUAL(n,11);
+	BOOST_CHECK_THROW(n *= real("nan"),std::overflow_error);
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		r1 *= 2.f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"6.00000000000000000000000000000000000");
+		r1 *= 2.5f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.50000000000000000000000000000000000e1");
+		r1 = 3;
+		float x = 4.f;
+		x *= real(".5");
+		BOOST_CHECK_EQUAL(x,2.f);
+	}
+	if (std::numeric_limits<float>::has_infinity) {
+		real r(1);
+		r *= std::numeric_limits<float>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"inf");
+		r = 0;
+		r *= -std::numeric_limits<float>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"nan");
+		float x = 4.f;
+		x *= real("inf");
+		BOOST_CHECK_EQUAL(x,std::numeric_limits<float>::infinity());
+		x = 1.f;
+		x *= real("-inf");
+		BOOST_CHECK_EQUAL(x,-std::numeric_limits<float>::infinity());
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		r1 *= 2.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"6.00000000000000000000000000000000000");
+		r1 *= 2.5;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.50000000000000000000000000000000000e1");
+		r1 = 3;
+		double x = 4.;
+		x *= real(".5");
+		BOOST_CHECK_EQUAL(x,2.);
+	}
+	if (std::numeric_limits<double>::has_infinity) {
+		real r(1);
+		r *= std::numeric_limits<double>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"inf");
+		r = 0;
+		r *= -std::numeric_limits<double>::infinity();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),"nan");
+		double x = 4.;
+		x *= real("-inf");
+		BOOST_CHECK_EQUAL(x,-std::numeric_limits<double>::infinity());
+		x = 1.;
+		x *= real("inf");
+		BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
+	}
+	boost::fusion::for_each(integral_values,check_in_place_mul_integral());
+	// Binary multiplication.
+	r1 = 2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1 * r1),"4.00000000000000000000000000000000000");
+	r2 = 2;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * r2),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1 * r2),"4.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * r1),"4.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * real("inf")),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-inf") * r2),"-inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") * r2),"nan");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * integer(2)),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(2) * r2),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * integer(1)),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) * real{"inf"}),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * rational(1,2)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(1,2) * r2),"1.00");
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5f * real{1,4}),"5.00e-1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1,4} * .5f),"5.00e-1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5f * real{"inf"}),"inf");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-inf"} * .5f),"-inf");
+	}
+	if (std::numeric_limits<float>::has_infinity) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1} * std::numeric_limits<float>::infinity()),"inf");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-std::numeric_limits<float>::infinity() * real{1}),"-inf");
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5 * real{1,4}),"5.00e-1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1,4} * .5),"5.00e-1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5 * real{"inf"}),"inf");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-inf"} * .5),"-inf");
+	}
+	if (std::numeric_limits<double>::has_infinity) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1} * std::numeric_limits<double>::infinity()),"inf");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-std::numeric_limits<double>::infinity() * real{1}),"-inf");
+	}
+	boost::fusion::for_each(integral_values,check_binary_mul_integral());
 }
