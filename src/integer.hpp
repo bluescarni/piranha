@@ -1851,7 +1851,7 @@ class integer
 		}
 		/// Overload input stream operator for piranha::integer.
 		/**
-		 * Equivalent to extracting a string from the stream and then using it to construct a piranha::integer that will be assigned to \p n.
+		 * Equivalent to extracting a line from the stream and then assigning it to \p n.
 		 * 
 		 * @param[in] is input stream.
 		 * @param[in,out] n integer to which the contents of the stream will be assigned.
@@ -1864,9 +1864,7 @@ class integer
 		{
 			std::string tmp_str;
 			std::getline(is,tmp_str);
-			// NOTE: here this can probably be optimized via mpz_set_str,
-			// thus avoiding one allocation.
-			n = integer(tmp_str);
+			n = tmp_str;
 			return is;
 		}
 	private:

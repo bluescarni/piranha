@@ -31,6 +31,7 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <mpfr.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -133,19 +134,6 @@ BOOST_AUTO_TEST_CASE(real_sign_test)
 	BOOST_CHECK_EQUAL(real{"-inf"}.sign(),-1);
 	BOOST_CHECK_EQUAL(real{"nan"}.sign(),0);
 	BOOST_CHECK_EQUAL(real{"-nan"}.sign(),0);
-}
-
-BOOST_AUTO_TEST_CASE(real_stream_test)
-{
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"nan"}),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+nan"}),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-nan"}),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"}),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+inf"}),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-inf"}),"-inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"3"}),"3.00000000000000000000000000000000000");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"30"}),"3.00000000000000000000000000000000000e1");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"0.5"}),"5.00000000000000000000000000000000000e-1");
 }
 
 BOOST_AUTO_TEST_CASE(real_precision_test)
@@ -1329,4 +1317,43 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 		BOOST_CHECK(!(real{"nan"} <= std::numeric_limits<double>::quiet_NaN()));
 	}
 	boost::fusion::for_each(integral_values,check_binary_comparison_integral());
+}
+
+BOOST_AUTO_TEST_CASE(real_stream_test)
+{
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"nan"}),"nan");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+nan"}),"nan");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-nan"}),"nan");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"}),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"+inf"}),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"-inf"}),"-inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"3"}),"3.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"30"}),"3.00000000000000000000000000000000000e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"0.5"}),"5.00000000000000000000000000000000000e-1");
+	{
+		std::ostringstream oss;
+		std::string tmp = "1.50";
+		oss << real(tmp,4);
+		BOOST_CHECK_EQUAL(tmp,oss.str());
+	}
+	{
+		std::ostringstream oss;
+		std::string tmp = "-5.00e-1";
+		oss << real(tmp,4);
+		BOOST_CHECK_EQUAL(tmp,oss.str());
+	}
+	{
+		real tmp{0,4};
+		std::stringstream ss;
+		ss << "1.5";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,(real{"1.5",4}));
+	}
+	{
+		real tmp{0,4};
+		std::stringstream ss;
+		ss << "-0.5";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,(real{"-.5",4}));
+	}
 }

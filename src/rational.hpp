@@ -1435,7 +1435,7 @@ class rational
 		}
 		/// Overload input stream operator for piranha::rational.
 		/**
-		 * Equivalent to extracting a string from the stream and then using it to construct a piranha::rational that will be assigned to \p q.
+		 * Equivalent to extracting a line from the stream and then assigning it to \p q.
 		 * 
 		 * @param[in] is input stream.
 		 * @param[in,out] q rational to which the contents of the stream will be assigned.
@@ -1448,9 +1448,7 @@ class rational
 		{
 			std::string tmp_str;
 			std::getline(is,tmp_str);
-			// NOTE: here this can probably be optimized via mpz_set_str,
-			// thus avoiding one allocation.
-			q = rational(tmp_str);
+			q = tmp_str;
 			return is;
 		}
 	private:
