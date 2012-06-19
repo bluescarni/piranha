@@ -315,6 +315,75 @@ class real
 		{
 			return binary_add(std::forward<U>(b),std::forward<T>(a));
 		}
+		// In-place subtraction.
+		void in_place_sub(const real &r)
+		{
+			if (r.get_prec() > get_prec()) {
+				*this = real{*this,r.get_prec()};
+			}
+			::mpfr_sub(m_value,m_value,r.m_value,default_rnd);
+		}
+		void in_place_sub(const rational &q)
+		{
+			::mpfr_sub_q(m_value,m_value,q.m_value,default_rnd);
+		}
+		void in_place_sub(const integer &n)
+		{
+			::mpfr_sub_z(m_value,m_value,n.m_value,default_rnd);
+		}
+		template <typename T>
+		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (si >= 0) {
+				::mpfr_sub_ui(m_value,m_value,static_cast<unsigned long>(si),default_rnd);
+			} else {
+				::mpfr_add_ui(m_value,m_value,-static_cast<unsigned long>(si),default_rnd);
+			}
+		}
+		template <typename T>
+		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			::mpfr_sub_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+		}
+		template <typename T>
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			in_place_sub(integer(n));
+		}
+		template <typename T>
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
+			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
+			if ((radix & (radix - 1u)) == 0u) {
+				::mpfr_sub_d(m_value,m_value,static_cast<double>(x),default_rnd);
+			} else {
+				in_place_sub(real(x));
+			}
+		}
+		// Binary subtraction.
+		template <typename T, typename U>
+		static real binary_sub(T &&a, U &&b, typename std::enable_if<
+			// NOTE: T == U means they have both to be real.
+			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
+			std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			real retval(std::forward<T>(a));
+			retval -= std::forward<U>(b);
+			return retval;
+		}
+		template <typename T, typename U>
+		static real binary_sub(T &&a, U &&b, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			real retval(binary_sub(std::forward<U>(b),std::forward<T>(a)));
+			retval.negate();
+			return retval;
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -727,6 +796,77 @@ class real
 		real operator+() const
 		{
 			return *this;
+		}
+		/// In-place subtraction.
+		/**
+		 * The same rules described in operator+=() apply.
+		 * 
+		 * @param[in] x argument for the subtraction.
+		 * 
+		 * @return reference to \p this.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			integer::is_interop_type<typename std::decay<T>::type>::value ||
+			std::is_same<real,typename std::decay<T>::type>::value ||
+			std::is_same<rational,typename std::decay<T>::type>::value ||
+			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator-=(T &&x)
+		{
+			in_place_sub(std::forward<T>(x));
+			return *this;
+		}
+		/// Generic in-place subtraction with piranha::real.
+		/**
+		 * Subtract a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
+		 * or piranha::rational, and \p R is piranha::real.
+		 * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] r second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 */
+		template <typename T, typename R>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value) &&
+			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
+			operator-=(T &x, R &&r)
+		{
+			x = static_cast<T>(x - std::forward<R>(r));
+			return x;
+		}
+		/// Generic binary subtraction involving piranha::real.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * The return type is always real.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x - y</tt>.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
+			operator-(T &&x, U &&y)
+		{
+			return binary_sub(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// Negated copy.
+		/**
+		 * @return copy of \p -this.
+		 */
+		real operator-() const
+		{
+			real retval(*this);
+			retval.negate();
+			return retval;
 		}
 		/// Overload output stream operator for piranha::real.
 		/**
