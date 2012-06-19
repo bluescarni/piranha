@@ -265,11 +265,7 @@ class real
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				::mpfr_add_ui(m_value,m_value,static_cast<unsigned long>(si),default_rnd);
-			} else {
-				::mpfr_sub_ui(m_value,m_value,-static_cast<unsigned long>(si),default_rnd);
-			}
+			::mpfr_add_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -336,11 +332,7 @@ class real
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				::mpfr_sub_ui(m_value,m_value,static_cast<unsigned long>(si),default_rnd);
-			} else {
-				::mpfr_add_ui(m_value,m_value,-static_cast<unsigned long>(si),default_rnd);
-			}
+			::mpfr_sub_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
