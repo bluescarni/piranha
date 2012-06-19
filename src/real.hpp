@@ -562,6 +562,113 @@ class real
 		{
 			return binary_equality(r,x);
 		}
+		// Binary less-than.
+		static bool binary_less_than(const real &r1, const real &r2)
+		{
+			return (::mpfr_less_p(r1.m_value,r2.m_value) != 0);
+		}
+		static bool binary_less_than(const real &r, const rational &q)
+		{
+			return (::mpfr_cmp_q(r.m_value,q.m_value) < 0);
+		}
+		static bool binary_less_than(const real &r, const integer &n)
+		{
+			return (::mpfr_cmp_z(r.m_value,n.m_value) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) < 0);
+		}
+		template <typename T>
+		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_less_than(r,integer(n));
+		}
+		template <typename T>
+		static bool binary_less_than(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) < 0);
+		}
+		// Binary less-than or equal.
+		static bool binary_leq(const real &r1, const real &r2)
+		{
+			return (::mpfr_lessequal_p(r1.m_value,r2.m_value) != 0);
+		}
+		static bool binary_leq(const real &r, const rational &q)
+		{
+			return (::mpfr_cmp_q(r.m_value,q.m_value) <= 0);
+		}
+		static bool binary_leq(const real &r, const integer &n)
+		{
+			return (::mpfr_cmp_z(r.m_value,n.m_value) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) <= 0);
+		}
+		template <typename T>
+		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_leq(r,integer(n));
+		}
+		template <typename T>
+		static bool binary_leq(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) <= 0);
+		}
+		// Inverse forms of less-than and leq.
+		template <typename T>
+		static bool binary_less_than(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
+			std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+		{
+			return !binary_leq(r,x);
+		}
+		template <typename T>
+		static bool binary_leq(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
+			std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+		{
+			return !binary_less_than(r,x);
+		}
+		// NOTE: we need to handle separately the NaNs as we cannot resort to the inversion of the comparison operators for them.
+		static bool check_nan(const real &r)
+		{
+			return r.is_nan();
+		}
+		template <typename T>
+		static bool check_nan(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return boost::math::isnan(x);
+		}
+		template <typename T>
+		static bool check_nan(const T &, typename std::enable_if<!std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			return false;
+		}
+		template <typename T, typename U>
+		static bool is_nan_comparison(const T &a, const U &b)
+		{
+			return (check_nan(a) || check_nan(b));
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -1176,7 +1283,7 @@ class real
 		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * If any operand is NaN, \p false will be returned.
+		 * Note that in all comparison operators, apart from operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1201,6 +1308,74 @@ class real
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
 		{
 			return !binary_equality(x,y);
+		}
+		/// Generic less-than operator involving piranha::real.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		{
+			if (is_nan_comparison(x,y)) {
+				return false;
+			}
+			return binary_less_than(x,y);
+		}
+		/// Generic less-than or equal operator involving piranha::real.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		{
+			if (is_nan_comparison(x,y)) {
+				return false;
+			}
+			return binary_leq(x,y);
+		}
+		/// Generic greater-than operator involving piranha::real.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		{
+			if (is_nan_comparison(x,y)) {
+				return false;
+			}
+			return (y < x);
+		}
+		/// Generic greater-than or equal operator involving piranha::real.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		{
+			if (is_nan_comparison(x,y)) {
+				return false;
+			}
+			return (y <= x);
 		}
 		/// Overload output stream operator for piranha::real.
 		/**

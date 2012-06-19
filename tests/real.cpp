@@ -1124,12 +1124,18 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 	BOOST_CHECK(!(real{"nan"} == real{"inf"}));
 	BOOST_CHECK(!(real{} == real{"nan"}));
 	BOOST_CHECK(!(real{"-inf"} == real{"nan"}));
+	BOOST_CHECK(!(real{"nan"} == real{"nan"}));
+	BOOST_CHECK(real{"nan"} != real{"nan"});
+	BOOST_CHECK(real{"nan"} != real{3});
+	BOOST_CHECK(real{"nan"} != real{"inf"});
 	BOOST_CHECK(real{0} != real{1});
 	// With integer.
 	BOOST_CHECK_EQUAL(integer(1),real{1});
 	BOOST_CHECK_EQUAL((real{0,4}),integer(rational(1,2)));
 	BOOST_CHECK(!(integer() == real{"nan"}));
+	BOOST_CHECK(integer() != real{"nan"});
 	BOOST_CHECK(!(real{"-nan"} == integer(5)));
+	BOOST_CHECK(real{"-nan"} != integer(5));
 	BOOST_CHECK(!(integer() == real{"inf"}));
 	BOOST_CHECK(!(real{"-inf"} == integer(5)));
 	BOOST_CHECK(real{1} != integer());
@@ -1139,7 +1145,9 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 	BOOST_CHECK_EQUAL(real{"0.5"},rational(1,2));
 	BOOST_CHECK_EQUAL(rational(1,2),(real{"0.5",4}));
 	BOOST_CHECK(!(rational() == real{"nan"}));
+	BOOST_CHECK(rational() != real{"nan"});
 	BOOST_CHECK(!(real{"-nan"} == rational(5,3)));
+	BOOST_CHECK(real{"-nan"} != rational(5,3));
 	BOOST_CHECK(!(rational() == real{"inf"}));
 	BOOST_CHECK(!(real{"-inf"} == rational(5)));
 	BOOST_CHECK(real{1} != rational(3,4));
@@ -1155,8 +1163,11 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 		BOOST_CHECK_EQUAL(real{"-inf"},-std::numeric_limits<float>::infinity());
 		BOOST_CHECK(!(real{"inf"} == -std::numeric_limits<float>::infinity()));
 		BOOST_CHECK(!(real{5} == std::numeric_limits<float>::quiet_NaN()));
+		BOOST_CHECK(real{5} != std::numeric_limits<float>::quiet_NaN());
 		BOOST_CHECK(!(5.f == real{"nan"}));
+		BOOST_CHECK(5.f != real{"nan"});
 		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() == real{"-nan"}));
+		BOOST_CHECK(std::numeric_limits<float>::quiet_NaN() != real{"-nan"});
 		BOOST_CHECK(0.5f != real{1});
 	}
 	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
@@ -1170,9 +1181,152 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 		BOOST_CHECK_EQUAL(real{"-inf"},-std::numeric_limits<double>::infinity());
 		BOOST_CHECK(!(real{"inf"} == -std::numeric_limits<double>::infinity()));
 		BOOST_CHECK(!(real{5} == std::numeric_limits<double>::quiet_NaN()));
+		BOOST_CHECK(real{5} != std::numeric_limits<double>::quiet_NaN());
 		BOOST_CHECK(!(5. == real{"nan"}));
+		BOOST_CHECK(5. != real{"nan"});
 		BOOST_CHECK(!(std::numeric_limits<double>::quiet_NaN() == real{"-nan"}));
+		BOOST_CHECK(std::numeric_limits<double>::quiet_NaN() != real{"-nan"});
 		BOOST_CHECK(0.5 != real{1});
 	}
 	boost::fusion::for_each(integral_values,check_binary_equality_integral());
+}
+
+struct check_binary_comparison_integral
+{
+	template <typename T>
+	void operator()(const T &) const
+	{
+		BOOST_CHECK(real{-1} < T(0));
+		BOOST_CHECK(real{"-inf"} < T(0));
+		BOOST_CHECK(T(0) < real{1});
+		BOOST_CHECK(T(0) < real{"inf"});
+		BOOST_CHECK(real{-1} <= T(0));
+		BOOST_CHECK(real{"-inf"} <= T(0));
+		BOOST_CHECK(T(0) <= real{0});
+		BOOST_CHECK(T(0) <= real{"inf"});
+		BOOST_CHECK(real{1} > T(0));
+		BOOST_CHECK(real{"inf"} > T(0));
+		BOOST_CHECK(T(0) > real{-1});
+		BOOST_CHECK(T(0) > real{"-inf"});
+		BOOST_CHECK(real{"inf"} >= T(0));
+		BOOST_CHECK(real{1} >= T(0));
+		BOOST_CHECK(T(0) >= real{0});
+		BOOST_CHECK(T(0) >= real{"-inf"});
+		// NaNs.
+		BOOST_CHECK(!(real{"nan"} < T(0)));
+		BOOST_CHECK(!(T(0) < real{"nan"}));
+		BOOST_CHECK(!(real{"nan"} <= T(0)));
+		BOOST_CHECK(!(T(0) <= real{"-nan"}));
+		BOOST_CHECK(!(real{"nan"} > T(0)));
+		BOOST_CHECK(!(T(0) > real{"nan"}));
+		BOOST_CHECK(!(real{"nan"} >= T(0)));
+		BOOST_CHECK(!(T(0) >= real{"nan"}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_comparisons_test)
+{
+	BOOST_CHECK(real{} <= real{});
+	BOOST_CHECK(real{} >= real{});
+	BOOST_CHECK(!(real{} < real{}));
+	BOOST_CHECK(!(real{} > real{}));
+	BOOST_CHECK((real{3,4}) <= real{3});
+	BOOST_CHECK((real{3,4}) >= real{3});
+	BOOST_CHECK((real{2,4}) <= real{3});
+	BOOST_CHECK((real{3,4}) >= real{2});
+	BOOST_CHECK(!(real{3,4} < real{3}));
+	BOOST_CHECK(!(real{3,4} > real{3}));
+	BOOST_CHECK(!(real{3,4} < real{3}));
+	BOOST_CHECK(real{4} > real{3});
+	BOOST_CHECK(real{3} < real{4});
+	BOOST_CHECK(real{"inf"} > real{});
+	BOOST_CHECK(real{"inf"} >= real{2});
+	BOOST_CHECK(real{"-inf"} < real{"inf"});
+	BOOST_CHECK(!(real{"inf"} <= real{"nan"}));
+	BOOST_CHECK(!(real{"nan"} >= real{"inf"}));
+	// Integer and rational.
+	BOOST_CHECK(real{4} > integer(3));
+	BOOST_CHECK(real{4} >= integer(4));
+	BOOST_CHECK(real{4} < integer(5));
+	BOOST_CHECK(real{4} <= integer(5));
+	BOOST_CHECK(real{"inf"} > integer(3));
+	BOOST_CHECK(integer{4} > real{2});
+	BOOST_CHECK(!(real{"nan"} > integer(3)));
+	BOOST_CHECK(!(real{"nan"} < integer(3)));
+	BOOST_CHECK(!(real{"nan"} >= integer(3)));
+	BOOST_CHECK(!(real{"nan"} <= integer(3)));
+	BOOST_CHECK(!(integer(3) > real{"nan"}));
+	BOOST_CHECK(!(integer(3) < real{"nan"}));
+	BOOST_CHECK(!(integer(3) >= real{"nan"}));
+	BOOST_CHECK(!(integer(3) <= real{"nan"}));
+	BOOST_CHECK(real{4} >= integer(3));
+	BOOST_CHECK(real{3} >= integer(3));
+	BOOST_CHECK(real{"inf"} >= integer(3));
+	BOOST_CHECK(real{"inf"} > integer(3));
+	BOOST_CHECK(real{"-inf"} < integer(3));
+	BOOST_CHECK(real{"-inf"} <= integer(3));
+	BOOST_CHECK(real{4} > rational(3));
+	BOOST_CHECK(real{4} >= rational(4));
+	BOOST_CHECK(real{4} < rational(5));
+	BOOST_CHECK(real{4} <= rational(5));
+	BOOST_CHECK(real{"inf"} > rational(3));
+	BOOST_CHECK(rational{4} > real{2});
+	BOOST_CHECK(!(real{"nan"} > rational(3)));
+	BOOST_CHECK(!(real{"nan"} < rational(3)));
+	BOOST_CHECK(!(real{"nan"} >= rational(3)));
+	BOOST_CHECK(!(real{"nan"} <= rational(3)));
+	BOOST_CHECK(!(rational(3) > real{"nan"}));
+	BOOST_CHECK(!(rational(3) < real{"nan"}));
+	BOOST_CHECK(!(rational(3) >= real{"nan"}));
+	BOOST_CHECK(!(rational(3) <= real{"nan"}));
+	BOOST_CHECK(real{4} >= rational(3));
+	BOOST_CHECK(real{3} >= rational(3));
+	BOOST_CHECK(real{"inf"} >= rational(3));
+	BOOST_CHECK(real{"inf"} > rational(3));
+	BOOST_CHECK(real{"-inf"} < rational(3));
+	BOOST_CHECK(real{"-inf"} <= rational(3));
+	// With floating-point types.
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
+		std::numeric_limits<float>::has_quiet_NaN)
+	{
+		BOOST_CHECK(real{1} > 0.5f);
+		BOOST_CHECK(0.5f > real{});
+		BOOST_CHECK(0.5f < real{1});
+		BOOST_CHECK(real{"-inf"} < 0.5f);
+		BOOST_CHECK(real{"inf"} >= 0.f);
+		BOOST_CHECK(0.f >= real{});
+		BOOST_CHECK(0.f <= real{});
+		BOOST_CHECK(real{} <= 0.f);
+		// NaNs.
+		BOOST_CHECK(!(real{1} > std::numeric_limits<float>::quiet_NaN()));
+		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() > real{}));
+		BOOST_CHECK(!(0.5f < real{"nan"}));
+		BOOST_CHECK(!(real{"-inf"} < std::numeric_limits<float>::quiet_NaN()));
+		BOOST_CHECK(!(real{"-nan"} >= std::numeric_limits<float>::quiet_NaN()));
+		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() >= real{}));
+		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() <= real{}));
+		BOOST_CHECK(!(real{"nan"} <= std::numeric_limits<float>::quiet_NaN()));
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
+		std::numeric_limits<double>::has_quiet_NaN)
+	{
+		BOOST_CHECK(real{1} > 0.5);
+		BOOST_CHECK(0.5 > real{});
+		BOOST_CHECK(0.5 < real{1});
+		BOOST_CHECK(real{"-inf"} < 0.5);
+		BOOST_CHECK(real{"inf"} >= 0.);
+		BOOST_CHECK(0. >= real{});
+		BOOST_CHECK(0. <= real{});
+		BOOST_CHECK(real{} <= 0.);
+		// NaNs.
+		BOOST_CHECK(!(real{1} > std::numeric_limits<double>::quiet_NaN()));
+		BOOST_CHECK(!(std::numeric_limits<double>::quiet_NaN() > real{}));
+		BOOST_CHECK(!(0.5 < real{"nan"}));
+		BOOST_CHECK(!(real{"-inf"} < std::numeric_limits<double>::quiet_NaN()));
+		BOOST_CHECK(!(real{"-nan"} >= std::numeric_limits<double>::quiet_NaN()));
+		BOOST_CHECK(!(std::numeric_limits<double>::quiet_NaN() >= real{}));
+		BOOST_CHECK(!(std::numeric_limits<double>::quiet_NaN() <= real{}));
+		BOOST_CHECK(!(real{"nan"} <= std::numeric_limits<double>::quiet_NaN()));
+	}
+	boost::fusion::for_each(integral_values,check_binary_comparison_integral());
 }
