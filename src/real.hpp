@@ -71,6 +71,17 @@ namespace piranha
  */
 class real
 {
+		// Type trait for allowed arguments in arithmetic binary operations.
+		template <typename T, typename U>
+		struct are_binary_op_types: std::integral_constant<bool,
+			(std::is_same<typename std::decay<T>::type,real>::value && integer::is_interop_type<typename std::decay<U>::type>::value) ||
+			(std::is_same<typename std::decay<U>::type,real>::value && integer::is_interop_type<typename std::decay<T>::type>::value) ||
+			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,integer>::value) ||
+			(std::is_same<typename std::decay<U>::type,real>::value && std::is_same<typename std::decay<T>::type,integer>::value) ||
+			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,rational>::value) ||
+			(std::is_same<typename std::decay<U>::type,real>::value && std::is_same<typename std::decay<T>::type,rational>::value) ||
+			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,real>::value)>
+		{};
 		// RAII struct to manage strings received via ::mpfr_get_str().
 		struct mpfr_str_manager
 		{
@@ -178,6 +189,7 @@ class real
 			}
 			if (is_inf()) {
 				if (std::numeric_limits<T>::has_infinity) {
+					piranha_assert(sign() != 0);
 					return (sign() > 0) ? std::numeric_limits<T>::infinity() : -std::numeric_limits<T>::infinity();
 				} else {
 					piranha_throw(std::overflow_error,"cannot convert infinity to floating-point type");
@@ -230,6 +242,8 @@ class real
 			}
 		}
 		// In-place addition.
+		// NOTE: all sorts of optimisations, here and in binary add, are possible (e.g., steal from rvalue ref).
+		// For the moment we keep it basic.
 		void in_place_add(const real &r)
 		{
 			if (r.get_prec() > get_prec()) {
@@ -277,6 +291,29 @@ class real
 			} else {
 				in_place_add(real(x));
 			}
+		}
+		// Binary add.
+		// NOTE: here we need to distinguish between the two cases because we want to avoid the case in which
+		// we are constructing a real with a non-real. In that case we might mess up the precision of the result,
+		// as default_prec would be used during construction and it would not be equal in general to the precision
+		// of the other operand.
+		template <typename T, typename U>
+		static real binary_add(T &&a, U &&b, typename std::enable_if<
+			// NOTE: T == U means they have both to be real.
+			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
+			std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			real retval(std::forward<T>(a));
+			retval += std::forward<U>(b);
+			return retval;
+		}
+		template <typename T, typename U>
+		static real binary_add(T &&a, U &&b, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,real>::value
+			>::type * = piranha_nullptr)
+		{
+			return binary_add(std::forward<U>(b),std::forward<T>(a));
 		}
 	public:
 		/// Default significand precision.
@@ -630,6 +667,50 @@ class real
 		{
 			in_place_add(std::forward<T>(x));
 			return *this;
+		}
+		/// Generic in-place addition with piranha::real.
+		/**
+		 * Add a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
+		 * or piranha::rational, and \p R is piranha::real.
+		 * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] r second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 */
+		template <typename T, typename R>
+		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value) &&
+			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
+			operator+=(T &x, R &&r)
+		{
+			// NOTE: for the supported types, assignment can never throw.
+			x = static_cast<T>(std::forward<R>(r) + x);
+			return x;
+		}
+		/// Generic binary addition involving piranha::real.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * The return type is always real.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
+			operator+(T &&x, U &&y)
+		{
+			return binary_add(std::forward<T>(x),std::forward<U>(y));
 		}
 		/// Identity operator.
 		/**
