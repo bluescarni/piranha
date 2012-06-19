@@ -579,7 +579,7 @@ class real
 		static const ::mpfr_prec_t default_prec = 113;
 		/// Default constructor.
 		/**
-		 * Will initialize the number to zero, using \p default_prec as significand precision.
+		 * Will initialize the number to zero, using real::default_prec as significand precision.
 		 */
 		real()
 		{
