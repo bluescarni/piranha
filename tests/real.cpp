@@ -174,6 +174,24 @@ BOOST_AUTO_TEST_CASE(real_swap_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
 }
 
+BOOST_AUTO_TEST_CASE(real_negate_test)
+{
+	real r1{-1,4};
+	r1.negate();
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.00");
+	r1 = 0;
+	r1.negate();
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-0.00");
+	r1 = "inf";
+	r1.negate();
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-inf");
+	r1.negate();
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"inf");
+	r1 = "nan";
+	r1.negate();
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"nan");
+}
+
 struct check_integral_assignment
 {
 	template <typename T>

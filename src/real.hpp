@@ -639,6 +639,14 @@ class real
 			prec_check(prec);
 			::mpfr_set_prec(m_value,prec);
 		}
+		/// Negate in-place.
+		/**
+		 * Will set \p this to <tt>-this</tt>.
+		 */
+		void negate()
+		{
+			::mpfr_neg(m_value,m_value,default_rnd);
+		}
 		/// In-place addition.
 		/**
 		 * Add \p x to the current value of the real object. This template operator is activated only if
