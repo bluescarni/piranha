@@ -22,6 +22,7 @@
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
+#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -35,6 +36,7 @@
 #include <string>
 #include <type_traits>
 
+#include "concepts/coefficient.hpp"
 #include "config.hpp"
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
@@ -786,9 +788,8 @@ class real
 		 */
 		~real() piranha_noexcept_spec(true)
 		{
+			BOOST_CONCEPT_ASSERT((concept::Coefficient<real>));
 			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
-			// TODO restore.
-			//BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
 			if (m_value->_mpfr_d) {
 				::mpfr_clear(m_value);
 			} else {
