@@ -1094,3 +1094,85 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	}
 	boost::fusion::for_each(integral_values,check_binary_div_integral());
 }
+
+struct check_binary_equality_integral
+{
+	template <typename T>
+	void operator()(const T &) const
+	{
+		BOOST_CHECK_EQUAL(real{},T(0));
+		BOOST_CHECK_EQUAL(T(1),(real{1,4}));
+		BOOST_CHECK(!(T(4) == real{"inf"}));
+		BOOST_CHECK(!(real{"-inf",4} == T(3)));
+		BOOST_CHECK(!(T(4) == real{"nan"}));
+		BOOST_CHECK(!(real{"-nan",4} == T(3)));
+		BOOST_CHECK(real{} != T(1));
+		BOOST_CHECK(T(1) != real{});
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_equality_test)
+{
+	BOOST_CHECK_EQUAL(real{},real{});
+	BOOST_CHECK_EQUAL((real{1,4}),real{1});
+	BOOST_CHECK_EQUAL(real{1},(real{1,4}));
+	BOOST_CHECK_EQUAL(real{"0.5"},(real{"0.5",4}));
+	BOOST_CHECK_EQUAL(real{"inf"},real{"inf"});
+	BOOST_CHECK_EQUAL(real{"-inf"},real{"-inf"});
+	BOOST_CHECK(!(real{"-inf"} == real{"inf"}));
+	BOOST_CHECK(!(real{"nan"} == real{}));
+	BOOST_CHECK(!(real{"nan"} == real{"inf"}));
+	BOOST_CHECK(!(real{} == real{"nan"}));
+	BOOST_CHECK(!(real{"-inf"} == real{"nan"}));
+	BOOST_CHECK(real{0} != real{1});
+	// With integer.
+	BOOST_CHECK_EQUAL(integer(1),real{1});
+	BOOST_CHECK_EQUAL((real{0,4}),integer(rational(1,2)));
+	BOOST_CHECK(!(integer() == real{"nan"}));
+	BOOST_CHECK(!(real{"-nan"} == integer(5)));
+	BOOST_CHECK(!(integer() == real{"inf"}));
+	BOOST_CHECK(!(real{"-inf"} == integer(5)));
+	BOOST_CHECK(real{1} != integer());
+	// With rational.
+	BOOST_CHECK_EQUAL(rational(1),real{1});
+	BOOST_CHECK_EQUAL(real{1},rational(1));
+	BOOST_CHECK_EQUAL(real{"0.5"},rational(1,2));
+	BOOST_CHECK_EQUAL(rational(1,2),(real{"0.5",4}));
+	BOOST_CHECK(!(rational() == real{"nan"}));
+	BOOST_CHECK(!(real{"-nan"} == rational(5,3)));
+	BOOST_CHECK(!(rational() == real{"inf"}));
+	BOOST_CHECK(!(real{"-inf"} == rational(5)));
+	BOOST_CHECK(real{1} != rational(3,4));
+	// With floating-point types.
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
+		std::numeric_limits<float>::has_quiet_NaN)
+	{
+		BOOST_CHECK_EQUAL(real{0},0.f);
+		BOOST_CHECK_EQUAL(1.f,real{1});
+		BOOST_CHECK_EQUAL(.5f,(real{".5",4}));
+		BOOST_CHECK(!(1.f == (real{".5",4})));
+		BOOST_CHECK_EQUAL(std::numeric_limits<float>::infinity(),real{"inf"});
+		BOOST_CHECK_EQUAL(real{"-inf"},-std::numeric_limits<float>::infinity());
+		BOOST_CHECK(!(real{"inf"} == -std::numeric_limits<float>::infinity()));
+		BOOST_CHECK(!(real{5} == std::numeric_limits<float>::quiet_NaN()));
+		BOOST_CHECK(!(5.f == real{"nan"}));
+		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() == real{"-nan"}));
+		BOOST_CHECK(0.5f != real{1});
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
+		std::numeric_limits<double>::has_quiet_NaN)
+	{
+		BOOST_CHECK_EQUAL(real{0},0.);
+		BOOST_CHECK_EQUAL(1.,real{1});
+		BOOST_CHECK_EQUAL(.5,(real{".5",4}));
+		BOOST_CHECK(!(1. == (real{".5",4})));
+		BOOST_CHECK_EQUAL(std::numeric_limits<double>::infinity(),real{"inf"});
+		BOOST_CHECK_EQUAL(real{"-inf"},-std::numeric_limits<double>::infinity());
+		BOOST_CHECK(!(real{"inf"} == -std::numeric_limits<double>::infinity()));
+		BOOST_CHECK(!(real{5} == std::numeric_limits<double>::quiet_NaN()));
+		BOOST_CHECK(!(5. == real{"nan"}));
+		BOOST_CHECK(!(std::numeric_limits<double>::quiet_NaN() == real{"-nan"}));
+		BOOST_CHECK(0.5 != real{1});
+	}
+	boost::fusion::for_each(integral_values,check_binary_equality_integral());
+}

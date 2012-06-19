@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 #include <cctype>
 #include <cstddef>
 #include <iostream>
@@ -509,6 +510,65 @@ class real
 			real retval(std::forward<T>(a),b.get_prec());
 			retval /= std::forward<U>(b);
 			return retval;
+		}
+		// Equality.
+		static bool binary_equality(const real &r1, const real &r2)
+		{
+			return (::mpfr_equal_p(r1.m_value,r2.m_value) != 0);
+		}
+		static bool binary_equality(const real &r, const integer &n)
+		{
+			if (r.is_nan()) {
+				return false;
+			}
+			return (::mpfr_cmp_z(r.m_value,n.m_value) == 0);
+		}
+		static bool binary_equality(const real &r, const rational &q)
+		{
+			if (r.is_nan()) {
+				return false;
+			}
+			return (::mpfr_cmp_q(r.m_value,q.m_value) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (r.is_nan()) {
+				return false;
+			}
+			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			if (r.is_nan()) {
+				return false;
+			}
+			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) == 0);
+		}
+		template <typename T>
+		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		{
+			return binary_equality(r,integer(n));
+		}
+		template <typename T>
+		static bool binary_equality(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		{
+			if (r.is_nan() || boost::math::isnan(x)) {
+				return false;
+			}
+			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) == 0);
+		}
+		// NOTE: this is the reverse of above.
+		template <typename T>
+		static bool binary_equality(const T &x, const real &r, typename std::enable_if<
+			std::is_arithmetic<T>::value || std::is_same<T,integer>::value ||
+			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+		{
+			return binary_equality(r,x);
 		}
 	public:
 		/// Default significand precision.
@@ -1115,6 +1175,40 @@ class real
 			operator/(T &&x, U &&y)
 		{
 			return binary_div(std::forward<T>(x),std::forward<U>(y));
+		}
+		/// Generic equality operator involving piranha::real.
+		/**
+		 * This template operator is activated if either:
+		 * 
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * If any operand is NaN, \p false will be returned.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		{
+			return binary_equality(x,y);
+		}
+		/// Generic inequality operator involving piranha::real.
+		/**
+		 * The implementation is equivalent to the generic equality operator.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		{
+			return !binary_equality(x,y);
 		}
 		/// Overload output stream operator for piranha::real.
 		/**
