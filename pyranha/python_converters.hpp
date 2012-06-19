@@ -30,6 +30,7 @@ struct integer_converter
 	{
 		static PyObject *convert(const integer &n)
 		{
+			// TODO: use PyLong_FromString here instead?
 			const std::string str = boost::lexical_cast<std::string>(n);
 			bp::object bi_module = bp::import("__builtin__");
 			bp::object int_class = bi_module.attr("int");
@@ -38,6 +39,8 @@ struct integer_converter
 	};
 	static void *convertible(PyObject *obj_ptr)
 	{
+		// TODO: do not convert if input object fits a long, let Boost.Python handle that case.
+		// Use the function PyLong_AsLongAndOverflow for the job.
 		if (!obj_ptr || (!PyInt_CheckExact(obj_ptr) && !PyLong_CheckExact(obj_ptr))) {
 			return piranha_nullptr;
 		}
