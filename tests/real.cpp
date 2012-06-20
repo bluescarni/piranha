@@ -40,6 +40,8 @@
 #include "../src/rational.hpp"
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
+static_assert(piranha::real::default_prec < MPFR_PREC_MAX,
+	"The unit tests for piranha::real assume that the default precision is strictly less-than the maximum MPFR precision.");
 
 using namespace piranha;
 
@@ -1445,4 +1447,29 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK_NO_THROW(math::pow(real{2},2.f));
 	BOOST_CHECK_NO_THROW(math::pow(real{2},2.));
 	BOOST_CHECK_EQUAL(real{2}.pow(3),8);
+}
+
+BOOST_AUTO_TEST_CASE(real_fma_test)
+{
+	real r{4};
+	r.multiply_accumulate(real{2},real{3});
+	BOOST_CHECK_EQUAL(r,10);
+	BOOST_CHECK_EQUAL(r.get_prec(),real::default_prec);
+	r.multiply_accumulate((real{2,4}),real{3});
+	BOOST_CHECK_EQUAL(r,16);
+	BOOST_CHECK_EQUAL(r.get_prec(),real::default_prec);
+	real r2{4,4};
+	r2.multiply_accumulate((real{2,4}),(real{3,4}));
+	BOOST_CHECK_EQUAL(r2,10);
+	BOOST_CHECK_EQUAL(r2.get_prec(),::mpfr_prec_t(4));
+	r2.multiply_accumulate((real{2,4}),real{3});
+	BOOST_CHECK_EQUAL(r2,16);
+	BOOST_CHECK_EQUAL(r2.get_prec(),real::default_prec);
+	r2.multiply_accumulate((real{2,real::default_prec + ::mpfr_prec_t(1)}),real{3});
+	BOOST_CHECK_EQUAL(r2,22);
+	BOOST_CHECK_EQUAL(r2.get_prec(),real::default_prec + ::mpfr_prec_t(1));
+	// Check the math:: function.
+	real r3{5};
+	math::multiply_accumulate(r3,real{-4},real{2});
+	BOOST_CHECK_EQUAL(r3,-3);
 }

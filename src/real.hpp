@@ -1325,6 +1325,25 @@ class real
 		{
 			return binary_div(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// Combined multiply-add.
+		/**
+		 * Sets \p this to <tt>this + (r1 * r2)</tt>. If the precision of \p this is less than the maximum precision \p max_prec of the two operands
+		 * \p r1 and \p r2, the precision of \p this will be set to \p max_prec before performing the operation.
+		 * 
+		 * @param[in] r1 first argument.
+		 * @param[in] r2 second argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		real &multiply_accumulate(const real &r1, const real &r2)
+		{
+			const auto prec1 = std::max< ::mpfr_prec_t>(r1.get_prec(),r2.get_prec());
+			if (prec1 > get_prec()) {
+				*this = real{*this,prec1};
+			}
+			::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
+			return *this;
+		}
 		/// Generic equality operator involving piranha::real.
 		/**
 		 * This template operator is activated if either:
@@ -1572,6 +1591,16 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::
 	static void run(T &r)
 	{
 		r.negate();
+	}
+};
+
+// Specialise multadd for real.
+template <typename T>
+struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	static void run(T &x, const T &y, const T &z)
+	{
+		x.multiply_accumulate(y,z);
 	}
 };
 
