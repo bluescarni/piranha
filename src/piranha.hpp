@@ -36,17 +36,15 @@
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
- * \todo document classes in detail:: namespace used to implement mathematical functions?
  * \todo fix type traits such as is_nothrow_move_constructible/assignable. They must work also for references,
  * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
- * reference collapsing rules, etc. etc.
+ * reference collapsing rules, etc. etc. -> here it is better probably to fall back to boost type traits.
  * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that
  * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
- * \todo hashing of array_key based on kronecker substitution -> use static table of kronecker_array to encode the array key in an integer -> note that this becomes
- * moot in case the homomorphic hashing thing works out.
+ * This should all tie in with the work of starting using type-traits more extensively, especially arithmetic ones, an is_exponentiable() type trait, etc.
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
@@ -83,13 +81,6 @@ namespace piranha
 namespace detail {}
 
 }
-
-// NOTES FOR DOCUMENTATION:
-// - thread safety: assume none unless specified
-// - bad_cast due to boost numeric cast: say that it might be thrown in many places, too cumbersome
-//   to document every occurrence.
-// - c++0x features not implemented yet in GCC latest version: what impact they have and piranha_* macros used
-//   to signal/emulate them.
 
 #include "array_key.hpp"
 #include "base_term.hpp"
