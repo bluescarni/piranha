@@ -73,7 +73,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class real
+class PIRANHA_PUBLIC real
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
