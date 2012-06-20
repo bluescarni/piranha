@@ -1004,13 +1004,13 @@ class series: series_binary_operators, detail::series_tag
 		 * Return \p this raised to the <tt>x</tt>-th power.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
-		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
-		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
-		 *   is 1 - including empty series);
 		 * - if \p this is empty, a series with a single term
 		 *   with unitary key and coefficient constructed from the integer numeral "0" and raised to the power of \p x (via piranha::math::pow()) is returned;
 		 * - if \p this has a single term with unitary key and coefficient \p cf, a series is returned with a single term with unitary key and coefficient
 		 *   equal to \p cf raised to the power of \p x (via piranha::math::pow());
+		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
+		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
+		 *   is 1 - including empty series);
 		 * - if \p T is an integral type or piranha::integer and \p x represents a non-negative integer, the return value
 		 *   is constructed via repeated multiplications;
 		 * - otherwise, an exception will be raised.
@@ -1033,11 +1033,6 @@ class series: series_binary_operators, detail::series_tag
 			// Shortcuts.
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
-			if (math::is_zero(x)) {
-				Derived retval;
-				retval.insert(term_type(cf_type(1),key_type(symbol_set{})));
-				return retval;
-			}
 			if (empty()) {
 				Derived retval;
 				retval.insert(term_type(math::pow(cf_type(0),x),key_type(symbol_set{})));
@@ -1046,6 +1041,11 @@ class series: series_binary_operators, detail::series_tag
 			if (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)) {
 				Derived retval;
 				retval.insert(term_type(math::pow(m_container.begin()->m_cf,x),key_type(symbol_set{})));
+				return retval;
+			}
+			if (math::is_zero(x)) {
+				Derived retval;
+				retval.insert(term_type(cf_type(1),key_type(symbol_set{})));
 				return retval;
 			}
 			return pow_impl(x);
