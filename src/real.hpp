@@ -288,7 +288,7 @@ class real
 			if ((radix & (radix - 1u)) == 0u) {
 				::mpfr_add_d(m_value,m_value,static_cast<double>(x),default_rnd);
 			} else {
-				in_place_add(real(x));
+				in_place_add(real(x,get_prec()));
 			}
 		}
 		// Binary add.
@@ -355,7 +355,7 @@ class real
 			if ((radix & (radix - 1u)) == 0u) {
 				::mpfr_sub_d(m_value,m_value,static_cast<double>(x),default_rnd);
 			} else {
-				in_place_sub(real(x));
+				in_place_sub(real(x,get_prec()));
 			}
 		}
 		// Binary subtraction.
@@ -419,7 +419,7 @@ class real
 			if ((radix & (radix - 1u)) == 0u) {
 				::mpfr_mul_d(m_value,m_value,static_cast<double>(x),default_rnd);
 			} else {
-				in_place_mul(real(x));
+				in_place_mul(real(x,get_prec()));
 			}
 		}
 		// Binary multiplication.
@@ -481,7 +481,7 @@ class real
 			if ((radix & (radix - 1u)) == 0u) {
 				::mpfr_div_d(m_value,m_value,static_cast<double>(x),default_rnd);
 			} else {
-				in_place_div(real(x));
+				in_place_div(real(x,get_prec()));
 			}
 		}
 		// Binary division.
@@ -1013,7 +1013,7 @@ class real
 		 * In-place addition of integral values and piranha::rational objects will use the corresponding MPFR routines.
 		 * 
 		 * If \p T is a floating-point type, the MPFR routine <tt>mpfr_add_d()</tt> is used if the radix of the type is a power
-		 * of 2, otherwise \p x will be converted to a real (using the default significand precision) before being added to \p this.
+		 * of 2, otherwise \p x will be converted to a real (using the same precision of \p this) before being added to \p this.
 		 * 
 		 * @param[in] x argument for the addition.
 		 * 
