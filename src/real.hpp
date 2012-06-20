@@ -41,6 +41,7 @@
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
+#include "math.hpp"
 #include "rational.hpp"
 #include "type_traits.hpp"
 
@@ -671,6 +672,46 @@ class real
 		{
 			return (check_nan(a) || check_nan(b));
 		}
+		// Exponentiation.
+		real pow_impl(const real &r) const
+		{
+			real retval{0,get_prec()};
+			::mpfr_pow(retval.m_value,m_value,r.m_value,default_rnd);
+			return retval;
+		}
+		real pow_impl(const integer &n) const
+		{
+			real retval{0,get_prec()};
+			::mpfr_pow_z(retval.m_value,m_value,n.m_value,default_rnd);
+			return retval;
+		}
+		template <typename T>
+		real pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
+		{
+			return pow_impl(real{x,get_prec()});
+		}
+		template <typename T>
+		real pow_impl(const T &si, typename std::enable_if<std::is_signed<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+		{
+			real retval{0,get_prec()};
+			::mpfr_pow_si(retval.m_value,m_value,static_cast<long>(si),default_rnd);
+			return retval;
+		}
+		template <typename T>
+		real pow_impl(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
+			integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+		{
+			real retval{0,get_prec()};
+			::mpfr_pow_ui(retval.m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+			return retval;
+		}
+		template <typename T>
+		real pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value &&
+			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+		{
+			return pow_impl(integer(n));
+		}
 	public:
 		/// Default significand precision.
 		/**
@@ -955,6 +996,14 @@ class real
 			} else {
 				return mpfr_sgn(m_value);
 			}
+		}
+		/// Test for zero.
+		/**
+		 * @return \p true it \p this is zero, \p false otherwise.
+		 */
+		bool is_zero() const
+		{
+			return (mpfr_zero_p(m_value) != 0);
 		}
 		/// Test for NaN.
 		/**
@@ -1378,6 +1427,28 @@ class real
 			}
 			return (y <= x);
 		}
+		/// Exponentiation.
+		/**
+		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is real, an
+		 * \ref interop "interoperable type" or piranha::integer. Special values are handled as described in the
+		 * MPFR documentation.
+		 * 
+		 * The precision of the result is equal to the precision of \p this. In case \p T is a floating-point type, \p x will
+		 * be converted to a real with the same precision as \p this before the exponentiation takes place.
+		 * 
+		 * @param[in] exp exponent.
+		 * 
+		 * @return <tt>this ** exp</tt>.
+		 * 
+		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Basic-Arithmetic-Functions
+		 */
+		template <typename T>
+		typename std::enable_if<std::is_same<real,T>::value ||
+			integer::is_interop_type<T>::value ||
+			std::is_same<T,integer>::value,real>::type pow(const T &exp) const
+		{
+			return pow_impl(exp);
+		}
 		/// Overload output stream operator for piranha::real.
 		/**
 		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
@@ -1452,6 +1523,59 @@ class real
 	private:
 		::mpfr_t m_value;
 };
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::pow() functor for piranha::real.
+/**
+ * This specialisation is activated when \p T is piranha::real.
+ * The result will be computed via piranha::real::pow().
+ */
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The exponentiation will be computed via piranha::real::pow().
+	 * 
+	 * @param[in] r base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p r to the power of \p x.
+	 */
+	auto operator()(const T &r, const U &x) const -> decltype(r.pow(x))
+	{
+		return r.pow(x);
+	}
+};
+
+}
+
+namespace detail
+{
+
+// Specialise implementation of math::is_zero for real.
+template <typename T>
+struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	static bool run(const T &r)
+	{
+		return r.is_zero();
+	}
+};
+
+// Specialise implementation of math::negate for real.
+template <typename T>
+struct math_negate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	static void run(T &r)
+	{
+		r.negate();
+	}
+};
+
+}
 
 }
 

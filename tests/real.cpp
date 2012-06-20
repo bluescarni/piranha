@@ -36,6 +36,7 @@
 #include <string>
 
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/rational.hpp"
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
@@ -182,6 +183,15 @@ BOOST_AUTO_TEST_CASE(real_negate_test)
 	r1 = "nan";
 	r1.negate();
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"nan");
+	r1 = 0;
+	math::negate(r1);
+	BOOST_CHECK_EQUAL(r1,0);
+	r1 = "inf";
+	math::negate(r1);
+	BOOST_CHECK_EQUAL(r1,real{"-inf"});
+	r1 = 4;
+	math::negate(r1);
+	BOOST_CHECK_EQUAL(r1,-4);
 }
 
 struct check_integral_assignment
@@ -298,6 +308,22 @@ BOOST_AUTO_TEST_CASE(real_is_inf_nan_test)
 	BOOST_CHECK(real{"-inf"}.is_inf());
 	BOOST_CHECK(!real{"inf"}.is_nan());
 	BOOST_CHECK(!real{"-inf"}.is_nan());
+}
+
+BOOST_AUTO_TEST_CASE(real_is_zero_test)
+{
+	BOOST_CHECK(real{}.is_zero());
+	BOOST_CHECK(!real{2}.is_zero());
+	BOOST_CHECK(!real{"inf"}.is_zero());
+	BOOST_CHECK(!real{"-inf"}.is_zero());
+	BOOST_CHECK(!real{"nan"}.is_zero());
+	BOOST_CHECK(!real{"-nan"}.is_zero());
+	BOOST_CHECK(math::is_zero(real{}));
+	BOOST_CHECK(!math::is_zero(real{2}));
+	BOOST_CHECK(!math::is_zero(real{"inf"}));
+	BOOST_CHECK(!math::is_zero(real{"-inf"}));
+	BOOST_CHECK(!math::is_zero(real{"nan"}));
+	BOOST_CHECK(!math::is_zero(real{"-nan"}));
 }
 
 struct check_integral_conversion
@@ -1360,4 +1386,63 @@ BOOST_AUTO_TEST_CASE(real_stream_test)
 		ss >> tmp;
 		BOOST_CHECK_EQUAL(tmp,(real{"-.5",4}));
 	}
+}
+
+struct check_pow_integral
+{
+	template <typename T>
+	void operator()(const T &) const
+	{
+		BOOST_CHECK_EQUAL(real{4}.pow(T(2)),16);
+		BOOST_CHECK_EQUAL(real{4}.pow(T(0)),1);
+		BOOST_CHECK_EQUAL(real{-3}.pow(T(1)),-3);
+		if (std::is_signed<T>::value) {
+			BOOST_CHECK_EQUAL(real{"inf"}.pow(T(-1)),0);
+			BOOST_CHECK_EQUAL(real{2}.pow(T(-2)),real{"0.25"});
+		}
+		BOOST_CHECK(real{"-nan"}.pow(T(2)).is_nan());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(real_pow_test)
+{
+	real r1{2,4};
+	BOOST_CHECK_EQUAL(r1.pow(real{2}),4);
+	BOOST_CHECK_EQUAL(real{4}.pow(real{"0.5"}),real{2});
+	BOOST_CHECK_EQUAL(r1.pow(real{"inf"}),real{"inf"});
+	BOOST_CHECK_EQUAL(r1.pow(real{"-inf"}),0);
+	BOOST_CHECK_EQUAL(real{"inf"}.pow(real{"inf"}),real{"inf"});
+	BOOST_CHECK(real{-1}.pow(real{"1.5"}).is_nan());
+	BOOST_CHECK_EQUAL(real{2}.pow(integer(2)),4);
+	BOOST_CHECK_EQUAL(real{2}.pow(integer()),1);
+	BOOST_CHECK_EQUAL(real{2}.pow(integer(-1)),rational(1,2));
+	BOOST_CHECK(real{"nan"}.pow(integer(1)).is_nan());
+	BOOST_CHECK_EQUAL(real{"inf"}.pow(integer(-1)),0);
+	BOOST_CHECK_EQUAL(real{"inf"}.pow(integer(-1)),0);
+	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
+		std::numeric_limits<float>::has_quiet_NaN)
+	{
+		BOOST_CHECK_EQUAL(real{2}.pow(2.f),4);
+		BOOST_CHECK_EQUAL(real{4}.pow(.5f),2);
+		BOOST_CHECK_EQUAL(real{2}.pow(-std::numeric_limits<float>::infinity()),0);
+		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<float>::infinity()),1);
+		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<float>::quiet_NaN()),1);
+	}
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
+		std::numeric_limits<double>::has_quiet_NaN)
+	{
+		BOOST_CHECK_EQUAL(real{2}.pow(2.),4);
+		BOOST_CHECK_EQUAL(real{4}.pow(.5),2);
+		BOOST_CHECK_EQUAL(real{2}.pow(-std::numeric_limits<double>::infinity()),0);
+		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<double>::infinity()),1);
+		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<double>::quiet_NaN()),1);
+	}
+	boost::fusion::for_each(integral_values,check_pow_integral());
+	// Check the math:: function.
+	BOOST_CHECK_EQUAL(math::pow(real{4},real{"0.5"}),real{2});
+	BOOST_CHECK(math::pow(real{-1},real{"1.5"}).is_nan());
+	BOOST_CHECK_EQUAL(real{2}.pow(integer(2)),4);
+	BOOST_CHECK_NO_THROW(math::pow(real{2},2.f));
+	BOOST_CHECK_NO_THROW(math::pow(real{2},2.));
+	BOOST_CHECK_EQUAL(real{2}.pow(3),8);
 }
