@@ -104,6 +104,10 @@ struct term_hasher
  * 
  * \todo cast operator, to series and non-series types.
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
+ * \todo review the handling of incompatible terms: it seems like in some places we are considering the possibility that operations on
+ * coefficients could make the term incompatible, but this is not the case as in base_term only the key matters for compatibility. Propagating
+ * this through the code would solve the issue of what to do if a term becomes incompatible during multiplication/merging/insertion etc. (now
+ * it cannot become incompatible any more if it is already in series).
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag
@@ -582,6 +586,28 @@ class series: series_binary_operators, detail::series_tag
 				}
 			}
 		}
+		// In-place divide
+		// =================
+		template <typename T>
+		void in_place_divide(T &&x)
+		{
+			const auto it_f = m_container.end();
+			try {
+				for (auto it = m_container.begin(); it != it_f;) {
+					it->m_cf /= x;
+					if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+						// Erase will return the next iterator.
+						it = m_container.erase(it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				// In case of any error, just clear the series out.
+				m_container.clear();
+				throw;
+			}
+		}
 		// Exponentiation.
 		template <typename T>
 		Derived pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr) const
@@ -708,7 +734,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Symbol set getter.
 		/**
-		 * @return const reference to the piranha::symbol_set describing the series.
+		 * @return const reference to the piranha::symbol_set associated to the series.
 		 */
 		const symbol_set &get_symbol_set() const
 		{
@@ -938,6 +964,29 @@ class series: series_binary_operators, detail::series_tag
 		Derived &operator*=(T &&other)
 		{
 			dispatch_multiply(std::forward<T>(other));
+			return *static_cast<Derived *>(this);
+		}
+		/// In-place division.
+		/**
+		 * This template operator is activated only if \p T is not an instance of piranha::series.
+		 * The coefficients of all terms of the series are divided in-place by \p other. If a
+		 * term is rendered ignorable or incompatible by the division (e.g., division by infinity), it will be erased from the series.
+		 * 
+		 * If any exception is thrown, \p this will be left in a valid but unspecified state.
+		 * 
+		 * @param[in] other object by which the series will be divided.
+		 * 
+		 * @return reference to \p this, cast to type \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the division operators of the coefficient type(s),
+		 * - piranha::hash_set::erase().
+		 */
+		template <typename T>
+		typename std::enable_if<
+			!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value,Derived &>::type operator/=(T &&other)
+		{
+			in_place_divide(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
 		/// Evaluate series sparsity.

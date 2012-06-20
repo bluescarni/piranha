@@ -1339,3 +1339,29 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	typedef g_series_type<rational,int> p_type2;
 	BOOST_CHECK_THROW(math::pow(p_type2{},-1),zero_division_error);
 }
+
+BOOST_AUTO_TEST_CASE(series_division_test)
+{
+	typedef g_series_type<integer,int> p_type1;
+	p_type1 p1{8};
+	p1 /= 2;
+	BOOST_CHECK_EQUAL(p1,4);
+	p1 /= rational(2);
+	BOOST_CHECK_EQUAL(p1,2);
+	p1 /= real(2);
+	BOOST_CHECK_EQUAL(p1,1);
+	typedef g_series_type<real,int> p_type2;
+	p_type2 p2{1};
+	p2 /= real("inf");
+	BOOST_CHECK(p2.empty());
+	BOOST_CHECK((std::is_same<decltype(p2 / 1),p_type2>::value));
+	BOOST_CHECK_EQUAL(p2 / 1,p2);
+	p1 = 2;
+	BOOST_CHECK_EQUAL(p1 / 2 * 2, p1);
+	BOOST_CHECK_THROW(p1 / 0,zero_division_error);
+	BOOST_CHECK_EQUAL(p1,2);
+	BOOST_CHECK_EQUAL((2 * p_type1{"x"} + 2) / 2, p_type1{"x"} + 1);
+	BOOST_CHECK_EQUAL((p_type2{"x"} + 1) / 2, p_type2{"x"} * rational(1,2) + real{"0.5"});
+	BOOST_CHECK_EQUAL((p_type2{"x"} + 1) / 1, p_type2{"x"} + 1);
+	BOOST_CHECK_EQUAL(p_type2{-1} / 0,real{"-inf"});
+}
