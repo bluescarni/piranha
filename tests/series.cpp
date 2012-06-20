@@ -40,13 +40,14 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
+#include "../src/real.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational> cf_types;
+typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
@@ -1151,6 +1152,10 @@ struct stream_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
+			// Avoid the stream tests with floating-point and similar, because of messy output.
+			if (std::is_same<Cf,double>::value || std::is_same<Cf,real>::value) {
+				return;
+			}
 			typedef g_series_type<Cf,Expo> p_type1;
 			typedef g_series_type<p_type1,Expo> p_type11;
 			std::ostringstream oss;
@@ -1287,8 +1292,8 @@ struct pow_tester
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
 			p_type1 p1;
-			BOOST_CHECK(p1.pow(0) == 1);
-			BOOST_CHECK(p1.pow(1) == 0);
+			BOOST_CHECK(p1.pow(0) == Cf(1));
+			BOOST_CHECK(p1.pow(1) == Cf(0));
 			p1 = 2;
 			BOOST_CHECK(math::pow(p1,4) == math::pow(Cf(2),4));
 			BOOST_CHECK(math::pow(p1,-4) == math::pow(Cf(2),-4));
@@ -1301,8 +1306,8 @@ struct pow_tester
 			// Coefficient series.
 			typedef g_series_type<p_type1,Expo> p_type11;
 			p_type11 p11;
-			BOOST_CHECK(p11.pow(0) == 1);
-			BOOST_CHECK(p11.pow(1) == 0);
+			BOOST_CHECK(p11.pow(0) == Cf(1));
+			BOOST_CHECK(p11.pow(1) == Cf(0));
 			p11 = 2;
 			BOOST_CHECK(math::pow(p11,4) == math::pow(p_type1(2),4));
 			BOOST_CHECK(math::pow(p11,-4) == math::pow(p_type1(2),-4));

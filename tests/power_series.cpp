@@ -31,11 +31,12 @@
 
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
+#include "../src/real.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,rational> cf_types;
+typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 // TODO missing tests with degree only in the coefficient -> implement them once we have poisson series.
