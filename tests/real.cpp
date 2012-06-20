@@ -30,11 +30,11 @@
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
-#include <mpfr.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
+#include "../src/detail/mpfr.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/rational.hpp"

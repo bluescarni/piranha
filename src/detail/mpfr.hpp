@@ -18,28 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "detail/mpfr.hpp"
-#include "real.hpp"
+#ifndef PIRANHA_DETAIL_MPFR_HPP
+#define PIRANHA_DETAIL_MPFR_HPP
 
-namespace piranha
-{
+#include <mpfr.h>
 
-const ::mpfr_rnd_t real::default_rnd;
-const ::mpfr_prec_t real::default_prec;
+#if MPFR_VERSION_MAJOR < 3
 
-namespace detail
-{
+#error Minimum supported MPFR version is 3.
 
-#if defined(__GNUC__)
-void free_mpfr_caches() __attribute__ ((destructor));
-
-void free_mpfr_caches()
-{
-std::cout << "Freeing MPFR caches\n";
-	::mpfr_free_cache();
-}
 #endif
 
-}
-
-}
+#endif

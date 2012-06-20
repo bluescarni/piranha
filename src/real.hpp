@@ -30,7 +30,6 @@
 #include <cstddef>
 #include <iostream>
 #include <limits>
-#include <mpfr.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -38,6 +37,7 @@
 
 #include "concepts/coefficient.hpp"
 #include "config.hpp"
+#include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
