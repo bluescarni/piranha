@@ -321,3 +321,84 @@ BOOST_AUTO_TEST_CASE(rtkm_h_degree_test)
 {
 	boost::mpl::for_each<int_types>(h_degree_tester());
 }
+
+struct multiply_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		typedef kronecker_array<T> ka;
+		k_type k1, k2, result_plus, result_minus;
+		symbol_set vs1;
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_int() == 0);
+		BOOST_CHECK(result_minus.get_int() == 0);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		k1 = k_type({0});
+		k2 = k_type({0});
+		vs1.add(symbol("a"));
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_int() == 0);
+		BOOST_CHECK(result_minus.get_int() == 0);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		k1 = k_type({1});
+		k2 = k_type({2});
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_int() == 3);
+		BOOST_CHECK(result_minus.get_int() == -1);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		k1 = k_type({1,-1});
+		k2 = k_type({2,0});
+		vs1.add(symbol("b"));
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		std::vector<int> tmp(2u);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == -1);
+		BOOST_CHECK(tmp[1u] == -1);
+		k1.set_flavour(false);
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_flavour() == false);
+		BOOST_CHECK(result_minus.get_flavour() == false);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == -1);
+		BOOST_CHECK(tmp[1u] == -1);
+		k1.set_flavour(true);
+		k2.set_flavour(false);
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_flavour() == false);
+		BOOST_CHECK(result_minus.get_flavour() == false);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == -1);
+		BOOST_CHECK(tmp[1u] == -1);
+		k1.set_flavour(false);
+		k1.multiply(result_plus,result_minus,k2,vs1);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == -1);
+		BOOST_CHECK(tmp[1u] == -1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_multiply_test)
+{
+	boost::mpl::for_each<int_types>(multiply_tester());
+}

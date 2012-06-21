@@ -290,10 +290,10 @@ struct multiply_tester
 		k2 = k_type({2,0});
 		vs1.add(symbol("b"));
 		k1.multiply(result,k2,vs1);
-		std::vector<int> tmp(2);
+		std::vector<int> tmp(2u);
 		ka::decode(tmp,result.get_int());
-		BOOST_CHECK(tmp[0] == 3);
-		BOOST_CHECK(tmp[1] == -1);
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
 	}
 };
 
