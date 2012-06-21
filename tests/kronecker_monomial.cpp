@@ -27,6 +27,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstddef>
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
@@ -350,6 +351,9 @@ struct hash_tester
 		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
 		k1 = k_type({0,1});
 		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		k1 = k_type({0,1,-1});
+		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		BOOST_CHECK(std::hash<k_type>()(k1) == (std::size_t)(k1.get_int()));
 	}
 };
 
