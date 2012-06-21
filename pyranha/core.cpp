@@ -70,8 +70,9 @@ inline integer get_big_int()
 BOOST_PYTHON_MODULE(_core)
 {
 	// Arithmetic converters.
-	integer_converter ic;
-	rational_converter rc;
+	integer_converter i_c;
+	rational_converter ra_c;
+	real_converter re_c;
 	// Exceptions translation.
 	bp::register_exception_translator<boost::numeric::bad_numeric_cast>(bnc_translator);
 	bp::register_exception_translator<boost::numeric::positive_overflow>(po_translator);

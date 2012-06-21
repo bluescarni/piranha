@@ -1,6 +1,6 @@
 struct polynomial_exposer
 {
-	typedef boost::mpl::vector<double,integer,rational> cf_types;
+	typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 	typedef cf_types interop_types;
 	// Functor for interoperability with other types.
 	template <typename Cf>
@@ -29,6 +29,8 @@ struct polynomial_exposer
 			m_cl.def(in == bp::self);
 			m_cl.def(bp::self != in);
 			m_cl.def(in != bp::self);
+			m_cl.def(bp::self /= in);
+			m_cl.def(bp::self / in);
 		}
 		c_type &m_cl;
 	};
@@ -84,7 +86,12 @@ struct polynomial_exposer
 			Cf cf(0);
 			const auto index = boost::mpl::distance<typename boost::mpl::begin<cf_types>::type,
 				typename boost::mpl::find<cf_types,Cf>::type>::value;
-			m_l.append(bp::make_tuple(cf,boost::lexical_cast<std::string>(index)));
+			try {
+				m_l.append(bp::make_tuple(cf,boost::lexical_cast<std::string>(index)));
+			} catch (const std::runtime_error &) {
+				// NOTE: here a runtime error is thrown if cf could not be converted to a Python type - this
+				// means that the coefficient type is not interoperable with Python types.
+			}
 		}
 		bp::list &m_l;
 	};
