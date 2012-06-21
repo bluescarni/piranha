@@ -38,6 +38,7 @@
 
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
+#include "detail/km_commons.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
 #include "kronecker_array.hpp"
 #include "static_vector.hpp"
@@ -195,8 +196,6 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		kronecker_monomial &operator=(const kronecker_monomial &) = default;
 		/// Trivial move assignment operator.
 		/**
-		 * Equivalent to copy assignment.
-		 * 
 		 * @param[in] other monomial to be assigned to this.
 		 * 
 		 * @return reference to \p this.
@@ -282,36 +281,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		kronecker_monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			if (unlikely(new_args.size() <= orig_args.size() ||
-				!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
-			{
-				piranha_throw(std::invalid_argument,"invalid argument(s) for symbol set merging");
-			}
-			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
-			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
-			const auto old_vector = unpack(orig_args);
-			v_type new_vector;
-			auto it_new = new_args.begin();
-			for (size_type i = 0u; i < old_vector.size(); ++i, ++it_new) {
-				while (*it_new != orig_args[i]) {
-					// NOTE: for arbitrary int types, value_type(0) might throw. Update docs
-					// if needed.
-					new_vector.push_back(value_type(0));
-					piranha_assert(it_new != new_args.end());
-					++it_new;
-					piranha_assert(it_new != new_args.end());
-				}
-				new_vector.push_back(old_vector[i]);
-			}
-			// Fill up arguments at the tail of new_args but not in orig_args.
-			for (; it_new != new_args.end(); ++it_new) {
-				new_vector.push_back(value_type(0));
-			}
-			piranha_assert(new_vector.size() == new_args.size());
-			// Return monomial with the new encoded vector.
-			kronecker_monomial retval;
-			retval.m_value = ka::encode(new_vector);
-			return retval;
+			return kronecker_monomial(detail::km_merge_args<v_type,ka>(orig_args,new_args,m_value));
 		}
 		/// Check if monomial is unitary.
 		/**
@@ -473,13 +443,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		v_type unpack(const symbol_set &args) const
 		{
-			if (unlikely(args.size() > v_type::max_size)) {
-				piranha_throw(std::invalid_argument,"input set of arguments is too large for unpacking");
-			}
-			v_type retval(args.size(),0);
-			piranha_assert(args.size() == retval.size());
-			ka::decode(retval,m_value);
-			return retval;
+			return detail::km_unpack<v_type,ka>(args,m_value);
 		}
 		/// Print.
 		/**
