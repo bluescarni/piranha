@@ -287,7 +287,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		/**
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return \p true if the internal integer instance is zero, \p false otherwise.
+		 * @return \p true if all the exponents are zero, \p false otherwise.
 		 * 
 		 * @throws std::invalid_argument if \p this is not compatible with \p args.
 		 */
