@@ -22,6 +22,7 @@
 #define PIRANHA_DETAIL_KM_COMMONS_HPP
 
 #include <algorithm>
+#include <boost/integer_traits.hpp>
 #include <stdexcept>
 
 #include "../config.hpp"
@@ -76,6 +77,21 @@ inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, 
 	piranha_assert(new_vector.size() == new_args.size());
 	// Return new encoded value.
 	return KaType::encode(new_vector);
+}
+
+template <typename T>
+inline T km_safe_adder(const T &a, const T &b)
+{
+	if (b >= 0) {
+		if (unlikely(a > boost::integer_traits<T>::const_max - b)) {
+			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
+		}
+	} else {
+		if (unlikely(a < boost::integer_traits<T>::const_min - b)) {
+			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
+		}
+	}
+	return a + b;
 }
 
 }}

@@ -311,7 +311,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		value_type degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
-			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),safe_adder);
+			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),detail::km_safe_adder<value_type>);
 		}
 		/// Low degree.
 		/**
@@ -356,7 +356,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				if (it2 == active_args.end()) {
 					break;
 				} else if (*it2 == it1->get_name()) {
-					retval = safe_adder(retval,tmp[i]);
+					retval = detail::km_safe_adder(retval,tmp[i]);
 				}
 			}
 			return retval;
@@ -396,7 +396,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result;
 			for (decltype(args.size()) i = 0u; i < size; ++i) {
-				result.push_back(safe_adder(tmp1[i],tmp2[i]));
+				result.push_back(detail::km_safe_adder(tmp1[i],tmp2[i]));
 			}
 			retval.m_value = ka::encode(result);
 		}
@@ -467,20 +467,6 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 					}
 				}
 			}
-		}
-	private:
-		static value_type safe_adder(const value_type &a, const value_type &b)
-		{
-			if (b >= 0) {
-				if (unlikely(a > boost::integer_traits<value_type>::const_max - b)) {
-					piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
-				}
-			} else {
-				if (unlikely(a < boost::integer_traits<value_type>::const_min - b)) {
-					piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
-				}
-			}
-			return a + b;
 		}
 	private:
 		value_type m_value;
