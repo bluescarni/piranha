@@ -271,7 +271,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * @return monomial with merged arguments.
 		 * 
-		 * @throw std::invalid_argument if at least one of these conditions is true:
+		 * @throws std::invalid_argument if at least one of these conditions is true:
 		 * - the size of \p new_args is not greater than the size of \p orig_args,
 		 * - not all elements of \p orig_args are included in \p new_args.
 		 * @throws unspecified any exception thrown by:

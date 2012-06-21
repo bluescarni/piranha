@@ -31,6 +31,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 
@@ -41,7 +42,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<int,long,long long> int_types;
+typedef boost::mpl::vector<signed char,int,long,long long> int_types;
 
 // Constructors, assignments, getters, setters, etc.
 struct constructor_tester
@@ -84,12 +85,12 @@ struct constructor_tester
 		v2 = {};
 		k_type k12(v2.begin(),v2.end());
 		BOOST_CHECK_EQUAL(k12.get_int(),0);
-		v2 = {42};
+		v2 = {21};
 		k_type k13(v2.begin(),v2.end());
-		BOOST_CHECK_EQUAL(k13.get_int(),42);
-		v2 = {-42};
+		BOOST_CHECK_EQUAL(k13.get_int(),21);
+		v2 = {-21};
 		k_type k14(v2.begin(),v2.end());
-		BOOST_CHECK_EQUAL(k14.get_int(),-42);
+		BOOST_CHECK_EQUAL(k14.get_int(),-21);
 		v2 = {1,-2};
 		k_type k15(v2.begin(),v2.end());
 		auto v = k15.unpack(symbol_set({symbol("a"),symbol("b")}));
@@ -393,6 +394,10 @@ struct print_tester
 	template <typename T>
 	void operator()(const T &)
 	{
+		// Avoid print test with signed char, garbage will come out.
+		if (std::is_same<T,signed char>::value) {
+			return;
+		}
 		typedef kronecker_monomial<T> k_type;
 		symbol_set vs;
 		k_type k1;
