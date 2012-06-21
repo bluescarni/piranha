@@ -343,23 +343,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
-			const auto tmp = unpack(args);
-			value_type retval(0);
-			auto it1 = args.begin();
-			auto it2 = active_args.begin();
-			for (size_type i = 0u; i < tmp.size(); ++i, ++it1) {
-				// Move forward the it2 iterator until it does not preceed the iterator in args,
-				// or we run out of symbols.
-				while (it2 != active_args.end() && *it2 < it1->get_name()) {
-					++it2;
-				}
-				if (it2 == active_args.end()) {
-					break;
-				} else if (*it2 == it1->get_name()) {
-					retval = detail::km_safe_adder(retval,tmp[i]);
-				}
-			}
-			return retval;
+			return detail::km_partial_degree<v_type,ka>(active_args,args,m_value);
 		}
 		/// Partial low degree.
 		/**

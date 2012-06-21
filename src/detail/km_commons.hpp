@@ -23,7 +23,9 @@
 
 #include <algorithm>
 #include <boost/integer_traits.hpp>
+#include <set>
 #include <stdexcept>
+#include <string>
 
 #include "../config.hpp"
 #include "../exceptions.hpp"
@@ -92,6 +94,29 @@ inline T km_safe_adder(const T &a, const T &b)
 		}
 	}
 	return a + b;
+}
+
+template <typename VType, typename KaType, typename T>
+inline T km_partial_degree(const std::set<std::string> &active_args, const symbol_set &args, const T &value)
+{
+	typedef typename KaType::size_type size_type;
+	const VType tmp = km_unpack<VType,KaType>(args,value);
+	T retval(0);
+	auto it1 = args.begin();
+	auto it2 = active_args.begin();
+	for (size_type i = 0u; i < tmp.size(); ++i, ++it1) {
+		// Move forward the it2 iterator until it does not preceed the iterator in args,
+		// or we run out of symbols.
+		while (it2 != active_args.end() && *it2 < it1->get_name()) {
+			++it2;
+		}
+		if (it2 == active_args.end()) {
+			break;
+		} else if (*it2 == it1->get_name()) {
+			retval = km_safe_adder(retval,tmp[i]);
+		}
+	}
+	return retval;
 }
 
 }}
