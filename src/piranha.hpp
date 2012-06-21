@@ -107,6 +107,7 @@ namespace detail {}
 #include "print_coefficient.hpp"
 #include "rational.hpp"
 #include "real.hpp"
+#include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"
 #include "series.hpp"
 #include "series_binary_operators.hpp"
