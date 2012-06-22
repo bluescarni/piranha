@@ -35,7 +35,7 @@
 #include <string>
 #include <type_traits>
 
-#include "concepts/coefficient.hpp"
+#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"

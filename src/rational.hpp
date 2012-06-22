@@ -39,7 +39,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "concepts/coefficient.hpp"
+#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
 #include "detail/rational_fwd.hpp"
 #include "detail/real_fwd.hpp"
@@ -796,7 +796,7 @@ class rational
 		 */
 		~rational() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Coefficient<rational>));
+			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
 			piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
 			if (mpq_numref(m_value)->_mp_d != 0) {

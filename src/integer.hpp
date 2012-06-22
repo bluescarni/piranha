@@ -40,7 +40,7 @@
 #include <unordered_set> // For hash specialisation.
 #include <vector>
 
-#include "concepts/coefficient.hpp"
+#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp" // For (un)likely.
 #include "detail/integer_fwd.hpp"
 #include "detail/rational_fwd.hpp"
@@ -1080,7 +1080,7 @@ class integer
 		 */
 		~integer() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Coefficient<integer>));
+			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<integer>));
 			piranha_assert(m_value->_mp_alloc >= 0);
 			if (m_value->_mp_d != 0) {
 				::mpz_clear(m_value);
