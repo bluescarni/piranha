@@ -829,7 +829,7 @@ class PIRANHA_PUBLIC real
 		 */
 		~real() piranha_noexcept_spec(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Coefficient<real>));
+			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
 			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
 			if (m_value->_mpfr_d) {
 				::mpfr_clear(m_value);
