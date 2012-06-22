@@ -18,36 +18,40 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_POISSON_SERIES_COEFFICIENT_HPP
+#define PIRANHA_POISSON_SERIES_COEFFICIENT_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+
+#include "multipliable_coefficient.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/degree_key.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/poisson_series_coefficient.hpp"
-#include "concepts/power_series.hpp"
-#include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
+namespace concept
+{
+
+/// Concept for Poisson series coefficients.
+/**
+ * The requisites for type \p T are the following:
+ * 
+ * - must be a model of piranha::concept::MultipliableCoefficient,
+ * - must be dividable by int.
+ */
+template <typename T>
+struct PoissonSeriesCoefficient:
+	MultipliableCoefficient<T>
+{
+	/// Concept usage pattern.
+	BOOST_CONCEPT_USAGE(PoissonSeriesCoefficient)
+	{
+		T inst_mut = T();
+		int n = 2;
+		inst_mut /= n;
+	}
+};
+
+}
+}
 
 #endif
