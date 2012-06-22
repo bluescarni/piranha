@@ -436,7 +436,7 @@ class real_trigonometric_kronecker_monomial
 				result_plus.push_back(detail::km_safe_adder(tmp1[i],tmp2[i]));
 				// NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
 				// that the range of each element is symmetric, so if tmp2[i] is representable also -tmp2[i] is.
-				// NOTE: the static cast here is because if value_type is narrower than int, the unaty minus will promote
+				// NOTE: the static cast here is because if value_type is narrower than int, the unary minus will promote
 				// to int and safe_adder won't work as it expects identical types.
 				result_minus.push_back(detail::km_safe_adder(tmp1[i],static_cast<value_type>(-tmp2[i])));
 			}
