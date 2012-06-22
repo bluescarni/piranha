@@ -23,18 +23,25 @@
 #define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstddef>
 #include <initializer_list>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
 
+#include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
+#include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<signed char, int,long,long long> int_types;
+typedef boost::mpl::vector<signed char,int,long,long long> int_types;
 
 // Constructors, assignments, getters, setters, etc.
 struct constructor_tester
@@ -401,4 +408,162 @@ struct multiply_tester
 BOOST_AUTO_TEST_CASE(rtkm_multiply_test)
 {
 	boost::mpl::for_each<int_types>(multiply_tester());
+}
+
+struct equality_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		k_type k1, k2;
+		BOOST_CHECK(k1 == k2);
+		BOOST_CHECK(!(k1 != k2));
+		k1 = k_type({0});
+		k2 = k_type({0});
+		BOOST_CHECK(k1 == k2);
+		BOOST_CHECK(!(k1 != k2));
+		k2 = k_type({1});
+		BOOST_CHECK(!(k1 == k2));
+		BOOST_CHECK(k1 != k2);
+		k1 = k_type({0,0});
+		k2 = k_type({0,0});
+		BOOST_CHECK(k1 == k2);
+		BOOST_CHECK(!(k1 != k2));
+		k1 = k_type({1,0});
+		k2 = k_type({1,0});
+		BOOST_CHECK(k1 == k2);
+		BOOST_CHECK(!(k1 != k2));
+		k1 = k_type({1,0});
+		k2 = k_type({0,1});
+		BOOST_CHECK(!(k1 == k2));
+		BOOST_CHECK(k1 != k2);
+		k1 = k_type{1,2};
+		k2 = k_type{1,2};
+		k2.set_flavour(false);
+		BOOST_CHECK(k1 != k2);
+		BOOST_CHECK(!(k1 == k2));
+		k1.set_flavour(false);
+		BOOST_CHECK(k1 == k2);
+		BOOST_CHECK(!(k1 != k2));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_equality_test)
+{
+	boost::mpl::for_each<int_types>(equality_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		k_type k1;
+		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		k1 = k_type({0});
+		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		k1 = k_type({0,1});
+		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		k1 = k_type({0,1,-1});
+		BOOST_CHECK(k1.hash() == (std::size_t)(k1.get_int()));
+		BOOST_CHECK(std::hash<k_type>()(k1) == (std::size_t)(k1.get_int()));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_hash_test)
+{
+	boost::mpl::for_each<int_types>(hash_tester());
+}
+
+struct unpack_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set vs1;
+		k_type k1({0});
+		auto t1 = k1.unpack(vs1);
+		typedef decltype(t1) s_vector_type;
+		BOOST_CHECK(!t1.size());
+		vs1.add(symbol("a"));
+		k1.set_int(-1);
+		auto t2 = k1.unpack(vs1);
+		BOOST_CHECK(t2.size());
+		BOOST_CHECK(t2[0u] == -1);
+		// Check for overflow condition.
+		std::string tmp = "";
+		for (integer i(0u); i < integer(s_vector_type::max_size) + 1; ++i) {
+			tmp += "b";
+			vs1.add(symbol(tmp));
+		}
+		BOOST_CHECK_THROW(k1.unpack(vs1),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_unpack_test)
+{
+	boost::mpl::for_each<int_types>(unpack_tester());
+}
+
+struct print_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		// Avoid print test with signed char, garbage will come out.
+		if (std::is_same<T,signed char>::value) {
+			return;
+		}
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(1)});
+		k3.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(x)");
+		k3.set_flavour(false);
+		oss.str("");
+		k3.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"sin(x)");
+		k_type k5({T(1),T(-1)});
+		vs.add("y");
+		oss.str("");
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(x-y)");
+		oss.str("");
+		k5 = k_type{T(1),T(1)};
+		k5.print(oss,vs);
+		BOOST_CHECK(oss.str() == "cos(x+y)");
+		oss.str("");
+		k5 = k_type{T(1),T(2)};
+		k5.set_flavour(false);
+		k5.print(oss,vs);
+		BOOST_CHECK(oss.str() == "sin(x+2y)");
+		oss.str("");
+		k5 = k_type{T(1),T(-2)};
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(x-2y)");
+		oss.str("");
+		k5 = k_type{T(-1),T(-2)};
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(-x-2y)");
+		oss.str("");
+		k5 = k_type{T(-2),T(1)};
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(-2x+y)");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
+{
+	boost::mpl::for_each<int_types>(print_tester());
 }

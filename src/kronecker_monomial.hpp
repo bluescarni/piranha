@@ -32,7 +32,6 @@
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <unordered_set>
 
@@ -40,6 +39,7 @@
 #include "config.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
+#include "exceptions.hpp"
 #include "kronecker_array.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"

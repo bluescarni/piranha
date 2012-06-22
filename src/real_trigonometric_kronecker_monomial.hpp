@@ -27,9 +27,13 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <iostream>
 #include <iterator>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <unordered_set>
 
 #include "concepts/key.hpp"
 #include "config.hpp"
@@ -200,8 +204,7 @@ class real_trigonometric_kronecker_monomial
 		/// Trivial destructor.
 		~real_trigonometric_kronecker_monomial() piranha_noexcept_spec(true)
 		{
-			// TODO restore
-			//BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
+			BOOST_CONCEPT_ASSERT((concept::Key<real_trigonometric_kronecker_monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &) = default;
@@ -445,6 +448,35 @@ class real_trigonometric_kronecker_monomial
 			retval_plus.m_flavour = f;
 			retval_minus.m_flavour = f;
 		}
+		/// Hash value.
+		/**
+		 * @return the internal integer instance, cast to \p std::size_t.
+		 */
+		std::size_t hash() const
+		{
+			return static_cast<std::size_t>(m_value);
+		}
+		/// Equality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 * 
+		 * @return \p true if the internal integral instance and the flavour of \p this are the same of \p other,
+		 * \p false otherwise.
+		 */
+		bool operator==(const real_trigonometric_kronecker_monomial &other) const
+		{
+			return (m_value == other.m_value && m_flavour == other.m_flavour);
+		}
+		/// Inequality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 * 
+		 * @return the opposite of operator==().
+		 */
+		bool operator!=(const real_trigonometric_kronecker_monomial &other) const
+		{
+			return (m_value != other.m_value || m_flavour != other.m_flavour);
+		}
 		/// Unpack internal integer instance.
 		/**
 		 * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.
@@ -461,9 +493,76 @@ class real_trigonometric_kronecker_monomial
 		{
 			return detail::km_unpack<v_type,ka>(args,m_value);
 		}
+		/// Print.
+		/**
+		 * Will print to stream a human-readable representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
+		 */
+		void print(std::ostream &os, const symbol_set &args) const
+		{
+			// Don't print anything in case all multipliers are zero.
+			if (m_value == value_type(0)) {
+				return;
+			}
+			if (m_flavour) {
+				os << "cos(";
+			} else {
+				os << "sin(";
+			}
+			const auto tmp = unpack(args);
+			piranha_assert(tmp.size() == args.size());
+			const value_type zero(0), one(1), m_one(-1);
+			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+				if (tmp[i] != zero) {
+					// A positive multiplier not at the beginning must always be preceded
+					// by a "+" sign.
+					if (i > 0u && tmp[i] > zero) {
+						os << "+";
+					}
+					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
+					if (tmp[i] == m_one) {
+						os << "-";
+					} else if (tmp[i] != one) {
+						os << tmp[i];
+					}
+					// Finally, print name of variable.
+					os << args[i].get_name();
+				}
+			}
+			os << ")";
+		}
 	private:
 		value_type	m_value;
 		bool		m_flavour;
+};
+
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::real_trigonometric_kronecker_monomial.
+template <typename T>
+struct hash<piranha::real_trigonometric_kronecker_monomial<T>>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::real_trigonometric_kronecker_monomial<T> argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] a argument whose hash value will be computed.
+	 * 
+	 * @return hash value of \p a computed via piranha::real_trigonometric_kronecker_monomial::hash().
+	 */
+	result_type operator()(const argument_type &a) const
+	{
+		return a.hash();
+	}
 };
 
 }
