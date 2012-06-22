@@ -57,7 +57,11 @@
  * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
  * only if T + U produces T. When going down that route, use and expand the existing arithmetic type traits (is_addable, etc.). Probably it is a good idea
  * in this piece of work to start reworking the generic series constructors, possibly dropping the converting constructors for keys, and move from there.
- * In general it seems possibly useful to remove interaction with different keys, both from constructors and from interoperable operators.
+ * In general it seems possibly useful to remove interaction with different keys from interoperable operators (but keep it for constructors?).
+ * Connected to this, we should specify better the semantics of math operations: a +-*= b means exactly a = a +-* b (use optimising behaviour like
+ * implementing in-place add separately only when it is really equivalent), and specify this well in the documentation
+ * of series multiplier, term's multiply methods, etc. (they should make clear that the return type deduction and operand orders was already determined for them).
+ * \todo series multadd to speed-up series multiplication when coefficients are series?
  * \todo start experimenting with parallel sort in multipliers and truncators (e.g., for the rectangular benchmark).
  * \todo forbid interoperability in +-* between series with different keys?
  * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,

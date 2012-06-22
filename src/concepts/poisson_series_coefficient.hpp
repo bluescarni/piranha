@@ -36,7 +36,7 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::MultipliableCoefficient,
- * - must be dividable by int.
+ * - must be dividable in-place by int.
  */
 template <typename T>
 struct PoissonSeriesCoefficient:
