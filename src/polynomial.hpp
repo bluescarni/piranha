@@ -45,6 +45,7 @@
 #include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "degree_truncator_settings.hpp"
+#include "detail/polynomial_fwd.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
@@ -66,13 +67,6 @@
 
 namespace piranha
 {
-
-namespace detail
-{
-
-struct polynomial_tag {};
-
-}
 
 /// Polynomial class.
 /**
@@ -119,9 +113,7 @@ class polynomial:
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name.
 		 * 
-		 * The coefficient type must be constructible from the literal constant 1.
-		 * 
-		 * This template constructor is activated iff the type <tt>String &&</tt> can be used to construct a piranha::symbol.
+		 * This template constructor is activated iff type \p String can be used to construct a piranha::symbol.
 		 * 
 		 * @param[in] name name of the symbolic variable that the polynomial will represent.
 		 * 
