@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 
@@ -94,7 +95,7 @@ struct constructor_tester
 			p_type p2{"x"};
 			BOOST_CHECK(p2.size() == 1u);
 			BOOST_CHECK(p2 == p_type{"x"});
-			BOOST_CHECK(p2 != p_type{"y"});
+			BOOST_CHECK(p2 != p_type{std::string("y")});
 			BOOST_CHECK(p2 == p_type{"x"} + p_type{"y"} - p_type{"y"});
 			// Construction from number-like entities.
 			p_type p3{3};
@@ -113,7 +114,7 @@ struct constructor_tester
 			BOOST_CHECK(p4 == p5);
 			BOOST_CHECK(p5 == p4);
 			p_type1 p6("x");
-			p_type2 p7("x");
+			p_type2 p7(std::string("x"));
 			p_type2 p8("y");
 			BOOST_CHECK(p6 == p7);
 			BOOST_CHECK(p7 == p6);
@@ -361,7 +362,7 @@ struct multiplication_tester
 		// NOTE: this test is going to be exact in case of coefficients cancellations with double
 		// precision coefficients only if the platform has ieee 754 format (integer exactly representable
 		// as doubles up to 2 ** 53).
-		if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 ||
+		if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 || std::numeric_limits<double>::radix != 2 ||
 			std::numeric_limits<double>::digits < 53))
 		{
 			return;
