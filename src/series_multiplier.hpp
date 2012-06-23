@@ -446,11 +446,10 @@ class series_multiplier
 				template <bool CheckFilter, typename Tuple, std::size_t N>
 				struct inserter<CheckFilter,Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
 				{
-					template <typename Term>
 					static void run(const default_functor &, Tuple &)
 					{}
 				};
-				template <bool CheckFilter, typename Term, typename... Args>
+				template <bool CheckFilter, typename... Args>
 				void insert_impl(std::tuple<Args...> &mult_res) const
 				{
 					inserter<CheckFilter,std::tuple<Args...>>::run(*this,mult_res);
