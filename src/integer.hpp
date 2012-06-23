@@ -90,12 +90,12 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo memory optimisations for division (same as those for mult and add)
  * \todo test the swapping arithmetic with a big integer or with operations such as i *= j + k +l
  * \todo test for number of memory allocations: such tests should re-defined GMP memory allocation functions so that they count the allocations, and report
  * their number. It would be useful to check that future GMP versions still behave the way it is assumed in this class regarding allocation requirements
  * for arithmetic operations.
  * \todo investigate implementing *= in terms of *, since it might be slightly faster (create result with constructor from size?)
+ * \todo check performance on poly multiplication tests if we replace operator* with straight mpz functions.
  * \todo improve interaction with long long via decomposition of operations in long operands
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
  * \todo investigate replacing lexical_cast with boost::format, as it seems like boost::format might offer better guarantees
