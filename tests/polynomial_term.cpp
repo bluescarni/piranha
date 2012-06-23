@@ -30,13 +30,15 @@
 #include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
 #include "../src/integer.hpp"
+#include "../src/polynomial.hpp"
+#include "../src/real.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer> cf_types;
+typedef boost::mpl::vector<double,integer,real,polynomial<integer>> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
-typedef float other_cf_type;
+typedef polynomial<real> other_cf_type;
 
 struct constructor_tester
 {
