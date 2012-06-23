@@ -276,12 +276,12 @@ class power_series<Series,typename std::enable_if<!is_power_series_term<typename
 		power_series(power_series &&) = default;
 		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series,typename std::decay<T>::type>::value>::type*& = enabler>
 		explicit power_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		~power_series()
+		~power_series() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
 		}
 		power_series &operator=(const power_series &) = default;
-		power_series &operator=(power_series &&other)
+		power_series &operator=(power_series &&other) piranha_noexcept_spec(true)
 		{
 			base::operator=(std::move(other));
 			return *this;
