@@ -414,10 +414,15 @@ class real_trigonometric_kronecker_monomial
 		 * according to the prosthaphaeresis formulas. After the multiplication, \p retval_plus will contain the monomial resulting
 		 * from the addition of the multipliers, \p retval_minus the monomial resulting from the subtraction of the mulipliers.
 		 * The flavours of the two output monomials will be \p true if the flavours of the operands are equal, \p false otherwise.
+		 * If the first multiplier of \p retval_plus (resp. \p retval_minus) is negative, then the sign of all multipliers will be
+		 * reversed and the value of \p sign_plus (resp. \p sign_minus) will be set to \p true; otherwise, the value of \p sign_plus (resp. \p sign_minus)
+		 * will be set to \p false.
 		 * 
 		 * @param[out] retval_plus monomial containing the sum of the multipliers of \p this and \p other.
 		 * @param[out] retval_minus monomial containing the difference of the multipliers of \p this and \p other.
 		 * @param[in] other multiplicand.
+		 * @param[out] sign_plus flag to signal a change in the sign of the multipliers in \p retval_plus.
+		 * @param[out] sign_minus flag to signal a change in the sign of the multipliers in \p retval_minus.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
@@ -427,18 +432,37 @@ class real_trigonometric_kronecker_monomial
 		 * - piranha::static_vector::push_back().
 		 */
 		void multiply(real_trigonometric_kronecker_monomial &retval_plus, real_trigonometric_kronecker_monomial &retval_minus,
-			const real_trigonometric_kronecker_monomial &other, const symbol_set &args) const
+			const real_trigonometric_kronecker_monomial &other, bool &sign_plus, bool &sign_minus, const symbol_set &args) const
 		{
+			typedef decltype(args.size()) size_type;
+			sign_plus = false;
+			sign_minus = false;
 			const auto size = args.size();
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result_plus, result_minus;
-			for (decltype(args.size()) i = 0u; i < size; ++i) {
+			for (size_type i = 0u; i < size; ++i) {
 				result_plus.push_back(detail::km_safe_adder(tmp1[i],tmp2[i]));
 				// NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
 				// that the range of each element is symmetric, so if tmp2[i] is representable also -tmp2[i] is.
 				// NOTE: the static cast here is because if value_type is narrower than int, the unary minus will promote
 				// to int and safe_adder won't work as it expects identical types.
 				result_minus.push_back(detail::km_safe_adder(tmp1[i],static_cast<value_type>(-tmp2[i])));
+			}
+			// Handle sign change.
+			auto sign_changer = [&size](v_type &v) -> void {
+				piranha_assert(v.size() == size);
+				for (size_type i = 0u; i < size; ++i) {
+					// This is safe because of the symmetry in the limits of kronecker_array.
+					v[i] = -v[i];
+				}
+			};
+			if (size != 0u && result_plus[0u] < value_type(0)) {
+				sign_changer(result_plus);
+				sign_plus = true;
+			}
+			if (size != 0u && result_minus[0u] < value_type(0)) {
+				sign_changer(result_minus);
+				sign_minus = true;
 			}
 			// Compute them before assigning, so in case of exceptions we do not touch the return values.
 			const auto re_plus = ka::encode(result_plus), re_minus = ka::encode(result_minus);
