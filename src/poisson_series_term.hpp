@@ -134,6 +134,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		{
 			// NOTE: first divide by two here and then multiply, at least for series? Would reduce
 			// quadratically the number of coefficient divisions.
+			// Similarly, it might be worth to change the sign as needed before the multiplication.
 			Cf res_cf(this->m_cf * other.m_cf);
 			res_cf /= 2;
 			std::get<0u>(retval).m_cf = res_cf;
