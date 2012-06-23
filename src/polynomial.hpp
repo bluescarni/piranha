@@ -98,7 +98,7 @@ struct polynomial_tag {};
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename Cf, typename Expo>
+template <typename Cf, typename Expo = kronecker_monomial<>>
 class polynomial:
 	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>,
 	detail::polynomial_tag
