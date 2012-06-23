@@ -821,3 +821,11 @@ BOOST_AUTO_TEST_CASE(rational_stream_test)
 		BOOST_CHECK_EQUAL(tmp,-30000);
 	}
 }
+
+BOOST_AUTO_TEST_CASE(rational_sin_cos_test)
+{
+	BOOST_CHECK_EQUAL(math::sin(rational()),0);
+	BOOST_CHECK_THROW(math::sin(rational(1)),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::cos(rational()),1);
+	BOOST_CHECK_THROW(math::cos(rational(1)),std::invalid_argument);
+}

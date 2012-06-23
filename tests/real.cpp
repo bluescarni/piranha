@@ -1473,3 +1473,13 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
 	math::multiply_accumulate(r3,real{-4},real{2});
 	BOOST_CHECK_EQUAL(r3,-3);
 }
+
+BOOST_AUTO_TEST_CASE(real_sin_cos_test)
+{
+	BOOST_CHECK_EQUAL((real{0,4}.cos()),1);
+	BOOST_CHECK_EQUAL(math::cos(real{0,4}),1);
+	BOOST_CHECK_EQUAL((real{0,4}).sin(),0);
+	BOOST_CHECK_EQUAL(math::sin(real{0,4}),0);
+	BOOST_CHECK_EQUAL((real{0,4}).sin().get_prec(),4);
+	BOOST_CHECK_EQUAL((real{0}).sin().get_prec(),real::default_prec);
+}

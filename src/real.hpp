@@ -1468,6 +1468,26 @@ class PIRANHA_PUBLIC real
 		{
 			return pow_impl(exp);
 		}
+		/// Sine.
+		/**
+		 * @return sine of \p this, computed with the precision of \p this.
+		 */
+		real sin() const
+		{
+			real retval(0,get_prec());
+			::mpfr_sin(retval.m_value,m_value,default_rnd);
+			return retval;
+		}
+		/// Cosine.
+		/**
+		 * @return cosine of \p this, computed with the precision of \p this.
+		 */
+		real cos() const
+		{
+			real retval(0,get_prec());
+			::mpfr_cos(retval.m_value,m_value,default_rnd);
+			return retval;
+		}
 		/// Overload output stream operator for piranha::real.
 		/**
 		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
@@ -1566,6 +1586,42 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,real>::value>::type>
 	auto operator()(const T &r, const U &x) const -> decltype(r.pow(x))
 	{
 		return r.pow(x);
+	}
+};
+
+/// Specialisation of the piranha::math::sin() functor for piranha::real.
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return the output of piranha::real::sin().
+	 * 
+	 * @param[in] r argument.
+	 * 
+	 * @return sine of \p r.
+	 */
+	real operator()(const T &r)
+	{
+		return r.sin();
+	}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::real.
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return the output of piranha::real::cos().
+	 * 
+	 * @param[in] r argument.
+	 * 
+	 * @return cosine of \p r.
+	 */
+	real operator()(const T &r)
+	{
+		return r.cos();
 	}
 };
 

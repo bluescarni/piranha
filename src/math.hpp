@@ -234,6 +234,102 @@ inline auto pow(T &&x, U &&y) -> decltype(pow_impl<typename std::decay<T>::type,
 	return pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y));
 }
 
+/// Default functor for the implementation of piranha::math::cos().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct cos_impl
+{};
+
+/// Specialisation of the piranha::math::cos() functor for floating-point and integral types.
+/**
+ * This specialisation is activated when \p T is a C++ floating-point or integral type.
+ * The result will be computed via the standard <tt>std::cos()</tt> function.
+ */
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The cosine will be computed via <tt>std::cos()</tt>.
+	 * 
+	 * @param[in] x argument.
+	 * 
+	 * @return cosine of \p x.
+	 */
+	auto operator()(const T &x) const -> decltype(std::cos(x))
+	{
+		return std::cos(x);
+	}
+};
+
+/// Cosine.
+/**
+ * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
+ * call operator.
+ * 
+ * @param[in] x cosine argument.
+ * 
+ * @return cosine of \p x.
+ * 
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::cos_impl functor.
+ */
+template <typename T>
+inline auto cos(const T &x) -> decltype(cos_impl<T>()(x))
+{
+	return cos_impl<T>()(x);
+}
+
+/// Default functor for the implementation of piranha::math::sin().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct sin_impl
+{};
+
+/// Specialisation of the piranha::math::sin() functor for floating-point and integral types.
+/**
+ * This specialisation is activated when \p T is a C++ floating-point or integral type.
+ * The result will be computed via the standard <tt>std::sin()</tt> function.
+ */
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The sine will be computed via <tt>std::sin()</tt>.
+	 * 
+	 * @param[in] x argument.
+	 * 
+	 * @return sine of \p x.
+	 */
+	auto operator()(const T &x) const -> decltype(std::sin(x))
+	{
+		return std::sin(x);
+	}
+};
+
+/// Sine.
+/**
+ * Returns the sine of \p x. The actual implementation of this function is in the piranha::math::sin_impl functor's
+ * call operator.
+ * 
+ * @param[in] x sine argument.
+ * 
+ * @return sine of \p x.
+ * 
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::sin_impl functor.
+ */
+template <typename T>
+inline auto sin(const T &x) -> decltype(sin_impl<T>()(x))
+{
+	return sin_impl<T>()(x);
+}
+
 }
 
 }

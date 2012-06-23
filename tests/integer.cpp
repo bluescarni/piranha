@@ -823,3 +823,11 @@ BOOST_AUTO_TEST_CASE(integer_primes_test)
 	BOOST_CHECK(n.probab_prime_p() == 0);
 	BOOST_CHECK_THROW(n.probab_prime_p(-1),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(integer_sin_cos_test)
+{
+	BOOST_CHECK_EQUAL(piranha::math::sin(piranha::integer()),0);
+	BOOST_CHECK_THROW(piranha::math::sin(piranha::integer(1)),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::math::cos(piranha::integer()),1);
+	BOOST_CHECK_THROW(piranha::math::cos(piranha::integer(1)),std::invalid_argument);
+}

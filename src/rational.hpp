@@ -1508,6 +1508,50 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,rational>::value>::ty
 	}
 };
 
+/// Specialisation of the piranha::math::sin() functor for piranha::rational.
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return zero if \p q is also zero, otherwise an
+	 * exception will be thrown.
+	 * 
+	 * @param[in] q argument.
+	 * 
+	 * @return sine of \p q.
+	 */
+	rational operator()(const T &q)
+	{
+		if (q.sign() == 0) {
+			return rational{};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the sine of a nonzero rational");
+	}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::rational.
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return one if \p q is zero, otherwise an
+	 * exception will be thrown.
+	 * 
+	 * @param[in] q argument.
+	 * 
+	 * @return cosine of \p q.
+	 */
+	rational operator()(const T &q)
+	{
+		if (q.sign() == 0) {
+			return rational{1};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero rational");
+	}
+};
+
 }
 
 }

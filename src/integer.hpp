@@ -1935,6 +1935,50 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,integer>::value>::typ
 	}
 };
 
+/// Specialisation of the piranha::math::sin() functor for piranha::integer.
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return zero if \p n is also zero, otherwise an
+	 * exception will be thrown.
+	 * 
+	 * @param[in] n argument.
+	 * 
+	 * @return sine of \p n.
+	 */
+	integer operator()(const T &n)
+	{
+		if (n.sign() == 0) {
+			return integer{};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the sine of a nonzero integer");
+	}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::integer.
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return one if \p n is zero, otherwise an
+	 * exception will be thrown.
+	 * 
+	 * @param[in] n argument.
+	 * 
+	 * @return cosine of \p n.
+	 */
+	integer operator()(const T &n)
+	{
+		if (n.sign() == 0) {
+			return integer{1};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero integer");
+	}
+};
+
 }
 
 }
