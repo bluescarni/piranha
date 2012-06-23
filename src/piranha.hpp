@@ -103,6 +103,7 @@ namespace detail {}
 #include "malloc_allocator.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
+#include "poisson_series.hpp"
 #include "poisson_series_term.hpp"
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
