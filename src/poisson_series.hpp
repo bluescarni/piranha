@@ -26,7 +26,6 @@
 
 #include "concepts/series.hpp"
 #include "config.hpp"
-#include "detail/polynomial_fwd.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
 #include "series.hpp"
@@ -41,7 +40,7 @@ namespace piranha
  * (represented by the piranha::poisson_series_term class). The coefficient
  * type \p Cf represents the ring over which the Poisson series is defined.
  * 
- * This class is a model of the piranha::concept::Series concepts.
+ * This class is a model of the piranha::concept::Series concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -62,6 +61,12 @@ class poisson_series:
 	public power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>
 {
 		typedef power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>> base;
+		template <typename T, typename... Args>
+		struct generic_enabler
+		{
+			static const bool value = (sizeof...(Args) != 0u) ||
+				!std::is_same<typename std::decay<T>::type,poisson_series>::value;
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -72,33 +77,6 @@ class poisson_series:
 		poisson_series(const poisson_series &) = default;
 		/// Defaulted move constructor.
 		poisson_series(poisson_series &&) = default;
-		/// Constructor from symbol name.
-		/**
-		 * This constructor is enabled only if the coefficient type is an instance of piranha::polynomial
-		 * and if type \p String can be used to construct a piranha::symbol.
-		 * It will construct a Poisson series consisting of a single term with coefficient constructed from \p name,
-		 * thus symbolically representing a variable called \p name.
-		 * 
-		 * @param[in] name name of the symbolic variable that the Poisson series will represent.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - piranha::symbol_set::add(),
-		 * - the constructor of piranha::symbol from <tt>String &&</tt>,
-		 * - the invoked constructor of the coefficient type,
-		 * - the invoked constructor of the key type,
-		 * - the constructor of the term type from coefficient and key,
-		 * - piranha::series::insert().
-		 */
-		template <typename String>
-		explicit poisson_series(String &&name,
-			typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value &&
-			std::is_constructible<symbol,String &&>::value>::type * = piranha_nullptr) : base()
-		{
-			typedef typename base::term_type term_type;
-			typename term_type::key_type key;
-			// Construct and insert the term.
-			this->insert(term_type(Cf(std::forward<String>(name)),std::move(key)));
-		}
 		/// Generic constructor.
 		/**
 		 * This constructor, activated only if the number of arguments is at least 2 or if the only argument is not of type piranha::poisson_series,
@@ -109,7 +87,7 @@ class poisson_series:
 		 * 
 		 * @throws unspecified any exception thrown by the invoked base constructor.
 		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<poisson_series,typename std::decay<T>::type>::value>::type*& = enabler>
+		template <typename T, typename... Args, typename std::enable_if<generic_enabler<T,Args...>::value>::type*& = enabler>
 		explicit poisson_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		/// Trivial destructor.
 		~poisson_series() piranha_noexcept_spec(true)
@@ -129,27 +107,10 @@ class poisson_series:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		/// Assignment from symbol name.
-		/**
-		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
-		 * 
-		 * @param[in] name name of the symbolic variable that the Poisson series will represent.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the constructor from symbol name.
-		 */
-		template <typename String>
-		typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value &&
-			std::is_constructible<symbol,String &&>::value,poisson_series &>::type operator=(String &&name)
-		{
-			operator=(poisson_series(std::forward<String>(name)));
-			return *this;
-		}
 		/// Generic assignment operator.
 		/**
 		 * Will forward the assignment to the base class. This assignment operator is activated only when \p T is not
-		 * piranha::poisson_series and no other assignment operator applies.
+		 * piranha::poisson_series.
 		 * 
 		 * @param[in] x assignment argument.
 		 * 
@@ -158,9 +119,7 @@ class poisson_series:
 		 * @throws unspecified any exception thrown by the assignment operator in the base class.
 		 */
 		template <typename T>
-		typename std::enable_if<(!std::is_constructible<symbol,T &&>::value ||
-			!std::is_base_of<detail::polynomial_tag,Cf>::value) &&
-			!std::is_same<poisson_series,typename std::decay<T>::type>::value,poisson_series &>::type operator=(T &&x)
+		typename std::enable_if<generic_enabler<T>::value,poisson_series &>::type operator=(T &&x)
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
