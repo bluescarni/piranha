@@ -34,6 +34,7 @@
 #include <numeric>
 #include <set>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -73,7 +74,7 @@ namespace piranha
  * This class represents multivariate polynomials as collections of multivariate polynomial terms
  * (represented by the piranha::polynomial_term class). The coefficient
  * type \p Cf represents the ring over which the polynomial is defined, while \p Expo is the type used to represent
- * the value of the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
+ * the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
  * Laurent polynomials and Puiseux polynomials.
  * 
  * This class is a model of the piranha::concept::Series and piranha::concept::PoissonSeriesCoefficient concepts.
@@ -98,6 +99,22 @@ class polynomial:
 	detail::polynomial_tag
 {
 		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
+		void construct_from_string(const char *str)
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(symbol(str));
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{1}));
+		}
+		template <typename T, typename... Args>
+		struct generic_enabler
+		{
+			static const bool value = (sizeof...(Args) != 0u) ||
+				(!std::is_same<typename std::decay<T>::type,polynomial>::value &&
+				!std::is_same<typename std::decay<T>::type,char *>::value &&
+				!std::is_same<typename std::decay<T>::type,std::string>::value);
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -108,44 +125,48 @@ class polynomial:
 		polynomial(const polynomial &) = default;
 		/// Defaulted move constructor.
 		polynomial(polynomial &&) = default;
-		/// Constructor from symbol name.
+		/// Constructor from symbol name (C string).
 		/**
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name.
-		 * 
-		 * This template constructor is activated iff type \p String can be used to construct a piranha::symbol.
 		 * 
 		 * @param[in] name name of the symbolic variable that the polynomial will represent.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol_set::add(),
-		 * - the constructor of piranha::symbol from <tt>String &&</tt>,
+		 * - the constructor of piranha::symbol from string,
 		 * - the invoked constructor of the coefficient type,
 		 * - the invoked constructor of the key type,
 		 * - the constructor of the term type from coefficient and key,
 		 * - piranha::series::insert().
 		 */
-		template <typename String>
-		explicit polynomial(String &&name,
-			typename std::enable_if<std::is_constructible<symbol,String &&>::value>::type * = piranha_nullptr) : base()
+		explicit polynomial(const char *name) : base()
 		{
-			typedef typename base::term_type term_type;
-			// Insert the symbol.
-			this->m_symbol_set.add(symbol(std::forward<String>(name)));
-			// Construct and insert the term.
-			this->insert(term_type(Cf(1),typename term_type::key_type{1}));
+			construct_from_string(name);
+		}
+		/// Constructor from symbol name (C++ string).
+		/**
+		 * Equivalent to the constructor from C string.
+		 * 
+		 * @param[in] name name of the symbolic variable that the polynomial will represent.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from C string.
+		 */
+		explicit polynomial(const std::string &name) : base()
+		{
+			construct_from_string(name.c_str());
 		}
 		/// Generic constructor.
 		/**
 		 * This constructor, activated only if the number of arguments is at least 2 or if the only argument is not of type piranha::polynomial
-		 * (disregarding cv-qualifications or references), will perfectly forward its arguments to a constructor in the base class.
+		 * or string, will perfectly forward its arguments to a constructor in the base class.
 		 * 
 		 * @param[in] arg1 first argument for construction.
 		 * @param[in] argn additional construction arguments.
 		 * 
 		 * @throws unspecified any exception thrown by the invoked base constructor.
 		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename std::decay<T>::type>::value>::type*& = enabler>
+		template <typename T, typename... Args, typename std::enable_if<generic_enabler<T,Args...>::value>::type*& = enabler>
 		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
 		/// Trivial destructor.
 		~polynomial() piranha_noexcept_spec(true)
@@ -166,7 +187,7 @@ class polynomial:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		/// Assignment from symbol name.
+		/// Assignment from symbol name (C string).
 		/**
 		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
 		 * 
@@ -176,16 +197,30 @@ class polynomial:
 		 * 
 		 * @throws unspecified any exception thrown by the constructor from symbol name.
 		 */
-		template <typename String>
-		typename std::enable_if<std::is_constructible<symbol,String &&>::value,polynomial &>::type operator=(String &&name)
+		polynomial &operator=(const char *name)
 		{
-			operator=(polynomial(std::forward<String>(name)));
+			operator=(polynomial(name));
+			return *this;
+		}
+		/// Assignment from symbol name (C++ string).
+		/**
+		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
+		 * 
+		 * @param[in] name name of the symbolic variable that the polynomial will represent.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from symbol name.
+		 */
+		polynomial &operator=(const std::string &name)
+		{
+			operator=(polynomial(name));
 			return *this;
 		}
 		/// Generic assignment operator.
 		/**
 		 * Will forward the assignment to the base class. This assignment operator is activated only when \p T is not
-		 * piranha::polynomial and no other assignment operator applies.
+		 * piranha::polynomial or a string type.
 		 * 
 		 * @param[in] x assignment argument.
 		 * 
@@ -194,7 +229,7 @@ class polynomial:
 		 * @throws unspecified any exception thrown by the assignment operator in the base class.
 		 */
 		template <typename T>
-		typename std::enable_if<!std::is_constructible<symbol,T &&>::value && !std::is_same<polynomial,typename std::decay<T>::type>::value,polynomial &>::type operator=(T &&x)
+		typename std::enable_if<generic_enabler<T>::value,polynomial &>::type operator=(T &&x)
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
