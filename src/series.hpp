@@ -688,9 +688,9 @@ class series: series_binary_operators, detail::series_tag
 		/**
 		 * @param[in] other assignment argument.
 		 * 
-		 * @throws unspecified any exception thrown by the copy constructor.
-		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		series &operator=(const series &other)
 		{
@@ -868,6 +868,8 @@ class series: series_binary_operators, detail::series_tag
 		/// Identity operator.
 		/**
 		 * @return copy of \p this, cast to \p Derived.
+		 * 
+		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		Derived operator+() const
 		{
@@ -1016,6 +1018,7 @@ class series: series_binary_operators, detail::series_tag
 		 * - otherwise, an exception will be raised.
 		 * 
 		 * @param[in] x exponent.
+		 * 
 		 * @return \p this raised to the power of \p x.
 		 * 
 		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and either
