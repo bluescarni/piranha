@@ -1508,3 +1508,18 @@ BOOST_AUTO_TEST_CASE(real_truncate_test)
 	BOOST_CHECK_EQUAL(r,0);
 	BOOST_CHECK_EQUAL(r.get_prec(),4);
 }
+
+BOOST_AUTO_TEST_CASE(real_integral_cast_test)
+{
+	BOOST_CHECK_THROW(math::integral_cast(real{"inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(real{"-inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(real{"nan"}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integral_cast(real{}),0);
+	BOOST_CHECK_EQUAL(math::integral_cast(real{3}),3);
+	BOOST_CHECK_EQUAL(math::integral_cast(real{-3}),-3);
+	BOOST_CHECK_THROW(math::integral_cast(real{"3.01"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(real{"4.99"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(real{"-7.99"}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integral_cast(real{"-3."}),-3);
+	BOOST_CHECK_EQUAL(math::integral_cast(real{"15.00"}),15);
+}

@@ -26,6 +26,7 @@
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cctype> // For std::isdigit().
@@ -1978,6 +1979,113 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
 		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero integer");
 	}
 };
+
+/// Default implementation of the piranha::math::integral_cast functor.
+/**
+ * This functor should be specialised using the \p std::enable_if mechanism.
+ */
+template <typename T, typename Enable = void>
+struct integral_cast_impl
+{
+	/// Call operator.
+	/**
+	 * The expected protocol for the call operator consists of a boolean flag \p result, the cast
+	 * argument \p x and the piranha::integer return type. The boolean flag must be set to \p true
+	 * if the cast operation was successful, to \p false otherwise.
+	 * 
+	 * The default implementation will set \p result to \p false and return a default-constructed piranha::integer.
+	 * 
+	 * @param[out] result flag to signal the outcome of the operation.
+	 * @param[in] x cast argument.
+	 * 
+	 * @return a default-constructed instance of piranha::integer.
+	 */
+	integer operator()(bool &result, const T &x) const
+	{
+		(void)x;
+		result = false;
+		return integer{};
+	}
+};
+
+/// Specialisation of the piranha::math::integral_cast functor for floating-point types.
+/**
+ * The supported floating-point types are those interoperable with piranha::integer.
+ */
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<std::is_floating_point<T>::value &&
+	std::is_constructible<integer,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call will be successful if \p x is finite and representing an integer value.
+	 * 
+	 * @param[out] result flag to signal the outcome of the operation.
+	 * @param[in] x cast argument.
+	 * 
+	 * @return result of the cast operation, or a default-constructed instance of piranha::integer
+	 * if the cast fails.
+	 */
+	integer operator()(bool &result, const T &x) const
+	{
+		if (!boost::math::isfinite(x) || boost::math::trunc(x) != x) {
+			result = false;
+			return integer{};
+		}
+		result = true;
+		return integer{x};
+	}
+};
+
+/// Specialisation of the piranha::math::integral_cast functor for integral types.
+/**
+ * The supported integral types are those interoperable with piranha::integer and piranha::integer itself.
+ */
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<(std::is_integral<T>::value &&
+	std::is_constructible<integer,T>::value) || std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call will always be successful and will return a piranha::integer constructed from \p x.
+	 * 
+	 * @param[out] result flag to signal the outcome of the operation.
+	 * @param[in] x cast argument.
+	 * 
+	 * @return a piranha::integer constructed from \p x.
+	 */
+	integer operator()(bool &result, const T &x) const
+	{
+		result = true;
+		return integer(x);
+	}
+};
+
+/// Integral cast.
+/**
+ * Will cast input value to piranha::integer if the conversion is exact. Otherwise, an exception of type \p std::invalid_argument
+ * will be raised.
+ * 
+ * The actual implementation of this function is in the piranha::math::integral_cast_impl functor's call operator. The expected functor
+ * protocol is explained in the documentation.
+ * 
+ * @param[in] x cast argument.
+ * 
+ * @return \p x cast to integer if the conversion is exact.
+ * 
+ * @throws std::invalid_argument if the conversion to piranha::integer is not exact.
+ * @throws unspecified any exception thrown by the call operator of piranha::math::integral_cast_impl.
+ */
+template <typename T>
+inline integer integral_cast(const T &x)
+{
+	bool result = false;
+	integer retval(integral_cast_impl<T>()(result,x));
+	if (!result) {
+		piranha_throw(std::invalid_argument,"integral cast failure");
+	}
+	return retval;
+}
 
 }
 

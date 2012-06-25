@@ -1568,6 +1568,32 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type
 	}
 };
 
+/// Specialisation of the piranha::math::integral_cast functor for piranha::rational.
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call will be successful if the denominator of \p x is unitary.
+	 * 
+	 * @param[out] result flag to signal the outcome of the operation.
+	 * @param[in] x cast argument.
+	 * 
+	 * @return result of the cast operation, or a default-constructed instance of piranha::integer
+	 * if the cast fails.
+	 */
+	integer operator()(bool &result, const T &x) const
+	{
+		if (x.get_denominator() == 1) {
+			result = true;
+			return x.get_numerator();
+		} else {
+			result = false;
+			return integer();
+		}
+	}
+};
+
 }
 
 }

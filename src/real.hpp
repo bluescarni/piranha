@@ -1636,6 +1636,38 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	}
 };
 
+/// Specialisation of the piranha::math::integral_cast functor for piranha::real.
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The call will be successful if \p x is finite and if it does not change after truncation.
+	 * 
+	 * @param[out] result flag to signal the outcome of the operation.
+	 * @param[in] x cast argument.
+	 * 
+	 * @return result of the cast operation, or a default-constructed instance of piranha::integer
+	 * if the cast fails.
+	 */
+	integer operator()(bool &result, const T &x) const
+	{
+		if (x.is_nan() || x.is_inf()) {
+			result = false;
+			return integer{};
+		}
+		auto x_copy(x);
+		x_copy.truncate();
+		if (x == x_copy) {
+			result = true;
+			return integer(x);
+		} else {
+			result = false;
+			return integer();
+		}
+	}
+};
+
 }
 
 namespace detail

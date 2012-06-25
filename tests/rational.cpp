@@ -829,3 +829,22 @@ BOOST_AUTO_TEST_CASE(rational_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::cos(rational()),1);
 	BOOST_CHECK_THROW(math::cos(rational(1)),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(rational_numden_test)
+{
+	BOOST_CHECK((std::is_same<decltype(rational().get_numerator()),integer>::value));
+	BOOST_CHECK((std::is_same<decltype(rational().get_denominator()),integer>::value));
+	BOOST_CHECK_EQUAL(rational().get_numerator(),0);
+	BOOST_CHECK_EQUAL(rational().get_denominator(),1);
+	BOOST_CHECK_EQUAL(rational(1,2).get_numerator(),1);
+	BOOST_CHECK_EQUAL(rational(4,-8).get_denominator(),2);
+}
+
+BOOST_AUTO_TEST_CASE(rational_integral_cast_test)
+{
+	BOOST_CHECK_EQUAL(math::integral_cast(rational()),0);
+	BOOST_CHECK_EQUAL(math::integral_cast(rational(2)),2);
+	BOOST_CHECK_EQUAL(math::integral_cast(rational(62,-2)),-31);
+	BOOST_CHECK_THROW(math::integral_cast(rational(1,-2)),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(rational("2/3") * 2),std::invalid_argument);
+}
