@@ -82,6 +82,15 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 			base::operator=(std::forward<T>(x));
 			return *this;
 		}
+		// Provide fake sin/cos methods with wrong sigs.
+		g_series_type sin()
+		{
+			return g_series_type(42);
+		}
+		int cos() const
+		{
+			return -42;
+		}
 };
 
 template <typename Cf, typename Expo>
@@ -115,6 +124,15 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
+		}
+		// Provide fake sin/cos methods to test math overloads.
+		g_series_type2 sin() const
+		{
+			return g_series_type2(42);
+		}
+		g_series_type2 cos() const
+		{
+			return g_series_type2(-42);
 		}
 };
 
@@ -1364,4 +1382,37 @@ BOOST_AUTO_TEST_CASE(series_division_test)
 	BOOST_CHECK_EQUAL((p_type2{"x"} + 1) / 2, p_type2{"x"} * rational(1,2) + real{"0.5"});
 	BOOST_CHECK_EQUAL((p_type2{"x"} + 1) / 1, p_type2{"x"} + 1);
 	BOOST_CHECK_EQUAL(p_type2{-1} / 0,real{"-inf"});
+}
+
+BOOST_AUTO_TEST_CASE(series_is_single_coefficient_test)
+{
+	typedef g_series_type<integer,int> p_type;
+	BOOST_CHECK(p_type{}.is_single_coefficient());
+	BOOST_CHECK(p_type{1}.is_single_coefficient());
+	BOOST_CHECK(!p_type{"x"}.is_single_coefficient());
+	BOOST_CHECK(!(3 * p_type{"x"}).is_single_coefficient());
+	BOOST_CHECK(!(1 + p_type{"x"}).is_single_coefficient());
+}
+
+BOOST_AUTO_TEST_CASE(series_apply_cf_functor_test)
+{
+	typedef g_series_type<integer,int> p_type;
+	BOOST_CHECK_THROW((1 + p_type{"x"}).apply_cf_functor([](const integer &n) {return n;}),std::invalid_argument);
+	BOOST_CHECK_THROW((p_type{"x"}).apply_cf_functor([](const integer &n) {return n;}),std::invalid_argument);
+	BOOST_CHECK_EQUAL((p_type{}).apply_cf_functor([](const integer &) {return integer(2);}),2);
+	BOOST_CHECK_EQUAL((p_type{3}).apply_cf_functor([](const integer &n) {return -n;}),-3);
+}
+
+BOOST_AUTO_TEST_CASE(series_sin_cos_test)
+{
+	typedef g_series_type<double,int> p_type1;
+	BOOST_CHECK_EQUAL(math::sin(p_type1{.5}),math::sin(.5));
+	BOOST_CHECK_EQUAL(math::cos(p_type1{.5}),math::cos(.5));
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"} - 1),std::invalid_argument);
+	typedef g_series_type2<double,int> p_type2;
+	BOOST_CHECK_EQUAL(math::sin(p_type2{.5}),double(42));
+	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
 }

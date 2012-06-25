@@ -43,6 +43,7 @@
 #include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
 #include "hash_set.hpp"
@@ -1021,10 +1022,8 @@ class series: series_binary_operators, detail::series_tag
 		 * Return \p this raised to the <tt>x</tt>-th power.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
-		 * - if \p this is empty, a series with a single term
-		 *   with unitary key and coefficient constructed from the integer numeral "0" and raised to the power of \p x (via piranha::math::pow()) is returned;
-		 * - if \p this has a single term with unitary key and coefficient \p cf, a series is returned with a single term with unitary key and coefficient
-		 *   equal to \p cf raised to the power of \p x (via piranha::math::pow());
+		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
+		 *   the coefficient. Otherwise, the algorithm proceeds;
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
 		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
 		 *   is 1 - including empty series);
@@ -1040,26 +1039,20 @@ class series: series_binary_operators, detail::series_tag
 		 * \p T is not an integral type or piranha::integer, or \p x does not represent a non-negative integer.
 		 * @throws unspecified any exception thrown by:
 		 * - series, term, coefficient and key construction,
-		 * - the <tt>is_unitary()</tt> method of the key type,
-		 * - piranha::math::is_zero() and piranha::math::pow(),
 		 * - insert(),
+		 * - is_single_coefficient(),
+		 * - apply_cf_functor(),
+		 * - piranha::math::pow() and piranha::math::is_zero(),
 		 * - series multiplication.
 		 */
 		template <typename T>
 		Derived pow(const T &x) const
 		{
-			// Shortcuts.
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
-			if (empty()) {
-				Derived retval;
-				retval.insert(term_type(math::pow(cf_type(0),x),key_type(symbol_set{})));
-				return retval;
-			}
-			if (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)) {
-				Derived retval;
-				retval.insert(term_type(math::pow(m_container.begin()->m_cf,x),key_type(symbol_set{})));
-				return retval;
+			if (is_single_coefficient()) {
+				auto pow_functor = [&x](const cf_type &cf) {return math::pow(cf,x);};
+				return apply_cf_functor(pow_functor);
 			}
 			if (math::is_zero(x)) {
 				Derived retval;
@@ -1067,6 +1060,43 @@ class series: series_binary_operators, detail::series_tag
 				return retval;
 			}
 			return pow_impl(x);
+		}
+		/// Apply functor to single-coefficient series.
+		/**
+		 * This method can be called successfully only on single-coefficient series.
+		 * 
+		 * If the series is empty, the return value will be a series with single term and unitary key in which the coefficient
+		 * is the result of applying the functor \p f on a coefficient instance constructed from the integral constant "0".
+		 * 
+		 * If the series has a single term with unitary key, the return value will be a series with single term and unitary key in which the coefficient
+		 * is the result of applying the functor \p f to the only coefficient of \p this.
+		 * 
+		 * @param[in] f coefficient functor.
+		 * 
+		 * @return a series constructed via the application of \p f to a coefficient instance as described above.
+		 * 
+		 * @throws std::invalid_argument if the series is not single-coefficient.
+		 * @throws unspecified any exception thrown by:
+		 * - the call operator of \p f,
+		 * - construction of coefficient, key and term instances,
+		 * - insert(),
+		 * - is_single_coefficient().
+		 */
+		template <typename Functor>
+		Derived apply_cf_functor(Functor &&f) const
+		{
+			if (!is_single_coefficient()) {
+				piranha_throw(std::invalid_argument,"cannot apply functor, series is not single-coefficient");
+			}
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			Derived retval;
+			if (empty()) {
+				retval.insert(term_type(f(cf_type(0)),key_type(symbol_set{})));
+			} else {
+				retval.insert(term_type(f(m_container.begin()->m_cf),key_type(symbol_set{})));
+			}
+			return retval;
 		}
 		/// Overload stream operator for piranha::series.
 		/**
@@ -1313,6 +1343,114 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
 	{
 		return s.pow(x);
 	}
+};
+
+/// Specialisation of the piranha::math::sin() functor for piranha::series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series.
+ * If the series type provides a const <tt>Series::sin()</tt> method returning an object of type \p Series,
+ * it will be used for the computation of the result.
+ * 
+ * Otherwise, a call to piranha::series::apply_cf_functor() will be attempted with a functor that
+ * calculates piranha::math::sin().
+ */
+template <typename Series>
+struct sin_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	private:
+		template <typename T>
+		class has_sin: detail::sfinae_types
+		{
+				template <typename U>
+				static auto test(const U *t) -> decltype(t->sin(),yes());
+				static no test(...);
+			public:
+				static const bool value = (sizeof(test((const T *)piranha_nullptr)) == sizeof(yes));
+		};
+		template <typename T>
+		T call_impl(const T &s, typename std::enable_if<has_sin<T>::value &&
+			std::is_same<decltype(std::declval<T>().sin()),T>::value>::type * = piranha_nullptr) const
+		{
+			return s.sin();
+		}
+		template <typename T>
+		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value ||
+			!std::is_same<decltype(std::declval<T>().sin()),T>::value>::type * = piranha_nullptr) const
+		{
+			typedef typename T::term_type::cf_type cf_type;
+			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
+			return s.apply_cf_functor(f);
+		}
+	public:
+		/// Call operator.
+		/**
+		 * @param[in] s argument.
+		 * 
+		 * @return sine of \p s.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>Series::sin()</tt> method,
+		 * - piranha::math::sin(),
+		 * - piranha::series::apply_cf_functor().
+		 */
+		Series operator()(const Series &s) const
+		{
+			return call_impl(s);
+		}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series.
+ * If the series type provides a const <tt>Series::cos()</tt> method returning an object of type \p Series,
+ * it will be used for the computation of the result.
+ * 
+ * Otherwise, a call to piranha::series::apply_cf_functor() will be attempted with a functor that
+ * calculates piranha::math::cos().
+ */
+template <typename Series>
+struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	private:
+		template <typename T>
+		class has_cos: detail::sfinae_types
+		{
+				template <typename U>
+				static auto test(const U *t) -> decltype(t->cos(),yes());
+				static no test(...);
+			public:
+				static const bool value = (sizeof(test((const T *)piranha_nullptr)) == sizeof(yes));
+		};
+		template <typename T>
+		T call_impl(const T &s, typename std::enable_if<has_cos<T>::value &&
+			std::is_same<decltype(std::declval<T>().cos()),T>::value>::type * = piranha_nullptr) const
+		{
+			return s.cos();
+		}
+		template <typename T>
+		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value ||
+			!std::is_same<decltype(std::declval<T>().cos()),T>::value>::type * = piranha_nullptr) const
+		{
+			typedef typename T::term_type::cf_type cf_type;
+			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
+			return s.apply_cf_functor(f);
+		}
+	public:
+		/// Call operator.
+		/**
+		 * @param[in] s argument.
+		 * 
+		 * @return cosine of \p s.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>Series::cos()</tt> method,
+		 * - piranha::math::cos(),
+		 * - piranha::series::apply_cf_functor().
+		 */
+		Series operator()(const Series &s) const
+		{
+			return call_impl(s);
+		}
 };
 
 }
