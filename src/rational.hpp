@@ -924,6 +924,22 @@ class rational
 		{
 			return convert_to_impl<T>();
 		}
+		/// Numerator.
+		/**
+		 * @return copy of the numerator.
+		 */
+		integer get_numerator() const
+		{
+			return integer(mpq_numref(m_value));
+		}
+		/// Denominator.
+		/**
+		 * @return copy of the denominator.
+		 */
+		integer get_denominator() const
+		{
+			return integer(mpq_denref(m_value));
+		}
 		/// Swap.
 		/**
 		 * Swap the content of \p this and \p q.
