@@ -243,13 +243,13 @@ template <typename T, typename Enable = void>
 struct cos_impl
 {};
 
-/// Specialisation of the piranha::math::cos() functor for floating-point and integral types.
+/// Specialisation of the piranha::math::cos() functor for floating-point types.
 /**
- * This specialisation is activated when \p T is a C++ floating-point or integral type.
+ * This specialisation is activated when \p T is a C++ floating-point type.
  * The result will be computed via the standard <tt>std::cos()</tt> function.
  */
 template <typename T>
-struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value>::type>
+struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -291,13 +291,13 @@ template <typename T, typename Enable = void>
 struct sin_impl
 {};
 
-/// Specialisation of the piranha::math::sin() functor for floating-point and integral types.
+/// Specialisation of the piranha::math::sin() functor for floating-point types.
 /**
- * This specialisation is activated when \p T is a C++ floating-point or integral type.
+ * This specialisation is activated when \p T is a C++ floating-point type.
  * The result will be computed via the standard <tt>std::sin()</tt> function.
  */
 template <typename T>
-struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value || std::is_integral<T>::value>::type>
+struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::type>
 {
 	/// Call operator.
 	/**

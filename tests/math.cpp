@@ -141,12 +141,8 @@ BOOST_AUTO_TEST_CASE(sin_cos_test)
 {
 	BOOST_CHECK(math::sin(1.f) == std::sin(1.f));
 	BOOST_CHECK(math::sin(2.) == std::sin(2.));
-	BOOST_CHECK(math::sin(3) == std::sin(3));
-	BOOST_CHECK(math::sin(4l) == std::sin(4l));
-	BOOST_CHECK(math::sin(-5ll) == std::sin(-5ll));
 	BOOST_CHECK(math::cos(1.f) == std::cos(1.f));
 	BOOST_CHECK(math::cos(2.) == std::cos(2.));
-	BOOST_CHECK(math::cos(3) == std::cos(3));
-	BOOST_CHECK(math::cos(4l) == std::cos(4l));
-	BOOST_CHECK(math::cos(-5ll) == std::cos(-5ll));
+	BOOST_CHECK(math::cos(1.L) == std::cos(1.L));
+	BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
 }
