@@ -60,7 +60,7 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(v2[0],-1);
 		BOOST_CHECK_EQUAL(v2[1],-1);
 		BOOST_CHECK_EQUAL(k2.get_flavour(),true);
-		k_type k3{};
+		k_type k3;
 		BOOST_CHECK_EQUAL(k3.get_int(),0);
 		BOOST_CHECK_EQUAL(k3.get_flavour(),true);
 		k_type k4({10});
@@ -81,8 +81,8 @@ struct constructor_tester
 		k_type k9(1,true);
 		BOOST_CHECK_EQUAL(k9.get_int(),1);
 		BOOST_CHECK(k9.get_flavour());
-		BOOST_CHECK_EQUAL((k_type{1,false}.get_int()),1);
-		BOOST_CHECK(!(k_type{1,false}.get_flavour()));
+		BOOST_CHECK_EQUAL((k_type(1,false).get_int()),1);
+		BOOST_CHECK(!(k_type(1,false).get_flavour()));
 		k_type k10;
 		k10.set_int(10);
 		BOOST_CHECK_EQUAL(k10.get_int(),10);
@@ -117,7 +117,7 @@ struct constructor_tester
 		// Converting constructor.
 		k_type k16, k17(k16,symbol_set{});
 		BOOST_CHECK(k17.get_flavour());
-		BOOST_CHECK(!(k_type(k_type{0,false},symbol_set{}).get_flavour()));
+		BOOST_CHECK(!(k_type(k_type(0,false),symbol_set{}).get_flavour()));
 		//BOOST_CHECK(k16 == k17);
 		k16.set_int(10);
 		k_type k18(k16,symbol_set({symbol("a")}));
@@ -125,7 +125,8 @@ struct constructor_tester
 		BOOST_CHECK_THROW((k_type(k16,symbol_set({}))),std::invalid_argument);
 		// First element negative.
 		k16 = k_type{-1,0};
-		BOOST_CHECK_THROW((k_type(k16,symbol_set({symbol{"a"},symbol{"b"}}))),std::invalid_argument);
+		symbol_set tmp_ss{symbol("a"),symbol("b")};
+		BOOST_CHECK_THROW((k_type(k16,tmp_ss)),std::invalid_argument);
 	}
 };
 
@@ -174,11 +175,11 @@ struct ignorability_tester
 	void operator()(const T &)
 	{
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
-		BOOST_CHECK(!k_type{}.is_ignorable(symbol_set{}));
+		BOOST_CHECK(!k_type().is_ignorable(symbol_set{}));
 		BOOST_CHECK(!k_type(symbol_set{symbol("a")}).is_ignorable(symbol_set{}));
 		BOOST_CHECK(!(k_type{0,0}.is_ignorable(symbol_set{})));
-		BOOST_CHECK(!(k_type{1,false}.is_ignorable(symbol_set{symbol{"a"}})));
-		BOOST_CHECK((k_type{0,false}.is_ignorable(symbol_set{symbol{"a"}})));
+		BOOST_CHECK(!(k_type(1,false).is_ignorable(symbol_set{symbol("a")})));
+		BOOST_CHECK((k_type(0,false).is_ignorable(symbol_set{symbol("a")})));
 		k_type k{0,-1};
 		k.set_flavour(false);
 		BOOST_CHECK(!k.is_ignorable(symbol_set{}));
@@ -220,7 +221,7 @@ struct merge_args_tester
 		k_type k4({-1});
 		BOOST_CHECK(k4.merge_args(vs1,vs2).get_int() == ka::encode(std::vector<int>({0,0,-1,0})));
 		vs1 = symbol_set({});
-		k_type k5{};
+		k_type k5;
 		k5.set_flavour(false);
 		BOOST_CHECK(k5.merge_args(vs1,vs2).get_int() == ka::encode(std::vector<int>({0,0,0,0})));
 		BOOST_CHECK(!(k5.merge_args(vs1,vs2).get_flavour()));
@@ -264,7 +265,7 @@ struct is_unitary_tester
 		}
 		BOOST_CHECK_THROW(k5.is_unitary(vs2),std::invalid_argument);
 		k2 = k_type{-1};
-		vs2 = symbol_set{symbol{"a"}};
+		vs2 = symbol_set({symbol("a")});
 		BOOST_CHECK_THROW(k2.is_unitary(vs2),std::invalid_argument);
 		k2 = k_type{0};
 		k2.set_flavour(false);
