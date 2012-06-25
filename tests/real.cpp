@@ -1483,3 +1483,28 @@ BOOST_AUTO_TEST_CASE(real_sin_cos_test)
 	BOOST_CHECK_EQUAL((real{0,4}).sin().get_prec(),4);
 	BOOST_CHECK_EQUAL((real{0}).sin().get_prec(),real::default_prec);
 }
+
+BOOST_AUTO_TEST_CASE(real_truncate_test)
+{
+	real r{"inf"};
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,real{"inf"});
+	r = "-inf";
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,real{"-inf"});
+	r = "nan";
+	r.truncate();
+	BOOST_CHECK(r.is_nan());
+	r = "5.4";
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,5);
+	r = "-5.4";
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,-5);
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,-5);
+	r = real{"0.5",4};
+	r.truncate();
+	BOOST_CHECK_EQUAL(r,0);
+	BOOST_CHECK_EQUAL(r.get_prec(),4);
+}

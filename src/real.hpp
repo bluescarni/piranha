@@ -1051,6 +1051,17 @@ class PIRANHA_PUBLIC real
 		{
 			::mpfr_neg(m_value,m_value,default_rnd);
 		}
+		/// Truncate in-place.
+		/**
+		 * Set \p this to the next representable integer toward zero. If \p this is infinity or NaN, there will be no effect.
+		 */
+		void truncate()
+		{
+			if (is_inf() || is_nan()) {
+				return;
+			}
+			::mpfr_trunc(m_value,m_value);
+		}
 		/// In-place addition.
 		/**
 		 * Add \p x to the current value of the real object. This template operator is activated only if
