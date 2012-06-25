@@ -756,6 +756,21 @@ class series: series_binary_operators, detail::series_tag
 		{
 			return !size();
 		}
+		/// Test for single-coefficient series.
+		/**
+		 * A series is considered to be <em>single-coefficient</em> when it is symbolically equivalent to a coefficient.
+		 * That is, the series is either empty (in which case it is considered to be equivalent to a coefficient constructed
+		 * from zero) or consisting of a single term with unitary key (in which case the series is considered equivalent to
+		 * its only coefficient).
+		 * 
+		 * @return \p true in case of single-coefficient series, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the <tt>is_unitary()</tt> method of the key type.
+		 */
+		bool is_single_coefficient() const
+		{
+			return (empty() || (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)));
+		}
 		/// Insert generic term.
 		/**
 		 * This method will insert \p term into the series using internally piranha::hash_set::insert. The method is enabled only
