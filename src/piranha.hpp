@@ -73,6 +73,8 @@
  * \todo it seems like default construction of c++ containers might throw :/ We should probably double-check we do not assume any nothrow behaviour in
  * such cases. For instance, if we use an old-style C allocation function and we need to create a container _before_ calling free(), then the behaviour
  * might not be exception-safe.
+ * \todo think about the generic binary term constrcutor, especially in conjunction with the generic series interop. Do we want to leave it generic
+ * or force it to be strictly from (cf_type,key_type)? In the latter case, we should review its usage.
  */
 namespace piranha
 {
