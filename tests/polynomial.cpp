@@ -80,7 +80,7 @@ class polynomial_alt:
 			return *this;
 		}
 };
-#if 0
+
 struct constructor_tester
 {
 	template <typename Cf>
@@ -461,8 +461,6 @@ BOOST_AUTO_TEST_CASE(polynomial_multiplier_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
 }
-
-#endif
 
 struct integral_combination_tag {};
 
