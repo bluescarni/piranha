@@ -26,10 +26,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 #include "../src/config.hpp"
+#include "../src/math.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
@@ -140,4 +142,22 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{"x"}),"x");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}),"-3/2x");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}.pow(2)),"-3/2x**2");
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
+{
+	typedef poisson_series<polynomial<integer>> p_type1;
+	p_type1 p1{"x"};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p1)),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.cos()),"cos(x)");
+	p1 = 0;
+	BOOST_CHECK_EQUAL(math::sin(p1),0);
+	BOOST_CHECK_EQUAL(math::cos(p1),1);
+	p1 = p_type1{"x"} - 2 * p_type1{"y"};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p1)),"sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.cos()),"cos(x-2y)");
 }

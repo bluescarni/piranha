@@ -129,8 +129,9 @@ class polynomial:
 			try {
 				std::map<std::string,integer> retval;
 				for (auto it = this->m_container.begin(); it != this->m_container.end(); ++it) {
-					retval[it->m_key.linear_argument(this->m_symbol_set)] =
-						math::integral_cast(it->m_cf);
+					const std::string lin_arg = it->m_key.linear_argument(this->m_symbol_set);
+					piranha_assert(retval.find(lin_arg) == retval.end());
+					retval[lin_arg] = math::integral_cast(it->m_cf);
 				}
 				return retval;
 			} catch (const std::invalid_argument &) {

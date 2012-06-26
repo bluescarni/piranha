@@ -22,11 +22,15 @@
 #define PIRANHA_POISSON_SERIES_HPP
 
 #include <boost/concept/assert.hpp>
+#include <stdexcept>
 #include <type_traits>
+#include <vector>
 
 #include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
+#include "detail/polynomial_fwd.hpp"
+#include "math.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
 #include "series.hpp"
@@ -68,6 +72,52 @@ class poisson_series:
 			static const bool value = (sizeof...(Args) != 0u) ||
 				!std::is_same<typename std::decay<T>::type,poisson_series>::value;
 		};
+		template <bool IsCos, typename T>
+		poisson_series sin_cos_impl(const T &, typename std::enable_if<
+			std::is_same<T,std::true_type>::value>::type * = piranha_nullptr) const
+		{
+			if (this->is_single_coefficient() && !this->empty()) {
+				try {
+					typedef poisson_series_term<Cf> term_type;
+					typedef typename term_type::key_type key_type;
+					typedef typename key_type::value_type value_type;
+					const auto lc = this->m_container.begin()->m_cf.integral_combination();
+					poisson_series retval;
+					std::vector<value_type> v;
+					for (auto it = lc.begin(); it != lc.end(); ++it) {
+						retval.m_symbol_set.add(it->first);
+						v.push_back(static_cast<value_type>(it->second));
+					}
+					term_type term(Cf(1),key_type(v.begin(),v.end()));
+					if (!IsCos) {
+						term.m_key.set_flavour(false);
+					}
+					retval.insert(std::move(term));
+					return retval;
+				} catch (const std::invalid_argument &) {
+					// Interpret invalid_argument as a failure in extracting integral combination,
+					// and move on.
+				}
+			}
+			return sin_cos_cf_impl<IsCos>();
+		}
+		template <bool IsCos, typename T>
+		poisson_series sin_cos_impl(const T &, typename std::enable_if<
+			std::is_same<T,std::false_type>::value>::type * = piranha_nullptr) const
+		{
+			return sin_cos_cf_impl<IsCos>();
+		}
+		template <bool IsCos>
+		poisson_series sin_cos_cf_impl() const
+		{
+			if (IsCos) {
+				auto f = [](const Cf &cf) {return piranha::math::cos(cf);};
+				return this->apply_cf_functor(f);
+			} else {
+				auto f = [](const Cf &cf) {return piranha::math::sin(cf);};
+				return this->apply_cf_functor(f);
+			}
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -124,6 +174,42 @@ class poisson_series:
 		{
 			base::operator=(std::forward<T>(x));
 			return *this;
+		}
+		/// Override sine implementation.
+		/**
+		 * This method will override the default math::sin() implementation in case the coefficient type is an instance of
+		 * piranha::polynomial. If the series is single-coefficient and not empty, and the coefficient represents a linear combination
+		 * of variables with integral coefficients, then the return value will be a Poisson series consisting of a single term with
+		 * coefficient constructed from "1" and trigonometric key containing the linear combination of variables.
+		 * 
+		 * In any other case, the default algorithm to calculate the sine of a series will take place.
+		 * 
+		 * @return sine of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::is_single_coefficient(), piranha::series::insert(),
+		 *   piranha::series::apply_cf_functor(),
+		 * - memory allocation errors in standard containers,
+		 * - the <tt>linear_argument()</tt> method of the key type,
+		 * - piranha::math::integral_cast(), piranha::math::sin(),
+		 * - the cast operator of piranha::integer,
+		 * - the constructors of coefficient, key and term types.
+		 */
+		poisson_series sin() const
+		{
+			return sin_cos_impl<false>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
+		}
+		/// Override cosine implementation.
+		/**
+		 * The procedure is the same as explained in sin().
+		 * 
+		 * @return cosine of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by sin().
+		 */
+		poisson_series cos() const
+		{
+			return sin_cos_impl<true>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
 		}
 };
 

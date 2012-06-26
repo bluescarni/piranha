@@ -72,6 +72,11 @@ struct power_series_tag {};
  * Move semantics is equivalent to the move semantics of \p Series.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo specify in the docs that the methods are available only if the series is a power series (so that in the docs of, e.g., poisson
+ * series there's no confusion).
+ * \todo investigate beautification (for doc purposes) of degree() return types via auto and decltype(). Or maybe at least do the same as
+ * done in power_series_term.
  */
 // NOTE: here the tag is used explicitly to differentiate between the general implementation
 // and the specialization below.
