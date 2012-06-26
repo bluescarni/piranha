@@ -27,15 +27,18 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <limits>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
 
+#include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/rational.hpp"
+#include "../src/real.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -77,7 +80,7 @@ class polynomial_alt:
 			return *this;
 		}
 };
-
+#if 0
 struct constructor_tester
 {
 	template <typename Cf>
@@ -457,4 +460,81 @@ struct multiplication_tester
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
+}
+
+#endif
+
+struct integral_combination_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<integral_combination_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				// Skip tests for fp values.
+				if (std::is_floating_point<Cf>::value) {
+					return;
+				}
+				typedef polynomial<Cf,Expo> p_type;
+				typedef std::map<std::string,integer> map_type;
+				p_type p1;
+				BOOST_CHECK((p1.integral_combination() == map_type{}));
+				p1 = "x";
+				BOOST_CHECK((p1.integral_combination() == map_type{{"x",integer(1)}}));
+				p1 += 2 * p_type{"y"};
+				BOOST_CHECK((p1.integral_combination() == map_type{{"y",integer(2)},{"x",integer(1)}}));
+				p1 = p_type{"x"} + 1;
+				BOOST_CHECK_THROW(p1.integral_combination(),std::invalid_argument);
+				p1 = p_type{"x"}.pow(2);
+				BOOST_CHECK_THROW(p1.integral_combination(),std::invalid_argument);
+				p1 = p_type{"x"} * 2 - p_type{"z"} * 3;
+				BOOST_CHECK((p1.integral_combination() == map_type{{"x",integer(2)},{"z",integer(-3)}}));
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+			// Tests specific to rational, double and real.
+			typedef polynomial<rational,int> p_type;
+			typedef std::map<std::string,integer> map_type;
+			p_type p1;
+			p1 = p_type{"x"} * rational(4,2) + p_type{"y"} * 4;
+			BOOST_CHECK((p1.integral_combination() == map_type{{"x",integer(2)},{"y",integer(4)}}));
+			p1 = p_type{"x"} * rational(4,3) + p_type{"y"} * 4;
+			BOOST_CHECK_THROW(p1.integral_combination(),std::invalid_argument);
+			p1 = 3 * (p_type{"x"} * rational(5,3) - p_type{"y"} * 4);
+			BOOST_CHECK((p1.integral_combination() == map_type{{"x",integer(5)},{"y",integer(-12)}}));
+			if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
+				std::numeric_limits<double>::has_quiet_NaN)
+			{
+				typedef polynomial<double,int> p_type2;
+				p_type2 p2;
+				p2 = p_type2{"x"} * 2. + p_type2{"y"} * 4.;
+				BOOST_CHECK((p2.integral_combination() == map_type{{"x",integer(2)},{"y",integer(4)}}));
+				p2 = p_type2{"x"} * 2.5 + p_type2{"y"} * 4.;
+				BOOST_CHECK_THROW(p2.integral_combination(),std::invalid_argument);
+			}
+			typedef polynomial<real,int> p_type3;
+			p_type3 p3;
+			p3 = p_type3{"x"} * 2 + p_type3{"y"} * 4;
+			BOOST_CHECK((p3.integral_combination() == map_type{{"x",integer(2)},{"y",integer(4)}}));
+			p3 = p_type3{"x"} * real{"2.5"} + p_type3{"y"} * 4.;
+			BOOST_CHECK_THROW(p3.integral_combination(),std::invalid_argument);
+		}
+};
+}
+
+typedef debug_access<integral_combination_tag> ic_tester;
+
+BOOST_AUTO_TEST_CASE(polynomial_integral_combination_test)
+{
+	boost::mpl::for_each<cf_types>(ic_tester());
 }

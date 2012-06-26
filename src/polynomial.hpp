@@ -31,6 +31,7 @@
 #include <initializer_list> // NOTE: this could go away when there's no need to use it explicitly, see below.
 #include <iterator>
 #include <list>
+#include <map>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -45,6 +46,7 @@
 #include "concepts/series.hpp"
 #include "concepts/truncator.hpp"
 #include "config.hpp"
+#include "debug_access.hpp"
 #include "degree_truncator_settings.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "echelon_size.hpp"
@@ -98,6 +100,9 @@ class polynomial:
 	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>,
 	detail::polynomial_tag
 {
+		// Make friend with debug class.
+		template <typename T>
+		friend class debug_access;
 		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
 		void construct_from_string(const char *str)
 		{
@@ -115,6 +120,19 @@ class polynomial:
 				!std::is_same<typename std::decay<T>::type,char *>::value &&
 				!std::is_same<typename std::decay<T>::type,std::string>::value);
 		};
+		std::map<std::string,integer> integral_combination() const
+		{
+			try {
+				std::map<std::string,integer> retval;
+				for (auto it = this->m_container.begin(); it != this->m_container.end(); ++it) {
+					retval[it->m_key.linear_argument(this->m_symbol_set)] =
+						math::integral_cast(it->m_cf);
+				}
+				return retval;
+			} catch (const std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
+			}
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
