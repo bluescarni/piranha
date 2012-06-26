@@ -186,3 +186,33 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_THROW(math::cos(p_type4{1}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::sin(p_type4{1}),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
+{
+	// Just some random arithmetic tests using known trigonometric identities.
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(math::cos(x) * math::cos(y),(math::cos(x - y) + math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(-x) * math::cos(y),(math::cos(x - y) + math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(x) * math::cos(-y),(math::cos(x - y) + math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(-x) * math::cos(-y),(math::cos(x - y) + math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(x) * math::sin(y),(math::cos(x - y) - math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(-x) * math::sin(y),-(math::cos(x - y) - math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(x) * math::sin(-y),-(math::cos(x - y) - math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(-x) * math::sin(-y),(math::cos(x - y) - math::cos(x + y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(x) * math::cos(y),(math::sin(x + y) + math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(-x) * math::cos(y),-(math::sin(x + y) + math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(x) * math::cos(-y),(math::sin(x + y) + math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::sin(-x) * math::cos(-y),-(math::sin(x + y) + math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(x) * math::sin(y),(math::sin(x + y) - math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(-x) * math::sin(y),(math::sin(x + y) - math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(x) * math::sin(-y),-(math::sin(x + y) - math::sin(x - y)) / 2);
+	BOOST_CHECK_EQUAL(math::cos(-x) * math::sin(-y),-(math::sin(x + y) - math::sin(x - y)) / 2);
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	BOOST_CHECK_EQUAL(pow(sin(x),5),(10 * sin(x) - 5 * sin(3 * x) + sin(5 * x)) / 16);
+	BOOST_CHECK_EQUAL(pow(cos(x),5),(10 * cos(x) + 5 * cos(3 * x) + cos(5 * x)) / 16);
+	BOOST_CHECK_EQUAL(pow(cos(x),5) * pow(sin(x),5),(10 * sin(2 * x) - 5 * sin(6 * x) + sin(10 * x)) / 512);
+	BOOST_CHECK_EQUAL(pow(p_type1{rational(1,2)},5),pow(rational(1,2),5));
+}
