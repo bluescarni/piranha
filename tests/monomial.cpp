@@ -34,6 +34,7 @@
 
 #include "../src/concepts/key.hpp"
 #include "../src/integer.hpp"
+#include "../src/rational.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
 
@@ -371,4 +372,43 @@ struct print_tester
 BOOST_AUTO_TEST_CASE(monomial_print_test)
 {
 	boost::mpl::for_each<expo_types>(print_tester());
+}
+
+struct linear_argument_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> k_type;
+		symbol_set vs;
+		BOOST_CHECK_THROW(k_type().linear_argument(vs),std::invalid_argument);
+		vs.add("x");
+		BOOST_CHECK_THROW(k_type().linear_argument(vs),std::invalid_argument);
+		k_type k({T(1)});
+		BOOST_CHECK_EQUAL(k.linear_argument(vs),"x");
+		k = k_type({T(0),T(1)});
+		vs.add("y");
+		BOOST_CHECK_EQUAL(k.linear_argument(vs),"y");
+		k = k_type({T(0),T(2)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+		k = k_type({T(2),T(0)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+		k = k_type({T(1),T(1)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_linear_argument_test)
+{
+	boost::mpl::for_each<expo_types>(linear_argument_tester());
+	typedef monomial<rational> k_type;
+	symbol_set vs;
+	vs.add("x");
+	k_type k({rational(1,2)});
+	BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+	k = k_type({rational(1),rational(0)});
+	vs.add("y");
+	BOOST_CHECK_EQUAL(k.linear_argument(vs),"x");
+	k = k_type({rational(2),rational(1)});
+	BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
 }

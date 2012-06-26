@@ -40,6 +40,7 @@
 #include "detail/km_commons.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
 #include "exceptions.hpp"
+#include "integer.hpp"
 #include "kronecker_array.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
@@ -237,6 +238,9 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
 		{
+			// NOTE: the idea here is to avoid unpack()ing for performance reasons: these checks
+			// are already part of unpack(), and that's why unpack() is used instead of is_compatible()
+			// in other methods.
 			const auto s = args.size();
 			// No args means the value must also be zero.
 			if (s == 0u) {
@@ -412,6 +416,44 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		bool operator!=(const kronecker_monomial &other) const
 		{
 			return m_value != other.m_value;
+		}
+		/// Name of the linear argument.
+		/**
+		 * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
+		 * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return name of the linear variable.
+		 * 
+		 * @throws std::invalid_argument if the monomial is not linear.
+		 * @throws unspecified any exception thrown by unpack().
+		 */
+		std::string linear_argument(const symbol_set &args) const
+		{
+			const auto v = unpack(args);
+			const auto size = args.size();
+			decltype(args.size()) n_linear = 0u, candidate = 0u;
+			for (decltype(args.size()) i = 0u; i < size; ++i) {
+				integer tmp;
+				try {
+					tmp = math::integral_cast(v[i]);
+				} catch (const std::invalid_argument &) {
+					piranha_throw(std::invalid_argument,"exponent is not an integer");
+				}
+				if (tmp == 0) {
+					continue;
+				}
+				if (tmp != 1) {
+					piranha_throw(std::invalid_argument,"exponent is not unitary");
+				}
+				candidate = i;
+				++n_linear;
+			}
+			if (n_linear != 1u) {
+				piranha_throw(std::invalid_argument,"monomial is not linear");
+			}
+			return args[candidate].get_name();
 		}
 		/// Unpack internal integer instance.
 		/**

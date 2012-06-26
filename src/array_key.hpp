@@ -84,6 +84,7 @@ struct static_size {};
  * 
  * \todo think about introducing range-checking in element access not only in debug mode, to make it completely
  * safe to use.
+ * \todo think about ditching the tag structure above, maybe via a default template parameters.
  */
 template <typename T, typename Derived>
 class array_key: detail::array_key_tag

@@ -435,3 +435,32 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_print_test)
 {
 	boost::mpl::for_each<int_types>(print_tester());
 }
+
+struct linear_argument_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		symbol_set vs;
+		BOOST_CHECK_THROW(k_type().linear_argument(vs),std::invalid_argument);
+		vs.add("x");
+		BOOST_CHECK_THROW(k_type().linear_argument(vs),std::invalid_argument);
+		k_type k({T(1)});
+		BOOST_CHECK_EQUAL(k.linear_argument(vs),"x");
+		k = k_type({T(0),T(1)});
+		vs.add("y");
+		BOOST_CHECK_EQUAL(k.linear_argument(vs),"y");
+		k = k_type({T(0),T(2)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+		k = k_type({T(2),T(0)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+		k = k_type({T(1),T(1)});
+		BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_linear_argument_test)
+{
+	boost::mpl::for_each<int_types>(linear_argument_tester());
+}
