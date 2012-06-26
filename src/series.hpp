@@ -1362,20 +1362,18 @@ struct sin_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 		class has_sin: detail::sfinae_types
 		{
 				template <typename U>
-				static auto test(const U *t) -> decltype(t->sin(),yes());
+				static auto test(const U *t) -> decltype(t->sin());
 				static no test(...);
 			public:
-				static const bool value = (sizeof(test((const T *)piranha_nullptr)) == sizeof(yes));
+				static const bool value = std::is_same<decltype(test((const T *)piranha_nullptr)),T>::value;
 		};
 		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_sin<T>::value &&
-			std::is_same<decltype(std::declval<T>().sin()),T>::value>::type * = piranha_nullptr) const
+		T call_impl(const T &s, typename std::enable_if<has_sin<T>::value>::type * = piranha_nullptr) const
 		{
 			return s.sin();
 		}
 		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value ||
-			!std::is_same<decltype(std::declval<T>().sin()),T>::value>::type * = piranha_nullptr) const
+		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value>::type * = piranha_nullptr) const
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
@@ -1416,20 +1414,18 @@ struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 		class has_cos: detail::sfinae_types
 		{
 				template <typename U>
-				static auto test(const U *t) -> decltype(t->cos(),yes());
+				static auto test(const U *t) -> decltype(t->cos());
 				static no test(...);
 			public:
-				static const bool value = (sizeof(test((const T *)piranha_nullptr)) == sizeof(yes));
+				static const bool value = std::is_same<decltype(test((const T *)piranha_nullptr)),T>::value;
 		};
 		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_cos<T>::value &&
-			std::is_same<decltype(std::declval<T>().cos()),T>::value>::type * = piranha_nullptr) const
+		T call_impl(const T &s, typename std::enable_if<has_cos<T>::value>::type * = piranha_nullptr) const
 		{
 			return s.cos();
 		}
 		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value ||
-			!std::is_same<decltype(std::declval<T>().cos()),T>::value>::type * = piranha_nullptr) const
+		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value>::type * = piranha_nullptr) const
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
