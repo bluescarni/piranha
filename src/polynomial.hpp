@@ -48,6 +48,7 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "degree_truncator_settings.hpp"
+#include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
@@ -103,6 +104,9 @@ class polynomial:
 		// Make friend with debug class.
 		template <typename T>
 		friend class debug_access;
+		// Make friend with Poisson series.
+		template <typename T>
+		friend class poisson_series;
 		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
 		void construct_from_string(const char *str)
 		{
