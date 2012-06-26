@@ -146,18 +146,43 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 {
-	typedef poisson_series<polynomial<integer>> p_type1;
+	typedef poisson_series<polynomial<rational>> p_type1;
 	p_type1 p1{"x"};
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p1)),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x)");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.cos()),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>((-p1).cos()),"cos(x)");
 	p1 = 0;
-	BOOST_CHECK_EQUAL(math::sin(p1),0);
+	BOOST_CHECK_EQUAL(math::sin(-p1),0);
 	BOOST_CHECK_EQUAL(math::cos(p1),1);
 	p1 = p_type1{"x"} - 2 * p_type1{"y"};
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p1)),"sin(x-2y)");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x-2y)");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p1)),"cos(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * p1.sin()),"3sin(x-2y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.cos()),"cos(x-2y)");
+	p1 = p_type1{"x"} * p_type1{"y"};
+	BOOST_CHECK_THROW(math::sin(p1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"} - 1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"} * rational(1,2)),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"} * rational(1,2)),std::invalid_argument);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type1{"x"} * rational(4,-2))),"-sin(2x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-math::cos(p_type1{"x"} * rational(4,2))),"-cos(2x)");
+	typedef poisson_series<polynomial<real>> p_type2;
+	BOOST_CHECK_EQUAL(math::sin(p_type2{3}),math::sin(real(3)));
+	BOOST_CHECK_EQUAL(math::cos(p_type2{3}),math::cos(real(3)));
+	p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)),"-1.00000000000000000000000000000000000sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)),"1.00000000000000000000000000000000000cos(x-2y)");
+	BOOST_CHECK_THROW(math::sin(p_type2{"x"} * real(rational(1,2))),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type2{"x"} * real(rational(1,2))),std::invalid_argument);
+	typedef poisson_series<real> p_type3;
+	BOOST_CHECK_EQUAL(math::sin(p_type3{3}),math::sin(real(3)));
+	BOOST_CHECK_EQUAL(math::cos(p_type3{3}),math::cos(real(3)));
+	typedef poisson_series<rational> p_type4;
+	BOOST_CHECK_EQUAL(math::sin(p_type4{0}),0);
+	BOOST_CHECK_EQUAL(math::cos(p_type4{0}),1);
+	BOOST_CHECK_THROW(math::cos(p_type4{1}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(p_type4{1}),std::invalid_argument);
 }

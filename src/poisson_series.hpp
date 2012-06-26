@@ -21,9 +21,11 @@
 #ifndef PIRANHA_POISSON_SERIES_HPP
 #define PIRANHA_POISSON_SERIES_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "concepts/series.hpp"
@@ -76,21 +78,36 @@ class poisson_series:
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
 			std::is_same<T,std::true_type>::value>::type * = piranha_nullptr) const
 		{
+			// Do something only if the series is equivalent to a polynomial.
 			if (this->is_single_coefficient() && !this->empty()) {
 				try {
+					// Shortcuts.
 					typedef poisson_series_term<Cf> term_type;
 					typedef typename term_type::key_type key_type;
 					typedef typename key_type::value_type value_type;
-					const auto lc = this->m_container.begin()->m_cf.integral_combination();
+					// Try to get the integral combination.
+					auto lc = this->m_container.begin()->m_cf.integral_combination();
+					// Change sign if needed.
+					bool sign_change = false;
+					if (!lc.empty() && lc.begin()->second.sign() < 0) {
+						std::for_each(lc.begin(),lc.end(),[](std::pair<const std::string,integer> &p) {p.second.negate();});
+						sign_change = true;
+					}
+					// Return value.
 					poisson_series retval;
+					// Build vector of integral multipliers.
 					std::vector<value_type> v;
 					for (auto it = lc.begin(); it != lc.end(); ++it) {
 						retval.m_symbol_set.add(it->first);
 						v.push_back(static_cast<value_type>(it->second));
 					}
+					// Build term, fix signs and flavour and move-insert it.
 					term_type term(Cf(1),key_type(v.begin(),v.end()));
 					if (!IsCos) {
 						term.m_key.set_flavour(false);
+						if (sign_change) {
+							math::negate(term.m_cf);
+						}
 					}
 					retval.insert(std::move(term));
 					return retval;
