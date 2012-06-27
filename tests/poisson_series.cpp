@@ -34,6 +34,7 @@
 #include "../src/math.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/power_series.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
 
@@ -222,4 +223,37 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
 	typedef poisson_series<real> p_type3;
 	BOOST_CHECK_EQUAL(sin(p_type3(real("1.234"))),sin(real("1.234")));
 	BOOST_CHECK_EQUAL(cos(p_type3(real("1.234"))),cos(real("1.234")));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
+{
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	BOOST_CHECK(is_power_series<p_type1>::value);
+	BOOST_CHECK(p_type1{}.degree() == 0);
+	BOOST_CHECK(p_type1{"x"}.degree() == 1);
+	BOOST_CHECK((p_type1{"x"} + 1).degree() == 1);
+	BOOST_CHECK((p_type1{"x"}.pow(2) + 1).degree() == 2);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree() == 2);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x"}) == 1);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x","y"}) == 2);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"z"}) == 0);
+	BOOST_CHECK((p_type1{"x"} + 1).ldegree() == 0);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x","y"}) == 1);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x"}) == 1);
+	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"y"}) == 0);
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK((pow(x,2) * cos(y) + 1).degree() == 2);
+	BOOST_CHECK((pow(x,2) * cos(y) + 1).ldegree() == 0);
+	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x"}) == 0);
+	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"y"}) == 0);
+	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"y"}) == 1);
+	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x"}) == 0);
+	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree() == 1);
+	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x","y"}) == 1);
+	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x","y"}) == 0);
+	typedef poisson_series<rational> p_type2;
+	BOOST_CHECK(!is_power_series<p_type2>::value);
 }

@@ -169,6 +169,9 @@ struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
  *   analogous to the notion of order in formal power series),
  * - a <tt>lget(const T &x, const std::set<std::string> &s)</tt> static method, returning the
  *   the partial low degree.
+ * 
+ * \todo we could probably do away with this, and just introduce math::degree() functions similar to
+ * pow(), cos(), etc. and the auto-detect the type-trait with SFINAE.
  */
 template <typename T, typename Enable = void>
 class has_degree
