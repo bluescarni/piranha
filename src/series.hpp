@@ -611,24 +611,24 @@ class series: series_binary_operators, detail::series_tag
 		}
 		// Exponentiation.
 		template <typename T>
-		Derived pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr) const
+		Derived pow_impl(const T &x) const
 		{
-			if (n > T(0)) {
-				// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
-				// exponentiation by squaring - the growth in number of terms seems to be slower.
-				Derived retval(*static_cast<Derived const *>(this));
-				for (T i(1); i < n; ++i) {
-					retval *= *static_cast<Derived const *>(this);
-				}
-				return retval;
+			integer n;
+			try {
+				n = math::integral_cast(x);
+			} catch (const std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-integral value");
 			}
-			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integer");
-		}
-		template <typename T>
-		Derived pow_impl(const T &, typename std::enable_if<!std::is_integral<T>::value &&
-			!std::is_same<T,integer>::value>::type * = piranha_nullptr) const
-		{
-			piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: unsupported type");
+			if (n.sign() < 0) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integral value");
+			}
+			// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
+			// exponentiation by squaring - the growth in number of terms seems to be slower.
+			Derived retval(*static_cast<Derived const *>(this));
+			for (integer i(1); i < n; ++i) {
+				retval *= *static_cast<Derived const *>(this);
+			}
+			return retval;
 		}
 	public:
 		/// Size type.
@@ -1027,23 +1027,23 @@ class series: series_binary_operators, detail::series_tag
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
 		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
 		 *   is 1 - including empty series);
-		 * - if \p T is an integral type or piranha::integer and \p x represents a non-negative integer, the return value
-		 *   is constructed via repeated multiplications;
+		 * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
 		 * - otherwise, an exception will be raised.
 		 * 
 		 * @param[in] x exponent.
 		 * 
 		 * @return \p this raised to the power of \p x.
 		 * 
-		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and either
-		 * \p T is not an integral type or piranha::integer, or \p x does not represent a non-negative integer.
+		 * @throws std::invalid_argument if exponentiation is computed via repeated series multiplications and
+		 * \p x does not represent a non-negative integer.
 		 * @throws unspecified any exception thrown by:
 		 * - series, term, coefficient and key construction,
 		 * - insert(),
 		 * - is_single_coefficient(),
 		 * - apply_cf_functor(),
 		 * - piranha::math::pow() and piranha::math::is_zero(),
-		 * - series multiplication.
+		 * - series multiplication,
+		 * - piranha::math::integral_cast().
 		 */
 		template <typename T>
 		Derived pow(const T &x) const

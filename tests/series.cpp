@@ -1346,9 +1346,9 @@ struct pow_tester
 BOOST_AUTO_TEST_CASE(series_pow_test)
 {
 	boost::mpl::for_each<cf_types>(pow_tester());
+	typedef g_series_type<double,int> p_type1;
 	if (std::numeric_limits<double>::is_iec559) {
 		// Test expo with float-float arguments.
-		typedef g_series_type<double,int> p_type1;
 		BOOST_CHECK(p_type1{2.}.pow(0.5) == std::pow(2.,0.5));
 		BOOST_CHECK(p_type1{3.}.pow(-0.5) == std::pow(3.,-0.5));
 		BOOST_CHECK_THROW(math::pow(p_type1{"x"} + 1,0.5),std::invalid_argument);
@@ -1356,6 +1356,18 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	// Check division by zero error.
 	typedef g_series_type<rational,int> p_type2;
 	BOOST_CHECK_THROW(math::pow(p_type2{},-1),zero_division_error);
+	// Check the integral_cast mechanism.
+	typedef g_series_type<real,int> p_type3;
+	auto p = p_type3{"x"} + 1;
+	BOOST_CHECK_EQUAL(p.pow(3),p.pow(real{3}));
+	BOOST_CHECK_THROW(p.pow(real{-3}),std::invalid_argument);
+	BOOST_CHECK_THROW(p.pow(real{"1.5"}),std::invalid_argument);
+	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
+		auto p = p_type1{"x"} + 1;
+		BOOST_CHECK_EQUAL(p.pow(3),p.pow(3.));
+		BOOST_CHECK_THROW(p.pow(-3.),std::invalid_argument);
+		BOOST_CHECK_THROW(p.pow(1.5),std::invalid_argument);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(series_division_test)
