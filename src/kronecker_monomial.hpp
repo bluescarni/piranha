@@ -455,6 +455,38 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			return args[candidate].get_name();
 		}
+		/// Exponentiation.
+		/**
+		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
+		 * is computed via multiplication of the exponents by the output of piranha::math::integral_cast()
+		 * on \p x.
+		 * 
+		 * @param[in] x exponent.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return \p this to the power of \p x.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::integral_cast(),
+		 * - the cast and binary multiplication operators of piranha::integer,
+		 * - piranha::kronecker_array::encode().
+		 */
+		template <typename U>
+		kronecker_monomial pow(const U &x, const symbol_set &args) const
+		{
+			auto v = unpack(args);
+			const auto size = args.size();
+			const integer n = math::integral_cast(x);
+			for (decltype(args.size()) i = 0u; i < size; ++i) {
+				// NOTE: here operator* produces an integer, which is safely cast back
+				// to the signed int type.
+				v[i] = static_cast<value_type>(n * v[i]);
+			}
+			kronecker_monomial retval;
+			retval.m_value = ka::encode(v);
+			return retval;
+		}
 		/// Unpack internal integer instance.
 		/**
 		 * Will decode the internal integral instance into a piranha::static_vector of size equal to the size of \p args.

@@ -327,6 +327,34 @@ class monomial: public array_key<T,monomial<T>>
 			}
 			return args[candidate].get_name();
 		}
+		/// Monomial exponentiation.
+		/**
+		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
+		 * is computed via in-place multiplication of the exponents by \p x.
+		 * 
+		 * @param[in] x exponent.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return \p this to the power of \p x.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by monomial copy construction
+		 * or in-place multiplication of exponents by \p x.
+		 */
+		template <typename U>
+		monomial pow(const U &x, const symbol_set &args) const
+		{
+			typedef typename base::size_type size_type;
+			if (!is_compatible(args)) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			monomial retval(*this);
+			const size_type size = retval.size();
+			for (size_type i = 0u; i < size; ++i) {
+				retval[i] *= x;
+			}
+			return retval;
+		}
 		/// Print.
 		/**
 		 * Will print to stream a human-readable representation of the monomial.

@@ -412,3 +412,30 @@ BOOST_AUTO_TEST_CASE(monomial_linear_argument_test)
 	k = k_type({rational(2),rational(1)});
 	BOOST_CHECK_THROW(k.linear_argument(vs),std::invalid_argument);
 }
+
+struct pow_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		BOOST_CHECK(k1 == k1.pow(42,vs));
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.pow(42,vs),std::invalid_argument);
+		k1 = k_type({T(1),T(2),T(3)});
+		vs.add("y");
+		vs.add("z");
+		BOOST_CHECK(k1.pow(2,vs) == k_type({T(2),T(4),T(6)}));
+		BOOST_CHECK(k1.pow(-2,vs) == k_type({T(-2),T(-4),T(-6)}));
+		BOOST_CHECK(k1.pow(0,vs) == k_type({T(0),T(0),T(0)}));
+		vs.add("a");
+		BOOST_CHECK_THROW(k1.pow(42,vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_pow_test)
+{
+	boost::mpl::for_each<expo_types>(pow_tester());
+}

@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_set>
 #include <vector>
@@ -463,4 +464,36 @@ struct linear_argument_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_linear_argument_test)
 {
 	boost::mpl::for_each<int_types>(linear_argument_tester());
+}
+
+struct pow_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		typedef kronecker_array<T> ka;
+		const auto &limits = ka::get_limits();
+		k_type k1;
+		k1.set_int(1);
+		symbol_set vs;
+		BOOST_CHECK_THROW(k1.pow(42,vs),std::invalid_argument);
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.pow(42.5,vs),std::invalid_argument);
+		k1 = k_type{2};
+		k_type k2({4});
+		BOOST_CHECK(k1.pow(2,vs) == k2);
+		BOOST_CHECK_THROW(k1.pow(boost::integer_traits<T>::const_max,vs),std::overflow_error);
+		k1 = k_type{1};
+		if (std::get<0u>(limits[1u])[0u] < boost::integer_traits<T>::const_max) {
+			BOOST_CHECK_THROW(k1.pow(std::get<0u>(limits[1u])[0u] + T(1),vs),std::invalid_argument);
+		}
+		k1 = k_type{2};
+		BOOST_CHECK(k1.pow(0,vs) == k_type{});
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_pow_test)
+{
+	boost::mpl::for_each<int_types>(pow_tester());
 }
