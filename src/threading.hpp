@@ -29,14 +29,16 @@
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread.html
  * 
- * \todo rework the threading support as follows:
- * - introduce thread class that inherits from boost/std thread, and make it detach() on destruction -> eventually include in the
- *   dtor also the MPFR cleanup functions for threading;
  * \todo review the semantics of boost stuff vs std c++, we know for instance that future::get() is a bit different, check
  * there are no other surprises.
  */
 
+#include <exception>
+#include <functional>
+#include <type_traits>
+
 #include "config.hpp"
+#include "detail/mpfr.hpp"
 
 #if defined(PIRANHA_USE_BOOST_THREAD)
 	#include <boost/exception_ptr.hpp>
@@ -56,17 +58,132 @@
 namespace piranha
 {
 
-/// Thread type.
+namespace detail
+{
+
+typedef
+#if defined(PIRANHA_USE_BOOST_THREAD)
+	boost::thread base_thread;
+#else
+	std::thread base_thread;
+#endif
+
+}
+
+/// Thread class.
 /**
- * Typedef for either <tt>std::thread</tt> or <tt>boost::thread</tt>.
+ * Basic thread class deriving from either <tt>std::thread</tt> or <tt>boost::thread</tt>. Only a basic common interface
+ * to both implementations is provided.
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread/thread_management.html#thread.thread_management.thread
  */
-#if defined(PIRANHA_USE_BOOST_THREAD)
-typedef boost::thread thread;
-#else
-typedef std::thread thread;
-#endif
+ class thread: private detail::base_thread
+{
+		typedef detail::base_thread base;
+		template <typename Callable, typename... Args>
+		static void wrapper(Callable func, Args... args)
+		{
+			try {
+				func(args...);
+			} catch (...) {
+				::mpfr_free_cache();
+				throw;
+			}
+			::mpfr_free_cache();
+		}
+	public:
+		/// Default constructor.
+		/**
+		 * Will construct a thread object without an associated thread of execution.
+		 */
+		thread():base() {}
+		/// Thread-launching constructor.
+		/**
+		 * Will construct a thread object that will run the supplied function \p func with arguments \p args.
+		 * The function \p func will be encapsulated in a wrapper that will call the MPFR function <tt>mpfr_free_cache()</tt>
+		 * upon the completion of \p func, in order to make it safe to use the piranha::real class across different threads.
+		 * 
+		 * @param[in] func function that will be called in the thread.
+		 * @param[in] args arguments to \p func.
+		 * 
+		 * @throws unspecified any exception thrown by the base constructor or by copying \p func or \p args.
+		 * 
+		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Memory-Handling
+		 */
+		template <typename Callable, typename... Args>
+		explicit thread(Callable &&func, Args && ... args):
+			base(std::bind(wrapper<typename std::decay<Callable>::type,
+			typename std::decay<Args>::type...>,std::forward<Callable>(func),std::forward<Args>(args)...)) {}
+		/// Deleted copy constructor.
+		thread(const thread &) = delete;
+		/// Defaulted move constructor.
+		thread(thread &&) = default;
+		/// Destructor.
+		/**
+		 * If \p this is associated to a thread of execution, <tt>std::terminate()</tt> will be called.
+		 */
+		~thread() piranha_noexcept_spec(true)
+		{
+			if (joinable()) {
+				std::terminate();
+			}
+		}
+		/// Deleted copy assignment operator.
+		thread &operator=(const thread &) = delete;
+		/// Trivial move assignment operator.
+		/**
+		 * Will forward the call to the corresponding move assignment in the base class.
+		 * 
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		thread &operator=(thread &&other) piranha_noexcept_spec(true)
+		{
+			if (this != &other) {
+				base::operator=(std::move(other));
+			}
+			return *this;
+		}
+		/// Thread join.
+		/**
+		 * Wait for the thread of execution associated with \p this to finish. The method will check
+		 * if the thread is joinable before calling the base join method, hence it is safe to call this method
+		 * multiple times on the same thread object.
+		 * 
+		 * @throws unspecified any exception thrown by the base method.
+		 */
+		void join()
+		{
+			if (joinable()) {
+				base::join();
+			}
+		}
+		/// Thread detach.
+		/**
+		 * Detach the thread of execution associated with \p this to finish. The method will check
+		 * if the thread is joinable before calling the base detach method, hence it is safe to call this method
+		 * multiple times on the same thread object.
+		 * 
+		 * @throws unspecified any exception thrown by the base method.
+		 */
+		void detach()
+		{
+			if (joinable()) {
+				base::detach();
+			}
+		}
+		/// Joinable flag.
+		/**
+		 * Query whether or not \p this has an associated thread of execution.
+		 * 
+		 * @return joinable flag.
+		 */
+		bool joinable() const
+		{
+			return base::joinable();
+		}
+};
 
 /// Condition variable type.
 /**
