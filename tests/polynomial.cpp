@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE polynomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
@@ -36,6 +37,7 @@
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
@@ -535,4 +537,38 @@ typedef debug_access<integral_combination_tag> ic_tester;
 BOOST_AUTO_TEST_CASE(polynomial_integral_combination_test)
 {
 	boost::mpl::for_each<cf_types>(ic_tester());
+}
+
+struct pow_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial<Cf,Expo> p_type;
+			p_type p{"x"};
+			BOOST_CHECK_EQUAL((2 * p).pow(4),p_type{math::pow(Cf(1) * 2,4)} * p * p * p * p);
+			p *= p_type{"y"}.pow(2);
+			BOOST_CHECK_EQUAL((3 * p).pow(4),p_type{math::pow(Cf(1) * 3,4)} * p * p * p * p);
+			if (!std::is_unsigned<Expo>::value) {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p.pow(-1)),"x**-1y**-2");
+			}
+			BOOST_CHECK_EQUAL(p.pow(0),p_type{math::pow(Cf(1),0)});
+			BOOST_CHECK_EQUAL(p_type{3}.pow(4),math::pow(Cf(3),4));
+			BOOST_CHECK_THROW((p + p_type{"x"}).pow(-1),std::invalid_argument);
+			BOOST_CHECK_EQUAL((p + p_type{"x"}).pow(0),Cf(1));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_pow_test)
+{
+	boost::mpl::for_each<cf_types>(pow_tester());
 }

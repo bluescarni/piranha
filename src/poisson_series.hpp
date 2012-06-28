@@ -211,6 +211,8 @@ class poisson_series:
 		 * - piranha::math::integral_cast(), piranha::math::sin(),
 		 * - the cast operator of piranha::integer,
 		 * - the constructors of coefficient, key and term types.
+		 * 
+		 * \todo here it would be better to call directly the base implementation of sin/cos, instead of re-implementing it.
 		 */
 		poisson_series sin() const
 		{

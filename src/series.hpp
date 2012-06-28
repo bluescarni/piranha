@@ -1041,9 +1041,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - insert(),
 		 * - is_single_coefficient(),
 		 * - apply_cf_functor(),
-		 * - piranha::math::pow() and piranha::math::is_zero(),
-		 * - series multiplication,
-		 * - piranha::math::integral_cast().
+		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::math::integral_cast(),
+		 * - series multiplication.
 		 */
 		template <typename T>
 		Derived pow(const T &x) const

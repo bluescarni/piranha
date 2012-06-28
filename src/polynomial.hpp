@@ -257,6 +257,41 @@ class polynomial:
 			base::operator=(std::forward<T>(x));
 			return *this;
 		}
+		/// Override default exponentiation method.
+		/**
+		 * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
+		 * key. In that case, the return polynomial will consist of a single term with coefficient computed via
+		 * piranha::math::pow() and key computed via the monomial exponentiation method.
+		 * 
+		 * Otherwise, the base (i.e., default) exponentiation method will be used.
+		 * 
+		 * @param[in] x exponent.
+		 * 
+		 * @return \p this to the power of \p x.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the <tt>is_unitary()</tt> and exponentiation methods of the key type,
+		 * - piranha::math::pow(),
+		 * - construction of coefficient, key and term,
+		 * - the copy assignment operator of piranha::symbol_set,
+		 * - piranha::series::insert() and piranha::series::pow().
+		 */
+		template <typename T>
+		polynomial pow(const T &x) const
+		{
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			if (this->size() == 1u && !this->m_container.begin()->m_key.is_unitary(this->m_symbol_set)) {
+				cf_type cf(math::pow(this->m_container.begin()->m_cf,x));
+				key_type key(this->m_container.begin()->m_key.pow(x,this->m_symbol_set));
+				polynomial retval;
+				retval.m_symbol_set = this->m_symbol_set;
+				retval.insert(term_type(std::move(cf),std::move(key)));
+				return retval;
+			}
+			return static_cast<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> const *>(this)->pow(x);
+		}
 };
 
 /// Specialisation of unary piranha::truncator for piranha::polynomial.
