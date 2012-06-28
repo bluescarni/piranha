@@ -1523,3 +1523,10 @@ BOOST_AUTO_TEST_CASE(real_integral_cast_test)
 	BOOST_CHECK_EQUAL(math::integral_cast(real{"-3."}),-3);
 	BOOST_CHECK_EQUAL(math::integral_cast(real{"15.00"}),15);
 }
+
+BOOST_AUTO_TEST_CASE(real_pi_test)
+{
+	BOOST_CHECK_EQUAL(real{}.pi(),real{"3.14159265358979323846264338327950280"});
+	BOOST_CHECK_EQUAL((real{0,4}.pi()),real{"3.25"});
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0,4}.pi()),"3.25");
+}

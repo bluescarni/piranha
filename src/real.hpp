@@ -1499,6 +1499,16 @@ class PIRANHA_PUBLIC real
 			::mpfr_cos(retval.m_value,m_value,default_rnd);
 			return retval;
 		}
+		/// Pi constant.
+		/**
+		 * @return pi constant calculated to the current precision of \p this.
+		 */
+		real pi() const
+		{
+			real retval(0,get_prec());
+			::mpfr_const_pi(retval.m_value,default_rnd);
+			return retval;
+		}
 		/// Overload output stream operator for piranha::real.
 		/**
 		 * The output format for finite numbers is normalised scientific notation, where the exponent is signalled by the letter 'e'
@@ -1672,6 +1682,18 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 
 namespace detail
 {
+
+#if defined(__GNUC__)
+
+void free_mpfr_caches() __attribute__ ((destructor));
+
+inline void free_mpfr_caches()
+{
+std::cout << "Freeing MPFR caches\n";
+	::mpfr_free_cache();
+}
+
+#endif
 
 // Specialise implementation of math::is_zero for real.
 template <typename T>

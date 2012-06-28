@@ -27,19 +27,4 @@ namespace piranha
 const ::mpfr_rnd_t real::default_rnd;
 const ::mpfr_prec_t real::default_prec;
 
-namespace detail
-{
-
-#if defined(__GNUC__)
-void free_mpfr_caches() __attribute__ ((destructor));
-
-void free_mpfr_caches()
-{
-std::cout << "Freeing MPFR caches\n";
-	::mpfr_free_cache();
-}
-#endif
-
-}
-
 }
