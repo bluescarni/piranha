@@ -41,7 +41,7 @@ namespace concept
  * - must be constructible from \p int,
  * - must be assignable,
  * - must be equality-comparable,
- * - must be addable (both in binary and unary form),
+ * - must be addable and subtractable (both in binary and unary form),
  * - must be streamable,
  * - must be a valid argument type for piranha::math::is_zero().
  * 
@@ -61,6 +61,8 @@ struct ArrayKeyValueType:
 		T inst2(inst);
 		inst += inst2;
 		inst = inst + inst2;
+		inst -= inst2;
+		inst = inst - inst2;
 		std::cout << inst2;
 		piranha::math::is_zero(inst);
 	}
