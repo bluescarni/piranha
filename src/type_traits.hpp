@@ -196,7 +196,7 @@ class is_addable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
 };
 
 template <typename T, typename U>
@@ -219,6 +219,42 @@ class is_addable_in_place: detail::sfinae_types
 
 template <typename T, typename U>
 const bool is_addable_in_place<T,U>::value;
+
+/// Subtractable type trait.
+/**
+ * Will be \p true if subtracting an instance of \p U from an instance of \p T is a valid expression, \p false otherwise.
+ */
+template <typename T, typename U>
+class is_subtractable: detail::sfinae_types
+{
+		template <typename V>
+		static auto test(const V *t) -> decltype(*t - std::declval<U>(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+};
+
+template <typename T, typename U>
+const bool is_subtractable<T,U>::value;
+
+/// In-place subtractable type trait.
+/**
+ * Will be \p true if subtracting in-place an instance of \p U from an instance of \p T is a valid expression, \p false otherwise.
+ */
+template <typename T, typename U>
+class is_subtractable_in_place: detail::sfinae_types
+{
+		template <typename V>
+		static auto test(V *t) -> decltype(*t -= std::declval<U>(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+};
+
+template <typename T, typename U>
+const bool is_subtractable_in_place<T,U>::value;
 
 }
 

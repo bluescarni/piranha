@@ -188,6 +188,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 	BOOST_CHECK((!is_addable<integer,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,int>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,integer>::value));
+	BOOST_CHECK((is_addable<std::string,std::string>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
@@ -198,4 +199,33 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
 	BOOST_CHECK((is_addable_in_place<std::complex<double>,double>::value));
 	BOOST_CHECK((!is_addable_in_place<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable_in_place<trivial,std::complex<double>>::value));
+	BOOST_CHECK((is_addable_in_place<std::string,std::string>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
+{
+	BOOST_CHECK((is_subtractable<int,int>::value));
+	BOOST_CHECK((is_subtractable<int,double>::value));
+	BOOST_CHECK((is_subtractable<double,int>::value));
+	BOOST_CHECK((is_subtractable<std::complex<double>,double>::value));
+	BOOST_CHECK((is_subtractable<double,std::complex<double>>::value));
+	BOOST_CHECK((is_subtractable<double,integer>::value));
+	BOOST_CHECK((is_subtractable<integer,double>::value));
+	BOOST_CHECK((!is_subtractable<trivial,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable<int,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable<integer,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable<std::complex<double>,int>::value));
+	BOOST_CHECK((!is_subtractable<std::complex<double>,integer>::value));
+	BOOST_CHECK((!is_subtractable<std::string,std::string>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place)
+{
+	BOOST_CHECK((is_subtractable_in_place<int,int>::value));
+	BOOST_CHECK((is_subtractable_in_place<int,double>::value));
+	BOOST_CHECK((is_subtractable_in_place<double,int>::value));
+	BOOST_CHECK((is_subtractable_in_place<std::complex<double>,double>::value));
+	BOOST_CHECK((!is_subtractable_in_place<double,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable_in_place<trivial,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable_in_place<std::string,std::string>::value));
 }
