@@ -848,3 +848,11 @@ BOOST_AUTO_TEST_CASE(rational_integral_cast_test)
 	BOOST_CHECK_THROW(math::integral_cast(rational(1,-2)),std::invalid_argument);
 	BOOST_CHECK_THROW(math::integral_cast(rational("2/3") * 2),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(rational_partial_test)
+{
+	BOOST_CHECK_EQUAL(math::partial(rational(),""),0);
+	BOOST_CHECK_EQUAL(math::partial(rational(1),std::string("")),0);
+	BOOST_CHECK_EQUAL(math::partial(rational(-10),std::string("")),0);
+	BOOST_CHECK(is_differentiable<rational>::value);
+}

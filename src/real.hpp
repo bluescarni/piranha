@@ -1622,7 +1622,7 @@ struct sin_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	 * 
 	 * @return sine of \p r.
 	 */
-	real operator()(const T &r)
+	real operator()(const T &r) const
 	{
 		return r.sin();
 	}
@@ -1640,9 +1640,23 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	 * 
 	 * @return cosine of \p r.
 	 */
-	real operator()(const T &r)
+	real operator()(const T &r) const
 	{
 		return r.cos();
+	}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::real.
+template <typename T>
+struct partial_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of piranha::real constructed from zero.
+	 */
+	real operator()(const real &, const std::string &) const
+	{
+		return real(0);
 	}
 };
 

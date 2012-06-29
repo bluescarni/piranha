@@ -1530,3 +1530,11 @@ BOOST_AUTO_TEST_CASE(real_pi_test)
 	BOOST_CHECK_EQUAL((real{0,4}.pi()),real{"3.25"});
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0,4}.pi()),"3.25");
 }
+
+BOOST_AUTO_TEST_CASE(real_partial_test)
+{
+	BOOST_CHECK_EQUAL(math::partial(real(),""),0);
+	BOOST_CHECK_EQUAL(math::partial(real(1),std::string("")),0);
+	BOOST_CHECK_EQUAL(math::partial(real(-10),std::string("")),0);
+	BOOST_CHECK(is_differentiable<real>::value);
+}

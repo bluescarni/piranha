@@ -1537,7 +1537,7 @@ struct sin_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type
 	 * 
 	 * @return sine of \p q.
 	 */
-	rational operator()(const T &q)
+	rational operator()(const T &q) const
 	{
 		if (q.sign() == 0) {
 			return rational{};
@@ -1559,12 +1559,26 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type
 	 * 
 	 * @return cosine of \p q.
 	 */
-	rational operator()(const T &q)
+	rational operator()(const T &q) const
 	{
 		if (q.sign() == 0) {
 			return rational{1};
 		}
 		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero rational");
+	}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::rational.
+template <typename T>
+struct partial_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of piranha::rational constructed from zero.
+	 */
+	rational operator()(const rational &, const std::string &) const
+	{
+		return rational(0);
 	}
 };
 

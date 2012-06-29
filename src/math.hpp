@@ -24,10 +24,12 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <string>
 #include <type_traits>
 
 #include "config.hpp"
 #include "detail/integer_fwd.hpp"
+#include "detail/sfinae_types.hpp"
 
 namespace piranha
 {
@@ -330,7 +332,68 @@ inline auto sin(const T &x) -> decltype(sin_impl<T>()(x))
 	return sin_impl<T>()(x);
 }
 
+/// Default functor for the implementation of piranha::math::partial().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct partial_impl
+{};
+
+/// Specialisation of the piranha::math::partial() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be zero.
+ */
+template <typename T>
+struct partial_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of \p T constructed from zero.
+	 */
+	T operator()(const T &, const std::string &) const
+	{
+		return T(0);
+	}
+};
+
+/// Partial derivative.
+/**
+ * Return the partial derivative of \p x with respect to the symbolic quantity named \p str. The actual
+ * implementation of this function is in the piranha::math::partial_impl functor.
+ * 
+ * @param[in] x argument for the partial derivative.
+ * @param[in] str name of the symbolic quantity with respect to which the derivative will be computed.
+ * 
+ * @return partial derivative of \p x with respect to \p str.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::partial_impl.
+ */
+template <typename T>
+inline auto partial(const T &x, const std::string &str) -> decltype(partial_impl<T>()(x,str))
+{
+	return partial_impl<T>()(x,str);
 }
+
+}
+
+/// Type-trait for differentiable types.
+/**
+ * The type-trait will be \p true if piranha::math::partial() can be successfully called on instances of
+ * type \p T, \p false otherwise.
+ */
+template <typename T>
+class is_differentiable: detail::sfinae_types
+{
+		template <typename U>
+		static auto test(U const *t) -> decltype(math::partial(*t,""),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+};
 
 }
 

@@ -32,6 +32,7 @@
 #include <boost/integer_traits.hpp>
 #include <cmath>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <typeinfo>
 
@@ -145,4 +146,16 @@ BOOST_AUTO_TEST_CASE(sin_cos_test)
 	BOOST_CHECK(math::cos(2.) == std::cos(2.));
 	BOOST_CHECK(math::cos(1.L) == std::cos(1.L));
 	BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
+}
+
+BOOST_AUTO_TEST_CASE(partial_test)
+{
+	BOOST_CHECK(piranha::is_differentiable<int>::value);
+	BOOST_CHECK(piranha::is_differentiable<long>::value);
+	BOOST_CHECK(piranha::is_differentiable<double>::value);
+	BOOST_CHECK(!piranha::is_differentiable<std::string>::value);
+	BOOST_CHECK_EQUAL(math::partial(1,""),0);
+	BOOST_CHECK_EQUAL(math::partial(1.,""),double(0));
+	BOOST_CHECK_EQUAL(math::partial(2L,""),0L);
+	BOOST_CHECK_EQUAL(math::partial(2LL,std::string("")),0LL);
 }

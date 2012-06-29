@@ -1949,7 +1949,7 @@ struct sin_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
 	 * 
 	 * @return sine of \p n.
 	 */
-	integer operator()(const T &n)
+	integer operator()(const T &n) const
 	{
 		if (n.sign() == 0) {
 			return integer{};
@@ -1971,12 +1971,26 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
 	 * 
 	 * @return cosine of \p n.
 	 */
-	integer operator()(const T &n)
+	integer operator()(const T &n) const
 	{
 		if (n.sign() == 0) {
 			return integer{1};
 		}
 		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero integer");
+	}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::integer.
+template <typename T>
+struct partial_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of piranha::integer constructed from zero.
+	 */
+	integer operator()(const integer &, const std::string &) const
+	{
+		return integer(0);
 	}
 };
 

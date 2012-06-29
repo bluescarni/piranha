@@ -873,3 +873,11 @@ BOOST_AUTO_TEST_CASE(integer_integral_cast_test)
 	boost::fusion::for_each(arithmetic_values,check_integral_cast());
 	BOOST_CHECK_EQUAL(piranha::math::integral_cast(piranha::integer(-23)),-23);
 }
+
+BOOST_AUTO_TEST_CASE(integer_partial_test)
+{
+	BOOST_CHECK_EQUAL(piranha::math::partial(piranha::integer(),""),0);
+	BOOST_CHECK_EQUAL(piranha::math::partial(piranha::integer(1),std::string("")),0);
+	BOOST_CHECK_EQUAL(piranha::math::partial(piranha::integer(-10),std::string("")),0);
+	BOOST_CHECK(piranha::is_differentiable<piranha::integer>::value);
+}

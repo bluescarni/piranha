@@ -31,6 +31,7 @@
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "kronecker_monomial.hpp"
+#include "math.hpp"
 #include "monomial.hpp"
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
