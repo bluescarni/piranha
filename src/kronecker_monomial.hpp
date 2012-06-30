@@ -34,6 +34,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
 
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
@@ -42,8 +43,10 @@
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
+#include "math.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
+#include "symbol.hpp"
 
 namespace piranha
 {
@@ -525,6 +528,38 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 					}
 				}
 			}
+		}
+		/// Partial derivative.
+		/**
+		 * Will return the partial derivative of \p this with respect to symbol \p s. The result is a pair
+		 * consisting of the exponent associated to \p s before differentiation and the monomial itself
+		 * after differentiation. If \p s is not in \p args or if the exponent associated to it is zero,
+		 * the returned pair will be <tt>(0,monomial{})</tt>.
+		 * 
+		 * @param[in] s symbol with respect to which the differentiation will be calculated.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return result of the differentiation.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::is_zero(),
+		 * - the cast operator of piranha::integer,
+		 * - piranha::kronecker_array::encode().
+		 */
+		std::pair<integer,kronecker_monomial> partial(const symbol &s, const symbol_set &args) const
+		{
+			auto v = unpack(args);
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				if (args[i] == s && !math::is_zero(v[i])) {
+					integer tmp_n(v[i]);
+					v[i] = static_cast<value_type>(tmp_n - 1);
+					kronecker_monomial tmp_km;
+					tmp_km.m_value = ka::encode(v);
+					return std::make_pair(std::move(tmp_n),std::move(tmp_km));
+				}
+			}
+			return std::make_pair(integer{0},kronecker_monomial{});
 		}
 	private:
 		value_type m_value;

@@ -26,14 +26,20 @@
 #include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
 #include <tuple>
+#include <type_traits>
 
 #include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
+#include "../src/config.hpp"
+#include "../src/detail/series_fwd.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -155,4 +161,53 @@ struct multiplication_tester
 BOOST_AUTO_TEST_CASE(poisson_series_term_multiplication_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
+}
+
+struct partial_tester
+{
+	template <typename Cf>
+	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	{
+		typedef poisson_series_term<Cf> term_type;
+		typedef typename term_type::key_type key_type;
+		typedef typename key_type::value_type value_type;
+		symbol_set ed;
+		term_type t1;
+		t1.m_cf = Cf(2);
+		t1.m_key = key_type{value_type(2)};
+		BOOST_CHECK_THROW(t1.partial(symbol("x"),ed),std::invalid_argument);
+		ed.add("x");
+		auto p_res = t1.partial(symbol("x"),ed);
+		BOOST_CHECK_EQUAL(p_res.size(),1u);
+		BOOST_CHECK_EQUAL(p_res[0u].m_cf,Cf(2) * integer(-2));
+		BOOST_CHECK(p_res[0u].m_key.get_int() == value_type(2));
+		BOOST_CHECK(p_res[0u].m_key.get_flavour() == false);
+		p_res = t1.partial(symbol("y"),ed);
+		BOOST_CHECK(p_res.empty());
+		t1.m_key = key_type{value_type(0)};
+		p_res = t1.partial(symbol("x"),ed);
+		BOOST_CHECK(p_res.empty());
+		t1.m_key = key_type{value_type(2),value_type(3)};
+		t1.m_key.set_flavour(false);
+		ed.add("y");
+		p_res = t1.partial(symbol("y"),ed);
+		BOOST_CHECK_EQUAL(p_res.size(),1u);
+		BOOST_CHECK(p_res[0u].m_cf == Cf(2) * integer(3));
+		BOOST_CHECK((p_res[0u].m_key == key_type{value_type(2),value_type(3)}));
+		t1.m_cf = Cf(0);
+		p_res = t1.partial(symbol("y"),ed);
+		BOOST_CHECK_EQUAL(p_res.size(),1u);
+		BOOST_CHECK(p_res[0u].m_cf == Cf(0));
+		BOOST_CHECK((p_res[0u].m_key == key_type{value_type(2),value_type(3)}));
+	}
+	template <typename Cf>
+	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	{
+		
+	}
+};
+
+BOOST_AUTO_TEST_CASE(poisson_series_term_partial_test)
+{
+	boost::mpl::for_each<cf_types>(partial_tester());
 }

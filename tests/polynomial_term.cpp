@@ -26,12 +26,18 @@
 #include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <stdexcept>
+#include <type_traits>
 
 #include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
+#include "../src/config.hpp"
+#include "../src/detail/series_fwd.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
+#include "../src/symbol_set.hpp"
+#include "../src/symbol.hpp"
 
 using namespace piranha;
 
@@ -138,4 +144,64 @@ struct multiplication_tester
 BOOST_AUTO_TEST_CASE(polynomial_term_multiplication_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
+}
+
+struct partial_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef polynomial_term<Cf,Expo> term_type;
+			typedef typename term_type::key_type key_type;
+			symbol_set ed;
+			term_type t1;
+			t1.m_cf = Cf(2);
+			t1.m_key = key_type{Expo(2)};
+			BOOST_CHECK_THROW(t1.partial(symbol("x"),ed),std::invalid_argument);
+			ed.add("x");
+			auto p_res = t1.partial(symbol("x"),ed);
+			BOOST_CHECK_EQUAL(p_res.size(),1u);
+			BOOST_CHECK(p_res[0u].m_cf == Cf(2) * Expo(2));
+			BOOST_CHECK(p_res[0u].m_key.size() == 1u);
+			BOOST_CHECK(p_res[0u].m_key[0u] == Expo(1));
+			p_res = t1.partial(symbol("y"),ed);
+			BOOST_CHECK(p_res.empty());
+			t1.m_key = key_type{Expo(0)};
+			p_res = t1.partial(symbol("x"),ed);
+			BOOST_CHECK(p_res.empty());
+			t1.m_key = key_type{Expo(2),Expo(3)};
+			ed.add("y");
+			p_res = t1.partial(symbol("y"),ed);
+			BOOST_CHECK_EQUAL(p_res.size(),1u);
+			BOOST_CHECK(p_res[0u].m_cf == Cf(2) * Expo(3));
+			BOOST_CHECK(p_res[0u].m_key.size() == 2u);
+			BOOST_CHECK(p_res[0u].m_key[0u] == Expo(2));
+			BOOST_CHECK(p_res[0u].m_key[1u] == Expo(2));
+			t1.m_cf = Cf(0);
+			p_res = t1.partial(symbol("y"),ed);
+			BOOST_CHECK_EQUAL(p_res.size(),1u);
+			BOOST_CHECK(p_res[0u].m_cf == Cf(0));
+			BOOST_CHECK(p_res[0u].m_key.size() == 2u);
+			BOOST_CHECK(p_res[0u].m_key[0u] == Expo(2));
+			BOOST_CHECK(p_res[0u].m_key[1u] == Expo(2));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+	template <typename Cf>
+	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	{
+		
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_term_partial_test)
+{
+	boost::mpl::for_each<cf_types>(partial_tester());
 }

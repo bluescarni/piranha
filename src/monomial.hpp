@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <unordered_set>
 
 #include "array_key.hpp"
@@ -37,6 +38,7 @@
 #include "integer.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
+#include "symbol.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -354,6 +356,41 @@ class monomial: public array_key<T,monomial<T>>
 				retval[i] *= x;
 			}
 			return retval;
+		}
+		/// Partial derivative.
+		/**
+		 * Will return the partial derivative of \p this with respect to symbol \p s. The result is a pair
+		 * consisting of the exponent associated to \p s before differentiation and the monomial itself
+		 * after differentiation. If \p s is not in \p args or if the exponent associated to it is zero,
+		 * the returned pair will be <tt>(0,monomial{})</tt>.
+		 * 
+		 * @param[in] s symbol with respect to which the differentiation will be calculated.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return result of the differentiation.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::is_zero(),
+		 * - monomial and exponent construction,
+		 * - the exponent type's subtraction operator.
+		 */
+		std::pair<typename base::value_type,monomial> partial(const symbol &s, const symbol_set &args) const
+		{
+			typedef typename base::size_type size_type;
+			typedef typename base::value_type value_type;
+			if (!is_compatible(args)) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			for (size_type i = 0u; i < args.size(); ++i) {
+				if (args[i] == s && !math::is_zero((*this)[i])) {
+					monomial tmp_m(*this);
+					value_type tmp_v(tmp_m[i]);
+					tmp_m[i] = tmp_m[i] - value_type(1);
+					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
+				}
+			}
+			return std::make_pair(value_type(0),monomial{});
 		}
 		/// Print.
 		/**

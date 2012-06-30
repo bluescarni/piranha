@@ -24,6 +24,7 @@
 #include <boost/concept/assert.hpp>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "base_term.hpp"
 #include "concepts/multipliable_term.hpp"
@@ -33,6 +34,7 @@
 #include "power_series_term.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "symbol_set.hpp"
+#include "symbol.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -161,6 +163,37 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 			if (sign_minus && !std::get<1u>(retval).m_key.get_flavour()) {
 				math::negate(std::get<1u>(retval).m_cf);
 			}
+		}
+		/// Partial derivative.
+		/**
+		 * Will return a vector of Poisson series terms representing the partial derivative of \p this with respect to
+		 * symbol \p s. The partial derivative is computed via piranha::math::partial() and the differentiation method
+		 * of the monomial type. This method requires the coefficient type to be differentiable and multipliable by piranha::integer.
+		 * 
+		 * @param[in] s piranha::symbol with respect to which the derivative will be calculated.
+		 * @param[in] args reference set of arguments.
+		 * 
+		 * @return partial derivative of \p this with respect to \p s.
+		 * 
+		 * @throws unspecified any exception throw by:
+		 * - piranha::math::partial() and piranha::math::is_zero(),
+		 * - coefficient, term and key constructors,
+		 * - memory allocation errors in standard containers,
+		 * - the differentiation method of the monomial type,
+		 * - the multiplication operator of the coefficient type.
+		 */
+		std::vector<poisson_series_term> partial(const symbol &s, const symbol_set &args) const
+		{
+			std::vector<poisson_series_term> retval;
+			auto cf_partial = math::partial(this->m_cf,s.get_name());
+			if (!math::is_zero(cf_partial)) {
+				retval.push_back(poisson_series_term(std::move(cf_partial),this->m_key));
+			}
+			auto key_partial = this->m_key.partial(s,args);
+			if (!math::is_zero(key_partial.first)) {
+				retval.push_back(poisson_series_term(this->m_cf * key_partial.first,std::move(key_partial.second)));
+			}
+			return retval;
 		}
 };
 

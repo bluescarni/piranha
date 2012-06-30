@@ -439,3 +439,37 @@ BOOST_AUTO_TEST_CASE(monomial_pow_test)
 {
 	boost::mpl::for_each<expo_types>(pow_tester());
 }
+
+struct partial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.partial(symbol("x"),vs),std::invalid_argument);
+		k1 = k_type({T(2)});
+		auto ret = k1.partial(symbol("x"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(2));
+		BOOST_CHECK(ret.second == k_type({T(1)}));
+		ret = k1.partial(symbol("y"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(0));
+		k1 = k_type({T(0)});
+		ret = k1.partial(symbol("x"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(0));
+		vs.add("y");
+		k1 = k_type({T(-1),T(0)});
+		ret = k1.partial(symbol("y"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(0));
+		ret = k1.partial(symbol("x"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(-1));
+		BOOST_CHECK(ret.second == k_type({T(-2),T(0)}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_partial_test)
+{
+	boost::mpl::for_each<expo_types>(partial_tester());
+}
