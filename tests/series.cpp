@@ -1428,3 +1428,20 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::sin(p_type2{.5}),double(42));
 	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
 }
+
+BOOST_AUTO_TEST_CASE(series_partial_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x,"y"),0);
+	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2),"x"),-8 * x);
+	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2) + y * x,"y"),x);
+	BOOST_CHECK_EQUAL(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),-8);
+	BOOST_CHECK_EQUAL(math::partial(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),"x"),0);
+	BOOST_CHECK_EQUAL(math::partial(-x + 1,"x"),-1);
+	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x).pow(10),"x"),20 * (1 + 2 * x).pow(9));
+	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
+	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
+	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
+}

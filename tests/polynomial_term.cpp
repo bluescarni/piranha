@@ -197,7 +197,24 @@ struct partial_tester
 	template <typename Cf>
 	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
 	{
-		
+		typedef polynomial_term<Cf,int> term_type;
+		typedef typename term_type::key_type key_type;
+		symbol_set ed;
+		ed.add("x");
+		term_type t1;
+		t1.m_cf = Cf{"x"};
+		t1.m_key = key_type{2};
+		auto p_res = t1.partial(symbol("x"),ed);
+		BOOST_CHECK_EQUAL(p_res.size(),2u);
+		BOOST_CHECK(p_res[0u].m_cf == Cf(1));
+		BOOST_CHECK(p_res[0u].m_key == t1.m_key);
+		BOOST_CHECK(p_res[1u].m_cf == t1.m_cf * 2);
+		BOOST_CHECK(p_res[1u].m_key == key_type{1});
+		t1.m_key = key_type{0};
+		p_res = t1.partial(symbol("x"),ed);
+		BOOST_CHECK_EQUAL(p_res.size(),1u);
+		BOOST_CHECK(p_res[0u].m_cf == Cf(1));
+		BOOST_CHECK(p_res[0u].m_key == t1.m_key);
 	}
 };
 

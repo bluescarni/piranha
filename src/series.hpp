@@ -33,12 +33,14 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
 
 #include "base_term.hpp"
 #include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
+#include "concepts/differentiable_term.hpp"
 #include "concepts/term.hpp"
 #include "concepts/truncator.hpp"
 #include "config.hpp"
@@ -54,6 +56,7 @@
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
 #include "symbol_set.hpp"
+#include "symbol.hpp"
 #include "tracing.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
@@ -1097,6 +1100,35 @@ class series: series_binary_operators, detail::series_tag
 			}
 			return retval;
 		}
+		/// Partial derivative.
+		/**
+		 * Will return the partial derivative of \p this with respect to the argument called \p name. The method will construct
+		 * the return value series from the output of the term's differentiation method.
+		 * 
+		 * This method requires the term type to be a model of the piranha::concept::DifferentiableTerm concept.
+		 * 
+		 * @param[in] name name of the argument with respect to which the derivative will be calculated.
+		 * 
+		 * @return partial derivative of \p this with respect to the symbol named \p name.
+		 * 
+		 * @throws unspecified any exception thrown by the differentiation method of the term type or by insert().
+		 */
+		Derived partial(const std::string &name) const
+		{
+			BOOST_CONCEPT_ASSERT((concept::DifferentiableTerm<Term>));
+			Derived retval;
+			retval.m_symbol_set = this->m_symbol_set;
+			const auto it_f = this->m_container.end();
+			const symbol s(name);
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				auto tmp_partial = it->partial(s,this->m_symbol_set);
+				const auto size = tmp_partial.size();
+				for (decltype(tmp_partial.size()) i = 0u; i < size; ++i) {
+					retval.insert(std::move(tmp_partial[i]));
+				}
+			}
+			return retval;
+		}
 		/// Overload stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
@@ -1446,6 +1478,29 @@ struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 		{
 			return call_impl(s);
 		}
+};
+
+/// Specialisation of the piranha::math::partial() functor for series types.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series.
+ * The implementation will invoke piranha::series::partial().
+ */
+template <typename Series>
+struct partial_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] s input series.
+	 * @param[in] name name of the argument with respect to which the differentiation will be calculated.
+	 * 
+	 * @return the output of piranha::series::partial().
+	 * 
+	 * @throws unspecified any exception thrown by piranha::series::partial().
+	 */
+	Series operator()(const Series &s, const std::string &name) const
+	{
+		return s.partial(name);
+	}
 };
 
 }

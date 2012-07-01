@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "base_term.hpp"
+#include "concepts/differentiable_coefficient.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "config.hpp"
@@ -190,8 +191,9 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		/**
 		 * Will return a vector of polynomial terms representing the partial derivative of \p this with respect to
 		 * symbol \p s. The partial derivative is computed via piranha::math::partial() and the differentiation method
-		 * of the monomial type. This method requires the coefficient type to be differentiable and multipliable by piranha::integer and/or by
-		 * the monomial exponent type.
+		 * of the monomial type. This method requires the coefficient type to be:
+		 * - multipliable by piranha::integer and/or by the monomial exponent type,
+		 * - a model of the piranha::concept::DifferentiableCoefficient concept.
 		 * 
 		 * @param[in] s piranha::symbol with respect to which the derivative will be calculated.
 		 * @param[in] args reference set of arguments.
@@ -207,6 +209,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		 */
 		std::vector<polynomial_term> partial(const symbol &s, const symbol_set &args) const
 		{
+			BOOST_CONCEPT_ASSERT((concept::DifferentiableCoefficient<Cf>));
 			std::vector<polynomial_term> retval;
 			auto cf_partial = math::partial(this->m_cf,s.get_name());
 			if (!math::is_zero(cf_partial)) {

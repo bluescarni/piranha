@@ -257,3 +257,20 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	typedef poisson_series<rational> p_type2;
 	BOOST_CHECK(!is_power_series<p_type2>::value);
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
+{
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	using math::partial;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(partial(x * cos(y),"x"),cos(y));
+	BOOST_CHECK_EQUAL(partial(x * cos(2 * x),"x"),cos(2 * x) - 2 * x * sin(2 * x));
+	BOOST_CHECK_EQUAL(partial(x * cos(2 * x + y),"y"),-x * sin(2 * x + y));
+	BOOST_CHECK_EQUAL(partial(rational(3,2) * cos(2 * x + y),"x"),-3 * sin(2 * x + y));
+	BOOST_CHECK_EQUAL(partial(rational(3,2) * x * cos(y),"y"),-rational(3,2) * x * sin(+y));
+	BOOST_CHECK_EQUAL(partial(pow(x * cos(y),5),"y"),5 * sin(-y) * x * pow(x * cos(y),4));
+	BOOST_CHECK_EQUAL(partial(pow(x * cos(y),5),"z"),0);
+}

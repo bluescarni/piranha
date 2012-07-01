@@ -75,6 +75,10 @@
  * might not be exception-safe.
  * \todo think about the generic binary term constrcutor, especially in conjunction with the generic series interop. Do we want to leave it generic
  * or force it to be strictly from (cf_type,key_type)? In the latter case, we should review its usage.
+ * \todo think about replacing the concept system with static_asserts in conjunction with extensive use of type traits. It seems like it
+ * would allow a finer control with generic methods (e.g., polynomial is a Poisson series coefficient only if it supports
+ * division by int, partial() requires multipliability by int/integer, etc.) and enable meta-programming. But how to implement
+ * concept inheriting? Where to put the static asserts? Is it worth it?
  */
 namespace piranha
 {

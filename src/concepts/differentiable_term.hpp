@@ -18,38 +18,48 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONCEPTS_HPP
-#define PIRANHA_CONCEPTS_HPP
+#ifndef PIRANHA_CONCEPT_DIFFERENTIABLE_TERM_HPP
+#define PIRANHA_CONCEPT_DIFFERENTIABLE_TERM_HPP
 
-/** \file concepts.hpp
- * \brief Include this file to include all concepts defined in Piranha.
- */
+#include <boost/concept_check.hpp>
+#include <type_traits>
+#include <vector>
+
+#include "../symbol.hpp"
+#include "../symbol_set.hpp"
+#include "term.hpp"
 
 namespace piranha
 {
-/// Concepts namespace.
-/**
- * All concepts in Piranha are defined within this namespace.
- */
-namespace concept {}
-}
 
-// Include all concepts.
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/coefficient.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
-#include "concepts/degree_key.hpp"
-#include "concepts/differentiable_coefficient.hpp"
-#include "concepts/differentiable_term.hpp"
-#include "concepts/key.hpp"
-#include "concepts/multipliable_coefficient.hpp"
-#include "concepts/multipliable_term.hpp"
-#include "concepts/poisson_series_coefficient.hpp"
-#include "concepts/power_series.hpp"
-#include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
+namespace concept
+{
+
+/// Concept for differentiable series terms.
+/**
+ * The requisites for type \p T are the following:
+ * 
+ * - must be a model of piranha::concept::Term,
+ * - must be provided with a const <tt>partial()</tt> method taking as parameters an instance of piranha::symbol and an instance
+ *   of piranha::symbol_set, and returning a vector of terms.
+ */
+template <typename T>
+class DifferentiableTerm:
+	Term<T>
+{
+	public:
+		/// Concept usage pattern.
+		BOOST_CONCEPT_USAGE(DifferentiableTerm)
+		{
+			const T inst = T();
+			const symbol s("");
+			const symbol_set ss;
+			auto ret = inst.partial(s,ss);
+			static_assert(std::is_same<decltype(ret),std::vector<T>>::value,"Invalid return type for partial() method.");
+		}
+};
+
+}
+}
 
 #endif

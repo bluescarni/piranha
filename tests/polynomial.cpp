@@ -572,3 +572,15 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 {
 	boost::mpl::for_each<cf_types>(pow_tester());
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_partial_test)
+{
+	using math::partial;
+	using math::pow;
+	typedef polynomial<rational> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(partial(x * y,"x"),y);
+	BOOST_CHECK_EQUAL(partial(x * y,"y"),x);
+	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"y"),10 * (x * y + x - 3 * pow(y,2)).pow(9) * (x - 6 * y));
+	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"z"),0);
+}
