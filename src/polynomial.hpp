@@ -280,8 +280,8 @@ class polynomial:
 		 * - piranha::series::insert() and piranha::series::pow().
 		 */
 		template <typename T>
-		polynomial pow(const T &x, typename std::enable_if<
-			is_exponentiable<typename base::term_type::cf_type,T>::value>::type * = piranha_nullptr) const
+		typename std::enable_if<is_exponentiable<typename base::term_type::cf_type,T>::value,polynomial>::type
+			pow(const T &x) const
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;

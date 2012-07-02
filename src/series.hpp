@@ -1049,8 +1049,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - series multiplication.
 		 */
 		template <typename T>
-		Derived pow(const T &x, typename std::enable_if<
-			is_exponentiable<typename term_type::cf_type,T>::value>::type * = piranha_nullptr) const
+		typename std::enable_if<is_exponentiable<typename term_type::cf_type,T>::value,Derived>::type
+			pow(const T &x) const
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
