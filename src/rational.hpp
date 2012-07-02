@@ -1518,7 +1518,8 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,rational>::value>::ty
 	 * 
 	 * @throws unspecified any exception resulting from piranha::rational::pow().
 	 */
-	auto operator()(const T &q, const U &x) const -> decltype(q.pow(x))
+	template <typename T2, typename U2>
+	auto operator()(const T2 &q, const U2 &x) const -> decltype(q.pow(x))
 	{
 		return q.pow(x);
 	}

@@ -571,6 +571,14 @@ struct pow_tester
 BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 {
 	boost::mpl::for_each<cf_types>(pow_tester());
+	typedef polynomial<integer,int> p_type1;
+	BOOST_CHECK((is_exponentiable<p_type1,integer>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1,double>::value));
+	typedef polynomial<real,int> p_type2;
+	BOOST_CHECK((is_exponentiable<p_type2,integer>::value));
+	BOOST_CHECK((is_exponentiable<p_type2,real>::value));
+	BOOST_CHECK((!is_exponentiable<p_type2,std::string>::value));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)

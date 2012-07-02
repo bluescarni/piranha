@@ -1930,7 +1930,8 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,integer>::value>::typ
 	 * 
 	 * @throws unspecified any exception resulting from piranha::integer::pow().
 	 */
-	auto operator()(const T &n, const U &x) const -> decltype(n.pow(x))
+	template <typename T2, typename U2>
+	auto operator()(const T2 &n, const U2 &x) const -> decltype(n.pow(x))
 	{
 		return n.pow(x);
 	}

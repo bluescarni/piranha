@@ -1447,6 +1447,12 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK_NO_THROW(math::pow(real{2},2.f));
 	BOOST_CHECK_NO_THROW(math::pow(real{2},2.));
 	BOOST_CHECK_EQUAL(real{2}.pow(3),8);
+	BOOST_CHECK((is_exponentiable<real,real>::value));
+	BOOST_CHECK((is_exponentiable<real,integer>::value));
+	BOOST_CHECK((is_exponentiable<real,int>::value));
+	BOOST_CHECK((is_exponentiable<real,char>::value));
+	BOOST_CHECK((is_exponentiable<real,double>::value));
+	BOOST_CHECK((!is_exponentiable<real,std::string>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_fma_test)

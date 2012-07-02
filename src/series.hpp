@@ -1022,7 +1022,8 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Exponentiation.
 		/**
-		 * Return \p this raised to the <tt>x</tt>-th power.
+		 * Return \p this raised to the <tt>x</tt>-th power. This template method is enabled only if the coefficient type
+		 * is exponentiable with exponent type \p T.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
 		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
@@ -1048,7 +1049,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - series multiplication.
 		 */
 		template <typename T>
-		Derived pow(const T &x) const
+		Derived pow(const T &x, typename std::enable_if<
+			is_exponentiable<typename term_type::cf_type,T>::value>::type * = piranha_nullptr) const
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
@@ -1370,7 +1372,8 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
 	 * 
 	 * @throws unspecified any exception resulting from the series' <tt>pow()</tt> method.
 	 */
-	auto operator()(const Series &s, const T &x) const -> decltype(s.pow(x))
+	template <typename S, typename U>
+	auto operator()(const S &s, const U &x) const -> decltype(s.pow(x))
 	{
 		return s.pow(x);
 	}

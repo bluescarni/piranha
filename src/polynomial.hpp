@@ -259,6 +259,9 @@ class polynomial:
 		}
 		/// Override default exponentiation method.
 		/**
+		 * This template method is enabled only if the coefficient type
+		 * is exponentiable with exponent type \p T.
+		 * 
 		 * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
 		 * key. In that case, the return polynomial will consist of a single term with coefficient computed via
 		 * piranha::math::pow() and key computed via the monomial exponentiation method.
@@ -277,7 +280,8 @@ class polynomial:
 		 * - piranha::series::insert() and piranha::series::pow().
 		 */
 		template <typename T>
-		polynomial pow(const T &x) const
+		polynomial pow(const T &x, typename std::enable_if<
+			is_exponentiable<typename base::term_type::cf_type,T>::value>::type * = piranha_nullptr) const
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;

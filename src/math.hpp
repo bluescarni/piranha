@@ -395,6 +395,22 @@ class is_differentiable: detail::sfinae_types
 		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
 };
 
+/// Type-trait for exponentiable types.
+/**
+ * The type-trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
+ * exponent \p U.
+ */
+template <typename T, typename U>
+class is_exponentiable: detail::sfinae_types
+{
+		template <typename Base, typename Expo>
+		static auto test(Base const *b, Expo const *e) -> decltype(math::pow(*b,*e),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T const *)piranha_nullptr,(U const *)piranha_nullptr)) == sizeof(yes));
+};
+
 }
 
 #endif

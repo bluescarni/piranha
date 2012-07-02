@@ -1604,7 +1604,8 @@ struct pow_impl<T,U,typename std::enable_if<std::is_same<T,real>::value>::type>
 	 * 
 	 * @return \p r to the power of \p x.
 	 */
-	auto operator()(const T &r, const U &x) const -> decltype(r.pow(x))
+	template <typename T2, typename U2>
+	auto operator()(const T2 &r, const U2 &x) const -> decltype(r.pow(x))
 	{
 		return r.pow(x);
 	}
