@@ -598,7 +598,7 @@ class real_trigonometric_kronecker_monomial
 					return std::make_pair(std::move(tmp_n),std::move(tmp_m));
 				}
 			}
-			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial{});
+			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial());
 		}
 	private:
 		value_type	m_value;

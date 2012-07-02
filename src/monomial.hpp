@@ -390,7 +390,7 @@ class monomial: public array_key<T,monomial<T>>
 					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
 				}
 			}
-			return std::make_pair(value_type(0),monomial{});
+			return std::make_pair(value_type(0),monomial());
 		}
 		/// Print.
 		/**
