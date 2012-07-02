@@ -138,14 +138,28 @@ struct real_converter
 		bp::object obj(obj_handle);
 		const ::mpfr_prec_t prec = boost::numeric_cast< ::mpfr_prec_t>(
 			static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
-		::PyObject *str_obj = ::PyObject_Str(obj_ptr);
+		::PyObject *str_obj = ::PyObject_Repr(obj_ptr);
 		if (!str_obj) {
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
 		}
 		bp::handle<> str_rep(str_obj);
 		const char *s = ::PyString_AsString(str_rep.get());
+		while (*s != '\0' && *s != '\'') {
+			++s;
+		}
+		if (s == '\0') {
+			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
+		}
+		++s;
+		auto start = s;
+		while (*s != '\0' && *s != '\'') {
+			++s;
+		}
+		if (s == '\0') {
+			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
+		}
 		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<real> *>(data)->storage.bytes;
-		::new (storage) real(s,prec);
+		::new (storage) real(std::string(start,s),prec);
 		data->convertible = storage;
 	}
 };
