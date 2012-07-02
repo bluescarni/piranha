@@ -36,17 +36,15 @@
 #include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/mpl/begin_end.hpp>
-#include <boost/mpl/distance.hpp>
-#include <boost/mpl/find.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/python.hpp>
+#include <cstddef>
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "../src/piranha.hpp"
@@ -59,7 +57,7 @@ using namespace piranha;
 
 #include "python_converters.hpp"
 #include "exceptions.hpp"
-#include "polynomial.hpp"
+#include "series_exposer.hpp"
 
 // Used for debugging on Python side.
 inline integer get_big_int()
@@ -83,6 +81,28 @@ BOOST_PYTHON_MODULE(_core)
 	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
-	// Expose polynomial types.
-	expose_polynomials();
+	// Polynomials.
+	auto poly_cf_types = std::make_tuple(
+		std::make_tuple(double(),std::string("double")),
+		std::make_tuple(integer(),std::string("integer")),
+		std::make_tuple(rational(),std::string("rational")),
+		std::make_tuple(real(),std::string("real"))
+	);
+	auto poly_interop_types = std::make_tuple(double(),integer(),rational(),real());
+	series_exposer<polynomial,decltype(poly_cf_types),decltype(poly_interop_types)>
+		pe("polynomial",poly_cf_types,poly_interop_types);
+	// Poisson series.
+	auto ps_cf_types = std::make_tuple(
+		std::make_tuple(double(),std::string("double")),
+		std::make_tuple(integer(),std::string("integer")),
+		std::make_tuple(rational(),std::string("rational")),
+		std::make_tuple(real(),std::string("real")),
+		std::make_tuple(polynomial<double>(),std::string("polynomial_double")),
+		std::make_tuple(polynomial<integer>(),std::string("polynomial_integer")),
+		std::make_tuple(polynomial<rational>(),std::string("polynomial_rational")),
+		std::make_tuple(polynomial<real>(),std::string("polynomial_real"))
+	);
+	auto ps_interop_types = std::make_tuple(double(),integer(),rational(),real());
+	series_exposer<poisson_series,decltype(ps_cf_types),decltype(ps_interop_types)>
+		pse("poisson_series",ps_cf_types,ps_interop_types);
 }

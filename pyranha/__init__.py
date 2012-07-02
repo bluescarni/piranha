@@ -23,6 +23,4 @@
 
 """
 
-__all__ = ['polynomial']
-
-import polynomial
+__all__ = ['polynomial', 'poisson_series']

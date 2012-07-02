@@ -23,14 +23,24 @@ from _common import _get_cf_types, _get_series_type
 import unittest as _ut
 
 def get_cf_types():
-	"""Get list of implemented coefficient types.
+	"""Get the list of implemented coefficient types.
 	
-	:rtype: list of types that can be used as polynomial coefficients.
+	The returned value is a list of pairs consisting of a string and either a type or *None*.
+	The string is a descriptor which can be used in :func:`get_type` to request a polynomial
+	type with a specific coefficient. The type can be used in exactly the same way, but it will be
+	present (i.e., not *None*) only if a direct conversion to/from the underlying C++ type is available.
+	
+	:rtype: list of types that can be used as polynomial coefficients
 	
 	>>> l = get_cf_types()
-	>>> all([isinstance(t,type) for t in l])
+	>>> all([isinstance(t[1],type) if not t[1] is None else True for t in l])
 	True
-	>>> st = get_type(l[0])
+	>>> all([isinstance(t[0],str) for t in l])
+	True
+	>>> t1 = get_type("integer")
+	>>> t2 = get_type(int)
+	>>> t1 == t2
+	True
 	
 	"""
 	return _get_cf_types('polynomial')
@@ -38,15 +48,20 @@ def get_cf_types():
 def get_type(cf_type):
 	"""Get a polynomial type.
 	
-	:param cf_type: coefficient type.
-	:rtype: polynomial type.
-	:raises: :exc:`TypeError` if the polynomial type could not be determined.
+	The argument must be either a string or a type, and it represents the requested coefficient type
+	for the output polynomial type. *cf_type*, either in string form or in type form, must be
+	present in the output of :func:`get_cf_types`, otherwise an error will be produced.
+	
+	:param cf_type: coefficient type
+	:type cf_type: type or string
+	:rtype: polynomial type
+	:raises: :exc:`TypeError` if the polynomial type could not be determined
 	
 	>>> tz = get_type(int)
 	>>> print(tz('x') * 2)
 	2x
 	>>> from fractions import Fraction
-	>>> tq = get_type(Fraction)
+	>>> tq = get_type('rational')
 	>>> print(Fraction(1,2) * tq('x')**2)
 	1/2x**2
 	

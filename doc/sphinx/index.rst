@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    polynomial.rst
+   poisson_series.rst
 
 Indices and tables
 ==================
