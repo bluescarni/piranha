@@ -123,16 +123,16 @@ class series: series_binary_operators, detail::series_tag
 		typedef Term term_type;
 	private:
 		// Make friend with all series.
-		template <typename Term2, typename Derived2>
+		template <typename, typename>
 		friend class series;
 		// Make friend with debugging class.
-		template <typename T>
+		template <typename>
 		friend class debug_access;
 		// Make friend with series multiplier class.
-		template <typename Series1, typename Series2, typename Enable>
+		template <typename, typename, typename>
 		friend class series_multiplier;
 		// Make friend with all truncator classes.
-		template <typename... Series>
+		template <typename...>
 		friend class truncator;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
