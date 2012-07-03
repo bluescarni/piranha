@@ -131,11 +131,13 @@ class poisson_series:
 		poisson_series sin_cos_cf_impl() const
 		{
 			if (IsCos) {
-				auto f = [](const Cf &cf) {return piranha::math::cos(cf);};
-				return this->apply_cf_functor(f);
+				// NOTE: here we cast back to the base class, and then we have to move-construct the output
+				// Poisson series as the math::cos functor will produce an output of the type of the base class.
+				return poisson_series(math::cos(
+					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
 			} else {
-				auto f = [](const Cf &cf) {return piranha::math::sin(cf);};
-				return this->apply_cf_functor(f);
+				return poisson_series(math::sin(
+					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
 			}
 		}
 	public:
@@ -250,8 +252,6 @@ class poisson_series:
 		 * - piranha::math::integral_cast(), piranha::math::sin(),
 		 * - the cast operator of piranha::integer,
 		 * - the constructors of coefficient, key and term types.
-		 * 
-		 * \todo here it would be better to call directly the base implementation of sin/cos, instead of re-implementing it.
 		 */
 		poisson_series sin() const
 		{
