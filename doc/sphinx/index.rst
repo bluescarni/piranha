@@ -13,6 +13,7 @@ Contents:
 
    polynomial.rst
    poisson_series.rst
+   math.rst
    test.rst
 
 Indices and tables

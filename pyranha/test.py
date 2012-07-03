@@ -19,6 +19,7 @@
 
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
+from __future__ import absolute_import as _ai
 import unittest as _ut
 
 class basic_test_case(_ut.TestCase):
@@ -34,9 +35,9 @@ class basic_test_case(_ut.TestCase):
 	def runTest(self):
 		from fractions import Fraction
 		from copy import copy, deepcopy
-		from _core import _get_big_int
+		from ._core import _get_big_int
 		# Use polynomial for testing.
-		from polynomial import get_type
+		from .polynomial import get_type
 		# Arithmetic with int and Fraction, len, str and comparisons.
 		for t in [int,Fraction]:
 			tp = get_type(t)
@@ -97,10 +98,10 @@ class basic_test_case(_ut.TestCase):
 		self.assertEqual(deepcopy(s1),s1)
 
 class mpmath_test_case(_ut.TestCase):
-	"""mpmath test case.
+	""":mod:`mpmath` test case.
 	
 	To be used within the :mod:`unittest` framework. Will test interoperability between
-	the mpmath library and the C++ real class. If the mpmath library is not available, the
+	the :mod:`mpmath` library and the C++ real class. If the :mod:`mpmath` library is not available, the
 	test will return immediately.
 	
 	>>> import unittest as ut
@@ -112,7 +113,7 @@ class mpmath_test_case(_ut.TestCase):
 			from mpmath import workdps, mpf, pi
 		except ImportError:
 			return
-		from polynomial import get_type
+		from .polynomial import get_type
 		pt = get_type(mpf)
 		self.assertEqual(pt,get_type('real'))
 		self.assertEqual(pt(mpf("4.5667")),mpf("4.5667"))
@@ -123,6 +124,39 @@ class mpmath_test_case(_ut.TestCase):
 				self.assertEqual(pt(mpf("4.5667")) ** mpf("1.234567"),mpf("4.5667") ** mpf("1.234567"))
 				self.assertEqual(pt(mpf(pi)),mpf(pi))
 
+class math_test_case(_ut.TestCase):
+	""":mod:`math` module test case.
+	
+	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
+	:mod:`math` module.
+	
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(math_test_case)
+	
+	"""
+	def runTest(self):
+		import math
+		from .math import cos as pcos
+		from .polynomial import get_type
+		self.assertEqual(math.cos(3),pcos(3))
+		self.assertEqual(math.cos(3.1234),pcos(3.1234))
+		pt = get_type(float)
+		self.assertEqual(math.cos(3),pcos(pt(3)))
+		self.assertEqual(math.cos(-2.456),pcos(pt(2.456)))
+		try:
+			from mpmath import mpf, workdps
+			from mpmath import cos as mpcos
+			pt = get_type(mpf)
+			self.assertEqual(mpcos(mpf("1.2345")),pcos(mpf("1.2345")))
+			self.assertEqual(mpcos(mpf("3")),pcos(pt(mpf("3"))))
+			self.assertEqual(mpcos(mpf("-2.456")),pcos(pt(mpf("-2.456"))))
+			with workdps(500):
+				self.assertEqual(mpcos(mpf("1.2345")),pcos(mpf("1.2345")))
+				self.assertEqual(mpcos(mpf("3")),pcos(pt(mpf("3"))))
+				self.assertEqual(mpcos(mpf("-2.456")),pcos(pt(mpf("-2.456"))))
+		except ImportError:
+			pass
+
 def run_test_suite():
 	"""Run the full test suite for the module.
 	
@@ -131,4 +165,5 @@ def run_test_suite():
 	"""
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
 	suite.addTest(mpmath_test_case())
+	suite.addTest(math_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)

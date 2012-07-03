@@ -23,4 +23,4 @@
 
 """
 
-__all__ = ['polynomial', 'poisson_series', 'test']
+__all__ = ['polynomial', 'poisson_series', 'math', 'test']
