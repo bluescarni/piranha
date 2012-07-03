@@ -29,12 +29,14 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "base_term.hpp"
@@ -57,6 +59,7 @@
 #include "settings.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "threading.hpp"
 #include "tracing.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
@@ -136,6 +139,9 @@ class series: series_binary_operators, detail::series_tag
 		friend class truncator;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
+		// Partial need access to the custom derivatives.
+		template <typename, typename>
+		friend class math::partial_impl;
 	protected:
 		/// Container type for terms.
 		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
@@ -1105,7 +1111,9 @@ class series: series_binary_operators, detail::series_tag
 		/// Partial derivative.
 		/**
 		 * Will return the partial derivative of \p this with respect to the argument called \p name. The method will construct
-		 * the return value series from the output of the term's differentiation method.
+		 * the return value series from the output of the term's differentiation method. Note that contrary to the specialisation
+		 * of piranha::math::partial() for series types, this method will not take into account custom derivatives registered
+		 * via register_custom_derivative().
 		 * 
 		 * This method requires the term type to be a model of the piranha::concept::DifferentiableTerm concept.
 		 * 
@@ -1130,6 +1138,47 @@ class series: series_binary_operators, detail::series_tag
 				}
 			}
 			return retval;
+		}
+		/// Register custom partial derivative.
+		/**
+		 * Register a copy of \p func associated to the symbol called \p name for use by piranha::math::partial().
+		 * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
+		 * \p name in place of the default partial differentiation algorithm.
+		 * 
+		 * It is safe to call this method from multiple threads.
+		 * 
+		 * @param[in] name symbol for which the custom partial derivative function will be registered.
+		 * @param[in] func custom partial derivative function.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - failure(s) in threading primitives,
+		 * - lookup and insertion operations on \p std::unordered_map.
+		 */
+		static void register_custom_derivative(const std::string &name, std::function<Derived(const Derived &)> func)
+		{
+			lock_guard<mutex>::type lock(cp_mutex);
+			cp_map[name] = func;
+		}
+		/// Unregister custom partial derivative.
+		/**
+		 * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
+		 * partial derivative was previously registered using register_custom_derivative(), calling this function will be a no-op.
+		 * 
+		 * It is safe to call this method from multiple threads.
+		 * 
+		 * @param[in] name symbol for which the custom partial derivative function will be unregistered.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - failure(s) in threading primitives,
+		 * - lookup and erase operations on \p std::unordered_map.
+		 */
+		static void unregister_custom_derivative(const std::string &name)
+		{
+			lock_guard<mutex>::type lock(cp_mutex);
+			auto it = cp_map.find(name);
+			if (it != cp_map.end()) {
+				cp_map.erase(it);
+			}
 		}
 		/// Overload stream operator for piranha::series.
 		/**
@@ -1293,7 +1342,18 @@ class series: series_binary_operators, detail::series_tag
 		symbol_set	m_symbol_set;
 		/// Terms container.
 		container_type	m_container;
+	private:
+		typedef std::unordered_map<std::string,std::function<Derived(const Derived &)>> cp_map_type;
+		static mutex		cp_mutex;
+		static cp_map_type	cp_map;
 };
+
+// Static initialisation.
+template <typename Term, typename Derived>
+mutex series<Term,Derived>::cp_mutex;
+
+template <typename Term, typename Derived>
+typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
 
 namespace detail
 {
@@ -1486,22 +1546,43 @@ struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 /// Specialisation of the piranha::math::partial() functor for series types.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
- * The implementation will invoke piranha::series::partial().
  */
 template <typename Series>
 struct partial_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
 {
 	/// Call operator.
 	/**
+	 * The call operator will first check whether a custom partial derivative for \p Series was registered
+	 * via piranha::series::register_custom_derivative(). In such a case, the custom derivative function will be used
+	 * to compute the return value. Otherwise, the output of piranha::series::partial() will be returned.
+	 * 
 	 * @param[in] s input series.
 	 * @param[in] name name of the argument with respect to which the differentiation will be calculated.
 	 * 
-	 * @return the output of piranha::series::partial().
+	 * @return the partial derivative of \p s with respect to \p name.
 	 * 
-	 * @throws unspecified any exception thrown by piranha::series::partial().
+	 * @throws unspecified any exception thrown by:
+	 * - piranha::series::partial(),
+	 * - failure(s) in threading primitives,
+	 * - lookup operations on \p std::unordered_map,
+	 * - the copy assignment and call operators of the registered custom partial derivative function.
 	 */
 	Series operator()(const Series &s, const std::string &name) const
 	{
+		bool custom = false;
+		std::function<Series(const Series &)> func;
+		// Try to locate a custom partial derivative and copy it into func, if found.
+		{
+			lock_guard<mutex>::type lock(Series::cp_mutex);
+			auto it = Series::cp_map.find(name);
+			if (it != Series::cp_map.end()) {
+				func = it->second;
+				custom = true;
+			}
+		}
+		if (custom) {
+			return func(s);
+		}
 		return s.partial(name);
 	}
 };

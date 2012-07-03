@@ -1447,4 +1447,24 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
 	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
 	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
+	// Custom derivatives.
+	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,314)};});
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,314));
+	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,315)};});
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,315));
+	p_type1::unregister_custom_derivative("x");
+	p_type1::unregister_custom_derivative("x");
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
+	// y as implicit function of x: y = x**2.
+	p_type1::register_custom_derivative("x",[x](const p_type1 &p) -> p_type1 {
+		return p.partial("x") + math::partial(p,"y") * 2 * x;
+	});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 2 * x);
+	p_type1::unregister_custom_derivative("y");
+	p_type1::unregister_custom_derivative("x");
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + 2 * y,"y"),2);
+	p_type1::register_custom_derivative("x",[](const p_type1 &p) {return p.partial("x");});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + y * x,"x"),y + 1);
 }
