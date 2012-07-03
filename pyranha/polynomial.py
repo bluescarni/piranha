@@ -20,7 +20,6 @@
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
 from _common import _get_cf_types, _get_series_type
-import unittest as _ut
 
 def get_cf_types():
 	"""Get the list of implemented coefficient types.
@@ -67,75 +66,3 @@ def get_type(cf_type):
 	
 	"""
 	return _get_series_type('polynomial',cf_type)
-
-class main_test_case(_ut.TestCase):
-	"""Main test case.
-	
-	To be used within the :mod:`unittest` framework. Will test construction, arithmetic
-	and comparison operators, and exceptions.
-	
-	>>> import unittest as ut
-	>>> suite = ut.TestLoader().loadTestsFromTestCase(main_test_case)
-	
-	"""
-	def runTest(self):
-		from fractions import Fraction
-		from _core import _get_big_int
-		# Arithmetic with int and Fraction, len, str and comparisons.
-		for t in [int,Fraction]:
-			tp = get_type(t)
-			self.assertEqual(tp('x') - tp('x'),t(1) - t(1))
-			self.assertEqual(tp(tp('x')) - tp('x'),t(1) - t(1))
-			self.assertEqual(tp(),t(0))
-			self.assertEqual(tp(t(2)),t(2))
-			self.assertEqual(tp('x'),+tp('x'))
-			foo = tp(t(1))
-			foo += t(2)
-			self.assertEqual(foo,t(1) + t(2))
-			self.assertEqual(tp(1) + tp(2),t(1) + t(2))
-			self.assertEqual(tp() + t(2),t(0) + t(2))
-			self.assertEqual(t(2) + tp(),t(0) + t(2))
-			self.assertEqual(tp('x') * t(-1),-tp('x'))
-			foo -= t(4)
-			self.assertEqual(foo,t(3) - t(4))
-			self.assertEqual(tp(1) - tp(2),t(1) - t(2))
-			self.assertEqual(tp() - t(2),t(0) - t(2))
-			self.assertEqual(t(2) - tp(),t(2) - t(0))
-			self.assertEqual(tp('x'),-(-tp('x')))
-			foo *= t(-5)
-			self.assertEqual(foo,t(-1) * t(-5))
-			self.assertEqual(tp(1) * tp(2),t(1) * t(2))
-			self.assertEqual(tp(1) * t(2),t(1) * t(2))
-			self.assertEqual(t(2) * tp(1),t(2) * t(1))
-			self.assertNotEqual(repr(tp('x')),'')
-			self.assertNotEqual(str(tp('x')),'')
-			self.assertEqual(len(tp('x') + 1),2)
-			self.assertTrue(tp('x') != tp('y'))
-			self.assertTrue(tp('x') != t(1))
-			self.assertTrue(t(1) != tp('x'))
-			self.assertTrue(tp('x') == tp('x'))
-			self.assertTrue(tp(t(1)) == t(1))
-			self.assertTrue(t(1) == tp(t(1)))
-			self.assertTrue(tp('x') ** 3 == tp('x') * tp('x') * tp('x'))
-		tp_int = get_type(int)
-		self.assertRaises(ValueError,tp_int,float('inf'))
-		self.assertRaises(ZeroDivisionError,lambda : tp_int() ** -1)
-		tp_q = get_type(Fraction)
-		self.assertRaises(ZeroDivisionError,lambda : tp_q(Fraction(0,1)) ** -1)
-		self.assertEqual(tp_q(Fraction(1,3)) ** -2,9)
-		self.assertRaises(ZeroDivisionError,lambda : tp_int(Fraction(1,3)) ** -2)
-		tp_f = get_type(float)
-		# NOTE: here we are going to assume that Python's float implementation uses C++ doubles and
-		# the corresponding pow() function.
-		self.assertEqual(tp_f(0.1) ** (0.5),0.1**0.5)
-		# Test integer exponentiation of double triggering bad numeric cast.
-		self.assertRaises(OverflowError,lambda : tp_f(1) ** _get_big_int())
-
-def run_test_suite():
-	"""Run the full test suite for the module.
-	
-	>>> run_test_suite()
-	
-	"""
-	suite = _ut.TestLoader().loadTestsFromTestCase(main_test_case)
-	_ut.TextTestRunner(verbosity=2).run(suite)
