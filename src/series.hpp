@@ -1471,7 +1471,11 @@ struct sin_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
-			return s.apply_cf_functor(f);
+			try {
+				return s.apply_cf_functor(f);
+			} catch (const std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
+			}
 		}
 	public:
 		/// Call operator.
@@ -1523,7 +1527,11 @@ struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
-			return s.apply_cf_functor(f);
+			try {
+				return s.apply_cf_functor(f);
+			} catch (const std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
+			}
 		}
 	public:
 		/// Call operator.
