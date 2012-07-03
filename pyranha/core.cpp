@@ -59,6 +59,11 @@ using namespace piranha;
 #include "exceptions.hpp"
 #include "series_exposer.hpp"
 
+// Static initialisation.
+bool integer_converter::registered = false;
+bool rational_converter::registered = false;
+bool real_converter::registered = false;
+
 // Used for debugging on Python side.
 inline integer get_big_int()
 {

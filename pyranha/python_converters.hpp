@@ -24,8 +24,11 @@ struct integer_converter
 {
 	integer_converter()
 	{
-		bp::to_python_converter<integer,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
+		if (!registered) {
+			bp::to_python_converter<integer,to_python>();
+			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
+			registered = true;
+		}
 	}
 	struct to_python
 	{
@@ -49,14 +52,18 @@ struct integer_converter
 	{
 		construct_from_str<integer>(obj_ptr,data,"integer");
 	}
+	static bool registered;
 };
 
 struct rational_converter
 {
 	rational_converter()
 	{
-		bp::to_python_converter<rational,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
+		if (!registered) {
+			bp::to_python_converter<rational,to_python>();
+			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
+			registered = true;
+		}
 	}
 	struct to_python
 	{
@@ -84,14 +91,18 @@ struct rational_converter
 	{
 		construct_from_str<rational>(obj_ptr,data,"rational");
 	}
+	static bool registered;
 };
 
 struct real_converter
 {
 	real_converter()
 	{
-		bp::to_python_converter<real,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
+		if (!registered) {
+			bp::to_python_converter<real,to_python>();
+			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
+			registered = true;
+		}
 	}
 	struct to_python
 	{
@@ -162,4 +173,5 @@ struct real_converter
 		::new (storage) real(std::string(start,s),prec);
 		data->convertible = storage;
 	}
+	static bool registered;
 };
