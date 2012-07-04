@@ -209,6 +209,18 @@ typedef boost::mutex mutex;
 typedef std::mutex mutex;
 #endif
 
+/// Recursive mutex type.
+/**
+ * Typedef for either <tt>std::recursive_mutex</tt> or <tt>boost::recursive_mutex</tt>.
+ * 
+ * @see http://www.boost.org/doc/libs/release/doc/html/interprocess/synchronization_mechanisms.html
+ */
+#if defined(PIRANHA_USE_BOOST_THREAD)
+typedef boost::recursive_mutex recursive_mutex;
+#else
+typedef std::recursive_mutex recursive_mutex;
+#endif
+
 /// Exception pointer type.
 /**
  * Typedef for either <tt>std::exception_ptr</tt> or <tt>boost::exception_ptr</tt>.
