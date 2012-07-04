@@ -36,6 +36,7 @@
 #include <type_traits>
 #include <typeinfo>
 
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
 using namespace piranha;
@@ -61,6 +62,7 @@ struct check_negate
 
 BOOST_AUTO_TEST_CASE(negate_test)
 {
+	environment env;
 	boost::fusion::for_each(arithmetic_values,check_negate());
 }
 

@@ -25,6 +25,7 @@
 
 #include <stdexcept>
 
+#include "../src/environment.hpp"
 #include "../src/runtime_info.hpp"
 
 using namespace piranha;
@@ -32,6 +33,7 @@ using namespace piranha;
 // Check getting and setting number of threads.
 BOOST_AUTO_TEST_CASE(settings_thread_number)
 {
+	environment env;
 	const auto original = settings::get_n_threads();
 	BOOST_CHECK_PREDICATE([](unsigned n){return n != 0;},(settings::get_n_threads()));
 	for (unsigned i = 0; i < runtime_info::get_hardware_concurrency(); ++i) {

@@ -23,9 +23,12 @@
 #define BOOST_TEST_MODULE timeit_test
 #include <boost/test/unit_test.hpp>
 
+#include "../src/environment.hpp"
+
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(timeit_test)
 {
+	environment env;
 	timeit([](){});
 }

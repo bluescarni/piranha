@@ -50,6 +50,7 @@
 #include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
 #include "echelon_size.hpp"
+#include "environment.hpp"
 #include "hash_set.hpp"
 #include "integer.hpp"
 #include "math.hpp" // For negate() and math specialisations.
@@ -1326,8 +1327,8 @@ class series: series_binary_operators, detail::series_tag
 		// Set of checks to be run on destruction in debug mode.
 		bool destruction_checks() const
 		{
-			// Run destruction checks only if they are enabled in settings.
-			if (!settings::get_destruction_checks()) {
+			// Run destruction checks only if we are not in shutdown.
+			if (environment::shutdown()) {
 				return true;
 			}
 			for (auto it = m_container.begin(); it != m_container.end(); ++it) {

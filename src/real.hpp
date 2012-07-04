@@ -1698,18 +1698,6 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 namespace detail
 {
 
-#if defined(__GNUC__)
-
-void free_mpfr_caches() __attribute__ ((destructor));
-
-inline void free_mpfr_caches()
-{
-std::cout << "Freeing MPFR caches\n";
-	::mpfr_free_cache();
-}
-
-#endif
-
 // Specialise implementation of math::is_zero for real.
 template <typename T>
 struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>

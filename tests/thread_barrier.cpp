@@ -25,10 +25,12 @@
 
 #include <functional>
 
+#include "../src/environment.hpp"
 #include "../src/task_group.hpp"
 
 BOOST_AUTO_TEST_CASE(thread_barrier_test_01)
 {
+	piranha::environment env;
 	const unsigned n_threads = 100;
 	piranha::thread_barrier tb(n_threads);
 	piranha::task_group tg;

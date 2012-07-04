@@ -25,6 +25,7 @@
 
 #include "../src/base_term.hpp"
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/monomial.hpp"
 #include "../src/series.hpp"
 
@@ -68,6 +69,7 @@ class g_series_type: public series<Term,g_series_type<Term>>
 
 BOOST_AUTO_TEST_CASE(type_traits_echelon_size)
 {
+	environment env;
 	BOOST_CHECK_EQUAL(echelon_size<g_term_type<double>>::value,std::size_t(1));
 	typedef g_series_type<g_term_type<double>> series_type1;
 	typedef g_series_type<g_term_type<series_type1>> series_type2;

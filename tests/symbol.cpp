@@ -23,10 +23,13 @@
 #define BOOST_TEST_MODULE symbol_test
 #include <boost/test/unit_test.hpp>
 
+#include "../src/environment.hpp"
+
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(symbol_constructor_test)
 {
+	environment env;
 	symbol x("x");
 	BOOST_CHECK_EQUAL(x.get_name(),"x");
 	BOOST_CHECK_EQUAL(x.get_value(),0.);

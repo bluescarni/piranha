@@ -18,58 +18,45 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/task_group.hpp"
+#include <cstdlib>
+#include <iostream>
 
-#define BOOST_TEST_MODULE task_group_test
-#include <boost/test/unit_test.hpp>
+#include "detail/mpfr.hpp"
+#include "environment.hpp"
+#include "threading.hpp"
 
-#include <functional>
-#include <stdexcept>
-
-#include "../src/config.hpp"
-#include "../src/environment.hpp"
-
-using namespace piranha;
-
-// Test construction and multiple waits.
-BOOST_AUTO_TEST_CASE(task_group_run_test_01)
+namespace piranha
 {
-	environment env;
-	task_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.add_task([](){}));
-	}
-	BOOST_CHECK_NO_THROW(tg.wait_all());
-	BOOST_CHECK_NO_THROW(tg.wait_all());
-	BOOST_CHECK_EQUAL(tg.size(),100u);
-	BOOST_CHECK_NO_THROW(tg.get_all());
-	BOOST_CHECK_NO_THROW(tg.get_all());
+
+mutex environment::m_mutex;
+bool environment::m_inited = false;
+bool environment::m_shutdown = false;
+
+void environment::cleanup_function()
+{
+	std::cout << "Freeing MPFR caches.\n";
+	::mpfr_free_cache();
+	std::cout << "Setting shutdown flag.\n";
+	environment::m_shutdown = true;
 }
 
-// Test destructor with embedded wait.
-BOOST_AUTO_TEST_CASE(task_group_run_test_02)
+/// Environment constructor.
+/**
+ * Will perform the initialisation of the runtime environment in a thread-safe manner.
+ * 
+ * @throws unspecified any exception thrown by threading primitives.
+ */
+environment::environment()
 {
-	task_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.add_task(std::bind([](int x, int y){return x + y;},i,i + 1)));
+	lock_guard<mutex>::type lock(m_mutex);
+	if (m_inited) {
+		return;
 	}
+	if (std::atexit(environment::cleanup_function)) {
+		std::cout << "Unable to register cleanup function with std::atexit().\n";
+		std::abort();
+	}
+	m_inited = true;
 }
 
-BOOST_AUTO_TEST_CASE(task_group_run_test_03)
-{
-	task_group tg;
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_NO_THROW(tg.add_task([](){throw std::runtime_error("");}));
-	}
-	BOOST_CHECK_EQUAL(tg.size(),100u);
-	for (int i = 0; i < 100; ++i) {
-		BOOST_CHECK_THROW(tg.get_all(),std::runtime_error);
-	}
-#if defined(PIRANHA_USE_BOOST_THREAD)
-	// This behaviour is different in Boost.Thread.
-	BOOST_CHECK_THROW(tg.get_all(),std::runtime_error);
-#else
-	BOOST_CHECK_NO_THROW(tg.get_all());
-#endif
-	BOOST_CHECK_NO_THROW(tg.wait_all());
 }

@@ -23,12 +23,14 @@
 #define BOOST_TEST_MODULE threading_test
 #include <boost/test/unit_test.hpp>
 
+#include "../src/environment.hpp"
 #include "../src/real.hpp"
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(threading_thread_test)
 {
+	environment env;
 	{
 		// Default-construction and destruction.
 		thread t1, t2, t3;

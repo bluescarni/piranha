@@ -31,6 +31,7 @@
 
 #include "../src/base_term.hpp"
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
 
@@ -47,6 +48,7 @@ struct bar {};
 
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
+	environment env;
 	BOOST_CHECK(has_typedef_foo_type<foo>::value);
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
 }

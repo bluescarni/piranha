@@ -29,6 +29,7 @@
 #include <string>
 #include <type_traits>
 
+#include "../src/environment.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
@@ -122,5 +123,6 @@ struct degree_tester
 
 BOOST_AUTO_TEST_CASE(power_series_degree_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(degree_tester());
 }

@@ -44,6 +44,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
 
@@ -73,6 +74,7 @@ struct check_arithmetic_construction
 
 BOOST_AUTO_TEST_CASE(integer_constructors_test)
 {
+	piranha::environment env;
 	// Default construction.
 	BOOST_CHECK_EQUAL(0,static_cast<int>(piranha::integer()));
 	// Construction from arithmetic types.

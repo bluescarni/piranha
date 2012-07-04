@@ -29,10 +29,13 @@
 #include <stdexcept>
 #include <string>
 
+#include "../src/environment.hpp"
+
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(tracing_trace_test)
 {
+	environment env;
 	settings::set_tracing(true);
 	tracing::trace("event1",[](boost::any &){});
 	auto f2 = [](boost::any &x) -> void {

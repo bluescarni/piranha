@@ -34,6 +34,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "../src/environment.hpp"
+
 using namespace piranha;
 
 typedef boost::mpl::vector<std::int_least8_t,std::int_least16_t,std::int_least32_t,std::make_signed<std::size_t>::type> int_types;
@@ -66,6 +68,7 @@ struct limits_tester
 
 BOOST_AUTO_TEST_CASE(kronecker_array_limits_test)
 {
+	environment env;
 	boost::mpl::for_each<int_types>(limits_tester());
 }
 

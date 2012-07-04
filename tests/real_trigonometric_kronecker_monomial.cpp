@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/symbol.hpp"
@@ -133,6 +134,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(rtkm_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<int_types>(constructor_tester());
 }
 

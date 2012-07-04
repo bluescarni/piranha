@@ -30,6 +30,7 @@
 #include <utility>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -100,6 +101,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(base_term_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

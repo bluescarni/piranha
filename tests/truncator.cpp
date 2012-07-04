@@ -29,6 +29,7 @@
 #include <type_traits>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/rational.hpp"
@@ -115,5 +116,6 @@ struct concept_tester
 
 BOOST_AUTO_TEST_CASE(truncator_concept_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(concept_tester());
 }

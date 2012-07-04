@@ -26,6 +26,7 @@
 #include <stdexcept>
 
 #include "../src/degree_truncator_settings.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/symbol.hpp"
@@ -80,6 +81,7 @@ struct g_truncator: public power_series_truncator
 
 BOOST_AUTO_TEST_CASE(power_series_truncator_test)
 {
+	environment env;
 	g_truncator gt0;
 	BOOST_CHECK(!gt0.is_active());
 	degree_truncator_settings dts;

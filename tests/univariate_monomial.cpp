@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <unordered_set>
 
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -75,6 +76,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(univariate_monomial_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<expo_types>(constructor_tester());
 }
 

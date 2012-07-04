@@ -29,12 +29,14 @@
 #include <stdexcept>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(malloc_allocator_unaligned_test)
 {
+	environment env;
 	malloc_allocator<char> a;
 	auto ptr = a.allocate(0);
 	BOOST_CHECK(ptr == piranha_nullptr);

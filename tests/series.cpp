@@ -34,6 +34,7 @@
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
+#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
@@ -303,6 +304,7 @@ typedef debug_access<construction_tag> constructor_tester;
 
 BOOST_AUTO_TEST_CASE(series_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 
@@ -1447,8 +1449,7 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
 	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
 	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
-	// Custom derivatives. Disable destruction checks first.
-	settings::set_destruction_checks(false);
+	// Custom derivatives.
 	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,314)};});
 	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,314));
 	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,315)};});

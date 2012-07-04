@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE thread_management_test
 #include <boost/test/unit_test.hpp>
 
+#include "../src/environment.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/task_group.hpp"
@@ -48,6 +49,7 @@ static inline void test_function()
 // Check binding on new threads thread.
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
+	piranha::environment env;
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		piranha::thread t(test_function);
 		t.join();

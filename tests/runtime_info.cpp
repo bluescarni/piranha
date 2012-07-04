@@ -25,6 +25,7 @@
 
 #include <iostream>
 
+#include "../src/environment.hpp"
 #include "../src/settings.hpp"
 #include "../src/threading.hpp"
 
@@ -33,6 +34,7 @@ using namespace piranha;
 // Simple check on the thread id.
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
+	environment env;
 	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),this_thread::get_id());
 }
 

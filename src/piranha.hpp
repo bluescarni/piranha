@@ -101,6 +101,7 @@ namespace detail {}
 #include "debug_access.hpp"
 #include "degree_truncator_settings.hpp"
 #include "echelon_size.hpp"
+#include "environment.hpp"
 #include "exceptions.hpp"
 #include "extended_integer_types.hpp"
 #include "hash_set.hpp"

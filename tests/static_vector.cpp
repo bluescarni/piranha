@@ -35,6 +35,7 @@
 #include <type_traits>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
 // NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:
@@ -137,6 +138,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(static_vector_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<value_types>(constructor_tester());
 }
 

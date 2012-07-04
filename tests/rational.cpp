@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
@@ -74,6 +75,7 @@ struct check_arithmetic_construction
 
 BOOST_AUTO_TEST_CASE(rational_constructors_test)
 {
+	environment env;
 	// Default construction.
 	BOOST_CHECK_EQUAL(0,static_cast<int>(rational()));
 	// Construction from arithmetic types.

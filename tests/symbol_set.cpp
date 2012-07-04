@@ -25,12 +25,14 @@
 
 #include <stdexcept>
 
+#include "../src/environment.hpp"
 #include "../src/symbol.hpp"
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 {
+	environment env;
 	symbol_set ss;
 	BOOST_CHECK(ss.size() == 0u);
 	BOOST_CHECK(ss.begin() == ss.end());

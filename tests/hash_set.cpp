@@ -41,6 +41,7 @@
 #include <unordered_set>
 
 #include "../src/config.hpp"
+#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 
@@ -241,6 +242,7 @@ struct hash<random_failure>
 
 BOOST_AUTO_TEST_CASE(hash_set_constructors_test)
 {
+	environment env;
 	// Def ctor.
 	hash_set<custom_string> ht;
 	BOOST_CHECK(ht.begin() == ht.end());

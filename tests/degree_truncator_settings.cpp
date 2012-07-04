@@ -26,12 +26,14 @@
 #include <set>
 #include <string>
 
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(degree_truncator_settings_get_set_test)
 {
+	environment env;
 	typedef degree_truncator_settings dts_type;
 	dts_type dts;
 	BOOST_CHECK(dts.get_mode() == dts_type::inactive);

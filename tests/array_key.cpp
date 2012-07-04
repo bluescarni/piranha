@@ -31,6 +31,7 @@
 #include <unordered_set>
 
 #include "../src/debug_access.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
@@ -132,6 +133,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(array_key_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<value_types>(constructor_tester());
 }
 

@@ -32,6 +32,7 @@
 #include <type_traits>
 
 #include "../src/degree_truncator_settings.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
@@ -129,6 +130,7 @@ struct multiplication_tester
 
 BOOST_AUTO_TEST_CASE(kronecker_polynomial_multiplier_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(multiplication_tester());
 	for (unsigned i = 1u; i <= 4u; ++i) {
 		settings::set_n_threads(i);

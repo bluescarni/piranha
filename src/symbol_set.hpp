@@ -28,8 +28,8 @@
 #include <vector>
 
 #include "config.hpp"
+#include "environment.hpp"
 #include "exceptions.hpp"
-#include "settings.hpp"
 #include "symbol.hpp"
 
 namespace piranha
@@ -256,8 +256,8 @@ class symbol_set
 	private:
 		bool run_destruction_checks() const
 		{
-			// Run destruction checks only if they are enabled in settings.
-			if (!settings::get_destruction_checks()) {
+			// Run destruction checks only if we are not in the shutdown phase.
+			if (environment::shutdown()) {
 				return true;
 			}
 			return check();

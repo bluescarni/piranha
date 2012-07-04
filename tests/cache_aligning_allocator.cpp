@@ -25,6 +25,7 @@
 
 #include <string>
 
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/runtime_info.hpp"
 
@@ -32,6 +33,7 @@ using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 {
+	environment env;
 	cache_aligning_allocator<char> caa1;
 	BOOST_CHECK_EQUAL(caa1.get_alignment(),runtime_info::get_cache_line_size());
 	cache_aligning_allocator<integer> caa2;

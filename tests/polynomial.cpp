@@ -36,6 +36,7 @@
 
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
@@ -136,6 +137,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

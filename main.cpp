@@ -4,6 +4,7 @@ using namespace piranha;
 
 int main()
 {
+	environment env;
 	polynomial<double,unsigned> p{"x"}, q{1}, mq{-1}, l{"y"};
 	std::cout << p << '\n';
 	std::cout << q << '\n';

@@ -1,5 +1,6 @@
 SET(SRC_LIST
 	degree_truncator_settings.cpp
+	environment.cpp
 	exceptions.cpp
 	real.cpp
 	runtime_info.cpp

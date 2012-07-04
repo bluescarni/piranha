@@ -34,6 +34,7 @@
 #include "../src/concepts/term.hpp"
 #include "../src/config.hpp"
 #include "../src/detail/series_fwd.hpp"
+#include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
@@ -90,6 +91,7 @@ struct constructor_tester
 
 BOOST_AUTO_TEST_CASE(poisson_series_term_constructor_test)
 {
+	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 

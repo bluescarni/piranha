@@ -36,7 +36,6 @@ std::pair<bool,unsigned> settings::m_n_threads(false,0u);
 std::pair<bool,unsigned> settings::m_cache_line_size(false,0u);
 bool settings::m_tracing = false;
 unsigned settings::m_max_char_output = settings::m_default_max_char_output;
-bool settings::m_destruction_checks = true;
 
 /// Get the number of threads available for use by piranha.
 /**
@@ -198,45 +197,6 @@ void settings::reset_max_char_output()
 {
 	lock_guard<mutex>::type lock(m_mutex);
 	m_max_char_output = m_default_max_char_output;
-}
-
-/// Get status of destruction checks.
-/**
- * In debug mode, consistency checks on destruction are run in some of piranha's classes.
- * Since some of these checks rely on the presence of static global variables, if the class instances
- * from which the checks are called have themselves static duration, on program exit the undefined
- * order of destruction of static objects could lead to invalid memory accesses. This could happen for instance
- * if custom partial derivative functors are registered from piranha::series that maintain internally a copy
- * of a series.
- * 
- * For this reason, a boolean flag is kept within the settings class to enable/disable such destruction checks
- * at runtime. This method allows to query the status of such flag, which is set to \p true on program startup.
- * 
- * If the program is not compiled in debug mode, this flag has no effect.
- * 
- * @return status flag of destruction checks.
- * 
- * @throws std::system_error in case of failure(s) by threading primitives.
- */
-bool settings::get_destruction_checks()
-{
-	lock_guard<mutex>::type lock(m_mutex);
-	return m_destruction_checks;
-}
-
-/// Set the status flag for destruction checks.
-/**
- * This method is used to enable/disable the debug consistency checks on destruction for some of piranha's classes.
- * See the explanation in settings::get_destruction_checks().
- * 
- * @param[in] flag desired value for the flag.
- * 
- * @throws std::system_error in case of failure(s) by threading primitives.
- */
-void settings::set_destruction_checks(bool flag)
-{
-	lock_guard<mutex>::type lock(m_mutex);
-	m_destruction_checks = flag;
 }
 
 }

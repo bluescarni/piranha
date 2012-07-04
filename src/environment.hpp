@@ -18,45 +18,56 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_SETTINGS_HPP
-#define PIRANHA_SETTINGS_HPP
+#ifndef PIRANHA_ENVIRONMENT_HPP
+#define PIRANHA_ENVIRONMENT_HPP
 
-#include <utility>
-
-#include "config.hpp"
 #include "threading.hpp"
 
 namespace piranha
 {
 
-/// Global settings.
+/// Piranha environment.
 /**
- * This class stores the global settings of piranha's runtime environment.
- * The methods of this class are thread-safe.
+ * An instance of this class should be created in the main routine of the program before accessing any
+ * other functionality of the library. Its constructor will set up the runtime environment and register
+ * cleanup functions that will be run on program exit (e.g., the MPFR <tt>mpfr_free_cache()</tt> function).
+ * 
+ * It is allowed to construct multiple instances of this class even from multiple threads: after the first
+ * instance has been created, additional instances will not perform any action.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC settings
+class environment
 {
 	public:
-		static unsigned get_n_threads();
-		static void set_n_threads(unsigned);
-		static void reset_n_threads();
-		static unsigned get_cache_line_size();
-		static void set_cache_line_size(unsigned);
-		static void reset_cache_line_size();
-		static bool get_tracing();
-		static void set_tracing(bool);
-		static unsigned get_max_char_output();
-		static void set_max_char_output(unsigned);
-		static void reset_max_char_output();
+		environment();
+		/// Deleted copy constructor.
+		environment(const environment &) = delete;
+		/// Deleted move constructor.
+		environment(environment &&) = delete;
+		/// Deleted copy assignment operator.
+		environment &operator=(const environment &) = delete;
+		/// Deleted move assignment operator.
+		environment &operator=(environment &&) = delete;
+		/// Query shutdown flag.
+		/**
+		 * If called before <tt>main()</tt> returns, this method will return \p false.
+		 * The shutdown flag will be set to \p true after <tt>main()</tt> has returned
+		 * but before the destruction of static objects begins (i.e., the flag is set to \p true
+		 * by a function registered with <tt>std::atexit()</tt>).
+		 * 
+		 * @return shutdown flag.
+		 */
+		static bool shutdown()
+		{
+			return m_shutdown;
+		}
 	private:
-		static mutex			m_mutex;
-		static std::pair<bool,unsigned>	m_n_threads;
-		static std::pair<bool,unsigned>	m_cache_line_size;
-		static bool			m_tracing;
-		static unsigned			m_max_char_output;
-		static const unsigned		m_default_max_char_output = 10000u;
+		static void cleanup_function();
+	private:
+		static mutex	m_mutex;
+		static bool	m_inited;
+		static bool	m_shutdown;
 };
 
 }

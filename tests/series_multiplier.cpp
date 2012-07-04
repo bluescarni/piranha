@@ -34,6 +34,7 @@
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/echelon_size.hpp"
+#include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
@@ -180,6 +181,7 @@ typedef debug_access<operator_tag> operator_tester;
 
 BOOST_AUTO_TEST_CASE(series_multiplier_operator_test)
 {
+	environment env;
 	settings::set_tracing(true);
 	operator_tester o;
 }
