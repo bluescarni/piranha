@@ -22,3 +22,8 @@ inline void zde_translator(const zero_division_error &zde)
 {
 	PyErr_SetString(PyExc_ZeroDivisionError,zde.what());
 }
+
+inline void nie_translator(const not_implemented_error &nie)
+{
+	PyErr_SetString(PyExc_NotImplementedError,nie.what());
+}

@@ -82,6 +82,7 @@ BOOST_PYTHON_MODULE(_core)
 	bp::register_exception_translator<boost::numeric::negative_overflow>(no_translator);
 	bp::register_exception_translator<std::overflow_error>(oe_translator);
 	bp::register_exception_translator<zero_division_error>(zde_translator);
+	bp::register_exception_translator<not_implemented_error>(nie_translator);
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
