@@ -121,6 +121,23 @@ class series: series_binary_operators, detail::series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 		BOOST_CONCEPT_ASSERT((concept::CRTP<series<Term,Derived>,Derived>));
+		// Thin wrapper around unordered_map to store custom derivatives.
+		// The only purpose of the inheritance is so that we can set the static flag on destruction.
+		class cp_umap: public std::unordered_map<std::string,std::function<Derived(const Derived &)>>
+		{
+			public:
+				cp_umap() = default;
+				// Remove everything else just to be sure.
+				cp_umap(const cp_umap &) = delete;
+				cp_umap(cp_umap &&) = delete;
+				cp_umap &operator=(const cp_umap &) = delete;
+				cp_umap &operator=(cp_umap &&) = delete;
+				~cp_umap()
+				{
+					shutdown = true;
+				}
+				static bool shutdown;
+		};
 	public:
 		/// Alias for term type.
 		typedef Term term_type;
@@ -1326,6 +1343,14 @@ class series: series_binary_operators, detail::series_tag
 		// Set of checks to be run on destruction in debug mode.
 		bool destruction_checks() const
 		{
+			// NOTE: Avoid running the destruction checks if we are shutting down.
+			// The idea here is that if we are in the static destruction phase
+			// (where this variable is set to true) we cannot be sure the data referenced in
+			// m_symbol_set is there anymore - it might have been cleaned up before the destruction
+			// of cp_map.
+			if (cp_map.shutdown) {
+				return true;
+			}
 			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
 				if (!it->is_compatible(m_symbol_set)) {
 					std::cout << "Term not compatible.\n";
@@ -1344,9 +1369,8 @@ class series: series_binary_operators, detail::series_tag
 		/// Terms container.
 		container_type	m_container;
 	private:
-		typedef std::unordered_map<std::string,std::function<Derived(const Derived &)>> cp_map_type;
 		static mutex		cp_mutex;
-		static cp_map_type	cp_map;
+		static cp_umap		cp_map;
 };
 
 // Static initialisation.
@@ -1354,7 +1378,10 @@ template <typename Term, typename Derived>
 mutex series<Term,Derived>::cp_mutex;
 
 template <typename Term, typename Derived>
-typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
+typename series<Term,Derived>::cp_umap series<Term,Derived>::cp_map;
+
+template <typename Term, typename Derived>
+bool series<Term,Derived>::cp_umap::shutdown = false;
 
 namespace detail
 {
