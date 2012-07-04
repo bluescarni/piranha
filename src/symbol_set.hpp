@@ -29,6 +29,7 @@
 
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "settings.hpp"
 #include "symbol.hpp"
 
 namespace piranha
@@ -132,7 +133,7 @@ class symbol_set
 		/// Trivial destructor.
 		~symbol_set() piranha_noexcept_spec(true)
 		{
-			piranha_assert(check());
+			piranha_assert(run_destruction_checks());
 		}
 		/// Index operator.
 		/**
@@ -251,6 +252,15 @@ class symbol_set
 		bool operator!=(const symbol_set &other) const
 		{
 			return !(*this == other);
+		}
+	private:
+		bool run_destruction_checks() const
+		{
+			// Run destruction checks only if they are enabled in settings.
+			if (!settings::get_destruction_checks()) {
+				return true;
+			}
+			return check();
 		}
 	private:
 		std::vector<symbol> m_values;

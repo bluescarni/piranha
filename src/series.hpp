@@ -1326,6 +1326,10 @@ class series: series_binary_operators, detail::series_tag
 		// Set of checks to be run on destruction in debug mode.
 		bool destruction_checks() const
 		{
+			// Run destruction checks only if they are enabled in settings.
+			if (!settings::get_destruction_checks()) {
+				return true;
+			}
 			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
 				if (!it->is_compatible(m_symbol_set)) {
 					std::cout << "Term not compatible.\n";

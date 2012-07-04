@@ -280,6 +280,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	BOOST_CHECK_EQUAL(partial(pow(x * cos(y),5),"y"),5 * sin(-y) * x * pow(x * cos(y),4));
 	BOOST_CHECK_EQUAL(partial(pow(x * cos(y),5),"z"),0);
 	// y as implicit function of x: y = cos(x).
+	settings::set_destruction_checks(false);
 	p_type1::register_custom_derivative("x",[x](const p_type1 &p) {
 		return p.partial("x") - partial(p,"y") * sin(x);
 	});

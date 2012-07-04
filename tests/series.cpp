@@ -1447,7 +1447,8 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
 	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
 	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
-	// Custom derivatives.
+	// Custom derivatives. Disable destruction checks first.
+	settings::set_destruction_checks(false);
 	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,314)};});
 	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,314));
 	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,315)};});

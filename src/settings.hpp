@@ -50,6 +50,8 @@ class PIRANHA_PUBLIC settings
 		static unsigned get_max_char_output();
 		static void set_max_char_output(unsigned);
 		static void reset_max_char_output();
+		static bool get_destruction_checks();
+		static void set_destruction_checks(bool);
 	private:
 		static mutex			m_mutex;
 		static std::pair<bool,unsigned>	m_n_threads;
@@ -57,6 +59,7 @@ class PIRANHA_PUBLIC settings
 		static bool			m_tracing;
 		static unsigned			m_max_char_output;
 		static const unsigned		m_default_max_char_output = 10000u;
+		static bool			m_destruction_checks;
 };
 
 }
