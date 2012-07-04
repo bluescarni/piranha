@@ -79,6 +79,7 @@
  * would allow a finer control with generic methods (e.g., polynomial is a Poisson series coefficient only if it supports
  * division by int, partial() requires multipliability by int/integer, etc.) and enable meta-programming. But how to implement
  * concept inheriting? Where to put the static asserts? Is it worth it?
+ * \todo univariate_monomial has been left behind a bit feature-wise.
  */
 namespace piranha
 {
