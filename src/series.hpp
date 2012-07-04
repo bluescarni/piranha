@@ -1152,7 +1152,8 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
-		 * - lookup and insertion operations on \p std::unordered_map.
+		 * - lookup and insertion operations on \p std::unordered_map,
+		 * - copy-assignment of \p func.
 		 */
 		static void register_custom_derivative(const std::string &name, std::function<Derived(const Derived &)> func)
 		{
