@@ -21,6 +21,7 @@
 #ifndef PIRANHA_ENVIRONMENT_HPP
 #define PIRANHA_ENVIRONMENT_HPP
 
+#include "config.hpp"
 #include "threading.hpp"
 
 namespace piranha
@@ -37,7 +38,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class environment
+class PIRANHA_PUBLIC environment
 {
 	public:
 		environment();
