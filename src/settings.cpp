@@ -190,6 +190,8 @@ void settings::set_max_char_output(unsigned n)
 /// Reset max char output.
 /**
  * Will set the max char output value to the default.
+ * 
+ * @throws std::system_error in case of failure(s) by threading primitives.
  */
 void settings::reset_max_char_output()
 {
