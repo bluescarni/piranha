@@ -1112,7 +1112,7 @@ class series: series_binary_operators, detail::series_tag
 		/// Partial derivative.
 		/**
 		 * Will return the partial derivative of \p this with respect to the argument called \p name. The method will construct
-		 * the return value series from the output of the term's differentiation method. Note that contrary to the specialisation
+		 * the return value series from the output of the term's differentiation method. Note that, contrary to the specialisation
 		 * of piranha::math::partial() for series types, this method will not take into account custom derivatives registered
 		 * via register_custom_derivative().
 		 * 
@@ -1181,6 +1181,18 @@ class series: series_binary_operators, detail::series_tag
 			if (it != cp_map.end()) {
 				cp_map.erase(it);
 			}
+		}
+		/// Unregister all custom partial derivatives.
+		/**
+		 * Will unregister all custom derivatives currently registered via register_custom_derivative().
+		 * It is safe to call this method from multiple threads.
+		 * 
+		 * @throws unspecified any exception thrown by failure(s) in threading primitives.
+		 */
+		static void unregister_all_custom_derivatives()
+		{
+			lock_guard<mutex>::type lock(cp_mutex);
+			cp_map.clear();
 		}
 		/// Overload stream operator for piranha::series.
 		/**

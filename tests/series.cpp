@@ -1469,4 +1469,15 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	p_type1::register_custom_derivative("x",[](const p_type1 &p) {return p.partial("x");});
 	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
 	BOOST_CHECK_EQUAL(math::partial(x + y * x,"x"),y + 1);
+	p_type1::register_custom_derivative("x",[x](const p_type1 &p) -> p_type1 {
+		return p.partial("x") + math::partial(p,"y") * 2 * x;
+	});
+	p_type1::register_custom_derivative("y",[](const p_type1 &p) -> p_type1 {
+		return 2 * p;
+	});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 4 * x * (x + y));
+	BOOST_CHECK_EQUAL(math::partial(x + y,"y"),2 * (x + y));
+	p_type1::unregister_all_custom_derivatives();
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
 }
