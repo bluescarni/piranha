@@ -57,7 +57,7 @@ def cos(arg):
 		raise TypeError("Invalid argument type.")
 
 def sin(arg):
-	"""Sin.
+	"""Sine.
 	
 	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
 	the function from the builtin :mod:`math` module will be used. If the argument is an :mod:`mpmath`
