@@ -33,6 +33,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "../src/detail/mpfr.hpp"
 #include "../src/environment.hpp"
