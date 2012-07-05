@@ -1265,6 +1265,69 @@ class series: series_binary_operators, detail::series_tag
 			};
 			return boost::make_transform_iterator(m_container.end(),func_type(std::move(func)));
 		}
+		/// Term filtering.
+		/**
+		 * This method will apply the functor \p func to each term in the series, and produce a return series
+		 * containing all terms in \p this for which \p func returns \p true.
+		 * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
+		 * via begin().
+		 * 
+		 * @param[in] func filtering functor.
+		 * 
+		 * @return filtered series.
+		 * 
+		 * @throw unspecified any exception thrown by:
+		 * - the call operator of \p func,
+		 * - insert(),
+		 * - the assignment operator of piranha::symbol_set,
+		 * - term, coefficient, key construction.
+		 */
+		Derived filter(std::function<bool(const std::pair<typename term_type::cf_type,Derived> &)> func) const
+		{
+			Derived retval;
+			retval.m_symbol_set = m_symbol_set;
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				if (func(pair_from_term(m_symbol_set,*it))) {
+					retval.insert(*it);
+				}
+			}
+			return retval;
+		}
+		/// Term transformation.
+		/**
+		 * This method will apply the functor \p func to each term in the series, and will use the return
+		 * value of the functor to construct a new series. Terms are passed to \p func in the same format
+		 * resulting from dereferencing the iterators obtained via begin(), and \p func is expected to produce
+		 * a return value of the same type.
+		 * 
+		 * The return series is first initialised as an empty series. For each input term \p t, the return value
+		 * of \p func is used to construct a new temporary series from the multiplication of \p t.first and
+		 * \p t.second. Each temporary series is then added to the return value series.
+		 * 
+		 * @param[in] func transforming functor.
+		 * 
+		 * @return transformed series.
+		 *
+		 * @throw unspecified any exception thrown by:
+		 * - the call operator of \p func,
+		 * - insert(),
+		 * - the assignment operator of piranha::symbol_set,
+		 * - term, coefficient, key construction,
+		 * - series multiplication and addition.
+		 */
+		Derived transform(std::function<std::pair<typename term_type::cf_type,Derived>
+			(const std::pair<typename term_type::cf_type,Derived> &)> func) const
+		{
+			Derived retval;
+			std::pair<typename term_type::cf_type,Derived> tmp;
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				tmp = func(pair_from_term(m_symbol_set,*it));
+				retval += tmp.first * tmp.second;
+			}
+			return retval;
+		}
 		/// Overload stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
