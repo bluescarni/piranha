@@ -26,7 +26,7 @@ def cos(arg):
 	"""Cosine.
 	
 	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
-	the function from the :mod:`math` module will be used. If the argument is an :mod:`mpmath`
+	the function from the builtin :mod:`math` module will be used. If the argument is an :mod:`mpmath`
 	float, the corresponding multiprecision function, if available, will be used. Otherwise, the argument is assumed
 	to be a series type and a function from the piranha C++ library is used.
 	
@@ -60,7 +60,7 @@ def sin(arg):
 	"""Sin.
 	
 	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
-	the function from the :mod:`math` module will be used. If the argument is an :mod:`mpmath`
+	the function from the builtin :mod:`math` module will be used. If the argument is an :mod:`mpmath`
 	float, the corresponding multiprecision function, if available, will be used. Otherwise, the argument is assumed
 	to be a series type and a function from the piranha C++ library is used.
 	
@@ -89,3 +89,20 @@ def sin(arg):
 		return _sin(arg)
 	except TypeError:
 		raise TypeError("Invalid argument type.")
+
+def partial(arg,name):
+	"""Partial derivative.
+	
+	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a series type and
+	*name* a string.
+	
+	:param arg: argument for the partial derivative
+	:type arg: a series type
+	:param name: name of the variable with respect to which the derivative will be calculated
+	:type name: string
+	:rtype: partial derivative of *arg* with respect to *name*
+	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
+		low-level function
+	"""
+	from ._core import _partial
+	return _partial(arg,name)

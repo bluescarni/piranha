@@ -109,6 +109,33 @@ struct series_exposer
 	{
 		return copy_wrapper(s);
 	}
+	// Custom partial derivatives.
+	// NOTE: here we need to take care of multithreading in the future, most likely by adding
+	// the Python threading bits inside the lambda and also outside when checking func.
+	template <typename S>
+	static void register_custom_derivative(const std::string &name, bp::object func)
+	{
+#if PY_MAJOR_VERSION < 3
+		bp::object builtin_module = bp::import("__builtin__");
+		if (!builtin_module.attr("callable")(func)) {
+			::PyErr_SetString(PyExc_TypeError,"object is not callable");
+			bp::throw_error_already_set();
+		}
+#else
+		// This will throw on failure.
+		try {
+			bp::object call_method = func.attr("__call__");
+			(void)call_method;
+		} catch (...) {
+			::PyErr_Clear();
+			::PyErr_SetString(PyExc_TypeError,"object is not callable");
+			bp::throw_error_already_set();
+		}
+#endif
+		S::register_custom_derivative(name,[func](const S &s) -> S {
+			return bp::extract<S>(func(s));
+		});
+	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -150,6 +177,12 @@ struct series_exposer
 		interop_exposer(series_class,m_interop_types);
 		// Partial derivative.
 		bp::def("_partial",partial_wrapper<series_type>);
+		series_class.def("partial",&series_type::partial);
+		series_class.def("register_custom_derivative",register_custom_derivative<series_type>).staticmethod("register_custom_derivative");
+		series_class.def("unregister_custom_derivative",
+			series_type::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
+		series_class.def("unregister_all_custom_derivatives",
+			series_type::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
 		// Sin and cos.
 		bp::def("_sin",sin_cos_wrapper<false,series_type>);
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);

@@ -41,3 +41,14 @@ def _get_series_type(series_name,cf_type):
 	s_name = filter(lambda s: s.startswith('_' + series_name + '_' + str(cand[0][2])),dir(_core))
 	assert(len(s_name) == 1)
 	return getattr(_core,s_name[0])
+
+# Function to be run at module unload to clear registered custom derivatives.
+# The rationale is that custom derivatives will contain Python objects, and we
+# want to remove them before the C++ library exits.
+def _cleanup_custom_derivatives(series_name):
+	import re
+	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	for s in s_names:
+		print('Unregistering custom derivatives for: ' + s)
+		s_type = getattr(_core,s)
+		s_type.unregister_all_custom_derivatives()
