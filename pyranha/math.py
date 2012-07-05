@@ -103,6 +103,13 @@ def partial(arg,name):
 	:rtype: partial derivative of *arg* with respect to *name*
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
+	
+	>>> from polynomial import get_type
+	>>> pt = get_type(int)
+	>>> x,y = pt("x"), pt("y")
+	>>> partial(x + 2*x*y,"y")
+	2x
+	
 	"""
 	from ._core import _partial
 	return _partial(arg,name)
