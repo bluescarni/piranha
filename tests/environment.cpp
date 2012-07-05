@@ -25,6 +25,8 @@
 
 #include <iostream>
 
+#include "../src/threading.hpp"
+
 using namespace piranha;
 
 struct dummy
@@ -39,9 +41,12 @@ dummy d;
 
 BOOST_AUTO_TEST_CASE(environment_main_test)
 {
-	// Multiple constructions.
-	environment env1;
-	environment env2;
-	environment env3;
+	// Multiple concurrent constructions.
+	thread t1([]() {environment env;});
+	thread t2([]() {environment env;});
+	thread t3([]() {environment env;});
+	t1.join();
+	t2.join();
+	t3.join();
 	BOOST_CHECK(!environment::shutdown());
 }
