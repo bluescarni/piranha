@@ -101,7 +101,7 @@ class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.
 	
 	To be used within the :mod:`unittest` framework. Will test interoperability between
-	the :mod:`mpmath` library and the C++ real class. If the :mod:`mpmath` library is not available, the
+	the :mod:`mpmath` library and the C++ *real* class. If the :mod:`mpmath` library is not available, the
 	test will return immediately.
 	
 	>>> import unittest as ut
@@ -169,13 +169,58 @@ class math_test_case(_ut.TestCase):
 		except ImportError:
 			pass
 
+class polynomial_test_case(_ut.TestCase):
+	""":mod:`polynomial` module test case.
+	
+	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
+	:mod:`polynomial` module.
+	
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(polynomial_test_case)
+	
+	"""
+	def runTest(self):
+		from .polynomial import get_type
+		from fractions import Fraction
+		self.assertEqual(get_type('rational'),get_type(Fraction))
+		self.assertEqual(get_type('integer'),get_type(int))
+		self.assertEqual(get_type('double'),get_type(float))
+		try:
+			from mpmath import mpf
+			self.assertEqual(get_type('real'),get_type(mpf))
+		except ImportError:
+			pass
+
+class poisson_series_test_case(_ut.TestCase):
+	""":mod:`poisson_series` module test case.
+	
+	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
+	:mod:`poisson_series` module.
+	
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(poisson_series_test_case)
+	
+	"""
+	def runTest(self):
+		from .poisson_series import get_type
+		from fractions import Fraction
+		self.assertEqual(get_type('rational'),get_type(Fraction))
+		self.assertEqual(get_type('double'),get_type(float))
+		try:
+			from mpmath import mpf
+			self.assertEqual(get_type('real'),get_type(mpf))
+		except ImportError:
+			pass
+
 def run_test_suite():
-	"""Run the full test suite for the module.
+	"""Run the full test suite.
 	
 	"""
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())
+	suite.addTest(polynomial_test_case())
+	suite.addTest(poisson_series_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest
@@ -184,4 +229,3 @@ def run_test_suite():
 	doctest.testmod(poisson_series)
 	doctest.testmod(polynomial)
 	doctest.testmod(test)
-
