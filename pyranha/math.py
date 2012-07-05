@@ -51,3 +51,33 @@ def cos(arg):
 		return _cos(arg)
 	except TypeError:
 		raise TypeError("Invalid argument type.")
+
+def sin(arg):
+	"""Sin.
+	
+	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
+	the function from the :mod:`math` module will be used. If the argument is an :mod:`mpmath`
+	float, the corresponding multiprecision function, if available, will be used. Otherwise, the argument is assumed
+	to be a series type and a function from the piranha C++ library is used.
+	
+	:param arg: sine argument
+	:rtype: sine of arg
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+	
+	"""
+	if isinstance(arg,float) or isinstance(arg,int):
+		import math
+		return math.sin(arg)
+	try:
+		from mpmath import mpf, sin
+		if isinstance(arg,mpf):
+			return sin(arg)
+	except ImportError:
+		pass
+	from ._core import _sin
+	from argparse import ArgumentError
+	try:
+		return _sin(arg)
+	except TypeError:
+		raise TypeError("Invalid argument type.")

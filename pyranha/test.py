@@ -136,24 +136,34 @@ class math_test_case(_ut.TestCase):
 	"""
 	def runTest(self):
 		import math
-		from .math import cos as pcos
+		from .math import cos as pcos, sin as psin
 		from .polynomial import get_type
 		self.assertEqual(math.cos(3),pcos(3))
 		self.assertEqual(math.cos(3.1234),pcos(3.1234))
+		self.assertEqual(math.sin(3),psin(3))
+		self.assertEqual(math.sin(3.1234),psin(3.1234))
 		pt = get_type(float)
 		self.assertEqual(math.cos(3),pcos(pt(3)))
 		self.assertEqual(math.cos(-2.456),pcos(pt(2.456)))
+		self.assertEqual(math.sin(3),psin(pt(3)))
+		self.assertEqual(math.sin(-2.456),-psin(pt(2.456)))
 		try:
 			from mpmath import mpf, workdps
-			from mpmath import cos as mpcos
+			from mpmath import cos as mpcos, sin as mpsin
 			pt = get_type(mpf)
 			self.assertEqual(mpcos(mpf("1.2345")),pcos(mpf("1.2345")))
 			self.assertEqual(mpcos(mpf("3")),pcos(pt(mpf("3"))))
 			self.assertEqual(mpcos(mpf("-2.456")),pcos(pt(mpf("-2.456"))))
+			self.assertEqual(mpsin(mpf("1.2345")),psin(mpf("1.2345")))
+			self.assertEqual(mpsin(mpf("3")),psin(pt(mpf("3"))))
+			self.assertEqual(mpsin(mpf("-2.456")),psin(pt(mpf("-2.456"))))
 			with workdps(500):
 				self.assertEqual(mpcos(mpf("1.2345")),pcos(mpf("1.2345")))
 				self.assertEqual(mpcos(mpf("3")),pcos(pt(mpf("3"))))
 				self.assertEqual(mpcos(mpf("-2.456")),pcos(pt(mpf("-2.456"))))
+				self.assertEqual(mpsin(mpf("1.2345")),psin(mpf("1.2345")))
+				self.assertEqual(mpsin(mpf("3")),psin(pt(mpf("3"))))
+				self.assertEqual(mpsin(mpf("-2.456")),psin(pt(mpf("-2.456"))))
 		except ImportError:
 			pass
 
