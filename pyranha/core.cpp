@@ -72,6 +72,8 @@ inline integer get_big_int()
 
 BOOST_PYTHON_MODULE(_core)
 {
+	// Piranha environment setup.
+	environment env;
 	// Arithmetic converters.
 	integer_converter i_c;
 	rational_converter ra_c;
@@ -85,9 +87,6 @@ BOOST_PYTHON_MODULE(_core)
 	bp::register_exception_translator<not_implemented_error>(nie_translator);
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
-	// Disable destruction checks.
-	// TODO check this is kept to the correct value once we expose the settings class.
-	settings::set_destruction_checks(false);
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
 	// Polynomials.
