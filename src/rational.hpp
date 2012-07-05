@@ -1583,6 +1583,22 @@ struct partial_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::
 	}
 };
 
+/// Specialisation of the piranha::math::evaluate() functor for piranha::rational.
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q evaluation argument.
+	 * 
+	 * @return copy of \p q.
+	 */
+	T operator()(const T &q, const std::unordered_map<std::string,T> &) const
+	{
+		return q;
+	}
+};
+
 /// Specialisation of the piranha::math::integral_cast functor for piranha::rational.
 template <typename T>
 struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>

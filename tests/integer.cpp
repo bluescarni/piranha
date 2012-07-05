@@ -890,3 +890,11 @@ BOOST_AUTO_TEST_CASE(integer_partial_test)
 	BOOST_CHECK_EQUAL(piranha::math::partial(piranha::integer(-10),std::string("")),0);
 	BOOST_CHECK(piranha::is_differentiable<piranha::integer>::value);
 }
+
+BOOST_AUTO_TEST_CASE(integer_evaluate_test)
+{
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(),{}),piranha::integer(0));
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(-2),{}),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer("3"),{}),piranha::integer(3));
+	BOOST_CHECK((std::is_same<decltype(piranha::math::evaluate(piranha::integer(),{})),piranha::integer>::value));
+}

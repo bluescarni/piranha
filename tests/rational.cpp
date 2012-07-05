@@ -863,3 +863,12 @@ BOOST_AUTO_TEST_CASE(rational_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(rational(-10),std::string("")),0);
 	BOOST_CHECK(is_differentiable<rational>::value);
 }
+
+BOOST_AUTO_TEST_CASE(rational_evaluate_test)
+{
+	BOOST_CHECK_EQUAL(math::evaluate(rational(),{}),rational());
+	BOOST_CHECK_EQUAL(math::evaluate(rational(2),{}),rational(2));
+	BOOST_CHECK_EQUAL(math::evaluate(rational(-3.5),{}),rational(-3.5));
+	BOOST_CHECK_EQUAL(math::evaluate(rational(4,5),{}),rational(8,10));
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(rational(),{})),rational>::value));
+}

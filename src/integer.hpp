@@ -1995,6 +1995,22 @@ struct partial_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::t
 	}
 };
 
+/// Specialisation of the piranha::math::evaluate() functor for piranha::integer.
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n evaluation argument.
+	 * 
+	 * @return copy of \p n.
+	 */
+	T operator()(const T &n, const std::unordered_map<std::string,T> &) const
+	{
+		return n;
+	}
+};
+
 /// Default implementation of the piranha::math::integral_cast functor.
 /**
  * This functor should be specialised using the \p std::enable_if mechanism.

@@ -26,6 +26,7 @@
 #include <cmath>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include "config.hpp"
 #include "detail/integer_fwd.hpp"
@@ -375,6 +376,55 @@ template <typename T>
 inline auto partial(const T &x, const std::string &str) -> decltype(partial_impl<T>()(x,str))
 {
 	return partial_impl<T>()(x,str);
+}
+
+/// Default functor for the implementation of piranha::math::evaluate().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct evaluate_impl
+{};
+
+/// Specialisation of the piranha::math::evaluate() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x evaluation argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	T operator()(const T &x, const std::unordered_map<std::string,T> &) const
+	{
+		return x;
+	}
+};
+
+/// Evaluation.
+/**
+ * Evaluation is the simultaneous substitution of all symbolic arguments in an expression. The input dictionary \p dict
+ * specifies the quantity (value) that will be susbstituted for each argument (key), here represented as a string.
+ * 
+ * The actual implementation of this function is in the piranha::math::evaluate_impl functor.
+ * 
+ * @param[in] x quantity that will be evaluated.
+ * @param[in] dict dictionary that will be used to perform the substitution.
+ * 
+ * @return \p x evaluated according to \p dict.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
+ */
+template <typename T>
+inline auto evaluate(const T &x, const std::unordered_map<std::string,T> &dict) -> decltype(evaluate_impl<T>()(x,dict))
+{
+	return evaluate_impl<T>()(x,dict);
 }
 
 }

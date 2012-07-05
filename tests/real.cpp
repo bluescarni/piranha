@@ -1547,3 +1547,11 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(real(-10),std::string("")),0);
 	BOOST_CHECK(is_differentiable<real>::value);
 }
+
+BOOST_AUTO_TEST_CASE(real_evaluate_test)
+{
+	BOOST_CHECK_EQUAL(math::evaluate(real(),{}),real());
+	BOOST_CHECK_EQUAL(math::evaluate(real(2),{}),real(2));
+	BOOST_CHECK_EQUAL(math::evaluate(real(-3.5),{}),real(-3.5));
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(real(),{})),real>::value));
+}

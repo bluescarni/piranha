@@ -170,3 +170,13 @@ BOOST_AUTO_TEST_CASE(partial_test)
 	BOOST_CHECK_EQUAL(math::partial(2L,""),0L);
 	BOOST_CHECK_EQUAL(math::partial(2LL,std::string("")),0LL);
 }
+
+BOOST_AUTO_TEST_CASE(evaluate_test)
+{
+	BOOST_CHECK_EQUAL(math::evaluate(5,{}),5);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,{})),int>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(5.,{}),5.);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,{})),double>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(5ul,{}),5ul);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,{})),unsigned long>::value));
+}
