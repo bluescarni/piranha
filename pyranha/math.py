@@ -31,9 +31,14 @@ def cos(arg):
 	to be a series type and a function from the piranha C++ library is used.
 	
 	:param arg: cosine argument
-	:rtype: cosine of arg
+	:rtype: cosine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
+	
+	>>> from poisson_series import get_type
+	>>> t = get_type("polynomial_rational")
+	>>> cos(2 * t("x"))
+	cos(2x)
 	
 	"""
 	if isinstance(arg,float) or isinstance(arg,int):
@@ -46,7 +51,6 @@ def cos(arg):
 	except ImportError:
 		pass
 	from ._core import _cos
-	from argparse import ArgumentError
 	try:
 		return _cos(arg)
 	except TypeError:
@@ -61,9 +65,14 @@ def sin(arg):
 	to be a series type and a function from the piranha C++ library is used.
 	
 	:param arg: sine argument
-	:rtype: sine of arg
+	:rtype: sine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
+	
+	>>> from poisson_series import get_type
+	>>> t = get_type("polynomial_rational")
+	>>> sin(2 * t("x"))
+	sin(2x)
 	
 	"""
 	if isinstance(arg,float) or isinstance(arg,int):
@@ -76,7 +85,6 @@ def sin(arg):
 	except ImportError:
 		pass
 	from ._core import _sin
-	from argparse import ArgumentError
 	try:
 		return _sin(arg)
 	except TypeError:
