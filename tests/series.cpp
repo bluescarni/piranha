@@ -1481,3 +1481,33 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
 	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
 }
+
+BOOST_AUTO_TEST_CASE(series_iterator_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	p_type1 empty;
+	BOOST_CHECK(empty.begin() == empty.end());
+	p_type1 x{"x"};
+	x *= 2;
+	auto it = x.begin();
+	BOOST_CHECK_EQUAL(it->first,2);
+	BOOST_CHECK((std::is_same<typename p_type1::term_type::cf_type,decltype(it->first)>::value));
+	BOOST_CHECK_EQUAL(it->second,p_type1{"x"});
+	BOOST_CHECK((std::is_same<p_type1,decltype(it->second)>::value));
+	++it;
+	BOOST_CHECK(it == x.end());
+	x /= 2;
+	p_type1 p1 = x + p_type1{"y"} + p_type1{"z"};
+	p1 *= 3;
+	it = p1.begin();
+	BOOST_CHECK(it != p1.end());
+	BOOST_CHECK_EQUAL(it->first,3);
+	++it;
+	BOOST_CHECK(it != p1.end());
+	BOOST_CHECK_EQUAL(it->first,3);
+	++it;
+	BOOST_CHECK(it != p1.end());
+	BOOST_CHECK_EQUAL(it->first,3);
+	++it;
+	BOOST_CHECK(it == p1.end());
+}

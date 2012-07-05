@@ -26,7 +26,7 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <functional>
@@ -640,12 +640,33 @@ class series: series_binary_operators, detail::series_tag
 			}
 			return retval;
 		}
+		// Iterator utilities.
+		static std::pair<typename term_type::cf_type,Derived> pair_from_term(const symbol_set &s, const term_type &t)
+		{
+			typedef typename term_type::cf_type cf_type;
+			Derived retval;
+			retval.m_symbol_set = s;
+			retval.insert(term_type(cf_type(1),t.m_key));
+			return std::make_pair(t.m_cf,std::move(retval));
+		}
+		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
+			typename container_type::const_iterator> const_iterator_impl;
 	public:
 		/// Size type.
 		/**
 		 * Used to represent the number of terms in the series. Equivalent to piranha::hash_set::size_type.
 		 */
 		typedef typename container_type::size_type size_type;
+		/// Const iterator.
+		/**
+		 * Iterator type that can be used to iterate over the terms of the series.
+		 * The object returned upon dereferentiation is an \p std::pair in which the first element
+		 * is a copy of the coefficient of the term, the second element a single-term instance of \p Derived constructed from
+		 * the term's key and a unitary coefficient.
+		 * 
+		 * @see begin() and end().
+		 */
+		typedef const_iterator_impl const_iterator;
 		/// Defaulted default constructor.
 		series() = default;
 		/// Defaulted copy constructor.
@@ -1193,6 +1214,56 @@ class series: series_binary_operators, detail::series_tag
 		{
 			lock_guard<mutex>::type lock(cp_mutex);
 			cp_map.clear();
+		}
+		/// Begin iterator.
+		/**
+		 * Return an iterator to the first term of the series. The returned iterator will
+		 * provide, when dereferenced, an \p std::pair in which the first element is a copy of the coefficient of
+		 * the term, whereas the second element is a single-term instance of \p Derived built from the term's key
+		 * and a unitary coefficient.
+		 * 
+		 * Note that terms are stored unordered in the series, hence it is not defined which particular
+		 * term will be returned by calling this method. The only guarantee is that the iterator can be used to transverse
+		 * all the series' terms until end() is eventually reached.
+		 * 
+		 * Calling any non-const method on the series will invalidate the iterators obtained via begin() and end().
+		 * 
+		 * @return an iterator to the first term of the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - construction and assignment of piranha::symbol_set,
+		 * - insert(),
+		 * - construction of term, coefficient and key instances.
+		 */
+		const_iterator begin() const
+		{
+			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
+				func_type;
+			auto func = [m_symbol_set](const term_type &t) {
+				return series<term_type,Derived>::pair_from_term(m_symbol_set,t);
+			};
+			return boost::make_transform_iterator(m_container.begin(),func_type(std::move(func)));
+		}
+		/// End iterator.
+		/**
+		 * Return an iterator one past the last term of the series. See the documentation of begin()
+		 * on how the returned iterator can be used.
+		 * 
+		 * @return an iterator to the end of the serie.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - construction and assignment of piranha::symbol_set,
+		 * - insert(),
+		 * - construction of term, coefficient and key instances.
+		 */
+		const_iterator end() const
+		{
+			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
+				func_type;
+			auto func = [m_symbol_set](const term_type &t) {
+				return series<term_type,Derived>::pair_from_term(m_symbol_set,t);
+			};
+			return boost::make_transform_iterator(m_container.end(),func_type(std::move(func)));
 		}
 		/// Overload stream operator for piranha::series.
 		/**
