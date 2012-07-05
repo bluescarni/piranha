@@ -147,6 +147,8 @@ class math_test_case(_ut.TestCase):
 		self.assertEqual(math.cos(-2.456),pcos(pt(2.456)))
 		self.assertEqual(math.sin(3),psin(pt(3)))
 		self.assertEqual(math.sin(-2.456),-psin(pt(2.456)))
+		self.assertRaises(TypeError,lambda : pcos(""))
+		self.assertRaises(TypeError,lambda : psin(""))
 		try:
 			from mpmath import mpf, workdps
 			from mpmath import cos as mpcos, sin as mpsin
@@ -170,10 +172,16 @@ class math_test_case(_ut.TestCase):
 def run_test_suite():
 	"""Run the full test suite for the module.
 	
-	>>> run_test_suite()
-	
 	"""
 	suite = _ut.TestLoader().loadTestsFromTestCase(basic_test_case)
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
+	# Run the doctests.
+	import doctest
+	from . import math, poisson_series, polynomial, test
+	doctest.testmod(math)
+	doctest.testmod(poisson_series)
+	doctest.testmod(polynomial)
+	doctest.testmod(test)
+
