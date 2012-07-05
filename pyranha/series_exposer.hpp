@@ -109,11 +109,8 @@ struct series_exposer
 	{
 		return copy_wrapper(s);
 	}
-	// Custom partial derivatives.
-	// NOTE: here we need to take care of multithreading in the future, most likely by adding
-	// the Python threading bits inside the lambda and also outside when checking func.
-	template <typename S>
-	static void register_custom_derivative(const std::string &name, bp::object func)
+	// Utility function to check if object is callable. Will throw TypeError if not.
+	static void check_callable(bp::object func)
 	{
 #if PY_MAJOR_VERSION < 3
 		bp::object builtin_module = bp::import("__builtin__");
@@ -132,9 +129,60 @@ struct series_exposer
 			bp::throw_error_already_set();
 		}
 #endif
+	}
+	// Custom partial derivatives.
+	// NOTE: here we need to take care of multithreading in the future, most likely by adding
+	// the Python threading bits inside the lambda and also outside when checking func.
+	template <typename S>
+	static void register_custom_derivative(const std::string &name, bp::object func)
+	{
+		check_callable(func);
 		S::register_custom_derivative(name,[func](const S &s) -> S {
 			return bp::extract<S>(func(s));
 		});
+	}
+	// filter() wrap.
+	template <typename S>
+	static S wrap_filter(const S &s, bp::object func)
+	{
+		typedef typename S::term_type::cf_type cf_type;
+		check_callable(func);
+		auto cpp_func = [func](const std::pair<cf_type,S> &p) -> bool {
+			return bp::extract<bool>(func(bp::make_tuple(p.first,p.second)));
+		};
+		return s.filter(cpp_func);
+	}
+	// Check if type is tuple with two elements (for use in wrap_transform).
+	static void check_tuple_2(bp::object obj)
+	{
+		bp::object builtin_module = bp::import("__builtin__");
+		bp::object isinstance = builtin_module.attr("isinstance");
+		bp::object tuple_type = builtin_module.attr("tuple");
+		if (!isinstance(obj,tuple_type)) {
+			::PyErr_SetString(PyExc_TypeError,"object is not a tuple");
+			bp::throw_error_already_set();
+		}
+		const std::size_t len = bp::extract<std::size_t>(obj.attr("__len__")());
+		if (len != 2u) {
+			::PyErr_SetString(PyExc_ValueError,"the tuple to be returned in series transformation must have 2 elements");
+			bp::throw_error_already_set();
+		}
+	}
+	// transform() wrap.
+	template <typename S>
+	static S wrap_transform(const S &s, bp::object func)
+	{
+		typedef series_exposer<Series,CfTypes,InteropTypes> se_type;
+		typedef typename S::term_type::cf_type cf_type;
+		check_callable(func);
+		auto cpp_func = [func](const std::pair<cf_type,S> &p) -> std::pair<cf_type,S> {
+			bp::object tmp = func(bp::make_tuple(p.first,p.second));
+			se_type::check_tuple_2(tmp);
+			cf_type tmp_cf = bp::extract<cf_type>(tmp[0]);
+			S tmp_key = bp::extract<S>(tmp[1]);
+			return std::make_pair(std::move(tmp_cf),std::move(tmp_key));
+		};
+		return s.transform(cpp_func);
 	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
@@ -183,6 +231,9 @@ struct series_exposer
 			series_type::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
 		series_class.def("unregister_all_custom_derivatives",
 			series_type::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
+		// Filter and transform.
+		series_class.def("filter",wrap_filter<series_type>);
+		series_class.def("transform",wrap_transform<series_type>);
 		// Sin and cos.
 		bp::def("_sin",sin_cos_wrapper<false,series_type>);
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
