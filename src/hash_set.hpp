@@ -40,6 +40,7 @@
 #include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "environment.hpp"
 #include "exceptions.hpp"
 
 namespace piranha
@@ -1180,6 +1181,10 @@ class hash_set
 		// Run a consistency check on the table, will return false if something is wrong.
 		bool sanity_check() const
 		{
+			// Ignore sanity checks on shutdown.
+			if (environment::shutdown()) {
+				return true;
+			}
 			size_type count = 0u;
 			for (size_type i = 0u; i < bucket_count(); ++i) {
 				for (auto it = m_container[i].begin(); it != m_container[i].end(); ++it) {
