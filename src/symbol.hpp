@@ -21,9 +21,11 @@
 #ifndef PIRANHA_SYMBOL_HPP
 #define PIRANHA_SYMBOL_HPP
 
+#include <cstddef>
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include "config.hpp"
@@ -156,6 +158,15 @@ class PIRANHA_PUBLIC symbol
 		{
 			return get_name() < other.get_name();
 		}
+		/// Hash value.
+		/**
+		 * @return a hash value for the symbol.
+		 */
+		std::size_t hash() const
+		{
+			// NOTE: consider hashing the pointer to the string here instead when we rewrite the class.
+			return std::hash<std::string>()(get_name());
+		}
 		/// Overload output stream operator for piranha::symbol.
 		/**
 		 * Will direct to \p os a human-readable description of \p s.
@@ -193,6 +204,31 @@ class PIRANHA_PUBLIC symbol
 		container_type::const_iterator	m_it;
 		static mutex			m_mutex;
 		static container_type		m_symbol_list;
+};
+
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::symbol.
+template <>
+struct hash<piranha::symbol>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::symbol argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] s piranha::symbol whose hash value will be returned.
+	 * 
+	 * @return piranha::symbol::hash().
+	 */
+	result_type operator()(const argument_type &s) const
+	{
+		return s.hash();
+	}
 };
 
 }

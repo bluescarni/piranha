@@ -23,6 +23,8 @@
 #define BOOST_TEST_MODULE symbol_test
 #include <boost/test/unit_test.hpp>
 
+#include <unordered_set>
+
 #include "../src/environment.hpp"
 
 using namespace piranha;
@@ -79,4 +81,10 @@ BOOST_AUTO_TEST_CASE(symbol_operators_test)
 	BOOST_CHECK(symbol("a") < symbol("b"));
 	BOOST_CHECK(!(symbol("a") < symbol("a")));
 	BOOST_CHECK(symbol("abc") < symbol("abd"));
+}
+
+BOOST_AUTO_TEST_CASE(symbol_hash_test)
+{
+	BOOST_CHECK_NO_THROW(symbol("x").hash());
+	BOOST_CHECK_EQUAL(symbol("x").hash(),std::hash<symbol>()(symbol("x")));
 }
