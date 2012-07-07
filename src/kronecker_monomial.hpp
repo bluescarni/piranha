@@ -578,9 +578,9 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * - unpack(),
 		 * - construction of the return type,
 		 * - lookup operations in \p std::unordered_map,
-		 * - piranha::math::pow() or the in-place addition operator of the return type.
+		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 * 
-		 * \todo request constructability from 1, addability and exponentiability.
+		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
 		decltype(math::pow(std::declval<U>(),std::declval<value_type>()))
@@ -588,17 +588,14 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		{
 			typedef decltype(math::pow(std::declval<U>(),std::declval<value_type>())) return_type;
 			auto v = unpack(args);
-			if (args.size() == 0u) {
-				return return_type(1);
-			}
-			return_type retval = return_type();
+			return_type retval(1);
 			const auto it_f = dict.end();
 			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
 				const auto it = dict.find(args[i]);
 				if (it == it_f) {
 					piranha_throw(std::invalid_argument,"cannot evaluate monomial: symbol does not appear in dictionary");
 				}
-				retval += math::pow(it->second,v[i]);
+				retval *= math::pow(it->second,v[i]);
 			}
 			return retval;
 		}

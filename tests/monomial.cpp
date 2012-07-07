@@ -499,19 +499,19 @@ struct evaluate_tester
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),9);
 		k1 = k_type({T(2),T(4)});
 		vs.add("y");
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),265);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("y"),integer(4)},{symbol("x"),integer(3)}},vs),265);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),2304);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("y"),integer(4)},{symbol("x"),integer(3)}},vs),2304);
 		typedef std::unordered_map<symbol,double> dict_type2;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::pow(3.2,2) + math::pow(-4.3,4));
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::pow(3.2,2) * math::pow(-4.3,4));
 		typedef std::unordered_map<symbol,rational> dict_type3;
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
-			math::pow(rational(4,-3),2) + math::pow(rational(-1,-2),4));
+			math::pow(rational(4,-3),2) * math::pow(rational(-1,-2),4));
 		k1 = k_type({T(-2),T(-4)});
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
-			math::pow(rational(4,-3),-2) + math::pow(rational(-1,-2),-4));
+			math::pow(rational(4,-3),-2) * math::pow(rational(-1,-2),-4));
 		typedef std::unordered_map<symbol,real> dict_type4;
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
-			math::pow(real(5.678),-2) + math::pow(real(1.234),-4));
+			math::pow(real(5.678),-2) * math::pow(real(1.234),-4));
 	}
 };
 

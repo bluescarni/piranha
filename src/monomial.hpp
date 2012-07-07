@@ -438,9 +438,9 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws unspecified any exception thrown by:
 		 * - construction of the return type,
 		 * - lookup operations in \p std::unordered_map,
-		 * - piranha::math::pow() or the in-place addition operator of the return type.
+		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 * 
-		 * \todo request constructability from 1, addability and exponentiability.
+		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
 		decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>()))
@@ -451,17 +451,14 @@ class monomial: public array_key<T,monomial<T>>
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			if (args.size() == 0u) {
-				return return_type(1);
-			}
-			return_type retval = return_type();
+			return_type retval(1);
 			const auto it_f = dict.end();
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				const auto it = dict.find(args[i]);
 				if (it == it_f) {
 					piranha_throw(std::invalid_argument,"cannot evaluate monomial: symbol does not appear in dictionary");
 				}
-				retval += math::pow(it->second,(*this)[i]);
+				retval *= math::pow(it->second,(*this)[i]);
 			}
 			return retval;
 		}
