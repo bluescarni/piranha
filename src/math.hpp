@@ -64,6 +64,7 @@ struct math_is_zero_impl<T,typename std::enable_if<boost::is_complex<T>::value>:
 };
 
 // Default implementation of math::negate.
+// NOTE: in gcc 4.6 and up here we could use copysign, signbit, etc. to determine whether it's safe to negate floating-point types.
 template <typename T, typename Enable = void>
 struct math_negate_impl
 {
