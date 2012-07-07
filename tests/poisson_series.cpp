@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
@@ -287,4 +288,34 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	});
 	BOOST_CHECK_EQUAL(partial(x + cos(y),"x"),1 + sin(y) * sin(x));
 	BOOST_CHECK_EQUAL(partial(x + x * cos(y),"x"),1 + cos(y) + x * sin(y) * sin(x));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
+{
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef decltype(*(p_type1{}.begin())) pair_type;
+	typedef decltype(*(p_type1{}.begin()->first.begin())) pair_type2;
+	p_type1 x{"x"}, y{"y"};
+	auto s = pow(1 + x + y,3) * cos(x) + pow(y,3) * sin(x);
+	auto s_t = s.transform([](const pair_type &p) {
+		return std::make_pair(p.first.filter([](const pair_type2 &p2) {return p2.second.degree() < 2;}),p.second);
+	});
+	BOOST_CHECK_EQUAL(s_t,(3*x + 3*y + 1) * cos(x));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
+{
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	auto s = (x + y) * cos(x + y) + pow(y,3) * sin(x + y);
+	auto eval = s.evaluate(std::unordered_map<std::string,double>{{"x",1.234},{"y",5.678}});
+	BOOST_CHECK_EQUAL(eval,(1.234 + 5.678) * cos(1.234 + 5.678) + pow(5.678,3) * sin(1.234 + 5.678));
+	BOOST_CHECK_EQUAL(eval,math::evaluate(s,std::unordered_map<std::string,double>{{"x",1.234},{"y",5.678}}));
+	BOOST_CHECK((std::is_same<double,decltype(eval)>::value));
 }

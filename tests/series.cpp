@@ -29,8 +29,10 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
@@ -1546,4 +1548,31 @@ BOOST_AUTO_TEST_CASE(series_transform_test)
 	BOOST_CHECK_EQUAL(y2.transform([](const pair_type2 &p) {
 		return std::make_pair(p.first.filter([](const pair_type &q) {return q.first < 2;}),p.second);
 	}),p_type2{"y"} * x + p_type2{"x"});
+}
+
+BOOST_AUTO_TEST_CASE(series_evaluate_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	typedef std::unordered_map<std::string,rational> dict_type;
+	BOOST_CHECK_EQUAL(p_type1{}.evaluate(dict_type{}),0);
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_THROW(x.evaluate(dict_type{}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(x.evaluate(dict_type{{"x",rational(1)}}),1);
+	BOOST_CHECK_THROW((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)}}),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)},{"y",rational(2,3)}}),rational(1) + (2 * rational(2,3)).pow(3));
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)},{"y",rational(2,3)}}),
+		math::evaluate(x + (2 * y).pow(3),dict_type{{"x",rational(1)},{"y",rational(2,3)}}));
+	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type{})),rational>::value));
+	typedef std::unordered_map<std::string,real> dict_type2;
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
+		real(1.234) + (2 * real(-5.678)).pow(3));
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
+		math::evaluate(x + math::pow(2 * y,3),dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}));
+	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type2{})),real>::value));
+	typedef std::unordered_map<std::string,double> dict_type3;
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}),
+		1.234 + math::pow(2 * -5.678,3));
+	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}),
+		math::evaluate(x + math::pow(2 * y,3),dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}));
+	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})),double>::value));
 }
