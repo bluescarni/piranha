@@ -27,9 +27,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/trunc.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cctype> // For std::isdigit().
+#include <cmath>
 #include <cstddef>
 // NOTE: GMP docs say gmp.h already includes the extern "C" parts.
 #include <gmp.h>
@@ -270,14 +270,19 @@ class integer
 		template <typename T>
 		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
 		{
-			// Extract always the double-precision value, and cast as needed.
-			if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::lowest())) < 0) {
-				if (std::numeric_limits<T>::has_infinity) {
-					return -std::numeric_limits<T>::infinity();
+			if (::mpz_cmp_d(m_value,static_cast<double>(std::numeric_limits<T>::lowest())) < 0) {
+				// NOTE: in order to be able to produce -inf we have to be sure of the following:
+				// - the lowest fp number is negative,
+				// - we can represent _positive_ infinity.
+				// Then we can return positive infinity with the sign copied from lowest().
+				if (std::signbit(std::numeric_limits<T>::lowest()) != 0 && std::numeric_limits<T>::has_infinity) {
+					return std::copysign(std::numeric_limits<T>::infinity(),std::numeric_limits<T>::lowest());
 				} else {
 					piranha_throw(std::overflow_error,"cannot convert to floating point type");
 				}
-			} else if (::mpz_cmp_d(m_value,static_cast<double>(boost::numeric::bounds<T>::highest())) > 0) {
+			} else if (::mpz_cmp_d(m_value,static_cast<double>(std::numeric_limits<T>::max())) > 0) {
+				// NOTE: here we do not have the issues above: if this is greater than the max fp value
+				// (be it positive or not) and we can represent positive inf, then return it.
 				if (std::numeric_limits<T>::has_infinity) {
 					return std::numeric_limits<T>::infinity();
 				} else {
@@ -285,7 +290,9 @@ class integer
 				}
 			} else {
 				// NOTE: here the GMP docs warn that this operation can fail in horrid ways,
-				// so far never had problems, but keep this in mind...
+				// the checks above should keep us safe, but keep this in mind...
+				// NOTE: here the static cast is safe if T is float because we made sure in the checks above that
+				// the GMP value is within the bounds of float.
 				return static_cast<T>(::mpz_get_d(m_value));
 			}
 		}
@@ -315,15 +322,7 @@ class integer
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				// NOTE: here we know that whatever type si is, it can be represented by long,
-				// and thus also by unsigned long (as si is positive).
-				::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(si));
-			} else {
-				// Neat trick here. See:
-				// http://stackoverflow.com/questions/4536095/unary-minus-and-signed-to-unsigned-conversion
-				::mpz_sub_ui(m_value,m_value,-static_cast<unsigned long>(si));
-			}
+			in_place_add(integer(si));
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -361,11 +360,7 @@ class integer
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(si));
-			} else {
-				::mpz_add_ui(m_value,m_value,-static_cast<unsigned long>(si));
-			}
+			in_place_sub(integer(si));
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -434,12 +429,7 @@ class integer
 		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si > 0) {
-				::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(si));
-			} else {
-				::mpz_tdiv_q_ui(m_value,m_value,-static_cast<unsigned long>(si));
-				::mpz_neg(m_value,m_value);
-			}
+			in_place_div(integer(si));
 		}
 		template <typename T>
 		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -469,10 +459,7 @@ class integer
 		void in_place_mod(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (unlikely(si <= 0)) {
-				piranha_throw(std::invalid_argument,"non-positive divisor");
-			}
-			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(si));
+			in_place_mod(integer(si));
 		}
 		template <typename T>
 		void in_place_mod(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -907,14 +894,7 @@ class integer
 		template <typename T>
 		integer pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
-			if (si >= 0) {
-				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
-			} else {
-				if (sign() == 0) {
-					piranha_throw(zero_division_error,"negative exponentiation of zero");
-				}
-				return (1 / *this).pow(-static_cast<typename std::make_unsigned<T>::type>(si));
-			}
+			return pow_impl(integer(si));
 		}
 		integer pow_impl(const integer &n) const
 		{

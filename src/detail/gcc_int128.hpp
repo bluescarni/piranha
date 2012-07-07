@@ -121,6 +121,8 @@ struct print_coefficient_impl<T,typename std::enable_if<
 		if (n >= 0) {
 			operator()(os,gcc_uint128(n));
 		} else {
+			// TODO: fix the use of the trick here. Convert to integer
+			// once we implement interop.
 			os << '-';
 			operator()(os,-static_cast<gcc_uint128>(n));
 		}

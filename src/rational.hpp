@@ -25,8 +25,8 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/numeric/conversion/bounds.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <gmp.h>
@@ -267,11 +267,11 @@ class rational
 		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
 		{
 			// NOTE: this should always be ok, as these are guaranteed to be finite values.
-			const rational highest(boost::numeric::bounds<T>::highest()),
-				lowest(boost::numeric::bounds<T>::lowest());
+			// See also the corresponding method in integer.
+			const rational highest(std::numeric_limits<T>::max()), lowest(std::numeric_limits<T>::lowest());
 			if (::mpq_cmp(m_value,lowest.m_value) < 0) {
-				if (std::numeric_limits<T>::has_infinity) {
-					return -std::numeric_limits<T>::infinity();
+				if (std::signbit(std::numeric_limits<T>::lowest()) != 0 && std::numeric_limits<T>::has_infinity) {
+					return std::copysign(std::numeric_limits<T>::infinity(),std::numeric_limits<T>::lowest());
 				} else {
 					piranha_throw(std::overflow_error,"cannot convert to floating point type");
 				}
@@ -298,13 +298,7 @@ class rational
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(si));
-			} else {
-				// Neat trick here. See:
-				// http://stackoverflow.com/questions/4536095/unary-minus-and-signed-to-unsigned-conversion
-				::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),-static_cast<unsigned long>(si));
-			}
+			in_place_add(integer(si));
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -356,11 +350,7 @@ class rational
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
 			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
 		{
-			if (si >= 0) {
-				::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(si));
-			} else {
-				::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),-static_cast<unsigned long>(si));
-			}
+			in_place_sub(integer(si));
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
@@ -650,21 +640,7 @@ class rational
 		template <typename T>
 		rational pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
 		{
-			if (si >= 0) {
-				return pow_impl(static_cast<typename std::make_unsigned<T>::type>(si));
-			} else {
-				if (sign() == 0) {
-					piranha_throw(zero_division_error,"negative exponentiation of zero");
-				}
-				auto retval = pow_impl(-static_cast<typename std::make_unsigned<T>::type>(si));
-				::mpz_swap(mpq_numref(retval.m_value),mpq_denref(retval.m_value));
-				// Fix signs if needed.
-				if (mpz_sgn(mpq_denref(retval.m_value)) < 0) {
-					::mpz_neg(mpq_numref(retval.m_value),mpq_numref(retval.m_value));
-					::mpz_neg(mpq_denref(retval.m_value),mpq_denref(retval.m_value));
-				}
-				return retval;
-			}
+			return pow_impl(integer(si));
 		}
 		rational pow_impl(const integer &n) const
 		{
