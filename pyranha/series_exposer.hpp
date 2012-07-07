@@ -184,6 +184,43 @@ struct series_exposer
 		};
 		return s.transform(cpp_func);
 	}
+	// degree wrappers.
+	template <typename S>
+	static decltype(std::declval<S>().degree()) wrap_degree(const S &s)
+	{
+		return s.degree();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().degree(std::declval<std::set<std::string>>())) wrap_partial_degree(const S &s, bp::object obj)
+	{
+		bp::stl_input_iterator<std::string> begin(obj), end;
+		return s.degree(std::set<std::string>(begin,end));
+	}
+	template <typename S>
+	static decltype(std::declval<S>().ldegree()) wrap_ldegree(const S &s)
+	{
+		return s.ldegree();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().ldegree(std::declval<std::set<std::string>>())) wrap_partial_ldegree(const S &s, bp::object obj)
+	{
+		bp::stl_input_iterator<std::string> begin(obj), end;
+		return s.ldegree(std::set<std::string>(begin,end));
+	}
+	// Power series exposer.
+	template <typename T>
+	static void power_series_exposer(bp::class_<T> &series_class,
+		typename std::enable_if<is_power_series<T>::value>::type * = piranha_nullptr)
+	{
+		series_class.def("degree",wrap_degree<T>);
+		series_class.def("degree",wrap_partial_degree<T>);
+		series_class.def("ldegree",wrap_ldegree<T>);
+		series_class.def("ldegree",wrap_partial_ldegree<T>);
+	}
+	template <typename T>
+	static void power_series_exposer(bp::class_<T> &,
+		typename std::enable_if<!is_power_series<T>::value>::type * = piranha_nullptr)
+	{}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -237,6 +274,8 @@ struct series_exposer
 		// Sin and cos.
 		bp::def("_sin",sin_cos_wrapper<false,series_type>);
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
+		// Power series methods.
+		power_series_exposer(series_class);
 		// Next iteration step.
 		main_exposer<I + 1u,T...>(t);
 	}

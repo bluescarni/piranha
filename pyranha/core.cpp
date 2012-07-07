@@ -38,8 +38,10 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
 #include <cstddef>
 #include <iterator>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
