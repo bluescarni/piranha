@@ -27,6 +27,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <cctype>
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <limits>
@@ -192,9 +193,11 @@ class PIRANHA_PUBLIC real
 				}
 			}
 			if (is_inf()) {
-				if (std::numeric_limits<T>::has_infinity) {
-					piranha_assert(sign() != 0);
-					return (sign() > 0) ? std::numeric_limits<T>::infinity() : -std::numeric_limits<T>::infinity();
+				piranha_assert(sign() != 0);
+				if (std::numeric_limits<T>::has_infinity && sign() > 0) {
+					return std::numeric_limits<T>::infinity();
+				} else if (std::numeric_limits<T>::has_infinity && sign() < 0 && std::signbit(std::numeric_limits<T>::lowest()) != 0) {
+					return std::copysign(std::numeric_limits<T>::infinity(),std::numeric_limits<T>::lowest());
 				} else {
 					piranha_throw(std::overflow_error,"cannot convert infinity to floating-point type");
 				}
