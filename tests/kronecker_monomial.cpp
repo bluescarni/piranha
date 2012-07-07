@@ -34,12 +34,16 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
+#include "../src/math.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -533,4 +537,45 @@ struct partial_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_partial_test)
 {
 	boost::mpl::for_each<int_types>(partial_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		typedef std::unordered_map<symbol,integer> dict_type;
+		symbol_set vs;
+		k_type k1;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(1));
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		k1 = k_type({T(1)});
+		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs),1);
+		k1 = k_type({T(2)});
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)}},vs),9);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),9);
+		k1 = k_type({T(2),T(3)});
+		vs.add("y");
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),73);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("y"),integer(4)},{symbol("x"),integer(3)}},vs),73);
+		typedef std::unordered_map<symbol,double> dict_type2;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::pow(3.2,2) + math::pow(-4.3,3));
+		typedef std::unordered_map<symbol,rational> dict_type3;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
+			math::pow(rational(4,-3),2) + math::pow(rational(-1,-2),3));
+		k1 = k_type({T(-2),T(-3)});
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
+			math::pow(rational(4,-3),-2) + math::pow(rational(-1,-2),-3));
+		typedef std::unordered_map<symbol,real> dict_type4;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+			math::pow(real(5.678),-2) + math::pow(real(1.234),-3));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_evaluate_test)
+{
+	boost::mpl::for_each<int_types>(evaluate_tester());
 }
