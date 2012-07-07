@@ -35,6 +35,7 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#include <unordered_map>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -173,10 +174,11 @@ BOOST_AUTO_TEST_CASE(partial_test)
 
 BOOST_AUTO_TEST_CASE(evaluate_test)
 {
-	BOOST_CHECK_EQUAL(math::evaluate(5,{}),5);
-	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,{})),int>::value));
-	BOOST_CHECK_EQUAL(math::evaluate(5.,{}),5.);
-	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,{})),double>::value));
-	BOOST_CHECK_EQUAL(math::evaluate(5ul,{}),5ul);
-	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,{})),unsigned long>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
+	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,std::unordered_map<std::string,double>{})),int>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(5.,std::unordered_map<std::string,int>{}),5.);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,std::unordered_map<std::string,short>{})),double>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(5ul,std::unordered_map<std::string,double>{}),5ul);
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,std::unordered_map<std::string,short>{})),unsigned long>::value));
 }
