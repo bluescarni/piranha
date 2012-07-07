@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -599,6 +600,59 @@ class real_trigonometric_kronecker_monomial
 				}
 			}
 			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial());
+		}
+		/// Evaluation.
+		/**
+		 * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
+		 * to the linear combination of the values in \p dict with the multipliers. If a symbol in \p args is not found
+		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned
+		 * if the monomial is a cosine, 0 otherwise.
+		 * 
+		 * @param[in] dict dictionary that will be used for substitution.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of evaluating \p this with the values provided in \p dict.
+		 * 
+		 * @throws std::invalid_argument if a symbol in \p args is not found in \p dict.
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - construction of the return type,
+		 * - lookup operations in \p std::unordered_map,
+		 * - piranha::math::cos(), piranha::math::sin(), or the in-place addition and binary multiplication operators of the types
+		 *   involved in the computation.
+		 * 
+		 * \todo request constructability from 1, addability and multipliability.
+		 */
+		template <typename U>
+		decltype(math::cos(std::declval<U>() * std::declval<value_type>()))
+			evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		{
+			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) return_type;
+			static_assert(std::is_same<return_type,decltype(math::sin(std::declval<U>() * std::declval<value_type>()))>::value,
+				"Inconsistent return type.");
+			auto v = unpack(args);
+			if (args.size() == 0u) {
+				if (get_flavour()) {
+					return return_type(1);
+				} else {
+					return return_type(0);
+				}
+			}
+			typedef decltype(std::declval<U>() * std::declval<value_type>()) tmp_type;
+			tmp_type tmp = tmp_type();
+			const auto it_f = dict.end();
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				const auto it = dict.find(args[i]);
+				if (it == it_f) {
+					piranha_throw(std::invalid_argument,"cannot evaluate monomial: symbol does not appear in dictionary");
+				}
+				tmp += it->second * v[i];
+			}
+			if (get_flavour()) {
+				return math::cos(tmp);
+			} else {
+				return math::sin(tmp);
+			}
 		}
 	private:
 		value_type	m_value;

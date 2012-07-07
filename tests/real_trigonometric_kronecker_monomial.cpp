@@ -33,11 +33,15 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
+#include "../src/math.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -635,4 +639,51 @@ struct partial_tester
 BOOST_AUTO_TEST_CASE(rtkm_partial_test)
 {
 	boost::mpl::for_each<int_types>(partial_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		typedef std::unordered_map<symbol,integer> dict_type;
+		symbol_set vs;
+		k_type k1;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(1));
+		k1.set_flavour(false);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(0));
+		k1.set_flavour(true);
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		k1 = k_type({T(1)});
+		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),1);
+		BOOST_CHECK_THROW(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs),std::invalid_argument);
+		k1.set_flavour(false);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),0);
+		k1 = k_type({T(2),T(-3)});
+		vs.add("y");
+		typedef std::unordered_map<symbol,double> dict_type2;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::cos((0. + (3.2 * 2)) + (-4.3 * -3)));
+		k1.set_flavour(false);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::sin((0. + (3.2 * 2)) + (-4.3 * -3)));
+		typedef std::unordered_map<symbol,real> dict_type4;
+		k1 = k_type({T(-2),T(-3)});
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+			math::cos((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
+		k1.set_flavour(false);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+			math::sin((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
+		typedef std::unordered_map<symbol,rational> dict_type3;
+		k1 = k_type({T(3),T(-2)});
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}},vs),1);
+		k1.set_flavour(false);
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}},vs),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_evaluate_test)
+{
+	boost::mpl::for_each<int_types>(evaluate_tester());
 }
