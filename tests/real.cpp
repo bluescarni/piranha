@@ -34,6 +34,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/detail/mpfr.hpp"
 #include "../src/environment.hpp"
@@ -1550,8 +1551,8 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 
 BOOST_AUTO_TEST_CASE(real_evaluate_test)
 {
-	BOOST_CHECK_EQUAL(math::evaluate(real(),{}),real());
-	BOOST_CHECK_EQUAL(math::evaluate(real(2),{}),real(2));
-	BOOST_CHECK_EQUAL(math::evaluate(real(-3.5),{}),real(-3.5));
-	BOOST_CHECK((std::is_same<decltype(math::evaluate(real(),{})),real>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(real(),std::unordered_map<std::string,integer>{}),real());
+	BOOST_CHECK_EQUAL(math::evaluate(real(2),std::unordered_map<std::string,int>{}),real(2));
+	BOOST_CHECK_EQUAL(math::evaluate(real(-3.5),std::unordered_map<std::string,double>{}),real(-3.5));
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(real(),std::unordered_map<std::string,real>{})),real>::value));
 }

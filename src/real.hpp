@@ -1674,7 +1674,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::typ
 	 * 
 	 * @return copy of \p x.
 	 */
-	T operator()(const T &x, const std::unordered_map<std::string,T> &) const
+	template <typename U>
+	T operator()(const T &x, const std::unordered_map<std::string,U> &) const
 	{
 		return x;
 	}

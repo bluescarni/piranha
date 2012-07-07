@@ -41,6 +41,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -893,8 +894,8 @@ BOOST_AUTO_TEST_CASE(integer_partial_test)
 
 BOOST_AUTO_TEST_CASE(integer_evaluate_test)
 {
-	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(),{}),piranha::integer(0));
-	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(-2),{}),piranha::integer(-2));
-	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer("3"),{}),piranha::integer(3));
-	BOOST_CHECK((std::is_same<decltype(piranha::math::evaluate(piranha::integer(),{})),piranha::integer>::value));
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(),std::unordered_map<std::string,piranha::integer>{}),piranha::integer(0));
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer(-2),std::unordered_map<std::string,double>{}),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer("3"),std::unordered_map<std::string,char>{}),piranha::integer(3));
+	BOOST_CHECK((std::is_same<decltype(piranha::math::evaluate(piranha::integer(),std::unordered_map<std::string,int>{})),piranha::integer>::value));
 }

@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "../src/config.hpp"
@@ -869,9 +870,9 @@ BOOST_AUTO_TEST_CASE(rational_partial_test)
 
 BOOST_AUTO_TEST_CASE(rational_evaluate_test)
 {
-	BOOST_CHECK_EQUAL(math::evaluate(rational(),{}),rational());
-	BOOST_CHECK_EQUAL(math::evaluate(rational(2),{}),rational(2));
-	BOOST_CHECK_EQUAL(math::evaluate(rational(-3.5),{}),rational(-3.5));
-	BOOST_CHECK_EQUAL(math::evaluate(rational(4,5),{}),rational(8,10));
-	BOOST_CHECK((std::is_same<decltype(math::evaluate(rational(),{})),rational>::value));
+	BOOST_CHECK_EQUAL(math::evaluate(rational(),std::unordered_map<std::string,integer>{}),rational());
+	BOOST_CHECK_EQUAL(math::evaluate(rational(2),std::unordered_map<std::string,rational>{}),rational(2));
+	BOOST_CHECK_EQUAL(math::evaluate(rational(-3.5),std::unordered_map<std::string,double>{}),rational(-3.5));
+	BOOST_CHECK_EQUAL(math::evaluate(rational(4,5),std::unordered_map<std::string,int>{}),rational(8,10));
+	BOOST_CHECK((std::is_same<decltype(math::evaluate(rational(),std::unordered_map<std::string,char>{})),rational>::value));
 }

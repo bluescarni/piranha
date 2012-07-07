@@ -1985,7 +1985,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::
 	 * 
 	 * @return copy of \p n.
 	 */
-	T operator()(const T &n, const std::unordered_map<std::string,T> &) const
+	template <typename U>
+	T operator()(const T &n, const std::unordered_map<std::string,U> &) const
 	{
 		return n;
 	}

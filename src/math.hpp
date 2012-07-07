@@ -402,7 +402,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::ty
 	 * 
 	 * @return copy of \p x.
 	 */
-	T operator()(const T &x, const std::unordered_map<std::string,T> &) const
+	template <typename U>
+	T operator()(const T &x, const std::unordered_map<std::string,U> &) const
 	{
 		return x;
 	}
@@ -422,8 +423,8 @@ struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::ty
  * 
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
-template <typename T>
-inline auto evaluate(const T &x, const std::unordered_map<std::string,T> &dict) -> decltype(evaluate_impl<T>()(x,dict))
+template <typename T, typename U>
+inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) -> decltype(evaluate_impl<T>()(x,dict))
 {
 	return evaluate_impl<T>()(x,dict);
 }
