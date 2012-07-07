@@ -73,6 +73,11 @@ template <typename T>
 class monomial: public array_key<T,monomial<T>>
 {
 		typedef array_key<T,monomial<T>> base;
+		template <typename U>
+		struct eval_type
+		{
+			typedef decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>())) type;
+		};
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
@@ -443,11 +448,9 @@ class monomial: public array_key<T,monomial<T>>
 		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
-		decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>()))
-			evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
-			typedef decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>()))
-				return_type;
+			typedef typename eval_type<U>::type return_type;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}

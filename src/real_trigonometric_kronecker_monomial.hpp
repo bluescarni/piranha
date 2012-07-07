@@ -104,6 +104,11 @@ class real_trigonometric_kronecker_monomial
 		static const size_type max_size = 255u;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		template <typename U>
+		struct eval_type
+		{
+			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) type;
+		};
 	public:
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
@@ -624,10 +629,9 @@ class real_trigonometric_kronecker_monomial
 		 * \todo request constructability from 1, addability and multipliability.
 		 */
 		template <typename U>
-		decltype(math::cos(std::declval<U>() * std::declval<value_type>()))
-			evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
-			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) return_type;
+			typedef typename eval_type<U>::type return_type;
 			static_assert(std::is_same<return_type,decltype(math::sin(std::declval<U>() * std::declval<value_type>()))>::value,
 				"Inconsistent return type.");
 			auto v = unpack(args);
