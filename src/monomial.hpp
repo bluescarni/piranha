@@ -431,7 +431,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * @param[in] dict dictionary that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the result of evaluating this with the values provided in \p dict.
+		 * @return the result of evaluating \p this with the values provided in \p dict.
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if
 		 * a symbol in \p args is not found in \p dict.

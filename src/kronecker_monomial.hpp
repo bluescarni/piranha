@@ -571,7 +571,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * @param[in] dict dictionary that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the result of evaluating this with the values provided in \p dict.
+		 * @return the result of evaluating \p this with the values provided in \p dict.
 		 * 
 		 * @throws std::invalid_argument if a symbol in \p args is not found in \p dict.
 		 * @throws unspecified any exception thrown by:
