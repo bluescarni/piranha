@@ -1239,8 +1239,8 @@ class series: series_binary_operators, detail::series_tag
 		{
 			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
 				func_type;
-			auto func = [m_symbol_set](const term_type &t) {
-				return series<term_type,Derived>::pair_from_term(m_symbol_set,t);
+			auto func = [this](const term_type &t) {
+				return series<term_type,Derived>::pair_from_term(this->m_symbol_set,t);
 			};
 			return boost::make_transform_iterator(m_container.begin(),func_type(std::move(func)));
 		}
@@ -1260,8 +1260,8 @@ class series: series_binary_operators, detail::series_tag
 		{
 			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
 				func_type;
-			auto func = [m_symbol_set](const term_type &t) {
-				return series<term_type,Derived>::pair_from_term(m_symbol_set,t);
+			auto func = [this](const term_type &t) {
+				return series<term_type,Derived>::pair_from_term(this->m_symbol_set,t);
 			};
 			return boost::make_transform_iterator(m_container.end(),func_type(std::move(func)));
 		}
@@ -1305,6 +1305,8 @@ class series: series_binary_operators, detail::series_tag
 		 * of \p func is used to construct a new temporary series from the multiplication of \p t.first and
 		 * \p t.second. Each temporary series is then added to the return value series.
 		 * 
+		 * This method requires the coefficient type to be multipliable by \p Derived.
+		 * 
 		 * @param[in] func transforming functor.
 		 * 
 		 * @return transformed series.
@@ -1315,6 +1317,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - the assignment operator of piranha::symbol_set,
 		 * - term, coefficient, key construction,
 		 * - series multiplication and addition.
+		 * 
+		 * \todo require multipliability of cf * Derived and addability of the result to Derived in place.
 		 */
 		Derived transform(std::function<std::pair<typename term_type::cf_type,Derived>
 			(const std::pair<typename term_type::cf_type,Derived> &)> func) const
@@ -1324,6 +1328,8 @@ class series: series_binary_operators, detail::series_tag
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				tmp = func(pair_from_term(m_symbol_set,*it));
+				// NOTE: here we could use multadd, but it seems like there's not
+				// much benefit (plus, the types involved are different).
 				retval += tmp.first * tmp.second;
 			}
 			return retval;
