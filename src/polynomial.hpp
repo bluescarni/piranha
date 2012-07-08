@@ -138,6 +138,17 @@ class polynomial:
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
 		}
+		// Subs typedef.
+		template <typename T>
+		struct subs_type
+		{
+			typedef typename base::term_type::cf_type cf_type;
+			typedef typename base::term_type::key_type key_type;
+			typedef decltype(
+				(math::subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<T>()) * std::declval<polynomial>()) *
+				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first
+			) type;
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -295,6 +306,54 @@ class polynomial:
 				return retval;
 			}
 			return static_cast<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> const *>(this)->pow(x);
+		}
+		/// Substitution.
+		/**
+		 * Substitute the symbolic quantity \p name with the generic value \p x. The result for each term is computed
+		 * via piranha::math::subs() for the coefficients and via the substitution method for the monomials, and
+		 * then assembled into the final return value via multiplications and additions.
+		 * 
+		 * @param[in] name name of the symbolic variable that will be subject to substitution.
+		 * @param[in] x quantity that will be substituted for \p name.
+		 * 
+		 * @return result of the substitution.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - symbol construction,
+		 * - piranha::symbol_set::remove() and assignment operator,
+		 * - piranha::math::subs(),
+		 * - the substitution method of the monomial type,
+		 * - piranha::series::insert(),
+		 * - construction, addition and multiplication of the types involved in the computation.
+		 * 
+		 * \todo type requirements.
+		 */
+		template <typename T>
+		typename subs_type<T>::type subs(const std::string &name, const T &x) const
+		{
+			typedef typename subs_type<T>::type return_type;
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			// Turn name into symbol.
+			const symbol s(name);
+			// Init return value.
+			return_type retval = return_type();
+			// Remove the symbol from the current symbol set, if present.
+			symbol_set sset(this->m_symbol_set);
+			if (std::binary_search(sset.begin(),sset.end(),s)) {
+				sset.remove(s);
+			}
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				auto cf_sub = math::subs(it->m_cf,name,x);
+				auto key_sub = it->m_key.subs(s,x,this->m_symbol_set);
+				polynomial tmp_series;
+				tmp_series.m_symbol_set = sset;
+				tmp_series.insert(term_type(cf_type(1),key_type(key_sub.second)));
+				retval += (cf_sub * tmp_series) * key_sub.first;
+			}
+			return retval;
 		}
 };
 

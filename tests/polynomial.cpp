@@ -33,6 +33,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
@@ -593,4 +594,36 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 	BOOST_CHECK_EQUAL(partial(x * y,"y"),x);
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"y"),10 * (x * y + x - 3 * pow(y,2)).pow(9) * (x - 6 * y));
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"z"),0);
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_subs_test)
+{
+	{
+	typedef polynomial<rational> p_type1;
+	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",integer(1)),1);
+	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",p_type1{"x"}),p_type1{"x"});
+	p_type1 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("x",integer(3)),9 + 3 * y + z);
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("y",rational(3,2)),x * x + x * rational(3,2) + z);
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("k",rational(3,2)),x * x + x * y + z);
+	BOOST_CHECK_EQUAL(x.pow(-1).subs("x",x.pow(-1)),x);
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("x",rational(3,2)).subs("y",rational(4,5)).subs("z",-rational(6,7)),
+		(x.pow(2) + x * y + z).evaluate(std::unordered_map<std::string,rational>{{"x",rational(3,2)},
+		{"y",rational(4,5)},{"z",-rational(6,7)}}));
+	BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x",integer(1))),p_type1>::value));
+	BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x",rational(1))),p_type1>::value));
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("k",rational(3,2)),x * x + x * y + z);
+	}
+	{
+	typedef polynomial<real,int> p_type2;
+	p_type2 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)),y*y + math::pow(real(1.234),3));
+	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)).subs("y",real(-5.678)),math::pow(real(-5.678),2) +
+		math::pow(real(1.234),3));
+	}
+	typedef polynomial<integer,long> p_type3;
+	p_type3 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL((x*x*x + y*y + z*y*x).subs("x",integer(2)).subs("y",integer(-3)).subs("z",integer(4)).subs("k",integer()),
+		integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));
+	BOOST_CHECK_EQUAL((x*x*x + y*y + z*y*x).subs("x",integer(0)).subs("y",integer(0)).subs("z",integer(0)).subs("k",integer()),0);
 }

@@ -1363,6 +1363,9 @@ class series: series_binary_operators, detail::series_tag
 		template <typename T>
 		typename eval_type<T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
 		{
+			// NOTE: possible improvement: if the evaluation type is less-than comparable,
+			// build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
+			// with fp types and maybe improve performance - e.g., for integers).
 			typedef typename eval_type<T>::type return_type;
 			// Transform the string dict into symbol dict for use in keys.
 			std::unordered_map<symbol,T> s_dict;
