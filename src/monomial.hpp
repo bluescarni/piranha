@@ -29,9 +29,9 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <utility>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 #include "array_key.hpp"
 #include "concepts/degree_key.hpp"
@@ -73,6 +73,7 @@ template <typename T>
 class monomial: public array_key<T,monomial<T>>
 {
 		typedef array_key<T,monomial<T>> base;
+		// Eval and subs type definition.
 		template <typename U>
 		struct eval_type
 		{
@@ -464,6 +465,47 @@ class monomial: public array_key<T,monomial<T>>
 				retval *= math::pow(it->second,(*this)[i]);
 			}
 			return retval;
+		}
+		/// Substitution.
+		/**
+		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a pair in which the first
+		 * element is the result of substituting \p s with \p x (i.e., \p x raised to the power of the exponent corresponding
+		 * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
+		 * corresponding to \p s removed). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
+		 * monomial is unchanged and the substitution yields 1).
+		 * 
+		 * @param[in] s symbol that will be substituted.
+		 * @param[in] x quantity that will be substituted in place of \p s.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p x for \p s.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by:
+		 * - construction and assignment of the return value,
+		 * - piranha::math::pow(),
+		 * - piranha::array_key::push_back().
+		 * 
+		 * \todo require constructability from int and exponentiability.
+		 */
+		template <typename U>
+		std::pair<typename eval_type<U>::type,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		{
+			typedef typename eval_type<U>::type s_type;
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			s_type retval_s(1);
+			monomial retval_key;
+			for (typename base::size_type i = 0u; i < this->size(); ++i) {
+				if (args[i] == s) {
+					retval_s = math::pow(x,(*this)[i]);
+				} else {
+					retval_key.push_back((*this)[i]);
+				}
+			}
+			piranha_assert(retval_key.size() == this->size() || retval_key.size() == this->size() - 1u);
+			return std::make_pair(std::move(retval_s),std::move(retval_key));
 		}
 };
 

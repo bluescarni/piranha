@@ -93,6 +93,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		static const size_type max_size = 255u;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		// Eval and sub typedef.
 		template <typename U>
 		struct eval_type
 		{
@@ -602,6 +603,42 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				retval *= math::pow(it->second,v[i]);
 			}
 			return retval;
+		}
+		/// Substitution.
+		/**
+		 * The algorithm is equivalent to the one implemented in piranha::monomial::subs().
+		 * 
+		 * @param[in] s symbol that will be substituted.
+		 * @param[in] x quantity that will be substituted in place of \p s.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p x for \p s.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - construction and assignment of the return value,
+		 * - piranha::math::pow(),
+		 * - piranha::static_vector::push_back(),
+		 * - piranha::kronecker_array::encode().
+		 * 
+		 * \todo require constructability from int and exponentiability.
+		 */
+		template <typename U>
+		std::pair<typename eval_type<U>::type,kronecker_monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		{
+			typedef typename eval_type<U>::type s_type;
+			const auto v = unpack(args);
+			v_type new_v;
+			s_type retval_s(1);
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				if (args[i] == s) {
+					retval_s = math::pow(x,v[i]);
+				} else {
+					new_v.push_back(v[i]);
+				}
+			}
+			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
+			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
 		}
 	private:
 		value_type m_value;

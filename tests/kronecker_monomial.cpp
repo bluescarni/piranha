@@ -579,3 +579,46 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_evaluate_test)
 {
 	boost::mpl::for_each<int_types>(evaluate_tester());
 }
+
+struct subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		auto ret = k1.subs(symbol("x"),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK((std::is_same<integer,decltype(ret.first)>::value));
+		BOOST_CHECK(ret.second == k1);
+		k1 = k_type({T(1)});
+		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(4),vs),std::invalid_argument);
+		vs.add("x");
+		k1 = k_type({T(2)});
+		ret = k1.subs(symbol("y"),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK(ret.second == k1);
+		ret = k1.subs(symbol("x"),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(4),T(2)));
+		BOOST_CHECK(ret.second == k_type{});
+		k1 = k_type({T(2),T(3)});
+		vs.add("y");
+		ret = k1.subs(symbol("y"),integer(-2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(-2),T(3)));
+		BOOST_CHECK(ret.second == k_type{T(2)});
+		auto ret2 = k1.subs(symbol("x"),real(-2.345),vs);
+		BOOST_CHECK_EQUAL(ret2.first,math::pow(real(-2.345),T(2)));
+		BOOST_CHECK(ret2.second == k_type{T(3)});
+		BOOST_CHECK((std::is_same<real,decltype(ret2.first)>::value));
+		auto ret3 = k1.subs(symbol("x"),rational(-1,2),vs);
+		BOOST_CHECK_EQUAL(ret3.first,rational(1,4));
+		BOOST_CHECK(ret3.second == k_type{T(3)});
+		BOOST_CHECK((std::is_same<rational,decltype(ret3.first)>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_subs_test)
+{
+	boost::mpl::for_each<int_types>(subs_tester());
+}
