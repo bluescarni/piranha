@@ -23,6 +23,18 @@ struct series_exposer
 	static void pow_exposer(bp::class_<T> &, const U &,
 		typename std::enable_if<!is_exponentiable<T,U>::value>::type * = piranha_nullptr)
 	{}
+	// Evaluation wrapper.
+	template <typename S, typename T>
+	static decltype(std::declval<S>().evaluate(std::declval<std::unordered_map<std::string,T>>()))
+		wrap_evaluate(const S &s, bp::dict dict, const T &)
+	{
+		std::unordered_map<std::string,T> cpp_dict;
+		bp::stl_input_iterator<std::string> it(dict), end;
+		for (; it != end; ++it) {
+			cpp_dict[*it] = bp::extract<T>(dict[*it])();
+		}
+		return s.evaluate(cpp_dict);
+	}
 	// Interaction with interoperable types.
 	template <typename S, std::size_t I = 0u, typename... T>
 	void interop_exposer(bp::class_<S> &, const std::tuple<T...> &,
@@ -58,6 +70,8 @@ struct series_exposer
 		series_class.def(bp::self / in);
 		// Exponentiation.
 		pow_exposer(series_class,in);
+		// Evaluation.
+		series_class.def("_evaluate",wrap_evaluate<S,interop_type>);
 		interop_exposer<S,I + 1u,T...>(series_class,t);
 	}
 	// Differentiation.

@@ -54,7 +54,7 @@ def cos(arg):
 	try:
 		return _cos(arg)
 	except TypeError:
-		raise TypeError("Invalid argument type.")
+		raise TypeError("invalid argument type")
 
 def sin(arg):
 	"""Sine.
@@ -88,7 +88,7 @@ def sin(arg):
 	try:
 		return _sin(arg)
 	except TypeError:
-		raise TypeError("Invalid argument type.")
+		raise TypeError("invalid argument type")
 
 def partial(arg,name):
 	"""Partial derivative.

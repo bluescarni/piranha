@@ -19,7 +19,7 @@
 
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
-from _common import _get_cf_types, _get_series_type, _cleanup_custom_derivatives
+from _common import _get_cf_types, _get_series_type, _cleanup_custom_derivatives, _register_evaluate_wrapper
 
 def get_cf_types():
 	"""Get the list of implemented coefficient types.
@@ -63,6 +63,8 @@ def get_type(cf_type):
 	
 	"""
 	return _get_series_type('poisson_series',cf_type)
+
+_register_evaluate_wrapper('poisson_series')
 
 import atexit as _atexit
 _atexit.register(lambda : _cleanup_custom_derivatives('poisson_series'))

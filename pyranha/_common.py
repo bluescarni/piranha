@@ -36,7 +36,7 @@ def _get_series_type(series_name,cf_type):
 		cand = filter(lambda t: t[1] == cf_type,cfl)
 		assert(len(cand) < 2)
 	if len(cand) == 0:
-		raise TypeError('No series type available for this coefficient type.')
+		raise TypeError('no series type available for this coefficient type')
 	# Build series name and get it from _core.
 	s_name = filter(lambda s: s.startswith('_' + series_name + '_' + str(cand[0][2])),dir(_core))
 	assert(len(s_name) == 1)
@@ -52,3 +52,29 @@ def _cleanup_custom_derivatives(series_name):
 		print('Unregistering custom derivatives for: ' + s)
 		s_type = getattr(_core,s)
 		s_type.unregister_all_custom_derivatives()
+
+# Wrapper for the evaluate() method. Will first check input dict,
+# and then try to invoke the underlying C++ exposed method.
+def _evaluate_wrapper(self,d):
+	# Type checks.
+	if not isinstance(d,dict):
+		raise TypeError('evaluation dictionary must be a dict object')
+	if len(d) == 0:
+		raise ValueError('evaluation dictionary cannot be empty')
+	if not all([isinstance(k,str) for k in d]):
+		raise TypeError('all keys in the evaluation dictionary must be string objects')
+	t_set = set([type(d[k]) for k in d])
+	if not len(t_set) == 1:
+		raise TypeError('all values in the evaluation dictionary must be of the same type')
+	try:
+		return self._evaluate(d,d[d.keys()[0]])
+	except TypeError:
+		raise TypeError('cannot evaluate with values of type ' + type(d[d.keys()[0]]).__name__)
+
+# Register the evaluate wrapper for a particular series.
+def _register_evaluate_wrapper(series_name):
+	import re
+	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	for s in s_names:
+		s_type = getattr(_core,s)
+		setattr(s_type,'evaluate',_evaluate_wrapper)
