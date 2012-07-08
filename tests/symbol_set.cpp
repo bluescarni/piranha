@@ -116,3 +116,23 @@ BOOST_AUTO_TEST_CASE(symbol_set_merge_test)
 	un.add(symbol("s"));
 	BOOST_CHECK(un == ss3a);
 }
+
+BOOST_AUTO_TEST_CASE(symbol_set_remove_test)
+{
+	symbol_set ss;
+	ss.add(symbol("c"));
+	ss.add(symbol("b"));
+	ss.add(symbol("d"));
+	BOOST_CHECK_THROW(ss.remove(symbol("a")),std::invalid_argument);
+	BOOST_CHECK_EQUAL(ss.size(),3u);
+	BOOST_CHECK_THROW(ss.remove("a"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(ss.size(),3u);
+	BOOST_CHECK_NO_THROW(ss.remove(symbol("b")));
+	BOOST_CHECK_EQUAL(ss.size(),2u);
+	BOOST_CHECK_NO_THROW(ss.remove("c"));
+	BOOST_CHECK_EQUAL(ss.size(),1u);
+	BOOST_CHECK_NO_THROW(ss.remove("d"));
+	BOOST_CHECK_EQUAL(ss.size(),0u);
+	BOOST_CHECK_THROW(ss.remove("a"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(ss.size(),0u);
+}

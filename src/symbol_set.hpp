@@ -199,6 +199,40 @@ class symbol_set
 		{
 			add(symbol(name));
 		}
+		/// Remove symbol from the set.
+		/**
+		 * The removal of \p s will preserve the order of the set.
+		 * 
+		 * @param[in] s piranha::symbol to be removed.
+		 * 
+		 * @throws std::invalid_argument if \p s is not present in the set.
+		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+		 */
+		void remove(const symbol &s)
+		{
+			// Operate on a copy to provide strong exception safety.
+			std::vector<symbol> new_values;
+			std::remove_copy_if(begin(),end(),std::back_inserter(new_values),
+				[&s](const symbol &sym) {return sym == s;});
+			if (new_values.size() == size()) {
+				piranha_throw(std::invalid_argument,"symbol is not present in this set");
+			}
+			m_values = std::move(new_values);
+			piranha_assert(check());
+		}
+		/// Remove symbol from the set.
+		/**
+		 * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
+		 * 
+		 * @param[in] name name of the piranha::symbol to be removed.
+		 * 
+		 * @throws unspecified any exception thrown by the other overload of this method or by the construction
+		 * of piranha::symbol from \p std::string.
+		 */
+		void remove(const std::string &name)
+		{
+			remove(symbol(name));
+		}
 		/// Set size.
 		/**
 		 * @return the number of elements in the set.
