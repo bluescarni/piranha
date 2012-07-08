@@ -175,10 +175,19 @@ BOOST_AUTO_TEST_CASE(partial_test)
 BOOST_AUTO_TEST_CASE(evaluate_test)
 {
 	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
-	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,std::unordered_map<std::string,double>{})),int>::value));
 	BOOST_CHECK_EQUAL(math::evaluate(5.,std::unordered_map<std::string,int>{}),5.);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,std::unordered_map<std::string,short>{})),double>::value));
 	BOOST_CHECK_EQUAL(math::evaluate(5ul,std::unordered_map<std::string,double>{}),5ul);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,std::unordered_map<std::string,short>{})),unsigned long>::value));
+}
+
+BOOST_AUTO_TEST_CASE(subs_test)
+{
+	BOOST_CHECK_EQUAL(math::subs(5,"",6),5);
+	BOOST_CHECK((std::is_same<decltype(math::subs(5,"",6)),int>::value));
+	BOOST_CHECK_EQUAL(math::subs(5.,"",6),5.);
+	BOOST_CHECK((std::is_same<decltype(math::subs(5.,"",6)),double>::value));
+	BOOST_CHECK_EQUAL(math::subs(10ll,"","foo"),10ll);
+	BOOST_CHECK((std::is_same<decltype(math::subs(10ll,"","foo")),long long>::value));
 }

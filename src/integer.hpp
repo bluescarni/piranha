@@ -1992,6 +1992,23 @@ struct evaluate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::
 	}
 };
 
+/// Specialisation of the piranha::math::subs() functor for piranha::integer.
+template <typename T>
+struct subs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n substitution argument.
+	 * 
+	 * @return copy of \p n.
+	 */
+	template <typename U>
+	T operator()(const T &n, const std::string &, const U &) const
+	{
+		return n;
+	}
+};
+
 /// Default implementation of the piranha::math::integral_cast functor.
 /**
  * This functor should be specialised using the \p std::enable_if mechanism.

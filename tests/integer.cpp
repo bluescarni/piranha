@@ -899,3 +899,11 @@ BOOST_AUTO_TEST_CASE(integer_evaluate_test)
 	BOOST_CHECK_EQUAL(piranha::math::evaluate(piranha::integer("3"),std::unordered_map<std::string,char>{}),piranha::integer(3));
 	BOOST_CHECK((std::is_same<decltype(piranha::math::evaluate(piranha::integer(),std::unordered_map<std::string,int>{})),piranha::integer>::value));
 }
+
+BOOST_AUTO_TEST_CASE(integer_subs_test)
+{
+	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer(),"",2),piranha::integer(0));
+	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer(-2),"foo",4.5),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer("3"),"bar","frob"),piranha::integer(3));
+	BOOST_CHECK((std::is_same<decltype(piranha::math::subs(piranha::integer(),"",2)),piranha::integer>::value));
+}

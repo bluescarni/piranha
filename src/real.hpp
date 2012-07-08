@@ -1681,6 +1681,23 @@ struct evaluate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::typ
 	}
 };
 
+/// Specialisation of the piranha::math::subs() functor for piranha::real.
+template <typename T>
+struct subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	template <typename U>
+	T operator()(const T &x, const std::string &, const U &) const
+	{
+		return x;
+	}
+};
+
 /// Specialisation of the piranha::math::integral_cast functor for piranha::real.
 template <typename T>
 struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>

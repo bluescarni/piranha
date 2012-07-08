@@ -1556,3 +1556,11 @@ BOOST_AUTO_TEST_CASE(real_evaluate_test)
 	BOOST_CHECK_EQUAL(math::evaluate(real(-3.5),std::unordered_map<std::string,double>{}),real(-3.5));
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(real(),std::unordered_map<std::string,real>{})),real>::value));
 }
+
+BOOST_AUTO_TEST_CASE(real_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::subs(real(),"",4),real());
+	BOOST_CHECK_EQUAL(math::subs(real(2),"foo",5.6),real(2));
+	BOOST_CHECK_EQUAL(math::subs(real(-3.5),"niz","foo"),real(-3.5));
+	BOOST_CHECK((std::is_same<decltype(math::subs(real(-3.5),"niz","foo")),real>::value));
+}

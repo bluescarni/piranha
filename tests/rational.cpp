@@ -876,3 +876,12 @@ BOOST_AUTO_TEST_CASE(rational_evaluate_test)
 	BOOST_CHECK_EQUAL(math::evaluate(rational(4,5),std::unordered_map<std::string,int>{}),rational(8,10));
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(rational(),std::unordered_map<std::string,char>{})),rational>::value));
 }
+
+BOOST_AUTO_TEST_CASE(rational_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::subs(rational(),"",1),rational());
+	BOOST_CHECK_EQUAL(math::subs(rational(2),"foo",4.5),rational(2));
+	BOOST_CHECK_EQUAL(math::subs(rational(-3.5),"bar",55),rational(-3.5));
+	BOOST_CHECK_EQUAL(math::subs(rational(4,5),"","frob"),rational(-8,-10));
+	BOOST_CHECK((std::is_same<decltype(math::subs(rational(4,5),"","frob")),rational>::value));
+}

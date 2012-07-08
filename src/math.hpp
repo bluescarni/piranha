@@ -429,6 +429,55 @@ inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) 
 	return evaluate_impl<T>()(x,dict);
 }
 
+/// Default functor for the implementation of piranha::math::subs().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct subs_impl
+{};
+
+/// Specialisation of the piranha::math::subs() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	template <typename U>
+	T operator()(const T &x, const std::string &, const U &) const
+	{
+		return x;
+	}
+};
+
+/// Substitution.
+/**
+ * Substitute a symbolic variable with a generic object.
+ * The actual implementation of this function is in the piranha::math::subs_impl functor.
+ * 
+ * @param[in] x quantity that will be subject to substitution.
+ * @param[in] name name of the symbolic variable that will be substituted.
+ * @param[in] y object that will substitute the variable.
+ * 
+ * @return \p x after substitution  of \p name with \p y.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
+ */
+template <typename T, typename U>
+inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T>()(x,name,y))
+{
+	return subs_impl<T>()(x,name,y);
+}
+
 }
 
 /// Type-trait for differentiable types.
