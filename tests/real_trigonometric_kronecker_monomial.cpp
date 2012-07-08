@@ -687,3 +687,97 @@ BOOST_AUTO_TEST_CASE(rtkm_evaluate_test)
 {
 	boost::mpl::for_each<int_types>(evaluate_tester());
 }
+
+struct subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		auto ret = k1.subs(symbol("x"),integer(5),vs);
+		BOOST_CHECK_EQUAL(ret.first.first,1);
+		BOOST_CHECK(ret.first.second == k1);
+		BOOST_CHECK_EQUAL(ret.second.first,0);
+		BOOST_CHECK((ret.second.second == k_type{T(0),false}));
+		k1.set_flavour(false);
+		ret = k1.subs(symbol("x"),integer(5),vs);
+		BOOST_CHECK_EQUAL(ret.first.first,0);
+		BOOST_CHECK((ret.first.second == k_type{T(0),true}));
+		BOOST_CHECK_EQUAL(ret.second.first,1);
+		BOOST_CHECK((ret.second.second == k1));
+		k1 = k_type{T(1)};
+		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(5),vs),std::invalid_argument);
+		k1 = k_type(T(1),false);
+		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(5),vs),std::invalid_argument);
+		// Subs with no sign changes.
+		vs.add("x");
+		vs.add("y");
+		k1 = k_type({T(2),T(3)});
+		auto ret2 = k1.subs(symbol("x"),real(5),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::cos(real(5) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,-math::sin(real(5) * T(2)));
+		BOOST_CHECK((ret2.first.second == k_type({T(3)})));
+		BOOST_CHECK((ret2.second.second == k_type(T(3),false)));
+		k1.set_flavour(false);
+		ret2 = k1.subs(symbol("x"),real(5),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::sin(real(5) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,math::cos(real(5) * T(2)));
+		BOOST_CHECK((ret2.first.second == k_type({T(3)})));
+		BOOST_CHECK((ret2.second.second == k_type(T(3),false)));
+		// Subs with no actual sub.
+		k1.set_flavour(true);
+		ret2 = k1.subs(symbol("z"),real(5),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,real(1));
+		BOOST_CHECK_EQUAL(ret2.second.first,real(0));
+		BOOST_CHECK((ret2.first.second == k1));
+		k1.set_flavour(false);
+		BOOST_CHECK((ret2.second.second == k1));
+		ret2 = k1.subs(symbol("z"),real(5),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,real(0));
+		BOOST_CHECK_EQUAL(ret2.second.first,real(1));
+		k1.set_flavour(true);
+		BOOST_CHECK((ret2.first.second == k1));
+		k1.set_flavour(false);
+		BOOST_CHECK((ret2.second.second == k1));
+		// Subs with sign change.
+		k1 = k_type({T(2),T(-3)});
+		ret2 = k1.subs(symbol("x"),real(6),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::cos(real(6) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,math::sin(real(6) * T(2)));
+		BOOST_CHECK((ret2.first.second == k_type({T(3)})));
+		BOOST_CHECK((ret2.second.second == k_type(T(3),false)));
+		k1.set_flavour(false);
+		ret2 = k1.subs(symbol("x"),real(6),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::sin(real(6) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,-math::cos(real(6) * T(2)));
+		BOOST_CHECK((ret2.first.second == k_type({T(3)})));
+		BOOST_CHECK((ret2.second.second == k_type(T(3),false)));
+		if (std::is_same<signed char,T>::value) {
+			return;
+		}
+		// Another with sign change.
+		k1 = k_type({T(2),T(-2),T(1)});
+		vs.add("z");
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::cos(real(7) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,math::sin(real(7) * T(2)));
+		k_type tmp({T(2),T(-1)});
+		BOOST_CHECK((ret2.first.second == tmp));
+		tmp.set_flavour(false);
+		BOOST_CHECK((ret2.second.second == tmp));
+		k1.set_flavour(false);
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::sin(real(7) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,-math::cos(real(7) * T(2)));
+		BOOST_CHECK((ret2.second.second == tmp));
+		tmp.set_flavour(true);
+		BOOST_CHECK((ret2.first.second == tmp));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_subs_test)
+{
+	boost::mpl::for_each<int_types>(subs_tester());
+}

@@ -104,10 +104,17 @@ class real_trigonometric_kronecker_monomial
 		static const size_type max_size = 255u;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		// Eval and subs typedefs.
 		template <typename U>
 		struct eval_type
 		{
 			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) type;
+		};
+		template <typename U>
+		struct subs_type
+		{
+			typedef std::pair<typename eval_type<U>::type,real_trigonometric_kronecker_monomial> pair_type;
+			typedef std::pair<pair_type,pair_type> type;
 		};
 	public:
 		/// Vector type used for temporary packing/unpacking.
@@ -656,6 +663,91 @@ class real_trigonometric_kronecker_monomial
 				return math::cos(tmp);
 			} else {
 				return math::sin(tmp);
+			}
+		}
+		/// Substitution.
+		/**
+		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a pair of pairs
+		 * computed according to the standard angle sum identities. That is, given a monomial of the form
+		 * \f[
+		 * \begin{array}{c}
+		 * \sin \tabularnewline
+		 * \cos
+		 * \end{array}
+		 * \left(na + b\right)
+		 * \f]
+		 * in which the symbol \f$ a \f$ is to be substituted with \f$ x \f$, the result of the substitution will be
+		 * one of
+		 * \f[
+		 * \begin{array}{c}
+		 * \left(\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right), \tabularnewline
+		 * \left(\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right),
+		 * \end{array}
+		 * \f]
+		 * where \f$ \cos b \f$ and \f$ \sin b \f$ are returned as monomials, and \f$ \cos nx \f$ and \f$ \sin nx \f$
+		 * as the return values of piranha::math::cos() and piranha::math::sin(). If \p s is not in \p args,
+		 * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first multiplier
+		 * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
+		 * 
+		 * @param[in] s symbol that will be substituted.
+		 * @param[in] x quantity that will be substituted in place of \p s.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p x for \p s.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - construction and assignment of the return value,
+		 * - piranha::math::cos(), piranha::math::sin() and piranha::math::negate(),
+		 * - piranha::static_vector::push_back(),
+		 * - piranha::kronecker_array::encode().
+		 * 
+		 * \todo require constructability from int, sin, cos, negate.
+		 */
+		template <typename U>
+		typename subs_type<U>::type subs(const symbol &s, const U &x, const symbol_set &args) const
+		{
+			typedef typename eval_type<U>::type s_type;
+			const auto v = unpack(args);
+			v_type new_v;
+			s_type retval_s_cos(1), retval_s_sin(0);
+			bool sign_changed = false;
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				if (args[i] == s) {
+					retval_s_cos = math::cos(v[i] * x);
+					retval_s_sin = math::sin(v[i] * x);
+				} else {
+					new_v.push_back(v[i]);
+				}
+			}
+			// NOTE: we have to check if in the newly-produced key the sign of the first
+			// multiplier needs to be changed for canonicalisation.
+			if (new_v.size() != 0u && new_v[0u] < value_type(0)) {
+				for (decltype(new_v.size()) i = 0u; i < new_v.size(); ++i) {
+					// This is safe because of the symmetry of the range in kronecker_array.
+					new_v[i] = -new_v[i];
+				}
+				sign_changed = true;
+			}
+			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
+			const auto new_int = ka::encode(new_v);
+			real_trigonometric_kronecker_monomial cos_key(new_int,true), sin_key(new_int,false);
+			if (get_flavour()) {
+				auto retval = std::make_pair(std::make_pair(std::move(retval_s_cos),std::move(cos_key)),
+					std::make_pair(std::move(retval_s_sin),std::move(sin_key)));
+				// Need to flip the sign on the sin * sin product if sign was not changed.
+				if (!sign_changed) {
+					math::negate(retval.second.first);
+				}
+				return retval;
+			} else {
+				auto retval = std::make_pair(std::make_pair(std::move(retval_s_sin),std::move(cos_key)),
+					std::make_pair(std::move(retval_s_cos),std::move(sin_key)));
+				// Need to flip the sign on the cos * sin product if sign was changed.
+				if (sign_changed) {
+					math::negate(retval.second.first);
+				}
+				return retval;
 			}
 		}
 	private:
