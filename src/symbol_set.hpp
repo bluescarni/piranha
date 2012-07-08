@@ -176,7 +176,7 @@ class symbol_set
 			// Copy it to provide strong exception safety.
 			std::vector<symbol> new_values;
 			new_values.reserve(size() + size_type(1u));
-			std::copy(begin(),end(),std::back_insert_iterator<std::vector<symbol>>(new_values));
+			std::copy(begin(),end(),std::back_inserter(new_values));
 			const auto it = std::lower_bound(new_values.begin(),new_values.end(),s);
 			if (unlikely(it != new_values.end() && *it == s)) {
 				piranha_throw(std::invalid_argument,"symbol already present in this set");
@@ -190,7 +190,7 @@ class symbol_set
 		/**
 		 * Equivalent to constructing a piranha::symbol from \p name and then invoking the other overload of this method.
 		 * 
-		 * @param[in] name name of r the piranha::symbol to be inserted.
+		 * @param[in] name name of the piranha::symbol to be inserted.
 		 * 
 		 * @throws unspecified any exception thrown by the other overload of this method or by the construction
 		 * of piranha::symbol from \p std::string.
