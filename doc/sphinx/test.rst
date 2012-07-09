@@ -1,7 +1,7 @@
 .. _test:
 
-Docs for :mod:`pyranhapp0x.test`
-======================================
+:mod:`pyranhapp0x.test`
+=======================
 
 Test module.
 

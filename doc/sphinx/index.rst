@@ -3,18 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Pyranha's documentation!
-===================================
+Pyranha
+=======
+
+Pyranha is a computer-algebra package dedicated to celestial mechanics.
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   polynomial.rst
-   poisson_series.rst
-   math.rst
-   test.rst
+   reference.rst
 
 Indices and tables
 ==================

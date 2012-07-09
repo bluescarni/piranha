@@ -1,7 +1,7 @@
 .. _polynomial:
 
-Docs for :mod:`pyranhapp0x.polynomial`
-======================================
+:mod:`pyranhapp0x.polynomial`
+=============================
 
 Polynomial module.
 

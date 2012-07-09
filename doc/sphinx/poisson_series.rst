@@ -1,7 +1,7 @@
 .. _poisson_series:
 
-Docs for :mod:`pyranhapp0x.poisson_series`
-==========================================
+:mod:`pyranhapp0x.poisson_series`
+=================================
 
 Poisson series module.
 

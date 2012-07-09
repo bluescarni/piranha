@@ -1,7 +1,7 @@
 .. _math:
 
-Docs for :mod:`pyranhapp0x.math`
-======================================
+:mod:`pyranhapp0x.math`
+=======================
 
 Math module.
 
