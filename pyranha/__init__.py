@@ -23,4 +23,16 @@
 
 """
 
-__all__ = ['polynomial', 'poisson_series', 'math', 'test']
+__all__ = ['polynomial', 'poisson_series', 'math', 'test', 'settings']
+
+class _settings(object):
+	@property
+	def max_term_output(self):
+		from _core import _settings as _s
+		return _s._get_max_term_output()
+	@max_term_output.setter
+	def max_term_output(self,n):
+		from _core import _settings as _s
+		_s._set_max_term_output(n)
+
+settings = _settings()

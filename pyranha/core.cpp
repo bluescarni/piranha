@@ -116,4 +116,8 @@ BOOST_PYTHON_MODULE(_core)
 	auto ps_interop_types = std::make_tuple(double(),integer(),rational(),real());
 	series_exposer<poisson_series,decltype(ps_cf_types),decltype(ps_interop_types)>
 		pse("poisson_series",ps_cf_types,ps_interop_types);
+	// Expose the settings class.
+	bp::class_<settings> settings_class("_settings",bp::init<>());
+	settings_class.def("_get_max_term_output",settings::get_max_term_output).staticmethod("_get_max_term_output");
+	settings_class.def("_set_max_term_output",settings::set_max_term_output).staticmethod("_set_max_term_output");
 }
