@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
 	typedef poisson_series<polynomial<rational>> p_type3;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{}),"0");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{"x"}),"x");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}),"-3/2x");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}.pow(2)),"-3/2x**2");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}),"-3/2*x");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}.pow(2)),"-3/2*x**2");
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	p1 = p_type1{"x"} - 2 * p_type1{"y"};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x-2y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p1)),"cos(x-2y)");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * p1.sin()),"3sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * p1.sin()),"3*sin(x-2y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.cos()),"cos(x-2y)");
 	p1 = p_type1{"x"} * p_type1{"y"};
 	BOOST_CHECK_THROW(math::sin(p1),std::invalid_argument);
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::sin(p_type2{3}),math::sin(real(3)));
 	BOOST_CHECK_EQUAL(math::cos(p_type2{3}),math::cos(real(3)));
 	p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)),"-1.00000000000000000000000000000000000sin(x-2y)");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)),"1.00000000000000000000000000000000000cos(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p2)),"-1.00000000000000000000000000000000000*sin(x-2y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p2)),"1.00000000000000000000000000000000000*cos(x-2y)");
 	BOOST_CHECK_THROW(math::sin(p_type2{"x"} * real(rational(1,2))),std::invalid_argument);
 	BOOST_CHECK_THROW(math::cos(p_type2{"x"} * real(rational(1,2))),std::invalid_argument);
 	typedef poisson_series<real> p_type3;
