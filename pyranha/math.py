@@ -108,8 +108,37 @@ def partial(arg,name):
 	>>> pt = get_type(int)
 	>>> x,y = pt("x"), pt("y")
 	>>> partial(x + 2*x*y,"y")
-	2x
+	2*x
 	
 	"""
 	from ._core import _partial
 	return _partial(arg,name)
+
+def factorial(n):
+	"""Factorial.
+	
+	Will compute the factorial of *n*, which must be a non-negative instance of *int*.
+	
+	:param n: argument for the factorial
+	:type n: *int*
+	:rtype: factorial of *n*
+	:raises: :exc:`TypeError` if *n* is not an *int*
+	:raises: :exc:`ValueError` if *n* is negative
+	:raises: :exc:`OverflowError` if *n* is too large
+	
+	>>> factorial(0)
+	1
+	>>> factorial(6)
+	720
+	>>> factorial(-1)
+	Traceback (most recent call last):
+	   ...
+	ValueError: factorial argument must be non-negative
+	
+	"""
+	from  ._core import _factorial
+	if not isinstance(n,int):
+		raise TypeError("factorial argument must be an integer")
+	if n < 0:
+		raise ValueError("factorial argument must be non-negative")
+	return _factorial(n)

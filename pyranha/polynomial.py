@@ -58,11 +58,11 @@ def get_type(cf_type):
 	
 	>>> tz = get_type(int)
 	>>> print(tz('x') * 2)
-	2x
+	2*x
 	>>> from fractions import Fraction
 	>>> tq = get_type('rational')
 	>>> print(Fraction(1,2) * tq('x')**2)
-	1/2x**2
+	1/2*x**2
 	
 	"""
 	return _get_series_type('polynomial',cf_type)

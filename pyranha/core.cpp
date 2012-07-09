@@ -120,4 +120,6 @@ BOOST_PYTHON_MODULE(_core)
 	bp::class_<settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",settings::get_max_term_output).staticmethod("_get_max_term_output");
 	settings_class.def("_set_max_term_output",settings::set_max_term_output).staticmethod("_set_max_term_output");
+	// Factorial.
+	bp::def("_factorial",&math::factorial);
 }
