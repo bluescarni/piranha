@@ -540,7 +540,7 @@ struct subs_tester
 		BOOST_CHECK(ret.second == k1);
 		ret = k1.subs(symbol("x"),integer(4),vs);
 		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(4),T(2)));
-		BOOST_CHECK(ret.second == k_type{});
+		BOOST_CHECK(ret.second == k_type());
 		k1 = k_type({T(2),T(3)});
 		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(4),vs),std::invalid_argument);
 		vs.add("y");

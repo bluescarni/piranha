@@ -700,11 +700,11 @@ struct subs_tester
 		BOOST_CHECK_EQUAL(ret.first.first,1);
 		BOOST_CHECK(ret.first.second == k1);
 		BOOST_CHECK_EQUAL(ret.second.first,0);
-		BOOST_CHECK((ret.second.second == k_type{T(0),false}));
+		BOOST_CHECK((ret.second.second == k_type(T(0),false)));
 		k1.set_flavour(false);
 		ret = k1.subs(symbol("x"),integer(5),vs);
 		BOOST_CHECK_EQUAL(ret.first.first,0);
-		BOOST_CHECK((ret.first.second == k_type{T(0),true}));
+		BOOST_CHECK((ret.first.second == k_type(T(0),true)));
 		BOOST_CHECK_EQUAL(ret.second.first,1);
 		BOOST_CHECK((ret.second.second == k1));
 		k1 = k_type{T(1)};
