@@ -1267,6 +1267,11 @@ struct stream_tester
 				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1-3*x+x**2+...");
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
 				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1+3*x+x**2+...");
+			// Test wih no term output.
+			settings::set_max_term_output(0u);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
+				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"...");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{}),"0");
 			poly1.get_truncator().unset();
 			settings::reset_max_term_output();
 		}
