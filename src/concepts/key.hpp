@@ -55,6 +55,7 @@ namespace concept
  * - must be provided with a const \p is_unitary method accepting a piranha::symbol_set
  *   as input and returning bool.
  * 
+ * \todo print and print_tex requirements.
  * \todo assert that key's hasher satisfy the Hashable requirements.
  * \todo requirements on default-constructed key: must it be unitary? --> this one is probably not needed
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
