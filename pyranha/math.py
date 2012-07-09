@@ -134,6 +134,10 @@ def factorial(n):
 	Traceback (most recent call last):
 	   ...
 	ValueError: factorial argument must be non-negative
+	>>> factorial(1.5)
+	Traceback (most recent call last):
+	   ...
+	TypeError: factorial argument must be an integer
 	
 	"""
 	from  ._core import _factorial
