@@ -1804,6 +1804,20 @@ class integer
 		{
 			return mpz_sgn(m_value);
 		}
+		/// Factorial.
+		/**
+		 * The GMP function <tt>mpz_fac_ui()</tt> will be used.
+		 * 
+		 * @return the factorial of \p this.
+		 * 
+		 * @throws unspecified any exception resulting from casting \p this to <tt>unsigned long</tt>.
+		 */
+		integer factorial() const
+		{
+			integer retval;
+			::mpz_fac_ui(retval.m_value,static_cast<unsigned long>(*this));
+			return retval;
+		}
 		/// Overload output stream operator for piranha::integer.
 		/**
 		 * @param[in] os output stream.
@@ -2114,6 +2128,19 @@ inline integer integral_cast(const T &x)
 		piranha_throw(std::invalid_argument,"integral cast failure");
 	}
 	return retval;
+}
+
+/// Factorial.
+/**
+ * @param[in] n factorial argument.
+ * 
+ * @return the output of piranha::integer::factorial().
+ * 
+ * @throws unspecified any exception thrown by piranha::integer::factorial().
+ */
+inline integer factorial(const integer &n)
+{
+	return n.factorial();
 }
 
 }

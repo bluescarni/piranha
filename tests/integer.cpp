@@ -907,3 +907,17 @@ BOOST_AUTO_TEST_CASE(integer_subs_test)
 	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer("3"),"bar","frob"),piranha::integer(3));
 	BOOST_CHECK((std::is_same<decltype(piranha::math::subs(piranha::integer(),"",2)),piranha::integer>::value));
 }
+
+BOOST_AUTO_TEST_CASE(integer_factorial_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer().factorial(),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).factorial(),1);
+	BOOST_CHECK_EQUAL(piranha::integer(6).factorial(),1 * 2 * 3 * 4 * 5 * 6);
+	BOOST_CHECK_THROW(piranha::integer(-1).factorial(),std::overflow_error);
+	BOOST_CHECK_THROW((piranha::integer(boost::integer_traits<unsigned long>::const_max) + 1).factorial(),std::overflow_error);
+	BOOST_CHECK_EQUAL(piranha::math::factorial(piranha::integer()),1);
+	BOOST_CHECK_EQUAL(piranha::math::factorial(piranha::integer(1)),1);
+	BOOST_CHECK_EQUAL(piranha::math::factorial(piranha::integer(6)),1 * 2 * 3 * 4 * 5 * 6);
+	BOOST_CHECK_THROW(piranha::math::factorial(piranha::integer(-1)),std::overflow_error);
+	BOOST_CHECK_THROW((piranha::math::factorial(piranha::integer(boost::integer_traits<unsigned long>::const_max) + 1)),std::overflow_error);
+}
