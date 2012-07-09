@@ -659,6 +659,124 @@ class series: series_binary_operators, detail::series_tag
 				std::declval<typename term_type::key_type>().evaluate(std::declval<std::unordered_map<symbol,T>>(),
 				std::declval<symbol_set>())) type;
 		};
+		// Print utilities.
+		template <typename Series>
+		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
+			truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
+		{
+			typedef typename Series::term_type term_type;
+			truncator<Series> t(s);
+			if (t.is_active()) {
+				std::vector<term_type const *> v;
+				v.reserve(s.size());
+				std::transform(s.m_container.begin(),s.m_container.end(),
+					std::back_insert_iterator<decltype(v)>(v),[](const term_type &t) {return &t;});
+				std::sort(v.begin(),v.end(),[&t](const term_type *t1, const term_type *t2) {return t.compare_terms(*t1,*t2);});
+				return print_helper_1(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
+					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
+			} else {
+				return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+			}
+		}
+		template <typename Series>
+		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
+			!truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
+		{
+			return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+		}
+		template <typename Iterator>
+		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
+		{
+			piranha_assert(start != end);
+			const auto limit = settings::get_max_term_output();
+			size_type count = 0u;
+			std::ostringstream oss;
+			auto it = start;
+			for (; it != end;) {
+				if (count == limit) {
+					break;
+				}
+				std::ostringstream oss_cf;
+				print_coefficient(oss_cf,it->m_cf);
+				auto str_cf = oss_cf.str();
+				std::ostringstream oss_key;
+				it->m_key.print(oss_key,args);
+				auto str_key = oss_key.str();
+				if (str_cf == "1" && !str_key.empty()) {
+					str_cf = "";
+				} else if (str_cf == "-1" && !str_key.empty()) {
+					str_cf = "-";
+				}
+				oss << str_cf;
+				if (str_cf != "" && str_cf != "-" && !str_key.empty()) {
+					oss << "*";
+				}
+				oss << str_key;
+				++it;
+				if (it != end) {
+					oss << "+";
+				}
+				++count;
+			}
+			auto str = oss.str();
+			// If we reached the limit without printing all terms in the series, print the ellipsis.
+			if (count == limit && it != end) {
+				str += "...";
+			}
+			std::string::size_type index = 0u;
+			while (true) {
+				index = str.find("+-",index);
+				if (index == std::string::npos) {
+					break;
+				}
+				str.replace(index,2u,"-");
+				++index;
+			}
+			os << str;
+			return os;
+		}
+		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
+		template <bool Sign, typename T>
+		void merge_terms(T &&s,
+			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		{
+			merge_terms_impl0<Sign>(std::forward<T>(s));
+		}
+		// Merge arguments using new_ss as new symbol set.
+		series merge_args(const symbol_set &new_ss) const
+		{
+			piranha_assert(new_ss.size() > m_symbol_set.size());
+			piranha_assert(std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end()));
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			series retval;
+			retval.m_symbol_set = new_ss;
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				cf_type new_cf(it->m_cf);
+				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
+				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
+			}
+			return retval;
+		}
+		// Set of checks to be run on destruction in debug mode.
+		bool destruction_checks() const
+		{
+			// Run destruction checks only if we are not in shutdown.
+			if (environment::shutdown()) {
+				return true;
+			}
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				if (!it->is_compatible(m_symbol_set)) {
+					std::cout << "Term not compatible.\n";
+					return false;
+				}
+				if (it->is_ignorable(m_symbol_set)) {
+					std::cout << "Term not ignorable.\n";
+					return false;
+				}
+			}
+			return true;
+		}
 	public:
 		/// Size type.
 		/**
@@ -1422,124 +1540,6 @@ class series: series_binary_operators, detail::series_tag
 				return os;
 			}
 			return print_helper_0(os,*static_cast<Derived const *>(&s));
-		}
-	private:
-		template <typename Series>
-		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
-			truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
-		{
-			typedef typename Series::term_type term_type;
-			truncator<Series> t(s);
-			if (t.is_active()) {
-				std::vector<term_type const *> v;
-				v.reserve(s.size());
-				std::transform(s.m_container.begin(),s.m_container.end(),
-					std::back_insert_iterator<decltype(v)>(v),[](const term_type &t) {return &t;});
-				std::sort(v.begin(),v.end(),[&t](const term_type *t1, const term_type *t2) {return t.compare_terms(*t1,*t2);});
-				return print_helper_1(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
-					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
-			} else {
-				return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
-			}
-		}
-		template <typename Series>
-		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
-			!truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
-		{
-			return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
-		}
-		template <typename Iterator>
-		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
-		{
-			piranha_assert(start != end);
-			const auto limit = settings::get_max_term_output();
-			size_type count = 0u;
-			std::ostringstream oss;
-			auto it = start;
-			for (; it != end;) {
-				if (count == limit) {
-					break;
-				}
-				std::ostringstream oss_cf;
-				print_coefficient(oss_cf,it->m_cf);
-				auto str_cf = oss_cf.str();
-				std::ostringstream oss_key;
-				it->m_key.print(oss_key,args);
-				auto str_key = oss_key.str();
-				if (str_cf == "1" && !str_key.empty()) {
-					str_cf = "";
-				} else if (str_cf == "-1" && !str_key.empty()) {
-					str_cf = "-";
-				}
-				oss << str_cf;
-				if (str_cf != "" && str_cf != "-" && !str_key.empty()) {
-					oss << "*";
-				}
-				oss << str_key;
-				++it;
-				if (it != end) {
-					oss << "+";
-				}
-				++count;
-			}
-			auto str = oss.str();
-			// If we reached the limit without printing all terms in the series, print the ellipsis.
-			if (count == limit && it != end) {
-				str += "...";
-			}
-			std::string::size_type index = 0u;
-			while (true) {
-				index = str.find("+-",index);
-				if (index == std::string::npos) {
-					break;
-				}
-				str.replace(index,2u,"-");
-				++index;
-			}
-			os << str;
-			return os;
-		}
-		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
-		template <bool Sign, typename T>
-		void merge_terms(T &&s,
-			typename std::enable_if<std::is_base_of<series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
-		{
-			merge_terms_impl0<Sign>(std::forward<T>(s));
-		}
-		// Merge arguments using new_ss as new symbol set.
-		series merge_args(const symbol_set &new_ss) const
-		{
-			piranha_assert(new_ss.size() > m_symbol_set.size());
-			piranha_assert(std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end()));
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
-			series retval;
-			retval.m_symbol_set = new_ss;
-			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
-				cf_type new_cf(it->m_cf);
-				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
-				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
-			}
-			return retval;
-		}
-		// Set of checks to be run on destruction in debug mode.
-		bool destruction_checks() const
-		{
-			// Run destruction checks only if we are not in shutdown.
-			if (environment::shutdown()) {
-				return true;
-			}
-			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
-				if (!it->is_compatible(m_symbol_set)) {
-					std::cout << "Term not compatible.\n";
-					return false;
-				}
-				if (it->is_ignorable(m_symbol_set)) {
-					std::cout << "Term not ignorable.\n";
-					return false;
-				}
-			}
-			return true;
 		}
 	protected:
 		/// Symbol set.
