@@ -37,6 +37,8 @@
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
 #include "series.hpp"
+#include "symbol.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -66,7 +68,8 @@ namespace piranha
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>
+	public power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,
+	detail::poisson_series_tag
 {
 		typedef power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>> base;
 		template <typename T, typename... Args>
@@ -140,6 +143,17 @@ class poisson_series:
 					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
 			}
 		}
+		// Subs typedef.
+		template <typename T>
+		struct subs_type
+		{
+			typedef typename base::term_type::cf_type cf_type;
+			typedef typename base::term_type::key_type key_type;
+			typedef decltype(
+				(math::subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<T>()) * std::declval<poisson_series>()) *
+				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first.first
+			) type;
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -269,7 +283,97 @@ class poisson_series:
 		{
 			return sin_cos_impl<true>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
 		}
+		/// Substitution.
+		/**
+		 * Substitute the symbolic quantity \p name with the generic value \p x. The result for each term is computed
+		 * via piranha::math::subs() for the coefficients and via the substitution method for the monomials, and
+		 * then assembled into the final return value via multiplications and additions.
+		 * 
+		 * @param[in] name name of the symbolic variable that will be subject to substitution.
+		 * @param[in] x quantity that will be substituted for \p name.
+		 * 
+		 * @return result of the substitution.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - symbol construction,
+		 * - piranha::symbol_set::remove() and assignment operator,
+		 * - piranha::math::subs(),
+		 * - the substitution method of the monomial type,
+		 * - piranha::series::insert(),
+		 * - construction, addition and multiplication of the types involved in the computation.
+		 * 
+		 * \todo type requirements.
+		 */
+		template <typename T>
+		typename subs_type<T>::type subs(const std::string &name, const T &x) const
+		{
+			typedef typename subs_type<T>::type return_type;
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			// Turn name into symbol.
+			const symbol s(name);
+			// Init return value.
+			return_type retval = return_type();
+			// Remove the symbol from the current symbol set, if present.
+			symbol_set sset(this->m_symbol_set);
+			if (std::binary_search(sset.begin(),sset.end(),s)) {
+				sset.remove(s);
+			}
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				auto cf_sub = math::subs(it->m_cf,name,x);
+				auto key_sub = it->m_key.subs(s,x,this->m_symbol_set);
+				poisson_series tmp_series1;
+				tmp_series1.m_symbol_set = sset;
+				tmp_series1.insert(term_type(cf_type(1),key_type(key_sub.first.second)));
+				poisson_series tmp_series2;
+				tmp_series2.m_symbol_set = sset;
+				tmp_series2.insert(term_type(cf_type(1),key_type(key_sub.second.second)));
+				retval += (cf_sub * tmp_series1) * key_sub.first.first;
+				retval += (cf_sub * tmp_series2) * key_sub.second.first;
+			}
+			return retval;
+		}
 };
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::subs() functor for Poisson series types.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
+ */
+template <typename Series>
+struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+{
+	private:
+		template <typename T>
+		struct subs_type
+		{
+			typedef decltype(std::declval<Series>().subs(std::declval<std::string>(),std::declval<T>())) type;
+		};
+	public:
+		/// Call operator.
+		/**
+		 * The implementation will use piranha::poisson_series::subs().
+		 * 
+		 * @param[in] s input Poisson series.
+		 * @param[in] name name of the symbolic variable that will be substituted.
+		 * @param[in] x object that will replace \p name.
+		 * 
+		 * @return output of piranha::poisson_series::subs().
+		 * 
+		 * @throws unspecified any exception thrown by piranha::poisson_series::subs().
+		 */
+		template <typename T>
+		typename subs_type<T>::type operator()(const Series &s, const std::string &name, const T &x) const
+		{
+			return s.subs(name,x);
+		}
+};
+
+}
 
 }
 

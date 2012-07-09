@@ -33,6 +33,7 @@
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
@@ -318,4 +319,43 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 	BOOST_CHECK_EQUAL(eval,(1.234 + 5.678) * cos(1.234 + 5.678) + pow(5.678,3) * sin(1.234 + 5.678));
 	BOOST_CHECK_EQUAL(eval,math::evaluate(s,std::unordered_map<std::string,double>{{"x",1.234},{"y",5.678}}));
 	BOOST_CHECK((std::is_same<double,decltype(eval)>::value));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
+{
+	using math::sin;
+	using math::cos;
+	using math::pow;
+	using math::subs;
+	typedef poisson_series<polynomial<real>> p_type1;
+	BOOST_CHECK(p_type1{}.subs("x",integer(4)).empty());
+	p_type1 x{"x"}, y{"y"};
+	auto s = (x + y) * cos(x) + pow(y,3) * sin(x);
+	BOOST_CHECK_EQUAL(s.subs("x",real(1.234)),(real(1.234) + y) * cos(real(1.234)) + pow(y,3) * sin(real(1.234)));
+	BOOST_CHECK((std::is_same<decltype(s.subs("x",real(1.234))),p_type1>::value));
+	BOOST_CHECK((std::is_same<decltype(s.subs("x",rational(1.234))),p_type1>::value));
+	s = (x + y) * cos(x + y) + pow(y,3) * sin(x + y);
+	real r(1.234);
+	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r) * cos(y) - sin(r) * sin(y)) + pow(y,3) * (sin(r) * cos(y) + cos(r) * sin(y)));
+	BOOST_CHECK_EQUAL(subs(s,"x",r),(r + y) * (cos(r) * cos(y) - sin(r) * sin(y)) + pow(y,3) * (sin(r) * cos(y) + cos(r) * sin(y)));
+	BOOST_CHECK_EQUAL(subs(s,"z",r),s);
+	s = (x + y) * cos(-x + y) + pow(y,3) * sin(-x + y);
+	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r) * cos(y) + sin(r) * sin(y)) + pow(y,3) * (-sin(r) * cos(y) + cos(r) * sin(y)));
+	s = (x + y) * cos(-2 * x + y) + pow(y,3) * sin(-5 * x + y);
+	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y)) + pow(y,3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
+	s = (x + y) * cos(-2 * x + y) + pow(x,3) * sin(-5 * x + y);
+	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y)) + pow(r,3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
+	typedef poisson_series<polynomial<rational>> p_type2;
+	p_type2 a{"a"}, b{"b"};
+	auto t = a * cos(a + b) + b * sin(a);
+	BOOST_CHECK_EQUAL(t.subs("a",b),b * cos(b + b) + b * sin(b));
+	BOOST_CHECK_EQUAL(subs(t,"a",a + b),(a + b) * cos(a + b + b) + b * sin(a + b));
+	t = a * cos(-3 * a + b) + b * sin(-5 * a - b);
+	BOOST_CHECK_EQUAL(subs(t,"a",a + b),(a + b) * cos(-3 * (a + b) + b) + b * sin(-5 * (a + b) - b));
+	BOOST_CHECK_EQUAL(subs(t,"a",2 * (a + b)),2 * (a + b) * cos(-6 * (a + b) + b) + b * sin(-10 * (a + b) - b));
+	BOOST_CHECK_EQUAL(subs(t,"b",-5 * a),a * cos(-3 * a - 5 * a));
+	BOOST_CHECK(t.subs("b",5 * a).subs("a",rational(0)).empty());
+	BOOST_CHECK_EQUAL((a * cos(b)).subs("b",rational(0)),a);
+	BOOST_CHECK_EQUAL((a * sin(b)).subs("b",rational(0)),rational(0));
+	BOOST_CHECK((std::is_same<decltype(subs(t,"a",a + b)),p_type2>::value));
 }
