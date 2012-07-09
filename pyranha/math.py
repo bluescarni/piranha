@@ -133,7 +133,7 @@ def factorial(n):
 	>>> factorial(-1)
 	Traceback (most recent call last):
 	   ...
-	ValueError: factorial argument must be non-negative
+	ValueError: invalid argument value
 	>>> factorial(1.5)
 	Traceback (most recent call last):
 	   ...
@@ -143,6 +143,7 @@ def factorial(n):
 	from  ._core import _factorial
 	if not isinstance(n,int):
 		raise TypeError("factorial argument must be an integer")
-	if n < 0:
-		raise ValueError("factorial argument must be non-negative")
-	return _factorial(n)
+	try:
+		return _factorial(n)
+	except ValueError:
+		raise ValueError("invalid argument value")

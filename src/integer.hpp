@@ -1810,10 +1810,13 @@ class integer
 		 * 
 		 * @return the factorial of \p this.
 		 * 
-		 * @throws unspecified any exception resulting from casting \p this to <tt>unsigned long</tt>.
+		 * @throws std::invalid_argument if \p this is negative or larger than an implementation-defined value.
 		 */
 		integer factorial() const
 		{
+			if (*this > 100000L || sign() < 0) {
+				piranha_throw(std::invalid_argument,"invalid input for factorial()");
+			}
 			integer retval;
 			::mpz_fac_ui(retval.m_value,static_cast<unsigned long>(*this));
 			return retval;
