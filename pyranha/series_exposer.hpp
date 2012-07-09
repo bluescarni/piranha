@@ -72,6 +72,8 @@ struct series_exposer
 		pow_exposer(series_class,in);
 		// Evaluation.
 		series_class.def("_evaluate",wrap_evaluate<S,interop_type>);
+		// Substitution.
+		subs_exposer<interop_type>(series_class);
 		interop_exposer<S,I + 1u,T...>(series_class,t);
 	}
 	// Differentiation.
@@ -235,6 +237,12 @@ struct series_exposer
 	static void power_series_exposer(bp::class_<T> &,
 		typename std::enable_if<!is_power_series<T>::value>::type * = piranha_nullptr)
 	{}
+	// Substitution exposer.
+	template <typename U, typename T>
+	static void subs_exposer(bp::class_<T> &series_class)
+	{
+		series_class.def("subs",&T::template subs<U>);
+	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -290,6 +298,8 @@ struct series_exposer
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
 		// Power series methods.
 		power_series_exposer(series_class);
+		// Substitution with self.
+		subs_exposer<series_type>(series_class);
 		// Next iteration step.
 		main_exposer<I + 1u,T...>(t);
 	}

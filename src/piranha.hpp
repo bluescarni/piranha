@@ -82,7 +82,8 @@
  * \todo univariate_monomial has been left behind a bit feature-wise.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
- * use with mutex protection instead of at register time?) and python converters (protect the inited flags with mutexes).
+ * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)
+ * and python converters (protect the inited flags with mutexes).
  */
 namespace piranha
 {
