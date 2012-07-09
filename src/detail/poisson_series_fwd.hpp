@@ -25,6 +25,14 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Tag for poisson_series class.
+struct poisson_series_tag {};
+
+}
+
 // Forward declaration of Poisson series class.
 template <typename Cf>
 class poisson_series;
