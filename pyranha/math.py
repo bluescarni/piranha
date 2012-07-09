@@ -123,8 +123,7 @@ def factorial(n):
 	:type n: *int*
 	:rtype: factorial of *n*
 	:raises: :exc:`TypeError` if *n* is not an *int*
-	:raises: :exc:`ValueError` if *n* is negative
-	:raises: :exc:`OverflowError` if *n* is too large
+	:raises: :exc:`ValueError` if *n* is negative or too large
 	
 	>>> factorial(0)
 	1
