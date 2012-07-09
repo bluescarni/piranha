@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(settings_cache_line_size)
 	BOOST_CHECK_EQUAL(original,settings::get_cache_line_size());
 }
 
-BOOST_AUTO_TEST_CASE(settings_max_char_output)
+BOOST_AUTO_TEST_CASE(settings_max_term_output)
 {
-	settings::set_max_char_output(10u);
-	BOOST_CHECK_EQUAL(10u,settings::get_max_char_output());
-	settings::reset_max_char_output();
-	BOOST_CHECK_EQUAL(10000u,settings::get_max_char_output());
+	settings::set_max_term_output(10u);
+	BOOST_CHECK_EQUAL(10u,settings::get_max_term_output());
+	settings::reset_max_term_output();
+	BOOST_CHECK_EQUAL(50u,settings::get_max_term_output());
 }

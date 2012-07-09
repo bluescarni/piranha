@@ -1385,19 +1385,20 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * The human-readable representation of the series is built as follows:
 		 * 
-		 * - the coefficient and key of each term are printed adjacent to each other,
+		 * - the coefficient and key of each term are printed adjacent to each other separated by the character "*",
 		 *   the former via the piranha::print_coefficient() function, the latter via its <tt>print()</tt> method;
 		 * - terms are separated by a "+" sign.
 		 * 
 		 * The following additional transformations take place on the printed output:
 		 * 
 		 * - if the printed output of a coefficient is the string "1" and the printed output of its key
-		 *   is not empty, the coefficient is not printed;
+		 *   is not empty, the coefficient and the "*" sign are not printed;
 		 * - if the printed output of a coefficient is the string "-1" and the printed output of its key
-		 *   is not empty, the printed output of the coefficient is transformed into "-";
+		 *   is not empty, the printed output of the coefficient is transformed into "-" and the sign "*" is not printed;
+		 * - if the key output is empty, the sign "*" is not printed;
 		 * - the sequence of characters "+-" is transformed into "-";
-		 * - if the total number of characters that would be printed exceeds the limit set in piranha::settings::get_max_char_output(),
-		 *   the output is resized to that limit and ellipsis "..." are added at the end of the output.
+		 * - at most piranha::settings::get_max_term_output() terms are printed, and terms in excess are
+		 *   represented with ellipsis "..." at the end of the output.
 		 * 
 		 * The order in which terms are printed is determined by an instance of
 		 * piranha::truncator of \p Derived constructed from \p this, in case the truncator
@@ -1451,10 +1452,14 @@ class series: series_binary_operators, detail::series_tag
 		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
 		{
 			piranha_assert(start != end);
-			const auto limit = settings::get_max_char_output();
-			integer count(0);
+			const auto limit = settings::get_max_term_output();
+			size_type count = 0u;
 			std::ostringstream oss;
-			for (auto it = start; it != end;) {
+			auto it = start;
+			for (; it != end;) {
+				if (count == limit) {
+					break;
+				}
 				std::ostringstream oss_cf;
 				print_coefficient(oss_cf,it->m_cf);
 				auto str_cf = oss_cf.str();
@@ -1466,24 +1471,20 @@ class series: series_binary_operators, detail::series_tag
 				} else if (str_cf == "-1" && !str_key.empty()) {
 					str_cf = "-";
 				}
-				count += str_cf.size();
 				oss << str_cf;
-				if (count > limit) {
-					break;
+				if (str_cf != "" && str_cf != "-" && !str_key.empty()) {
+					oss << "*";
 				}
-				count += str_key.size();
 				oss << str_key;
-				if (count > limit) {
-					break;
-				}
 				++it;
 				if (it != end) {
 					oss << "+";
 				}
+				++count;
 			}
 			auto str = oss.str();
-			if (str.size() > limit) {
-				str.resize(limit);
+			// If we reached the limit without printing all terms in the series, print the ellipsis.
+			if (count == limit && it != end) {
 				str += "...";
 			}
 			std::string::size_type index = 0u;

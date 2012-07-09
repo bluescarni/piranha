@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE series_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <initializer_list>
@@ -1228,8 +1229,8 @@ struct stream_tester
 			oss.str("");
 			oss << (p_type11{"x"} - 1);
 			BOOST_CHECK(oss.str() == "x-1" || oss.str() == "-1+x");
-			// Test wih less char output.
-			settings::set_max_char_output(3u);
+			// Test wih less term output.
+			settings::set_max_term_output(3u);
 			oss.str("");
 			oss << p_type11{};
 			BOOST_CHECK(oss.str() == "0");
@@ -1251,7 +1252,6 @@ struct stream_tester
 			oss.str("");
 			oss << (-p_type11{"x"} * p_type11{"y"});
 			BOOST_CHECK(oss.str() == "-xy");
-			settings::reset_max_char_output();
 			// Check printing with a truncator.
 			typedef polynomial<Cf,Expo> poly_type;
 			poly_type poly1{"x"};
@@ -1260,7 +1260,15 @@ struct stream_tester
 			oss.str("");
 			oss << poly1;
 			BOOST_CHECK(oss.str() == "1+x");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"}),"1+x+x**2");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} - 1 + 2 * poly_type{"x"} * poly_type{"x"}),"-1+x+2*x**2");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} - 1 - 2 * poly_type{"x"} * poly_type{"x"}),"-1+x-2*x**2");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
+				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1-3*x+x**2+...");
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
+				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1+3*x+x**2+...");
 			poly1.get_truncator().unset();
+			settings::reset_max_term_output();
 		}
 	};
 	template <typename Cf>

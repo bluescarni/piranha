@@ -35,7 +35,7 @@ mutex settings::m_mutex;
 std::pair<bool,unsigned> settings::m_n_threads(false,0u);
 std::pair<bool,unsigned> settings::m_cache_line_size(false,0u);
 bool settings::m_tracing = false;
-unsigned settings::m_max_char_output = settings::m_default_max_char_output;
+unsigned long settings::m_max_term_output = settings::m_default_max_term_output;
 
 /// Get the number of threads available for use by piranha.
 /**
@@ -163,40 +163,40 @@ void settings::set_tracing(bool flag)
 	m_tracing = flag;
 }
 
-/// Get max char output.
+/// Get max term output.
 /**
- * @return the maximum number of character displayed when printing series.
+ * @return maximum number of terms displayed when printing series.
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
-unsigned settings::get_max_char_output()
+unsigned long settings::get_max_term_output()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	return m_max_char_output;
+	return m_max_term_output;
 }
 
-/// Set max char output.
+/// Set max term output.
 /**
- * @param[in] n the maximum number of character to be displayed when printing series.
+ * @param[in] n maximum number of terms to be displayed when printing series.
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
-void settings::set_max_char_output(unsigned n)
+void settings::set_max_term_output(unsigned long n)
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_max_char_output = n;
+	m_max_term_output = n;
 }
 
-/// Reset max char output.
+/// Reset max term output.
 /**
- * Will set the max char output value to the default.
+ * Will set the max term output value to the default.
  * 
  * @throws std::system_error in case of failure(s) by threading primitives.
  */
-void settings::reset_max_char_output()
+void settings::reset_max_term_output()
 {
 	lock_guard<mutex>::type lock(m_mutex);
-	m_max_char_output = m_default_max_char_output;
+	m_max_term_output = m_default_max_term_output;
 }
 
 }

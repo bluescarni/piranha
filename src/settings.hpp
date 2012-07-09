@@ -47,16 +47,16 @@ class PIRANHA_PUBLIC settings
 		static void reset_cache_line_size();
 		static bool get_tracing();
 		static void set_tracing(bool);
-		static unsigned get_max_char_output();
-		static void set_max_char_output(unsigned);
-		static void reset_max_char_output();
+		static unsigned long get_max_term_output();
+		static void set_max_term_output(unsigned long);
+		static void reset_max_term_output();
 	private:
 		static mutex			m_mutex;
 		static std::pair<bool,unsigned>	m_n_threads;
 		static std::pair<bool,unsigned>	m_cache_line_size;
 		static bool			m_tracing;
-		static unsigned			m_max_char_output;
-		static const unsigned		m_default_max_char_output = 10000u;
+		static unsigned long		m_max_term_output;
+		static const unsigned long	m_default_max_term_output = 50ul;
 };
 
 }
