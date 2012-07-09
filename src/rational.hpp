@@ -46,6 +46,7 @@
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "math.hpp"
+#include "print_tex_coefficient.hpp"
 
 namespace piranha
 {
@@ -1445,6 +1446,37 @@ class rational
 		}
 	private:
 		::mpq_t m_value;
+};
+
+/// Specialisation of the piranha::print_tex_coefficient() for piranha::rational.
+template <typename T>
+struct print_tex_coefficient_impl<T,typename std::enable_if<std::is_same<rational,T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] os target stream.
+	 * @param[in] cf coefficient to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by streaming to \p os.
+	 */
+	void operator()(std::ostream &os, const T &cf) const
+	{
+		integer num = cf.get_numerator(), den = cf.get_denominator();
+		piranha_assert(den.sign() > 0);
+		if (num.sign() == 0) {
+			os << "0";
+			return;
+		}
+		if (den == 1) {
+			os << num;
+			return;
+		}
+		if (num.sign() < 0) {
+			os << "-";
+			num.negate();
+		}
+		os << "\\frac{" << num << "}{" << den << "}";
+	}
 };
 
 namespace detail

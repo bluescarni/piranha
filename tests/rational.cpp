@@ -885,3 +885,25 @@ BOOST_AUTO_TEST_CASE(rational_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(rational(4,5),"","frob"),rational(-8,-10));
 	BOOST_CHECK((std::is_same<decltype(math::subs(rational(4,5),"","frob")),rational>::value));
 }
+
+BOOST_AUTO_TEST_CASE(rational_print_tex_test)
+{
+	std::ostringstream ss;
+	print_tex_coefficient(ss,rational(0));
+	BOOST_CHECK_EQUAL(ss.str(),"0");
+	ss.str("");
+	print_tex_coefficient(ss,rational(-1));
+	BOOST_CHECK_EQUAL(ss.str(),"-1");
+	ss.str("");
+	print_tex_coefficient(ss,rational(1));
+	BOOST_CHECK_EQUAL(ss.str(),"1");
+	ss.str("");
+	print_tex_coefficient(ss,rational(1,2));
+	BOOST_CHECK_EQUAL(ss.str(),"\\frac{1}{2}");
+	ss.str("");
+	print_tex_coefficient(ss,rational(1,-2));
+	BOOST_CHECK_EQUAL(ss.str(),"-\\frac{1}{2}");
+	ss.str("");
+	print_tex_coefficient(ss,rational(-14,21));
+	BOOST_CHECK_EQUAL(ss.str(),"-\\frac{2}{3}");
+}
