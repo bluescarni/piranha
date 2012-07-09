@@ -123,6 +123,7 @@ namespace detail {}
 #include "power_series_term.hpp"
 #include "power_series_truncator.hpp"
 #include "print_coefficient.hpp"
+#include "print_tex_coefficient.hpp"
 #include "rational.hpp"
 #include "real.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
