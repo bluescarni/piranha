@@ -23,9 +23,13 @@
 #define BOOST_TEST_MODULE print_tex_coefficient_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <sstream>
+#include <string>
 
 #include "../src/environment.hpp"
+#include "../src/integer.hpp"
+#include "../src/real.hpp"
 
 using namespace piranha;
 
@@ -39,4 +43,9 @@ BOOST_AUTO_TEST_CASE(print_tex_coefficient_main_test)
 	print_tex_coefficient(oss,11ull);
 	BOOST_CHECK_EQUAL(oss.str(),"11");
 	oss.str("");
+	print_tex_coefficient(oss,integer(-20));
+	BOOST_CHECK_EQUAL(oss.str(),"-20");
+	oss.str("");
+	print_tex_coefficient(oss,real("-1.2345"));
+	BOOST_CHECK_EQUAL(oss.str(),boost::lexical_cast<std::string>(real("-1.2345")));
 }
