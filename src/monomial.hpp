@@ -439,8 +439,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception resulting from:
-		 * - construction of the exponent type from \p int,
-		 * - comparison of exponents,
+		 * - construction, comparison and assignment of exponents,
+		 * - piranha::math::negate(),
 		 * - streaming to \p os.
 		 */
 		void print_tex(std::ostream &os, const symbol_set &args) const
