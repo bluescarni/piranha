@@ -568,13 +568,56 @@ class real_trigonometric_kronecker_monomial
 					if (tmp[i] == m_one) {
 						os << "-";
 					} else if (tmp[i] != one) {
-						os << tmp[i];
+						// NOTE: long long cast here is safe, as long long is the widest signed int type.
+						os << static_cast<long long>(tmp[i]);
 					}
 					// Finally, print name of variable.
 					os << args[i].get_name();
 				}
 			}
 			os << ")";
+		}
+		/// Print in TeX mode.
+		/**
+		 * Will print to stream a TeX representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
+		 */
+		void print_tex(std::ostream &os, const symbol_set &args) const
+		{
+			// Don't print anything in case all multipliers are zero.
+			if (m_value == value_type(0)) {
+				return;
+			}
+			if (m_flavour) {
+				os << "\\cos{\\left(";
+			} else {
+				os << "\\sin{\\left(";
+			}
+			const auto tmp = unpack(args);
+			piranha_assert(tmp.size() == args.size());
+			const value_type zero(0), one(1), m_one(-1);
+			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+				if (tmp[i] != zero) {
+					// A positive multiplier not at the beginning must always be preceded
+					// by a "+" sign.
+					if (i > 0u && tmp[i] > zero) {
+						os << "+";
+					}
+					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
+					if (tmp[i] == m_one) {
+						os << "-";
+					} else if (tmp[i] != one) {
+						os << static_cast<long long>(tmp[i]);
+					}
+					// Finally, print name of variable.
+					os << "{" << args[i].get_name() << "}";
+				}
+			}
+			os << "\\right)}";
 		}
 		/// Partial derivative.
 		/**

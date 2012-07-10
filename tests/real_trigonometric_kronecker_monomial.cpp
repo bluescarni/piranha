@@ -541,10 +541,6 @@ struct print_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		// Avoid print test with signed char, garbage will come out.
-		if (std::is_same<T,signed char>::value) {
-			return;
-		}
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
 		symbol_set vs;
 		k_type k1;
@@ -780,4 +776,60 @@ struct subs_tester
 BOOST_AUTO_TEST_CASE(rtkm_subs_test)
 {
 	boost::mpl::for_each<int_types>(subs_tester());
+}
+
+struct print_tex_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print_tex(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print_tex(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(1)});
+		k3.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left({x}\\right)}");
+		k3.set_flavour(false);
+		oss.str("");
+		k3.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\sin{\\left({x}\\right)}");
+		k_type k5({T(1),T(-1)});
+		vs.add("y");
+		oss.str("");
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left({x}-{y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(1),T(1)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "\\cos{\\left({x}+{y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(1),T(2)};
+		k5.set_flavour(false);
+		k5.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "\\sin{\\left({x}+2{y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(1),T(-2)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left({x}-2{y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(-1),T(-2)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left(-{x}-2{y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(-2),T(1)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left(-2{x}+{y}\\right)}");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_print_tex_test)
+{
+	boost::mpl::for_each<int_types>(print_tex_tester());
 }
