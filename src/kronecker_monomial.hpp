@@ -25,11 +25,13 @@
 #include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/utility.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -531,9 +533,46 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				if (tmp[i] != zero) {
 					os << args[i].get_name();
 					if (tmp[i] != one) {
-						os << "**" << tmp[i];
+						// NOTE: cast to long long is always safe as it is the
+						// widest signed int type.
+						os << "**" << static_cast<long long>(tmp[i]);
 					}
 				}
+			}
+		}
+		/// Print in TeX mode.
+		/**
+		 * Will print to stream a TeX representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws unspecified any exception thrown by unpack() or by streaming instances of \p value_type.
+		 */
+		void print_tex(std::ostream &os, const symbol_set &args) const
+		{
+			const auto tmp = unpack(args);
+			std::ostringstream oss_num, oss_den, *cur_oss;
+			const value_type zero(0), one(1);
+			value_type cur_value;
+			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
+				cur_value = tmp[i];
+				if (cur_value != zero) {
+					// NOTE: here negate() is safe because of the symmetry in kronecker_array.
+					cur_oss = (cur_value > zero) ? boost::addressof(oss_num) : (math::negate(cur_value),boost::addressof(oss_den));
+					(*cur_oss) << "{" << args[i].get_name() << "}";
+					if (cur_value != one) {
+						(*cur_oss) << "^{" << static_cast<long long>(cur_value) << "}";
+					}
+				}
+			}
+			const std::string num_str = oss_num.str(), den_str = oss_den.str();
+			if (!num_str.empty() && !den_str.empty()) {
+				os << "\\frac{" << num_str << "}{" << den_str << "}";
+			} else if (!num_str.empty() && den_str.empty()) {
+				os << num_str;
+			} else if (num_str.empty() && !den_str.empty()) {
+				os << "\\frac{1}{" << den_str << "}";
 			}
 		}
 		/// Partial derivative.

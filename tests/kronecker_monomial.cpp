@@ -405,10 +405,6 @@ struct print_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		// Avoid print test with signed char, garbage will come out.
-		if (std::is_same<T,signed char>::value) {
-			return;
-		}
 		typedef kronecker_monomial<T> k_type;
 		symbol_set vs;
 		k_type k1;
@@ -621,4 +617,81 @@ struct subs_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_subs_test)
 {
 	boost::mpl::for_each<int_types>(subs_tester());
+}
+
+struct print_tex_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print_tex(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k1 = k_type({T(1)});
+		BOOST_CHECK_THROW(k1.print_tex(oss,vs),std::invalid_argument);
+		k1 = k_type({T(0)});
+		vs.add("x");
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"");
+		k1 = k_type({T(1)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{x}");
+		oss.str("");
+		k1 = k_type({T(-1)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{{x}}");
+		oss.str("");
+		k1 = k_type({T(2)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{x}^{2}");
+		oss.str("");
+		k1 = k_type({T(-2)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{{x}^{2}}");
+		vs.add("y");
+		oss.str("");
+		k1 = k_type({T(-2),T(1)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{{y}}{{x}^{2}}");
+		oss.str("");
+		k1 = k_type({T(-2),T(3)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{{y}^{3}}{{x}^{2}}");
+		oss.str("");
+		k1 = k_type({T(-2),T(-3)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{{x}^{2}{y}^{3}}");
+		oss.str("");
+		k1 = k_type({T(2),T(3)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{x}^{2}{y}^{3}");
+		oss.str("");
+		k1 = k_type({T(1),T(3)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{x}{y}^{3}");
+		oss.str("");
+		k1 = k_type({T(0),T(3)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{y}^{3}");
+		oss.str("");
+		k1 = k_type({T(0),T(0)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"");
+		oss.str("");
+		k1 = k_type({T(0),T(1)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"{y}");
+		oss.str("");
+		k1 = k_type({T(0),T(-1)});
+		k1.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{{y}}");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_print_tex_test)
+{
+	boost::mpl::for_each<int_types>(print_tex_tester());
 }
