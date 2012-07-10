@@ -1655,6 +1655,36 @@ struct print_coefficient_impl<Series,typename std::enable_if<
 	}
 };
 
+/// Specialisation of piranha::print_tex_coefficient_impl for series.
+/**
+ * This specialisation is enabled if \p Series is an instance of piranha::series.
+ */
+template <typename Series>
+struct print_tex_coefficient_impl<Series,typename std::enable_if<
+	std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * Equivalent to piranha::series::print_tex(), apart from a couple
+	 * of parentheses '()' enclosing the coefficient series if its size is larger than 1.
+	 * 
+	 * @param[in] os target stream.
+	 * @param[in] s coefficient series to be printed.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::series::print_tex().
+	 */
+	void operator()(std::ostream &os, const Series &s) const
+	{
+		if (s.size() > 1u) {
+			os << "\\left(";
+		}
+		s.print_tex(os);
+		if (s.size() > 1u) {
+			os << "\\right)";
+		}
+	}
+};
+
 namespace math
 {
 

@@ -26,6 +26,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -358,4 +359,25 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	BOOST_CHECK_EQUAL((a * cos(b)).subs("b",rational(0)),a);
 	BOOST_CHECK_EQUAL((a * sin(b)).subs("b",rational(0)),rational(0));
 	BOOST_CHECK((std::is_same<decltype(subs(t,"a",a + b)),p_type2>::value));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_print_tex_test)
+{
+	using math::sin;
+	using math::cos;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	std::ostringstream oss;
+	std::string s1 = "3\\frac{{x}}{{y}}\\cos{\\left({x}+{y}\\right)}";
+	std::string s2 = "2\\frac{{x}^{2}}{{y}^{2}}\\cos{\\left(3{x}\\right)}";
+	((3*x*y.pow(-1)) * cos(x + y)).print_tex(oss);
+	BOOST_CHECK_EQUAL(oss.str(),s1);
+	oss.str("");
+	((3*x*y.pow(-1)) * cos(x + y) - (2*x.pow(2)*y.pow(-2)) * cos(-3 * x)).print_tex(oss);
+	BOOST_CHECK(oss.str() == s1 + "-" + s2 || oss.str() == std::string("-") + s2 + "+" + s1);
+	std::string s3 = "\\left({x}+{y}\\right)";
+	std::string s4 = "\\left({y}+{x}\\right)";
+	oss.str("");
+	((x+y)*cos(x)).print_tex(oss);
+	BOOST_CHECK(oss.str() == s3 + "\\cos{\\left({x}\\right)}" || oss.str() == s4 + "\\cos{\\left({x}\\right)}");
 }
