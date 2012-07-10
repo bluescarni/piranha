@@ -40,7 +40,7 @@ namespace concept
  * - must be a model of piranha::concept::ContainerElement,
  * - must be constructible from \p int,
  * - must be assignable,
- * - must be equality-comparable,
+ * - must be equality-comparable and less-than comparable,
  * - must be addable and subtractable (both in binary and unary form),
  * - must be streamable,
  * - must be a valid argument type for piranha::math::is_zero().
@@ -59,6 +59,7 @@ struct ArrayKeyValueType:
 		// Shut off compiler warning.
 		(void)&inst;
 		T inst2(inst);
+		(void)(inst < inst);
 		inst += inst2;
 		inst = inst + inst2;
 		inst -= inst2;

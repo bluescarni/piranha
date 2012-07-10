@@ -23,9 +23,11 @@
 
 #include <algorithm>
 #include <boost/concept/assert.hpp>
+#include <boost/utility.hpp> // For addressof.
 #include <initializer_list>
 #include <iostream>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -426,6 +428,47 @@ class monomial: public array_key<T,monomial<T>>
 						os << "**" << (*this)[i];
 					}
 				}
+			}
+		}
+		/// Print in TeX mode.
+		/**
+		 * Will print to stream a TeX representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception resulting from:
+		 * - construction of the exponent type from \p int,
+		 * - comparison of exponents,
+		 * - streaming to \p os.
+		 */
+		void print_tex(std::ostream &os, const symbol_set &args) const
+		{
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			typedef typename base::value_type value_type;
+			std::ostringstream oss_num, oss_den, *cur_oss;
+			const value_type zero(0), one(1);
+			value_type cur_value;
+			for (typename base::size_type i = 0u; i < this->size(); ++i) {
+				cur_value = (*this)[i];
+				if (cur_value != zero) {
+					cur_oss = (cur_value > zero) ? boost::addressof(oss_num) : (math::negate(cur_value),boost::addressof(oss_den));
+					(*cur_oss) << "{" << args[i].get_name() << "}";
+					if (cur_value != one) {
+						(*cur_oss) << "^{" << cur_value << "}";
+					}
+				}
+			}
+			const std::string num_str = oss_num.str(), den_str = oss_den.str();
+			if (!num_str.empty() && !den_str.empty()) {
+				os << "\\frac{" << num_str << "}{" << den_str << "}";
+			} else if (!num_str.empty() && den_str.empty()) {
+				os << num_str;
+			} else if (num_str.empty() && !den_str.empty()) {
+				os << "\\frac{1}{" << den_str << "}";
 			}
 		}
 		/// Evaluation.
