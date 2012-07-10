@@ -616,6 +616,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 	BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x",integer(1))),p_type1>::value));
 	BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.subs("x",rational(1))),p_type1>::value));
 	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).subs("k",rational(3,2)),x * x + x * y + z);
+	BOOST_CHECK_EQUAL(((y + 4 * z).pow(5) * x.pow(-1)).subs("x",rational(3)),((y + 4 * z).pow(5)) / 3);
 	}
 	{
 	typedef polynomial<real,int> p_type2;
