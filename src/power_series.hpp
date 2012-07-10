@@ -87,19 +87,23 @@ class power_series: public Series,detail::power_series_tag
 		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
 		typedef Series base;
 		template <typename... Args>
-		struct determine_dtype
+		struct degree_type
 		{
-			typedef decltype(std::declval<typename Series::term_type>().degree(std::declval<Args>()...,std::declval<symbol_set>())) type;
+			typedef decltype(std::declval<typename Series::term_type>().degree(
+				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
 		};
 		template <typename... Args>
-		struct determine_ldtype
+		struct ldegree_type
 		{
-			typedef decltype(std::declval<typename Series::term_type>().ldegree(std::declval<Args>()...,std::declval<symbol_set>())) type;
+			typedef decltype(std::declval<typename Series::term_type>().ldegree(
+				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
 		};
 		template <typename... Args>
-		typename determine_dtype<Args ...>::type degree_impl(Args && ... params) const
+		typename degree_type<Args ...>::type degree_impl(Args && ... params) const
 		{
-			typedef typename determine_dtype<Args ...>::type return_type;
+			// NOTE: this code is partially re-used in Poisson series, keep it in mind
+			// if it gets changed.
+			typedef typename degree_type<Args ...>::type return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
@@ -117,9 +121,9 @@ class power_series: public Series,detail::power_series_tag
 			return retval;
 		}
 		template <typename... Args>
-		typename determine_ldtype<Args ...>::type ldegree_impl(Args && ... params) const
+		typename ldegree_type<Args ...>::type ldegree_impl(Args && ... params) const
 		{
-			typedef typename determine_ldtype<Args ...>::type return_type;
+			typedef typename ldegree_type<Args ...>::type return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
@@ -203,7 +207,7 @@ class power_series: public Series,detail::power_series_tag
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename determine_dtype<>::type degree() const
+		typename degree_type<>::type degree() const
 		{
 			return degree_impl();
 		}
@@ -224,7 +228,7 @@ class power_series: public Series,detail::power_series_tag
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename determine_dtype<const std::set<std::string> &>::type degree(const std::set<std::string> &s) const
+		typename degree_type<std::set<std::string>>::type degree(const std::set<std::string> &s) const
 		{
 			return degree_impl(s);
 		}
@@ -242,7 +246,7 @@ class power_series: public Series,detail::power_series_tag
 		 * - the calculation of the low degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename determine_ldtype<>::type ldegree() const
+		typename ldegree_type<>::type ldegree() const
 		{
 			return ldegree_impl();
 		}
@@ -263,7 +267,7 @@ class power_series: public Series,detail::power_series_tag
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename determine_ldtype<const std::set<std::string> &>::type ldegree(const std::set<std::string> &s) const
+		typename ldegree_type<std::set<std::string>>::type ldegree(const std::set<std::string> &s) const
 		{
 			return ldegree_impl(s);
 		}
