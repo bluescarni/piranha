@@ -337,3 +337,48 @@ BOOST_AUTO_TEST_CASE(univariate_monomial_print_test)
 {
 	boost::mpl::for_each<expo_types>(print_tester());
 }
+
+struct print_tex_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef univariate_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		std::ostringstream oss;
+		k1.print_tex(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		vs.add("x");
+		k_type k2(vs);
+		k2.print_tex(oss,vs);
+		BOOST_CHECK(oss.str().empty());
+		k_type k3({T(-1)});
+		k3.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "\\frac{1}{{x}}");
+		oss.str("");
+		k3 = k_type({T(-2)});
+		k3.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "\\frac{1}{{x}^{2}}");
+		k_type k4({T(1)});
+		oss.str("");
+		k4.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "{x}");
+		oss.str("");
+		k3 = k_type({T(5)});
+		k3.print_tex(oss,vs);
+		BOOST_CHECK(oss.str() == "{x}^{5}");
+		k_type k5;
+		vs.add("y");
+		BOOST_CHECK_THROW(k5.print_tex(oss,vs),std::invalid_argument);
+		vs = symbol_set();
+		k_type k6;
+		k6.set_exponent(T(1));
+		BOOST_CHECK_THROW(k6.print_tex(oss,vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(univariate_monomial_print_tex_test)
+{
+	boost::mpl::for_each<expo_types>(print_tex_tester());
+}

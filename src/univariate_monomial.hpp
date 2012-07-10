@@ -413,12 +413,48 @@ class univariate_monomial
 				piranha_throw(std::invalid_argument,"invalid symbol set");
 			}
 			const value_type zero(0), one(1);
-			if (args.size()) {
-				if (m_value != zero) {
-					os << args[0u].get_name();
-					if (m_value != one) {
-						os << "**" << m_value;
-					}
+			if (args.size() && m_value != zero) {
+				os << args[0u].get_name();
+				if (m_value != one) {
+					os << "**" << m_value;
+				}
+			}
+		}
+		/// Print in TeX mode.
+		/**
+		 * Will print to stream a TeX representation of the monomial.
+		 * 
+		 * @param[in] os target stream.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @throws std::invalid_argument if the size of \p args is greater than one or
+		 * if the size is zero and the exponent is not zero.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::is_zero() and piranha::math::negate(),
+		 * - construction of the exponent type,
+		 * - comparison of exponents,
+		 * - printing exponents to stream.
+		 */
+		void print_tex(std::ostream &os, const symbol_set &args) const
+		{
+			if (unlikely(args.size() > 1u || (!args.size() && !math::is_zero(m_value)))) {
+				piranha_throw(std::invalid_argument,"invalid symbol set");
+			}
+			const value_type zero(0), one(1);
+			value_type copy(m_value);
+			bool sign_change = false;
+			if (args.size() && copy != zero) {
+				if (copy < zero) {
+					math::negate(copy);
+					os << "\\frac{1}{";
+					sign_change = true;
+				}
+				os << "{" << args[0u].get_name() << "}";
+				if (copy != one) {
+					os << "^{" << copy << "}";
+				}
+				if (sign_change) {
+					os << "}";
 				}
 			}
 		}
