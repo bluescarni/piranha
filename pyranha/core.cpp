@@ -42,6 +42,7 @@
 #include <cstddef>
 #include <iterator>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
