@@ -78,3 +78,62 @@ def _register_evaluate_wrapper(series_name):
 	for s in s_names:
 		s_type = getattr(_core,s)
 		setattr(s_type,'evaluate',_evaluate_wrapper)
+
+# Render a series in png format using latex + dvipng.
+# Code adapted from and inspired by:
+# http://xyne.archlinux.ca/projects/tex2png
+def _repr_png_(self):
+	from tempfile import mkdtemp, NamedTemporaryFile as ntf
+	from subprocess import Popen, PIPE, STDOUT
+	from shlex import split
+	from shutil import rmtree
+	from os.path import join
+	# Get the latex representation of the series.
+	str_latex = self._repr_latex_()
+	tex_text = r"""
+		\documentclass{article}
+		\usepackage[paperwidth=\maxdimen,paperheight=\maxdimen]{geometry}
+		\pagestyle{empty}
+		\usepackage{amsmath}
+		\usepackage{amssymb}
+		\begin{document}
+		\begin{samepage}"""
+	# Need to cut out the math environment specifiers in str_latex.
+	tex_text += str_latex + r"""
+		\end{samepage}
+		\end{document}"""
+	# Create the temporary directory in which we are going to operate.
+	tempd_name = mkdtemp(prefix = 'pyranha')
+	try:
+		# Create a temp filename in which we write the tex.
+		tex_file = ntf(dir = tempd_name, suffix = r'.tex', delete = False)
+		tex_file.write(tex_text)
+		tex_file.close()
+		tex_filename = tex_file.name
+		# Run latex.
+		raw_command = r'latex -interaction=nonstopmode "' + tex_filename + r'"'
+		proc = Popen(split(raw_command), cwd = tempd_name, stdout = PIPE, stderr = STDOUT)
+		output = proc.communicate()[0]
+		if proc.returncode:
+			raise RuntimeError(output)
+		# Convert dvi to png.
+		raw_command = r'dvipng -q -x "1400" -p "1" -T tight -bg "Transparent" -png -z 9 -o "' + tex_filename[0:-4] + r'.png" "' + tex_filename[0:-4] + r'.dvi"'
+		proc = Popen(split(raw_command), cwd = tempd_name, stdout = PIPE, stderr = STDOUT)
+		output = proc.communicate()[0]
+		if proc.returncode:
+			raise RuntimeError(output)
+		# Read png and return.
+		png_file = open(join(tempd_name,tex_filename[0:-4] + r'.png'))
+		retval = png_file.read()
+		return retval
+	finally:
+		# No matter what happens, always remove the temp directory with all the content.
+		rmtree(tempd_name)
+
+# Register the png representation method for a particular series.
+def _register_repr_png(series_name):
+	import re
+	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	for s in s_names:
+		s_type = getattr(_core,s)
+		setattr(s_type,'_repr_png_',_repr_png_)
