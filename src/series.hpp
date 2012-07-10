@@ -55,6 +55,7 @@
 #include "integer.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 #include "print_coefficient.hpp"
+#include "print_tex_coefficient.hpp"
 #include "series_multiplier.hpp"
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
@@ -660,7 +661,7 @@ class series: series_binary_operators, detail::series_tag
 				std::declval<symbol_set>())) type;
 		};
 		// Print utilities.
-		template <typename Series>
+		template <bool TexMode, typename Series>
 		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
 			truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
 		{
@@ -672,19 +673,19 @@ class series: series_binary_operators, detail::series_tag
 				std::transform(s.m_container.begin(),s.m_container.end(),
 					std::back_insert_iterator<decltype(v)>(v),[](const term_type &t) {return &t;});
 				std::sort(v.begin(),v.end(),[&t](const term_type *t1, const term_type *t2) {return t.compare_terms(*t1,*t2);});
-				return print_helper_1(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
+				return print_helper_1<TexMode>(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
 					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
 			} else {
-				return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+				return print_helper_1<TexMode>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
 			}
 		}
-		template <typename Series>
+		template <bool TexMode, typename Series>
 		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
 			!truncator_traits<Series>::is_sorting>::type * = piranha_nullptr)
 		{
-			return print_helper_1(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+			return print_helper_1<TexMode>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
 		}
-		template <typename Iterator>
+		template <bool TexMode, typename Iterator>
 		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
 		{
 			piranha_assert(start != end);
@@ -697,10 +698,18 @@ class series: series_binary_operators, detail::series_tag
 					break;
 				}
 				std::ostringstream oss_cf;
-				print_coefficient(oss_cf,it->m_cf);
+				if (TexMode) {
+					print_tex_coefficient(oss_cf,it->m_cf);
+				} else {
+					print_coefficient(oss_cf,it->m_cf);
+				}
 				auto str_cf = oss_cf.str();
 				std::ostringstream oss_key;
-				it->m_key.print(oss_key,args);
+				if (TexMode) {
+					it->m_key.print_tex(oss_key,args);
+				} else {
+					it->m_key.print(oss_key,args);
+				}
 				auto str_key = oss_key.str();
 				if (str_cf == "1" && !str_key.empty()) {
 					str_cf = "";
@@ -708,7 +717,7 @@ class series: series_binary_operators, detail::series_tag
 					str_cf = "-";
 				}
 				oss << str_cf;
-				if (str_cf != "" && str_cf != "-" && !str_key.empty()) {
+				if (str_cf != "" && str_cf != "-" && !str_key.empty() && !TexMode) {
 					oss << "*";
 				}
 				oss << str_key;
@@ -721,7 +730,11 @@ class series: series_binary_operators, detail::series_tag
 			auto str = oss.str();
 			// If we reached the limit without printing all terms in the series, print the ellipsis.
 			if (count == limit && it != end) {
-				str += "...";
+				if (TexMode) {
+					str += "\\ldots";
+				} else {
+					str += "...";
+				}
 			}
 			std::string::size_type index = 0u;
 			while (true) {
@@ -1497,7 +1510,33 @@ class series: series_binary_operators, detail::series_tag
 			}
 			return retval;
 		}
-		/// Overload stream operator for piranha::series.
+		/// Print in TeX mode.
+		/**
+		 * Print series to stream \p os in TeX mode. The representation is constructed in the same way as explained in
+		 * operator<<(), but using piranha::print_tex_coefficient() and the key's TeX printing method instead of the plain
+		 * printing functions.
+		 * 
+		 * @param os target stream.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::print_tex_coefficient(),
+		 * - the TeX printing method of the key type,
+		 * - memory allocation errors in standard containers,
+		 * - piranha::settings::get_max_term_output(),
+		 * - streaming to \p os or to instances of \p std::ostringstream.
+		 * 
+		 * @see operator<<().
+		 */
+		void print_tex(std::ostream &os) const
+		{
+			// If the series is empty, print zero and exit.
+			if (empty()) {
+				os << "0";
+				return;
+			}
+			print_helper_0<true>(os,*static_cast<Derived const *>(this));
+		}
+		/// Overloaded stream operator for piranha::series.
 		/**
 		 * Will direct to stream a human-readable representation of the series.
 		 * 
@@ -1530,7 +1569,9 @@ class series: series_binary_operators, detail::series_tag
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::print_coefficient(),
 		 * - the <tt>print()</tt> method of the key type,
-		 * - memory allocation errors in standard containers.
+		 * - memory allocation errors in standard containers,
+		 * - piranha::settings::get_max_term_output(),
+		 * - streaming to \p os or to instances of \p std::ostringstream.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const series &s)
 		{
@@ -1539,7 +1580,7 @@ class series: series_binary_operators, detail::series_tag
 				os << "0";
 				return os;
 			}
-			return print_helper_0(os,*static_cast<Derived const *>(&s));
+			return print_helper_0<false>(os,*static_cast<Derived const *>(&s));
 		}
 	protected:
 		/// Symbol set.

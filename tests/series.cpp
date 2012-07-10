@@ -1589,3 +1589,132 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 		math::evaluate(x + math::pow(2 * y,3),dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}));
 	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})),double>::value));
 }
+
+struct print_tex_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			// Avoid the stream tests with floating-point and similar, because of messy output.
+			if (std::is_same<Cf,double>::value || std::is_same<Cf,real>::value) {
+				return;
+			}
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			std::ostringstream oss;
+			p_type1{}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "0");
+			oss.str("");
+			p_type1{1}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			p_type1{-1}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			p_type1{"x"}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}");
+			oss.str("");
+			(-p_type1{"x"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-{x}");
+			oss.str("");
+			(-p_type1{"x"} * p_type1{"y"}.pow(2)).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-{x}{y}^{2}");
+			oss.str("");
+			(-p_type1{"x"} + 1).print_tex(oss);
+			BOOST_CHECK(oss.str() == "1-{x}" || oss.str() == "-{x}+1");
+			oss.str("");
+			p_type11{}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "0");
+			oss.str("");
+			p_type11{"x"}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}");
+			oss.str("");
+			(-3 * p_type11{"x"}.pow(2)).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-3{x}^{2}");
+			oss.str("");
+			(p_type11{1}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			(p_type11{-1}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			(p_type11{"x"} * p_type11{"y"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}{y}");
+			oss.str("");
+			(-p_type11{"x"} * p_type11{"y"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-{x}{y}");
+			oss.str("");
+			(-p_type11{"x"} + 1).print_tex(oss);
+			BOOST_CHECK(oss.str() == "1-{x}" || oss.str() == "-{x}+1");
+			oss.str("");
+			(p_type11{"x"} - 1).print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}-1" || oss.str() == "-1+{x}");
+			// Test wih less term output.
+			settings::set_max_term_output(3u);
+			oss.str("");
+			p_type11{}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "0");
+			oss.str("");
+			p_type11{"x"}.print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}");
+			oss.str("");
+			(-p_type11{"x"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-{x}");
+			oss.str("");
+			(p_type11{1}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "1");
+			oss.str("");
+			(p_type11{-1}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-1");
+			oss.str("");
+			(p_type11{"x"} * p_type11{"y"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "{x}{y}");
+			oss.str("");
+			(-p_type11{"x"} * p_type11{"y"}).print_tex(oss);
+			BOOST_CHECK(oss.str() == "-{x}{y}");
+			// Check printing with a truncator.
+			typedef polynomial<Cf,Expo> poly_type;
+			poly_type poly1{"x"};
+			poly1.get_truncator().set(5);
+			poly1 += 1;
+			oss.str("");
+			poly1.print_tex(oss);
+			BOOST_CHECK(oss.str() == "1+{x}");
+			oss.str("");
+			(poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"}).print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"1+{x}+{x}^{2}");
+			oss.str("");
+			(poly_type{"x"} - 1 + 2 * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"-1+{x}+2{x}^{2}");
+			oss.str("");
+			(poly_type{"x"} - 1 - 2 * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"-1+{x}-2{x}^{2}");
+			oss.str("");
+			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"1-3{x}+{x}^{2}+\\ldots");
+			// Test wih no term output.
+			settings::set_max_term_output(0u);
+			oss.str("");
+			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"\\ldots");
+			oss.str("");
+			poly_type{}.print_tex(oss);
+			BOOST_CHECK_EQUAL(oss.str(),"0");
+			poly1.get_truncator().unset();
+			settings::reset_max_term_output();
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_print_tex_test)
+{
+	boost::mpl::for_each<cf_types>(print_tex_tester());
+}
