@@ -53,9 +53,10 @@ namespace concept
  * - must be provided with a const \p merge_args method accepting two piranha::symbol_set
  *   as input and returning an instance of \p T,
  * - must be provided with a const \p is_unitary method accepting a piranha::symbol_set
- *   as input and returning bool.
+ *   as input and returning bool,
+ * - must be provided with const \p print and \p print_tex methods accepting an \p std::ostream as first argument
+ *   and a const piranha::symbol_set as second argument.
  * 
- * \todo print and print_tex requirements.
  * \todo assert that key's hasher satisfy the Hashable requirements.
  * \todo requirements on default-constructed key: must it be unitary? --> this one is probably not needed
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
@@ -87,6 +88,8 @@ struct Key:
 		// TODO: assert here that hasher satisfy the Hashable requirements.
 		std::hash<T> hasher;
 		(void)hasher;
+		inst.print(std::cout,symbol_set{});
+		inst.print_tex(std::cout,symbol_set{});
 	}
 };
 
