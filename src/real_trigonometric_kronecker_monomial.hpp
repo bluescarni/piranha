@@ -698,7 +698,9 @@ class real_trigonometric_kronecker_monomial
 			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
 				const auto it = dict.find(args[i]);
 				if (it == it_f) {
-					piranha_throw(std::invalid_argument,"cannot evaluate monomial: symbol does not appear in dictionary");
+					piranha_throw(std::invalid_argument,
+						std::string("cannot evaluate monomial: symbol \'") + args[i].get_name() +
+						"\' does not appear in dictionary");
 				}
 				tmp += it->second * v[i];
 			}
