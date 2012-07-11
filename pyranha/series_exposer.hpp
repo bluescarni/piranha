@@ -35,39 +35,70 @@ struct series_exposer
 		}
 		return s.evaluate(cpp_dict);
 	}
+	// Handle division specially (allowed only with non-series types).
+	template <typename S, typename T>
+	static void expose_division(bp::class_<S> &series_class, const T &in,
+		typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+	{
+		series_class.def(bp::self /= in);
+		series_class.def(bp::self / in);
+	}
+	template <typename S, typename T>
+	static void expose_division(bp::class_<S> &, const T &,
+		typename std::enable_if<std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+	{}
+	// TMP to check if a type is in the tuple.
+	template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
+	struct type_in_tuple
+	{
+		static const bool value = std::is_same<T,typename std::tuple_element<I,Tuple>::type>::value ||
+			type_in_tuple<T,Tuple,I + 1u>::value;
+	};
+	template <typename T, typename Tuple, std::size_t I>
+	struct type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
+	{
+		static const bool value = false;
+	};
 	// Interaction with interoperable types.
 	template <typename S, std::size_t I = 0u, typename... T>
-	void interop_exposer(bp::class_<S> &, const std::tuple<T...> &,
+	void interop_exposer(bp::class_<S> &series_class, const std::tuple<T...> &,
 		typename std::enable_if<I == sizeof...(T)>::type * = piranha_nullptr) const
-	{}
+	{
+		// Add interoperability with coefficient type if it is not already included in
+		// the interoperable types.
+		if (!type_in_tuple<typename S::term_type::cf_type,std::tuple<T...>>::value) {
+			typename S::term_type::cf_type cf;
+			interop_exposer(series_class,std::make_tuple(cf));
+		}
+	}
 	template <typename S, std::size_t I = 0u, typename... T>
 	void interop_exposer(bp::class_<S> &series_class, const std::tuple<T...> &t,
 		typename std::enable_if<(I < sizeof...(T))>::type * = piranha_nullptr) const
 	{
+		namespace sn = boost::python::self_ns;
 		typedef typename std::tuple_element<I,std::tuple<T...>>::type interop_type;
 		interop_type in;
 		// Constrcutor from interoperable.
 		series_class.def(bp::init<const interop_type &>());
-		// NOTE: to resolve ambiguities when we interop with other series types
-		// we can try using the namespace-qualified operators from Boost.Python.
 		// Arithmetic and comparison with interoperable type.
+		// NOTE: in order to resolve ambiguities when we interop with other series types,
+		// we use the namespace-qualified operators from Boost.Python.
 		// NOTE: if we fix is_addable type traits for series the above is not needed any more,
 		// as series + bp::self is not available any more.
-		series_class.def(bp::self += in);
-		series_class.def(bp::self + in);
-		series_class.def(in + bp::self);
-		series_class.def(bp::self -= in);
-		series_class.def(bp::self - in);
-		series_class.def(in - bp::self);
-		series_class.def(bp::self *= in);
-		series_class.def(bp::self * in);
-		series_class.def(in * bp::self);
-		series_class.def(bp::self == in);
-		series_class.def(in == bp::self);
-		series_class.def(bp::self != in);
-		series_class.def(in != bp::self);
-		series_class.def(bp::self /= in);
-		series_class.def(bp::self / in);
+		series_class.def(sn::operator+=(bp::self,in));
+		series_class.def(sn::operator+(bp::self,in));
+		series_class.def(sn::operator+(in,bp::self));
+		series_class.def(sn::operator-=(bp::self,in));
+		series_class.def(sn::operator-(bp::self,in));
+		series_class.def(sn::operator-(in,bp::self));
+		series_class.def(sn::operator*=(bp::self,in));
+		series_class.def(sn::operator*(bp::self,in));
+		series_class.def(sn::operator*(in,bp::self));
+		series_class.def(sn::operator==(bp::self,in));
+		series_class.def(sn::operator==(in,bp::self));
+		series_class.def(sn::operator!=(bp::self,in));
+		series_class.def(sn::operator!=(in,bp::self));
+		expose_division(series_class,in);
 		// Exponentiation.
 		pow_exposer(series_class,in);
 		// Evaluation.

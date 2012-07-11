@@ -78,7 +78,9 @@
  * \todo think about replacing the concept system with static_asserts in conjunction with extensive use of type traits. It seems like it
  * would allow a finer control with generic methods (e.g., polynomial is a Poisson series coefficient only if it supports
  * division by int, partial() requires multipliability by int/integer, etc.) and enable meta-programming. But how to implement
- * concept inheriting? Where to put the static asserts? Is it worth it?
+ * concept inheriting? Where to put the static asserts? Is it worth it? NOTE: related to this, should we restrict generic and forwarding
+ * constructors in series to accept only parameters for which the construction can happen? This way also the type-trait is_constructible would
+ * work, whereas now the generic constructors gobble up everything.
  * \todo univariate_monomial has been left behind a bit feature-wise.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
