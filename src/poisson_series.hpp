@@ -66,6 +66,10 @@ namespace piranha
  * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo the h_degree methods should probably go in the future in a harmonic_series toolbox (which, contrary to the power_series
+ * toolbox, would allow only either cf or key to have harmonic degree). This should all be wrapped up in a type-trait/concept thing
+ * similarly to the upcoming power_series type-trait rework. The harmonic order Morbidelli talks about should go in it as well.
  */
 template <typename Cf>
 class poisson_series:

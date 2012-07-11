@@ -75,6 +75,9 @@ namespace piranha
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo think about having this (and rtkm) return degrees as integer() to solve possible problems of overflowing in conjunction with
+ * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag

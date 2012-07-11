@@ -237,6 +237,43 @@ struct series_exposer
 	static void power_series_exposer(bp::class_<T> &,
 		typename std::enable_if<!is_power_series<T>::value>::type * = piranha_nullptr)
 	{}
+	// Harmonic degree wrappers.
+	template <typename S>
+	static decltype(std::declval<S>().h_degree()) wrap_h_degree(const S &s)
+	{
+		return s.h_degree();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().h_degree(std::declval<std::set<std::string>>())) wrap_partial_h_degree(const S &s, bp::object obj)
+	{
+		bp::stl_input_iterator<std::string> begin(obj), end;
+		return s.h_degree(std::set<std::string>(begin,end));
+	}
+	template <typename S>
+	static decltype(std::declval<S>().h_ldegree()) wrap_h_ldegree(const S &s)
+	{
+		return s.h_ldegree();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().h_ldegree(std::declval<std::set<std::string>>())) wrap_partial_h_ldegree(const S &s, bp::object obj)
+	{
+		bp::stl_input_iterator<std::string> begin(obj), end;
+		return s.h_ldegree(std::set<std::string>(begin,end));
+	}
+	// Harmonic degree exposer.
+	template <typename T>
+	static void harmonic_series_exposer(bp::class_<T> &series_class,
+		typename std::enable_if<std::is_base_of<detail::poisson_series_tag,T>::value>::type * = piranha_nullptr)
+	{
+		series_class.def("h_degree",wrap_h_degree<T>);
+		series_class.def("h_degree",wrap_partial_h_degree<T>);
+		series_class.def("h_ldegree",wrap_h_ldegree<T>);
+		series_class.def("h_ldegree",wrap_partial_h_ldegree<T>);
+	}
+	template <typename T>
+	static void harmonic_series_exposer(bp::class_<T> &,
+		typename std::enable_if<!std::is_base_of<detail::poisson_series_tag,T>::value>::type * = piranha_nullptr)
+	{}
 	// Substitution exposer.
 	template <typename U, typename T>
 	static void subs_exposer(bp::class_<T> &series_class)
@@ -308,6 +345,8 @@ struct series_exposer
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
 		// Power series methods.
 		power_series_exposer(series_class);
+		// Harmonic series methods.
+		harmonic_series_exposer(series_class);
 		// Substitution with self.
 		subs_exposer<series_type>(series_class);
 		// Latex representation.
