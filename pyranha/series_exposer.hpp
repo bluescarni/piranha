@@ -290,6 +290,15 @@ struct series_exposer
 		oss << "$";
 		return oss.str();
 	}
+	template <typename S>
+	static bp::list to_list_wrapper(const S &s)
+	{
+		bp::list retval;
+		for (auto it = s.begin(); it != s.end(); ++it) {
+			retval.append(bp::make_tuple(it->first,it->second));
+		}
+		return retval;
+	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -316,6 +325,8 @@ struct series_exposer
 		series_class.def(repr(bp::self));
 		// Length.
 		series_class.def("__len__",&series_type::size);
+		// Conversion to list.
+		series_class.add_property("list",to_list_wrapper<series_type>);
 		// Interaction with self.
 		series_class.def(bp::self += bp::self);
 		series_class.def(bp::self + bp::self);
