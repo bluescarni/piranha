@@ -584,6 +584,15 @@ struct print_tester
 		k5 = k_type{T(-2),T(1)};
 		k5.print(oss,vs);
 		BOOST_CHECK_EQUAL(oss.str(),"cos(-2x+y)");
+		oss.str("");
+		// Representation bug: would display cos(+y).
+		k5 = k_type{T(0),T(1)};
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(y)");
+		oss.str("");
+		k5 = k_type{T(0),T(-1)};
+		k5.print(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"cos(-y)");
 	}
 };
 
@@ -826,6 +835,15 @@ struct print_tex_tester
 		k5 = k_type{T(-2),T(1)};
 		k5.print_tex(oss,vs);
 		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left(-2{x}+{y}\\right)}");
+		// Representation bug: would display cos(+y).
+		oss.str("");
+		k5 = k_type{T(0),T(1)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left({y}\\right)}");
+		oss.str("");
+		k5 = k_type{T(0),T(-1)};
+		k5.print_tex(oss,vs);
+		BOOST_CHECK_EQUAL(oss.str(),"\\cos{\\left(-{y}\\right)}");
 	}
 };
 

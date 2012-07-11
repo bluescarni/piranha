@@ -557,11 +557,12 @@ class real_trigonometric_kronecker_monomial
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
 			const value_type zero(0), one(1), m_one(-1);
+			bool empty_output = true;
 			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
 				if (tmp[i] != zero) {
-					// A positive multiplier not at the beginning must always be preceded
+					// A positive multiplier, in case previous output exists, must be preceded
 					// by a "+" sign.
-					if (i > 0u && tmp[i] > zero) {
+					if (tmp[i] > zero && !empty_output) {
 						os << "+";
 					}
 					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
@@ -573,6 +574,7 @@ class real_trigonometric_kronecker_monomial
 					}
 					// Finally, print name of variable.
 					os << args[i].get_name();
+					empty_output = false;
 				}
 			}
 			os << ")";
@@ -600,11 +602,12 @@ class real_trigonometric_kronecker_monomial
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
 			const value_type zero(0), one(1), m_one(-1);
+			bool empty_output = true;
 			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
 				if (tmp[i] != zero) {
-					// A positive multiplier not at the beginning must always be preceded
+					// A positive multiplier, in case previous output exists, must be preceded
 					// by a "+" sign.
-					if (i > 0u && tmp[i] > zero) {
+					if (tmp[i] > zero && !empty_output) {
 						os << "+";
 					}
 					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
@@ -615,6 +618,7 @@ class real_trigonometric_kronecker_monomial
 					}
 					// Finally, print name of variable.
 					os << "{" << args[i].get_name() << "}";
+					empty_output = false;
 				}
 			}
 			os << "\\right)}";
