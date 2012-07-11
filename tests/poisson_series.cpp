@@ -381,3 +381,54 @@ BOOST_AUTO_TEST_CASE(poisson_series_print_tex_test)
 	((x+y)*cos(x)).print_tex(oss);
 	BOOST_CHECK(oss.str() == s3 + "\\cos{\\left({x}\\right)}" || oss.str() == s4 + "\\cos{\\left({x}\\right)}");
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_harmonic_degree_test)
+{
+	using math::sin;
+	using math::cos;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(x.h_degree(),0);
+	BOOST_CHECK_EQUAL(cos(3 * x).h_degree(),3);
+	BOOST_CHECK_EQUAL(cos(3 * x - 4 * y).h_degree(),-1);
+	BOOST_CHECK_EQUAL((cos(3 * x - 4 * y) + sin(x + y)).h_degree(),2);
+	BOOST_CHECK_EQUAL((cos(-3 * x - 4 * y) + sin(-x - y)).h_degree(),7);
+	BOOST_CHECK_EQUAL((cos(-3 * x - 2 * y) + sin(-x + y)).h_degree(),5);
+	BOOST_CHECK_EQUAL(cos(2 * x).h_degree({"x"}),2);
+	BOOST_CHECK_EQUAL(cos(2 * x).h_degree({"y"}),0);
+	BOOST_CHECK_EQUAL((cos(2 * x) + cos(3 * x + y)).h_degree({"x"}),3);
+	BOOST_CHECK_EQUAL((cos(2 * x) + cos(x + y)).h_degree({"x"}),2);
+	BOOST_CHECK_EQUAL((x * cos(2 * x) - y * cos(x + y)).h_degree({"y"}),1);
+	BOOST_CHECK_EQUAL((y * cos(x - y)).h_degree({"y"}),-1);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + x).h_degree({"y"}),0);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + x).h_degree({"y","x","y"}),0);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).h_degree({"y","x","y","z"}),2);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).h_degree({"x"}),1);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).h_degree({}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_degree({}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_degree({"x"}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_degree(),0);
+	BOOST_CHECK_EQUAL(p_type1{2}.h_degree(),0);
+	// Low harmonic degree.
+	BOOST_CHECK_EQUAL(x.h_ldegree(),0);
+	BOOST_CHECK_EQUAL(cos(3 * x).h_ldegree(),3);
+	BOOST_CHECK_EQUAL(cos(3 * x - 4 * y).h_ldegree(),-1);
+	BOOST_CHECK_EQUAL((cos(3 * x - 4 * y) + sin(x + y)).h_ldegree(),-1);
+	BOOST_CHECK_EQUAL((cos(-3 * x - 4 * y) + sin(-x - y)).h_ldegree(),2);
+	BOOST_CHECK_EQUAL((cos(-3 * x - 2 * y) + sin(-x + y)).h_ldegree(),0);
+	BOOST_CHECK_EQUAL(cos(2 * x).h_ldegree({"x"}),2);
+	BOOST_CHECK_EQUAL(cos(2 * x).h_ldegree({"y"}),0);
+	BOOST_CHECK_EQUAL((cos(2 * x) + cos(3 * x + y)).h_ldegree({"x"}),2);
+	BOOST_CHECK_EQUAL((cos(2 * x) + cos(x + y)).h_ldegree({"x"}),1);
+	BOOST_CHECK_EQUAL((x * cos(2 * x) - y * cos(x + y)).h_ldegree({"y"}),0);
+	BOOST_CHECK_EQUAL((y * cos(x - y)).h_ldegree({"y"}),-1);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + x).h_ldegree({"y"}),-1);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + x).h_ldegree({"y","x","y"}),0);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).h_ldegree({"y","x","y","z"}),0);
+	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).h_ldegree({"x"}),1);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).h_ldegree({}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_ldegree({}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_ldegree({"x"}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.h_ldegree(),0);
+	BOOST_CHECK_EQUAL(p_type1{2}.h_ldegree(),0);
+}

@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/concept/assert.hpp>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -154,6 +155,63 @@ class poisson_series:
 				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first.first
 			) type;
 		};
+		// Harmonic degree utilities.
+		template <typename... Args>
+		struct h_degree_type
+		{
+			typedef typename base::term_type::key_type key_type;
+			typedef decltype(std::declval<key_type>().h_degree(
+				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
+		};
+		template <typename... Args>
+		struct h_ldegree_type
+		{
+			typedef typename base::term_type::key_type key_type;
+			typedef decltype(std::declval<key_type>().h_ldegree(
+				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
+		};
+		template <typename... Args>
+		typename h_degree_type<Args ...>::type h_degree_impl(Args && ... params) const
+		{
+			// NOTE: this code is taken from power series, keep it in mind
+			// if it gets changed.
+			typedef typename h_degree_type<Args ...>::type return_type;
+			if (this->empty()) {
+				return return_type(0);
+			}
+			auto it = this->m_container.begin();
+			const auto it_f = this->m_container.end();
+			return_type retval = it->m_key.h_degree(std::forward<Args>(params)...,this->m_symbol_set);
+			++it;
+			return_type tmp;
+			for (; it != it_f; ++it) {
+				tmp = it->m_key.h_degree(std::forward<Args>(params)...,this->m_symbol_set);
+				if (tmp > retval) {
+					retval = std::move(tmp);
+				}
+			}
+			return retval;
+		}
+		template <typename... Args>
+		typename h_ldegree_type<Args ...>::type h_ldegree_impl(Args && ... params) const
+		{
+			typedef typename h_ldegree_type<Args ...>::type return_type;
+			if (this->empty()) {
+				return return_type(0);
+			}
+			auto it = this->m_container.begin();
+			const auto it_f = this->m_container.end();
+			return_type retval = it->m_key.h_ldegree(std::forward<Args>(params)...,this->m_symbol_set);
+			++it;
+			return_type tmp;
+			for (; it != it_f; ++it) {
+				tmp = it->m_key.h_ldegree(std::forward<Args>(params)...,this->m_symbol_set);
+				if (tmp < retval) {
+					retval = std::move(tmp);
+				}
+			}
+			return retval;
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -334,6 +392,87 @@ class poisson_series:
 				retval += (cf_sub * tmp_series2) * key_sub.second.first;
 			}
 			return retval;
+		}
+		/// Harmonic degree.
+		/**
+		 * The harmonic degree of a Poisson series is defined in the same way as the degree in a polynomial,
+		 * with the exponents replaced by the multipliers. That is, the harmonic degree of a term is the sum
+		 * of its trigonometric multipliers, and the harmonic degree of a series is given by the term with the
+		 * highest harmonic degree.
+		 * 
+		 * If the series is empty, zero will be returned.
+		 * 
+		 * @return the total harmonic degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type from zero,
+		 * - the calculation of the degree of each term,
+		 * - the assignment and greater-than operators for the return type.
+		 * 
+		 * \todo requirement on the degree type (less-than comparable, etc.), probably should fold them in with the new has_degree
+		 * type-trait (and do the same for power_series_term).
+		 */
+		typename h_degree_type<>::type h_degree() const
+		{
+			return h_degree_impl();
+		}
+		/// Partial harmonic degree.
+		/**
+		 * Equivalent to the harmonic degree, but only the symbols in \p s are considered in the computation.
+		 * 
+		 * If the series is empty, zero will be returned.
+		 * 
+		 * @param[in] s list of names of the variables that will be considered in the computation.
+		 * 
+		 * @return the partial harmonic degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type from zero,
+		 * - the calculation of the degree of each term,
+		 * - the assignment and greater-than operators for the return type.
+		 */
+		typename h_degree_type<std::set<std::string>>::type h_degree(const std::set<std::string> &s) const
+		{
+			return h_degree_impl(s);
+		}
+		/// Harmonic low degree.
+		/**
+		 * The harmonic low degree of a Poisson series is defined in the same way as the low degree in a polynomial,
+		 * with the exponents replaced by the multipliers. That is, the harmonic degree of a term is the sum
+		 * of its trigonometric multipliers, and the harmonic low degree of a series is given by the term with the
+		 * lowest harmonic degree.
+		 * 
+		 * If the series is empty, zero will be returned.
+		 * 
+		 * @return the total harmonic low degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type from zero,
+		 * - the calculation of the degree of each term,
+		 * - the assignment and less-than operators for the return type.
+		 */
+		typename h_ldegree_type<>::type h_ldegree() const
+		{
+			return h_ldegree_impl();
+		}
+		/// Partial harmonic low degree.
+		/**
+		 * Equivalent to the harmonic low degree, but only the symbols in \p s are considered in the computation.
+		 * 
+		 * If the series is empty, zero will be returned.
+		 * 
+		 * @param[in] s list of names of the variables that will be considered in the computation.
+		 * 
+		 * @return the partial harmonic low degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type from zero,
+		 * - the calculation of the degree of each term,
+		 * - the assignment and less-than operators for the return type.
+		 */
+		typename h_ldegree_type<std::set<std::string>>::type h_ldegree(const std::set<std::string> &s) const
+		{
+			return h_ldegree_impl(s);
 		}
 };
 
