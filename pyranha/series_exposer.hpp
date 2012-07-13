@@ -316,9 +316,9 @@ struct series_exposer
 	static std::string wrap_repr_latex(const S &s)
 	{
 		std::ostringstream oss;
-		oss << "$";
+		oss << "\\[ ";
 		s.print_tex(oss);
-		oss << "$";
+		oss << " \\]";
 		return oss.str();
 	}
 	template <typename S>

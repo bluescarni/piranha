@@ -117,7 +117,7 @@ def _repr_png_(self):
 		if proc.returncode:
 			raise RuntimeError(output)
 		# Convert dvi to png.
-		raw_command = r'dvipng -q -x "1400" -p "1" -T tight -bg "Transparent" -png -z 9 -o "' + tex_filename[0:-4] + r'.png" "' + tex_filename[0:-4] + r'.dvi"'
+		raw_command = r'dvipng -q -D 120 -T tight -bg "Transparent" -png -o "' + tex_filename[0:-4] + r'.png" "' + tex_filename[0:-4] + r'.dvi"'
 		proc = Popen(split(raw_command), cwd = tempd_name, stdout = PIPE, stderr = STDOUT)
 		output = proc.communicate()[0]
 		if proc.returncode:
