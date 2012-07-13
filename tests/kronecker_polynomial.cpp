@@ -109,6 +109,7 @@ struct multiplication_tester
 		// NOTE: this test is going to be exact in case of coefficients cancellations with double
 		// precision coefficients only if the platform has ieee 754 format (integer exactly representable
 		// as doubles up to 2 ** 53).
+		// NOTE: no check on radix needed, 2 is the minimum value.
 		if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 ||
 			std::numeric_limits<double>::digits < 53))
 		{
