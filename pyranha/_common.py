@@ -83,7 +83,7 @@ def _register_evaluate_wrapper(series_name):
 # Code adapted from and inspired by:
 # http://xyne.archlinux.ca/projects/tex2png
 def _repr_png_(self):
-	from tempfile import mkdtemp, NamedTemporaryFile as ntf
+	from tempfile import mkdtemp, NamedTemporaryFile
 	from subprocess import Popen, PIPE, STDOUT
 	from shlex import split
 	from shutil import rmtree
@@ -106,7 +106,7 @@ def _repr_png_(self):
 	tempd_name = mkdtemp(prefix = 'pyranha')
 	try:
 		# Create a temp filename in which we write the tex.
-		tex_file = ntf(dir = tempd_name, suffix = r'.tex', delete = False)
+		tex_file = NamedTemporaryFile(dir = tempd_name, suffix = r'.tex', delete = False)
 		tex_file.write(tex_text)
 		tex_file.close()
 		tex_filename = tex_file.name
