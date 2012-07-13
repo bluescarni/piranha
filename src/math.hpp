@@ -379,6 +379,33 @@ inline auto partial(const T &x, const std::string &str) -> decltype(partial_impl
 	return partial_impl<T>()(x,str);
 }
 
+/// Default functor for the implementation of piranha::math::integrate().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct integrate_impl
+{};
+
+/// Integration.
+/**
+ * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
+ * implementation of this function is in the piranha::math::integrate_impl functor.
+ * 
+ * @param[in] x argument for the integration.
+ * @param[in] str name of the symbolic quantity with respect to which the integration will be computed.
+ * 
+ * @return antiderivative of \p x with respect to \p str.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::integrate_impl.
+ */
+template <typename T>
+inline auto integrate(const T &x, const std::string &str) -> decltype(integrate_impl<T>()(x,str))
+{
+	return integrate_impl<T>()(x,str);
+}
+
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -490,6 +517,22 @@ class is_differentiable: detail::sfinae_types
 {
 		template <typename U>
 		static auto test(U const *t) -> decltype(math::partial(*t,""),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+};
+
+/// Type-trait for integrable types.
+/**
+ * The type-trait will be \p true if piranha::math::integrate() can be successfully called on instances of
+ * type \p T, \p false otherwise.
+ */
+template <typename T>
+class is_integrable: detail::sfinae_types
+{
+		template <typename U>
+		static auto test(U const *t) -> decltype(math::integrate(*t,""),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.

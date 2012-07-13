@@ -39,6 +39,8 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
 
 using namespace piranha;
 
@@ -190,4 +192,15 @@ BOOST_AUTO_TEST_CASE(subs_test)
 	BOOST_CHECK((std::is_same<decltype(math::subs(5.,"",6)),double>::value));
 	BOOST_CHECK_EQUAL(math::subs(10ll,"","foo"),10ll);
 	BOOST_CHECK((std::is_same<decltype(math::subs(10ll,"","foo")),long long>::value));
+}
+
+BOOST_AUTO_TEST_CASE(integrate_test)
+{
+	BOOST_CHECK(!piranha::is_integrable<int>::value);
+	BOOST_CHECK(!piranha::is_integrable<long>::value);
+	BOOST_CHECK(!piranha::is_integrable<double>::value);
+	BOOST_CHECK(!piranha::is_integrable<integer>::value);
+	BOOST_CHECK(!piranha::is_integrable<real>::value);
+	BOOST_CHECK(!piranha::is_integrable<rational>::value);
+	BOOST_CHECK(!piranha::is_integrable<std::string>::value);
 }
