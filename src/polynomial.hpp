@@ -42,6 +42,7 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
+#include "concepts/differentiable_coefficient.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
 #include "concepts/series.hpp"
 #include "concepts/truncator.hpp"
@@ -149,6 +150,50 @@ class polynomial:
 				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first
 			) type;
 		};
+		// Integration with integrable coefficient.
+		polynomial integrate_impl(const symbol &s, const typename base::term_type &term,
+			const std::true_type &) const
+		{
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			// Get the partial degree of the monomial in integral form.
+			integer degree;
+			try {
+				degree = math::integral_cast(term.m_key.degree({s.get_name()},this->m_symbol_set));
+			} catch (std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,
+					"unable to perform polynomial integration: cannot extract the integral form of an exponent");
+			}
+			// If the degree is negative, integration by parts won't terminate.
+			if (degree.sign() < 0) {
+				piranha_throw(std::invalid_argument,
+					"unable to perform polynomial integration: negative integral exponent");
+			}
+			// Initialise retval (this is also the final retval in case the degree of s is zero).
+			polynomial retval;
+			retval.m_symbol_set = this->m_symbol_set;
+			key_type tmp_key = term.m_key;
+			cf_type i_cf(math::integrate(term.m_cf,s.get_name()));
+			retval.insert(term_type(i_cf,tmp_key));
+			for (integer i(1); i <= degree; ++i) {
+				// Update coefficient and key.
+				i_cf = cf_type(math::integrate(i_cf,s.get_name()));
+				auto partial_key = tmp_key.partial(s,this->m_symbol_set);
+				i_cf *= std::move(partial_key.first);
+				// Account for (-1)**i.
+				math::negate(i_cf);
+				tmp_key = std::move(partial_key.second);
+				retval.insert(term_type(i_cf,tmp_key));
+			}
+			return retval;
+		}
+		// Integration with non-integrable coefficient.
+		polynomial integrate_impl(const symbol &, const typename base::term_type &,
+			const std::false_type &) const
+		{
+			piranha_throw(std::invalid_argument,"unable to perform polynomial integration: coefficient type is not integrable");
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -355,6 +400,66 @@ class polynomial:
 			}
 			return retval;
 		}
+		/// Integration.
+		/**
+		 * This method will attempt to compute the antiderivative of the polynomial term by term. If the term's coefficient does not depend on
+		 * the integration variable, the result will be calculated via the integration of the corresponding monomial.
+		 * Integration with respect to a variable appearing to the power of -1 will fail.
+		 * 
+		 * Otherwise, a strategy of integration by parts is attempted, its success depending on the integrability
+		 * of the coefficient and on the value of the exponent of the integration variable. The integration will
+		 * fail if the exponent is negative or non-integral.
+		 * 
+		 * This method requires the coefficient type to be differentiable.
+		 * 
+		 * @param[in] name integration variable.
+		 * 
+		 * @return the antiderivative of \p this with respect to \p name.
+		 * 
+		 * @throws std::invalid_argument if the integration procedure fails.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::symbol construction,
+		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::math::integral_cast() and
+		 *   piranha::math::negate(),
+		 * - piranha::symbol_set::add() and assignment operator,
+		 * - term construction,
+		 * - coefficient construction, assignment and arithmetics,
+		 * - integration, construction, assignment, differentiation and degree querying methods of the key type,
+		 * - insert(),
+		 * - series arithmetics.
+		 * 
+		 * \todo requirements on dividability by degree type, etc.
+		 */
+		polynomial integrate(const std::string &name) const
+		{
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			BOOST_CONCEPT_ASSERT((concept::DifferentiableCoefficient<cf_type>));
+			// Turn name into symbol.
+			const symbol s(name);
+			polynomial retval;
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// If the derivative of the coefficient is null, we just need to deal with
+				// the integration of the key.
+				if (math::is_zero(math::partial(it->m_cf,name))) {
+					polynomial tmp;
+					symbol_set sset = this->m_symbol_set;
+					// If the variable does not exist in the arguments set, add it.
+					if (!std::binary_search(sset.begin(),sset.end(),s)) {
+						sset.add(s);
+					}
+					tmp.m_symbol_set = sset;
+					auto key_int = it->m_key.integrate(s,this->m_symbol_set);
+					tmp.insert(term_type(it->m_cf,std::move(key_int.second)));
+					tmp /= key_int.first;
+					retval += std::move(tmp);
+				} else {
+					retval += integrate_impl(s,*it,std::integral_constant<bool,is_integrable<cf_type>::value>());
+				}
+			}
+			return retval;
+		}
 };
 
 namespace math
@@ -391,6 +496,30 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomi
 		{
 			return s.subs(name,x);
 		}
+};
+
+/// Specialisation of the piranha::math::integrate() functor for polynomial types.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::polynomial.
+ */
+template <typename Series>
+struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The implementation will use piranha::polynomial::integrate().
+	 * 
+	 * @param[in] s input polynomial.
+	 * @param[in] name integration variable.
+	 * 
+	 * @return antiderivative of \p s with respect to \p name.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::polynomial::integrate().
+	 */
+	Series operator()(const Series &s, const std::string &name) const
+	{
+		return s.integrate(name);
+	}
 };
 
 }

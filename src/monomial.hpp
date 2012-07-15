@@ -395,11 +395,68 @@ class monomial: public array_key<T,monomial<T>>
 				if (args[i] == s && !math::is_zero((*this)[i])) {
 					monomial tmp_m(*this);
 					value_type tmp_v(tmp_m[i]);
-					tmp_m[i] = tmp_m[i] - value_type(1);
+					tmp_m[i] -= value_type(1);
 					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
 				}
 			}
 			return std::make_pair(value_type(0),monomial());
+		}
+		/// Integration.
+		/**
+		 * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
+		 * consisting of the exponent associated to \p s and the monomial itself
+		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
+		 * set to 1 in the same position \p s would have if it were added to \p args.
+		 * 
+		 * If the exponent corresponding to \p s is -1, an error will be produced.
+		 * 
+		 * @param[in] s symbol with respect to which the integration will be calculated.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return result of the integration.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ
+		 * or if the exponent associated to \p s is -1.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::is_zero(),
+		 * - exponent construction,
+		 * - push_back(),
+		 * - the exponent type's addition and assignment operators.
+		 */
+		std::pair<typename base::value_type,monomial> integrate(const symbol &s, const symbol_set &args) const
+		{
+			typedef typename base::size_type size_type;
+			typedef typename base::value_type value_type;
+			if (!is_compatible(args)) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			monomial retval;
+			value_type expo(0), one(1);
+			for (size_type i = 0u; i < args.size(); ++i) {
+				if (math::is_zero(expo) && s < args[i]) {
+					// If we went past the position of s in args and still we
+					// have not performed the integration, it means that we need to add
+					// a new exponent.
+					retval.push_back(one);
+					expo = one;
+				}
+				retval.push_back((*this)[i]);
+				if (args[i] == s) {
+					// NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
+					// we are never going to land here as args[i] is at this point never going to be s.
+					retval[i] += one;
+					if (math::is_zero(retval[i])) {
+						piranha_throw(std::invalid_argument,"unable to perform monomial integration: negative unitary exponent");
+					}
+					expo = retval[i];
+				}
+			}
+			// If expo is still zero, it means we need to add a new exponent at the end.
+			if (math::is_zero(expo)) {
+				retval.push_back(one);
+				expo = one;
+			}
+			return std::make_pair(std::move(expo),std::move(retval));
 		}
 		/// Print.
 		/**

@@ -635,3 +635,66 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 		integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));
 	BOOST_CHECK_EQUAL((x*x*x + y*y + z*y*x).subs("x",integer(0)).subs("y",integer(0)).subs("z",integer(0)).subs("k",integer()),0);
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
+{
+	// Simple echelon-1 polynomial.
+	typedef polynomial<rational> p_type1;
+	BOOST_CHECK(is_integrable<p_type1>::value);
+	p_type1 x("x"), y("y"), z("z");
+	BOOST_CHECK_EQUAL(p_type1{}.integrate("x"),p_type1{});
+	BOOST_CHECK_EQUAL(x.integrate("x"),x * x / 2);
+	BOOST_CHECK_EQUAL(y.integrate("x"),x * y);
+	BOOST_CHECK_EQUAL((x + 3*y*x*x + z*y*x / 4).integrate("x"),x*x/2 + y*x*x*x + z*y*x*x/8);
+	BOOST_CHECK_THROW(x.pow(-1).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x + 3*y*x*x + z*y*x / 4).integrate("x").partial("x"),x + 3*y*x*x + z*y*x / 4);
+	BOOST_CHECK_EQUAL((x + 3*y*x*x + z*y*x / 4).integrate("y").partial("y"),x + 3*y*x*x + z*y*x / 4);
+	BOOST_CHECK_EQUAL((x + 3*y*x*x + z*y*x / 4).integrate("z").partial("z"),x + 3*y*x*x + z*y*x / 4);
+	BOOST_CHECK_EQUAL(p_type1{4}.integrate("z"),4 * z);
+	BOOST_CHECK_EQUAL((x * y * z).pow(-5).integrate("x"),(y * z).pow(-5) * x.pow(-4) * rational(1,-4));
+	// Polynomial with polynomial coefficient, no variable mixing.
+	typedef polynomial<p_type1> p_type11;
+	BOOST_CHECK(is_integrable<p_type11>::value);
+	p_type11 a("a"), b("b"), c("c");
+	BOOST_CHECK_EQUAL((a*x).integrate("x"),a*x*x/2);
+	BOOST_CHECK_EQUAL((a*x).integrate("a"),a*a*x/2);
+	BOOST_CHECK_EQUAL((a*x*x + b*x/15 - c * x * y).integrate("x"),a*x*x*x/3 + b*x*x/30 - c*x*x*y/2);
+	BOOST_CHECK_EQUAL((a*((x*x).pow(-1)) + b*x/15 - a * y).integrate("x"),-a*(x).pow(-1) + b*x*x/30 - a*x*y);
+	BOOST_CHECK_THROW((a*(x).pow(-1) + b*x/15 - a * y).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL((a*x*x + b*x/15 - a * y).integrate("a"),a*a*x*x/2 + a*b*x/15 - a*a*y/2);
+	BOOST_CHECK_EQUAL(math::integrate(a*x*x + b*x/15 - a * y,"a"),a*a*x*x/2 + a*b*x/15 - a*a*y/2);
+	BOOST_CHECK_EQUAL((7 * x * a.pow(-2) + b*x/15 - a * y).integrate("a"),-7*x*a.pow(-1) + a*b*x/15 - a*a*y/2);
+	BOOST_CHECK_EQUAL((7 * x * a.pow(-2) - a * y + b*x/15).integrate("a"),-7*x*a.pow(-1) + a*b*x/15 - a*a*y/2);
+	BOOST_CHECK_EQUAL(math::integrate(x.pow(4) * y * a.pow(4) + x * y * b,"x"),x.pow(5) * y * a.pow(4) / 5 + x * x / 2 * y * b);
+	// Variable mixing (integration by parts).
+	p_type11 xx("x"), yy("y"), zz("z");
+	BOOST_CHECK_EQUAL((x*xx).integrate("x"),x*x * xx / 2 - math::integrate(x*x/2,"x"));
+	BOOST_CHECK_EQUAL(((3*x + y)*xx).integrate("x"),(3*x*x + 2*x*y) * xx / 2 - math::integrate((3*x*x + 2*x*y)/2,"x"));
+	BOOST_CHECK_EQUAL((x*xx*xx).integrate("x"),x*x * xx * xx / 2 - 2 * xx  * x * x * x / 6 + 2 * x * x * x * x / 24);
+	BOOST_CHECK_EQUAL(math::partial((x*xx*xx).integrate("x"),"x"),x*xx*xx);
+	BOOST_CHECK_THROW((x.pow(-1)*xx*xx).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_THROW((x.pow(-2)*xx*xx).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_THROW((x.pow(-3)*xx*xx).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x.pow(-4)*xx*xx).integrate("x"),-x.pow(-3)/3*xx*xx - x.pow(-2) * 2 * xx / 6 - 2 * x.pow(-1) / 6);
+	BOOST_CHECK_EQUAL((x.pow(-4)*xx).integrate("x"),-x.pow(-3)/3*xx - x.pow(-2) / 6);
+	BOOST_CHECK_EQUAL((y * x.pow(-4)*xx*xx).integrate("x"),y*(-x.pow(-3)/3*xx*xx - x.pow(-2) * 2 * xx / 6 - 2 * x.pow(-1) / 6));
+	BOOST_CHECK_EQUAL(((y + z.pow(2) * y) * x.pow(-4)*xx*xx).integrate("x"),(y + z.pow(2) * y) * (-x.pow(-3)/3*xx*xx - x.pow(-2) * 2 * xx / 6 - 2 * x.pow(-1) / 6));
+	BOOST_CHECK_EQUAL(((y + z.pow(2) * y) * x.pow(-4)*xx*xx - x.pow(-4)*xx).integrate("x"),
+		(y + z.pow(2) * y) * (-x.pow(-3)/3*xx*xx - x.pow(-2) * 2 * xx / 6 - 2 * x.pow(-1) / 6) - (-x.pow(-3)/3*xx - x.pow(-2) / 6));
+	// Misc tests.
+	BOOST_CHECK_EQUAL(math::partial((x + y + z).pow(10).integrate("x"),"x"),(x + y + z).pow(10));
+	BOOST_CHECK_EQUAL(math::partial((x + y + z).pow(10).integrate("y"),"y"),(x + y + z).pow(10));
+	BOOST_CHECK_EQUAL(math::partial((x + y + z).pow(10).integrate("z"),"z"),(x + y + z).pow(10));
+	BOOST_CHECK_THROW((x*xx.pow(-1)).integrate("x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x*xx.pow(-1)).integrate("y"),x * xx.pow(-1) * yy);
+	BOOST_CHECK_THROW((x*yy.pow(-1)).integrate("y"),std::invalid_argument);
+	BOOST_CHECK_EQUAL((x*yy.pow(-2)).integrate("y"),-x*yy.pow(-1));
+	// Non-integrable coefficient.
+	typedef polynomial<polynomial_alt<rational,int>> p_type_alt;
+	p_type_alt n("n"), m("m");
+	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"n"),n*n*m/2 + m*n);
+	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"m"),m*n*m/2 + m*m/2);
+	BOOST_CHECK_THROW(math::integrate(p_type_alt{polynomial_alt<rational,int>{"m"}},"m"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integrate(p_type_alt{polynomial_alt<rational,int>{"n"}},"m"),(polynomial_alt<rational,int>{"n"} * m));
+	BOOST_CHECK_EQUAL(math::integrate(p_type_alt{polynomial_alt<rational,int>{"m"}},"n"),(polynomial_alt<rational,int>{"m"} * n));
+}

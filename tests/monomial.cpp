@@ -638,3 +638,56 @@ BOOST_AUTO_TEST_CASE(monomial_print_tex_test)
 {
 	boost::mpl::for_each<expo_types>(print_tex_tester());
 }
+
+struct integrate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		auto ret = k1.integrate(symbol("a"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(1)}));
+		vs.add("b");
+		BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument);
+		k1 = k_type{T(1)};
+		ret = k1.integrate(symbol("b"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(2));
+		BOOST_CHECK(ret.second == k_type({T(2)}));
+		k1 = k_type{T(2)};
+		ret = k1.integrate(symbol("c"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(2),T(1)}));
+		ret = k1.integrate(symbol("a"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(1),T(2)}));
+		k1 = k_type{T(2),T(3)};
+		vs.add("d");
+		ret = k1.integrate(symbol("a"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(1),T(2),T(3)}));
+		ret = k1.integrate(symbol("b"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(3));
+		BOOST_CHECK(ret.second == k_type({T(3),T(3)}));
+		ret = k1.integrate(symbol("c"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(2),T(1),T(3)}));
+		ret = k1.integrate(symbol("d"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(4));
+		BOOST_CHECK(ret.second == k_type({T(2),T(4)}));
+		ret = k1.integrate(symbol("e"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(1));
+		BOOST_CHECK(ret.second == k_type({T(2),T(3),T(1)}));
+		k1 = k_type{T(-1),T(3)};
+		BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument);
+		k1 = k_type{T(2),T(-1)};
+		BOOST_CHECK_THROW(k1.integrate(symbol("d"),vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_integrate_test)
+{
+	boost::mpl::for_each<expo_types>(integrate_tester());
+}

@@ -78,6 +78,7 @@ namespace piranha
  * 
  * \todo think about having this (and rtkm) return degrees as integer() to solve possible problems of overflowing in conjunction with
  * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
+ * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag
@@ -609,6 +610,58 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				}
 			}
 			return std::make_pair(integer{0},kronecker_monomial{});
+		}
+		/// Integration.
+		/**
+		 * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
+		 * consisting of the exponent associated to \p s and the monomial itself
+		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
+		 * set to 1 in the same position \p s would have if it were added to \p args.
+		 * 
+		 * If the exponent corresponding to \p s is -1, an error will be produced.
+		 * 
+		 * @param[in] s symbol with respect to which the integration will be calculated.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return result of the integration.
+		 * 
+		 * @throws std::invalid_argument if the exponent associated to \p s is -1.
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::is_zero(),
+		 * - piranha::static_vector::push_back(),
+		 * - the cast operator of piranha::integer,
+		 * - piranha::kronecker_array::encode().
+		 */
+		std::pair<integer,kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
+		{
+			v_type v = unpack(args), retval;
+			value_type expo(0), one(1);
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				if (math::is_zero(expo) && s < args[i]) {
+					// If we went past the position of s in args and still we
+					// have not performed the integration, it means that we need to add
+					// a new exponent.
+					retval.push_back(one);
+					expo = one;
+				}
+				retval.push_back(v[i]);
+				if (args[i] == s) {
+					// NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
+					// we are never going to land here as args[i] is at this point never going to be s.
+					retval[i] = static_cast<value_type>(integer(retval[i]) + 1);
+					if (math::is_zero(retval[i])) {
+						piranha_throw(std::invalid_argument,"unable to perform monomial integration: negative unitary exponent");
+					}
+					expo = retval[i];
+				}
+			}
+			// If expo is still zero, it means we need to add a new exponent at the end.
+			if (math::is_zero(expo)) {
+				retval.push_back(one);
+				expo = one;
+			}
+			return std::make_pair(integer(expo),kronecker_monomial(ka::encode(retval)));
 		}
 		/// Evaluation.
 		/**
