@@ -197,7 +197,7 @@ class series_multiplier
 		 * The number of threads that will be opened will never exceed \p n, the output of piranha::settings::get_n_threads(),
 		 * and it is determined as follows:
 		 * 
-		 * - if the method is not called from the main thread, then 1 wil be returned;
+		 * - if the method is not called from the main thread, then 1 will be returned;
 		 * - if the number of term-by-term multiplications that would be performed per thread using \p n
 		 *   threads is greater than an implementation-defined minimum, then \p n is returned;
 		 * - otherwise, the number of threads is decreased as necessary to meet the minimum thread workload.
