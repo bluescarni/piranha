@@ -34,6 +34,7 @@
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "integer.hpp"
 #include "math.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
