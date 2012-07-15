@@ -161,7 +161,7 @@ class polynomial:
 			integer degree;
 			try {
 				degree = math::integral_cast(term.m_key.degree({s.get_name()},this->m_symbol_set));
-			} catch (std::invalid_argument &) {
+			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
 					"unable to perform polynomial integration: cannot extract the integral form of an exponent");
 			}
