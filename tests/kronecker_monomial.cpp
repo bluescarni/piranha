@@ -527,6 +527,11 @@ struct partial_tester
 		ret = k1.partial(symbol("x"),vs);
 		BOOST_CHECK_EQUAL(ret.first,-1);
 		BOOST_CHECK(ret.second == k_type({T(-2),T(0)}));
+		// Check limits violation.
+		typedef kronecker_array<T> ka;
+		const auto &limits = ka::get_limits();
+		k1 = k_type{-std::get<0u>(limits[2u])[0u],-std::get<0u>(limits[2u])[0u]};
+		BOOST_CHECK_THROW(ret = k1.partial(symbol("x"),vs),std::invalid_argument);
 	}
 };
 
