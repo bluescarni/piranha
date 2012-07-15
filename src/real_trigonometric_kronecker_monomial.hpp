@@ -84,6 +84,9 @@ namespace piranha
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
+ * of h_degree around the code to make sure the change has no nasty effects.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial

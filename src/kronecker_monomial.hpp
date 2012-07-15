@@ -78,7 +78,8 @@ namespace piranha
  * 
  * \todo think about having this (and rtkm) return degrees as integer() to solve possible problems of overflowing in conjunction with
  * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
- * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate.
+ * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate. Review the code for degree() use after the
+ * change has been made to spot possible problems.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag
