@@ -36,7 +36,7 @@ def get_cf_types():
 	True
 	>>> all([isinstance(t[0],str) for t in l])
 	True
-	>>> t1 = get_type("integer")
+	>>> t1 = get_type('integer')
 	>>> t2 = get_type(int)
 	>>> t1 == t2
 	True

@@ -36,8 +36,8 @@ def cos(arg):
 		low-level function
 	
 	>>> from poisson_series import get_type
-	>>> t = get_type("polynomial_rational")
-	>>> cos(2 * t("x"))
+	>>> t = get_type('polynomial_rational')
+	>>> cos(2 * t('x'))
 	cos(2x)
 	
 	"""
@@ -70,8 +70,8 @@ def sin(arg):
 		low-level function
 	
 	>>> from poisson_series import get_type
-	>>> t = get_type("polynomial_rational")
-	>>> sin(2 * t("x"))
+	>>> t = get_type('polynomial_rational')
+	>>> sin(2 * t('x'))
 	sin(2x)
 	
 	"""
@@ -106,8 +106,8 @@ def partial(arg,name):
 	
 	>>> from polynomial import get_type
 	>>> pt = get_type(int)
-	>>> x,y = pt("x"), pt("y")
-	>>> partial(x + 2*x*y,"y")
+	>>> x,y = pt('x'), pt('y')
+	>>> partial(x + 2*x*y,'y')
 	2*x
 	
 	"""
@@ -130,11 +130,11 @@ def integrate(arg,name):
 		low-level function
 	
 	>>> from polynomial import get_type
-	>>> pt = get_type(int)
-	>>> x,y = pt("x"), pt("y")
-	>>> integrate(x + 2*x*y,"x") == x**2/2 + x**2*y
+	>>> pt = get_type('rational')
+	>>> x,y = pt('x'), pt('y')
+	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
 	True
-	>>> integrate(x**-1,"x") # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> integrate(x**-1,'x') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	ValueError: negative unitary exponent
