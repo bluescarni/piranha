@@ -477,7 +477,7 @@ class real_trigonometric_kronecker_monomial
 		 * according to the prosthaphaeresis formulas. After the multiplication, \p retval_plus will contain the monomial resulting
 		 * from the addition of the multipliers, \p retval_minus the monomial resulting from the subtraction of the mulipliers.
 		 * The flavours of the two output monomials will be \p true if the flavours of the operands are equal, \p false otherwise.
-		 * If the first multiplier of \p retval_plus (resp. \p retval_minus) is negative, then the sign of all multipliers will be
+		 * If the first nonzero multiplier of \p retval_plus (resp. \p retval_minus) is negative, then the sign of all multipliers will be
 		 * reversed and the value of \p sign_plus (resp. \p sign_minus) will be set to \p true; otherwise, the value of \p sign_plus (resp. \p sign_minus)
 		 * will be set to \p false.
 		 * 
@@ -511,22 +511,9 @@ class real_trigonometric_kronecker_monomial
 				// to int and safe_adder won't work as it expects identical types.
 				result_minus.push_back(detail::km_safe_adder(tmp1[i],static_cast<value_type>(-tmp2[i])));
 			}
-			// Handle sign change.
-			auto sign_changer = [&size](v_type &v) -> void {
-				piranha_assert(v.size() == size);
-				for (size_type i = 0u; i < size; ++i) {
-					// This is safe because of the symmetry in the limits of kronecker_array.
-					v[i] = -v[i];
-				}
-			};
-			if (size != 0u && result_plus[0u] < value_type(0)) {
-				sign_changer(result_plus);
-				sign_plus = true;
-			}
-			if (size != 0u && result_minus[0u] < value_type(0)) {
-				sign_changer(result_minus);
-				sign_minus = true;
-			}
+			// Handle sign changes.
+			sign_plus = canonicalise_impl(result_plus);
+			sign_minus = canonicalise_impl(result_minus);
 			// Compute them before assigning, so in case of exceptions we do not touch the return values.
 			const auto re_plus = ka::encode(result_plus), re_minus = ka::encode(result_minus);
 			retval_plus.m_value = re_plus;

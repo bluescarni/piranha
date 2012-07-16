@@ -441,6 +441,32 @@ struct multiply_tester
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == 1);
 		BOOST_CHECK(sign_plus && !sign_minus);
+		// Multiplication that produces first multiplier zero, second negative, in the plus.
+		k1 = k_type({1,-1});
+		k2 = k_type({-1,-2});
+		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
+		BOOST_CHECK(sign_plus && !sign_minus);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 0);
+		BOOST_CHECK_EQUAL(tmp[1u],3);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == 2);
+		BOOST_CHECK_EQUAL(tmp[1u],1);
+		// Multiplication that produces first multiplier zero, second negative, in the minus.
+		k1 = k_type({1,-2});
+		k2 = k_type({1,-1});
+		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
+		BOOST_CHECK(!sign_plus && sign_minus);
+		BOOST_CHECK(result_plus.get_flavour() == true);
+		BOOST_CHECK(result_minus.get_flavour() == true);
+		ka::decode(tmp,result_plus.get_int());
+		BOOST_CHECK(tmp[0u] == 2);
+		BOOST_CHECK_EQUAL(tmp[1u],-3);
+		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[0u] == 0);
+		BOOST_CHECK_EQUAL(tmp[1u],1);
 	}
 };
 
