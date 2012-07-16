@@ -137,7 +137,7 @@ def integrate(arg,name):
 	>>> integrate(x**-1,"x") # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
-	ValueError: unable to perform monomial integration: negative unitary exponent
+	ValueError: negative unitary exponent
 	
 	"""
 	from ._core import _integrate
