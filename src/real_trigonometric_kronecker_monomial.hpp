@@ -318,7 +318,7 @@ class real_trigonometric_kronecker_monomial
 		 * - the size of \p args is zero and the internal integer is not zero,
 		 * - the size of \p args is equal to or larger than the size of the output of piranha::kronecker_array::get_limits(),
 		 * - the internal integer is not within the limits reported by piranha::kronecker_array::get_limits(),
-		 * - the first element of the vector of multipliers represented by the internal integer is negative.
+		 * - the first nonzero element of the vector of multipliers represented by the internal integer is negative.
 		 * 
 		 * Otherwise, the monomial is considered to be compatible for insertion.
 		 * 
@@ -349,8 +349,12 @@ class real_trigonometric_kronecker_monomial
 			const auto unpacked = unpack(args);
 			// We know that s != 0.
 			piranha_assert(unpacked.size() > 0u);
-			if (unpacked[0u] < value_type(0)) {
-				return false;
+			for (decltype(args.size()) i = 0u; i < s; ++i) {
+				if (unpacked[i] < value_type(0)) {
+					return false;
+				} else if (unpacked[i] > value_type(0)) {
+					break;
+				}
 			}
 			return true;
 		}

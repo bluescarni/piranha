@@ -168,6 +168,17 @@ struct compatibility_tester
 		// Negative first element.
 		k1 = k_type{-1,0};
 		BOOST_CHECK(!k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
+		// Negative first nonzero element.
+		k1 = k_type{0,-1};
+		BOOST_CHECK(!k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
+		k1 = k_type{1,0};
+		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
+		k1 = k_type{0,1};
+		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
+		k1 = k_type{1,-1};
+		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
+		k1 = k_type{0,0};
+		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
 	}
 };
 
