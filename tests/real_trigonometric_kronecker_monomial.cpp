@@ -821,6 +821,38 @@ struct subs_tester
 		BOOST_CHECK((ret2.second.second == tmp));
 		tmp.set_flavour(true);
 		BOOST_CHECK((ret2.first.second == tmp));
+		// Sign change with leading zero multiplier after substitution.
+		k1 = k_type({T(2),T(0),T(-1)});
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::cos(real(7) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,math::sin(real(7) * T(2)));
+		tmp = k_type({T(0),T(1)});
+		BOOST_CHECK((ret2.first.second == tmp));
+		tmp.set_flavour(false);
+		BOOST_CHECK((ret2.second.second == tmp));
+		k1.set_flavour(false);
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::sin(real(7) * T(2)));
+		BOOST_CHECK_EQUAL(ret2.second.first,-math::cos(real(7) * T(2)));
+		BOOST_CHECK((ret2.second.second == tmp));
+		tmp.set_flavour(true);
+		BOOST_CHECK((ret2.first.second == tmp));
+		// Leading zero and subsequent canonicalisation.
+		k1 = k_type({T(0),T(-1),T(1)});
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::cos(real(7) * T(0)));
+		BOOST_CHECK_EQUAL(ret2.second.first,math::sin(real(7) * T(0)));
+		tmp = k_type({T(1),T(-1)});
+		BOOST_CHECK((ret2.first.second == tmp));
+		tmp.set_flavour(false);
+		BOOST_CHECK((ret2.second.second == tmp));
+		k1.set_flavour(false);
+		ret2 = k1.subs(symbol("x"),real(7),vs);
+		BOOST_CHECK_EQUAL(ret2.first.first,math::sin(real(7) * T(0)));
+		BOOST_CHECK_EQUAL(ret2.second.first,-math::cos(real(7) * T(0)));
+		BOOST_CHECK((ret2.second.second == tmp));
+		tmp.set_flavour(true);
+		BOOST_CHECK((ret2.first.second == tmp));
 	}
 };
 

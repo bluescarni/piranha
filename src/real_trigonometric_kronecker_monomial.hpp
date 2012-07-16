@@ -806,7 +806,7 @@ class real_trigonometric_kronecker_monomial
 		 * \f]
 		 * where \f$ \cos b \f$ and \f$ \sin b \f$ are returned as monomials, and \f$ \cos nx \f$ and \f$ \sin nx \f$
 		 * as the return values of piranha::math::cos() and piranha::math::sin(). If \p s is not in \p args,
-		 * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first multiplier
+		 * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first nonzero multiplier
 		 * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
 		 * 
 		 * @param[in] s symbol that will be substituted.
@@ -831,7 +831,6 @@ class real_trigonometric_kronecker_monomial
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s_cos(1), retval_s_sin(0);
-			bool sign_changed = false;
 			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
 				if (args[i] == s) {
 					retval_s_cos = math::cos(v[i] * x);
@@ -840,15 +839,7 @@ class real_trigonometric_kronecker_monomial
 					new_v.push_back(v[i]);
 				}
 			}
-			// NOTE: we have to check if in the newly-produced key the sign of the first
-			// multiplier needs to be changed for canonicalisation.
-			if (new_v.size() != 0u && new_v[0u] < value_type(0)) {
-				for (decltype(new_v.size()) i = 0u; i < new_v.size(); ++i) {
-					// This is safe because of the symmetry of the range in kronecker_array.
-					new_v[i] = -new_v[i];
-				}
-				sign_changed = true;
-			}
+			const bool sign_changed = canonicalise_impl(new_v);
 			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
 			const auto new_int = ka::encode(new_v);
 			real_trigonometric_kronecker_monomial cos_key(new_int,true), sin_key(new_int,false);
