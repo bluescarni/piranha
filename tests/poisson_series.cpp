@@ -432,3 +432,63 @@ BOOST_AUTO_TEST_CASE(poisson_series_harmonic_degree_test)
 	BOOST_CHECK_EQUAL(p_type1{}.h_ldegree(),0);
 	BOOST_CHECK_EQUAL(p_type1{2}.h_ldegree(),0);
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
+{
+	using math::sin;
+	using math::cos;
+	typedef poisson_series<polynomial<rational>> p_type1;
+	p_type1 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL(p_type1{}.integrate("x"),p_type1{});
+	BOOST_CHECK_EQUAL(x.integrate("x"),x*x/2);
+	BOOST_CHECK_EQUAL(x.pow(-2).integrate("x"),-x.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate((x+y)*cos(x) + cos(y),"x"),(x+y)*sin(x) + x*cos(y) + cos(x));
+	BOOST_CHECK_EQUAL(math::integrate((x+y)*cos(x) + cos(y),"y"),y/2*(2*x + y)*cos(x)+sin(y));
+	BOOST_CHECK_EQUAL(math::integrate((x+y)*cos(x) + cos(x),"x"),(x+y+1)*sin(x)+cos(x));
+	BOOST_CHECK_THROW(math::integrate(x.pow(-1)*cos(x),"x"),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integrate(x.pow(-2)*cos(x+y) + x,"x"),std::invalid_argument);
+	// Some examples computed with Wolfram alpha for checking.
+	BOOST_CHECK_EQUAL(math::integrate(x.pow(-2)*cos(x+y) + x,"y"),sin(x+y)*x.pow(-2)+x*y);
+	BOOST_CHECK_EQUAL(math::integrate(x.pow(5)*y.pow(4)*z.pow(3)*cos(5*x+4*y+3*z),"x"),
+		y.pow(4)*z.pow(3)/3125*(5*x*(125*x.pow(4)-100*x*x+24)*sin(5*x+4*y+3*z)+(625*x.pow(4)-
+		300*x*x+24)*cos(5*x+4*y+3*z)));
+	BOOST_CHECK_EQUAL(math::integrate(x.pow(5)/37*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z),"y"),
+		x.pow(5)*z.pow(3)/4736*(4*y*(8*y*y-3)*cos(5*x-4*y+3*z)+(-32*y.pow(4)+24*y*y-3)*sin(5*x-4*y+3*z)));
+	BOOST_CHECK_EQUAL(math::partial(math::integrate(x.pow(5)/37*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z),"y"),"y"),
+		x.pow(5)/37*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z));
+	BOOST_CHECK_EQUAL(math::partial(math::partial(math::integrate(math::integrate(x.pow(5)/37*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z),"y"),"y"),"y"),"y"),
+		x.pow(5)/37*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z));
+	BOOST_CHECK_EQUAL(math::integrate(rational(1,37)*y.pow(4)*z.pow(3)*cos(5*x-4*y+3*z),"x"),rational(1,185)*y.pow(4)*z.pow(3)*sin(5*x-4*y+3*z));
+	BOOST_CHECK_EQUAL(math::integrate(rational(1,37)*x.pow(4)*z.pow(3)*cos(4*y-3*z),"x"),rational(1,185)*x.pow(5)*z.pow(3)*cos(4*y-3*z));
+	BOOST_CHECK_EQUAL(math::integrate(y.pow(-5)*cos(4*x-3*z)-x*y*y*sin(y).pow(4),"x"),
+		(sin(4*x-3*z)-2*x*x*y.pow(7)*sin(y).pow(4))*(4*y.pow(5)).pow(-1));
+	BOOST_CHECK_EQUAL((x * x * cos(x)).integrate("x"),(x*x - 2) * sin(x) + 2*x*cos(x));
+	BOOST_CHECK_EQUAL(((x * x + y) * cos(x) - y * cos(x)).integrate("x"),(x*x - 2) * sin(x) + 2*x*cos(x));
+	BOOST_CHECK_EQUAL(((x * x + y) * cos(x) + y * cos(x) - x * sin(y)).integrate("x"),
+		-(x*x)/2 * sin(y) + (x*x+2*y-2)*sin(x) + 2*x*cos(x));
+	BOOST_CHECK_EQUAL(((x*x*x + y*x)*cos(2*x - 3*y) + y*x.pow(4)*cos(x) - (x.pow(-5) * sin(y))).integrate("x"),
+		x.pow(-4)/8*(32*(x*x-6)*x.pow(5)*y*cos(x)+x.pow(4)*(6*x*x+2*y-3)*cos(2*x-3*y)+2*(x.pow(5)*(2*x*x+2*y-3)*sin(2*x-3*y)+
+		4*(x.pow(4)-12*x*x+24)*x.pow(4)*y*sin(x)+sin(y))));
+	BOOST_CHECK_EQUAL(math::integrate((x.pow(-1)*cos(y)+x*y*cos(x)).pow(2),"x"),x.pow(-1)/24*(4*x.pow(4)*y*y+
+		6*x.pow(3)*y*y*sin(2*x)+6*x*x*y*y*cos(2*x)-3*x*y*y*sin(2*x)+24*x*y*sin(x-y)+24*x*y*sin(x+y)-
+		12*cos(2*y)-12));
+	BOOST_CHECK_EQUAL(math::integrate((cos(y)*x.pow(-2)+x*x*y*cos(x)).pow(2),"x"),x.pow(5)*y*y/10-(cos(y).pow(2))*x.pow(-3)/3+
+		rational(1,4)*(2*x*x-3)*x*y*y*cos(2*x)+rational(1,8)*(2*x.pow(4)-6*x*x+3)*y*y*sin(2*x)+
+		2*y*sin(x)*cos(y));
+	BOOST_CHECK_EQUAL(math::integrate((x*cos(y)+y*cos(x)).pow(2),"x"),rational(1,6)*x*(x*x*cos(2*y)+x*x+3*y*y)+
+		rational(1,4)*y*y*sin(2*x)+2*y*cos(x)*cos(y)+2*x*y*sin(x)*cos(y));
+	BOOST_CHECK_EQUAL(math::integrate((x*y*cos(y)+y*cos(x)).pow(2),"x"),rational(1,12)*y*y*(2*x*(x*x*cos(2*y)+x*x+3)
+		+24*cos(x)*cos(y)+24*x*sin(x)*cos(y)+3*sin(2*x)));
+	BOOST_CHECK_EQUAL(math::integrate((x*y*cos(y)+y*cos(x)+x*x*cos(x)).pow(2),"x"),rational(1,60)*(15*x*(2*x*x+2*y-3)*
+		cos(x).pow(2)+x*(6*x.pow(4)+5*x*x*y*y+10*x*x*y*y*cos(y).pow(2)+5*x*x*y*y*cos(2*y)+20*x*x*y-15*
+		(2*x*x+2*y-3)*sin(x).pow(2)+120*y*(x*x+y-6)*sin(x)*cos(y)+30*y*y)+15*cos(x)*(8*y*(3*x*x+y-6)*cos(y)+
+		(2*x.pow(4)+x*x*(4*y-6)+2*y*y-2*y+3)*sin(x))));
+	// This would require sine/cosine integral special functions.
+	BOOST_CHECK_THROW(math::integrate((x*y.pow(-1)*cos(y)+y*cos(x)+x*x*cos(x)).pow(2),"y"),std::invalid_argument);
+	// Check type trait.
+	BOOST_CHECK(is_integrable<p_type1>::value);
+	typedef poisson_series<rational> p_type2;
+	BOOST_CHECK_EQUAL(p_type2{}.integrate("x"),p_type2{});
+	BOOST_CHECK_THROW(p_type2{1}.integrate("x"),std::invalid_argument);
+	BOOST_CHECK(is_integrable<p_type2>::value);
+}

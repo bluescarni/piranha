@@ -663,6 +663,44 @@ class real_trigonometric_kronecker_monomial
 			}
 			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial());
 		}
+		/// Integration.
+		/**
+		 * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
+		 * consisting of the multiplier associated to \p s cast to piranha::integer and a copy of the monomial.
+		 * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
+		 * integration formulas for elementary trigonometric functions.
+		 * If \p s is not in \p args or if the multiplier associated to it is zero,
+		 * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
+		 * 
+		 * @param[in] s symbol with respect to which the integration will be calculated.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return result of the integration.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::is_zero(),
+		 * - monomial construction.
+		 */
+		std::pair<integer,real_trigonometric_kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
+		{
+			auto v = unpack(args);
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				if (args[i] == s && !math::is_zero(v[i])) {
+					integer tmp_n(v[i]);
+					real_trigonometric_kronecker_monomial tmp_m(*this);
+					// Flip the flavour.
+					tmp_m.set_flavour(!get_flavour());
+					// Flip the sign of the multiplier as needed.
+					if (!get_flavour()) {
+						tmp_n.negate();
+					}
+					return std::make_pair(std::move(tmp_n),std::move(tmp_m));
+				}
+
+			}
+			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial());
+		}
 		/// Evaluation.
 		/**
 		 * The return value will be built by applying piranha::math::cos() or piranha::math:sin()

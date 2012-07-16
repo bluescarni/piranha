@@ -638,6 +638,11 @@ struct partial_tester
 		BOOST_CHECK_EQUAL(ret.first,0);
 		BOOST_CHECK_EQUAL(ret.second.get_flavour(),true);
 		BOOST_CHECK_EQUAL(ret.second.get_int(),0);
+		k1 = k_type{T(1),T(2)};
+		ret = k1.partial(symbol("y"),vs);
+		BOOST_CHECK_EQUAL(ret.first,-2);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),false);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),k1.get_int());
 	}
 };
 
@@ -850,4 +855,54 @@ struct print_tex_tester
 BOOST_AUTO_TEST_CASE(rtkm_print_tex_test)
 {
 	boost::mpl::for_each<int_types>(print_tex_tester());
+}
+
+struct integrate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		typedef kronecker_array<T> ka;
+		const auto &limits = ka::get_limits();
+		symbol_set vs;
+		k_type k1{T(1)};
+		BOOST_CHECK_THROW(k1.integrate(symbol("x"),vs),std::invalid_argument);
+		if (std::get<0u>(limits[1u])[0u] < boost::integer_traits<T>::const_max) {
+			k1.set_int(boost::integer_traits<T>::const_max);
+			BOOST_CHECK_THROW(k1.integrate(symbol("x"),vs),std::invalid_argument);
+		}
+		vs.add("x");
+		vs.add("y");
+		k1 = k_type{T(1),T(2)};
+		auto ret = k1.integrate(symbol("x"),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),false);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),k1.get_int());
+		k1.set_flavour(false);
+		ret = k1.integrate(symbol("y"),vs);
+		BOOST_CHECK_EQUAL(ret.first,-2);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),true);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),k1.get_int());
+		k1 = k_type{T(0),T(2)};
+		ret = k1.integrate(symbol("x"),vs);
+		BOOST_CHECK_EQUAL(ret.first,0);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),true);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),0);
+		k1 = k_type{T(1),T(2)};
+		ret = k1.integrate(symbol("z"),vs);
+		BOOST_CHECK_EQUAL(ret.first,0);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),true);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),0);
+		k1 = k_type{T(1),T(2)};
+		ret = k1.integrate(symbol("y"),vs);
+		BOOST_CHECK_EQUAL(ret.first,2);
+		BOOST_CHECK_EQUAL(ret.second.get_flavour(),false);
+		BOOST_CHECK_EQUAL(ret.second.get_int(),k1.get_int());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_integrate_test)
+{
+	boost::mpl::for_each<int_types>(integrate_tester());
 }
