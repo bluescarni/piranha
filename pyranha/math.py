@@ -114,6 +114,35 @@ def partial(arg,name):
 	from ._core import _partial
 	return _partial(arg,name)
 
+def integrate(arg,name):
+	"""Integration.
+	
+	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a series type and
+	*name* a string. The success of the operation is not guaranteed, and depends both on the type and value of
+	*arg*.
+	
+	:param arg: argument for the integration
+	:type arg: a series type
+	:param name: name of the variable with respect to which the integration will be calculated
+	:type name: string
+	:rtype: antiderivative of *arg* with respect to *name*
+	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
+		low-level function
+	
+	>>> from polynomial import get_type
+	>>> pt = get_type(int)
+	>>> x,y = pt("x"), pt("y")
+	>>> integrate(x + 2*x*y,"x") == x**2/2 + x**2*y
+	True
+	>>> integrate(x**-1,"x") # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: unable to perform monomial integration: negative unitary exponent
+	
+	"""
+	from ._core import _integrate
+	return _integrate(arg,name)
+
 def factorial(n):
 	"""Factorial.
 	

@@ -113,6 +113,12 @@ struct series_exposer
 	{
 		return math::partial(s,name);
 	}
+	// Integration.
+	template <typename S>
+	static S integrate_wrapper(const S &s, const std::string &name)
+	{
+		return math::integrate(s,name);
+	}
 	// Sin and cos.
 	template <bool IsCos, typename S>
 	static S sin_cos_wrapper(const S &s)
@@ -330,6 +336,18 @@ struct series_exposer
 		}
 		return retval;
 	}
+	// Expose integration conditionally.
+	template <typename S>
+	static void expose_integrate(bp::class_<S> &series_class,
+		typename std::enable_if<is_integrable<S>::value>::type * = piranha_nullptr)
+	{
+		series_class.def("integrate",&S::integrate);
+		bp::def("_integrate",integrate_wrapper<S>);
+	}
+	template <typename S>
+	static void expose_integrate(bp::class_<S> &,
+		typename std::enable_if<!is_integrable<S>::value>::type * = piranha_nullptr)
+	{}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -379,6 +397,8 @@ struct series_exposer
 			series_type::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
 		series_class.def("unregister_all_custom_derivatives",
 			series_type::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
+		// Integration.
+		expose_integrate(series_class);
 		// Filter and transform.
 		series_class.def("filter",wrap_filter<series_type>);
 		series_class.def("transform",wrap_transform<series_type>);
