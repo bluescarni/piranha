@@ -105,6 +105,8 @@ class real_trigonometric_kronecker_monomial
 		typedef typename ka::size_type size_type;
 		/// Maximum monomial size.
 		static const size_type max_size = 255u;
+		/// Vector type used for temporary packing/unpacking.
+		typedef static_vector<value_type,max_size> v_type;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
 		// Eval and subs typedefs.
@@ -119,9 +121,22 @@ class real_trigonometric_kronecker_monomial
 			typedef std::pair<typename eval_type<U>::type,real_trigonometric_kronecker_monomial> pair_type;
 			typedef std::pair<pair_type,pair_type> type;
 		};
+		// Implementation of canonicalisation.
+		static bool canonicalise_impl(v_type &unpacked)
+		{
+			const auto size = unpacked.size();
+			bool sign_change = false;
+			for (decltype(unpacked.size()) i = 0u; i < size; ++i) {
+				if (sign_change || unpacked[i] < value_type(0)) {
+					unpacked[i] = -unpacked[i];
+					sign_change = true;
+				} else if (unpacked[i] > value_type(0)) {
+					break;
+				}
+			}
+			return sign_change;
+		}
 	public:
-		/// Vector type used for temporary packing/unpacking.
-		typedef static_vector<value_type,max_size> v_type;
 		/// Default constructor.
 		/**
 		 * After construction all multipliers in the monomial will be zero, and the flavour will be set to \p true.
@@ -271,6 +286,30 @@ class real_trigonometric_kronecker_monomial
 		void set_flavour(bool f)
 		{
 			m_flavour = f;
+		}
+		/// Canonicalise.
+		/**
+		 * A monomial is considered to be in canonical form when the first nonzero multiplier is positive.
+		 * If \p this is not in canonical form, the method will canonicalise \p this by switching
+		 * the signs of all multipliers and return \p true.
+		 * Otherwise, \p this will not be modified and \p false will be returned.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return \p true if the monomial was canonicalised, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::kronecker_array::encode().
+		 */
+		bool canonicalise(const symbol_set &args)
+		{
+			auto unpacked = unpack(args);
+			const bool retval = canonicalise_impl(unpacked);
+			if (retval) {
+				m_value = ka::encode(unpacked);
+			}
+			return retval;
 		}
 		/// Compatibility check.
 		/**

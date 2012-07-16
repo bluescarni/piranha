@@ -906,3 +906,62 @@ BOOST_AUTO_TEST_CASE(rtkm_integrate_test)
 {
 	boost::mpl::for_each<int_types>(integrate_tester());
 }
+
+struct canonicalise_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		BOOST_CHECK(!k1.canonicalise(vs));
+		k1 = k_type{T(1)};
+		BOOST_CHECK_THROW(k1.canonicalise(vs),std::invalid_argument);
+		vs.add("x");
+		k1 = k_type{T(0)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		k1 = k_type{T(1)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		k1 = k_type{T(-1)};
+		BOOST_CHECK(k1.canonicalise(vs));
+		BOOST_CHECK(k1 == k_type{T(1)});
+		vs.add("y");
+		k1 = k_type{T(0),T(0)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(0)}));
+		k1 = k_type{T(1),T(0)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(1),T(0)}));
+		k1 = k_type{T(-1),T(0)};
+		BOOST_CHECK(k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(1),T(0)}));
+		k1 = k_type{T(1),T(-1)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(1),T(-1)}));
+		k1 = k_type{T(0),T(-1)};
+		BOOST_CHECK(k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(1)}));
+		k1 = k_type{T(0),T(1)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(1)}));
+		vs.add("z");
+		k1 = k_type{T(0),T(1),T(-1)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(1),T(-1)}));
+		k1 = k_type{T(0),T(-1),T(-1)};
+		BOOST_CHECK(k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(1),T(1)}));
+		k1 = k_type{T(0),T(0),T(-1)};
+		BOOST_CHECK(k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(0),T(0),T(1)}));
+		k1 = k_type{T(1),T(-1),T(-1)};
+		BOOST_CHECK(!k1.canonicalise(vs));
+		BOOST_CHECK((k1 == k_type{T(1),T(-1),T(-1)}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_canonicalise_test)
+{
+	boost::mpl::for_each<int_types>(canonicalise_tester());
+}
