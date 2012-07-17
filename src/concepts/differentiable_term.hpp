@@ -53,7 +53,7 @@ class DifferentiableTerm:
 		{
 			const T inst = T();
 			const symbol s("");
-			const symbol_set ss;
+			const symbol_set ss = symbol_set();
 			auto ret = inst.partial(s,ss);
 			static_assert(std::is_same<decltype(ret),std::vector<T>>::value,"Invalid return type for partial() method.");
 		}
