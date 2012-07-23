@@ -1793,7 +1793,7 @@ class integer
 		 */
 		auto allocated_size() const -> typename std::decay<std::make_unsigned<decltype(::mpz_t{}->_mp_alloc)>::type>::type
 		{
-			typedef typename std::decay<std::make_unsigned<decltype(::mpz_t{}->_mp_alloc)>::type>::type return_type;
+			typedef typename std::decay<std::make_unsigned<decltype(integer{}.m_value->_mp_alloc)>::type>::type return_type;
 			return return_type(m_value->_mp_alloc);
 		}
 		/// Sign.
