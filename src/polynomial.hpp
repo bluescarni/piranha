@@ -817,11 +817,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// in the operands and examine them, we cannot operate on the codes for this.
 			auto it1 = this->m_v1.begin();
 			auto it2 = this->m_v2.begin();
-			typedef typename term_type1::key_type::value_type value_type1;
-			typedef typename term_type2::key_type::value_type value_type2;
 			// Initialise minmax values.
-			std::vector<std::pair<value_type1,value_type1>> minmax_values1;
-			std::vector<std::pair<value_type2,value_type2>> minmax_values2;
+			std::vector<std::pair<value_type,value_type>> minmax_values1;
+			std::vector<std::pair<value_type,value_type>> minmax_values2;
 			auto tmp_vec1 = (*it1)->m_key.unpack(this->m_s1->m_symbol_set);
 			auto tmp_vec2 = (*it2)->m_key.unpack(this->m_s1->m_symbol_set);
 			// Bounds of the Kronecker representation for each component.
@@ -837,7 +835,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				tmp_vec1 = (*it1)->m_key.unpack(this->m_s1->m_symbol_set);
 				piranha_assert(tmp_vec1.size() == minmax_values1.size());
 				std::transform(minmax_values1.begin(),minmax_values1.end(),tmp_vec1.begin(),minmax_values1.begin(),
-					[](const std::pair<value_type1,value_type1> &p, const value_type1 &v) {
+					[](const std::pair<value_type,value_type> &p, const value_type &v) {
 						return std::make_pair(
 							v < p.first ? v : p.first,
 							v > p.second ? v : p.second
@@ -848,7 +846,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				tmp_vec2 = (*it2)->m_key.unpack(this->m_s2->m_symbol_set);
 				piranha_assert(tmp_vec2.size() == minmax_values2.size());
 				std::transform(minmax_values2.begin(),minmax_values2.end(),tmp_vec2.begin(),minmax_values2.begin(),
-					[](const std::pair<value_type2,value_type2> &p, const value_type2 &v) {
+					[](const std::pair<value_type,value_type> &p, const value_type &v) {
 						return std::make_pair(
 							v < p.first ? v : p.first,
 							v > p.second ? v : p.second
@@ -859,8 +857,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// NOTE: use m_minmax_values for the ranges of the result only, update it to include
 			// the ranges of the operands below.
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
-				std::back_inserter(m_minmax_values),[](const std::pair<value_type1,value_type1> &p1,
-				const std::pair<value_type2,value_type2> &p2) {
+				std::back_inserter(m_minmax_values),[](const std::pair<value_type,value_type> &p1,
+				const std::pair<value_type,value_type> &p2) {
 					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
 			});
 			piranha_assert(m_minmax_values.size() == minmax_vec.size());
@@ -1215,7 +1213,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		void dense_multiplication(return_type &retval, const truncator_type &trunc) const
 		{
 			piranha_assert(IsActive == trunc.is_active());
-			typedef typename term_type1::key_type::value_type value_type;
 			// Vectors of minimum / maximum values, cast to hardware int.
 			std::vector<value_type> mins;
 			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(mins),[](const std::pair<integer,integer> &p) {
