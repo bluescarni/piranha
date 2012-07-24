@@ -59,7 +59,7 @@ struct ArrayKeyValueType:
 		// Shut off compiler warning.
 		(void)&inst;
 		T inst2(inst);
-		(void)(inst < inst);
+		(void)(inst < inst2);
 		inst += inst2;
 		inst = inst + inst2;
 		inst -= inst2;
