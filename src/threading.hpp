@@ -81,7 +81,7 @@ typedef
 {
 		typedef detail::base_thread base;
 		template <typename Callable, typename... Args>
-		static void wrapper(Callable func, Args... args)
+		static void wrapper(Callable &func, Args & ... args)
 		{
 			try {
 				func(args...);
