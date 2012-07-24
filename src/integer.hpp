@@ -2161,7 +2161,7 @@ namespace std
  * @see piranha::integer::swap()
  */
 template <>
-inline void swap(piranha::integer &n1, piranha::integer &n2)
+inline void swap(piranha::integer &n1, piranha::integer &n2) piranha_noexcept_spec(true)
 {
 	n1.swap(n2);
 }

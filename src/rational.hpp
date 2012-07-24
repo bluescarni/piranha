@@ -1666,7 +1666,7 @@ namespace std
  * @see piranha::rational::swap()
  */
 template <>
-inline void swap(piranha::rational &q1, piranha::rational &q2)
+inline void swap(piranha::rational &q1, piranha::rational &q2) piranha_noexcept_spec(true)
 {
 	q1.swap(q2);
 }

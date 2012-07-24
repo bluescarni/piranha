@@ -1780,7 +1780,7 @@ namespace std
  * @see piranha::real::swap()
  */
 template <>
-inline void swap(piranha::real &r1, piranha::real &r2)
+inline void swap(piranha::real &r1, piranha::real &r2) piranha_noexcept_spec(true)
 {
 	r1.swap(r2);
 }
