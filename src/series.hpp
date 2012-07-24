@@ -82,6 +82,19 @@ struct term_hasher
 	}
 };
 
+// NOTE: this needs to go here, instead of in the series class as private method,
+// because of a bug in GCC 4.7:
+// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53137
+template <typename Term, typename Derived>
+inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set &s, const Term &t)
+{
+	typedef typename Term::cf_type cf_type;
+	Derived retval;
+	retval.m_symbol_set = s;
+	retval.insert(Term(cf_type(1),t.m_key));
+	return std::make_pair(t.m_cf,std::move(retval));
+}
+
 }
 
 /// Series class.
@@ -144,6 +157,9 @@ class series: series_binary_operators, detail::series_tag
 		// Partial need access to the custom derivatives.
 		template <typename, typename>
 		friend class math::partial_impl;
+		// NOTE: this friendship is related to the bug workaround above.
+		template <typename Term2, typename Derived2>
+		friend std::pair<typename Term2::cf_type,Derived2> detail::pair_from_term(const symbol_set &, const Term2 &);
 	protected:
 		/// Container type for terms.
 		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
@@ -642,14 +658,6 @@ class series: series_binary_operators, detail::series_tag
 			return retval;
 		}
 		// Iterator utilities.
-		static std::pair<typename term_type::cf_type,Derived> pair_from_term(const symbol_set &s, const term_type &t)
-		{
-			typedef typename term_type::cf_type cf_type;
-			Derived retval;
-			retval.m_symbol_set = s;
-			retval.insert(term_type(cf_type(1),t.m_key));
-			return std::make_pair(t.m_cf,std::move(retval));
-		}
 		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
 			typename container_type::const_iterator> const_iterator_impl;
 		// Evaluation utilities.
@@ -1379,7 +1387,7 @@ class series: series_binary_operators, detail::series_tag
 			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
 				func_type;
 			auto func = [this](const term_type &t) {
-				return series<term_type,Derived>::pair_from_term(this->m_symbol_set,t);
+				return detail::pair_from_term<term_type,Derived>(this->m_symbol_set,t);
 			};
 			return boost::make_transform_iterator(m_container.begin(),func_type(std::move(func)));
 		}
@@ -1400,7 +1408,7 @@ class series: series_binary_operators, detail::series_tag
 			typedef std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>
 				func_type;
 			auto func = [this](const term_type &t) {
-				return series<term_type,Derived>::pair_from_term(this->m_symbol_set,t);
+				return detail::pair_from_term<term_type,Derived>(this->m_symbol_set,t);
 			};
 			return boost::make_transform_iterator(m_container.end(),func_type(std::move(func)));
 		}
@@ -1427,7 +1435,7 @@ class series: series_binary_operators, detail::series_tag
 			retval.m_symbol_set = m_symbol_set;
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				if (func(pair_from_term(m_symbol_set,*it))) {
+				if (func(detail::pair_from_term<term_type,Derived>(m_symbol_set,*it))) {
 					retval.insert(*it);
 				}
 			}
@@ -1466,7 +1474,7 @@ class series: series_binary_operators, detail::series_tag
 			std::pair<typename term_type::cf_type,Derived> tmp;
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				tmp = func(pair_from_term(m_symbol_set,*it));
+				tmp = func(detail::pair_from_term<term_type,Derived>(m_symbol_set,*it));
 				// NOTE: here we could use multadd, but it seems like there's not
 				// much benefit (plus, the types involved are different).
 				retval += tmp.first * tmp.second;
