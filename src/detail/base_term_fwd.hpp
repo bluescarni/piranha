@@ -32,7 +32,7 @@ struct base_term_tag {};
 
 // Forward-declaration of base_term.
 template <typename Cf, typename Key, typename Derived>
-struct base_term;
+class base_term;
 
 }
 

@@ -64,7 +64,7 @@ namespace std
 {
 
 template <typename T>
-class hash<g_key_type<T>>: public hash<array_key<T,g_key_type<T>>> {};
+struct hash<g_key_type<T>>: public hash<array_key<T,g_key_type<T>>> {};
 
 }
 
