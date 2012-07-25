@@ -953,7 +953,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			piranha_assert(r1.first <= r1.second);
 			piranha_assert(!second_region || (r2.first <= r2.second && r2.second < r1.first));
-			return task_type{{i_start,i_end},{j_start,j_end},r1,r2,second_region};
+			return task_type{std::make_pair(i_start,i_end),std::make_pair(j_start,j_end),r1,r2,second_region};
 		}
 		// Functor to check if region r does not overlap any of the busy ones.
 		template <typename RegionSet>
@@ -1308,7 +1308,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				const bucket_size_type b = boost::numeric_cast<bucket_size_type>((new_keys1[i_end - 1u].first + new_keys2[j_end - 1u].first) - hmin);
 				piranha_assert(a <= b);
 				piranha_assert(b <= boost::numeric_cast<bucket_size_type>(hmax - hmin));
-				return task_type{{i_start,i_end},{j_start,j_end},{a,b},{0u,0u},false};
+				return task_type{std::make_pair(i_start,i_end),std::make_pair(j_start,j_end),
+					std::make_pair(a,b),std::make_pair(bucket_size_type(0u),bucket_size_type(0u)),false};
 			};
 			for (index_type i = 0u; i < size1 / bsize1; ++i) {
 				for (index_type j = 0u; j < size2 / bsize2; ++j) {
