@@ -18,53 +18,66 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_CONFIG_HPP
-#define PIRANHA_CONFIG_HPP
+#ifndef PIRANHA_CONFIG_GCC_HPP
+#define PIRANHA_CONFIG_GCC_HPP
 
-@PIRANHA_THREAD_MODEL@
-@PIRANHA_USE_BOOST_THREAD@
-@PIRANHA_VERSION@
-@PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
-@PIRANHA_USE_TCMALLOC@
+#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5)
+	#error Minimum GCC version supported is 4.5.0.
+#endif
 
-#include <cassert>
-#include <cstdlib>
-
-#define piranha_assert assert
-
-#if defined(__clang__)
-	#include "detail/config_clang.hpp"
-#elif defined(__GNUC__)
-	#include "detail/config_gcc.hpp"
+// c++0x features depending on the GCC version.
+// NOTE: when removing support for GCC < 4.6 remember that
+// we can default move assignment in derived classes.
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
+	#define piranha_nullptr nullptr
+	// noexcept
+	#define piranha_noexcept_spec(expr) noexcept(expr)
+	#define piranha_noexcept_op(expr) noexcept(expr)
+	#define PIRANHA_HAVE_NOEXCEPT
 #else
-	// NOTE: addidtional compiler configurations go here.
-	#define likely(x) (x)
-	#define unlikely(x) (x)
+	#define piranha_nullptr (NULL)
+	#define piranha_noexcept_spec(expr)
+	#define piranha_noexcept_op(expr) (true)
 #endif
 
-// Support of posix_memalign.
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-	#define PIRANHA_HAVE_POSIX_MEMALIGN
+// Explicit override available from 4.7.
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+	#define piranha_override override
+#else
+	#define piranha_override
 #endif
 
-// Ugh.
-// http://web.archiveorange.com/archive/v/NDiIbUvkEafCV0VHMIwL
-#include <boost/integer_traits.hpp>
-static_assert(boost::integer_traits<long long>::const_max >= 0,"Buggy integer_traits implementation: please update the Boost libraries.");
+#include <chrono>
+
+namespace piranha
+{
+namespace detail
+{
+// Steady vs monotonic clock.
+typedef
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
+	std::chrono::steady_clock
+#else
+	std::chrono::monotonic_clock
+#endif
+steady_clock;
+}
+}
+
+#define likely(x) __builtin_expect((x),1)
+#define unlikely(x) __builtin_expect((x),0)
 
 // Visibility support.
-#ifdef __GNUC__
-	#if defined(_WIN32)
-		#if defined(PIRANHA_BUILDING_DLL)
-			#define PIRANHA_PUBLIC __declspec(dllexport)
-		#elif defined(PIRANHA_USING_DLL)
-			#define PIRANHA_PUBLIC __declspec(dllimport)
-		#else
-			#define PIRANHA_PUBLIC
-		#endif
+#if defined(_WIN32)
+	#if defined(PIRANHA_BUILDING_DLL)
+		#define PIRANHA_PUBLIC __declspec(dllexport)
+	#elif defined(PIRANHA_USING_DLL)
+		#define PIRANHA_PUBLIC __declspec(dllimport)
 	#else
-		#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
+		#define PIRANHA_PUBLIC
 	#endif
+#else
+	#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
 #endif
 
 #endif

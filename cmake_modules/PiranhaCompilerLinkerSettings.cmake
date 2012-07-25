@@ -1,5 +1,12 @@
 INCLUDE(CheckCXXCompilerFlag)
 
+# Clang detection:
+# http://stackoverflow.com/questions/10046114/in-cmake-how-can-i-test-if-the-compiler-is-clang
+IF("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
+	MESSAGE(STATUS "Clang compiler detected.")
+	SET(CMAKE_COMPILER_IS_CLANGXX 1)
+ENDIF("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
+
 # Configuration for GCC.
 IF(CMAKE_COMPILER_IS_GNUCXX)
 	INCLUDE(CheckTypeSize)
@@ -63,9 +70,13 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 # 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 # 		ADD_DEFINITIONS(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
 # 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	# Disable the -g and enable the -Os flag on MinGW in debug mode in order to reduce the size
-	# of the executables.
+	# Disable the -g flag and enable the -Os flag on MinGW in debug mode in order to reduce the size
+	# of the executables and make them compilable.
 	IF(MINGW)
 		SET(CMAKE_CXX_FLAGS_DEBUG "-Os")
 	ENDIF(MINGW)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+IF(CMAKE_COMPILER_IS_CLANGXX)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -Wall -Wextra")
+ENDIF(CMAKE_COMPILER_IS_CLANGXX)

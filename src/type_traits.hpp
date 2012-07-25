@@ -27,6 +27,8 @@
  * This header contains general-purpose type-traits classes.
  */
 
+#include <boost/type_traits/has_trivial_copy.hpp>
+#include <boost/type_traits/has_trivial_destructor.hpp>
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
@@ -135,20 +137,34 @@ const bool is_nothrow_destructible<T>::value;
 
 /// Type is trivially destructible.
 /**
- * Placeholder for <tt>std::is_trivially_destructible</tt>, until it is implemented in GCC.
- * Will use a GCC-specific type trait for implementation.
+ * Equivalent to <tt>std::is_trivially_destructible</tt>.
+ * Will use an implementation-defined type trait internally.
  */
 template <typename T>
-struct is_trivially_destructible : std::has_trivial_destructor<T>
+struct is_trivially_destructible :
+#if defined(__clang__)
+std::is_trivially_destructible<T>
+#elif defined(__GNUC__)
+std::has_trivial_destructor<T>
+#else
+boost::has_trivial_destructor<T>
+#endif
 {};
 
 /// Type is trivially copyable.
 /**
- * Placeholder for <tt>std::is_trivially_copyable</tt>, until it is implemented in GCC.
- * Will use a GCC-specific type trait for implementation.
+ * Equivalent to <tt>std::is_trivially_copyable</tt>.
+ * Will use an implementation-defined type trait internally.
  */
 template <typename T>
-struct is_trivially_copyable : std::has_trivial_copy_constructor<T>
+struct is_trivially_copyable :
+#if defined(__clang__)
+std::is_trivially_copyable<T>
+#elif defined(__GNUC__)
+std::has_trivial_copy_constructor<T>
+#else
+boost::has_trivial_copy_constructor<T>
+#endif
 {};
 
 /// Type has degree.
