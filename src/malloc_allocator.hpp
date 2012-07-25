@@ -263,17 +263,6 @@ class malloc_allocator
 		{
 			return boost::integer_traits<size_type>::const_max / sizeof(T);
 		}
-		/// Placement copy construction.
-		/**
-		 * Equivalent to calling placement \p new on the input pointer.
-		 * 
-		 * @param[in] p pointer where construction will happen.
-		 * @param[in] val value to be copy-constructed in-place.
-		 */
-		void construct(pointer p, const T &val)
-		{
-			::new((void *)p) value_type(val);
-		}
 		/// Placement variadic construction.
 		/**
 		 * Equivalent to calling placement \p new on the input pointer.
@@ -281,10 +270,13 @@ class malloc_allocator
 		 * @param[in] p pointer where construction will happen.
 		 * @param[in] args arguments that will be forwarded for in-place construction.
 		 */
-		template<typename... Args>
-		void construct(pointer p, Args && ... args)
+		template <typename U, typename... Args>
+		void construct(U *p, Args && ... args)
 		{
-			::new((void *)p) T(std::forward<Args>(args)...);
+			// NOTE: here eventually we want to use allocator_traits
+			// and delete a bunch of methods that can be synthesised automatically.
+			// http://llvm.org/bugs/show_bug.cgi?id=10278
+			::new(p) U(std::forward<Args>(args)...);
 		}
 		/// Placement destruction.
 		/**
