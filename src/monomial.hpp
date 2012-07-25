@@ -26,6 +26,7 @@
 #include <boost/utility.hpp> // For addressof.
 #include <initializer_list>
 #include <iostream>
+#include <numeric>
 #include <set>
 #include <sstream>
 #include <stdexcept>
