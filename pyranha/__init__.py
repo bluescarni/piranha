@@ -28,17 +28,18 @@ _series_types = ['polynomial', 'poisson_series']
 __all__ = _series_types + ['math', 'test', 'settings']
 
 from _common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
+import threading as _thr
 
 for n in _series_types:
 	_register_evaluate_wrapper(n)
 	_register_repr_png(n)
 	_register_repr_latex(n)
-
-# Cleanup.
 del n
-del _series_types
 
 class _settings(object):
+	# Main lock for protecting reads/writes from multiple threads.
+	_lock = _thr.RLock()
+	# Wrapper to get/set max term output.
 	@property
 	def max_term_output(self):
 		from _core import _settings as _s
@@ -47,5 +48,27 @@ class _settings(object):
 	def max_term_output(self,n):
 		from _core import _settings as _s
 		_s._set_max_term_output(n)
+	# Wrapper method to enable/disable latex representation.
+	@property
+	def latex_repr(self):
+		import _core, re
+		with self._lock:
+			s_names = filter(lambda s: re.match('\_' + _series_types[0] + '\_\d+',s),dir(_core))
+			return hasattr(getattr(_core,s_names[0]),'_repr_latex_')
+	@latex_repr.setter
+	def latex_repr(self,flag):
+		import _core, re
+		f = bool(flag)
+		with self._lock:
+			if f == self.latex_repr:
+				return
+			if f:
+				for n in _series_types:
+					_register_repr_latex(n)
+			else:
+				for n in _series_types:
+					s_names = filter(lambda s: re.match('\_' + n + '\_\d+',s),dir(_core))
+					for s in s_names:
+						delattr(getattr(_core,s),'_repr_latex_')
 
 settings = _settings()
