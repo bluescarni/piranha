@@ -137,3 +137,11 @@ def _register_repr_png(series_name):
 	for s in s_names:
 		s_type = getattr(_core,s)
 		setattr(s_type,'_repr_png_',_repr_png_)
+
+# Register the latex representation method for a particular series.
+def _register_repr_latex(series_name):
+	import re
+	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	for s in s_names:
+		s_type = getattr(_core,s)
+		setattr(s_type,'_repr_latex_',lambda self: r'\[' + s._latex_() + r'\]')

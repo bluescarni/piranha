@@ -32,6 +32,7 @@ from _common import _register_evaluate_wrapper, _register_repr_png
 for n in _series_types:
 	_register_evaluate_wrapper(n)
 	_register_repr_png(n)
+	_register_repr_latex(n)
 
 # Cleanup.
 del n

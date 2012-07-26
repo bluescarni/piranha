@@ -319,12 +319,10 @@ struct series_exposer
 	}
 	// Latex representation.
 	template <typename S>
-	static std::string wrap_repr_latex(const S &s)
+	static std::string wrap_latex(const S &s)
 	{
 		std::ostringstream oss;
-		oss << "\\[ ";
 		s.print_tex(oss);
-		oss << " \\]";
 		return oss.str();
 	}
 	template <typename S>
@@ -421,8 +419,8 @@ struct series_exposer
 		harmonic_series_exposer(series_class);
 		// Substitution with self.
 		subs_exposer<series_type>(series_class);
-		// Latex representation.
-		series_class.def("_repr_latex_",wrap_repr_latex<series_type>);
+		// Latex.
+		series_class.def("_latex_",wrap_latex<series_type>);
 		// Next iteration step.
 		main_exposer<I + 1u,T...>(t);
 	}
