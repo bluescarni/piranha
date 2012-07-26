@@ -23,7 +23,19 @@
 
 """
 
-__all__ = ['polynomial', 'poisson_series', 'math', 'test', 'settings']
+_series_types = ['polynomial', 'poisson_series']
+
+__all__ = _series_types + ['math', 'test', 'settings']
+
+from _common import _register_evaluate_wrapper, _register_repr_png
+
+for n in _series_types:
+	_register_evaluate_wrapper(n)
+	_register_repr_png(n)
+
+# Cleanup.
+del n
+del _series_types
 
 class _settings(object):
 	@property
