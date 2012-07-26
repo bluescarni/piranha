@@ -346,11 +346,22 @@ struct series_exposer
 	static void expose_integrate(bp::class_<S> &,
 		typename std::enable_if<!is_integrable<S>::value>::type * = piranha_nullptr)
 	{}
+	// Sparsity wrapper.
 	template <typename S>
 	static bp::tuple table_sparsity_wrapper(const S &s)
 	{
 		const auto retval = s.table_sparsity();
 		return bp::make_tuple(std::get<0u>(retval),std::get<1u>(retval));
+	}
+	// Symbol set wrapper.
+	template <typename S>
+	static ::PyObject *symbol_set_wrapper(const S &s)
+	{
+		bp::list retval;
+		for (auto it = s.get_symbol_set().begin(); it != s.get_symbol_set().end(); ++it) {
+			retval.append(it->get_name());
+		}
+		return ::PySet_New(retval.ptr());
 	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
@@ -421,6 +432,8 @@ struct series_exposer
 		subs_exposer<series_type>(series_class);
 		// Latex.
 		series_class.def("_latex_",wrap_latex<series_type>);
+		// Arguments set.
+		series_class.add_property("symbol_set",wrap_symbol_set<series_type>);
 		// Next iteration step.
 		main_exposer<I + 1u,T...>(t);
 	}
