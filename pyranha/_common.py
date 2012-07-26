@@ -144,4 +144,4 @@ def _register_repr_latex(series_name):
 	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
 	for s in s_names:
 		s_type = getattr(_core,s)
-		setattr(s_type,'_repr_latex_',lambda self: r'\[' + s._latex_() + r'\]')
+		setattr(s_type,'_repr_latex_',lambda self: r'\[ ' + self._latex_() + r' \]')

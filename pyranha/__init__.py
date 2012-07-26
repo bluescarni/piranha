@@ -27,7 +27,7 @@ _series_types = ['polynomial', 'poisson_series']
 
 __all__ = _series_types + ['math', 'test', 'settings']
 
-from _common import _register_evaluate_wrapper, _register_repr_png
+from _common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
 
 for n in _series_types:
 	_register_evaluate_wrapper(n)
