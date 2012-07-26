@@ -348,6 +348,12 @@ struct series_exposer
 	static void expose_integrate(bp::class_<S> &,
 		typename std::enable_if<!is_integrable<S>::value>::type * = piranha_nullptr)
 	{}
+	template <typename S>
+	static bp::tuple table_sparsity_wrapper(const series_type &s)
+	{
+		const auto retval = s.table_sparsity();
+		return bp::make_tuple(std::get<0u>(retval),std::get<1u>(retval));
+	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
@@ -374,6 +380,10 @@ struct series_exposer
 		series_class.def(repr(bp::self));
 		// Length.
 		series_class.def("__len__",&series_type::size);
+		// Table properties.
+		series_class.def("table_load_factor",&series_type::table_load_factor);
+		series_class.def("table_bucket_count",&series_type::table_bucket_count);
+		series_class.def("table_sparsity",table_sparsity_wrapper<series_type>);
 		// Conversion to list.
 		series_class.add_property("list",to_list_wrapper<series_type>);
 		// Interaction with self.

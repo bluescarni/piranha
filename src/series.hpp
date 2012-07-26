@@ -1185,16 +1185,41 @@ class series: series_binary_operators, detail::series_tag
 			in_place_divide(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
 		}
-		/// Evaluate series sparsity.
+		/** @name Table-querying methods
+		 * Methods to query the properties of the internal container used to store the terms.
+		 */
+		//@{
+		/// Table sparsity.
 		/**
-		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container.
+		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container
+		 * and return the result.
 		 * 
 		 * @return an \p std::tuple containing information about the sparsity of the internal container.
 		 */
-		sparsity_info_type evaluate_sparsity() const
+		sparsity_info_type table_sparsity() const
 		{
 			return m_container.evaluate_sparsity();
 		}
+		/// Table load factor.
+		/**
+		 * Will call piranha::hash_set::load_factor() on the internal terms container
+		 * and return the result.
+		 * 
+		 * @return the load factor of the internal container.
+		 */
+		double table_load_factor() const
+		{
+			return m_container.load_factor();
+		}
+		/// Table bucket count.
+		/**
+		 * @return the bucket count of the internal container.
+		 */
+		size_type table_bucket_count() const
+		{
+			return m_container.bucket_count();
+		}
+		//@}
 		/// Exponentiation.
 		/**
 		 * Return \p this raised to the <tt>x</tt>-th power. This template method is enabled only if the coefficient type

@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(series_stream_test)
 	boost::mpl::for_each<cf_types>(stream_tester());
 }
 
-struct evaluate_sparsity_tester
+struct table_info_tester
 {
 	template <typename Cf>
 	struct runner
@@ -1298,11 +1298,15 @@ struct evaluate_sparsity_tester
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
 			p_type1 p;
-			BOOST_CHECK(std::get<0u>(p.evaluate_sparsity()) == 0u);
-			BOOST_CHECK(std::get<1u>(p.evaluate_sparsity()) == 0u);
+			BOOST_CHECK(std::get<0u>(p.table_sparsity()) == 0u);
+			BOOST_CHECK(std::get<1u>(p.table_sparsity()) == 0u);
+			BOOST_CHECK(p.table_bucket_count() == 0u);
+			BOOST_CHECK(p.table_load_factor() == 0.);
 			p_type1 q{"x"};
-			BOOST_CHECK(std::get<0u>(q.evaluate_sparsity()) == 1u);
-			BOOST_CHECK(std::get<1u>(q.evaluate_sparsity()) == 1u);
+			BOOST_CHECK(std::get<0u>(q.table_sparsity()) == 1u);
+			BOOST_CHECK(std::get<1u>(q.table_sparsity()) == 1u);
+			BOOST_CHECK(q.table_load_factor() != 0.);
+			BOOST_CHECK(q.table_bucket_count() != 0u);
 		}
 	};
 	template <typename Cf>
@@ -1312,9 +1316,9 @@ struct evaluate_sparsity_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(series_evaluate_sparsity_test)
+BOOST_AUTO_TEST_CASE(series_table_info_test)
 {
-	boost::mpl::for_each<cf_types>(evaluate_sparsity_tester());
+	boost::mpl::for_each<cf_types>(table_info_tester());
 }
 
 struct pow_tester
