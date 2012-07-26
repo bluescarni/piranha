@@ -433,7 +433,7 @@ struct series_exposer
 		// Latex.
 		series_class.def("_latex_",wrap_latex<series_type>);
 		// Arguments set.
-		series_class.add_property("symbol_set",wrap_symbol_set<series_type>);
+		series_class.add_property("symbol_set",symbol_set_wrapper<series_type>);
 		// Next iteration step.
 		main_exposer<I + 1u,T...>(t);
 	}
