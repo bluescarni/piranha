@@ -89,7 +89,7 @@ def _repr_png_(self):
 	from shutil import rmtree
 	from os.path import join
 	# Get the latex representation of the series.
-	str_latex = self._repr_latex_()
+	str_latex = r'\[ ' + self._latex_() + r' \]'
 	tex_text = r"""
 		\documentclass{article}
 		\usepackage[paperwidth=\maxdimen,paperheight=\maxdimen]{geometry}
