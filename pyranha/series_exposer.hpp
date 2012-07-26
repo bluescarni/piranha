@@ -355,13 +355,13 @@ struct series_exposer
 	}
 	// Symbol set wrapper.
 	template <typename S>
-	static ::PyObject *symbol_set_wrapper(const S &s)
+	static bp::list symbol_set_wrapper(const S &s)
 	{
 		bp::list retval;
 		for (auto it = s.get_symbol_set().begin(); it != s.get_symbol_set().end(); ++it) {
 			retval.append(it->get_name());
 		}
-		return ::PySet_New(retval.ptr());
+		return retval;
 	}
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
