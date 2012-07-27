@@ -199,13 +199,13 @@ def pbracket(f,g,p_list,q_list):
 	>>> from polynomial import get_type
 	>>> pt = get_type('rational')
 	>>> x,v = pt('x'), pt('v')
-	>>> pbracket(x+y,x+y,['v'],['x']) == 0
+	>>> pbracket(x+v,x+v,['v'],['x']) == 0
 	True
-	>>> pbracket(x+y,x+y,[],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> pbracket(x+v,x+v,[],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	ValueError: the number of coordinates is different from the number of momenta
-	>>> pbracket(x+y,x+y,['v','v'],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> pbracket(x+v,x+v,['v','v'],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	ValueError: the list of momenta contains duplicate entries
