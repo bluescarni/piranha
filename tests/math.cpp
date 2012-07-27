@@ -39,6 +39,8 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/poisson_series.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
 
@@ -203,4 +205,40 @@ BOOST_AUTO_TEST_CASE(integrate_test)
 	BOOST_CHECK(!piranha::is_integrable<real>::value);
 	BOOST_CHECK(!piranha::is_integrable<rational>::value);
 	BOOST_CHECK(!piranha::is_integrable<std::string>::value);
+}
+
+BOOST_AUTO_TEST_CASE(pbracket_test)
+{
+	typedef polynomial<rational> p_type;
+	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{},{}),p_type(0));
+	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},{}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},{"q","r"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p","p"},{"q","r"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p","q"},{"q","q"}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{"x","y"},{"a","b"}),p_type(0));
+	// Pendulum Hamiltonian.
+	typedef poisson_series<polynomial<rational>> ps_type;
+	auto m = ps_type{"m"}, p = ps_type{"p"}, l = ps_type{"l"}, g = ps_type{"g"}, th = ps_type{"theta"};
+	auto H_p = p*p * (2*m*l*l).pow(-1) + m*g*l*math::cos(th);
+	BOOST_CHECK_EQUAL(math::pbracket(H_p,H_p,{"p"},{"theta"}),0);
+	// Two body problem.
+	auto x = ps_type{"x"}, y = ps_type{"y"}, z = ps_type{"z"};
+	auto vx = ps_type{"vx"}, vy = ps_type{"vy"}, vz = ps_type{"vz"}, r = ps_type{"r"};
+	auto H_2 = (vx*vx + vy*vy + vz*vz) / 2 - r.pow(-1);
+	ps_type::register_custom_derivative("x",[&x,&r](const ps_type &p) {
+		return p.partial("x") - p.partial("r") * x * r.pow(-3);
+	});
+	ps_type::register_custom_derivative("y",[&y,&r](const ps_type &p) {
+		return p.partial("y") - p.partial("r") * y * r.pow(-3);
+	});
+	ps_type::register_custom_derivative("z",[&z,&r](const ps_type &p) {
+		return p.partial("z") - p.partial("r") * z * r.pow(-3);
+	});
+	BOOST_CHECK_EQUAL(math::pbracket(H_2,H_2,{"vx","vy","vz"},{"x","y","z"}),0);
+	// Angular momentum integral.
+	auto Gx = y*vz - z*vy, Gy = z*vx - x*vz, Gz = x*vy - y*vx;
+	BOOST_CHECK_EQUAL(math::pbracket(H_2,Gx,{"vx","vy","vz"},{"x","y","z"}),0);
+	BOOST_CHECK_EQUAL(math::pbracket(H_2,Gy,{"vx","vy","vz"},{"x","y","z"}),0);
+	BOOST_CHECK_EQUAL(math::pbracket(H_2,Gz,{"vx","vy","vz"},{"x","y","z"}),0);
+	BOOST_CHECK(math::pbracket(H_2,Gz + x,{"vx","vy","vz"},{"x","y","z"}) != 0);
 }

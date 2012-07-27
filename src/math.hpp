@@ -24,13 +24,17 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #include "config.hpp"
 #include "detail/integer_fwd.hpp"
 #include "detail/sfinae_types.hpp"
+#include "exceptions.hpp"
 
 namespace piranha
 {
@@ -503,6 +507,54 @@ template <typename T, typename U>
 inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T>()(x,name,y))
 {
 	return subs_impl<T>()(x,name,y);
+}
+
+/// Poisson bracket.
+/**
+ * The Poisson bracket of \p f and \p g with respect to the list of momenta \p p_list and coordinates \p q_list
+ * is defined as:
+ * \f[
+ * \left\{f,g\right\} = \sum_{i=1}^{N}
+ * \left[
+ * \frac{\partial f}{\partial q_{i}} \frac{\partial g}{\partial p_{i}} -
+ * \frac{\partial f}{\partial p_{i}} \frac{\partial g}{\partial q_{i}}
+ * \right],
+ * \f]
+ * where \f$ p_i \f$ and \f$ q_i \f$ are the elements of \p p_list and \p q_list.
+ * 
+ * @param[in] f first argument.
+ * @param[in] g second argument.
+ * @param[in] p_list list of the names of momenta.
+ * @param[in] p_list list of the names of coordinates.
+ * 
+ * @return the poisson bracket of \p f and \p g with respect to \p p_list and \p q_list.
+ * 
+ * @throws std::invalid_argument if the sizes of \p p_list and \p q_list differ or if
+ * \p p_list or \p q_list contain duplicate entries.
+ * @throws unspecified any exception thrown by piranha::math::partial() or by the arithmetic operators
+ * of \p f and \p g.
+ */
+template <typename T>
+inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_list,
+	const std::vector<std::string> &q_list) -> decltype(partial(f,q_list[0]) * partial(g,p_list[0]))
+{
+	typedef decltype(partial(f,q_list[0]) * partial(g,p_list[0])) return_type;
+	if (p_list.size() != q_list.size()) {
+		piranha_throw(std::invalid_argument,"the number of coordinates is different from the number of momenta");
+	}
+	if (std::unordered_set<std::string>(p_list.begin(),p_list.end()).size() != p_list.size()) {
+		piranha_throw(std::invalid_argument,"the list of momenta contains duplicate entries");
+	}
+	if (std::unordered_set<std::string>(q_list.begin(),q_list.end()).size() != q_list.size()) {
+		piranha_throw(std::invalid_argument,"the list of coordinates contains duplicate entries");
+	}
+	return_type retval = return_type();
+	for (decltype(p_list.size()) i = 0u; i < p_list.size(); ++i) {
+		// NOTE: could use multadd/sub here, if we implement it for series.
+		retval += partial(f,q_list[i]) * partial(g,p_list[i]);
+		retval -= partial(f,p_list[i]) * partial(g,q_list[i]);
+	}
+	return retval;
 }
 
 }

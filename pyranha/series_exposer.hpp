@@ -119,6 +119,15 @@ struct series_exposer
 	{
 		return math::integrate(s,name);
 	}
+	// Poisson bracket.
+	template <typename S>
+	static S pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list)
+	{
+		bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+		bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+		return math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
+			std::vector<std::string>(begin_q,end_q));
+	}
 	// Sin and cos.
 	template <bool IsCos, typename S>
 	static S sin_cos_wrapper(const S &s)
@@ -418,6 +427,8 @@ struct series_exposer
 			series_type::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
 		// Integration.
 		expose_integrate(series_class);
+		// Poisson bracket.
+		bp::def("_pbracket",pbracket_wrapper<series_type>);
 		// Filter and transform.
 		series_class.def("filter",wrap_filter<series_type>);
 		series_class.def("transform",wrap_transform<series_type>);
