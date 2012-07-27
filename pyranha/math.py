@@ -180,16 +180,7 @@ def pbracket(f,g,p_list,q_list):
 	"""Poisson bracket.
 	
 	Compute the Poisson bracket of *f* and *g* with respect to the momenta with names in *p_list*
-	and coordinates with names in *q_list*:
-	
-	.. math::
-	   \left\{f,g\right\} = \sum_{i=1}^{N}
-	   \left[
-	   \frac{\partial f}{\partial q_{i}} \frac{\partial g}{\partial p_{i}} -
-	   \frac{\partial f}{\partial p_{i}} \frac{\partial g}{\partial q_{i}}
-	   \right].
-	
-	*f* and *g* must be series of the same type, and
+	and coordinates with names in *q_list*. *f* and *g* must be series of the same type, and
 	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.
 	
 	:param f: first argument
