@@ -175,3 +175,41 @@ def factorial(n):
 		return _factorial(n)
 	except ValueError:
 		raise ValueError("invalid argument value")
+
+def pbracket(f,g,p_list,q_list):
+	"""Poisson bracket.
+	
+	Compute the Poisson bracket of *f* and *g* with respect to the momenta with names in *p_list*
+	and coordinates with names in *q_list*. *f* and *g* must be series of the same type, and
+	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.
+	
+	:param f: first argument
+	:type f: a series type
+	:param g: second argument
+	:type g: a series type
+	:param p_list: list of momenta names
+	:type p_list: list of strings
+	:param q_list: list of coordinates names
+	:type q_list: list of strings
+	:rtype: Poisson bracket of *f* and *g* with respect to momenta *p_list* and coordinates *q_list*
+	:raises: :exc:`ValueError` if *p_list* and *q_list* have different sizes or duplicate entries
+	:raises: :exc:`TypeError` if the types of the arguments are invalid
+	:raises: any exception raised by the invoked low-level function
+	
+	>>> from polynomial import get_type
+	>>> pt = get_type('rational')
+	>>> x,v = pt('x'), pt('v')
+	>>> pbracket(x+y,x+y,['v'],['x']) == 0
+	True
+	>>> pbracket(x+y,x+y,[],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: the number of coordinates is different from the number of momenta
+	>>> pbracket(x+y,x+y,['v','v'],['x']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: the list of momenta contains duplicate entries
+	
+	"""
+	from ._core import _pbracket
+	return _pbracket(f,g,p_list,q_list)
