@@ -525,7 +525,7 @@ inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(su
  * @param[in] f first argument.
  * @param[in] g second argument.
  * @param[in] p_list list of the names of momenta.
- * @param[in] p_list list of the names of coordinates.
+ * @param[in] q_list list of the names of coordinates.
  * 
  * @return the poisson bracket of \p f and \p g with respect to \p p_list and \p q_list.
  * 
