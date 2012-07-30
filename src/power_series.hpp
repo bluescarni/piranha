@@ -234,7 +234,7 @@ class power_series: public Series,detail::power_series_tag
 		}
 		/// Partial degree.
 		/**
-		 * Convenience overload that will call degree(const std::set<std::string> &s) on a set built from the
+		 * Convenience overload that will call degree() with a set built from the
 		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
 		 * 
 		 * @param[in] name name of the variable that will be considered in the computation of the partial degree.
@@ -292,7 +292,7 @@ class power_series: public Series,detail::power_series_tag
 		}
 		/// Partial low degree.
 		/**
-		 * Convenience overload that will call ldegree(const std::set<std::string> &s) on a set built from the
+		 * Convenience overload that will call ldegree() with a set built from the
 		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
 		 * 
 		 * @param[in] name name of the variable that will be considered in the computation of the partial low degree.
