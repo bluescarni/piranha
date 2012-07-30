@@ -84,7 +84,7 @@ class poisson_series:
 		{
 			static const bool value = (sizeof...(Args) != 0u) ||
 				(!std::is_same<typename std::decay<T>::type,poisson_series>::value &&
-				!std::is_same<typename std::decay<T>::type,char *>::value &&
+				!std::is_same<typename std::decay<T>::type,const char *>::value &&
 				!std::is_same<typename std::decay<T>::type,std::string>::value);
 		};
 		template <bool IsCos, typename T>
@@ -296,7 +296,7 @@ class poisson_series:
 		template <typename Str>
 		poisson_series(Str &&str, typename std::enable_if<
 			(std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,char *>::value) &&
+			std::is_same<typename std::decay<Str>::type,const char *>::value) &&
 			std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = piranha_nullptr) : base(std::forward<Str>(str))
 		{}
 		/// Generic constructor.
@@ -342,7 +342,7 @@ class poisson_series:
 		 */
 		template <typename Str>
 		typename std::enable_if<(std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,char *>::value) &&
+			std::is_same<typename std::decay<Str>::type,const char *>::value) &&
 			std::is_base_of<detail::polynomial_tag,Cf>::value,poisson_series &>::type operator=(Str &&str)
 		{
 			operator=(poisson_series(std::forward<Str>(str)));

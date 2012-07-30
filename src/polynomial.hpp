@@ -122,7 +122,7 @@ class polynomial:
 		{
 			static const bool value = (sizeof...(Args) != 0u) ||
 				(!std::is_same<typename std::decay<T>::type,polynomial>::value &&
-				!std::is_same<typename std::decay<T>::type,char *>::value &&
+				!std::is_same<typename std::decay<T>::type,const char *>::value &&
 				!std::is_same<typename std::decay<T>::type,std::string>::value);
 		};
 		std::map<std::string,integer> integral_combination() const
