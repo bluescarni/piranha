@@ -59,14 +59,14 @@ struct constructor_tester
 		BOOST_CHECK(p2 != p_type{std::string("y")});
 		BOOST_CHECK(p2 == p_type{"x"} + p_type{"y"} - p_type{"y"});
 		BOOST_CHECK((std::is_constructible<p_type,std::string>::value));
-		BOOST_CHECK((std::is_constructible<p_type,char *>::value));
+		BOOST_CHECK((std::is_constructible<p_type,const char *>::value));
 	}
 	template <typename Cf>
 	void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = piranha_nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		BOOST_CHECK((!std::is_constructible<p_type,std::string>::value));
-		BOOST_CHECK((!std::is_constructible<p_type,char *>::value));
+		BOOST_CHECK((!std::is_constructible<p_type,const char *>::value));
 	}
 	template <typename Cf>
 	void operator()(const Cf &)
