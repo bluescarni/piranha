@@ -232,6 +232,25 @@ class power_series: public Series,detail::power_series_tag
 		{
 			return degree_impl(s);
 		}
+		/// Partial degree.
+		/**
+		 * Convenience overload that will call degree(const std::set<std::string> &s) on a set built from the
+		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
+		 * 
+		 * @param[in] name name of the variable that will be considered in the computation of the partial degree.
+		 * 
+		 * @return the partial degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by degree(const std::set<std::string> &s) or by memory allocation
+		 * errors in standard containers.
+		 */
+		template <typename Str>
+		typename degree_type<std::set<std::string>>::type degree(Str &&name,
+			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
+			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = piranha_nullptr) const
+		{
+			return degree(std::set<std::string>{std::string(name)});
+		}
 		/// Low degree.
 		/**
 		 * The low degree of the series is the minimum low degree of its terms. The low degree of each term is calculated
@@ -270,6 +289,25 @@ class power_series: public Series,detail::power_series_tag
 		typename ldegree_type<std::set<std::string>>::type ldegree(const std::set<std::string> &s) const
 		{
 			return ldegree_impl(s);
+		}
+		/// Partial low degree.
+		/**
+		 * Convenience overload that will call ldegree(const std::set<std::string> &s) on a set built from the
+		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
+		 * 
+		 * @param[in] name name of the variable that will be considered in the computation of the partial low degree.
+		 * 
+		 * @return the partial low degree of the series.
+		 * 
+		 * @throws unspecified any exception thrown by ldegree(const std::set<std::string> &s) or by memory allocation
+		 * errors in standard containers.
+		 */
+		template <typename Str>
+		typename ldegree_type<std::set<std::string>>::type ldegree(Str &&name,
+			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
+			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = piranha_nullptr) const
+		{
+			return ldegree(std::set<std::string>{std::string(name)});
 		}
 };
 
