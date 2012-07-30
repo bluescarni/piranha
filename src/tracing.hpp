@@ -85,27 +85,7 @@ class PIRANHA_PUBLIC tracing
 			}
 			trace_impl(str,f);
 		}
-		/// Trace event (C string version).
-		/**
-		 * Functionally equivalent to the other trace() method overload.
-		 * 
-		 * @param[in] str the descriptor of the event being traced.
-		 * @param[in] f the functor to be applied to the data associated to \p str.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the other version of trace(),
-		 * - construction of \p std::string from a C string.
-		 */
-		template <typename Functor>
-		static void trace(const char *str, const Functor &f)
-		{
-			if (likely(!settings::get_tracing())) {
-				return;
-			}
-			trace_impl(str,f);
-		}
 		static void reset();
-		static boost::any get(const char *s);
 		static boost::any get(const std::string &);
 		static void dump(std::ostream & = std::cout);
 	private:

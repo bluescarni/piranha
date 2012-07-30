@@ -100,21 +100,6 @@ void tracing::dump(std::ostream &os)
 	}
 }
 
-/// Get data associated to an event (C string version).
-/**
- * @param[in] str event descriptor.
- * 
- * @return an instance of \p boost::any containing the data associated to the event described by \p str,
- * or an empty \p boost::any instance if the event is not in the database.
- * 
- * @throws unspecified any exception thrown by the constructor of \p std::string from a C string, or
- * by the other overload of the method.
- */
-boost::any tracing::get(const char *str)
-{
-	return get(std::string(str));
-}
-
 /// Get data associated to an event.
 /**
  * @param[in] str event descriptor.
