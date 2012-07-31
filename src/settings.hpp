@@ -56,7 +56,7 @@ class PIRANHA_PUBLIC settings
 		static std::pair<bool,unsigned>	m_cache_line_size;
 		static bool			m_tracing;
 		static unsigned long		m_max_term_output;
-		static const unsigned long	m_default_max_term_output = 50ul;
+		static const unsigned long	m_default_max_term_output = 20ul;
 };
 
 }
