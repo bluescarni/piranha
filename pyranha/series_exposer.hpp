@@ -275,7 +275,7 @@ struct series_exposer
 		return s.ldegree(std::set<std::string>(begin,end));
 	}
 	template <typename S>
-	static decltype(std::declval<S>().ldegree(std::declval<std::string>())) wrap_partial_ldegree_string(const S &s, const std::string &s)
+	static decltype(std::declval<S>().ldegree(std::declval<std::string>())) wrap_partial_ldegree_string(const S &s, const std::string &str)
 	{
 		return s.ldegree(str);
 	}
