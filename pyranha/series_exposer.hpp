@@ -285,9 +285,11 @@ struct series_exposer
 		typename std::enable_if<is_power_series<T>::value>::type * = piranha_nullptr)
 	{
 		series_class.def("degree",wrap_degree<T>);
-		series_class.def("degree",wrap_partial_degree<T>);
+		series_class.def("degree",wrap_partial_degree_set<T>);
+		series_class.def("degree",wrap_partial_degree_string<T>);
 		series_class.def("ldegree",wrap_ldegree<T>);
-		series_class.def("ldegree",wrap_partial_ldegree<T>);
+		series_class.def("ldegree",wrap_partial_ldegree_set<T>);
+		series_class.def("ldegree",wrap_partial_ldegree_string<T>);
 	}
 	template <typename T>
 	static void power_series_exposer(bp::class_<T> &,
