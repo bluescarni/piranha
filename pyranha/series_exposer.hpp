@@ -253,10 +253,15 @@ struct series_exposer
 		return s.degree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().degree(std::declval<std::set<std::string>>())) wrap_partial_degree(const S &s, bp::object obj)
+	static decltype(std::declval<S>().degree(std::declval<std::set<std::string>>())) wrap_partial_degree_set(const S &s, bp::list l)
 	{
-		bp::stl_input_iterator<std::string> begin(obj), end;
+		bp::stl_input_iterator<std::string> begin(l), end;
 		return s.degree(std::set<std::string>(begin,end));
+	}
+	template <typename S>
+	static decltype(std::declval<S>().degree(std::declval<std::string>())) wrap_partial_degree_string(const S &s, const std::string &str)
+	{
+		return s.degree(str);
 	}
 	template <typename S>
 	static decltype(std::declval<S>().ldegree()) wrap_ldegree(const S &s)
@@ -264,10 +269,15 @@ struct series_exposer
 		return s.ldegree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().ldegree(std::declval<std::set<std::string>>())) wrap_partial_ldegree(const S &s, bp::object obj)
+	static decltype(std::declval<S>().ldegree(std::declval<std::set<std::string>>())) wrap_partial_ldegree_set(const S &s, bp::list l)
 	{
-		bp::stl_input_iterator<std::string> begin(obj), end;
+		bp::stl_input_iterator<std::string> begin(l), end;
 		return s.ldegree(std::set<std::string>(begin,end));
+	}
+	template <typename S>
+	static decltype(std::declval<S>().ldegree(std::declval<std::string>())) wrap_partial_ldegree_string(const S &s, const std::string &s)
+	{
+		return s.ldegree(str);
 	}
 	// Power series exposer.
 	template <typename T>
@@ -290,9 +300,9 @@ struct series_exposer
 		return s.h_degree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().h_degree(std::declval<std::set<std::string>>())) wrap_partial_h_degree(const S &s, bp::object obj)
+	static decltype(std::declval<S>().h_degree(std::declval<std::set<std::string>>())) wrap_partial_h_degree(const S &s, bp::list l)
 	{
-		bp::stl_input_iterator<std::string> begin(obj), end;
+		bp::stl_input_iterator<std::string> begin(l), end;
 		return s.h_degree(std::set<std::string>(begin,end));
 	}
 	template <typename S>
@@ -301,9 +311,9 @@ struct series_exposer
 		return s.h_ldegree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().h_ldegree(std::declval<std::set<std::string>>())) wrap_partial_h_ldegree(const S &s, bp::object obj)
+	static decltype(std::declval<S>().h_ldegree(std::declval<std::set<std::string>>())) wrap_partial_h_ldegree(const S &s, bp::list l)
 	{
-		bp::stl_input_iterator<std::string> begin(obj), end;
+		bp::stl_input_iterator<std::string> begin(l), end;
 		return s.h_ldegree(std::set<std::string>(begin,end));
 	}
 	// Harmonic degree exposer.
