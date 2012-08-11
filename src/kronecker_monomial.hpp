@@ -80,6 +80,7 @@ namespace piranha
  * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
  * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate. Review the code for degree() use after the
  * change has been made to spot possible problems.
+ * \todo abstract the km_commons in a class and use it both here and in rtkm.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial: detail::kronecker_monomial_tag
@@ -737,6 +738,40 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			}
 			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
 			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
+		}
+		/// Identify symbols that can be trimmed.
+		/**
+		 * This method is used in piranha::series::trim(). The input parameter \p candidates
+		 * contains a set of symbols that are candidates for elimination. The method will remove
+		 * from \p candidates those symbols whose exponent in \p this is not zero.
+		 * 
+		 * @param[in] candidates set of candidates for elimination.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::is_zero(),
+		 * - piranha::symbol_set::remove().
+		 */
+		void trim_identify(symbol_set &candidates, const symbol_set &args) const
+		{
+			return detail::km_trim_identify<v_type,ka>(candidates,args,m_value);
+		}
+		/// Trim.
+		/**
+		 * This method will return a copy of \p this with the exponents associated to the symbols
+		 * in \p trim_args removed.
+		 * 
+		 * @param[in] trim_args arguments whose exponents will be removed.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::static_vector::push_back().
+		 */
+		kronecker_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+		{
+			return kronecker_monomial(detail::km_trim<v_type,ka>(trim_args,orig_args,m_value));
 		}
 	private:
 		value_type m_value;

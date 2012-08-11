@@ -39,6 +39,7 @@
 #include "debug_access.hpp"
 #include "detail/array_key_fwd.hpp"
 #include "exceptions.hpp"
+#include "math.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -85,6 +86,8 @@ struct static_size {};
  * \todo think about introducing range-checking in element access not only in debug mode, to make it completely
  * safe to use.
  * \todo think about ditching the tag structure above, maybe via a default template parameters.
+ * \todo merge_args: should probably not be protected, make it public and drop the implementation in monomial.
+ * \todo add missing tests with static size.
  */
 template <typename T, typename Derived>
 class array_key: detail::array_key_tag
@@ -431,6 +434,53 @@ class array_key: detail::array_key_tag
 		bool operator!=(const array_key &other) const
 		{
 			return !operator==(other);
+		}
+		/// Identify symbols that can be trimmed.
+		/**
+		 * This method is used in piranha::series::trim(). The input parameter \p candidates
+		 * contains a set of symbols that are candidates for elimination. The method will remove
+		 * from \p candidates those symbols whose exponent in \p this is not zero.
+		 * 
+		 * @param[in] candidates set of candidates for elimination.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
+		 * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
+		 */
+		void trim_identify(symbol_set &candidates, const symbol_set &args) const
+		{
+			if (unlikely(m_container.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid arguments set for trim_identify()");
+			}
+			for (size_type i = 0u; i < m_container.size(); ++i) {
+				if (!math::is_zero(m_container[i]) && std::binary_search(candidates.begin(),candidates.end(),args[i])) {
+					candidates.remove(args[i]);
+				}
+			}
+		}
+		/// Trim.
+		/**
+		 * This method will return a copy of \p this with the exponents associated to the symbols
+		 * in \p trim_args removed.
+		 * 
+		 * @param[in] trim_args arguments whose exponents will be removed.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
+		 * @throws unspecified any exception thrown by push_back().
+		 */
+		Derived trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+		{
+			if (unlikely(m_container.size() != orig_args.size())) {
+				piranha_throw(std::invalid_argument,"invalid arguments set for trim()");
+			}
+			Derived retval;
+			for (size_type i = 0u; i < m_container.size(); ++i) {
+				if (!std::binary_search(trim_args.begin(),trim_args.end(),orig_args[i])) {
+					retval.push_back(m_container[i]);
+				}
+			}
+			return retval;
 		}
 	protected:
 		/// Merge arguments.

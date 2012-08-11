@@ -1034,3 +1034,75 @@ BOOST_AUTO_TEST_CASE(rtkm_canonicalise_test)
 {
 	boost::mpl::for_each<int_types>(canonicalise_tester());
 }
+
+struct trim_identify_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		k_type k0;
+		symbol_set v1, v2;
+		k0.set_int(1);
+		BOOST_CHECK_THROW(k0.trim_identify(v2,v2),std::invalid_argument);
+		v1.add("x");
+		v2.add("y");
+		v2.add("x");
+		k0 = k_type({T(1),T(2)});
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set());
+		k0 = k_type({T(0),T(2)});
+		v1.add("x");
+		v1.add("y");
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("x")}));
+		k0 = k_type({T(0),T(0)});
+		v1.add("y");
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("x"),symbol("y")}));
+		k0 = k_type({T(1),T(0)});
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("y")}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_trim_identify_test)
+{
+	boost::mpl::for_each<int_types>(trim_identify_tester());
+}
+
+struct trim_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		k_type k0;
+		symbol_set v1, v2;
+		k0.set_int(1);
+		BOOST_CHECK_THROW(k0.trim(v1,v2),std::invalid_argument);
+		v1.add("x");
+		v1.add("y");
+		v1.add("z");
+		k0 = k_type{T(1),T(0),T(-1)};
+		v2.add("x");
+		BOOST_CHECK((k0.trim(v2,v1) == k_type{T(0),T(-1)}));
+		v2.add("z");
+		v2.add("a");
+		BOOST_CHECK((k0.trim(v2,v1) == k_type{T(0)}));
+		v2.add("y");
+		BOOST_CHECK((k0.trim(v2,v1) == k_type{}));
+		v2 = symbol_set();
+		BOOST_CHECK((k0.trim(v2,v1) == k0));
+		k0.set_flavour(false);
+		v2.add("x");
+		v2.add("z");
+		v2.add("a");
+		BOOST_CHECK((k0.trim(v2,v1) == k_type(T(0),false)));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_trim_test)
+{
+	boost::mpl::for_each<int_types>(trim_tester());
+}

@@ -29,6 +29,7 @@
 
 #include "../config.hpp"
 #include "../exceptions.hpp"
+#include "../math.hpp"
 #include "../symbol_set.hpp"
 
 // Common routines for use in kronecker monomial classes.
@@ -117,6 +118,32 @@ inline T km_partial_degree(const std::set<std::string> &active_args, const symbo
 		}
 	}
 	return retval;
+}
+
+template <typename VType, typename KaType, typename T>
+inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, const T &value)
+{
+	typedef typename KaType::size_type size_type;
+	const VType tmp = km_unpack<VType,KaType>(args,value);
+	for (size_type i = 0u; i < tmp.size(); ++i) {
+		if (!math::is_zero(tmp[i]) && std::binary_search(candidates.begin(),candidates.end(),args[i])) {
+			candidates.remove(args[i]);
+		}
+	}
+}
+
+template <typename VType, typename KaType, typename T>
+inline T km_trim(const symbol_set &trim_args, const symbol_set &orig_args, const T &value)
+{
+	typedef typename KaType::size_type size_type;
+	const VType tmp = km_unpack<VType,KaType>(orig_args,value);
+	VType new_vector;
+	for (size_type i = 0u; i < tmp.size(); ++i) {
+		if (!std::binary_search(trim_args.begin(),trim_args.end(),orig_args[i])) {
+			new_vector.push_back(tmp[i]);
+		}
+	}
+	return KaType::encode(new_vector);
 }
 
 }}

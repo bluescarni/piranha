@@ -363,3 +363,72 @@ BOOST_AUTO_TEST_CASE(array_key_add_test)
 {
 	boost::mpl::for_each<value_types>(add_tester());
 }
+
+struct trim_identify_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<T> key_type;
+		key_type k0;
+		symbol_set v1, v2;
+		v1.add("x");
+		k0.resize(1u);
+		BOOST_CHECK_THROW(k0.trim_identify(v2,v2),std::invalid_argument);
+		v2.add("y");
+		k0.resize(2u);
+		k0[0u] = T(1);
+		k0[1u] = T(2);
+		v2.add("x");
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set());
+		k0[0u] = T(0);
+		v1.add("x");
+		v1.add("y");
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("x")}));
+		k0[0u] = T(0);
+		k0[1u] = T(0);
+		v1.add("y");
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("x"),symbol("y")}));
+		k0[0u] = T(1);
+		k0.trim_identify(v1,v2);
+		BOOST_CHECK(v1 == symbol_set({symbol("y")}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_trim_identify_test)
+{
+	boost::mpl::for_each<value_types>(trim_identify_tester());
+}
+
+struct trim_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<T> key_type;
+		key_type k0;
+		symbol_set v1, v2;
+		v1.add("x");
+		v1.add("y");
+		v1.add("z");
+		BOOST_CHECK_THROW(k0.trim(v2,v1),std::invalid_argument);
+		k0 = key_type{T(1),T(2),T(3)};
+		v2.add("x");
+		BOOST_CHECK((k0.trim(v2,v1) == key_type{T(2),T(3)}));
+		v2.add("z");
+		v2.add("a");
+		BOOST_CHECK((k0.trim(v2,v1) == key_type{T(2)}));
+		v2.add("y");
+		BOOST_CHECK((k0.trim(v2,v1) == key_type{}));
+		v2 = symbol_set();
+		BOOST_CHECK((k0.trim(v2,v1) == k0));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_trim_test)
+{
+	boost::mpl::for_each<value_types>(trim_tester());
+}

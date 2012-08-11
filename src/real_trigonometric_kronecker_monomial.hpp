@@ -861,6 +861,40 @@ class real_trigonometric_kronecker_monomial
 				return retval;
 			}
 		}
+		/// Identify symbols that can be trimmed.
+		/**
+		 * This method is used in piranha::series::trim(). The input parameter \p candidates
+		 * contains a set of symbols that are candidates for elimination. The method will remove
+		 * from \p candidates those symbols whose multiplier in \p this is not zero.
+		 * 
+		 * @param[in] candidates set of candidates for elimination.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::math::is_zero(),
+		 * - piranha::symbol_set::remove().
+		 */
+		void trim_identify(symbol_set &candidates, const symbol_set &args) const
+		{
+			return detail::km_trim_identify<v_type,ka>(candidates,args,m_value);
+		}
+		/// Trim.
+		/**
+		 * This method will return a copy of \p this with the multipliers associated to the symbols
+		 * in \p trim_args removed.
+		 * 
+		 * @param[in] trim_args arguments whose multipliers will be removed.
+		 * @param[in] args reference arguments set.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - piranha::static_vector::push_back().
+		 */
+		real_trigonometric_kronecker_monomial trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+		{
+			return real_trigonometric_kronecker_monomial(detail::km_trim<v_type,ka>(trim_args,orig_args,m_value),m_flavour);
+		}
 	private:
 		value_type	m_value;
 		bool		m_flavour;
