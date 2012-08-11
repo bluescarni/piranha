@@ -504,6 +504,10 @@ class array_key: detail::array_key_tag
 		 */
 		array_key base_merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
+			// NOTE: here and elsewhere (i.e., kronecker keys) the check on new_args.size() <= orig_args.size()
+			// is not redundant with the std::includes check; indeed it actually checks that the new args are
+			// _more_ than the old args (whereas with just the std::includes check identical orig_args and new_args
+			// would be allowed).
 			if (unlikely(m_container.size() != orig_args.size() || new_args.size() <= orig_args.size() ||
 				!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
 			{
