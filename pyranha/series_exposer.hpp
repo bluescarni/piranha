@@ -444,6 +444,8 @@ struct series_exposer
 		// Filter and transform.
 		series_class.def("filter",wrap_filter<series_type>);
 		series_class.def("transform",wrap_transform<series_type>);
+		// Trimming.
+		series_class.def("trim",&series_type::trim);
 		// Sin and cos.
 		bp::def("_sin",sin_cos_wrapper<false,series_type>);
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
