@@ -247,7 +247,7 @@ class symbol_set
 		 * 
 		 * @return a new set containing the union of the elements present in \p this and \p other.
 		 * 
-		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
+		 * @throws unspecified any exception thrown by \p std::vector::push_back().
 		 */
 		symbol_set merge(const symbol_set &other) const
 		{
@@ -255,6 +255,22 @@ class symbol_set
 			retval.m_values.reserve(other.size() + size());
 			auto bi_it = std::back_insert_iterator<std::vector<symbol>>(retval.m_values);
 			std::set_union(begin(),end(),other.begin(),other.end(),bi_it);
+			piranha_assert(retval.check());
+			return retval;
+		}
+		/// Set difference.
+		/**
+		 * @param[in] other difference argument.
+		 * 
+		 * @return a new set containing the elements of \p this which are not present in \p other.
+		 * 
+		 * @throws unspecified any exception thrown by \p std::vector::push_back().
+		 */
+		symbol_set diff(const symbol_set &other) const
+		{
+			symbol_set retval;
+			std::set_difference(begin(),end(),other.begin(),
+				other.end(),std::back_inserter(retval.m_values));
 			piranha_assert(retval.check());
 			return retval;
 		}

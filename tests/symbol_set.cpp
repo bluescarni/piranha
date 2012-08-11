@@ -136,3 +136,19 @@ BOOST_AUTO_TEST_CASE(symbol_set_remove_test)
 	BOOST_CHECK_THROW(ss.remove("a"),std::invalid_argument);
 	BOOST_CHECK_EQUAL(ss.size(),0u);
 }
+
+BOOST_AUTO_TEST_CASE(symbol_set_diff_test)
+{
+	symbol_set ss1;
+	ss1.add(symbol("b"));
+	ss1.add(symbol("d"));
+	symbol_set ss2;
+	ss2.add(symbol("a"));
+	ss2.add(symbol("b"));
+	ss2.add(symbol("c"));
+	ss2.add(symbol("d"));
+	ss2.add(symbol("e"));
+	auto ss3 = ss2.diff(ss1);
+	BOOST_CHECK(ss3 == symbol_set({symbol("a"),symbol("c"),symbol("e")}));
+	BOOST_CHECK(ss2.diff(ss2) == symbol_set{});
+}
