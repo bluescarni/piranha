@@ -422,7 +422,7 @@ struct trim_tester
 		v2.add("a");
 		BOOST_CHECK((k0.trim(v2,v1) == key_type{T(2)}));
 		v2.add("y");
-		BOOST_CHECK((k0.trim(v2,v1) == key_type{}));
+		BOOST_CHECK((k0.trim(v2,v1) == key_type()));
 		v2 = symbol_set();
 		BOOST_CHECK((k0.trim(v2,v1) == k0));
 	}
