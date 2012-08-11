@@ -798,6 +798,18 @@ class series: series_binary_operators, detail::series_tag
 			}
 			return true;
 		}
+		template <typename T>
+		static T trim_cf_impl(const T &s, typename std::enable_if<
+			std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+		{
+			return s.trim();
+		}
+		template <typename T>
+		static const T &trim_cf_impl(const T &s, typename std::enable_if<
+			!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+		{
+			return s;
+		}
 	public:
 		/// Size type.
 		/**
@@ -1540,6 +1552,40 @@ class series: series_binary_operators, detail::series_tag
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(s_dict,m_symbol_set));
+			}
+			return retval;
+		}
+		/// Trim.
+		/**
+		 * This method will return a series mathematically equivalent to \p this in which discardable arguments
+		 * have been removed from the internal set of symbols. Which symbols are removed depends on the trimming
+		 * method \p trim_identify() of the key type (e.g., in a polynomial a symbol can be discarded if its exponent
+		 * is zero in all monomials).
+		 * 
+		 * If the coefficient type is an instance of piranha::series, trim() will be called recursively on the coefficients
+		 * while building the return value.
+		 * 
+		 * @return trimmed version of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - operations on piranha::symbol_set,
+		 * - the trimming methods of coefficient and/or key,
+		 * - insert(),
+		 * - term, coefficient and key type construction.
+		 */
+		Derived trim() const
+		{
+			// Build the set of symbols that can be removed.
+			const auto it_f = this->m_container.end();
+			symbol_set trim_ss(m_symbol_set);
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				it->m_key.trim_identify(trim_ss,m_symbol_set);
+			}
+			// Determine the new set.
+			Derived retval;
+			retval.m_symbol_set = m_symbol_set.diff(trim_ss);
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				retval.insert(term_type(trim_cf_impl(it->m_cf),it->m_key.trim(trim_ss,m_symbol_set)));
 			}
 			return retval;
 		}

@@ -1722,3 +1722,41 @@ BOOST_AUTO_TEST_CASE(series_print_tex_test)
 {
 	boost::mpl::for_each<cf_types>(print_tex_tester());
 }
+
+struct trim_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			if (std::is_same<Cf,double>::value) {
+				return;
+			}
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			p_type1 x{"x"}, y{"y"};
+			BOOST_CHECK_EQUAL((1 + x - x).trim().get_symbol_set().size(),0u);
+			BOOST_CHECK_EQUAL((1 + x*y - y*x + x).trim().get_symbol_set().size(),1u);
+			BOOST_CHECK_EQUAL((1 + x*y - y*x + x + y).trim().get_symbol_set().size(),2u);
+			p_type11 xx(x), yy(y);
+			BOOST_CHECK_EQUAL(((1 + xx) - xx).begin()->first.get_symbol_set().size(),1u);
+			BOOST_CHECK_EQUAL(((1 + xx) - xx).trim().begin()->first.get_symbol_set().size(),0u);
+			BOOST_CHECK_EQUAL(((1 + xx*yy) - xx*yy + xx).trim().begin()->first.get_symbol_set().size(),1u);
+			BOOST_CHECK_EQUAL(((1 + xx*yy) - xx*yy + xx + yy).trim().begin()->first.get_symbol_set().size(),2u);
+			BOOST_CHECK_EQUAL((1+x*xx + y*yy - x*xx).trim().begin()->first.get_symbol_set().size(),1u);
+			BOOST_CHECK_EQUAL((1+x*p_type11{"x"} + y*p_type11{"y"} - x*p_type11{"x"}).trim().get_symbol_set().size(),1u);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_trim_test)
+{
+	boost::mpl::for_each<cf_types>(trim_tester());
+}
