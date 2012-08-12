@@ -763,7 +763,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * in \p trim_args removed.
 		 * 
 		 * @param[in] trim_args arguments whose exponents will be removed.
-		 * @param[in] args reference arguments set.
+		 * @param[in] orig_args original arguments set.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),

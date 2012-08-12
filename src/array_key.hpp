@@ -464,7 +464,7 @@ class array_key: detail::array_key_tag
 		 * in \p trim_args removed.
 		 * 
 		 * @param[in] trim_args arguments whose exponents will be removed.
-		 * @param[in] args reference arguments set.
+		 * @param[in] orig_args original arguments set.
 		 * 
 		 * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
 		 * @throws unspecified any exception thrown by push_back().

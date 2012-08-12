@@ -1747,6 +1747,7 @@ struct trim_tester
 			BOOST_CHECK_EQUAL(((1 + xx*yy) - xx*yy + xx + yy).trim().begin()->first.get_symbol_set().size(),2u);
 			BOOST_CHECK_EQUAL((1+x*xx + y*yy - x*xx).trim().begin()->first.get_symbol_set().size(),1u);
 			BOOST_CHECK_EQUAL((1+x*p_type11{"x"} + y*p_type11{"y"} - x*p_type11{"x"}).trim().get_symbol_set().size(),1u);
+			BOOST_CHECK_EQUAL((((1+x).pow(5) + y) - y).trim(),(1+x).pow(5));
 		}
 	};
 	template <typename Cf>

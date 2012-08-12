@@ -885,7 +885,7 @@ class real_trigonometric_kronecker_monomial
 		 * in \p trim_args removed.
 		 * 
 		 * @param[in] trim_args arguments whose multipliers will be removed.
-		 * @param[in] args reference arguments set.
+		 * @param[in] orig_args original arguments set.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
