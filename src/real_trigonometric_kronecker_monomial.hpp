@@ -887,6 +887,8 @@ class real_trigonometric_kronecker_monomial
 		 * @param[in] trim_args arguments whose multipliers will be removed.
 		 * @param[in] orig_args original arguments set.
 		 * 
+		 * @return trimmed copy of \p this.
+		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::static_vector::push_back().

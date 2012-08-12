@@ -765,6 +765,8 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * @param[in] trim_args arguments whose exponents will be removed.
 		 * @param[in] orig_args original arguments set.
 		 * 
+		 * @return trimmed copy of \p this.
+		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::static_vector::push_back().
