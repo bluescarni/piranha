@@ -1651,6 +1651,27 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::va
 	}
 };
 
+/// Specialisation of the piranha::math::ipow_subs() functor for piranha::rational.
+/**
+ * This specialisation is activated when \p T is piranha::rational.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q substitution argument.
+	 * 
+	 * @return copy of \p q.
+	 */
+	template <typename U>
+	T operator()(const T &q, const std::string &, const integer &, const U &) const
+	{
+		return q;
+	}
+};
+
 }
 
 }

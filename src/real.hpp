@@ -1730,6 +1730,27 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 	}
 };
 
+/// Specialisation of the piranha::math::ipow_subs() functor for piranha::real.
+/**
+ * This specialisation is activated when \p T is piranha::real.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	template <typename U>
+	T operator()(const T &x, const std::string &, const integer &, const U &) const
+	{
+		return x;
+	}
+};
+
 }
 
 namespace detail

@@ -907,3 +907,9 @@ BOOST_AUTO_TEST_CASE(rational_print_tex_test)
 	print_tex_coefficient(ss,rational(-14,21));
 	BOOST_CHECK_EQUAL(ss.str(),"-\\frac{2}{3}");
 }
+
+BOOST_AUTO_TEST_CASE(rational_ipow_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::ipow_subs(rational(-42,2),"a",integer(4),5),rational(-21));
+	BOOST_CHECK_EQUAL(math::ipow_subs(rational(42,3),"a",integer(4),5),rational(14));
+}

@@ -2133,6 +2133,77 @@ inline integer integral_cast(const T &x)
 	return retval;
 }
 
+/// Default functor for the implementation of piranha::math::ipow_subs().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct ipow_subs_impl
+{};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	template <typename U>
+	T operator()(const T &x, const std::string &, const integer &, const U &) const
+	{
+		return x;
+	}
+};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for piranha::integer.
+/**
+ * This specialisation is activated when \p T is piranha::integer.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n substitution argument.
+	 * 
+	 * @return copy of \p n.
+	 */
+	template <typename U>
+	T operator()(const T &n, const std::string &, const integer &, const U &) const
+	{
+		return n;
+	}
+};
+
+/// Substitution of integral power.
+/**
+ * Substitute the integral power of a symbolic variable with a generic object.
+ * The actual implementation of this function is in the piranha::math::ipow_subs_impl functor.
+ * 
+ * @param[in] x quantity that will be subject to substitution.
+ * @param[in] name name of the symbolic variable that will be substituted.
+ * @param[in] n power of \p name that will be substituted.
+ * @param[in] y object that will substitute the variable.
+ * 
+ * @return \p x after substitution  of \p name to the power of \p n with \p y.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
+ */
+template <typename T, typename U>
+inline auto ipow_subs(const T &x, const std::string &name, const integer &n, const U &y) -> decltype(ipow_subs_impl<T>()(x,name,n,y))
+{
+	return ipow_subs_impl<T>()(x,name,n,y);
+}
+
 /// Factorial.
 /**
  * @param[in] n factorial argument.

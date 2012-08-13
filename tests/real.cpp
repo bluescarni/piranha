@@ -1564,3 +1564,9 @@ BOOST_AUTO_TEST_CASE(real_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(real(-3.5),"niz","foo"),real(-3.5));
 	BOOST_CHECK((std::is_same<decltype(math::subs(real(-3.5),"niz","foo")),real>::value));
 }
+
+BOOST_AUTO_TEST_CASE(real_ipow_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::ipow_subs(real(-42.123),"a",integer(4),5),real(-42.123));
+	BOOST_CHECK_EQUAL(math::ipow_subs(real(42.456),"a",integer(4),5),real(42.456));
+}

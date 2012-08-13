@@ -921,3 +921,19 @@ BOOST_AUTO_TEST_CASE(integer_factorial_test)
 	BOOST_CHECK_THROW(piranha::math::factorial(piranha::integer(-1)),std::invalid_argument);
 	BOOST_CHECK_THROW(piranha::math::factorial(piranha::integer(100001L)),std::invalid_argument);
 }
+
+struct check_ipow_subs
+{
+	template <typename T>
+	void operator()(const T &x) const
+	{
+		BOOST_CHECK_EQUAL(piranha::math::ipow_subs(x,"a",piranha::integer(4),5),x);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(integer_ipow_subs_test)
+{
+	boost::fusion::for_each(arithmetic_values,check_ipow_subs());
+	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(-42),"a",piranha::integer(4),5),piranha::integer(-42));
+	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(42),"a",piranha::integer(4),5),piranha::integer(42));
+}
