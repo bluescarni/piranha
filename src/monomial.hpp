@@ -40,6 +40,7 @@
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "integer.hpp"
+#include "rational.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -608,6 +609,60 @@ class monomial: public array_key<T,monomial<T>>
 				}
 			}
 			piranha_assert(retval_key.size() == this->size() || retval_key.size() == this->size() - 1u);
+			return std::make_pair(std::move(retval_s),std::move(retval_key));
+		}
+		/// Substitution of integral power.
+		/**
+		 * Substitute \p s to the power of \p n with quantity \p x. The return value is a pair in which the first
+		 * element is the result of the substitution, and the second element the monomial after the substitution has been performed.
+		 * If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
+		 * monomial is unchanged and the substitution yields 1).
+		 * 
+		 * In order for the substitution to be successful, the exponent type must be convertible to piranha::integer
+		 * via piranha::math::integral_cast(). The method will substitute also \p s to powers higher than \p n in absolute value.
+		 * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
+		 * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
+		 * 
+		 * Note that, contrary to normal substitution, this method will never eliminate an exponent from the monomial, even if the
+		 * exponent becomes zero after substitution.
+		 * 
+		 * @param[in] s symbol that will be substituted.
+		 * @param[in] n power of \p s that will be substituted.
+		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p x for \p s to the power of \p n.
+		 * 
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by:
+		 * - construction and assignment of the return value,
+		 * - piranha::integral_cast(),
+		 * - piranha::math::pow(),
+		 * - piranha::array_key::push_back(),
+		 * - the in-place subtraction operator of the exponent type.
+		 * 
+		 * \todo require constructability from int, exponentiability, subtractability.
+		 */
+		template <typename U>
+		std::pair<typename eval_type<U>::type,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		{
+			typedef typename eval_type<U>::type s_type;
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			s_type retval_s(1);
+			monomial retval_key;
+			for (typename base::size_type i = 0u; i < this->size(); ++i) {
+				retval_key.push_back((*this)[i]);
+				if (args[i] == s) {
+					const rational tmp(math::integral_cast((*this)[i]),n);
+					if (tmp >= 1) {
+						const auto tmp_t = static_cast<integer>(tmp);
+						retval_s = math::pow(x,tmp_t);
+						retval_key[i] -= tmp_t * n;
+					}
+				}
+			}
 			return std::make_pair(std::move(retval_s),std::move(retval_key));
 		}
 };
