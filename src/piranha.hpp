@@ -86,10 +86,11 @@
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
  * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)
  * and python converters (protect the inited flags with mutexes).
- * \todo: instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
+ * \todo instead of disabling debug checks at shutdown for series, maybe we should do like in Python and register an
  * atexit() function to clean up custom derivatives before static destruction starts. We could register the atexit
  * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each time.
- * Probably the existing mutex can be resued as well.
+ * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
+ * work in a more generic fashion.
  */
 namespace piranha
 {
