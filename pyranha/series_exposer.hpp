@@ -103,8 +103,9 @@ struct series_exposer
 		pow_exposer(series_class,in);
 		// Evaluation.
 		series_class.def("_evaluate",wrap_evaluate<S,interop_type>);
-		// Substitution.
-		subs_exposer<interop_type>(series_class);
+		// Substitutions.
+		series_class.def("subs",&series_type::template subs<interop_type>);
+		series_class.def("ipow_subs",&series_type::template ipow_subs<interop_type>);
 		interop_exposer<S,I + 1u,T...>(series_class,t);
 	}
 	// Differentiation.
@@ -332,12 +333,6 @@ struct series_exposer
 	static void harmonic_series_exposer(bp::class_<T> &,
 		typename std::enable_if<!std::is_base_of<detail::poisson_series_tag,T>::value>::type * = piranha_nullptr)
 	{}
-	// Substitution exposer.
-	template <typename U, typename T>
-	static void subs_exposer(bp::class_<T> &series_class)
-	{
-		series_class.def("subs",&T::template subs<U>);
-	}
 	// Latex representation.
 	template <typename S>
 	static std::string wrap_latex(const S &s)
@@ -453,8 +448,9 @@ struct series_exposer
 		power_series_exposer(series_class);
 		// Harmonic series methods.
 		harmonic_series_exposer(series_class);
-		// Substitution with self.
-		subs_exposer<series_type>(series_class);
+		// Substitutiona with self.
+		series_class.def("subs",&series_type::template subs<series_type>);
+		series_class.def("ipow_subs",&series_type::template ipow_subs<series_type>);
 		// Latex.
 		series_class.def("_latex_",wrap_latex<series_type>);
 		// Arguments set.
