@@ -636,6 +636,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of the return value,
+		 * - construction of piranha::rational,
 		 * - piranha::integral_cast(),
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back(),
