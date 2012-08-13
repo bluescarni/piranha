@@ -97,7 +97,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename Cf, typename Expo = kronecker_monomial<>>
+template <typename Cf, typename Expo = int>
 class polynomial:
 	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>,
 	detail::polynomial_tag
