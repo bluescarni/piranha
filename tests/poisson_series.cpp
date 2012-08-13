@@ -492,3 +492,33 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 	BOOST_CHECK_THROW(p_type2{1}.integrate("x"),std::invalid_argument);
 	BOOST_CHECK(is_integrable<p_type2>::value);
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
+{
+	typedef poisson_series<polynomial<rational>> p_type1;
+	{
+	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(4),integer(1)),p_type1{"x"});
+	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(1),p_type1{"x"}),p_type1{"x"});
+	p_type1 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).ipow_subs("x",integer(2),integer(3)),3 + x * y + z);
+	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).ipow_subs("y",integer(1),rational(3,2)),x * x + x * rational(3,2) + z);
+	BOOST_CHECK_EQUAL((x.pow(7) + x.pow(2) * y + z).ipow_subs("x",integer(3),x),x.pow(3) + x.pow(2) * y + z);
+	BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x",integer(3),p_type1{}),x.pow(2) * y + z);
+	}
+	{
+	typedef poisson_series<polynomial<real>> p_type2;
+	p_type2 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(1),real(1.234)),y*y + math::pow(real(1.234),3));
+	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(3),real(1.234)),y*y + real(1.234));
+	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(2),real(1.234)).ipow_subs("y",integer(2),real(-5.678)),real(-5.678) +
+		real(1.234) * x);
+	BOOST_CHECK_EQUAL(math::ipow_subs(x*x*x + y*y,"x",integer(1),real(1.234)).ipow_subs("y",integer(1),real(-5.678)),math::pow(real(-5.678),2) +
+		math::pow(real(1.234),3));
+	}
+	p_type1 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(2),y),x.pow(-7) + y + z);
+	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-2),y),x.pow(-1) * y.pow(3) + y + z);
+	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
+	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(-4),z),(z * x.pow(-3)) * math::cos(x) + y + z);
+	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(4),z),x.pow(-7) * math::cos(x) + y + z);
+}

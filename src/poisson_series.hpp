@@ -150,7 +150,7 @@ class poisson_series:
 					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
 			}
 		}
-		// Subs typedef.
+		// Subs typedefs.
 		template <typename T>
 		struct subs_type
 		{
@@ -159,6 +159,15 @@ class poisson_series:
 			typedef decltype(
 				(math::subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<T>()) * std::declval<poisson_series>()) *
 				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first.first
+			) type;
+		};
+		template <typename T>
+		struct ipow_subs_type
+		{
+			typedef typename base::term_type::cf_type cf_type;
+			typedef decltype(
+				math::ipow_subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<integer>(),std::declval<T>()) *
+				std::declval<poisson_series>()
 			) type;
 		};
 		// Harmonic degree utilities.
@@ -453,6 +462,45 @@ class poisson_series:
 			}
 			return retval;
 		}
+		/// Substitution of integral power.
+		/**
+		 * This method will substitute occurrences of \p name to the power of \p n with \p x.
+		 * The result for each term is computed by calling piranha::math::ipow_subs() on the coefficients, with
+		 * the final return value assembled via multiplications and additions.
+		 * 
+		 * @param[in] name name of the symbolic variable that will be subject to substitution.
+		 * @param[in] n power of \p name that will be substituted.
+		 * @param[in] x quantity that will be substituted for \p name to the power of \p n.
+		 * 
+		 * @return result of the substitution.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the assignment operator of piranha::symbol_set,
+		 * - piranha::math::ipow_subs(),
+		 * - piranha::series::insert(),
+		 * - construction, addition and multiplication of the types involved in the computation.
+		 * 
+		 * \todo type requirements.
+		 */
+		template <typename T>
+		typename ipow_subs_type<T>::type ipow_subs(const std::string &name, const integer &n, const T &x) const
+		{
+			typedef typename ipow_subs_type<T>::type return_type;
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			// Init return value.
+			return_type retval = return_type();
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				auto cf_sub = math::ipow_subs(it->m_cf,name,n,x);
+				poisson_series tmp_series;
+				tmp_series.m_symbol_set = this->m_symbol_set;
+				tmp_series.insert(term_type(cf_type(1),it->m_key));
+				// NOTE: use series multadd if it becomes available.
+				retval += cf_sub * tmp_series;
+			}
+			return retval;
+		}
 		/// Harmonic degree.
 		/**
 		 * The harmonic degree of a Poisson series is defined in the same way as the degree in a polynomial,
@@ -632,6 +680,40 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_
 		typename subs_type<T>::type operator()(const Series &s, const std::string &name, const T &x) const
 		{
 			return s.subs(name,x);
+		}
+};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for Poisson series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
+ */
+template <typename Series>
+struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+{
+	private:
+		template <typename T>
+		struct ipow_subs_type
+		{
+			typedef decltype(std::declval<Series>().ipow_subs(std::declval<std::string>(),std::declval<integer>(),std::declval<T>())) type;
+		};
+	public:
+		/// Call operator.
+		/**
+		 * The implementation will use piranha::poisson_series::ipow_subs().
+		 * 
+		 * @param[in] s input Poisson series.
+		 * @param[in] name name of the symbolic variable that will be substituted.
+		 * @param[in] n power of \p name that will be substituted.
+		 * @param[in] x object that will replace \p name.
+		 * 
+		 * @return output of piranha::poisson_series::ipow_subs().
+		 * 
+		 * @throws unspecified any exception thrown by piranha::poisson_series::ipow_subs().
+		 */
+		template <typename T>
+		typename ipow_subs_type<T>::type operator()(const Series &s, const std::string &name, const integer &n, const T &x) const
+		{
+			return s.ipow_subs(name,n,x);
 		}
 };
 

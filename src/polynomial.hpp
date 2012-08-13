@@ -412,8 +412,8 @@ class polynomial:
 		}
 		/// Substitution of integral power.
 		/**
-		 * This method will substitute occurrences of \p name to the power of \p n with \p x, where \p n can be either positive
-		 * or negative. The result for each term is computed via piranha::math::ipow_subs() for the coefficients and via the
+		 * This method will substitute occurrences of \p name to the power of \p n with \p x.
+		 * The result for each term is computed via piranha::math::ipow_subs() for the coefficients and via the
 		 * corresponding substitution method for the monomials, and then assembled into the final return value via multiplications and additions.
 		 * 
 		 * @param[in] name name of the symbolic variable that will be subject to substitution.
