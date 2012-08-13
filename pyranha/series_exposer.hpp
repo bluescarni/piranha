@@ -104,8 +104,8 @@ struct series_exposer
 		// Evaluation.
 		series_class.def("_evaluate",wrap_evaluate<S,interop_type>);
 		// Substitutions.
-		series_class.def("subs",&series_type::template subs<interop_type>);
-		series_class.def("ipow_subs",&series_type::template ipow_subs<interop_type>);
+		series_class.def("subs",&S::template subs<interop_type>);
+		series_class.def("ipow_subs",&S::template ipow_subs<interop_type>);
 		interop_exposer<S,I + 1u,T...>(series_class,t);
 	}
 	// Differentiation.
