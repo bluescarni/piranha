@@ -40,6 +40,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/math.hpp"
 #include "../src/rational.hpp"
@@ -824,4 +825,82 @@ struct trim_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_trim_test)
 {
 	boost::mpl::for_each<int_types>(trim_tester());
+}
+
+struct ipow_subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		symbol_set vs;
+		k_type k1;
+		auto ret = k1.ipow_subs(symbol("x"),integer(45),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK((std::is_same<integer,decltype(ret.first)>::value));
+		BOOST_CHECK(ret.second == k1);
+		k1.set_int(1);
+		BOOST_CHECK_THROW(k1.ipow_subs(symbol("x"),integer(35),integer(4),vs),std::invalid_argument);
+		vs.add("x");
+		k1 = k_type({T(2)});
+		ret = k1.ipow_subs(symbol("y"),integer(2),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK(ret.second == k1);
+		ret = k1.ipow_subs(symbol("x"),integer(1),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(4),T(2)));
+		BOOST_CHECK(ret.second == k_type({T(0)}));
+		ret = k1.ipow_subs(symbol("x"),integer(2),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(4),T(1)));
+		BOOST_CHECK(ret.second == k_type({T(0)}));
+		ret = k1.ipow_subs(symbol("x"),integer(-1),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK(ret.second == k_type({T(2)}));
+		ret = k1.ipow_subs(symbol("x"),integer(4),integer(4),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK(ret.second == k_type({T(2)}));
+		if (std::is_same<T,signed char>::value) {
+			// Values below are too large for signed char.
+			return;
+		}
+		k1 = k_type({T(7),T(2)});
+		vs.add("y");
+		ret = k1.ipow_subs(symbol("x"),integer(3),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(2)));
+		BOOST_CHECK((ret.second == k_type{T(1),T(2)}));
+		ret = k1.ipow_subs(symbol("x"),integer(4),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(1)));
+		BOOST_CHECK((ret.second == k_type{T(3),T(2)}));
+		ret = k1.ipow_subs(symbol("x"),integer(-4),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK((ret.second == k_type{T(7),T(2)}));
+		k1 = k_type({T(-7),T(2)});
+		ret = k1.ipow_subs(symbol("x"),integer(4),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,1);
+		BOOST_CHECK((ret.second == k_type{T(-7),T(2)}));
+		ret = k1.ipow_subs(symbol("x"),integer(-4),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(1)));
+		BOOST_CHECK((ret.second == k_type{T(-3),T(2)}));
+		ret = k1.ipow_subs(symbol("x"),integer(-3),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(2)));
+		BOOST_CHECK((ret.second == k_type{T(-1),T(2)}));
+		k1 = k_type({T(2),T(-7)});
+		ret = k1.ipow_subs(symbol("y"),integer(-3),integer(2),vs);
+		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(2)));
+		BOOST_CHECK((ret.second == k_type{T(2),T(-1)}));
+		BOOST_CHECK_THROW(k1.ipow_subs(symbol("y"),integer(0),integer(2),vs),zero_division_error);
+		k1 = k_type({T(-7),T(2)});
+		auto ret2 = k1.ipow_subs(symbol("x"),integer(-4),real(-2.345),vs);
+		BOOST_CHECK_EQUAL(ret2.first,math::pow(real(-2.345),T(1)));
+		BOOST_CHECK((ret2.second == k_type{T(-3),T(2)}));
+		BOOST_CHECK((std::is_same<real,decltype(ret2.first)>::value));
+		auto ret3 = k1.ipow_subs(symbol("x"),integer(-3),rational(-1,2),vs);
+		BOOST_CHECK_EQUAL(ret3.first,math::pow(rational(-1,2),T(2)));
+		BOOST_CHECK((ret3.second == k_type{T(-1),T(2)}));
+		BOOST_CHECK((std::is_same<rational,decltype(ret3.first)>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_ipow_subs_test)
+{
+	boost::mpl::for_each<int_types>(ipow_subs_tester());
 }

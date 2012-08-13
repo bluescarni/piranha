@@ -47,6 +47,7 @@
 #include "integer.hpp"
 #include "kronecker_array.hpp"
 #include "math.hpp"
+#include "rational.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -737,6 +738,49 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 				}
 			}
 			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
+			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
+		}
+		/// Substitution of integral power.
+		/**
+		 * This method works in the same way as piranha::monomial::ipow_subs().
+		 * 
+		 * @param[in] s symbol that will be substituted.
+		 * @param[in] n power of \p s that will be substituted.
+		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p x for \p s to the power of \p n.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - construction and assignment of the return value,
+		 * - construction of piranha::rational,
+		 * - piranha::integral_cast(),
+		 * - piranha::math::pow(),
+		 * - piranha::static_vector::push_back(),
+		 * - the in-place subtraction operator of the exponent type,
+		 * - piranha::kronecker_array::encode().
+		 * 
+		 * \todo require constructability from int, exponentiability, subtractability.
+		 */
+		template <typename U>
+		std::pair<typename eval_type<U>::type,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		{
+			typedef typename eval_type<U>::type s_type;
+			const auto v = unpack(args);
+			v_type new_v;
+			s_type retval_s(1);
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				new_v.push_back(v[i]);
+				if (args[i] == s) {
+					const rational tmp(math::integral_cast(v[i]),n);
+					if (tmp >= 1) {
+						const auto tmp_t = static_cast<integer>(tmp);
+						retval_s = math::pow(x,tmp_t);
+						new_v[i] -= tmp_t * n;
+					}
+				}
+			}
 			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
 		}
 		/// Identify symbols that can be trimmed.
