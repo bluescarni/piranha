@@ -35,6 +35,7 @@
 
 #include "../src/concepts/key.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/rational.hpp"
@@ -748,6 +749,7 @@ struct ipow_subs_tester
 		ret = k1.ipow_subs(symbol("y"),integer(-3),integer(2),vs);
 		BOOST_CHECK_EQUAL(ret.first,math::pow(integer(2),T(2)));
 		BOOST_CHECK((ret.second == k_type{T(2),T(-1)}));
+		BOOST_CHECK_THROW(k1.ipow_subs(symbol("y"),integer(0),integer(2),vs),zero_division_error);
 		k1 = k_type({T(-7),T(2)});
 		auto ret2 = k1.ipow_subs(symbol("x"),integer(-4),real(-2.345),vs);
 		BOOST_CHECK_EQUAL(ret2.first,math::pow(real(-2.345),T(1)));
