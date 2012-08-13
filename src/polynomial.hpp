@@ -139,7 +139,7 @@ class polynomial:
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
 		}
-		// Subs typedef.
+		// Subs typedefs.
 		template <typename T>
 		struct subs_type
 		{
@@ -148,6 +148,16 @@ class polynomial:
 			typedef decltype(
 				(math::subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<T>()) * std::declval<polynomial>()) *
 				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first
+			) type;
+		};
+		template <typename T>
+		struct ipow_subs_type
+		{
+			typedef typename base::term_type::cf_type cf_type;
+			typedef typename base::term_type::key_type key_type;
+			typedef decltype(
+				(math::ipow_subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<integer>(),std::declval<T>()) * std::declval<polynomial>()) *
+				std::declval<key_type>().ipow_subs(std::declval<symbol>(),std::declval<integer>(),std::declval<T>(),std::declval<symbol_set>()).first
 			) type;
 		};
 		// Integration with integrable coefficient.
@@ -400,6 +410,50 @@ class polynomial:
 			}
 			return retval;
 		}
+		/// Substitution of integral power.
+		/**
+		 * This method will substitute occurrences of \p name to the power of \p n with \p x, where \p n can be either positive
+		 * or negative. The result for each term is computed via piranha::math::ipow_subs() for the coefficients and via the
+		 * corresponding substitution method for the monomials, and then assembled into the final return value via multiplications and additions.
+		 * 
+		 * @param[in] name name of the symbolic variable that will be subject to substitution.
+		 * @param[in] n power of \p name that will be substituted.
+		 * @param[in] x quantity that will be substituted for \p name to the power of \p n.
+		 * 
+		 * @return result of the substitution.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - symbol construction,
+		 * - the assignment operator of piranha::symbol_set,
+		 * - piranha::math::ipow_subs(),
+		 * - the substitution method of the monomial type,
+		 * - piranha::series::insert(),
+		 * - construction, addition and multiplication of the types involved in the computation.
+		 * 
+		 * \todo type requirements.
+		 */
+		template <typename T>
+		typename ipow_subs_type<T>::type ipow_subs(const std::string &name, const integer &n, const T &x) const
+		{
+			typedef typename ipow_subs_type<T>::type return_type;
+			typedef typename base::term_type term_type;
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			// Turn name into symbol.
+			const symbol s(name);
+			// Init return value.
+			return_type retval = return_type();
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				auto cf_sub = math::ipow_subs(it->m_cf,name,n,x);
+				auto key_sub = it->m_key.ipow_subs(s,n,x,this->m_symbol_set);
+				polynomial tmp_series;
+				tmp_series.m_symbol_set = this->m_symbol_set;
+				tmp_series.insert(term_type(cf_type(1),key_type(key_sub.second)));
+				retval += (cf_sub * tmp_series) * key_sub.first;
+			}
+			return retval;
+		}
 		/// Integration.
 		/**
 		 * This method will attempt to compute the antiderivative of the polynomial term by term. If the term's coefficient does not depend on
@@ -495,6 +549,40 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomi
 		typename subs_type<T>::type operator()(const Series &s, const std::string &name, const T &x) const
 		{
 			return s.subs(name,x);
+		}
+};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for polynomial types.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::polynomial.
+ */
+template <typename Series>
+struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+{
+	private:
+		template <typename T>
+		struct ipow_subs_type
+		{
+			typedef decltype(std::declval<Series>().ipow_subs(std::declval<std::string>(),std::declval<integer>(),std::declval<T>())) type;
+		};
+	public:
+		/// Call operator.
+		/**
+		 * The implementation will use piranha::polynomial::ipow_subs().
+		 * 
+		 * @param[in] s input polynomial.
+		 * @param[in] name name of the symbolic variable that will be substituted.
+		 * @param[in] n power of \p name that will be substituted.
+		 * @param[in] x object that will replace \p name.
+		 * 
+		 * @return output of piranha::polynomial::ipow_subs().
+		 * 
+		 * @throws unspecified any exception thrown by piranha::polynomial::ipow_subs().
+		 */
+		template <typename T>
+		typename ipow_subs_type<T>::type operator()(const Series &s, const std::string &name, const integer &n, const T &x) const
+		{
+			return s.ipow_subs(name,n,x);
 		}
 };
 
