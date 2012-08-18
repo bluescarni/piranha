@@ -701,8 +701,8 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 {
-	{
 	typedef polynomial<rational> p_type1;
+	{
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(4),integer(1)),p_type1{"x"});
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(1),p_type1{"x"}),p_type1{"x"});
 	p_type1 x{"x"}, y{"y"}, z{"z"};
@@ -710,6 +710,8 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL((x.pow(2) + x * y + z).ipow_subs("y",integer(1),rational(3,2)),x * x + x * rational(3,2) + z);
 	BOOST_CHECK_EQUAL((x.pow(7) + x.pow(2) * y + z).ipow_subs("x",integer(3),x),x.pow(3) + x.pow(2) * y + z);
 	BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x",integer(3),p_type1{}),x.pow(2) * y + z);
+	BOOST_CHECK_EQUAL((1+3*x.pow(2)-5*y.pow(5)).pow(10).ipow_subs("x",integer(2),p_type1{"x2"})
+		.subs("x2",x.pow(2)),(1+3*x.pow(2)-5*y.pow(5)).pow(10));
 	}
 	{
 	typedef polynomial<real,int> p_type2;

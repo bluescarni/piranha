@@ -96,6 +96,9 @@ namespace piranha
  * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
+ * This is useful to simplify the notation, and needs not to be done for lower level methods in keys.
  */
 template <typename Cf, typename Expo = int>
 class polynomial:
