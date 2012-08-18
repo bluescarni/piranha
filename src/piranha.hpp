@@ -91,6 +91,8 @@
  * at the first invocation of register_custom_derivative() for each series type, set a flag and then query the flag each time.
  * Probably the existing mutex can be resued as well. Probably it makes sense to keep both, as the existing method would
  * work in a more generic fashion.
+ * \todo pyranha: enable math for numpy's floating point type, and arrays. Also, think about enableing conversion from the numpy float
+ * in the from-python converters?
  */
 namespace piranha
 {
