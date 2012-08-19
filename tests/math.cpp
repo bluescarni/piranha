@@ -242,3 +242,28 @@ BOOST_AUTO_TEST_CASE(pbracket_test)
 	BOOST_CHECK_EQUAL(math::pbracket(H_2,Gz,{"vx","vy","vz"},{"x","y","z"}),0);
 	BOOST_CHECK(math::pbracket(H_2,Gz + x,{"vx","vy","vz"},{"x","y","z"}) != 0);
 }
+
+BOOST_AUTO_TEST_CASE(abs_test)
+{
+	BOOST_CHECK_EQUAL(math::abs((signed char)(4)),(signed char)(4));
+	BOOST_CHECK_EQUAL(math::abs((signed char)(-4)),(signed char)(4));
+	BOOST_CHECK_EQUAL(math::abs(short(4)),short(4));
+	BOOST_CHECK_EQUAL(math::abs(short(-4)),short(4));
+	BOOST_CHECK_EQUAL(math::abs(4),4);
+	BOOST_CHECK_EQUAL(math::abs(-4),4);
+	BOOST_CHECK_EQUAL(math::abs(4l),4l);
+	BOOST_CHECK_EQUAL(math::abs(-4l),4l);
+	BOOST_CHECK_EQUAL(math::abs(4ll),4ll);
+	BOOST_CHECK_EQUAL(math::abs(-4ll),4ll);
+	BOOST_CHECK_EQUAL(math::abs((unsigned char)(4)),(unsigned char)(4));
+	BOOST_CHECK_EQUAL(math::abs((unsigned short)(4)),(unsigned short)(4));
+	BOOST_CHECK_EQUAL(math::abs(4u),4u);
+	BOOST_CHECK_EQUAL(math::abs(4lu),4lu);;
+	BOOST_CHECK_EQUAL(math::abs(4llu),4llu);
+	BOOST_CHECK_EQUAL(math::abs(1.23f),1.23f);
+	BOOST_CHECK_EQUAL(math::abs(-1.23f),1.23f);
+	BOOST_CHECK_EQUAL(math::abs(1.23),1.23);
+	BOOST_CHECK_EQUAL(math::abs(-1.23),1.23);
+	BOOST_CHECK_EQUAL(math::abs(1.23l),1.23l);
+	BOOST_CHECK_EQUAL(math::abs(-1.23l),1.23l);
+}

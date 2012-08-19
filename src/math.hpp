@@ -509,6 +509,66 @@ inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(su
 	return subs_impl<T>()(x,name,y);
 }
 
+/// Default functor for the implementation of piranha::math::abs().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename Enable = void>
+struct abs_impl
+{};
+
+/// Specialisation of the piranha::math::abs() functor for signed and unsigned integer types, and floating-point types.
+/**
+ * This specialisation is activated when \p T is a signed or unsigned integer type, or a floating-point type.
+ * The result will be computed via \p std::abs() for floating-point and signed integer types,
+ * while for unsigned integer types it will be the input value unchanged.
+ */
+template <typename T>
+struct abs_impl<T,typename std::enable_if<std::is_signed<T>::value || std::is_unsigned<T>::value ||
+	std::is_floating_point<T>::value>::type>
+{
+	private:
+		template <typename U>
+		static U impl(const U &x, typename std::enable_if<std::is_signed<U>::value ||
+			std::is_floating_point<U>::value>::type * = piranha_nullptr)
+		{
+			return std::abs(x);
+		}
+		template <typename U>
+		static U impl(const U &x, typename std::enable_if<std::is_unsigned<U>::value>::type * = piranha_nullptr)
+		{
+			return x;
+		}
+	public:
+		/// Call operator.
+		/**
+		 * @param[in] x input parameter.
+		 * 
+		 * @return absolute value of \p x.
+		 */
+		T operator()(const T &x) const
+		{
+			return impl(x);
+		}
+};
+
+/// Absolute value.
+/**
+ * The actual implementation of this function is in the piranha::math::abs_impl functor.
+ * 
+ * @param[in] x quantity whose absolute value will be calculated.
+ * 
+ * @return absolute value of \p x.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::abs_impl.
+ */
+template <typename T>
+inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
+{
+	return abs_impl<T>()(x);
+}
+
 /// Poisson bracket.
 /**
  * The Poisson bracket of \p f and \p g with respect to the list of momenta \p p_list and coordinates \p q_list

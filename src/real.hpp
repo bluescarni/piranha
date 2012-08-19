@@ -1482,6 +1482,16 @@ class PIRANHA_PUBLIC real
 		{
 			return pow_impl(exp);
 		}
+		/// Absolute value.
+		/**
+		 * @return absolute value of \p this.
+		 */
+		real abs() const
+		{
+			real retval(*this);
+			::mpfr_abs(retval.m_value,retval.m_value,default_rnd);
+			return retval;
+		}
 		/// Sine.
 		/**
 		 * @return sine of \p this, computed with the precision of \p this.
@@ -1647,6 +1657,22 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	real operator()(const T &r) const
 	{
 		return r.cos();
+	}
+};
+
+/// Specialisation of the piranha::math::abs() functor for piranha::real.
+template <typename T>
+struct abs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x input parameter.
+	 * 
+	 * @return absolute value of \p x.
+	 */
+	T operator()(const T &x) const
+	{
+		return x.abs();
 	}
 };
 

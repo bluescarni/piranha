@@ -1384,6 +1384,16 @@ class rational
 		{
 			return pow_impl(exp);
 		}
+		/// Absolute value.
+		/**
+		 * @return absolute value of \p this.
+		 */
+		rational abs() const
+		{
+			rational retval(*this);
+			::mpz_abs(mpq_numref(retval.m_value),mpq_numref(retval.m_value));
+			return retval;
+		}
 		/// Hash value.
 		/**
 		 * The value is calculated via \p boost::hash_combine over the limbs of the internal \p mpq_t type.
@@ -1574,6 +1584,22 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type
 			return rational{1};
 		}
 		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero rational");
+	}
+};
+
+/// Specialisation of the piranha::math::abs() functor for piranha::rational.
+template <typename T>
+struct abs_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q input parameter.
+	 * 
+	 * @return absolute value of \p q.
+	 */
+	T operator()(const T &q) const
+	{
+		return q.abs();
 	}
 };
 

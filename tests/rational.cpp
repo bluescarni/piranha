@@ -913,3 +913,11 @@ BOOST_AUTO_TEST_CASE(rational_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(rational(-42,2),"a",integer(4),5),rational(-21));
 	BOOST_CHECK_EQUAL(math::ipow_subs(rational(42,3),"a",integer(4),5),rational(14));
 }
+
+BOOST_AUTO_TEST_CASE(rational_abs_test)
+{
+	BOOST_CHECK_EQUAL(rational(42,2).abs(),21);
+	BOOST_CHECK_EQUAL(rational(-42,2).abs(),21);
+	BOOST_CHECK_EQUAL(math::abs(rational(42,2)),21);
+	BOOST_CHECK_EQUAL(math::abs(rational(42,-2)),21);
+}

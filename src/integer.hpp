@@ -101,6 +101,7 @@ namespace piranha
  * \todo improve performance of binary modulo operation when the second argument is a hardware integer
  * \todo investigate replacing lexical_cast with boost::format, as it seems like boost::format might offer better guarantees
  * on the printed value -> but maybe not: http://www.gotw.ca/publications/mill19.htm it seems it should be ok for int types.
+ * \todo think about a better way to establish the limit of factorial input - maybe a test done in the build system?
  */
 class integer
 {
@@ -1716,6 +1717,16 @@ class integer
 		{
 			return pow_impl(exp);
 		}
+		/// Absolute value.
+		/**
+		 * @return absolute value of \p this.
+		 */
+		integer abs() const
+		{
+			integer retval(*this);
+			::mpz_abs(retval.m_value,retval.m_value);
+			return retval;
+		}
 		/// Compute next prime number.
 		/**
 		 * Compute the next prime number after \p this. The method uses the GMP function <tt>mpz_nextprime()</tt>.
@@ -2023,6 +2034,22 @@ struct subs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type
 	T operator()(const T &n, const std::string &, const U &) const
 	{
 		return n;
+	}
+};
+
+/// Specialisation of the piranha::math::abs() functor for piranha::integer.
+template <typename T>
+struct abs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n input parameter.
+	 * 
+	 * @return absolute value of \p n.
+	 */
+	T operator()(const T &n) const
+	{
+		return n.abs();
 	}
 };
 

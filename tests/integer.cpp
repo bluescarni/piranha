@@ -937,3 +937,11 @@ BOOST_AUTO_TEST_CASE(integer_ipow_subs_test)
 	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(-42),"a",piranha::integer(4),5),piranha::integer(-42));
 	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(42),"a",piranha::integer(4),5),piranha::integer(42));
 }
+
+BOOST_AUTO_TEST_CASE(integer_abs_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer(42).abs(),42);
+	BOOST_CHECK_EQUAL(piranha::integer(-42).abs(),42);
+	BOOST_CHECK_EQUAL(piranha::math::abs(piranha::integer(43)),43);
+	BOOST_CHECK_EQUAL(piranha::math::abs(piranha::integer(-43)),43);
+}
