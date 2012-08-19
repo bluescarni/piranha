@@ -282,16 +282,7 @@ class symbol_set
 		 */
 		bool operator==(const symbol_set &other) const
 		{
-			const size_type s = size();
-			if (s != other.size()) {
-				return false;
-			}
-			for (size_type i = 0u; i < s; ++i) {
-				if (m_values[i] != other[i]) {
-					return false;
-				}
-			}
-			return true;
+			return m_values == other.m_values;
 		}
 		/// Inequality operator.
 		/**
