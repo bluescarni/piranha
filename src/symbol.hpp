@@ -23,7 +23,7 @@
 
 #include <cstddef>
 #include <iostream>
-#include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -36,8 +36,8 @@ namespace piranha
 
 /// Literal symbol class.
 /**
- * This class represents a symbolic variable, which is associated to a name and a numerical value. Symbol instances
- * are tracked in global list for the duration of the program, so that different instances of symbols with the same name are always
+ * This class represents a symbolic variable uniquely identified by its name. Symbol instances
+ * are tracked in a global list for the duration of the program, so that different instances of symbols with the same name are always
  * referring to the same underlying object.
  * 
  * The methods of this class, unless specified otherwise, are thread-safe: it is possible to create, access and operate on objects of this class
@@ -49,41 +49,22 @@ namespace piranha
  * 
  * \section move_semantics Move semantics
  * 
- * Move construction and move assignment will leave the moved-from object in a state equivalent to a
- * default-constructed object.
+ * Move construction and move assignment will not alter the original object.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo drop the value, does not make much sense anymore.
- * \todo drop also the iterator and global map mechanism, as it is not guaranteed to be thread safe. Just replace it with plain strings,
- * and assume that equal names == equal symbols - or at least store the pointer instead of the iterator:
- * http://stackoverflow.com/questions/9006663/iterators-validity-and-threads
- * Comparing pointers instead of full strings could provide important performance benefits.
  */
 class PIRANHA_PUBLIC symbol
 {
 	public:
 		/// Constructor from name.
 		/**
-		 * Construct a symbol with name \p name. If the name has been used before to create another symbol,
-		 * use its numerical value for \p this. Otherwise, the numerical value will be 0.
+		 * Construct a symbol with name \p name.
 		 * 
 		 * @param[in] name name of the symbol.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>std::map::insert()</tt>.
+		 * @throws unspecified any exception thrown by <tt>std::set::insert()</tt>.
 		 */
-		explicit symbol(const std::string &name):m_it(get_iterator<false>(name,0.)) {}
-		/// Constructor from name and numerical value.
-		/**
-		 * Construct a symbol with name \p name. The numerical value associated to \p this will be
-		 * \p value, regardless if a symbol with the same name was created before.
-		 * 
-		 * @param[in] name name of the symbol.
-		 * @param[in] value numerical value of the symbol.
-		 * 
-		 * @throws unspecified any exception thrown by <tt>std::map::insert()</tt>.
-		 */
-		explicit symbol(const std::string &name, const double &value):m_it(get_iterator<true>(name,value)) {}
+		explicit symbol(const std::string &name):m_ptr(get_pointer(name)) {}
 		/// Defaulted copy constructor.
 		symbol(const symbol &) = default;
 		/// Move constructor.
@@ -92,7 +73,7 @@ class PIRANHA_PUBLIC symbol
 		 * 
 		 * @param[in] other symbol to be copied.
 		 */
-		symbol(symbol &&other) piranha_noexcept_spec(true) : m_it(other.m_it) {}
+		symbol(symbol &&other) piranha_noexcept_spec(true) : m_ptr(other.m_ptr) {}
 		/// Defaulted copy assignment operator.
 		symbol &operator=(const symbol &) = default;
 		/// Move assignment operator.
@@ -115,26 +96,17 @@ class PIRANHA_PUBLIC symbol
 		 */
 		const std::string &get_name() const
 		{
-			return m_it->first;
-		}
-		/// Value getter.
-		/**
-		 * @return numerical value of the symbol. 
-		 */
-		double get_value() const
-		{
-			lock_guard<mutex>::type lock(m_mutex);
-			return m_it->second;
+			return *m_ptr;
 		}
 		/// Equality operator.
 		/**
 		 * @param[in] other equality argument.
 		 * 
-		 * @return true if \p other refers to the same underlying object of \p this, false otherwise.
+		 * @return true if \p other refers to the same underlying object as \p this, false otherwise.
 		 */
 		bool operator==(const symbol &other) const
 		{
-			return m_it == other.m_it;
+			return m_ptr == other.m_ptr;
 		}
 		/// Inequality operator.
 		/**
@@ -164,8 +136,7 @@ class PIRANHA_PUBLIC symbol
 		 */
 		std::size_t hash() const
 		{
-			// NOTE: consider hashing the pointer to the string here instead when we rewrite the class.
-			return std::hash<std::string>()(get_name());
+			return std::hash<std::string const *>()(m_ptr);
 		}
 		/// Overload output stream operator for piranha::symbol.
 		/**
@@ -178,30 +149,29 @@ class PIRANHA_PUBLIC symbol
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const symbol &s)
 		{
-			os << "name = \"" << s.get_name() << "\", value = " << s.get_value();
+			os << "name = \'" << s.get_name() << "\'";
 			return os;
 		}
 	private:
-		typedef std::map<std::string,double> container_type;
-		template <bool Replace>
-		static container_type::const_iterator get_iterator(const std::string &name, const double &value)
+		typedef std::set<std::string> container_type;
+		static std::string const *get_pointer(const std::string &name)
 		{
 			lock_guard<mutex>::type lock(m_mutex);
 			auto it = m_symbol_list.find(name);
 			if (it == m_symbol_list.end()) {
 				// If symbol is not present in the list, add it.
-				auto retval = m_symbol_list.insert(std::make_pair(name,value));
+				auto retval = m_symbol_list.insert(name);
 				piranha_assert(retval.second);
 				it = retval.first;
-			} else if (Replace) {
-				// If the symbol already exists and a replace was requested, perform it.
-				it->second = value;
 			}
 			// Final check, just for peace of mind.
 			piranha_assert(it != m_symbol_list.end());
-			return it;
+			// Extract and return the pointer.
+			// NOTE: this is legal, as std::set is a standard container:
+			// http://www.gotw.ca/gotw/050.htm
+			return &*it;
 		}
-		container_type::const_iterator	m_it;
+		std::string const		*m_ptr;
 		static mutex			m_mutex;
 		static container_type		m_symbol_list;
 };
