@@ -20,10 +20,16 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 	data->convertible = storage;
 }
 
-struct integer_converter
+struct base_converter
+{
+	static mutex m_mutex;
+};
+
+struct integer_converter:base_converter
 {
 	integer_converter()
 	{
+		lock_guard<mutex>::type lock(m_mutex);
 		if (!registered) {
 			bp::to_python_converter<integer,to_python>();
 			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
@@ -55,10 +61,11 @@ struct integer_converter
 	static bool registered;
 };
 
-struct rational_converter
+struct rational_converter:base_converter
 {
 	rational_converter()
 	{
+		lock_guard<mutex>::type lock(m_mutex);
 		if (!registered) {
 			bp::to_python_converter<rational,to_python>();
 			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
@@ -94,10 +101,11 @@ struct rational_converter
 	static bool registered;
 };
 
-struct real_converter
+struct real_converter:base_converter
 {
 	real_converter()
 	{
+		lock_guard<mutex>::type lock(m_mutex);
 		if (!registered) {
 			bp::to_python_converter<real,to_python>();
 			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
@@ -175,3 +183,4 @@ struct real_converter
 	}
 	static bool registered;
 };
+

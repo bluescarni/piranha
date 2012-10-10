@@ -78,7 +78,7 @@ struct series_exposer
 		namespace sn = boost::python::self_ns;
 		typedef typename std::tuple_element<I,std::tuple<T...>>::type interop_type;
 		interop_type in;
-		// Constrcutor from interoperable.
+		// Constructor from interoperable.
 		series_class.def(bp::init<const interop_type &>());
 		// Arithmetic and comparison with interoperable type.
 		// NOTE: in order to resolve ambiguities when we interop with other series types,
@@ -141,25 +141,29 @@ struct series_exposer
 	}
 	// Helpers to get coefficient list.
 	template <std::size_t I = 0u, typename... T>
-	static void build_coefficient_list(const std::tuple<T...> &,
+	static void build_coefficient_list(bp::list &, const std::tuple<T...> &,
 		typename std::enable_if<I == sizeof...(T)>::type * = piranha_nullptr)
 	{}
 	template <std::size_t I = 0u, typename... T>
-	static void build_coefficient_list(const std::tuple<T...> &t,
+	static void build_coefficient_list(bp::list &retval, const std::tuple<T...> &t,
 		typename std::enable_if<(I < sizeof...(T))>::type * = piranha_nullptr)
 	{
 		try {
-			cf_list.append(bp::make_tuple(bp::object(std::get<0u>(std::get<I>(t))),
+			retval.append(bp::make_tuple(bp::object(std::get<0u>(std::get<I>(t))),
 				std::get<1u>(std::get<I>(t)),I));
 		} catch (...) {
 			::PyErr_Clear();
-			cf_list.append(bp::make_tuple(bp::object(),std::get<1u>(std::get<I>(t)),I));
+			retval.append(bp::make_tuple(bp::object(),std::get<1u>(std::get<I>(t)),I));
 		}
-		build_coefficient_list<I + 1u,T...>(t);
+		build_coefficient_list<I + 1u,T...>(retval,t);
 	}
+	// Return the list of coefficient types available for the series. The list elements
+	// are tuples (instance,descriptor,index).
 	static bp::list get_coefficient_list()
 	{
-		return cf_list;
+		bp::list retval;
+		build_coefficient_list(retval,m_cf_types);
+		return retval;
 	}
 	// Copy operations.
 	template <typename S>
@@ -247,7 +251,7 @@ struct series_exposer
 		};
 		return s.transform(cpp_func);
 	}
-	// degree wrappers.
+	// degree() wrappers.
 	template <typename S>
 	static decltype(std::declval<S>().degree()) wrap_degree(const S &s)
 	{
@@ -448,7 +452,7 @@ struct series_exposer
 		power_series_exposer(series_class);
 		// Harmonic series methods.
 		harmonic_series_exposer(series_class);
-		// Substitutiona with self.
+		// Substitution with self.
 		series_class.def("subs",&series_type::template subs<series_type>);
 		series_class.def("ipow_subs",&series_type::template ipow_subs<series_type>);
 		// Latex.
@@ -459,23 +463,33 @@ struct series_exposer
 		main_exposer<I + 1u,T...>(t);
 	}
 	explicit series_exposer(const std::string &series_name, const CfTypes &cf_types,
-		const InteropTypes &interop_types):m_series_name(series_name),m_cf_types(cf_types),
-		m_interop_types(interop_types)
+		const InteropTypes &interop_types):m_series_name(series_name),m_interop_types(interop_types)
 	{
+		lock_guard<mutex>::type lock(m_mutex);
+		if (m_inited) {
+			return;
+		}
+		m_cf_types = cf_types;
 		main_exposer(m_cf_types);
-		// Build and expose the coefficient list.
-		// NOTE: not entirely sure here that this code will not be run multiple times on multiple imports.
-		// Hence, clear the list for safety.
-		cf_list = bp::list();
-		build_coefficient_list(m_cf_types);
 		bp::def((std::string("_") + m_series_name + std::string("_get_coefficient_list")).c_str(),
 			get_coefficient_list);
+		m_inited = true;
 	}
 	const std::string	m_series_name;
-	const CfTypes		m_cf_types;
 	const InteropTypes	m_interop_types;
-	static bp::list		cf_list;
+	// This needs to exist statically as it is used when building the coefficients list.
+	static CfTypes		m_cf_types;
+	// Synchronisation and one-time initialisation.
+	static bool		m_inited;
+	static mutex		m_mutex;
 };
 
 template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
-bp::list series_exposer<Series,CfTypes,InteropTypes>::cf_list;
+CfTypes series_exposer<Series,CfTypes,InteropTypes>::m_cf_types;
+
+template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
+bool series_exposer<Series,CfTypes,InteropTypes>::m_inited = false;
+
+template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
+mutex series_exposer<Series,CfTypes,InteropTypes>::m_mutex;
+

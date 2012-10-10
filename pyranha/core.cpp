@@ -64,6 +64,7 @@ using namespace piranha;
 #include "series_exposer.hpp"
 
 // Static initialisation.
+mutex base_converter::m_mutex;
 bool integer_converter::registered = false;
 bool rational_converter::registered = false;
 bool real_converter::registered = false;
