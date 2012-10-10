@@ -20,21 +20,12 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 	data->convertible = storage;
 }
 
-struct base_converter
-{
-	static mutex m_mutex;
-};
-
-struct integer_converter:base_converter
+struct integer_converter
 {
 	integer_converter()
 	{
-		lock_guard<mutex>::type lock(m_mutex);
-		if (!registered) {
-			bp::to_python_converter<integer,to_python>();
-			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
-			registered = true;
-		}
+		bp::to_python_converter<integer,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
 	}
 	struct to_python
 	{
@@ -58,19 +49,14 @@ struct integer_converter:base_converter
 	{
 		construct_from_str<integer>(obj_ptr,data,"integer");
 	}
-	static bool registered;
 };
 
-struct rational_converter:base_converter
+struct rational_converter
 {
 	rational_converter()
 	{
-		lock_guard<mutex>::type lock(m_mutex);
-		if (!registered) {
-			bp::to_python_converter<rational,to_python>();
-			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
-			registered = true;
-		}
+		bp::to_python_converter<rational,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
 	}
 	struct to_python
 	{
@@ -98,19 +84,14 @@ struct rational_converter:base_converter
 	{
 		construct_from_str<rational>(obj_ptr,data,"rational");
 	}
-	static bool registered;
 };
 
-struct real_converter:base_converter
+struct real_converter
 {
 	real_converter()
 	{
-		lock_guard<mutex>::type lock(m_mutex);
-		if (!registered) {
-			bp::to_python_converter<real,to_python>();
-			bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
-			registered = true;
-		}
+		bp::to_python_converter<real,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
 	}
 	struct to_python
 	{
@@ -181,6 +162,5 @@ struct real_converter:base_converter
 		::new (storage) real(std::string(start,s),prec);
 		data->convertible = storage;
 	}
-	static bool registered;
 };
 

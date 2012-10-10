@@ -465,31 +465,17 @@ struct series_exposer
 	explicit series_exposer(const std::string &series_name, const CfTypes &cf_types,
 		const InteropTypes &interop_types):m_series_name(series_name),m_interop_types(interop_types)
 	{
-		lock_guard<mutex>::type lock(m_mutex);
-		if (m_inited) {
-			return;
-		}
 		m_cf_types = cf_types;
 		main_exposer(m_cf_types);
 		bp::def((std::string("_") + m_series_name + std::string("_get_coefficient_list")).c_str(),
 			get_coefficient_list);
-		m_inited = true;
 	}
 	const std::string	m_series_name;
 	const InteropTypes	m_interop_types;
 	// This needs to exist statically as it is used when building the coefficients list.
 	static CfTypes		m_cf_types;
-	// Synchronisation and one-time initialisation.
-	static bool		m_inited;
-	static mutex		m_mutex;
 };
 
 template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
 CfTypes series_exposer<Series,CfTypes,InteropTypes>::m_cf_types;
-
-template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
-bool series_exposer<Series,CfTypes,InteropTypes>::m_inited = false;
-
-template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
-mutex series_exposer<Series,CfTypes,InteropTypes>::m_mutex;
 

@@ -63,11 +63,8 @@ using namespace piranha;
 #include "exceptions.hpp"
 #include "series_exposer.hpp"
 
-// Static initialisation.
-mutex base_converter::m_mutex;
-bool integer_converter::registered = false;
-bool rational_converter::registered = false;
-bool real_converter::registered = false;
+static mutex global_mutex;
+static bool inited = false;
 
 // Used for debugging on Python side.
 inline integer get_big_int()
@@ -77,6 +74,12 @@ inline integer get_big_int()
 
 BOOST_PYTHON_MODULE(_core)
 {
+	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
+	// if the module is loaded from multiple threads.
+	lock_guard<mutex>::type lock(global_mutex);
+	if (inited) {
+		return;
+	}
 	// Piranha environment setup.
 	environment env;
 	// Arithmetic converters.
@@ -124,4 +127,7 @@ BOOST_PYTHON_MODULE(_core)
 	settings_class.def("_set_max_term_output",settings::set_max_term_output).staticmethod("_set_max_term_output");
 	// Factorial.
 	bp::def("_factorial",&math::factorial);
+	// Set the inited flag.
+	inited = true;
 }
+
