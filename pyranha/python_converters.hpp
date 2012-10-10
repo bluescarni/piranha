@@ -144,6 +144,7 @@ struct real_converter
 		}
 		bp::handle<> str_rep(str_obj);
 		const char *s = ::PyString_AsString(str_rep.get());
+		// NOTE: the search for "'" is due to the string format of mpmath.mpf objects.
 		while (*s != '\0' && *s != '\'') {
 			++s;
 		}
