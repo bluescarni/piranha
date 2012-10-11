@@ -98,3 +98,4 @@ struct PIRANHA_PUBLIC zero_division_error: public base_exception
 }
 
 #endif
+
