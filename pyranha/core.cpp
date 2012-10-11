@@ -87,12 +87,12 @@ BOOST_PYTHON_MODULE(_core)
 	rational_converter ra_c;
 	real_converter re_c;
 	// Exceptions translation.
-	bp::register_exception_translator<boost::numeric::bad_numeric_cast>(bnc_translator);
-	bp::register_exception_translator<boost::numeric::positive_overflow>(po_translator);
-	bp::register_exception_translator<boost::numeric::negative_overflow>(no_translator);
-	bp::register_exception_translator<std::overflow_error>(oe_translator);
-	bp::register_exception_translator<zero_division_error>(zde_translator);
-	bp::register_exception_translator<not_implemented_error>(nie_translator);
+	generic_translate<&PyExc_ZeroDivisionError,zero_division_error>();
+	generic_translate<&PyExc_NotImplementedError,not_implemented_error>();
+	generic_translate<&PyExc_OverflowError,std::overflow_error>();
+	generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
+	generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
+	generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
