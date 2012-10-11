@@ -478,4 +478,3 @@ struct series_exposer
 
 template <template <typename...> class Series, typename CfTypes, typename InteropTypes>
 CfTypes series_exposer<Series,CfTypes,InteropTypes>::m_cf_types;
-

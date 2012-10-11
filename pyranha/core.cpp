@@ -130,4 +130,3 @@ BOOST_PYTHON_MODULE(_core)
 	// Set the inited flag.
 	inited = true;
 }
-

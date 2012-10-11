@@ -164,4 +164,3 @@ struct real_converter
 		data->convertible = storage;
 	}
 };
-
