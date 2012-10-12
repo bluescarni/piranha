@@ -25,7 +25,7 @@
 
 _series_types = ['polynomial', 'poisson_series']
 
-__all__ = _series_types + ['math', 'test', 'settings']
+__all__ = _series_types + ['celmec', 'math', 'test', 'settings']
 
 from _common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
 import threading as _thr

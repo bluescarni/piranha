@@ -224,7 +224,8 @@ def run_test_suite():
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest
-	from . import math, poisson_series, polynomial, test
+	from . import celmec, math, poisson_series, polynomial, test
+	doctest.testmod(celmec)
 	doctest.testmod(math)
 	doctest.testmod(poisson_series)
 	doctest.testmod(polynomial)
