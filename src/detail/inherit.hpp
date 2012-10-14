@@ -38,6 +38,8 @@ explicit Derived(T_ &&arg0, Args_ && ... args):Base(std::forward<T_>(arg0),std::
 
 // Assignment inheritance, activated if the base class is assignable and the argument is not
 // a base of Derived.
+// NOTE: here the is_base_of is not strictly necessary as above (where the copy/move constructor need to be implicit
+// and hence cannot be included in the macro), but we keep it this way for consistency.
 #define PIRANHA_USING_ASSIGNMENT(Derived,Base) \
 template <typename T_> \
 typename std::enable_if<piranha::is_assignable<Base,T_>::value && \
