@@ -231,3 +231,16 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place)
 	BOOST_CHECK((!is_subtractable_in_place<trivial,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable_in_place<std::string,std::string>::value));
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_is_assignable)
+{
+	// NOTE: on fundamental types one cannot call the assignment operator on an rvalue. On class types, it depends
+	// on the implementation of operator=().
+	// http://stackoverflow.com/questions/8832304/how-can-a-returned-object-be-assignable
+	BOOST_CHECK((is_assignable<int &,int>::value));
+	BOOST_CHECK((is_assignable<int &,double>::value));
+	BOOST_CHECK((is_assignable<double &,int>::value));
+	BOOST_CHECK((!is_assignable<int,int>::value));
+	BOOST_CHECK((is_assignable<integer,int>::value));
+	BOOST_CHECK((!is_assignable<int,integer>::value));
+}
