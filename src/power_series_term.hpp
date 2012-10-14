@@ -161,7 +161,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 		power_series_term(const power_series_term &) = default;
 		/// Defaulted move constructor.
 		power_series_term(power_series_term &&) = default;
-		PIRANHA_USING_CTOR(power_series_term,Term)
+		PIRANHA_USING_CTOR(power_series_term,base)
 		/// Trivial destructor.
 		~power_series_term() piranha_noexcept_spec(true)
 		{
@@ -175,7 +175,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 			base::operator=(std::move(other));
 			return *this;
 		}
-		PIRANHA_USING_ASSIGNMENT(power_series_term,Term)
+		PIRANHA_USING_ASSIGNMENT(power_series_term,base)
 		/// Total degree.
 		/**
 		 * @param[in] ss reference set of arguments.
