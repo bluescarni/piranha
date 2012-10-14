@@ -30,6 +30,7 @@
 #include "concepts/term.hpp"
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"
+#include "detail/inherit.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -160,18 +161,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 		power_series_term(const power_series_term &) = default;
 		/// Defaulted move constructor.
 		power_series_term(power_series_term &&) = default;
-		/// Forwarding constructor.
-		/**
-		 * This constructor, activated only if the number of arguments is at least 2 or if the only argument does not derive from piranha::power_series_term
-		 * (disregarding cv-qualifications or references), will perfectly forward its arguments to a constructor in the base class.
-		 * 
-		 * @param[in] arg1 first argument for construction.
-		 * @param[in] argn additional construction arguments.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked base constructor.
-		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series_term,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit power_series_term(T &&arg1, Args && ... argn): base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		PIRANHA_USING_CTOR(power_series_term,Term)
 		/// Trivial destructor.
 		~power_series_term() piranha_noexcept_spec(true)
 		{
@@ -185,23 +175,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 			base::operator=(std::move(other));
 			return *this;
 		}
-		/// Generic assignment operator.
-		/**
-		 * Will forward the assignment to the base class. This assignment operator is activated only when \p T does not derive from
-		 * piranha::power_series_term.
-		 * 
-		 * @param[in] x assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the assignment operator in the base class.
-		 */
-		template <typename T>
-		typename std::enable_if<!std::is_base_of<power_series_term,typename std::decay<T>::type>::value,power_series_term &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_USING_ASSIGNMENT(power_series_term,Term)
 		/// Total degree.
 		/**
 		 * @param[in] ss reference set of arguments.
@@ -272,8 +246,7 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 		power_series_term() = default;
 		power_series_term(const power_series_term &) = default;
 		power_series_term(power_series_term &&) = default;
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_base_of<power_series_term,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit power_series_term(T &&arg1, Args && ... argn): base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		PIRANHA_USING_CTOR(power_series_term,base)
 		~power_series_term() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
@@ -284,12 +257,7 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 			base::operator=(std::move(other));
 			return *this;
 		}
-		template <typename T>
-		typename std::enable_if<!std::is_base_of<power_series_term,typename std::decay<T>::type>::value,power_series_term &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_USING_ASSIGNMENT(power_series_term,base)
 };
 
 /// Type-trait for power series term.

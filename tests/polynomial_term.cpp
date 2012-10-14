@@ -27,6 +27,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 #include "../src/concepts/multipliable_term.hpp"
@@ -89,6 +90,10 @@ struct constructor_tester
 			term_type t_from_ot(Cf(ot.m_cf),key_type(ot.m_key,ed));
 			BOOST_CHECK_EQUAL(t_from_ot.m_cf,Cf(float(7)));
 			BOOST_CHECK(t_from_ot.m_key == key_type{Expo(2)});
+			// Type trait check.
+			BOOST_CHECK((std::is_constructible<term_type,Cf,key_type>::value));
+			BOOST_CHECK((!std::is_constructible<term_type,Cf,Expo>::value));
+			BOOST_CHECK((!std::is_constructible<term_type,std::string,key_type,int>::value));
 		}
 	};
 	template <typename Cf>

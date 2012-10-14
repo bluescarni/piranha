@@ -93,9 +93,12 @@ struct degree_tester
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b"),key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 1));
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b") * cf_type2("a"),key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 2));
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b") * cf_type2("a") + 1,key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 1));
-			// Check type trait.
+			// Check type traits.
 			BOOST_CHECK(is_power_series_term<term_type1>::value);
 			BOOST_CHECK(is_power_series_term<term_type2>::value);
+			BOOST_CHECK((std::is_constructible<term_type1,Cf,key_type1>::value));
+			BOOST_CHECK((!std::is_constructible<term_type1,Cf,std::string>::value));
+			BOOST_CHECK((!std::is_constructible<term_type1,Cf,std::string,int>::value));
 		}
 	};
 	template <typename Cf>

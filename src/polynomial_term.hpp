@@ -30,6 +30,7 @@
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "config.hpp"
+#include "detail/inherit.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "kronecker_monomial.hpp"
@@ -128,19 +129,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		polynomial_term(const polynomial_term &) = default;
 		/// Defaulted move constructor.
 		polynomial_term(polynomial_term &&) = default;
-		/// Generic constructor.
-		/**
-		 * Will perfectly forward all arguments to a matching constructor in piranha::base_term.
-		 * This constructor is enabled only if the number of variadic arguments is nonzero or
-		 * if \p T is not of the same type as \p this.
-		 * 
-		 * @param[in] arg1 first argument to be forwarded to the base constructor.
-		 * @param[in] params other arguments to be forwarded to the base constructor.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked constructor in piranha::base_term.
-		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_term,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit polynomial_term(T &&arg1, Args && ... params):base(std::forward<T>(arg1),std::forward<Args>(params)...) {}
+		PIRANHA_USING_CTOR(polynomial_term,base)
 		/// Trivial destructor.
 		~polynomial_term() piranha_noexcept_spec(true)
 		{

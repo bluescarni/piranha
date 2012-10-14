@@ -31,6 +31,7 @@
 #include "concepts/multipliable_term.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
+#include "detail/inherit.hpp"
 #include "math.hpp"
 #include "power_series_term.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
@@ -86,19 +87,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		poisson_series_term(const poisson_series_term &) = default;
 		/// Defaulted move constructor.
 		poisson_series_term(poisson_series_term &&) = default;
-		/// Generic constructor.
-		/**
-		 * Will perfectly forward all arguments to a matching constructor in piranha::base_term.
-		 * This constructor is enabled only if the number of variadic arguments is nonzero or
-		 * if \p T is not of the same type as \p this.
-		 * 
-		 * @param[in] arg1 first argument to be forwarded to the base constructor.
-		 * @param[in] params other arguments to be forwarded to the base constructor.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked constructor in piranha::base_term.
-		 */
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<poisson_series_term,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit poisson_series_term(T &&arg1, Args && ... params):base(std::forward<T>(arg1),std::forward<Args>(params)...) {}
+		PIRANHA_USING_CTOR(poisson_series_term,base)
 		/// Trivial destructor.
 		~poisson_series_term() piranha_noexcept_spec(true)
 		{
