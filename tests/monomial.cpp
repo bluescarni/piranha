@@ -30,6 +30,7 @@
 #include <initializer_list>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -112,6 +113,11 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k7[0],T(0));
 		BOOST_CHECK_EQUAL(k7[1],T(0));
 		BOOST_CHECK_EQUAL(k7[2],T(0));
+		// Type trait check.
+		BOOST_CHECK((std::is_constructible<monomial_type,monomial_type>::value));
+		BOOST_CHECK((std::is_constructible<monomial_type,symbol_set>::value));
+		BOOST_CHECK((!std::is_constructible<monomial_type,std::string>::value));
+		BOOST_CHECK((!std::is_constructible<monomial_type,monomial_type,int>::value));
 	}
 };
 

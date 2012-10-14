@@ -27,9 +27,11 @@
 #include <boost/mpl/vector.hpp>
 #include <numeric>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "../src/config.hpp"
+#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
@@ -58,8 +60,7 @@ class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 			return *this;
 		}
 		// Needed to satisfy concept checking.
-		template <typename... Args>
-		explicit g_term_type(Args && ... params):base(std::forward<Args>(params)...) {}
+		PIRANHA_USING_CTOR(g_term_type,base)
 };
 
 struct constructor_tester
@@ -90,6 +91,9 @@ struct constructor_tester
 			term_type term(Cf(1),Key{value_type(2)});
 			term = term_type(Cf(2),Key{value_type(1)});
 			BOOST_CHECK_EQUAL(term.m_cf,Cf(2));
+			// Type trait test.
+			BOOST_CHECK((std::is_constructible<term_type,Cf,Key>::value));
+			BOOST_CHECK((!std::is_constructible<term_type,Cf,std::string>::value));
 		}
 	};
 	template <typename Cf>
