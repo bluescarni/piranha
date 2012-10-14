@@ -39,6 +39,7 @@
 #include "array_key.hpp"
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
+#include "detail/inherit.hpp"
 #include "integer.hpp"
 #include "rational.hpp"
 #include "math.hpp"
@@ -98,20 +99,7 @@ class monomial: public array_key<T,monomial<T>>
 		 */
 		template <typename U>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
-		/// Forwarding constructor.
-		/**
-		 * Will perfectly forward the arguments to a corresponding constructor in piranha::array_key.
-		 * This constructor is enabled only if the number of variadic arguments is nonzero or
-		 * if \p U is not of the same type as \p this.
-		 * 
-		 * @param[in] arg1 first argument to be forwarded to the base constructor.
-		 * @param[in] params other arguments to be forwarded to the base constructor.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked constructor from piranha::array_key.
-		 */
-		template <typename U, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<monomial,typename std::decay<U>::type>::value>::type*& = enabler>
-		explicit monomial(U &&arg1, Args && ... params):
-			base(std::forward<U>(arg1),std::forward<Args>(params)...) {}
+		PIRANHA_USING_CTOR(monomial,base)
 		/// Trivial destructor.
 		~monomial() piranha_noexcept_spec(true)
 		{
