@@ -419,8 +419,11 @@ class series: series_binary_operators, detail::series_tag
 			typedef typename std::decay<T>::type::term_type other_term_type;
 			typedef typename other_term_type::cf_type other_cf_type;
 			typedef typename other_term_type::key_type other_key_type;
+			// NOTE: this essentially is an is_term_insertable check. Keep it in mind if we implement
+			// enable/disable of insertion method in the future.
 			static const bool value = std::is_same<term_type,other_term_type>::value ||
-				std::is_constructible<term_type,other_cf_type,other_key_type>::value;
+				(std::is_constructible<typename term_type::cf_type,other_cf_type>:: value &&
+				std::is_constructible<typename term_type::key_type,other_key_type,symbol_set>:: value);
 		};
 		template <typename T>
 		struct generic_ctor_enabler<T,typename std::enable_if<
