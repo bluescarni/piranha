@@ -37,6 +37,7 @@
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
+#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
@@ -48,6 +49,7 @@
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -78,14 +80,8 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 			}
 			return *this;
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit g_series_type(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		template <typename T>
-		typename std::enable_if<!std::is_same<g_series_type,typename std::decay<T>::type>::value,g_series_type &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_USING_CTOR(g_series_type,base)
+		PIRANHA_USING_ASSIGNMENT(g_series_type,base)
 		// Provide fake sin/cos methods with wrong sigs.
 		g_series_type sin()
 		{
@@ -121,14 +117,8 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 			}
 			return *this;
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type2,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit g_series_type2(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		template <typename T>
-		typename std::enable_if<!std::is_same<g_series_type2,typename std::decay<T>::type>::value,g_series_type2 &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_USING_CTOR(g_series_type2,base)
+		PIRANHA_USING_ASSIGNMENT(g_series_type2,base)
 		// Provide fake sin/cos methods to test math overloads.
 		g_series_type2 sin() const
 		{
@@ -293,6 +283,14 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s5o.m_container.begin()->m_cf.m_container.begin()->m_cf == 1);
 			// Truncator getter.
 			BOOST_CHECK_NO_THROW(s5o.get_truncator());
+			// Type traits.
+			BOOST_CHECK((std::is_constructible<series_type,series_type>::value));
+			BOOST_CHECK((!std::is_constructible<series_type,series_type,int>::value));
+			BOOST_CHECK((std::is_constructible<series_type2,series_type>::value));
+			BOOST_CHECK((std::is_constructible<series_type3,series_type>::value));
+			BOOST_CHECK((is_assignable<series_type,int>::value));
+			BOOST_CHECK((is_assignable<series_type,series_type2>::value));
+			BOOST_CHECK((!is_assignable<series_type,symbol_set>::value));
 		}
 	};
 	template <typename Cf>

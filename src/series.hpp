@@ -401,6 +401,35 @@ class series: series_binary_operators, detail::series_tag
 		}
 		// Generic construction
 		// ====================
+		// TMP for the generic constructor.
+		// NOTE: this logic is a slight repetition of the helper methods below. However, since the enabling
+		// conditions below are already quite complicated and split in lvalue/rvalue,
+		// it might be better to leave this as is.
+		template <typename T, typename = void>
+		struct generic_ctor_enabler
+		{
+			static const bool value = std::is_constructible<typename term_type::cf_type,T>::value;
+		};
+		template <typename T>
+		struct generic_ctor_enabler<T,typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			(echelon_size<term_type>::value == echelon_size<typename std::decay<T>::type::term_type>::value)
+			>::type>
+		{
+			typedef typename std::decay<T>::type::term_type other_term_type;
+			typedef typename other_term_type::cf_type other_cf_type;
+			typedef typename other_term_type::key_type other_key_type;
+			static const bool value = std::is_same<term_type,other_term_type>::value ||
+				std::is_constructible<term_type,other_cf_type,other_key_type>::value;
+		};
+		template <typename T>
+		struct generic_ctor_enabler<T,typename std::enable_if<
+			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			(echelon_size<term_type>::value < echelon_size<typename std::decay<T>::type::term_type>::value)
+			>::type>
+		{
+			static const bool value = false;
+		};
 		// Series with same echelon size, same term type, move.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
@@ -834,7 +863,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		series(const series &) = default;
 		/// Defaulted move constructor.
-		series(series &&other) piranha_noexcept_spec(true) : m_symbol_set(std::move(other.m_symbol_set)),m_container(std::move(other.m_container)) {}
+		series(series &&other) piranha_noexcept_spec(true): m_symbol_set(std::move(other.m_symbol_set)),m_container(std::move(other.m_container)) {}
 		/// Generic constructor.
 		/**
 		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
@@ -845,7 +874,7 @@ class series: series_binary_operators, detail::series_tag
 		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
 		 *   - else:
 		 *     - the symbol set of \p x is forwarded to construct the symbol set of this and all terms from \p x are inserted into \p this
-		 *       (after conversion to \p term_type);
+		 *       (after conversion to \p term_type via binary constructor from coefficient and key);
 		 * - else:
 		 *   - \p x is used to construct a new term as follows:
 		 *     - \p x is forwarded to construct a coefficient;
@@ -853,7 +882,8 @@ class series: series_binary_operators, detail::series_tag
 		 *     - coefficient and key are used to construct the new term instance;
 		 *   - the new term is inserted into \p this.
 		 * 
-		 * If \p x is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
+		 * If \p x is an instance of piranha::series with echelon size larger than the calling type, or any constructor needed in the
+		 * algorithm outlined above is not available, this constructor will be disabled.
 		 * 
 		 * @param[in] x object to construct from.
 		 * 
@@ -865,7 +895,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - the copy constructor of piranha::series.
 		 */
 		template <typename T>
-		explicit series(T &&x, typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+		explicit series(T &&x, typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value &&
+			generic_ctor_enabler<T>::value>::type * = piranha_nullptr)
 		{
 			dispatch_generic_construction(std::forward<T>(x));
 		}
@@ -908,7 +939,8 @@ class series: series_binary_operators, detail::series_tag
 		/// Generic assignment operator.
 		/**
 		 * This template constructor is enabled only if \p T does not derive from piranha::series of \p Term and
-		 * \p Derived. Generic assignment is equivalent to assignment to a piranha::series constructed
+		 * \p Derived, and \p x can be used to construct piranha::series.
+		 * That is, generic assignment is equivalent to assignment to a piranha::series constructed
 		 * via the generic constructor.
 		 * 
 		 * @param[in] x assignment argument.
@@ -918,8 +950,9 @@ class series: series_binary_operators, detail::series_tag
 		 * @throws unspecified any exception thrown by the generic constructor.
 		 */
 		template <typename T>
-		typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value,series &>::type
-			operator=(T &&x)
+		typename std::enable_if<!std::is_base_of<series,typename std::decay<T>::type>::value &&
+			std::is_constructible<series,T>::value,
+			series &>::type operator=(T &&x)
 		{
 			return operator=(series(std::forward<T>(x)));
 		}
