@@ -94,7 +94,8 @@ class base_term: detail::base_term_tag
 		base_term(base_term &&other) piranha_noexcept_spec(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
 		/// Constructor from generic coefficient and key.
 		/**
-		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key.
+		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key. The constructor is
+		 * activated only if coefficient and key are constructible from types \p T and \p U.
 		 * 
 		 * @param[in] cf argument used for the construction of the coefficient.
 		 * @param[in] key argument used for the construction of the key.
@@ -102,7 +103,9 @@ class base_term: detail::base_term_tag
 		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
 		 */
 		template <typename T, typename U>
-		explicit base_term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
+		explicit base_term(T &&cf, U &&key, typename std::enable_if<
+			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
+			>::type * = piranha_nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
 		~base_term() piranha_noexcept_spec(true)
 		{
