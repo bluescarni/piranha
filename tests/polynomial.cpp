@@ -37,6 +37,7 @@
 
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
+#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
@@ -74,8 +75,7 @@ class polynomial_alt:
 			// Construct and insert the term.
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial_alt,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit polynomial_alt(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		PIRANHA_USING_CTOR(polynomial_alt,base)
 		~polynomial_alt() = default;
 		polynomial_alt &operator=(const polynomial_alt &) = default;
 		polynomial_alt &operator=(polynomial_alt &&other) piranha_noexcept_spec(true)
@@ -83,6 +83,7 @@ class polynomial_alt:
 			base::operator=(std::move(other));
 			return *this;
 		}
+		PIRANHA_USING_ASSIGNMENT(polynomial_alt,base)
 };
 
 struct constructor_tester
@@ -127,6 +128,11 @@ struct constructor_tester
 			BOOST_CHECK(p7 == p6);
 			BOOST_CHECK(p6 != p8);
 			BOOST_CHECK(p8 != p6);
+			// Type traits checks.
+			BOOST_CHECK((std::is_constructible<p_type,Cf>::value));
+			BOOST_CHECK((std::is_constructible<p_type,std::string>::value));
+			BOOST_CHECK((std::is_constructible<p_type2,p_type1>::value));
+			BOOST_CHECK((!std::is_constructible<p_type,symbol>::value));
 		}
 	};
 	template <typename Cf>
@@ -158,6 +164,10 @@ struct assignment_tester
 			BOOST_CHECK(p1 == integer(10));
 			p1 = "x";
 			BOOST_CHECK(p1 == p_type("x"));
+			BOOST_CHECK((is_assignable<p_type,Cf>::value));
+			BOOST_CHECK((is_assignable<p_type,std::string>::value));
+			BOOST_CHECK((is_assignable<p_type,p_type>::value));
+			BOOST_CHECK((!is_assignable<p_type,symbol>::value));
 		}
 	};
 	template <typename Cf>
