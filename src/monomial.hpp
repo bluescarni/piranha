@@ -39,7 +39,7 @@
 #include "array_key.hpp"
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
-#include "detail/inherit.hpp"
+#include "forwarding.hpp"
 #include "integer.hpp"
 #include "rational.hpp"
 #include "math.hpp"
@@ -99,7 +99,7 @@ class monomial: public array_key<T,monomial<T>>
 		 */
 		template <typename U>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
-		PIRANHA_USING_CTOR(monomial,base)
+		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
 		~monomial() piranha_noexcept_spec(true)
 		{

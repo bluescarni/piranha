@@ -35,6 +35,7 @@
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "forwarding.hpp"
 #include "integer.hpp"
 #include "math.hpp"
 #include "poisson_series_term.hpp"
@@ -79,14 +80,6 @@ class poisson_series:
 	detail::poisson_series_tag
 {
 		typedef power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>> base;
-		template <typename T, typename... Args>
-		struct generic_enabler
-		{
-			static const bool value = (sizeof...(Args) != 0u) ||
-				(!std::is_same<typename std::decay<T>::type,poisson_series>::value &&
-				!std::is_same<typename std::decay<T>::type,const char *>::value &&
-				!std::is_same<typename std::decay<T>::type,std::string>::value);
-		};
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
 			std::is_same<T,std::true_type>::value>::type * = piranha_nullptr) const
@@ -140,15 +133,10 @@ class poisson_series:
 		template <bool IsCos>
 		poisson_series sin_cos_cf_impl() const
 		{
-			if (IsCos) {
-				// NOTE: here we cast back to the base class, and then we have to move-construct the output
-				// Poisson series as the math::cos functor will produce an output of the type of the base class.
-				return poisson_series(math::cos(
-					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
-			} else {
-				return poisson_series(math::sin(
-					*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this)));
-			}
+			// NOTE: here we cast back to the base class, and then we have to move-construct the output
+			// Poisson series as the math::cos functor will produce an output of the type of the base class.
+			return ((IsCos) ? poisson_series(math::cos(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))) :
+				poisson_series(math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))));
 		}
 		// Subs typedefs.
 		template <typename T>
@@ -291,35 +279,7 @@ class poisson_series:
 		poisson_series(const poisson_series &) = default;
 		/// Defaulted move constructor.
 		poisson_series(poisson_series &&) = default;
-		/// Constructor from string.
-		/**
-		 * This constructor is enabled only if \p Str is a string type (either C or C++) and the coefficient type of the series
-		 * is an instance of piranha::polyomial. The string will be forwarded to the constructor of the base series and will result
-		 * in the construction of a single-coefficient Poisson series in which the only coefficient is a polynomial representing
-		 * the symbolic quantity \p str.
-		 * 
-		 * @param[in] str name of the symbolic quantity that the constructed series will represent.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked based constructor.
-		 */
-		template <typename Str>
-		poisson_series(Str &&str, typename std::enable_if<
-			(std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value) &&
-			std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = piranha_nullptr) : base(std::forward<Str>(str))
-		{}
-		/// Generic constructor.
-		/**
-		 * This constructor, activated only if the number of arguments is at least 2 or if the only argument is not of type
-		 * piranha::poisson_series or string, will perfectly forward its arguments to a constructor in the base class.
-		 * 
-		 * @param[in] arg1 first argument for construction.
-		 * @param[in] argn additional construction arguments.
-		 * 
-		 * @throws unspecified any exception thrown by the invoked base constructor.
-		 */
-		template <typename T, typename... Args, typename std::enable_if<generic_enabler<T,Args...>::value>::type*& = enabler>
-		explicit poisson_series(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
+		PIRANHA_FORWARDING_CTOR(poisson_series,base)
 		/// Trivial destructor.
 		~poisson_series() piranha_noexcept_spec(true)
 		{
@@ -338,42 +298,7 @@ class poisson_series:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		/// Assignment from string.
-		/**
-		 * This operator is enabled only if \p Str is a string type (either C or C++) and the coefficient type of the series
-		 * is an instance of piranha::polyomial. The operation is equivalent to assignment to a series constructed from \p str.
-		 * 
-		 * @param[in] str name of the symbolic quantity that will be assigned to \p this.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the constructor from string.
-		 */
-		template <typename Str>
-		typename std::enable_if<(std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value) &&
-			std::is_base_of<detail::polynomial_tag,Cf>::value,poisson_series &>::type operator=(Str &&str)
-		{
-			operator=(poisson_series(std::forward<Str>(str)));
-			return *this;
-		}
-		/// Generic assignment operator.
-		/**
-		 * Will forward the assignment to the base class. This assignment operator is activated only when \p T is not
-		 * piranha::poisson_series or a string type.
-		 * 
-		 * @param[in] x assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the assignment operator in the base class.
-		 */
-		template <typename T>
-		typename std::enable_if<generic_enabler<T>::value,poisson_series &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_FORWARDING_ASSIGNMENT(poisson_series,base)
 		/// Override sine implementation.
 		/**
 		 * This method will override the default math::sin() implementation in case the coefficient type is an instance of

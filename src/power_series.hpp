@@ -27,8 +27,8 @@
 
 #include "concepts/power_series_term.hpp"
 #include "concepts/series.hpp"
-#include "detail/inherit.hpp"
 #include "detail/series_fwd.hpp"
+#include "forwarding.hpp"
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -148,7 +148,7 @@ class power_series: public Series,detail::power_series_tag
 		power_series(const power_series &) = default;
 		/// Defaulted move constructor.
 		power_series(power_series &&) = default;
-		PIRANHA_USING_CTOR(power_series,base)
+		PIRANHA_FORWARDING_CTOR(power_series,base)
 		/// Trivial destructor.
 		~power_series() piranha_noexcept_spec(true)
 		{
@@ -167,7 +167,7 @@ class power_series: public Series,detail::power_series_tag
 			base::operator=(std::move(other));
 			return *this;
 		}
-		PIRANHA_USING_ASSIGNMENT(power_series,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 		/// Total degree.
 		/**
 		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated using piranha::power_series_term::degree().
@@ -295,7 +295,7 @@ class power_series<Series,typename std::enable_if<!is_power_series_term<typename
 		power_series() = default;
 		power_series(const power_series &) = default;
 		power_series(power_series &&) = default;
-		PIRANHA_USING_CTOR(power_series,base)
+		PIRANHA_FORWARDING_CTOR(power_series,base)
 		~power_series() piranha_noexcept_spec(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
@@ -306,7 +306,7 @@ class power_series<Series,typename std::enable_if<!is_power_series_term<typename
 			base::operator=(std::move(other));
 			return *this;
 		}
-		PIRANHA_USING_ASSIGNMENT(power_series,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 };
 
 /// Type-trait for power series.

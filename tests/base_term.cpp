@@ -32,8 +32,8 @@
 #include <utility>
 
 #include "../src/config.hpp"
-#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -61,7 +61,7 @@ class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 			return *this;
 		}
 		// Needed to satisfy concept checking.
-		PIRANHA_USING_CTOR(g_term_type,base)
+		PIRANHA_FORWARDING_CTOR(g_term_type,base)
 };
 
 struct constructor_tester

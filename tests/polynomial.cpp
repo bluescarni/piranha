@@ -37,8 +37,8 @@
 
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
-#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
@@ -75,7 +75,7 @@ class polynomial_alt:
 			// Construct and insert the term.
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
-		PIRANHA_USING_CTOR(polynomial_alt,base)
+		PIRANHA_FORWARDING_CTOR(polynomial_alt,base)
 		~polynomial_alt() = default;
 		polynomial_alt &operator=(const polynomial_alt &) = default;
 		polynomial_alt &operator=(polynomial_alt &&other) piranha_noexcept_spec(true)
@@ -83,7 +83,7 @@ class polynomial_alt:
 			base::operator=(std::move(other));
 			return *this;
 		}
-		PIRANHA_USING_ASSIGNMENT(polynomial_alt,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(polynomial_alt,base)
 };
 
 struct constructor_tester

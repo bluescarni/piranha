@@ -49,11 +49,11 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "degree_truncator_settings.hpp"
-#include "detail/inherit.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
+#include "forwarding.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
@@ -234,7 +234,7 @@ class polynomial:
 		{
 			construct_from_string(std::forward<Str>(name));
 		}
-		PIRANHA_USING_CTOR(polynomial,base)
+		PIRANHA_FORWARDING_CTOR(polynomial,base)
 		/// Trivial destructor.
 		~polynomial() piranha_noexcept_spec(true)
 		{
@@ -284,7 +284,7 @@ class polynomial:
 			operator=(polynomial(name));
 			return *this;
 		}
-		PIRANHA_USING_ASSIGNMENT(polynomial,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 		/// Override default exponentiation method.
 		/**
 		 * This template method is enabled only if the coefficient type

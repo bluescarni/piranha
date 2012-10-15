@@ -37,9 +37,9 @@
 
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
-#include "../src/detail/inherit.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial_term.hpp"
@@ -80,8 +80,8 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 			}
 			return *this;
 		}
-		PIRANHA_USING_CTOR(g_series_type,base)
-		PIRANHA_USING_ASSIGNMENT(g_series_type,base)
+		PIRANHA_FORWARDING_CTOR(g_series_type,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
 		// Provide fake sin/cos methods with wrong sigs.
 		g_series_type sin()
 		{
@@ -117,8 +117,8 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 			}
 			return *this;
 		}
-		PIRANHA_USING_CTOR(g_series_type2,base)
-		PIRANHA_USING_ASSIGNMENT(g_series_type2,base)
+		PIRANHA_FORWARDING_CTOR(g_series_type2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
 		// Provide fake sin/cos methods to test math overloads.
 		g_series_type2 sin() const
 		{

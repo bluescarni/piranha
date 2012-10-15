@@ -31,7 +31,7 @@
 #include "concepts/multipliable_term.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
-#include "detail/inherit.hpp"
+#include "forwarding.hpp"
 #include "math.hpp"
 #include "power_series_term.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
@@ -87,7 +87,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		poisson_series_term(const poisson_series_term &) = default;
 		/// Defaulted move constructor.
 		poisson_series_term(poisson_series_term &&) = default;
-		PIRANHA_USING_CTOR(poisson_series_term,base)
+		PIRANHA_FORWARDING_CTOR(poisson_series_term,base)
 		/// Trivial destructor.
 		~poisson_series_term() piranha_noexcept_spec(true)
 		{

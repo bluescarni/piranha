@@ -30,9 +30,9 @@
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "config.hpp"
-#include "detail/inherit.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
+#include "forwarding.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
@@ -129,7 +129,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		polynomial_term(const polynomial_term &) = default;
 		/// Defaulted move constructor.
 		polynomial_term(polynomial_term &&) = default;
-		PIRANHA_USING_CTOR(polynomial_term,base)
+		PIRANHA_FORWARDING_CTOR(polynomial_term,base)
 		/// Trivial destructor.
 		~polynomial_term() piranha_noexcept_spec(true)
 		{
