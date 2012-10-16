@@ -37,7 +37,6 @@
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {

@@ -32,7 +32,7 @@
 #include "detail/base_term_fwd.hpp"
 #include "forwarding.hpp"
 #include "symbol_set.hpp"
-#include "type_traits.hpp"
+#include "type_traits.hpp" // For has_degree.
 
 namespace piranha
 {

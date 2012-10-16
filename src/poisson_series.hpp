@@ -43,7 +43,6 @@
 #include "series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {

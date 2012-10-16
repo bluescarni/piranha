@@ -34,7 +34,6 @@
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {

@@ -39,7 +39,6 @@
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
-#include "type_traits.hpp"
 #include "univariate_monomial.hpp"
 
 namespace piranha

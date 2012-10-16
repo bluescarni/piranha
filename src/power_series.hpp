@@ -31,7 +31,7 @@
 #include "forwarding.hpp"
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
-#include "type_traits.hpp"
+#include "type_traits.hpp" // For has_degree.
 
 namespace piranha
 {

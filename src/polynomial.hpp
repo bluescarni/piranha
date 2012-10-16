@@ -69,7 +69,6 @@
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "truncator.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {

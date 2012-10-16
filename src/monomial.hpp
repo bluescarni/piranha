@@ -45,7 +45,6 @@
 #include "math.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {
