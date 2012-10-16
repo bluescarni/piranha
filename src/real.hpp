@@ -44,7 +44,6 @@
 #include "integer.hpp"
 #include "math.hpp"
 #include "rational.hpp"
-#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -965,9 +964,9 @@ class PIRANHA_PUBLIC real
 		 * 
 		 * @throws std::overflow_error if the conversion fails in one of the ways described above.
 		 */
-		template <typename T, typename std::enable_if<integer::is_interop_type<T>::value ||
+		template <typename T, typename = typename std::enable_if<integer::is_interop_type<T>::value ||
 			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type*& = enabler>
+			std::is_same<T,rational>::value>::type>
 			explicit operator T() const
 		{
 			return convert_to_impl<T>();

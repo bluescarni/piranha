@@ -37,17 +37,8 @@
 #include "detail/base_term_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 
-// TODO:
-// - check inclusion of this header -> only uses are in concept, the enabler thing and the has_type.
-
 namespace piranha
 {
-
-/// Enabler variable.
-/**
- * @see http://boost.2283326.n4.nabble.com/New-powerful-way-to-use-enable-if-in-C-0x-td3442723.html.
- */
-extern void *enabler;
 
 /// Type-trait to test if type is a tuple.
 /**

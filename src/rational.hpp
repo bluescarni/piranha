@@ -896,7 +896,7 @@ class rational
 		 * @throws std::overflow_error if the conversion to an integral type other than bool results in (negative) overflow, or if
 		 * conversion to a floating-point type lacking infinity overflows.
 		 */
-		template <typename T, typename std::enable_if<integer::is_interop_type<T>::value || std::is_same<T,integer>::value>::type*& = enabler>
+		template <typename T, typename = typename std::enable_if<integer::is_interop_type<T>::value || std::is_same<T,integer>::value>::type>
 		explicit operator T() const
 		{
 			return convert_to_impl<T>();

@@ -34,7 +34,6 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/rational.hpp"
 #include "../src/series.hpp"
-#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -65,14 +64,8 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 			}
 			return *this;
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<g_series_type,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit g_series_type(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		template <typename T>
-		typename std::enable_if<!std::is_same<g_series_type,typename std::decay<T>::type>::value,g_series_type &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_FORWARDING_CTOR(g_series_type,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
 };
 
 struct concept_tester

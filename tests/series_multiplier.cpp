@@ -36,6 +36,7 @@
 #include "../src/echelon_size.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/power_series.hpp"
@@ -73,14 +74,8 @@ class polynomial:
 			}
 			return *this;
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit polynomial(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		template <typename T>
-		typename std::enable_if<!std::is_same<polynomial,typename std::decay<T>::type>::value,polynomial &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_FORWARDING_CTOR(polynomial,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 };
 
 namespace piranha
@@ -371,14 +366,8 @@ class polynomial2:
 			}
 			return *this;
 		}
-		template <typename T, typename... Args, typename std::enable_if<sizeof...(Args) || !std::is_same<polynomial2,typename std::decay<T>::type>::value>::type*& = enabler>
-		explicit polynomial2(T &&arg1, Args && ... argn) : base(std::forward<T>(arg1),std::forward<Args>(argn)...) {}
-		template <typename T>
-		typename std::enable_if<!std::is_same<polynomial2,typename std::decay<T>::type>::value,polynomial2 &>::type operator=(T &&x)
-		{
-			base::operator=(std::forward<T>(x));
-			return *this;
-		}
+		PIRANHA_FORWARDING_CTOR(polynomial2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(polynomial2,base)
 };
 
 namespace piranha

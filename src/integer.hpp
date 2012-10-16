@@ -1192,7 +1192,7 @@ class integer
 		// NOTE: the reason why conversion to floating point has unspecified rounding direction (despite the fact that for double
 		// the rounding direction is well defined) is that we don't know what happens in the conversion from double to float (there
 		// the rounding direction is unspecified). So let's keep it vague.
-		template <typename T, typename std::enable_if<is_interop_type<T>::value>::type*& = enabler>
+		template <typename T, typename = typename std::enable_if<is_interop_type<T>::value>::type>
 		explicit operator T() const
 		{
 			return convert_to_impl<T>();
