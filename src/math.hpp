@@ -660,7 +660,7 @@ template <typename T, typename U>
 class is_exponentiable: detail::sfinae_types
 {
 		template <typename Base, typename Expo>
-		static auto test(Base const *b, Expo const *e) -> decltype(math::pow(*b,*e),yes());
+		static auto test(Base const *b, Expo const *e) -> decltype(math::pow(*b,*e),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
