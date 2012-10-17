@@ -24,6 +24,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -617,6 +618,64 @@ inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_l
 	return retval;
 }
 
+/// Default functor for the implementation of piranha::math::t_degree().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::t_degree() (the total trigonometric degree), the other for the binary form of piranha::math::t_degree()
+ * (the partial trigonometric degree).
+ */
+template <typename T, typename Enable = void>
+struct t_degree_impl
+{};
+
+/// Total trigonometric degree.
+/**
+ * A type exposing a trigonometric degree property, in analogy with the concept of polynomial degree,
+ * should be a linear combination of real or complex trigonometric functions. For instance, the Poisson series
+ * \f[
+ * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
+ * \f]
+ * has a trigonometric degree of 4.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
+ * 
+ * @param[in] x object whose trigonometric degree will be computed.
+ * 
+ * @return total trigonometric degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
+ */
+template <typename T>
+inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
+{
+	return t_degree_impl<T>()(x);
+}
+
+/// Partial trigonometric degree.
+/**
+ * The partial trigonometric degree is the trigonometric degree when only certain variables are considered in
+ * the computation.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
+ * 
+ * @param[in] x object whose trigonometric degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation of the degree.
+ * 
+ * @return partial trigonometric degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_degree_impl.
+ * 
+ * @see piranha::math::t_degree().
+ */
+template <typename T>
+inline auto t_degree(const T &x, const std::set<std::string> &names) -> decltype(t_degree_impl<T>()(x,names))
+{
+	return t_degree_impl<T>()(x,names);
+}
+
 }
 
 /// Type-trait for differentiable types.
@@ -674,6 +733,34 @@ class is_exponentiable: detail::sfinae_types
 		/// Value of the type trait.
 		static const bool value = (sizeof(test((T const *)piranha_nullptr,(U const *)piranha_nullptr)) == sizeof(yes));
 };
+
+// Static init.
+template <typename T, typename U>
+const bool is_exponentiable<T,U>::value;
+
+/// Type trait to detect if type has a trigonometric degree property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::t_degree()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_t_degree: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(U const *u) -> decltype(math::t_degree(*u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(U const *u) -> decltype(math::t_degree(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+};
+
+// Static init.
+template <typename T>
+const bool has_t_degree<T>::value;
 
 }
 
