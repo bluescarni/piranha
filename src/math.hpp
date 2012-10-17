@@ -635,6 +635,10 @@ class is_differentiable: detail::sfinae_types
 		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
 };
 
+// Static init.
+template <typename T>
+const bool is_differentiable<T>::value;
+
 /// Type-trait for integrable types.
 /**
  * The type-trait will be \p true if piranha::math::integrate() can be successfully called on instances of
@@ -650,6 +654,10 @@ class is_integrable: detail::sfinae_types
 		/// Value of the type trait.
 		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
 };
+
+// Static init.
+template <typename T>
+const bool is_integrable<T>::value;
 
 /// Type-trait for exponentiable types.
 /**
