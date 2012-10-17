@@ -40,16 +40,16 @@ template <typename Key>
 struct key_has_degree: sfinae_types
 {
 	template <typename T>
-	static auto test1(const T *t) -> decltype(t->degree(std::declval<symbol_set>()),yes());
+	static auto test1(const T *t) -> decltype(t->degree(std::declval<symbol_set>()),void(),yes());
 	static no test1(...);
 	template <typename T>
-	static auto test2(const T *t) -> decltype(t->degree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),yes());
+	static auto test2(const T *t) -> decltype(t->degree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),void(),yes());
 	static no test2(...);
 	template <typename T>
-	static auto test3(const T *t) -> decltype(t->ldegree(std::declval<symbol_set>()),yes());
+	static auto test3(const T *t) -> decltype(t->ldegree(std::declval<symbol_set>()),void(),yes());
 	static no test3(...);
 	template <typename T>
-	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),yes());
+	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<std::set<std::string>>(),std::declval<symbol_set>()),void(),yes());
 	static no test4(...);
 	static const bool value = (sizeof(test1((Key *)piranha_nullptr)) == sizeof(yes)) &&
 		(sizeof(test2((Key *)piranha_nullptr)) == sizeof(yes)) && (sizeof(test3((Key *)piranha_nullptr)) == sizeof(yes)) &&

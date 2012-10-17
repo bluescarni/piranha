@@ -183,16 +183,16 @@ class truncator_traits: detail::sfinae_types
 		typedef typename std::tuple_element<0u,_ttype>::type::term_type term_type1;
 		typedef typename std::tuple_element<1u,_ttype>::type::term_type term_type2;
 		template <typename T>
-		static auto test_sorting1(const T *t) -> decltype(t->compare_terms(std::declval<term_type1>(),std::declval<term_type1>()),yes());
+		static auto test_sorting1(const T *t) -> decltype(t->compare_terms(std::declval<term_type1>(),std::declval<term_type1>()),void(),yes());
 		static no test_sorting1(...);
 		template <typename T>
-		static auto test_sorting2(const T *t) -> decltype(t->compare_terms(std::declval<term_type2>(),std::declval<term_type2>()),yes());
+		static auto test_sorting2(const T *t) -> decltype(t->compare_terms(std::declval<term_type2>(),std::declval<term_type2>()),void(),yes());
 		static no test_sorting2(...);
 		template <typename T>
-		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type1>()),yes());
+		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type1>()),void(),yes());
 		static no test_filtering(...);
 		template <typename T>
-		static auto test_skipping(const T *t) -> decltype(t->skip(std::declval<term_type1>(),std::declval<term_type2>()),yes());
+		static auto test_skipping(const T *t) -> decltype(t->skip(std::declval<term_type1>(),std::declval<term_type2>()),void(),yes());
 		static no test_skipping(...);
 		static const bool is_sorting_impl = (sizeof(test_sorting1((const truncator_type *)piranha_nullptr)) == sizeof(yes) &&
 			sizeof(test_sorting2((const truncator_type *)piranha_nullptr)) == sizeof(yes));
@@ -247,11 +247,11 @@ class truncator_traits<Series>: detail::sfinae_types
 		typedef truncator<Series> truncator_type;
 		typedef typename Series::term_type term_type;
 		template <typename T>
-		static auto test_sorting(const T *t) -> decltype(t->compare_terms(std::declval<term_type>(),std::declval<term_type>()),yes());
+		static auto test_sorting(const T *t) -> decltype(t->compare_terms(std::declval<term_type>(),std::declval<term_type>()),void(),yes());
 		static no test_sorting(...);
 		static const bool is_sorting_impl = (sizeof(test_sorting((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 		template <typename T>
-		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type>()),yes());
+		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<term_type>()),void(),yes());
 		static no test_filtering(...);
 		static const bool is_filtering_impl = (sizeof(test_filtering((const truncator_type *)piranha_nullptr)) == sizeof(yes));
 	public:

@@ -628,7 +628,7 @@ template <typename T>
 class is_differentiable: detail::sfinae_types
 {
 		template <typename U>
-		static auto test(U const *t) -> decltype(math::partial(*t,""),yes());
+		static auto test(U const *t) -> decltype(math::partial(*t,""),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -644,7 +644,7 @@ template <typename T>
 class is_integrable: detail::sfinae_types
 {
 		template <typename U>
-		static auto test(U const *t) -> decltype(math::integrate(*t,""),yes());
+		static auto test(U const *t) -> decltype(math::integrate(*t,""),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.

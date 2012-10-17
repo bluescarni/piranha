@@ -34,6 +34,7 @@ struct sfinae_types
 {
 	typedef char yes;
 	typedef std::array<char,2u> no;
+	static_assert(sizeof(yes) != sizeof(no),"Invalid sizes.");
 };
 
 }

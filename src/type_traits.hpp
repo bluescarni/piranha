@@ -199,7 +199,7 @@ template <typename T, typename U>
 class is_addable: detail::sfinae_types
 {
 		template <typename V>
-		static auto test(const V *t) -> decltype(*t + std::declval<U>(),yes());
+		static auto test(const V *t) -> decltype(*t + std::declval<U>(),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -217,7 +217,7 @@ template <typename T, typename U>
 class is_addable_in_place: detail::sfinae_types
 {
 		template <typename V>
-		static auto test(V *t) -> decltype(*t += std::declval<U>(),yes());
+		static auto test(V *t) -> decltype(*t += std::declval<U>(),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -235,7 +235,7 @@ template <typename T, typename U>
 class is_subtractable: detail::sfinae_types
 {
 		template <typename V>
-		static auto test(const V *t) -> decltype(*t - std::declval<U>(),yes());
+		static auto test(const V *t) -> decltype(*t - std::declval<U>(),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -253,7 +253,7 @@ template <typename T, typename U>
 class is_subtractable_in_place: detail::sfinae_types
 {
 		template <typename V>
-		static auto test(V *t) -> decltype(*t -= std::declval<U>(),yes());
+		static auto test(V *t) -> decltype(*t -= std::declval<U>(),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -271,7 +271,7 @@ template <typename T, typename U>
 class is_assignable: detail::sfinae_types
 {
 		template <typename T1, typename U1>
-		static decltype(std::declval<T1>() = std::declval<U1>(),yes()) test (int);
+		static decltype(std::declval<T1>() = std::declval<U1>(),void(),yes()) test (int);
 		template <typename, typename>
 		static no test(...);
 	public:
