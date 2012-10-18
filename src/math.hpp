@@ -21,6 +21,7 @@
 #ifndef PIRANHA_MATH_HPP
 #define PIRANHA_MATH_HPP
 
+#include <boost/concept/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
@@ -32,6 +33,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "concepts/key.hpp"
 #include "config.hpp"
 #include "detail/integer_fwd.hpp"
 #include "detail/sfinae_types.hpp"
@@ -1016,10 +1018,13 @@ const bool has_t_lorder<T>::value;
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_degree()</tt> const methods, accepting one and two instances
  * of piranha::symbol_set as arguments.
+ * 
+ * \p Key must be a model of piranha::concept::Key.
  */
 template <typename Key>
 class key_has_t_degree: detail::sfinae_types
 {
+		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<symbol_set>()),void(),yes());
 		static no test1(...);
@@ -1037,10 +1042,13 @@ class key_has_t_degree: detail::sfinae_types
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_ldegree()</tt> const methods, accepting one and two instances
  * of piranha::symbol_set as arguments.
+ * 
+ * \p Key must be a model of piranha::concept::Key.
  */
 template <typename Key>
 class key_has_t_ldegree: detail::sfinae_types
 {
+		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<symbol_set>()),void(),yes());
 		static no test1(...);
@@ -1058,10 +1066,13 @@ class key_has_t_ldegree: detail::sfinae_types
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
  * It will test the presence of two <tt>t_order()</tt> const methods, accepting one and two instances
  * of piranha::symbol_set as arguments.
+ * 
+ * \p Key must be a model of piranha::concept::Key.
  */
 template <typename Key>
 class key_has_t_order: detail::sfinae_types
 {
+		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_order(std::declval<symbol_set>()),void(),yes());
 		static no test1(...);
@@ -1079,10 +1090,13 @@ class key_has_t_order: detail::sfinae_types
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
  * It will test the presence of two <tt>t_lorder()</tt> const methods, accepting one and two instances
  * of piranha::symbol_set as arguments.
+ * 
+ * \p Key must be a model of piranha::concept::Key.
  */
 template <typename Key>
 class key_has_t_lorder: detail::sfinae_types
 {
+		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<symbol_set>()),void(),yes());
 		static no test1(...);
