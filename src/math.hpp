@@ -36,6 +36,7 @@
 #include "detail/integer_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
+#include "symbol_set.hpp"
 
 namespace piranha
 {
@@ -638,7 +639,7 @@ struct t_degree_impl
  * \f[
  * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
  * \f]
- * has a trigonometric degree of 4.
+ * has a trigonometric degree of 3+1=4.
  * 
  * The actual implementation of this function is in the piranha::math::t_degree_impl functor.
  * 
@@ -674,6 +675,182 @@ template <typename T>
 inline auto t_degree(const T &x, const std::set<std::string> &names) -> decltype(t_degree_impl<T>()(x,names))
 {
 	return t_degree_impl<T>()(x,names);
+}
+
+/// Default functor for the implementation of piranha::math::t_ldegree().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::t_ldegree() (the total trigonometric low degree), the other for the binary form of piranha::math::t_ldegree()
+ * (the partial trigonometric low degree).
+ */
+template <typename T, typename Enable = void>
+struct t_ldegree_impl
+{};
+
+/// Total trigonometric low degree.
+/**
+ * A type exposing a trigonometric low degree property, in analogy with the concept of polynomial low degree,
+ * should be a linear combination of real or complex trigonometric functions. For instance, the Poisson series
+ * \f[
+ * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
+ * \f]
+ * has a trigonometric low degree of 2-1=1.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
+ * 
+ * @param[in] x object whose trigonometric low degree will be computed.
+ * 
+ * @return total trigonometric low degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
+ */
+template <typename T>
+inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
+{
+	return t_ldegree_impl<T>()(x);
+}
+
+/// Partial trigonometric low degree.
+/**
+ * The partial trigonometric low degree is the trigonometric low degree when only certain variables are considered in
+ * the computation.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_ldegree_impl functor.
+ * 
+ * @param[in] x object whose trigonometric low degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation of the degree.
+ * 
+ * @return partial trigonometric low degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_ldegree_impl.
+ * 
+ * @see piranha::math::t_ldegree().
+ */
+template <typename T>
+inline auto t_ldegree(const T &x, const std::set<std::string> &names) -> decltype(t_ldegree_impl<T>()(x,names))
+{
+	return t_ldegree_impl<T>()(x,names);
+}
+
+/// Default functor for the implementation of piranha::math::t_order().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::t_order() (the total trigonometric order), the other for the binary form of piranha::math::t_order()
+ * (the partial trigonometric order).
+ */
+template <typename T, typename Enable = void>
+struct t_order_impl
+{};
+
+/// Total trigonometric order.
+/**
+ * A type exposing a trigonometric order property should be a linear combination of real or complex trigonometric functions.
+ * The order is computed in a way similar to the trigonometric degree, with the key difference that the absolute values of
+ * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
+ * \f[
+ * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
+ * \f]
+ * has a trigonometric order of abs(3)+abs(1)=4.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_order_impl functor.
+ * 
+ * @param[in] x object whose trigonometric order will be computed.
+ * 
+ * @return total trigonometric order.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
+ */
+template <typename T>
+inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
+{
+	return t_order_impl<T>()(x);
+}
+
+/// Partial trigonometric order.
+/**
+ * The partial trigonometric order is the trigonometric order when only certain variables are considered in
+ * the computation.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_order_impl functor.
+ * 
+ * @param[in] x object whose trigonometric order will be computed.
+ * @param[in] names names of the variables that will be considered in the computation of the order.
+ * 
+ * @return partial trigonometric order.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_order_impl.
+ * 
+ * @see piranha::math::t_order().
+ */
+template <typename T>
+inline auto t_order(const T &x, const std::set<std::string> &names) -> decltype(t_order_impl<T>()(x,names))
+{
+	return t_order_impl<T>()(x,names);
+}
+
+/// Default functor for the implementation of piranha::math::t_lorder().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::t_lorder() (the total trigonometric low order), the other for the binary form of piranha::math::t_lorder()
+ * (the partial trigonometric low order).
+ */
+template <typename T, typename Enable = void>
+struct t_lorder_impl
+{};
+
+/// Total trigonometric low order.
+/**
+ * A type exposing a trigonometric low order property should be a linear combination of real or complex trigonometric functions.
+ * The low order is computed in a way similar to the trigonometric low degree, with the key difference that the absolute values of
+ * the trigonometric degrees of each variable are considered in the computation. For instance, the Poisson series
+ * \f[
+ * 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right)
+ * \f]
+ * has a trigonometric low order of abs(2)+abs(1)=3.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
+ * 
+ * @param[in] x object whose trigonometric low order will be computed.
+ * 
+ * @return total trigonometric low order.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
+ */
+template <typename T>
+inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
+{
+	return t_lorder_impl<T>()(x);
+}
+
+/// Partial trigonometric low order.
+/**
+ * The partial trigonometric low order is the trigonometric low order when only certain variables are considered in
+ * the computation.
+ * 
+ * The actual implementation of this function is in the piranha::math::t_lorder_impl functor.
+ * 
+ * @param[in] x object whose trigonometric low order will be computed.
+ * @param[in] names names of the variables that will be considered in the computation of the order.
+ * 
+ * @return partial trigonometric low order.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_lorder_impl.
+ * 
+ * @see piranha::math::t_lorder().
+ */
+template <typename T>
+inline auto t_lorder(const T &x, const std::set<std::string> &names) -> decltype(t_lorder_impl<T>()(x,names))
+{
+	return t_lorder_impl<T>()(x,names);
 }
 
 }
@@ -761,6 +938,162 @@ class has_t_degree: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool has_t_degree<T>::value;
+
+/// Type trait to detect if type has a trigonometric low degree property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::t_ldegree()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_t_ldegree: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(U const *u) -> decltype(math::t_ldegree(*u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(U const *u) -> decltype(math::t_ldegree(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+};
+
+// Static init.
+template <typename T>
+const bool has_t_ldegree<T>::value;
+
+/// Type trait to detect if type has a trigonometric order property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::t_order()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_t_order: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(U const *u) -> decltype(math::t_order(*u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(U const *u) -> decltype(math::t_order(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+};
+
+// Static init.
+template <typename T>
+const bool has_t_order<T>::value;
+
+/// Type trait to detect if type has a trigonometric low order property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::t_lorder()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_t_lorder: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(U const *u) -> decltype(math::t_lorder(*u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(U const *u) -> decltype(math::t_lorder(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+};
+
+// Static init.
+template <typename T>
+const bool has_t_lorder<T>::value;
+
+/// Type trait to detect if a key type has a trigonometric degree property.
+/**
+ * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
+ * It will test the presence of two <tt>t_degree()</tt> const methods, accepting one and two instances
+ * of piranha::symbol_set as arguments.
+ */
+template <typename Key>
+class key_has_t_degree: detail::sfinae_types
+{
+		template <typename T>
+		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<symbol_set>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+};
+
+/// Type trait to detect if a key type has a trigonometric low degree property.
+/**
+ * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
+ * It will test the presence of two <tt>t_ldegree()</tt> const methods, accepting one and two instances
+ * of piranha::symbol_set as arguments.
+ */
+template <typename Key>
+class key_has_t_ldegree: detail::sfinae_types
+{
+		template <typename T>
+		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<symbol_set>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+};
+
+/// Type trait to detect if a key type has a trigonometric order property.
+/**
+ * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
+ * It will test the presence of two <tt>t_order()</tt> const methods, accepting one and two instances
+ * of piranha::symbol_set as arguments.
+ */
+template <typename Key>
+class key_has_t_order: detail::sfinae_types
+{
+		template <typename T>
+		static auto test1(T const *t) -> decltype(t->t_order(std::declval<symbol_set>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(T const *t) -> decltype(t->t_order(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+};
+
+/// Type trait to detect if a key type has a trigonometric low order property.
+/**
+ * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
+ * It will test the presence of two <tt>t_lorder()</tt> const methods, accepting one and two instances
+ * of piranha::symbol_set as arguments.
+ */
+template <typename Key>
+class key_has_t_lorder: detail::sfinae_types
+{
+		template <typename T>
+		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<symbol_set>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+};
 
 }
 

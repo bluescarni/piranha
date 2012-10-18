@@ -244,10 +244,3 @@ BOOST_AUTO_TEST_CASE(type_traits_is_assignable)
 	BOOST_CHECK((is_assignable<integer,int>::value));
 	BOOST_CHECK((!is_assignable<int,integer>::value));
 }
-
-BOOST_AUTO_TEST_CASE(type_traits_has_t_degree)
-{
-	BOOST_CHECK(!has_t_degree<int>::value);
-	BOOST_CHECK(!has_t_degree<std::string>::value);
-	BOOST_CHECK(!has_t_degree<double>::value);
-}

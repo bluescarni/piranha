@@ -267,3 +267,60 @@ BOOST_AUTO_TEST_CASE(abs_test)
 	BOOST_CHECK_EQUAL(math::abs(1.23l),1.23l);
 	BOOST_CHECK_EQUAL(math::abs(-1.23l),1.23l);
 }
+
+BOOST_AUTO_TEST_CASE(math_has_t_degree_test)
+{
+	BOOST_CHECK(!has_t_degree<int>::value);
+	BOOST_CHECK(!has_t_degree<std::string>::value);
+	BOOST_CHECK(!has_t_degree<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_has_t_ldegree_test)
+{
+	BOOST_CHECK(!has_t_ldegree<int>::value);
+	BOOST_CHECK(!has_t_ldegree<std::string>::value);
+	BOOST_CHECK(!has_t_ldegree<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_has_t_order_test)
+{
+	BOOST_CHECK(!has_t_order<int>::value);
+	BOOST_CHECK(!has_t_order<std::string>::value);
+	BOOST_CHECK(!has_t_order<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_has_t_lorder_test)
+{
+	BOOST_CHECK(!has_t_lorder<int>::value);
+	BOOST_CHECK(!has_t_lorder<std::string>::value);
+	BOOST_CHECK(!has_t_lorder<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_key_has_t_degree_test)
+{
+	BOOST_CHECK(!key_has_t_degree<int>::value);
+	BOOST_CHECK(!key_has_t_degree<std::string>::value);
+	BOOST_CHECK(!key_has_t_degree<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_key_has_t_ldegree_test)
+{
+	BOOST_CHECK(!key_has_t_ldegree<int>::value);
+	BOOST_CHECK(!key_has_t_ldegree<std::string>::value);
+	BOOST_CHECK(!key_has_t_ldegree<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_key_has_t_order_test)
+{
+	BOOST_CHECK(!key_has_t_order<int>::value);
+	BOOST_CHECK(!key_has_t_order<std::string>::value);
+	BOOST_CHECK(!key_has_t_order<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_key_has_t_lorder_test)
+{
+	BOOST_CHECK(!key_has_t_lorder<int>::value);
+	BOOST_CHECK(!key_has_t_lorder<std::string>::value);
+	BOOST_CHECK(!key_has_t_lorder<double>::value);
+}
+
