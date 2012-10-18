@@ -64,7 +64,7 @@ struct power_series_tag {};
  * 
  * \section type_requirements Type requirements
  * 
- * \p Series must be an instance of piranha::series.
+ * \p Series must be suitable for use in piranha::toolbox as first template parameter.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -76,8 +76,6 @@ struct power_series_tag {};
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo specify in the docs that the methods are available only if the series is a power series (so that in the docs of, e.g., poisson
- * series there's no confusion).
  * \todo investigate beautification (for doc purposes) of degree() return types via auto and decltype(). Or maybe at least do the same as
  * done in power_series_term.
  */
@@ -172,6 +170,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
+		 * This method is available only if the class satisfies the power series concept.
+		 * 
 		 * @return the total degree of the series.
 		 * 
 		 * @throws unspecified any exception thrown by:
@@ -191,6 +191,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
+		 * This method is available only if the class satisfies the power series concept.
+		 * 
 		 * @param[in] s the set of names of the variables that will be considered in the computation of the partial degree.
 		 * 
 		 * @return the partial degree of the series.
@@ -208,6 +210,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		/**
 		 * Convenience overload that will call degree() with a set built from the
 		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
+		 * 
+		 * This method is available only if the class satisfies the power series concept.
 		 * 
 		 * @param[in] name name of the variable that will be considered in the computation of the partial degree.
 		 * 
@@ -230,6 +234,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
+		 * This method is available only if the class satisfies the power series concept.
+		 * 
 		 * @return the total low degree of the series.
 		 * 
 		 * @throws unspecified any exception thrown by:
@@ -249,6 +255,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		 * 
 		 * If the series is empty, zero will be returned.
 		 * 
+		 * This method is available only if the class satisfies the power series concept.
+		 * 
 		 * @param[in] s the set of names of the variables that will be considered in the computation of the partial low degree.
 		 * 
 		 * @return the partial low degree of the series.
@@ -266,6 +274,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		/**
 		 * Convenience overload that will call ldegree() with a set built from the
 		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
+		 * 
+		 * This method is available only if the class satisfies the power series concept.
 		 * 
 		 * @param[in] name name of the variable that will be considered in the computation of the partial low degree.
 		 * 
