@@ -32,6 +32,7 @@
 #include "forwarding.hpp"
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
+#include "toolbox.hpp"
 #include "type_traits.hpp" // For has_degree.
 
 namespace piranha
@@ -83,9 +84,8 @@ struct power_series_tag {};
 // NOTE: here the tag is used explicitly to differentiate between the general implementation
 // and the specialization below.
 template <typename Series, typename Enable = void>
-class power_series: public Series,detail::power_series_tag
+class power_series: public Series,detail::power_series_tag,toolbox<Series,power_series<Series,Enable>>
 {
-		static_assert(std::is_base_of<detail::series_tag,Series>::value,"Base class must be an instance of piranha::series.");
 		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
 		typedef Series base;
 		template <typename... Args>
@@ -150,11 +150,8 @@ class power_series: public Series,detail::power_series_tag
 		/// Defaulted move constructor.
 		power_series(power_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series,base)
-		/// Trivial destructor.
-		~power_series() piranha_noexcept_spec(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
-		}
+		/// Defaulted destructor.
+		~power_series() = default;
 		/// Defaulted copy assignment operator.
 		power_series &operator=(const power_series &) = default;
 		/// Trivial move assignment operator.
@@ -288,19 +285,15 @@ class power_series: public Series,detail::power_series_tag
 
 template <typename Series>
 class power_series<Series,typename std::enable_if<!is_power_series_term<typename Series::term_type>::value>::type>:
-	public Series
+	public Series,toolbox<Series,power_series<Series>>
 {
-		static_assert(std::is_base_of<detail::series_tag,Series>::value,"Base class must derive from piranha::series.");
 		typedef Series base;
 	public:
 		power_series() = default;
 		power_series(const power_series &) = default;
 		power_series(power_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series,base)
-		~power_series() piranha_noexcept_spec(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::Series<power_series>));
-		}
+		~power_series() = default;
 		power_series &operator=(const power_series &) = default;
 		power_series &operator=(power_series &&other) piranha_noexcept_spec(true)
 		{
