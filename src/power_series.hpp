@@ -57,7 +57,7 @@ struct power_series_tag {};
  * a compile-time error will be produced.
  * 
  * If the term type does not satisfy the piranha::is_power_series_term type-trait, this class will not add any new functionality to the \p Series class and
- * will just provide generic constructors that will forward their arguments to the constructors of \p Series.
+ * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
  * 
  * This class is a model of the piranha::concept::Series concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeries
  * concept.
