@@ -21,6 +21,7 @@
 #ifndef PIRANHA_POWER_SERIES_HPP
 #define PIRANHA_POWER_SERIES_HPP
 
+#include <boost/concept/assert.hpp>
 #include <set>
 #include <string>
 #include <type_traits>
