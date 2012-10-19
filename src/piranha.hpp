@@ -149,6 +149,7 @@ namespace detail {}
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "timeit.hpp"
+#include "toolbox.hpp"
 #include "tracing.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
