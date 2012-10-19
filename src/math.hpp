@@ -1017,8 +1017,8 @@ const bool has_t_lorder<T>::value;
 /// Type trait to detect if a key type has a trigonometric degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_degree()</tt> const methods, accepting one and two instances
- * of piranha::symbol_set as arguments.
+ * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
  * \p Key must be a model of piranha::concept::Key.
  */
@@ -1030,7 +1030,7 @@ class key_has_t_degree: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1041,8 +1041,8 @@ class key_has_t_degree: detail::sfinae_types
 /// Type trait to detect if a key type has a trigonometric low degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
- * It will test the presence of two <tt>t_ldegree()</tt> const methods, accepting one and two instances
- * of piranha::symbol_set as arguments.
+ * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
  * \p Key must be a model of piranha::concept::Key.
  */
@@ -1054,7 +1054,7 @@ class key_has_t_ldegree: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1065,8 +1065,8 @@ class key_has_t_ldegree: detail::sfinae_types
 /// Type trait to detect if a key type has a trigonometric order property.
 /**
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
- * It will test the presence of two <tt>t_order()</tt> const methods, accepting one and two instances
- * of piranha::symbol_set as arguments.
+ * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
  * \p Key must be a model of piranha::concept::Key.
  */
@@ -1078,7 +1078,7 @@ class key_has_t_order: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_order(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1089,8 +1089,8 @@ class key_has_t_order: detail::sfinae_types
 /// Type trait to detect if a key type has a trigonometric low order property.
 /**
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
- * It will test the presence of two <tt>t_lorder()</tt> const methods, accepting one and two instances
- * of piranha::symbol_set as arguments.
+ * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
  * \p Key must be a model of piranha::concept::Key.
  */
@@ -1102,7 +1102,7 @@ class key_has_t_lorder: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
