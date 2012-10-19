@@ -22,6 +22,7 @@
 #define PIRANHA_SERIES_BINARY_OPERATORS_HPP
 
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "detail/series_fwd.hpp"

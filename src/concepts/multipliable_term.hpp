@@ -24,6 +24,7 @@
 #include <boost/concept_check.hpp>
 #include <type_traits>
 #include <tuple>
+#include <utility>
 
 #include "../symbol_set.hpp"
 #include "../type_traits.hpp"
@@ -69,7 +70,7 @@ class MultipliableTerm:
 				is_tuple<typename T::multiplication_result_type>::value,"Invalid multiplication result type typedef.");
 			check_tuple(std::integral_constant<bool,is_tuple<typename T::multiplication_result_type>::value>());
 			typename T::multiplication_result_type retval;
-			typedef decltype(std::declval<T>().multiply(retval,std::declval<T>(),std::declval<symbol_set>())) ret_type;
+			typedef decltype(std::declval<const T &>().multiply(retval,std::declval<const T &>(),std::declval<const symbol_set &>())) ret_type;
 			static_assert(std::is_same<void,ret_type>::value,"Invalid return value type for multiply()");
 		}
 };

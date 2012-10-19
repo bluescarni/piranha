@@ -32,6 +32,7 @@
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "detail/base_term_fwd.hpp"

@@ -138,6 +138,7 @@ class poisson_series:
 				poisson_series(math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))));
 		}
 		// Subs typedefs.
+		// TODO: fix declval usage.
 		template <typename T>
 		struct subs_type
 		{
@@ -582,6 +583,7 @@ template <typename Series>
 struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
 {
 	private:
+		// TODO: fix declval usage.
 		template <typename T>
 		struct subs_type
 		{
@@ -615,6 +617,7 @@ template <typename Series>
 struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
 {
 	private:
+		// TODO: fix declval usage.
 		template <typename T>
 		struct ipow_subs_type
 		{

@@ -25,6 +25,7 @@
 #include <set>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "concepts/degree_key.hpp"
 #include "concepts/term.hpp"
@@ -150,6 +151,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 				return t.m_key.ldegree(as,ss);
 			}
 		};
+		// TODO: fix declval usage.
 		typedef decltype(degree_utils<power_series_term>::compute(std::declval<power_series_term>(),std::declval<symbol_set>())) d_type;
 		typedef decltype(degree_utils<power_series_term>::compute(std::declval<power_series_term>(),std::declval<symbol_set>(),{})) pd_type;
 		typedef decltype(degree_utils<power_series_term>::lcompute(std::declval<power_series_term>(),std::declval<symbol_set>())) ld_type;

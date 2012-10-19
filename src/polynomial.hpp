@@ -136,6 +136,7 @@ class polynomial:
 			}
 		}
 		// Subs typedefs.
+		// TODO: fix declval usage.
 		template <typename T>
 		struct subs_type
 		{
@@ -488,6 +489,7 @@ template <typename Series>
 struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
 {
 	private:
+		// TODO: fix declval usage.
 		template <typename T>
 		struct subs_type
 		{
@@ -521,6 +523,7 @@ template <typename Series>
 struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
 {
 	private:
+		// TODO: fix declval usage.
 		template <typename T>
 		struct ipow_subs_type
 		{

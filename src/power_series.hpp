@@ -25,6 +25,7 @@
 #include <set>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "concepts/power_series_term.hpp"
 #include "concepts/series.hpp"
@@ -86,6 +87,7 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 {
 		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
 		typedef Series base;
+		// TODO: fix usage of declval.
 		template <typename... Args>
 		struct degree_type
 		{

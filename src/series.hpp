@@ -37,6 +37,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "base_term.hpp"
@@ -697,8 +698,8 @@ class series: series_binary_operators, detail::series_tag
 		struct eval_type
 		{
 			typedef decltype(math::evaluate(std::declval<typename term_type::cf_type>(),std::declval<std::unordered_map<std::string,T>>()) *
-				std::declval<typename term_type::key_type>().evaluate(std::declval<std::unordered_map<symbol,T>>(),
-				std::declval<symbol_set>())) type;
+				std::declval<const typename term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,T> &>(),
+				std::declval<const symbol_set &>())) type;
 		};
 		// Print utilities.
 		template <bool TexMode, typename Series>

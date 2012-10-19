@@ -26,6 +26,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <type_traits>
+#include <utility>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -52,10 +53,10 @@ struct degree_tester
 		{
 			typedef polynomial_term<Cf,int> term_type1;
 			typedef typename term_type1::key_type key_type1;
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree(std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree({},std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree(std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree({},std::declval<symbol_set>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree(std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree(std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree({},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK(term_type1{}.degree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type1{1,key_type1{1}}.degree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type1{1,key_type1{1,2}}.degree(symbol_set{symbol("a"),symbol("b")}) == 3));
@@ -71,10 +72,10 @@ struct degree_tester
 			typedef polynomial_term<polynomial<Cf,Expo>,int> term_type2;
 			typedef typename term_type2::cf_type cf_type2;
 			typedef typename term_type2::key_type key_type2;
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree(std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree({},std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree(std::declval<symbol_set>()))>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree({},std::declval<symbol_set>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree(std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree(std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree({},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK(term_type2{}.degree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1}}.degree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.degree(symbol_set{symbol("a"),symbol("b")}) == 3));

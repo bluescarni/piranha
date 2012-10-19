@@ -31,6 +31,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "concepts/key.hpp"
@@ -929,7 +930,7 @@ class has_t_degree: detail::sfinae_types
 		static auto test1(U const *u) -> decltype(math::t_degree(*u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_degree(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static auto test2(U const *u) -> decltype(math::t_degree(*u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -953,7 +954,7 @@ class has_t_ldegree: detail::sfinae_types
 		static auto test1(U const *u) -> decltype(math::t_ldegree(*u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_ldegree(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static auto test2(U const *u) -> decltype(math::t_ldegree(*u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -977,7 +978,7 @@ class has_t_order: detail::sfinae_types
 		static auto test1(U const *u) -> decltype(math::t_order(*u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_order(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static auto test2(U const *u) -> decltype(math::t_order(*u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1001,7 +1002,7 @@ class has_t_lorder: detail::sfinae_types
 		static auto test1(U const *u) -> decltype(math::t_lorder(*u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_lorder(*u,std::declval<std::set<std::string>>()),void(),yes());
+		static auto test2(U const *u) -> decltype(math::t_lorder(*u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1026,10 +1027,10 @@ class key_has_t_degree: detail::sfinae_types
 {
 		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
-		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<symbol_set>()),void(),yes());
+		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1050,10 +1051,10 @@ class key_has_t_ldegree: detail::sfinae_types
 {
 		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
-		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<symbol_set>()),void(),yes());
+		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1074,10 +1075,10 @@ class key_has_t_order: detail::sfinae_types
 {
 		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
-		static auto test1(T const *t) -> decltype(t->t_order(std::declval<symbol_set>()),void(),yes());
+		static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_order(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1098,10 +1099,10 @@ class key_has_t_lorder: detail::sfinae_types
 {
 		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 		template <typename T>
-		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<symbol_set>()),void(),yes());
+		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<symbol_set>(),std::declval<symbol_set>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.

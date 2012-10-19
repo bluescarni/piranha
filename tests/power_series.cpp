@@ -28,6 +28,7 @@
 #include <set>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "../src/environment.hpp"
 #include "../src/polynomial.hpp"
@@ -95,10 +96,10 @@ struct degree_tester
 			BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"}).ldegree({"x"}) == 1);
 			BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 2 * p_type1{"x"}).ldegree({"y"}) == 0);
 			std::set<std::string> empty_set;
-			BOOST_CHECK((std::is_same<decltype(std::declval<p_type11>().degree()),decltype(std::declval<Expo>() + std::declval<int>())>::value));
-			BOOST_CHECK((std::is_same<decltype(std::declval<p_type11>().degree(empty_set)),decltype(std::declval<Expo>() + std::declval<int>())>::value));
-			BOOST_CHECK((std::is_same<decltype(std::declval<p_type11>().ldegree()),decltype(std::declval<Expo>() + std::declval<int>())>::value));
-			BOOST_CHECK((std::is_same<decltype(std::declval<p_type11>().ldegree(empty_set)),decltype(std::declval<Expo>() + std::declval<int>())>::value));
+			BOOST_CHECK((std::is_same<decltype(std::declval<const p_type11 &>().degree()),decltype(std::declval<Expo>() + std::declval<int>())>::value));
+			BOOST_CHECK((std::is_same<decltype(std::declval<const p_type11 &>().degree(empty_set)),decltype(std::declval<Expo>() + std::declval<int>())>::value));
+			BOOST_CHECK((std::is_same<decltype(std::declval<const p_type11 &>().ldegree()),decltype(std::declval<Expo>() + std::declval<int>())>::value));
+			BOOST_CHECK((std::is_same<decltype(std::declval<const p_type11 &>().ldegree(empty_set)),decltype(std::declval<Expo>() + std::declval<int>())>::value));
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}).degree() == 2);
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}).degree({"x"}) == 1);
 			BOOST_CHECK((p_type11{"x"} * p_type1{"y"} + 2 * p_type1{"y"}).degree("x") == 1);
