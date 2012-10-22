@@ -69,7 +69,7 @@
  * \todo look into perfect forwarding of members, for use in series, hash set (?) http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
- * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment
+ * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment -> compile boost in c++11/c++0x mode in gentoo and windows.
  * \todo it seems like default construction of c++ containers might throw :/ We should probably double-check we do not assume any nothrow behaviour in
  * such cases. For instance, if we use an old-style C allocation function and we need to create a container _before_ calling free(), then the behaviour
  * might not be exception-safe.

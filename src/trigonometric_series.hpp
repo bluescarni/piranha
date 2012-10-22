@@ -74,7 +74,7 @@ struct is_trigonometric_term
  * for the key type.
  * 
  * Note that in order for the trigonometric methods to be enabled, coefficient and key type cannot satisfy these type traits at the same time,
- * and all degree/order type traits need to be satisfied for the coefficient or key type.
+ * and all degree/order type traits need to be satisfied for the coefficient/key type.
  * 
  * If the above requirements are not satisfied, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
