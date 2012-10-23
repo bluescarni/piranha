@@ -40,6 +40,7 @@
 #include "concepts/key.hpp"
 #include "config.hpp"
 #include "detail/km_commons.hpp"
+#include "detail/degree_commons.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "math.hpp"
@@ -421,7 +422,7 @@ class real_trigonometric_kronecker_monomial
 		value_type h_degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
-			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),detail::km_safe_adder<value_type>);
+			return detail::monomial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,args);
 		}
 		/// Low harmonic degree.
 		/**
@@ -453,7 +454,8 @@ class real_trigonometric_kronecker_monomial
 		 */
 		value_type h_degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
-			return detail::km_partial_degree<v_type,ka>(active_args,args,m_value);
+			const auto tmp = unpack(args);
+			return detail::monomial_partial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,active_args,args);
 		}
 		/// Partial low harmonic degree.
 		/**
@@ -504,12 +506,14 @@ class real_trigonometric_kronecker_monomial
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result_plus, result_minus;
 			for (size_type i = 0u; i < size; ++i) {
-				result_plus.push_back(detail::km_safe_adder(tmp1[i],tmp2[i]));
+				result_plus.push_back(tmp1[i]);
+				detail::km_safe_adder(result_plus[i],tmp2[i]);
 				// NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
 				// that the range of each element is symmetric, so if tmp2[i] is representable also -tmp2[i] is.
 				// NOTE: the static cast here is because if value_type is narrower than int, the unary minus will promote
 				// to int and safe_adder won't work as it expects identical types.
-				result_minus.push_back(detail::km_safe_adder(tmp1[i],static_cast<value_type>(-tmp2[i])));
+				result_minus.push_back(tmp1[i]);
+				detail::km_safe_adder(result_minus[i],static_cast<value_type>(-tmp2[i]));
 			}
 			// Handle sign changes.
 			sign_plus = canonicalise_impl(result_plus);

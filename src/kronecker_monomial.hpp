@@ -41,6 +41,7 @@
 
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
+#include "detail/degree_commons.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/kronecker_monomial_fwd.hpp"
 #include "exceptions.hpp"
@@ -79,7 +80,7 @@ namespace piranha
  * 
  * \todo think about having this (and rtkm) return degrees as integer() to solve possible problems of overflowing in conjunction with
  * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
- * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate. Review the code for degree() use after the
+ * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate (which both return integers). Review the code for degree() use after the
  * change has been made to spot possible problems.
  * \todo abstract the km_commons in a class and use it both here and in rtkm.
  */
@@ -334,7 +335,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		value_type degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
-			return std::accumulate(tmp.begin(),tmp.end(),value_type(0),detail::km_safe_adder<value_type>);
+			return detail::monomial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,args);
 		}
 		/// Low degree.
 		/**
@@ -366,7 +367,8 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
-			return detail::km_partial_degree<v_type,ka>(active_args,args,m_value);
+			const auto tmp = unpack(args);
+			return detail::monomial_partial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,active_args,args);
 		}
 		/// Partial low degree.
 		/**
@@ -403,7 +405,8 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result;
 			for (decltype(args.size()) i = 0u; i < size; ++i) {
-				result.push_back(detail::km_safe_adder(tmp1[i],tmp2[i]));
+				result.push_back(tmp1[i]);
+				detail::km_safe_adder(result[i],tmp2[i]);
 			}
 			retval.m_value = ka::encode(result);
 		}

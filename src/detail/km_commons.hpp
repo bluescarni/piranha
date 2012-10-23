@@ -83,9 +83,9 @@ inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, 
 }
 
 template <typename T>
-inline T km_safe_adder(const T &a, const T &b)
+inline void km_safe_adder(T &a, const T &b)
 {
-	if (b >= 0) {
+	if (b >= T(0)) {
 		if (unlikely(a > boost::integer_traits<T>::const_max - b)) {
 			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 		}
@@ -94,30 +94,7 @@ inline T km_safe_adder(const T &a, const T &b)
 			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 		}
 	}
-	return a + b;
-}
-
-template <typename VType, typename KaType, typename T>
-inline T km_partial_degree(const std::set<std::string> &active_args, const symbol_set &args, const T &value)
-{
-	typedef typename KaType::size_type size_type;
-	const VType tmp = km_unpack<VType,KaType>(args,value);
-	T retval(0);
-	auto it1 = args.begin();
-	auto it2 = active_args.begin();
-	for (size_type i = 0u; i < tmp.size(); ++i, ++it1) {
-		// Move forward the it2 iterator until it does not preceed the iterator in args,
-		// or we run out of symbols.
-		while (it2 != active_args.end() && *it2 < it1->get_name()) {
-			++it2;
-		}
-		if (it2 == active_args.end()) {
-			break;
-		} else if (*it2 == it1->get_name()) {
-			retval = km_safe_adder(retval,tmp[i]);
-		}
-	}
-	return retval;
+	a += b;
 }
 
 template <typename VType, typename KaType, typename T>

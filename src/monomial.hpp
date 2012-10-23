@@ -26,7 +26,6 @@
 #include <boost/utility.hpp> // For addressof.
 #include <initializer_list>
 #include <iostream>
-#include <numeric>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -38,6 +37,7 @@
 
 #include "array_key.hpp"
 #include "concepts/degree_key.hpp"
+#include "detail/degree_commons.hpp"
 #include "config.hpp"
 #include "forwarding.hpp"
 #include "integer.hpp"
@@ -196,10 +196,7 @@ class monomial: public array_key<T,monomial<T>>
 		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &args) const
 		{
 			typedef typename base::value_type value_type;
-			if(unlikely(args.size() != this->size())) {
-				piranha_throw(std::invalid_argument,"invalid size of arguments set");
-			}
-			return std::accumulate(this->m_container.begin(),this->m_container.end(),value_type(0));
+			return detail::monomial_degree<value_type>(this->m_container,[](value_type &retval, const value_type &x) -> void {retval += x;},args);
 		}
 		/// Low degree.
 		/**
@@ -232,25 +229,8 @@ class monomial: public array_key<T,monomial<T>>
 		typename array_key<T,monomial<T>>::value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			typedef typename base::value_type value_type;
-			if(unlikely(args.size() != this->size())) {
-				piranha_throw(std::invalid_argument,"invalid size of arguments set");
-			}
-			value_type retval(0);
-			auto it1 = args.begin();
-			auto it2 = active_args.begin();
-			for (typename base::size_type i = 0u; i < this->size(); ++i, ++it1) {
-				// Move forward the it2 iterator until it does not preceed the iterator in args,
-				// or we run out of symbols.
-				while (it2 != active_args.end() && *it2 < it1->get_name()) {
-					++it2;
-				}
-				if (it2 == active_args.end()) {
-					break;
-				} else if (*it2 == it1->get_name()) {
-					retval += (*this)[i];
-				}
-			}
-			return retval;
+			return detail::monomial_partial_degree<value_type>(this->m_container,[](value_type &retval, const value_type &x) -> void {retval += x;},
+				active_args,args);
 		}
 		/// Partial low degree.
 		/**
@@ -344,6 +324,8 @@ class monomial: public array_key<T,monomial<T>>
 		template <typename U>
 		monomial pow(const U &x, const symbol_set &args) const
 		{
+			// NOTE: here it might make sense to allow this only if retval[i] * x has the type of
+			// retval[i], in order to avoid int ** rational resulting in nasty surprises.
 			typedef typename base::size_type size_type;
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
