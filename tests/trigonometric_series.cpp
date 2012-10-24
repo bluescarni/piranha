@@ -26,6 +26,7 @@
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/poisson_series.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 
 using namespace piranha;
@@ -35,7 +36,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	environment env;
 	using math::sin;
 	using math::cos;
-	typedef poisson_series<rational> p_type1;
+	typedef poisson_series<polynomial<rational>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(x.t_degree(),0);
 	BOOST_CHECK_EQUAL(cos(3 * x).t_degree(),3);
