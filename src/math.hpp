@@ -680,25 +680,6 @@ inline auto t_degree(const T &x, const std::set<std::string> &names) -> decltype
 	return t_degree_impl<T>()(x,names);
 }
 
-/// Partial trigonometric degree.
-/**
- * Convenience wrapper that will call the other overload for the calculation of the partial degree
- * (after constructing a temporary set of one string from \p name).
- * 
- * @param[in] x object whose trigonometric degree will be computed.
- * @param[in] name name of the variable that will be considered in the computation of the degree.
- * 
- * @return partial trigonometric degree.
- * 
- * @throws unspecified any exception thrown by invoked overloaded function or by memory
- * allocation errors in standard containers.
- */
-template <typename T>
-inline auto t_degree(const T &x, const std::string &name) -> decltype(t_degree(x,{name}))
-{
-	return t_degree(x,{name});
-}
-
 /// Default functor for the implementation of piranha::math::t_ldegree().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -755,25 +736,6 @@ template <typename T>
 inline auto t_ldegree(const T &x, const std::set<std::string> &names) -> decltype(t_ldegree_impl<T>()(x,names))
 {
 	return t_ldegree_impl<T>()(x,names);
-}
-
-/// Partial trigonometric low degree.
-/**
- * Convenience wrapper that will call the other overload for the calculation of the partial low degree
- * (after constructing a temporary set of one string from \p name).
- * 
- * @param[in] x object whose trigonometric low degree will be computed.
- * @param[in] name name of the variable that will be considered in the computation of the degree.
- * 
- * @return partial trigonometric low degree.
- * 
- * @throws unspecified any exception thrown by invoked overloaded function or by memory
- * allocation errors in standard containers.
- */
-template <typename T>
-inline auto t_ldegree(const T &x, const std::string &name) -> decltype(t_ldegree(x,{name}))
-{
-	return t_ldegree(x,{name});
 }
 
 /// Default functor for the implementation of piranha::math::t_order().
@@ -835,25 +797,6 @@ inline auto t_order(const T &x, const std::set<std::string> &names) -> decltype(
 	return t_order_impl<T>()(x,names);
 }
 
-/// Partial trigonometric order.
-/**
- * Convenience wrapper that will call the other overload for the calculation of the partial order
- * (after constructing a temporary set of one string from \p name).
- * 
- * @param[in] x object whose trigonometric order will be computed.
- * @param[in] name name of the variable that will be considered in the computation of the order.
- * 
- * @return partial trigonometric order.
- * 
- * @throws unspecified any exception thrown by invoked overloaded function or by memory
- * allocation errors in standard containers.
- */
-template <typename T>
-inline auto t_order(const T &x, const std::string &name) -> decltype(t_order(x,{name}))
-{
-	return t_order(x,{name});
-}
-
 /// Default functor for the implementation of piranha::math::t_lorder().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -911,25 +854,6 @@ template <typename T>
 inline auto t_lorder(const T &x, const std::set<std::string> &names) -> decltype(t_lorder_impl<T>()(x,names))
 {
 	return t_lorder_impl<T>()(x,names);
-}
-
-/// Partial trigonometric low order.
-/**
- * Convenience wrapper that will call the other overload for the calculation of the partial low order
- * (after constructing a temporary set of one string from \p name).
- * 
- * @param[in] x object whose trigonometric low order will be computed.
- * @param[in] name name of the variable that will be considered in the computation of the order.
- * 
- * @return partial trigonometric low order.
- * 
- * @throws unspecified any exception thrown by invoked overloaded function or by memory
- * allocation errors in standard containers.
- */
-template <typename T>
-inline auto t_lorder(const T &x, const std::string &name) -> decltype(t_lorder(x,{name}))
-{
-	return t_lorder(x,{name});
 }
 
 }
