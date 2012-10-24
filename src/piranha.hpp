@@ -151,6 +151,7 @@ namespace detail {}
 #include "timeit.hpp"
 #include "toolbox.hpp"
 #include "tracing.hpp"
+#include "trigonometric_series.hpp"
 #include "truncator.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
