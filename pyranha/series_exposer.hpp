@@ -323,7 +323,29 @@ struct series_exposer
 		bp::stl_input_iterator<std::string> begin(l), end;
 		return s.t_ldegree(std::set<std::string>(begin,end));
 	}
-	// Trigonometric degree exposer.
+	template <typename S>
+	static decltype(std::declval<S>().t_order()) wrap_t_order(const S &s)
+	{
+		return s.t_order();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().t_order(std::declval<std::set<std::string>>())) wrap_partial_t_order(const S &s, bp::list l)
+	{
+		bp::stl_input_iterator<std::string> begin(l), end;
+		return s.t_order(std::set<std::string>(begin,end));
+	}
+	template <typename S>
+	static decltype(std::declval<S>().t_lorder()) wrap_t_lorder(const S &s)
+	{
+		return s.t_lorder();
+	}
+	template <typename S>
+	static decltype(std::declval<S>().t_lorder(std::declval<std::set<std::string>>())) wrap_partial_t_lorder(const S &s, bp::list l)
+	{
+		bp::stl_input_iterator<std::string> begin(l), end;
+		return s.t_lorder(std::set<std::string>(begin,end));
+	}
+	// Trigonometric exposer.
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &series_class,
 		typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = piranha_nullptr)
@@ -332,6 +354,10 @@ struct series_exposer
 		series_class.def("t_degree",wrap_partial_t_degree<T>);
 		series_class.def("t_ldegree",wrap_t_ldegree<T>);
 		series_class.def("t_ldegree",wrap_partial_t_ldegree<T>);
+		series_class.def("t_order",wrap_t_order<T>);
+		series_class.def("t_order",wrap_partial_t_order<T>);
+		series_class.def("t_lorder",wrap_t_lorder<T>);
+		series_class.def("t_lorder",wrap_partial_t_lorder<T>);
 	}
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &,
