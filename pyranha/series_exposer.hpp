@@ -300,42 +300,42 @@ struct series_exposer
 	static void power_series_exposer(bp::class_<T> &,
 		typename std::enable_if<!is_power_series<T>::value>::type * = piranha_nullptr)
 	{}
-	// Harmonic degree wrappers.
+	// Trigonometric wrappers.
 	template <typename S>
-	static decltype(std::declval<S>().h_degree()) wrap_h_degree(const S &s)
+	static decltype(std::declval<S>().t_degree()) wrap_t_degree(const S &s)
 	{
-		return s.h_degree();
+		return s.t_degree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().h_degree(std::declval<std::set<std::string>>())) wrap_partial_h_degree(const S &s, bp::list l)
+	static decltype(std::declval<S>().t_degree(std::declval<std::set<std::string>>())) wrap_partial_t_degree(const S &s, bp::list l)
 	{
 		bp::stl_input_iterator<std::string> begin(l), end;
-		return s.h_degree(std::set<std::string>(begin,end));
+		return s.t_degree(std::set<std::string>(begin,end));
 	}
 	template <typename S>
-	static decltype(std::declval<S>().h_ldegree()) wrap_h_ldegree(const S &s)
+	static decltype(std::declval<S>().t_ldegree()) wrap_t_ldegree(const S &s)
 	{
-		return s.h_ldegree();
+		return s.t_ldegree();
 	}
 	template <typename S>
-	static decltype(std::declval<S>().h_ldegree(std::declval<std::set<std::string>>())) wrap_partial_h_ldegree(const S &s, bp::list l)
+	static decltype(std::declval<S>().t_ldegree(std::declval<std::set<std::string>>())) wrap_partial_t_ldegree(const S &s, bp::list l)
 	{
 		bp::stl_input_iterator<std::string> begin(l), end;
-		return s.h_ldegree(std::set<std::string>(begin,end));
+		return s.t_ldegree(std::set<std::string>(begin,end));
 	}
-	// Harmonic degree exposer.
+	// Trigonometric degree exposer.
 	template <typename T>
-	static void harmonic_series_exposer(bp::class_<T> &series_class,
-		typename std::enable_if<std::is_base_of<detail::poisson_series_tag,T>::value>::type * = piranha_nullptr)
+	static void trigonometric_series_exposer(bp::class_<T> &series_class,
+		typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = piranha_nullptr)
 	{
-		series_class.def("h_degree",wrap_h_degree<T>);
-		series_class.def("h_degree",wrap_partial_h_degree<T>);
-		series_class.def("h_ldegree",wrap_h_ldegree<T>);
-		series_class.def("h_ldegree",wrap_partial_h_ldegree<T>);
+		series_class.def("t_degree",wrap_t_degree<T>);
+		series_class.def("t_degree",wrap_partial_t_degree<T>);
+		series_class.def("t_ldegree",wrap_t_ldegree<T>);
+		series_class.def("t_ldegree",wrap_partial_t_ldegree<T>);
 	}
 	template <typename T>
-	static void harmonic_series_exposer(bp::class_<T> &,
-		typename std::enable_if<!std::is_base_of<detail::poisson_series_tag,T>::value>::type * = piranha_nullptr)
+	static void trigonometric_series_exposer(bp::class_<T> &,
+		typename std::enable_if<!std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = piranha_nullptr)
 	{}
 	// Latex representation.
 	template <typename S>
@@ -450,8 +450,8 @@ struct series_exposer
 		bp::def("_cos",sin_cos_wrapper<true,series_type>);
 		// Power series methods.
 		power_series_exposer(series_class);
-		// Harmonic series methods.
-		harmonic_series_exposer(series_class);
+		// Trigonometric series methods.
+		trigonometric_series_exposer(series_class);
 		// Substitution with self.
 		series_class.def("subs",&series_type::template subs<series_type>);
 		series_class.def("ipow_subs",&series_type::template ipow_subs<series_type>);
