@@ -67,8 +67,9 @@ namespace piranha
  * by piranha::kronecker_array. The boolean <em>flavour</em> of the monomial indicates whether it represents
  * a cosine (<tt>true</tt>) or sine (<tt>false</tt>).
  * 
- * Similarly to an ordinary monomial, this class provides methods to query the <em>harmonic</em> (partial) (low) degree, defined
- * as if the multipliers were exponents of a regular monomial (e.g., the total harmonic degree is the sum of the multipliers).
+ * Similarly to an ordinary monomial, this class provides methods to query the <em>trigonometric</em> (partial) (low) degree, defined
+ * as if the multipliers were exponents of a regular monomial (e.g., the total trigonometric degree is the sum of the multipliers).
+ * Closely related is the concept of trigonometric order, calculated by adding the absolute values of the multipliers.
  * 
  * This class is a model of the piranha::concept::Key concept.
  * 
@@ -87,7 +88,7 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
- * of h_degree around the code to make sure the change has no nasty effects.
+ * of t_degree around the code to make sure the change has no nasty effects.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
@@ -410,37 +411,37 @@ class real_trigonometric_kronecker_monomial
 			}
 			return (!m_value && m_flavour);
 		}
-		/// Harmonic degree.
+		/// Trigonometric degree.
 		/**
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return harmonic degree of the monomial.
+		 * @return trigonometric degree of the monomial.
 		 * 
 		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type h_degree(const symbol_set &args) const
+		value_type t_degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			return detail::monomial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,args);
 		}
-		/// Low harmonic degree.
+		/// Low trigonometric degree.
 		/**
-		 * Equivalent to the harmonic degree.
+		 * Equivalent to the trigonometric degree.
 		 * 
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return low harmonic degree of the monomial.
+		 * @return low trigonometric degree of the monomial.
 		 * 
-		 * @throws unspecified any exception thrown by h_degree().
+		 * @throws unspecified any exception thrown by t_degree().
 		 */
-		value_type h_ldegree(const symbol_set &args) const
+		value_type t_ldegree(const symbol_set &args) const
 		{
-			return h_degree(args);
+			return t_degree(args);
 		}
-		/// Partial harmonic degree.
+		/// Partial trigonometric degree.
 		/**
-		 * Partial harmonic degree of the monomial: only the symbols with names in \p active_args are considered during the computation
+		 * Partial trigonometric degree of the monomial: only the symbols with names in \p active_args are considered during the computation
 		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
 		 * 
 		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
@@ -452,25 +453,87 @@ class real_trigonometric_kronecker_monomial
 		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
 		 * @throws unspecified any exception thrown by unpack().
 		 */
-		value_type h_degree(const std::set<std::string> &active_args, const symbol_set &args) const
+		value_type t_degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			return detail::monomial_partial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,active_args,args);
 		}
-		/// Partial low harmonic degree.
+		/// Partial low trigonometric degree.
 		/**
-		 * Equivalent to the partial harmonic degree.
+		 * Equivalent to the partial trigonometric degree.
 		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low harmonic degree of the monomial.
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low trigonometric degree of the monomial.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the partial low harmonic degree.
+		 * @return the partial low trigonometric degree.
 		 * 
-		 * @throws unspecified any exception thrown by h_degree().
+		 * @throws unspecified any exception thrown by t_degree().
 		 */
-		value_type h_ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
+		value_type t_ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
-			return h_degree(active_args,args);
+			return t_degree(active_args,args);
+		}
+		/// Trigonometric order.
+		/**
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return trigonometric order of the monomial.
+		 * 
+		 * @throws std::overflow_error if the computation of the order overflows type \p value_type.
+		 * @throws unspecified any exception thrown by unpack().
+		 */
+		value_type t_order(const symbol_set &args) const
+		{
+			const auto tmp = unpack(args);
+			return detail::monomial_degree<value_type>(tmp,detail::km_safe_abs_adder<value_type>,args);
+		}
+		/// Low trigonometric order.
+		/**
+		 * Equivalent to the trigonometric order.
+		 * 
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return low trigonometric order of the monomial.
+		 * 
+		 * @throws unspecified any exception thrown by t_order().
+		 */
+		value_type t_lorder(const symbol_set &args) const
+		{
+			return t_order(args);
+		}
+		/// Partial trigonometric order.
+		/**
+		 * Partial trigonometric order of the monomial: only the symbols with names in \p active_args are considered during the computation
+		 * of the order. Symbols in \p active_args not appearing in \p args are not considered.
+		 * 
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial order of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols in
+		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
+		 * 
+		 * @throws std::overflow_error if the computation of the order overflows type \p value_type.
+		 * @throws unspecified any exception thrown by unpack().
+		 */
+		value_type t_order(const std::set<std::string> &active_args, const symbol_set &args) const
+		{
+			const auto tmp = unpack(args);
+			return detail::monomial_partial_degree<value_type>(tmp,detail::km_safe_abs_adder<value_type>,active_args,args);
+		}
+		/// Partial low trigonometric order.
+		/**
+		 * Equivalent to the partial trigonometric order.
+		 * 
+		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low trigonometric order of the monomial.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the partial low trigonometric order.
+		 * 
+		 * @throws unspecified any exception thrown by t_order().
+		 */
+		value_type t_lorder(const std::set<std::string> &active_args, const symbol_set &args) const
+		{
+			return t_order(active_args,args);
 		}
 		/// Multiply monomial.
 		/**

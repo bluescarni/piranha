@@ -21,13 +21,13 @@
 #ifndef PIRANHA_TRIGONOMETRIC_SERIES_HPP
 #define PIRANHA_TRIGONOMETRIC_SERIES_HPP
 
-#include <algorithm>
 #include <functional>
 #include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include "detail/degree_commons.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
@@ -184,17 +184,6 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 				return t.m_key.t_lorder(names,s);
 			}
 		};
-		template <typename Container, typename Getter, typename Cmp>
-		static auto generic_series_degree(const Container &c, Getter &&g, Cmp &&cmp) -> decltype(g(std::declval<typename Container::key_type>()))
-		{
-			typedef typename Container::key_type term_type;
-			typedef decltype(g(std::declval<term_type>())) return_type;
-			const auto it = std::max_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
-				return cmp(g(t1),g(t2));
-
-			});
-			return (it == c.end()) ? return_type(0) : g(*it);
-		}
 	public:
 		/// Defaulted default constructor.
 		trigonometric_series() = default;
@@ -227,7 +216,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this](const term_type &t) {
 				return t_get<term_type>::t_degree(t,this->m_symbol_set);
 			};
-			return generic_series_degree(this->m_container,g,std::less<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::less<return_type>());
 		}
 		/// Partial trigonometric degree.
 		/**
@@ -248,7 +237,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this,&names](const term_type &t) {
 				return t_get<term_type>::t_degree(t,this->m_symbol_set,names);
 			};
-			return generic_series_degree(this->m_container,g,std::less<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::less<return_type>());
 		}
 		/// Total trigonometric low degree.
 		/**
@@ -266,7 +255,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this](const term_type &t) {
 				return t_get<term_type>::t_ldegree(t,this->m_symbol_set);
 			};
-			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::greater<return_type>());
 		}
 		/// Partial trigonometric low degree.
 		/**
@@ -287,7 +276,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this,&names](const term_type &t) {
 				return t_get<term_type>::t_ldegree(t,this->m_symbol_set,names);
 			};
-			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::greater<return_type>());
 		}
 		/// Total trigonometric order.
 		/**
@@ -305,7 +294,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this](const term_type &t) {
 				return t_get<term_type>::t_order(t,this->m_symbol_set);
 			};
-			return generic_series_degree(this->m_container,g,std::less<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::less<return_type>());
 		}
 		/// Partial trigonometric order.
 		/**
@@ -326,7 +315,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this,&names](const term_type &t) {
 				return t_get<term_type>::t_order(t,this->m_symbol_set,names);
 			};
-			return generic_series_degree(this->m_container,g,std::less<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::less<return_type>());
 		}
 		/// Total trigonometric low order.
 		/**
@@ -344,7 +333,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this](const term_type &t) {
 				return t_get<term_type>::t_lorder(t,this->m_symbol_set);
 			};
-			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::greater<return_type>());
 		}
 		/// Partial trigonometric low order.
 		/**
@@ -365,7 +354,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 			auto g = [this,&names](const term_type &t) {
 				return t_get<term_type>::t_lorder(t,this->m_symbol_set,names);
 			};
-			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+			return detail::generic_series_degree(this->m_container,g,std::greater<return_type>());
 		}
 };
 

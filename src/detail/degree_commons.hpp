@@ -21,9 +21,11 @@
 #ifndef PIRANHA_DETAIL_DEGREE_COMMONS_HPP
 #define PIRANHA_DETAIL_DEGREE_COMMONS_HPP
 
+#include <algorithm>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "../config.hpp"
 #include "../exceptions.hpp"
@@ -76,6 +78,18 @@ inline Retval monomial_partial_degree(const Container &c, const Op &op, const st
 		}
 	}
 	return retval;
+}
+
+// Generic functor to calculate degree-like properties in series.
+template <typename Container, typename Getter, typename Cmp>
+inline auto generic_series_degree(const Container &c, Getter &&g, Cmp &&cmp) -> decltype(g(std::declval<typename Container::key_type>()))
+{
+	typedef typename Container::key_type term_type;
+	typedef decltype(g(std::declval<term_type>())) return_type;
+	const auto it = std::max_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
+		return cmp(g(t1),g(t2));
+		});
+	return (it == c.end()) ? return_type(0) : g(*it);
 }
 
 }}

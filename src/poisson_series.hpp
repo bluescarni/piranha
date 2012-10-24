@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/concept/assert.hpp>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -43,6 +42,7 @@
 #include "series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "trigonometric_series.hpp"
 
 namespace piranha
 {
@@ -68,17 +68,13 @@ namespace piranha
  * Move semantics is equivalent to piranha::power_series's move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo the h_degree methods should probably go in the future in a harmonic_series toolbox (which, contrary to the power_series
- * toolbox, would allow only either cf or key to have harmonic degree). This should all be wrapped up in a type-trait/concept thing
- * similarly to the upcoming power_series type-trait rework. The harmonic order Morbidelli talks about should go in it as well.
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,
+	public power_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>>,
 	detail::poisson_series_tag
 {
-		typedef power_series<series<poisson_series_term<Cf>,poisson_series<Cf>>> base;
+		typedef power_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>> base;
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
 			std::is_same<T,std::true_type>::value>::type * = piranha_nullptr) const
@@ -138,7 +134,7 @@ class poisson_series:
 				poisson_series(math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))));
 		}
 		// Subs typedefs.
-		// TODO: fix declval usage.
+		// TODO: fix declval usage. -> remove it everywhere, remove <utility>.
 		template <typename T>
 		struct subs_type
 		{
@@ -158,63 +154,6 @@ class poisson_series:
 				std::declval<poisson_series>()
 			) type;
 		};
-		// Harmonic degree utilities.
-		template <typename... Args>
-		struct h_degree_type
-		{
-			typedef typename base::term_type::key_type key_type;
-			typedef decltype(std::declval<key_type>().h_degree(
-				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
-		};
-		template <typename... Args>
-		struct h_ldegree_type
-		{
-			typedef typename base::term_type::key_type key_type;
-			typedef decltype(std::declval<key_type>().h_ldegree(
-				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
-		};
-		template <typename... Args>
-		typename h_degree_type<Args ...>::type h_degree_impl(Args && ... params) const
-		{
-			// NOTE: this code is taken from power series, keep it in mind
-			// if it gets changed.
-			typedef typename h_degree_type<Args ...>::type return_type;
-			if (this->empty()) {
-				return return_type(0);
-			}
-			auto it = this->m_container.begin();
-			const auto it_f = this->m_container.end();
-			return_type retval = it->m_key.h_degree(std::forward<Args>(params)...,this->m_symbol_set);
-			++it;
-			return_type tmp;
-			for (; it != it_f; ++it) {
-				tmp = it->m_key.h_degree(std::forward<Args>(params)...,this->m_symbol_set);
-				if (tmp > retval) {
-					retval = std::move(tmp);
-				}
-			}
-			return retval;
-		}
-		template <typename... Args>
-		typename h_ldegree_type<Args ...>::type h_ldegree_impl(Args && ... params) const
-		{
-			typedef typename h_ldegree_type<Args ...>::type return_type;
-			if (this->empty()) {
-				return return_type(0);
-			}
-			auto it = this->m_container.begin();
-			const auto it_f = this->m_container.end();
-			return_type retval = it->m_key.h_ldegree(std::forward<Args>(params)...,this->m_symbol_set);
-			++it;
-			return_type tmp;
-			for (; it != it_f; ++it) {
-				tmp = it->m_key.h_ldegree(std::forward<Args>(params)...,this->m_symbol_set);
-				if (tmp < retval) {
-					retval = std::move(tmp);
-				}
-			}
-			return retval;
-		}
 		// Implementation details for integration.
 		template <typename T>
 		static auto integrate_cf(const T &cf, const std::string &name,
@@ -425,87 +364,6 @@ class poisson_series:
 				retval += cf_sub * tmp_series;
 			}
 			return retval;
-		}
-		/// Harmonic degree.
-		/**
-		 * The harmonic degree of a Poisson series is defined in the same way as the degree in a polynomial,
-		 * with the exponents replaced by the multipliers. That is, the harmonic degree of a term is the sum
-		 * of its trigonometric multipliers, and the harmonic degree of a series is given by the term with the
-		 * highest harmonic degree.
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * @return the total harmonic degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of return type from zero,
-		 * - the calculation of the degree of each term,
-		 * - the assignment and greater-than operators for the return type.
-		 * 
-		 * \todo requirement on the degree type (less-than comparable, etc.), probably should fold them in with the new has_degree
-		 * type-trait (and do the same for power_series_term).
-		 */
-		typename h_degree_type<>::type h_degree() const
-		{
-			return h_degree_impl();
-		}
-		/// Partial harmonic degree.
-		/**
-		 * Equivalent to the harmonic degree, but only the symbols in \p s are considered in the computation.
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * @param[in] s list of names of the variables that will be considered in the computation.
-		 * 
-		 * @return the partial harmonic degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of return type from zero,
-		 * - the calculation of the degree of each term,
-		 * - the assignment and greater-than operators for the return type.
-		 */
-		typename h_degree_type<std::set<std::string>>::type h_degree(const std::set<std::string> &s) const
-		{
-			return h_degree_impl(s);
-		}
-		/// Harmonic low degree.
-		/**
-		 * The harmonic low degree of a Poisson series is defined in the same way as the low degree in a polynomial,
-		 * with the exponents replaced by the multipliers. That is, the harmonic degree of a term is the sum
-		 * of its trigonometric multipliers, and the harmonic low degree of a series is given by the term with the
-		 * lowest harmonic degree.
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * @return the total harmonic low degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of return type from zero,
-		 * - the calculation of the degree of each term,
-		 * - the assignment and less-than operators for the return type.
-		 */
-		typename h_ldegree_type<>::type h_ldegree() const
-		{
-			return h_ldegree_impl();
-		}
-		/// Partial harmonic low degree.
-		/**
-		 * Equivalent to the harmonic low degree, but only the symbols in \p s are considered in the computation.
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * @param[in] s list of names of the variables that will be considered in the computation.
-		 * 
-		 * @return the partial harmonic low degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of return type from zero,
-		 * - the calculation of the degree of each term,
-		 * - the assignment and less-than operators for the return type.
-		 */
-		typename h_ldegree_type<std::set<std::string>>::type h_ldegree(const std::set<std::string> &s) const
-		{
-			return h_ldegree_impl(s);
 		}
 		/// Integration.
 		/**

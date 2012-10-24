@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(rtkm_is_unitary_test)
 	boost::mpl::for_each<int_types>(is_unitary_tester());
 }
 
-struct h_degree_tester
+struct t_degree_tester
 {
 	template <typename T>
 	void operator()(const T &)
@@ -308,44 +308,130 @@ struct h_degree_tester
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
 		k_type k1;
 		symbol_set vs1;
-		BOOST_CHECK(k1.h_degree(vs1) == 0);
-		BOOST_CHECK(k1.h_ldegree(vs1) == 0);
+		BOOST_CHECK(k1.t_degree(vs1) == 0);
+		BOOST_CHECK(k1.t_ldegree(vs1) == 0);
 		k_type k2({0});
 		vs1.add(symbol("a"));
-		BOOST_CHECK(k2.h_degree(vs1) == 0);
-		BOOST_CHECK(k2.h_ldegree(vs1) == 0);
+		BOOST_CHECK(k2.t_degree(vs1) == 0);
+		BOOST_CHECK(k2.t_ldegree(vs1) == 0);
 		k_type k3({-1});
-		BOOST_CHECK(k3.h_degree(vs1) == -1);
-		BOOST_CHECK(k3.h_ldegree(vs1) == -1);
+		BOOST_CHECK(k3.t_degree(vs1) == -1);
+		BOOST_CHECK(k3.t_ldegree(vs1) == -1);
 		vs1.add(symbol("b"));
 		k_type k4({0,0});
-		BOOST_CHECK(k4.h_degree(vs1) == 0);
-		BOOST_CHECK(k4.h_ldegree(vs1) == 0);
+		BOOST_CHECK(k4.t_degree(vs1) == 0);
+		BOOST_CHECK(k4.t_ldegree(vs1) == 0);
 		k_type k5({-1,-1});
-		BOOST_CHECK(k5.h_degree(vs1) == -2);
-		BOOST_CHECK(k5.h_degree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.h_degree({},vs1) == 0);
-		BOOST_CHECK(k5.h_degree({"f"},vs1) == 0);
-		BOOST_CHECK(k5.h_degree({"a","b"},vs1) == -2);
-		BOOST_CHECK(k5.h_degree({"a","c"},vs1) == -1);
-		BOOST_CHECK(k5.h_degree({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.h_degree({"d","b"},vs1) == -1);
-		BOOST_CHECK(k5.h_degree({"A","a"},vs1) == -1);
-		BOOST_CHECK(k5.h_ldegree(vs1) == -2);
-		BOOST_CHECK(k5.h_ldegree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.h_ldegree({},vs1) == 0);
-		BOOST_CHECK(k5.h_ldegree({"f"},vs1) == 0);
-		BOOST_CHECK(k5.h_ldegree({"a","b"},vs1) == -2);
-		BOOST_CHECK(k5.h_ldegree({"a","c"},vs1) == -1);
-		BOOST_CHECK(k5.h_ldegree({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.h_ldegree({"d","b"},vs1) == -1);
-		BOOST_CHECK(k5.h_ldegree({"A","a"},vs1) == -1);
+		BOOST_CHECK(k5.t_degree(vs1) == -2);
+		BOOST_CHECK(k5.t_degree({"a"},vs1) == -1);
+		BOOST_CHECK(k5.t_degree({},vs1) == 0);
+		BOOST_CHECK(k5.t_degree({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_degree({"a","b"},vs1) == -2);
+		BOOST_CHECK(k5.t_degree({"a","c"},vs1) == -1);
+		BOOST_CHECK(k5.t_degree({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_degree({"d","b"},vs1) == -1);
+		BOOST_CHECK(k5.t_degree({"A","a"},vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree(vs1) == -2);
+		BOOST_CHECK(k5.t_ldegree({"a"},vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree({},vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree({"a","b"},vs1) == -2);
+		BOOST_CHECK(k5.t_ldegree({"a","c"},vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree({"d","b"},vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree({"A","a"},vs1) == -1);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(rtkm_h_degree_test)
+BOOST_AUTO_TEST_CASE(rtkm_t_degree_test)
 {
-	boost::mpl::for_each<int_types>(h_degree_tester());
+	boost::mpl::for_each<int_types>(t_degree_tester());
+}
+
+struct t_order_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		k_type k1;
+		symbol_set vs1;
+		BOOST_CHECK(k1.t_order(vs1) == 0);
+		BOOST_CHECK(k1.t_lorder(vs1) == 0);
+		k_type k2({0});
+		vs1.add(symbol("a"));
+		BOOST_CHECK(k2.t_order(vs1) == 0);
+		BOOST_CHECK(k2.t_lorder(vs1) == 0);
+		k_type k3({-1});
+		BOOST_CHECK(k3.t_order(vs1) == 1);
+		BOOST_CHECK(k3.t_lorder(vs1) == 1);
+		vs1.add(symbol("b"));
+		k_type k4({0,0});
+		BOOST_CHECK(k4.t_order(vs1) == 0);
+		BOOST_CHECK(k4.t_lorder(vs1) == 0);
+		k_type k5({-1,-1});
+		BOOST_CHECK(k5.t_order(vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+		k5 = k_type({-1,1});
+		BOOST_CHECK(k5.t_order(vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+		k5 = k_type({1,-1});
+		BOOST_CHECK(k5.t_order(vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
+		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_t_order_test)
+{
+	boost::mpl::for_each<int_types>(t_order_tester());
 }
 
 struct multiply_tester
@@ -1105,4 +1191,22 @@ struct trim_tester
 BOOST_AUTO_TEST_CASE(rtkm_trim_test)
 {
 	boost::mpl::for_each<int_types>(trim_tester());
+}
+
+struct tt_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		BOOST_CHECK(key_has_t_degree<k_type>::value);
+		BOOST_CHECK(key_has_t_ldegree<k_type>::value);
+		BOOST_CHECK(key_has_t_order<k_type>::value);
+		BOOST_CHECK(key_has_t_lorder<k_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_tt_test)
+{
+	boost::mpl::for_each<int_types>(tt_tester());
 }
