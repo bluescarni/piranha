@@ -22,6 +22,9 @@
 #define PIRANHA_TRIGONOMETRIC_SERIES_HPP
 
 #include <algorithm>
+#include <functional>
+#include <set>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -74,7 +77,8 @@ struct is_trigonometric_term
  * for the key type.
  * 
  * Note that in order for the trigonometric methods to be enabled, coefficient and key type cannot satisfy these type traits at the same time,
- * and all degree/order type traits need to be satisfied for the coefficient/key type.
+ * and all degree/order type traits need to be satisfied for the coefficient/key type. Note also that the types representing the degree/order
+ * must be constructible from the integral constant zero and less-than and greater-than comparable.
  * 
  * If the above requirements are not satisfied, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
@@ -104,63 +108,92 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 		{
 			// Paranoia check.
 			static_assert(detail::cf_trig_score<typename Term::cf_type>::value == 4,"Invalid trig score.");
-			template <typename ... Args>
-			static auto t_degree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_degree(t.m_cf,args...))
+			// NOTE: here and below we could do this with variadic templates, avoiding the dual overload for partial degree/order.
+			// Unfortunately, as of GCC 4.6 decltype() with variadic unpacking is not implemented. Keep this in mind for future improvement:
+			// template <typename ... Args>
+			// static auto t_degree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_degree(t.m_cf,args...))
+			// {
+			//	return math::t_degree(t.m_cf,args...);
+			// }
+			static auto t_degree(const Term &t, const symbol_set &) -> decltype(math::t_degree(t.m_cf))
 			{
-				return math::t_degree(t.m_cf,args...);
+				return math::t_degree(t.m_cf);
 			}
-			template <typename ... Args>
-			static auto t_ldegree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_ldegree(t.m_cf,args...))
+			static auto t_degree(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_degree(t.m_cf,names))
 			{
-				return math::t_ldegree(t.m_cf,args...);
+				return math::t_degree(t.m_cf,names);
 			}
-			template <typename ... Args>
-			static auto t_order(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_order(t.m_cf,args...))
+			static auto t_ldegree(const Term &t, const symbol_set &) -> decltype(math::t_ldegree(t.m_cf))
 			{
-				return math::t_order(t.m_cf,args...);
+				return math::t_ldegree(t.m_cf);
 			}
-			template <typename ... Args>
-			static auto t_lorder(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_lorder(t.m_cf,args...))
+			static auto t_ldegree(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_ldegree(t.m_cf,names))
 			{
-				return math::t_lorder(t.m_cf,args...);
+				return math::t_ldegree(t.m_cf,names);
+			}
+			static auto t_order(const Term &t, const symbol_set &) -> decltype(math::t_order(t.m_cf))
+			{
+				return math::t_order(t.m_cf);
+			}
+			static auto t_order(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_order(t.m_cf,names))
+			{
+				return math::t_order(t.m_cf,names);
+			}
+			static auto t_lorder(const Term &t, const symbol_set &) -> decltype(math::t_lorder(t.m_cf))
+			{
+				return math::t_lorder(t.m_cf);
+			}
+			static auto t_lorder(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_lorder(t.m_cf,names))
+			{
+				return math::t_lorder(t.m_cf,names);
 			}
 		};
 		template <typename Term>
 		struct t_get<Term,typename std::enable_if<detail::key_trig_score<typename Term::key_type>::value == 4>::type>
 		{
-			template <typename ... Args>
-			static auto t_degree(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_degree(s,args...))
+			static auto t_degree(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_degree(s))
 			{
-				return t.m_key.t_degree(args...,s);
+				return t.m_key.t_degree(s);
 			}
-			template <typename ... Args>
-			static auto t_ldegree(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_ldegree(s,args...))
+			static auto t_degree(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_degree(names,s))
 			{
-				return t.m_key.t_ldegree(args...,s);
+				return t.m_key.t_degree(names,s);
 			}
-			template <typename ... Args>
-			static auto t_order(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_order(s,args...))
+			static auto t_ldegree(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_ldegree(s))
 			{
-				return t.m_key.t_order(args...,s);
+				return t.m_key.t_ldegree(s);
 			}
-			template <typename ... Args>
-			static auto t_lorder(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_lorder(s,args...))
+			static auto t_ldegree(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_ldegree(names,s))
 			{
-				return t.m_key.t_lorder(args...,s);
+				return t.m_key.t_ldegree(names,s);
+			}
+			static auto t_order(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_order(s))
+			{
+				return t.m_key.t_order(s);
+			}
+			static auto t_order(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_order(names,s))
+			{
+				return t.m_key.t_order(names,s);
+			}
+			static auto t_lorder(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_lorder(s))
+			{
+				return t.m_key.t_lorder(s);
+			}
+			static auto t_lorder(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_lorder(names,s))
+			{
+				return t.m_key.t_lorder(names,s);
 			}
 		};
-		template <typename... Args>
-		auto t_degree_impl(const Args & ... params) const
+		template <typename Container, typename Getter, typename Cmp>
+		static auto generic_series_degree(const Container &c, Getter &&g, Cmp &&cmp) -> decltype(g(std::declval<typename Container::key_type>()))
 		{
-			typedef typename Series::term_type term_type;
-			typedef decltype(t_get<term_type>::t_degree(std::declval<term_type>(),this->m_symbol_set,params...)) return_type;
-			const auto it = std::max_element(this->m_container.begin(),this->m_container.end(),
-				[&](const term_type &t1, const term_type &t2) {
-					return t_get<term_type>::t_degree(t1,this->m_symbol_set,params...) <
-						t_get<term_type>::t_degree(t2,this->m_symbol_set,params...);
-				});
-			return (it == this->m_container.end()) ? return_type(0) :
-				it->degree(std::forward<Args>(params)...,this->m_symbol_set);
+			typedef typename Container::key_type term_type;
+			typedef decltype(g(std::declval<term_type>())) return_type;
+			const auto it = std::max_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
+				return cmp(g(t1),g(t2));
+
+			});
+			return (it == c.end()) ? return_type(0) : g(*it);
 		}
 	public:
 		/// Defaulted default constructor.
@@ -175,15 +208,170 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 		/// Defaulted move assignment operator.
 		trigonometric_series &operator=(trigonometric_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(trigonometric_series,base)
-		auto t_degree() const -> decltype(std::declval<trigonometric_series>().degree_impl())
+		// NOTE: this could be implemented generically with variadic template capture in the lambda, in order to avoid the partial overloads. Not implemented
+		// yet in GCC though:
+		// http://stackoverflow.com/questions/3377828/variadic-templates-for-lambda-expressions
+		/// Total trigonometric degree.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @return total trigonometric degree of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		auto t_degree() const -> decltype(t_get<typename Series::term_type>::t_degree(std::declval<typename Series::term_type>(),std::declval<symbol_set>()))
 		{
-			return degree_impl();
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_degree(std::declval<term_type>(),std::declval<symbol_set>())) return_type;
+			auto g = [this](const term_type &t) {
+				return t_get<term_type>::t_degree(t,this->m_symbol_set);
+			};
+			return generic_series_degree(this->m_container,g,std::less<return_type>());
+		}
+		/// Partial trigonometric degree.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @param[in] names list of names of the variables that will be considered in the computation of the degree.
+		 * 
+		 * @return partial trigonometric degree of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		auto t_degree(const std::set<std::string> &names) const ->
+			decltype(t_get<typename Series::term_type>::t_degree(std::declval<typename Series::term_type>(),std::declval<symbol_set>(),names))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_degree(std::declval<term_type>(),std::declval<symbol_set>(),names)) return_type;
+			auto g = [this,&names](const term_type &t) {
+				return t_get<term_type>::t_degree(t,this->m_symbol_set,names);
+			};
+			return generic_series_degree(this->m_container,g,std::less<return_type>());
+		}
+		/// Total trigonometric low degree.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @return total trigonometric low degree of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		auto t_ldegree() const -> decltype(t_get<typename Series::term_type>::t_ldegree(std::declval<typename Series::term_type>(),std::declval<symbol_set>()))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_ldegree(std::declval<term_type>(),std::declval<symbol_set>())) return_type;
+			auto g = [this](const term_type &t) {
+				return t_get<term_type>::t_ldegree(t,this->m_symbol_set);
+			};
+			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+		}
+		/// Partial trigonometric low degree.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @param[in] names list of names of the variables that will be considered in the computation of the degree.
+		 * 
+		 * @return partial trigonometric low degree of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		auto t_ldegree(const std::set<std::string> &names) const ->
+			decltype(t_get<typename Series::term_type>::t_ldegree(std::declval<typename Series::term_type>(),std::declval<symbol_set>(),names))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_ldegree(std::declval<term_type>(),std::declval<symbol_set>(),names)) return_type;
+			auto g = [this,&names](const term_type &t) {
+				return t_get<term_type>::t_ldegree(t,this->m_symbol_set,names);
+			};
+			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+		}
+		/// Total trigonometric order.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @return total trigonometric order of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		auto t_order() const -> decltype(t_get<typename Series::term_type>::t_order(std::declval<typename Series::term_type>(),std::declval<symbol_set>()))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_order(std::declval<term_type>(),std::declval<symbol_set>())) return_type;
+			auto g = [this](const term_type &t) {
+				return t_get<term_type>::t_order(t,this->m_symbol_set);
+			};
+			return generic_series_degree(this->m_container,g,std::less<return_type>());
+		}
+		/// Partial trigonometric order.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @param[in] names list of names of the variables that will be considered in the computation of the order.
+		 * 
+		 * @return partial trigonometric order of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		auto t_order(const std::set<std::string> &names) const ->
+			decltype(t_get<typename Series::term_type>::t_order(std::declval<typename Series::term_type>(),std::declval<symbol_set>(),names))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_order(std::declval<term_type>(),std::declval<symbol_set>(),names)) return_type;
+			auto g = [this,&names](const term_type &t) {
+				return t_get<term_type>::t_order(t,this->m_symbol_set,names);
+			};
+			return generic_series_degree(this->m_container,g,std::less<return_type>());
+		}
+		/// Total trigonometric low order.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @return total trigonometric low order of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		auto t_lorder() const -> decltype(t_get<typename Series::term_type>::t_lorder(std::declval<typename Series::term_type>(),std::declval<symbol_set>()))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_lorder(std::declval<term_type>(),std::declval<symbol_set>())) return_type;
+			auto g = [this](const term_type &t) {
+				return t_get<term_type>::t_lorder(t,this->m_symbol_set);
+			};
+			return generic_series_degree(this->m_container,g,std::greater<return_type>());
+		}
+		/// Partial trigonometric low order.
+		/**
+		 * \note
+		 * This method is available only if the series satisfies the requirements of piranha::trigonometric_series.
+		 * 
+		 * @param[in] names list of names of the variables that will be considered in the computation of the order.
+		 * 
+		 * @return partial trigonometric low order of the series.
+		 * 
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		auto t_lorder(const std::set<std::string> &names) const ->
+			decltype(t_get<typename Series::term_type>::t_lorder(std::declval<typename Series::term_type>(),std::declval<symbol_set>(),names))
+		{
+			typedef typename Series::term_type term_type;
+			typedef decltype(t_get<term_type>::t_lorder(std::declval<term_type>(),std::declval<symbol_set>(),names)) return_type;
+			auto g = [this,&names](const term_type &t) {
+				return t_get<term_type>::t_lorder(t,this->m_symbol_set,names);
+			};
+			return generic_series_degree(this->m_container,g,std::greater<return_type>());
 		}
 };
 
 template <typename Series>
 class trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>
-	: public Series,toolbox<Series,trigonometric_series<Series,Enable>>
+	: public Series,toolbox<Series,trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>>
 {
 		typedef Series base;
 	public:
@@ -195,6 +383,159 @@ class trigonometric_series<Series,typename std::enable_if<!detail::is_trigonomet
 		trigonometric_series &operator=(trigonometric_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(trigonometric_series,base)
 };
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::t_degree() functor for instances of piranha::trigonometric_series.
+/**
+ * This specialisation is activated if \p TrigonometricSeries derives from and satisfies the requirements of
+ * piranha::trigonometric_series (whose methods will be used in the call operators).
+ */
+template <typename TrigonometricSeries>
+struct t_degree_impl<TrigonometricSeries,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,
+	TrigonometricSeries>::value>::type>
+{
+	/// Total trigonometric degree operator.
+	/**
+	 * @param[in] ts input series.
+	 * 
+	 * @return total trigonometric degree of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_degree().
+	 */
+	auto operator()(const TrigonometricSeries &ts) const -> decltype(ts.t_degree())
+	{
+		return ts.t_degree();
+	}
+	/// Partial trigonometric degree operator.
+	/**
+	 * @param[in] ts input series.
+	 * @param[in] names names of the variables that will be considered in the computation.
+	 * 
+	 * @return partial trigonometric degree of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_degree().
+	 */
+	auto operator()(const TrigonometricSeries &ts, const std::set<std::string> &names) const ->
+		decltype(ts.t_degree(names))
+	{
+		return ts.t_degree(names);
+	}
+};
+
+/// Specialisation of the piranha::math::t_ldegree() functor for instances of piranha::trigonometric_series.
+/**
+ * This specialisation is activated if \p TrigonometricSeries derives from and satisfies the requirements of
+ * piranha::trigonometric_series (whose methods will be used in the call operators).
+ */
+template <typename TrigonometricSeries>
+struct t_ldegree_impl<TrigonometricSeries,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,
+	TrigonometricSeries>::value>::type>
+{
+	/// Total trigonometric low degree operator.
+	/**
+	 * @param[in] ts input series.
+	 * 
+	 * @return total trigonometric low degree of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_ldegree().
+	 */
+	auto operator()(const TrigonometricSeries &ts) const -> decltype(ts.t_ldegree())
+	{
+		return ts.t_ldegree();
+	}
+	/// Partial trigonometric low degree operator.
+	/**
+	 * @param[in] ts input series.
+	 * @param[in] names names of the variables that will be considered in the computation.
+	 * 
+	 * @return partial trigonometric low degree of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_ldegree().
+	 */
+	auto operator()(const TrigonometricSeries &ts, const std::set<std::string> &names) const ->
+		decltype(ts.t_ldegree(names))
+	{
+		return ts.t_ldegree(names);
+	}
+};
+
+/// Specialisation of the piranha::math::t_order() functor for instances of piranha::trigonometric_series.
+/**
+ * This specialisation is activated if \p TrigonometricSeries derives from and satisfies the requirements of
+ * piranha::trigonometric_series (whose methods will be used in the call operators).
+ */
+template <typename TrigonometricSeries>
+struct t_order_impl<TrigonometricSeries,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,
+	TrigonometricSeries>::value>::type>
+{
+	/// Total trigonometric order operator.
+	/**
+	 * @param[in] ts input series.
+	 * 
+	 * @return total trigonometric order of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_order().
+	 */
+	auto operator()(const TrigonometricSeries &ts) const -> decltype(ts.t_order())
+	{
+		return ts.t_order();
+	}
+	/// Partial trigonometric order operator.
+	/**
+	 * @param[in] ts input series.
+	 * @param[in] names names of the variables that will be considered in the computation.
+	 * 
+	 * @return partial trigonometric order of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_order().
+	 */
+	auto operator()(const TrigonometricSeries &ts, const std::set<std::string> &names) const ->
+		decltype(ts.t_order(names))
+	{
+		return ts.t_order(names);
+	}
+};
+
+/// Specialisation of the piranha::math::t_lorder() functor for instances of piranha::trigonometric_series.
+/**
+ * This specialisation is activated if \p TrigonometricSeries derives from and satisfies the requirements of
+ * piranha::trigonometric_series (whose methods will be used in the call operators).
+ */
+template <typename TrigonometricSeries>
+struct t_lorder_impl<TrigonometricSeries,typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,
+	TrigonometricSeries>::value>::type>
+{
+	/// Total trigonometric low order operator.
+	/**
+	 * @param[in] ts input series.
+	 * 
+	 * @return total trigonometric low order of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_lorder().
+	 */
+	auto operator()(const TrigonometricSeries &ts) const -> decltype(ts.t_lorder())
+	{
+		return ts.t_lorder();
+	}
+	/// Partial trigonometric low order operator.
+	/**
+	 * @param[in] ts input series.
+	 * @param[in] names names of the variables that will be considered in the computation.
+	 * 
+	 * @return partial trigonometric low order of \p ts.
+	 *
+	 * @throws unspecified any exception thrown by piranha::trigonometric_series::t_lorder().
+	 */
+	auto operator()(const TrigonometricSeries &ts, const std::set<std::string> &names) const ->
+		decltype(ts.t_lorder(names))
+	{
+		return ts.t_lorder(names);
+	}
+};
+
+}
 
 }
 
