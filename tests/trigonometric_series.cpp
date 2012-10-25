@@ -137,4 +137,16 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK(has_t_ldegree<p_type1>::value);
 	BOOST_CHECK(has_t_order<p_type1>::value);
 	BOOST_CHECK(has_t_lorder<p_type1>::value);
+	// Trigonometric properties in the coefficients.
+	BOOST_CHECK(!has_t_degree<poisson_series<p_type1>>::value);
+	typedef polynomial<p_type1> p_type2;
+	BOOST_CHECK(has_t_degree<p_type2>::value);
+	BOOST_CHECK_EQUAL(p_type2{}.t_degree(),0);
+	BOOST_CHECK_EQUAL(p_type2{"x"}.t_degree(),0);
+	BOOST_CHECK_EQUAL(p_type2{p_type1{"x"}}.t_degree(),0);
+	BOOST_CHECK_EQUAL(p_type2{math::cos(p_type1{"x"})}.t_degree(),1);
+	BOOST_CHECK_EQUAL(p_type2{math::cos(p_type1{"x"}-p_type1{"y"})}.t_degree(),0);
+	BOOST_CHECK_EQUAL(p_type2{1 + math::cos(p_type1{"x"}+p_type1{"y"})}.t_ldegree(),0);
+	BOOST_CHECK_EQUAL(p_type2{math::cos(p_type1{"x"}-p_type1{"y"})}.t_order(),2);
+	BOOST_CHECK_EQUAL(p_type2{math::cos(p_type1{"x"}-p_type1{"y"}) + math::cos(p_type1{"x"}+p_type1{"y"})}.t_lorder(),2);
 }

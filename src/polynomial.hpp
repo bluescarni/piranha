@@ -68,6 +68,7 @@
 #include "task_group.hpp"
 #include "thread_management.hpp"
 #include "threading.hpp"
+#include "trigonometric_series.hpp"
 #include "truncator.hpp"
 
 namespace piranha
@@ -102,7 +103,7 @@ namespace piranha
  */
 template <typename Cf, typename Expo = int>
 class polynomial:
-	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>,
+	public power_series<trigonometric_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>>,
 	detail::polynomial_tag
 {
 		// Make friend with debug class.
@@ -111,7 +112,7 @@ class polynomial:
 		// Make friend with Poisson series.
 		template <typename T>
 		friend class poisson_series;
-		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
+		typedef power_series<trigonometric_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>> base;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
