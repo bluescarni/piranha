@@ -39,6 +39,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_set> // For hash specialisation.
+#include <utility>
 #include <vector>
 
 #include "concepts/poisson_series_coefficient.hpp"
@@ -936,6 +937,26 @@ class integer
 			std::swap(n1->_mp_size,n2->_mp_size);
 			std::swap(n1->_mp_alloc,n2->_mp_alloc);
 		}
+		template <typename T>
+		static unsigned long check_choose_k(const T &k,
+			typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+		{
+			try {
+				return boost::numeric_cast<unsigned long>(k);
+			} catch (...) {
+				piranha_throw(std::invalid_argument,"invalid k argument for binomial coefficient");
+			}
+		}
+		template <typename T>
+		static unsigned long check_choose_k(const T &k,
+			typename std::enable_if<std::is_same<T,integer>::value>::type * = piranha_nullptr)
+		{
+			try {
+				return static_cast<unsigned long>(k);
+			} catch (...) {
+				piranha_throw(std::invalid_argument,"invalid k argument for binomial coefficient");
+			}
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -1832,6 +1853,24 @@ class integer
 			::mpz_fac_ui(retval.m_value,static_cast<unsigned long>(*this));
 			return retval;
 		}
+		/// Binomial coefficient.
+		/**
+		 * Will return \p this choose \p k using the GMP <tt>mpz_bin_ui</tt> function.
+		 * 
+		 * @param[in] k bottom argument for the binomial coefficient.
+		 * 
+		 * @return \p this choose \p k.
+		 * 
+		 * @throws std::invalid_argument if \p k cannot be converted successfully to <tt>unsigned int</tt>.
+		 */
+		template <typename T>
+		integer binomial(const T &k, typename std::enable_if<std::is_integral<T>::value ||
+			std::is_same<integer,T>::value>::type * = piranha_nullptr) const
+		{
+			integer retval;
+			::mpz_bin_ui(retval.m_value,m_value,check_choose_k(k));
+			return retval;
+		}
 		/// Overload output stream operator for piranha::integer.
 		/**
 		 * @param[in] os output stream.
@@ -2243,6 +2282,57 @@ inline integer factorial(const integer &n)
 {
 	return n.factorial();
 }
+
+/// Specialisation of the piranha::math::binomial() functor for piranha::integer.
+/**
+ * This specialisation is enabled if \p T is piranha::integer and \p U can be used as argument for piranha::integer::binomial().
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<
+	std::is_same<T,integer>::value &&
+	std::is_same<decltype(std::declval<integer>().binomial(std::declval<U>())),integer>::value
+	>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n top number.
+	 * @param[in] k bottom number.
+	 * 
+	 * @return \p n choose \p k.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::integer::binomial().
+	 */
+	integer operator()(const integer &n, const U &k) const
+	{
+		return n.binomial(k);
+	}
+};
+
+/// Specialisation of the piranha::math::binomial() functor for integral types.
+/**
+ * This specialisation is enabled if \p T is an integral type that can be used to construct piranha::integer
+ * and \p U can be used as argument for piranha::integer::binomial().
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<
+	std::is_integral<T>::value && std::is_constructible<integer,T>::value &&
+	std::is_same<decltype(std::declval<integer>().binomial(std::declval<U>())),integer>::value
+	>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n top number.
+	 * @param[in] k bottom number.
+	 * 
+	 * @return \p n choose \p k.
+	 * 
+	 * @throws unspecified any exception thrown by constructing piranha::integer from \p n or by piranha::integer::binomial().
+	 */
+	integer operator()(const T &n, const U &k) const
+	{
+		return integer(n).binomial(k);
+	}
+};
 
 }
 

@@ -31,6 +31,7 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/integer_traits.hpp>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -320,4 +321,65 @@ BOOST_AUTO_TEST_CASE(math_key_has_t_lorder_test)
 {
 	BOOST_CHECK(!key_has_t_lorder<monomial<int>>::value);
 	BOOST_CHECK(!key_has_t_lorder<kronecker_monomial<>>::value);
+}
+
+BOOST_AUTO_TEST_CASE(math_binomial_test)
+{
+	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0))>::value));
+	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,integer(0)))>::value));
+	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0u))>::value));
+	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0l))>::value));
+	BOOST_CHECK((std::is_same<float,decltype(math::binomial(0.f,0))>::value));
+	BOOST_CHECK((std::is_same<float,decltype(math::binomial(0.f,0u))>::value));
+	BOOST_CHECK((std::is_same<float,decltype(math::binomial(0.f,0ll))>::value));
+	BOOST_CHECK((std::is_same<long double,decltype(math::binomial(0.l,0))>::value));
+	BOOST_CHECK((std::is_same<long double,decltype(math::binomial(0.l,char(0)))>::value));
+	BOOST_CHECK((std::is_same<long double,decltype(math::binomial(0.l,short(0)))>::value));
+	if (!std::numeric_limits<double>::is_iec559 || !std::numeric_limits<long double>::is_iec559 ||
+		!std::numeric_limits<float>::is_iec559)
+	{
+		return;
+	}
+	BOOST_CHECK_EQUAL(math::binomial(0.,0),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,integer(0u)),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,0u),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.f,0),1.f);
+	BOOST_CHECK_EQUAL(math::binomial(0.l,0),1.l);
+	BOOST_CHECK_THROW(math::binomial(0.,-1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::binomial(1.,0),1.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,0),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-1.,0),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-2.,0),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,1),0.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,2),0.);
+	BOOST_CHECK_EQUAL(math::binomial(1.,0u),1.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,0u),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-1.,0u),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-2.,0u),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,1u),0.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,2u),0.);
+	BOOST_CHECK_EQUAL(math::binomial(1.,0l),1.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,0l),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-1.,0l),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-2.,0l),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,1l),0.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,2l),0.);
+	BOOST_CHECK_EQUAL(math::binomial(1.,0ull),1.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,0ull),1.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,1ull),0.);
+	BOOST_CHECK_EQUAL(math::binomial(0.,2ull),0.);
+	BOOST_CHECK_EQUAL(math::binomial(1.,1ull),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-1.,1ull),-1.);
+	BOOST_CHECK_EQUAL(math::binomial(-5.,1ull),-5.);
+	BOOST_CHECK_EQUAL(math::binomial(5.,1ull),5.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,2ull),1.);
+	BOOST_CHECK_EQUAL(math::binomial(-2.,2ull),3.);
+	BOOST_CHECK_EQUAL(math::binomial(-2.,3ull),-4.);
+	BOOST_CHECK_EQUAL(math::binomial(2.,3ull),0.);
+	BOOST_CHECK_EQUAL(math::binomial(20.,short(3)),1140.);
+	BOOST_CHECK((has_binomial<double,int>::value));
+	BOOST_CHECK((has_binomial<double,unsigned>::value));
+	BOOST_CHECK((has_binomial<float,char>::value));
+	BOOST_CHECK((!has_binomial<float,float>::value));
+	BOOST_CHECK((!has_binomial<float,double>::value));
 }

@@ -858,6 +858,107 @@ inline auto t_lorder(const T &x, const std::set<std::string> &names) -> decltype
 
 }
 
+namespace detail
+{
+
+// Generic binomial implementation.
+template <typename T>
+static inline bool generic_binomial_check_k(const T &, const T &,
+	typename std::enable_if<std::is_unsigned<T>::value>::type * = piranha_nullptr)
+{
+	return false;
+}
+
+template <typename T>
+static inline bool generic_binomial_check_k(const T &k, const T &zero,
+	typename std::enable_if<!std::is_unsigned<T>::value>::type * = piranha_nullptr)
+{
+	return k < zero;
+}
+
+template <typename T, typename U>
+inline T generic_binomial(const T &x, const U &k)
+{
+	static_assert(std::is_integral<U>::value || std::is_same<integer,U>::value,"Invalid type.");
+	const U zero(0), one(1);
+	if (generic_binomial_check_k(k,zero)) {
+		piranha_throw(std::invalid_argument,"negative k value in binomial coefficient");
+	}
+	// Zero at bottom results always in 1.
+	if (k == zero) {
+		return T(1);
+	}
+	T tmp(x - T(1)), retval = x / k;
+	for (U i(k - one); i >= one; --i, --tmp) {
+		retval *= tmp;
+		retval /= i;
+	}
+	return retval;
+}
+
+}
+
+namespace math
+{
+
+/// Default functor for the implementation of piranha::math::binomial().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename U, typename = void>
+struct binomial_impl
+{};
+
+/// Specialisation of the piranha::math::binomial() functor for floating-point top arguments.
+/**
+ * This specialisation is activated when \p T is a floating-point type and \p U an integral type or piranha::integer.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
+	(std::is_integral<U>::value || std::is_same<integer,U>::value)
+	>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] k bottom argument.
+	 * 
+	 * @return \p x choose \p k.
+	 * 
+	 * @throws std::invalid_argument if \p k is negative.
+	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::integer.
+	 */
+	T operator()(const T &x, const U &k)
+	{
+		return detail::generic_binomial(x,k);
+	}
+};
+
+/// Generalised binomial coefficient.
+/**
+ * Will return the generalised binomial coefficient:
+ * \f[
+ * {x \choose k} = \frac{x^{\underline k}}{k!} = \frac{x(x-1)(x-2)\cdots(x-k+1)}{k(k-1)(k-2)\cdots 1}.
+ * \f]
+ * 
+ * The actual implementation of this function is in the piranha::math::binomial_impl functor.
+ * 
+ * @param[in] x top number.
+ * @param[in] k bottom number.
+ * 
+ * @return \p x choose \p k.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl.
+ */
+template <typename T, typename U>
+inline auto binomial(const T &x, const U &k) -> decltype(binomial_impl<T,U>()(x,k))
+{
+	return binomial_impl<T,U>()(x,k);
+}
+
+}
+
 /// Type-trait for differentiable types.
 /**
  * The type-trait will be \p true if piranha::math::partial() can be successfully called on instances of
@@ -1121,6 +1222,25 @@ class key_has_t_lorder: detail::sfinae_types
 		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
 			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
 };
+
+// Static init.
+template <typename T>
+const bool key_has_t_lorder<T>::value;
+
+template <typename T, typename U>
+class has_binomial: detail::sfinae_types
+{
+		template <typename T1, typename U1>
+		static auto test(T1 const *t, U1 const *u) -> decltype(math::binomial(*t,*u),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = sizeof(test((T const *)piranha_nullptr,(U const *)piranha_nullptr)) == sizeof(yes);
+};
+
+// Static init.
+template <typename T, typename U>
+const bool has_binomial<T,U>::value;
 
 }
 

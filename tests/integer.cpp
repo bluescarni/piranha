@@ -945,3 +945,62 @@ BOOST_AUTO_TEST_CASE(integer_abs_test)
 	BOOST_CHECK_EQUAL(piranha::math::abs(piranha::integer(43)),43);
 	BOOST_CHECK_EQUAL(piranha::math::abs(piranha::integer(-43)),43);
 }
+
+BOOST_AUTO_TEST_CASE(integer_binomial_test)
+{
+	BOOST_CHECK_EQUAL(piranha::integer(0).binomial(0),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).binomial(0u),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).binomial(0l),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).binomial(0ull),1);
+	BOOST_CHECK_EQUAL(piranha::integer(0).binomial(piranha::integer(0)),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(0),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(0u),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(0l),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(0ull),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(piranha::integer(0)),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).binomial(0),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-2).binomial(0u),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-3).binomial(0l),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-4).binomial(0ull),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-5).binomial(piranha::integer(0)),1);
+	BOOST_CHECK_EQUAL(piranha::integer(1).binomial(1),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-1).binomial(1),-1);
+	BOOST_CHECK_EQUAL(piranha::integer(-5).binomial(1),-5);
+	BOOST_CHECK_THROW(piranha::integer(-5).binomial(-1),std::invalid_argument);
+	BOOST_CHECK_THROW(piranha::integer(-5).binomial(-1l),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::integer(5).binomial(1),5);
+	BOOST_CHECK_EQUAL(piranha::integer(2).binomial(2),1);
+	BOOST_CHECK_EQUAL(piranha::integer(-2).binomial(2),3);
+	BOOST_CHECK_EQUAL(piranha::integer(-2).binomial(3),-4);
+	BOOST_CHECK_EQUAL(piranha::integer(2).binomial(3),0);
+	BOOST_CHECK_EQUAL(piranha::integer(20).binomial(3),1140);
+	BOOST_CHECK_EQUAL(piranha::integer(-20).binomial(char(30)),piranha::integer("18851684897584"));
+	BOOST_CHECK_EQUAL(piranha::math::binomial(piranha::integer(-20),char(30)),piranha::integer("18851684897584"));
+	BOOST_CHECK((piranha::has_binomial<piranha::integer,int>::value));
+	BOOST_CHECK((piranha::has_binomial<piranha::integer,unsigned short>::value));
+	BOOST_CHECK((piranha::has_binomial<piranha::integer,long long>::value));
+	BOOST_CHECK((piranha::has_binomial<piranha::integer,piranha::integer>::value));
+	BOOST_CHECK((!piranha::has_binomial<piranha::integer,float>::value));
+	BOOST_CHECK((!piranha::has_binomial<piranha::integer,double>::value));
+	BOOST_CHECK((!piranha::has_binomial<piranha::integer,std::string>::value));
+	// Int - integral.
+	BOOST_CHECK((piranha::has_binomial<int,unsigned>::value));
+	BOOST_CHECK((piranha::has_binomial<char,long>::value));
+	BOOST_CHECK((piranha::has_binomial<int,piranha::integer>::value));
+	BOOST_CHECK((!piranha::has_binomial<std::string,int>::value));
+	BOOST_CHECK_EQUAL(piranha::math::binomial(20,3),1140);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(20,3ul),1140);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(20,piranha::integer(3)),1140);
+	BOOST_CHECK_THROW(piranha::math::binomial(20,piranha::integer(-3)),std::invalid_argument);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(0,1l),0);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(0,0l),1);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(1,0l),1);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(-1,0ull),1);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(2,0ull),1);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(2,1ull),2);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(-2,1ull),-2);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(14,12),91);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(-14,12),piranha::integer("5200300"));
+	BOOST_CHECK((std::is_same<piranha::integer,decltype(piranha::math::binomial(0,0))>::value));
+	BOOST_CHECK((std::is_same<piranha::integer,decltype(piranha::math::binomial(0,piranha::integer(0)))>::value));
+}
