@@ -1698,6 +1698,32 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,rational>::value>
 	}
 };
 
+/// Specialisation of the piranha::math::binomial() functor for piranha::rational.
+/**
+ * This specialisation is enabled if \p T is piranha::rational and \p U is an integral type or piranha::integer.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<
+	std::is_same<rational,T>::value &&
+	(std::is_integral<U>::value || std::is_same<integer,U>::value)
+	>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q top number.
+	 * @param[in] k bottom number.
+	 * 
+	 * @return \p q choose \p k.
+	 * 
+	 * @throws std::invalid_argument if \p k is negative.
+	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::rational.
+	 */
+	rational operator()(const rational &q, const U &k) const
+	{
+		return detail::generic_binomial(q,k);
+	}
+};
+
 }
 
 }

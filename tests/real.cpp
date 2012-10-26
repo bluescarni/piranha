@@ -1616,4 +1616,8 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 	BOOST_CHECK(math::abs(math::binomial(real{"3.5"},5) - real{"-0.0273"}) < real{".001"});
 	BOOST_CHECK(math::abs(math::binomial(real{".1"},5) - real{"0.0161"}) < real{".001"});
 	BOOST_CHECK(math::abs(math::binomial(-real{".1"},5) - real{"-0.0244"}) < real{".001"});
+	BOOST_CHECK_EQUAL(math::binomial(real{},2),0);
+	BOOST_CHECK_EQUAL(math::binomial(real{},20),0);
+	BOOST_CHECK_EQUAL(math::binomial(real{.1},0),1);
+	BOOST_CHECK_EQUAL(math::binomial(real{-34.5},0),1);
 }

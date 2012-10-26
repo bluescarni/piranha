@@ -921,3 +921,22 @@ BOOST_AUTO_TEST_CASE(rational_abs_test)
 	BOOST_CHECK_EQUAL(math::abs(rational(42,2)),21);
 	BOOST_CHECK_EQUAL(math::abs(rational(42,-2)),21);
 }
+
+BOOST_AUTO_TEST_CASE(rational_binomial_test)
+{
+	BOOST_CHECK((has_binomial<rational,int>::value));
+	BOOST_CHECK((has_binomial<rational,char>::value));
+	BOOST_CHECK((has_binomial<rational,unsigned>::value));
+	BOOST_CHECK((has_binomial<rational,long>::value));
+	BOOST_CHECK((!has_binomial<rational,std::string>::value));
+	BOOST_CHECK((std::is_same<rational,decltype(math::binomial(rational{},2))>::value));
+	BOOST_CHECK_EQUAL(math::binomial(rational(-14),12),integer("5200300"));
+	BOOST_CHECK_EQUAL(math::binomial(rational(1,10),5),rational("64467/4000000"));
+	BOOST_CHECK_EQUAL(math::binomial(rational(1,-10),5),rational("-97867/4000000"));
+	BOOST_CHECK_EQUAL(math::binomial(rational(8,7),5),rational("-104/16807"));
+	BOOST_CHECK_EQUAL(math::binomial(rational(8,-7),5),rational("-22968/16807"));
+	BOOST_CHECK_EQUAL(math::binomial(rational(8,-7),0l),1);
+	BOOST_CHECK_EQUAL(math::binomial(rational(8,7),0ull),1);
+	BOOST_CHECK_EQUAL(math::binomial(rational(0,-7),1),0);
+	BOOST_CHECK_EQUAL(math::binomial(rational(0,7),2),0);
+}
