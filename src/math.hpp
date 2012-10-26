@@ -929,7 +929,7 @@ struct binomial_impl<T,U,typename std::enable_if<std::is_floating_point<T>::valu
 	 * @throws std::invalid_argument if \p k is negative.
 	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::integer.
 	 */
-	T operator()(const T &x, const U &k)
+	T operator()(const T &x, const U &k) const
 	{
 		return detail::generic_binomial(x,k);
 	}
