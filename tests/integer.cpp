@@ -996,6 +996,7 @@ BOOST_AUTO_TEST_CASE(integer_binomial_test)
 	BOOST_CHECK_EQUAL(piranha::math::binomial(0,0l),1);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(1,0l),1);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(-1,0ull),1);
+	BOOST_CHECK_EQUAL(piranha::math::binomial(-3,5ull),-21);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(2,0ull),1);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(2,1ull),2);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(-2,1ull),-2);

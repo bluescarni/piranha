@@ -888,7 +888,8 @@ inline T generic_binomial(const T &x, const U &k)
 	if (k == zero) {
 		return T(1);
 	}
-	T tmp(x - T(1)), retval = x / k;
+	T tmp(x), retval = x / k;
+	--tmp;
 	for (U i(k - one); i >= one; --i, --tmp) {
 		retval *= tmp;
 		retval /= i;
