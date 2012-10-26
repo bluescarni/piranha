@@ -1600,3 +1600,20 @@ BOOST_AUTO_TEST_CASE(real_abs_test)
 	BOOST_CHECK_EQUAL(math::abs(real("inf")),real("inf"));
 	BOOST_CHECK_EQUAL(math::abs(real("-inf")),real("inf"));
 }
+
+BOOST_AUTO_TEST_CASE(real_binomial_test)
+{
+	BOOST_CHECK((has_binomial<real,int>::value));
+	BOOST_CHECK((has_binomial<real,char>::value));
+	BOOST_CHECK((has_binomial<real,unsigned>::value));
+	BOOST_CHECK((has_binomial<real,long>::value));
+	BOOST_CHECK((!has_binomial<real,std::string>::value));
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},2))>::value));
+	BOOST_CHECK_EQUAL(math::binomial(real(-14),12),integer("5200300"));
+	BOOST_CHECK_EQUAL(math::binomial(real{"3.5"},2),real{"4.375"});
+	BOOST_CHECK_EQUAL(math::binomial(real{"-3.5"},2),real{"7.875"});
+	BOOST_CHECK(math::abs(math::binomial(real{"-3.5"},5) - real{"-35.191"}) < real{".01"});
+	BOOST_CHECK(math::abs(math::binomial(real{"3.5"},5) - real{"-0.0273"}) < real{".001"});
+	BOOST_CHECK(math::abs(math::binomial(real{".1"},5) - real{"0.0161"}) < real{".001"});
+	BOOST_CHECK(math::abs(math::binomial(-real{".1"},5) - real{"-0.0244"}) < real{".001"});
+}

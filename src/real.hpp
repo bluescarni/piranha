@@ -1820,6 +1820,32 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::ty
 	}
 };
 
+/// Specialisation of the piranha::math::binomial() functor for piranha::real.
+/**
+ * This specialisation is enabled if \p T is piranha::real and \p U is an integral type or piranha::integer.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<
+	std::is_same<real,T>::value &&
+	(std::is_integral<U>::value || std::is_same<integer,U>::value)
+	>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x top number.
+	 * @param[in] k bottom number.
+	 * 
+	 * @return \p x choose \p k.
+	 * 
+	 * @throws std::invalid_argument if \p k is negative.
+	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::real.
+	 */
+	real operator()(const real &x, const U &k) const
+	{
+		return detail::generic_binomial(x,k);
+	}
+};
+
 }
 
 namespace detail
