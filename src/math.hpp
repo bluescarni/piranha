@@ -1038,6 +1038,10 @@ class key_has_t_degree: detail::sfinae_types
 			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
 };
 
+// Static init.
+template <typename T>
+const bool key_has_t_degree<T>::value;
+
 /// Type trait to detect if a key type has a trigonometric low degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
@@ -1062,6 +1066,10 @@ class key_has_t_ldegree: detail::sfinae_types
 			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
 };
 
+// Static init.
+template <typename T>
+const bool key_has_t_ldegree<T>::value;
+
 /// Type trait to detect if a key type has a trigonometric order property.
 /**
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
@@ -1085,6 +1093,10 @@ class key_has_t_order: detail::sfinae_types
 		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
 			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
 };
+
+// Static init.
+template <typename T>
+const bool key_has_t_order<T>::value;
 
 /// Type trait to detect if a key type has a trigonometric low order property.
 /**
