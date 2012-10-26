@@ -939,4 +939,6 @@ BOOST_AUTO_TEST_CASE(rational_binomial_test)
 	BOOST_CHECK_EQUAL(math::binomial(rational(8,7),0ull),1);
 	BOOST_CHECK_EQUAL(math::binomial(rational(0,-7),1),0);
 	BOOST_CHECK_EQUAL(math::binomial(rational(0,7),2),0);
+	BOOST_CHECK_THROW(math::binomial(rational(3),-2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::binomial(rational(0),-2),std::invalid_argument);
 }
