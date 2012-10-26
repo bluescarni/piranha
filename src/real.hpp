@@ -1145,6 +1145,28 @@ class PIRANHA_PUBLIC real
 		{
 			return *this;
 		}
+		/// Prefix increment.
+		/**
+		 * Increment \p this by one.
+		 * 
+		 * @return reference to \p this after the increment.
+		 */
+		real &operator++()
+		{
+			return operator+=(1);
+		}
+		/// Suffix increment.
+		/**
+		 * Increment \p this by one and return a copy of \p this as it was before the increment.
+		 * 
+		 * @return copy of \p this before the increment.
+		 */
+		real operator++(int)
+		{
+			const real retval(*this);
+			++(*this);
+			return retval;
+		}
 		/// In-place subtraction.
 		/**
 		 * The same rules described in operator+=() apply.
@@ -1214,6 +1236,28 @@ class PIRANHA_PUBLIC real
 		{
 			real retval(*this);
 			retval.negate();
+			return retval;
+		}
+		/// Prefix decrement.
+		/**
+		 * Decrement \p this by one and return.
+		 * 
+		 * @return reference to \p this.
+		 */
+		real &operator--()
+		{
+			return operator-=(1);
+		}
+		/// Suffix decrement.
+		/**
+		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
+		 * 
+		 * @return copy of \p this before the decrement.
+		 */
+		real operator--(int)
+		{
+			const real retval(*this);
+			--(*this);
 			return retval;
 		}
 		/// In-place multiplication.

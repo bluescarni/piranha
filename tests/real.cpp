@@ -590,6 +590,15 @@ BOOST_AUTO_TEST_CASE(real_addition_test)
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-std::numeric_limits<double>::infinity() + real{1}),"-inf");
 	}
 	boost::fusion::for_each(integral_values,check_binary_add_integral());
+	// Increment operators.
+	r2 = 4;
+	BOOST_CHECK_EQUAL(++r2,5);
+	BOOST_CHECK_EQUAL(r2++,5);
+	BOOST_CHECK_EQUAL(r2,6);
+	r2 = ".5";
+	BOOST_CHECK_EQUAL(++r2,real{"1.5"});
+	BOOST_CHECK_EQUAL(r2++,real{"1.5"});
+	BOOST_CHECK_EQUAL(r2,real{"2.5"});
 }
 
 BOOST_AUTO_TEST_CASE(real_identity_operator)
@@ -767,6 +776,15 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(std::numeric_limits<double>::infinity() - real{1}),"inf");
 	}
 	boost::fusion::for_each(integral_values,check_binary_sub_integral());
+	// Decrement operators.
+	r2 = 0;
+	BOOST_CHECK_EQUAL(--r2,-1);
+	BOOST_CHECK_EQUAL(r2--,-1);
+	BOOST_CHECK_EQUAL(r2,-2);
+	r2 = "1.5";
+	BOOST_CHECK_EQUAL(--r2,real{"0.5"});
+	BOOST_CHECK_EQUAL(r2--,real{"0.5"});
+	BOOST_CHECK_EQUAL(r2,real{"-0.5"});
 }
 
 struct check_in_place_mul_integral
