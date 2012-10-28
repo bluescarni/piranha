@@ -28,10 +28,10 @@
 #include <utility>
 
 #include "detail/degree_commons.hpp"
+#include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
-#include "toolbox.hpp"
 
 namespace piranha
 {
@@ -100,7 +100,7 @@ struct is_trigonometric_term
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Enable = void>
-class trigonometric_series: public Series,detail::trigonometric_series_tag,toolbox<Series,trigonometric_series<Series,Enable>>
+class trigonometric_series: public Series,detail::trigonometric_series_tag,detail::toolbox<Series,trigonometric_series<Series,Enable>>
 {
 		typedef Series base;
 		template <typename Term, typename = void>
@@ -360,7 +360,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,toolb
 
 template <typename Series>
 class trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>
-	: public Series,toolbox<Series,trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>>
+	: public Series,detail::toolbox<Series,trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>>
 {
 		typedef Series base;
 	public:

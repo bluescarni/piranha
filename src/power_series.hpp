@@ -30,10 +30,10 @@
 #include "concepts/power_series_term.hpp"
 #include "concepts/series.hpp"
 #include "detail/series_fwd.hpp"
+#include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "power_series_term.hpp"
 #include "symbol_set.hpp"
-#include "toolbox.hpp"
 #include "type_traits.hpp" // For has_degree.
 
 namespace piranha
@@ -83,7 +83,7 @@ struct power_series_tag {};
 // NOTE: here the tag is used explicitly to differentiate between the general implementation
 // and the specialization below.
 template <typename Series, typename Enable = void>
-class power_series: public Series,detail::power_series_tag,toolbox<Series,power_series<Series,Enable>>
+class power_series: public Series,detail::power_series_tag,detail::toolbox<Series,power_series<Series,Enable>>
 {
 		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
 		typedef Series base;
@@ -288,7 +288,7 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 
 template <typename Series>
 class power_series<Series,typename std::enable_if<!is_power_series_term<typename Series::term_type>::value>::type>:
-	public Series,toolbox<Series,power_series<Series>>
+	public Series,detail::toolbox<Series,power_series<Series>>
 {
 		typedef Series base;
 	public:

@@ -95,7 +95,6 @@
  * in the from-python converters?
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
- * \todo: move toolbox class in detail, it clutters doxygen output.
  */
 namespace piranha
 {
