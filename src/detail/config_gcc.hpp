@@ -21,23 +21,8 @@
 #ifndef PIRANHA_CONFIG_GCC_HPP
 #define PIRANHA_CONFIG_GCC_HPP
 
-#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5)
-	#error Minimum GCC version supported is 4.5.0.
-#endif
-
-// c++0x features depending on the GCC version.
-// NOTE: when removing support for GCC < 4.6 remember that
-// we can default move assignment in derived classes.
-#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6
-	#define piranha_nullptr nullptr
-	// noexcept
-	#define piranha_noexcept_spec(expr) noexcept(expr)
-	#define piranha_noexcept_op(expr) noexcept(expr)
-	#define PIRANHA_HAVE_NOEXCEPT
-#else
-	#define piranha_nullptr (NULL)
-	#define piranha_noexcept_spec(expr)
-	#define piranha_noexcept_op(expr) (true)
+#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
+	#error Minimum GCC version supported is 4.6.0.
 #endif
 
 // Explicit override available from 4.7.

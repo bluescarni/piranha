@@ -78,11 +78,7 @@ class polynomial_alt:
 		PIRANHA_FORWARDING_CTOR(polynomial_alt,base)
 		~polynomial_alt() = default;
 		polynomial_alt &operator=(const polynomial_alt &) = default;
-		polynomial_alt &operator=(polynomial_alt &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		polynomial_alt &operator=(polynomial_alt &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial_alt,base)
 };
 

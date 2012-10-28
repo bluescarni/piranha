@@ -37,7 +37,6 @@
 #include <functional>
 #include <type_traits>
 
-#include "config.hpp"
 #include "detail/mpfr.hpp"
 
 #if defined(PIRANHA_USE_BOOST_THREAD)
@@ -122,7 +121,7 @@ typedef
 		/**
 		 * If \p this is associated to a thread of execution, <tt>std::terminate()</tt> will be called.
 		 */
-		~thread() piranha_noexcept_spec(true)
+		~thread() noexcept(true)
 		{
 			if (joinable()) {
 				std::terminate();
@@ -138,7 +137,7 @@ typedef
 		 * 
 		 * @return reference to \p this.
 		 */
-		thread &operator=(thread &&other) piranha_noexcept_spec(true)
+		thread &operator=(thread &&other) noexcept(true)
 		{
 			if (this != &other) {
 				base::operator=(std::move(other));

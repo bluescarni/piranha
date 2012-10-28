@@ -29,7 +29,6 @@
 
 #include "concepts/degree_key.hpp"
 #include "concepts/term.hpp"
-#include "config.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "forwarding.hpp"
 #include "symbol_set.hpp"
@@ -165,18 +164,14 @@ class power_series_term: public Term, detail::power_series_term_tag
 		power_series_term(power_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series_term,base)
 		/// Trivial destructor.
-		~power_series_term() piranha_noexcept_spec(true)
+		~power_series_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
 		}
 		/// Defaulted copy assignment operator.
 		power_series_term &operator=(const power_series_term &) = default;
-		/// Trivial move assignment operator.
-		power_series_term &operator=(power_series_term &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		power_series_term &operator=(power_series_term &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series_term,base)
 		/// Total degree.
 		/**
@@ -249,16 +244,12 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 		power_series_term(const power_series_term &) = default;
 		power_series_term(power_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series_term,base)
-		~power_series_term() piranha_noexcept_spec(true)
+		~power_series_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
 		}
 		power_series_term &operator=(const power_series_term &) = default;
-		power_series_term &operator=(power_series_term &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		power_series_term &operator=(power_series_term &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series_term,base)
 };
 

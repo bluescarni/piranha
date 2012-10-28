@@ -30,7 +30,6 @@
 #include "concepts/differentiable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
-#include "config.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "power_series_term.hpp"
@@ -88,23 +87,14 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		poisson_series_term(poisson_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series_term,base)
 		/// Trivial destructor.
-		~poisson_series_term() piranha_noexcept_spec(true)
+		~poisson_series_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<poisson_series_term>));
 		}
 		/// Defaulted copy assignment operator.
 		poisson_series_term &operator=(const poisson_series_term &) = default;
-		/// Move assignment operator.
-		/**
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		poisson_series_term &operator=(poisson_series_term &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		poisson_series_term &operator=(poisson_series_term &&) = default;
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce two terms according to the prosthaphaeresis formulas.

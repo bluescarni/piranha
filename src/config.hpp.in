@@ -37,7 +37,7 @@
 #elif defined(__GNUC__)
 	#include "detail/config_gcc.hpp"
 #else
-	// NOTE: addidtional compiler configurations go here.
+	// NOTE: addidtional compiler configurations go here or in separate file as above.
 	#define likely(x) (x)
 	#define unlikely(x) (x)
 #endif

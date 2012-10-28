@@ -30,7 +30,6 @@
 #include <type_traits>
 
 #include "../src/base_term.hpp"
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/monomial.hpp"
@@ -83,8 +82,8 @@ struct trivial {};
 
 struct nontrivial_copy
 {
-	nontrivial_copy(nontrivial_copy &&) piranha_noexcept_spec(false) {}
-	nontrivial_copy &operator=(nontrivial_copy &&) piranha_noexcept_spec(false)
+	nontrivial_copy(nontrivial_copy &&) noexcept(false) {}
+	nontrivial_copy &operator=(nontrivial_copy &&) noexcept(false)
 	{
 		return *this;
 	}
@@ -95,12 +94,12 @@ struct nontrivial_copy
 struct nontrivial_dtor
 {
 	nontrivial_dtor(const nontrivial_dtor &) = default;
-	nontrivial_dtor(nontrivial_dtor &&) piranha_noexcept_spec(false) {}
-	nontrivial_dtor &operator=(nontrivial_dtor &&) piranha_noexcept_spec(false)
+	nontrivial_dtor(nontrivial_dtor &&) noexcept(false) {}
+	nontrivial_dtor &operator=(nontrivial_dtor &&) noexcept(false)
 	{
 		return *this;
 	}
-	~nontrivial_dtor() piranha_noexcept_spec(false)
+	~nontrivial_dtor() noexcept(false)
 	{
 		n = 0;
 	}
@@ -125,7 +124,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible)
 	BOOST_CHECK_EQUAL(is_trivially_destructible<std::string>::value,false);
 }
 
-#if defined(PIRANHA_HAVE_NOEXCEPT)
 BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_move_constructible<int>::value,true);
@@ -144,8 +142,6 @@ BOOST_AUTO_TEST_CASE(type_traits_nothrow_type_traits)
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
 }
-
-#endif
 
 BOOST_AUTO_TEST_CASE(type_traits_is_tuple)
 {

@@ -144,7 +144,7 @@ class integer
 		// Function to check that a floating point number is not pathological, in order to shield GMP
 		// functions.
 		template <typename T>
-		static void fp_normal_check(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static void fp_normal_check(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			if (unlikely(!boost::math::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"non-finite floating-point number");
@@ -181,25 +181,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_init_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
 		void construct_from_arithmetic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_init_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void construct_from_arithmetic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_init_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void construct_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -215,25 +215,25 @@ class integer
 			piranha_assert(retval == 0);
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			fp_normal_check(x);
 			::mpz_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
 		void assign_from_arithmetic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_set_si(m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void assign_from_arithmetic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_set_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void assign_from_arithmetic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -322,24 +322,24 @@ class integer
 		}
 		template <typename T>
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_add(integer(si));
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_add_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		// For non-gmp ints create a temporary integer and add it.
 		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_add(integer(n));
 		}
 		template <typename T>
-		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) + x);
 		}
@@ -360,23 +360,23 @@ class integer
 		}
 		template <typename T>
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_sub(integer(si));
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_sub_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_sub(integer(n));
 		}
 		template <typename T>
-		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) - x);
 		}
@@ -402,23 +402,23 @@ class integer
 		}
 		template <typename T>
 		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_si(m_value,m_value,static_cast<long>(si));
 		}
 		template <typename T>
 		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_mul(integer(n));
 		}
 		template <typename T>
-		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) * x);
 		}
@@ -429,23 +429,23 @@ class integer
 		}
 		template <typename T>
 		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_div(integer(si));
 		}
 		template <typename T>
 		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_tdiv_q_ui(m_value,m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_div(integer(n));
 		}
 		template <typename T>
-		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) / x);
 		}
@@ -459,13 +459,13 @@ class integer
 		}
 		template <typename T>
 		void in_place_mod(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_mod(integer(si));
 		}
 		template <typename T>
 		void in_place_mod(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			if (unlikely(ui == 0u)) {
 				piranha_throw(std::invalid_argument,"non-positive divisor");
@@ -473,7 +473,7 @@ class integer
 			*this = ::mpz_fdiv_ui(m_value,static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_mod(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_mod(const T &n, typename std::enable_if<std::is_integral<T>::value && !is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_mod(integer(n));
 		}
@@ -507,7 +507,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
 			const std::size_t target_size = std::max<std::size_t>(n1.size(),n2.size()) + std::size_t(1);
@@ -545,7 +545,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const std::size_t target_size = n1.size() + std::size_t(1);
 			if (n1.allocated_size() >= target_size) {
@@ -557,7 +557,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_plus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(1);
 			if (n2.allocated_size() >= target_size) {
@@ -567,12 +567,12 @@ class integer
 			}
 		}
 		template <typename T>
-		static T binary_plus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_plus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) + x);
 		}
 		template <typename T>
-		static T binary_plus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_plus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return binary_plus(n,x);
 		}
@@ -580,7 +580,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value && std::is_same<typename std::decay<U>::type,integer>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
 			const std::size_t target_size = std::max<std::size_t>(n1.size(),n2.size()) + std::size_t(1);
@@ -624,7 +624,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const std::size_t target_size = n1.size() + std::size_t(1);
 			if (n1.allocated_size() >= target_size) {
@@ -636,7 +636,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_minus(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(1);
 			if (n2.allocated_size() >= target_size) {
@@ -646,12 +646,12 @@ class integer
 			}
 		}
 		template <typename T>
-		static T binary_minus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_minus(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) - x);
 		}
 		template <typename T>
-		static T binary_minus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_minus(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return -binary_minus(n,x);
 		}
@@ -660,7 +660,7 @@ class integer
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value &&
 			std::is_same<typename std::decay<U>::type,integer>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const auto a1 = n1.allocated_size(), a2 = n2.allocated_size();
 			const std::size_t s1 = n1.size(), s2 = n2.size(), target_size = s1 + s2 + std::size_t(1);
@@ -705,7 +705,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,integer>::value && std::is_integral<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			// NOTE: here the formula would be: n1.size() + size_in_limbs_of_U + 1, but we
 			// are assuming that the size of U is no greater than 1 limb.
@@ -719,7 +719,7 @@ class integer
 		template <typename T, typename U>
 		static integer binary_mul(T &&n1, U &&n2, typename std::enable_if<
 			std::is_same<typename std::decay<U>::type,integer>::value && std::is_integral<typename std::decay<T>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const std::size_t target_size = n2.size() + std::size_t(2);
 			if (n2.allocated_size() >= target_size) {
@@ -729,12 +729,12 @@ class integer
 			}
 		}
 		template <typename T>
-		static T binary_mul(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_mul(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) * x);
 		}
 		template <typename T>
-		static T binary_mul(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_mul(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return binary_mul(n,x);
 		}
@@ -743,7 +743,7 @@ class integer
 		static integer binary_div(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			// NOTE: here it makes sense only to attempt to steal n1's storage, not n2's, because the operation is not commutative.
 			integer retval(std::forward<T>(n1));
@@ -751,7 +751,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		static T binary_div(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_div(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			if (unlikely(x == 0.)) {
 				piranha_throw(zero_division_error,"division by zero");
@@ -759,7 +759,7 @@ class integer
 			return (static_cast<T>(n) / x);
 		}
 		template <typename T>
-		static T binary_div(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_div(const T &x, const integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			const T n_T = static_cast<T>(n);
 			if (unlikely(n_T == 0.)) {
@@ -772,7 +772,7 @@ class integer
 		static integer binary_mod(T &&n1, U &&n2, typename std::enable_if<
 			are_binary_op_types<T,U>::value &&
 			!std::is_floating_point<typename std::decay<T>::type>::value && !std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			integer retval(std::forward<T>(n1));
 			retval %= std::forward<U>(n2);
@@ -785,30 +785,30 @@ class integer
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
-			!is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_equality(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_equality(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) == x);
 		}
 		// NOTE: this is the reverse of above.
 		template <typename T>
-		static bool binary_equality(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr)
 		{
 			return binary_equality(n,x);
 		}
@@ -819,24 +819,24 @@ class integer
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
-			!is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_less_than(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_less_than(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) < x);
 		}
@@ -847,41 +847,41 @@ class integer
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_signed<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_si(n1.m_value,static_cast<long>(n2)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_unsigned<T>::value &&
-			is_gmp_int<T>::value>::type * = piranha_nullptr)
+			is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpz_cmp_ui(n1.m_value,static_cast<unsigned long>(n2)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const integer &n1, const T &n2, typename std::enable_if<std::is_integral<T>::value &&
-			!is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_leq(n1,integer(n2));
 		}
 		template <typename T>
-		static bool binary_leq(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(n) <= x);
 		}
 		// Inverse forms of less-than and leq.
 		template <typename T>
-		static bool binary_less_than(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr)
 		{
 			return !binary_leq(n,x);
 		}
 		template <typename T>
-		static bool binary_leq(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const T &x, const integer &n, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr)
 		{
 			return !binary_less_than(n,x);
 		}
 		// Exponentiation.
 		template <typename T>
-		integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = piranha_nullptr) const
+		integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = nullptr) const
 		{
 			unsigned long exp;
 			try {
@@ -894,7 +894,7 @@ class integer
 			return retval;
 		}
 		template <typename T>
-		integer pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
+		integer pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = nullptr) const
 		{
 			return pow_impl(integer(si));
 		}
@@ -939,7 +939,7 @@ class integer
 		}
 		template <typename T>
 		static unsigned long check_choose_k(const T &k,
-			typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
 		{
 			try {
 				return boost::numeric_cast<unsigned long>(k);
@@ -949,7 +949,7 @@ class integer
 		}
 		template <typename T>
 		static unsigned long check_choose_k(const T &k,
-			typename std::enable_if<std::is_same<T,integer>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_same<T,integer>::value>::type * = nullptr)
 		{
 			try {
 				return static_cast<unsigned long>(k);
@@ -1027,14 +1027,14 @@ class integer
 		/**
 		 * @param[in] other integer to be moved.
 		 */
-		integer(integer &&other) piranha_noexcept_spec(true)
+		integer(integer &&other) noexcept(true)
 		{
 			m_value->_mp_size = other.m_value->_mp_size;
 			m_value->_mp_d = other.m_value->_mp_d;
 			m_value->_mp_alloc = other.m_value->_mp_alloc;
 			// Erase other.
 			other.m_value->_mp_size = 0;
-			other.m_value->_mp_d = piranha_nullptr;
+			other.m_value->_mp_d = nullptr;
 			other.m_value->_mp_alloc = 0;
 		}
 		/// Generic constructor.
@@ -1049,7 +1049,7 @@ class integer
 		 * @throws std::invalid_argument if \p x is a non-finite floating-point number.
 		 */
 		template <typename T>
-		explicit integer(const T &x, typename std::enable_if<is_interop_type<T>::value>::type * = piranha_nullptr)
+		explicit integer(const T &x, typename std::enable_if<is_interop_type<T>::value>::type * = nullptr)
 		{
 			construct_from_arithmetic(x);
 		}
@@ -1081,7 +1081,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer() piranha_noexcept_spec(true)
+		~integer() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<integer>));
 			piranha_assert(m_value->_mp_alloc >= 0);
@@ -1097,7 +1097,7 @@ class integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		integer &operator=(integer &&other) piranha_noexcept_spec(true)
+		integer &operator=(integer &&other) noexcept(true)
 		{
 			// NOTE: swap() already has the check for this.
 			swap(other);
@@ -1184,7 +1184,7 @@ class integer
 		 * 
 		 * @param[in] n swap argument.
 		 */
-		void swap(integer &n) piranha_noexcept_spec(true)
+		void swap(integer &n) noexcept(true)
 		{
 			if (unlikely(this == &n)) {
 			    return;
@@ -1865,7 +1865,7 @@ class integer
 		 */
 		template <typename T>
 		integer binomial(const T &k, typename std::enable_if<std::is_integral<T>::value ||
-			std::is_same<integer,T>::value>::type * = piranha_nullptr) const
+			std::is_same<integer,T>::value>::type * = nullptr) const
 		{
 			integer retval;
 			::mpz_bin_ui(retval.m_value,m_value,check_choose_k(k));
@@ -2349,7 +2349,7 @@ namespace std
  * @see piranha::integer::swap()
  */
 template <>
-inline void swap(piranha::integer &n1, piranha::integer &n2) piranha_noexcept_spec(true)
+inline void swap(piranha::integer &n1, piranha::integer &n2) noexcept(true)
 {
 	n1.swap(n2);
 }

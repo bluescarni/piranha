@@ -34,7 +34,6 @@
 #include <string>
 #include <type_traits>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
@@ -46,16 +45,16 @@ class custom_string: public std::string
 		custom_string() = default;
 		custom_string(const custom_string &) = default;
 		// NOTE: strange thing here, move constructor of std::string results in undefined reference?
-		custom_string(custom_string &&other) piranha_noexcept_spec(true) : std::string(other) {}
+		custom_string(custom_string &&other) noexcept(true) : std::string(other) {}
 		template <typename... Args>
 		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
 		custom_string &operator=(const custom_string &) = default;
-		custom_string &operator=(custom_string &&other) piranha_noexcept_spec(true)
+		custom_string &operator=(custom_string &&other) noexcept(true)
 		{
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() piranha_noexcept_spec(true) {}
+		~custom_string() noexcept(true) {}
 };
 
 using namespace piranha;

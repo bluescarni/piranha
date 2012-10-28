@@ -30,7 +30,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/degree_truncator_settings.hpp"
 #include "../src/echelon_size.hpp"
@@ -67,13 +66,7 @@ class polynomial:
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
 		polynomial &operator=(const polynomial &) = default;
-		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
-		{
-			if (this != &other) {
-				base::operator=(std::move(other));
-			}
-			return *this;
-		}
+		polynomial &operator=(polynomial &&) = default;
 		PIRANHA_FORWARDING_CTOR(polynomial,base)
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 };
@@ -102,7 +95,7 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 		truncator &operator=(truncator &&) = delete;
 		template <typename Term>
 		bool compare_terms(const Term &t1, const Term &t2, typename std::enable_if<std::is_same<Term,term_type1>::value ||
-			std::is_same<Term,term_type2>::value>::type * = piranha_nullptr) const
+			std::is_same<Term,term_type2>::value>::type * = nullptr) const
 		{
 			const auto &args = (std::is_same<Term,term_type1>::value) ? m_poly1.m_symbol_set : m_poly2.m_symbol_set;
 			switch (std::get<0u>(m_state)) {
@@ -359,13 +352,7 @@ class polynomial2:
 			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
 		}
 		polynomial2 &operator=(const polynomial2 &) = default;
-		polynomial2 &operator=(polynomial2 &&other) piranha_noexcept_spec(true)
-		{
-			if (this != &other) {
-				base::operator=(std::move(other));
-			}
-			return *this;
-		}
+		polynomial2 &operator=(polynomial2 &&) = default;
 		PIRANHA_FORWARDING_CTOR(polynomial2,base)
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial2,base)
 };
@@ -394,7 +381,7 @@ class truncator<polynomial2<Cf1,Expo1>,polynomial2<Cf2,Expo2>>: public power_ser
 		truncator &operator=(truncator &&) = delete;
 		template <typename Term>
 		bool compare_terms(const Term &t1, const Term &t2, typename std::enable_if<std::is_same<Term,term_type1>::value ||
-			std::is_same<Term,term_type2>::value>::type * = piranha_nullptr) const
+			std::is_same<Term,term_type2>::value>::type * = nullptr) const
 		{
 			const auto &args = (std::is_same<Term,term_type1>::value) ? m_poly1.m_symbol_set : m_poly2.m_symbol_set;
 			switch (std::get<0u>(m_state)) {

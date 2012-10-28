@@ -40,7 +40,6 @@
 #include <tuple>
 #include <unordered_set>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
@@ -55,16 +54,16 @@ class custom_string: public std::string
 		custom_string() = default;
 		custom_string(const custom_string &) = default;
 		// NOTE: strange thing here, move constructor of std::string results in undefined reference?
-		custom_string(custom_string &&other) piranha_noexcept_spec(true) : std::string(other) {}
+		custom_string(custom_string &&other) noexcept(true) : std::string(other) {}
 		template <typename... Args>
 		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
 		custom_string &operator=(const custom_string &) = default;
-		custom_string &operator=(custom_string &&other) piranha_noexcept_spec(true)
+		custom_string &operator=(custom_string &&other) noexcept(true)
 		{
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() piranha_noexcept_spec(true) {}
+		~custom_string() noexcept(true) {}
 };
 
 namespace std
@@ -208,8 +207,8 @@ struct random_failure
 			throw std::runtime_error("fail!");
 		}
 	}
-	random_failure(random_failure &&rf) piranha_noexcept_spec(true) :m_str(std::move(rf.m_str)) {}
-	~random_failure() piranha_noexcept_spec(true) {}
+	random_failure(random_failure &&rf) noexcept(true) :m_str(std::move(rf.m_str)) {}
+	~random_failure() noexcept(true) {}
 	std::size_t hash() const
 	{
 		return boost::lexical_cast<int>(m_str);
@@ -218,7 +217,7 @@ struct random_failure
 	{
 		return m_str == rf.m_str;
 	}
-	random_failure &operator=(random_failure &&other) piranha_noexcept_spec(true)
+	random_failure &operator=(random_failure &&other) noexcept(true)
 	{
 		m_str = std::move(other.m_str);
 		return *this;

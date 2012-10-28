@@ -118,23 +118,23 @@ class PIRANHA_PUBLIC real
 			}
 		}
 		template <typename T>
-		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			::mpfr_set_d(m_value,static_cast<double>(x),default_rnd);
 		}
 		template <typename T>
-		void construct_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value && integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void construct_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value && integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_set_si(m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
-		void construct_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value && integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void construct_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value && integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_set_ui(m_value,static_cast<unsigned long>(ui),default_rnd);
 		}
 		template <typename T>
 		void construct_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			construct_from_generic(integer(ll));
 		}
@@ -220,7 +220,7 @@ class PIRANHA_PUBLIC real
 			}
 			// Get string representation.
 			::mpfr_exp_t exp(0);
-			mpfr_str_manager m(::mpfr_get_str(piranha_nullptr,&exp,10,0,m_value,default_rnd));
+			mpfr_str_manager m(::mpfr_get_str(nullptr,&exp,10,0,m_value,default_rnd));
 			auto str = m.m_str;
 			if (!str) {
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
@@ -268,23 +268,23 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_add_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_add_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
 		}
 		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_add(integer(n));
 		}
 		template <typename T>
-		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
 			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
@@ -304,7 +304,7 @@ class PIRANHA_PUBLIC real
 			// NOTE: T == U means they have both to be real.
 			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
 			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			real retval(std::forward<T>(a));
 			retval += std::forward<U>(b);
@@ -313,7 +313,7 @@ class PIRANHA_PUBLIC real
 		template <typename T, typename U>
 		static real binary_add(T &&a, U &&b, typename std::enable_if<
 			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return binary_add(std::forward<U>(b),std::forward<T>(a));
 		}
@@ -335,23 +335,23 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_sub_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_sub_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_sub(integer(n));
 		}
 		template <typename T>
-		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
 			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
@@ -366,7 +366,7 @@ class PIRANHA_PUBLIC real
 		static real binary_sub(T &&a, U &&b, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
 			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			real retval(std::forward<T>(a));
 			retval -= std::forward<U>(b);
@@ -375,7 +375,7 @@ class PIRANHA_PUBLIC real
 		template <typename T, typename U>
 		static real binary_sub(T &&a, U &&b, typename std::enable_if<
 			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			real retval(binary_sub(std::forward<U>(b),std::forward<T>(a)));
 			retval.negate();
@@ -399,23 +399,23 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_mul_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_mul_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_mul(integer(n));
 		}
 		template <typename T>
-		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
 			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
@@ -430,7 +430,7 @@ class PIRANHA_PUBLIC real
 		static real binary_mul(T &&a, U &&b, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
 			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			real retval(std::forward<T>(a));
 			retval *= std::forward<U>(b);
@@ -439,7 +439,7 @@ class PIRANHA_PUBLIC real
 		template <typename T, typename U>
 		static real binary_mul(T &&a, U &&b, typename std::enable_if<
 			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return binary_mul(std::forward<U>(b),std::forward<T>(a));
 		}
@@ -461,23 +461,23 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_div_si(m_value,m_value,static_cast<long>(si),default_rnd);
 		}
 		template <typename T>
 		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpfr_div_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_div(integer(n));
 		}
 		template <typename T>
-		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
 			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
@@ -492,7 +492,7 @@ class PIRANHA_PUBLIC real
 		static real binary_div(T &&a, U &&b, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
 			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			real retval(std::forward<T>(a));
 			retval /= std::forward<U>(b);
@@ -501,7 +501,7 @@ class PIRANHA_PUBLIC real
 		template <typename T, typename U>
 		static real binary_div(T &&a, U &&b, typename std::enable_if<
 			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			// Create retval from a, with same precision as b.
 			real retval(std::forward<T>(a),b.get_prec());
@@ -529,7 +529,7 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			if (r.is_nan()) {
 				return false;
@@ -538,7 +538,7 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			if (r.is_nan()) {
 				return false;
@@ -547,12 +547,12 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_equality(r,integer(n));
 		}
 		template <typename T>
-		static bool binary_equality(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			if (r.is_nan() || boost::math::isnan(x)) {
 				return false;
@@ -563,7 +563,7 @@ class PIRANHA_PUBLIC real
 		template <typename T>
 		static bool binary_equality(const T &x, const real &r, typename std::enable_if<
 			std::is_arithmetic<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+			std::is_same<T,rational>::value>::type * = nullptr)
 		{
 			return binary_equality(r,x);
 		}
@@ -582,24 +582,24 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_less_than(r,integer(n));
 		}
 		template <typename T>
-		static bool binary_less_than(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) < 0);
 		}
@@ -618,24 +618,24 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_leq(r,integer(n));
 		}
 		template <typename T>
-		static bool binary_leq(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) <= 0);
 		}
@@ -643,14 +643,14 @@ class PIRANHA_PUBLIC real
 		template <typename T>
 		static bool binary_less_than(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
 			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+			std::is_same<T,rational>::value>::type * = nullptr)
 		{
 			return !binary_leq(r,x);
 		}
 		template <typename T>
 		static bool binary_leq(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
 			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+			std::is_same<T,rational>::value>::type * = nullptr)
 		{
 			return !binary_less_than(r,x);
 		}
@@ -660,12 +660,12 @@ class PIRANHA_PUBLIC real
 			return r.is_nan();
 		}
 		template <typename T>
-		static bool check_nan(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool check_nan(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return boost::math::isnan(x);
 		}
 		template <typename T>
-		static bool check_nan(const T &, typename std::enable_if<!std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool check_nan(const T &, typename std::enable_if<!std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return false;
 		}
@@ -688,13 +688,13 @@ class PIRANHA_PUBLIC real
 			return retval;
 		}
 		template <typename T>
-		real pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr) const
+		real pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
 		{
 			return pow_impl(real{x,get_prec()});
 		}
 		template <typename T>
 		real pow_impl(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+			integer::is_gmp_int<T>::value>::type * = nullptr) const
 		{
 			real retval{0,get_prec()};
 			::mpfr_pow_si(retval.m_value,m_value,static_cast<long>(si),default_rnd);
@@ -702,7 +702,7 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		real pow_impl(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+			integer::is_gmp_int<T>::value>::type * = nullptr) const
 		{
 			real retval{0,get_prec()};
 			::mpfr_pow_ui(retval.m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
@@ -710,7 +710,7 @@ class PIRANHA_PUBLIC real
 		}
 		template <typename T>
 		real pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr) const
+			!integer::is_gmp_int<T>::value>::type * = nullptr) const
 		{
 			return pow_impl(integer(n));
 		}
@@ -746,7 +746,7 @@ class PIRANHA_PUBLIC real
 		/**
 		 * @param[in] other real to be moved.
 		 */
-		real(real &&other) piranha_noexcept_spec(true)
+		real(real &&other) noexcept(true)
 		{
 			m_value->_mpfr_prec = other.m_value->_mpfr_prec;
 			m_value->_mpfr_sign = other.m_value->_mpfr_sign;
@@ -756,7 +756,7 @@ class PIRANHA_PUBLIC real
 			other.m_value->_mpfr_prec = 0;
 			other.m_value->_mpfr_sign = 0;
 			other.m_value->_mpfr_exp = 0;
-			other.m_value->_mpfr_d = piranha_nullptr;
+			other.m_value->_mpfr_d = nullptr;
 		}
 		/// Constructor from C string.
 		/**
@@ -819,7 +819,7 @@ class PIRANHA_PUBLIC real
 		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec, typename std::enable_if<
 			integer::is_interop_type<T>::value ||
 			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = piranha_nullptr)
+			std::is_same<T,rational>::value>::type * = nullptr)
 		{
 			prec_check(prec);
 			::mpfr_init2(m_value,prec);
@@ -829,7 +829,7 @@ class PIRANHA_PUBLIC real
 		/**
 		 * Will clear the internal MPFR variable.
 		 */
-		~real() piranha_noexcept_spec(true)
+		~real() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
 			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
@@ -871,7 +871,7 @@ class PIRANHA_PUBLIC real
 		 * 
 		 * @return reference to \p this.
 		 */
-		real &operator=(real &&other) piranha_noexcept_spec(true)
+		real &operator=(real &&other) noexcept(true)
 		{
 			// NOTE: swap() already has the check for this.
 			swap(other);
@@ -977,7 +977,7 @@ class PIRANHA_PUBLIC real
 		 * 
 		 * @param[in] other swap argument.
 		 */
-		void swap(real &other) piranha_noexcept_spec(true)
+		void swap(real &other) noexcept(true)
 		{
 			if (this == &other) {
 				return;
@@ -1596,7 +1596,7 @@ class PIRANHA_PUBLIC real
 				return os;
 			}
 			::mpfr_exp_t exp(0);
-			real::mpfr_str_manager m(::mpfr_get_str(piranha_nullptr,&exp,10,0,r.m_value,default_rnd));
+			real::mpfr_str_manager m(::mpfr_get_str(nullptr,&exp,10,0,r.m_value,default_rnd));
 			if (!m.m_str) {
 				piranha_throw(std::invalid_argument,"unable to convert real to string");
 			}
@@ -1896,7 +1896,7 @@ namespace std
  * @see piranha::real::swap()
  */
 template <>
-inline void swap(piranha::real &r1, piranha::real &r2) piranha_noexcept_spec(true)
+inline void swap(piranha::real &r1, piranha::real &r2) noexcept(true)
 {
 	r1.swap(r2);
 }

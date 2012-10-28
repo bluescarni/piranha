@@ -154,17 +154,8 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		~power_series() = default;
 		/// Defaulted copy assignment operator.
 		power_series &operator=(const power_series &) = default;
-		/// Trivial move assignment operator.
-		/**
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		power_series &operator=(power_series &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		power_series &operator=(power_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 		/// Total degree.
 		/**
@@ -225,7 +216,7 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		template <typename Str>
 		typename degree_type<std::set<std::string>>::type degree(Str &&name,
 			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = piranha_nullptr) const
+			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) const
 		{
 			return degree(std::set<std::string>{std::string(name)});
 		}
@@ -289,7 +280,7 @@ class power_series: public Series,detail::power_series_tag,toolbox<Series,power_
 		template <typename Str>
 		typename ldegree_type<std::set<std::string>>::type ldegree(Str &&name,
 			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = piranha_nullptr) const
+			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) const
 		{
 			return ldegree(std::set<std::string>{std::string(name)});
 		}
@@ -307,11 +298,7 @@ class power_series<Series,typename std::enable_if<!is_power_series_term<typename
 		PIRANHA_FORWARDING_CTOR(power_series,base)
 		~power_series() = default;
 		power_series &operator=(const power_series &) = default;
-		power_series &operator=(power_series &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		power_series &operator=(power_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 };
 

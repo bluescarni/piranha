@@ -990,14 +990,14 @@ class series_multiplier
 		}
 		template <std::size_t N = 0u, typename Functor, typename... T>
 		static std::size_t count_n_filtered(const std::tuple<T...> &t, const Functor &f,
-			typename std::enable_if<(N != std::tuple_size<std::tuple<T...>>::value - 1u)>::type * = piranha_nullptr)
+			typename std::enable_if<(N != std::tuple_size<std::tuple<T...>>::value - 1u)>::type * = nullptr)
 		{
 			static_assert(N < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
 			return ((std::size_t)f.filter(std::get<N>(t))) + count_n_filtered<N + 1u>(t,f);
 		}
 		template <std::size_t N, typename Functor, typename... T>
 		static std::size_t count_n_filtered(const std::tuple<T...> &t, const Functor &f,
-			typename std::enable_if<N == std::tuple_size<std::tuple<T...>>::value - 1u>::type * = piranha_nullptr)
+			typename std::enable_if<N == std::tuple_size<std::tuple<T...>>::value - 1u>::type * = nullptr)
 		{
 			return f.filter(std::get<N>(t));
 		}

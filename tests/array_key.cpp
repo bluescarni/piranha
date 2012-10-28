@@ -49,11 +49,7 @@ class g_key_type: public array_key<T,g_key_type<T>>
 		g_key_type(const g_key_type &) = default;
 		g_key_type(g_key_type &&) = default;
 		g_key_type &operator=(const g_key_type &) = default;
-		g_key_type &operator=(g_key_type &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		g_key_type &operator=(g_key_type &&) = default;
 		template <typename U>
 		explicit g_key_type(std::initializer_list<U> list):base(list) {}
 		template <typename ... Args>

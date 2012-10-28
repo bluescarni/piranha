@@ -119,7 +119,7 @@ class array_key: detail::array_key_tag
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
 			typename std::enable_if<std::is_same<value_type,typename std::decay<U>::type::value_type>::value &&
-			is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+			is_nonconst_rvalue_ref<U &&>::value>::type * = nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -129,7 +129,7 @@ class array_key: detail::array_key_tag
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
 			typename std::enable_if<std::is_same<value_type,typename std::decay<U>::type::value_type>::value &&
-			!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+			!is_nonconst_rvalue_ref<U &&>::value>::type * = nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -138,7 +138,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static void fill_for_construction(container_type &retval, U &&x,
-			typename std::enable_if<is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+			typename std::enable_if<is_nonconst_rvalue_ref<U &&>::value>::type * = nullptr)
 		{
 			for (auto it = x.begin(); it != x.end(); ++it) {
 				retval.emplace_back(std::move(*it));
@@ -146,7 +146,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static void fill_for_construction(container_type &retval, U &&x,
-			typename std::enable_if<!is_nonconst_rvalue_ref<U &&>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!is_nonconst_rvalue_ref<U &&>::value>::type * = nullptr)
 		{
 			for (auto it = x.begin(); it != x.end(); ++it) {
 				retval.emplace_back(*it);
@@ -154,7 +154,7 @@ class array_key: detail::array_key_tag
 		}
 		template <typename U>
 		static container_type forward_for_construction(U &&x, const symbol_set &args,
-			typename std::enable_if<!std::is_same<value_type,typename std::decay<U>::type::value_type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_same<value_type,typename std::decay<U>::type::value_type>::value>::type * = nullptr)
 		{
 			if (unlikely(args.size() != x.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -186,7 +186,7 @@ class array_key: detail::array_key_tag
 		/**
 		 * @param[in] other object to move from.
 		 */
-		array_key(array_key &&other) piranha_noexcept_spec(true) : m_container(std::move(other.m_container))
+		array_key(array_key &&other) noexcept(true) : m_container(std::move(other.m_container))
 		{}
 		/// Constructor from initializer list.
 		/**
@@ -237,13 +237,13 @@ class array_key: detail::array_key_tag
 		 */
 		template <typename U>
 		explicit array_key(U &&x, const symbol_set &args,
-			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename std::decay<U>::type>::value>::type * = nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
 		{
 			piranha_assert(std::is_sorted(args.begin(),args.end()));
 		}
 		/// Trivial destructor.
-		~array_key() piranha_noexcept_spec(true)
+		~array_key() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 		}
@@ -269,8 +269,10 @@ class array_key: detail::array_key_tag
 		 * 
 		 * @return reference to \p this.
 		 */
-		array_key &operator=(array_key &&other) piranha_noexcept_spec(true)
+		array_key &operator=(array_key &&other) noexcept(true)
 		{
+			// NOTE: here the idea is that we cannot rely on std::vector to support move assignment
+			// from self the way we want it to. Hence, the explicit check.
 			if (likely(this != &other)) {
 				m_container = std::move(other.m_container);
 			}

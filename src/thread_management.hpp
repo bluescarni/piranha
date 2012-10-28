@@ -24,6 +24,7 @@
 #include <unordered_set>
 #include <utility>
 
+#include "config.hpp"
 #include "threading.hpp"
 
 namespace piranha

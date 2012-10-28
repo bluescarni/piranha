@@ -239,24 +239,14 @@ class real_trigonometric_kronecker_monomial
 			}
 		}
 		/// Trivial destructor.
-		~real_trigonometric_kronecker_monomial() piranha_noexcept_spec(true)
+		~real_trigonometric_kronecker_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<real_trigonometric_kronecker_monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &) = default;
-		/// Trivial move assignment operator.
-		/**
-		 * @param[in] other monomial to be assigned to this.
-		 * 
-		 * @return reference to \p this.
-		 */
-		real_trigonometric_kronecker_monomial &operator=(real_trigonometric_kronecker_monomial &&other) piranha_noexcept_spec(true)
-		{
-			m_value = std::move(other.m_value);
-			m_flavour = std::move(other.m_flavour);
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		real_trigonometric_kronecker_monomial &operator=(real_trigonometric_kronecker_monomial &&) = default;
 		/// Set the internal integer instance.
 		/**
 		 * @param[in] n value to which the internal integer instance will be set.
@@ -328,7 +318,7 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * @return compatibility flag for the monomial.
 		 */
-		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const noexcept(true)
 		{
 			const auto s = args.size();
 			// No args means the value must also be zero.
@@ -366,7 +356,7 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * @return ignorability flag.
 		 */
-		bool is_ignorable(const symbol_set &) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &) const noexcept(true)
 		{
 			if (m_value == value_type(0) && !m_flavour) {
 				return true;

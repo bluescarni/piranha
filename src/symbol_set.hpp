@@ -85,8 +85,10 @@ class symbol_set
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
 		symbol_set(const symbol_set &) = default;
+		// NOTE: this can be defaulted in GCC 4.7 (?). GCC 4.6 apparently does
+		// not have noexcept in std::vector.
 		/// Defaulted move constructor.
-		symbol_set(symbol_set &&) = default;
+		symbol_set(symbol_set &&other) noexcept(true) : m_values(std::move(other.m_values)) {}
 		/// Constructor from initializer list of piranha::symbol.
 		/**
 		 * Each symbol in the list will be added via add() to the set.
@@ -117,21 +119,23 @@ class symbol_set
 			}
 			return *this;
 		}
-		/// Move operator.
+		/// Move assignment operator.
 		/**
 		 * @param[in] other assignment argument.
 		 * 
 		 * @return reference to \p this.
 		 */
-		symbol_set &operator=(symbol_set &&other) piranha_noexcept_spec(true)
+		symbol_set &operator=(symbol_set &&other) noexcept(true)
 		{
+			// NOTE: here the idea is that in principle we want to be able to move-assign self,
+			// and we don't want to rely on std::vector to support this. Hence, the explicit check.
 			if (likely(this != &other)) {
 				m_values = std::move(other.m_values);
 			}
 			return *this;
 		}
 		/// Trivial destructor.
-		~symbol_set() piranha_noexcept_spec(true)
+		~symbol_set() noexcept(true)
 		{
 			piranha_assert(run_destruction_checks());
 		}

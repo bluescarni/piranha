@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "concepts/key.hpp"
-#include "config.hpp"
 #include "detail/integer_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
@@ -111,21 +110,21 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_float
 // Implementation of exponentiation with floating-point base.
 template <typename T, typename U>
 inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
-	std::is_integral<U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,boost::numeric_cast<int>(n)))
+	std::is_integral<U>::value>::type * = nullptr) -> decltype(std::pow(x,boost::numeric_cast<int>(n)))
 {
 	return std::pow(x,boost::numeric_cast<int>(n));
 }
 
 template <typename T, typename U>
 inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
-	std::is_same<integer,U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,static_cast<int>(n)))
+	std::is_same<integer,U>::value>::type * = nullptr) -> decltype(std::pow(x,static_cast<int>(n)))
 {
 	return std::pow(x,static_cast<int>(n));
 }
 
 template <typename T, typename U>
 inline auto float_pow_impl(const T &x, const U &y, typename std::enable_if<
-	std::is_floating_point<U>::value>::type * = piranha_nullptr) -> decltype(std::pow(x,y))
+	std::is_floating_point<U>::value>::type * = nullptr) -> decltype(std::pow(x,y))
 {
 	return std::pow(x,y);
 }
@@ -536,12 +535,12 @@ struct abs_impl<T,typename std::enable_if<std::is_signed<T>::value || std::is_un
 	private:
 		template <typename U>
 		static U impl(const U &x, typename std::enable_if<std::is_signed<U>::value ||
-			std::is_floating_point<U>::value>::type * = piranha_nullptr)
+			std::is_floating_point<U>::value>::type * = nullptr)
 		{
 			return std::abs(x);
 		}
 		template <typename U>
-		static U impl(const U &x, typename std::enable_if<std::is_unsigned<U>::value>::type * = piranha_nullptr)
+		static U impl(const U &x, typename std::enable_if<std::is_unsigned<U>::value>::type * = nullptr)
 		{
 			return x;
 		}
@@ -864,14 +863,14 @@ namespace detail
 // Generic binomial implementation.
 template <typename T>
 static inline bool generic_binomial_check_k(const T &, const T &,
-	typename std::enable_if<std::is_unsigned<T>::value>::type * = piranha_nullptr)
+	typename std::enable_if<std::is_unsigned<T>::value>::type * = nullptr)
 {
 	return false;
 }
 
 template <typename T>
 static inline bool generic_binomial_check_k(const T &k, const T &zero,
-	typename std::enable_if<!std::is_unsigned<T>::value>::type * = piranha_nullptr)
+	typename std::enable_if<!std::is_unsigned<T>::value>::type * = nullptr)
 {
 	return k < zero;
 }
@@ -973,7 +972,7 @@ class is_differentiable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
 };
 
 // Static init.
@@ -993,7 +992,7 @@ class is_integrable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
 };
 
 // Static init.
@@ -1013,7 +1012,7 @@ class is_exponentiable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)piranha_nullptr,(U const *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)nullptr,(U const *)nullptr)) == sizeof(yes));
 };
 
 // Static init.
@@ -1036,8 +1035,8 @@ class has_t_degree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1060,8 +1059,8 @@ class has_t_ldegree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1084,8 +1083,8 @@ class has_t_order: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1108,8 +1107,8 @@ class has_t_lorder: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((T const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1136,8 +1135,8 @@ class key_has_t_degree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1164,8 +1163,8 @@ class key_has_t_ldegree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1192,8 +1191,8 @@ class key_has_t_order: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1220,8 +1219,8 @@ class key_has_t_lorder: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)piranha_nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
+			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.
@@ -1236,7 +1235,7 @@ class has_binomial: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test((T const *)piranha_nullptr,(U const *)piranha_nullptr)) == sizeof(yes);
+		static const bool value = sizeof(test((T const *)nullptr,(U const *)nullptr)) == sizeof(yes);
 };
 
 // Static init.

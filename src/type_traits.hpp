@@ -34,7 +34,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "config.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 
@@ -82,14 +81,12 @@ const bool is_nonconst_rvalue_ref<T>::value;
 /// Type has non-throwing move constructor.
 /**
  * Placeholder for <tt>std::is_nothrow_move_constructible</tt>, until it is implemented in GCC.
- * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
- * the \p noexcept operator.
  */
 template <typename T, typename Enable = void>
 struct is_nothrow_move_constructible
 {
 	/// Type-trait value.
-	static const bool value = piranha_noexcept_op(T(static_cast<T &&>(*static_cast<T *>(piranha_nullptr))));
+	static const bool value = noexcept(T(static_cast<T &&>(*static_cast<T *>(nullptr))));
 };
 
 template <typename T, typename Enable>
@@ -98,14 +95,12 @@ const bool is_nothrow_move_constructible<T,Enable>::value;
 /// Type has non-throwing move assignment operator.
 /**
  * Placeholder for <tt>std::is_nothrow_move_assignable</tt>, until it is implemented in GCC.
- * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
- * the \p noexcept operator.
  */
 template <typename T, typename Enable = void>
 struct is_nothrow_move_assignable
 {
 	/// Type-trait value.
-	static const bool value = piranha_noexcept_op(*static_cast<T *>(piranha_nullptr) = static_cast<T &&>(*static_cast<T *>(piranha_nullptr)));
+	static const bool value = noexcept(*static_cast<T *>(nullptr) = static_cast<T &&>(*static_cast<T *>(nullptr)));
 };
 
 template <typename T, typename Enable>
@@ -114,14 +109,12 @@ const bool is_nothrow_move_assignable<T,Enable>::value;
 /// Type is nothrow-destructible.
 /**
  * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
- * In GCC 4.5, it will be true by default for all types. In GCC >= 4.6, it will use
- * the \p noexcept operator.
  */
 template <typename T>
 struct is_nothrow_destructible
 {
 	/// Type-trait value.
-	static const bool value = piranha_noexcept_op(static_cast<T *>(piranha_nullptr)->~T());
+	static const bool value = noexcept(static_cast<T *>(nullptr)->~T());
 };
 
 template <typename T>
@@ -204,7 +197,7 @@ class is_addable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
 };
 
 template <typename T, typename U>
@@ -222,7 +215,7 @@ class is_addable_in_place: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T *)nullptr)) == sizeof(yes));
 };
 
 template <typename T, typename U>
@@ -240,7 +233,7 @@ class is_subtractable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
 };
 
 template <typename T, typename U>
@@ -258,7 +251,7 @@ class is_subtractable_in_place: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T *)piranha_nullptr)) == sizeof(yes));
+		static const bool value = (sizeof(test((T *)nullptr)) == sizeof(yes));
 };
 
 template <typename T, typename U>

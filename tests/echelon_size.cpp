@@ -24,7 +24,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../src/base_term.hpp"
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/monomial.hpp"
 #include "../src/series.hpp"
@@ -39,11 +38,7 @@ class g_term_type: public base_term<Cf,monomial<int>,g_term_type<Cf>>
 		g_term_type(const g_term_type &) = default;
 		g_term_type(g_term_type &&) = default;
 		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&other) piranha_noexcept_spec(true)
-		{
-			base_term<Cf,monomial<int>,g_term_type>::operator=(std::move(other));
-			return *this;
-		}
+		g_term_type &operator=(g_term_type &&) = default;
 		// Needed to satisfy concept checking.
 		explicit g_term_type(const Cf &, const monomial<int> &) {}
 };
@@ -58,13 +53,7 @@ class g_series_type: public series<Term,g_series_type<Term>>
 		g_series_type(g_series_type &&) = default;
 		g_series_type(const int &n):base(n) {}
 		g_series_type &operator=(const g_series_type &) = default;
-		g_series_type &operator=(g_series_type &&other) piranha_noexcept_spec(true)
-		{
-			if (this != &other) {
-				base::operator=(std::move(other));
-			}
-			return *this;
-		}
+		g_series_type &operator=(g_series_type &&) = default;
 };
 
 BOOST_AUTO_TEST_CASE(type_traits_echelon_size)

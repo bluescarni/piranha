@@ -29,7 +29,6 @@
 #include "concepts/differentiable_coefficient.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
-#include "config.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "forwarding.hpp"
@@ -130,23 +129,14 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		polynomial_term(polynomial_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(polynomial_term,base)
 		/// Trivial destructor.
-		~polynomial_term() piranha_noexcept_spec(true)
+		~polynomial_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<polynomial_term>));
 		}
 		/// Defaulted copy assignment operator.
 		polynomial_term &operator=(const polynomial_term &) = default;
-		/// Move assignment operator.
-		/**
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		polynomial_term &operator=(polynomial_term &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		polynomial_term &operator=(polynomial_term &&) = default;
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce a single term whose coefficient is the
@@ -214,7 +204,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		template <typename Cf2, typename ExpoType2>
 		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
 			typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value &&
-			!std::is_base_of<detail::series_tag,Cf2>::value>::type * = piranha_nullptr) const
+			!std::is_base_of<detail::series_tag,Cf2>::value>::type * = nullptr) const
 		{
 			retval.m_cf = this->m_cf;
 			retval.m_cf *= other.m_cf;
@@ -223,7 +213,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		template <typename Cf2, typename ExpoType2>
 		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
 			typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value ||
-			std::is_base_of<detail::series_tag,Cf2>::value>::type * = piranha_nullptr) const
+			std::is_base_of<detail::series_tag,Cf2>::value>::type * = nullptr) const
 		{
 			retval.m_cf = this->m_cf * other.m_cf;
 		}

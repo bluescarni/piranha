@@ -105,10 +105,10 @@ class malloc_allocator
 		 * Memory allocation will use the standard <tt>std::malloc()</tt> function.
 		 */
 		malloc_allocator():m_alignment(0u) {}
-		/// Trivial copy constructor.
-		malloc_allocator(const malloc_allocator &other):m_alignment(other.m_alignment) {}
-		/// Trivial move constructor.
-		malloc_allocator(malloc_allocator &&other) piranha_noexcept_spec(true):m_alignment(other.m_alignment) {}
+		/// Defaulted copy constructor.
+		malloc_allocator(const malloc_allocator &) = default;
+		/// Defaulted move constructor.
+		malloc_allocator(malloc_allocator &&) = default;
 		/// Constructor from alignment value.
 		/**
 		 * The allocated memory will be aligned to the specified \p alignment value.
@@ -139,19 +139,16 @@ class malloc_allocator
 		// NOTE: has we know that other has valid alignment, any weaker alignment is supported too.
 		template <typename U>
 		malloc_allocator(const malloc_allocator<U> &other, typename std::enable_if<
-			(alignof(T) <= alignof(U))>::type * = piranha_nullptr):m_alignment(other.m_alignment)
+			(alignof(T) <= alignof(U))>::type * = nullptr):m_alignment(other.m_alignment)
 		{}
-		/// Trivial destructor.
-		~malloc_allocator() piranha_noexcept_spec(true) {}
+		/// Defaulted destructor.
+		~malloc_allocator() = default;
 		/// Defaulted copy assignment operator.
 		// NOTE: the meaning of assignment operators for allocators:
 		// http://msdn.microsoft.com/en-us/library/01des920.aspx
 		malloc_allocator &operator=(const malloc_allocator &) = default;
-		/// Trivial move assignment operator.
-		malloc_allocator &operator=(malloc_allocator &&other) piranha_noexcept_spec(true)
-		{
-			return operator=(other);
-		}
+		/// Defaulted move assignment operator.
+		malloc_allocator &operator=(malloc_allocator &&) = default;
 		/// Memory address of reference.
 		/**
 		 * @param[in] x reference.
@@ -185,10 +182,10 @@ class malloc_allocator
 		 * 
 		 * @throws std::bad_alloc if \p size is greater than max_size(), or if the allocation fails.
 		 */
-		pointer allocate(size_type size, const void * = piranha_nullptr)
+		pointer allocate(size_type size, const void * = nullptr)
 		{
 			if (!size) {
-				return piranha_nullptr;
+				return nullptr;
 			}
 			if (unlikely(size > max_size())) {
 				piranha_throw(std::bad_alloc,0);
@@ -215,7 +212,7 @@ class malloc_allocator
 				// We should never get there, as no memalign primitives means the object
 				// should have not been constructed in the first place.
 				piranha_assert(false);
-				return piranha_nullptr;
+				return nullptr;
 #endif
 			} else {
 				pointer ret = static_cast<T *>(std::malloc(size * sizeof(T)));

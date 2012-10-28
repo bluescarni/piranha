@@ -27,7 +27,6 @@
 #include <unordered_set>
 #include <utility>
 
-#include "../config.hpp"
 #include "../symbol_set.hpp"
 #include "container_element.hpp"
 
@@ -74,12 +73,12 @@ struct Key:
 		static_assert(!std::is_pointer<T>::value,"Key type cannot be a pointer.");
 		T tmp = T(symbol_set{});
 		T tmp_conv(tmp,symbol_set{});
-		std::cout << (static_cast<T *>(piranha_nullptr));
+		std::cout << (static_cast<T *>(nullptr));
 		const T inst = T();
-		static_assert(piranha_noexcept_op(inst.is_compatible(std::declval<const symbol_set &>())),"is_compatible() must be non-throwing.");
+		static_assert(noexcept(inst.is_compatible(std::declval<const symbol_set &>())),"is_compatible() must be non-throwing.");
 		auto tmp1 = inst.is_compatible(symbol_set{});
 		static_assert(std::is_same<decltype(tmp1),bool>::value,"Invalid is_compatible() method signature for key type.");
-		static_assert(piranha_noexcept_op(inst.is_ignorable(std::declval<const symbol_set &>())),"is_ignorable() must be non-throwing.");
+		static_assert(noexcept(inst.is_ignorable(std::declval<const symbol_set &>())),"is_ignorable() must be non-throwing.");
 		auto tmp2 = inst.is_ignorable(symbol_set{});
 		static_assert(std::is_same<decltype(tmp2),bool>::value,"Invalid is_ignorable() method signature for key type.");
 		auto merge_out = inst.merge_args(symbol_set{},symbol_set{});

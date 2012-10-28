@@ -67,27 +67,12 @@ class PIRANHA_PUBLIC symbol
 		explicit symbol(const std::string &name):m_ptr(get_pointer(name)) {}
 		/// Defaulted copy constructor.
 		symbol(const symbol &) = default;
-		/// Move constructor.
-		/**
-		 * Equivalent to the copy constructor.
-		 * 
-		 * @param[in] other symbol to be copied.
-		 */
-		symbol(symbol &&other) piranha_noexcept_spec(true) : m_ptr(other.m_ptr) {}
+		/// Defaulted move constructor.
+		symbol(symbol &&) = default;
 		/// Defaulted copy assignment operator.
 		symbol &operator=(const symbol &) = default;
-		/// Move assignment operator.
-		/**
-		 * Equivalent to the copy assignment operator.
-		 * 
-		 * @param[in] other symbol to be copied.
-		 * 
-		 * @return reference to \p this.
-		 */
-		symbol &operator=(symbol &&other) piranha_noexcept_spec(true)
-		{
-			return operator=(other);
-		}
+		/// Defaulted move assignment operator.
+		symbol &operator=(symbol &&) = default;
 		/// Defaulted destructor.
 		~symbol() = default;
 		/// Name getter.

@@ -127,7 +127,7 @@ class series_binary_operators
 			is_nonconst_rvalue_ref<Series1 &&>::value) ||
 			(std::is_same<typename std::decay<Series1>::type,typename std::decay<U>::type>::value &&
 			!is_nonconst_rvalue_ref<Series1 &&>::value && !is_nonconst_rvalue_ref<U &&>::value)
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			typename result_type<Series1,U>::type retval(std::forward<Series1>(s1));
 			if (Sign) {
@@ -146,7 +146,7 @@ class series_binary_operators
 			!std::is_same<typename std::decay<U>::type,typename std::decay<Series2>::type>::value) ||
 			(std::is_same<typename std::decay<U>::type,typename std::decay<Series2>::type>::value &&
 			!is_nonconst_rvalue_ref<U &&>::value && is_nonconst_rvalue_ref<Series2 &&>::value)
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			typename result_type<U,Series2>::type retval(std::forward<Series2>(s2));
 			if (Sign) {
@@ -165,7 +165,7 @@ class series_binary_operators
 		// Series vs non-series.
 		template <typename Series, typename T>
 		static typename result_type<Series,T>::type dispatch_binary_multiply(Series &&s, T &&x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -175,14 +175,14 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
-			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
 		// Non-series vs series.
 		template <typename T, typename Series>
 		static typename result_type<T,Series>::type dispatch_binary_multiply(T &&x, Series &&s,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -192,7 +192,7 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
-			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<typename std::decay<Series>::type::term_type>::value)>::type * = nullptr)
 		{
 			return mixed_binary_multiply(std::forward<Series>(s),std::forward<T>(x));
 		}
@@ -257,7 +257,7 @@ class series_binary_operators
 			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value &&
 			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return series_multiply_first(s1,s2);
 		}
@@ -268,7 +268,7 @@ class series_binary_operators
 			std::is_base_of<detail::series_tag,typename std::decay<Series1>::type>::value &&
 			std::is_base_of<detail::series_tag,typename std::decay<Series2>::type>::value &&
 			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return series_multiply_first(s2,s1);
 		}
@@ -290,7 +290,7 @@ class series_binary_operators
 		// Overload for series vs non-series.
 		template <typename Series, typename T>
 		static bool dispatch_equality(const Series &s, const T &x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
 		{
 			return mixed_equality(s,x);
 		}
@@ -300,14 +300,14 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,Series>::value &&
 			std::is_base_of<detail::series_tag,T>::value &&
-			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = nullptr)
 		{
 			return mixed_equality(s,x);
 		}
 		// Overload for non-series vs series.
 		template <typename T, typename Series>
 		static bool dispatch_equality(const T &x, const Series &s,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
 		{
 			return mixed_equality(s,x);
 		}
@@ -317,7 +317,7 @@ class series_binary_operators
 			typename std::enable_if<
 			std::is_base_of<detail::series_tag,Series>::value &&
 			std::is_base_of<detail::series_tag,T>::value &&
-			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = piranha_nullptr)
+			(echelon_size<typename T::term_type>::value < echelon_size<typename Series::term_type>::value)>::type * = nullptr)
 		{
 			return mixed_equality(s,x);
 		}
@@ -325,7 +325,7 @@ class series_binary_operators
 		template <typename Series1, typename Series2>
 		static bool series_equality_impl(const Series1 &s1, const Series2 &s2, typename std::enable_if<
 			std::is_same<typename Series1::term_type,typename Series2::term_type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			if (s1.size() != s2.size()) {
 				return false;
@@ -346,7 +346,7 @@ class series_binary_operators
 		template <typename Series1, typename Series2>
 		static bool series_equality_impl(const Series1 &s1, const Series2 &s2, typename std::enable_if<
 			!std::is_same<typename Series1::term_type,typename Series2::term_type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			const auto it_f = s1.m_container.end();
 			const auto it_end = s2.m_container.end();
@@ -422,7 +422,7 @@ class series_binary_operators
 			std::is_base_of<detail::series_tag,Series2>::value &&
 			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value &&
 			std::is_same<decltype(s1 + s2),Series1>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return series_equality(s2,s1);
 		}
@@ -433,7 +433,7 @@ class series_binary_operators
 			std::is_base_of<detail::series_tag,Series2>::value &&
 			echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value &&
 			!std::is_same<decltype(s1 + s2),Series1>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			return series_equality(s1,s2);
 		}

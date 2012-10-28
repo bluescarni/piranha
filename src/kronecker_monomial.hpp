@@ -209,23 +209,14 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		explicit kronecker_monomial(const value_type &n):m_value(n) {}
 		/// Trivial destructor.
-		~kronecker_monomial() piranha_noexcept_spec(true)
+		~kronecker_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		kronecker_monomial &operator=(const kronecker_monomial &) = default;
-		/// Trivial move assignment operator.
-		/**
-		 * @param[in] other monomial to be assigned to this.
-		 * 
-		 * @return reference to \p this.
-		 */
-		kronecker_monomial &operator=(kronecker_monomial &&other) piranha_noexcept_spec(true)
-		{
-			m_value = std::move(other.m_value);
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		kronecker_monomial &operator=(kronecker_monomial &&) = default;
 		/// Set the internal integer instance.
 		/**
 		 * @param[in] n value to which the internal integer instance will be set.
@@ -256,7 +247,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * @return compatibility flag for the monomial.
 		 */
-		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const noexcept(true)
 		{
 			// NOTE: the idea here is to avoid unpack()ing for performance reasons: these checks
 			// are already part of unpack(), and that's why unpack() is used instead of is_compatible()
@@ -281,7 +272,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const symbol_set &) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &) const noexcept(true)
 		{
 			return false;
 		}

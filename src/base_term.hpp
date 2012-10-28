@@ -30,7 +30,6 @@
 #include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
 #include "concepts/term.hpp"
-#include "config.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
@@ -86,11 +85,8 @@ class base_term: detail::base_term_tag
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
 		base_term(const base_term &) = default;
-		/// Move constructor.
-		/**
-		 * @param[in] other term to move from.
-		 */
-		base_term(base_term &&other) piranha_noexcept_spec(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key)) {}
+		/// Defaulted move constructor.
+		base_term(base_term &&) = default;
 		/// Constructor from generic coefficient and key.
 		/**
 		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key. The constructor is
@@ -104,9 +100,9 @@ class base_term: detail::base_term_tag
 		template <typename T, typename U>
 		explicit base_term(T &&cf, U &&key, typename std::enable_if<
 			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
-			>::type * = piranha_nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
+			>::type * = nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
-		~base_term() piranha_noexcept_spec(true)
+		~base_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<Derived>));
 		}
@@ -126,22 +122,8 @@ class base_term: detail::base_term_tag
 			}
 			return *this;
 		}
-		/// Move-assignment operator.
-		/**
-		 * Will move <tt>other</tt>'s coefficient and key.
-		 * 
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		base_term &operator=(base_term &&other) piranha_noexcept_spec(true)
-		{
-			if (likely(this != &other)) {
-				m_cf = std::move(other.m_cf);
-				m_key = std::move(other.m_key);
-			}
-			return *this;
-		}
+		/// Defaulted move-assignment operator.
+		base_term &operator=(base_term &&) = default;
 		/// Equality operator.
 		/**
 		 * Equivalence of terms is defined by the equivalence of their keys.
@@ -174,7 +156,7 @@ class base_term: detail::base_term_tag
 		 * 
 		 * @return the key's <tt>is_compatible()</tt> method's return value.
 		 */
-		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const noexcept(true)
 		{
 			// NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
 			// we must take care of asserting noexcept on the corresponding methods in the derived class.
@@ -190,7 +172,7 @@ class base_term: detail::base_term_tag
 		 * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient return \p true,
 		 * \p false otherwise.
 		 */
-		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &args) const noexcept(true)
 		{
 			return (math::is_zero(m_cf) || m_key.is_ignorable(args));
 		}

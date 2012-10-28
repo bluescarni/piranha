@@ -28,7 +28,6 @@
 #include <new>
 #include <stdexcept>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 
@@ -39,10 +38,10 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_unaligned_test)
 	environment env;
 	malloc_allocator<char> a;
 	auto ptr = a.allocate(0);
-	BOOST_CHECK(ptr == piranha_nullptr);
+	BOOST_CHECK(ptr == nullptr);
 	BOOST_CHECK_NO_THROW(a.deallocate(ptr,0));
 	ptr = a.allocate(1);
-	BOOST_CHECK(ptr != piranha_nullptr);
+	BOOST_CHECK(ptr != nullptr);
 	BOOST_CHECK_NO_THROW(a.deallocate(ptr,0));
 	malloc_allocator<char[2]> b;
 	BOOST_CHECK_THROW(b.allocate(boost::integer_traits<malloc_allocator<char[2]>::size_type>::const_max),std::bad_alloc);
@@ -87,12 +86,12 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
 		malloc_allocator<char> good(good_align);
 		BOOST_CHECK_THROW(new malloc_allocator<char>(bad_align),std::invalid_argument);
 		auto ptr = good.allocate(0);
-		BOOST_CHECK(ptr == piranha_nullptr);
+		BOOST_CHECK(ptr == nullptr);
 		BOOST_CHECK_NO_THROW(good.deallocate(ptr,0));
 		ptr = good.allocate(1);
 		auto ptr2 = good.allocate(1);
-		BOOST_CHECK(ptr != piranha_nullptr);
-		BOOST_CHECK(ptr2 != piranha_nullptr);
+		BOOST_CHECK(ptr != nullptr);
+		BOOST_CHECK(ptr2 != nullptr);
 		BOOST_CHECK(!((ptr - ptr2) % good_align));
 		BOOST_CHECK_NO_THROW(good.deallocate(ptr,0));
 		BOOST_CHECK_NO_THROW(good.deallocate(ptr2,0));

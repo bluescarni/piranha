@@ -33,7 +33,6 @@
 
 #include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
-#include "../src/config.hpp"
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -173,7 +172,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_term_multiplication_test)
 struct partial_tester
 {
 	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series_term<Cf> term_type;
 		typedef typename term_type::key_type key_type;
@@ -208,7 +207,7 @@ struct partial_tester
 		BOOST_CHECK((p_res[0u].m_key == key_type{value_type(2),value_type(3)}));
 	}
 	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series_term<Cf> term_type;
 		typedef typename term_type::key_type key_type;

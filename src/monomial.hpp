@@ -100,24 +100,14 @@ class monomial: public array_key<T,monomial<T>>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
-		~monomial() piranha_noexcept_spec(true)
+		~monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<monomial>));
 		}
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
-		// NOTE: this can be defaulted in GCC >= 4.6.
-		/// Move assignment operator.
-		/**
-		 * @param[in] other object to move from.
-		 * 
-		 * @return reference to \p this.
-		 */
-		monomial &operator=(monomial &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		monomial &operator=(monomial &&) = default;
 		/// Compatibility check
 		/**
 		 * A monomial and a set of arguments are compatible if their sizes coincide.
@@ -126,7 +116,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @return <tt>this->size() == args.size()</tt>.
 		 */
-		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const noexcept(true)
 		{
 			return (this->size() == args.size());
 		}
@@ -138,7 +128,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &args) const noexcept(true)
 		{
 			(void)args;
 			piranha_assert(is_compatible(args));

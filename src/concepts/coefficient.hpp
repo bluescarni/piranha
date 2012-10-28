@@ -25,7 +25,6 @@
 #include <iostream>
 #include <type_traits>
 
-#include "../config.hpp"
 #include "../math.hpp"
 #include "../print_coefficient.hpp"
 #include "../print_tex_coefficient.hpp"

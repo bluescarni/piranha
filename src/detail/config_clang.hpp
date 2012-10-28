@@ -25,11 +25,7 @@
 	#error Minimum Clang version supported is 3.1.
 #endif
 
-#define piranha_nullptr nullptr
-#define piranha_noexcept_spec(expr) noexcept(expr)
-#define piranha_noexcept_op(expr) noexcept(expr)
 #define piranha_override override
-#define PIRANHA_HAVE_NOEXCEPT
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)

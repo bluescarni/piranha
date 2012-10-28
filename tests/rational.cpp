@@ -42,7 +42,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
@@ -582,14 +581,14 @@ struct check_arithmetic_zeroes_div
 struct check_arithmetic_binary_div
 {
 	template <typename T>
-	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr) const
+	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr) const
 	{
 		rational i(100);
 		BOOST_CHECK(boost::lexical_cast<std::string>(i / x) == "50/21" || boost::lexical_cast<std::string>(i / x) == "-50/21");
 		BOOST_CHECK(boost::lexical_cast<std::string>(x / i) == "21/50" || boost::lexical_cast<std::string>(x / i) == "-21/50");
 	}
 	template <typename T>
-	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = piranha_nullptr) const
+	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = nullptr) const
 	{
 		if (std::numeric_limits<T>::is_iec559) {
 			rational i(100);
@@ -602,7 +601,7 @@ struct check_arithmetic_binary_div
 struct check_arithmetic_in_place_div
 {
 	template <typename T>
-	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = piranha_nullptr) const
+	void operator()(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr) const
 	{
 		{
 			rational i(100);
@@ -617,7 +616,7 @@ struct check_arithmetic_in_place_div
 		}
 	}
 	template <typename T>
-	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = piranha_nullptr) const
+	void operator()(const T &, typename std::enable_if<!std::is_integral<T>::value>::type * = nullptr) const
 	{
 		if (std::numeric_limits<T>::is_iec559) {
 			rational i(100);

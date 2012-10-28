@@ -26,7 +26,6 @@
 #include <string>
 #include <utility>
 
-#include "../config.hpp"
 #include "../detail/sfinae_types.hpp"
 #include "../symbol_set.hpp"
 #include "key.hpp"
@@ -52,9 +51,9 @@ struct key_has_degree: sfinae_types
 	template <typename T>
 	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
 	static no test4(...);
-	static const bool value = (sizeof(test1((Key *)piranha_nullptr)) == sizeof(yes)) &&
-		(sizeof(test2((Key *)piranha_nullptr)) == sizeof(yes)) && (sizeof(test3((Key *)piranha_nullptr)) == sizeof(yes)) &&
-		(sizeof(test4((Key *)piranha_nullptr)) == sizeof(yes));
+	static const bool value = (sizeof(test1((Key *)nullptr)) == sizeof(yes)) &&
+		(sizeof(test2((Key *)nullptr)) == sizeof(yes)) && (sizeof(test3((Key *)nullptr)) == sizeof(yes)) &&
+		(sizeof(test4((Key *)nullptr)) == sizeof(yes));
 };
 
 template <typename Key>

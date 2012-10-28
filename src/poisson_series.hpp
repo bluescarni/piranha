@@ -77,7 +77,7 @@ class poisson_series:
 		typedef power_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>> base;
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
-			std::is_same<T,std::true_type>::value>::type * = piranha_nullptr) const
+			std::is_same<T,std::true_type>::value>::type * = nullptr) const
 		{
 			// Do something only if the series is equivalent to a polynomial.
 			if (this->is_single_coefficient() && !this->empty()) {
@@ -121,7 +121,7 @@ class poisson_series:
 		}
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
-			std::is_same<T,std::false_type>::value>::type * = piranha_nullptr) const
+			std::is_same<T,std::false_type>::value>::type * = nullptr) const
 		{
 			return sin_cos_cf_impl<IsCos>();
 		}
@@ -157,13 +157,13 @@ class poisson_series:
 		// Implementation details for integration.
 		template <typename T>
 		static auto integrate_cf(const T &cf, const std::string &name,
-			typename std::enable_if<is_integrable<T>::value>::type * = piranha_nullptr) -> decltype(math::integrate(cf,name))
+			typename std::enable_if<is_integrable<T>::value>::type * = nullptr) -> decltype(math::integrate(cf,name))
 		{
 			return math::integrate(cf,name);
 		}
 		template <typename T>
 		static T integrate_cf(const T &, const std::string &,
-			typename std::enable_if<!is_integrable<T>::value>::type * = piranha_nullptr)
+			typename std::enable_if<!is_integrable<T>::value>::type * = nullptr)
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not integrable");
 		}
@@ -220,23 +220,14 @@ class poisson_series:
 		poisson_series(poisson_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series,base)
 		/// Trivial destructor.
-		~poisson_series() piranha_noexcept_spec(true)
+		~poisson_series() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<poisson_series>));
 		}
 		/// Defaulted copy assignment operator.
 		poisson_series &operator=(const poisson_series &) = default;
-		/// Move assignment operator.
-		/**
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		poisson_series &operator=(poisson_series &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		poisson_series &operator=(poisson_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(poisson_series,base)
 		/// Override sine implementation.
 		/**

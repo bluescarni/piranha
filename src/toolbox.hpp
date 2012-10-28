@@ -25,7 +25,6 @@
 #include <type_traits>
 
 #include "concepts/series.hpp"
-#include "config.hpp"
 #include "detail/series_fwd.hpp"
 
 namespace piranha
@@ -46,7 +45,7 @@ class toolbox
 		/**
 		 * Implements part of the static checking logic.
 		 */
-		~toolbox() piranha_noexcept_spec(true)
+		~toolbox() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<Derived>));
 		}

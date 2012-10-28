@@ -32,7 +32,6 @@
 
 #include "../src/concepts/multipliable_term.hpp"
 #include "../src/concepts/term.hpp"
-#include "../src/config.hpp"
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -197,12 +196,12 @@ struct partial_tester
 		}
 	};
 	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		boost::mpl::for_each<expo_types>(runner<Cf>());
 	}
 	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = piranha_nullptr)
+	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef polynomial_term<Cf,int> term_type;
 		typedef typename term_type::key_type key_type;

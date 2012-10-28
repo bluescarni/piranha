@@ -112,7 +112,7 @@ class rational
 		};
 		// Construction.
 		template <typename T>
-		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			integer::fp_normal_check(x);
 			::mpq_init(m_value);
@@ -120,21 +120,21 @@ class rational
 		}
 		template <typename T>
 		void construct_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_init_set_si(mpq_numref(m_value),static_cast<long>(si));
 			::mpz_init_set_ui(mpq_denref(m_value),1ul);
 		}
 		template <typename T>
 		void construct_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_init_set_ui(mpq_numref(m_value),static_cast<unsigned long>(ui));
 			::mpz_init_set_ui(mpq_denref(m_value),1ul);
 		}
 		template <typename T>
 		void construct_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			construct_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -145,7 +145,7 @@ class rational
 		}
 		template <typename T>
 		void construct_from_numden(const T &num, const T &den, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			piranha_assert(den != 0);
 			::mpz_init_set_si(mpq_numref(m_value),static_cast<long>(num));
@@ -153,14 +153,14 @@ class rational
 		}
 		template <typename T>
 		void construct_from_numden(const T &num, const T &den, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			piranha_assert(den != 0u);
 			::mpz_init_set_ui(mpq_numref(m_value),static_cast<unsigned long>(num));
 			::mpz_init_set_ui(mpq_denref(m_value),static_cast<unsigned long>(den));
 		}
 		template <typename T>
-		void construct_from_numden(const T &num, const T &den, typename std::enable_if<std::is_same<T,integer>::value>::type * = piranha_nullptr)
+		void construct_from_numden(const T &num, const T &den, typename std::enable_if<std::is_same<T,integer>::value>::type * = nullptr)
 		{
 			piranha_assert(!math::is_zero(den));
 			::mpz_init_set(mpq_numref(m_value),num.m_value);
@@ -168,7 +168,7 @@ class rational
 		}
 		template <typename T>
 		void construct_from_numden(const T &num, const T &den, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			construct_from_numden(integer(num),integer(den));
 		}
@@ -218,27 +218,27 @@ class rational
 			::mpq_canonicalize(m_value);
 		}
 		template <typename T>
-		void assign_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void assign_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			integer::fp_normal_check(x);
 			::mpq_set_d(m_value,static_cast<double>(x));
 		}
 		template <typename T>
 		void assign_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_set_si(mpq_numref(m_value),static_cast<long>(si));
 			::mpz_set_ui(mpq_denref(m_value),1ul);
 		}
 		template <typename T>
 		void assign_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_set_ui(mpq_numref(m_value),static_cast<unsigned long>(ui));
 			::mpz_set_ui(mpq_denref(m_value),1ul);
 		}
 		template <typename T>
-		void assign_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void assign_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			assign_from_string(boost::lexical_cast<std::string>(ll).c_str());
 		}
@@ -297,23 +297,23 @@ class rational
 		}
 		template <typename T>
 		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_add(integer(si));
 		}
 		template <typename T>
 		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_addmul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_add(integer(n));
 		}
 		template <typename T>
-		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) + x);
 		}
@@ -322,19 +322,19 @@ class rational
 		static rational binary_plus(T &&x, U &&y, typename std::enable_if<
 			!std::is_floating_point<typename std::decay<T>::type>::value &&
 			!std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			rational retval(std::forward<T>(x));
 			retval += std::forward<U>(y);
 			return retval;
 		}
 		template <typename T>
-		static T binary_plus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_plus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) + x);
 		}
 		template <typename T>
-		static T binary_plus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_plus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return binary_plus(q,x);
 		}
@@ -349,23 +349,23 @@ class rational
 		}
 		template <typename T>
 		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_sub(integer(si));
 		}
 		template <typename T>
 		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_submul_ui(mpq_numref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
 		}
 		template <typename T>
-		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_sub(integer(n));
 		}
 		template <typename T>
-		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) - x);
 		}
@@ -374,19 +374,19 @@ class rational
 		static rational binary_minus(T &&x, U &&y, typename std::enable_if<
 			!std::is_floating_point<typename std::decay<T>::type>::value &&
 			!std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			rational retval(std::forward<T>(x));
 			retval -= std::forward<U>(y);
 			return retval;
 		}
 		template <typename T>
-		static T binary_minus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_minus(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) - x);
 		}
 		template <typename T>
-		static T binary_minus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_minus(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return -binary_minus(q,x);
 		}
@@ -402,25 +402,25 @@ class rational
 		}
 		template <typename T>
 		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_si(mpq_numref(m_value),mpq_numref(m_value),static_cast<long>(si));
 			::mpq_canonicalize(m_value);
 		}
 		template <typename T>
 		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_ui(mpq_numref(m_value),mpq_numref(m_value),static_cast<unsigned long>(ui));
 			::mpq_canonicalize(m_value);
 		}
 		template <typename T>
-		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_mul(integer(n));
 		}
 		template <typename T>
-		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) * x);
 		}
@@ -429,19 +429,19 @@ class rational
 		static rational binary_mul(T &&x, U &&y, typename std::enable_if<
 			!std::is_floating_point<typename std::decay<T>::type>::value &&
 			!std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			rational retval(std::forward<T>(x));
 			retval *= std::forward<U>(y);
 			return retval;
 		}
 		template <typename T>
-		static T binary_mul(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_mul(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) * x);
 		}
 		template <typename T>
-		static T binary_mul(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_mul(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return binary_mul(q,x);
 		}
@@ -457,25 +457,25 @@ class rational
 		}
 		template <typename T>
 		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_si(mpq_denref(m_value),mpq_denref(m_value),static_cast<long>(si));
 			::mpq_canonicalize(m_value);
 		}
 		template <typename T>
 		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			::mpz_mul_ui(mpq_denref(m_value),mpq_denref(m_value),static_cast<unsigned long>(ui));
 			::mpq_canonicalize(m_value);
 		}
 		template <typename T>
-		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			in_place_div(integer(n));
 		}
 		template <typename T>
-		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			operator=(static_cast<T>(*this) / x);
 		}
@@ -484,14 +484,14 @@ class rational
 		static rational binary_div(T &&x, U &&y, typename std::enable_if<
 			!std::is_floating_point<typename std::decay<T>::type>::value &&
 			!std::is_floating_point<typename std::decay<U>::type>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			rational retval(std::forward<T>(x));
 			retval /= std::forward<U>(y);
 			return retval;
 		}
 		template <typename T>
-		static T binary_div(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_div(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			if (unlikely(math::is_zero(x))) {
 				piranha_throw(zero_division_error,"division by zero");
@@ -499,7 +499,7 @@ class rational
 			return (static_cast<T>(q) / x);
 		}
 		template <typename T>
-		static T binary_div(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static T binary_div(const T &x, const rational &q, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			const T q_T = static_cast<T>(q);
 			if (unlikely(math::is_zero(q_T))) {
@@ -518,31 +518,31 @@ class rational
 		}
 		template <typename T>
 		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) == 0);
 		}
 		template <typename T>
 		static bool binary_equality(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_equality(q,integer(n));
 		}
 		template <typename T>
-		static bool binary_equality(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_equality(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) == x);
 		}
 		// NOTE: this is the reverse of above.
 		template <typename T>
 		static bool binary_equality(const T &x, const rational &q, typename std::enable_if<
-			std::is_arithmetic<T>::value || std::is_same<T,integer>::value>::type * = piranha_nullptr)
+			std::is_arithmetic<T>::value || std::is_same<T,integer>::value>::type * = nullptr)
 		{
 			return binary_equality(q,x);
 		}
@@ -557,24 +557,24 @@ class rational
 		}
 		template <typename T>
 		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) < 0);
 		}
 		template <typename T>
 		static bool binary_less_than(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_less_than(q,integer(n));
 		}
 		template <typename T>
-		static bool binary_less_than(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_less_than(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) < x);
 		}
@@ -589,43 +589,43 @@ class rational
 		}
 		template <typename T>
 		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_si(q.m_value,static_cast<long>(n),1ul) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return (mpq_cmp_ui(q.m_value,static_cast<unsigned long>(n),1ul) <= 0);
 		}
 		template <typename T>
 		static bool binary_leq(const rational &q, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = piranha_nullptr)
+			!integer::is_gmp_int<T>::value>::type * = nullptr)
 		{
 			return binary_leq(q,integer(n));
 		}
 		template <typename T>
-		static bool binary_leq(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = piranha_nullptr)
+		static bool binary_leq(const rational &q, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (static_cast<T>(q) <= x);
 		}
 		// Inverse forms of less-than and leq.
 		template <typename T>
 		static bool binary_less_than(const T &x, const rational &q, typename std::enable_if<std::is_arithmetic<T>::value ||
-			std::is_same<T,integer>::value>::type * = piranha_nullptr)
+			std::is_same<T,integer>::value>::type * = nullptr)
 		{
 			return !binary_leq(q,x);
 		}
 		template <typename T>
 		static bool binary_leq(const T &x, const rational &q, typename std::enable_if<std::is_arithmetic<T>::value ||
-			std::is_same<T,integer>::value>::type * = piranha_nullptr)
+			std::is_same<T,integer>::value>::type * = nullptr)
 		{
 			return !binary_less_than(q,x);
 		}
 		// Exponentiation.
 		template <typename T>
-		rational pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = piranha_nullptr) const
+		rational pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = nullptr) const
 		{
 			unsigned long exp;
 			try {
@@ -639,7 +639,7 @@ class rational
 			return retval;
 		}
 		template <typename T>
-		rational pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = piranha_nullptr) const
+		rational pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = nullptr) const
 		{
 			return pow_impl(integer(si));
 		}
@@ -689,7 +689,7 @@ class rational
 		/**
 		 * @param[in] other rational to be moved.
 		 */
-		rational(rational &&other) piranha_noexcept_spec(true)
+		rational(rational &&other) noexcept(true)
 		{
 			auto mover = [](::mpz_t a, ::mpz_t b) {
 				// Move b into a.
@@ -698,7 +698,7 @@ class rational
 				a->_mp_alloc = b->_mp_alloc;
 				// Erase b.
 				b->_mp_size = 0;
-				b->_mp_d = piranha_nullptr;
+				b->_mp_d = nullptr;
 				b->_mp_alloc = 0;
 			};
 			mover(mpq_numref(m_value),mpq_numref(other.m_value));
@@ -717,7 +717,7 @@ class rational
 		explicit rational(const T &x, typename std::enable_if<
 			integer::is_interop_type<T>::value ||
 			std::is_same<T,integer>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			construct_from_generic(x);
 		}
@@ -735,7 +735,7 @@ class rational
 		explicit rational(const T &num, const T &den, typename std::enable_if<
 			(integer::is_interop_type<T>::value && std::is_integral<T>::value) ||
 			std::is_same<T,integer>::value
-			>::type * = piranha_nullptr)
+			>::type * = nullptr)
 		{
 			if (math::is_zero(den)) {
 				piranha_throw(zero_division_error,"division by zero");
@@ -771,7 +771,7 @@ class rational
 		/**
 		 * Will clear the internal \p mpq_t type.
 		 */
-		~rational() piranha_noexcept_spec(true)
+		~rational() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
@@ -791,7 +791,7 @@ class rational
 		 * 
 		 * @return reference to \p this.
 		 */
-		rational &operator=(rational &&other) piranha_noexcept_spec(true)
+		rational &operator=(rational &&other) noexcept(true)
 		{
 			// NOTE: swap() already has the check for this.
 			swap(other);
@@ -923,7 +923,7 @@ class rational
 		 * 
 		 * @param[in] q swap argument.
 		 */
-		void swap(rational &q) piranha_noexcept_spec(true)
+		void swap(rational &q) noexcept(true)
 		{
 			if (unlikely(this == &q)) {
 			    return;
@@ -1739,7 +1739,7 @@ namespace std
  * @see piranha::rational::swap()
  */
 template <>
-inline void swap(piranha::rational &q1, piranha::rational &q2) piranha_noexcept_spec(true)
+inline void swap(piranha::rational &q1, piranha::rational &q2) noexcept(true)
 {
 	q1.swap(q2);
 }

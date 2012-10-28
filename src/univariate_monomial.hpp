@@ -143,7 +143,7 @@ class univariate_monomial
 			}
 		}
 		/// Trivial destructor.
-		~univariate_monomial() piranha_noexcept_spec(true)
+		~univariate_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<univariate_monomial>));
 		}
@@ -163,12 +163,8 @@ class univariate_monomial
 			}
 			return *this;
 		}
-		/// Trivial move assignment operator.
-		univariate_monomial &operator=(univariate_monomial &&other) piranha_noexcept_spec(true)
-		{
-			m_value = std::move(other.m_value);
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		univariate_monomial &operator=(univariate_monomial &&) = default;
 		/// Hash value.
 		/**
 		 * @return the hash value of the exponent, calculated via \p std::hash in case \p T is not an integral
@@ -211,7 +207,7 @@ class univariate_monomial
 		 * @return \p true if the size of \p args is 1 or if the size of \p args is 0 and piranha::math::is_zero()
 		 * on the exponent returns \p true.
 		 */
-		bool is_compatible(const symbol_set &args) const piranha_noexcept_spec(true)
+		bool is_compatible(const symbol_set &args) const noexcept(true)
 		{
 			const auto size = args.size();
 			return (size == 1u || (!size && math::is_zero(m_value)));
@@ -220,7 +216,7 @@ class univariate_monomial
 		/**
 		 * @return \p false (a monomial is never ignorable).
 		 */
-		bool is_ignorable(const symbol_set &) const piranha_noexcept_spec(true)
+		bool is_ignorable(const symbol_set &) const noexcept(true)
 		{
 			return false;
 		}
@@ -460,12 +456,12 @@ class univariate_monomial
 		}
 	private:
 		template <typename U>
-		static std::size_t compute_hash(const U &value,typename std::enable_if<std::is_integral<U>::value>::type * = piranha_nullptr)
+		static std::size_t compute_hash(const U &value,typename std::enable_if<std::is_integral<U>::value>::type * = nullptr)
 		{
 			return static_cast<std::size_t>(value);
 		}
 		template <typename U>
-		static std::size_t compute_hash(const U &value,typename std::enable_if<!std::is_integral<U>::value>::type * = piranha_nullptr)
+		static std::size_t compute_hash(const U &value,typename std::enable_if<!std::is_integral<U>::value>::type * = nullptr)
 		{
 			return std::hash<U>()(value);
 		}

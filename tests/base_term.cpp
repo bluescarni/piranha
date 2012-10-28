@@ -31,7 +31,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
@@ -55,11 +54,7 @@ class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 		g_term_type(const g_term_type &) = default;
 		g_term_type(g_term_type &&) = default;
 		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&other) piranha_noexcept_spec(true)
-		{
-			base_term<Cf,Key,g_term_type>::operator=(std::move(other));
-			return *this;
-		}
+		g_term_type &operator=(g_term_type &&) = default;
 		// Needed to satisfy concept checking.
 		PIRANHA_FORWARDING_CTOR(g_term_type,base)
 };
@@ -178,11 +173,7 @@ struct compatibility_tester
 					term_type(const term_type &) = default;
 					term_type(term_type &&) = default;
 					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&other) piranha_noexcept_spec(true)
-					{
-						base_term<Cf,Key,term_type>::operator=(std::move(other));
-						return *this;
-					}
+					term_type &operator=(term_type &&) = default;
 					// Needed to satisfy concept checking.
 					explicit term_type(const Cf &, const Key &) {}
 			};
@@ -223,11 +214,7 @@ struct ignorability_tester
 					term_type(const term_type &) = default;
 					term_type(term_type &&) = default;
 					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&other) piranha_noexcept_spec(true)
-					{
-						base_term<Cf,Key,term_type>::operator=(std::move(other));
-						return *this;
-					}
+					term_type &operator=(term_type &&) = default;
 					// Needed to satisfy concept checking.
 					explicit term_type(const Cf &, const Key &) {}
 			};

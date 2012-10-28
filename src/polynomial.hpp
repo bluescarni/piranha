@@ -231,30 +231,21 @@ class polynomial:
 		explicit polynomial(Str &&name, typename std::enable_if<
 			std::is_same<typename std::decay<Str>::type,std::string>::value ||
 			std::is_same<typename std::decay<Str>::type,char *>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = piranha_nullptr) : base()
+			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) : base()
 		{
 			construct_from_string(std::forward<Str>(name));
 		}
 		PIRANHA_FORWARDING_CTOR(polynomial,base)
 		/// Trivial destructor.
-		~polynomial() piranha_noexcept_spec(true)
+		~polynomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<polynomial>));
 		}
 		/// Defaulted copy assignment operator.
 		polynomial &operator=(const polynomial &) = default;
-		/// Move assignment operator.
-		/**
-		 * @param[in] other assignment argument.
-		 * 
-		 * @return reference to \p this.
-		 */
-		polynomial &operator=(polynomial &&other) piranha_noexcept_spec(true)
-		{
-			base::operator=(std::move(other));
-			return *this;
-		}
+		/// Defaulted move assignment operator.
+		polynomial &operator=(polynomial &&) = default;
 		/// Assignment from symbol name (C string).
 		/**
 		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
@@ -725,7 +716,7 @@ class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_serie
 		 */
 		template <typename Term>
 		bool compare_terms(const Term &t1, const Term &t2, typename std::enable_if<std::is_same<Term,term_type1>::value ||
-			std::is_same<Term,term_type2>::value>::type * = piranha_nullptr) const
+			std::is_same<Term,term_type2>::value>::type * = nullptr) const
 		{
 			const auto &args = (std::is_same<Term,term_type1>::value) ? m_poly1.m_symbol_set : m_poly2.m_symbol_set;
 			switch (std::get<0u>(m_state)) {
@@ -1099,11 +1090,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// Pre-sort individual blocks if truncator is skipping and active.
 		template <typename S1, typename S2>
 		void sparse_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
-			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
+			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr) const
 		{}
 		template <typename S1, typename S2>
 		void sparse_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
-			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr) const
+			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr) const
 		{
 			if (!trunc.is_active()) {
 				return;
@@ -1128,11 +1119,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		}
 		template <typename S1, typename S2, typename Keys1, typename Keys2>
 		static void dense_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
-			Keys1 &, Keys2 &, typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+			Keys1 &, Keys2 &, typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
 		{}
 		template <typename S1, typename S2, typename Keys1, typename Keys2>
 		static void dense_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
-			Keys1 &new_keys1, Keys2 &new_keys2, typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+			Keys1 &new_keys1, Keys2 &new_keys2, typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
 		{
 			if (!trunc.is_active()) {
 				return;
@@ -1225,13 +1216,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		}
 		template <bool IsActive,typename S1, typename S2>
 		static bool dense_skip(const term_type1 &t1,const term_type2 &t2, const truncator<S1,S2> &trunc,
-			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
 		{
 			return IsActive && trunc.skip(t1,t2);
 		}
 		template <bool IsActive,typename S1, typename S2>
 		static bool dense_skip(const term_type1 &,const term_type2 &, const truncator<S1,S2> &,
-			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = piranha_nullptr)
+			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
 		{
 			return false;
 		}

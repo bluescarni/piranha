@@ -103,7 +103,7 @@ class hash_set
 		struct node
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
-			node():m_next(piranha_nullptr) {}
+			node():m_next(nullptr) {}
 			const T *ptr() const
 			{
 				piranha_assert(m_next);
@@ -131,12 +131,12 @@ class hash_set
 					template <typename V>
 					friend class iterator_impl;
 				public:
-					iterator_impl():m_ptr(piranha_nullptr) {}
+					iterator_impl():m_ptr(nullptr) {}
 					explicit iterator_impl(ptr_type ptr):m_ptr(ptr) {}
 					// Constructor from other iterator type.
 					template <typename V>
 					iterator_impl(const iterator_impl<V> &other,
-						typename std::enable_if<std::is_convertible<typename iterator_impl<V>::ptr_type,ptr_type>::value>::type * = piranha_nullptr):
+						typename std::enable_if<std::is_convertible<typename iterator_impl<V>::ptr_type,ptr_type>::value>::type * = nullptr):
 						m_ptr(other.m_ptr)
 					{}
 				private:
@@ -228,12 +228,12 @@ class hash_set
 					m_node.m_next = other.m_node.m_next;
 					// Destroy first node of other.
 					other.m_node.ptr()->~T();
-					other.m_node.m_next = piranha_nullptr;
+					other.m_node.m_next = nullptr;
 				}
 				piranha_assert(other.empty());
 			}
 			template <typename U>
-			node *insert(U &&item, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
+			node *insert(U &&item, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = nullptr)
 			{
 				// NOTE: optimize with likely/unlikely?
 				if (m_node.m_next) {
@@ -280,7 +280,7 @@ class hash_set
 					cur = cur->m_next;
 					// Destroy the old payload and erase connections
 					old->ptr()->~T();
-					old->m_next = piranha_nullptr;
+					old->m_next = nullptr;
 					// If the old node was not the initial one, delete it.
 					if (old != &m_node) {
 						::delete old;
@@ -318,7 +318,7 @@ class hash_set
 				typedef typename std::conditional<std::is_const<Key>::value,hash_set const,hash_set>::type set_type;
 				typedef typename std::conditional<std::is_const<Key>::value,typename list::const_iterator,typename list::iterator>::type it_type;
 			public:
-				iterator_impl():m_set(piranha_nullptr),m_idx(0u),m_it() {}
+				iterator_impl():m_set(nullptr),m_idx(0u),m_it() {}
 				explicit iterator_impl(set_type *set, const size_type &idx, it_type it):
 					m_set(set),m_idx(idx),m_it(it) {}
 			private:
@@ -431,7 +431,7 @@ class hash_set
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		hash_set(const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator() {}
+			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator() {}
 		/// Constructor from number of buckets.
 		/**
 		 * Will construct a table whose number of buckets is at least equal to \p n_buckets.
@@ -444,7 +444,7 @@ class hash_set
 		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		explicit hash_set(const size_type &n_buckets, const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
+			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
 		{
 			init_from_n_buckets(n_buckets);
 		}
@@ -456,7 +456,7 @@ class hash_set
 		 * the copy constructor of the stored type, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		hash_set(const hash_set &other):
-			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(other.m_hasher),
+			m_container(nullptr),m_log2_size(0u),m_hasher(other.m_hasher),
 			m_key_equal(other.m_key_equal),m_n_elements(0u),m_allocator(other.m_allocator)
 		{
 			// Proceed to actual copy only if other has some content.
@@ -495,12 +495,12 @@ class hash_set
 		 * 
 		 * @param[in] other table to be moved.
 		 */
-		hash_set(hash_set &&other) piranha_noexcept_spec(true) : m_container(other.m_container),m_log2_size(other.m_log2_size),
+		hash_set(hash_set &&other) noexcept(true) : m_container(other.m_container),m_log2_size(other.m_log2_size),
 			m_hasher(std::move(other.m_hasher)),m_key_equal(std::move(other.m_key_equal)),m_n_elements(other.m_n_elements),
 			m_allocator(std::move(other.m_allocator))
 		{
 			// Clear out the other one.
-			other.m_container = piranha_nullptr;
+			other.m_container = nullptr;
 			other.m_log2_size = 0u;
 			other.m_n_elements = 0u;
 		}
@@ -521,7 +521,7 @@ class hash_set
 		template <typename InputIterator>
 		explicit hash_set(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0u,
 			const hasher &h = hasher(), const key_equal &k = key_equal()):
-			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
+			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
 		{
 			init_from_n_buckets(n_buckets);
 			for (auto it = begin; it != end; ++it) {
@@ -540,7 +540,7 @@ class hash_set
 		 */
 		template <typename U>
 		hash_set(std::initializer_list<U> list):
-			m_container(piranha_nullptr),m_log2_size(0u),m_hasher(),m_key_equal(),m_n_elements(0u),m_allocator()
+			m_container(nullptr),m_log2_size(0u),m_hasher(),m_key_equal(),m_n_elements(0u),m_allocator()
 		{
 			// We do not care here for possible truncation of list.size(), as this is only an optimization.
 			init_from_n_buckets(static_cast<size_type>(list.size()));
@@ -552,7 +552,7 @@ class hash_set
 		/**
 		 * No side effects.
 		 */
-		~hash_set() piranha_noexcept_spec(true)
+		~hash_set() noexcept(true)
 		{
 			piranha_assert(sanity_check());
 			destroy_and_deallocate();
@@ -579,7 +579,7 @@ class hash_set
 		 * 
 		 * @return reference to \p this.
 		 */
-		hash_set &operator=(hash_set &&other) piranha_noexcept_spec(true)
+		hash_set &operator=(hash_set &&other) noexcept(true)
 		{
 			if (likely(this != &other)) {
 				destroy_and_deallocate();
@@ -590,7 +590,7 @@ class hash_set
 				m_n_elements = other.m_n_elements;
 				m_allocator = std::move(other.m_allocator);
 				// Zero out other.
-				other.m_container = piranha_nullptr;
+				other.m_container = nullptr;
 				other.m_log2_size = 0u;
 				other.m_n_elements = 0u;
 			}
@@ -754,7 +754,7 @@ class hash_set
 		 * maximum number of buckets.
 		 */
 		template <typename U>
-		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
+		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = nullptr)
 		{
 			auto b_count = bucket_count();
 			// Handle the case of a table with no buckets.
@@ -836,7 +836,7 @@ class hash_set
 		{
 			destroy_and_deallocate();
 			// Reset the members.
-			m_container = piranha_nullptr;
+			m_container = nullptr;
 			m_log2_size = 0u;
 			m_n_elements = 0u;
 		}
@@ -992,7 +992,7 @@ class hash_set
 		 */
 		template <typename U>
 		iterator _unique_insert(U &&k, const size_type &bucket_idx,
-			typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = piranha_nullptr)
+			typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = nullptr)
 		{
 			// Assert that key is not present already in the table.
 			piranha_assert(find(std::forward<U>(k)) == end());
@@ -1132,7 +1132,7 @@ class hash_set
 				bucket.m_node.ptr()->~T();
 				if (bucket.m_node.m_next == &bucket.terminator) {
 					// Special handling if this was the only element.
-					bucket.m_node.m_next = piranha_nullptr;
+					bucket.m_node.m_next = nullptr;
 					return bucket.end();
 				} else {
 					// Store the link in the second element.
