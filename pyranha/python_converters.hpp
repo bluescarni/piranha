@@ -41,7 +41,7 @@ struct integer_converter
 	static void *convertible(::PyObject *obj_ptr)
 	{
 		if (!obj_ptr || (!PyInt_CheckExact(obj_ptr) && !PyLong_CheckExact(obj_ptr))) {
-			return piranha_nullptr;
+			return nullptr;
 		}
 		return obj_ptr;
 	}
@@ -71,12 +71,12 @@ struct rational_converter
 	static void *convertible(::PyObject *obj_ptr)
 	{
 		if (!obj_ptr) {
-			return piranha_nullptr;
+			return nullptr;
 		}
 		bp::object frac_module = bp::import("fractions");
 		bp::object frac_class = frac_module.attr("Fraction");
 		if (!::PyObject_IsInstance(obj_ptr,frac_class.ptr())) {
-			return piranha_nullptr;
+			return nullptr;
 		}
 		return obj_ptr;
 	}
@@ -113,7 +113,7 @@ struct real_converter
 	static void *convertible(::PyObject *obj_ptr)
 	{
 		if (!obj_ptr) {
-			return piranha_nullptr;
+			return nullptr;
 		}
 		try {
 			// NOTE: here we want to ignore errors when mpmath is missing, and just report that
@@ -121,11 +121,11 @@ struct real_converter
 			bp::object mpmath = bp::import("mpmath");
 			bp::object mpf = mpmath.attr("mpf");
 			if (!::PyObject_IsInstance(obj_ptr,mpf.ptr())) {
-				return piranha_nullptr;
+				return nullptr;
 			}
 		} catch (...) {
 			::PyErr_Clear();
-			return piranha_nullptr;
+			return nullptr;
 		}
 		return obj_ptr;
 	}

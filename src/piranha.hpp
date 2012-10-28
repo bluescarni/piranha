@@ -151,7 +151,6 @@ namespace detail {}
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "timeit.hpp"
-#include "toolbox.hpp"
 #include "tracing.hpp"
 #include "trigonometric_series.hpp"
 #include "truncator.hpp"

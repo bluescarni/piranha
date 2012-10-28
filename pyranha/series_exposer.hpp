@@ -4,24 +4,24 @@ struct series_exposer
 	// String constructor.
 	template <typename T>
 	static void expose_string_ctor(bp::class_<T> &cl,
-		typename std::enable_if<std::is_constructible<T,std::string>::value>::type * = piranha_nullptr)
+		typename std::enable_if<std::is_constructible<T,std::string>::value>::type * = nullptr)
 	{
 		cl.def(bp::init<const std::string &>());
 	}
 	template <typename T>
 	static void expose_string_ctor(bp::class_<T> &,
-		typename std::enable_if<!std::is_constructible<T,std::string>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!std::is_constructible<T,std::string>::value>::type * = nullptr)
 	{}
 	// Exponentiation support.
 	template <typename T, typename U>
 	static void pow_exposer(bp::class_<T> &series_class, const U &,
-		typename std::enable_if<is_exponentiable<T,U>::value>::type * = piranha_nullptr)
+		typename std::enable_if<is_exponentiable<T,U>::value>::type * = nullptr)
 	{
 		series_class.def("__pow__",&T::template pow<U>);
 	}
 	template <typename T, typename U>
 	static void pow_exposer(bp::class_<T> &, const U &,
-		typename std::enable_if<!is_exponentiable<T,U>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!is_exponentiable<T,U>::value>::type * = nullptr)
 	{}
 	// Evaluation wrapper.
 	template <typename S, typename T>
@@ -38,14 +38,14 @@ struct series_exposer
 	// Handle division specially (allowed only with non-series types).
 	template <typename S, typename T>
 	static void expose_division(bp::class_<S> &series_class, const T &in,
-		typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
 	{
 		series_class.def(bp::self /= in);
 		series_class.def(bp::self / in);
 	}
 	template <typename S, typename T>
 	static void expose_division(bp::class_<S> &, const T &,
-		typename std::enable_if<std::is_base_of<detail::series_tag,T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
 	{}
 	// TMP to check if a type is in the tuple.
 	template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
@@ -62,7 +62,7 @@ struct series_exposer
 	// Interaction with interoperable types.
 	template <typename S, std::size_t I = 0u, typename... T>
 	void interop_exposer(bp::class_<S> &series_class, const std::tuple<T...> &,
-		typename std::enable_if<I == sizeof...(T)>::type * = piranha_nullptr) const
+		typename std::enable_if<I == sizeof...(T)>::type * = nullptr) const
 	{
 		// Add interoperability with coefficient type if it is not already included in
 		// the interoperable types.
@@ -73,7 +73,7 @@ struct series_exposer
 	}
 	template <typename S, std::size_t I = 0u, typename... T>
 	void interop_exposer(bp::class_<S> &series_class, const std::tuple<T...> &t,
-		typename std::enable_if<(I < sizeof...(T))>::type * = piranha_nullptr) const
+		typename std::enable_if<(I < sizeof...(T))>::type * = nullptr) const
 	{
 		namespace sn = boost::python::self_ns;
 		typedef typename std::tuple_element<I,std::tuple<T...>>::type interop_type;
@@ -142,11 +142,11 @@ struct series_exposer
 	// Helpers to get coefficient list.
 	template <std::size_t I = 0u, typename... T>
 	static void build_coefficient_list(bp::list &, const std::tuple<T...> &,
-		typename std::enable_if<I == sizeof...(T)>::type * = piranha_nullptr)
+		typename std::enable_if<I == sizeof...(T)>::type * = nullptr)
 	{}
 	template <std::size_t I = 0u, typename... T>
 	static void build_coefficient_list(bp::list &retval, const std::tuple<T...> &t,
-		typename std::enable_if<(I < sizeof...(T))>::type * = piranha_nullptr)
+		typename std::enable_if<(I < sizeof...(T))>::type * = nullptr)
 	{
 		try {
 			retval.append(bp::make_tuple(bp::object(std::get<0u>(std::get<I>(t))),
@@ -287,7 +287,7 @@ struct series_exposer
 	// Power series exposer.
 	template <typename T>
 	static void power_series_exposer(bp::class_<T> &series_class,
-		typename std::enable_if<is_power_series<T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<is_power_series<T>::value>::type * = nullptr)
 	{
 		series_class.def("degree",wrap_degree<T>);
 		series_class.def("degree",wrap_partial_degree_set<T>);
@@ -298,7 +298,7 @@ struct series_exposer
 	}
 	template <typename T>
 	static void power_series_exposer(bp::class_<T> &,
-		typename std::enable_if<!is_power_series<T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!is_power_series<T>::value>::type * = nullptr)
 	{}
 	// Trigonometric wrappers.
 	template <typename S>
@@ -348,7 +348,7 @@ struct series_exposer
 	// Trigonometric exposer.
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &series_class,
-		typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = nullptr)
 	{
 		series_class.def("t_degree",wrap_t_degree<T>);
 		series_class.def("t_degree",wrap_partial_t_degree<T>);
@@ -361,7 +361,7 @@ struct series_exposer
 	}
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &,
-		typename std::enable_if<!std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = nullptr)
 	{}
 	// Latex representation.
 	template <typename S>
@@ -383,14 +383,14 @@ struct series_exposer
 	// Expose integration conditionally.
 	template <typename S>
 	static void expose_integrate(bp::class_<S> &series_class,
-		typename std::enable_if<is_integrable<S>::value>::type * = piranha_nullptr)
+		typename std::enable_if<is_integrable<S>::value>::type * = nullptr)
 	{
 		series_class.def("integrate",&S::integrate);
 		bp::def("_integrate",integrate_wrapper<S>);
 	}
 	template <typename S>
 	static void expose_integrate(bp::class_<S> &,
-		typename std::enable_if<!is_integrable<S>::value>::type * = piranha_nullptr)
+		typename std::enable_if<!is_integrable<S>::value>::type * = nullptr)
 	{}
 	// Sparsity wrapper.
 	template <typename S>
@@ -412,11 +412,11 @@ struct series_exposer
 	// Main exposer function.
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &,
-		typename std::enable_if<I == sizeof...(T)>::type * = piranha_nullptr) const
+		typename std::enable_if<I == sizeof...(T)>::type * = nullptr) const
 	{}
 	template <std::size_t I = 0u, typename... T>
 	void main_exposer(const std::tuple<T...> &t,
-		typename std::enable_if<(I < sizeof...(T))>::type * = piranha_nullptr) const
+		typename std::enable_if<(I < sizeof...(T))>::type * = nullptr) const
 	{
 		typedef typename std::tuple_element<0u,
 			typename std::tuple_element<I,std::tuple<T...>>::type>::type cf_type;
