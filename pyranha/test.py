@@ -20,6 +20,7 @@
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
 from __future__ import absolute_import as _ai
+
 import unittest as _ut
 
 class basic_test_case(_ut.TestCase):

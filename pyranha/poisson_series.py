@@ -19,7 +19,9 @@
 
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
-from _common import _get_cf_types, _get_series_type, _cleanup_custom_derivatives
+from __future__ import absolute_import as _ai
+
+from ._common import _get_cf_types, _get_series_type, _cleanup_custom_derivatives
 
 def get_cf_types():
 	"""Get the list of implemented coefficient types.

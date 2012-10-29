@@ -23,11 +23,13 @@
 
 """
 
+from __future__ import absolute_import as _ai
+
 _series_types = ['polynomial', 'poisson_series']
 
 __all__ = _series_types + ['celmec', 'math', 'test', 'settings']
 
-from _common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
+from ._common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
 import threading as _thr
 
 for n in _series_types:

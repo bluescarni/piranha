@@ -17,7 +17,9 @@
 # Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import _core
+from __future__ import absolute_import as _ai
+
+from . import _core
 
 # Get a list of coefficients supported by series type named series_name.
 def _get_cf_types(series_name):
@@ -29,16 +31,16 @@ def _get_series_type(series_name,cf_type):
 	cf_list_getter = getattr(_core,'_' + series_name + '_get_coefficient_list')
 	cfl = [(type(t[0]) if not t[0] is None else None,t[1],t[2]) for t in cf_list_getter()]
 	# First let's search by type.
-	cand = filter(lambda t: t[0] == cf_type if not t[0] is None else False,cfl)
+	cand = list(filter(lambda t: t[0] == cf_type if not t[0] is None else False,cfl))
 	assert(len(cand) < 2)
 	if len(cand) == 0:
 		# Let's try to search by name if we had no matches.
-		cand = filter(lambda t: t[1] == cf_type,cfl)
+		cand = list(filter(lambda t: t[1] == cf_type,cfl))
 		assert(len(cand) < 2)
 	if len(cand) == 0:
 		raise TypeError('no series type available for this coefficient type')
 	# Build series name and get it from _core.
-	s_name = filter(lambda s: s.startswith('_' + series_name + '_' + str(cand[0][2])),dir(_core))
+	s_name = list(filter(lambda s: s.startswith('_' + series_name + '_' + str(cand[0][2])),dir(_core)))
 	assert(len(s_name) == 1)
 	return getattr(_core,s_name[0])
 
@@ -47,7 +49,7 @@ def _get_series_type(series_name,cf_type):
 # want to remove them before the C++ library exits.
 def _cleanup_custom_derivatives(series_name):
 	import re
-	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
 	for s in s_names:
 		print('Unregistering custom derivatives for: ' + s)
 		s_type = getattr(_core,s)
@@ -74,7 +76,7 @@ def _evaluate_wrapper(self,d):
 # Register the evaluate wrapper for a particular series.
 def _register_evaluate_wrapper(series_name):
 	import re
-	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
 	for s in s_names:
 		s_type = getattr(_core,s)
 		setattr(s_type,'evaluate',_evaluate_wrapper)
@@ -133,7 +135,7 @@ def _repr_png_(self):
 # Register the png representation method for a particular series.
 def _register_repr_png(series_name):
 	import re
-	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
 	for s in s_names:
 		s_type = getattr(_core,s)
 		setattr(s_type,'_repr_png_',_repr_png_)
@@ -141,7 +143,7 @@ def _register_repr_png(series_name):
 # Register the latex representation method for a particular series.
 def _register_repr_latex(series_name):
 	import re
-	s_names = filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core))
+	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
 	for s in s_names:
 		s_type = getattr(_core,s)
 		setattr(s_type,'_repr_latex_',lambda self: r'\[ ' + self._latex_() + r' \]')

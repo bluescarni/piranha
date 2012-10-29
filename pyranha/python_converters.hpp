@@ -14,7 +14,20 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
 	}
 	bp::handle<> str_rep(str_obj);
+#if PY_MAJOR_VERSION < 3
 	const char *s = ::PyString_AsString(str_rep.get());
+#else
+	::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"utf-8","strict");
+	if (!unicode_str_obj) {
+		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+	}
+	bp::handle<> unicode_str(unicode_str_obj);
+	const char *s = ::PyBytes_AsString(unicode_str.get());
+	if (!s) {
+		::PyErr_Clear();
+		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+	}
+#endif
 	void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
 	::new (storage) T(s);
 	data->convertible = storage;
@@ -33,14 +46,22 @@ struct integer_converter
 		{
 			// NOTE: use PyLong_FromString here instead?
 			const std::string str = boost::lexical_cast<std::string>(n);
+#if PY_MAJOR_VERSION < 3
 			bp::object bi_module = bp::import("__builtin__");
+#else
+			bp::object bi_module = bp::import("builtins");
+#endif
 			bp::object int_class = bi_module.attr("int");
 			return bp::incref(int_class(str).ptr());
 		}
 	};
 	static void *convertible(::PyObject *obj_ptr)
 	{
-		if (!obj_ptr || (!PyInt_CheckExact(obj_ptr) && !PyLong_CheckExact(obj_ptr))) {
+		if (!obj_ptr || (
+#if PY_MAJOR_VERSION < 3
+			!PyInt_CheckExact(obj_ptr) &&
+#endif
+			!PyLong_CheckExact(obj_ptr))) {
 			return nullptr;
 		}
 		return obj_ptr;
@@ -143,7 +164,20 @@ struct real_converter
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
 		}
 		bp::handle<> str_rep(str_obj);
+#if PY_MAJOR_VERSION < 3
 		const char *s = ::PyString_AsString(str_rep.get());
+#else
+		::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"utf-8","strict");
+		if (!unicode_str_obj) {
+			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
+		}
+		bp::handle<> unicode_str(unicode_str_obj);
+		const char *s = ::PyBytes_AsString(unicode_str.get());
+		if (!s) {
+			::PyErr_Clear();
+			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
+		}
+#endif
 		// NOTE: the search for "'" is due to the string format of mpmath.mpf objects.
 		while (*s != '\0' && *s != '\'') {
 			++s;

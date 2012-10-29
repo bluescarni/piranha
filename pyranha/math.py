@@ -35,7 +35,7 @@ def cos(arg):
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from poisson_series import get_type
+	>>> from .poisson_series import get_type
 	>>> t = get_type('polynomial_rational')
 	>>> cos(2 * t('x'))
 	cos(2x)
@@ -69,7 +69,7 @@ def sin(arg):
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from poisson_series import get_type
+	>>> from .poisson_series import get_type
 	>>> t = get_type('polynomial_rational')
 	>>> sin(2 * t('x'))
 	sin(2x)
@@ -104,7 +104,7 @@ def partial(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from polynomial import get_type
+	>>> from .polynomial import get_type
 	>>> pt = get_type(int)
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
@@ -129,7 +129,7 @@ def integrate(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from polynomial import get_type
+	>>> from .polynomial import get_type
 	>>> pt = get_type('rational')
 	>>> x,y = pt('x'), pt('y')
 	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
@@ -196,7 +196,7 @@ def pbracket(f,g,p_list,q_list):
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from polynomial import get_type
+	>>> from .polynomial import get_type
 	>>> pt = get_type('rational')
 	>>> x,v = pt('x'), pt('v')
 	>>> pbracket(x+v,x+v,['v'],['x']) == 0
