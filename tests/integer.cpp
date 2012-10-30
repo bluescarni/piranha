@@ -773,6 +773,7 @@ BOOST_AUTO_TEST_CASE(integer_math_overloads_test)
 	BOOST_CHECK_EQUAL(n,piranha::integer(-10));
 	piranha::math::negate(n);
 	BOOST_CHECK_EQUAL(n,piranha::integer(10));
+	BOOST_CHECK(piranha::has_is_zero<piranha::integer>::value);
 }
 
 BOOST_AUTO_TEST_CASE(integer_vector_accumulate_test)

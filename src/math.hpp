@@ -46,31 +46,6 @@ namespace piranha
 namespace detail
 {
 
-// Default implementation of math::is_zero.
-// NOTE: the technique and its motivations are well-described here:
-// http://www.gotw.ca/publications/mill17.htm
-template <typename T, typename Enable = void>
-struct math_is_zero_impl
-{
-	static bool run(const T &x)
-	{
-		// NOTE: construct instance from integral constant 0.
-		// http://groups.google.com/group/comp.lang.c++.moderated/msg/328440a86dae8088?dmode=source
-		return x == T(0);
-	}
-};
-
-// Handle std::complex types.
-template <typename T>
-struct math_is_zero_impl<T,typename std::enable_if<boost::is_complex<T>::value>::type>
-{
-	static bool run(const T &c)
-	{
-		return math_is_zero_impl<typename T::value_type>::run(c.real()) &&
-			math_is_zero_impl<typename T::value_type>::run(c.imag());
-	}
-};
-
 // Default implementation of math::negate.
 // NOTE: in gcc 4.6 and up here we could use copysign, signbit, etc. to determine whether it's safe to negate floating-point types.
 template <typename T, typename Enable = void>
@@ -138,21 +113,71 @@ inline auto float_pow_impl(const T &x, const U &y, typename std::enable_if<
 namespace math
 {
 
+/// Default functor for the implementation of piranha::math::is_zero().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+// NOTE: the technique and its motivations are well-described here:
+// http://www.gotw.ca/publications/mill17.htm
+template <typename T, typename = void>
+struct is_zero_impl
+{};
+
+/// Specialisation of the piranha::math::is_zero() functor for C++ arithmetic types.
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operator will compare \p x to an instance of \p T constructed from the literal 0.
+	 * 
+	 * @param[in] x argument to be tested.
+	 * 
+	 * @return \p true if \p x is zero, \p false otherwise.
+	 */
+	bool operator()(const T &x) const
+	{
+		// NOTE: construct instance from integral constant 0.
+		// http://groups.google.com/group/comp.lang.c++.moderated/msg/328440a86dae8088?dmode=source
+		return x == T(0);
+	}
+};
+
+/// Specialisation of the piranha::math::is_zero() functor for C++ complex types.
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<boost::is_complex<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operator will test separately the real and imaginary parts of the complex argument.
+	 * 
+	 * @param[in] c argument to be tested.
+	 * 
+	 * @return \p true if \p c is zero, \p false otherwise.
+	 */
+	bool operator()(const T &c) const
+	{
+		return is_zero_impl<typename T::value_type>()(c.real()) &&
+			is_zero_impl<typename T::value_type>()(c.imag());
+	}
+};
+
 /// Zero test.
 /**
- * Test if value is zero. This function works with all C++ arithmetic types
- * and with piranha's numerical types. For series types, it will return \p true
- * if the series is empty, \p false otherwise. For \p std::complex, the function will
- * return \p true if both the real and imaginary parts are zero, \p false otherwise.
+ * Test if value is zero. The actual implementation of this function is in the piranha::math::is_zero_impl functor's
+ * call operator.
  * 
  * @param[in] x value to be tested.
  * 
  * @return \p true if value is zero, \p false otherwise.
+ * 
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::is_zero_impl functor.
  */
 template <typename T>
-inline bool is_zero(const T &x)
+inline auto is_zero(const T &x) -> decltype(is_zero_impl<T>()(x))
 {
-	return piranha::detail::math_is_zero_impl<T>::run(x);
+	return is_zero_impl<T>()(x);
 }
 
 /// In-place negation.
@@ -1246,6 +1271,26 @@ class has_binomial: detail::sfinae_types
 // Static init.
 template <typename T, typename U>
 const bool has_binomial<T,U>::value;
+
+/// Type trait to detect the presence of the piranha::math::is_zero function.
+/**
+ * The type trait will be \p true if piranha::math::is_zero can be successfully called on instances of \p T, returning
+ * an instance of type \p bool.
+ */
+template <typename T>
+class has_is_zero: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(T1 const *t) -> decltype(math::is_zero(*t));
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test((T const *)nullptr)),bool>::value;
+};
+
+// Static init.
+template <typename T>
+const bool has_is_zero<T>::value;
 
 }
 

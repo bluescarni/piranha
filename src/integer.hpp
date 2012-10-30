@@ -1923,16 +1923,6 @@ class integer
 namespace detail
 {
 
-// Specialise implementation of math::is_zero for integer.
-template <typename T>
-struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
-{
-	static bool run(const T &n)
-	{
-		return n.sign() == 0;
-	}
-};
-
 // Specialise implementation of math::negate for integer.
 template <typename T>
 struct math_negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
@@ -1957,6 +1947,22 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<
 
 namespace math
 {
+
+/// Specialisation of the piranha::math::is_zero() functor for piranha::integer.
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n piranha::integer to be tested.
+	 * 
+	 * @return \p true if \p n is zero, \p false otherwise.
+	 */
+	bool operator()(const T &n) const
+	{
+		return n.sign() == 0;
+	}
+};
 
 /// Specialisation of the piranha::math::pow() functor for piranha::integer.
 /**

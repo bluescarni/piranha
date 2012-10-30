@@ -1706,16 +1706,6 @@ namespace detail
 {
 
 template <typename Series>
-struct math_is_zero_impl<Series,typename std::enable_if<
-	std::is_base_of<series_tag,Series>::value>::type>
-{
-	static bool run(const Series &s)
-	{
-		return s.empty();
-	}
-};
-
-template <typename Series>
 struct math_negate_impl<Series,typename std::enable_if<
 	std::is_base_of<series_tag,Series>::value>::type>
 {
@@ -1789,6 +1779,26 @@ struct print_tex_coefficient_impl<Series,typename std::enable_if<
 
 namespace math
 {
+
+/// Specialisation of the piranha::math::is_zero() functor for piranha::series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series.
+ * The result will be computed via the series' <tt>empty()</tt> method.
+ */
+template <typename Series>
+struct is_zero_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] s piranha::series to be tested.
+	 * 
+	 * @return \p true if \p s is empty, \p false otherwise.
+	 */
+	bool operator()(const Series &s) const
+	{
+		return s.empty();
+	}
+};
 
 /// Specialisation of the piranha::math::pow() functor for piranha::series.
 /**

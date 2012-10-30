@@ -800,6 +800,7 @@ BOOST_AUTO_TEST_CASE(rational_math_overloads_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-10");
 	math::negate(n);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"10");
+	BOOST_CHECK(has_is_zero<rational>::value);
 }
 
 BOOST_AUTO_TEST_CASE(rational_stream_test)

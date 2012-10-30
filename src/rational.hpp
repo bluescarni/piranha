@@ -1492,16 +1492,6 @@ struct print_tex_coefficient_impl<T,typename std::enable_if<std::is_same<rationa
 namespace detail
 {
 
-// Specialise implementation of math::is_zero for rational.
-template <typename T>
-struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
-{
-	static bool run(const T &q)
-	{
-		return q.sign() == 0;
-	}
-};
-
 // Specialise implementation of math::negate for rational.
 template <typename T>
 struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
@@ -1516,6 +1506,22 @@ struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::valu
 
 namespace math
 {
+
+/// Specialisation of the piranha::math::is_zero() functor for piranha::rational.
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q piranha::rational to be tested.
+	 * 
+	 * @return \p true if \p q is zero, \p false otherwise.
+	 */
+	bool operator()(const T &q) const
+	{
+		return q.sign() == 0;
+	}
+};
 
 /// Specialisation of the piranha::math::pow() functor for piranha::rational.
 /**

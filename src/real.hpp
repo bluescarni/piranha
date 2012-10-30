@@ -1643,6 +1643,22 @@ class PIRANHA_PUBLIC real
 namespace math
 {
 
+/// Specialisation of the piranha::math::is_zero() functor for piranha::real.
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] r piranha::real to be tested.
+	 * 
+	 * @return \p true if \p r is zero, \p false otherwise.
+	 */
+	bool operator()(const T &r) const
+	{
+		return r.is_zero();
+	}
+};
+
 /// Specialisation of the piranha::math::pow() functor for piranha::real.
 /**
  * This specialisation is activated when \p T is piranha::real.
@@ -1850,16 +1866,6 @@ struct binomial_impl<T,U,typename std::enable_if<
 
 namespace detail
 {
-
-// Specialise implementation of math::is_zero for real.
-template <typename T>
-struct math_is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
-{
-	static bool run(const T &r)
-	{
-		return r.is_zero();
-	}
-};
 
 // Specialise implementation of math::negate for real.
 template <typename T>

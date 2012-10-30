@@ -104,6 +104,14 @@ BOOST_AUTO_TEST_CASE(is_zero_test)
 {
 	boost::fusion::for_each(zeroes,check_is_zero_01());
 	boost::fusion::for_each(arithmetic_values,check_is_zero_02());
+	BOOST_CHECK(has_is_zero<int>::value);
+	BOOST_CHECK(has_is_zero<char>::value);
+	BOOST_CHECK(has_is_zero<double>::value);
+	BOOST_CHECK(has_is_zero<unsigned>::value);
+	BOOST_CHECK(has_is_zero<std::complex<double>>::value);
+	BOOST_CHECK(has_is_zero<std::complex<float>>::value);
+	BOOST_CHECK(!has_is_zero<std::string>::value);
+	BOOST_CHECK((!has_is_zero<std::unordered_map<int,int>>::value));
 }
 
 struct check_multiply_accumulate

@@ -1746,3 +1746,35 @@ BOOST_AUTO_TEST_CASE(series_trim_test)
 {
 	boost::mpl::for_each<cf_types>(trim_tester());
 }
+
+struct is_zero_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			BOOST_CHECK(has_is_zero<p_type1>::value);
+			BOOST_CHECK(has_is_zero<p_type11>::value);
+			BOOST_CHECK(math::is_zero(p_type1{}));
+			BOOST_CHECK(math::is_zero(p_type11{}));
+			BOOST_CHECK(math::is_zero(p_type1{0}));
+			BOOST_CHECK(math::is_zero(p_type11{0}));
+			BOOST_CHECK(!math::is_zero(p_type1{1}));
+			BOOST_CHECK(!math::is_zero(p_type11{1}));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_is_zero_test)
+{
+	boost::mpl::for_each<cf_types>(is_zero_tester());
+}

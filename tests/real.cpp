@@ -330,6 +330,7 @@ BOOST_AUTO_TEST_CASE(real_is_zero_test)
 	BOOST_CHECK(!math::is_zero(real{"-inf"}));
 	BOOST_CHECK(!math::is_zero(real{"nan"}));
 	BOOST_CHECK(!math::is_zero(real{"-nan"}));
+	BOOST_CHECK(has_is_zero<real>::value);
 }
 
 struct check_integral_conversion
