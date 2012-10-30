@@ -39,6 +39,7 @@
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -115,32 +116,28 @@ namespace math
 
 /// Default functor for the implementation of piranha::math::is_zero().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
+ * This functor should be specialised via the \p std::enable_if mechanism. The default implementation defines a call
+ * operator which is enabled only if the argument type is constructible from the C++ \p int type and \p T is equality comparable.
  */
-// NOTE: the technique and its motivations are well-described here:
-// http://www.gotw.ca/publications/mill17.htm
 template <typename T, typename = void>
 struct is_zero_impl
-{};
-
-/// Specialisation of the piranha::math::is_zero() functor for C++ arithmetic types.
-template <typename T>
-struct is_zero_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
 {
 	/// Call operator.
 	/**
-	 * The operator will compare \p x to an instance of \p T constructed from the literal 0.
+	 * The operator will compare \p x to an instance of \p U constructed from the literal 0. If \p U cannot
+	 * be constructed from the literal 0 or \p U is not equality comparable, the operator will be disabled.
 	 * 
 	 * @param[in] x argument to be tested.
 	 * 
 	 * @return \p true if \p x is zero, \p false otherwise.
 	 */
-	bool operator()(const T &x) const
+	template <typename U>
+	bool operator()(const U &x, typename std::enable_if<std::is_constructible<U,int>::value &&
+		is_equality_comparable<U>::value>::type * = nullptr) const
 	{
 		// NOTE: construct instance from integral constant 0.
 		// http://groups.google.com/group/comp.lang.c++.moderated/msg/328440a86dae8088?dmode=source
-		return x == T(0);
+		return x == U(0);
 	}
 };
 
