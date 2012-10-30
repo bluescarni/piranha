@@ -1227,6 +1227,11 @@ class key_has_t_lorder: detail::sfinae_types
 template <typename T>
 const bool key_has_t_lorder<T>::value;
 
+/// Type trait to detect the presence of the piranha::math::binomial function.
+/**
+ * The type trait will be \p true if piranha::math::binomial can be successfully called on instances of \p T and \p U respectively,
+ * \p false otherwise.
+ */
 template <typename T, typename U>
 class has_binomial: detail::sfinae_types
 {
