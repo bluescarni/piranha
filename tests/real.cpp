@@ -41,6 +41,7 @@
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/rational.hpp"
+#include "../src/type_traits.hpp"
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
 static_assert(piranha::real::default_prec < MPFR_PREC_MAX,
@@ -1623,4 +1624,16 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 	BOOST_CHECK_EQUAL(math::binomial(real{-34.5},0),1);
 	BOOST_CHECK_THROW(math::binomial(real(3),-2),std::invalid_argument);
 	BOOST_CHECK_THROW(math::binomial(real(0),-2),std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
+{
+	BOOST_CHECK(is_equality_comparable<real>::value);
+	BOOST_CHECK((is_equality_comparable<real,rational>::value));
+	BOOST_CHECK((is_equality_comparable<real,integer>::value));
+	BOOST_CHECK((is_equality_comparable<rational,real>::value));
+	BOOST_CHECK((is_equality_comparable<integer,real>::value));
+	BOOST_CHECK((is_equality_comparable<double,real>::value));
+	BOOST_CHECK((is_equality_comparable<real,int>::value));
+	BOOST_CHECK((!is_equality_comparable<real,std::string>::value));
 }

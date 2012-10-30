@@ -48,6 +48,7 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/type_traits.hpp"
 
 const boost::fusion::vector<char,signed char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double> arithmetic_values(
 	(char)42,(signed char)42,(short)42,-42,42L,-42LL,
@@ -1005,4 +1006,12 @@ BOOST_AUTO_TEST_CASE(integer_binomial_test)
 	BOOST_CHECK_EQUAL(piranha::math::binomial(-14,12),piranha::integer("5200300"));
 	BOOST_CHECK((std::is_same<piranha::integer,decltype(piranha::math::binomial(0,0))>::value));
 	BOOST_CHECK((std::is_same<piranha::integer,decltype(piranha::math::binomial(0,piranha::integer(0)))>::value));
+}
+
+BOOST_AUTO_TEST_CASE(integer_is_equality_comparable_test)
+{
+	BOOST_CHECK(piranha::is_equality_comparable<piranha::integer>::value);
+	BOOST_CHECK((piranha::is_equality_comparable<double,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_equality_comparable<piranha::integer,int>::value));
+	BOOST_CHECK((!piranha::is_equality_comparable<piranha::integer,std::string>::value));
 }

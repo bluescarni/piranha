@@ -46,6 +46,7 @@
 #include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -941,4 +942,14 @@ BOOST_AUTO_TEST_CASE(rational_binomial_test)
 	BOOST_CHECK_EQUAL(math::binomial(rational(0,7),2),0);
 	BOOST_CHECK_THROW(math::binomial(rational(3),-2),std::invalid_argument);
 	BOOST_CHECK_THROW(math::binomial(rational(0),-2),std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(rational_is_equality_comparable_test)
+{
+	BOOST_CHECK(is_equality_comparable<rational>::value);
+	BOOST_CHECK((is_equality_comparable<rational,integer>::value));
+	BOOST_CHECK((is_equality_comparable<integer,rational>::value));
+	BOOST_CHECK((is_equality_comparable<double,rational>::value));
+	BOOST_CHECK((is_equality_comparable<rational,int>::value));
+	BOOST_CHECK((!is_equality_comparable<rational,std::string>::value));
 }
