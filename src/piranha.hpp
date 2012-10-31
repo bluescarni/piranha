@@ -95,7 +95,7 @@
  * in the from-python converters?
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
- * \todo review coding of type traits, test equality comparable for pointer.
+ * \todo review coding of type traits.
  */
 namespace piranha
 {

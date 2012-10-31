@@ -278,8 +278,8 @@ const bool is_assignable<T,U>::value;
 
 /// Equality-comparable type trait.
 /**
- * This type trait is \p true if instances if type \p T can be compared for equality to instances of
- * type \p U. The equality operator must be non-mutable (i.e., implemented using pass-by-value or const
+ * This type trait is \p true if instances if type \p T can be compared for equality and inequality to instances of
+ * type \p U. The operators must be non-mutable (i.e., implemented using pass-by-value or const
  * references) and must return a type implicitly convertible to \p bool.
  */
 template <typename T, typename U = T>
@@ -288,11 +288,15 @@ class is_equality_comparable: detail::sfinae_types
 		typedef typename std::decay<T>::type Td;
 		typedef typename std::decay<U>::type Ud;
 		template <typename T1, typename U1>
-		static auto test(const T1 &t, const U1 &u) -> decltype(t == u);
-		static no test(...);
+		static auto test1(const T1 &t, const U1 &u) -> decltype(t == u);
+		static no test1(...);
+		template <typename T1, typename U1>
+		static auto test2(const T1 &t, const U1 &u) -> decltype(t != u);
+		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_convertible<decltype(test(std::declval<Td>(),std::declval<Ud>())),bool>::value;
+		static const bool value = std::is_convertible<decltype(test1(std::declval<Td>(),std::declval<Ud>())),bool>::value &&
+			std::is_convertible<decltype(test2(std::declval<Td>(),std::declval<Ud>())),bool>::value;
 };
 
 // Static init.

@@ -244,37 +244,54 @@ BOOST_AUTO_TEST_CASE(type_traits_is_assignable)
 struct frob
 {
 	bool operator==(const frob &) const;
+	bool operator!=(const frob &) const;
 };
 
 struct frob_nonconst
 {
 	bool operator==(const frob_nonconst &);
+	bool operator!=(const frob_nonconst &);
 };
 
 struct frob_nonbool
 {
 	char operator==(const frob_nonbool &) const;
+	char operator!=(const frob_nonbool &) const;
 };
 
 struct frob_void
 {
 	void operator==(const frob_nonbool &) const;
+	void operator!=(const frob_nonbool &) const;
 };
 
 struct frob_copy
 {
 	int operator==(frob_copy) const;
+	int operator!=(frob_copy) const;
 };
 
 struct frob_mix
 {};
 
 short operator==(const frob_mix &, frob_mix);
+short operator!=(const frob_mix &, frob_mix);
 
 struct frob_mix_wrong
 {};
 
 short operator==(frob_mix_wrong, frob_mix_wrong &);
+short operator!=(frob_mix_wrong, frob_mix_wrong &);
+
+struct frob_mix_not_ineq
+{};
+
+bool operator==(const frob_mix_not_ineq &, const frob_mix_not_ineq &);
+
+struct frob_mix_not_eq
+{};
+
+bool operator!=(const frob_mix_not_eq &, const frob_mix_not_eq &);
 
 BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
 {
@@ -285,6 +302,8 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
 	BOOST_CHECK((!is_equality_comparable<double,trivial>::value));
 	BOOST_CHECK((!is_equality_comparable<trivial,double>::value));
 	BOOST_CHECK(is_equality_comparable<int &>::value);
+	BOOST_CHECK(is_equality_comparable<int *>::value);
+	BOOST_CHECK((is_equality_comparable<int const *, int *>::value));
 	BOOST_CHECK((is_equality_comparable<int &, double>::value));
 	BOOST_CHECK((is_equality_comparable<int const &, double &&>::value));
 	BOOST_CHECK(is_equality_comparable<frob>::value);
@@ -294,4 +313,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
 	BOOST_CHECK(is_equality_comparable<frob_copy>::value);
 	BOOST_CHECK(is_equality_comparable<frob_mix>::value);
 	BOOST_CHECK(!is_equality_comparable<frob_mix_wrong>::value);
+	BOOST_CHECK(!is_equality_comparable<frob_mix_not_ineq>::value);
+	BOOST_CHECK(!is_equality_comparable<frob_mix_not_eq>::value);
 }
