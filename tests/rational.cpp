@@ -953,3 +953,17 @@ BOOST_AUTO_TEST_CASE(rational_is_equality_comparable_test)
 	BOOST_CHECK((is_equality_comparable<rational,int>::value));
 	BOOST_CHECK((!is_equality_comparable<rational,std::string>::value));
 }
+
+BOOST_AUTO_TEST_CASE(rational_t_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::t_subs(rational(),"",2,1),rational(0));
+	BOOST_CHECK_EQUAL(math::t_subs(rational(-2),"foo",4.5,2.),rational(-2));
+	BOOST_CHECK_EQUAL(math::t_subs(rational("3"),"bar","frob","niz"),rational(3));
+	BOOST_CHECK((std::is_same<decltype(math::t_subs(rational(),"",2,0)),rational>::value));
+	BOOST_CHECK(has_t_subs<rational>::value);
+	BOOST_CHECK((has_t_subs<rational,int>::value));
+	BOOST_CHECK((has_t_subs<rational,int,double>::value));
+	BOOST_CHECK((has_t_subs<rational &,int>::value));
+	BOOST_CHECK((has_t_subs<const rational &,const int &,double &>::value));
+	BOOST_CHECK((!has_t_subs<std::string,rational,double>::value));
+}

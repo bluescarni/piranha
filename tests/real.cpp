@@ -1637,3 +1637,17 @@ BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
 	BOOST_CHECK((is_equality_comparable<real,int>::value));
 	BOOST_CHECK((!is_equality_comparable<real,std::string>::value));
 }
+
+BOOST_AUTO_TEST_CASE(real_t_subs_test)
+{
+	BOOST_CHECK_EQUAL(math::t_subs(real(),"",2,1),real(0));
+	BOOST_CHECK_EQUAL(math::t_subs(real(-2),"foo",4.5,2.),real(-2));
+	BOOST_CHECK_EQUAL(math::t_subs(real("3"),"bar","frob","niz"),real(3));
+	BOOST_CHECK((std::is_same<decltype(math::t_subs(real(),"",2,0)),real>::value));
+	BOOST_CHECK(has_t_subs<real>::value);
+	BOOST_CHECK((has_t_subs<real,int>::value));
+	BOOST_CHECK((has_t_subs<real,int,double>::value));
+	BOOST_CHECK((has_t_subs<real &,int>::value));
+	BOOST_CHECK((has_t_subs<const real &,const int &,double &>::value));
+	BOOST_CHECK((!has_t_subs<std::string,real,double>::value));
+}

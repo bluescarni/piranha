@@ -1015,3 +1015,17 @@ BOOST_AUTO_TEST_CASE(integer_is_equality_comparable_test)
 	BOOST_CHECK((piranha::is_equality_comparable<piranha::integer,int>::value));
 	BOOST_CHECK((!piranha::is_equality_comparable<piranha::integer,std::string>::value));
 }
+
+BOOST_AUTO_TEST_CASE(integer_t_subs_test)
+{
+	BOOST_CHECK_EQUAL(piranha::math::t_subs(piranha::integer(),"",2,1),piranha::integer(0));
+	BOOST_CHECK_EQUAL(piranha::math::t_subs(piranha::integer(-2),"foo",4.5,2.),piranha::integer(-2));
+	BOOST_CHECK_EQUAL(piranha::math::t_subs(piranha::integer("3"),std::string("bar"),"frob","niz"),piranha::integer(3));
+	BOOST_CHECK((std::is_same<decltype(piranha::math::t_subs(piranha::integer(),"",2,0)),piranha::integer>::value));
+	BOOST_CHECK(piranha::has_t_subs<piranha::integer>::value);
+	BOOST_CHECK((piranha::has_t_subs<piranha::integer,int>::value));
+	BOOST_CHECK((piranha::has_t_subs<piranha::integer,int,double>::value));
+	BOOST_CHECK((piranha::has_t_subs<piranha::integer &,int>::value));
+	BOOST_CHECK((piranha::has_t_subs<const piranha::integer &,const int &,double &>::value));
+	BOOST_CHECK((!piranha::has_t_subs<std::string,piranha::integer,double>::value));
+}

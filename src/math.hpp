@@ -535,6 +535,56 @@ inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(su
 	return subs_impl<T>()(x,name,y);
 }
 
+/// Default functor for the implementation of piranha::math::t_subs().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename = void>
+struct t_subs_impl
+{};
+
+/// Specialisation of the piranha::math::t_subs() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct t_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 * 
+	 * @return copy of \p x.
+	 */
+	template <typename U, typename V>
+	T operator()(const T &x, const std::string &, const U &, const V &) const
+	{
+		return x;
+	}
+};
+
+/// Trigonometric substitution.
+/**
+ * Substitute the cosine and sine of a symbolic variable with generic objects.
+ * The actual implementation of this function is in the piranha::math::t_subs_impl functor.
+ * 
+ * @param[in] x quantity that will be subject to substitution.
+ * @param[in] name name of the symbolic variable that will be substituted.
+ * @param[in] c object that will substitute the cosine of the variable.
+ * @param[in] s object that will substitute the sine of the variable.
+ * 
+ * @return \p x after substitution of cosine and sine of \p name with \p c and \p s.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::t_subs_impl.
+ */
+template <typename T, typename U, typename V>
+inline auto t_subs(const T &x, const std::string &name, const U &c, const V &s) -> decltype(t_subs_impl<T>()(x,name,c,s))
+{
+	return t_subs_impl<T>()(x,name,c,s);
+}
+
 /// Default functor for the implementation of piranha::math::abs().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1288,6 +1338,29 @@ class has_is_zero: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool has_is_zero<T>::value;
+
+/// Type trait to detect the presence of the piranha::math::t_subs function.
+/**
+ * The type trait will be \p true if piranha::math::t_subs can be successfully called on instances
+ * of type \p T, with instances of type \p U  and \p V as substitution arguments.
+ */
+template <typename T, typename U = T, typename V = U>
+class has_t_subs: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		typedef typename std::decay<V>::type Vd;
+		template <typename T1, typename U1, typename V1>
+		static auto test(const T1 &t, const U1 &u, const V1 &v) -> decltype(math::t_subs(t,std::declval<std::string>(),u,v),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>(),std::declval<Vd>())),yes>::value;
+};
+
+// Static init.
+template <typename T, typename U, typename V>
+const bool has_t_subs<T,U,V>::value;
 
 }
 

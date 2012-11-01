@@ -2082,6 +2082,23 @@ struct subs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type
 	}
 };
 
+/// Specialisation of the piranha::math::t_subs() functor for piranha::integer.
+template <typename T>
+struct t_subs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n substitution argument.
+	 * 
+	 * @return copy of \p n.
+	 */
+	template <typename U, typename V>
+	T operator()(const T &n, const std::string &, const U &, const V &) const
+	{
+		return n;
+	}
+};
+
 /// Specialisation of the piranha::math::abs() functor for piranha::integer.
 template <typename T>
 struct abs_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>

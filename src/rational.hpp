@@ -1657,6 +1657,23 @@ struct subs_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::typ
 	}
 };
 
+/// Specialisation of the piranha::math::t_subs() functor for piranha::rational.
+template <typename T>
+struct t_subs_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q substitution argument.
+	 * 
+	 * @return copy of \p q.
+	 */
+	template <typename U, typename V>
+	T operator()(const T &q, const std::string &, const U &, const V &) const
+	{
+		return q;
+	}
+};
+
 /// Specialisation of the piranha::math::integral_cast functor for piranha::rational.
 template <typename T>
 struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
