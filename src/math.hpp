@@ -1322,17 +1322,18 @@ const bool has_binomial<T,U>::value;
 /// Type trait to detect the presence of the piranha::math::is_zero function.
 /**
  * The type trait will be \p true if piranha::math::is_zero can be successfully called on instances of \p T, returning
- * an instance of type \p bool.
+ * an instance of a type implicitly convertible \p bool.
  */
 template <typename T>
 class has_is_zero: detail::sfinae_types
 {
+		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(T1 const *t) -> decltype(math::is_zero(*t));
+		static auto test(const T1 &t) -> decltype(math::is_zero(t));
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr)),bool>::value;
+		static const bool value = std::is_convertible<decltype(test(std::declval<Td>())),bool>::value;
 };
 
 // Static init.

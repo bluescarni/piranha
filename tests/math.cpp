@@ -110,11 +110,17 @@ BOOST_AUTO_TEST_CASE(is_zero_test)
 	BOOST_CHECK(has_is_zero<int>::value);
 	BOOST_CHECK(has_is_zero<char>::value);
 	BOOST_CHECK(has_is_zero<double>::value);
+	BOOST_CHECK(has_is_zero<double &>::value);
+	BOOST_CHECK(has_is_zero<double &&>::value);
+	BOOST_CHECK(has_is_zero<const double &>::value);
 	BOOST_CHECK(has_is_zero<unsigned>::value);
 	BOOST_CHECK(has_is_zero<std::complex<double>>::value);
 	BOOST_CHECK(has_is_zero<std::complex<float>>::value);
 	BOOST_CHECK(!has_is_zero<std::string>::value);
 	BOOST_CHECK((!has_is_zero<trivial>::value));
+	BOOST_CHECK((!has_is_zero<trivial &>::value));
+	BOOST_CHECK((!has_is_zero<trivial &&>::value));
+	BOOST_CHECK((!has_is_zero<const trivial &&>::value));
 }
 
 struct check_multiply_accumulate
