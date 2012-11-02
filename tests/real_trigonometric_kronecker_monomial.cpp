@@ -1210,3 +1210,144 @@ BOOST_AUTO_TEST_CASE(rtkm_tt_test)
 {
 	boost::mpl::for_each<int_types>(tt_tester());
 }
+
+BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
+{
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int>::value));
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int,int>::value));
+	// This fails because the cos and sin replacements must be the same type.
+	BOOST_CHECK((!key_has_t_subs<real_trigonometric_kronecker_monomial<short>,int,long>::value));
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<short>,long,long>::value));
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<long> &,long,const long &>::value));
+	BOOST_CHECK((key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &,char,const char &>::value));
+	BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<long long> &,char,int>::value));
+}
+
+struct t_subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		// Test with no substitution.
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		symbol_set v;
+		k_type k;
+		auto res = k.t_subs("x",.5,.0,v);
+		typedef decltype(res) res_type1;
+		BOOST_CHECK((std::is_same<typename res_type1::value_type::first_type,double>::value));
+		BOOST_CHECK_EQUAL(res.size(),2u);
+		BOOST_CHECK_EQUAL(res[0u].first,double(1));
+		BOOST_CHECK_EQUAL(res[1u].first,double(0));
+		k.set_flavour(false);
+		res = k.t_subs("x",.5,.0,v);
+		BOOST_CHECK_EQUAL(res.size(),2u);
+		BOOST_CHECK_EQUAL(res[0u].first,double(0));
+		BOOST_CHECK_EQUAL(res[1u].first,double(1));
+		k = k_type{T(3)};
+		k.set_flavour(true);
+		v.add("x");
+		res = k.t_subs("y",.5,.0,v);
+		BOOST_CHECK_EQUAL(res.size(),2u);
+		BOOST_CHECK_EQUAL(res[0u].first,double(1));
+		BOOST_CHECK_EQUAL(res[1u].first,double(0));
+		BOOST_CHECK(res[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res[1u].second == k);
+		res = k.t_subs("y",.5,.0,v);
+		BOOST_CHECK_EQUAL(res.size(),2u);
+		BOOST_CHECK_EQUAL(res[0u].first,double(0));
+		BOOST_CHECK_EQUAL(res[1u].first,double(1));
+		BOOST_CHECK(res[1u].second == k);
+		k.set_flavour(true);
+		BOOST_CHECK(res[0u].second == k);
+		// Test substitution with no canonicalisation.
+		v.add("y");
+		k = k_type{T(2),T(3)};
+		auto c = rational(1,2), s = rational(4,5);
+		auto res2 = k.t_subs("y",c,s,v);
+		typedef decltype(res2) res_type2;
+		BOOST_CHECK((std::is_same<typename res_type2::value_type::first_type,rational>::value));
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,c*c*c-3*s*s*c);
+		BOOST_CHECK_EQUAL(res2[1u].first,-3*c*c*s+s*s*s);
+		k = k_type{T(2),T(0)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		k = k_type{T(2),T(3)};
+		k.set_flavour(false);
+		res2 = k.t_subs("y",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,3*c*c*s-s*s*s);
+		BOOST_CHECK_EQUAL(res2[1u].first,c*c*c-3*s*s*c);
+		k = k_type{T(2),T(0)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		// Negative multiplier
+		k = k_type{T(-3),T(3)};
+		res2 = k.t_subs("x",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,c*c*c-3*s*s*c);
+		BOOST_CHECK_EQUAL(res2[1u].first,3*c*c*s-s*s*s);
+		k = k_type{T(0),T(3)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		k = k_type{T(-3),T(3)};
+		k.set_flavour(false);
+		res2 = k.t_subs("x",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,-3*c*c*s+s*s*s);
+		BOOST_CHECK_EQUAL(res2[1u].first,c*c*c-3*s*s*c);
+		k = k_type{T(0),T(3)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		// Test substitution with canonicalisation.
+		k = k_type{T(-2),T(3)};
+		res2 = k.t_subs("y",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,c*c*c-3*s*s*c);
+		BOOST_CHECK_EQUAL(res2[1u].first,3*c*c*s-s*s*s);
+		k = k_type{T(2),T(0)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		k = k_type{T(-2),T(3)};
+		k.set_flavour(false);
+		res2 = k.t_subs("y",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,3*c*c*s-s*s*s);
+		BOOST_CHECK_EQUAL(res2[1u].first,-c*c*c+3*s*s*c);
+		k = k_type{T(2),T(0)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		// Negative multiplier
+		k = k_type{T(-3),T(-3)};
+		res2 = k.t_subs("x",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,c*c*c-3*s*s*c);
+		BOOST_CHECK_EQUAL(res2[1u].first,-3*c*c*s+s*s*s);
+		k = k_type{T(0),T(3)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+		k = k_type{T(-3),T(-3)};
+		k.set_flavour(false);
+		res2 = k.t_subs("x",c,s,v);
+		BOOST_CHECK_EQUAL(res2.size(),2u);
+		BOOST_CHECK_EQUAL(res2[0u].first,-3*c*c*s+s*s*s);
+		BOOST_CHECK_EQUAL(res2[1u].first,-c*c*c+3*s*s*c);
+		k = k_type{T(0),T(3)};
+		BOOST_CHECK(res2[0u].second == k);
+		k.set_flavour(false);
+		BOOST_CHECK(res2[1u].second == k);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_t_subs_test)
+{
+	boost::mpl::for_each<int_types>(t_subs_tester());
+}

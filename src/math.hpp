@@ -1363,6 +1363,45 @@ class has_t_subs: detail::sfinae_types
 template <typename T, typename U, typename V>
 const bool has_t_subs<T,U,V>::value;
 
+/// Type trait to detect the presence of the trigonometric substitution method in keys.
+/**
+ * This type trait will be \p true if \p Key provides a const method <tt>t_subs()</tt> accepting as const parameters a string,
+ * an instance of \p T, an instance of \p U and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
+ * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a symbol with its cosine
+ * and sine passed as instances of \p T and \p U respectively.
+ * 
+ * \p Key must be a model of piranha::concept::Key.
+ */
+template <typename Key, typename T, typename U = T>
+class key_has_t_subs: detail::sfinae_types
+{
+		typedef typename std::decay<Key>::type Keyd;
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		BOOST_CONCEPT_ASSERT((concept::Key<Keyd>));
+		template <typename Key1, typename T1, typename U1>
+		static auto test(const Key1 &k, const T1 &t, const U1 &u) -> decltype(k.t_subs(std::declval<const std::string &>(),t,u,std::declval<const symbol_set &>()));
+		static no test(...);
+		template <typename T1>
+		struct check_result_type
+		{
+			static const bool value = false;
+		};
+		template <typename Res>
+		struct check_result_type<std::vector<std::pair<Res,Keyd>>>
+		{
+			static const bool value = true;
+		};
+	public:
+		/// Value of the type trait.
+		static const bool value = check_result_type<decltype(test(std::declval<Keyd>(),
+			std::declval<Td>(),std::declval<Ud>()))>::value;
+};
+
+// Static init.
+template <typename Key, typename T, typename U>
+const bool key_has_t_subs<Key,T,U>::value;
+
 }
 
 #endif

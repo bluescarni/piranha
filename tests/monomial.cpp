@@ -773,3 +773,11 @@ BOOST_AUTO_TEST_CASE(monomial_ipow_subs_test)
 {
 	boost::mpl::for_each<expo_types>(ipow_subs_tester());
 }
+
+BOOST_AUTO_TEST_CASE(monomial_key_has_t_subs_test)
+{
+	BOOST_CHECK((!key_has_t_subs<monomial<int>,int,int>::value));
+	BOOST_CHECK((!key_has_t_subs<monomial<short>,char,long>::value));
+	BOOST_CHECK((!key_has_t_subs<monomial<long> &,char,const long &>::value));
+	BOOST_CHECK((!key_has_t_subs<const monomial<short> &,char,const char &>::value));
+}

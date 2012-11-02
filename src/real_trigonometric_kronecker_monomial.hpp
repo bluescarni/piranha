@@ -117,11 +117,21 @@ class real_trigonometric_kronecker_monomial
 		{
 			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) type;
 		};
+		// NOTE: here the idea is that it would be possible to use decltype() directly in the substitution methods' declarations,
+		// but it's not supported yet in GCC. The idea of using decltype()/enable_if to automatically disable the method if the template
+		// parameter does not satisfy the requirements of the function's body is interesting, but might be too cumbersome to implement
+		// without something like compiler-level concepts.
 		template <typename U>
 		struct subs_type
 		{
 			typedef std::pair<typename eval_type<U>::type,real_trigonometric_kronecker_monomial> pair_type;
 			typedef std::pair<pair_type,pair_type> type;
+		};
+		template <typename U>
+		struct t_subs_type
+		{
+			typedef decltype(std::declval<value_type>() * math::binomial(std::declval<value_type>(),std::declval<value_type>()) *
+				std::declval<const U &>() * std::declval<const U &>()) type;
 		};
 		// Implementation of canonicalisation.
 		static bool canonicalise_impl(v_type &unpacked)
@@ -137,6 +147,19 @@ class real_trigonometric_kronecker_monomial
 				}
 			}
 			return sign_change;
+		}
+		// Couple of helper functions for Vieta's formulae.
+		static value_type cos_phase(const value_type &n)
+		{
+			piranha_assert(n >= value_type(0));
+			const value_type v[4] = {1,0,-1,0};
+			return v[n % value_type(4)];
+		}
+		static value_type sin_phase(const value_type &n)
+		{
+			piranha_assert(n >= value_type(0));
+			const value_type v[4] = {0,1,0,-1};
+			return v[n % value_type(4)];
 		}
 	public:
 		/// Default constructor.
@@ -917,6 +940,97 @@ class real_trigonometric_kronecker_monomial
 				}
 				return retval;
 			}
+		}
+		/// Trigonometric substitution.
+		/**
+		 * This method works in the same way as the subs() method, but the cosine \p c and sine \p s of \p name will be substituted instead of a direct
+		 * substitution of \p name.
+		 * The substitution is performed using standard trigonometric formulae, and it will result in a list of two (substitution result,new monomial) pairs.
+		 * 
+		 * This method requires \p U to be constructible from \p int, multipliable, addable and suitable as argument for piranha::math::negate().
+		 * 
+		 * @param[in] name symbol whose cosine and sine will be substituted.
+		 * @param[in] c cosine of \p name.
+		 * @param[in] s sine of \p name.
+		 * @param[in] args reference set of piranha::symbol.
+		 * 
+		 * @return the result of substituting \p c and \p s for the cosine and sine of \p name.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - unpack(),
+		 * - construction, assignment and arithmetics on the return value and on the intermediary values invovled in the computation,
+		 * - piranha::math::negate() and piranha::math::binomial(),
+		 * - piranha::static_vector::push_back(),
+		 * - piranha::kronecker_array::encode().
+		 */
+		template <typename U>
+		std::vector<std::pair<typename t_subs_type<U>::type,
+			real_trigonometric_kronecker_monomial>> t_subs(const std::string &name, const U &c, const U &s, const symbol_set &args) const
+		{
+			typedef decltype(this->t_subs(name,c,s,args)) ret_type;
+			typedef typename ret_type::value_type::first_type res_type;
+			typedef decltype(args.size()) size_type;
+			const auto v = unpack(args);
+			v_type new_v;
+			value_type n(0);
+			// Build the new vector key.
+			for (size_type i = 0u; i < args.size(); ++i) {
+				if (args[i].get_name() == name) {
+					new_v.push_back(value_type(0));
+					n = v[i];
+				} else {
+					new_v.push_back(v[i]);
+				}
+			}
+			// Absolute value of the multiplier.
+			const value_type abs_n = (n >= 0) ? n : -n;
+			// Prepare the powers of c and s to be used in the multiple angles formulae.
+			std::unordered_map<value_type,U> c_map, s_map;
+			c_map[0] = U(1);
+			s_map[0] = U(1);
+			for (value_type k(0); k < abs_n; ++k) {
+				c_map[k + value_type(1)] = c_map[k] * c;
+				s_map[k + value_type(1)] = s_map[k] * s;
+			}
+			// Init with the first element in the summation.
+			res_type cos_nx(cos_phase(abs_n) * math::binomial(abs_n,value_type(0)) * c_map[value_type(0)] * s_map[abs_n]),
+				sin_nx(sin_phase(abs_n) * math::binomial(abs_n,value_type(0)) * c_map[value_type(0)] * s_map[abs_n]);
+			for (value_type k(0); k < abs_n; ++k) {
+				const value_type p = abs_n - (k + value_type(1));
+				piranha_assert(p >= value_type(0));
+				// NOTE: here the type is slightly different from the decltype() in the prototype, but as long
+				// as binomial(value_type,value_type) returns integer there will be no difference because of the
+				// left-to-right associativity of multiplication.
+				res_type tmp(math::binomial(abs_n,k + value_type(1)) * c_map[k + value_type(1)] * s_map[p]);
+				cos_nx += cos_phase(p) * tmp;
+				sin_nx += sin_phase(p) * tmp;
+			}
+			// Change sign as necessary.
+			if (abs_n != n) {
+				math::negate(sin_nx);
+			}
+			// Buld the new keys and canonicalise as needed.
+			const bool sign_changed = canonicalise_impl(new_v);
+			piranha_assert(new_v.size() == v.size());
+			const auto new_int = ka::encode(new_v);
+			real_trigonometric_kronecker_monomial cos_key(new_int,true), sin_key(new_int,false);
+			ret_type retval;
+			if (get_flavour()) {
+				retval.push_back(std::make_pair(std::move(cos_nx),std::move(cos_key)));
+				retval.push_back(std::make_pair(std::move(sin_nx),std::move(sin_key)));
+				// Need to flip the sign on the sin * sin product if sign was not changed.
+				if (!sign_changed) {
+					math::negate(retval[1u].first);
+				}
+			} else {
+				retval.push_back(std::make_pair(std::move(sin_nx),std::move(cos_key)));
+				retval.push_back(std::make_pair(std::move(cos_nx),std::move(sin_key)));
+				// Need to flip the sign on the cos * sin product if sign was changed.
+				if (sign_changed) {
+					math::negate(retval[1u].first);
+				}
+			}
+			return retval;
 		}
 		/// Identify symbols that can be trimmed.
 		/**

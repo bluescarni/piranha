@@ -32,6 +32,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 
@@ -381,4 +382,12 @@ struct print_tex_tester
 BOOST_AUTO_TEST_CASE(univariate_monomial_print_tex_test)
 {
 	boost::mpl::for_each<expo_types>(print_tex_tester());
+}
+
+BOOST_AUTO_TEST_CASE(univariate_monomial_key_has_t_subs_test)
+{
+	BOOST_CHECK((!key_has_t_subs<univariate_monomial<int>,int,int>::value));
+	BOOST_CHECK((!key_has_t_subs<univariate_monomial<short>,char,long>::value));
+	BOOST_CHECK((!key_has_t_subs<univariate_monomial<long> &,char,const long &>::value));
+	BOOST_CHECK((!key_has_t_subs<const univariate_monomial<short> &,char,const char &>::value));
 }
