@@ -103,6 +103,37 @@ struct check_is_zero_02
 struct trivial
 {};
 
+struct trivial_a
+{};
+
+struct trivial_b
+{};
+
+struct trivial_c
+{};
+
+namespace piranha { namespace math {
+
+template <>
+struct is_zero_impl<trivial_a,void>
+{
+	char operator()(const trivial_a &);
+};
+
+template <>
+struct is_zero_impl<trivial_b,void>
+{
+	char operator()(const trivial_a &);
+};
+
+template <>
+struct is_zero_impl<trivial_c,void>
+{
+	std::string operator()(const trivial_c &);
+};
+
+}}
+
 BOOST_AUTO_TEST_CASE(is_zero_test)
 {
 	boost::fusion::for_each(zeroes,check_is_zero_01());
@@ -121,6 +152,10 @@ BOOST_AUTO_TEST_CASE(is_zero_test)
 	BOOST_CHECK((!has_is_zero<trivial &>::value));
 	BOOST_CHECK((!has_is_zero<trivial &&>::value));
 	BOOST_CHECK((!has_is_zero<const trivial &&>::value));
+	BOOST_CHECK(has_is_zero<trivial_a>::value);
+	BOOST_CHECK(has_is_zero<trivial_a &>::value);
+	BOOST_CHECK(!has_is_zero<trivial_b>::value);
+	BOOST_CHECK(!has_is_zero<trivial_c>::value);
 }
 
 struct check_multiply_accumulate
