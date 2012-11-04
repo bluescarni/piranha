@@ -63,10 +63,6 @@ struct power_series_tag {};
  * This class is a model of the piranha::concept::Series concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeries
  * concept.
  * 
- * \section type_requirements Type requirements
- * 
- * \p Series must be suitable for use in piranha::toolbox as first template parameter.
- * 
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same guarantee as \p Series.

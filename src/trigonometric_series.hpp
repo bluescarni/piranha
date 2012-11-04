@@ -85,10 +85,6 @@ struct is_trigonometric_term
  * 
  * This class is a model of the piranha::concept::Series concept.
  * 
- * \section type_requirements Type requirements
- * 
- * \p Series must be suitable for use in piranha::toolbox as first template parameter.
- * 
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same guarantee as \p Series.
