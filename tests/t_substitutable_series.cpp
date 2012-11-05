@@ -26,6 +26,7 @@
 #include <type_traits>
 
 #include "../src/environment.hpp"
+#include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/poisson_series.hpp"
@@ -64,4 +65,8 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 		3 * math::sin(-p_type1{"x"}-p_type1{"y"}),"x",2,3);
 	BOOST_CHECK((std::is_same<decltype(tmp3),p_type1>::value));
 	BOOST_CHECK_EQUAL(tmp3,4*2*math::cos(y)-4*3*math::sin(y)-3*3*math::cos(y)-3*2*math::sin(y));
+	p_type1 c{"c"}, s{"s"};
+	BOOST_CHECK_EQUAL(math::sin(3*x).t_subs("x",c,s),3*c*c*s-s*s*s);
+	BOOST_CHECK_EQUAL(math::cos(3*x).t_subs("x",c,s),c*c*c-3*s*s*c);
+	BOOST_CHECK_EQUAL((math::t_subs((10*math::sin(x)-5*math::sin(3*x)+math::sin(5*x))/16,"x",c,s)).ipow_subs("c",integer(2),1-s*s),s*s*s*s*s);
 }
