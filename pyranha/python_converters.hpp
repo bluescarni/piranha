@@ -17,7 +17,7 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 #if PY_MAJOR_VERSION < 3
 	const char *s = ::PyString_AsString(str_rep.get());
 #else
-	::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"utf-8","strict");
+	::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"ascii","strict");
 	if (!unicode_str_obj) {
 		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
 	}
@@ -167,7 +167,7 @@ struct real_converter
 #if PY_MAJOR_VERSION < 3
 		const char *s = ::PyString_AsString(str_rep.get());
 #else
-		::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"utf-8","strict");
+		::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"ascii","strict");
 		if (!unicode_str_obj) {
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
 		}

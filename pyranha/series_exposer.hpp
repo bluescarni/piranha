@@ -106,6 +106,7 @@ struct series_exposer
 		// Substitutions.
 		series_class.def("subs",&S::template subs<interop_type>);
 		series_class.def("ipow_subs",&S::template ipow_subs<interop_type>);
+		t_subs_exposer<interop_type>(series_class);
 		interop_exposer<S,I + 1u,T...>(series_class,t);
 	}
 	// Differentiation.
@@ -363,6 +364,22 @@ struct series_exposer
 	static void trigonometric_series_exposer(bp::class_<T> &,
 		typename std::enable_if<!std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = nullptr)
 	{}
+	// t_subs exposer.
+	template <typename S, typename T>
+	static auto wrap_t_subs(const S &series, const std::string &name, const T &c, const T &s) -> decltype(series.t_subs(name,c,s))
+	{
+		return series.t_subs(name,c,s);
+	}
+	template <typename T, typename S>
+	static void t_subs_exposer(bp::class_<S> &series_class,
+		typename std::enable_if<has_t_subs<S,T>::value>::type * = nullptr)
+	{
+		series_class.def("t_subs",wrap_t_subs<S,T>);
+	}
+	template <typename T, typename S>
+	static void t_subs_exposer(bp::class_<S> &,
+		typename std::enable_if<!has_t_subs<S,T>::value>::type * = nullptr)
+	{}
 	// Latex representation.
 	template <typename S>
 	static std::string wrap_latex(const S &s)
@@ -481,6 +498,8 @@ struct series_exposer
 		// Substitution with self.
 		series_class.def("subs",&series_type::template subs<series_type>);
 		series_class.def("ipow_subs",&series_type::template ipow_subs<series_type>);
+		// Trigonometric subs.
+		t_subs_exposer<series_type>(series_class);
 		// Latex.
 		series_class.def("_latex_",wrap_latex<series_type>);
 		// Arguments set.
