@@ -544,27 +544,6 @@ template <typename T, typename = void>
 struct t_subs_impl
 {};
 
-/// Specialisation of the piranha::math::t_subs() functor for arithmetic types.
-/**
- * This specialisation is activated when \p T is a C++ arithmetic type.
- * The result will be the input value unchanged.
- */
-template <typename T>
-struct t_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] x substitution argument.
-	 * 
-	 * @return copy of \p x.
-	 */
-	template <typename U, typename V>
-	T operator()(const T &x, const std::string &, const U &, const V &) const
-	{
-		return x;
-	}
-};
-
 /// Trigonometric substitution.
 /**
  * Substitute the cosine and sine of a symbolic variable with generic objects.
