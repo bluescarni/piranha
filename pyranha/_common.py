@@ -109,7 +109,8 @@ def _repr_png_(self):
 	try:
 		# Create a temp filename in which we write the tex.
 		tex_file = NamedTemporaryFile(dir = tempd_name, suffix = r'.tex', delete = False)
-		tex_file.write(tex_text)
+		# NOTE: write in ascii, we know nothing about utf-8 in piranha.
+		tex_file.write(bytes(tex_text,'ascii'))
 		tex_file.close()
 		tex_filename = tex_file.name
 		# Run latex.
@@ -125,7 +126,7 @@ def _repr_png_(self):
 		if proc.returncode:
 			raise RuntimeError(output)
 		# Read png and return.
-		png_file = open(join(tempd_name,tex_filename[0:-4] + r'.png'))
+		png_file = open(join(tempd_name,tex_filename[0:-4] + r'.png'),'rb')
 		retval = png_file.read()
 		return retval
 	finally:

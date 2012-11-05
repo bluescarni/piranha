@@ -27,7 +27,8 @@ class basic_test_case(_ut.TestCase):
 	"""Basic test case.
 	
 	To be used within the :mod:`unittest` framework. Will test construction, arithmetic
-	and comparison operators, exponentiation and exceptions.
+	and comparison operators, exponentiation and exceptions. It will test also
+	the latex renderer, if available.
 	
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(basic_test_case)
@@ -97,6 +98,13 @@ class basic_test_case(_ut.TestCase):
 		self.assertEqual(copy(s1),s1)
 		self.assertNotEqual(id(deepcopy(s1)),s1)
 		self.assertEqual(deepcopy(s1),s1)
+		# Latex renderer, if available.
+		x = tp_int('x')
+		try:
+			tmp = x._repr_png_()
+			self.assertTrue(len(tmp) != 0)
+		except OSError:
+			pass
 
 class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.
