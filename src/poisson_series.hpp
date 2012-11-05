@@ -42,6 +42,7 @@
 #include "series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
+#include "t_substitutable_series.hpp"
 #include "trigonometric_series.hpp"
 
 namespace piranha
@@ -71,10 +72,10 @@ namespace piranha
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>>,
+	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>,
 	detail::poisson_series_tag
 {
-		typedef power_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>> base;
+		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>> base;
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
 			std::is_same<T,std::true_type>::value>::type * = nullptr) const
