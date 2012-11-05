@@ -26,9 +26,8 @@ import unittest as _ut
 class basic_test_case(_ut.TestCase):
 	"""Basic test case.
 	
-	To be used within the :mod:`unittest` framework. Will test construction, arithmetic
-	and comparison operators, exponentiation and exceptions. It will test also
-	the latex renderer, if available.
+	To be used within the :mod:`unittest` framework. Will test features common
+	to all series types.
 	
 	>>> import unittest as ut
 	>>> suite = ut.TestLoader().loadTestsFromTestCase(basic_test_case)
@@ -105,6 +104,10 @@ class basic_test_case(_ut.TestCase):
 			self.assertTrue(len(tmp) != 0)
 		except OSError:
 			pass
+		# Evaluation.
+		x = tp_q('x')
+		self.assertEqual(x.evaluate({'x' : 3}),3)
+		self.assertEqual((2 * x).evaluate({'x' : Fraction(3,2)}),Fraction(3))
 
 class mpmath_test_case(_ut.TestCase):
 	""":mod:`mpmath` test case.

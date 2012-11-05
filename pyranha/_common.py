@@ -69,9 +69,9 @@ def _evaluate_wrapper(self,d):
 	if not len(t_set) == 1:
 		raise TypeError('all values in the evaluation dictionary must be of the same type')
 	try:
-		return self._evaluate(d,d[d.keys()[0]])
+		return self._evaluate(d,d[list(d.keys())[0]])
 	except TypeError:
-		raise TypeError('cannot evaluate with values of type ' + type(d[d.keys()[0]]).__name__)
+		raise TypeError('cannot evaluate with values of type ' + type(d[list(d.keys())[0]]).__name__)
 
 # Register the evaluate wrapper for a particular series.
 def _register_evaluate_wrapper(series_name):
