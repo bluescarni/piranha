@@ -223,7 +223,13 @@ struct series_exposer
 	// Check if type is tuple with two elements (for use in wrap_transform).
 	static void check_tuple_2(bp::object obj)
 	{
-		bp::object builtin_module = bp::import("__builtin__");
+		bp::object builtin_module = bp::import(
+#if PY_MAJOR_VERSION < 3
+		"__builtin__"
+#else
+		"builtins"
+#endif
+		);
 		bp::object isinstance = builtin_module.attr("isinstance");
 		bp::object tuple_type = builtin_module.attr("tuple");
 		if (!isinstance(obj,tuple_type)) {

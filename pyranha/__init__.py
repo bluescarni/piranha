@@ -44,22 +44,24 @@ class _settings(object):
 	# Wrapper to get/set max term output.
 	@property
 	def max_term_output(self):
-		from _core import _settings as _s
+		from ._core import _settings as _s
 		return _s._get_max_term_output()
 	@max_term_output.setter
 	def max_term_output(self,n):
-		from _core import _settings as _s
+		from ._core import _settings as _s
 		_s._set_max_term_output(n)
 	# Wrapper method to enable/disable latex representation.
 	@property
 	def latex_repr(self):
-		import _core, re
+		import re
+		from . import _core
 		with self._lock:
-			s_names = filter(lambda s: re.match('\_' + _series_types[0] + '\_\d+',s),dir(_core))
+			s_names = list(filter(lambda s: re.match('\_' + _series_types[0] + '\_\d+',s),dir(_core)))
 			return hasattr(getattr(_core,s_names[0]),'_repr_latex_')
 	@latex_repr.setter
 	def latex_repr(self,flag):
-		import _core, re
+		import re
+		from . import _core
 		f = bool(flag)
 		with self._lock:
 			if f == self.latex_repr:
@@ -69,7 +71,7 @@ class _settings(object):
 					_register_repr_latex(n)
 			else:
 				for n in _series_types:
-					s_names = filter(lambda s: re.match('\_' + n + '\_\d+',s),dir(_core))
+					s_names = list(filter(lambda s: re.match('\_' + n + '\_\d+',s),dir(_core)))
 					for s in s_names:
 						delattr(getattr(_core,s),'_repr_latex_')
 
