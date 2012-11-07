@@ -21,10 +21,13 @@
 #ifndef PIRANHA_MATH_HPP
 #define PIRANHA_MATH_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <initializer_list>
+#include <iterator>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -670,6 +673,100 @@ inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_l
 		retval -= partial(f,p_list[i]) * partial(g,q_list[i]);
 	}
 	return retval;
+}
+
+}
+
+namespace detail
+{
+
+template <typename T>
+static inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+{
+	typedef decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list)) p_type;
+	if (p_list.size() != q_list.size()) {
+		piranha_throw(std::invalid_argument,"the number of coordinates is different from the number of momenta");
+	}
+	if (new_p.size() != new_q.size()) {
+		piranha_throw(std::invalid_argument,"the number of new coordinates is different from the number of new momenta");
+	}
+	if (p_list.size() != new_p.size()) {
+		piranha_throw(std::invalid_argument,"the number of new momenta is different from the number of momenta");
+	}
+	if (std::unordered_set<std::string>(p_list.begin(),p_list.end()).size() != p_list.size()) {
+		piranha_throw(std::invalid_argument,"the list of momenta contains duplicate entries");
+	}
+	if (std::unordered_set<std::string>(q_list.begin(),q_list.end()).size() != q_list.size()) {
+		piranha_throw(std::invalid_argument,"the list of coordinates contains duplicate entries");
+	}
+	const auto size = new_p.size();
+	for (decltype(new_p.size()) i = 0u; i < size; ++i) {
+		for (decltype(new_p.size()) j = 0u; j < size; ++j) {
+			if (!math::is_zero(math::pbracket(*new_p[i],*new_p[j],p_list,q_list))) {
+				return false;
+			}
+			if (!math::is_zero(math::pbracket(*new_q[i],*new_q[j],p_list,q_list))) {
+				return false;
+			}
+			// Poisson bracket needs to be zero for i != j, one for i == j.
+			// NOTE: cast from bool to int is always 0 or 1.
+			if (math::pbracket(*new_q[i],*new_p[j],p_list,q_list) != p_type(static_cast<int>(i == j))) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+}
+
+namespace math
+{
+
+/// Check if a transformation is canonical.
+/**
+ * This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
+ * The transformation is expressed as two separate collections of objects, \p new_p and \p new_q, representing the new momenta
+ * and coordinates as functions of the old momenta \p p_list and \p q_list.
+ * 
+ * This function requires type \p T to be suitable for use in in piranha::math::pbracket() and piranha::math::is_zero(), and to be constructible
+ * from \p int and equality comparable.
+ * 
+ * @param[in] new_p list of objects representing the new momenta.
+ * @param[in] new_q list of objects representing the new coordinates.
+ * @param[in] p_list list of names of the old momenta.
+ * @param[in] q_list list of names of the old coordinates.
+ * 
+ * @return \p true if the transformation is canonical, \p false otherwise.
+ * 
+ * @throws std::invalid_argument if the sizes of the four input arguments are not the same or if either \p p_list or \p q_list
+ * contain duplicate entries.
+ * @throws unspecified any exception thrown by:
+ * - piranha::math::pbracket(),
+ * - construction and comparison of objects of the type returned by piranha::math::pbracket(),
+ * - piranha::math::is_zero(),
+ * - memory errors in standard containers.
+ */
+template <typename T>
+inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::vector<T> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+{
+	std::vector<T const *> pv, qv;
+	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
+	std::transform(new_q.begin(),new_q.end(),std::back_inserter(qv),[](const T &q) {return &q;});
+	return detail::is_canonical_impl(pv,qv,p_list,q_list);
+}
+
+/// Check if a transformation is canonical (alternative overload).
+template <typename T>
+inline bool transformation_is_canonical(const std::initializer_list<T> &new_p, const std::initializer_list<T> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+{
+	std::vector<T const *> pv, qv;
+	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
+	std::transform(new_q.begin(),new_q.end(),std::back_inserter(qv),[](const T &q) {return &q;});
+	return detail::is_canonical_impl(pv,qv,p_list,q_list);
 }
 
 /// Default functor for the implementation of piranha::math::t_degree().

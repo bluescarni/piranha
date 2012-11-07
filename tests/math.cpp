@@ -451,3 +451,38 @@ BOOST_AUTO_TEST_CASE(math_t_subs_test)
 	BOOST_CHECK((!has_t_subs<std::string &,int>::value));
 	BOOST_CHECK((!has_t_subs<std::string &,int,std::string &&>::value));
 }
+
+BOOST_AUTO_TEST_CASE(math_canonical_test)
+{
+	typedef polynomial<rational> p_type1;
+	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"},p_type1{"p"}},{p_type1{"q"}},{"p"},{"q"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"}},{p_type1{"q"}},{"p","x"},{"q"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"}},{p_type1{"q"}},{"p","x"},{"q","y"}),std::invalid_argument);
+	BOOST_CHECK((math::transformation_is_canonical({p_type1{"p"}},{p_type1{"q"}},{"p"},{"q"})));
+	p_type1 px{"px"}, py{"py"}, x{"x"}, y{"y"};
+	BOOST_CHECK((math::transformation_is_canonical({py,px},{y,x},{"px","py"},{"x","y"})));
+	BOOST_CHECK((!math::transformation_is_canonical({py,px},{x,y},{"px","py"},{"x","y"})));
+	BOOST_CHECK((math::transformation_is_canonical({-x,-y},{px,py},{"px","py"},{"x","y"})));
+	BOOST_CHECK((!math::transformation_is_canonical({x,y},{px,py},{"px","py"},{"x","y"})));
+	BOOST_CHECK((math::transformation_is_canonical({px,px+py},{x-y,y},{"px","py"},{"x","y"})));
+	BOOST_CHECK((!math::transformation_is_canonical({px,px-py},{x-y,y},{"px","py"},{"x","y"})));
+	BOOST_CHECK((math::transformation_is_canonical(std::vector<p_type1>{px,px+py},std::vector<p_type1>{x-y,y},{"px","py"},{"x","y"})));
+	// Linear transformation.
+	p_type1 L{"L"}, G{"G"}, H{"H"}, l{"l"}, g{"g"}, h{"h"};
+	BOOST_CHECK((math::transformation_is_canonical({L+G+H,L+G,L},{h,g-h,l-g},{"L","G","H"},{"l","g","h"})));
+	// Unimodular matrices.
+	BOOST_CHECK((math::transformation_is_canonical({L+2*G+3*H,-4*G+H,3*G-H},{l,11*l-g-3*h,14*l-g-4*h},{"L","G","H"},{"l","g","h"})));
+	BOOST_CHECK((math::transformation_is_canonical({2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H},{-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-8*h},{"L","G","H"},{"l","g","h"})));
+	BOOST_CHECK((!math::transformation_is_canonical({2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H},{-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-7*h},{"L","G","H"},{"l","g","h"})));
+	BOOST_CHECK((math::transformation_is_canonical(std::vector<p_type1>{2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H},std::vector<p_type1>{-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-8*h},{"L","G","H"},{"l","g","h"})));
+	BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type1>{2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H},std::vector<p_type1>{-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-7*h},{"L","G","H"},{"l","g","h"})));
+	typedef poisson_series<p_type1> p_type2;
+	// Poincare' variables.
+	p_type2 P{"P"}, Q{"Q"}, p{"p"}, q{"q"}, P2{"P2"}, Q2{"Q2"};
+	p_type2::register_custom_derivative("P",[&P2](const p_type2 &arg) {return arg.partial("P") + arg.partial("P2") * math::pow(P2,-1);});
+	p_type2::register_custom_derivative("Q",[&Q2](const p_type2 &arg) {return arg.partial("Q") + arg.partial("Q2") * math::pow(Q2,-1);});
+	BOOST_CHECK((math::transformation_is_canonical({P2*math::cos(p),Q2*math::cos(q)},{P2*math::sin(p),Q2*math::sin(q)},{"P","Q"},{"p","q"})));
+	BOOST_CHECK((!math::transformation_is_canonical({P*Q*math::cos(p)*q,Q*P*math::sin(3*q)*p*math::pow(q,-1)},{P*math::sin(p),Q*math::sin(q)},{"P","Q"},{"p","q"})));
+	BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2*math::cos(p)*q,Q2*math::cos(q)*p},std::vector<p_type2>{P2*math::sin(p),Q2*math::sin(q)},
+		{"P","Q"},{"p","q"})));
+}
