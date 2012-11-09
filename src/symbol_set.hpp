@@ -99,8 +99,8 @@ class symbol_set
 		 */
 		explicit symbol_set(std::initializer_list<symbol> l)
 		{
-			for (auto it = l.begin(); it != l.end(); ++it) {
-				add(*it);
+			for (const auto &s: l) {
+				add(s);
 			}
 		}
 		/// Copy assignment operator.

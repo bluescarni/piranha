@@ -760,7 +760,7 @@ inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::
 
 /// Check if a transformation is canonical (alternative overload).
 template <typename T>
-inline bool transformation_is_canonical(const std::initializer_list<T> &new_p, const std::initializer_list<T> &new_q,
+inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
 	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
 {
 	std::vector<T const *> pv, qv;

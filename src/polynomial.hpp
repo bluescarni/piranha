@@ -28,7 +28,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <functional> // For std::bind.
-#include <initializer_list> // NOTE: this could go away when there's no need to use it explicitly, see below.
+#include <initializer_list>
 #include <iterator>
 #include <list>
 #include <map>
@@ -914,11 +914,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_throw(std::overflow_error,"Kronecker monomial components are out of bounds");
 				}
 				// Update with the ranges of the operands.
-				// NOTE: the fact that we have to use std::initializer_list explicitly here seems
-				// a compiler bug, should probably investigate with GCC > 4.5.
-				m_minmax_values[i] = std::minmax(std::initializer_list<integer>({m_minmax_values[i].first,
+				m_minmax_values[i] = std::minmax({m_minmax_values[i].first,
 					integer(minmax_values1[i].first),integer(minmax_values2[i].first),m_minmax_values[i].second,
-					integer(minmax_values1[i].second),integer(minmax_values2[i].second)}));
+					integer(minmax_values1[i].second),integer(minmax_values2[i].second)});
 			}
 		}
 		/// Perform multiplication.

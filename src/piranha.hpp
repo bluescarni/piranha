@@ -98,6 +98,7 @@
  * \todo review coding of type traits.
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
  * instead of symbol for consistency.
+ * \todo initializer_list ctors: should they be explicit or not?
  */
 namespace piranha
 {

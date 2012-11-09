@@ -189,8 +189,8 @@ class real_trigonometric_kronecker_monomial
 		explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list):m_value(0),m_flavour(true)
 		{
 			v_type tmp;
-			for (auto it = list.begin(); it != list.end(); ++it) {
-				tmp.push_back(boost::numeric_cast<value_type>(*it));
+			for (const auto &x: list) {
+				tmp.push_back(boost::numeric_cast<value_type>(x));
 			}
 			m_value = ka::encode(tmp);
 		}

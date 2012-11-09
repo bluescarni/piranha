@@ -544,8 +544,8 @@ class hash_set
 		{
 			// We do not care here for possible truncation of list.size(), as this is only an optimization.
 			init_from_n_buckets(static_cast<size_type>(list.size()));
-			for (auto it = list.begin(); it != list.end(); ++it) {
-				insert(*it);
+			for (const auto &x: list) {
+				insert(x);
 			}
 		}
 		/// Destructor.
