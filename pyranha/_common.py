@@ -21,6 +21,14 @@ from __future__ import absolute_import as _ai
 
 from . import _core
 
+# Decorator to prettify the type errors resulting when calling a C++ exposed function
+# with an invalid signature.
+def _cpp_type_catcher(func,*args):
+	try:
+		return func(*args)
+	except TypeError:
+		raise TypeError("invalid argument type(s)")
+
 # Get a list of coefficients supported by series type named series_name.
 def _get_cf_types(series_name):
 	cf_list_getter = getattr(_core,'_' + series_name + '_get_coefficient_list')
@@ -68,10 +76,7 @@ def _evaluate_wrapper(self,d):
 	t_set = set([type(d[k]) for k in d])
 	if not len(t_set) == 1:
 		raise TypeError('all values in the evaluation dictionary must be of the same type')
-	try:
-		return self._evaluate(d,d[list(d.keys())[0]])
-	except TypeError:
-		raise TypeError('cannot evaluate with values of type ' + type(d[list(d.keys())[0]]).__name__)
+	return _cpp_type_catcher(self._evaluate,d,d[list(d.keys())[0]])
 
 # Register the evaluate wrapper for a particular series.
 def _register_evaluate_wrapper(series_name):

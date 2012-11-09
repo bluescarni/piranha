@@ -22,6 +22,8 @@
 # Use absolute imports to avoid issues with the main math module.
 from __future__ import absolute_import as _ai
 
+from ._common import _cpp_type_catcher
+
 def cos(arg):
 	"""Cosine.
 	
@@ -39,6 +41,10 @@ def cos(arg):
 	>>> t = get_type('polynomial_rational')
 	>>> cos(2 * t('x'))
 	cos(2x)
+	>>> cos('y') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
 	
 	"""
 	if isinstance(arg,float) or isinstance(arg,int):
@@ -51,10 +57,7 @@ def cos(arg):
 	except ImportError:
 		pass
 	from ._core import _cos
-	try:
-		return _cos(arg)
-	except TypeError:
-		raise TypeError("invalid argument type")
+	return _cpp_type_catcher(_cos,arg)
 
 def sin(arg):
 	"""Sine.
@@ -73,6 +76,10 @@ def sin(arg):
 	>>> t = get_type('polynomial_rational')
 	>>> sin(2 * t('x'))
 	sin(2x)
+	>>> sin('y') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
 	
 	"""
 	if isinstance(arg,float) or isinstance(arg,int):
@@ -85,10 +92,7 @@ def sin(arg):
 	except ImportError:
 		pass
 	from ._core import _sin
-	try:
-		return _sin(arg)
-	except TypeError:
-		raise TypeError("invalid argument type")
+	return _cpp_type_catcher(_sin,arg)
 
 def partial(arg,name):
 	"""Partial derivative.
@@ -109,10 +113,14 @@ def partial(arg,name):
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
 	2*x
+	>>> partial(x + 2*x*y,1) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
 	
 	"""
 	from ._core import _partial
-	return _partial(arg,name)
+	return _cpp_type_catcher(_partial,arg,name)
 
 def integrate(arg,name):
 	"""Integration.
@@ -138,10 +146,14 @@ def integrate(arg,name):
 	Traceback (most recent call last):
 	   ...
 	ValueError: negative unitary exponent
+	>>> integrate(x**-1,1) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
 	
 	"""
 	from ._core import _integrate
-	return _integrate(arg,name)
+	return _cpp_type_catcher(_integrate,arg,name)
 
 def factorial(n):
 	"""Factorial.
@@ -209,7 +221,87 @@ def pbracket(f,g,p_list,q_list):
 	Traceback (most recent call last):
 	   ...
 	ValueError: the list of momenta contains duplicate entries
+	>>> pbracket(v,x,['v'],[1]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
 	
 	"""
 	from ._core import _pbracket
-	return _pbracket(f,g,p_list,q_list)
+	return _cpp_type_catcher(_pbracket,f,g,p_list,q_list)
+
+def transformation_is_canonical(new_p,new_q,p_list,q_list):
+	"""Test if transformation is canonical.
+	
+	This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
+	The transformation is expressed as two separate list of objects, *new_p* and *new_q*, representing the new momenta
+	and coordinates as functions of the old momenta *p_list* and *q_list*.
+	
+	The function requires *new_p* and *new_q* to be lists of series of the same type, and
+	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.
+	
+	:param new_p: list of objects representing the new momenta
+	:type new_p: list of series instances
+	:param new_q: list of objects representing the new coordinates
+	:type new_q: list of series instances
+	:param p_list: list of momenta names
+	:type p_list: list of strings
+	:param q_list: list of coordinates names
+	:type q_list: list of strings
+	:rtype: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise.
+	:raises: :exc:`ValueError` if the size of all input lists is not the same
+	:raises: :exc:`TypeError` if the types of the arguments are invalid
+	:raises: any exception raised by the invoked low-level function
+	
+	>>> from .polynomial import get_type
+	>>> pt = get_type('rational')
+	>>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
+	>>> transformation_is_canonical([-l],[L],['L'],['l'])
+	True
+	>>> transformation_is_canonical([l],[L],['L'],['l'])
+	False
+	>>> transformation_is_canonical([2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H],[-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-8*h],['L','G','H'],['l','g','h'])
+	True
+	>>> transformation_is_canonical([2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H],[-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-7*h],['L','G','H'],['l','g','h'])
+	False
+	>>> transformation_is_canonical(L,l,'L','l') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: non-list input type
+	>>> transformation_is_canonical([L,G],[l],['L'],['l']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: the number of coordinates is different from the number of momenta
+	>>> transformation_is_canonical([],[],[],[]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: empty input list(s)
+	>>> transformation_is_canonical([L,1],[l,g],['L','G'],['l','g']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: types in input lists are not homogeneous
+	>>> transformation_is_canonical([L,G],[l,g],['L','G'],['l',1]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: p_list and q_list must be lists of strings
+	>>> transformation_is_canonical(['a'],['b'],['c'],['d']) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+	
+	"""
+	from ._core import _transformation_is_canonical
+	if not isinstance(new_p,list) or not isinstance(new_q,list):
+		raise TypeError("non-list input type")
+	if not all([isinstance(_,str) for _ in p_list + q_list]):
+		raise TypeError("p_list and q_list must be lists of strings")
+	types_set = list(set([type(_) for _ in new_p + new_q]))
+	if len(types_set) == 0:
+		raise ValueError("empty input list(s)")
+	if len(types_set) != 1:
+		raise TypeError("types in input lists are not homogeneous")
+	try:
+		inst = types_set[0]()
+	except:
+		raise TypeError("cannot construct instance of input type")
+	return _cpp_type_catcher(_transformation_is_canonical,new_p,new_q,p_list,q_list,types_set[0]())

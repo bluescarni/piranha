@@ -130,6 +130,18 @@ struct series_exposer
 		return math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
 			std::vector<std::string>(begin_q,end_q));
 	}
+	// Canonical transformation.
+	// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
+	template <typename S>
+	static bool canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
+	{
+		bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
+		bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
+		bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+		bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+		return math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
+			std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
+	}
 	// Sin and cos.
 	template <bool IsCos, typename S>
 	static S sin_cos_wrapper(const S &s)
@@ -489,6 +501,8 @@ struct series_exposer
 		expose_integrate(series_class);
 		// Poisson bracket.
 		bp::def("_pbracket",pbracket_wrapper<series_type>);
+		// Test for canonical transformations.
+		bp::def("_transformation_is_canonical",canonical_wrapper<series_type>);
 		// Filter and transform.
 		series_class.def("filter",wrap_filter<series_type>);
 		series_class.def("transform",wrap_transform<series_type>);
