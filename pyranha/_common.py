@@ -95,6 +95,7 @@ def _repr_png_(self):
 	from shlex import split
 	from shutil import rmtree
 	from os.path import join
+	import sys
 	# Get the latex representation of the series.
 	str_latex = r'\[ ' + self._latex_() + r' \]'
 	tex_text = r"""
@@ -114,8 +115,11 @@ def _repr_png_(self):
 	try:
 		# Create a temp filename in which we write the tex.
 		tex_file = NamedTemporaryFile(dir = tempd_name, suffix = r'.tex', delete = False)
-		# NOTE: write in ascii, we know nothing about utf-8 in piranha.
-		tex_file.write(bytes(tex_text,'ascii'))
+		if sys.version_info < (3,0,0):
+			tex_file.write(tex_text)
+		else:
+			# NOTE: write in ascii, we know nothing about utf-8 in piranha.
+			tex_file.write(bytes(tex_text,'ascii'))
 		tex_file.close()
 		tex_filename = tex_file.name
 		# Run latex.
