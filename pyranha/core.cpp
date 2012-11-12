@@ -72,6 +72,19 @@ inline integer get_big_int()
 	return integer(boost::integer_traits<int>::const_max) + 1;
 }
 
+static inline auto binomial_integer(const integer &n, const integer &k) -> decltype(math::binomial(n,k))
+{
+	if (math::abs(n) > 10000 || math::abs(k) > 10000) {
+		piranha_throw(std::invalid_argument,"input value is too large");
+	}
+	return math::binomial(n,k);
+}
+
+static inline auto binomial_rational(const rational &q, const integer &k) -> decltype(math::binomial(q,k))
+{
+	return math::binomial(q,k);
+}
+
 BOOST_PYTHON_MODULE(_core)
 {
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
@@ -127,6 +140,9 @@ BOOST_PYTHON_MODULE(_core)
 	settings_class.def("_set_max_term_output",settings::set_max_term_output).staticmethod("_set_max_term_output");
 	// Factorial.
 	bp::def("_factorial",&math::factorial);
+	// Binomial coefficient.
+	bp::def("_binomial",&binomial_integer);
+	bp::def("_binomial",&binomial_rational);
 	// Set the inited flag.
 	inited = true;
 }

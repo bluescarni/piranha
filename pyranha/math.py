@@ -94,6 +94,45 @@ def sin(arg):
 	from ._core import _sin
 	return _cpp_type_catcher(_sin,arg)
 
+def binomial(x,k):
+	"""Binomial coefficient.
+	
+	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient,
+	supporting integers and rationals as first argument, and integers as second argument.
+	
+	:param x: top argument for the binomial coefficient
+	:type x: integer or rational
+	:param k: bottom argument for the binomial coefficient
+	:type k: integer
+	:rtype: *x* choose *k*
+	:raises: :exc:`TypeError` if the types of *x* and/or *k* are not supported
+	:raises: :exc:`ValueError` if the absolute value of input values is too large
+	:raises: any exception raised by the invoked low-level function
+	
+	>>> binomial(3,2)
+	3
+	>>> binomial(-6,2)
+	21
+	>>> from fractions import Fraction
+	>>> binomial(Fraction(-4,5),2)
+	Fraction(18, 25)
+	>>> binomial(1.3,2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+	>>> binomial(10,2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+	>>> binomial(10001,2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: input value is too large
+	
+	"""
+	from ._core import _binomial
+	return _cpp_type_catcher(_binomial,x,k)
+
 def partial(arg,name):
 	"""Partial derivative.
 	

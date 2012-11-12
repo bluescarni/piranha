@@ -99,6 +99,10 @@
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
  * instead of symbol for consistency.
  * \todo initializer_list ctors: should they be explicit or not?
+ * \todo binomial coefficient: for double/real types it should really be implemented in terms of gamma functions:
+ * http://www.boost.org/doc/libs/release/libs/math/doc/sf_and_dist/html/math_toolkit/special/factorials/sf_binomial.html
+ * http://mathworld.wolfram.com/GammaFunction.html
+ * http://www.mpfr.org/mpfr-current/mpfr.html (implement in terms of gamma functions as indicated by the Wolfram link)
  */
 namespace piranha
 {
