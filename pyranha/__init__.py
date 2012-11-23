@@ -40,7 +40,7 @@ del n
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.
-	_lock = _thr.RLock()
+	__lock = _thr.RLock()
 	# Wrapper to get/set max term output.
 	@property
 	def max_term_output(self):
@@ -55,7 +55,7 @@ class _settings(object):
 	def latex_repr(self):
 		import re
 		from . import _core
-		with self._lock:
+		with self.__lock:
 			s_names = list(filter(lambda s: re.match('\_' + _series_types[0] + '\_\d+',s),dir(_core)))
 			return hasattr(getattr(_core,s_names[0]),'_repr_latex_')
 	@latex_repr.setter
@@ -63,7 +63,7 @@ class _settings(object):
 		import re
 		from . import _core
 		f = bool(flag)
-		with self._lock:
+		with self.__lock:
 			if f == self.latex_repr:
 				return
 			if f:
