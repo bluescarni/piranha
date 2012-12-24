@@ -32,7 +32,7 @@ namespace piranha
 degree_truncator_settings::mode degree_truncator_settings::m_mode = degree_truncator_settings::inactive;
 mutex degree_truncator_settings::m_mutex;
 integer degree_truncator_settings::m_limit = integer(0);
-std::set<std::string> degree_truncator_settings::m_args = {};
+std::set<std::string> degree_truncator_settings::m_args = std::set<std::string>{};
 
 /// Disable truncation.
 /**

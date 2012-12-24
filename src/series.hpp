@@ -157,7 +157,7 @@ class series: series_binary_operators, detail::series_tag
 		friend class series_binary_operators;
 		// Partial need access to the custom derivatives.
 		template <typename, typename>
-		friend class math::partial_impl;
+		friend struct math::partial_impl;
 		// NOTE: this friendship is related to the bug workaround above.
 		template <typename Term2, typename Derived2>
 		friend std::pair<typename Term2::cf_type,Derived2> detail::pair_from_term(const symbol_set &, const Term2 &);
