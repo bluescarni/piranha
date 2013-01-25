@@ -49,7 +49,9 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(UNIX OR MINGW)
-	TRY_COMPILE(PIRANHA_IGNORE_LIBM ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake_modules/test_libm.cpp CMAKE_FLAGS "${CMAKE_CXX_FLAGS}")
+	# NOTE: here it seems like the CFLAGS for the TRY_COMPILE are inherited from the ones already defined,
+	# so no need to define the explicitly.
+	TRY_COMPILE(PIRANHA_IGNORE_LIBM ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake_modules/test_libm.cpp)
 	IF(NOT PIRANHA_IGNORE_LIBM)
 		MESSAGE(STATUS "Explicit linking to the math library is needed.")
 		FIND_LIBRARY(SYSTEM_M_LIBRARY NAMES m)
