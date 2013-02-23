@@ -75,10 +75,11 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 # 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 # 		ADD_DEFINITIONS(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
 # 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	# Disable the -g flag and enable the -Os flag on MinGW in debug mode in order to reduce the size
-	# of the executables and make them compilable.
+	# Some flags to curb the size of binaries in MinGW: do debug mode with -Os and without actual
+	# debug information, and enable globally the inlining flag for functions.
 	IF(MINGW)
-		SET(CMAKE_CXX_FLAGS_DEBUG "-Os")
+		SET(CMAKE_CXX_FLAGS_DEBUG "-g0 -Os")
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
 	ENDIF(MINGW)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
