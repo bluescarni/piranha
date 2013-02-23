@@ -37,6 +37,7 @@
 #include <functional>
 #include <type_traits>
 
+#include "config.hpp"
 #include "detail/mpfr.hpp"
 
 #if defined(PIRANHA_USE_BOOST_THREAD)
