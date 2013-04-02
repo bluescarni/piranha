@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 
+#include "../config.hpp"
 #include "../exceptions.hpp"
 #include "../symbol_set.hpp"
 
