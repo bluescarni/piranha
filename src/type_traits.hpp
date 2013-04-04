@@ -130,7 +130,11 @@ struct is_trivially_destructible :
 #if defined(__clang__)
 std::is_trivially_destructible<T>
 #elif defined(__GNUC__)
+#if __GNUC__ == 4 && __GNUC_MINOR__ < 8
 std::has_trivial_destructor<T>
+#else
+std::is_trivially_destructible<T>
+#endif
 #else
 boost::has_trivial_destructor<T>
 #endif
