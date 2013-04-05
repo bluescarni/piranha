@@ -29,6 +29,7 @@
 
 #include <boost/type_traits/has_trivial_copy.hpp>
 #include <boost/type_traits/has_trivial_destructor.hpp>
+#include <cstdarg>
 #include <cstddef>
 #include <tuple>
 #include <type_traits>
@@ -201,7 +202,7 @@ class is_addable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
 };
 
 template <typename T, typename U>
@@ -219,7 +220,7 @@ class is_addable_in_place: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T *)nullptr)),yes>::value;
 };
 
 template <typename T, typename U>
@@ -237,7 +238,7 @@ class is_subtractable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
 };
 
 template <typename T, typename U>
@@ -255,7 +256,7 @@ class is_subtractable_in_place: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T *)nullptr)),yes>::value;
 };
 
 template <typename T, typename U>
@@ -274,7 +275,7 @@ class is_assignable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test<T,U>(0)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test<T,U>(0)),yes>::value;
 };
 
 template <typename T, typename U>

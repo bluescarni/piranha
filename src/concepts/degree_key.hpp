@@ -22,8 +22,10 @@
 #define PIRANHA_CONCEPT_DEGREE_KEY_HPP
 
 #include <boost/concept_check.hpp>
+#include <cstdarg>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "../detail/sfinae_types.hpp"
@@ -37,23 +39,29 @@ namespace detail
 {
 
 template <typename Key>
-struct key_has_degree: sfinae_types
+class key_has_degree: sfinae_types
 {
-	template <typename T>
-	static auto test1(const T *t) -> decltype(t->degree(std::declval<const symbol_set &>()),void(),yes());
-	static no test1(...);
-	template <typename T>
-	static auto test2(const T *t) -> decltype(t->degree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
-	static no test2(...);
-	template <typename T>
-	static auto test3(const T *t) -> decltype(t->ldegree(std::declval<const symbol_set &>()),void(),yes());
-	static no test3(...);
-	template <typename T>
-	static auto test4(const T *t) -> decltype(t->ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
-	static no test4(...);
-	static const bool value = (sizeof(test1((Key *)nullptr)) == sizeof(yes)) &&
-		(sizeof(test2((Key *)nullptr)) == sizeof(yes)) && (sizeof(test3((Key *)nullptr)) == sizeof(yes)) &&
-		(sizeof(test4((Key *)nullptr)) == sizeof(yes));
+		// NOTE: here it works (despite the difference in constness with the use below) because none of the two versions
+		// of test1() is an exact match, and the conversion in constness has a higher priority than the ellipsis conversion.
+		// For more info:
+		// http://cpp0x.centaur.ath.cx/over.ics.rank.html
+		template <typename T>
+		static auto test1(const T *t) -> decltype(t->degree(std::declval<const symbol_set &>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(const T *t) -> decltype(t->degree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static no test2(...);
+		template <typename T>
+		static auto test3(const T *t) -> decltype(t->ldegree(std::declval<const symbol_set &>()),void(),yes());
+		static no test3(...);
+		template <typename T>
+		static auto test4(const T *t) -> decltype(t->ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static no test4(...);
+	public:
+		static const bool value = std::is_same<decltype(test1((Key *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test3((Key *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test4((Key *)nullptr)),yes>::value;
 };
 
 template <typename Key>

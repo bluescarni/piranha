@@ -22,8 +22,10 @@
 #define PIRANHA_TRUNCATOR_HPP
 
 #include <boost/concept/assert.hpp>
+#include <cstdarg>
 #include <iostream>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 #include "concepts/series.hpp"
@@ -194,10 +196,10 @@ class truncator_traits: detail::sfinae_types
 		template <typename T>
 		static auto test_skipping(const T *t) -> decltype(t->skip(std::declval<const term_type1 &>(),std::declval<const term_type2 &>()),void(),yes());
 		static no test_skipping(...);
-		static const bool is_sorting_impl = (sizeof(test_sorting1((const truncator_type *)nullptr)) == sizeof(yes) &&
-			sizeof(test_sorting2((const truncator_type *)nullptr)) == sizeof(yes));
-		static const bool is_filtering_impl = (sizeof(test_filtering((const truncator_type *)nullptr)) == sizeof(yes));
-		static const bool is_skipping_impl = (sizeof(test_skipping((const truncator_type *)nullptr)) == sizeof(yes));
+		static const bool is_sorting_impl = std::is_same<decltype(test_sorting1((const truncator_type *)nullptr)),yes>::value &&
+						    std::is_same<decltype(test_sorting2((const truncator_type *)nullptr)),yes>::value;
+		static const bool is_filtering_impl = std::is_same<decltype(test_filtering((const truncator_type *)nullptr)),yes>::value;
+		static const bool is_skipping_impl = std::is_same<decltype(test_skipping((const truncator_type *)nullptr)),yes>::value;
 	public:
 		/// Sorting flag.
 		/**
@@ -249,11 +251,11 @@ class truncator_traits<Series>: detail::sfinae_types
 		template <typename T>
 		static auto test_sorting(const T *t) -> decltype(t->compare_terms(std::declval<const term_type &>(),std::declval<const term_type &>()),void(),yes());
 		static no test_sorting(...);
-		static const bool is_sorting_impl = (sizeof(test_sorting((const truncator_type *)nullptr)) == sizeof(yes));
+		static const bool is_sorting_impl = std::is_same<decltype(test_sorting((const truncator_type *)nullptr)),yes>::value;
 		template <typename T>
 		static auto test_filtering(const T *t) -> decltype(t->filter(std::declval<const term_type &>()),void(),yes());
 		static no test_filtering(...);
-		static const bool is_filtering_impl = (sizeof(test_filtering((const truncator_type *)nullptr)) == sizeof(yes));
+		static const bool is_filtering_impl = std::is_same<decltype(test_filtering((const truncator_type *)nullptr)),yes>::value;
 	public:
 		/// Sorting flag.
 		/**

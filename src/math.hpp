@@ -26,6 +26,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <cstdarg>
 #include <initializer_list>
 #include <iterator>
 #include <set>
@@ -1121,7 +1122,7 @@ class is_differentiable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1141,7 +1142,7 @@ class is_integrable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1161,7 +1162,7 @@ class is_exponentiable: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = (sizeof(test((T const *)nullptr,(U const *)nullptr)) == sizeof(yes));
+		static const bool value = std::is_same<decltype(test((T const *)nullptr,(U const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1184,8 +1185,8 @@ class has_t_degree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1208,8 +1209,8 @@ class has_t_ldegree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1232,8 +1233,8 @@ class has_t_order: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1256,8 +1257,8 @@ class has_t_lorder: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((T const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((T const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1284,8 +1285,8 @@ class key_has_t_degree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((Key const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1312,8 +1313,8 @@ class key_has_t_ldegree: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((Key const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1340,8 +1341,8 @@ class key_has_t_order: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((Key const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1368,8 +1369,8 @@ class key_has_t_lorder: detail::sfinae_types
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test1((Key const *)nullptr)) == sizeof(yes) &&
-			sizeof(test2((Key const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test1((Key const *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1389,7 +1390,7 @@ class has_binomial: detail::sfinae_types
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = sizeof(test((T const *)nullptr,(U const *)nullptr)) == sizeof(yes);
+		static const bool value = std::is_same<decltype(test((T const *)nullptr,(U const *)nullptr)),yes>::value;
 };
 
 // Static init.
@@ -1457,7 +1458,8 @@ class key_has_t_subs: detail::sfinae_types
 		typedef typename std::decay<U>::type Ud;
 		BOOST_CONCEPT_ASSERT((concept::Key<Keyd>));
 		template <typename Key1, typename T1, typename U1>
-		static auto test(const Key1 &k, const T1 &t, const U1 &u) -> decltype(k.t_subs(std::declval<const std::string &>(),t,u,std::declval<const symbol_set &>()));
+		static auto test(const Key1 &k, const T1 &t, const U1 &u) ->
+			decltype(k.t_subs(std::declval<const std::string &>(),t,u,std::declval<const symbol_set &>()));
 		static no test(...);
 		template <typename T1>
 		struct check_result_type

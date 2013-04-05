@@ -30,11 +30,15 @@ namespace detail
 {
 
 // Types for SFINAE-based type traits.
+// Guidelines for usage:
+// - decltype-based SFINAE,
+// - use std::is_same in the value of the type trait,
+// - use (...,void(),yes/no()) in the decltype in order to avoid problems with
+//   overloads of the comma operator.
 struct sfinae_types
 {
-	typedef char yes;
-	typedef std::array<char,2u> no;
-	static_assert(sizeof(yes) != sizeof(no),"Invalid sizes.");
+	struct yes {};
+	struct no {};
 };
 
 }
