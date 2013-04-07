@@ -876,7 +876,7 @@ class series_multiplier
 			std::vector<integer> new_sizes;
 			new_sizes.reserve(n_threads);
 			if (unlikely(new_sizes.capacity() != n_threads)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			const typename Series1::size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
 			try {

@@ -31,6 +31,8 @@ namespace piranha
  * The string parameter is an error message that will be stored intenally.
  * 
  * @param[in] s std::string representing an error message.
+ *
+ * @throws unspecified any exception thrown by the copy constructor of \p std::string.
  */
 base_exception::base_exception(const std::string &s):m_what(s) {}
 
@@ -51,12 +53,16 @@ base_exception::~base_exception() throw() {}
 /// Constructor.
 /**
  * @param[in] s std::string representing an error message.
+ *
+ * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
  */
 not_implemented_error::not_implemented_error(const std::string &s): base_exception(s) {}
 
 /// Constructor.
 /**
  * @param[in] s std::string representing an error message.
+ *
+ * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
  */
 zero_division_error::zero_division_error(const std::string &s): base_exception(s) {}
 

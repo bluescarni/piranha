@@ -188,14 +188,14 @@ class malloc_allocator
 				return nullptr;
 			}
 			if (unlikely(size > max_size())) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			if (m_alignment) {
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
 				void *ptr;
 				const auto retval = ::posix_memalign(&ptr,m_alignment,size * sizeof(T));
 				if (unlikely(retval)) {
-					piranha_throw(std::bad_alloc,0);
+					piranha_throw(std::bad_alloc,);
 				}
 				return static_cast<T *>(ptr);
 #elif defined(_WIN32)
@@ -205,7 +205,7 @@ class malloc_allocator
 				void *ptr = ::_aligned_malloc(size * sizeof(T),m_alignment);
 #endif
 				if (unlikely(ptr == NULL)) {
-					piranha_throw(std::bad_alloc,0);
+					piranha_throw(std::bad_alloc,);
 				}
 				return static_cast<T *>(ptr);
 #else
@@ -217,7 +217,7 @@ class malloc_allocator
 			} else {
 				pointer ret = static_cast<T *>(std::malloc(size * sizeof(T)));
 				if (unlikely(!ret)) {
-					piranha_throw(std::bad_alloc,0);
+					piranha_throw(std::bad_alloc,);
 				}
 				return ret;
 			}

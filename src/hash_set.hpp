@@ -371,7 +371,7 @@ class hash_set
 				const size_type size = size_type(1u) << log2_size;
 				auto new_ptr = m_allocator.allocate(size);
 				if (unlikely(!new_ptr)) {
-					piranha_throw(std::bad_alloc,0);
+					piranha_throw(std::bad_alloc,);
 				}
 				size_type i = 0u;
 				try {
@@ -464,7 +464,7 @@ class hash_set
 				const size_type size = size_type(1u) << other.m_log2_size;
 				auto new_ptr = m_allocator.allocate(size);
 				if (unlikely(!new_ptr)) {
-					piranha_throw(std::bad_alloc,0);
+					piranha_throw(std::bad_alloc,);
 				}
 				size_type i = 0u;
 				try {
@@ -1081,7 +1081,7 @@ class hash_set
 		void _increase_size()
 		{
 			if (unlikely(m_log2_size >= m_n_nonzero_sizes - 1u)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			// We must take care here: if the table has zero buckets,
 			// the next log2_size is 0u. Otherwise increase current log2_size.
@@ -1229,7 +1229,7 @@ class hash_set
 					return i;
 				}
 			}
-			piranha_throw(std::bad_alloc,0);
+			piranha_throw(std::bad_alloc,);
 		}
 	private:
 		container_type	m_container;

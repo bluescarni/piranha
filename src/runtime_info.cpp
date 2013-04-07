@@ -149,7 +149,7 @@ unsigned runtime_info::get_cache_line_size()
 	try {
 		buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(boost::numeric_cast<std::size_t>(buffer_size));
 		if (unlikely(!buffer)) {
-			piranha_throw(std::bad_alloc,0);
+			piranha_throw(std::bad_alloc,);
 		}
 		if (!::GetLogicalProcessorInformation(&buffer[0u],&buffer_size)) {
 			std::free(buffer);

@@ -294,7 +294,7 @@ class static_vector
 		void push_back(const value_type &x)
 		{
 			if (unlikely(m_size == MaxSize)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			::new ((void *)(ptr() + m_size)) value_type(x);
 			++m_size;
@@ -310,7 +310,7 @@ class static_vector
 		void push_back(value_type &&x)
 		{
 			if (unlikely(m_size == MaxSize)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			::new ((void *)(ptr() + m_size)) value_type(std::move(x));
 			++m_size;
@@ -328,7 +328,7 @@ class static_vector
 		void emplace_back(Args && ... params)
 		{
 			if (unlikely(m_size == MaxSize)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			::new ((void *)(ptr() + m_size)) value_type(std::forward<Args>(params)...);
 			++m_size;
@@ -365,7 +365,7 @@ class static_vector
 		void resize(const size_type &new_size)
 		{
 			if (unlikely(new_size > MaxSize)) {
-				piranha_throw(std::bad_alloc,0);
+				piranha_throw(std::bad_alloc,);
 			}
 			const auto old_size = m_size;
 			if (new_size == old_size) {
