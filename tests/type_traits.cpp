@@ -316,3 +316,38 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
 	BOOST_CHECK(!is_equality_comparable<frob_mix_not_ineq>::value);
 	BOOST_CHECK(!is_equality_comparable<frob_mix_not_eq>::value);
 }
+
+struct c_element {};
+
+struct nc_element1
+{
+	nc_element1() = delete;
+};
+
+struct nc_element2
+{
+	nc_element2() = default;
+	nc_element2(const nc_element2 &) = default;
+	nc_element2(nc_element2 &&) = default;
+	nc_element2 &operator=(nc_element2 &&);
+};
+
+struct c_element2
+{
+	c_element2() = default;
+	c_element2(const c_element2 &) = default;
+	c_element2(c_element2 &&) = default;
+	c_element2 &operator=(c_element2 &&) noexcept(true);
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
+{
+	BOOST_CHECK(is_container_element<int>::value);
+	BOOST_CHECK(is_container_element<double>::value);
+	BOOST_CHECK(is_container_element<integer>::value);
+	BOOST_CHECK(is_container_element<monomial<int>>::value);
+	BOOST_CHECK(is_container_element<c_element>::value);
+	BOOST_CHECK(!is_container_element<nc_element1>::value);
+	BOOST_CHECK(!is_container_element<nc_element2>::value);
+	BOOST_CHECK(is_container_element<c_element2>::value);
+}

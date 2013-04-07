@@ -308,6 +308,29 @@ class is_equality_comparable: detail::sfinae_types
 template <typename T, typename U>
 const bool is_equality_comparable<T,U>::value;
 
+/// Type trait for well-behaved container elements.
+/**
+ * The type trait will be true if all these conditions hold:
+ * 
+ * - \p T is default-constructible,
+ * - \p T is copy-constructible,
+ * - \p T has nothrow move semantics,
+ * - \p T is nothrow-destructible.
+ */
+template <typename T>
+struct is_container_element
+{
+	/// Value of the type trait.
+	static const bool value = std::is_default_constructible<T>::value &&
+				  std::is_copy_constructible<T>::value &&
+				  is_nothrow_destructible<T>::value &&
+				  std::is_nothrow_move_constructible<T>::value &&
+				  std::is_nothrow_move_assignable<T>::value;
+};
+
+template <typename T>
+const bool is_container_element<T>::value;
+
 }
 
 /// Macro to test if class has type definition.
