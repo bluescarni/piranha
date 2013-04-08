@@ -83,15 +83,33 @@ const bool is_nonconst_rvalue_ref<T>::value;
 /**
  * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
  */
-template <typename T>
+template <typename T, typename = void>
 struct is_nothrow_destructible
 {
 	/// Type-trait value.
-	static const bool value = noexcept(static_cast<T *>(nullptr)->~T());
+	static const bool value = noexcept(std::declval<T>().~T());
 };
 
 template <typename T>
-const bool is_nothrow_destructible<T>::value;
+struct is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>
+{
+	static const bool value = true;
+};
+
+template <typename T, typename Enable>
+const bool is_nothrow_destructible<T,Enable>::value;
+
+template <typename T>
+const bool is_nothrow_destructible<T,typename std::enable_if<!std::is_destructible<T>::value>::type>::value;
+
+template <typename T>
+const bool is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>::value;
 
 /// Type is trivially destructible.
 /**
