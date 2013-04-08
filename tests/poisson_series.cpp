@@ -40,7 +40,6 @@
 #include "../src/power_series.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
-#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -61,8 +60,8 @@ struct constructor_tester
 		BOOST_CHECK((std::is_constructible<p_type,std::string>::value));
 		BOOST_CHECK((std::is_constructible<p_type,const char *>::value));
 		BOOST_CHECK((!std::is_constructible<p_type,environment>::value));
-		BOOST_CHECK((is_assignable<p_type,std::string>::value));
-		BOOST_CHECK((!is_assignable<p_type,environment>::value));
+		BOOST_CHECK((std::is_assignable<p_type,std::string>::value));
+		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
 	}
 	template <typename Cf>
 	void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
@@ -73,8 +72,8 @@ struct constructor_tester
 			BOOST_CHECK((!std::is_constructible<p_type,const char *>::value));
 		}
 		BOOST_CHECK((!std::is_constructible<p_type,environment>::value));
-		BOOST_CHECK((!is_assignable<p_type,environment>::value));
-		BOOST_CHECK((is_assignable<p_type,int>::value));
+		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
+		BOOST_CHECK((std::is_assignable<p_type,int>::value));
 	}
 	template <typename Cf>
 	void operator()(const Cf &)

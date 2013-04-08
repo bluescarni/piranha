@@ -48,7 +48,6 @@
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
-#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -275,9 +274,9 @@ struct debug_access<construction_tag>
 			BOOST_CHECK((!std::is_constructible<series_type,series_type,int>::value));
 			BOOST_CHECK((std::is_constructible<series_type2,series_type>::value));
 			BOOST_CHECK((std::is_constructible<series_type3,series_type>::value));
-			BOOST_CHECK((is_assignable<series_type,int>::value));
-			BOOST_CHECK((is_assignable<series_type,series_type2>::value));
-			BOOST_CHECK((!is_assignable<series_type,symbol_set>::value));
+			BOOST_CHECK((std::is_assignable<series_type,int>::value));
+			BOOST_CHECK((std::is_assignable<series_type,series_type2>::value));
+			BOOST_CHECK((!std::is_assignable<series_type,symbol_set>::value));
 		}
 	};
 	template <typename Cf>

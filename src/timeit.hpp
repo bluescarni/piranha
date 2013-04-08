@@ -21,9 +21,8 @@
 #ifndef PIRANHA_TIMEIT_HPP
 #define PIRANHA_TIMEIT_HPP
 
+#include <chrono>
 #include <iostream>
-
-#include "config.hpp"
 
 namespace piranha
 {
@@ -47,12 +46,12 @@ inline auto timeit(F &&f, Args && ... args) -> decltype(f(std::forward<Args>(arg
 {
 	struct timer
 	{
-		timer():m_start(detail::steady_clock::now()) {}
+		timer():m_start(std::chrono::steady_clock::now()) {}
 		~timer()
 		{
-			std::cout << "Elapsed time: " << (detail::steady_clock::now() - m_start).count() / 1000. << '\n';
+			std::cout << "Elapsed time: " << (std::chrono::steady_clock::now() - m_start).count() / 1000. << '\n';
 		}
-		const decltype(detail::steady_clock::now()) m_start;
+		const decltype(std::chrono::steady_clock::now()) m_start;
 	};
 	timer t;
 	return f(std::forward<Args>(args)...);

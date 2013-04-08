@@ -47,7 +47,6 @@
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
-#include "../src/type_traits.hpp"
 #include "../src/univariate_monomial.hpp"
 
 // NOTE: when we specialize for univariate monomials, review the test here and move the unviariate
@@ -160,10 +159,10 @@ struct assignment_tester
 			BOOST_CHECK(p1 == integer(10));
 			p1 = "x";
 			BOOST_CHECK(p1 == p_type("x"));
-			BOOST_CHECK((is_assignable<p_type,Cf>::value));
-			BOOST_CHECK((is_assignable<p_type,std::string>::value));
-			BOOST_CHECK((is_assignable<p_type,p_type>::value));
-			BOOST_CHECK((!is_assignable<p_type,symbol>::value));
+			BOOST_CHECK((std::is_assignable<p_type,Cf>::value));
+			BOOST_CHECK((std::is_assignable<p_type,std::string>::value));
+			BOOST_CHECK((std::is_assignable<p_type,p_type>::value));
+			BOOST_CHECK((!std::is_assignable<p_type,symbol>::value));
 		}
 	};
 	template <typename Cf>

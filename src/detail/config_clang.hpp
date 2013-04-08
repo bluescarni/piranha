@@ -25,20 +25,8 @@
 	#error Minimum Clang version supported is 3.1.
 #endif
 
-#define piranha_override override
-
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
-
-#include <chrono>
-
-namespace piranha
-{
-namespace detail
-{
-typedef std::chrono::steady_clock steady_clock;
-}
-}
 
 // Visibility support.
 #if defined(_WIN32)

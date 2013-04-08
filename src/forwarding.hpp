@@ -29,8 +29,6 @@
 
 #include <type_traits>
 
-#include "type_traits.hpp"
-
 /// Constructor-forwarding macro.
 /**
  * This macro will declare and define an explicit constructor for class \p Derived that accepts
@@ -56,7 +54,7 @@ template <typename T_, typename ... Args_,typename = typename std::enable_if< \
  */
 #define PIRANHA_FORWARDING_ASSIGNMENT(Derived,Base) \
 template <typename T_> \
-typename std::enable_if<piranha::is_assignable<Base,T_>::value && \
+typename std::enable_if<std::is_assignable<Base,T_>::value && \
 	!std::is_same<Derived,typename std::decay<T_>::type>::value, \
 	Derived &>::type operator=(T_ &&arg) \
 { \

@@ -21,33 +21,9 @@
 #ifndef PIRANHA_CONFIG_GCC_HPP
 #define PIRANHA_CONFIG_GCC_HPP
 
-#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6)
-	#error Minimum GCC version supported is 4.6.0.
+#if __GNUC__  < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 7)
+	#error Minimum GCC version supported is 4.7.0.
 #endif
-
-// Explicit override available from 4.7.
-#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-	#define piranha_override override
-#else
-	#define piranha_override
-#endif
-
-#include <chrono>
-
-namespace piranha
-{
-namespace detail
-{
-// Steady vs monotonic clock.
-typedef
-#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
-	std::chrono::steady_clock
-#else
-	std::chrono::monotonic_clock
-#endif
-steady_clock;
-}
-}
 
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)

@@ -262,25 +262,6 @@ class is_subtractable_in_place: detail::sfinae_types
 template <typename T, typename U>
 const bool is_subtractable_in_place<T,U>::value;
 
-/// Assignable type trait.
-/**
- * This type trait is analogous to \p std::is_assignable.
- */
-template <typename T, typename U>
-class is_assignable: detail::sfinae_types
-{
-		template <typename T1, typename U1>
-		static decltype(std::declval<T1>() = std::declval<U1>(),void(),yes()) test (int);
-		template <typename, typename>
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test<T,U>(0)),yes>::value;
-};
-
-template <typename T, typename U>
-const bool is_assignable<T,U>::value;
-
 /// Equality-comparable type trait.
 /**
  * This type trait is \p true if instances if type \p T can be compared for equality and inequality to instances of

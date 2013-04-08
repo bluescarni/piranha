@@ -33,7 +33,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "config.hpp" // For piranha_override and visibility.
+#include "config.hpp" // For visibility support.
 
 namespace piranha
 {
@@ -123,7 +123,7 @@ class PIRANHA_PUBLIC base_exception: public std::exception
 {
         public:
 		explicit base_exception(const std::string &);
-		virtual const char *what() const throw() piranha_override;
+		virtual const char *what() const throw() override;
 		virtual ~base_exception() throw();
 	private:
 		const std::string m_what;
