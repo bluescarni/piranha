@@ -24,7 +24,7 @@
 /** \file type_traits.hpp
  * \brief Type traits.
  * 
- * This header contains general-purpose type-traits classes.
+ * This header contains general-purpose type traits classes.
  */
 
 #include <boost/type_traits/has_trivial_copy.hpp>
@@ -41,7 +41,7 @@
 namespace piranha
 {
 
-/// Type-trait to test if type is a tuple.
+/// Type trait to test if type is a tuple.
 /**
  * The \p value member will be \p true if \p T is an \p std::tuple, \p false otherwise.
  */
@@ -58,7 +58,7 @@ struct is_tuple<std::tuple<Args...>>: std::true_type {};
 template <typename T>
 struct is_cv_or_ref
 {
-	/// Type-trait value.
+	/// Type trait value.
 	static const bool value = (std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value);
 };
 
@@ -72,7 +72,7 @@ const bool is_cv_or_ref<T>::value;
 template <typename T>
 struct is_nonconst_rvalue_ref
 {
-	/// Type-trait value.
+	/// Type trait value.
 	static const bool value = std::is_rvalue_reference<T>::value && !std::is_const<typename std::remove_reference<T>::type>::value;
 };
 
@@ -86,7 +86,7 @@ const bool is_nonconst_rvalue_ref<T>::value;
 template <typename T, typename = void>
 struct is_nothrow_destructible
 {
-	/// Type-trait value.
+	/// Type trait value.
 	static const bool value = noexcept(std::declval<T>().~T());
 };
 
@@ -167,7 +167,7 @@ boost::has_trivial_copy_constructor<T>
  *   the partial low degree.
  * 
  * \todo we could probably do away with this, and just introduce math::degree() functions similar to
- * pow(), cos(), etc. and the auto-detect the type-trait with SFINAE.
+ * pow(), cos(), etc. and the auto-detect the type trait with SFINAE.
  */
 template <typename T, typename Enable = void>
 class has_degree

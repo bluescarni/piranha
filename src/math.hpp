@@ -1109,9 +1109,9 @@ inline auto binomial(const T &x, const U &k) -> decltype(binomial_impl<T,U>()(x,
 
 }
 
-/// Type-trait for differentiable types.
+/// Type trait for differentiable types.
 /**
- * The type-trait will be \p true if piranha::math::partial() can be successfully called on instances of
+ * The type trait will be \p true if piranha::math::partial() can be successfully called on instances of
  * type \p T, \p false otherwise.
  */
 template <typename T>
@@ -1129,9 +1129,9 @@ class is_differentiable: detail::sfinae_types
 template <typename T>
 const bool is_differentiable<T>::value;
 
-/// Type-trait for integrable types.
+/// Type trait for integrable types.
 /**
- * The type-trait will be \p true if piranha::math::integrate() can be successfully called on instances of
+ * The type trait will be \p true if piranha::math::integrate() can be successfully called on instances of
  * type \p T, \p false otherwise.
  */
 template <typename T>
@@ -1149,9 +1149,9 @@ class is_integrable: detail::sfinae_types
 template <typename T>
 const bool is_integrable<T>::value;
 
-/// Type-trait for exponentiable types.
+/// Type trait for exponentiable types.
 /**
- * The type-trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
+ * The type trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
  * exponent \p U.
  */
 template <typename T, typename U>

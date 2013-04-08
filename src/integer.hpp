@@ -120,7 +120,7 @@ class integer
 				std::is_same<T,unsigned char>::value || std::is_same<T,unsigned short>::value || std::is_same<T,unsigned>::value ||
 				std::is_same<T,unsigned long>::value || std::is_same<T,unsigned long long>::value;
 		};
-		// Type-trait to detect integral types that can interoperate directly with GMP routines.
+		// Type trait to detect integral types that can interoperate directly with GMP routines.
 		template <typename T, typename = void>
 		struct is_gmp_int
 		{

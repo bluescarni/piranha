@@ -336,4 +336,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
 	BOOST_CHECK(!is_container_element<nc_element1>::value);
 	BOOST_CHECK(!is_container_element<nc_element2>::value);
 	BOOST_CHECK(is_container_element<c_element2>::value);
+	BOOST_CHECK(!is_container_element<int &>::value);
+	BOOST_CHECK(!is_container_element<int &&>::value);
+	BOOST_CHECK(!is_container_element<int const &>::value);
 }

@@ -50,7 +50,7 @@ struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<seri
 
 }
 
-/// Echelon size type-trait.
+/// Echelon size type trait.
 /**
  * Echelon size of \p Term. The echelon size is defined recursively by the number of times coefficient types are series, in \p Term
  * and its nested types.
@@ -74,7 +74,7 @@ class echelon_size
 		static const std::size_t value = detail::echelon_level_impl<typename Term::cf_type>::value + static_cast<std::size_t>(1);
 };
 
-// Instantiation of type-trait value.
+// Instantiation of type trait value.
 template <typename Term>
 const std::size_t echelon_size<Term>::value;
 

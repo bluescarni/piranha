@@ -293,7 +293,7 @@ class malloc_allocator
 		{
 			return m_alignment;
 		}
-		/// Type-trait for alignment primitives.
+		/// Type trait for alignment primitives.
 		/**
 		 * \p true if the host platform supports the memory alignment primitives needed for nonzero
 		 * alignments, \p false otherwise.

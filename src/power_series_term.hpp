@@ -253,9 +253,9 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series_term,base)
 };
 
-/// Type-trait for power series term.
+/// Type trait for power series term.
 /**
- * The value of the type-trait will be \p true if \p Term is an instance of piranha::power_series_term
+ * The value of the type trait will be \p true if \p Term is an instance of piranha::power_series_term
  * that provides the methods to query the degree of the term, \p false otherwise.
  * 
  * \section type_requirements Type requirements
@@ -267,7 +267,7 @@ class is_power_series_term
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
 	public:
-		/// Type-trait value.
+		/// Type trait value.
 		static const bool value = std::is_base_of<detail::power_series_term_tag,Term>::value;
 };
 

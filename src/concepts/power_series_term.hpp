@@ -37,7 +37,7 @@ namespace concept
  * The requisites for type \p T are the following:
  * 
  * - must be a model of piranha::concept::Term,
- * - must have a \p true value for the type-trait piranha::is_power_series_term.
+ * - must have a \p true value for the type trait piranha::is_power_series_term.
  */
 template <typename T>
 class PowerSeriesTerm:

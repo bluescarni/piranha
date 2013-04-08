@@ -44,7 +44,7 @@
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
  * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that
  * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
- * This should all tie in with the work of starting using type-traits more extensively, especially arithmetic ones, an is_exponentiable() type trait, etc.
+ * This should all tie in with the work of starting using type traits more extensively, especially arithmetic ones, an is_exponentiable() type trait, etc.
  * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
@@ -79,7 +79,7 @@
  * would allow a finer control with generic methods (e.g., polynomial is a Poisson series coefficient only if it supports
  * division by int, partial() requires multipliability by int/integer, etc.) and enable meta-programming. But how to implement
  * concept inheriting? Where to put the static asserts? Is it worth it? NOTE: related to this, should we restrict generic and forwarding
- * constructors in series to accept only parameters for which the construction can happen? This way also the type-trait is_constructible would
+ * constructors in series to accept only parameters for which the construction can happen? This way also the type trait is_constructible would
  * work, whereas now the generic constructors gobble up everything.
  * \todo univariate_monomial has been left behind a bit feature-wise.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,

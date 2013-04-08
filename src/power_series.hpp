@@ -51,13 +51,13 @@ struct power_series_tag {};
  * This toolbox is intended to extend the \p Series type with properties of formal power series.
  * 
  * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and partial (low) degree
- * of a \p Series object. Such augmentation takes place if the series term satisfies the piranha::is_power_series_term type-trait.
+ * of a \p Series object. Such augmentation takes place if the series term satisfies the piranha::is_power_series_term type trait.
  * 
  * As an additional requirement, the types returned when querying total and partial (low) degree must be default-constructible,
  * move-assignable, constructible from \p int, and less-than and greater-than comparable. If these additional requirements are not satisfied,
  * a compile-time error will be produced.
  * 
- * If the term type does not satisfy the piranha::is_power_series_term type-trait, this class will not add any new functionality to the \p Series class and
+ * If the term type does not satisfy the piranha::is_power_series_term type trait, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
  * 
  * This class is a model of the piranha::concept::Series concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeries
@@ -298,16 +298,16 @@ class power_series<Series,typename std::enable_if<!is_power_series_term<typename
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 };
 
-/// Type-trait for power series.
+/// Type trait for power series.
 /**
- * The value of the type-trait will be \p true if \p Series is an instance of piranha::power_series that provides the methods
+ * The value of the type trait will be \p true if \p Series is an instance of piranha::power_series that provides the methods
  * for querying the degree of the series, \p false otherwise.
  */
 template <typename Series>
 class is_power_series
 {
 	public:
-		/// Type-trait value.
+		/// Type trait value.
 		static const bool value = std::is_base_of<detail::power_series_tag,Series>::value;
 };
 
@@ -316,7 +316,7 @@ const bool is_power_series<Series>::value;
 
 /// Specialization of piranha::has_degree for power series.
 /**
- * This specialization is enabled for types satisfying the type-trait piranha::is_power_series.
+ * This specialization is enabled for types satisfying the type trait piranha::is_power_series.
  * 
  * \section type_requirements Type requirements
  * 
