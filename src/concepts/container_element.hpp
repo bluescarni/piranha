@@ -22,6 +22,7 @@
 #define PIRANHA_CONCEPT_CONTAINER_ELEMENT_HPP
 
 #include <boost/concept_check.hpp>
+#include <type_traits>
 
 #include "../type_traits.hpp"
 
@@ -51,7 +52,7 @@ struct ContainerElement:
 	{
 		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
 		static_assert(is_nothrow_destructible<T>::value,"T must be nothrow-destructible.");
-		static_assert(is_nothrow_move_constructible<T>::value && is_nothrow_move_assignable<T>::value,"T must have nothrow move semantics.");
+		static_assert(std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_assignable<T>::value,"T must have nothrow move semantics.");
 	}
 };
 

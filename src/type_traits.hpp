@@ -79,34 +79,6 @@ struct is_nonconst_rvalue_ref
 template <typename T>
 const bool is_nonconst_rvalue_ref<T>::value;
 
-/// Type has non-throwing move constructor.
-/**
- * Placeholder for <tt>std::is_nothrow_move_constructible</tt>, until it is implemented in GCC.
- */
-template <typename T, typename Enable = void>
-struct is_nothrow_move_constructible
-{
-	/// Type-trait value.
-	static const bool value = noexcept(T(static_cast<T &&>(*static_cast<T *>(nullptr))));
-};
-
-template <typename T, typename Enable>
-const bool is_nothrow_move_constructible<T,Enable>::value;
-
-/// Type has non-throwing move assignment operator.
-/**
- * Placeholder for <tt>std::is_nothrow_move_assignable</tt>, until it is implemented in GCC.
- */
-template <typename T, typename Enable = void>
-struct is_nothrow_move_assignable
-{
-	/// Type-trait value.
-	static const bool value = noexcept(*static_cast<T *>(nullptr) = static_cast<T &&>(*static_cast<T *>(nullptr)));
-};
-
-template <typename T, typename Enable>
-const bool is_nothrow_move_assignable<T,Enable>::value;
-
 /// Type is nothrow-destructible.
 /**
  * Placeholder for <tt>std::is_nothrow_destructible</tt>, until it is implemented in GCC.
