@@ -127,8 +127,11 @@ BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible)
 BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<const int>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<trivial>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<integer>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<const trivial>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<const integer>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int *>::value,true);
