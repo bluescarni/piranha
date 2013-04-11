@@ -434,4 +434,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
 	BOOST_CHECK(!is_container_element<int &>::value);
 	BOOST_CHECK(!is_container_element<int &&>::value);
 	BOOST_CHECK(!is_container_element<int const &>::value);
+	
+	std::cout << is_instance_of<std::ostream,std::basic_ostream>::value << '\n';
+	std::cout << is_instance_of<decltype(std::cout),std::basic_ostream>::value << '\n';
+	std::cout << is_ostreamable<int>::value << '\n';
+	std::cout << is_ostreamable<int &>::value << '\n';
 }

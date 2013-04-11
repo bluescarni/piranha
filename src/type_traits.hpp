@@ -31,6 +31,7 @@
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <cstdarg>
 #include <cstddef>
+#include <ostream>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -346,6 +347,41 @@ struct is_container_element
 
 template <typename T>
 const bool is_container_element<T>::value;
+
+namespace detail
+{
+
+template <template <typename ...> class T>
+struct iio_converter
+{
+     template <typename ... Args>
+     iio_converter(const T<Args ...> &);
+};
+
+}
+
+template <class T, template <typename ...> class TT>
+struct is_instance_of
+{
+	static const bool value = std::is_convertible<T,detail::iio_converter<TT>>::value;
+};
+
+template <class T, template <typename ...> class TT>
+const bool is_instance_of<T,TT>::value;
+
+template <typename T>
+class is_ostreamable: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(std::ostream &s, const T1 &t) -> decltype(s << t);
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test(*(std::ostream *)nullptr,
+			std::declval<T>())),std::ostream &>::value;
+};
+
+template <typename T>
+const bool is_ostreamable<T>::value;
 
 }
 
