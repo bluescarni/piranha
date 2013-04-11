@@ -176,6 +176,17 @@ BOOST_AUTO_TEST_CASE(type_traits_has_degree)
 
 BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 {
+	BOOST_CHECK(is_addable<int>::value);
+	BOOST_CHECK(is_addable<const int>::value);
+	BOOST_CHECK((is_addable<const int, int>::value));
+	BOOST_CHECK((is_addable<int, const int>::value));
+	BOOST_CHECK((is_addable<const int &, int &>::value));
+	BOOST_CHECK((is_addable<int &&, const int &>::value));
+	BOOST_CHECK(is_addable<double>::value);
+	BOOST_CHECK(is_addable<integer>::value);
+	BOOST_CHECK(is_addable<std::complex<double>>::value);
+	BOOST_CHECK((is_addable<const std::complex<double>,double>::value));
+	BOOST_CHECK((is_addable<std::complex<double>,const double>::value));
 	BOOST_CHECK((is_addable<int,int>::value));
 	BOOST_CHECK((is_addable<int,double>::value));
 	BOOST_CHECK((is_addable<double,int>::value));
@@ -189,10 +200,27 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 	BOOST_CHECK((!is_addable<std::complex<double>,int>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,integer>::value));
 	BOOST_CHECK((is_addable<std::string,std::string>::value));
+	BOOST_CHECK((is_addable<std::string,const char *>::value));
+	BOOST_CHECK((is_addable<const char *,std::string>::value));
+	BOOST_CHECK((is_addable<int *,std::size_t>::value));
+	BOOST_CHECK((is_addable<std::size_t,int *>::value));
+	BOOST_CHECK(!is_addable<int *>::value);
+	BOOST_CHECK(is_addable<int &>::value);
+	BOOST_CHECK((is_addable<int &, double &>::value));
+	BOOST_CHECK((is_addable<double &, int &>::value));
+	BOOST_CHECK(is_addable<int const &>::value);
+	BOOST_CHECK((is_addable<int const &, double &>::value));
+	BOOST_CHECK((is_addable<double const &, int &>::value));
+	BOOST_CHECK(is_addable<int &&>::value);
+	BOOST_CHECK((is_addable<int &&, double &&>::value));
+	BOOST_CHECK((is_addable<double &&, int &&>::value));
+	BOOST_CHECK((!is_addable<int &&, std::string &>::value));
+	BOOST_CHECK((is_addable<int * &,int>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
 {
+	BOOST_CHECK((is_addable_in_place<int>::value));
 	BOOST_CHECK((is_addable_in_place<int,int>::value));
 	BOOST_CHECK((is_addable_in_place<int,double>::value));
 	BOOST_CHECK((is_addable_in_place<double,int>::value));
@@ -200,10 +228,25 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
 	BOOST_CHECK((!is_addable_in_place<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable_in_place<trivial,std::complex<double>>::value));
 	BOOST_CHECK((is_addable_in_place<std::string,std::string>::value));
+	BOOST_CHECK((is_addable_in_place<int, const int>::value));
+	BOOST_CHECK((!is_addable_in_place<const int, int>::value));
+	BOOST_CHECK((!is_addable_in_place<const int &, int>::value));
+	BOOST_CHECK((is_addable_in_place<int &&, const int &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
 {
+	BOOST_CHECK(is_subtractable<int>::value);
+	BOOST_CHECK(is_subtractable<const int>::value);
+	BOOST_CHECK((is_subtractable<const int, int>::value));
+	BOOST_CHECK((is_subtractable<int, const int>::value));
+	BOOST_CHECK((is_subtractable<const int &, int &>::value));
+	BOOST_CHECK((is_subtractable<int &&, const int &>::value));
+	BOOST_CHECK(is_subtractable<double>::value);
+	BOOST_CHECK(is_subtractable<integer>::value);
+	BOOST_CHECK(is_subtractable<std::complex<double>>::value);
+	BOOST_CHECK((is_subtractable<const std::complex<double>,double>::value));
+	BOOST_CHECK((is_subtractable<std::complex<double>,const double>::value));
 	BOOST_CHECK((is_subtractable<int,int>::value));
 	BOOST_CHECK((is_subtractable<int,double>::value));
 	BOOST_CHECK((is_subtractable<double,int>::value));
@@ -217,10 +260,26 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
 	BOOST_CHECK((!is_subtractable<std::complex<double>,int>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,integer>::value));
 	BOOST_CHECK((!is_subtractable<std::string,std::string>::value));
+	BOOST_CHECK((!is_subtractable<std::string,const char *>::value));
+	BOOST_CHECK((!is_subtractable<const char *,std::string>::value));
+	BOOST_CHECK((is_subtractable<int *,std::size_t>::value));
+	BOOST_CHECK((!is_subtractable<std::size_t,int *>::value));
+	BOOST_CHECK(is_subtractable<int *>::value);
+	BOOST_CHECK(is_subtractable<int &>::value);
+	BOOST_CHECK((is_subtractable<int &, double &>::value));
+	BOOST_CHECK((is_subtractable<double &, int &>::value));
+	BOOST_CHECK(is_subtractable<int const &>::value);
+	BOOST_CHECK((is_subtractable<int const &, double &>::value));
+	BOOST_CHECK((is_subtractable<double const &, int &>::value));
+	BOOST_CHECK(is_subtractable<int &&>::value);
+	BOOST_CHECK((is_subtractable<int &&, double &&>::value));
+	BOOST_CHECK((is_subtractable<double &&, int &&>::value));
+	BOOST_CHECK((!is_subtractable<int &&, std::string &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place)
 {
+	BOOST_CHECK((is_subtractable_in_place<int>::value));
 	BOOST_CHECK((is_subtractable_in_place<int,int>::value));
 	BOOST_CHECK((is_subtractable_in_place<int,double>::value));
 	BOOST_CHECK((is_subtractable_in_place<double,int>::value));
@@ -228,6 +287,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place)
 	BOOST_CHECK((!is_subtractable_in_place<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable_in_place<trivial,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable_in_place<std::string,std::string>::value));
+	BOOST_CHECK((is_subtractable_in_place<int, const int>::value));
+	BOOST_CHECK((!is_subtractable_in_place<const int, int>::value));
+	BOOST_CHECK((!is_subtractable_in_place<const int &, int>::value));
+	BOOST_CHECK((is_subtractable_in_place<int &&, const int &>::value));
 }
 
 struct frob

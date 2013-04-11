@@ -180,77 +180,99 @@ class has_degree
 template <typename T, typename Enable>
 const bool has_degree<T,Enable>::value;
 
-/// Addable type trait.
-/**
- * Will be \p true if adding an instance of \p T to an instance of \p U is a valid expression, \p false otherwise.
- */
-template <typename T, typename U>
-class is_addable: detail::sfinae_types
+namespace detail
 {
-		template <typename V>
-		static auto test(const V *t) -> decltype(*t + std::declval<U>(),void(),yes());
-		static no test(...);
+
+template <typename T, typename U, typename Derived>
+class arith_tt_helper
+{
+		typedef typename std::remove_reference<T>::type Td;
+		typedef typename std::remove_reference<U>::type Ud;
 	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(Derived::test(*(Td *)nullptr,*(Ud *)nullptr)),
+			detail::sfinae_types::yes>::value;
 };
 
-template <typename T, typename U>
-const bool is_addable<T,U>::value;
+template <typename T, typename U, typename Derived>
+const bool arith_tt_helper<T,U,Derived>::value;
+
+}
+
+/// Addable type trait.
+/**
+ * Will be \p true if objects of type \p T can be added to objects of type \p U using the binary addition operator.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ * @code
+ * operator+(const Td &, const Ud &)
+ * @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers.
+ * 
+ * The value of the type trait is a static const boolean flag inherited by an implementation-defined base class. E.g.,
+ * @code
+ * is_addable<int>::value == true;
+ * is_addable<int,std::string>::value == false;
+ * @endcode
+ */
+template <typename T, typename U = T>
+class is_addable: detail::sfinae_types, public detail::arith_tt_helper<T,U,is_addable<T,U>>
+{
+	friend class detail::arith_tt_helper<T,U,is_addable<T,U>>;
+	template <typename T1, typename U1>
+	static auto test(const T1 &t, const U1 &u) -> decltype(t + u,void(),yes());
+	static no test(...);
+};
 
 /// In-place addable type trait.
 /**
- * Will be \p true if adding in-place an instance of \p U to an instance of \p T is a valid expression, \p false otherwise.
+ * Will be \p true if objects of type \p U can be added in-place to objects of type \p T.
+ * 
+ * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
+ * @code
+ * operator+=(Td &, const Ud &)
+ * @endcode
+ * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers.
+ * 
+ * The value of the type trait is a static const boolean flag inherited by an implementation-defined base class. E.g.,
+ * @code
+ * is_addable_in_place<int>::value == true;
+ * is_addable_in_place<int,std::string>::value == false;
+ * @endcode
  */
-template <typename T, typename U>
-class is_addable_in_place: detail::sfinae_types
+template <typename T, typename U = T>
+class is_addable_in_place: detail::sfinae_types, public detail::arith_tt_helper<T,U,is_addable_in_place<T,U>>
 {
-		template <typename V>
-		static auto test(V *t) -> decltype(*t += std::declval<U>(),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T *)nullptr)),yes>::value;
+	friend class detail::arith_tt_helper<T,U,is_addable_in_place<T,U>>;
+	template <typename T1, typename U1>
+	static auto test(T1 &t, const U1 &u) -> decltype(t += u,void(),yes());
+	static no test(...);
 };
-
-template <typename T, typename U>
-const bool is_addable_in_place<T,U>::value;
 
 /// Subtractable type trait.
 /**
- * Will be \p true if subtracting an instance of \p U from an instance of \p T is a valid expression, \p false otherwise.
+ * @see piranha::is_addable.
  */
-template <typename T, typename U>
-class is_subtractable: detail::sfinae_types
+template <typename T, typename U = T>
+class is_subtractable: detail::sfinae_types, public detail::arith_tt_helper<T,U,is_subtractable<T,U>>
 {
-		template <typename V>
-		static auto test(const V *t) -> decltype(*t - std::declval<U>(),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
+	friend class detail::arith_tt_helper<T,U,is_subtractable<T,U>>;
+	template <typename T1, typename U1>
+	static auto test(const T1 &t, const U1 &u) -> decltype(t - u,void(),yes());
+	static no test(...);
 };
-
-template <typename T, typename U>
-const bool is_subtractable<T,U>::value;
 
 /// In-place subtractable type trait.
 /**
- * Will be \p true if subtracting in-place an instance of \p U from an instance of \p T is a valid expression, \p false otherwise.
+ * @see piranha::is_addable_in_place.
  */
-template <typename T, typename U>
-class is_subtractable_in_place: detail::sfinae_types
+template <typename T, typename U = T>
+class is_subtractable_in_place: detail::sfinae_types, public detail::arith_tt_helper<T,U,is_subtractable_in_place<T,U>>
 {
-		template <typename V>
-		static auto test(V *t) -> decltype(*t -= std::declval<U>(),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T *)nullptr)),yes>::value;
+	friend class detail::arith_tt_helper<T,U,is_subtractable_in_place<T,U>>;
+	template <typename T1, typename U1>
+	static auto test(T1 &t, const U1 &u) -> decltype(t -= u,void(),yes());
+	static no test(...);
 };
-
-template <typename T, typename U>
-const bool is_subtractable_in_place<T,U>::value;
 
 /// Equality-comparable type trait.
 /**
