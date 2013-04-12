@@ -33,6 +33,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
+#include <complex>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -962,4 +963,26 @@ BOOST_AUTO_TEST_CASE(rational_t_subs_test)
 	BOOST_CHECK((!has_t_subs<rational &,int>::value));
 	BOOST_CHECK((!has_t_subs<const rational &,const int &,double &>::value));
 	BOOST_CHECK((!has_t_subs<std::string,rational,double>::value));
+}
+
+BOOST_AUTO_TEST_CASE(rational_type_traits_test)
+{
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<rational>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<const rational>::value,true);
+	BOOST_CHECK(!has_degree<rational>::value);
+	BOOST_CHECK(is_addable<rational>::value);
+	BOOST_CHECK((is_addable<rational,integer>::value));
+	BOOST_CHECK((is_addable<integer,rational>::value));
+	BOOST_CHECK((is_addable<double,rational>::value));
+	BOOST_CHECK((is_addable<rational,double>::value));
+	BOOST_CHECK((!is_addable<rational,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable<std::complex<double>,rational>::value));
+	BOOST_CHECK(is_subtractable<rational>::value);
+	BOOST_CHECK((is_subtractable<double,rational>::value));
+	BOOST_CHECK((is_subtractable<rational,integer>::value));
+	BOOST_CHECK((is_subtractable<integer,rational>::value));
+	BOOST_CHECK((is_subtractable<rational,double>::value));
+	BOOST_CHECK((!is_subtractable<rational,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable<std::complex<double>,rational>::value));
+	BOOST_CHECK(is_container_element<rational>::value);
 }

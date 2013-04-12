@@ -30,6 +30,7 @@
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
+#include <complex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -1646,4 +1647,26 @@ BOOST_AUTO_TEST_CASE(real_t_subs_test)
 	BOOST_CHECK((!has_t_subs<real &,int>::value));
 	BOOST_CHECK((!has_t_subs<const real &,const int &,double &>::value));
 	BOOST_CHECK((!has_t_subs<std::string,real,double>::value));
+}
+
+BOOST_AUTO_TEST_CASE(real_type_traits_test)
+{
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<real>::value,true);
+	BOOST_CHECK_EQUAL(is_nothrow_destructible<const real>::value,true);
+	BOOST_CHECK(!has_degree<real>::value);
+	BOOST_CHECK(is_addable<real>::value);
+	BOOST_CHECK((is_addable<real,integer>::value));
+	BOOST_CHECK((is_addable<integer,real>::value));
+	BOOST_CHECK((is_addable<double,real>::value));
+	BOOST_CHECK((is_addable<real,double>::value));
+	BOOST_CHECK((!is_addable<real,std::complex<double>>::value));
+	BOOST_CHECK((!is_addable<std::complex<double>,real>::value));
+	BOOST_CHECK(is_subtractable<real>::value);
+	BOOST_CHECK((is_subtractable<double,real>::value));
+	BOOST_CHECK((is_subtractable<real,integer>::value));
+	BOOST_CHECK((is_subtractable<integer,real>::value));
+	BOOST_CHECK((is_subtractable<real,double>::value));
+	BOOST_CHECK((!is_subtractable<real,std::complex<double>>::value));
+	BOOST_CHECK((!is_subtractable<std::complex<double>,real>::value));
+	BOOST_CHECK(is_container_element<real>::value);
 }
