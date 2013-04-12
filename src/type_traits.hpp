@@ -382,6 +382,15 @@ class is_instance_of
 template <class T, template <typename ...> class TT>
 const bool is_instance_of<T,TT>::value;
 
+/// Type trait for classes that can be output-streamed.
+/**
+ * This type trait will be \p true if instances of type \p T can be directed to
+ * instances of \p std::ostream via the insertion operator. The operator must have a signature
+ * compatible with
+ * @code
+ * std::ostream &operator<<(std::ostream &, const T &)
+ * @endcode
+ */
 template <typename T>
 class is_ostreamable: detail::sfinae_types
 {
@@ -389,6 +398,7 @@ class is_ostreamable: detail::sfinae_types
 		static auto test(std::ostream &s, const T1 &t) -> decltype(s << t);
 		static no test(...);
 	public:
+		/// Value of the type trait.
 		static const bool value = std::is_same<decltype(test(*(std::ostream *)nullptr,
 			std::declval<T>())),std::ostream &>::value;
 };

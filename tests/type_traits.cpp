@@ -430,6 +430,41 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of)
 	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
 }
 
+struct stream1 {};
+
+std::ostream &operator<<(std::ostream &, const stream1 &);
+
+struct stream2 {};
+
+std::ostream &operator<<(std::ostream &, stream2);
+
+struct stream3 {};
+
+std::ostream &operator<<(std::ostream &, stream3 &);
+
+struct stream4 {};
+
+void operator<<(std::ostream &, const stream4 &);
+
+struct stream5 {};
+
+std::ostream &operator<<(const std::ostream &, const stream5 &);
+
+BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable)
+{
+	BOOST_CHECK(is_ostreamable<int>::value);
+	BOOST_CHECK(is_ostreamable<double>::value);
+	BOOST_CHECK(is_ostreamable<int &>::value);
+	BOOST_CHECK(is_ostreamable<double &&>::value);
+	BOOST_CHECK(is_ostreamable<const int &>::value);
+	BOOST_CHECK(!is_ostreamable<iio_base<int>>::value);
+	BOOST_CHECK(is_ostreamable<stream1>::value);
+	BOOST_CHECK(is_ostreamable<stream2>::value);
+	BOOST_CHECK(!is_ostreamable<stream3>::value);
+	BOOST_CHECK(!is_ostreamable<stream4>::value);
+	BOOST_CHECK(is_ostreamable<stream5>::value);
+}
+
 struct c_element {};
 
 struct nc_element1
