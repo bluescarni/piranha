@@ -362,12 +362,12 @@ struct iio_converter
 
 /// Type trait for detecting instances of class templates.
 /**
- * This type trait will be true if the decay type of \p T (or one of its base classes) is an instance
- * of the class template \p TT. E.g.,
+ * This type trait will be \p true if the decay type of \p T (or one of its base classes) is an instance
+ * of the class template \p TT, \p false otherwise. E.g.,
  * @code
  * is_instance_of<std::vector<int>,std::vector>::value == true;
  * is_instance_of<std::ostream,std::basic_ios>::value == true;
- * is_instance_of<std::set<double>,std::list>::value == false;
+ * is_instance_of<int,std::list>::value == false;
  * @endcode
  */
 template <class T, template <typename ...> class TT>

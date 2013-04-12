@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of)
 	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
 	BOOST_CHECK((is_instance_of<std::ostream,std::basic_ios>::value));
 	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
-	BOOST_CHECK((!is_instance_of<std::set<double>,std::list>::value));
+	BOOST_CHECK((!is_instance_of<int,std::list>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int>,std::vector>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int>,iio_base>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int> &,iio_base>::value));
