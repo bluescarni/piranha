@@ -1669,4 +1669,5 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 	BOOST_CHECK((!is_subtractable<real,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,real>::value));
 	BOOST_CHECK(is_container_element<real>::value);
+	BOOST_CHECK(is_ostreamable<real>::value);
 }

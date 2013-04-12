@@ -985,4 +985,5 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK((!is_subtractable<rational,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,rational>::value));
 	BOOST_CHECK(is_container_element<rational>::value);
+	BOOST_CHECK(is_ostreamable<rational>::value);
 }
