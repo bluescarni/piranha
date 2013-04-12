@@ -450,6 +450,10 @@ struct stream5 {};
 
 std::ostream &operator<<(const std::ostream &, const stream5 &);
 
+struct stream6 {};
+
+const std::ostream &operator<<(std::ostream &, const stream6 &);
+
 BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable)
 {
 	BOOST_CHECK(is_ostreamable<int>::value);
@@ -463,6 +467,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable)
 	BOOST_CHECK(!is_ostreamable<stream3>::value);
 	BOOST_CHECK(!is_ostreamable<stream4>::value);
 	BOOST_CHECK(is_ostreamable<stream5>::value);
+	BOOST_CHECK(!is_ostreamable<stream6>::value);
 }
 
 struct c_element {};
