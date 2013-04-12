@@ -24,10 +24,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <complex>
+#include <ios>
+#include <iostream>
+#include <list>
 #include <set>
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "../src/base_term.hpp"
 #include "../src/environment.hpp"
@@ -398,6 +402,34 @@ BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable)
 	BOOST_CHECK((!is_less_than_comparable<frob_mix_wrong>::value));
 }
 
+template <typename T>
+struct iio_base {};
+
+template <typename T>
+struct iio_derived: iio_base<T> {};
+
+template <typename T>
+struct iio_derived2: iio_base<T>, std::vector<T> {};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_instance_of)
+{
+	BOOST_CHECK((is_instance_of<std::vector<double>,std::vector>::value));
+	BOOST_CHECK((is_instance_of<std::vector<int>,std::vector>::value));
+	BOOST_CHECK((!is_instance_of<std::vector<int>,std::set>::value));
+	BOOST_CHECK((is_instance_of<iio_base<int>,iio_base>::value));
+	BOOST_CHECK((is_instance_of<iio_derived<int>,iio_base>::value));
+	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
+	BOOST_CHECK((is_instance_of<std::ostream,std::basic_ios>::value));
+	BOOST_CHECK((!is_instance_of<iio_base<int>,iio_derived>::value));
+	BOOST_CHECK((!is_instance_of<std::set<double>,std::list>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int>,std::vector>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int>,iio_base>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int> &,iio_base>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int> &&,iio_base>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
+	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
+}
+
 struct c_element {};
 
 struct nc_element1
@@ -434,9 +466,4 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
 	BOOST_CHECK(!is_container_element<int &>::value);
 	BOOST_CHECK(!is_container_element<int &&>::value);
 	BOOST_CHECK(!is_container_element<int const &>::value);
-	
-	std::cout << is_instance_of<std::ostream,std::basic_ostream>::value << '\n';
-	std::cout << is_instance_of<decltype(std::cout),std::basic_ostream>::value << '\n';
-	std::cout << is_ostreamable<int>::value << '\n';
-	std::cout << is_ostreamable<int &>::value << '\n';
 }

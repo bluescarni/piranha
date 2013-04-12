@@ -351,19 +351,32 @@ const bool is_container_element<T>::value;
 namespace detail
 {
 
-template <template <typename ...> class T>
+template <template <typename ...> class TT>
 struct iio_converter
 {
      template <typename ... Args>
-     iio_converter(const T<Args ...> &);
+     iio_converter(const TT<Args ...> &);
 };
 
 }
 
+/// Type trait for detecting instances of class templates.
+/**
+ * This type trait will be true if the decay type of \p T (or one of its base classes) is an instance
+ * of the class template \p TT. E.g.,
+ * @code
+ * is_instance_of<std::vector<int>,std::vector>::value == true;
+ * is_instance_of<std::ostream,std::basic_ios>::value == true;
+ * is_instance_of<std::set<double>,std::list>::value == false;
+ * @endcode
+ */
 template <class T, template <typename ...> class TT>
-struct is_instance_of
+class is_instance_of
 {
-	static const bool value = std::is_convertible<T,detail::iio_converter<TT>>::value;
+		typedef typename std::decay<T>::type Td;
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_convertible<Td,detail::iio_converter<TT>>::value;
 };
 
 template <class T, template <typename ...> class TT>
