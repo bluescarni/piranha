@@ -44,6 +44,7 @@
 #include "../src/real.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -780,4 +781,9 @@ BOOST_AUTO_TEST_CASE(monomial_key_has_t_subs_test)
 	BOOST_CHECK((!key_has_t_subs<monomial<short>,char,long>::value));
 	BOOST_CHECK((!key_has_t_subs<monomial<long> &,char,const long &>::value));
 	BOOST_CHECK((!key_has_t_subs<const monomial<short> &,char,const char &>::value));
+}
+
+BOOST_AUTO_TEST_CASE(monomial_type_traits_test)
+{
+	BOOST_CHECK(is_container_element<monomial<int>>::value);
 }

@@ -35,8 +35,6 @@
 
 #include "../src/base_term.hpp"
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
-#include "../src/monomial.hpp"
 
 using namespace piranha;
 
@@ -133,9 +131,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible)
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<const int>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<integer>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<const trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_nothrow_destructible<const integer>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor>::value,false);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int *>::value,true);
@@ -174,7 +170,6 @@ BOOST_AUTO_TEST_CASE(type_traits_has_degree)
 {
 	BOOST_CHECK(!has_degree<int>::value);
 	BOOST_CHECK(!has_degree<double>::value);
-	BOOST_CHECK(!has_degree<integer>::value);
 	BOOST_CHECK(has_degree<trivial>::value);
 }
 
@@ -187,7 +182,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 	BOOST_CHECK((is_addable<const int &, int &>::value));
 	BOOST_CHECK((is_addable<int &&, const int &>::value));
 	BOOST_CHECK(is_addable<double>::value);
-	BOOST_CHECK(is_addable<integer>::value);
 	BOOST_CHECK(is_addable<std::complex<double>>::value);
 	BOOST_CHECK((is_addable<const std::complex<double>,double>::value));
 	BOOST_CHECK((is_addable<std::complex<double>,const double>::value));
@@ -196,13 +190,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 	BOOST_CHECK((is_addable<double,int>::value));
 	BOOST_CHECK((is_addable<std::complex<double>,double>::value));
 	BOOST_CHECK((is_addable<double,std::complex<double>>::value));
-	BOOST_CHECK((is_addable<double,integer>::value));
-	BOOST_CHECK((is_addable<integer,double>::value));
 	BOOST_CHECK((!is_addable<trivial,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<int,std::complex<double>>::value));
-	BOOST_CHECK((!is_addable<integer,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,int>::value));
-	BOOST_CHECK((!is_addable<std::complex<double>,integer>::value));
 	BOOST_CHECK((is_addable<std::string,std::string>::value));
 	BOOST_CHECK((is_addable<std::string,const char *>::value));
 	BOOST_CHECK((is_addable<const char *,std::string>::value));
@@ -247,7 +237,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
 	BOOST_CHECK((is_subtractable<const int &, int &>::value));
 	BOOST_CHECK((is_subtractable<int &&, const int &>::value));
 	BOOST_CHECK(is_subtractable<double>::value);
-	BOOST_CHECK(is_subtractable<integer>::value);
 	BOOST_CHECK(is_subtractable<std::complex<double>>::value);
 	BOOST_CHECK((is_subtractable<const std::complex<double>,double>::value));
 	BOOST_CHECK((is_subtractable<std::complex<double>,const double>::value));
@@ -256,13 +245,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
 	BOOST_CHECK((is_subtractable<double,int>::value));
 	BOOST_CHECK((is_subtractable<std::complex<double>,double>::value));
 	BOOST_CHECK((is_subtractable<double,std::complex<double>>::value));
-	BOOST_CHECK((is_subtractable<double,integer>::value));
-	BOOST_CHECK((is_subtractable<integer,double>::value));
 	BOOST_CHECK((!is_subtractable<trivial,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<int,std::complex<double>>::value));
-	BOOST_CHECK((!is_subtractable<integer,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,int>::value));
-	BOOST_CHECK((!is_subtractable<std::complex<double>,integer>::value));
 	BOOST_CHECK((!is_subtractable<std::string,std::string>::value));
 	BOOST_CHECK((!is_subtractable<std::string,const char *>::value));
 	BOOST_CHECK((!is_subtractable<const char *,std::string>::value));
@@ -497,8 +482,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
 {
 	BOOST_CHECK(is_container_element<int>::value);
 	BOOST_CHECK(is_container_element<double>::value);
-	BOOST_CHECK(is_container_element<integer>::value);
-	BOOST_CHECK(is_container_element<monomial<int>>::value);
 	BOOST_CHECK(is_container_element<c_element>::value);
 	BOOST_CHECK(!is_container_element<nc_element1>::value);
 	BOOST_CHECK(!is_container_element<nc_element2>::value);

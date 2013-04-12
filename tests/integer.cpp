@@ -33,6 +33,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
+#include <complex>
 #include <ctgmath>
 #include <limits>
 #include <memory>
@@ -1024,4 +1025,22 @@ BOOST_AUTO_TEST_CASE(integer_t_subs_test)
 	BOOST_CHECK((!piranha::has_t_subs<piranha::integer &,int>::value));
 	BOOST_CHECK((!piranha::has_t_subs<const piranha::integer &,const int &,double &>::value));
 	BOOST_CHECK((!piranha::has_t_subs<std::string,piranha::integer,double>::value));
+}
+
+BOOST_AUTO_TEST_CASE(integer_type_traits_test)
+{
+	BOOST_CHECK_EQUAL(piranha::is_nothrow_destructible<piranha::integer>::value,true);
+	BOOST_CHECK_EQUAL(piranha::is_nothrow_destructible<const piranha::integer>::value,true);
+	BOOST_CHECK(!piranha::has_degree<piranha::integer>::value);
+	BOOST_CHECK(piranha::is_addable<piranha::integer>::value);
+	BOOST_CHECK((piranha::is_addable<double,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_addable<piranha::integer,double>::value));
+	BOOST_CHECK((!piranha::is_addable<piranha::integer,std::complex<double>>::value));
+	BOOST_CHECK((!piranha::is_addable<std::complex<double>,piranha::integer>::value));
+	BOOST_CHECK(piranha::is_subtractable<piranha::integer>::value);
+	BOOST_CHECK((piranha::is_subtractable<double,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_subtractable<piranha::integer,double>::value));
+	BOOST_CHECK((!piranha::is_subtractable<piranha::integer,std::complex<double>>::value));
+	BOOST_CHECK((!piranha::is_subtractable<std::complex<double>,piranha::integer>::value));
+	BOOST_CHECK(piranha::is_container_element<piranha::integer>::value);
 }
