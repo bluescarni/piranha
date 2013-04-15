@@ -277,10 +277,24 @@ class static_vector
 		 * 
 		 * @return \p true if the sizes of the vectors are the same and all elements of \p this compare as equal
 		 * to the elements in \p other, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by the comparison operator of the value type.
 		 */
 		bool operator==(const static_vector &other) const
 		{
 			return (m_size == other.m_size && std::equal(begin(),end(),other.begin()));
+		}
+		/// Inequality operator.
+		/**
+		 * @param[in] other argument for the comparison.
+		 * 
+		 * @return the opposite of operator==().
+		 * 
+		 * @throws unspecified any exception thrown by operator==().
+		 */
+		bool operator!=(const static_vector &other) const
+		{
+			return !operator==(other);
 		}
 		/// Copy-add element at the end of the vector.
 		/**

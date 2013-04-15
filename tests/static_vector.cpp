@@ -36,6 +36,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/type_traits.hpp"
 
 // NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:
 // in the current GCC (4.6) the destructor of std::string does not have nothrow, so we cannot use it.
@@ -60,7 +61,8 @@ class custom_string: public std::string
 using namespace piranha;
 
 typedef boost::mpl::vector<int,integer,custom_string> value_types;
-typedef boost::mpl::vector<std::integral_constant<std::uint_least8_t,1u>,std::integral_constant<std::uint_least8_t,5u>,std::integral_constant<std::uint_least8_t,10u>> size_types;
+typedef boost::mpl::vector<std::integral_constant<std::uint_least8_t,1u>,std::integral_constant<std::uint_least8_t,5u>,
+	std::integral_constant<std::uint_least8_t,10u>> size_types;
 
 // Constructors, assignments and element access.
 struct constructor_tester
@@ -184,11 +186,14 @@ struct equality_tester
 			vector_type v1, v2;
 			v1.push_back(boost::lexical_cast<T>(1));
 			BOOST_CHECK(!(v1 == v2));
+			BOOST_CHECK(v1 != v2);
 			v2.push_back(boost::lexical_cast<T>(1));
 			BOOST_CHECK(v1 == v2);
+			BOOST_CHECK(!(v1 != v2));
 			v1 = vector_type();
 			v1.push_back(boost::lexical_cast<T>(2));
 			BOOST_CHECK(!(v1 == v2));
+			BOOST_CHECK(v1 != v2);
 		}
 	};
 	template <typename T>
@@ -340,4 +345,31 @@ struct stream_tester
 BOOST_AUTO_TEST_CASE(static_vector_stream_test)
 {
 	boost::mpl::for_each<value_types>(stream_tester());
+}
+
+struct type_traits_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef static_vector<T,U::value> vector_type;
+			BOOST_CHECK(is_container_element<vector_type>::value);
+			BOOST_CHECK(is_ostreamable<vector_type>::value);
+			BOOST_CHECK(is_equality_comparable<vector_type>::value);
+			BOOST_CHECK(!is_addable<vector_type>::value);
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_type_traits_test)
+{
+	boost::mpl::for_each<value_types>(type_traits_tester());
 }
