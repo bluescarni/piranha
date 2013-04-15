@@ -48,6 +48,7 @@
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 

@@ -43,6 +43,7 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -545,4 +546,21 @@ struct evaluate_sparsity_tester
 BOOST_AUTO_TEST_CASE(hash_set_evaluate_sparsity_test)
 {
 	boost::mpl::for_each<key_types>(evaluate_sparsity_tester());
+}
+
+struct type_traits_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		BOOST_CHECK(is_container_element<hash_set<T>>::value);
+		BOOST_CHECK((is_instance_of<hash_set<T>,hash_set>::value));
+		BOOST_CHECK(!is_equality_comparable<hash_set<T>>::value);
+		BOOST_CHECK(!is_addable<hash_set<T>>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(hash_set_type_traits_test)
+{
+	boost::mpl::for_each<key_types>(type_traits_tester());
 }

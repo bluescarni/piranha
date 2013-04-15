@@ -36,9 +36,6 @@
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
- * \todo fix type traits such as is_nothrow_move_constructible/assignable. They must work also for references,
- * make them use SFINAE, declval and decltype as in the current GCC 4.6 type_traits header (e.g., see is_constructible). Keep in mind
- * reference collapsing rules, etc. etc. -> here it is better probably to fall back to boost type traits.
  * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
  * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
@@ -95,7 +92,6 @@
  * in the from-python converters?
  * \todo: pyranha tests should test the *exposition* and/or wrapping, not the functionality of the library. For poly/poisson series, add
  * tests for degree/order, plus add in math.py the degree/order methods in order to mirror math.hpp.
- * \todo review coding of type traits.
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
  * instead of symbol for consistency.
  * \todo initializer_list ctors: should they be explicit or not?
@@ -103,6 +99,8 @@
  * http://www.boost.org/doc/libs/release/libs/math/doc/sf_and_dist/html/math_toolkit/special/factorials/sf_binomial.html
  * http://mathworld.wolfram.com/GammaFunction.html
  * http://www.mpfr.org/mpfr-current/mpfr.html (implement in terms of gamma functions as indicated by the Wolfram link)
+ * \todo review usage of ::new, we probably want to switch to unqualified new() in order to account for possible overloads
+ * to be found via ADL.
  */
 namespace piranha
 {
