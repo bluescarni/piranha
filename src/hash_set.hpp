@@ -91,6 +91,9 @@ namespace piranha
  * implementation.
  * \todo replace direct use of numeric_limits with explicit routine that computes the max log2 size, for peace of mind (it's not clear if we can rely on 2**(n-1) being the
  * highest power of two representable.
+ * \todo memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
+ * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
+ * \todo: use of new: we should probably replace ::new with new, in case new is overloaded.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
