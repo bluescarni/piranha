@@ -1777,3 +1777,71 @@ BOOST_AUTO_TEST_CASE(series_is_zero_test)
 {
 	boost::mpl::for_each<cf_types>(is_zero_tester());
 }
+
+struct type_traits_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Expo>
+		void operator()(const Expo &)
+		{
+			typedef g_series_type<Cf,Expo> p_type1;
+			typedef g_series_type<p_type1,Expo> p_type11;
+			BOOST_CHECK(is_equality_comparable<p_type1>::value);
+			BOOST_CHECK((is_equality_comparable<p_type1,Cf>::value));
+			BOOST_CHECK((is_equality_comparable<Cf,p_type1>::value));
+			// TODO: fix this and implement more tests once equality operator is made
+			// conditional for series. This includes arithmetic operators.
+			//BOOST_CHECK((!is_equality_comparable<p_type1,std::string>::value));
+			BOOST_CHECK(is_equality_comparable<p_type11>::value);
+			BOOST_CHECK((is_equality_comparable<p_type11,p_type1>::value));
+			BOOST_CHECK((is_equality_comparable<p_type1,p_type11>::value));
+			BOOST_CHECK((is_instance_of<p_type1,series>::value));
+			BOOST_CHECK((is_instance_of<p_type11,series>::value));
+			BOOST_CHECK(is_ostreamable<p_type1>::value);
+			BOOST_CHECK(is_ostreamable<p_type11>::value);
+			BOOST_CHECK(is_container_element<p_type1>::value);
+			BOOST_CHECK(is_container_element<p_type11>::value);
+			BOOST_CHECK(!is_less_than_comparable<p_type1>::value);
+			BOOST_CHECK((!is_less_than_comparable<p_type1,int>::value));
+			BOOST_CHECK(!is_less_than_comparable<p_type11>::value);
+			BOOST_CHECK((!is_less_than_comparable<p_type11,int>::value));
+			BOOST_CHECK((!is_less_than_comparable<p_type11,p_type1>::value));
+			BOOST_CHECK(is_addable<p_type1>::value);
+			BOOST_CHECK((is_addable<p_type1,int>::value));
+			BOOST_CHECK((is_addable<int,p_type1>::value));
+			BOOST_CHECK(is_addable<p_type11>::value);
+			BOOST_CHECK((is_addable<p_type11,int>::value));
+			BOOST_CHECK((is_addable<int,p_type11>::value));
+			BOOST_CHECK((is_addable<p_type11,p_type1>::value));
+			BOOST_CHECK(is_addable_in_place<p_type1>::value);
+			BOOST_CHECK((is_addable_in_place<p_type1,int>::value));
+			BOOST_CHECK(is_addable_in_place<p_type11>::value);
+			BOOST_CHECK((is_addable_in_place<p_type11,int>::value));
+			BOOST_CHECK((is_addable_in_place<p_type11,p_type1>::value));
+			BOOST_CHECK(is_subtractable<p_type1>::value);
+			BOOST_CHECK((is_subtractable<p_type1,int>::value));
+			BOOST_CHECK((is_subtractable<int,p_type1>::value));
+			BOOST_CHECK(is_subtractable<p_type11>::value);
+			BOOST_CHECK((is_subtractable<p_type11,int>::value));
+			BOOST_CHECK((is_subtractable<int,p_type11>::value));
+			BOOST_CHECK((is_subtractable<p_type11,p_type1>::value));
+			BOOST_CHECK(is_subtractable_in_place<p_type1>::value);
+			BOOST_CHECK((is_subtractable_in_place<p_type1,int>::value));
+			BOOST_CHECK(is_subtractable_in_place<p_type11>::value);
+			BOOST_CHECK((is_subtractable_in_place<p_type11,int>::value));
+			BOOST_CHECK((is_subtractable_in_place<p_type11,p_type1>::value));
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(series_type_traits_test)
+{
+	boost::mpl::for_each<cf_types>(type_traits_tester());
+}
