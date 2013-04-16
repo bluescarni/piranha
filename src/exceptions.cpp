@@ -39,8 +39,6 @@ base_exception::base_exception(const std::string &s):m_what(s) {}
 /// Error description.
 /**
  * @return const pointer to the internal error message.
- * 
- * \todo c++0x explicit virtual function override once it gets available.
  */
 const char *base_exception::what() const throw()
 {
