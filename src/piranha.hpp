@@ -101,6 +101,8 @@
  * http://www.mpfr.org/mpfr-current/mpfr.html (implement in terms of gamma functions as indicated by the Wolfram link)
  * \todo review usage of ::new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL.
+ * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using ::piranha specifiers as needed.
+ * \todo should we always use ::piranha when calling functions in order to prevent ADL?
  */
 namespace piranha
 {
