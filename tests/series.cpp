@@ -45,6 +45,7 @@
 #include "../src/polynomial_term.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/print_coefficient.hpp"
+#include "../src/print_tex_coefficient.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
 #include "../src/settings.hpp"
@@ -1837,8 +1838,12 @@ struct type_traits_tester
 			BOOST_CHECK((is_subtractable_in_place<p_type11,p_type1>::value));
 			BOOST_CHECK(has_print_coefficient<p_type1>::value);
 			BOOST_CHECK(has_print_coefficient<p_type11>::value);
+			BOOST_CHECK(has_print_tex_coefficient<p_type1>::value);
+			BOOST_CHECK(has_print_tex_coefficient<p_type11>::value);
 			BOOST_CHECK((std::is_same<void,decltype(print_coefficient(*(std::ostream *)nullptr,std::declval<p_type1>()))>::value));
 			BOOST_CHECK((std::is_same<void,decltype(print_coefficient(*(std::ostream *)nullptr,std::declval<p_type11>()))>::value));
+			BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<p_type1>()))>::value));
+			BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<p_type11>()))>::value));
 		}
 	};
 	template <typename Cf>

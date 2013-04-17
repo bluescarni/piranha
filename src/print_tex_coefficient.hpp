@@ -22,6 +22,11 @@
 #define PIRANHA_PRINT_TEX_COEFFICIENT_HPP
 
 #include <iostream>
+#include <type_traits>
+#include <utility>
+
+#include "detail/sfinae_types.hpp"
+#include "print_coefficient.hpp"
 
 namespace piranha
 {
@@ -30,21 +35,24 @@ namespace piranha
 /**
  * This functor should be specialised via the \p std::enable_if mechanism.
  */
-template <typename T, typename Enable = void>
+template <typename T, typename = void>
 struct print_tex_coefficient_impl
 {
 	/// Call operator.
 	/**
-	 * The default call operator will print to stream the object.
+	 * The default call operator will call piranha::print_coefficient.
 	 * 
 	 * @param[in] os target stream.
 	 * @param[in] cf coefficient to be printed.
 	 * 
-	 * @throws unspecified any exception thrown by printing \p cf to stream \p os.
+	 * @return the value returned by piranha::print_coefficient.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::print_coefficient.
 	 */
-	void operator()(std::ostream &os, const T &cf) const
+	template <typename U>
+	auto operator()(std::ostream &os, const U &cf) const -> decltype(print_coefficient(os,cf))
 	{
-		os << cf;
+		return print_coefficient(os,cf);
 	}
 };
 
@@ -58,13 +66,34 @@ struct print_tex_coefficient_impl
  * @param[in] os target stream.
  * @param[in] cf coefficient object to be printed.
  * 
+ * @return the value returned by the call operator of piranha::print_tex_coefficient_impl.
+ * 
  * @throws unspecified any exception thrown by the call operator of piranha::print_tex_coefficient_impl.
  */
 template <typename T>
-inline void print_tex_coefficient(std::ostream &os, const T &cf)
+inline auto print_tex_coefficient(std::ostream &os, const T &cf) -> decltype(print_tex_coefficient_impl<T>()(os,cf))
 {
-	print_tex_coefficient_impl<T>()(os,cf);
+	return print_tex_coefficient_impl<T>()(os,cf);
 }
+
+/// Type trait for classes implementing piranha::print_tex_coefficient.
+/**
+ * This type trait will be \p true if piranha::print_tex_coefficient can be called on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_print_tex_coefficient: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(std::ostream &os, const T1 &t) -> decltype(piranha::print_tex_coefficient(os,t),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(*(std::ostream *)nullptr,std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_print_tex_coefficient<T>::value;
 
 }
 

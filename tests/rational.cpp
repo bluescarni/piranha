@@ -34,6 +34,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
 #include <complex>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <sstream>
@@ -41,12 +42,15 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/print_coefficient.hpp"
+#include "../src/print_tex_coefficient.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -986,4 +990,7 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK((!is_subtractable<std::complex<double>,rational>::value));
 	BOOST_CHECK(is_container_element<rational>::value);
 	BOOST_CHECK(is_ostreamable<rational>::value);
+	BOOST_CHECK(has_print_coefficient<rational>::value);
+	BOOST_CHECK(has_print_tex_coefficient<rational>::value);
+	BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<rational>()))>::value));
 }
