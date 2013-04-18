@@ -993,4 +993,9 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK(has_print_coefficient<rational>::value);
 	BOOST_CHECK(has_print_tex_coefficient<rational>::value);
 	BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<rational>()))>::value));
+	BOOST_CHECK(has_negate<rational>::value);
+	BOOST_CHECK(has_negate<rational &>::value);
+	BOOST_CHECK(!has_negate<const rational &>::value);
+	BOOST_CHECK(!has_negate<const rational>::value);
+	BOOST_CHECK((std::is_same<decltype(math::negate(*(rational *)nullptr)),void>::value));
 }

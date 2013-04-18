@@ -1923,16 +1923,6 @@ class integer
 namespace detail
 {
 
-// Specialise implementation of math::negate for integer.
-template <typename T>
-struct math_negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
-{
-	static void run(T &n)
-	{
-		n.negate();
-	}
-};
-
 // Specialise multadd for integer.
 template <typename T>
 struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,integer>::value>::type>
@@ -1947,6 +1937,20 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<
 
 namespace math
 {
+
+/// Specialisation of the piranha::math::negate() functor for piranha::integer.
+template <typename T>
+struct negate_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in,out] n piranha::integer to be negated.
+	 */
+	void operator()(integer &n) const
+	{
+		n.negate();
+	}
+};
 
 /// Specialisation of the piranha::math::is_zero() functor for piranha::integer.
 template <typename T>

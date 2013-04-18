@@ -1643,6 +1643,20 @@ class PIRANHA_PUBLIC real
 namespace math
 {
 
+/// Specialisation of the piranha::math::negate() functor for piranha::real.
+template <typename T>
+struct negate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in,out] x piranha::real to be negated.
+	 */
+	void operator()(real &x) const
+	{
+		x.negate();
+	}
+};
+
 /// Specialisation of the piranha::math::is_zero() functor for piranha::real.
 template <typename T>
 struct is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
@@ -1866,16 +1880,6 @@ struct binomial_impl<T,U,typename std::enable_if<
 
 namespace detail
 {
-
-// Specialise implementation of math::negate for real.
-template <typename T>
-struct math_negate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
-{
-	static void run(T &r)
-	{
-		r.negate();
-	}
-};
 
 // Specialise multadd for real.
 template <typename T>

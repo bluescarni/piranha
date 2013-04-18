@@ -1489,23 +1489,22 @@ struct print_tex_coefficient_impl<T,typename std::enable_if<std::is_same<rationa
 	}
 };
 
-namespace detail
+namespace math
 {
 
-// Specialise implementation of math::negate for rational.
+/// Specialisation of the piranha::math::negate() functor for piranha::rational.
 template <typename T>
-struct math_negate_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
+struct negate_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
 {
-	static void run(T &q)
+	/// Call operator.
+	/**
+	 * @param[in,out] q piranha::rational to be negated.
+	 */
+	void operator()(rational &q) const
 	{
 		q.negate();
 	}
 };
-
-}
-
-namespace math
-{
 
 /// Specialisation of the piranha::math::is_zero() functor for piranha::rational.
 template <typename T>

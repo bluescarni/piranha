@@ -1844,6 +1844,16 @@ struct type_traits_tester
 			BOOST_CHECK((std::is_same<void,decltype(print_coefficient(*(std::ostream *)nullptr,std::declval<p_type11>()))>::value));
 			BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<p_type1>()))>::value));
 			BOOST_CHECK((std::is_same<void,decltype(print_tex_coefficient(*(std::ostream *)nullptr,std::declval<p_type11>()))>::value));
+			BOOST_CHECK(has_negate<p_type1>::value);
+			BOOST_CHECK(has_negate<p_type1 &>::value);
+			BOOST_CHECK(!has_negate<const p_type1 &>::value);
+			BOOST_CHECK(!has_negate<const p_type1>::value);
+			BOOST_CHECK((std::is_same<decltype(math::negate(*(p_type1 *)nullptr)),void>::value));
+			BOOST_CHECK(has_negate<p_type11>::value);
+			BOOST_CHECK(has_negate<p_type11 &>::value);
+			BOOST_CHECK(!has_negate<const p_type11 &>::value);
+			BOOST_CHECK(!has_negate<const p_type11>::value);
+			BOOST_CHECK((std::is_same<decltype(math::negate(*(p_type11 *)nullptr)),void>::value));
 		}
 	};
 	template <typename Cf>

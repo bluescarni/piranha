@@ -1702,21 +1702,6 @@ mutex series<Term,Derived>::cp_mutex;
 template <typename Term, typename Derived>
 typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
 
-namespace detail
-{
-
-template <typename Series>
-struct math_negate_impl<Series,typename std::enable_if<
-	std::is_base_of<series_tag,Series>::value>::type>
-{
-	static void run(Series &s)
-	{
-		s.negate();
-	}
-};
-
-}
-
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
  * This specialisation is enabled if \p Series is an instance of piranha::series.
@@ -1779,6 +1764,26 @@ struct print_tex_coefficient_impl<Series,typename std::enable_if<
 
 namespace math
 {
+
+/// Specialisation of the piranha::math::negate() functor for piranha::series.
+/**
+ * This specialisation is enabled if \p T is an instance of piranha::series.
+ */
+template <typename T>
+struct negate_impl<T,typename std::enable_if<is_instance_of<T,series>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in,out] s piranha::series to be negated.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::series::negate().
+	 */
+	template <typename U>
+	auto operator()(U &s) const -> decltype(s.negate())
+	{
+		return s.negate();
+	}
+};
 
 /// Specialisation of the piranha::math::is_zero() functor for piranha::series.
 /**

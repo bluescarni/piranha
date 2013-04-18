@@ -1044,4 +1044,9 @@ BOOST_AUTO_TEST_CASE(integer_type_traits_test)
 	BOOST_CHECK((!piranha::is_subtractable<std::complex<double>,piranha::integer>::value));
 	BOOST_CHECK(piranha::is_container_element<piranha::integer>::value);
 	BOOST_CHECK(piranha::is_ostreamable<piranha::integer>::value);
+	BOOST_CHECK(piranha::has_negate<piranha::integer>::value);
+	BOOST_CHECK(piranha::has_negate<piranha::integer &>::value);
+	BOOST_CHECK(!piranha::has_negate<const piranha::integer &>::value);
+	BOOST_CHECK(!piranha::has_negate<const piranha::integer>::value);
+	BOOST_CHECK((std::is_same<decltype(piranha::math::negate(*(piranha::integer *)nullptr)),void>::value));
 }

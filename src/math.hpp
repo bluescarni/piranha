@@ -51,17 +51,6 @@ namespace piranha
 namespace detail
 {
 
-// Default implementation of math::negate.
-// NOTE: in gcc 4.6 and up here we could use copysign, signbit, etc. to determine whether it's safe to negate floating-point types.
-template <typename T, typename Enable = void>
-struct math_negate_impl
-{
-	static void run(T &x)
-	{
-		x = -x;
-	}
-};
-
 // Default implementation of multiply-accumulate.
 template <typename T, typename U, typename V, typename Enable = void>
 struct math_multiply_accumulate_impl
@@ -181,17 +170,49 @@ inline auto is_zero(const T &x) -> decltype(is_zero_impl<T>()(x))
 	return is_zero_impl<T>()(x);
 }
 
+/// Default functor for the implementation of piranha::math::negate().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will
+ * assign to the input value its negation.
+ */
+template <typename T, typename = void>
+struct negate_impl
+{
+	/// Call operator.
+	/**
+	 * The body of the operator is equivalent to:
+	 * @code
+	 * return x = -x;
+	 * @endcode
+	 * 
+	 * @param[in,out] x value to be negated.
+	 * 
+	 * @return the value returned by the assignment operator of \p x.
+	 * 
+	 * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
+	 */
+	template <typename U>
+	auto operator()(U &x) const -> decltype(x = -x)
+	{
+		return x = -x;
+	}
+};
+
 /// In-place negation.
 /**
- * Negate value in-place. This function works with all C++ arithmetic types,
- * with piranha's numerical types and with series types. For series, piranha::series::negate() is called.
+ * Negate value in-place. The actual implementation of this function is in the piranha::math::negate_impl functor's
+ * call operator.
  * 
  * @param[in,out] x value to be negated.
+ * 
+ * @return the value returned by the call operator of piranha::math::negate_impl.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::negate_impl.
  */
 template <typename T>
-inline void negate(T &x)
+inline auto negate(T &x) -> decltype(negate_impl<T>()(x))
 {
-	piranha::detail::math_negate_impl<typename std::decay<T>::type>::run(x);
+	return negate_impl<T>()(x);
 }
 
 /// Multiply-accumulate.
@@ -1417,6 +1438,26 @@ class has_is_zero: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool has_is_zero<T>::value;
+
+/// Type trait to detect the presence of the piranha::math::negate function.
+/**
+ * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T
+ * stripped of reference qualifiers, \p false otherwise.
+ */
+template <typename T>
+class has_negate: detail::sfinae_types
+{
+		typedef typename std::remove_reference<T>::type Td;
+		template <typename T1>
+		static auto test(T1 &t) -> decltype(math::negate(t),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(*(Td *)nullptr)),yes>::value;
+};
+
+template <typename T>
+const bool has_negate<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::t_subs function.
 /**

@@ -65,13 +65,36 @@ struct check_negate
 			math::negate(negation);
 			BOOST_CHECK_EQUAL(negation,-value);
 		}
+		BOOST_CHECK(has_negate<T>::value);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(negate_test)
+struct no_negate {};
+
+struct no_negate2
+{
+	no_negate2 operator-() const;
+	no_negate2 &operator=(no_negate2 &) = delete;
+};
+
+struct yes_negate
+{
+	yes_negate operator-() const;
+};
+
+BOOST_AUTO_TEST_CASE(math_negate_test)
 {
 	environment env;
 	boost::fusion::for_each(arithmetic_values,check_negate());
+	BOOST_CHECK(!has_negate<no_negate>::value);
+	BOOST_CHECK(!has_negate<no_negate2>::value);
+	BOOST_CHECK(has_negate<yes_negate>::value);
+	BOOST_CHECK(has_negate<std::complex<double>>::value);
+	BOOST_CHECK(has_negate<int &>::value);
+	BOOST_CHECK(has_negate<int &&>::value);
+	BOOST_CHECK(!has_negate<int const>::value);
+	BOOST_CHECK(!has_negate<int const &>::value);
+	BOOST_CHECK(!has_negate<std::complex<float> const &>::value);
 }
 
 const boost::fusion::vector<char,short,int,long,long long,unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,float,double,long double> zeroes(
@@ -134,7 +157,7 @@ struct is_zero_impl<trivial_c,void>
 
 }}
 
-BOOST_AUTO_TEST_CASE(is_zero_test)
+BOOST_AUTO_TEST_CASE(math_is_zero_test)
 {
 	boost::fusion::for_each(zeroes,check_is_zero_01());
 	boost::fusion::for_each(arithmetic_values,check_is_zero_02());
@@ -174,12 +197,12 @@ struct check_multiply_accumulate
 	}
 };
 
-BOOST_AUTO_TEST_CASE(multiply_accumulate_test)
+BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
 {
 	boost::fusion::for_each(arithmetic_values,check_multiply_accumulate());
 }
 
-BOOST_AUTO_TEST_CASE(pow_test)
+BOOST_AUTO_TEST_CASE(math_pow_test)
 {
 	BOOST_CHECK(math::pow(2.,2.) == std::pow(2.,2.));
 	BOOST_CHECK(math::pow(2.f,2.) == std::pow(2.f,2.));
@@ -209,7 +232,7 @@ BOOST_AUTO_TEST_CASE(pow_test)
 	BOOST_CHECK((!is_exponentiable<int,integer>::value));
 }
 
-BOOST_AUTO_TEST_CASE(sin_cos_test)
+BOOST_AUTO_TEST_CASE(math_sin_cos_test)
 {
 	BOOST_CHECK(math::sin(1.f) == std::sin(1.f));
 	BOOST_CHECK(math::sin(2.) == std::sin(2.));
@@ -219,7 +242,7 @@ BOOST_AUTO_TEST_CASE(sin_cos_test)
 	BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
 }
 
-BOOST_AUTO_TEST_CASE(partial_test)
+BOOST_AUTO_TEST_CASE(math_partial_test)
 {
 	BOOST_CHECK(piranha::is_differentiable<int>::value);
 	BOOST_CHECK(piranha::is_differentiable<long>::value);
@@ -231,7 +254,7 @@ BOOST_AUTO_TEST_CASE(partial_test)
 	BOOST_CHECK_EQUAL(math::partial(2LL,std::string("")),0LL);
 }
 
-BOOST_AUTO_TEST_CASE(evaluate_test)
+BOOST_AUTO_TEST_CASE(math_evaluate_test)
 {
 	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,std::unordered_map<std::string,double>{})),int>::value));
@@ -241,7 +264,7 @@ BOOST_AUTO_TEST_CASE(evaluate_test)
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,std::unordered_map<std::string,short>{})),unsigned long>::value));
 }
 
-BOOST_AUTO_TEST_CASE(subs_test)
+BOOST_AUTO_TEST_CASE(math_subs_test)
 {
 	BOOST_CHECK_EQUAL(math::subs(5,"",6),5);
 	BOOST_CHECK((std::is_same<decltype(math::subs(5,"",6)),int>::value));
@@ -251,7 +274,7 @@ BOOST_AUTO_TEST_CASE(subs_test)
 	BOOST_CHECK((std::is_same<decltype(math::subs(10ll,"","foo")),long long>::value));
 }
 
-BOOST_AUTO_TEST_CASE(integrate_test)
+BOOST_AUTO_TEST_CASE(math_integrate_test)
 {
 	BOOST_CHECK(!piranha::is_integrable<int>::value);
 	BOOST_CHECK(!piranha::is_integrable<long>::value);
@@ -262,7 +285,7 @@ BOOST_AUTO_TEST_CASE(integrate_test)
 	BOOST_CHECK(!piranha::is_integrable<std::string>::value);
 }
 
-BOOST_AUTO_TEST_CASE(pbracket_test)
+BOOST_AUTO_TEST_CASE(math_pbracket_test)
 {
 	typedef polynomial<rational> p_type;
 	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{},{}),p_type(0));
@@ -298,7 +321,7 @@ BOOST_AUTO_TEST_CASE(pbracket_test)
 	BOOST_CHECK(math::pbracket(H_2,Gz + x,{"vx","vy","vz"},{"x","y","z"}) != 0);
 }
 
-BOOST_AUTO_TEST_CASE(abs_test)
+BOOST_AUTO_TEST_CASE(math_abs_test)
 {
 	BOOST_CHECK_EQUAL(math::abs((signed char)(4)),(signed char)(4));
 	BOOST_CHECK_EQUAL(math::abs((signed char)(-4)),(signed char)(4));
