@@ -413,6 +413,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of)
 	BOOST_CHECK((is_instance_of<iio_derived2<int> &&,iio_base>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
+	BOOST_CHECK((is_instance_of<std::complex<double>,std::complex>::value));
 }
 
 struct stream1 {};
