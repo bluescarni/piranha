@@ -1139,11 +1139,11 @@ template <typename T>
 class is_differentiable: detail::sfinae_types
 {
 		template <typename U>
-		static auto test(U const *t) -> decltype(math::partial(*t,""),void(),yes());
+		static auto test(const U &u) -> decltype(math::partial(u,""),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 };
 
 // Static init.

@@ -247,7 +247,11 @@ BOOST_AUTO_TEST_CASE(math_partial_test)
 	BOOST_CHECK(piranha::is_differentiable<int>::value);
 	BOOST_CHECK(piranha::is_differentiable<long>::value);
 	BOOST_CHECK(piranha::is_differentiable<double>::value);
+	BOOST_CHECK(piranha::is_differentiable<double &>::value);
+	BOOST_CHECK(piranha::is_differentiable<double &&>::value);
+	BOOST_CHECK(piranha::is_differentiable<double const &>::value);
 	BOOST_CHECK(!piranha::is_differentiable<std::string>::value);
+	BOOST_CHECK(!piranha::is_differentiable<std::string &>::value);
 	BOOST_CHECK_EQUAL(math::partial(1,""),0);
 	BOOST_CHECK_EQUAL(math::partial(1.,""),double(0));
 	BOOST_CHECK_EQUAL(math::partial(2L,""),0L);

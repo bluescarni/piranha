@@ -871,7 +871,6 @@ BOOST_AUTO_TEST_CASE(rational_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(rational(),""),0);
 	BOOST_CHECK_EQUAL(math::partial(rational(1),std::string("")),0);
 	BOOST_CHECK_EQUAL(math::partial(rational(-10),std::string("")),0);
-	BOOST_CHECK(is_differentiable<rational>::value);
 }
 
 BOOST_AUTO_TEST_CASE(rational_evaluate_test)
@@ -973,6 +972,9 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<rational>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<const rational>::value,true);
+	BOOST_CHECK(is_differentiable<rational>::value);
+	BOOST_CHECK(is_differentiable<rational &>::value);
+	BOOST_CHECK(is_differentiable<rational &&>::value);
 	BOOST_CHECK(!has_degree<rational>::value);
 	BOOST_CHECK(is_addable<rational>::value);
 	BOOST_CHECK((is_addable<rational,integer>::value));

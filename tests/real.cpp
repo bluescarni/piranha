@@ -1567,7 +1567,6 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(real(),""),0);
 	BOOST_CHECK_EQUAL(math::partial(real(1),std::string("")),0);
 	BOOST_CHECK_EQUAL(math::partial(real(-10),std::string("")),0);
-	BOOST_CHECK(is_differentiable<real>::value);
 }
 
 BOOST_AUTO_TEST_CASE(real_evaluate_test)
@@ -1653,6 +1652,10 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<real>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<const real>::value,true);
+	BOOST_CHECK(is_differentiable<real>::value);
+	BOOST_CHECK(is_differentiable<real &>::value);
+	BOOST_CHECK(is_differentiable<const real &>::value);
+	BOOST_CHECK(is_differentiable<const real>::value);
 	BOOST_CHECK(!has_degree<real>::value);
 	BOOST_CHECK(is_addable<real>::value);
 	BOOST_CHECK((is_addable<real,integer>::value));
