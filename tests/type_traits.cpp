@@ -491,3 +491,17 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 	BOOST_CHECK(!is_container_element<int &&>::value);
 	BOOST_CHECK(!is_container_element<int const &>::value);
 }
+
+struct unhashable {};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
+{
+	BOOST_CHECK(is_hashable<int>::value);
+	BOOST_CHECK(is_hashable<std::string>::value);
+	BOOST_CHECK(is_hashable<double>::value);
+	BOOST_CHECK(is_hashable<double &>::value);
+	BOOST_CHECK(is_hashable<double &&>::value);
+	BOOST_CHECK(is_hashable<const double &>::value);
+	BOOST_CHECK(is_hashable<const double>::value);
+	//BOOST_CHECK(!is_hashable<unhashable>::value);
+}

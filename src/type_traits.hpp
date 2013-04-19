@@ -31,6 +31,7 @@
 #include <boost/type_traits/has_trivial_destructor.hpp>
 #include <cstdarg>
 #include <cstddef>
+#include <functional>
 #include <ostream>
 #include <tuple>
 #include <type_traits>
@@ -405,6 +406,22 @@ class is_ostreamable: detail::sfinae_types
 
 template <typename T>
 const bool is_ostreamable<T>::value;
+
+template <typename T>
+class is_hashable: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		template <typename T1>
+		static auto test(const T1 &t) -> decltype(std::hash<T1>()(t),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value &&
+					  //noexcept(test(std::declval<Td>()));
+					  noexcept(std::hash<Td>()(std::declval<Td>()));
+};
+
+template <typename T>
+const bool is_hashable<T>::value;
 
 }
 
