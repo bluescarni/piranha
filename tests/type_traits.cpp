@@ -108,7 +108,7 @@ struct nontrivial_dtor
 	int n;
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_is_trivially_copyable)
+BOOST_AUTO_TEST_CASE(type_traits_is_trivially_copyable_test)
 {
 	BOOST_CHECK_EQUAL(is_trivially_copyable<int>::value,true);
 	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial>::value,true);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_trivially_copyable)
 	BOOST_CHECK_EQUAL(is_trivially_copyable<std::string>::value,false);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible)
+BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible_test)
 {
 	BOOST_CHECK_EQUAL(is_trivially_destructible<int>::value,true);
 	BOOST_CHECK_EQUAL(is_trivially_destructible<trivial>::value,true);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible)
 	BOOST_CHECK_EQUAL(is_trivially_destructible<std::string>::value,false);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible)
+BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<const int>::value,true);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible)
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy *>::value,true);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_tuple)
+BOOST_AUTO_TEST_CASE(type_traits_is_tuple_test)
 {
 	BOOST_CHECK(is_tuple<std::tuple<>>::value);
 	BOOST_CHECK(is_tuple<std::tuple<int>>::value);
@@ -166,14 +166,14 @@ class has_degree<T,typename std::enable_if<std::is_same<trivial,T>::value>::type
 
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_has_degree)
+BOOST_AUTO_TEST_CASE(type_traits_has_degree_test)
 {
 	BOOST_CHECK(!has_degree<int>::value);
 	BOOST_CHECK(!has_degree<double>::value);
 	BOOST_CHECK(has_degree<trivial>::value);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_addable)
+BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 {
 	BOOST_CHECK(is_addable<int>::value);
 	BOOST_CHECK(is_addable<const int>::value);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable)
 	BOOST_CHECK((is_addable<int * &,int>::value));
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
+BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place_test)
 {
 	BOOST_CHECK((is_addable_in_place<int>::value));
 	BOOST_CHECK((is_addable_in_place<int,int>::value));
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_in_place)
 	BOOST_CHECK((is_addable_in_place<int &&, const int &>::value));
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
+BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_test)
 {
 	BOOST_CHECK(is_subtractable<int>::value);
 	BOOST_CHECK(is_subtractable<const int>::value);
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable)
 	BOOST_CHECK((!is_subtractable<int &&, std::string &>::value));
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place)
+BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place_test)
 {
 	BOOST_CHECK((is_subtractable_in_place<int>::value));
 	BOOST_CHECK((is_subtractable_in_place<int,int>::value));
@@ -341,7 +341,7 @@ struct frob_mix_not_eq
 
 bool operator!=(const frob_mix_not_eq &, const frob_mix_not_eq &);
 
-BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
+BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable_test)
 {
 	BOOST_CHECK(is_equality_comparable<int>::value);
 	BOOST_CHECK(!is_equality_comparable<trivial>::value);
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable)
 	BOOST_CHECK(!is_equality_comparable<frob_mix_not_eq>::value);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable)
+BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable_test)
 {
 	BOOST_CHECK(is_less_than_comparable<int>::value);
 	BOOST_CHECK((is_less_than_comparable<int, double>::value));
@@ -396,7 +396,7 @@ struct iio_derived: iio_base<T> {};
 template <typename T>
 struct iio_derived2: iio_base<T>, std::vector<T> {};
 
-BOOST_AUTO_TEST_CASE(type_traits_is_instance_of)
+BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
 {
 	BOOST_CHECK((is_instance_of<std::vector<double>,std::vector>::value));
 	BOOST_CHECK((is_instance_of<std::vector<int>,std::vector>::value));
@@ -440,7 +440,7 @@ struct stream6 {};
 
 const std::ostream &operator<<(std::ostream &, const stream6 &);
 
-BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable)
+BOOST_AUTO_TEST_CASE(type_traits_is_ostreamable_test)
 {
 	BOOST_CHECK(is_ostreamable<int>::value);
 	BOOST_CHECK(is_ostreamable<double>::value);
@@ -479,7 +479,7 @@ struct c_element2
 	c_element2 &operator=(c_element2 &&) noexcept(true);
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_is_container_element)
+BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 {
 	BOOST_CHECK(is_container_element<int>::value);
 	BOOST_CHECK(is_container_element<double>::value);
