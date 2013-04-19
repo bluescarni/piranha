@@ -33,6 +33,7 @@
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -181,6 +182,46 @@ class base_term: detail::base_term_tag
 		/// Key member.
 		Key		m_key;
 };
+
+namespace detail
+{
+
+template <typename T, typename = void>
+struct is_term_impl
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_term_impl<T,typename std::enable_if<is_instance_of<T,base_term>::value>::type>
+{
+	typedef typename T::cf_type cf_type;
+	typedef typename T::key_type key_type;
+	static const bool value = is_container_element<T>::value &&
+				  std::is_constructible<T,cf_type const &,key_type const &>::value;
+};
+
+}
+
+/// Type trait to detect term types.
+/**
+ * This type trait will be true if the decay type of \p T satisfies the following conditions:
+ * - it is an instance of piranha::base_term,
+ * - it satisfies piranha::is_container_element,
+ * - it is constructible from two const references, one to an instance of the coefficient type,
+ *   the other to an instance of the key type.
+ */
+template <typename T>
+class is_term
+{
+		typedef typename std::decay<T>::type Td;
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::is_term_impl<Td>::value;
+};
+
+template <typename T>
+const bool is_term<T>::value;
 
 }
 

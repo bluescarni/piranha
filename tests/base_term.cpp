@@ -240,3 +240,88 @@ BOOST_AUTO_TEST_CASE(base_term_ignorability_test)
 {
 	boost::mpl::for_each<cf_types>(ignorability_tester());
 }
+
+struct is_term_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			class term_type: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type() = default;
+					term_type(const term_type &) = default;
+					term_type(term_type &&) = default;
+					term_type &operator=(const term_type &) = default;
+					term_type &operator=(term_type &&) = default;
+					// Needed to satisfy concept checking.
+					explicit term_type(const Cf &, const Key &) {}
+			};
+			class term_type_invalid1: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type_invalid1() = default;
+					term_type_invalid1(const term_type_invalid1 &) = default;
+					term_type_invalid1(term_type_invalid1 &&) = default;
+					term_type_invalid1 &operator=(const term_type_invalid1 &) = default;
+					term_type_invalid1 &operator=(term_type_invalid1 &&) = default;
+			};
+			class term_type_invalid2: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type_invalid2() = delete;
+					term_type_invalid2(const term_type_invalid2 &) = default;
+					term_type_invalid2(term_type_invalid2 &&) = default;
+					term_type_invalid2 &operator=(const term_type_invalid2 &) = default;
+					term_type_invalid2 &operator=(term_type_invalid2 &&) = default;
+					explicit term_type_invalid2(const Cf &, const Key &) {}
+			};
+			class term_type_invalid3
+			{
+				public:
+					term_type_invalid3() = default;
+					term_type_invalid3(const term_type_invalid3 &) = default;
+					term_type_invalid3(term_type_invalid3 &&) = default;
+					term_type_invalid3 &operator=(const term_type_invalid3 &) = default;
+					term_type_invalid3 &operator=(term_type_invalid3 &&) = default;
+					explicit term_type_invalid3(const Cf &, const Key &) {}
+			};
+			class term_type_invalid4: public base_term<Cf,Key,term_type>
+			{
+				public:
+					term_type_invalid4() = default;
+					term_type_invalid4(const term_type_invalid4 &) = default;
+					term_type_invalid4(term_type_invalid4 &&) = default;
+					term_type_invalid4 &operator=(const term_type_invalid4 &) = default;
+					term_type_invalid4 &operator=(term_type_invalid4 &&) = default;
+					// Needed to satisfy concept checking.
+					explicit term_type_invalid4(Cf &, const Key &) {}
+			};
+			BOOST_CHECK(is_term<term_type>::value);
+			BOOST_CHECK(!is_term<term_type_invalid1>::value);
+			BOOST_CHECK(!is_term<term_type_invalid2>::value);
+			BOOST_CHECK(!is_term<term_type_invalid3>::value);
+			BOOST_CHECK(!is_term<term_type_invalid4>::value);
+			BOOST_CHECK(is_term<term_type &>::value);
+			BOOST_CHECK(is_term<const term_type>::value);
+			BOOST_CHECK(is_term<term_type const &>::value);
+			BOOST_CHECK(is_term<term_type &&>::value);
+			BOOST_CHECK(!is_term<term_type *>::value);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<key_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(base_term_is_term_test)
+{
+	boost::mpl::for_each<cf_types>(is_term_tester());
+	BOOST_CHECK(!is_term<int>::value);
+	BOOST_CHECK(!is_term<std::string>::value);
+}
