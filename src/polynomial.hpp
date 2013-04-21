@@ -238,7 +238,7 @@ class polynomial:
 		}
 		PIRANHA_FORWARDING_CTOR(polynomial,base)
 		/// Trivial destructor.
-		~polynomial() noexcept(true)
+		~polynomial()
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<polynomial>));

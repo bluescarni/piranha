@@ -243,7 +243,7 @@ class array_key: detail::array_key_tag
 			piranha_assert(std::is_sorted(args.begin(),args.end()));
 		}
 		/// Trivial destructor.
-		~array_key() noexcept(true)
+		~array_key()
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 		}
@@ -593,7 +593,7 @@ struct hash<piranha::array_key<T,Derived>>
 	 * 
 	 * @throws unspecified any exception thrown by piranha::array_key::hash().
 	 */
-	result_type operator()(const argument_type &a) const
+	result_type operator()(const argument_type &a) const noexcept(true)
 	{
 		return a.hash();
 	}

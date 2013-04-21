@@ -262,7 +262,7 @@ class real_trigonometric_kronecker_monomial
 			}
 		}
 		/// Trivial destructor.
-		~real_trigonometric_kronecker_monomial() noexcept(true)
+		~real_trigonometric_kronecker_monomial()
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<real_trigonometric_kronecker_monomial>));
 		}
@@ -1092,7 +1092,7 @@ struct hash<piranha::real_trigonometric_kronecker_monomial<T>>
 	 * 
 	 * @return hash value of \p a computed via piranha::real_trigonometric_kronecker_monomial::hash().
 	 */
-	result_type operator()(const argument_type &a) const
+	result_type operator()(const argument_type &a) const noexcept(true)
 	{
 		return a.hash();
 	}

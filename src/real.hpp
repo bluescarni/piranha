@@ -829,7 +829,7 @@ class PIRANHA_PUBLIC real
 		/**
 		 * Will clear the internal MPFR variable.
 		 */
-		~real() noexcept(true)
+		~real()
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
 			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");

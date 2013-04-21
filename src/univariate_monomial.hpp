@@ -143,7 +143,7 @@ class univariate_monomial
 			}
 		}
 		/// Trivial destructor.
-		~univariate_monomial() noexcept(true)
+		~univariate_monomial()
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<univariate_monomial>));
 		}
@@ -490,7 +490,7 @@ struct hash<piranha::univariate_monomial<T>>
 	 * 
 	 * @throws unspecified any exception thrown by piranha::univariate_monomial::hash().
 	 */
-	result_type operator()(const argument_type &m) const
+	result_type operator()(const argument_type &m) const noexcept(true)
 	{
 		return m.hash();
 	}

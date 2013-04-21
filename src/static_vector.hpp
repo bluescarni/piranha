@@ -153,7 +153,7 @@ class static_vector
 		/**
 		 * Will destroy all elements of the vector.
 		 */
-		~static_vector() noexcept(true)
+		~static_vector()
 		{
 			if (!std::is_pod<T>::value) {
 				destroy_items();

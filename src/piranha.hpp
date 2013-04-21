@@ -103,6 +103,7 @@
  * to be found via ADL.
  * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as needed.
  * \todo should we always use piranha when calling functions in order to prevent ADL?
+ * \todo replace uses of iterator facade with inheritance from std::iterator.
  */
 namespace piranha
 {

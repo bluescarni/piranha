@@ -100,7 +100,7 @@ class monomial: public array_key<T,monomial<T>>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
-		~monomial() noexcept(true)
+		~monomial()
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<monomial>));
 		}

@@ -87,7 +87,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		poisson_series_term(poisson_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series_term,base)
 		/// Trivial destructor.
-		~poisson_series_term() noexcept(true)
+		~poisson_series_term()
 		{
 			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<poisson_series_term>));
 		}

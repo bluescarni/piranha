@@ -221,7 +221,7 @@ class poisson_series:
 		poisson_series(poisson_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series,base)
 		/// Trivial destructor.
-		~poisson_series() noexcept(true)
+		~poisson_series()
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<poisson_series>));
 		}

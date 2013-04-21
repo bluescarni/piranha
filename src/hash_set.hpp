@@ -555,7 +555,7 @@ class hash_set
 		/**
 		 * No side effects.
 		 */
-		~hash_set() noexcept(true)
+		~hash_set()
 		{
 			piranha_assert(sanity_check());
 			destroy_and_deallocate();

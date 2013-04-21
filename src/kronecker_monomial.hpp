@@ -209,7 +209,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		explicit kronecker_monomial(const value_type &n):m_value(n) {}
 		/// Trivial destructor.
-		~kronecker_monomial() noexcept(true)
+		~kronecker_monomial()
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
 		}
@@ -836,7 +836,7 @@ struct hash<piranha::kronecker_monomial<T>>
 	 * 
 	 * @return hash value of \p a computed via piranha::kronecker_monomial::hash().
 	 */
-	result_type operator()(const argument_type &a) const
+	result_type operator()(const argument_type &a) const noexcept(true)
 	{
 		return a.hash();
 	}

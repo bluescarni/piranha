@@ -903,7 +903,7 @@ class series: series_binary_operators, detail::series_tag
 			dispatch_generic_construction(std::forward<T>(x));
 		}
 		/// Trivial destructor.
-		~series() noexcept(true)
+		~series()
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 			piranha_assert(destruction_checks());

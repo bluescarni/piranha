@@ -48,7 +48,7 @@ class toolbox
 		/*
 		 * Implements part of the static checking logic.
 		 */
-		~toolbox() noexcept(true)
+		~toolbox()
 		{
 			BOOST_CONCEPT_ASSERT((concept::Series<Derived>));
 		}

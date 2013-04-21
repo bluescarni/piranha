@@ -1081,7 +1081,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer() noexcept(true)
+		~integer()
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<integer>));
 			piranha_assert(m_value->_mp_alloc >= 0);
@@ -2380,7 +2380,7 @@ struct hash<piranha::integer>
 	 * 
 	 * @see piranha::integer::hash()
 	 */
-	result_type operator()(const argument_type &n) const
+	result_type operator()(const argument_type &n) const noexcept(true)
 	{
 		return n.hash();
 	}

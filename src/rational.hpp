@@ -771,7 +771,7 @@ class rational
 		/**
 		 * Will clear the internal \p mpq_t type.
 		 */
-		~rational() noexcept(true)
+		~rational()
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
@@ -1765,7 +1765,7 @@ struct hash<piranha::rational>
 	 * 
 	 * @see piranha::rational::hash()
 	 */
-	result_type operator()(const argument_type &q) const
+	result_type operator()(const argument_type &q) const noexcept(true)
 	{
 		return q.hash();
 	}

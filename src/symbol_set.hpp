@@ -135,7 +135,7 @@ class symbol_set
 			return *this;
 		}
 		/// Trivial destructor.
-		~symbol_set() noexcept(true)
+		~symbol_set()
 		{
 			piranha_assert(run_destruction_checks());
 		}

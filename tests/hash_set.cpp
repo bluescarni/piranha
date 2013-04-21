@@ -64,7 +64,7 @@ class custom_string: public std::string
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() noexcept(true) {}
+		~custom_string() {}
 };
 
 namespace std
@@ -209,7 +209,7 @@ struct random_failure
 		}
 	}
 	random_failure(random_failure &&rf) noexcept(true) :m_str(std::move(rf.m_str)) {}
-	~random_failure() noexcept(true) {}
+	~random_failure() {}
 	std::size_t hash() const
 	{
 		return boost::lexical_cast<int>(m_str);
