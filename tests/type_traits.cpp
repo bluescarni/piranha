@@ -24,6 +24,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <complex>
+#include <cstddef>
+#include <functional>
 #include <ios>
 #include <iostream>
 #include <list>
@@ -492,7 +494,104 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 	BOOST_CHECK(!is_container_element<int const &>::value);
 }
 
-struct unhashable {};
+struct unhashable1 {};
+
+struct unhashable2 {};
+
+struct unhashable3 {};
+
+struct unhashable4 {};
+
+struct unhashable5 {};
+
+struct unhashable6 {};
+
+struct unhashable7 {};
+
+struct unhashable8 {};
+
+struct unhashable9 {};
+
+struct hashable1 {};
+
+struct hashable2 {};
+
+struct hashable3 {};
+
+namespace std
+{
+
+template <>
+struct hash<unhashable2>
+{};
+
+template <>
+struct hash<unhashable3>
+{
+	int operator()(const unhashable3 &);
+};
+
+template <>
+struct hash<unhashable4>
+{
+	std::size_t operator()(unhashable4 &);
+};
+
+template <>
+struct hash<unhashable5>
+{
+	hash(const hash &) = delete;
+	std::size_t operator()(const unhashable5 &);
+};
+
+template <>
+struct hash<unhashable6>
+{
+	~hash() = delete;
+	std::size_t operator()(const unhashable6 &);
+};
+
+template <>
+struct hash<unhashable7>
+{
+	std::size_t operator()(const unhashable7 &);
+};
+
+template <>
+struct hash<unhashable8>
+{
+	hash();
+	std::size_t operator()(const unhashable8 &) noexcept(true);
+};
+
+template <>
+struct hash<unhashable9>
+{
+	std::size_t operator()(const unhashable9 &) noexcept(true);
+};
+
+template <>
+struct hash<hashable1>
+{
+	std::size_t operator()(const hashable1 &) const noexcept(true);
+};
+
+template <>
+struct hash<hashable2>
+{
+	std::size_t operator()(const hashable2 &) const noexcept(true);
+};
+
+template <>
+struct hash<hashable3>
+{
+	hash() noexcept(true);
+	std::size_t operator()(const hashable3 &) const noexcept(true);
+};
+
+}
+
+bool foobar(int,int = 5);
 
 BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 {
@@ -503,5 +602,23 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 	BOOST_CHECK(is_hashable<double &&>::value);
 	BOOST_CHECK(is_hashable<const double &>::value);
 	BOOST_CHECK(is_hashable<const double>::value);
-	//BOOST_CHECK(!is_hashable<unhashable>::value);
+	BOOST_CHECK(!is_hashable<unhashable1>::value);
+	BOOST_CHECK(is_hashable<unhashable1 *>::value);
+	BOOST_CHECK(is_hashable<unhashable1 const *>::value);
+	BOOST_CHECK(!is_hashable<unhashable2>::value);
+	BOOST_CHECK(!is_hashable<unhashable3>::value);
+	BOOST_CHECK(!is_hashable<unhashable4>::value);
+	BOOST_CHECK(!is_hashable<unhashable5>::value);
+	BOOST_CHECK(!is_hashable<unhashable6>::value);
+	BOOST_CHECK(!is_hashable<unhashable7>::value);
+	BOOST_CHECK(!is_hashable<unhashable8>::value);
+	BOOST_CHECK(!is_hashable<unhashable9>::value);
+	BOOST_CHECK(is_hashable<hashable1>::value);
+	BOOST_CHECK(is_hashable<hashable2>::value);
+	BOOST_CHECK(is_hashable<hashable2 &>::value);
+	BOOST_CHECK(is_hashable<hashable2 &&>::value);
+	BOOST_CHECK(is_hashable<hashable2 const &>::value);
+	BOOST_CHECK(is_hashable<hashable2 *>::value);
+	BOOST_CHECK(is_hashable<hashable2 const *>::value);
+	BOOST_CHECK(is_hashable<hashable3>::value);
 }

@@ -1000,4 +1000,7 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK(!has_negate<const rational &>::value);
 	BOOST_CHECK(!has_negate<const rational>::value);
 	BOOST_CHECK((std::is_same<decltype(math::negate(*(rational *)nullptr)),void>::value));
+	BOOST_CHECK(is_hashable<rational>::value);
+	BOOST_CHECK(is_hashable<rational &>::value);
+	BOOST_CHECK(is_hashable<const rational &>::value);
 }

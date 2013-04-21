@@ -407,21 +407,57 @@ class is_ostreamable: detail::sfinae_types
 template <typename T>
 const bool is_ostreamable<T>::value;
 
+namespace detail
+{
+
 template <typename T>
-class is_hashable: detail::sfinae_types
+class is_hashable_impl: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(const T1 &t) -> decltype(std::hash<T1>()(t),void(),yes());
+		static auto test(const T1 &t) -> decltype((*(std::hash<Td> const *)nullptr)(t));
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test(std::declval<Td>())),yes>::value &&
-					  //noexcept(test(std::declval<Td>()));
-					  noexcept(std::hash<Td>()(std::declval<Td>()));
+		static const bool value = std::is_same<decltype(test(std::declval<Td>())),std::size_t>::value;
+};
+
+}
+
+/// Hashable type trait.
+/**
+ * This type trait will be \p true if the decay type of \p T is hashable, \p false otherwise.
+ *
+ * A type \p T is hashable when supplied with a specialisation of \p std::hash which satisfies the following
+ * prerequisites:
+ * - it defines a noexcept const call operator taking as parameter a const instance of \p T and returning
+ *   \p std::size_t,
+ * - it is nothrow default constructible, copy constructible and destructible.
+ */
+template <typename T, typename = void>
+class is_hashable
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = false;
 };
 
 template <typename T>
-const bool is_hashable<T>::value;
+class is_hashable<T,typename std::enable_if<detail::is_hashable_impl<T>::value>::type>
+{
+		typedef typename std::decay<T>::type Td;
+		typedef std::hash<Td> hasher;
+	public:
+		static const bool value = noexcept((*(hasher const *)nullptr)(std::declval<Td const &>())) &&
+					  std::is_copy_constructible<hasher>::value &&
+					  std::is_destructible<hasher>::value &&
+					  std::is_nothrow_default_constructible<hasher>::value;
+};
+
+template <typename T, typename Enable>
+const bool is_hashable<T,Enable>::value;
+
+template <typename T>
+const bool is_hashable<T,typename std::enable_if<detail::is_hashable_impl<T>::value>::type>::value;
 
 }
 

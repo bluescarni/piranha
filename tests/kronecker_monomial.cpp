@@ -47,6 +47,7 @@
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -905,10 +906,20 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_ipow_subs_test)
 	boost::mpl::for_each<int_types>(ipow_subs_tester());
 }
 
-BOOST_AUTO_TEST_CASE(kronecker_monomial_key_has_t_subs_test)
+struct tt_tester
 {
-	BOOST_CHECK((!key_has_t_subs<kronecker_monomial<int>,int,int>::value));
-	BOOST_CHECK((!key_has_t_subs<kronecker_monomial<short>,char,long>::value));
-	BOOST_CHECK((!key_has_t_subs<kronecker_monomial<long> &,char,const long &>::value));
-	BOOST_CHECK((!key_has_t_subs<const kronecker_monomial<short> &,char,const char &>::value));
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		BOOST_CHECK((!key_has_t_subs<k_type,int,int>::value));
+		BOOST_CHECK((!key_has_t_subs<k_type &,int,int>::value));
+		BOOST_CHECK((!key_has_t_subs<k_type const &,int,int>::value));
+		BOOST_CHECK(is_hashable<k_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_type_traits_test)
+{
+	boost::mpl::for_each<int_types>(tt_tester());
 }

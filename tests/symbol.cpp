@@ -29,6 +29,7 @@
 #include <unordered_set>
 
 #include "../src/environment.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -85,6 +86,9 @@ BOOST_AUTO_TEST_CASE(symbol_hash_test)
 	BOOST_CHECK_NO_THROW(symbol("x").hash());
 	BOOST_CHECK_EQUAL(symbol("x").hash(),std::hash<symbol>()(symbol("x")));
 	BOOST_CHECK_EQUAL(symbol("x").hash(),std::hash<std::string const *>()(boost::addressof(symbol("x").get_name())));
+	BOOST_CHECK(is_hashable<symbol>::value);
+	BOOST_CHECK(is_hashable<symbol &>::value);
+	BOOST_CHECK(is_hashable<symbol &&>::value);
 }
 
 BOOST_AUTO_TEST_CASE(symbol_streaming_test)

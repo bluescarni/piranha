@@ -44,6 +44,7 @@
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -1203,6 +1204,7 @@ struct tt_tester
 		BOOST_CHECK(key_has_t_ldegree<k_type>::value);
 		BOOST_CHECK(key_has_t_order<k_type>::value);
 		BOOST_CHECK(key_has_t_lorder<k_type>::value);
+		BOOST_CHECK(is_hashable<k_type>::value);
 	}
 };
 

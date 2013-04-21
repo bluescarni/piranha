@@ -35,6 +35,7 @@
 #include "../src/integer.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -427,4 +428,21 @@ struct trim_tester
 BOOST_AUTO_TEST_CASE(array_key_trim_test)
 {
 	boost::mpl::for_each<value_types>(trim_tester());
+}
+
+struct tt_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<T> key_type;
+		BOOST_CHECK(is_hashable<key_type>::value);
+
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_type_traits_test)
+{
+
+	boost::mpl::for_each<value_types>(tt_tester());
 }
