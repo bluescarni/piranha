@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/utility.hpp> // For addressof.
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <set>
@@ -32,7 +33,6 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include "array_key.hpp"
@@ -100,7 +100,7 @@ class monomial: public array_key<T,monomial<T>>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
-		~monomial()
+		~monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<monomial>));
 		}

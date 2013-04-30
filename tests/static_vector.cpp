@@ -55,7 +55,7 @@ class custom_string: public std::string
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() {}
+		~custom_string() noexcept(true) {}
 };
 
 using namespace piranha;

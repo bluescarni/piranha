@@ -22,10 +22,10 @@
 #define PIRANHA_SYMBOL_HPP
 
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <set>
 #include <string>
-#include <unordered_set>
 #include <utility>
 
 #include "config.hpp"

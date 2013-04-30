@@ -164,7 +164,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 		power_series_term(power_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series_term,base)
 		/// Trivial destructor.
-		~power_series_term()
+		~power_series_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
 		}
@@ -244,7 +244,7 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 		power_series_term(const power_series_term &) = default;
 		power_series_term(power_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series_term,base)
-		~power_series_term()
+		~power_series_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
 		}

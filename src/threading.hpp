@@ -122,7 +122,7 @@ typedef
 		/**
 		 * If \p this is associated to a thread of execution, <tt>std::terminate()</tt> will be called.
 		 */
-		~thread()
+		~thread() noexcept(true)
 		{
 			if (joinable()) {
 				std::terminate();

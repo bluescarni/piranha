@@ -31,6 +31,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <new>
 #include <random>
@@ -38,7 +39,6 @@
 #include <string>
 #include <type_traits>
 #include <tuple>
-#include <unordered_set>
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -64,7 +64,7 @@ class custom_string: public std::string
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() {}
+		~custom_string() noexcept(true) {}
 };
 
 namespace std
@@ -209,7 +209,7 @@ struct random_failure
 		}
 	}
 	random_failure(random_failure &&rf) noexcept(true) :m_str(std::move(rf.m_str)) {}
-	~random_failure() {}
+	~random_failure() noexcept(true) {}
 	std::size_t hash() const
 	{
 		return boost::lexical_cast<int>(m_str);

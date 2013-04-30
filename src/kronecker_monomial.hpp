@@ -27,6 +27,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
@@ -36,7 +37,6 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include "concepts/degree_key.hpp"
@@ -209,7 +209,7 @@ class kronecker_monomial: detail::kronecker_monomial_tag
 		 */
 		explicit kronecker_monomial(const value_type &n):m_value(n) {}
 		/// Trivial destructor.
-		~kronecker_monomial()
+		~kronecker_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
 		}

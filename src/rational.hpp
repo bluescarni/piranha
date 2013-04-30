@@ -29,6 +29,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include <functional>
 #include <gmp.h>
 #include <iostream>
 #include <limits>
@@ -36,7 +37,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "concepts/poisson_series_coefficient.hpp"
@@ -771,7 +772,7 @@ class rational
 		/**
 		 * Will clear the internal \p mpq_t type.
 		 */
-		~rational()
+		~rational() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
 			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);

@@ -26,6 +26,7 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
@@ -34,7 +35,6 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include "concepts/key.hpp"
@@ -262,7 +262,7 @@ class real_trigonometric_kronecker_monomial
 			}
 		}
 		/// Trivial destructor.
-		~real_trigonometric_kronecker_monomial()
+		~real_trigonometric_kronecker_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Key<real_trigonometric_kronecker_monomial>));
 		}

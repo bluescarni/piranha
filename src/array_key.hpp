@@ -26,10 +26,10 @@
 #include <boost/functional/hash.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <initializer_list>
 #include <stdexcept>
 #include <type_traits>
-#include <unordered_set>
 #include <vector>
 
 #include "concepts/array_key_value_type.hpp"
@@ -243,7 +243,7 @@ class array_key: detail::array_key_tag
 			piranha_assert(std::is_sorted(args.begin(),args.end()));
 		}
 		/// Trivial destructor.
-		~array_key()
+		~array_key() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 		}

@@ -129,7 +129,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		polynomial_term(polynomial_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(polynomial_term,base)
 		/// Trivial destructor.
-		~polynomial_term()
+		~polynomial_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<polynomial_term>));
 		}

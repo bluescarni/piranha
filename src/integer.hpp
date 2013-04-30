@@ -31,6 +31,7 @@
 #include <cctype> // For std::isdigit().
 #include <cmath>
 #include <cstddef>
+#include <functional>
 // NOTE: GMP docs say gmp.h already includes the extern "C" parts.
 #include <gmp.h>
 #include <iostream>
@@ -38,7 +39,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_set> // For hash specialisation.
 #include <utility>
 #include <vector>
 
@@ -1081,7 +1081,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer()
+		~integer() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<integer>));
 			piranha_assert(m_value->_mp_alloc >= 0);

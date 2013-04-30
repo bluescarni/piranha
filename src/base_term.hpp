@@ -103,7 +103,7 @@ class base_term: detail::base_term_tag
 			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
 			>::type * = nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
-		~base_term()
+		~base_term() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::Term<Derived>));
 		}

@@ -24,13 +24,13 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_set>
 
 #include "concepts/array_key_value_type.hpp"
 #include "concepts/degree_key.hpp"
@@ -143,7 +143,7 @@ class univariate_monomial
 			}
 		}
 		/// Trivial destructor.
-		~univariate_monomial()
+		~univariate_monomial() noexcept(true)
 		{
 			BOOST_CONCEPT_ASSERT((concept::DegreeKey<univariate_monomial>));
 		}

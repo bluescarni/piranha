@@ -26,9 +26,9 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <stdexcept>
-#include <unordered_set>
 
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
