@@ -104,6 +104,7 @@
  * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as needed.
  * \todo should we always use piranha when calling functions in order to prevent ADL?
  * \todo replace uses of iterator facade with inheritance from std::iterator.
+ * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
  */
 namespace piranha
 {
