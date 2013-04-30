@@ -2,10 +2,10 @@ INCLUDE(CheckCXXCompilerFlag)
 
 # Clang detection:
 # http://stackoverflow.com/questions/10046114/in-cmake-how-can-i-test-if-the-compiler-is-clang
-IF("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
-	MESSAGE(STATUS "Clang compiler detected.")
+# http://www.cmake.org/cmake/help/v2.8.10/cmake.html#variable:CMAKE_LANG_COMPILER_ID
+IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	SET(CMAKE_COMPILER_IS_CLANGXX 1)
-ENDIF("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
+ENDIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 # Configuration for GCC.
 IF(CMAKE_COMPILER_IS_GNUCXX)
