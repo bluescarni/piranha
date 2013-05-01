@@ -591,8 +591,6 @@ struct hash<hashable3>
 
 }
 
-bool foobar(int,int = 5);
-
 BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 {
 	BOOST_CHECK(is_hashable<int>::value);
