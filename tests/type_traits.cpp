@@ -512,11 +512,15 @@ struct unhashable8 {};
 
 struct unhashable9 {};
 
+struct unhashable10 {};
+
 struct hashable1 {};
 
 struct hashable2 {};
 
 struct hashable3 {};
+
+struct hashable4 {};
 
 namespace std
 {
@@ -571,6 +575,13 @@ struct hash<unhashable9>
 };
 
 template <>
+struct hash<unhashable10>
+{
+	std::size_t operator()(const unhashable10 &) const noexcept(true);
+	~hash() noexcept(false) {}
+};
+
+template <>
 struct hash<hashable1>
 {
 	std::size_t operator()(const hashable1 &) const noexcept(true);
@@ -587,6 +598,13 @@ struct hash<hashable3>
 {
 	hash() noexcept(true);
 	std::size_t operator()(const hashable3 &) const noexcept(true);
+};
+
+template <>
+struct hash<hashable4>
+{
+	std::size_t operator()(const hashable4 &) const noexcept(true);
+	~hash() noexcept(true) {}
 };
 
 }
@@ -614,6 +632,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 	BOOST_CHECK(!is_hashable<unhashable7>::value);
 	BOOST_CHECK(!is_hashable<unhashable8>::value);
 	BOOST_CHECK(!is_hashable<unhashable9>::value);
+	BOOST_CHECK(!is_hashable<unhashable10>::value);
 	BOOST_CHECK(is_hashable<hashable1>::value);
 	BOOST_CHECK(is_hashable<hashable2>::value);
 	BOOST_CHECK(is_hashable<hashable2 &>::value);

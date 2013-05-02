@@ -421,6 +421,15 @@ class is_hashable_impl: detail::sfinae_types
 		static const bool value = std::is_same<decltype(test(std::declval<Td>())),std::size_t>::value;
 };
 
+template <typename Hasher, typename Td>
+struct common_hasher_requirements
+{
+	static const bool value = noexcept((*(Hasher const *)nullptr)(std::declval<Td const &>())) &&
+				  std::is_copy_constructible<Hasher>::value &&
+				  is_nothrow_destructible<Hasher>::value &&
+				  std::is_nothrow_default_constructible<Hasher>::value;
+};
+
 }
 
 /// Hashable type trait.
@@ -431,7 +440,11 @@ class is_hashable_impl: detail::sfinae_types
  * prerequisites:
  * - it defines a noexcept const call operator taking as parameter a const instance of \p T and returning
  *   \p std::size_t,
- * - it is nothrow default constructible, copy constructible and destructible.
+ * - it is nothrow default constructible, copy constructible and nothrow destructible.
+ * 
+ * Note that depending on the implementation of the default \p std::hash class, using this type trait with
+ * a type which does not provide a specialisation for \p std::hash could result in a compilation error
+ * (e.g., if the unspecialised \p std::hash includes a false \p static_assert).
  */
 template <typename T, typename = void>
 class is_hashable
@@ -447,10 +460,7 @@ class is_hashable<T,typename std::enable_if<detail::is_hashable_impl<T>::value>:
 		typedef typename std::decay<T>::type Td;
 		typedef std::hash<Td> hasher;
 	public:
-		static const bool value = noexcept((*(hasher const *)nullptr)(std::declval<Td const &>())) &&
-					  std::is_copy_constructible<hasher>::value &&
-					  std::is_destructible<hasher>::value &&
-					  std::is_nothrow_default_constructible<hasher>::value;
+		static const bool value = detail::common_hasher_requirements<hasher,Td>::value;
 };
 
 template <typename T, typename Enable>
