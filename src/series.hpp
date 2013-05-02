@@ -1776,6 +1776,8 @@ struct negate_impl<T,typename std::enable_if<is_instance_of<T,series>::value>::t
 	/**
 	 * @param[in,out] s piranha::series to be negated.
 	 * 
+	 * @return the return value of piranha::series::negate()..
+	 * 
 	 * @throws unspecified any exception thrown by piranha::series::negate().
 	 */
 	template <typename U>
