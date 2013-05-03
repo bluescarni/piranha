@@ -144,8 +144,6 @@ class base_term: detail::base_term_tag
 		 * The term's hash value is given by its key's hash value.
 		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
-		 * 
-		 * @throws unspecified any exception thrown by the specialisation of \p std::hash for \p Key.
 		 */
 		std::size_t hash() const noexcept(true)
 		{
