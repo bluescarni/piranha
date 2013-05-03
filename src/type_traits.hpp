@@ -548,7 +548,41 @@ template <typename T, typename U, typename Enable>
 const bool is_hash_function_object<T,U,Enable>::value;
 
 template <typename T, typename U>
-const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
+const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+	std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
+
+/// Type trait to detect equality function objects.
+/**
+ * \p T is an equality function object for \p U if the following requirements are met:
+ * - \p T is a function object with const noexcept call operator accepting as input two const \p U and returning \p bool,
+ * - \p T satisfies piranha::is_container_element.
+ * 
+ * The decay types of \p T and \p U are considered in this type trait.
+ */
+template <typename T, typename U, typename = void>
+class is_equality_function_object
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = false;
+};
+
+template <typename T, typename U>
+class is_equality_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+	bool,typename std::decay<U>::type const &,typename std::decay<U>::type const &>::value>::type>
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+	public:
+		static const bool value = is_container_element<Td>::value;
+};
+
+template <typename T, typename U, typename Enable>
+const bool is_equality_function_object<T,U,Enable>::value;
+
+template <typename T, typename U>
+const bool is_equality_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+	bool,typename std::decay<U>::type const &,typename std::decay<U>::type const &>::value>::type>::value;
 
 }
 

@@ -852,3 +852,88 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 	BOOST_CHECK((!is_hash_function_object<hfo8,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo9,int>::value));
 }
+
+struct efo1 {};
+
+struct efo2
+{
+	bool operator()(int,int) const;
+};
+
+struct efo3
+{
+	bool operator()(int,int);
+};
+
+struct efo4
+{
+	bool operator()(int,int) const;
+	~efo4() noexcept(false);
+};
+
+struct efo5
+{
+	efo5() = delete;
+	bool operator()(int,int) const;
+};
+
+struct efo6
+{
+	template <typename ... Args>
+	bool operator()(Args && ...) const;
+};
+
+struct efo7
+{
+	efo7();
+	efo7(const efo7 &);
+	efo7(efo7 &&) noexcept(true);
+	efo7 &operator=(const efo7 &);
+	efo7 &operator=(efo7 &&) noexcept(true);
+	bool operator()(int,int) const;
+};
+
+struct efo8
+{
+	efo8();
+	efo8(const efo8 &);
+	efo8(efo8 &&);
+	efo8 &operator=(const efo8 &);
+	efo8 &operator=(efo8 &&) noexcept(true);
+	bool operator()(int,int) const;
+};
+
+struct efo9
+{
+	efo9();
+	efo9(const efo9 &);
+	efo9(efo9 &&) noexcept(true);
+	efo9 &operator=(const efo9 &);
+	efo9 &operator=(efo9 &&);
+	bool operator()(int,int) const;
+};
+
+struct efo10
+{
+	bool operator()(int) const;
+	bool operator()(int,int,int) const;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
+{
+	BOOST_CHECK((is_equality_function_object<std::equal_to<int>,int>::value));
+	BOOST_CHECK((is_equality_function_object<std::equal_to<int>,short>::value));
+	BOOST_CHECK((!is_equality_function_object<std::hash<int>,int>::value));
+	BOOST_CHECK((!is_equality_function_object<bool,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo1,int>::value));
+	BOOST_CHECK((is_equality_function_object<efo2,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo3,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo4,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo5,int>::value));
+	BOOST_CHECK((is_equality_function_object<efo6,int>::value));
+	BOOST_CHECK((is_equality_function_object<efo6,std::string>::value));
+	BOOST_CHECK((is_equality_function_object<efo7,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo8,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo9,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo10,int>::value));
+}
