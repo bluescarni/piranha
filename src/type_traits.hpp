@@ -469,6 +469,84 @@ const bool is_hashable<T,Enable>::value;
 template <typename T>
 const bool is_hashable<T,typename std::enable_if<detail::is_hashable_impl<T>::value>::type>::value;
 
+namespace detail
+{
+
+template <typename, typename, typename = void>
+struct is_function_object_impl
+{
+	template <typename ... Args>
+	struct tt
+	{
+		static const bool value = false;
+	};
+};
+
+template <typename T, typename ReturnType>
+struct is_function_object_impl<T,ReturnType,typename std::enable_if<std::is_class<T>::value>::type>
+{
+	template <typename ... Args>
+	struct tt: detail::sfinae_types
+	{
+		template <typename U>
+		static auto test(U &f) -> decltype(f(std::declval<Args>()...));
+		static no test(...);
+		static const bool value = std::is_same<decltype(test(*(T *)nullptr)),ReturnType>::value;
+	};
+};
+
+}
+
+/// Function object type trait.
+/**
+ * This type trait will be true if \p T (disregarding reference qualifiers) is a function object returning \p ReturnType and taking
+ * \p Args as arguments. That is, the type trait will be \p true if the following conditions are met:
+ * - \p T is a class,
+ * - \p T is equipped with a call operator returning \p ReturnType and taking \p Args as arguments.
+ * 
+ * \p T can be const qualified (in which case the call operator must be also const in order for the type trait to be satisfied).
+ */
+template <typename T, typename ReturnType, typename ... Args>
+class is_function_object
+{
+		typedef typename std::remove_reference<T>::type Td;
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::is_function_object_impl<Td,ReturnType>::template tt<Args...>::value;
+};
+
+template <typename T, typename ReturnType, typename ... Args>
+const bool is_function_object<T,ReturnType,Args...>::value;
+
+/// Type trait to detect hash function objects.
+/**
+ * \p T is a hash function object for \p U if the following requirements are met:
+ * - \p T is a function object with const noexcept call operator accepting as input const \p U and returning \p std::size_t,
+ * - \p T is nothrow default constructible, copy constructible and nothrow destructible.
+ */
+template <typename T, typename U, typename = void>
+class is_hash_function_object
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = false;
+};
+
+template <typename T, typename U>
+class is_hash_function_object<T,U,typename std::enable_if<is_function_object<const T,std::size_t,typename std::decay<U>::type const &>::value>::type>
+{
+		typedef typename std::remove_reference<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+	public:
+		static const bool value = detail::common_hasher_requirements<Td,Ud>::value;
+};
+
+template <typename T, typename U, typename Enable>
+const bool is_hash_function_object<T,U,Enable>::value;
+
+template <typename T, typename U>
+const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const T,std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
+
 }
 
 /// Macro to test if class has type definition.

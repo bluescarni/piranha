@@ -641,4 +641,156 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 	BOOST_CHECK(is_hashable<hashable2 *>::value);
 	BOOST_CHECK(is_hashable<hashable2 const *>::value);
 	BOOST_CHECK(is_hashable<hashable3>::value);
+	BOOST_CHECK(is_hashable<hashable4>::value);
+}
+
+struct fo1 {};
+
+struct fo2
+{
+	void operator()();
+	void operator()() const;
+};
+
+struct fo3
+{
+	void operator()(int);
+};
+
+struct fo4
+{
+	void operator()(int);
+	std::string operator()(int,double &);
+};
+
+struct fo5
+{
+	template <typename ... Args>
+	int operator()(Args && ...);
+};
+
+struct fo6
+{
+	int operator()(int, int = 0);
+};
+
+void not_fo();
+
+BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
+{
+	auto l1 = [](){};
+	auto l2 = [](const int &){};
+	auto l3 = [](int &){};
+	auto l4 = [](int &) {return std::string{};};
+	std::string str1;
+	auto l5 = [&str1](int &) -> std::string & {return str1;};
+	std::string str2;
+	auto l6 = [&str2](int &) -> std::string const & {return str2;};
+	BOOST_CHECK((!is_function_object<int,void>::value));
+	BOOST_CHECK((is_function_object<decltype(l1),void>::value));
+	BOOST_CHECK((is_function_object<const decltype(l1),void>::value));
+	BOOST_CHECK((!is_function_object<decltype(l1),void,int>::value));
+	BOOST_CHECK((!is_function_object<const decltype(l2),void>::value));
+	BOOST_CHECK((is_function_object<decltype(l2),void,int>::value));
+	BOOST_CHECK((is_function_object<const decltype(l2),void,int &>::value));
+	BOOST_CHECK((is_function_object<const decltype(l2),void,const int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l3),void>::value));
+	BOOST_CHECK((!is_function_object<const decltype(l3),void,int>::value));
+	BOOST_CHECK((is_function_object<decltype(l3),void,int &>::value));
+	BOOST_CHECK((!is_function_object<const decltype(l3),void,const int &>::value));
+	BOOST_CHECK((is_function_object<decltype(l3) &,void,int &>::value));
+	BOOST_CHECK((is_function_object<decltype(l3) const &,void,int &>::value));
+	BOOST_CHECK((is_function_object<decltype(l4),std::string,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l4),std::string &,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l5),std::string,int &>::value));
+	BOOST_CHECK((is_function_object<decltype(l5),std::string &,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l5),std::string const &,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l6),std::string,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l6),std::string &,int &>::value));
+	BOOST_CHECK((is_function_object<decltype(l6),std::string const &,int &>::value));
+	BOOST_CHECK((is_function_object<std::hash<int>,std::size_t,int>::value));
+	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,int &&>::value));
+	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,const int &>::value));
+	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,int &>::value));
+	BOOST_CHECK((!is_function_object<const std::hash<int>,int,int &>::value));
+	BOOST_CHECK((!is_function_object<const std::hash<int>,std::size_t,int &, int &>::value));
+	BOOST_CHECK((!is_function_object<const std::hash<int>,std::size_t>::value));
+	BOOST_CHECK((!is_function_object<fo1,void>::value));
+	BOOST_CHECK((!is_function_object<fo1,void,int>::value));
+	BOOST_CHECK((is_function_object<fo2,void>::value));
+	BOOST_CHECK((!is_function_object<fo2 *,void>::value));
+	BOOST_CHECK((is_function_object<const fo2,void>::value));
+	BOOST_CHECK((is_function_object<fo3,void,int>::value));
+	BOOST_CHECK((!is_function_object<const fo3,void,int>::value));
+	BOOST_CHECK((!is_function_object<fo3,void,int,int>::value));
+	BOOST_CHECK((is_function_object<fo4,void,int>::value));
+	BOOST_CHECK((is_function_object<fo4,std::string,int,double &>::value));
+	BOOST_CHECK((!is_function_object<fo4,std::string,int,double &,int>::value));
+	BOOST_CHECK((!is_function_object<fo4,std::string,int>::value));
+	BOOST_CHECK((!is_function_object<fo4,std::string &,int,double &>::value));
+	BOOST_CHECK((!is_function_object<fo4,std::string,int,double const &>::value));
+	BOOST_CHECK((is_function_object<fo5,int>::value));
+	BOOST_CHECK((is_function_object<fo5,int,double>::value));
+	BOOST_CHECK((is_function_object<fo5,int,double,const std::string &>::value));
+	BOOST_CHECK((!is_function_object<fo5,void,double,const std::string &>::value));
+	BOOST_CHECK((is_function_object<fo6,int,int>::value));
+	BOOST_CHECK((is_function_object<fo6,int,int,int>::value));
+	BOOST_CHECK((!is_function_object<fo6,int,int,int,double>::value));
+	BOOST_CHECK((!is_function_object<decltype(not_fo),void>::value));
+	BOOST_CHECK((is_function_object<std::function<void(int)>,void,int>::value));
+	BOOST_CHECK((!is_function_object<std::function<void(int)>,void>::value));
+}
+
+struct hfo1 {};
+
+struct hfo2
+{
+	hfo2() noexcept(true);
+	std::size_t operator()(int) noexcept(true);
+};
+
+struct hfo3
+{
+	hfo3() noexcept(true);
+	std::size_t operator()(int) const noexcept(true);
+};
+
+struct hfo4
+{
+	hfo4() noexcept(true);
+	std::size_t operator()(int) const noexcept(true);
+	~hfo4() noexcept(false);
+};
+
+struct hfo5
+{
+	hfo5() noexcept(true);
+	std::size_t operator()(int) const;
+};
+
+struct hfo6
+{
+	hfo6() noexcept(true);
+	hfo6(const hfo6 &) = delete;
+	std::size_t operator()(int) const noexcept(true);
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
+{
+	BOOST_CHECK((is_hash_function_object<std::hash<int>,int>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<int const *>,int const *>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<int const *>,int *>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<int> &,int &>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<int> const &,int &>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<int> &,const int &>::value));
+	BOOST_CHECK((is_hash_function_object<std::hash<std::string>,std::string>::value));
+	BOOST_CHECK((!is_hash_function_object<std::hash<int>,std::string>::value));
+	BOOST_CHECK((!is_hash_function_object<int,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo1,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo2,int>::value));
+	BOOST_CHECK((is_hash_function_object<hfo3,int>::value));
+	BOOST_CHECK((is_hash_function_object<hfo3,short>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo4,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo5,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo6,int>::value));
 }
