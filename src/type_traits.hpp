@@ -615,4 +615,11 @@ struct has_typedef_##type_name \
 	static const bool value = sizeof(test<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>(0)) == sizeof(yes); \
 }
 
+/// Macro for static type trait checks.
+/**
+ * This macro will check via a \p static_assert that the template type trait \p tt provides a \p true \p value.
+ * The variadic arguments are interpreted as the template arguments of \p tt.
+ */
+#define PIRANHA_TT_CHECK(tt,...) static_assert(tt<__VA_ARGS__>::value,"type trait check failure -> "#tt"<"#__VA_ARGS__">")
+
 #endif
