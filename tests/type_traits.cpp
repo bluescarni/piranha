@@ -514,6 +514,10 @@ struct unhashable9 {};
 
 struct unhashable10 {};
 
+struct unhashable11 {};
+
+struct unhashable12 {};
+
 struct hashable1 {};
 
 struct hashable2 {};
@@ -582,6 +586,28 @@ struct hash<unhashable10>
 };
 
 template <>
+struct hash<unhashable11>
+{
+	std::size_t operator()(const unhashable11 &) const noexcept(true);
+	hash() noexcept(true);
+	hash(const hash &);
+	hash(hash &&) noexcept(false);
+	hash &operator=(hash &&) noexcept(true);
+	~hash() noexcept(true);
+};
+
+template <>
+struct hash<unhashable12>
+{
+	std::size_t operator()(const unhashable12 &) const noexcept(true);
+	hash() noexcept(true);
+	hash(const hash &);
+	hash(hash &&) noexcept(true);
+	hash &operator=(hash &&) noexcept(false);
+	~hash() noexcept(true);
+};
+
+template <>
 struct hash<hashable1>
 {
 	std::size_t operator()(const hashable1 &) const noexcept(true);
@@ -633,6 +659,8 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 	BOOST_CHECK(!is_hashable<unhashable8>::value);
 	BOOST_CHECK(!is_hashable<unhashable9>::value);
 	BOOST_CHECK(!is_hashable<unhashable10>::value);
+	BOOST_CHECK(!is_hashable<unhashable11>::value);
+	BOOST_CHECK(!is_hashable<unhashable12>::value);
 	BOOST_CHECK(is_hashable<hashable1>::value);
 	BOOST_CHECK(is_hashable<hashable2>::value);
 	BOOST_CHECK(is_hashable<hashable2 &>::value);
@@ -775,6 +803,33 @@ struct hfo6
 	std::size_t operator()(int) const noexcept(true);
 };
 
+struct hfo7
+{
+	hfo7() noexcept(true);
+	std::size_t operator()(int) const noexcept(true);
+	hfo7(const hfo7 &);
+	hfo7(hfo7 &&) noexcept(true);
+	hfo7 &operator=(hfo7 &&) noexcept(true);
+};
+
+struct hfo8
+{
+	hfo8() noexcept(true);
+	std::size_t operator()(int) const noexcept(true);
+	hfo8(const hfo7 &);
+	hfo8(hfo8 &&) noexcept(false);
+	hfo8 &operator=(hfo8 &&) noexcept(true);
+};
+
+struct hfo9
+{
+	hfo9() noexcept(true);
+	std::size_t operator()(int) const noexcept(true);
+	hfo9(const hfo9 &);
+	hfo9(hfo9 &&) noexcept(true);
+	hfo9 &operator=(hfo9 &&) noexcept(false);
+};
+
 BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 {
 	BOOST_CHECK((is_hash_function_object<std::hash<int>,int>::value));
@@ -793,4 +848,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 	BOOST_CHECK((!is_hash_function_object<hfo4,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo5,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo6,int>::value));
+	BOOST_CHECK((is_hash_function_object<hfo7,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo8,int>::value));
+	BOOST_CHECK((!is_hash_function_object<hfo9,int>::value));
 }

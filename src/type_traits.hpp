@@ -415,7 +415,7 @@ class is_hashable_impl: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
 		template <typename T1>
-		static auto test(const T1 &t) -> decltype((*(std::hash<Td> const *)nullptr)(t));
+		static auto test(const T1 &t) -> decltype((*(std::hash<T1> const *)nullptr)(t));
 		static no test(...);
 	public:
 		static const bool value = std::is_same<decltype(test(std::declval<Td>())),std::size_t>::value;
@@ -425,9 +425,9 @@ template <typename Hasher, typename Td>
 struct common_hasher_requirements
 {
 	static const bool value = noexcept((*(Hasher const *)nullptr)(std::declval<Td const &>())) &&
-				  std::is_copy_constructible<Hasher>::value &&
-				  is_nothrow_destructible<Hasher>::value &&
-				  std::is_nothrow_default_constructible<Hasher>::value;
+				  std::is_nothrow_default_constructible<Hasher>::value &&
+				  // NOTE: a bit of repetition here.
+				  is_container_element<Hasher>::value;
 };
 
 }
@@ -440,7 +440,7 @@ struct common_hasher_requirements
  * prerequisites:
  * - it defines a noexcept const call operator taking as parameter a const instance of \p T and returning
  *   \p std::size_t,
- * - it is nothrow default constructible, copy constructible and nothrow destructible.
+ * - it is nothrow default constructible and it satisfies piranha::is_container_element.
  * 
  * Note that depending on the implementation of the default \p std::hash class, using this type trait with
  * a type which does not provide a specialisation for \p std::hash could result in a compilation error
@@ -522,7 +522,9 @@ const bool is_function_object<T,ReturnType,Args...>::value;
 /**
  * \p T is a hash function object for \p U if the following requirements are met:
  * - \p T is a function object with const noexcept call operator accepting as input const \p U and returning \p std::size_t,
- * - \p T is nothrow default constructible, copy constructible and nothrow destructible.
+ * - \p T is nothrow default constructible and it satisfies piranha::is_container_element.
+ * 
+ * The decay types of \p T and \p U are considered in this type trait.
  */
 template <typename T, typename U, typename = void>
 class is_hash_function_object
@@ -533,9 +535,10 @@ class is_hash_function_object
 };
 
 template <typename T, typename U>
-class is_hash_function_object<T,U,typename std::enable_if<is_function_object<const T,std::size_t,typename std::decay<U>::type const &>::value>::type>
+class is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+	std::size_t,typename std::decay<U>::type const &>::value>::type>
 {
-		typedef typename std::remove_reference<T>::type Td;
+		typedef typename std::decay<T>::type Td;
 		typedef typename std::decay<U>::type Ud;
 	public:
 		static const bool value = detail::common_hasher_requirements<Td,Ud>::value;
@@ -545,7 +548,7 @@ template <typename T, typename U, typename Enable>
 const bool is_hash_function_object<T,U,Enable>::value;
 
 template <typename T, typename U>
-const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const T,std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
+const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
 
 }
 
