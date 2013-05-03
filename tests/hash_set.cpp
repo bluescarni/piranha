@@ -74,7 +74,7 @@ struct hash<custom_string>
 {
 	typedef size_t result_type;
 	typedef custom_string argument_type;
-	result_type operator()(const argument_type &s) const
+	result_type operator()(const argument_type &s) const noexcept(true)
 	{
 		return hash<std::string>{}(s);
 	}
@@ -233,7 +233,7 @@ struct hash<random_failure>
 {
 	typedef size_t result_type;
 	typedef random_failure argument_type;
-	result_type operator()(const random_failure &rf) const
+	result_type operator()(const random_failure &rf) const noexcept(true)
 	{
 		return rf.hash();
 	}
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(hash_set_insert_test)
 	const std::size_t critical_size = 193;
 	struct custom_hash
 	{
-		std::size_t operator()(std::size_t i) const
+		std::size_t operator()(std::size_t i) const noexcept(true)
 		{
 			return i;
 		}

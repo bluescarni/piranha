@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <cstddef>
@@ -37,11 +36,11 @@
 #include <tuple>
 #include <type_traits>
 
-#include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -67,8 +66,9 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be a model of piranha::concept::ContainerElement. \p Hash and \p Pred must model the
- * concepts in the standard C++ library for the corresponding types of \p std::unordered_set.
+ * - \p T must satisfy piranha::is_container_element,
+ * - \p Hash must satisfy piranha::is_hash_function_object,
+ * - \p Pred must satisfy piranha::is_equality_function_object.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -83,7 +83,6 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo concept assert for hash and pred. Require non-throwing swap, comparison and hashing operators and modify docs accordingly.
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
@@ -98,7 +97,9 @@ namespace piranha
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
 {
-		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		PIRANHA_TT_CHECK(is_container_element,T);
+		PIRANHA_TT_CHECK(is_hash_function_object,Hash,T);
+		PIRANHA_TT_CHECK(is_equality_function_object,Pred,T);
 		// Make friend with debug access class.
 		template <typename U>
 		friend class debug_access;
@@ -1056,8 +1057,6 @@ class hash_set
 		 * @param[in] k input argument.
 		 * 
 		 * @return index of the destination bucket for \p k.
-		 * 
-		 * @throws unspecified any exception thrown by the hashing functor.
 		 */
 		size_type _bucket(const key_type &k) const
 		{
