@@ -33,7 +33,6 @@
 #include <vector>
 
 #include "concepts/array_key_value_type.hpp"
-#include "concepts/container_element.hpp"
 #include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
@@ -71,7 +70,7 @@ struct static_size {};
  *   in which case \p U must be a model of piranha::concept::ArrayKeyValueType,
  * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
  *   of \p T and \p Derived as base class.
- * - \p Derived must be a model of piranha::concept::ContainerElement.
+ * - \p Derived must satisfy the piranha::is_container_element type trait.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -245,7 +244,7 @@ class array_key: detail::array_key_tag
 		/// Trivial destructor.
 		~array_key() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+			PIRANHA_TT_CHECK(is_container_element,Derived);
 		}
 		/// Copy assignment operator.
 		/**

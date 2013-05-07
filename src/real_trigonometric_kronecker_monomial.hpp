@@ -22,7 +22,6 @@
 #define PIRANHA_REAL_TRIGONOMETRIC_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
@@ -37,7 +36,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "concepts/key.hpp"
 #include "config.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/degree_commons.hpp"
@@ -48,6 +46,7 @@
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -71,7 +70,7 @@ namespace piranha
  * as if the multipliers were exponents of a regular monomial (e.g., the total trigonometric degree is the sum of the multipliers).
  * Closely related is the concept of trigonometric order, calculated by adding the absolute values of the multipliers.
  * 
- * This class is a model of the piranha::concept::Key concept.
+ * This class satisfies the piranha::is_key type trait.
  * 
  * \section type_requirements Type requirements
  * 
@@ -264,7 +263,7 @@ class real_trigonometric_kronecker_monomial
 		/// Trivial destructor.
 		~real_trigonometric_kronecker_monomial() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Key<real_trigonometric_kronecker_monomial>));
+			PIRANHA_TT_CHECK(is_key,real_trigonometric_kronecker_monomial);
 		}
 		/// Defaulted copy assignment operator.
 		real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &) = default;
