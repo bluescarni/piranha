@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "config.hpp"
+#include "detail/symbol_set_fwd.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "symbol.hpp"

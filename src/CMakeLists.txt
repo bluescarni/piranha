@@ -83,6 +83,7 @@ SET(HEADERS_LIST
 	detail/toolbox.hpp
 	detail/polynomial_fwd.hpp
 	detail/config_gcc.hpp
+	detail/symbol_set_fwd.hpp
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp

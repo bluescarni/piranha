@@ -37,6 +37,7 @@
 
 #include "../src/base_term.hpp"
 #include "../src/environment.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -936,4 +937,195 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
 	BOOST_CHECK((!is_equality_function_object<efo8,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo9,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo10,int>::value));
+}
+
+struct key01 {};
+
+struct key02
+{
+	key02() = default;
+	key02(const key02 &) = default;
+	key02(key02 &&) noexcept(true);
+	key02 &operator=(const key02 &) = default;
+	key02 &operator=(key02 &&) noexcept(true);
+	key02(const symbol_set &);
+	bool operator==(const key02 &) const;
+	bool operator!=(const key02 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key02 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key03
+{
+	key03() = default;
+	key03(const key03 &) = default;
+	key03(key03 &&) noexcept(true);
+	key03 &operator=(const key03 &) = default;
+	key03 &operator=(key03 &&) noexcept(true);
+	key03(const symbol_set &);
+	bool operator==(const key03 &) const;
+	bool operator!=(const key03 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key03 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key04
+{
+	key04() = default;
+	key04(const key04 &) = default;
+	key04(key04 &&) noexcept(false);
+	key04 &operator=(const key04 &) = default;
+	key04 &operator=(key04 &&) noexcept(true);
+	key04(const symbol_set &);
+	bool operator==(const key04 &) const;
+	bool operator!=(const key04 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key04 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key05
+{
+	key05() = default;
+	key05(const key05 &) = default;
+	key05(key05 &&) noexcept(true);
+	key05 &operator=(const key05 &) = default;
+	key05 &operator=(key05 &&) noexcept(true);
+	key05(const symbol_set &);
+	bool operator==(const key05 &) const;
+	bool operator!=(const key05 &) const;
+	bool is_compatible(const symbol_set &) const;
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key05 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key06
+{
+	key06() = default;
+	key06(const key06 &) = default;
+	key06(key06 &&) noexcept(true);
+	key06 &operator=(const key06 &) = default;
+	key06 &operator=(key06 &&) noexcept(true);
+	key06(const symbol_set &);
+	bool operator==(const key06 &) const;
+	bool operator!=(const key06 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const;
+	key06 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key07
+{
+	key07() = default;
+	key07(const key07 &) = default;
+	key07(key07 &&) noexcept(true);
+	key07 &operator=(const key07 &) = default;
+	key07 &operator=(key07 &&) noexcept(true);
+	key07(const symbol_set &);
+	bool operator==(const key07 &) const;
+	bool operator!=(const key07 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key07 merge_args(const symbol_set &, const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+struct key08
+{
+	key08() = default;
+	key08(const key08 &) = default;
+	key08(key08 &&) noexcept(true);
+	key08 &operator=(const key08 &) = default;
+	key08 &operator=(key08 &&) noexcept(true);
+	key08(const symbol_set &);
+	bool operator==(const key08 &) const;
+	bool operator!=(const key08 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key08 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+};
+
+namespace std
+{
+
+template <>
+struct hash<key02>
+{
+	std::size_t operator()(const key02 &) const noexcept(true);
+};
+
+template <>
+struct hash<key03> {};
+
+template <>
+struct hash<key04>
+{
+	std::size_t operator()(const key04 &) const noexcept(true);
+};
+
+template <>
+struct hash<key05>
+{
+	std::size_t operator()(const key05 &) const noexcept(true);
+};
+
+template <>
+struct hash<key06>
+{
+	std::size_t operator()(const key06 &) const noexcept(true);
+};
+
+template <>
+struct hash<key07>
+{
+	std::size_t operator()(const key07 &) const noexcept(true);
+};
+
+template <>
+struct hash<key08>
+{
+	std::size_t operator()(const key08 &) const noexcept(true);
+};
+
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
+{
+	BOOST_CHECK(!is_key<int>::value);
+	BOOST_CHECK(!is_key<double>::value);
+	BOOST_CHECK(!is_key<long *>::value);
+	BOOST_CHECK(!is_key<long &>::value);
+	BOOST_CHECK(!is_key<long const &>::value);
+	BOOST_CHECK(!is_key<key01>::value);
+	BOOST_CHECK(!is_key<const key01 &>::value);
+	BOOST_CHECK(is_key<key02>::value);
+	BOOST_CHECK(is_key<key02 &>::value);
+	BOOST_CHECK(is_key<const key02>::value);
+	BOOST_CHECK(!is_key<key03>::value);
+	BOOST_CHECK(!is_key<key04>::value);
+	BOOST_CHECK(!is_key<key05>::value);
+	BOOST_CHECK(!is_key<key06>::value);
+	BOOST_CHECK(!is_key<key07>::value);
+	BOOST_CHECK(!is_key<key08>::value);
 }
