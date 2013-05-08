@@ -485,8 +485,12 @@ struct c_element2
 BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 {
 	BOOST_CHECK(is_container_element<int>::value);
+	BOOST_CHECK(!is_container_element<int const>::value);
 	BOOST_CHECK(is_container_element<double>::value);
 	BOOST_CHECK(is_container_element<c_element>::value);
+	BOOST_CHECK(!is_container_element<c_element const>::value);
+	BOOST_CHECK(!is_container_element<c_element &>::value);
+	BOOST_CHECK(!is_container_element<c_element const &>::value);
 	BOOST_CHECK(!is_container_element<nc_element1>::value);
 	BOOST_CHECK(!is_container_element<nc_element2>::value);
 	BOOST_CHECK(is_container_element<c_element2>::value);
@@ -727,8 +731,8 @@ BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
 	BOOST_CHECK((!is_function_object<const decltype(l3),void,int>::value));
 	BOOST_CHECK((is_function_object<decltype(l3),void,int &>::value));
 	BOOST_CHECK((!is_function_object<const decltype(l3),void,const int &>::value));
-	BOOST_CHECK((is_function_object<decltype(l3) &,void,int &>::value));
-	BOOST_CHECK((is_function_object<decltype(l3) const &,void,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l3) &,void,int &>::value));
+	BOOST_CHECK((!is_function_object<decltype(l3) const &,void,int &>::value));
 	BOOST_CHECK((is_function_object<decltype(l4),std::string,int &>::value));
 	BOOST_CHECK((!is_function_object<decltype(l4),std::string &,int &>::value));
 	BOOST_CHECK((!is_function_object<decltype(l5),std::string,int &>::value));
@@ -741,6 +745,8 @@ BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
 	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,int &&>::value));
 	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,const int &>::value));
 	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,int &>::value));
+	BOOST_CHECK((!is_function_object<const std::hash<int> &,std::size_t,int &>::value));
+	BOOST_CHECK((!is_function_object<std::hash<int> &,std::size_t,int &>::value));
 	BOOST_CHECK((!is_function_object<const std::hash<int>,int,int &>::value));
 	BOOST_CHECK((!is_function_object<const std::hash<int>,std::size_t,int &, int &>::value));
 	BOOST_CHECK((!is_function_object<const std::hash<int>,std::size_t>::value));
@@ -836,9 +842,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 	BOOST_CHECK((is_hash_function_object<std::hash<int>,int>::value));
 	BOOST_CHECK((is_hash_function_object<std::hash<int const *>,int const *>::value));
 	BOOST_CHECK((is_hash_function_object<std::hash<int const *>,int *>::value));
-	BOOST_CHECK((is_hash_function_object<std::hash<int> &,int &>::value));
-	BOOST_CHECK((is_hash_function_object<std::hash<int> const &,int &>::value));
-	BOOST_CHECK((is_hash_function_object<std::hash<int> &,const int &>::value));
+	BOOST_CHECK((!is_hash_function_object<const std::hash<int const *>,int *>::value));
+	BOOST_CHECK((!is_hash_function_object<std::hash<int> &,int &>::value));
+	BOOST_CHECK((!is_hash_function_object<std::hash<int> const &,int &>::value));
+	BOOST_CHECK((!is_hash_function_object<std::hash<int> &,const int &>::value));
 	BOOST_CHECK((is_hash_function_object<std::hash<std::string>,std::string>::value));
 	BOOST_CHECK((!is_hash_function_object<std::hash<int>,std::string>::value));
 	BOOST_CHECK((!is_hash_function_object<int,int>::value));
@@ -924,6 +931,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
 {
 	BOOST_CHECK((is_equality_function_object<std::equal_to<int>,int>::value));
 	BOOST_CHECK((is_equality_function_object<std::equal_to<int>,short>::value));
+	BOOST_CHECK((!is_equality_function_object<const std::equal_to<int>,short>::value));
+	BOOST_CHECK((!is_equality_function_object<std::equal_to<int> &,short>::value));
+	BOOST_CHECK((!is_equality_function_object<std::equal_to<int> &&,short>::value));
 	BOOST_CHECK((!is_equality_function_object<std::hash<int>,int>::value));
 	BOOST_CHECK((!is_equality_function_object<bool,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo1,int>::value));
@@ -934,6 +944,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
 	BOOST_CHECK((is_equality_function_object<efo6,int>::value));
 	BOOST_CHECK((is_equality_function_object<efo6,std::string>::value));
 	BOOST_CHECK((is_equality_function_object<efo7,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo7 const,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo7 const &,int>::value));
+	BOOST_CHECK((!is_equality_function_object<efo7 &,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo8,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo9,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo10,int>::value));
@@ -1120,8 +1133,9 @@ BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
 	BOOST_CHECK(!is_key<key01>::value);
 	BOOST_CHECK(!is_key<const key01 &>::value);
 	BOOST_CHECK(is_key<key02>::value);
-	BOOST_CHECK(is_key<key02 &>::value);
-	BOOST_CHECK(is_key<const key02>::value);
+	BOOST_CHECK(!is_key<key02 &>::value);
+	BOOST_CHECK(!is_key<const key02>::value);
+	BOOST_CHECK(!is_key<const key02 &>::value);
 	BOOST_CHECK(!is_key<key03>::value);
 	BOOST_CHECK(!is_key<key04>::value);
 	BOOST_CHECK(!is_key<key05>::value);

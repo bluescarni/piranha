@@ -339,6 +339,8 @@ const bool is_less_than_comparable<T,U>::value;
 template <typename T>
 struct is_container_element
 {
+	// NOTE: here we do not require copy assignability as in our containers we always implement
+	// copy-assign as copy-construct + move for exception safety reasons.
 	/// Value of the type trait.
 	static const bool value = std::is_default_constructible<T>::value &&
 				  std::is_copy_constructible<T>::value &&
@@ -500,7 +502,7 @@ struct is_function_object_impl<T,ReturnType,typename std::enable_if<std::is_clas
 
 /// Function object type trait.
 /**
- * This type trait will be true if \p T (disregarding reference qualifiers) is a function object returning \p ReturnType and taking
+ * This type trait will be true if \p T is a function object returning \p ReturnType and taking
  * \p Args as arguments. That is, the type trait will be \p true if the following conditions are met:
  * - \p T is a class,
  * - \p T is equipped with a call operator returning \p ReturnType and taking \p Args as arguments.
@@ -510,10 +512,9 @@ struct is_function_object_impl<T,ReturnType,typename std::enable_if<std::is_clas
 template <typename T, typename ReturnType, typename ... Args>
 class is_function_object
 {
-		typedef typename std::remove_reference<T>::type Td;
 	public:
 		/// Value of the type trait.
-		static const bool value = detail::is_function_object_impl<Td,ReturnType>::template tt<Args...>::value;
+		static const bool value = detail::is_function_object_impl<T,ReturnType>::template tt<Args...>::value;
 };
 
 template <typename T, typename ReturnType, typename ... Args>
@@ -525,7 +526,7 @@ const bool is_function_object<T,ReturnType,Args...>::value;
  * - \p T is a function object with const noexcept call operator accepting as input const \p U and returning \p std::size_t,
  * - \p T is nothrow default constructible and it satisfies piranha::is_container_element.
  * 
- * The decay types of \p T and \p U are considered in this type trait.
+ * The decay type of \p U is considered in this type trait.
  */
 template <typename T, typename U, typename = void>
 class is_hash_function_object
@@ -536,20 +537,19 @@ class is_hash_function_object
 };
 
 template <typename T, typename U>
-class is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+class is_hash_function_object<T,U,typename std::enable_if<is_function_object<typename std::add_const<T>::type,
 	std::size_t,typename std::decay<U>::type const &>::value>::type>
 {
-		typedef typename std::decay<T>::type Td;
 		typedef typename std::decay<U>::type Ud;
 	public:
-		static const bool value = detail::common_hasher_requirements<Td,Ud>::value;
+		static const bool value = detail::common_hasher_requirements<T,Ud>::value;
 };
 
 template <typename T, typename U, typename Enable>
 const bool is_hash_function_object<T,U,Enable>::value;
 
 template <typename T, typename U>
-const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+const bool is_hash_function_object<T,U,typename std::enable_if<is_function_object<typename std::add_const<T>::type,
 	std::size_t,typename std::decay<U>::type const &>::value>::type>::value;
 
 /// Type trait to detect equality function objects.
@@ -558,7 +558,7 @@ const bool is_hash_function_object<T,U,typename std::enable_if<is_function_objec
  * - \p T is a function object with const noexcept call operator accepting as input two const \p U and returning \p bool,
  * - \p T satisfies piranha::is_container_element.
  * 
- * The decay types of \p T and \p U are considered in this type trait.
+ * The decay type of \p U is considered in this type trait.
  */
 template <typename T, typename U, typename = void>
 class is_equality_function_object
@@ -569,20 +569,18 @@ class is_equality_function_object
 };
 
 template <typename T, typename U>
-class is_equality_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+class is_equality_function_object<T,U,typename std::enable_if<is_function_object<typename std::add_const<T>::type,
 	bool,typename std::decay<U>::type const &,typename std::decay<U>::type const &>::value>::type>
 {
-		typedef typename std::decay<T>::type Td;
-		typedef typename std::decay<U>::type Ud;
 	public:
-		static const bool value = is_container_element<Td>::value;
+		static const bool value = is_container_element<T>::value;
 };
 
 template <typename T, typename U, typename Enable>
 const bool is_equality_function_object<T,U,Enable>::value;
 
 template <typename T, typename U>
-const bool is_equality_function_object<T,U,typename std::enable_if<is_function_object<const typename std::decay<T>::type,
+const bool is_equality_function_object<T,U,typename std::enable_if<is_function_object<typename std::add_const<T>::type,
 	bool,typename std::decay<U>::type const &,typename std::decay<U>::type const &>::value>::type>::value;
 
 namespace detail
@@ -622,8 +620,8 @@ struct is_key_impl: sfinae_types
 
 /// Type trait to detect key types.
 /**
- * This type trait will be \p true if the decay type of \p T can be used as a key type, \p false otherwise.
- * The requisites for the decay type of \p T are the following:
+ * This type trait will be \p true if \p T can be used as a key type, \p false otherwise.
+ * The requisites for \p T are the following:
  * 
  * - it must satisfy piranha::is_container_element,
  * - it must be constructible from a const piranha::symbol_set reference,
@@ -654,23 +652,22 @@ class is_key
 };
 
 template <typename T>
-class is_key<T,typename std::enable_if<detail::is_key_impl<typename std::decay<T>::type>::value>::type>
+class is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type>
 {
-		typedef typename std::decay<T>::type Td;
 	public:
-		static const bool value = is_container_element<Td>::value &&
-					  std::is_constructible<Td,const symbol_set &>::value &&
-					  is_equality_comparable<Td>::value &&
-					  is_hashable<Td>::value &&
-					  noexcept(std::declval<Td const &>().is_compatible(std::declval<symbol_set const &>())) &&
-					  noexcept(std::declval<Td const &>().is_ignorable(std::declval<symbol_set const &>()));
+		static const bool value = is_container_element<T>::value &&
+					  std::is_constructible<T,const symbol_set &>::value &&
+					  is_equality_comparable<T>::value &&
+					  is_hashable<T>::value &&
+					  noexcept(std::declval<T const &>().is_compatible(std::declval<symbol_set const &>())) &&
+					  noexcept(std::declval<T const &>().is_ignorable(std::declval<symbol_set const &>()));
 };
 
 template <typename T, typename Enable>
 const bool is_key<T,Enable>::value;
 
 template <typename T>
-const bool is_key<T,typename std::enable_if<detail::is_key_impl<typename std::decay<T>::type>::value>::type>::value;
+const bool is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type>::value;
 
 }
 
