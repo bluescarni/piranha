@@ -306,7 +306,7 @@ const bool is_equality_comparable<T,U>::value;
 
 /// Less-than-comparable type trait.
 /**
- * This type trait is \p true if instances if type \p T can be compared to instances of
+ * This type trait is \p true if instances of type \p T can be compared to instances of
  * type \p U using the less-than operator. The operator must be non-mutable (i.e., implemented using pass-by-value or const
  * references) and must return a type implicitly convertible to \p bool.
  */
