@@ -1143,3 +1143,112 @@ BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
 	BOOST_CHECK(!is_key<key07>::value);
 	BOOST_CHECK(!is_key<key08>::value);
 }
+
+struct cf01 {};
+
+struct cf02
+{
+	cf02();
+	cf02(const int &);
+	cf02(const cf02 &);
+	cf02(cf02 &&) noexcept(true);
+	cf02 &operator=(const cf02 &);
+	cf02 &operator=(cf02 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf02 &);
+	cf02 operator-() const;
+	bool operator==(const cf02 &) const;
+	bool operator!=(const cf02 &) const;
+	cf02 &operator+=(const cf02 &);
+	cf02 &operator-=(const cf02 &);
+	cf02 operator+(const cf02 &) const;
+	cf02 operator-(const cf02 &) const;
+};
+
+struct cf03
+{
+	cf03();
+	cf03(const int &);
+	cf03(const cf03 &);
+	cf03(cf03 &&) noexcept(true);
+	cf03 &operator=(const cf03 &);
+	cf03 &operator=(cf03 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf03 &);
+	bool operator==(const cf03 &) const;
+	bool operator!=(const cf03 &) const;
+	cf03 &operator+=(const cf03 &);
+	cf03 &operator-=(const cf03 &);
+	cf03 operator+(const cf03 &) const;
+	cf03 operator-(const cf03 &) const;
+};
+
+struct cf04
+{
+	cf04();
+	cf04(const int &);
+	cf04(const cf04 &);
+	cf04(cf04 &&) noexcept(true);
+	cf04 &operator=(const cf04 &);
+	cf04 &operator=(cf04 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf04 &);
+	cf04 operator-() const;
+	cf04 &operator+=(const cf04 &);
+	cf04 &operator-=(const cf04 &);
+	cf04 operator+(const cf04 &) const;
+	cf04 operator-(const cf04 &) const;
+};
+
+struct cf05
+{
+	cf05();
+	cf05(const cf05 &);
+	cf05(cf05 &&) noexcept(true);
+	cf05 &operator=(const cf05 &);
+	cf05 &operator=(cf05 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf05 &);
+	cf05 operator-() const;
+	bool operator==(const cf05 &) const;
+	bool operator!=(const cf05 &) const;
+	cf05 &operator+=(const cf05 &);
+	cf05 &operator-=(const cf05 &);
+	cf05 operator+(const cf05 &) const;
+	cf05 operator-(const cf05 &) const;
+};
+
+struct cf06
+{
+	cf06();
+	cf06(const int &);
+	cf06(const cf06 &);
+	cf06(cf06 &&) noexcept(false);
+	cf06 &operator=(const cf06 &);
+	cf06 &operator=(cf06 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf06 &);
+	cf06 operator-() const;
+	bool operator==(const cf06 &) const;
+	bool operator!=(const cf06 &) const;
+	cf06 &operator+=(const cf06 &);
+	cf06 &operator-=(const cf06 &);
+	cf06 operator+(const cf06 &) const;
+	cf06 operator-(const cf06 &) const;
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
+{
+	BOOST_CHECK(is_cf<int>::value);
+	BOOST_CHECK(is_cf<double>::value);
+	BOOST_CHECK(is_cf<long double>::value);
+	BOOST_CHECK(is_cf<std::complex<double>>::value);
+	BOOST_CHECK(!is_cf<double *>::value);
+	BOOST_CHECK(!is_cf<double const *>::value);
+	BOOST_CHECK(!is_cf<int &>::value);
+	BOOST_CHECK(!is_cf<int const &>::value);
+	BOOST_CHECK(!is_cf<int const &>::value);
+	BOOST_CHECK(!is_cf<cf01>::value);
+	BOOST_CHECK(is_cf<cf02>::value);
+	BOOST_CHECK(!is_cf<cf02 *>::value);
+	BOOST_CHECK(!is_cf<cf02 &&>::value);
+	BOOST_CHECK(!is_cf<cf03>::value);
+	BOOST_CHECK(!is_cf<cf04>::value);
+	BOOST_CHECK(!is_cf<cf05>::value);
+	BOOST_CHECK(!is_cf<cf06>::value);
+}

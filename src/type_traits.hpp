@@ -38,8 +38,11 @@
 #include <utility>
 
 #include "detail/base_term_fwd.hpp"
+#include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/symbol_set_fwd.hpp"
+#include "print_coefficient.hpp"
+#include "print_tex_coefficient.hpp"
 
 namespace piranha
 {
@@ -582,6 +585,34 @@ const bool is_equality_function_object<T,U,Enable>::value;
 template <typename T, typename U>
 const bool is_equality_function_object<T,U,typename std::enable_if<is_function_object<typename std::add_const<T>::type,
 	bool,typename std::decay<U>::type const &,typename std::decay<U>::type const &>::value>::type>::value;
+
+/// Type trait to detect coefficient types.
+/**
+ * This type trait will be \p true if \p T can be used as a coefficient type, \p false otherwise.
+ * The requisites for \p T are the following:
+ * 
+ * - it must satisfy piranha::is_container_element,
+ * - it must satisfy piranha::has_print_coefficient and piranha::has_print_tex_coefficient,
+ * - it must satisfy piranha::has_is_zero and piranha::has_negate,
+ * - it must be equality comparable,
+ * - it must be addable and subtractable (both binary and in-place forms),
+ * - it must be constructible from integer numerals.
+ */
+template <typename T>
+class is_cf
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = is_container_element<T>::value &&
+					  has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value &&
+					  has_is_zero<T>::value && has_negate<T>::value &&
+					  is_equality_comparable<T>::value && is_addable<T>::value &&
+					  is_addable_in_place<T>::value && is_subtractable_in_place<T>::value &&
+					  is_subtractable<T>::value && std::is_constructible<T,int>::value;
+};
+
+template <typename T>
+const bool is_cf<T>::value;
 
 namespace detail
 {

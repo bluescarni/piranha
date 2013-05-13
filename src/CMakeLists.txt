@@ -70,6 +70,7 @@ SET(HEADERS_LIST
 	detail/kronecker_monomial_fwd.hpp
 	detail/config_clang.hpp
 	detail/gcc_int128.hpp
+	detail/math_tt_fwd.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
 	detail/truncator_fwd.hpp
