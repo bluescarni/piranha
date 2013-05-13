@@ -305,10 +305,10 @@ struct is_term_tester
 			BOOST_CHECK(!is_term<term_type_invalid2>::value);
 			BOOST_CHECK(!is_term<term_type_invalid3>::value);
 			BOOST_CHECK(!is_term<term_type_invalid4>::value);
-			BOOST_CHECK(is_term<term_type &>::value);
-			BOOST_CHECK(is_term<const term_type>::value);
-			BOOST_CHECK(is_term<term_type const &>::value);
-			BOOST_CHECK(is_term<term_type &&>::value);
+			BOOST_CHECK(!is_term<term_type &>::value);
+			BOOST_CHECK(!is_term<const term_type>::value);
+			BOOST_CHECK(!is_term<term_type const &>::value);
+			BOOST_CHECK(!is_term<term_type &&>::value);
 			BOOST_CHECK(!is_term<term_type *>::value);
 		}
 	};

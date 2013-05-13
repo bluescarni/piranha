@@ -190,13 +190,13 @@ struct is_term_impl
 	static const bool value = false;
 };
 
+// NOTE: put the check on container element here in order to preempt trying to access the cf/key typedefs inside references below.
 template <typename T>
-struct is_term_impl<T,typename std::enable_if<is_instance_of<T,base_term>::value>::type>
+struct is_term_impl<T,typename std::enable_if<is_instance_of<T,base_term>::value && is_container_element<T>::value>::type>
 {
 	typedef typename T::cf_type cf_type;
 	typedef typename T::key_type key_type;
-	static const bool value = is_container_element<T>::value &&
-				  std::is_constructible<T,cf_type const &,key_type const &>::value;
+	static const bool value = std::is_constructible<T,cf_type const &,key_type const &>::value;
 };
 
 }
@@ -212,10 +212,9 @@ struct is_term_impl<T,typename std::enable_if<is_instance_of<T,base_term>::value
 template <typename T>
 class is_term
 {
-		typedef typename std::decay<T>::type Td;
 	public:
 		/// Value of the type trait.
-		static const bool value = detail::is_term_impl<Td>::value;
+		static const bool value = detail::is_term_impl<T>::value;
 };
 
 template <typename T>
