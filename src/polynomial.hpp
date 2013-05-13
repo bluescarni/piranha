@@ -71,6 +71,7 @@
 #include "threading.hpp"
 #include "trigonometric_series.hpp"
 #include "truncator.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -240,6 +241,7 @@ class polynomial:
 		/// Trivial destructor.
 		~polynomial() noexcept(true)
 		{
+			PIRANHA_TT_CHECK(is_cf,polynomial);
 			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
 			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<polynomial>));
 		}

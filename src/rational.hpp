@@ -48,6 +48,7 @@
 #include "integer.hpp"
 #include "math.hpp"
 #include "print_tex_coefficient.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -772,20 +773,7 @@ class rational
 		/**
 		 * Will clear the internal \p mpq_t type.
 		 */
-		~rational() noexcept(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
-			piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
-			piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
-			if (mpq_numref(m_value)->_mp_d != 0) {
-				piranha_assert(mpq_denref(m_value)->_mp_d != 0);
-				::mpq_clear(m_value);
-			} else {
-				piranha_assert(mpq_denref(m_value)->_mp_d == 0);
-				piranha_assert(mpq_numref(m_value)->_mp_size == 0 && mpq_numref(m_value)->_mp_alloc == 0);
-				piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
-			}
-		}
+		~rational() noexcept(true);
 		/// Move assignment operator.
 		/**
 		 * @param[in] other rational to be moved.
@@ -1730,6 +1718,22 @@ struct binomial_impl<T,U,typename std::enable_if<
 	}
 };
 
+}
+
+inline rational::~rational() noexcept(true)
+{
+	PIRANHA_TT_CHECK(is_cf,rational);
+	BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
+	piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
+	piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
+	if (mpq_numref(m_value)->_mp_d != 0) {
+		piranha_assert(mpq_denref(m_value)->_mp_d != 0);
+		::mpq_clear(m_value);
+	} else {
+		piranha_assert(mpq_denref(m_value)->_mp_d == 0);
+		piranha_assert(mpq_numref(m_value)->_mp_size == 0 && mpq_numref(m_value)->_mp_alloc == 0);
+		piranha_assert(mpq_denref(m_value)->_mp_size == 0 && mpq_denref(m_value)->_mp_alloc == 0);
+	}
 }
 
 }

@@ -44,6 +44,7 @@
 #include "integer.hpp"
 #include "math.hpp"
 #include "rational.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -829,18 +830,7 @@ class PIRANHA_PUBLIC real
 		/**
 		 * Will clear the internal MPFR variable.
 		 */
-		~real() noexcept(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
-			static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
-			if (m_value->_mpfr_d) {
-				::mpfr_clear(m_value);
-			} else {
-				piranha_assert(!m_value->_mpfr_prec);
-				piranha_assert(!m_value->_mpfr_sign);
-				piranha_assert(!m_value->_mpfr_exp);
-			}
-		}
+		~real() noexcept(true);
 		/// Copy assignment operator.
 		/**
 		 * The assignment operation will deep-copy \p other (i.e., including its precision).
@@ -1891,6 +1881,20 @@ struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<
 	}
 };
 
+}
+
+inline real::~real() noexcept(true)
+{
+	PIRANHA_TT_CHECK(is_cf,real);
+	BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
+	static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
+	if (m_value->_mpfr_d) {
+		::mpfr_clear(m_value);
+	} else {
+		piranha_assert(!m_value->_mpfr_prec);
+		piranha_assert(!m_value->_mpfr_sign);
+		piranha_assert(!m_value->_mpfr_exp);
+	}
 }
 
 }
