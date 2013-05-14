@@ -43,7 +43,6 @@
 #include "config.hpp"
 #include "detail/degree_commons.hpp"
 #include "detail/km_commons.hpp"
-#include "detail/kronecker_monomial_fwd.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
@@ -85,7 +84,7 @@ namespace piranha
  * \todo abstract the km_commons in a class and use it both here and in rtkm.
  */
 template <typename T = std::make_signed<std::size_t>::type>
-class kronecker_monomial: detail::kronecker_monomial_tag
+class kronecker_monomial
 {
 	public:
 		/// Alias for \p T.

@@ -64,7 +64,6 @@ SET(HEADERS_LIST
 	t_substitutable_series.hpp
 	detail/series_multiplier_fwd.hpp
 	detail/mpfr.hpp
-	detail/kronecker_monomial_fwd.hpp
 	detail/config_clang.hpp
 	detail/gcc_int128.hpp
 	detail/math_tt_fwd.hpp
