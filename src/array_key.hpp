@@ -33,7 +33,6 @@
 
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "detail/array_key_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "static_vector.hpp"
@@ -116,7 +115,7 @@ struct static_size {};
  * \todo add missing tests with static size.
  */
 template <typename T, typename Derived>
-class array_key: detail::array_key_tag
+class array_key
 {
 		template <typename U>
 		struct determine_container_type
@@ -262,7 +261,7 @@ class array_key: detail::array_key_tag
 		 */
 		template <typename U>
 		explicit array_key(U &&x, const symbol_set &args,
-			typename std::enable_if<std::is_base_of<detail::array_key_tag,typename std::decay<U>::type>::value>::type * = nullptr)
+			typename std::enable_if<is_instance_of<typename std::decay<U>::type,array_key>::value>::type * = nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
 		{
 			piranha_assert(std::is_sorted(args.begin(),args.end()));

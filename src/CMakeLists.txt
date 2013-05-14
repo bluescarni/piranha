@@ -63,7 +63,6 @@ SET(HEADERS_LIST
 	symbol.hpp
 	t_substitutable_series.hpp
 	detail/series_multiplier_fwd.hpp
-	detail/array_key_fwd.hpp
 	detail/mpfr.hpp
 	detail/kronecker_monomial_fwd.hpp
 	detail/config_clang.hpp
