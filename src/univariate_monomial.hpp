@@ -32,12 +32,13 @@
 #include <string>
 #include <type_traits>
 
-#include "concepts/array_key_value_type.hpp"
+#include "array_key.hpp"
 #include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -51,7 +52,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be a model of piranha::concept::ArrayKeyValueType.
+ * \p T must satisfy piranha::is_array_key_value_type.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -66,7 +67,7 @@ namespace piranha
 template <typename T>
 class univariate_monomial
 {
-		BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<T>));
+		PIRANHA_TT_CHECK(is_array_key_value_type,T);
 	public:
 		/// Value type.
 		/**

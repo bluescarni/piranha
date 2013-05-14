@@ -437,7 +437,7 @@ struct tt_tester
 	{
 		typedef g_key_type<T> key_type;
 		BOOST_CHECK(is_hashable<key_type>::value);
-
+		BOOST_CHECK(is_equality_comparable<key_type>::value);
 	}
 };
 
@@ -445,4 +445,28 @@ BOOST_AUTO_TEST_CASE(array_key_type_traits_test)
 {
 
 	boost::mpl::for_each<value_types>(tt_tester());
+}
+
+struct iakvt_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		BOOST_CHECK(is_array_key_value_type<T>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_is_array_key_value_type_test)
+{
+
+	boost::mpl::for_each<value_types>(iakvt_tester());
+	BOOST_CHECK(is_array_key_value_type<double>::value);
+	BOOST_CHECK(is_array_key_value_type<long>::value);
+	BOOST_CHECK(is_array_key_value_type<unsigned long>::value);
+	BOOST_CHECK(is_array_key_value_type<short>::value);
+	BOOST_CHECK(is_array_key_value_type<char>::value);
+	BOOST_CHECK(!(is_array_key_value_type<int *>::value));
+	BOOST_CHECK(!(is_array_key_value_type<int &>::value));
+	BOOST_CHECK(!(is_array_key_value_type<const int>::value));
+	BOOST_CHECK(!(is_array_key_value_type<const int &>::value));
 }

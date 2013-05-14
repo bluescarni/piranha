@@ -22,7 +22,6 @@
 #define PIRANHA_ARRAY_KEY_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -32,8 +31,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "concepts/array_key_value_type.hpp"
-#include "concepts/crtp.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/array_key_fwd.hpp"
@@ -45,6 +42,37 @@
 
 namespace piranha
 {
+
+/// Type trait for types suitable for use as values in piranha::array_key.
+/**
+ * The requisites for type \p T are the following:
+ * - it must satisfy piranha::is_container_element,
+ * - it must be constructible from \p int,
+ * - references must be assignable from \p T,
+ * - it must be equality-comparable and less-than comparable,
+ * - it must be addable and subtractable (both in binary and unary form),
+ * - it must satisfy piranha::is_ostreamable,
+ * - it must satisfy piranha::has_is_zero,
+ * - it must satisfy piranha:::is_hashable.
+ */
+template <typename T>
+class is_array_key_value_type
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = is_container_element<T>::value &&
+					  std::is_constructible<T,int>::value &&
+					  std::is_assignable<T &,T>::value &&
+					  is_equality_comparable<T>::value &&
+					  is_less_than_comparable<T>::value &&
+					  is_addable<T>::value && is_addable_in_place<T>::value &&
+					  is_subtractable<T>::value && is_subtractable_in_place<T>::value &&
+					  is_ostreamable<T>::value && has_is_zero<T>::value &&
+					  is_hashable<T>::value;
+};
+
+template <typename T>
+const bool is_array_key_value_type<T>::value;
 
 /// Static size tag for piranha::array_key.
 /**
@@ -66,10 +94,9 @@ struct static_size {};
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must either be a model of piranha::concept::ArrayKeyValueType, or piranha::static_size of \p U and \p MaxSize,
- *   in which case \p U must be a model of piranha::concept::ArrayKeyValueType,
- * - \p Derived must be a model of piranha::concept::CRTP, with piranha::array_key
- *   of \p T and \p Derived as base class.
+ * - \p T must either satisfy piranha::is_array_key_value_type, or be piranha::static_size of \p U and \p MaxSize,
+ *   in which case \p U must satisfy piranha::is_array_key_value_type,
+ * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
  * - \p Derived must satisfy the piranha::is_container_element type trait.
  * 
  * \section exception_safety Exception safety guarantee
@@ -91,11 +118,10 @@ struct static_size {};
 template <typename T, typename Derived>
 class array_key: detail::array_key_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::CRTP<array_key<T,Derived>,Derived>));
 		template <typename U>
 		struct determine_container_type
 		{
-			BOOST_CONCEPT_ASSERT((concept::ArrayKeyValueType<U>));
+			PIRANHA_TT_CHECK(is_array_key_value_type,U);
 			typedef std::vector<U> type;
 		};
 		template <typename U, std::uint_least8_t MaxSize>
@@ -245,6 +271,7 @@ class array_key: detail::array_key_tag
 		~array_key() noexcept(true)
 		{
 			PIRANHA_TT_CHECK(is_container_element,Derived);
+			PIRANHA_TT_CHECK(std::is_base_of,array_key,Derived);
 		}
 		/// Copy assignment operator.
 		/**

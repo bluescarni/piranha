@@ -25,7 +25,6 @@ SET(HEADERS_LIST
 	concepts/differentiable_coefficient.hpp
 	concepts/truncator.hpp
 	concepts/multipliable_term.hpp
-	concepts/array_key_value_type.hpp
 	concepts/container_element.hpp
 	concepts/power_series.hpp
 	concepts/term.hpp
