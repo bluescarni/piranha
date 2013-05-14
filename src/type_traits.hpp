@@ -37,7 +37,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "detail/base_term_fwd.hpp"
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/symbol_set_fwd.hpp"

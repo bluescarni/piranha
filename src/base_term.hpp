@@ -28,7 +28,6 @@
 
 #include "concepts/coefficient.hpp"
 #include "concepts/key.hpp"
-#include "concepts/term.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
@@ -45,7 +44,7 @@ namespace piranha
  * \section type_requirements Type requirements
  * 
  * - \p Derived must derive from piranha::base_term of \p Cf, \p Key and \p Derived.
- * - \p Derived must be a model of piranha::concept::Term.
+ * - \p Derived must satisfy piranha::is_term.
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
  * 
@@ -100,11 +99,7 @@ class base_term: detail::base_term_tag
 			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
 			>::type * = nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
-		~base_term() noexcept(true)
-		{
-			PIRANHA_TT_CHECK(std::is_base_of,base_term,Derived);
-			BOOST_CONCEPT_ASSERT((concept::Term<Derived>));
-		}
+		~base_term() noexcept(true);
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
@@ -217,6 +212,13 @@ class is_term
 
 template <typename T>
 const bool is_term<T>::value;
+
+template <typename Cf, typename Key, typename Derived>
+inline base_term<Cf,Key,Derived>::~base_term() noexcept(true)
+{
+	PIRANHA_TT_CHECK(std::is_base_of,base_term,Derived);
+	PIRANHA_TT_CHECK(is_term,Derived);
+}
 
 }
 
