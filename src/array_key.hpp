@@ -387,11 +387,9 @@ class array_key
 		 *   values of all the elements of the container, calculated via \p std::hash,
 		 *   with the hash value of the first element as seed value.
 		 * 
-		 * @throws unspecified any exception thrown by <tt>operator()</tt> of \p std::hash of \p value_type.
-		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
 		 */
-		std::size_t hash() const
+		std::size_t hash() const noexcept(true)
 		{
 			const auto size = m_container.size();
 			switch (size) {
@@ -615,8 +613,6 @@ struct hash<piranha::array_key<T,Derived>>
 	 * @param[in] a piranha::array_key whose hash value will be returned.
 	 * 
 	 * @return piranha::array_key::hash().
-	 * 
-	 * @throws unspecified any exception thrown by piranha::array_key::hash().
 	 */
 	result_type operator()(const argument_type &a) const noexcept(true)
 	{
