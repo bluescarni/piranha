@@ -27,7 +27,6 @@
 #include <unordered_set>
 
 #include "concepts/coefficient.hpp"
-#include "concepts/crtp.hpp"
 #include "concepts/key.hpp"
 #include "concepts/term.hpp"
 #include "detail/base_term_fwd.hpp"
@@ -45,8 +44,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Derived must be a model of piranha::concept::CRTP, with piranha::base_term
- *   of \p Cf, \p Key and \p Derived as base class.
+ * - \p Derived must derive from piranha::base_term of \p Cf, \p Key and \p Derived.
  * - \p Derived must be a model of piranha::concept::Term.
  * - \p Cf must be a model of piranha::concept::Coefficient.
  * - \p Key must be a model of piranha::concept::Key.
@@ -66,7 +64,6 @@ namespace piranha
 template <typename Cf, typename Key, typename Derived>
 class base_term: detail::base_term_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::CRTP<base_term<Cf,Key,Derived>,Derived>));
 		BOOST_CONCEPT_ASSERT((concept::Coefficient<Cf>));
 		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
 	public:
@@ -105,6 +102,7 @@ class base_term: detail::base_term_tag
 		/// Trivial destructor.
 		~base_term() noexcept(true)
 		{
+			PIRANHA_TT_CHECK(std::is_base_of,base_term,Derived);
 			BOOST_CONCEPT_ASSERT((concept::Term<Derived>));
 		}
 		/// Copy assignment operator.

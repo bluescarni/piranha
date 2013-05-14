@@ -42,7 +42,6 @@
 
 #include "base_term.hpp"
 #include "concepts/container_element.hpp"
-#include "concepts/crtp.hpp"
 #include "concepts/differentiable_term.hpp"
 #include "concepts/term.hpp"
 #include "concepts/truncator.hpp"
@@ -111,8 +110,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
  * \section type_requirements Type requirements
  * 
  * - \p Term must be a model of piranha::concept::Term.
- * - \p Derived must be a model of piranha::concept::CRTP, with piranha::series
- *   of \p Term and \p Derived as base class.
+ * - \p Derived must derive from piranha::series of \p Term and \p Derived.
  * - \p Derived must be a model of piranha::concept::ContainerElement.
  * 
  * \section exception_safety Exception safety guarantee
@@ -136,7 +134,6 @@ template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag
 {
 		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
-		BOOST_CONCEPT_ASSERT((concept::CRTP<series<Term,Derived>,Derived>));
 	public:
 		/// Alias for term type.
 		typedef Term term_type;
@@ -905,6 +902,7 @@ class series: series_binary_operators, detail::series_tag
 		/// Trivial destructor.
 		~series() noexcept(true)
 		{
+			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
 			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
 			piranha_assert(destruction_checks());
 		}
