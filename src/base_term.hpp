@@ -21,13 +21,10 @@
 #ifndef PIRANHA_BASE_TERM_HPP
 #define PIRANHA_BASE_TERM_HPP
 
-#include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <type_traits>
 #include <unordered_set>
 
-#include "concepts/coefficient.hpp"
-#include "concepts/key.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
@@ -45,8 +42,8 @@ namespace piranha
  * 
  * - \p Derived must derive from piranha::base_term of \p Cf, \p Key and \p Derived.
  * - \p Derived must satisfy piranha::is_term.
- * - \p Cf must be a model of piranha::concept::Coefficient.
- * - \p Key must be a model of piranha::concept::Key.
+ * - \p Cf must satisfy piranha::is_cf.
+ * - \p Key must satisfy piranha::is_key.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -63,8 +60,8 @@ namespace piranha
 template <typename Cf, typename Key, typename Derived>
 class base_term: detail::base_term_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::Coefficient<Cf>));
-		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
+		PIRANHA_TT_CHECK(is_cf,Cf);
+		PIRANHA_TT_CHECK(is_key,Key);
 	public:
 		/// Alias for coefficient type.
 		typedef Cf cf_type;
