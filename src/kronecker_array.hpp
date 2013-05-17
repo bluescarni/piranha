@@ -91,6 +91,9 @@ class kronecker_array
 		typedef std::size_t size_type;
 	private:
 		// Static vector of limits built at startup.
+		// NOTE: here we should not have problems when interoperating with libraries that modify the GMP allocation functions,
+		// as we do not store any static piranha::integer: the creation and destruction of integer objects is confined to the determine_limit()
+		// function.
 		static const limits_type m_limits;
 		// Determine limits for m-dimensional vectors.
 		static limit_type determine_limit(const size_type &m)

@@ -47,6 +47,10 @@ namespace piranha
  * \section move_semantics Move semantics
  * 
  * This class has only global state, and hence has trivial move semantics.
+ * 
+ * \todo if the limit here stays as a piranha::integer/rational, we need a way to deal with libraries that
+ * might redefine the GMP memory allocation functions -> we might end up constructing a static GMP object
+ * with the standard routine and destroy it with the modified ones, or viceversa.
  */
 // NOTE: depending on performance measurements, a possible way to reduce the
 // ovrhead of mutexes here is to use an atomic variable for the mode: when getting
