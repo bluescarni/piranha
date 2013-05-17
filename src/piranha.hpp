@@ -105,6 +105,8 @@
  * \todo should we always use piranha when calling functions in order to prevent ADL?
  * \todo replace uses of iterator facade with inheritance from std::iterator.
  * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
+ * \todo deuglify enable_if by moving enabling conditions in template list with default value:
+ * http://loungecpp.wikidot.com/tips-and-tricks:enable-if-for-c-11
  */
 namespace piranha
 {
