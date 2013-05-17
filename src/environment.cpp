@@ -54,6 +54,7 @@ environment::environment()
 	}
 	if (std::atexit(environment::cleanup_function)) {
 		std::cout << "Unable to register cleanup function with std::atexit().\n";
+		std::cout.flush();
 		std::abort();
 	}
 	m_inited = true;
