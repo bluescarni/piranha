@@ -261,7 +261,7 @@ class array_key
 		 */
 		template <typename U>
 		explicit array_key(U &&x, const symbol_set &args,
-			typename std::enable_if<is_instance_of<typename std::decay<U>::type,array_key>::value>::type * = nullptr)
+			typename std::enable_if<is_instance_of<typename std::decay<U>::type,piranha::array_key>::value>::type * = nullptr)
 			:m_container(forward_for_construction(std::forward<U>(x),args))
 		{
 			piranha_assert(std::is_sorted(args.begin(),args.end()));
