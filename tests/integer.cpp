@@ -260,10 +260,10 @@ static inline void inf_conversion_test()
 BOOST_AUTO_TEST_CASE(integer_conversion_test)
 {
 	piranha::integer bigint(get_big_int());
-	BOOST_CHECK_THROW(static_cast<int>(bigint),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<int>(bigint),std::overflow_error);
 	piranha::integer max_unsigned(boost::numeric::bounds<unsigned>::highest());
-	BOOST_CHECK_THROW(static_cast<int>(max_unsigned),std::overflow_error);
-	BOOST_CHECK_NO_THROW(static_cast<unsigned>(max_unsigned));
+	BOOST_CHECK_THROW((void)static_cast<int>(max_unsigned),std::overflow_error);
+	BOOST_CHECK_NO_THROW((void)static_cast<unsigned>(max_unsigned));
 	// Conversion that will generate infinity.
 	inf_conversion_test<float>();
 	inf_conversion_test<double>();
