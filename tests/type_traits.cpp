@@ -709,16 +709,22 @@ struct fo6
 
 void not_fo();
 
+struct l5
+{
+	std::string &operator()(int &);
+};
+
+struct l6
+{
+	std::string const &operator()(int &);
+};
+
 BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
 {
 	auto l1 = [](){};
 	auto l2 = [](const int &){};
 	auto l3 = [](int &){};
 	auto l4 = [](int &) {return std::string{};};
-	std::string str1;
-	auto l5 = [&str1](int &) -> std::string & {return str1;};
-	std::string str2;
-	auto l6 = [&str2](int &) -> std::string const & {return str2;};
 	BOOST_CHECK((!is_function_object<int,void>::value));
 	BOOST_CHECK((is_function_object<decltype(l1),void>::value));
 	BOOST_CHECK((is_function_object<const decltype(l1),void>::value));
@@ -735,12 +741,12 @@ BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
 	BOOST_CHECK((!is_function_object<decltype(l3) const &,void,int &>::value));
 	BOOST_CHECK((is_function_object<decltype(l4),std::string,int &>::value));
 	BOOST_CHECK((!is_function_object<decltype(l4),std::string &,int &>::value));
-	BOOST_CHECK((!is_function_object<decltype(l5),std::string,int &>::value));
-	BOOST_CHECK((is_function_object<decltype(l5),std::string &,int &>::value));
-	BOOST_CHECK((!is_function_object<decltype(l5),std::string const &,int &>::value));
-	BOOST_CHECK((!is_function_object<decltype(l6),std::string,int &>::value));
-	BOOST_CHECK((!is_function_object<decltype(l6),std::string &,int &>::value));
-	BOOST_CHECK((is_function_object<decltype(l6),std::string const &,int &>::value));
+	BOOST_CHECK((!is_function_object<l5,std::string,int &>::value));
+	BOOST_CHECK((is_function_object<l5,std::string &,int &>::value));
+	BOOST_CHECK((!is_function_object<l5,std::string const &,int &>::value));
+	BOOST_CHECK((!is_function_object<l6,std::string,int &>::value));
+	BOOST_CHECK((!is_function_object<l6,std::string &,int &>::value));
+	BOOST_CHECK((is_function_object<l6,std::string const &,int &>::value));
 	BOOST_CHECK((is_function_object<std::hash<int>,std::size_t,int>::value));
 	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,int &&>::value));
 	BOOST_CHECK((is_function_object<const std::hash<int>,std::size_t,const int &>::value));
@@ -1238,14 +1244,21 @@ BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
 	BOOST_CHECK(is_cf<double>::value);
 	BOOST_CHECK(is_cf<long double>::value);
 	BOOST_CHECK(is_cf<std::complex<double>>::value);
-	BOOST_CHECK(!is_cf<double *>::value);
-	BOOST_CHECK(!is_cf<double const *>::value);
+	// NOTE: the checks on the pointers here produce warnings in clang. The reason is that
+	// ptr1 -= ptr2
+	// expands to
+	// ptr1 = ptr1 - ptr2
+	// where ptr1 - ptr2 is some integer value (due to pointer arith.) that then gets assigned back to a pointer. It is not
+	// entirely clear if this should be a hard error (GCC) or just a warning (clang) so for now it is better to simply disable
+	// the check. Note that the same problem would be in is_subtractable_in_place if we checked for pointers there.
+	// BOOST_CHECK(!is_cf<double *>::value);
+	// BOOST_CHECK(!is_cf<double const *>::value);
 	BOOST_CHECK(!is_cf<int &>::value);
 	BOOST_CHECK(!is_cf<int const &>::value);
 	BOOST_CHECK(!is_cf<int const &>::value);
 	BOOST_CHECK(!is_cf<cf01>::value);
 	BOOST_CHECK(is_cf<cf02>::value);
-	BOOST_CHECK(!is_cf<cf02 *>::value);
+	// BOOST_CHECK(!is_cf<cf02 *>::value);
 	BOOST_CHECK(!is_cf<cf02 &&>::value);
 	BOOST_CHECK(!is_cf<cf03>::value);
 	BOOST_CHECK(!is_cf<cf04>::value);
