@@ -129,16 +129,16 @@ class kronecker_array
 				piranha_assert(diff >= 0);
 				try {
 					// Try to cast everything to hardware integers.
-					static_cast<int_type>(h_min);
-					static_cast<int_type>(h_max);
+					(void)static_cast<int_type>(h_min);
+					(void)static_cast<int_type>(h_max);
 					// Here it is +1 because h_max - h_min must be strictly less than the maximum value
 					// of int_type - see paper.
-					static_cast<int_type>(diff + 1);
+					(void)static_cast<int_type>(diff + 1);
 					// NOTE: check casting individual elements too of m/M vec. This is because in the paper we assume
 					// m and M representable, but here we do not know really.
 					for (size_type i = 0u; i < M_vec.size(); ++i) {
-						static_cast<int_type>(M_vec[i]);
-						static_cast<int_type>(m_vec[i]);
+						(void)static_cast<int_type>(M_vec[i]);
+						(void)static_cast<int_type>(m_vec[i]);
 					}
 				} catch (const std::overflow_error &) {
 					std::vector<int_type> tmp;
