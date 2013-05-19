@@ -29,6 +29,7 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -252,7 +253,10 @@ struct degree_tester
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.degree(vs1) == -2);
 		BOOST_CHECK(k5.degree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.degree({},vs1) == 0);
+		// NOTE: here it seems the compilation error arising when only {} is used (as opposed
+		// to std::set<std::string>{}) is a bug in libc++. See:
+		// http://clang-developers.42468.n3.nabble.com/C-11-error-about-initializing-explicit-constructor-with-td4029849.html
+		BOOST_CHECK(k5.degree(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.degree({"f"},vs1) == 0);
 		BOOST_CHECK(k5.degree({"a","b"},vs1) == -2);
 		BOOST_CHECK(k5.degree({"a","c"},vs1) == -1);
@@ -261,7 +265,7 @@ struct degree_tester
 		BOOST_CHECK(k5.degree({"A","a"},vs1) == -1);
 		BOOST_CHECK(k5.ldegree(vs1) == -2);
 		BOOST_CHECK(k5.ldegree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.ldegree({},vs1) == 0);
+		BOOST_CHECK(k5.ldegree(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.ldegree({"f"},vs1) == 0);
 		BOOST_CHECK(k5.ldegree({"a","b"},vs1) == -2);
 		BOOST_CHECK(k5.ldegree({"a","c"},vs1) == -1);
