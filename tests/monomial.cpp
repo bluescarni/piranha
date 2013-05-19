@@ -28,6 +28,7 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -289,7 +290,7 @@ struct degree_tester
 		BOOST_CHECK_EQUAL(k2.degree(v),T(2) + T(3));
 		BOOST_CHECK_THROW(k2.degree(symbol_set{}),std::invalid_argument);
 		// Partial degree.
-		BOOST_CHECK(k2.degree({},v) == T(0));
+		BOOST_CHECK(k2.degree(std::set<std::string>{},v) == T(0));
 		BOOST_CHECK(k2.degree({"a"},v) == T(2));
 		BOOST_CHECK(k2.degree({"A"},v) == T(0));
 		BOOST_CHECK(k2.degree({"z"},v) == T(0));
@@ -299,7 +300,7 @@ struct degree_tester
 		BOOST_CHECK(k2.degree({"a","b","z"},v) == T(3) + T(2));
 		BOOST_CHECK(k2.degree({"a","b","A"},v) == T(3) + T(2));
 		BOOST_CHECK(k2.degree({"a","b","A","z"},v) == T(3) + T(2));
-		BOOST_CHECK(k2.ldegree({},v) == T(0));
+		BOOST_CHECK(k2.ldegree(std::set<std::string>{},v) == T(0));
 		BOOST_CHECK(k2.ldegree({"a"},v) == T(2));
 		BOOST_CHECK(k2.ldegree({"A"},v) == T(0));
 		BOOST_CHECK(k2.ldegree({"z"},v) == T(0));
