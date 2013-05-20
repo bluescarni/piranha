@@ -163,7 +163,7 @@ class t_substitutable_series: public Series,detail::t_substitutable_series_tag,d
 		 */
 		template <typename T, typename U>
 		typename t_subs_utils<T,U>::type t_subs(const std::string &name, const T &c, const U &s,
-			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value>::type * = nullptr) const
+			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0>::type * = nullptr) const
 		{
 			typedef typename t_subs_utils<T,U>::type ret_type;
 			ret_type retval(0);
