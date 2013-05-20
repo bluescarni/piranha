@@ -27,6 +27,8 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <set>
+#include <string>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -280,8 +282,8 @@ struct degree_tester
 		v.add(symbol("b"));
 		BOOST_CHECK_THROW(k0.degree(v),std::invalid_argument);
 		// Partial degree.
-		BOOST_CHECK_THROW(k0.degree({},v),std::invalid_argument);
-		BOOST_CHECK_THROW(k0.ldegree({},v),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.degree(std::set<std::string>{},v),std::invalid_argument);
+		BOOST_CHECK_THROW(k0.ldegree(std::set<std::string>{},v),std::invalid_argument);
 		BOOST_CHECK_THROW(k0.degree({"a","b"},v2),std::invalid_argument);
 		BOOST_CHECK_THROW(k0.ldegree({"a","b"},v2),std::invalid_argument);
 		k0.set_exponent(0);
