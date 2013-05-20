@@ -55,13 +55,13 @@ struct degree_tester
 			typedef polynomial<Cf,Expo> p_type1;
 			typedef polynomial<polynomial<Cf,int>,Expo> p_type11;
 			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.degree())>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.degree({}))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.degree(std::set<std::string>{}))>::value));
 			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.ldegree())>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.ldegree({}))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.ldegree(std::set<std::string>{}))>::value));
 			BOOST_CHECK(p_type1{}.degree() == 0);
-			BOOST_CHECK(p_type1{}.degree({}) == 0);
+			BOOST_CHECK(p_type1{}.degree(std::set<std::string>{}) == 0);
 			BOOST_CHECK(p_type1{}.ldegree() == 0);
-			BOOST_CHECK(p_type1{}.ldegree({}) == 0);
+			BOOST_CHECK(p_type1{}.ldegree(std::set<std::string>{}) == 0);
 			BOOST_CHECK((std::is_same<Expo,decltype(p_type1{}.degree())>::value));
 			BOOST_CHECK(p_type1{"x"}.degree() == 1);
 			BOOST_CHECK(p_type1{"x"}.degree({"x"}) == 1);
