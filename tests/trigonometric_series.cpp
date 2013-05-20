@@ -23,6 +23,9 @@
 #define BOOST_TEST_MODULE trigonometric_series_test
 #include <boost/test/unit_test.hpp>
 
+#include <set>
+#include <string>
+
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/poisson_series.hpp"
@@ -56,8 +59,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL((y * cos(x - y) + x).t_degree({"y","x","y"}),0);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_degree({"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_degree({"x"}),1);
-	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_degree({}),0);
-	BOOST_CHECK_EQUAL(p_type1{}.t_degree({}),0);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_degree(std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.t_degree(std::set<std::string>{}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_degree({"x"}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_degree(),0);
 	BOOST_CHECK_EQUAL(p_type1{2}.t_degree(),0);
@@ -79,8 +82,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL((y * cos(x - y) + x).t_ldegree({"y","x","y"}),0);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_ldegree({"y","x","y","z"}),0);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_ldegree({"x"}),1);
-	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_ldegree({}),0);
-	BOOST_CHECK_EQUAL(p_type1{}.t_ldegree({}),0);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_ldegree(std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.t_ldegree(std::set<std::string>{}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_ldegree({"x"}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_ldegree(),0);
 	BOOST_CHECK_EQUAL(p_type1{2}.t_ldegree(),0);
@@ -103,8 +106,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL((y * cos(x - y) + x).t_order({"y","x","y"}),2);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_order({"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_order({"x"}),1);
-	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_order({}),0);
-	BOOST_CHECK_EQUAL(p_type1{}.t_order({}),0);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_order(std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.t_order(std::set<std::string>{}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_order({"x"}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_order(),0);
 	BOOST_CHECK_EQUAL(p_type1{2}.t_order(),0);
@@ -127,8 +130,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_lorder({"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + cos(x + y)),{"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL((y * cos(x - y) + cos(x + y)).t_lorder({"x"}),1);
-	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_lorder({}),0);
-	BOOST_CHECK_EQUAL(p_type1{}.t_lorder({}),0);
+	BOOST_CHECK_EQUAL((y * sin(x - y) + cos(x + y)).t_lorder(std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.t_lorder(std::set<std::string>{}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_lorder({"x"}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.t_lorder(),0);
 	BOOST_CHECK_EQUAL(p_type1{2}.t_lorder(),0);
