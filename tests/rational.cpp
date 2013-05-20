@@ -279,10 +279,10 @@ static inline void inf_conversion_test()
 BOOST_AUTO_TEST_CASE(rational_conversion_test)
 {
 	rational bigint(get_big_int());
-	BOOST_CHECK_THROW(static_cast<int>(bigint),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<int>(bigint),std::overflow_error);
 	rational max_unsigned(boost::numeric::bounds<unsigned>::highest());
-	BOOST_CHECK_THROW(static_cast<int>(max_unsigned),std::overflow_error);
-	BOOST_CHECK_NO_THROW(static_cast<unsigned>(max_unsigned));
+	BOOST_CHECK_THROW((void)static_cast<int>(max_unsigned),std::overflow_error);
+	BOOST_CHECK_NO_THROW((void)static_cast<unsigned>(max_unsigned));
 	// Conversion that will generate infinity.
 	inf_conversion_test<float>();
 	inf_conversion_test<double>();
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(rational_conversion_test)
 	BOOST_CHECK(static_cast<integer>(rational(3,2)) == 1);
 	BOOST_CHECK(static_cast<int>(rational(-256,3)) == -85);
 	BOOST_CHECK(static_cast<unsigned>(rational(256,3)) == 85u);
-	BOOST_CHECK_THROW(static_cast<unsigned>(rational(-1)),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<unsigned>(rational(-1)),std::overflow_error);
 }
 
 struct check_arithmetic_in_place_add
