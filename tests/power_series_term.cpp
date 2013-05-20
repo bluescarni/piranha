@@ -25,6 +25,8 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <set>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -54,28 +56,28 @@ struct degree_tester
 			typedef polynomial_term<Cf,int> term_type1;
 			typedef typename term_type1::key_type key_type1;
 			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree(std::declval<const symbol_set &>()))>::value));
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree(std::set<std::string>{},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree(std::declval<const symbol_set &>()))>::value));
-			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree(std::set<std::string>{},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK(term_type1{}.degree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type1{1,key_type1{1}}.degree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type1{1,key_type1{1,2}}.degree(symbol_set{symbol("a"),symbol("b")}) == 3));
 			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.degree(symbol_set{}))>::value));
 			BOOST_CHECK((term_type1{1,key_type1{1,2}}.degree({"b"},symbol_set{symbol("a"),symbol("b")}) == 2));
-			BOOST_CHECK((term_type1{1,key_type1{1,2}}.degree({},symbol_set{symbol("a"),symbol("b")}) == 0));
+			BOOST_CHECK((term_type1{1,key_type1{1,2}}.degree(std::set<std::string>{},symbol_set{symbol("a"),symbol("b")}) == 0));
 			BOOST_CHECK(term_type1{}.ldegree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type1{1,key_type1{1}}.ldegree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type1{1,key_type1{1,2}}.ldegree(symbol_set{symbol("a"),symbol("b")}) == 3));
 			BOOST_CHECK((std::is_same<int,decltype(term_type1{}.ldegree(symbol_set{}))>::value));
 			BOOST_CHECK((term_type1{1,key_type1{1,2}}.ldegree({"b"},symbol_set{symbol("a"),symbol("b")}) == 2));
-			BOOST_CHECK((term_type1{1,key_type1{1,2}}.ldegree({},symbol_set{symbol("a"),symbol("b")}) == 0));
+			BOOST_CHECK((term_type1{1,key_type1{1,2}}.ldegree(std::set<std::string>{},symbol_set{symbol("a"),symbol("b")}) == 0));
 			typedef polynomial_term<polynomial<Cf,Expo>,int> term_type2;
 			typedef typename term_type2::cf_type cf_type2;
 			typedef typename term_type2::key_type key_type2;
 			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree(std::declval<const symbol_set &>()))>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.degree(std::set<std::string>{},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree(std::declval<const symbol_set &>()))>::value));
-			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree({},std::declval<const symbol_set &>()))>::value));
+			BOOST_CHECK((std::is_same<Expo,decltype(term_type2{}.ldegree(std::set<std::string>{},std::declval<const symbol_set &>()))>::value));
 			BOOST_CHECK(term_type2{}.degree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1}}.degree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.degree(symbol_set{symbol("a"),symbol("b")}) == 3));
@@ -84,13 +86,13 @@ struct degree_tester
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.degree({"b"},symbol_set{symbol("a"),symbol("b")}) == 2));
 			BOOST_CHECK((term_type2{cf_type2("b"),key_type2{1,2}}.degree({"b"},symbol_set{symbol("a"),symbol("b")}) == 3));
 			BOOST_CHECK((term_type2{cf_type2("a"),key_type2{1,2}}.degree({"b"},symbol_set{symbol("a"),symbol("b")}) == 2));
-			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.degree({},symbol_set{symbol("a"),symbol("b")}) == 0));
+			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.degree(std::set<std::string>{},symbol_set{symbol("a"),symbol("b")}) == 0));
 			BOOST_CHECK(term_type2{}.ldegree(symbol_set{}) == 0);
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1}}.ldegree(symbol_set{symbol("a")}) == 1));
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.ldegree(symbol_set{symbol("a"),symbol("b")}) == 3));
 			BOOST_CHECK((std::is_same<decltype(std::declval<Expo>() + std::declval<int>()),decltype(term_type2{}.ldegree(symbol_set{}))>::value));
 			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.ldegree({"b"},symbol_set{symbol("a"),symbol("b")}) == 2));
-			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.ldegree({},symbol_set{symbol("a"),symbol("b")}) == 0));
+			BOOST_CHECK((term_type2{cf_type2(1),key_type2{1,2}}.ldegree(std::set<std::string>{},symbol_set{symbol("a"),symbol("b")}) == 0));
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b"),key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 1));
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b") * cf_type2("a"),key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 2));
 			BOOST_CHECK((term_type2{cf_type2("a") + cf_type2("b") * cf_type2("a") + 1,key_type2{1,2}}.ldegree({"a"},symbol_set{symbol("a"),symbol("b")}) == 1));
