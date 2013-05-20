@@ -29,6 +29,7 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -325,7 +326,7 @@ struct t_degree_tester
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.t_degree(vs1) == -2);
 		BOOST_CHECK(k5.t_degree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.t_degree({},vs1) == 0);
+		BOOST_CHECK(k5.t_degree(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_degree({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_degree({"a","b"},vs1) == -2);
 		BOOST_CHECK(k5.t_degree({"a","c"},vs1) == -1);
@@ -334,7 +335,7 @@ struct t_degree_tester
 		BOOST_CHECK(k5.t_degree({"A","a"},vs1) == -1);
 		BOOST_CHECK(k5.t_ldegree(vs1) == -2);
 		BOOST_CHECK(k5.t_ldegree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.t_ldegree({},vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_ldegree({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_ldegree({"a","b"},vs1) == -2);
 		BOOST_CHECK(k5.t_ldegree({"a","c"},vs1) == -1);
@@ -373,7 +374,7 @@ struct t_order_tester
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
@@ -382,7 +383,7 @@ struct t_order_tester
 		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
@@ -392,7 +393,7 @@ struct t_order_tester
 		k5 = k_type({-1,1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
@@ -401,7 +402,7 @@ struct t_order_tester
 		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
@@ -411,7 +412,7 @@ struct t_order_tester
 		k5 = k_type({1,-1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({},vs1) == 0);
+		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
@@ -420,7 +421,7 @@ struct t_order_tester
 		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({},vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
 		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
 		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
