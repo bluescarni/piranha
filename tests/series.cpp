@@ -1108,12 +1108,12 @@ struct identity_tester
 		void operator()(const Expo &)
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
-			+p_type1{} == +p_type1{};
-			+p_type1{} == p_type1{};
-			p_type1{} == +p_type1{};
-			p_type1("x") == +p_type1("x");
-			+p_type1("x") == p_type1("x");
-			+p_type1("x") == +p_type1("x");
+			BOOST_CHECK(+p_type1{} == +p_type1{});
+			BOOST_CHECK(+p_type1{} == p_type1{});
+			BOOST_CHECK(p_type1{} == +p_type1{});
+			BOOST_CHECK(p_type1("x") == +p_type1("x"));
+			BOOST_CHECK(+p_type1("x") == p_type1("x"));
+			BOOST_CHECK(+p_type1("x") == +p_type1("x"));
 		}
 	};
 	template <typename Cf>
@@ -1137,10 +1137,10 @@ struct negation_tester
 		void operator()(const Expo &)
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
-			+p_type1{} == -(-(+p_type1{}));
-			-(-(+p_type1{})) == p_type1{};
-			-p_type1("x") == -(+p_type1("x"));
-			-(+p_type1("x")) == -p_type1("x");
+			BOOST_CHECK(+p_type1{} == -(-(+p_type1{})));
+			BOOST_CHECK(-(-(+p_type1{})) == p_type1{});
+			BOOST_CHECK(-p_type1("x") == -(+p_type1("x")));
+			BOOST_CHECK(-(+p_type1("x")) == -p_type1("x"));
 		}
 	};
 	template <typename Cf>
