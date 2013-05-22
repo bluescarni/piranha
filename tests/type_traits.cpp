@@ -325,11 +325,60 @@ BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_in_place_test)
 	BOOST_CHECK((is_multipliable_in_place<int,double>::value));
 	BOOST_CHECK((is_multipliable_in_place<double,int>::value));
 	BOOST_CHECK((is_multipliable_in_place<std::complex<double>,double>::value));
+	BOOST_CHECK((!is_multipliable_in_place<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_multipliable_in_place<trivial,std::complex<double>>::value));
 	BOOST_CHECK((is_multipliable_in_place<int, const int>::value));
 	BOOST_CHECK((!is_multipliable_in_place<const int, int>::value));
 	BOOST_CHECK((!is_multipliable_in_place<const int &, int>::value));
 	BOOST_CHECK((is_multipliable_in_place<int &&, const int &>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_divisible_test)
+{
+	BOOST_CHECK(is_divisible<int>::value);
+	BOOST_CHECK(is_divisible<const int>::value);
+	BOOST_CHECK((is_divisible<const int, int>::value));
+	BOOST_CHECK((is_divisible<int, const int>::value));
+	BOOST_CHECK((is_divisible<const int &, int &>::value));
+	BOOST_CHECK((is_divisible<int &&, const int &>::value));
+	BOOST_CHECK(is_divisible<double>::value);
+	BOOST_CHECK(is_divisible<std::complex<double>>::value);
+	BOOST_CHECK((is_divisible<const std::complex<double>,double>::value));
+	BOOST_CHECK((is_divisible<std::complex<double>,const double>::value));
+	BOOST_CHECK((is_divisible<int,int>::value));
+	BOOST_CHECK((is_divisible<int,double>::value));
+	BOOST_CHECK((is_divisible<double,int>::value));
+	BOOST_CHECK((is_divisible<std::complex<double>,double>::value));
+	BOOST_CHECK((is_divisible<double,std::complex<double>>::value));
+	BOOST_CHECK((!is_divisible<trivial,std::complex<double>>::value));
+	BOOST_CHECK((!is_divisible<int *,std::size_t>::value));
+	BOOST_CHECK((!is_divisible<std::size_t,int *>::value));
+	BOOST_CHECK(!is_divisible<int *>::value);
+	BOOST_CHECK(is_divisible<int &>::value);
+	BOOST_CHECK((is_divisible<int &, double &>::value));
+	BOOST_CHECK((is_divisible<double &, int &>::value));
+	BOOST_CHECK(is_divisible<int const &>::value);
+	BOOST_CHECK((is_divisible<int const &, double &>::value));
+	BOOST_CHECK((is_divisible<double const &, int &>::value));
+	BOOST_CHECK(is_divisible<int &&>::value);
+	BOOST_CHECK((is_divisible<int &&, double &&>::value));
+	BOOST_CHECK((is_divisible<double &&, int &&>::value));
+	BOOST_CHECK((!is_divisible<int * &,int>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_divisible_in_place_test)
+{
+	BOOST_CHECK((is_divisible_in_place<int>::value));
+	BOOST_CHECK((is_divisible_in_place<int,int>::value));
+	BOOST_CHECK((is_divisible_in_place<int,double>::value));
+	BOOST_CHECK((is_divisible_in_place<double,int>::value));
+	BOOST_CHECK((is_divisible_in_place<std::complex<double>,double>::value));
+	BOOST_CHECK((!is_divisible_in_place<double,std::complex<double>>::value));
+	BOOST_CHECK((!is_divisible_in_place<trivial,std::complex<double>>::value));
+	BOOST_CHECK((is_divisible_in_place<int, const int>::value));
+	BOOST_CHECK((!is_divisible_in_place<const int, int>::value));
+	BOOST_CHECK((!is_divisible_in_place<const int &, int>::value));
+	BOOST_CHECK((is_divisible_in_place<int &&, const int &>::value));
 }
 
 struct frob

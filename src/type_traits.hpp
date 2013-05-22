@@ -334,6 +334,44 @@ class is_multipliable_in_place: detail::sfinae_types
 template <typename T, typename U>
 const bool is_multipliable_in_place<T,U>::value;
 
+/// Divisible type trait.
+/**
+ * @see piranha::is_addable.
+ */
+template <typename T, typename U = T>
+class is_divisible: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,is_divisible<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(t / u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,is_divisible>::value;
+};
+
+template <typename T, typename U>
+const bool is_divisible<T,U>::value;
+
+/// In-place divisible type trait.
+/**
+ * @see piranha::is_addable_in_place.
+ */
+template <typename T, typename U = T>
+class is_divisible_in_place: detail::sfinae_types
+{
+		friend class detail::arith_tt_helper<T,U,is_divisible_in_place<T,U>>;
+		template <typename T1, typename U1>
+		static auto test(T1 &t, const U1 &u) -> decltype(t /= u,void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::arith_tt_helper<T,U,is_divisible_in_place>::value;
+};
+
+template <typename T, typename U>
+const bool is_divisible_in_place<T,U>::value;
+
 /// Equality-comparable type trait.
 /**
  * This type trait is \p true if instances if type \p T can be compared for equality and inequality to instances of
