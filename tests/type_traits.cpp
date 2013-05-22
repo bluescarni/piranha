@@ -285,6 +285,53 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_in_place_test)
 	BOOST_CHECK((is_subtractable_in_place<int &&, const int &>::value));
 }
 
+BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_test)
+{
+	BOOST_CHECK(is_multipliable<int>::value);
+	BOOST_CHECK(is_multipliable<const int>::value);
+	BOOST_CHECK((is_multipliable<const int, int>::value));
+	BOOST_CHECK((is_multipliable<int, const int>::value));
+	BOOST_CHECK((is_multipliable<const int &, int &>::value));
+	BOOST_CHECK((is_multipliable<int &&, const int &>::value));
+	BOOST_CHECK(is_multipliable<double>::value);
+	BOOST_CHECK(is_multipliable<std::complex<double>>::value);
+	BOOST_CHECK((is_multipliable<const std::complex<double>,double>::value));
+	BOOST_CHECK((is_multipliable<std::complex<double>,const double>::value));
+	BOOST_CHECK((is_multipliable<int,int>::value));
+	BOOST_CHECK((is_multipliable<int,double>::value));
+	BOOST_CHECK((is_multipliable<double,int>::value));
+	BOOST_CHECK((is_multipliable<std::complex<double>,double>::value));
+	BOOST_CHECK((is_multipliable<double,std::complex<double>>::value));
+	BOOST_CHECK((!is_multipliable<trivial,std::complex<double>>::value));
+	BOOST_CHECK((!is_multipliable<int *,std::size_t>::value));
+	BOOST_CHECK((!is_multipliable<std::size_t,int *>::value));
+	BOOST_CHECK(!is_multipliable<int *>::value);
+	BOOST_CHECK(is_multipliable<int &>::value);
+	BOOST_CHECK((is_multipliable<int &, double &>::value));
+	BOOST_CHECK((is_multipliable<double &, int &>::value));
+	BOOST_CHECK(is_multipliable<int const &>::value);
+	BOOST_CHECK((is_multipliable<int const &, double &>::value));
+	BOOST_CHECK((is_multipliable<double const &, int &>::value));
+	BOOST_CHECK(is_multipliable<int &&>::value);
+	BOOST_CHECK((is_multipliable<int &&, double &&>::value));
+	BOOST_CHECK((is_multipliable<double &&, int &&>::value));
+	BOOST_CHECK((!is_multipliable<int * &,int>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_multipliable_in_place_test)
+{
+	BOOST_CHECK((is_multipliable_in_place<int>::value));
+	BOOST_CHECK((is_multipliable_in_place<int,int>::value));
+	BOOST_CHECK((is_multipliable_in_place<int,double>::value));
+	BOOST_CHECK((is_multipliable_in_place<double,int>::value));
+	BOOST_CHECK((is_multipliable_in_place<std::complex<double>,double>::value));
+	BOOST_CHECK((!is_multipliable_in_place<trivial,std::complex<double>>::value));
+	BOOST_CHECK((is_multipliable_in_place<int, const int>::value));
+	BOOST_CHECK((!is_multipliable_in_place<const int, int>::value));
+	BOOST_CHECK((!is_multipliable_in_place<const int &, int>::value));
+	BOOST_CHECK((is_multipliable_in_place<int &&, const int &>::value));
+}
+
 struct frob
 {
 	bool operator==(const frob &) const;
