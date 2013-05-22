@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "concepts/differentiable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
 #include "forwarding.hpp"
@@ -36,6 +35,7 @@
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -148,9 +148,9 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		/**
 		 * Will return a vector of Poisson series terms representing the partial derivative of \p this with respect to
 		 * symbol \p s. The partial derivative is computed via piranha::math::partial() and the differentiation method
-		 * of the monomial type. This method requires the coefficient type to be:
-		 * - multipliable by piranha::integer,
-		 * - a model of the piranha::concept::DifferentiableCoefficient concept.
+		 * of the monomial type. This method requires the coefficient type to
+		 * - be multipliable by piranha::integer,
+		 * - satisfy the piranha::is_differentiable type trait.
 		 * 
 		 * @param[in] s piranha::symbol with respect to which the derivative will be calculated.
 		 * @param[in] args reference set of arguments.
@@ -166,7 +166,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		 */
 		std::vector<poisson_series_term> partial(const symbol &s, const symbol_set &args) const
 		{
-			BOOST_CONCEPT_ASSERT((concept::DifferentiableCoefficient<Cf>));
+			PIRANHA_TT_CHECK(is_differentiable,Cf);
 			std::vector<poisson_series_term> retval;
 			auto cf_partial = math::partial(this->m_cf,s.get_name());
 			if (!math::is_zero(cf_partial)) {

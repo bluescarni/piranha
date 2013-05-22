@@ -20,7 +20,6 @@ SET(HEADERS_LIST
 	concepts/poisson_series_coefficient.hpp
 	concepts/coefficient.hpp
 	concepts/multipliable_coefficient.hpp
-	concepts/differentiable_coefficient.hpp
 	concepts/truncator.hpp
 	concepts/multipliable_term.hpp
 	concepts/container_element.hpp

@@ -29,7 +29,6 @@
 #include <utility>
 #include <vector>
 
-#include "concepts/differentiable_coefficient.hpp"
 #include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
@@ -44,6 +43,7 @@
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
 #include "trigonometric_series.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -393,7 +393,7 @@ class poisson_series:
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
-			BOOST_CONCEPT_ASSERT((concept::DifferentiableCoefficient<cf_type>));
+			PIRANHA_TT_CHECK(is_differentiable,cf_type);
 			// Turn name into symbol.
 			const symbol s(name);
 			poisson_series retval;

@@ -42,7 +42,6 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
-#include "concepts/differentiable_coefficient.hpp"
 #include "concepts/poisson_series_coefficient.hpp"
 #include "concepts/series.hpp"
 #include "concepts/truncator.hpp"
@@ -421,7 +420,7 @@ class polynomial:
 		 * of the coefficient and on the value of the exponent of the integration variable. The integration will
 		 * fail if the exponent is negative or non-integral.
 		 * 
-		 * This method requires the coefficient type to be differentiable.
+		 * This method requires the coefficient type to satisfy the piranha::is_differentiable type trait.
 		 * 
 		 * @param[in] name integration variable.
 		 * 
@@ -445,7 +444,7 @@ class polynomial:
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
-			BOOST_CONCEPT_ASSERT((concept::DifferentiableCoefficient<cf_type>));
+			PIRANHA_TT_CHECK(is_differentiable,cf_type);
 			// Turn name into symbol.
 			const symbol s(name);
 			polynomial retval;
