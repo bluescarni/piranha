@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
 	using math::cos;
 	using math::pow;
 	typedef poisson_series<polynomial<rational>> p_type1;
-	typedef decltype(*(p_type1{}.begin())) pair_type;
-	typedef decltype(*(p_type1{}.begin()->first.begin())) pair_type2;
+	typedef std::decay<decltype(*(p_type1{}.begin()))>::type pair_type;
+	typedef std::decay<decltype(*(p_type1{}.begin()->first.begin()))>::type pair_type2;
 	p_type1 x{"x"}, y{"y"};
 	auto s = pow(1 + x + y,3) * cos(x) + pow(y,3) * sin(x);
 	auto s_t = s.transform([](const pair_type &p) {

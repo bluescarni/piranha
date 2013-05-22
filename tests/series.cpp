@@ -1495,7 +1495,7 @@ BOOST_AUTO_TEST_CASE(series_iterator_test)
 	p_type1 empty;
 	BOOST_CHECK(empty.begin() == empty.end());
 	p_type1 x{"x"};
-	typedef decltype(*(x.begin())) pair_type;
+	typedef std::decay<decltype(*(x.begin()))>::type pair_type;
 	BOOST_CHECK((std::is_same<pair_type,std::pair<rational,p_type1>>::value));
 	x *= 2;
 	auto it = x.begin();
@@ -1525,7 +1525,7 @@ BOOST_AUTO_TEST_CASE(series_filter_test)
 {
 	typedef g_series_type<rational,int> p_type1;
 	p_type1 x{"x"}, y{"y"}, z{"z"};
-	typedef decltype(*(x.begin())) pair_type;
+	typedef std::decay<decltype(*(x.begin()))>::type pair_type;
 	BOOST_CHECK_EQUAL(x,x.filter([](const pair_type &) {return true;}));
 	BOOST_CHECK(x.filter([](const pair_type &) {return false;}).empty());
 	BOOST_CHECK_EQUAL(x,(x + 2 * y).filter([](const pair_type &p) {return p.first < 2;}));
@@ -1540,7 +1540,7 @@ BOOST_AUTO_TEST_CASE(series_transform_test)
 {
 	typedef g_series_type<rational,int> p_type1;
 	p_type1 x{"x"}, y{"y"};
-	typedef decltype(*(x.begin())) pair_type;
+	typedef std::decay<decltype(*(x.begin()))>::type pair_type;
 	BOOST_CHECK_EQUAL(x,x.transform([](const pair_type &p) {return p;}));
 	BOOST_CHECK_EQUAL(0,x.transform([](const pair_type &) {return pair_type();}));
 	BOOST_CHECK_EQUAL(rational(1,2),x.transform([](const pair_type &) {return pair_type(rational(1,2),p_type1(1));}));
@@ -1549,7 +1549,7 @@ BOOST_AUTO_TEST_CASE(series_transform_test)
 	p_type2 y2{"y"};
 	y2 *= (x + 2);
 	y2 += p_type2{"x"};
-	typedef decltype(*(y2.begin())) pair_type2;
+	typedef std::decay<decltype(*(y2.begin()))>::type pair_type2;
 	BOOST_CHECK_EQUAL(y2.transform([](const pair_type2 &p) {
 		return std::make_pair(p.first.filter([](const pair_type &q) {return q.first < 2;}),p.second);
 	}),p_type2{"y"} * x + p_type2{"x"});

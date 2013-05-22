@@ -109,6 +109,7 @@
  * http://loungecpp.wikidot.com/tips-and-tricks:enable-if-for-c-11
  * \todo what about changing the toolbox classes not to be specialised, but simply enabling-if the appropriate methods
  * and then use the type traits? E.g., compare t_substitutable toolbox vs power/trig series.
+ * \todo base_term_fwd must go.
  */
 namespace piranha
 {
