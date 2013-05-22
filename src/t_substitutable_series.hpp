@@ -29,15 +29,13 @@
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
 
 namespace detail
 {
-
-// Tag for trigonometric subs series.
-struct t_substitutable_series_tag {};
 
 // Detect t_subs term.
 template <typename Term, typename T, typename U>
@@ -68,7 +66,7 @@ struct t_subs_term_score
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
-class t_substitutable_series: public Series,detail::t_substitutable_series_tag,detail::toolbox<Series,t_substitutable_series<Series,Derived>>
+class t_substitutable_series: public Series,detail::toolbox<Series,t_substitutable_series<Series,Derived>>
 {
 		typedef Series base;
 		template <typename T, typename U, typename Term = typename Series::term_type, typename = void>
@@ -161,9 +159,9 @@ class t_substitutable_series: public Series,detail::t_substitutable_series_tag,d
 		 * - piranha::series::insert(),
 		 * - the substitution methods of coefficient and key.
 		 */
-		template <typename T, typename U>
-		typename t_subs_utils<T,U>::type t_subs(const std::string &name, const T &c, const U &s,
-			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0>::type * = nullptr) const
+		template <typename T, typename U, typename =
+			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0>::type>
+		typename t_subs_utils<T,U>::type t_subs(const std::string &name, const T &c, const U &s) const
 		{
 			typedef typename t_subs_utils<T,U>::type ret_type;
 			ret_type retval(0);
@@ -183,7 +181,7 @@ namespace math
  * is available only if \p Series satisfies the requirements explained in piranha::t_substitutable_series.
  */
 template <typename Series>
-struct t_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::t_substitutable_series_tag,Series>::value>::type>
+struct t_subs_impl<Series,typename std::enable_if<is_instance_of<Series,t_substitutable_series>::value>::type>
 {
 	/// Call operator.
 	/**
