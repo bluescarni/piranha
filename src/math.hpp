@@ -22,7 +22,6 @@
 #define PIRANHA_MATH_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/type_traits/is_complex.hpp>
 #include <cmath>
@@ -38,7 +37,6 @@
 #include <utility>
 #include <vector>
 
-#include "concepts/key.hpp"
 #include "detail/integer_fwd.hpp"
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
@@ -1287,18 +1285,78 @@ class has_t_lorder: detail::sfinae_types
 template <typename T>
 const bool has_t_lorder<T>::value;
 
+/// Type trait to detect if a key type has a degree property.
+/**
+ * The type trait has the same meaning as piranha::has_degree, but it's meant for use with key types.
+ * It will test the presence of two <tt>degree()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * 
+ * \p Key must satisfy piranha::is_key.
+ * 
+ * \todo check docs once we implement piranha::has_degree.
+ */
+template <typename Key>
+class key_has_degree: detail::sfinae_types
+{
+		PIRANHA_TT_CHECK(is_key,Key);
+		// NOTE: here it works (despite the difference in constness with the use below) because none of the two versions
+		// of test1() is an exact match, and the conversion in constness has a higher priority than the ellipsis conversion.
+		// For more info:
+		// http://cpp0x.centaur.ath.cx/over.ics.rank.html
+		template <typename T>
+		static auto test1(const T *t) -> decltype(t->degree(std::declval<const symbol_set &>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(const T *t) -> decltype(t->degree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1((Key *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key *)nullptr)),yes>::value;
+};
+
+template <typename Key>
+const bool key_has_degree<Key>::value;
+
+/// Type trait to detect if a key type has a low degree property.
+/**
+ * The type trait has the same meaning as piranha::has_ldegree, but it's meant for use with key types.
+ * It will test the presence of two <tt>ldegree()</tt> const methods, the first one accepting a const instance of
+ * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * 
+ * \p Key must satisfy piranha::is_key.
+ */
+template <typename Key>
+class key_has_ldegree: detail::sfinae_types
+{
+		PIRANHA_TT_CHECK(is_key,Key);
+		template <typename T>
+		static auto test1(const T *t) -> decltype(t->ldegree(std::declval<const symbol_set &>()),void(),yes());
+		static no test1(...);
+		template <typename T>
+		static auto test2(const T *t) -> decltype(t->ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1((Key *)nullptr)),yes>::value &&
+					  std::is_same<decltype(test2((Key *)nullptr)),yes>::value;
+};
+
+template <typename Key>
+const bool key_has_ldegree<Key>::value;
+
 /// Type trait to detect if a key type has a trigonometric degree property.
 /**
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
- * \p Key must be a model of piranha::concept::Key.
+ * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
 class key_has_t_degree: detail::sfinae_types
 {
-		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
+		PIRANHA_TT_CHECK(is_key,Key);
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
@@ -1321,12 +1379,12 @@ const bool key_has_t_degree<T>::value;
  * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
- * \p Key must be a model of piranha::concept::Key.
+ * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
 class key_has_t_ldegree: detail::sfinae_types
 {
-		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
+		PIRANHA_TT_CHECK(is_key,Key);
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
@@ -1349,12 +1407,12 @@ const bool key_has_t_ldegree<T>::value;
  * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
- * \p Key must be a model of piranha::concept::Key.
+ * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
 class key_has_t_order: detail::sfinae_types
 {
-		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
+		PIRANHA_TT_CHECK(is_key,Key);
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
@@ -1377,12 +1435,12 @@ const bool key_has_t_order<T>::value;
  * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
  * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
- * \p Key must be a model of piranha::concept::Key.
+ * \p Key must satisfy piranha::is_key.
  */
 template <typename Key>
 class key_has_t_lorder: detail::sfinae_types
 {
-		BOOST_CONCEPT_ASSERT((concept::Key<Key>));
+		PIRANHA_TT_CHECK(is_key,Key);
 		template <typename T>
 		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
@@ -1490,7 +1548,7 @@ const bool has_t_subs<T,U,V>::value;
  * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a symbol with its cosine
  * and sine passed as instances of \p T and \p U respectively.
  * 
- * \p Key must be a model of piranha::concept::Key.
+ * The decay type of \p Key must satisfy piranha::is_key.
  */
 template <typename Key, typename T, typename U = T>
 class key_has_t_subs: detail::sfinae_types
@@ -1498,7 +1556,7 @@ class key_has_t_subs: detail::sfinae_types
 		typedef typename std::decay<Key>::type Keyd;
 		typedef typename std::decay<T>::type Td;
 		typedef typename std::decay<U>::type Ud;
-		BOOST_CONCEPT_ASSERT((concept::Key<Keyd>));
+		PIRANHA_TT_CHECK(is_key,Keyd);
 		template <typename Key1, typename T1, typename U1>
 		static auto test(const Key1 &k, const T1 &t, const U1 &u) ->
 			decltype(k.t_subs(std::declval<const std::string &>(),t,u,std::declval<const symbol_set &>()));

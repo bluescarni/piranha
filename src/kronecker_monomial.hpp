@@ -22,7 +22,6 @@
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/utility.hpp>
@@ -39,7 +38,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "detail/degree_commons.hpp"
 #include "detail/km_commons.hpp"
@@ -51,6 +49,7 @@
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -61,7 +60,7 @@ namespace piranha
  * The values of the exponents are packed in a signed integer using Kronecker substitution, using the facilities provided
  * by piranha::kronecker_array.
  * 
- * This class is a model of the piranha::concept::DegreeKey concept.
+ * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
  * 
  * \section type_requirements Type requirements
  * 
@@ -210,7 +209,9 @@ class kronecker_monomial
 		/// Trivial destructor.
 		~kronecker_monomial() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::DegreeKey<kronecker_monomial>));
+			PIRANHA_TT_CHECK(is_key,kronecker_monomial);
+			PIRANHA_TT_CHECK(key_has_degree,kronecker_monomial);
+			PIRANHA_TT_CHECK(key_has_ldegree,kronecker_monomial);
 		}
 		/// Defaulted copy assignment operator.
 		kronecker_monomial &operator=(const kronecker_monomial &) = default;

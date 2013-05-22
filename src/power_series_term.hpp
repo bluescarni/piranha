@@ -21,16 +21,14 @@
 #ifndef PIRANHA_POWER_SERIES_TERM_HPP
 #define PIRANHA_POWER_SERIES_TERM_HPP
 
-#include <boost/concept/assert.hpp>
 #include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "concepts/degree_key.hpp"
-#include "concepts/term.hpp"
-#include "detail/base_term_fwd.hpp"
+#include "base_term.hpp"
 #include "forwarding.hpp"
+#include "math.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp" // For has_degree.
 
@@ -53,7 +51,7 @@ struct power_series_term_tag {};
  * requirements:
  * 
  * - the piranha::has_degree type trait is specialised to be \p true for the coefficient type, as indicated in the type trait's documentation;
- * - the key type is a model of piranha::concept::DegreeKey.
+ * - the key type must satisfy piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree.
  * 
  * As an additional requirement, the types returned when querying total and partial (low) degree must be addable and copy/move constructible.
  * If these additional requirements are not satisfied,
@@ -78,6 +76,8 @@ struct power_series_term_tag {};
  * Move semantics is equivalent to the move semantics of \p Term.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ *
+ * \todo doc will be obsoleted soon.
  */
 template <typename Term, typename = void>
 class power_series_term: public Term, detail::power_series_term_tag
@@ -107,7 +107,8 @@ class power_series_term: public Term, detail::power_series_term_tag
 			}
 		};
 		template <typename Term2>
-		struct degree_utils<Term2,typename std::enable_if<!detail::key_has_degree<typename Term2::key_type>::value>::type>
+		struct degree_utils<Term2,typename std::enable_if<!key_has_degree<typename Term2::key_type>::value ||
+			!key_has_ldegree<typename Term2::key_type>::value>::type>
 		{
 			static auto compute(const Term2 &t, const symbol_set &) -> decltype(has_degree<typename Term2::cf_type>::get(t.m_cf))
 			{
@@ -166,7 +167,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 		/// Trivial destructor.
 		~power_series_term() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
+			PIRANHA_TT_CHECK(is_term,power_series_term);
 		}
 		/// Defaulted copy assignment operator.
 		power_series_term &operator=(const power_series_term &) = default;
@@ -235,7 +236,7 @@ class power_series_term: public Term, detail::power_series_term_tag
 
 template <typename Term>
 class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::cf_type>::value &&
-	!detail::key_has_degree<typename Term::key_type>::value>::type>: public Term
+	!key_has_degree<typename Term::key_type>::value && !key_has_ldegree<typename Term::key_type>::value>::type>: public Term
 {
 		static_assert(std::is_base_of<detail::base_term_tag,Term>::value,"Term must be an instance of piranha::base_term.");
 		typedef Term base;
@@ -246,7 +247,7 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
 		PIRANHA_FORWARDING_CTOR(power_series_term,base)
 		~power_series_term() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Term<power_series_term>));
+			PIRANHA_TT_CHECK(is_term,power_series_term);
 		}
 		power_series_term &operator=(const power_series_term &) = default;
 		power_series_term &operator=(power_series_term &&) = default;
@@ -261,11 +262,13 @@ class power_series_term<Term,typename std::enable_if<!has_degree<typename Term::
  * \section type_requirements Type requirements
  * 
  * \p Term must be a model of the piranha::concept::Term concept.
+ * 
+ * \todo should this survive the power_series rework in some form? Maybe used as an internal type trait.
  */
 template <typename Term>
 class is_power_series_term
 {
-		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
+		PIRANHA_TT_CHECK(is_term,Term);
 	public:
 		/// Type trait value.
 		static const bool value = std::is_base_of<detail::power_series_term_tag,Term>::value;

@@ -920,6 +920,12 @@ struct tt_tester
 		BOOST_CHECK((!key_has_t_subs<k_type &,int,int>::value));
 		BOOST_CHECK((!key_has_t_subs<k_type const &,int,int>::value));
 		BOOST_CHECK(is_hashable<k_type>::value);
+		BOOST_CHECK(key_has_degree<k_type>::value);
+		BOOST_CHECK(key_has_ldegree<k_type>::value);
+		BOOST_CHECK(!key_has_t_degree<k_type>::value);
+		BOOST_CHECK(!key_has_t_ldegree<k_type>::value);
+		BOOST_CHECK(!key_has_t_order<k_type>::value);
+		BOOST_CHECK(!key_has_t_lorder<k_type>::value);
 	}
 };
 

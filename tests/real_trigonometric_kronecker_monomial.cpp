@@ -1224,6 +1224,12 @@ BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<long> &,long,const long &>::value));
 	BOOST_CHECK((key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &,char,const char &>::value));
 	BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<long long> &,char,int>::value));
+	BOOST_CHECK(!key_has_degree<real_trigonometric_kronecker_monomial<int>>::value);
+	BOOST_CHECK(!key_has_ldegree<real_trigonometric_kronecker_monomial<int>>::value);
+	BOOST_CHECK(key_has_t_degree<real_trigonometric_kronecker_monomial<int>>::value);
+	BOOST_CHECK(key_has_t_ldegree<real_trigonometric_kronecker_monomial<int>>::value);
+	BOOST_CHECK(key_has_t_order<real_trigonometric_kronecker_monomial<int>>::value);
+	BOOST_CHECK(key_has_t_lorder<real_trigonometric_kronecker_monomial<int>>::value);
 }
 
 struct t_subs_tester

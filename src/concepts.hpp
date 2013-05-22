@@ -37,10 +37,8 @@ namespace concept {}
 // Include all concepts.
 #include "concepts/coefficient.hpp"
 #include "concepts/container_element.hpp"
-#include "concepts/degree_key.hpp"
 #include "concepts/differentiable_coefficient.hpp"
 #include "concepts/differentiable_term.hpp"
-#include "concepts/key.hpp"
 #include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/poisson_series_coefficient.hpp"

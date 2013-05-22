@@ -15,7 +15,6 @@ SET(HEADERS_LIST
 	forwarding.hpp
 	degree_truncator_settings.hpp
 	series.hpp
-	concepts/degree_key.hpp
 	concepts/series.hpp
 	concepts/power_series_term.hpp
 	concepts/poisson_series_coefficient.hpp
@@ -28,7 +27,6 @@ SET(HEADERS_LIST
 	concepts/power_series.hpp
 	concepts/term.hpp
 	concepts/differentiable_term.hpp
-	concepts/key.hpp
 	power_series_term.hpp
 	poisson_series.hpp
 	polynomial_term.hpp

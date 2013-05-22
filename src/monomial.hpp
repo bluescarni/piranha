@@ -22,7 +22,6 @@
 #define PIRANHA_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/utility.hpp> // For addressof.
 #include <functional>
 #include <initializer_list>
@@ -36,7 +35,6 @@
 #include <utility>
 
 #include "array_key.hpp"
-#include "concepts/degree_key.hpp"
 #include "detail/degree_commons.hpp"
 #include "config.hpp"
 #include "forwarding.hpp"
@@ -45,6 +43,7 @@
 #include "math.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -53,7 +52,7 @@ namespace piranha
 /**
  * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
  * 
- * This class is a model of the piranha::concept::DegreeKey concept.
+ * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
  * 
  * \section type_requirements Type requirements
  * 
@@ -102,7 +101,9 @@ class monomial: public array_key<T,monomial<T>>
 		/// Trivial destructor.
 		~monomial() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::DegreeKey<monomial>));
+			PIRANHA_TT_CHECK(is_key,monomial);
+			PIRANHA_TT_CHECK(key_has_degree,monomial);
+			PIRANHA_TT_CHECK(key_has_ldegree,monomial);
 		}
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;

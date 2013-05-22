@@ -22,7 +22,6 @@
 #define PIRANHA_UNIVARIATE_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -33,7 +32,6 @@
 #include <type_traits>
 
 #include "array_key.hpp"
-#include "concepts/degree_key.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -48,7 +46,7 @@ namespace piranha
  * This class represents a univariate monomial with exponent of type \p T. The exponent is represented
  * by an instance of \p T stored within the object.
  * 
- * This class is a model of the piranha::concept::DegreeKey concept.
+ * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
  * 
  * \section type_requirements Type requirements
  * 
@@ -146,7 +144,9 @@ class univariate_monomial
 		/// Trivial destructor.
 		~univariate_monomial() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::DegreeKey<univariate_monomial>));
+			PIRANHA_TT_CHECK(is_key,univariate_monomial);
+			PIRANHA_TT_CHECK(key_has_degree,univariate_monomial);
+			PIRANHA_TT_CHECK(key_has_ldegree,univariate_monomial);
 		}
 		/// Copy assignment operator.
 		/**

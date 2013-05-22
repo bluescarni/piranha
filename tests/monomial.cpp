@@ -23,7 +23,6 @@
 #define BOOST_TEST_MODULE monomial_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
@@ -36,7 +35,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../src/concepts/key.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
@@ -58,7 +56,7 @@ struct constructor_tester
 	void operator()(const T &)
 	{
 		typedef monomial<T> monomial_type;
-		BOOST_CONCEPT_ASSERT((concept::Key<monomial_type>));
+		PIRANHA_TT_CHECK(is_key,monomial_type);
 		monomial_type m0;
 		BOOST_CHECK_NO_THROW(monomial_type());
 		BOOST_CHECK_NO_THROW(monomial_type(monomial_type()));
@@ -788,6 +786,12 @@ struct tt_tester
 		BOOST_CHECK((!key_has_t_subs<const k_type &,int,int>::value));
 		BOOST_CHECK(is_container_element<k_type>::value);
 		BOOST_CHECK(is_hashable<k_type>::value);
+		BOOST_CHECK(key_has_degree<k_type>::value);
+		BOOST_CHECK(key_has_ldegree<k_type>::value);
+		BOOST_CHECK(!key_has_t_degree<k_type>::value);
+		BOOST_CHECK(!key_has_t_ldegree<k_type>::value);
+		BOOST_CHECK(!key_has_t_order<k_type>::value);
+		BOOST_CHECK(!key_has_t_lorder<k_type>::value);
 	}
 };
 
