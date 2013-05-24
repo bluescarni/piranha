@@ -222,6 +222,11 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 	}
 	BOOST_CHECK_THROW(math::pow(2.,integer(boost::integer_traits<int>::const_max)+1),std::overflow_error);
 	BOOST_CHECK((is_exponentiable<double,double>::value));
+	BOOST_CHECK((is_exponentiable<double &,double>::value));
+	BOOST_CHECK((is_exponentiable<const double,double>::value));
+	BOOST_CHECK((is_exponentiable<double &,double &>::value));
+	BOOST_CHECK((is_exponentiable<double &,double const &>::value));
+	BOOST_CHECK((is_exponentiable<double,double &>::value));
 	BOOST_CHECK((is_exponentiable<float,double>::value));
 	BOOST_CHECK((is_exponentiable<double,float>::value));
 	BOOST_CHECK((is_exponentiable<double,int>::value));
@@ -229,6 +234,8 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 	BOOST_CHECK((is_exponentiable<float,integer>::value));
 	BOOST_CHECK((is_exponentiable<double,integer>::value));
 	BOOST_CHECK((!is_exponentiable<std::string,integer>::value));
+	BOOST_CHECK((!is_exponentiable<std::string,integer &>::value));
+	BOOST_CHECK((!is_exponentiable<std::string &,integer &>::value));
 	BOOST_CHECK((!is_exponentiable<int,integer>::value));
 }
 

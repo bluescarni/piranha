@@ -1173,16 +1173,18 @@ const bool is_integrable<T>::value;
 /**
  * The type trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
  * exponent \p U.
+ * 
+ * The call to piranha::math::pow() will be tested with const reference arguments.
  */
 template <typename T, typename U>
 class is_exponentiable: detail::sfinae_types
 {
 		template <typename Base, typename Expo>
-		static auto test(Base const *b, Expo const *e) -> decltype(math::pow(*b,*e),void(),yes());
+		static auto test(const Base &b, const Expo &e) -> decltype(math::pow(b,e),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test((T const *)nullptr,(U const *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<T>(),std::declval<U>())),yes>::value;
 };
 
 // Static init.

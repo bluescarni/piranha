@@ -586,7 +586,11 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	boost::mpl::for_each<cf_types>(pow_tester());
 	typedef polynomial<integer,int> p_type1;
 	BOOST_CHECK((is_exponentiable<p_type1,integer>::value));
+	BOOST_CHECK((is_exponentiable<const p_type1,integer>::value));
+	BOOST_CHECK((is_exponentiable<p_type1 &,integer>::value));
+	BOOST_CHECK((is_exponentiable<p_type1 &,integer &>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,double>::value));
 	typedef polynomial<real,int> p_type2;
 	BOOST_CHECK((is_exponentiable<p_type2,integer>::value));
@@ -651,6 +655,9 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	// Simple echelon-1 polynomial.
 	typedef polynomial<rational> p_type1;
 	BOOST_CHECK(is_integrable<p_type1>::value);
+	BOOST_CHECK(is_integrable<p_type1 &>::value);
+	BOOST_CHECK(is_integrable<const p_type1>::value);
+	BOOST_CHECK(is_integrable<p_type1 const &>::value);
 	p_type1 x("x"), y("y"), z("z");
 	BOOST_CHECK_EQUAL(p_type1{}.integrate("x"),p_type1{});
 	BOOST_CHECK_EQUAL(x.integrate("x"),x * x / 2);
@@ -665,6 +672,9 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	// Polynomial with polynomial coefficient, no variable mixing.
 	typedef polynomial<p_type1> p_type11;
 	BOOST_CHECK(is_integrable<p_type11>::value);
+	BOOST_CHECK(is_integrable<p_type11 &>::value);
+	BOOST_CHECK(is_integrable<const p_type11>::value);
+	BOOST_CHECK(is_integrable<p_type11 const &>::value);
 	p_type11 a("a"), b("b"), c("c");
 	BOOST_CHECK_EQUAL((a*x).integrate("x"),a*x*x/2);
 	BOOST_CHECK_EQUAL((a*x).integrate("a"),a*a*x/2);

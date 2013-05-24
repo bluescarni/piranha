@@ -1378,8 +1378,14 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 		BOOST_CHECK_THROW(p.pow(1.5),std::invalid_argument);
 	}
 	BOOST_CHECK((is_exponentiable<p_type1,double>::value));
+	BOOST_CHECK((is_exponentiable<const p_type1,double>::value));
+	BOOST_CHECK((is_exponentiable<p_type1 &,double>::value));
+	BOOST_CHECK((is_exponentiable<p_type1 &,double &>::value));
+	BOOST_CHECK((is_exponentiable<const p_type1 &,double &>::value));
 	BOOST_CHECK((is_exponentiable<p_type1,integer>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_division_test)

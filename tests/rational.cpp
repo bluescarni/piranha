@@ -758,9 +758,14 @@ BOOST_AUTO_TEST_CASE(rational_exponentiation_test)
 	BOOST_CHECK_THROW(math::pow(rational(),-1),zero_division_error);
 	BOOST_CHECK_THROW(math::pow(rational(),integer(-1)),zero_division_error);
 	BOOST_CHECK((is_exponentiable<rational,integer>::value));
+	BOOST_CHECK((is_exponentiable<const rational,integer>::value));
+	BOOST_CHECK((is_exponentiable<rational &,integer &>::value));
+	BOOST_CHECK((is_exponentiable<rational &,integer const &>::value));
 	BOOST_CHECK((is_exponentiable<rational,int>::value));
 	BOOST_CHECK((is_exponentiable<rational,unsigned>::value));
 	BOOST_CHECK((!is_exponentiable<rational,float>::value));
+	BOOST_CHECK((!is_exponentiable<rational &,float>::value));
+	BOOST_CHECK((!is_exponentiable<rational &,float &>::value));
 	BOOST_CHECK((!is_exponentiable<rational,std::string>::value));
 	// This was a bug in the signed/unsigned conversion+unary minus trick in the pow() method.
 	BOOST_CHECK_EQUAL(math::pow(rational(1,2),(signed char)(-1)),2);
