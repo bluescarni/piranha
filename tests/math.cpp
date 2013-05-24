@@ -281,6 +281,9 @@ BOOST_AUTO_TEST_CASE(math_subs_test)
 BOOST_AUTO_TEST_CASE(math_integrate_test)
 {
 	BOOST_CHECK(!piranha::is_integrable<int>::value);
+	BOOST_CHECK(!piranha::is_integrable<int const>::value);
+	BOOST_CHECK(!piranha::is_integrable<int &>::value);
+	BOOST_CHECK(!piranha::is_integrable<int const &>::value);
 	BOOST_CHECK(!piranha::is_integrable<long>::value);
 	BOOST_CHECK(!piranha::is_integrable<double>::value);
 	BOOST_CHECK(!piranha::is_integrable<integer>::value);

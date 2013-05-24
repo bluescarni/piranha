@@ -451,10 +451,16 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 	BOOST_CHECK_THROW(math::integrate((x*y.pow(-1)*cos(y)+y*cos(x)+x*x*cos(x)).pow(2),"y"),std::invalid_argument);
 	// Check type trait.
 	BOOST_CHECK(is_integrable<p_type1>::value);
+	BOOST_CHECK(is_integrable<p_type1 &>::value);
+	BOOST_CHECK(is_integrable<const p_type1>::value);
+	BOOST_CHECK(is_integrable<p_type1 const &>::value);
 	typedef poisson_series<rational> p_type2;
 	BOOST_CHECK_EQUAL(p_type2{}.integrate("x"),p_type2{});
 	BOOST_CHECK_THROW(p_type2{1}.integrate("x"),std::invalid_argument);
 	BOOST_CHECK(is_integrable<p_type2>::value);
+	BOOST_CHECK(is_integrable<p_type2 &>::value);
+	BOOST_CHECK(is_integrable<const p_type2>::value);
+	BOOST_CHECK(is_integrable<p_type2 const &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
