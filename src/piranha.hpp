@@ -102,7 +102,9 @@
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL.
  * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as needed.
- * \todo should we always use piranha when calling functions in order to prevent ADL?
+ * \todo should we always use piranha when calling functions in order to prevent ADL? -> note that these ADL concerns apply
+ * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside piranha::math
+ * and hence always include the math:: qualifier).
  * \todo replace uses of iterator facade with inheritance from std::iterator.
  * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
  * \todo think about deuglifying enable_if by moving enabling conditions in template list with default value:
