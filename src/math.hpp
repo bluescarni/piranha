@@ -1248,15 +1248,15 @@ template <typename T>
 class has_t_order: detail::sfinae_types
 {
 		template <typename U>
-		static auto test1(U const *u) -> decltype(math::t_order(*u),void(),yes());
+		static auto test1(const U &u) -> decltype(math::t_order(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_order(*u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_order(u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
-					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(test1(std::declval<T>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>())),yes>::value;
 };
 
 // Static init.
@@ -1272,15 +1272,15 @@ template <typename T>
 class has_t_lorder: detail::sfinae_types
 {
 		template <typename U>
-		static auto test1(U const *u) -> decltype(math::t_lorder(*u),void(),yes());
+		static auto test1(const U &u) -> decltype(math::t_lorder(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(U const *u) -> decltype(math::t_lorder(*u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_lorder(u,std::declval<const std::set<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test1((T const *)nullptr)),yes>::value &&
-					  std::is_same<decltype(test2((T const *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(test1(std::declval<T>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>())),yes>::value;
 };
 
 // Static init.

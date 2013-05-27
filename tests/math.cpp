@@ -377,6 +377,9 @@ BOOST_AUTO_TEST_CASE(math_has_t_ldegree_test)
 BOOST_AUTO_TEST_CASE(math_has_t_order_test)
 {
 	BOOST_CHECK(!has_t_order<int>::value);
+	BOOST_CHECK(!has_t_order<const int>::value);
+	BOOST_CHECK(!has_t_order<int &>::value);
+	BOOST_CHECK(!has_t_order<int const &>::value);
 	BOOST_CHECK(!has_t_order<std::string>::value);
 	BOOST_CHECK(!has_t_order<double>::value);
 }
@@ -384,6 +387,9 @@ BOOST_AUTO_TEST_CASE(math_has_t_order_test)
 BOOST_AUTO_TEST_CASE(math_has_t_lorder_test)
 {
 	BOOST_CHECK(!has_t_lorder<int>::value);
+	BOOST_CHECK(!has_t_lorder<const int>::value);
+	BOOST_CHECK(!has_t_lorder<int &>::value);
+	BOOST_CHECK(!has_t_lorder<int const &>::value);
 	BOOST_CHECK(!has_t_lorder<std::string>::value);
 	BOOST_CHECK(!has_t_lorder<double>::value);
 }

@@ -145,7 +145,13 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK(has_t_ldegree<p_type1 &>::value);
 	BOOST_CHECK(has_t_ldegree<p_type1 const &>::value);
 	BOOST_CHECK(has_t_order<p_type1>::value);
+	BOOST_CHECK(has_t_order<const p_type1>::value);
+	BOOST_CHECK(has_t_order<p_type1 &>::value);
+	BOOST_CHECK(has_t_order<p_type1 const &>::value);
 	BOOST_CHECK(has_t_lorder<p_type1>::value);
+	BOOST_CHECK(has_t_lorder<const p_type1>::value);
+	BOOST_CHECK(has_t_lorder<p_type1 &>::value);
+	BOOST_CHECK(has_t_lorder<p_type1 const &>::value);
 	// Trigonometric properties in the coefficients.
 	BOOST_CHECK(!has_t_degree<poisson_series<p_type1>>::value);
 	typedef polynomial<p_type1> p_type2;
