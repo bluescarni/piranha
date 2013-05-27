@@ -524,7 +524,6 @@ class debug_access<merge_args_tag>
 			void operator()(const Expo &)
 			{
 				typedef polynomial_term<Cf,Expo> term_type;
-				typedef Cf value_type;
 				typedef typename term_type::key_type key_type;
 				typedef g_series_type<Cf,Expo> series_type;
 				series_type s_derived;

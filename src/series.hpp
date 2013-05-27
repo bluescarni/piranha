@@ -622,7 +622,6 @@ class series: series_binary_operators, detail::series_tag
 			// specialization of series_multiplier and truncator depends on the derived types - which must then be preserved and
 			// not casted away to the base types.
 			// Base types of multiplicand series.
-			typedef series base_type1;
 			typedef series<typename std::decay<T>::type::term_type,typename std::decay<T>::type> base_type2;
 			if (likely(m_symbol_set == other.m_symbol_set)) {
 				operator=(multiply_by_series(other));

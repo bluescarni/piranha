@@ -218,7 +218,6 @@ struct ignorability_tester
 					// Needed to satisfy concept checking.
 					explicit term_type(const Cf &, const Key &) {}
 			};
-			typedef typename Key::value_type value_type;
 			symbol_set args;
 			term_type t1;
 			BOOST_CHECK_EQUAL(t1.is_ignorable(args),(t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf)));

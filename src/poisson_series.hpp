@@ -173,7 +173,6 @@ class poisson_series:
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
 			integer degree;
 			try {
 				degree = math::integral_cast(term.m_cf.degree({s.get_name()}));

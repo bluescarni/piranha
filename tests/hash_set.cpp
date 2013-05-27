@@ -91,13 +91,12 @@ static inline hash_set<T> make_hash_set()
 	struct lc_func_type
 	{
 		typedef T result_type;
-		T operator()(int n) const
+		result_type operator()(int n) const
 		{
 			return boost::lexical_cast<T>(n);
 		}
 	};
 	lc_func_type lc_func;
-	typedef boost::transform_iterator<decltype(lc_func),boost::counting_iterator<int>> lc_iterator;
 	return hash_set<T>(boost::make_transform_iterator(boost::counting_iterator<int>(0),lc_func),
 		boost::make_transform_iterator(boost::counting_iterator<int>(N),lc_func)
 	);
