@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "concepts/multipliable_coefficient.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
@@ -97,7 +96,10 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Cf must be a model of piranha::concept::MultipliableCoefficient.
+ * - \p Cf must satisfy the following type traits:
+ *   - piranha::is_cf,
+ *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
+ *   - piranha::has_multiply_accumulate.
  * - \p ExpoType must be suitable for use in piranha::monomial, or be piranha::univariate_monomial or piranha::kronecker_monomial.
  * 
  * \section exception_safety Exception safety guarantee
@@ -113,7 +115,10 @@ struct polynomial_term_key<kronecker_monomial<T>>
 template <typename Cf, typename ExpoType>
 class polynomial_term: public power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>>
 {
-		BOOST_CONCEPT_ASSERT((concept::MultipliableCoefficient<Cf>));
+		PIRANHA_TT_CHECK(is_cf,Cf);
+		PIRANHA_TT_CHECK(is_multipliable,Cf);
+		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
+		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
 		typedef power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>
