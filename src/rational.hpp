@@ -22,7 +22,6 @@
 #define PIRANHA_RATIONAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -40,7 +39,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
 #include "detail/rational_fwd.hpp"
 #include "detail/real_fwd.hpp"
@@ -1723,7 +1721,6 @@ struct binomial_impl<T,U,typename std::enable_if<
 inline rational::~rational() noexcept(true)
 {
 	PIRANHA_TT_CHECK(is_cf,rational);
-	BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<rational>));
 	piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);
 	piranha_assert(mpq_denref(m_value)->_mp_alloc >= 0);
 	if (mpq_numref(m_value)->_mp_d != 0) {

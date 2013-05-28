@@ -22,7 +22,6 @@
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -36,7 +35,6 @@
 #include <string>
 #include <type_traits>
 
-#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp"
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
@@ -1891,7 +1889,6 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,rea
 inline real::~real() noexcept(true)
 {
 	PIRANHA_TT_CHECK(is_cf,real);
-	BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<real>));
 	static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");
 	if (m_value->_mpfr_d) {
 		::mpfr_clear(m_value);

@@ -22,7 +22,6 @@
 #define PIRANHA_INTEGER_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -42,7 +41,6 @@
 #include <utility>
 #include <vector>
 
-#include "concepts/poisson_series_coefficient.hpp"
 #include "config.hpp" // For (un)likely.
 #include "detail/integer_fwd.hpp"
 #include "detail/rational_fwd.hpp"
@@ -2347,7 +2345,6 @@ struct binomial_impl<T,U,typename std::enable_if<
 inline integer::~integer() noexcept(true)
 {
 	PIRANHA_TT_CHECK(is_cf,integer);
-	BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<integer>));
 	piranha_assert(m_value->_mp_alloc >= 0);
 	if (m_value->_mp_d != 0) {
 		::mpz_clear(m_value);
