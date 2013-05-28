@@ -35,7 +35,6 @@ namespace concept {}
 }
 
 // Include all concepts.
-#include "concepts/coefficient.hpp"
 #include "concepts/container_element.hpp"
 #include "concepts/differentiable_term.hpp"
 #include "concepts/multipliable_term.hpp"
