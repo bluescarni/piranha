@@ -17,9 +17,7 @@ SET(HEADERS_LIST
 	series.hpp
 	concepts/series.hpp
 	concepts/power_series_term.hpp
-	concepts/poisson_series_coefficient.hpp
 	concepts/coefficient.hpp
-	concepts/multipliable_coefficient.hpp
 	concepts/truncator.hpp
 	concepts/multipliable_term.hpp
 	concepts/container_element.hpp
