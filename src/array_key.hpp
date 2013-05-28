@@ -52,7 +52,7 @@ namespace piranha
  * - it must be addable and subtractable (both in binary and unary form),
  * - it must satisfy piranha::is_ostreamable,
  * - it must satisfy piranha::has_is_zero,
- * - it must satisfy piranha:::is_hashable.
+ * - it must satisfy piranha::is_hashable.
  */
 template <typename T>
 class is_array_key_value_type
