@@ -28,7 +28,6 @@
 
 #include "base_term.hpp"
 #include "concepts/multipliable_term.hpp"
-#include "concepts/poisson_series_coefficient.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "power_series_term.hpp"
@@ -59,7 +58,11 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p Cf must be a model of piranha::concept::PoissonSeriesCoefficient.
+ * \p Cf must satisfy the following type traits:
+ * - piranha::is_cf,
+ * - piranha::is_multipliable and piranha::is_multipliable_in_place,
+ * - piranha::has_multiply_accumulate,
+ * - piranha::is_divisible_in_place by \p int.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -74,7 +77,11 @@ namespace piranha
 template <typename Cf>
 class poisson_series_term: public power_series_term<base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>>>
 {
-		BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<Cf>));
+		PIRANHA_TT_CHECK(is_cf,Cf);
+		PIRANHA_TT_CHECK(is_multipliable,Cf);
+		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
+		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
+		PIRANHA_TT_CHECK(is_divisible_in_place,Cf,int);
 		typedef power_series_term<base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>>> base;
 	public:
 		/// Result type for the multiplication by another term.
