@@ -363,6 +363,9 @@ BOOST_AUTO_TEST_CASE(math_abs_test)
 BOOST_AUTO_TEST_CASE(math_has_t_degree_test)
 {
 	BOOST_CHECK(!has_t_degree<int>::value);
+	BOOST_CHECK(!has_t_degree<const int>::value);
+	BOOST_CHECK(!has_t_degree<int &>::value);
+	BOOST_CHECK(!has_t_degree<const int &>::value);
 	BOOST_CHECK(!has_t_degree<std::string>::value);
 	BOOST_CHECK(!has_t_degree<double>::value);
 }
@@ -370,6 +373,9 @@ BOOST_AUTO_TEST_CASE(math_has_t_degree_test)
 BOOST_AUTO_TEST_CASE(math_has_t_ldegree_test)
 {
 	BOOST_CHECK(!has_t_ldegree<int>::value);
+	BOOST_CHECK(!has_t_ldegree<int const>::value);
+	BOOST_CHECK(!has_t_ldegree<int &>::value);
+	BOOST_CHECK(!has_t_ldegree<const int &>::value);
 	BOOST_CHECK(!has_t_ldegree<std::string>::value);
 	BOOST_CHECK(!has_t_ldegree<double>::value);
 }
