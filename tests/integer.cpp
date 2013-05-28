@@ -692,6 +692,8 @@ BOOST_AUTO_TEST_CASE(integer_comparisons_test)
 	boost::fusion::for_each(arithmetic_values,check_arithmetic_comparisons());
 }
 
+struct no_fma{};
+
 BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 {
 	piranha::integer i(10);
@@ -709,6 +711,12 @@ BOOST_AUTO_TEST_CASE(integer_multiply_accumulate_test)
 	BOOST_CHECK_EQUAL(i,-30);
 	piranha::math::multiply_accumulate(i,piranha::integer(-10),piranha::integer(-3));
 	BOOST_CHECK_EQUAL(i,0);
+	BOOST_CHECK((piranha::has_multiply_accumulate<piranha::integer>::value));
+	BOOST_CHECK((!piranha::has_multiply_accumulate<piranha::integer,no_fma>::value));
+	BOOST_CHECK((piranha::has_multiply_accumulate<piranha::integer &, piranha::integer>::value));
+	BOOST_CHECK((piranha::has_multiply_accumulate<piranha::integer &, piranha::integer &, const piranha::integer &>::value));
+	BOOST_CHECK((!piranha::has_multiply_accumulate<const piranha::integer, piranha::integer>::value));
+	BOOST_CHECK((!piranha::has_multiply_accumulate<const piranha::integer &, piranha::integer, piranha::integer &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(integer_exponentiation_test)

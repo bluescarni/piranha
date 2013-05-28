@@ -1485,6 +1485,8 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK((!is_exponentiable<real &,std::string &>::value));
 }
 
+struct no_fma{};
+
 BOOST_AUTO_TEST_CASE(real_fma_test)
 {
 	real r{4};
@@ -1508,6 +1510,13 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
 	real r3{5};
 	math::multiply_accumulate(r3,real{-4},real{2});
 	BOOST_CHECK_EQUAL(r3,-3);
+	BOOST_CHECK((has_multiply_accumulate<real>::value));
+	BOOST_CHECK((has_multiply_accumulate<real,integer>::value));
+	BOOST_CHECK((!has_multiply_accumulate<real,no_fma>::value));
+	BOOST_CHECK((has_multiply_accumulate<real &, real>::value));
+	BOOST_CHECK((has_multiply_accumulate<real &, real &, const real &>::value));
+	BOOST_CHECK((!has_multiply_accumulate<const real, real>::value));
+	BOOST_CHECK((!has_multiply_accumulate<const real &, real, real &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_sin_cos_test)

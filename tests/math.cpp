@@ -181,11 +181,23 @@ BOOST_AUTO_TEST_CASE(math_is_zero_test)
 	BOOST_CHECK(!has_is_zero<trivial_c>::value);
 }
 
+struct no_fma{};
+
 struct check_multiply_accumulate
 {
 	template <typename T>
 	void operator()(const T &) const
 	{
+		BOOST_CHECK(has_multiply_accumulate<T>::value);
+		BOOST_CHECK(has_multiply_accumulate<T &>::value);
+		BOOST_CHECK((has_multiply_accumulate<T,T>::value));
+		BOOST_CHECK((has_multiply_accumulate<T &,T &>::value));
+		BOOST_CHECK((has_multiply_accumulate<T &,T const &>::value));
+		BOOST_CHECK((has_multiply_accumulate<T,T,T>::value));
+		BOOST_CHECK((has_multiply_accumulate<T &,const T,T &>::value));
+		BOOST_CHECK((has_multiply_accumulate<T &,const T,T const &>::value));
+		BOOST_CHECK(!has_multiply_accumulate<const T>::value);
+		BOOST_CHECK(!has_multiply_accumulate<const T &>::value);
 		T x(2);
 		math::multiply_accumulate(x,T(4),T(6));
 		BOOST_CHECK_EQUAL(x,T(2) + T(4) * T(6));
@@ -200,6 +212,9 @@ struct check_multiply_accumulate
 BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
 {
 	boost::fusion::for_each(arithmetic_values,check_multiply_accumulate());
+	BOOST_CHECK(!has_multiply_accumulate<no_fma>::value);
+	BOOST_CHECK(!has_multiply_accumulate<no_fma const &>::value);
+	BOOST_CHECK(!has_multiply_accumulate<no_fma &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(math_pow_test)

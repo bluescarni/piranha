@@ -1911,23 +1911,28 @@ class integer
 };
 
 
-namespace detail
-{
-
-// Specialise multadd for integer.
-template <typename T>
-struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,integer>::value>::type>
-{
-	static void run(T &x, const T &y, const T &z)
-	{
-		x.multiply_accumulate(y,z);
-	}
-};
-
-}
-
 namespace math
 {
+
+/// Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::integer.
+template <typename T>
+struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,integer>::value>::type>
+{
+	/// Call operator.
+ 	/**
+	 * This implementation will use piranha::integer::multiply_accumulate().
+	 * 
+	 * @param[in,out] x target value for accumulation.
+	 * @param[in] y first argument.
+	 * @param[in] z second argument.
+	 * 
+	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
+	 */
+	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
+	{
+		return x.multiply_accumulate(y,z);
+	}
+};
 
 /// Specialisation of the piranha::math::negate() functor for piranha::integer.
 template <typename T>

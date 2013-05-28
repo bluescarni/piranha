@@ -50,31 +50,6 @@ namespace piranha
 namespace detail
 {
 
-// Default implementation of multiply-accumulate.
-template <typename T, typename U, typename V, typename Enable = void>
-struct math_multiply_accumulate_impl
-{
-	template <typename U2, typename V2>
-	static void run(T &x, U2 &&y, V2 &&z)
-	{
-		x += std::forward<U2>(y) * std::forward<V2>(z);
-	}
-};
-
-#if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
-
-// Implementation of multiply-accumulate for floating-point types, if fast FMA is available.
-template <typename T>
-struct math_multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_point<T>::value>::type>
-{
-	static void run(T &x, const T &y, const T &z)
-	{
-		x = std::fma(y,z,x);
-	}
-};
-
-#endif
-
 // Implementation of exponentiation with floating-point base.
 template <typename T, typename U>
 inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
@@ -214,26 +189,83 @@ inline auto negate(T &x) -> decltype(negate_impl<T>()(x))
 	return negate_impl<T>()(x);
 }
 
+/// Default functor for the implementation of piranha::math::multiply_accumulate().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism.
+ */
+template <typename T, typename U, typename V, typename = void>
+struct multiply_accumulate_impl
+{
+	/// Call operator.
+	/**
+	 * The body of the operator is equivalent to:
+	 * @code
+	 * x += y * z;
+	 * @endcode
+	 * where \p y and \p z are perfectly forwarded.
+	 * 
+	 * @param[in,out] x target value for accumulation.
+	 * @param[in] y first argument.
+	 * @param[in] z second argument.
+	 * 
+	 * @return <tt>x += y * z</tt>.
+	 * 
+	 * @throws unspecified any exception resulting from in-place addition or binary multiplication on the operands.
+	 */
+	template <typename T2, typename U2, typename V2>
+	auto operator()(T2 &x, U2 &&y, V2 &&z) const -> decltype(x += std::forward<U2>(y) * std::forward<V2>(z))
+	{
+		return x += std::forward<U2>(y) * std::forward<V2>(z);
+	}
+};
+
+#if defined(FP_FAST_FMA) && defined(FP_FAST_FMAF) && defined(FP_FAST_FMAL)
+
+/// Specialisation of the implementation of piranha::math::multiply_accumulate() for floating-point types.
+/**
+ * This functor is enabled only if the macros \p FP_FAST_FMA, \p FP_FAST_FMAF and \p FP_FAST_FMAL are defined.
+ */
+template <typename T>
+struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_point<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * This implementation will use the \p std::fma function.
+	 * 
+	 * @param[in,out] x target value for accumulation.
+	 * @param[in] y first argument.
+	 * @param[in] z second argument.
+	 * 
+	 * @return <tt>x = std::fma(y,z,x)</tt>.
+	 */
+	template <typename U>
+	auto operator()(U &x, const U &y, const U &z) const -> decltype(x = std::fma(y,z,x))
+	{
+		return x = std::fma(y,z,x);
+	}
+};
+
+#endif
+
 /// Multiply-accumulate.
 /**
- * Will set \p x to <tt>x + y * z</tt>. Default implementation is equivalent to:
- * @code
- * x += y * z
- * @endcode
- * where \p y and \p z are perfectly forwarded.
+ * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the piranha::math::multiply_accumulate_impl functor's
+ * call operator.
  * 
- * In case fast fma functions are available on the host platform, they will be used instead of the above
- * formula for floating-point types.
+ * @param[in,out] x target value for accumulation.
+ * @param[in] y first argument.
+ * @param[in] z second argument.
  * 
- * @param[in,out] x value used for accumulation.
- * @param[in] y first multiplicand.
- * @param[in] z second multiplicand.
+ * @returns the return value of the call operator of piranha::math::multiply_accumulate_impl.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
 template <typename T, typename U, typename V>
-inline void multiply_accumulate(T &x, U &&y, V &&z)
+inline auto multiply_accumulate(T &x, U &&y, V &&z) -> decltype(multiply_accumulate_impl<typename std::decay<T>::type,
+		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z)))
 {
-	piranha::detail::math_multiply_accumulate_impl<typename std::decay<T>::type,
-		typename std::decay<U>::type,typename std::decay<V>::type>::run(x,std::forward<U>(y),std::forward<V>(z));
+	return multiply_accumulate_impl<typename std::decay<T>::type,
+		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z));
 }
 
 /// Default functor for the implementation of piranha::math::pow().
@@ -1582,6 +1614,26 @@ class key_has_t_subs: detail::sfinae_types
 // Static init.
 template <typename Key, typename T, typename U>
 const bool key_has_t_subs<Key,T,U>::value;
+
+/// Type trait to detect the availability of piranha::math::multiply_accumulate.
+/**
+ * This type trait will be \p true if piranha::math::multiply_accumulate can be called with arguments of type \p T, \p U and \p V,
+ * \p false otherwise.
+ */
+template <typename T, typename U = T, typename V = U>
+class has_multiply_accumulate: detail::sfinae_types
+{
+		template <typename T2, typename U2, typename V2>
+		static auto test(T2 &t, const U2 &u, const V2 &v) -> decltype(math::multiply_accumulate(t,u,v),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T &>(),std::declval<U>(),std::declval<V>())),yes>::value;
+};
+
+// Static init.
+template <typename T, typename U, typename V>
+const bool has_multiply_accumulate<T,U,V>::value;
 
 }
 
