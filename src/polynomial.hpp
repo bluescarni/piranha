@@ -42,7 +42,6 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
-#include "concepts/poisson_series_coefficient.hpp"
 #include "concepts/series.hpp"
 #include "concepts/truncator.hpp"
 #include "config.hpp"
@@ -83,7 +82,7 @@ namespace piranha
  * the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
  * Laurent polynomials and Puiseux polynomials.
  * 
- * This class is a model of the piranha::concept::Series and piranha::concept::PoissonSeriesCoefficient concepts.
+ * This class is a model of the piranha::concept::Series concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -242,7 +241,6 @@ class polynomial:
 		{
 			PIRANHA_TT_CHECK(is_cf,polynomial);
 			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
-			BOOST_CONCEPT_ASSERT((concept::PoissonSeriesCoefficient<polynomial>));
 		}
 		/// Defaulted copy assignment operator.
 		polynomial &operator=(const polynomial &) = default;
