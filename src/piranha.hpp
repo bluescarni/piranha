@@ -112,6 +112,7 @@
  * \todo what about changing the toolbox classes not to be specialised, but simply enabling-if the appropriate methods
  * and then use the type traits? E.g., compare t_substitutable toolbox vs power/trig series.
  * \todo base_term_fwd must go.
+ * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
  */
 namespace piranha
 {
