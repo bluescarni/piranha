@@ -30,9 +30,12 @@ namespace detail
 struct base_term_tag {};
 }
 
-// Forward-declaration of base_term.
-template <typename Cf, typename Key, typename Derived>
+// Forward-declarations.
+template <typename, typename, typename>
 class base_term;
+
+template <typename>
+class is_term;
 
 }
 

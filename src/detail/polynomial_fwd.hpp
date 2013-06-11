@@ -33,7 +33,7 @@ struct polynomial_tag {};
 }
 
 // Forward declaration of polynomial class.
-template <typename Cf, typename Expo>
+template <typename, typename>
 class polynomial;
 
 }

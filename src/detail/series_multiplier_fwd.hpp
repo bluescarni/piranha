@@ -25,7 +25,7 @@ namespace piranha
 {
 
 // Forward-declaration of series_multiplier.
-template <typename Series1, typename Series2, typename Enable>
+template <typename, typename, typename>
 class series_multiplier;
 
 }

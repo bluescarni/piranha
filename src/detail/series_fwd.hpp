@@ -31,7 +31,7 @@ struct series_tag {};
 }
 
 // Forward-declaration of series.
-template <typename Term, typename Derived>
+template <typename, typename>
 class series;
 
 }

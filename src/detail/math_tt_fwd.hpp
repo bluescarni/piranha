@@ -24,10 +24,10 @@
 namespace piranha
 {
 
-template <typename T>
+template <typename>
 class has_is_zero;
 
-template <typename T>
+template <typename>
 class has_negate;
 
 }

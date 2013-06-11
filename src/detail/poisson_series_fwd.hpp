@@ -34,7 +34,7 @@ struct poisson_series_tag {};
 }
 
 // Forward declaration of Poisson series class.
-template <typename Cf>
+template <typename>
 class poisson_series;
 
 }

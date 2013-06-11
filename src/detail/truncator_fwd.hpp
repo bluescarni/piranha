@@ -25,11 +25,11 @@ namespace piranha
 {
 
 // Forward-declaration of truncator.
-template <typename... Series>
+template <typename...>
 class truncator;
 
 // Forward-declaration of truncator traits.
-template <typename... Series>
+template <typename...>
 class truncator_traits;
 
 }
