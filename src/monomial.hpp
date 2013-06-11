@@ -311,6 +311,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by monomial copy construction
 		 * or in-place multiplication of exponents by \p x.
+		 * 
+		 * \todo require multipliability.
 		 */
 		template <typename U>
 		monomial pow(const U &x, const symbol_set &args) const
