@@ -160,7 +160,7 @@ class t_substitutable_series: public Series,detail::toolbox<Series,t_substitutab
 		 * - the substitution methods of coefficient and key.
 		 */
 		template <typename T, typename U, typename =
-			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0>::type>
+			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0u>::type>
 		typename t_subs_utils<T,U>::type t_subs(const std::string &name, const T &c, const U &s) const
 		{
 			typedef typename t_subs_utils<T,U>::type ret_type;
