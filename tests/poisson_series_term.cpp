@@ -36,6 +36,7 @@
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
@@ -175,6 +176,7 @@ struct partial_tester
 	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series_term<Cf> term_type;
+		BOOST_CHECK(term_is_differentiable<term_type>::value);
 		typedef typename term_type::key_type key_type;
 		typedef typename key_type::value_type value_type;
 		symbol_set ed;
@@ -210,6 +212,7 @@ struct partial_tester
 	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series_term<Cf> term_type;
+		BOOST_CHECK(term_is_differentiable<term_type>::value);
 		typedef typename term_type::key_type key_type;
 		typedef typename key_type::value_type value_type;
 		symbol_set ed;

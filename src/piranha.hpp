@@ -117,6 +117,7 @@
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
  * \todo when migrating to boost multiprecision, start by checking and rooting out uses of integer in the core of the library -> maybe
  * start by introducing a new_integer class and use it in kronecker.
+ * \todo clean up the int128 detection in the build system now that we require gcc 4.7.
  */
 namespace piranha
 {
