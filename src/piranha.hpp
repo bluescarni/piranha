@@ -111,8 +111,12 @@
  * http://loungecpp.wikidot.com/tips-and-tricks:enable-if-for-c-11
  * \todo what about changing the toolbox classes not to be specialised, but simply enabling-if the appropriate methods
  * and then use the type traits? E.g., compare t_substitutable toolbox vs power/trig series.
- * \todo base_term_fwd must go.
+ * \todo base_term_fwd must go -> maybe not really, just the tag... need fwd declaration of type trait.
  * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
+ * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
+ * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
+ * \todo when migrating to boost multiprecision, start by checking and rooting out uses of integer in the core of the library -> maybe
+ * start by introducing a new_integer class and use it in kronecker.
  */
 namespace piranha
 {
