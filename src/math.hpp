@@ -37,10 +37,12 @@
 #include <utility>
 #include <vector>
 
+#include "detail/base_term_fwd.hpp"
 #include "detail/integer_fwd.hpp"
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
+#include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -1180,6 +1182,30 @@ class is_differentiable: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool is_differentiable<T>::value;
+
+/// Type trait for differentiable term types.
+/**
+ * A term is differentiable if it is provided with a const <tt>partial()</tt> method accepting a const
+ * reference to piranha::symbol and a const reference to piranha::symbol_set as arguments and returning
+ * an <tt>std::vector</tt> of \p T as result.
+ * 
+ * \p T must satisfy piranha::is_term.
+ */
+template <typename T>
+class term_is_differentiable: detail::sfinae_types
+{
+		PIRANHA_TT_CHECK(is_term,T);
+		template <typename U>
+		static auto test(const U &u) -> decltype(u.partial(std::declval<const symbol &>(),
+			std::declval<const symbol_set &>()));
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),std::vector<T>>::value;
+};
+
+template <typename T>
+const bool term_is_differentiable<T>::value;
 
 /// Type trait for integrable types.
 /**

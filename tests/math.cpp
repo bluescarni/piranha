@@ -37,8 +37,11 @@
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
+#include <vector>
 
+#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
@@ -46,6 +49,8 @@
 #include "../src/polynomial.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -549,4 +554,63 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
 	BOOST_CHECK((!math::transformation_is_canonical({P*Q*math::cos(p)*q,Q*P*math::sin(3*q)*p*math::pow(q,-1)},{P*math::sin(p),Q*math::sin(q)},{"P","Q"},{"p","q"})));
 	BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2*math::cos(p)*q,Q2*math::cos(q)*p},std::vector<p_type2>{P2*math::sin(p),Q2*math::sin(q)},
 		{"P","Q"},{"p","q"})));
+}
+
+struct term1: base_term<double,monomial<int>,term1>
+{
+	typedef base_term<double,monomial<int>,term1> base;
+	PIRANHA_FORWARDING_CTOR(term1,base)
+	PIRANHA_FORWARDING_ASSIGNMENT(term1,base)
+	term1() = default;
+	term1(const term1 &) = default;
+	term1(term1 &&) = default;
+	term1 &operator=(const term1 &) = default;
+	term1 &operator=(term1 &&) = default;
+};
+
+struct term2: base_term<double,monomial<int>,term2>
+{
+	typedef base_term<double,monomial<int>,term2> base;
+	PIRANHA_FORWARDING_CTOR(term2,base)
+	PIRANHA_FORWARDING_ASSIGNMENT(term2,base)
+	term2() = default;
+	term2(const term2 &) = default;
+	term2(term2 &&) = default;
+	term2 &operator=(const term2 &) = default;
+	term2 &operator=(term2 &&) = default;
+	std::vector<term2> partial(const symbol &, const symbol_set &) const;
+};
+
+struct term3: base_term<double,monomial<int>,term3>
+{
+	typedef base_term<double,monomial<int>,term3> base;
+	PIRANHA_FORWARDING_CTOR(term3,base)
+	PIRANHA_FORWARDING_ASSIGNMENT(term3,base)
+	term3() = default;
+	term3(const term3 &) = default;
+	term3(term3 &&) = default;
+	term3 &operator=(const term3 &) = default;
+	term3 &operator=(term3 &&) = default;
+	std::vector<term3> partial(const symbol &, const symbol_set &);
+};
+
+struct term4: base_term<double,monomial<int>,term4>
+{
+	typedef base_term<double,monomial<int>,term4> base;
+	PIRANHA_FORWARDING_CTOR(term4,base)
+	PIRANHA_FORWARDING_ASSIGNMENT(term4,base)
+	term4() = default;
+	term4(const term4 &) = default;
+	term4(term4 &&) = default;
+	term4 &operator=(const term4 &) = default;
+	term4 &operator=(term4 &&) = default;
+	std::vector<term4> partial(const symbol &, symbol_set &) const;
+};
+
+BOOST_AUTO_TEST_CASE(math_term_is_differentiable_test)
+{
+	BOOST_CHECK(!term_is_differentiable<term1>::value);
+	BOOST_CHECK(term_is_differentiable<term2>::value);
+	BOOST_CHECK(!term_is_differentiable<term3>::value);
+	BOOST_CHECK(!term_is_differentiable<term4>::value);
 }
