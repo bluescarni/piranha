@@ -22,7 +22,9 @@
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
 #include <boost/concept/assert.hpp>
+#include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "base_term.hpp"
@@ -34,8 +36,8 @@
 #include "math.hpp"
 #include "monomial.hpp"
 #include "power_series_term.hpp"
-#include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "symbol_set.hpp"
 #include "univariate_monomial.hpp"
 #include "type_traits.hpp"
 
@@ -96,8 +98,8 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * \section type_requirements Type requirements
  * 
+ * - \p Cf must be suitable for use in piranha::base_term.
  * - \p Cf must satisfy the following type traits:
- *   - piranha::is_cf,
  *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
  *   - piranha::has_multiply_accumulate.
  * - \p ExpoType must be suitable for use in piranha::monomial, or be piranha::univariate_monomial or piranha::kronecker_monomial.
@@ -115,7 +117,6 @@ struct polynomial_term_key<kronecker_monomial<T>>
 template <typename Cf, typename ExpoType>
 class polynomial_term: public power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>>
 {
-		PIRANHA_TT_CHECK(is_cf,Cf);
 		PIRANHA_TT_CHECK(is_multipliable,Cf);
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
@@ -123,6 +124,27 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;
+		// MP for enabling partial derivative.
+		template <typename Cf2, typename Key2, typename = void>
+		struct partial_enabler
+		{
+			static const bool value = false;
+		};
+		template <typename Cf2, typename Key2>
+		struct partial_enabler<Cf2,Key2,typename std::enable_if<is_differentiable<Cf2>::value &&
+			is_multipliable<const Cf2 &,decltype(std::declval<Key2 const &>().partial(std::declval<const symbol &>(),
+			std::declval<const symbol_set &>()).first)>::value>::type>
+		{
+			typedef decltype(math::partial(std::declval<Cf2>(),std::declval<std::string>())) diff_type;
+			typedef decltype(std::declval<Key2 const &>().partial(std::declval<const symbol &>(),
+				std::declval<const symbol_set &>()).first) key_diff_type;
+			static const bool value = has_is_zero<diff_type>::value &&
+						  has_is_zero<key_diff_type>::value &&
+						  std::is_move_constructible<diff_type>::value &&
+						  std::is_constructible<polynomial_term,diff_type,const Key2 &>::value &&
+						  std::is_constructible<polynomial_term,decltype(std::declval<const Cf2 &>() *
+						  std::declval<key_diff_type &>()),Key2>::value;
+		};
 	public:
 		/// Result type for the multiplication by another term.
 		typedef polynomial_term multiplication_result_type;
@@ -172,27 +194,35 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		}
 		/// Partial derivative.
 		/**
+		 * \note
+		 * This method is enabled if:
+		 * - the coefficient type satisfies piranha::is_differentiable, it is multipliable by the scalar type
+		 *   returned by the differentiation method of the monomial and it satisfies piranha::has_is_zero,
+		 * - the type resulting from the differentiation of the coefficient type is move-constructible,
+		 * - the scalar type returned by the differentiation method of the monomial satisfies piranha::has_is_zero,
+		 * - the polynomial term can be constructed from coefficient-key argument pairs resulting from the arithmetic operations
+		 *   necessary to compute the derivative.
+		 * 
 		 * Will return a vector of polynomial terms representing the partial derivative of \p this with respect to
 		 * symbol \p s. The partial derivative is computed via piranha::math::partial() and the differentiation method
-		 * of the monomial type. This method requires the coefficient type to
-		 * - be multipliable by piranha::integer and/or by the monomial exponent type,
-		 * - satisfy the piranha::is_differentiable type trait.
+		 * of the monomial type.
 		 * 
 		 * @param[in] s piranha::symbol with respect to which the derivative will be calculated.
 		 * @param[in] args reference set of arguments.
 		 * 
-		 * @return partial derivative of \p this with respect to \p s.
+		 * @return partial derivative of \p this with respect to \p s, represented as a vector of terms.
 		 * 
-		 * @throws unspecified any exception throw by:
+		 * @throws unspecified any exception thrown by:
 		 * - piranha::math::partial() and piranha::math::is_zero(),
 		 * - coefficient, term and key constructors,
 		 * - memory allocation errors in standard containers,
 		 * - the differentiation method of the monomial type,
 		 * - the multiplication operator of the coefficient type.
 		 */
+		template <typename T = Cf, typename U = typename base::key_type,
+			typename = typename std::enable_if<partial_enabler<T,U>::value>::type>
 		std::vector<polynomial_term> partial(const symbol &s, const symbol_set &args) const
 		{
-			PIRANHA_TT_CHECK(is_differentiable,Cf);
 			std::vector<polynomial_term> retval;
 			auto cf_partial = math::partial(this->m_cf,s.get_name());
 			if (!math::is_zero(cf_partial)) {

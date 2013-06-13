@@ -35,6 +35,7 @@
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol_set.hpp"
@@ -152,6 +153,27 @@ BOOST_AUTO_TEST_CASE(polynomial_term_multiplication_test)
 	boost::mpl::for_each<cf_types>(multiplication_tester());
 }
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 struct partial_tester
 {
 	template <typename Cf>
@@ -161,6 +183,7 @@ struct partial_tester
 		void operator()(const Expo &)
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
+			BOOST_CHECK(term_is_differentiable<term_type>::value);
 			typedef typename term_type::key_type key_type;
 			symbol_set ed;
 			term_type t1;
@@ -227,4 +250,5 @@ struct partial_tester
 BOOST_AUTO_TEST_CASE(polynomial_term_partial_test)
 {
 	boost::mpl::for_each<cf_types>(partial_tester());
+	BOOST_CHECK((!term_is_differentiable<polynomial_term<mock_cf,int>>::value));
 }
