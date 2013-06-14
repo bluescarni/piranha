@@ -22,7 +22,6 @@ SET(HEADERS_LIST
 	concepts/container_element.hpp
 	concepts/power_series.hpp
 	concepts/term.hpp
-	concepts/differentiable_term.hpp
 	power_series_term.hpp
 	poisson_series.hpp
 	polynomial_term.hpp

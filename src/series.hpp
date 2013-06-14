@@ -1344,8 +1344,6 @@ class series: series_binary_operators, detail::series_tag
 		 * of piranha::math::partial() for series types, this method will not take into account custom derivatives registered
 		 * via register_custom_derivative().
 		 * 
-		 * This method requires the term type to be a model of the piranha::concept::DifferentiableTerm concept.
-		 * 
 		 * @param[in] name name of the argument with respect to which the derivative will be calculated.
 		 * 
 		 * @return partial derivative of \p this with respect to the symbol named \p name.

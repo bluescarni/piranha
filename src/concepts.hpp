@@ -36,7 +36,6 @@ namespace concept {}
 
 // Include all concepts.
 #include "concepts/container_element.hpp"
-#include "concepts/differentiable_term.hpp"
 #include "concepts/multipliable_term.hpp"
 #include "concepts/power_series.hpp"
 #include "concepts/power_series_term.hpp"
