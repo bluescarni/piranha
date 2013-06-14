@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -41,10 +40,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "concepts/container_element.hpp"
-#include "concepts/differentiable_term.hpp"
-#include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/sfinae_types.hpp"
@@ -109,9 +104,9 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Term must be a model of piranha::concept::Term.
+ * - \p Term must satisfy piranha::is_term.
  * - \p Derived must derive from piranha::series of \p Term and \p Derived.
- * - \p Derived must be a model of piranha::concept::ContainerElement.
+ * - \p Derived must satisfy piranha::is_container_element.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -133,7 +128,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag
 {
-		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
+		PIRANHA_TT_CHECK(is_term,Term);
 	public:
 		/// Alias for term type.
 		typedef Term term_type;
@@ -902,7 +897,7 @@ class series: series_binary_operators, detail::series_tag
 		~series() noexcept(true)
 		{
 			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
-			BOOST_CONCEPT_ASSERT((concept::ContainerElement<Derived>));
+			PIRANHA_TT_CHECK(is_container_element,Derived);
 			piranha_assert(destruction_checks());
 		}
 		/// Copy-assignment operator.
