@@ -170,6 +170,28 @@ BOOST_AUTO_TEST_CASE(poisson_series_term_multiplication_test)
 	boost::mpl::for_each<cf_types>(multiplication_tester());
 }
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+	mock_cf &operator/=(int);
+};
+
 struct partial_tester
 {
 	template <typename Cf>
@@ -246,4 +268,5 @@ struct partial_tester
 BOOST_AUTO_TEST_CASE(poisson_series_term_partial_test)
 {
 	boost::mpl::for_each<cf_types>(partial_tester());
+	BOOST_CHECK(!term_is_differentiable<poisson_series_term<mock_cf>>::value);
 }

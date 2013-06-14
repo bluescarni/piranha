@@ -98,7 +98,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Cf must be suitable for use in piranha::base_term.
+ * - \p Cf must be suitable for use in piranha::base_term;
  * - \p Cf must satisfy the following type traits:
  *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
  *   - piranha::has_multiply_accumulate.
