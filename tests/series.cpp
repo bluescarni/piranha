@@ -1446,9 +1446,31 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
 }
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
 	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK(is_differentiable<p_type1>::value);
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
 	BOOST_CHECK_EQUAL(math::partial(x,"y"),0);
@@ -1492,6 +1514,8 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	p_type1::unregister_all_custom_derivatives();
 	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
 	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
+	typedef g_series_type<mock_cf,int> p_type2;
+	BOOST_CHECK(!is_differentiable<p_type2>::value);
 }
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)

@@ -1336,6 +1336,9 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Partial derivative.
 		/**
+		 * \note
+		 * This method is enabled only if the term type satisfies piranha::term_is_differentiable.
+		 * 
 		 * Will return the partial derivative of \p this with respect to the argument called \p name. The method will construct
 		 * the return value series from the output of the term's differentiation method. Note that, contrary to the specialisation
 		 * of piranha::math::partial() for series types, this method will not take into account custom derivatives registered
@@ -1349,9 +1352,9 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * @throws unspecified any exception thrown by the differentiation method of the term type or by insert().
 		 */
+		template <typename T = term_type, typename = typename std::enable_if<term_is_differentiable<T>::value>::type>
 		Derived partial(const std::string &name) const
 		{
-			BOOST_CONCEPT_ASSERT((concept::DifferentiableTerm<Term>));
 			Derived retval;
 			retval.m_symbol_set = this->m_symbol_set;
 			const auto it_f = this->m_container.end();
@@ -1947,7 +1950,7 @@ struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
 template <typename Series>
-struct partial_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -1966,15 +1969,16 @@ struct partial_impl<Series,typename std::enable_if<std::is_base_of<detail::serie
 	 * - lookup operations on \p std::unordered_map,
 	 * - the copy assignment and call operators of the registered custom partial derivative function.
 	 */
-	Series operator()(const Series &s, const std::string &name) const
+	template <typename T>
+	auto operator()(const T &s, const std::string &name) -> decltype(s.partial(name))
 	{
 		bool custom = false;
-		std::function<Series(const Series &)> func;
+		std::function<T(const T &)> func;
 		// Try to locate a custom partial derivative and copy it into func, if found.
 		{
-			lock_guard<mutex>::type lock(Series::cp_mutex);
-			auto it = Series::cp_map.find(name);
-			if (it != Series::cp_map.end()) {
+			lock_guard<mutex>::type lock(T::cp_mutex);
+			auto it = T::cp_map.find(name);
+			if (it != T::cp_map.end()) {
 				func = it->second;
 				custom = true;
 			}

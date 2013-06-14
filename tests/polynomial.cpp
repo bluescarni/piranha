@@ -598,6 +598,27 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type2,std::string>::value));
 }
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {
 	using math::partial;
@@ -608,6 +629,8 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 	BOOST_CHECK_EQUAL(partial(x * y,"y"),x);
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"y"),10 * (x * y + x - 3 * pow(y,2)).pow(9) * (x - 6 * y));
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"z"),0);
+	BOOST_CHECK(is_differentiable<p_type1>::value);
+	BOOST_CHECK(!is_differentiable<polynomial<mock_cf>>::value);
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_subs_test)
