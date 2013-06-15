@@ -306,6 +306,10 @@ struct pow_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
 	}
 };
 
+
+// Just a trick to work around a glitch in Doxygen while parsing the trailing return type of pow().
+#define PIRANHA_TMP_RETURN_TYPE pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y))
+
 /// Exponentiation.
 /**
  * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl functor's
@@ -321,10 +325,12 @@ struct pow_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
 // NOTE: here the use of trailing decltype gives a nice and compact compilation error in case the specialisation of the functor
 // is missing.
 template <typename T, typename U>
-inline auto pow(T &&x, U &&y) -> decltype(pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y)))
+inline auto pow(T &&x, U &&y) -> decltype(PIRANHA_TMP_RETURN_TYPE)
 {
-	return pow_impl<typename std::decay<T>::type,typename std::decay<U>::type>()(std::forward<T>(x),std::forward<U>(y));
+	return PIRANHA_TMP_RETURN_TYPE;
 }
+
+#undef PIRANHA_TMP_RETURN_TYPE
 
 /// Default functor for the implementation of piranha::math::cos().
 /**
