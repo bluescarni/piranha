@@ -40,7 +40,6 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
-#include "concepts/multipliable_term.hpp"
 #include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/series_fwd.hpp"
@@ -75,8 +74,7 @@ namespace piranha
  * \section type_requirements Type requirements
  * 
  * - \p Series1 and \p Series2 must be models of piranha::concept::Series. Additionally, the echelon sizes of
- *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail;
- * - the term type of \p Series1 must be a model of piranha::concept::MultipliableTerm.
+ *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -103,7 +101,6 @@ class series_multiplier
 {
 		BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
 		BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
-		BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<typename Series1::term_type>));
 		static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
 			"Mismatch in echelon sizes.");
 	protected:

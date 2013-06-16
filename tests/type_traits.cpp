@@ -59,18 +59,6 @@ BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
 }
 
-BOOST_AUTO_TEST_CASE(type_traits_is_cv_ref)
-{
-	BOOST_CHECK_EQUAL(is_cv_or_ref<int>::value,false);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<int &>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<const int>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<const volatile int>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<const volatile int &>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<volatile int>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<int * const>::value,true);
-	BOOST_CHECK_EQUAL(is_cv_or_ref<int const *>::value,false);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_is_nonconst_rvalue_ref_test)
 {
 	BOOST_CHECK_EQUAL(is_nonconst_rvalue_ref<int>::value,false);
@@ -148,13 +136,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy &>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor *>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy *>::value,true);
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_is_tuple_test)
-{
-	BOOST_CHECK(is_tuple<std::tuple<>>::value);
-	BOOST_CHECK(is_tuple<std::tuple<int>>::value);
-	BOOST_CHECK(!is_tuple<std::string>::value);
 }
 
 namespace piranha

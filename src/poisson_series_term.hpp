@@ -21,7 +21,6 @@
 #ifndef PIRANHA_POISSON_SERIES_TERM_HPP
 #define PIRANHA_POISSON_SERIES_TERM_HPP
 
-#include <boost/concept/assert.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -29,7 +28,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "concepts/multipliable_term.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "power_series_term.hpp"
@@ -55,8 +53,6 @@ namespace piranha
  * \left(n_0x_0 + n_1x_1 + \ldots + n_mx_m\right),
  * \f]
  * where \f$ C \f$ is an arbitrary type parametrised by \p Cf.
- * 
- * This class is a model of the piranha::concept::MultipliableTerm concept.
  * 
  * \section type_requirements Type requirements
  * 
@@ -117,10 +113,7 @@ class poisson_series_term: public power_series_term<base_term<Cf,real_trigonomet
 		poisson_series_term(poisson_series_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series_term,base)
 		/// Trivial destructor.
-		~poisson_series_term() noexcept(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<poisson_series_term>));
-		}
+		~poisson_series_term() = default;
 		/// Defaulted copy assignment operator.
 		poisson_series_term &operator=(const poisson_series_term &) = default;
 		/// Defaulted move assignment operator.

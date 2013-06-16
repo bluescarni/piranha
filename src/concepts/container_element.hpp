@@ -50,7 +50,8 @@ struct ContainerElement:
 	/// Concept usage pattern.
 	BOOST_CONCEPT_USAGE(ContainerElement)
 	{
-		static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
+		// NOTE: this is going away.
+		//static_assert(!is_cv_or_ref<T>::value,"T must not be a reference type or cv-qualified.");
 		static_assert(is_nothrow_destructible<T>::value,"T must be nothrow-destructible.");
 		static_assert(std::is_nothrow_move_constructible<T>::value && std::is_nothrow_move_assignable<T>::value,"T must have nothrow move semantics.");
 	}

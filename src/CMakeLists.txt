@@ -18,7 +18,6 @@ SET(HEADERS_LIST
 	concepts/series.hpp
 	concepts/power_series_term.hpp
 	concepts/truncator.hpp
-	concepts/multipliable_term.hpp
 	concepts/container_element.hpp
 	concepts/power_series.hpp
 	concepts/term.hpp

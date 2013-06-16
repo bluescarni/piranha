@@ -21,14 +21,12 @@
 #ifndef PIRANHA_POLYNOMIAL_TERM_HPP
 #define PIRANHA_POLYNOMIAL_TERM_HPP
 
-#include <boost/concept/assert.hpp>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "base_term.hpp"
-#include "concepts/multipliable_term.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "forwarding.hpp"
@@ -94,8 +92,6 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * @endcode
  * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
  * 
- * This class is a model of the piranha::concept::MultipliableTerm concept.
- * 
  * \section type_requirements Type requirements
  * 
  * - \p Cf must be suitable for use in piranha::base_term;
@@ -156,10 +152,7 @@ class polynomial_term: public power_series_term<base_term<Cf,typename detail::po
 		polynomial_term(polynomial_term &&) = default;
 		PIRANHA_FORWARDING_CTOR(polynomial_term,base)
 		/// Trivial destructor.
-		~polynomial_term() noexcept(true)
-		{
-			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<polynomial_term>));
-		}
+		~polynomial_term() = default;
 		/// Defaulted copy assignment operator.
 		polynomial_term &operator=(const polynomial_term &) = default;
 		/// Defaulted move assignment operator.

@@ -47,30 +47,6 @@
 namespace piranha
 {
 
-/// Type trait to test if type is a tuple.
-/**
- * The \p value member will be \p true if \p T is an \p std::tuple, \p false otherwise.
- */
-template <typename T>
-struct is_tuple: std::false_type {};
-
-template <typename... Args>
-struct is_tuple<std::tuple<Args...>>: std::true_type {};
-
-/// Type is reference or is cv-qualified.
-/**
- * This type trait defines a static const boolean \p value flag which is \p true if either \p T is a reference or it is cv-qualified, \p false otherwise.
- */
-template <typename T>
-struct is_cv_or_ref
-{
-	/// Type trait value.
-	static const bool value = (std::is_reference<T>::value || std::is_const<T>::value || std::is_volatile<T>::value);
-};
-
-template <typename T>
-const bool is_cv_or_ref<T>::value;
-
 /// Type is non-const rvalue reference.
 /**
  * This type trait defines a static const boolean \p value flag which is \p true if \p T is a non-const rvalue reference.

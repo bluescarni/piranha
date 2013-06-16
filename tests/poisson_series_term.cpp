@@ -23,7 +23,6 @@
 #define BOOST_TEST_MODULE poisson_series_term_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <stdexcept>
@@ -31,8 +30,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "../src/concepts/multipliable_term.hpp"
-#include "../src/concepts/term.hpp"
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -54,7 +51,7 @@ struct constructor_tester
 	void operator()(const Cf &)
 	{
 		typedef poisson_series_term<Cf> term_type;
-		BOOST_CONCEPT_ASSERT((concept::Term<term_type>));
+		BOOST_CHECK(is_term<term_type>::value);
 		typedef typename term_type::key_type key_type;
 		typedef typename key_type::value_type expo_type;
 		symbol_set ed;
@@ -108,7 +105,6 @@ struct multiplication_tester
 	{
 		typedef poisson_series_term<Cf> term_type;
 		BOOST_CHECK(term_is_multipliable<term_type>::value);
-		BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<term_type>));
 		typedef typename term_type::key_type key_type;
 		typedef typename key_type::value_type expo_type;
 		symbol_set ed;

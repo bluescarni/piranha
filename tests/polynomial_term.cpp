@@ -23,15 +23,12 @@
 #define BOOST_TEST_MODULE polynomial_term_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/concept/assert.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
-#include "../src/concepts/multipliable_term.hpp"
-#include "../src/concepts/term.hpp"
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -58,7 +55,7 @@ struct constructor_tester
 		void operator()(const Expo &)
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
-			BOOST_CONCEPT_ASSERT((concept::Term<term_type>));
+			BOOST_CHECK(is_term<term_type>::value);
 			typedef typename term_type::key_type key_type;
 			symbol_set ed;
 			ed.add("x");
@@ -120,7 +117,6 @@ struct multiplication_tester
 		{
 			typedef polynomial_term<Cf,Expo> term_type;
 			BOOST_CHECK(term_is_multipliable<term_type>::value);
-			BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<term_type>));
 			typedef typename term_type::key_type key_type;
 			symbol_set ed;
 			ed.add("x");
