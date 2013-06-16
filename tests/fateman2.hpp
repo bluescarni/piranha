@@ -21,8 +21,9 @@
 #ifndef PIRANHA_FATEMAN2_HPP
 #define PIRANHA_FATEMAN2_HPP
 
+#include <boost/timer/timer.hpp>
+
 #include "../src/polynomial.hpp"
-#include "../src/timeit.hpp"
 
 namespace piranha
 {
@@ -37,7 +38,10 @@ inline polynomial<Cf,Key> fateman2()
 	for (auto i = 1; i < 30; ++i) {
 		f *= tmp;
 	}
-	return timeit([&f](){return f * (f + 1);});
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * (f + 1);
+	}
 }
 
 }

@@ -21,8 +21,9 @@
 #ifndef PIRANHA_PEARCE1_HPP
 #define PIRANHA_PEARCE1_HPP
 
+#include <boost/timer/timer.hpp>
+
 #include "../src/polynomial.hpp"
-#include "../src/timeit.hpp"
 
 namespace piranha
 {
@@ -41,7 +42,10 @@ inline polynomial<Cf,Key> pearce1()
 		f *= tmp_f;
 		g *= tmp_g;
 	}
-	return timeit([&f,&g](){return f * g;});
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * g;
+	}
 }
 
 }

@@ -24,11 +24,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/timer/timer.hpp>
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/settings.hpp"
-#include "../src/timeit.hpp"
 
 using namespace piranha;
 
@@ -55,5 +55,8 @@ BOOST_AUTO_TEST_CASE(rectangular_test)
 		BOOST_CHECK_EQUAL(curr.size(),1284816u);
 		return curr;
 	};
-	auto tmp = timeit(func);
+	{
+	boost::timer::auto_cpu_timer t;
+	auto tmp = func();
+	}
 }

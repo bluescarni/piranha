@@ -77,7 +77,6 @@ SET(HEADERS_LIST
 	type_traits.hpp
 	univariate_monomial.hpp
 	power_series_truncator.hpp
-	timeit.hpp
 	integer.hpp
 	math.hpp
 	environment.hpp

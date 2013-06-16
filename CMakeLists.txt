@@ -47,7 +47,7 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization)
+SET(REQUIRED_BOOST_LIBS serialization timer)
 # Look for Boost.Test only if we are building unit tests.
 IF(BUILD_TESTS)
 	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
@@ -64,13 +64,8 @@ IF(BUILD_PYRANHA)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
 ENDIF(BUILD_PYRANHA)
 MESSAGE(STATUS "Required Boost libraries: ${REQUIRED_BOOST_LIBS}")
-IF(PIRANHA_ENABLE_BOOST_THREAD)
-	# NOTE: it seems like proper c++0x support in Boost.thread is there from around 1.45.0. Possibly earlier,
-	# but no earlier than 1.43.0.
-	FIND_PACKAGE(Boost 1.45.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
-ELSE(PIRANHA_ENABLE_BOOST_THREAD)
-	FIND_PACKAGE(Boost 1.42.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
-ENDIF(PIRANHA_ENABLE_BOOST_THREAD)
+# Timers are available since 1.48.0.
+FIND_PACKAGE(Boost 1.48.0 REQUIRED COMPONENTS "${REQUIRED_BOOST_LIBS}")
 MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 # Include system Boost headers.
 MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
@@ -78,7 +73,7 @@ MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
 # when compiling tests.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY})
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_TIMER_LIBRARY})
 IF(PIRANHA_ENABLE_BOOST_THREAD)
 	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY})
 ENDIF(PIRANHA_ENABLE_BOOST_THREAD)
