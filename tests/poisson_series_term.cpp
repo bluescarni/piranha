@@ -42,6 +42,7 @@
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -106,6 +107,7 @@ struct multiplication_tester
 	void operator()(const Cf &)
 	{
 		typedef poisson_series_term<Cf> term_type;
+		BOOST_CHECK(term_is_multipliable<term_type>::value);
 		BOOST_CONCEPT_ASSERT((concept::MultipliableTerm<term_type>));
 		typedef typename term_type::key_type key_type;
 		typedef typename key_type::value_type expo_type;
