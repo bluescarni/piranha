@@ -1821,6 +1821,11 @@ struct type_traits_tester
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
 			typedef g_series_type<p_type1,Expo> p_type11;
+			BOOST_CHECK(is_series<p_type1>::value);
+			BOOST_CHECK(is_series<p_type11>::value);
+			BOOST_CHECK(!is_series<p_type1 &>::value);
+			BOOST_CHECK(!is_series<const p_type11>::value);
+			BOOST_CHECK(!is_series<p_type11 const &>::value);
 			BOOST_CHECK(is_equality_comparable<p_type1>::value);
 			BOOST_CHECK((is_equality_comparable<p_type1,Cf>::value));
 			BOOST_CHECK((is_equality_comparable<Cf,p_type1>::value));
@@ -1895,4 +1900,6 @@ struct type_traits_tester
 BOOST_AUTO_TEST_CASE(series_type_traits_test)
 {
 	boost::mpl::for_each<cf_types>(type_traits_tester());
+	BOOST_CHECK(!is_series<int>::value);
+	BOOST_CHECK(!is_series<double>::value);
 }

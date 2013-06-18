@@ -240,7 +240,7 @@ class polynomial:
 		~polynomial() noexcept(true)
 		{
 			PIRANHA_TT_CHECK(is_cf,polynomial);
-			BOOST_CONCEPT_ASSERT((concept::Series<polynomial>));
+			PIRANHA_TT_CHECK(is_series,polynomial);
 		}
 		/// Defaulted copy assignment operator.
 		polynomial &operator=(const polynomial &) = default;

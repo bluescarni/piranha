@@ -222,7 +222,7 @@ class poisson_series:
 		/// Trivial destructor.
 		~poisson_series() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Series<poisson_series>));
+			PIRANHA_TT_CHECK(is_series,poisson_series);
 		}
 		/// Defaulted copy assignment operator.
 		poisson_series &operator=(const poisson_series &) = default;
