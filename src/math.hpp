@@ -831,6 +831,55 @@ inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::ini
 	return detail::is_canonical_impl(pv,qv,p_list,q_list);
 }
 
+/// Default functor for the implementation of piranha::math::degree().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::degree() (the total degree), the other for the binary form of piranha::math::degree()
+ * (the partial degree).
+ */
+template <typename T, typename Enable = void>
+struct degree_impl
+{};
+
+/// Total degree.
+/**
+ * Return the total degree (as in polynomial degree).
+ * 
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
+ * 
+ * @param[in] x object whose degree will be computed.
+ * 
+ * @return total degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
+ */
+template <typename T>
+inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
+{
+	return degree_impl<T>()(x);
+}
+
+/// Partial degree.
+/**
+ * Return the partial degree (as in polynomial degree, but only a set of variables is considered in the computation).
+ * 
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
+ * 
+ * @param[in] x object whose partial degree will be computed.
+ * 
+ * @return partial degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
+ */
+template <typename T>
+inline auto degree(const T &x, const std::set<std::string> &names) -> decltype(degree_impl<T>()(x,names))
+{
+	return degree_impl<T>()(x,names);
+}
+
 /// Default functor for the implementation of piranha::math::t_degree().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1254,6 +1303,30 @@ class is_exponentiable: detail::sfinae_types
 // Static init.
 template <typename T, typename U>
 const bool is_exponentiable<T,U>::value;
+
+/// Type trait to detect if type has a degree property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::degree()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_degree_: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(const U &u) -> decltype(math::degree(u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(const U &u) -> decltype(math::degree(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1(std::declval<T>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>())),yes>::value;
+};
+
+// Static init.
+template <typename T>
+const bool has_degree_<T>::value;
 
 /// Type trait to detect if type has a trigonometric degree property.
 /**

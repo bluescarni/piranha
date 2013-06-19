@@ -31,15 +31,46 @@
 #include <utility>
 
 #include "../src/environment.hpp"
+#include "../src/poisson_series_term.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/polynomial_term.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
 
 typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
+
+template <typename Cf, typename Expo>
+class g_series_type: public power_series_<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>
+{
+	public:
+		typedef power_series_<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>> base;
+		g_series_type() = default;
+		g_series_type(const g_series_type &) = default;
+		g_series_type(g_series_type &&) = default;
+		g_series_type &operator=(const g_series_type &) = default;
+		g_series_type &operator=(g_series_type &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
+};
+
+template <typename Cf>
+class g_series_type2: public power_series_<series<poisson_series_term<Cf>,g_series_type2<Cf>>>
+{
+	public:
+		typedef power_series_<series<poisson_series_term<Cf>,g_series_type2<Cf>>> base;
+		g_series_type2() = default;
+		g_series_type2(const g_series_type2 &) = default;
+		g_series_type2(g_series_type2 &&) = default;
+		g_series_type2 &operator=(const g_series_type2 &) = default;
+		g_series_type2 &operator=(g_series_type2 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type2,base)
+};
 
 // TODO missing tests with degree only in the coefficient -> implement them once we have poisson series.
 // Also, implement tests for power series that do not satisfy the requirements.
@@ -138,4 +169,14 @@ BOOST_AUTO_TEST_CASE(power_series_degree_test)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(degree_tester());
+}
+
+BOOST_AUTO_TEST_CASE(power_series_tester)
+{
+	typedef g_series_type<double,int> stype1;
+	stype1 s;
+	s.degree();
+	typedef g_series_type2<double> stype2;
+	stype2 s2;
+	//s2.degree();
 }

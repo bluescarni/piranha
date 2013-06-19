@@ -21,6 +21,7 @@
 #ifndef PIRANHA_POWER_SERIES_HPP
 #define PIRANHA_POWER_SERIES_HPP
 
+#include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <set>
 #include <string>
@@ -30,6 +31,7 @@
 #include "concepts/power_series_term.hpp"
 #include "detail/toolbox.hpp"
 #include "forwarding.hpp"
+#include "math.hpp"
 #include "power_series_term.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
@@ -37,6 +39,121 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+template <typename Series>
+struct power_series_term_score
+{
+	static const unsigned value = static_cast<unsigned>(has_degree<typename Series::term_type::cf_type>::value) |
+				      (static_cast<unsigned>(key_has_degree<typename Series::term_type::key_type>::value) << 1u);
+};
+
+}
+
+template <typename Series>
+class power_series_: public Series
+{
+		PIRANHA_TT_CHECK(is_series,Series);
+		typedef Series base;
+		// Common checks on degree/ldegree type for use in enabling conditions below.
+		template <typename T>
+		struct common_type_checks
+		{
+			static const bool value = std::is_constructible<T,int>::value &&
+						  std::is_copy_constructible<T>::value &&
+						  std::is_assignable<T &,T>::value &&
+						  std::is_move_assignable<T>::value &&
+						  is_less_than_comparable<T>::value;
+		};
+		// Utilities to compute the degree.
+		template <typename T, typename = void>
+		struct degree_utils
+		{};
+		template <typename T>
+		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 1u>::type>
+		{
+			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,std::forward<Args>(args)...)
+			template <typename Term, typename ... Args>
+			static auto get(const Term &t, Args && ... args, const symbol_set &) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
+		};
+		template <typename T>
+		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 2u>::type>
+		{
+			#define PIRANHA_TMP_RETURN t.m_key.degree(std::forward<Args>(args)...,s)
+			template <typename Term, typename ... Args>
+			static auto get(const Term &t, Args && ... args, const symbol_set &s) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
+		};
+		template <typename T>
+		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 3u>::type>
+		{
+			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,std::forward<Args>(args)...) + t.m_key.degree(std::forward<Args>(args)...,s)
+			template <typename Term, typename ... Args>
+			static auto get(const Term &t, Args && ... args, const symbol_set &s) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
+		};
+		template <typename T, typename ... Args>
+		auto degree_impl(Args && ... args) const ->
+			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::forward<Args>(args)...,std::declval<symbol_set>()))
+		{
+			typedef decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),
+				std::forward<Args>(args)...,std::declval<symbol_set>())) return_type;
+			if (this->empty()) {
+				return return_type(0);
+			}
+			auto it = this->m_container.begin();
+			const auto it_f = this->m_container.end();
+			return_type retval = degree_utils<T>::get(*it,std::forward<Args>(args)...,this->m_symbol_set);
+			++it;
+			return_type tmp;
+			for (; it != it_f; ++it) {
+				tmp = degree_utils<T>::get(*it,std::forward<Args>(args)...,this->m_symbol_set);
+				if (retval < tmp) {
+					retval = std::move(tmp);
+				}
+			}
+			return retval;
+		}
+	public:
+		/// Defaulted default constructor.
+		power_series_() = default;
+		/// Defaulted copy constructor.
+		power_series_(const power_series_ &) = default;
+		/// Defaulted move constructor.
+		power_series_(power_series_ &&) = default;
+		PIRANHA_FORWARDING_CTOR(power_series_,base)
+		/// Defaulted copy assignment operator.
+		power_series_ &operator=(const power_series_ &) = default;
+		/// Defaulted move assignment operator.
+		power_series_ &operator=(power_series_ &&) = default;
+		PIRANHA_FORWARDING_ASSIGNMENT(power_series_,base)
+		/// Trivial destructor.
+		~power_series_() noexcept(true)
+		{
+			PIRANHA_TT_CHECK(is_series,power_series_);
+		}
+		template <typename T = power_series_>
+		auto degree() const -> decltype(this->degree_impl<T>())
+		{
+			return degree_impl<T>();
+		}
+};
+
 
 namespace detail
 {
