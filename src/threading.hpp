@@ -77,7 +77,12 @@ typedef
  * 
  * @see http://www.boost.org/doc/libs/release/doc/html/thread/thread_management.html#thread.thread_management.thread
  */
- class thread: private detail::base_thread
+// NOTE: some improvements here:
+// - encapsulate the thread object instead of deriving,
+// - think about using std::ref/cref in order to avoid copying object in the wrapper. Or maybe just force
+//   the ctor to take a std::function<void()> or something like that for peace of mind. The wrapper should
+//   also be easier in that case.
+class thread: private detail::base_thread
 {
 		typedef detail::base_thread base;
 		template <typename Callable, typename... Args>
