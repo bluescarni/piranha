@@ -53,7 +53,6 @@
 #include "thread_management.hpp"
 #include "threading.hpp"
 #include "tracing.hpp"
-#include "truncator.hpp"
 
 namespace piranha
 {
@@ -82,7 +81,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo series multiplier concept? -> do the same thing done for truncator class.
+ * \todo series multiplier concept?
  * \todo mention this must be specialised using enable_if.
  * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
  * means via template specialisation to customise the behaviour for different types of coefficients -> probably the easiest thing is to benchmark
@@ -90,8 +89,7 @@ namespace piranha
  * but should avoid excessive overhead practically always (which probably is what we want).
  * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
  * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
- * operations during multiplication. Or: have specialised functors cache degree/norms of terms for truncation purposes, in order to avoid
- * computing them each time.
+ * operations during multiplication.
  * \todo possibly we could adopt some of the optimizations adopted, e.g., in the Kronecker multiplier. For instance, have a fast mode for the multiplier
  * to kick in when doing the full computation in order to avoid some branching in the insertion routines. The code though is already quite complex,
  * so better be very sure it is worth before embarking in this.
@@ -113,13 +111,9 @@ class series_multiplier
 		 * Return type is the base piranha::series type of \p Series1.
 		 */
 		typedef series<term_type1,Series1> return_type;
-		/// Alias for the truncator type.
-		typedef truncator<Series1,Series2> truncator_type;
 	private:
 		static_assert(std::is_same<return_type,decltype(std::declval<Series1>().multiply_by_series(std::declval<Series1>()))>::value,
 			"Invalid return_type.");
-		// Alias for truncator traits.
-		typedef truncator_traits<Series1,Series2> ttraits;
 		// Swap operands if series types are the same and first series is shorter than the second,
 		// as the first series is used to split work among threads in mt mode.
 		template <typename T>
@@ -168,25 +162,15 @@ class series_multiplier
 		series_multiplier &operator=(series_multiplier &&) = delete;
 		/// Compute result of series multiplication.
 		/**
-		 * This method will create a piranha::truncator object from the series operands and
-		 * call execute() using default_functor as multiplication functor. The \p IsActive flag
-		 * of the functor will be set according to the activity flag of the truncator.
+		 * This method will call execute() using default_functor as multiplication functor.
 		 * 
 		 * @return the result of multiplying the two series.
 		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the construction of a piranha::truncator object from the series operands,
-		 * - the <tt>is_active()</tt> method of the truncator object,
-		 * - execute().
+		 * @throws unspecified any exception thrown by execute().
 		 */
 		return_type operator()() const
 		{
-			const truncator_type t(*m_s1,*m_s2);
-			if (t.is_active()) {
-				return execute<default_functor<true>>(t);
-			} else {
-				return execute<default_functor<false>>(t);
-			}
+			return execute<default_functor>(t);
 		}
 	protected:
 		/// Determine the number of threads to use in the multiplication.
@@ -241,18 +225,15 @@ class series_multiplier
 		 * - if one of the two series is empty, a default-constructed instance of \p return_type is returned;
 		 * - a heuristic determines whether to enable multi-threaded mode or not;
 		 * - in single-threaded mode:
-		 *   - an instance of \p Functor is created (using \p trunc as truncator object for construction)
-		 *     and used to compute the return value via term-by-term multiplications and
+		 *   - an instance of \p Functor is created and used to compute the return value via term-by-term multiplications and
 		 *     insertions in the return series;
 		 * - in multi-threaded mode:
 		 *   - the first series is subdivided into segments and the same process described for single-threaded mode is run in parallel,
 		 *     storing the multiple resulting series in a list;
 		 *   - the series in the result list are merged into a single series via piranha::series::insert().
 		 * 
-		 * \p Functor must be a type exposing the same public interface as default_functor. It will be used to compute term-by-term multiplications
-		 * and insert the terms into the return series respecting the current truncator settings.
-		 * 
-		 * @param[in] trunc a piranha::truncator object constructed from the series operands of the multiplication.
+		 * \p Functor must be a type exposing the same public interface as default_functor.
+		 * It will be used to compute term-by-term multiplications and insert the terms into the return series.
 		 * 
 		 * @return the result of multiplying the first series by the second series.
 		 * 
@@ -265,7 +246,7 @@ class series_multiplier
 		 * - piranha::series::insert().
 		 */
 		template <typename Functor>
-		return_type execute(const truncator_type &trunc) const
+		return_type execute() const
 		{
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_s1->empty() || m_s2->empty())) {
@@ -287,7 +268,7 @@ class series_multiplier
 			if (likely(n_threads == 1u)) {
 				return_type retval;
 				retval.m_symbol_set = m_s1->m_symbol_set;
-				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval);
+				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,retval);
 				const auto tmp = rehasher(f);
 				blocked_multiplication(f);
 				if (tmp.first) {
@@ -304,7 +285,7 @@ class series_multiplier
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
 					retval_list.push_back(return_type{});
 					retval_list.back().m_symbol_set = m_s1->m_symbol_set;
-					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,trunc,retval_list.back()));
+					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,retval_list.back()));
 				}
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
@@ -331,7 +312,7 @@ class series_multiplier
 				}
 				return_type retval;
 				retval.m_symbol_set = m_s1->m_symbol_set;
-				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,trunc,retval));
+				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,retval));
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
 				// methods in hash_set.
 				if (unlikely(!final_estimate)) {
@@ -351,7 +332,7 @@ class series_multiplier
 					);
 				}
 				// Cleanup functor that will erase all elements in retval_list.
-				auto cleanup = [&retval_list]() -> void {
+				auto cleanup = [&retval_list]() {
 					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) {r.m_container.clear();});
 				};
 				try {
@@ -375,17 +356,8 @@ class series_multiplier
 		/**
 		 * This multiplication functor uses the <tt>multiply()</tt> method of \p term_type1 to compute the result of
 		 * term-by-term multiplications, and employs the piranha::series::insert() method to accumulate the terms
-		 * in the return value. The functor will use the active truncator settings to sort, skip and filter terms
-		 * as necessary.
-		 * 
-		 * The \p IsActive template boolean flag is used to optimize those cases in which the truncator overhead can
-		 * be avoided because the truncator itself is not active. In such a case, the functor must be instantiated with
-		 * \p IsActive set to \p false, so that frequent truncation-related operations
-		 * can be skipped altogether, hence improving performance.
-		 * 
-		 * The \p SortOnConstruction boolean flag is used during construction to conditionally prevent the sorting of input terms.
+		 * in the return value.
 		 */
-		template <bool IsActive, bool SortOnConstruction = true>
 		class default_functor
 		{
 			public:
@@ -395,146 +367,45 @@ class series_multiplier
 				 */
 				typedef typename std::vector<term_type1 const *>::size_type size_type;
 			private:
-				// Meta-programmed helpers for skipping and filtering.
-				void sort_for_skip(const std::true_type &) const
-				{
-					auto sorter1 = [this](const term_type1 *t1, const term_type1 *t2) {
-						return this->m_trunc.compare_terms(*t1,*t2);
-					};
-					auto sorter2 = [this](const term_type2 *t1, const term_type2 *t2) {
-						return this->m_trunc.compare_terms(*t1,*t2);
-					};
-					std::sort(m_ptr1,m_ptr1 + m_s1,sorter1);
-					std::sort(m_ptr2,m_ptr2 + m_s2,sorter2);
-				}
-				void sort_for_skip(const std::false_type &) const {}
-				bool skip_impl(const size_type &i, const size_type &j, const std::true_type &) const
-				{
-					return m_trunc.skip(*m_ptr1[i],*m_ptr2[j]);
-				}
-				bool skip_impl(const size_type &, const size_type &, const std::false_type &) const
-				{
-					return false;
-				}
-				bool filter_impl(const term_type1 &t, const std::true_type &) const
-				{
-					return m_trunc.filter(t);
-				}
-				bool filter_impl(const term_type1 &, const std::false_type &) const
-				{
-					return false;
-				}
 				// Functor for the insertion of the terms.
-				template <bool CheckFilter, typename Tuple, std::size_t N = 0u, typename Enable2 = void>
+				template <typename Tuple, std::size_t N = 0u, typename Enable2 = void>
 				struct inserter
 				{
 					static_assert(N < boost::integer_traits<std::size_t>::const_max,
 							"Overflow error.");
 					static void run(const default_functor &f, Tuple &t)
 					{
-						if (!ttraits::is_skipping && CheckFilter && f.filter(std::get<N>(t))) {
-							// Do not insert.
-						} else {
-							f.m_retval.insert(std::get<N>(t));
-						}
-						inserter<CheckFilter,Tuple,N + 1u>::run(f,t);
+						f.m_retval.insert(std::get<N>(t));
+						inserter<Tuple,N + 1u>::run(f,t);
 					}
 				};
-				template <bool CheckFilter, typename Tuple, std::size_t N>
-				struct inserter<CheckFilter,Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
-				{
-					static void run(const default_functor &, Tuple &)
-					{}
-				};
-				template <bool CheckFilter, typename... Args>
+				template <typename... Args>
 				void insert_impl(std::tuple<Args...> &mult_res) const
 				{
 					inserter<CheckFilter,std::tuple<Args...>>::run(*this,mult_res);
 				}
-				template <bool CheckFilter>
 				void insert_impl(typename Series1::term_type &mult_res) const
 				{
-					// NOTE: the check on the traits here is because if the truncator is skipping, we assume that
-					// any necessary filtering has been done by the skip method.
-					if (!ttraits::is_skipping && CheckFilter && filter(mult_res)) {
-						// Do not insert.
-					} else {
-						m_retval.insert(mult_res);
-					}
+					m_retval.insert(mult_res);
 				}
 			public:
 				/// Constructor.
 				/**
 				 * The functor is constructed from arrays of pointers to the input series terms on which the functor
-				 * will operate, a piranha::truncator object and the return value into which the results of term-by-term
+				 * will operate and the return value into which the results of term-by-term
 				 * multiplications will be accumulated. The input parameters (or references to them) are stored as public
 				 * class members for later use.
-				 * 
-				 * If the associated truncator object is a skipping truncator, the \p IsActive flag is \p true
-				 * and the \p SortOnConstruction flag is true, the arrays of
-				 * pointers to terms will be sorted according to the truncator. Otherwise, the input term pointers arrays
-				 * will be unmodified and it will be up to the user of the functor to sort them according to the active
-				 * truncator.
 				 * 
 				 * @param[in] ptr1 start of the first array of pointers.
 				 * @param[in] s1 size of the first array of pointers.
 				 * @param[in] ptr2 start of the second array of pointers.
 				 * @param[in] s2 size of the second array of pointers.
-				 * @param[in] trunc piranha::truncator object associated to the multiplication.
 				 * @param[in] retval series into which the result of the multiplication will be accumulated.
-				 * 
-				 * @throws std::invalid_argument if \p IsActive is different from the output of <tt>trunc.is_active()</tt>.
-				 * @throws unspecified any exception thrown by the <tt>compare_terms()</tt> method of the truncator object,
-				 * in case of an active skipping truncator.
 				 */
 				explicit default_functor(term_type1 const **ptr1, const size_type &s1,
-					term_type2 const **ptr2, const size_type &s2, const truncator_type &trunc,
-					return_type &retval):
-					m_ptr1(ptr1),m_s1(s1),m_ptr2(ptr2),m_s2(s2),m_trunc(trunc),m_retval(retval)
-				{
-					if (unlikely(IsActive != trunc.is_active())) {
-						piranha_throw(std::invalid_argument,"inconsistent activity flags for truncator");
-					}
-					sort_for_skip(std::integral_constant<bool,IsActive && ttraits::is_skipping && SortOnConstruction>());
-				}
-				/// Check skipping condition.
-				/**
-				 * In case of an active skipping truncator, this method will return the output of the <tt>skip()</tt> method
-				 * of the truncator called on the pointees of the i-th and j-th elements of the first and second array of
-				 * term pointers respectively.
-				 * 
-				 * If the truncator is not active or not skipping, the method will return \p false.
-				 * 
-				 * @param[in] i index of the term in the first array of terms pointers.
-				 * @param[in] j index of the term in the second array of terms pointers.
-				 * 
-				 * @return the output of the <tt>skip()</tt> method of the truncator in case of a skipping active truncator,
-				 * \p false otherwise.
-				 * 
-				 * @throws unspecified any exception thrown by the <tt>skip()</tt> method of the truncator.
-				 */
-				bool skip(const size_type &i, const size_type &j) const
-				{
-					return skip_impl(i,j,std::integral_constant<bool,IsActive && ttraits::is_skipping>());
-				}
-				/// Check filtering condition.
-				/**
-				 * In case of an active filtering truncator, this method will return the output of the <tt>filter()</tt> method
-				 * of the truncator on the input term.
-				 * 
-				 * If the truncator is not active or not filtering, the method will return \p false.
-				 * 
-				 * @param[in] t term to be checked.
-				 * 
-				 * @return the output of the <tt>filter()</tt> method of the truncator in case of a filtering active truncator,
-				 * \p false otherwise.
-				 * 
-				 * @throws unspecified any exception thrown by the <tt>filter()</tt> method of the truncator.
-				 */
-				bool filter(const term_type1 &t) const
-				{
-					return filter_impl(t,std::integral_constant<bool,IsActive && ttraits::is_filtering>());
-				}
+					term_type2 const **ptr2, const size_type &s2, return_type &retval):
+					m_ptr1(ptr1),m_s1(s1),m_ptr2(ptr2),m_s2(s2),m_retval(retval)
+				{}
 				/// Term multiplication.
 				/**
 				 * This function call operator will multiply the i-th term in the first array of pointers by the j-th term
