@@ -36,12 +36,11 @@ BOOST_AUTO_TEST_CASE(task_group_run_test_01)
 {
 	environment env;
 	task_group tg;
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 1000; ++i) {
 		BOOST_CHECK_NO_THROW(tg.add_task([](){}));
 	}
 	BOOST_CHECK_NO_THROW(tg.wait_all());
 	BOOST_CHECK_NO_THROW(tg.wait_all());
-	BOOST_CHECK_EQUAL(tg.size(),100u);
 	BOOST_CHECK_NO_THROW(tg.get_all());
 	BOOST_CHECK_NO_THROW(tg.get_all());
 }
@@ -50,7 +49,7 @@ BOOST_AUTO_TEST_CASE(task_group_run_test_01)
 BOOST_AUTO_TEST_CASE(task_group_run_test_02)
 {
 	task_group tg;
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 1000; ++i) {
 		BOOST_CHECK_NO_THROW(tg.add_task(std::bind([](int x, int y) -> void {(void)(x + y);},i,i + 1)));
 	}
 }
@@ -58,11 +57,10 @@ BOOST_AUTO_TEST_CASE(task_group_run_test_02)
 BOOST_AUTO_TEST_CASE(task_group_run_test_03)
 {
 	task_group tg;
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 1000; ++i) {
 		BOOST_CHECK_NO_THROW(tg.add_task([](){throw std::runtime_error("");}));
 	}
-	BOOST_CHECK_EQUAL(tg.size(),100u);
-	for (int i = 0; i < 100; ++i) {
+	for (int i = 0; i < 1000; ++i) {
 		BOOST_CHECK_THROW(tg.get_all(),std::runtime_error);
 	}
 #if defined(PIRANHA_USE_BOOST_THREAD)

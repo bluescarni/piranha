@@ -22,8 +22,9 @@
 #define PIRANHA_TASK_GROUP_HPP
 
 #include <algorithm>
-#include <functional>
-#include <memory>
+#include <forward_list>
+#include <iterator>
+#include <utility>
 #include <vector>
 
 #include "config.hpp"
@@ -32,6 +33,127 @@
 namespace piranha
 {
 
+class task_group
+{
+		typedef promise<void>::type p_type;
+		typedef future<void>::type f_type;
+		typedef std::pair<p_type,f_type> pair_type;
+		typedef std::forward_list<pair_type> container_type;
+		// Task wrapper.
+		template <typename Callable>
+		struct task_wrapper
+		{
+			template <typename T>
+			explicit task_wrapper(T &&c, pair_type &pair):m_c(std::forward<T>(c)),m_pair(pair)
+			{
+				// NOTE: this is noexcept.
+				m_pair.second = m_pair.first.get_future();
+			}
+			void operator()()
+			{
+				try {
+					m_c();
+					m_pair.first.set_value();
+				} catch (...) {
+					m_pair.first.set_exception(current_exception());
+				}
+			}
+			Callable	m_c;
+			pair_type	&m_pair;
+		};
+	public:
+		/// Defaulted default constructor.
+		/**
+		 * Will initialise an empty task group.
+		 */
+		task_group() = default;
+		/// Destructor.
+		/**
+		 * Will invoke wait_all().
+		 */
+		~task_group()
+		{
+			wait_all();
+		}
+		/// Deleted copy constructor.
+		task_group(const task_group &) = delete;
+		/// Deleted move constructor.
+		task_group(task_group &&) = delete;
+		/// Deleted copy assignment operator.
+		task_group &operator=(const task_group &) = delete;
+		/// Deleted move assignment operator.
+		task_group &operator=(task_group &&) = delete;
+		template <typename Callable, typename = typename std::enable_if<std::is_constructible<thread,Callable &&>::value>::type>
+		void add_task(Callable &&c)
+		{
+			// First let's try to append an empty future. If an error happens here, no big deal.
+			m_container.emplace_front(p_type{},f_type{});
+			try {
+				// Create the functor.
+				task_wrapper<typename std::decay<Callable>::type> tw(std::forward<Callable>(c),m_container.front());
+				// Now the future has been assigned to the back of m_container. Launch the thread.
+				thread thr(std::move(tw));
+				piranha_assert(thr.joinable());
+				// Try detaching.
+				// NOTE: it is not clear here what kind of guarantees we can offer, could be a good candidate for fatal error
+				// logging, or maybe terminate().
+				try {
+					thr.detach();
+				} catch (...) {
+					// Last-ditch effort: try join()ing before re-throwing.
+					thr.join();
+					throw;
+				}
+			} catch (...) {
+				// The error happened *after* the empty item was added,
+				// we have to remove it as it is invalid.
+				m_container.pop_front();
+				throw;
+			}
+		}
+		/// Wait for completion of all tasks.
+		/**
+		 * It is safe to call this method multiple times, even if get_all() has been called before.
+		 */
+		void wait_all()
+		{
+			std::for_each(m_container.begin(),m_container.end(),[this](pair_type &p) {
+				if (this->future_is_valid(p.second)) {
+					p.second.wait();
+				}
+			});
+		}
+		/// Get an exception thrown by a task.
+		/**
+		 * Depending on the threading model (C++ vs Boost.Thread), calling this method multiple times
+		 * can either re-throw the same exception or be a no-op.
+		 * 
+		 * @throws unspecified an exception thrown by a task.
+		 */
+		void get_all()
+		{
+			std::for_each(m_container.begin(),m_container.end(),[this](pair_type &p) {
+				if (this->future_is_valid(p.second)) {
+					p.second.get();
+				}
+			});
+		}
+	private:
+		// NOTE: the semantics to check if a future is valid are slightly different
+		// in Boost and std c++.
+		static bool future_is_valid(f_type &f)
+		{
+#if defined(PIRANHA_USE_BOOST_THREAD)
+			return f.get_state() != boost::future_state::uninitialized;
+#else
+			return f.valid();
+#endif
+		}
+	private:
+		container_type m_container;
+};
+
+#if 0
 /// Task group class.
 /**
  * This class represents a group of tasks run asynchrously in separate threads. Tasks must consist
@@ -182,6 +304,7 @@ class task_group
 	private:
 		container_type m_container;
 };
+#endif
 
 }
 

@@ -39,6 +39,7 @@
 
 #include "config.hpp"
 #include "detail/mpfr.hpp"
+#include "type_traits.hpp"
 
 #if defined(PIRANHA_USE_BOOST_THREAD)
 	#include <boost/exception_ptr.hpp>
@@ -70,6 +71,75 @@ typedef
 
 }
 
+/// Thread class.
+/**
+ * Basic thread class deriving from either <tt>std::thread</tt> or <tt>boost::thread</tt>. Only a basic common interface
+ * to both implementations is provided.
+ * 
+ * @see http://www.boost.org/doc/libs/release/doc/html/thread/thread_management.html#thread.thread_management.thread
+ */
+class thread
+{
+		template <typename Callable>
+		struct wrapper
+		{
+			wrapper() = delete;
+			template <typename T>
+			explicit wrapper(T &&c):m_c(std::forward<T>(c)) {}
+			wrapper(const wrapper &) = delete;
+			wrapper(wrapper &&) = default;
+			wrapper &operator=(const wrapper &) = delete;
+			wrapper &operator=(wrapper &&) = delete;
+			void operator()()
+			{
+				try {
+					m_c();
+				} catch (...) {
+					::mpfr_free_cache();
+					throw;
+				}
+				::mpfr_free_cache();
+			}
+			Callable m_c;
+		};
+	public:
+		thread() = delete;
+		template <typename Callable, typename = typename std::enable_if<is_function_object<
+			typename std::decay<Callable>::type,void>::value &&
+			std::is_move_constructible<typename std::decay<Callable>::type>::value &&
+			std::is_constructible<typename std::decay<Callable>::type,Callable &&>::value>::type>
+		explicit thread(Callable &&c):m_thread(wrapper<typename std::decay<Callable>::type>(std::forward<Callable>(c))) {}
+		thread(const thread &) = delete;
+		thread(thread &&) = default;
+		thread &operator=(const thread &) = delete;
+		thread &operator=(thread &&) = default;
+		bool joinable() const
+		{
+			return m_thread.joinable();
+		}
+		void join()
+		{
+			if (joinable()) {
+				m_thread.join();
+			}
+		}
+		void detach()
+		{
+			if (joinable()) {
+				m_thread.detach();
+			}
+		}
+		~thread() noexcept(true)
+		{
+			if (joinable()) {
+				std::terminate();
+			}
+		}
+	private:
+		detail::base_thread m_thread;
+};
+
+#if 0
 /// Thread class.
 /**
  * Basic thread class deriving from either <tt>std::thread</tt> or <tt>boost::thread</tt>. Only a basic common interface
@@ -189,6 +259,7 @@ class thread: private detail::base_thread
 			return base::joinable();
 		}
 };
+#endif
 
 /// Condition variable type.
 /**

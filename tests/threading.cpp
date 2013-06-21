@@ -28,7 +28,7 @@
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(threading_thread_test)
+/*BOOST_AUTO_TEST_CASE(threading_thread_test)
 {
 	environment env;
 	{
@@ -70,4 +70,13 @@ BOOST_AUTO_TEST_CASE(threading_thread_test)
 	BOOST_CHECK(!t4.joinable());
 	BOOST_CHECK_EQUAL(r1,1 + real{}.pi());
 	BOOST_CHECK_EQUAL(r2,1 + real{}.pi());
+}*/
+
+BOOST_AUTO_TEST_CASE(threading_thread_test)
+{
+	environment env;
+	real r1, r2;
+	auto f = [&r1]() {r1 += 1;};
+	thread t1(f);
+	t1.join();
 }
