@@ -170,7 +170,7 @@ class series_multiplier
 		 */
 		return_type operator()() const
 		{
-			return execute<default_functor>(t);
+			return execute<default_functor>();
 		}
 	protected:
 		/// Determine the number of threads to use in the multiplication.
@@ -379,10 +379,16 @@ class series_multiplier
 						inserter<Tuple,N + 1u>::run(f,t);
 					}
 				};
+				template <typename Tuple, std::size_t N>
+				struct inserter<Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
+				{
+				       static void run(const default_functor &, Tuple &)
+				       {}
+				};
 				template <typename... Args>
 				void insert_impl(std::tuple<Args...> &mult_res) const
 				{
-					inserter<CheckFilter,std::tuple<Args...>>::run(*this,mult_res);
+					inserter<std::tuple<Args...>>::run(*this,mult_res);
 				}
 				void insert_impl(typename Series1::term_type &mult_res) const
 				{
@@ -423,20 +429,13 @@ class series_multiplier
 				}
 				/// Term insertion.
 				/**
-				 * This method will insert into the return value \p m_retval the term(s) stored in \p m_tmp. The boolean flag \p CheckFilter
-				 * establishes whether the insertion respects the filtering criterion: if \p true, before any term insertion the filter()
-				 * method of the functor will be called to check if the term can be discarded, otherwise the terms will be unconditionally
-				 * inserted.
-				 * 
-				 * Note that the term will always be unconditionally inserted when the truncator is skipping, as it is assumed that all the filtering
-				 * has been performed by the skip() method.
+				 * This method will insert into the return value \p m_retval the term(s) stored in \p m_tmp.
 				 * 
 				 * @throws unspecified any exception thrown by series::insert().
 				 */
-				template <bool CheckFilter = true>
 				void insert() const
 				{
-					insert_impl<CheckFilter>(m_tmp);
+					insert_impl(m_tmp);
 				}
 				/// Pointer to the first array of pointers.
 				term_type1 const **					m_ptr1;
@@ -446,8 +445,6 @@ class series_multiplier
 				term_type2 const **					m_ptr2;
 				/// Size of the second array of pointers.
 				const size_type						m_s2;
-				/// Const reference to the truncator object used during construction.
-				const truncator_type					&m_trunc;
 				/// Reference to the return series object used during construction.
 				return_type						&m_retval;
 				/// Object holding the result of term-by-term multiplications.
@@ -460,8 +457,7 @@ class series_multiplier
 		/**
 		 * This method expects a \p Functor type exposing the same inteface as default_functor. Functionally, the method
 		 * is equivalent to repeated calls of the methods of \p Functor that will multiply term-by-term the terms
-		 * of the input series and accumulate the result in the output series. Terms will be inserted respecting the
-		 * skipping and filtering criterions established by the active truncator.
+		 * of the input series and accumulate the result in the output series.
 		 *
 		 * The method will perform the multiplications after logically subdividing the input series in blocks, in order to
 		 * optimize cache memory access patterns.
@@ -487,9 +483,6 @@ class series_multiplier
 					const size_type j_start = n2 * bsize2, j_end = j_start + bsize2;
 					for (size_type i = i_start; i < i_end; ++i) {
 						for (size_type j = j_start; j < j_end; ++j) {
-							if (f.skip(i,j)) {
-								break;
-							}
 							f(i,j);
 							f.insert();
 						}
@@ -498,9 +491,6 @@ class series_multiplier
 				// regulars1 * rem2
 				for (size_type i = i_start; i < i_end; ++i) {
 					for (size_type j = j_ir_start; j < j_ir_end; ++j) {
-						if (f.skip(i,j)) {
-							break;
-						}
 						f(i,j);
 						f.insert();
 					}
@@ -511,9 +501,6 @@ class series_multiplier
 				const size_type j_start = n2 * bsize2, j_end = j_start + bsize2;
 				for (size_type i = i_ir_start; i < i_ir_end; ++i) {
 					for (size_type j = j_start; j < j_end; ++j) {
-						if (f.skip(i,j)) {
-							break;
-						}
 						f(i,j);
 						f.insert();
 					}
@@ -522,9 +509,6 @@ class series_multiplier
 			// rem1 * rem2.
 			for (size_type i = i_ir_start; i < i_ir_end; ++i) {
 				for (size_type j = j_ir_start; j < j_ir_end; ++j) {
-					if (f.skip(i,j)) {
-						break;
-					}
 					f(i,j);
 					f.insert();
 				}
@@ -585,15 +569,15 @@ class series_multiplier
 			typedef typename std::iterator_traits<typename std::vector<size_type>::iterator>::difference_type diff_type;
 			typedef std::uniform_int_distribution<diff_type> dist_type;
 			auto rng = [&engine](const diff_type &n) {return dist_type(diff_type(0),n - diff_type(1))(engine);};
-			// Init counters.
-			integer total(0), filtered(0);
+			// Init counter.
+			integer total(0);
 			// Go with the trials.
 			// NOTE: This could be easily parallelised, but not sure if it is worth.
 			for (auto n = 0u; n < ntrials; ++n) {
 				// Randomise.
 				std::random_shuffle(v_idx1.begin(),v_idx1.end(),rng);
 				std::random_shuffle(v_idx2.begin(),v_idx2.end(),rng);
-				size_type count = 0u, count_filtered = 0u;
+				size_type count = 0u;
 				auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
 				while (count < max_M) {
 					if (it1 == v_idx1.end()) {
@@ -610,8 +594,7 @@ class series_multiplier
 					}
 					// Perform multiplication and check if it produces a new term.
 					f(*it1,*it2);
-					// Do not filter on insertion, we are going to check how many terms would be filtered later.
-					f.template insert<false>();
+					f.insert();
 					// Check for unlikely overflow when increasing count.
 					if (unlikely(result_size(f.m_tmp) > boost::integer_traits<size_type>::const_max ||
 						count > boost::integer_traits<size_type>::const_max - result_size(f.m_tmp)))
@@ -621,30 +604,19 @@ class series_multiplier
 					if (retval.size() != count + result_size(f.m_tmp)) {
 						break;
 					}
-					// Check how many terms would be filtered.
-					const std::size_t n_filtered = count_n_filtered(f.m_tmp,f);
-					// Check for unlikely overflow, as above.
-					if (unlikely(n_filtered > boost::integer_traits<size_type>::const_max ||
-						count_filtered > boost::integer_traits<size_type>::const_max - n_filtered))
-					{
-						piranha_throw(std::overflow_error,"overflow error");
-					}
-					count_filtered += n_filtered;
 					// Increase cycle variables.
 					count += result_size(f.m_tmp);
 					++it1;
 					++it2;
 				}
 				total += count;
-				filtered += count_filtered;
 				// Reset retval.
 				retval.m_container.clear();
 			}
-			piranha_assert(total >= filtered);
 			const auto mean = total / ntrials;
 			// Avoid division by zero.
 			if (total.sign()) {
-				const integer M = (mean * mean * multiplier * (total - filtered)) / total;
+				const integer M = (mean * mean * multiplier * total) / total;
 				return static_cast<bucket_size_type>(M);
 			} else {
 				return static_cast<bucket_size_type>(mean * mean * multiplier);
@@ -849,25 +821,6 @@ class series_multiplier
 		static std::size_t result_size(const std::tuple<T...> &)
 		{
 			return std::tuple_size<std::tuple<T...>>::value;
-		}
-		// Meta-programming for counting the filtered terms in f.m_tmp.
-		template <typename Functor>
-		static std::size_t count_n_filtered(const term_type1 &t, const Functor &f)
-		{
-			return f.filter(t);
-		}
-		template <std::size_t N = 0u, typename Functor, typename... T>
-		static std::size_t count_n_filtered(const std::tuple<T...> &t, const Functor &f,
-			typename std::enable_if<(N != std::tuple_size<std::tuple<T...>>::value - 1u)>::type * = nullptr)
-		{
-			static_assert(N < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
-			return ((std::size_t)f.filter(std::get<N>(t))) + count_n_filtered<N + 1u>(t,f);
-		}
-		template <std::size_t N, typename Functor, typename... T>
-		static std::size_t count_n_filtered(const std::tuple<T...> &t, const Functor &f,
-			typename std::enable_if<N == std::tuple_size<std::tuple<T...>>::value - 1u>::type * = nullptr)
-		{
-			return f.filter(std::get<N>(t));
 		}
 	protected:
 		/// Const pointer to the first series operand.
