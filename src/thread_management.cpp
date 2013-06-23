@@ -32,7 +32,7 @@
 #include "settings.hpp"
 #include "thread_management.hpp"
 
-#if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
+#if defined(PIRANHA_HAVE_PTHREAD_AFFINITY)
 
 extern "C"
 {
@@ -89,7 +89,7 @@ void thread_management::bind_to_proc(unsigned n)
 	if (hc != 0u && n >= hc) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
 	}
-#if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
+#if defined(PIRANHA_HAVE_PTHREAD_AFFINITY)
 	unsigned cpu_setsize;
 	int n_int;
 	try {
@@ -157,7 +157,7 @@ void thread_management::bind_to_proc(unsigned n)
 std::pair<bool,unsigned> thread_management::bound_proc()
 {
 	std::lock_guard<std::mutex> lock(m_mutex);
-#if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
+#if defined(PIRANHA_HAVE_PTHREAD_AFFINITY)
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
 	const int errno_ = ::pthread_getaffinity_np(::pthread_self(),sizeof(cpuset),&cpuset);

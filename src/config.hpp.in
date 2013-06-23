@@ -21,13 +21,13 @@
 #ifndef PIRANHA_CONFIG_HPP
 #define PIRANHA_CONFIG_HPP
 
-@PIRANHA_THREAD_MODEL@
+@PIRANHA_PTHREAD_AFFINITY@
+@PIRANHA_POSIX_MEMALIGN@
 @PIRANHA_VERSION@
 @PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
 @PIRANHA_USE_TCMALLOC@
 
 #include <cassert>
-#include <cstdlib>
 
 #define piranha_assert assert
 
@@ -39,11 +39,6 @@
 	// NOTE: addidtional compiler configurations go here or in separate file as above.
 	#define likely(x) (x)
 	#define unlikely(x) (x)
-#endif
-
-// Support of posix_memalign.
-#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
-	#define PIRANHA_HAVE_POSIX_MEMALIGN
 #endif
 
 // Ugh.

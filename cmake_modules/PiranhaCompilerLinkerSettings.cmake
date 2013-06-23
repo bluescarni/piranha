@@ -37,10 +37,6 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	ENDIF(GNUCXX_VISIBILITY_INLINES_HIDDEN AND GNUCXX_VISIBILITY_HIDDEN AND NOT MINGW)
 	# Add to the base flags extra warnings.
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors -Wdisabled-optimization")
-	# Suggested for multithreaded code.
-	ADD_DEFINITIONS(-D_REENTRANT)
-	# When compiling with GCC, enable the GNU extensions - used for instance in thread affinity settings.
-	ADD_DEFINITIONS(-D_GNU_SOURCE)
 	# Try to see if we have the 128-bit integer type available. Can be either
 	# __int128_t or __int128 (in later versions).
 	CHECK_TYPE_SIZE("__int128_t" PIRANHA_GCC___INT128_T)
