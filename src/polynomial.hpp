@@ -981,7 +981,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					return static_cast<value_type>(old);
 			});
 			// Try casting final delta.
-			static_cast<value_type>(f_delta);
+			(void)static_cast<value_type>(f_delta);
 			// Compute hmax and hmin.
 			piranha_assert(m_minmax_values.size() == c_vec.size());
 			const auto h_minmax = std::inner_product(m_minmax_values.begin(),m_minmax_values.end(),c_vec.begin(),
@@ -1389,7 +1389,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				task_group tg;
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
-						tg.add_task(thread_function);
+						// NOTE: this is a workaround for a GCC 4.7 bug. When we bump to 4.8 we can avoid
+						// std::function and use the functor directly.
+						tg.add_task(std::function<void()>(thread_function));
 					}
 					// First let's wait for everything to finish.
 					tg.wait_all();
