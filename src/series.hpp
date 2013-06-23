@@ -29,8 +29,10 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <functional>
+#include <memory>
 #include <iostream>
 #include <iterator>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -56,9 +58,7 @@
 #include "settings.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
-#include "threading.hpp"
 #include "tracing.hpp"
-#include "truncator.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -142,9 +142,6 @@ class series: series_binary_operators, detail::series_tag
 		// Make friend with series multiplier class.
 		template <typename, typename, typename>
 		friend class series_multiplier;
-		// Make friend with all truncator classes.
-		template <typename...>
-		friend class truncator;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
 		// Partial need access to the custom derivatives.
@@ -614,7 +611,7 @@ class series: series_binary_operators, detail::series_tag
 			>::type * = nullptr)
 		{
 			// NOTE: all this dancing around with base and derived types for series is necessary as the mechanism of
-			// specialization of series_multiplier and truncator depends on the derived types - which must then be preserved and
+			// specialization of series_multiplier depends on the derived types - which must then be preserved and
 			// not casted away to the base types.
 			// Base types of multiplicand series.
 			typedef series<typename std::decay<T>::type::term_type,typename std::decay<T>::type> base_type2;
@@ -693,30 +690,6 @@ class series: series_binary_operators, detail::series_tag
 				std::declval<const symbol_set &>())) type;
 		};
 		// Print utilities.
-		template <bool TexMode, typename Series>
-		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
-			truncator_traits<Series>::is_sorting>::type * = nullptr)
-		{
-			typedef typename Series::term_type term_type;
-			truncator<Series> t(s);
-			if (t.is_active()) {
-				std::vector<term_type const *> v;
-				v.reserve(s.size());
-				std::transform(s.m_container.begin(),s.m_container.end(),
-					std::back_insert_iterator<decltype(v)>(v),[](const term_type &t) {return &t;});
-				std::sort(v.begin(),v.end(),[&t](const term_type *t1, const term_type *t2) {return t.compare_terms(*t1,*t2);});
-				return print_helper_1<TexMode>(os,boost::indirect_iterator<decltype(v.begin())>(v.begin()),
-					boost::indirect_iterator<decltype(v.end())>(v.end()),s.m_symbol_set);
-			} else {
-				return print_helper_1<TexMode>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
-			}
-		}
-		template <bool TexMode, typename Series>
-		static std::ostream &print_helper_0(std::ostream &os, const Series &s, typename std::enable_if<
-			!truncator_traits<Series>::is_sorting>::type * = nullptr)
-		{
-			return print_helper_1<TexMode>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
-		}
 		template <bool TexMode, typename Iterator>
 		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
 		{
@@ -1035,17 +1008,6 @@ class series: series_binary_operators, detail::series_tag
 		void insert(T &&term)
 		{
 			insert<true>(std::forward<T>(term));
-		}
-		/// Truncator getter.
-		/**
-		 * @return an instance of piranha::truncator of \p Derived constructed using \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the constructor of piranha::truncator.
-		 */
-		truncator<Derived> get_truncator() const
-		{
-			BOOST_CONCEPT_ASSERT((concept::Truncator<Derived>));
-			return truncator<Derived>(*static_cast<Derived const *>(this));
 		}
 		/// In-place addition.
 		/**
@@ -1379,8 +1341,8 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void register_custom_derivative(const std::string &name, std::function<Derived(const Derived &)> func)
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
-			cp_map[name] = func;
+			std::lock_guard<std::mutex> lock(cp_mutex);
+			(*cp_map)[name] = func;
 		}
 		/// Unregister custom partial derivative.
 		/**
@@ -1397,10 +1359,10 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void unregister_custom_derivative(const std::string &name)
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
-			auto it = cp_map.find(name);
-			if (it != cp_map.end()) {
-				cp_map.erase(it);
+			std::lock_guard<std::mutex> lock(cp_mutex);
+			auto it = cp_map->find(name);
+			if (it != cp_map->end()) {
+				cp_map->erase(it);
 			}
 		}
 		/// Unregister all custom partial derivatives.
@@ -1412,8 +1374,8 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void unregister_all_custom_derivatives()
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
-			cp_map.clear();
+			std::lock_guard<std::mutex> lock(cp_mutex);
+			cp_map->clear();
 		}
 		/// Begin iterator.
 		/**
@@ -1629,7 +1591,7 @@ class series: series_binary_operators, detail::series_tag
 				os << "0";
 				return;
 			}
-			print_helper_0<true>(os,*static_cast<Derived const *>(this));
+			print_helper_1<true>(os,m_container.begin(),m_container.end(),m_symbol_set);
 		}
 		/// Overloaded stream operator for piranha::series.
 		/**
@@ -1652,9 +1614,7 @@ class series: series_binary_operators, detail::series_tag
 		 * - at most piranha::settings::get_max_term_output() terms are printed, and terms in excess are
 		 *   represented with ellipsis "..." at the end of the output.
 		 * 
-		 * The order in which terms are printed is determined by an instance of
-		 * piranha::truncator of \p Derived constructed from \p this, in case the truncator
-		 * is sorting and active. Otherwise, the print order will be undefined.
+		 * Note that the print order of the terms will be undefined.
 		 * 
 		 * @param[in,out] os target stream.
 		 * @param[in] s piranha::series argument.
@@ -1675,7 +1635,7 @@ class series: series_binary_operators, detail::series_tag
 				os << "0";
 				return os;
 			}
-			return print_helper_0<false>(os,*static_cast<Derived const *>(&s));
+			return print_helper_1<false>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
 		}
 	protected:
 		/// Symbol set.
@@ -1683,17 +1643,20 @@ class series: series_binary_operators, detail::series_tag
 		/// Terms container.
 		container_type	m_container;
 	private:
-		typedef std::unordered_map<std::string,std::function<Derived(const Derived &)>> cp_map_type;
-		static mutex		cp_mutex;
+		// NOTE: Derived is not a complete type here, so we need to wrap everything in a unique_ptr.
+		typedef std::unique_ptr<std::unordered_map<std::string,std::function<Derived(const Derived &)>>> cp_map_type;
+		static std::mutex	cp_mutex;
 		static cp_map_type	cp_map;
+
 };
 
 // Static initialisation.
 template <typename Term, typename Derived>
-mutex series<Term,Derived>::cp_mutex;
+std::mutex series<Term,Derived>::cp_mutex;
 
 template <typename Term, typename Derived>
-typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
+typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map =
+	series<Term,Derived>::cp_map_type(new std::unordered_map<std::string,std::function<Derived(const Derived &)>>);
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
@@ -1969,9 +1932,9 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
 		std::function<T(const T &)> func;
 		// Try to locate a custom partial derivative and copy it into func, if found.
 		{
-			lock_guard<mutex>::type lock(T::cp_mutex);
-			auto it = T::cp_map.find(name);
-			if (it != T::cp_map.end()) {
+			std::lock_guard<std::mutex> lock(T::cp_mutex);
+			auto it = T::cp_map->find(name);
+			if (it != T::cp_map->end()) {
 				func = it->second;
 				custom = true;
 			}
@@ -2016,6 +1979,21 @@ struct evaluate_impl<Series,typename std::enable_if<std::is_base_of<detail::seri
 };
 
 }
+
+/// Type trait to detect series types.
+/**
+ * This type trait will be true if \p T is an instance of piranha::series and it satisfies piranha::is_container_element.
+ */
+template <typename T>
+class is_series
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = is_instance_of<T,series>::value && is_container_element<T>::value;
+};
+
+template <typename T>
+const bool is_series<T>::value;
 
 }
 

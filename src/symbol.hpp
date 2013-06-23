@@ -24,12 +24,12 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <mutex>
 #include <set>
 #include <string>
 #include <utility>
 
 #include "config.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
@@ -141,7 +141,7 @@ class PIRANHA_PUBLIC symbol
 		typedef std::set<std::string> container_type;
 		static std::string const *get_pointer(const std::string &name)
 		{
-			lock_guard<mutex>::type lock(m_mutex);
+			std::lock_guard<std::mutex> lock(m_mutex);
 			auto it = m_symbol_list.find(name);
 			if (it == m_symbol_list.end()) {
 				// If symbol is not present in the list, add it.
@@ -157,7 +157,7 @@ class PIRANHA_PUBLIC symbol
 			return &*it;
 		}
 		std::string const		*m_ptr;
-		static mutex			m_mutex;
+		static std::mutex		m_mutex;
 		static container_type		m_symbol_list;
 };
 

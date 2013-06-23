@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-#include "../src/threading.hpp"
+#include "../src/thread.hpp"
 
 using namespace piranha;
 

@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include <mutex>
 #include <stdexcept>
 #include <utility>
 
@@ -25,13 +26,12 @@
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
 
 // Static init.
-mutex settings::m_mutex;
+std::mutex settings::m_mutex;
 std::pair<bool,unsigned> settings::m_n_threads(false,0u);
 std::pair<bool,unsigned> settings::m_cache_line_size(false,0u);
 bool settings::m_tracing = false;
@@ -47,7 +47,7 @@ unsigned long settings::m_max_term_output = settings::m_default_max_term_output;
  */
 unsigned settings::get_n_threads()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if (unlikely(!m_n_threads.first)) {
 		const auto candidate = runtime_info::get_hardware_concurrency();
 		m_n_threads.second = (candidate > 0u) ? candidate : 1u;
@@ -68,7 +68,7 @@ void settings::set_n_threads(unsigned n)
 	if (n == 0u) {
 		piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
 	}
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_n_threads.first = true;
 	m_n_threads.second = n;
 }
@@ -81,7 +81,7 @@ void settings::set_n_threads(unsigned n)
  */
 void settings::reset_n_threads()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	const auto candidate = runtime_info::get_hardware_concurrency();
 	m_n_threads.second = (candidate > 0u) ? candidate : 1u;
 	m_n_threads.first = true;
@@ -98,7 +98,7 @@ void settings::reset_n_threads()
  */
 unsigned settings::get_cache_line_size()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if (unlikely(!m_cache_line_size.first)) {
 		m_cache_line_size.second = runtime_info::get_cache_line_size();
 		m_cache_line_size.first = true;
@@ -117,7 +117,7 @@ unsigned settings::get_cache_line_size()
  */
 void settings::set_cache_line_size(unsigned n)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_cache_line_size.first = true;
 	m_cache_line_size.second = n;
 }
@@ -130,7 +130,7 @@ void settings::set_cache_line_size(unsigned n)
  */
 void settings::reset_cache_line_size()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_cache_line_size.second = runtime_info::get_cache_line_size();
 	m_cache_line_size.first = true;
 }
@@ -145,7 +145,7 @@ void settings::reset_cache_line_size()
  */
 bool settings::get_tracing()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_tracing;
 }
 
@@ -159,7 +159,7 @@ bool settings::get_tracing()
  */
 void settings::set_tracing(bool flag)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_tracing = flag;
 }
 
@@ -171,7 +171,7 @@ void settings::set_tracing(bool flag)
  */
 unsigned long settings::get_max_term_output()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_max_term_output;
 }
 
@@ -183,7 +183,7 @@ unsigned long settings::get_max_term_output()
  */
 void settings::set_max_term_output(unsigned long n)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_max_term_output = n;
 }
 
@@ -195,7 +195,7 @@ void settings::set_max_term_output(unsigned long n)
  */
 void settings::reset_max_term_output()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_max_term_output = m_default_max_term_output;
 }
 

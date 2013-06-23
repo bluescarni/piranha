@@ -34,6 +34,10 @@ struct series_tag {};
 template <typename, typename>
 class series;
 
+// Fwd declaration of type trait.
+template <typename>
+class is_series;
+
 }
 
 #endif

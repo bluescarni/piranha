@@ -31,7 +31,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include "../src/degree_truncator_settings.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/kronecker_array.hpp"
@@ -49,7 +48,6 @@ struct multiplication_tester
 	template <typename Cf>
 	void operator()(const Cf &)
 	{
-		degree_truncator_settings::unset();
 		typedef kronecker_array<std::int_least8_t> ka1;
 		typedef polynomial<Cf,kronecker_monomial<std::int_least8_t>> p_type1;
 		// Test for empty series.
@@ -76,36 +74,6 @@ struct multiplication_tester
 		auto retval = f * g;
 		auto r_no_trunc = retval;
 		BOOST_CHECK_EQUAL(retval.size(),10626u);
-		degree_truncator_settings::set(0);
-		f = 1 + p_type2("x") + y + z + t;
-		tmp2 = f;
-		for (int i = 1; i < 10; ++i) {
-			f *= tmp2;
-		}
-		g = f + 1;
-		retval = f * g;
-		BOOST_CHECK_EQUAL(retval.size(),0u);
-		degree_truncator_settings::set(1);
-		f = 1 + p_type2("x") + y + z + t;
-		tmp2 = f;
-		for (int i = 1; i < 10; ++i) {
-			f *= tmp2;
-		}
-		g = f + 1;
-		retval = f * g;
-		BOOST_CHECK_EQUAL(retval.size(),1u);
-		BOOST_CHECK(retval.degree() == 0);
-		degree_truncator_settings::set(10);
-		f = 1 + p_type2("x") + y + z + t;
-		tmp2 = f;
-		for (int i = 1; i < 10; ++i) {
-			f *= tmp2;
-		}
-		g = f + 1;
-		retval = f * g;
-		BOOST_CHECK(retval.degree() == 9);
-		BOOST_CHECK((r_no_trunc - retval).degree() >= 9);
-		degree_truncator_settings::unset();
 		// NOTE: this test is going to be exact in case of coefficients cancellations with double
 		// precision coefficients only if the platform has ieee 754 format (integer exactly representable
 		// as doubles up to 2 ** 53).
@@ -171,7 +139,6 @@ struct st_vs_mt_tester
 		// NOTE: do not check for size as via unsigned wrapover some coefficients
 		// might go to zero.
 		settings::set_n_threads(1u);
-		degree_truncator_settings::unset();
 		typedef polynomial<std::size_t,kronecker_monomial<>> p_type;
 		p_type x("x"), y("y"), z("z"), t("t");
 		auto f = 1 + x + y + z + t;
@@ -186,32 +153,11 @@ struct st_vs_mt_tester
 			auto mt = f * g;
 			BOOST_CHECK(mt == st);
 		}
-		// With truncation.
-		degree_truncator_settings::set(15);
-		settings::set_n_threads(1u);
-		st = f * g;
-		BOOST_CHECK(st.degree() == 14);
-		for (auto i = 2u; i <= 4u; ++i) {
-			settings::set_n_threads(i);
-			auto mt = f * g;
-			BOOST_CHECK(mt == st);
-		}
 		// Dense case.
 		settings::set_n_threads(1u);
-		degree_truncator_settings::unset();
 		f *= f;
 		g *= g;
 		st = f * g;
-		for (auto i = 2u; i <= 4u; ++i) {
-			settings::set_n_threads(i);
-			auto mt = f * g;
-			BOOST_CHECK(mt == st);
-		}
-		// With truncation.
-		degree_truncator_settings::set(25);
-		settings::set_n_threads(1u);
-		st = f * g;
-		BOOST_CHECK(st.degree() == 24);
 		for (auto i = 2u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
 			auto mt = f * g;
@@ -229,7 +175,6 @@ BOOST_AUTO_TEST_CASE(kronecker_polynomial_st_vs_mt_test)
 BOOST_AUTO_TEST_CASE(kronecker_polynomial_different_cf_test)
 {
 	settings::set_n_threads(1u);
-	degree_truncator_settings::unset();
 	typedef polynomial<std::size_t,kronecker_monomial<>> p_type1;
 	typedef polynomial<integer,kronecker_monomial<>> p_type2;
 	p_type1 x("x"), y("y"), z("z"), t("t");
@@ -248,7 +193,6 @@ BOOST_AUTO_TEST_CASE(kronecker_polynomial_sparse_cancellation_mt_test)
 {
 	settings::set_n_threads(4);
 	typedef polynomial<double,kronecker_monomial<>> p_type;
-	p_type{}.get_truncator().unset();
 	// Dense case with cancellations, default setup.
 	auto h = 1 - p_type("x") + p_type("y") + p_type("z") + p_type("t");
 	auto f = 1 + p_type("x") + p_type("y") + p_type("z") + p_type("t");

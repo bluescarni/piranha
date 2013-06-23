@@ -1,5 +1,4 @@
 SET(SRC_LIST
-	degree_truncator_settings.cpp
 	environment.cpp
 	exceptions.cpp
 	real.cpp
@@ -13,11 +12,9 @@ SET(SRC_LIST
 
 SET(HEADERS_LIST
 	forwarding.hpp
-	degree_truncator_settings.hpp
 	series.hpp
 	concepts/series.hpp
 	concepts/power_series_term.hpp
-	concepts/truncator.hpp
 	concepts/container_element.hpp
 	concepts/power_series.hpp
 	concepts/term.hpp
@@ -36,7 +33,6 @@ SET(HEADERS_LIST
 	kronecker_monomial.hpp
 	echelon_size.hpp
 	hash_set.hpp
-	truncator.hpp
 	debug_access.hpp
 	real_trigonometric_kronecker_monomial.hpp
 	series_binary_operators.hpp
@@ -61,7 +57,6 @@ SET(HEADERS_LIST
 	detail/math_tt_fwd.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
-	detail/truncator_fwd.hpp
 	detail/degree_commons.hpp
 	detail/base_term_fwd.hpp
 	detail/km_commons.hpp
@@ -76,7 +71,6 @@ SET(HEADERS_LIST
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp
-	power_series_truncator.hpp
 	integer.hpp
 	math.hpp
 	environment.hpp
@@ -84,7 +78,7 @@ SET(HEADERS_LIST
 	cache_aligning_allocator.hpp
 	trigonometric_series.hpp
 	monomial.hpp
-	threading.hpp
+	thread.hpp
 )
 
 IF(BUILD_MAIN OR BUILD_TESTS)

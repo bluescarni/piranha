@@ -24,10 +24,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <thread>
 
 #include "../src/environment.hpp"
 #include "../src/settings.hpp"
-#include "../src/threading.hpp"
 
 using namespace piranha;
 
@@ -35,7 +35,7 @@ using namespace piranha;
 BOOST_AUTO_TEST_CASE(runtime_info_thread_id_test)
 {
 	environment env;
-	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),this_thread::get_id());
+	BOOST_CHECK_EQUAL(runtime_info::get_main_thread_id(),std::this_thread::get_id());
 }
 
 BOOST_AUTO_TEST_CASE(runtime_info_print_test)
@@ -43,7 +43,6 @@ BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 	std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
 	std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
 	std::cout << "Memory alignment primitives: " << (runtime_info::have_memalign_primitives() ? "available" : "unavailable") << '\n';
-	std::cout << "Threading primitives: " << ((runtime_info::threading_primitives() == 0) ? "C++11" : "Boost.Thread") << '\n';
 }
 
 BOOST_AUTO_TEST_CASE(runtime_info_settings_test)

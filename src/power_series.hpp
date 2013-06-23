@@ -28,11 +28,10 @@
 #include <utility>
 
 #include "concepts/power_series_term.hpp"
-#include "concepts/series.hpp"
-#include "detail/series_fwd.hpp"
 #include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "power_series_term.hpp"
+#include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp" // For has_degree.
 
@@ -146,8 +145,11 @@ class power_series: public Series,detail::power_series_tag,detail::toolbox<Serie
 		/// Defaulted move constructor.
 		power_series(power_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series,base)
-		/// Defaulted destructor.
-		~power_series() = default;
+		/// Trivial destructor.
+		~power_series() noexcept(true)
+		{
+			PIRANHA_TT_CHECK(is_series,power_series);
+		}
 		/// Defaulted copy assignment operator.
 		power_series &operator=(const power_series &) = default;
 		/// Defaulted move assignment operator.
@@ -317,15 +319,10 @@ const bool is_power_series<Series>::value;
 /// Specialization of piranha::has_degree for power series.
 /**
  * This specialization is enabled for types satisfying the type trait piranha::is_power_series.
- * 
- * \section type_requirements Type requirements
- * 
- * \p Series must be a model of the piranha::concept::Series concept.
  */
 template <typename PowerSeries>
 class has_degree<PowerSeries,typename std::enable_if<is_power_series<PowerSeries>::value>::type>
 {
-		BOOST_CONCEPT_ASSERT((concept::Series<PowerSeries>));
 	public:
 		/// Type trait value.
 		static const bool value = true;

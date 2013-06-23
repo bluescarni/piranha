@@ -18,26 +18,25 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/threading.hpp"
+#include "../src/thread.hpp"
 
-#define BOOST_TEST_MODULE threading_test
+#define BOOST_TEST_MODULE thread_test
 #include <boost/test/unit_test.hpp>
+
+#include <type_traits>
 
 #include "../src/environment.hpp"
 #include "../src/real.hpp"
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(threading_thread_test)
+BOOST_AUTO_TEST_CASE(thread_main_test)
 {
 	environment env;
-	{
-		// Default-construction and destruction.
-		thread t1, t2, t3;
-	}
-	auto f = [](real *r) {*r += 1;};
-	real r1, r2;
-	thread t1(f,&r1), t2(f,&r2);
+	real r1(0), r2(r1);
+	auto f1 = [&r1]() {r1 += 1;};
+	auto f2 = [&r2]() {r2 += 1;};
+	thread t1(f1), t2(f2);
 	BOOST_CHECK(t1.joinable());
 	BOOST_CHECK(t2.joinable());
 	// Multiple join and detach calls.
@@ -54,8 +53,9 @@ BOOST_AUTO_TEST_CASE(threading_thread_test)
 	BOOST_CHECK_EQUAL(r1,1);
 	BOOST_CHECK_EQUAL(r2,1);
 	// Test the mpfr cache freeing.
-	auto g = [](real *r) {*r += r->pi();};
-	thread t3(g,&r1), t4(g,&r2);
+	auto g1 = [&r1]() {r1 += r1.pi();};
+	auto g2 = [&r2]() {r2 += r2.pi();};
+	thread t3(g1), t4(g2);
 	BOOST_CHECK(t3.joinable());
 	BOOST_CHECK(t4.joinable());
 	t3.join();
@@ -70,4 +70,46 @@ BOOST_AUTO_TEST_CASE(threading_thread_test)
 	BOOST_CHECK(!t4.joinable());
 	BOOST_CHECK_EQUAL(r1,1 + real{}.pi());
 	BOOST_CHECK_EQUAL(r2,1 + real{}.pi());
+}
+
+void foo();
+
+struct functor_00
+{
+	void operator()();
+};
+
+struct functor_01
+{
+	int operator()();
+};
+
+struct functor_02
+{
+	functor_02();
+	functor_02(const functor_02 &);
+	functor_02(functor_02 &&);
+	void operator()();
+};
+
+struct functor_03
+{
+	functor_03();
+	functor_03(const functor_03 &);
+	functor_03(functor_03 &&) = delete;
+	void operator()();
+};
+
+BOOST_AUTO_TEST_CASE(thread_type_traits_test)
+{
+	auto f = [](){};
+	BOOST_CHECK((std::is_constructible<thread,decltype(f)>::value));
+	auto g = [](int){};
+	BOOST_CHECK((!std::is_constructible<thread,decltype(g)>::value));
+	BOOST_CHECK((!std::is_constructible<thread,decltype(foo)>::value));
+	BOOST_CHECK((!std::is_constructible<thread,int>::value));
+	BOOST_CHECK((std::is_constructible<thread,functor_00>::value));
+	BOOST_CHECK((!std::is_constructible<thread,functor_01>::value));
+	BOOST_CHECK((std::is_constructible<thread,functor_02>::value));
+	BOOST_CHECK((!std::is_constructible<thread,functor_03>::value));
 }

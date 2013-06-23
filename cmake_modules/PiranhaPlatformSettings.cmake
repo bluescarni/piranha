@@ -1,19 +1,33 @@
-SET(PIRANHA_ENABLE_BOOST_THREAD FALSE)
-
 IF(UNIX)
 	# Install path for libraries.
 	SET(LIB_INSTALL_PATH "lib")
-	# Enable the pthread flag in Unix only if the compiler is GNU.
-	# NOTE: here the situation is very hairy: different systems require different GCC flags:
-	# http://gcc.gnu.org/onlinedocs/libstdc++/manual/using_concurrency.html
-	# This will work at least on Linux/x86 and FreeBSD.
-	IF(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_USE_PTHREADS_INIT)
-		MESSAGE(STATUS "GCC with POSIX threads detected.")
-		# NOTE: according to GCC docs, this sets the flag for both compiler and linker.
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-		# Set definitions in config.hpp.
-		SET(PIRANHA_THREAD_MODEL "#define PIRANHA_THREAD_MODEL_PTHREADS")
-	ENDIF(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_USE_PTHREADS_INIT)
+	# POSIX thread setup on Unix.
+	IF(CMAKE_USE_PTHREADS_INIT)
+		MESSAGE(STATUS "POSIX threads detected.")
+		# NOTE: here the situation is very hairy: e.g., different systems require different GCC flags:
+		# http://gcc.gnu.org/onlinedocs/libstdc++/manual/using_concurrency.html
+		CHECK_CXX_COMPILER_FLAG(-pthread PIRANHA_PTHREAD_COMPILER_FLAG)
+		IF(PIRANHA_PTHREAD_COMPILER_FLAG)
+			MESSAGE(STATUS "Enabling the -pthread compiler flag.")
+			# NOTE: according to GCC docs, this sets the flag for both compiler and linker. This should
+			# work similarly for clang as well.
+			SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+		ENDIF()
+		TRY_COMPILE(PIRANHA_PTHREAD_AFFINITY_TESTS ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/pthread_affinity_tests.cpp")
+		IF(PIRANHA_PTHREAD_AFFINITY_TESTS)
+			MESSAGE(STATUS "POSIX threads affinity extensions detected.")
+			SET(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
+		ELSE()
+			MESSAGE(STATUS "POSIX threads affinity extensions not detected.")
+		ENDIF()
+	ENDIF(CMAKE_USE_PTHREADS_INIT)
+	TRY_COMPILE(PIRANHA_POSIX_MEMALIGN_TEST ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/posix_memalign_test.cpp")
+	IF(PIRANHA_POSIX_MEMALIGN_TEST)
+		MESSAGE(STATUS "POSIX memalign detected.")
+		SET(PIRANHA_POSIX_MEMALIGN "#define PIRANHA_HAVE_POSIX_MEMALIGN")
+	ELSE()
+		MESSAGE(STATUS "POSIX memalign not detected.")
+	ENDIF()
 ENDIF(UNIX)
 
 IF(MINGW)
@@ -22,8 +36,6 @@ IF(MINGW)
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mthreads")
 	SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -mthreads")
 	SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -mthreads")
-	# NOTE: in MinGW there is no support for c++0x threads yet.
-	SET(PIRANHA_ENABLE_BOOST_THREAD TRUE)
 	# NOTE: workaround for CMake being unable to locate Boost libraries in certain
 	# configurations. See:
 	# http://www.ogre3d.org/tikiwiki/Setting%20Up%20An%20Application%20-%20Mac%20OSX

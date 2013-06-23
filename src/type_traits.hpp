@@ -399,6 +399,29 @@ class is_less_than_comparable: detail::sfinae_types
 template <typename T, typename U>
 const bool is_less_than_comparable<T,U>::value;
 
+/// Greater-than-comparable type trait.
+/**
+ * This type trait is \p true if instances of type \p T can be compared to instances of
+ * type \p U using the greater-than operator. The operator must be non-mutable (i.e., implemented using pass-by-value or const
+ * references) and must return a type implicitly convertible to \p bool.
+ */
+template <typename T, typename U = T>
+class is_greater_than_comparable: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(t > u);
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_convertible<decltype(test(std::declval<Td>(),std::declval<Ud>())),bool>::value;
+};
+
+// Static init.
+template <typename T, typename U>
+const bool is_greater_than_comparable<T,U>::value;
+
 /// Type trait for well-behaved container elements.
 /**
  * The type trait will be true if all these conditions hold:
