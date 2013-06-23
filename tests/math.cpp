@@ -319,6 +319,8 @@ BOOST_AUTO_TEST_CASE(math_integrate_test)
 	BOOST_CHECK(!piranha::is_integrable<std::string>::value);
 }
 
+// NOTE: seems like there is a bug in GCC 4.8 regarding the conversion of lambdas to std::function.
+#if __GNUC__  != 4 || __GNUC_MINOR__ != 8
 BOOST_AUTO_TEST_CASE(math_pbracket_test)
 {
 	typedef polynomial<rational> p_type;
@@ -354,6 +356,7 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	BOOST_CHECK_EQUAL(math::pbracket(H_2,Gz,{"vx","vy","vz"},{"x","y","z"}),0);
 	BOOST_CHECK(math::pbracket(H_2,Gz + x,{"vx","vy","vz"},{"x","y","z"}) != 0);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(math_abs_test)
 {
@@ -521,6 +524,7 @@ BOOST_AUTO_TEST_CASE(math_t_subs_test)
 	BOOST_CHECK((!has_t_subs<std::string &,int,std::string &&>::value));
 }
 
+#if __GNUC__  != 4 || __GNUC_MINOR__ != 8
 BOOST_AUTO_TEST_CASE(math_canonical_test)
 {
 	typedef polynomial<rational> p_type1;
@@ -555,6 +559,7 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
 	BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2*math::cos(p)*q,Q2*math::cos(q)*p},std::vector<p_type2>{P2*math::sin(p),Q2*math::sin(q)},
 		{"P","Q"},{"p","q"})));
 }
+#endif
 
 struct term1: base_term<double,monomial<int>,term1>
 {

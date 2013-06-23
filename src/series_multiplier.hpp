@@ -30,10 +30,12 @@
 #include <cstddef>
 #include <iterator>
 #include <list>
+#include <mutex>
 #include <new> // For bad_alloc.
 #include <numeric>
 #include <random>
 #include <stdexcept>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -51,7 +53,6 @@
 #include "settings.hpp"
 #include "task_group.hpp"
 #include "thread_management.hpp"
-#include "threading.hpp"
 #include "tracing.hpp"
 
 namespace piranha
@@ -196,7 +197,7 @@ class series_multiplier
 		unsigned determine_n_threads() const
 		{
 			// Use just one thread if we are not in the main thread.
-			if (runtime_info::get_main_thread_id() != this_thread::get_id()) {
+			if (runtime_info::get_main_thread_id() != std::this_thread::get_id()) {
 				return 1u;
 			}
 			const unsigned candidate = settings::get_n_threads();
@@ -303,7 +304,6 @@ class series_multiplier
 						};
 						tg.add_task(f);
 					}
-					piranha_assert(tg.size() == n_threads);
 					tg.wait_all();
 					tg.get_all();
 				} catch (...) {
@@ -712,7 +712,7 @@ class series_multiplier
 				throw;
 			}
 			task_group tg2;
-			mutex m;
+			std::mutex m;
 			std::vector<integer> new_sizes;
 			new_sizes.reserve(n_threads);
 			if (unlikely(new_sizes.capacity() != n_threads)) {
@@ -765,12 +765,12 @@ class series_multiplier
 							}
 						}
 						// Store the new size.
-						lock_guard<mutex>::type lock(m);
+						std::lock_guard<std::mutex> lock(m);
 						new_sizes.push_back(integer(count_plus) - integer(count_minus));
 					};
 					tg2.add_task(f);
 				}
-				piranha_assert(tg2.size() == n_threads);
+				//piranha_assert(tg2.size() == n_threads);
 				tg2.wait_all();
 				tg2.get_all();
 			} catch (...) {

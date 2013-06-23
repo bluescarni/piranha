@@ -1450,6 +1450,7 @@ struct mock_cf
 	mock_cf operator*(const mock_cf &) const;
 };
 
+#if __GNUC__  != 4 || __GNUC_MINOR__ != 8
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
 	typedef g_series_type<rational,int> p_type1;
@@ -1500,6 +1501,7 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	typedef g_series_type<mock_cf,int> p_type2;
 	BOOST_CHECK(!is_differentiable<p_type2>::value);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)
 {

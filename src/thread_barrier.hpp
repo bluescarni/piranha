@@ -21,7 +21,8 @@
 #ifndef PIRANHA_THREAD_BARRIER_HPP
 #define PIRANHA_THREAD_BARRIER_HPP
 
-#include "threading.hpp"
+#include <condition_variable>
+#include <mutex>
 
 namespace piranha
 {
@@ -68,8 +69,8 @@ class thread_barrier
 		~thread_barrier() = default;
 		bool wait();
 	private:
-		mutex			m_mutex;
-		condition_variable	m_cond;
+		std::mutex		m_mutex;
+		std::condition_variable	m_cond;
 		const unsigned		m_threshold;
 		unsigned		m_count;
 		unsigned		m_generation;

@@ -31,6 +31,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -56,7 +57,6 @@
 #include "settings.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
-#include "threading.hpp"
 #include "tracing.hpp"
 #include "type_traits.hpp"
 
@@ -1340,7 +1340,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void register_custom_derivative(const std::string &name, std::function<Derived(const Derived &)> func)
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(cp_mutex);
 			cp_map[name] = func;
 		}
 		/// Unregister custom partial derivative.
@@ -1358,7 +1358,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void unregister_custom_derivative(const std::string &name)
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(cp_mutex);
 			auto it = cp_map.find(name);
 			if (it != cp_map.end()) {
 				cp_map.erase(it);
@@ -1373,7 +1373,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		static void unregister_all_custom_derivatives()
 		{
-			lock_guard<mutex>::type lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(cp_mutex);
 			cp_map.clear();
 		}
 		/// Begin iterator.
@@ -1643,13 +1643,14 @@ class series: series_binary_operators, detail::series_tag
 		container_type	m_container;
 	private:
 		typedef std::unordered_map<std::string,std::function<Derived(const Derived &)>> cp_map_type;
-		static mutex		cp_mutex;
+		static std::mutex	cp_mutex;
 		static cp_map_type	cp_map;
+
 };
 
 // Static initialisation.
 template <typename Term, typename Derived>
-mutex series<Term,Derived>::cp_mutex;
+std::mutex series<Term,Derived>::cp_mutex;
 
 template <typename Term, typename Derived>
 typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
@@ -1928,7 +1929,7 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
 		std::function<T(const T &)> func;
 		// Try to locate a custom partial derivative and copy it into func, if found.
 		{
-			lock_guard<mutex>::type lock(T::cp_mutex);
+			std::lock_guard<std::mutex> lock(T::cp_mutex);
 			auto it = T::cp_map.find(name);
 			if (it != T::cp_map.end()) {
 				func = it->second;

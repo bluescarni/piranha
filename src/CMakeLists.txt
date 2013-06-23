@@ -78,7 +78,7 @@ SET(HEADERS_LIST
 	cache_aligning_allocator.hpp
 	trigonometric_series.hpp
 	monomial.hpp
-	threading.hpp
+	thread.hpp
 )
 
 IF(BUILD_MAIN OR BUILD_TESTS)

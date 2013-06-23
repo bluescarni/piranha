@@ -27,11 +27,13 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <condition_variable>
 #include <functional> // For std::bind.
 #include <initializer_list>
 #include <iterator>
 #include <list>
 #include <map>
+#include <mutex>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -63,7 +65,6 @@
 #include "t_substitutable_series.hpp"
 #include "task_group.hpp"
 #include "thread_management.hpp"
-#include "threading.hpp"
 #include "trigonometric_series.hpp"
 #include "type_traits.hpp"
 
@@ -1108,8 +1109,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				region_comparer rc;
 				std::set<region_type,region_comparer> busy_regions(rc);
 				// Synchronization.
-				mutex m;
-				condition_variable cond;
+				std::mutex m;
+				std::condition_variable cond;
 				// Thread function.
 				auto thread_function = [&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
 					thread_management::binder b;
@@ -1117,7 +1118,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					while (true) {
 						{
 							// First, lock down everything.
-							unique_lock<mutex>::type lock(m);
+							std::unique_lock<std::mutex> lock(m);
 							if (task_list.empty()) {
 								break;
 							}
@@ -1170,7 +1171,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							}
 						} catch (...) {
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Cleanup the regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1179,7 +1180,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 						{
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Take out the regions in which we just wrote from the set of busy regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1192,7 +1193,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						tg.add_task(thread_function);
 					}
-					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.
@@ -1298,8 +1298,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				region_comparer rc;
 				std::set<region_type,region_comparer> busy_regions(rc);
 				// Synchronization.
-				mutex m;
-				condition_variable cond;
+				std::mutex m;
+				std::condition_variable cond;
 				// Thread function.
 				auto thread_function = [&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
 					thread_management::binder b;
@@ -1307,7 +1307,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					while (true) {
 						{
 							// First, lock down everything.
-							unique_lock<mutex>::type lock(m);
+							std::unique_lock<std::mutex> lock(m);
 							if (task_list.empty()) {
 								break;
 							}
@@ -1367,7 +1367,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							tmp_ins_count = f.m_insertion_count;
 						} catch (...) {
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Cleanup the regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1376,7 +1376,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 						{
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Update the insertion count.
 							insertion_count += tmp_ins_count;
 							// Take out the regions in which we just wrote from the set of busy regions.
@@ -1391,7 +1391,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						tg.add_task(thread_function);
 					}
-					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.
@@ -1457,7 +1456,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				piranha_assert(b_count);
 				// Adjust the number of threads if they are more than the bucket count.
 				const unsigned nt = (n_threads <= b_count) ? n_threads : b_count;
-				mutex m;
+				std::mutex m;
 				auto eraser = [b_count,&retval,&m](const bucket_size_type &start, const bucket_size_type &end) {
 					piranha_assert(start < end && end <= b_count);
 					bucket_size_type erase_count = 0u;
@@ -1479,7 +1478,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 					if (erase_count) {
-						lock_guard<mutex>::type lock(m);
+						std::lock_guard<std::mutex> lock(m);
 						piranha_assert(erase_count <= retval.m_container.size());
 						retval.m_container._update_size(retval.m_container.size() - erase_count);
 					}
@@ -1490,7 +1489,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
 						tg.add_task(std::bind(eraser,start,end));
 					}
-					piranha_assert(tg.size() == nt);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.

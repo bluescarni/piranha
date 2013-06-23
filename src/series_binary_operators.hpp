@@ -212,7 +212,7 @@ class series_binary_operators
 		static Series1 series_multiply_first(const Series1 &s1, const Series2 &s2)
 		{
 			// NOTE: all this dancing around with base and derived types for series is necessary as the mechanism of
-			// specialization of series_multiplier and truncator depends on the derived types - which must then be preserved and
+			// specialization of series_multiplier depends on the derived types - which must then be preserved and
 			// not casted away to the base types.
 			// Base series types.
 			typedef series<typename Series1::term_type,Series1> base_type1;

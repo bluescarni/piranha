@@ -20,7 +20,9 @@
 
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <mutex>
 #include <stdexcept>
+#include <thread>
 #include <unordered_set>
 #include <utility>
 
@@ -29,7 +31,6 @@
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "thread_management.hpp"
-#include "threading.hpp"
 
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
 
@@ -61,8 +62,8 @@ namespace piranha
 {
 
 // Static init.
-mutex thread_management::m_mutex;
-mutex thread_management::binder::m_binder_mutex;
+std::mutex thread_management::m_mutex;
+std::mutex thread_management::binder::m_binder_mutex;
 std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 
 /// Bind thread to specific processor.
@@ -83,7 +84,7 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
  */
 void thread_management::bind_to_proc(unsigned n)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	const auto hc = runtime_info::get_hardware_concurrency();
 	if (hc != 0u && n >= hc) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
@@ -155,7 +156,7 @@ void thread_management::bind_to_proc(unsigned n)
  */
 std::pair<bool,unsigned> thread_management::bound_proc()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(PIRANHA_THREAD_MODEL_PTHREADS) && defined(_GNU_SOURCE) && defined(__linux__)
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);
@@ -243,12 +244,12 @@ std::pair<bool,unsigned> thread_management::bound_proc()
 thread_management::binder::binder():m_result(false,0)
 {
 	// Do nothing if we are not in a different thread.
-	if (this_thread::get_id() == runtime_info::get_main_thread_id()) {
+	if (std::this_thread::get_id() == runtime_info::get_main_thread_id()) {
 		return;
 	}
 	// This try/catch is to guard against failure in lock_guard.
 	try {
-		lock_guard<mutex>::type lock(m_binder_mutex);
+		std::lock_guard<std::mutex> lock(m_binder_mutex);
 		unsigned candidate = 0u, n_threads = settings::get_n_threads();
 		for (; candidate < n_threads; ++candidate) {
 			// If the processor is not taken, bail out and try to use it.
@@ -293,7 +294,7 @@ thread_management::binder::~binder()
 {
 	try {
 		if (m_result.first) {
-			lock_guard<mutex>::type lock(m_binder_mutex);
+			std::lock_guard<std::mutex> lock(m_binder_mutex);
 			auto it = m_used_procs.find(m_result.second);
 			piranha_assert(it != m_used_procs.end());
 			m_used_procs.erase(it);

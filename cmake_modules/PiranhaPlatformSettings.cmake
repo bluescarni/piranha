@@ -1,5 +1,3 @@
-SET(PIRANHA_ENABLE_BOOST_THREAD FALSE)
-
 IF(UNIX)
 	# Install path for libraries.
 	SET(LIB_INSTALL_PATH "lib")
@@ -22,8 +20,6 @@ IF(MINGW)
 	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mthreads")
 	SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -mthreads")
 	SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -mthreads")
-	# NOTE: in MinGW there is no support for c++0x threads yet.
-	SET(PIRANHA_ENABLE_BOOST_THREAD TRUE)
 	# NOTE: workaround for CMake being unable to locate Boost libraries in certain
 	# configurations. See:
 	# http://www.ogre3d.org/tikiwiki/Setting%20Up%20An%20Application%20-%20Mac%20OSX

@@ -21,8 +21,9 @@
 #ifndef PIRANHA_ENVIRONMENT_HPP
 #define PIRANHA_ENVIRONMENT_HPP
 
+#include <mutex>
+
 #include "config.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
@@ -66,9 +67,9 @@ class PIRANHA_PUBLIC environment
 	private:
 		static void cleanup_function();
 	private:
-		static mutex	m_mutex;
-		static bool	m_inited;
-		static bool	m_shutdown;
+		static std::mutex	m_mutex;
+		static bool		m_inited;
+		static bool		m_shutdown;
 };
 
 }
