@@ -29,6 +29,7 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <functional>
+#include <memory> // For std unique_ptr workaround in custom derivative.
 #include <iostream>
 #include <iterator>
 #include <mutex>
@@ -1341,7 +1342,7 @@ class series: series_binary_operators, detail::series_tag
 		static void register_custom_derivative(const std::string &name, std::function<Derived(const Derived &)> func)
 		{
 			std::lock_guard<std::mutex> lock(cp_mutex);
-			cp_map[name] = func;
+			(*cp_map)[name] = func;
 		}
 		/// Unregister custom partial derivative.
 		/**
@@ -1359,9 +1360,9 @@ class series: series_binary_operators, detail::series_tag
 		static void unregister_custom_derivative(const std::string &name)
 		{
 			std::lock_guard<std::mutex> lock(cp_mutex);
-			auto it = cp_map.find(name);
-			if (it != cp_map.end()) {
-				cp_map.erase(it);
+			auto it = cp_map->find(name);
+			if (it != cp_map->end()) {
+				cp_map->erase(it);
 			}
 		}
 		/// Unregister all custom partial derivatives.
@@ -1374,7 +1375,7 @@ class series: series_binary_operators, detail::series_tag
 		static void unregister_all_custom_derivatives()
 		{
 			std::lock_guard<std::mutex> lock(cp_mutex);
-			cp_map.clear();
+			cp_map->clear();
 		}
 		/// Begin iterator.
 		/**
@@ -1642,7 +1643,9 @@ class series: series_binary_operators, detail::series_tag
 		/// Terms container.
 		container_type	m_container;
 	private:
-		typedef std::unordered_map<std::string,std::function<Derived(const Derived &)>> cp_map_type;
+		// NOTE: this unique_ptr is needed to work around this GCC 4.8 bug:
+		// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=57684
+		typedef std::unique_ptr<std::unordered_map<std::string,std::function<Derived(const Derived &)>>> cp_map_type;
 		static std::mutex	cp_mutex;
 		static cp_map_type	cp_map;
 
@@ -1653,7 +1656,8 @@ template <typename Term, typename Derived>
 std::mutex series<Term,Derived>::cp_mutex;
 
 template <typename Term, typename Derived>
-typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map;
+typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map =
+	series<Term,Derived>::cp_map_type(new std::unordered_map<std::string,std::function<Derived(const Derived &)>>);
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
@@ -1930,8 +1934,8 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
 		// Try to locate a custom partial derivative and copy it into func, if found.
 		{
 			std::lock_guard<std::mutex> lock(T::cp_mutex);
-			auto it = T::cp_map.find(name);
-			if (it != T::cp_map.end()) {
+			auto it = T::cp_map->find(name);
+			if (it != T::cp_map->end()) {
 				func = it->second;
 				custom = true;
 			}
