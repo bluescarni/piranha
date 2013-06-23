@@ -43,7 +43,6 @@ SET(HEADERS_LIST
 	piranha.hpp
 	symbol_set.hpp
 	runtime_info.hpp
-	power_series.hpp
 	series_multiplier.hpp
 	array_key.hpp
 	symbol.hpp
