@@ -21,9 +21,11 @@
 #ifndef PIRANHA_RUNTIME_INFO_HPP
 #define PIRANHA_RUNTIME_INFO_HPP
 
+#include <mutex>
+#include <thread>
+
 #include "config.hpp"
 #include "malloc_allocator.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
@@ -42,7 +44,7 @@ class PIRANHA_PUBLIC runtime_info
 		/**
 		 * @return const reference to an instance of the ID of the main thread of execution.
 		 */
-		static const thread_id &get_main_thread_id()
+		static const std::thread::id &get_main_thread_id()
 		{
 			return m_main_thread_id;
 		}
@@ -56,22 +58,9 @@ class PIRANHA_PUBLIC runtime_info
 		{
 			return malloc_allocator<char>::have_memalign_primitives;
 		}
-		/// Type of threading primitives.
-		/**
-		 * @return 0 if the threading primitives are the standrd C++11 ones, 1 if
-		 * Boost.Thread is being used.
-		 */
-		static int threading_primitives()
-		{
-#ifdef PIRANHA_USE_BOOST_THREAD
-			return 1;
-#else
-			return 0;
-#endif
-		}
 	private:
-		static mutex		m_mutex;
-		static const thread_id	m_main_thread_id;
+		static std::mutex		m_mutex;
+		static const std::thread::id	m_main_thread_id;
 };
 
 }

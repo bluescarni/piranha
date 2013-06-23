@@ -21,10 +21,10 @@
 #include <boost/any.hpp>
 #include <cstddef>
 #include <iostream>
+#include <mutex>
 #include <string>
 #include <typeinfo>
 
-#include "threading.hpp"
 #include "tracing.hpp"
 
 namespace piranha
@@ -32,7 +32,7 @@ namespace piranha
 
 // Static init.
 tracing::container_type tracing::m_container;
-mutex tracing::m_mutex;
+std::mutex tracing::m_mutex;
 
 namespace detail
 {
@@ -88,7 +88,7 @@ struct generic_printer
  */
 void tracing::dump(std::ostream &os)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto it = m_container.begin(); it != m_container.end(); ++it) {
 		os << it->first << '=';
 		if (it->second.empty()) {
@@ -112,7 +112,7 @@ void tracing::dump(std::ostream &os)
  */
 boost::any tracing::get(const std::string &str)
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	const auto it = m_container.find(str);
 	if (it == m_container.end()) {
 		return boost::any();
@@ -128,7 +128,7 @@ boost::any tracing::get(const std::string &str)
  */
 void tracing::reset()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_container.clear();
 }
 

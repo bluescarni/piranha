@@ -27,11 +27,13 @@
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
+#include <condition_variable>
 #include <functional> // For std::bind.
 #include <initializer_list>
 #include <iterator>
 #include <list>
 #include <map>
+#include <mutex>
 #include <numeric>
 #include <set>
 #include <stdexcept>
@@ -43,10 +45,8 @@
 
 #include "cache_aligning_allocator.hpp"
 #include "concepts/series.hpp"
-#include "concepts/truncator.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "degree_truncator_settings.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "echelon_size.hpp"
@@ -58,7 +58,6 @@
 #include "math.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
-#include "power_series_truncator.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
@@ -66,9 +65,7 @@
 #include "t_substitutable_series.hpp"
 #include "task_group.hpp"
 #include "thread_management.hpp"
-#include "threading.hpp"
 #include "trigonometric_series.hpp"
-#include "truncator.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -568,208 +565,6 @@ struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::pol
 
 }
 
-/// Specialisation of unary piranha::truncator for piranha::polynomial.
-/**
- * This specialisation will use piranha::power_series_truncator to rank terms according to their low degree.
- * 
- * \section type_requirements Type requirements
- * 
- * This specialisation is activated for instances of piranha::polynomial.
- * 
- * \todo here we could optimize the comparisons with the state snapshot by creating another snapshot in case the degree_type is not integer ->
- * cast the degree limit to degree_type for faster comparisons with builtin C++ types.
- * \todo also, hash_set on the degrees of the terms of the input series for optimization.
- */
-template <typename Cf, typename Expo>
-class truncator<polynomial<Cf,Expo>>: public power_series_truncator
-{
-		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf,Expo>>));
-	public:
-		/// Alias for the polynomial type.
-		typedef polynomial<Cf,Expo> polynomial_type;
-		/// Alias for the polynomial term type.
-		typedef typename polynomial_type::term_type term_type;
-		/// Constructor from polynomial.
-		/**
-		 * The constructor will store internally a reference to the input series and will invoke the default
-		 * constructor of piranha::power_series_truncator.
-		 * 
-		 * @param[in] poly series on which the truncator will operate.
-		 * 
-		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
-		 */
-		explicit truncator(const polynomial_type &poly):power_series_truncator(),m_poly(poly) {}
-		/// Defaulted copy constructor.
-		truncator(const truncator &) = default;
-		/// Deleted copy assignment.
-		truncator &operator=(const truncator &) = delete;
-		/// Deleted move assignment.
-		truncator &operator=(truncator &&) = delete;
-		/// Term comparison.
-		/**
-		 * This method will compare the partial or total low degree (depending on the truncator settings) of \p t1 and \p t2,
-		 * and will return \p true if the low degree of \p t1 is less than the low degree of \p t2, \p false otherwise.
-		 * If the truncator is inactive, a runtime error will be produced.
-		 * 
-		 * @param[in] t1 first term.
-		 * @param[in] t2 second term.
-		 * 
-		 * @return the result of comparing the low degrees of \p t1 and \p t2.
-		 * 
-		 * @throws std::invalid_argument if the truncator is inactive.
-		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
-		 */
-		bool compare_terms(const term_type &t1, const term_type &t2) const
-		{
-			switch (std::get<0u>(m_state)) {
-				case total:
-					return compare_ldegree(t1,t2,m_poly.m_symbol_set);
-				case partial:
-					return compare_pldegree(t1,t2,m_poly.m_symbol_set);
-				default:
-					piranha_throw(std::invalid_argument,"cannot compare terms if truncator is inactive");
-			}
-		}
-		/// Filter term.
-		/**
-		 * @param[in] t term argument.
-		 * 
-		 * @return \p true if \p t can be discarded given the current truncation settings, \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by piranha::power_series_truncator::filter_term().
-		 */
-		bool filter(const term_type &t) const
-		{
-			return filter_term(t,m_poly.m_symbol_set);
-		}
-	private:
-		const polynomial_type &m_poly;
-};
-
-/// Specialisation of binary piranha::truncator for piranha::polynomial.
-/**
- * This specialisation will use piranha::power_series_truncator to rank terms according to their low degree.
- * 
- * \section type_requirements Type requirements
- * 
- * This specialisation is activated for instances of piranha::polynomial. If the echelon sizes of the two polynomial term types
- * are not equal, a compile-time error will be produced.
- */
-template <typename Cf1, typename Expo1, typename Cf2, typename Expo2>
-class truncator<polynomial<Cf1,Expo1>,polynomial<Cf2,Expo2>>: public power_series_truncator
-{
-		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf1,Expo1>>));
-		BOOST_CONCEPT_ASSERT((concept::Truncator<polynomial<Cf2,Expo2>>));
-	public:
-		/// Alias for the first polynomial type.
-		typedef polynomial<Cf1,Expo1> polynomial_type1;
-		/// Alias for the second polynomial type.
-		typedef polynomial<Cf2,Expo2> polynomial_type2;
-		/// Alias for the first polynomial term type.
-		typedef typename polynomial_type1::term_type term_type1;
-		/// Alias for the second polynomial term type.
-		typedef typename polynomial_type2::term_type term_type2;
-	private:
-		static_assert(echelon_size<term_type1>::value == echelon_size<term_type2>::value,"Inconsistent echelon sizes.");
-	public:
-		/// Constructor from polynomials.
-		/**
-		 * The constructor will store internally references to the input series and will invoke the default
-		 * constructor of piranha::power_series_truncator.
-		 * 
-		 * @param[in] poly1 first series on which the truncator will operate.
-		 * @param[in] poly2 second series on which the truncator will operate.
-		 * 
-		 * @throws std::invalid_argument if the arguments sets of \p poly1 and \p poly2 differ.
-		 * @throws unspecified any exception thrown by the default constructor of piranha::power_series_truncator.
-		 */
-		explicit truncator(const polynomial_type1 &poly1, const polynomial_type2 &poly2):power_series_truncator(),
-			m_poly1(poly1),m_poly2(poly2)
-		{
-			if (unlikely(m_poly1.m_symbol_set != m_poly2.m_symbol_set)) {
-				piranha_throw(std::invalid_argument,"incompatible sets of arguments");
-			}
-		}
-		/// Defaulted copy constructor.
-		truncator(const truncator &) = default;
-		/// Deleted copy assignment.
-		truncator &operator=(const truncator &) = delete;
-		/// Deleted move assignment.
-		truncator &operator=(truncator &&) = delete;
-		/// Term comparison.
-		/**
-		 * This method will compare the partial or total low degree (depending on the truncator settings) of \p t1 and \p t2,
-		 * and will return \p true if the low degree of \p t1 is less than the low degree of \p t2, \p false otherwise.
-		 * If the truncator is inactive, a runtime error will be produced.
-		 * 
-		 * This template method is activated only if \p Term is \p term_type1 or \p term_type2. If \p Term is \p term_type1 the set
-		 * of arguments used to calculate and compare the degree of the terms will be the one of the first series, otherwise the set of arguments
-		 * of the second series will be used.
-		 * 
-		 * @param[in] t1 first term.
-		 * @param[in] t2 second term.
-		 * 
-		 * @return the result of comparing the low degrees of \p t1 and \p t2.
-		 * 
-		 * @throws std::invalid_argument if the truncator is inactive.
-		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
-		 */
-		template <typename Term>
-		bool compare_terms(const Term &t1, const Term &t2, typename std::enable_if<std::is_same<Term,term_type1>::value ||
-			std::is_same<Term,term_type2>::value>::type * = nullptr) const
-		{
-			const auto &args = (std::is_same<Term,term_type1>::value) ? m_poly1.m_symbol_set : m_poly2.m_symbol_set;
-			switch (std::get<0u>(m_state)) {
-				case total:
-					return compare_ldegree(t1,t2,args);
-				case partial:
-					return compare_pldegree(t1,t2,args);
-				default:
-					piranha_throw(std::invalid_argument,"cannot compare terms if truncator is inactive");
-			}
-		}
-		/// Filter term.
-		/**
-		 * @param[in] t term argument.
-		 * 
-		 * @return \p true if \p t can be discarded given the current truncation settings, \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by piranha::power_series_truncator::filter_term().
-		 */
-		bool filter(const term_type1 &t) const
-		{
-			return filter_term(t,m_poly1.m_symbol_set);
-		}
-		/// Skip term multiplications.
-		/**
-		 * This method will return \p true if the multiplication of \p t1 by \p t2 and of all terms following \p t1 and \p t2 in the ordering established by
-		 * compare_terms() can be skipped, given the current truncation settings, \p false otherwise.
-		 * 
-		 * @param[in] t1 first term.
-		 * @param[in] t2 second term.
-		 * 
-		 * @return \p true if the result of the multiplication of \p t1 by \p t2 and of all subsequent term-by-term multiplications
-		 * can be discarded, \p false otherwise.
-		 * 
-		 * @throws unspecified any exception thrown by the calculation and comparison of the low degrees of the terms.
-		 */
-		bool skip(const term_type1 &t1, const term_type2 &t2) const
-		{
-			switch (std::get<0u>(m_state)) {
-				case total:
-					return (t1.ldegree(m_poly1.m_symbol_set) + t2.ldegree(m_poly2.m_symbol_set)) >= std::get<1u>(m_state);
-				case partial:
-					return (t1.ldegree(std::get<2u>(m_state),m_poly1.m_symbol_set) +
-						t2.ldegree(std::get<2u>(m_state),m_poly2.m_symbol_set)) >= std::get<1u>(m_state);
-				default:
-					return false;
-			}
-		}
-	private:
-		const polynomial_type1	&m_poly1;
-		const polynomial_type2	&m_poly2;
-};
-
 namespace detail
 {
 
@@ -831,8 +626,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		typedef typename Series2::term_type term_type2;
 		/// Alias for the return type.
 		typedef typename base::return_type return_type;
-		/// Alias for the truncator type.
-		typedef truncator<Series1,Series2> truncator_type;
 		/// Constructor.
 		/**
 		 * Will call the base constructor and additionally check that the result of the multiplication will not overflow
@@ -931,8 +724,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 */
 		return_type operator()() const
 		{
-			truncator_type trunc(*this->m_s1,*this->m_s2);
-			return execute(trunc);
+			return execute();
 		}
 	private:
 		typedef typename std::vector<term_type1 const *>::size_type index_type;
@@ -1085,66 +877,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const std::vector<term_type1 const *>	&m_v1;
 			const std::vector<term_type2 const *>	&m_v2;
 		};
-		// Pre-sort individual blocks if truncator is skipping and active.
-		template <typename S1, typename S2>
-		void sparse_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
-			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr) const
-		{}
-		template <typename S1, typename S2>
-		void sparse_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
-			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr) const
-		{
-			if (!trunc.is_active()) {
-				return;
-			}
-			auto &v1 = this->m_v1;
-			auto &v2 = this->m_v2;
-			const auto size1 = v1.size(), size2 = v2.size();
-			auto sorter1 = [&trunc](const term_type1 *t1, const term_type1 *t2) {return trunc.compare_terms(*t1,*t2);};
-			auto sorter2 = [&trunc](const term_type2 *t1, const term_type2 *t2) {return trunc.compare_terms(*t1,*t2);};
-			for (index_type i = 0u; i < size1 / bsize1; ++i) {
-				std::sort(&v1[0u] + i * bsize1,&v1[0u] + (i + 1u) * bsize1,sorter1);
-			}
-			if (size1 % bsize1) {
-				std::sort(&v1[0u] + (size1 / bsize1) * bsize1,&v1[0u] + size1,sorter1);
-			}
-			for (index_type i = 0u; i < size2 / bsize2; ++i) {
-				std::sort(&v2[0u] + i * bsize2,&v2[0u] + (i + 1u) * bsize2,sorter2);
-			}
-			if (size2 % bsize2) {
-				std::sort(&v2[0u] + (size2 / bsize2) * bsize2,&v2[0u] + size2,sorter2);
-			}
-		}
-		template <typename S1, typename S2, typename Keys1, typename Keys2>
-		static void dense_sort_blocks(const index_type &, const index_type &, const truncator<S1,S2> &,
-			Keys1 &, Keys2 &, typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
-		{}
-		template <typename S1, typename S2, typename Keys1, typename Keys2>
-		static void dense_sort_blocks(const index_type &bsize1, const index_type &bsize2, const truncator<S1,S2> &trunc,
-			Keys1 &new_keys1, Keys2 &new_keys2, typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
-		{
-			if (!trunc.is_active()) {
-				return;
-			}
-			typedef typename Keys1::value_type pair_type1;
-			typedef typename Keys2::value_type pair_type2;
-			const auto size1 = new_keys1.size(), size2 = new_keys2.size();
-			auto sorter1 = [&trunc](const pair_type1 &p1, const pair_type1 &p2) {return trunc.compare_terms(*p1.second,*p2.second);};
-			auto sorter2 = [&trunc](const pair_type2 &p1, const pair_type2 &p2) {return trunc.compare_terms(*p1.second,*p2.second);};
-			for (index_type i = 0u; i < size1 / bsize1; ++i) {
-				std::sort(&new_keys1[0u] + i * bsize1,&new_keys1[0u] + (i + 1u) * bsize1,sorter1);
-			}
-			if (size1 % bsize1) {
-				std::sort(&new_keys1[0u] + (size1 / bsize1) * bsize1,&new_keys1[0u] + size1,sorter1);
-			}
-			for (index_type i = 0u; i < size2 / bsize2; ++i) {
-				std::sort(&new_keys2[0u] + i * bsize2,&new_keys2[0u] + (i + 1u) * bsize2,sorter2);
-			}
-			if (size2 % bsize2) {
-				std::sort(&new_keys2[0u] + (size2 / bsize2) * bsize2,&new_keys2[0u] + size2,sorter2);
-			}
-		}
-		return_type execute(const truncator_type &trunc) const
+		return_type execute() const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
 			// Do not do anything if one of the two series is empty, just return an empty series.
@@ -1162,11 +895,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			retval.m_symbol_set = this->m_s1->m_symbol_set;
 			typename Series1::size_type estimate;
 			// Use the sparse functor for the estimation.
-			if (trunc.is_active()) {
-				estimate = base::estimate_final_series_size(sparse_functor<true>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
-			} else {
-				estimate = base::estimate_final_series_size(sparse_functor<false>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,trunc,retval));
-			}
+			estimate = base::estimate_final_series_size(sparse_functor<>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,retval));
 			// Correct the unlikely case of zero estimate.
 			if (unlikely(!estimate)) {
 				estimate = 1u;
@@ -1176,17 +905,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(estimate / retval.m_container.max_load_factor())));
 			piranha_assert(retval.m_container.bucket_count());
 			if ((integer(size1) * integer(size2)) / estimate > 200) {
-				if (trunc.is_active()) {
-					dense_multiplication<true>(retval,trunc);
-				} else {
-					dense_multiplication<false>(retval,trunc);
-				}
+				dense_multiplication(retval);
 			} else {
-				if (trunc.is_active()) {
-					sparse_multiplication<sparse_functor<true>>(retval,trunc);
-				} else {
-					sparse_multiplication<sparse_functor<false>>(retval,trunc);
-				}
+				sparse_multiplication<sparse_functor<>>(retval);
 			}
 			// Trace the result of estimation.
 			this->trace_estimates(retval.size(),estimate);
@@ -1211,18 +932,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				block_size2 = job_size;
 			}
 			return std::make_pair(std::move(block_size1),std::move(block_size2));
-		}
-		template <bool IsActive,typename S1, typename S2>
-		static bool dense_skip(const term_type1 &t1,const term_type2 &t2, const truncator<S1,S2> &trunc,
-			typename std::enable_if<truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
-		{
-			return IsActive && trunc.skip(t1,t2);
-		}
-		template <bool IsActive,typename S1, typename S2>
-		static bool dense_skip(const term_type1 &,const term_type2 &, const truncator<S1,S2> &,
-			typename std::enable_if<!truncator_traits<S1,S2>::is_skipping>::type * = nullptr)
-		{
-			return false;
 		}
 		// Compare regions by lower bound.
 		struct region_comparer
@@ -1251,10 +960,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			piranha_assert(region_set_checker(busy_regions));
 		}
 		// Dense multiplication method.
-		template <bool IsActive>
-		void dense_multiplication(return_type &retval, const truncator_type &trunc) const
+		void dense_multiplication(return_type &retval) const
 		{
-			piranha_assert(IsActive == trunc.is_active());
 			// Vectors of minimum / maximum values, cast to hardware int.
 			std::vector<value_type> mins;
 			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(mins),[](const std::pair<integer,integer> &p) {
@@ -1274,7 +981,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					return static_cast<value_type>(old);
 			});
 			// Try casting final delta.
-			static_cast<value_type>(f_delta);
+			(void)static_cast<value_type>(f_delta);
 			// Compute hmax and hmin.
 			piranha_assert(m_minmax_values.size() == c_vec.size());
 			const auto h_minmax = std::inner_product(m_minmax_values.begin(),m_minmax_values.end(),c_vec.begin(),
@@ -1373,8 +1080,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 			}
-			// Pre-sort each block according to the truncator, if necessary.
-			dense_sort_blocks(bsize1,bsize2,trunc,new_keys1,new_keys2);
 			// Prepare the storage for multiplication.
 			std::vector<typename term_type1::cf_type> cf_vector;
 			cf_vector.resize(boost::numeric_cast<decltype(cf_vector.size())>((hmax - hmin) + 1));
@@ -1390,9 +1095,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(i_end > i_start && j_end > j_start);
 					for (index_type i = i_start; i < i_end; ++i) {
 						for (index_type j = j_start; j < j_end; ++j) {
-							if (dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
-								break;
-							}
 							const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
 							piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
 							math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
@@ -1407,16 +1109,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				region_comparer rc;
 				std::set<region_type,region_comparer> busy_regions(rc);
 				// Synchronization.
-				mutex m;
-				condition_variable cond;
+				std::mutex m;
+				std::condition_variable cond;
 				// Thread function.
-				auto thread_function = [&trunc,&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
+				auto thread_function = [&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
 					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{
 							// First, lock down everything.
-							unique_lock<mutex>::type lock(m);
+							std::unique_lock<std::mutex> lock(m);
 							if (task_list.empty()) {
 								break;
 							}
@@ -1461,9 +1163,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							piranha_assert(i_end > i_start && j_end > j_start);
 							for (index_type i = i_start; i < i_end; ++i) {
 								for (index_type j = j_start; j < j_end; ++j) {
-									if (this->dense_skip<IsActive>(*new_keys1[i].second,*new_keys2[j].second,trunc)) {
-										break;
-									}
 									const auto idx = (new_keys1[i].first + new_keys2[j].first) - hmin;
 									piranha_assert(idx < boost::numeric_cast<value_type>(cf_vector.size()));
 									math::multiply_accumulate(cf_vector[static_cast<decltype(cf_vector.size())>(idx)],
@@ -1472,7 +1171,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							}
 						} catch (...) {
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Cleanup the regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1481,7 +1180,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 						{
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Take out the regions in which we just wrote from the set of busy regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1494,7 +1193,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
 						tg.add_task(thread_function);
 					}
-					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.
@@ -1508,10 +1206,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 			// Build the return value.
-			// NOTE: the thing here is that if the truncator were not skipping, we would need to filter out
-			// the terms when building the return value. This is here as a reminder if we use this code,
-			// e.g., in Poisson series multiplication where the truncator could be filtering but not skipping.
-			static_assert(truncator_traits<Series1,Series2>::is_skipping,"Skipping truncator expected.");
 			// Append the final delta to the coding vector for use in the decoding routine.
 			c_vec.push_back(static_cast<value_type>(f_delta));
 			// Temp vector for decoding.
@@ -1542,7 +1236,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		template <typename Functor>
-		void sparse_multiplication(return_type &retval, const truncator_type &trunc) const
+		void sparse_multiplication(return_type &retval) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
 			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
@@ -1584,15 +1278,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 			}
-			// Pre-sort each block according to the truncator, if necessary.
-			sparse_sort_blocks(bsize1,bsize2,trunc);
 			typedef decltype(this->determine_n_threads()) thread_size_type;
 			const thread_size_type n_threads = this->determine_n_threads();
 			if (n_threads == 1u) {
 				// Perform the multiplication. We need this try/catch because, by using the fast interface,
 				// in case of an error the container in retval could be left in an inconsistent state.
 				try {
-					sparse_single_thread<Functor>(retval,trunc,task_list);
+					sparse_single_thread<Functor>(retval,task_list);
 				} catch (...) {
 					retval.m_container.clear();
 					throw;
@@ -1606,16 +1298,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				region_comparer rc;
 				std::set<region_type,region_comparer> busy_regions(rc);
 				// Synchronization.
-				mutex m;
-				condition_variable cond;
+				std::mutex m;
+				std::condition_variable cond;
 				// Thread function.
-				auto thread_function = [&trunc,&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
+				auto thread_function = [&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
 					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{
 							// First, lock down everything.
-							unique_lock<mutex>::type lock(m);
+							std::unique_lock<std::mutex> lock(m);
 							if (task_list.empty()) {
 								break;
 							}
@@ -1665,12 +1357,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 								i_end = task.m_b1.second, j_end = task.m_b2.second;
 							piranha_assert(i_end > i_start && j_end > j_start);
 							const index_type i_size = i_end - i_start, j_size = j_end - j_start;
-							fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
+							fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,retval);
 							for (index_type i = 0u; i < i_size; ++i) {
 								for (index_type j = 0u; j < j_size; ++j) {
-									if (f.skip(i,j)) {
-										break;
-									}
 									f(i,j);
 									f.insert();
 								}
@@ -1678,7 +1367,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							tmp_ins_count = f.m_insertion_count;
 						} catch (...) {
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Cleanup the regions.
 							this->cleanup_regions(busy_regions,task);
 							// Notify all waiting threads that a region was removed from the busy set.
@@ -1687,7 +1376,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 						{
 							// Re-acquire the lock.
-							lock_guard<mutex>::type lock(m);
+							std::lock_guard<std::mutex> lock(m);
 							// Update the insertion count.
 							insertion_count += tmp_ins_count;
 							// Take out the regions in which we just wrote from the set of busy regions.
@@ -1700,9 +1389,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				task_group tg;
 				try {
 					for (thread_size_type i = 0u; i < n_threads; ++i) {
-						tg.add_task(thread_function);
+						// NOTE: this is a workaround for a GCC 4.7 bug. When we bump to 4.8 we can avoid
+						// std::function and use the functor directly.
+						tg.add_task(std::function<void()>(thread_function));
 					}
-					piranha_assert(tg.size() == n_threads);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.
@@ -1721,8 +1411,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		// Single-thread sparse multiplication.
-		template <typename Functor, typename Truncator, typename TaskList>
-		void sparse_single_thread(return_type &retval, const Truncator &trunc, const TaskList &task_list) const
+		template <typename Functor, typename TaskList>
+		void sparse_single_thread(return_type &retval, const TaskList &task_list) const
 		{
 			typedef typename Functor::fast_rebind fast_functor_type;
 			bucket_size_type insertion_count = 0u;
@@ -1732,12 +1422,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					i_end = it->m_b1.second, j_end = it->m_b2.second;
 				piranha_assert(i_end > i_start && j_end > j_start);
 				const index_type i_size = i_end - i_start, j_size = j_end - j_start;
-				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,trunc,retval);
+				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,retval);
 				for (index_type i = 0u; i < i_size; ++i) {
 					for (index_type j = 0u; j < j_size; ++j) {
-						if (f.skip(i,j)) {
-							break;
-						}
 						f(i,j);
 						f.insert();
 					}
@@ -1771,7 +1458,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				piranha_assert(b_count);
 				// Adjust the number of threads if they are more than the bucket count.
 				const unsigned nt = (n_threads <= b_count) ? n_threads : b_count;
-				mutex m;
+				std::mutex m;
 				auto eraser = [b_count,&retval,&m](const bucket_size_type &start, const bucket_size_type &end) {
 					piranha_assert(start < end && end <= b_count);
 					bucket_size_type erase_count = 0u;
@@ -1793,7 +1480,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						}
 					}
 					if (erase_count) {
-						lock_guard<mutex>::type lock(m);
+						std::lock_guard<std::mutex> lock(m);
 						piranha_assert(erase_count <= retval.m_container.size());
 						retval.m_container._update_size(retval.m_container.size() - erase_count);
 					}
@@ -1804,7 +1491,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
 						tg.add_task(std::bind(eraser,start,end));
 					}
-					piranha_assert(tg.size() == nt);
 					// First let's wait for everything to finish.
 					tg.wait_all();
 					// Then, let's handle the exceptions.
@@ -1827,16 +1513,15 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		// Functor for use in sparse multiplication.
-		template <bool IsActive, bool FastMode = false>
-		struct sparse_functor: base::template default_functor<IsActive,false>
+		template <bool FastMode = false>
+		struct sparse_functor: base::default_functor
 		{
 			// Fast version of functor.
-			typedef sparse_functor<IsActive,true> fast_rebind;
+			typedef sparse_functor<true> fast_rebind;
 			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
 			explicit sparse_functor(term_type1 const **ptr1, const index_type &s1,
-				term_type2 const **ptr2, const index_type &s2, const truncator_type &trunc,
-				return_type &retval):
-				base::template default_functor<IsActive,false>(ptr1,s1,ptr2,s2,trunc,retval),
+				term_type2 const **ptr2, const index_type &s2, return_type &retval):
+				base::default_functor(ptr1,s1,ptr2,s2,retval),
 				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
 			{}
 			void operator()(const index_type &i, const index_type &j) const
@@ -1846,7 +1531,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				m_cached_i = i;
 				m_cached_j = j;
 			}
-			template <bool CheckFilter = true>
 			void insert() const
 			{
 				// NOTE: be very careful: every kind of optimization in here must involve only the key part,

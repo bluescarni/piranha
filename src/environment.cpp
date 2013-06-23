@@ -20,15 +20,15 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 
 #include "detail/mpfr.hpp"
 #include "environment.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
 
-mutex environment::m_mutex;
+std::mutex environment::m_mutex;
 bool environment::m_inited = false;
 bool environment::m_shutdown = false;
 
@@ -48,7 +48,7 @@ void environment::cleanup_function()
  */
 environment::environment()
 {
-	lock_guard<mutex>::type lock(m_mutex);
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if (m_inited) {
 		return;
 	}

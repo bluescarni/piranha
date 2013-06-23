@@ -21,10 +21,10 @@
 #ifndef PIRANHA_SETTINGS_HPP
 #define PIRANHA_SETTINGS_HPP
 
+#include <mutex>
 #include <utility>
 
 #include "config.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
@@ -51,7 +51,7 @@ class PIRANHA_PUBLIC settings
 		static void set_max_term_output(unsigned long);
 		static void reset_max_term_output();
 	private:
-		static mutex			m_mutex;
+		static std::mutex		m_mutex;
 		static std::pair<bool,unsigned>	m_n_threads;
 		static std::pair<bool,unsigned>	m_cache_line_size;
 		static bool			m_tracing;

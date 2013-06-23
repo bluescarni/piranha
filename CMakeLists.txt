@@ -53,13 +53,6 @@ IF(BUILD_TESTS)
 	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
 ENDIF(BUILD_TESTS)
-IF(PIRANHA_ENABLE_BOOST_THREAD)
-	MESSAGE(STATUS "Enabling Boost.thread.")
-	SET(PIRANHA_USE_BOOST_THREAD "#define PIRANHA_USE_BOOST_THREAD")
-	# NOTE: it seems like in Win32 Boost.thread needs to link to the Boost System
-	# and Chrono libraries. Just link them always for simplicity.
-	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} thread system chrono)
-ENDIF(PIRANHA_ENABLE_BOOST_THREAD)
 IF(BUILD_PYRANHA)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
 ENDIF(BUILD_PYRANHA)
@@ -74,9 +67,6 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
 # when compiling tests.
 SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_TIMER_LIBRARY})
-IF(PIRANHA_ENABLE_BOOST_THREAD)
-	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_CHRONO_LIBRARY})
-ENDIF(PIRANHA_ENABLE_BOOST_THREAD)
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)

@@ -24,12 +24,12 @@
 #include <boost/any.hpp>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <string>
 #include <utility>
 
 #include "config.hpp"
 #include "settings.hpp"
-#include "threading.hpp"
 
 namespace piranha
 {
@@ -97,7 +97,7 @@ class PIRANHA_PUBLIC tracing
 		template <typename Functor>
 		static void trace_impl(const std::string &str, const Functor &f)
 		{
-			lock_guard<mutex>::type lock(m_mutex);
+			std::lock_guard<std::mutex> lock(m_mutex);
 			bool new_item = false;
 			auto it = m_container.find(str);
 			if (it == m_container.end()) {
@@ -117,7 +117,7 @@ class PIRANHA_PUBLIC tracing
 		}
 	private:
 		static container_type	m_container;
-		static mutex		m_mutex;
+		static std::mutex	m_mutex;
 };
 
 }

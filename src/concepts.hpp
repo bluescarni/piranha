@@ -40,6 +40,5 @@ namespace concept {}
 #include "concepts/power_series_term.hpp"
 #include "concepts/series.hpp"
 #include "concepts/term.hpp"
-#include "concepts/truncator.hpp"
 
 #endif

@@ -271,8 +271,6 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s5o.size() == 1u);
 			BOOST_CHECK(s5o.m_container.begin()->m_cf.size() == 1u);
 			BOOST_CHECK(s5o.m_container.begin()->m_cf.m_container.begin()->m_cf == 1);
-			// Truncator getter.
-			BOOST_CHECK_NO_THROW(s5o.get_truncator());
 			// Type traits.
 			BOOST_CHECK((std::is_constructible<series_type,series_type>::value));
 			BOOST_CHECK((!std::is_constructible<series_type,series_type,int>::value));
@@ -1217,6 +1215,7 @@ struct stream_tester
 			oss << (p_type11{"x"} - 1);
 			BOOST_CHECK(oss.str() == "x-1" || oss.str() == "-1+x");
 			// Test wih less term output.
+			typedef polynomial<Cf,Expo> poly_type;
 			settings::set_max_term_output(3u);
 			oss.str("");
 			oss << p_type11{};
@@ -1239,27 +1238,11 @@ struct stream_tester
 			oss.str("");
 			oss << (-p_type11{"x"} * p_type11{"y"});
 			BOOST_CHECK(oss.str() == "-xy");
-			// Check printing with a truncator.
-			typedef polynomial<Cf,Expo> poly_type;
-			poly_type poly1{"x"};
-			poly1.get_truncator().set(5);
-			poly1 += 1;
-			oss.str("");
-			oss << poly1;
-			BOOST_CHECK(oss.str() == "1+x");
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"}),"1+x+x**2");
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} - 1 + 2 * poly_type{"x"} * poly_type{"x"}),"-1+x+2*x**2");
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{"x"} - 1 - 2 * poly_type{"x"} * poly_type{"x"}),"-1+x-2*x**2");
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
-				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1-3*x+x**2+...");
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
-				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"1+3*x+x**2+...");
 			// Test wih no term output.
 			settings::set_max_term_output(0u);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
 				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"...");
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{}),"0");
-			poly1.get_truncator().unset();
 			settings::reset_max_term_output();
 		}
 	};
@@ -1696,27 +1679,8 @@ struct print_tex_tester
 			oss.str("");
 			(-p_type11{"x"} * p_type11{"y"}).print_tex(oss);
 			BOOST_CHECK(oss.str() == "-{x}{y}");
-			// Check printing with a truncator.
-			typedef polynomial<Cf,Expo> poly_type;
-			poly_type poly1{"x"};
-			poly1.get_truncator().set(5);
-			poly1 += 1;
-			oss.str("");
-			poly1.print_tex(oss);
-			BOOST_CHECK(oss.str() == "1+{x}");
-			oss.str("");
-			(poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"}).print_tex(oss);
-			BOOST_CHECK_EQUAL(oss.str(),"1+{x}+{x}^{2}");
-			oss.str("");
-			(poly_type{"x"} - 1 + 2 * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
-			BOOST_CHECK_EQUAL(oss.str(),"-1+{x}+2{x}^{2}");
-			oss.str("");
-			(poly_type{"x"} - 1 - 2 * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
-			BOOST_CHECK_EQUAL(oss.str(),"-1+{x}-2{x}^{2}");
-			oss.str("");
-			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
-			BOOST_CHECK_EQUAL(oss.str(),"1-3{x}+{x}^{2}+\\ldots");
 			// Test wih no term output.
+			typedef polynomial<Cf,Expo> poly_type;
 			settings::set_max_term_output(0u);
 			oss.str("");
 			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
@@ -1724,7 +1688,6 @@ struct print_tex_tester
 			oss.str("");
 			poly_type{}.print_tex(oss);
 			BOOST_CHECK_EQUAL(oss.str(),"0");
-			poly1.get_truncator().unset();
 			settings::reset_max_term_output();
 		}
 	};

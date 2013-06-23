@@ -829,6 +829,9 @@ struct l6
 
 BOOST_AUTO_TEST_CASE(type_traits_is_function_object_test)
 {
+	// NOTE: regarding lambdas:
+	// http://en.cppreference.com/w/cpp/language/lambda
+	// Specifically, they are always function objects and they have defaulted constructors.
 	auto l1 = [](){};
 	auto l2 = [](const int &){};
 	auto l3 = [](int &){};
