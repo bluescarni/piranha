@@ -14,11 +14,9 @@ SET(HEADERS_LIST
 	forwarding.hpp
 	series.hpp
 	concepts/series.hpp
-	concepts/power_series_term.hpp
 	concepts/container_element.hpp
-	concepts/power_series.hpp
 	concepts/term.hpp
-	power_series_term.hpp
+	power_series.hpp
 	poisson_series.hpp
 	polynomial_term.hpp
 	poisson_series_term.hpp

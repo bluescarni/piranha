@@ -21,21 +21,16 @@
 #ifndef PIRANHA_POWER_SERIES_HPP
 #define PIRANHA_POWER_SERIES_HPP
 
-#include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "concepts/power_series_term.hpp"
-#include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
-#include "power_series_term.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
-#include "type_traits.hpp" // For has_degree.
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -43,17 +38,48 @@ namespace piranha
 namespace detail
 {
 
+// Detect power series terms.
 template <typename Series>
 struct power_series_term_score
 {
-	static const unsigned value = static_cast<unsigned>(has_degree<typename Series::term_type::cf_type>::value) |
-				      (static_cast<unsigned>(key_has_degree<typename Series::term_type::key_type>::value) << 1u);
+	typedef typename Series::term_type::cf_type cf_type;
+	typedef typename Series::term_type::key_type key_type;
+	static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) |
+				      (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_t_ldegree<key_type>::value) << 1u);
 };
 
 }
 
+/// Power series toolbox.
+/**
+ * This toolbox is intended to extend the \p Series type with properties of formal power series.
+ *
+ * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and partial (low) degree
+ * of a \p Series object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query
+ * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits).
+ *
+ * As an additional requirement, the types returned when querying the degree must be default-constructible, constructible from \p int,
+ * copy-constructible, assignable, move-assignable, and less-than comparable. If these additional requirements are not satisfied,
+ * the degree-querying methods will be disabled.
+ *
+ * This class satisfies the piranha::is_series type trait.
+ *
+ * \section type_requirements Type requirements
+ *
+ * \p Series must satisfy the piranha::is_series type trait.
+ *
+ * \section exception_safety Exception safety guarantee
+ *
+ * This class provides the same guarantee as \p Series.
+ *
+ * \section move_semantics Move semantics
+ *
+ * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 template <typename Series>
-class power_series_: public Series
+class power_series: public Series
 {
 		PIRANHA_TT_CHECK(is_series,Series);
 		typedef Series base;
@@ -61,16 +87,19 @@ class power_series_: public Series
 		template <typename T>
 		struct common_type_checks
 		{
-			static const bool value = std::is_constructible<T,int>::value &&
+			static const bool value = std::is_default_constructible<T>::value &&
+						  std::is_constructible<T,int>::value &&
 						  std::is_copy_constructible<T>::value &&
 						  std::is_assignable<T &,T>::value &&
 						  std::is_move_assignable<T>::value &&
 						  is_less_than_comparable<T>::value;
 		};
 		// Utilities to compute the degree.
+		// Unspecialised version will not define any member, will SFINAE out.
 		template <typename T, typename = void>
 		struct degree_utils
 		{};
+		// Case 1: only coefficient as degree/ldegree.
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 1u>::type>
 		{
@@ -82,7 +111,16 @@ class power_series_: public Series
 				return PIRANHA_TMP_RETURN;
 			}
 			#undef PIRANHA_TMP_RETURN
+			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,std::forward<Args>(args)...)
+			template <typename Term, typename ... Args>
+			static auto lget(const Term &t, Args && ... args, const symbol_set &) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
 		};
+		// Case 2: only key has degree/ldegree.
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 2u>::type>
 		{
@@ -94,13 +132,30 @@ class power_series_: public Series
 				return PIRANHA_TMP_RETURN;
 			}
 			#undef PIRANHA_TMP_RETURN
+			#define PIRANHA_TMP_RETURN t.m_key.ldegree(std::forward<Args>(args)...,s)
+			template <typename Term, typename ... Args>
+			static auto lget(const Term &t, Args && ... args, const symbol_set &s) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
 		};
+		// Case 3: only key has degree/ldegree.
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<detail::power_series_term_score<T>::value == 3u>::type>
 		{
 			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,std::forward<Args>(args)...) + t.m_key.degree(std::forward<Args>(args)...,s)
 			template <typename Term, typename ... Args>
 			static auto get(const Term &t, Args && ... args, const symbol_set &s) ->
+				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
+			{
+				return PIRANHA_TMP_RETURN;
+			}
+			#undef PIRANHA_TMP_RETURN
+			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,std::forward<Args>(args)...) + t.m_key.ldegree(std::forward<Args>(args)...,s)
+			template <typename Term, typename ... Args>
+			static auto lget(const Term &t, Args && ... args, const symbol_set &s) ->
 				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
 			{
 				return PIRANHA_TMP_RETURN;
@@ -129,125 +184,22 @@ class power_series_: public Series
 			}
 			return retval;
 		}
-	public:
-		/// Defaulted default constructor.
-		power_series_() = default;
-		/// Defaulted copy constructor.
-		power_series_(const power_series_ &) = default;
-		/// Defaulted move constructor.
-		power_series_(power_series_ &&) = default;
-		PIRANHA_FORWARDING_CTOR(power_series_,base)
-		/// Defaulted copy assignment operator.
-		power_series_ &operator=(const power_series_ &) = default;
-		/// Defaulted move assignment operator.
-		power_series_ &operator=(power_series_ &&) = default;
-		PIRANHA_FORWARDING_ASSIGNMENT(power_series_,base)
-		/// Trivial destructor.
-		~power_series_() noexcept(true)
+		template <typename T, typename ... Args>
+		auto ldegree_impl(Args && ... args) const ->
+			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::forward<Args>(args)...,std::declval<symbol_set>()))
 		{
-			PIRANHA_TT_CHECK(is_series,power_series_);
-		}
-		template <typename T = power_series_>
-		auto degree() const -> decltype(this->degree_impl<T>())
-		{
-			return degree_impl<T>();
-		}
-};
-
-
-namespace detail
-{
-
-struct power_series_tag {};
-
-}
-
-/// Power series toolbox.
-/**
- * This toolbox is intended to extend the \p Series type with properties of formal power series.
- * 
- * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and partial (low) degree
- * of a \p Series object. Such augmentation takes place if the series term satisfies the piranha::is_power_series_term type trait.
- * 
- * As an additional requirement, the types returned when querying total and partial (low) degree must be default-constructible,
- * move-assignable, constructible from \p int, and less-than and greater-than comparable. If these additional requirements are not satisfied,
- * a compile-time error will be produced.
- * 
- * If the term type does not satisfy the piranha::is_power_series_term type trait, this class will not add any new functionality to the \p Series class and
- * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
- * 
- * This class is a model of the piranha::concept::Series concept and, in case the above requirements are satisfied, of the piranha::concept::PowerSeries
- * concept.
- * 
- * \section exception_safety Exception safety guarantee
- * 
- * This class provides the same guarantee as \p Series.
- * 
- * \section move_semantics Move semantics
- * 
- * Move semantics is equivalent to the move semantics of \p Series.
- * 
- * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo investigate beautification (for doc purposes) of degree() return types via auto and decltype(). Or maybe at least do the same as
- * done in power_series_term.
- */
-// NOTE: here the tag is used explicitly to differentiate between the general implementation
-// and the specialization below.
-template <typename Series, typename Enable = void>
-class power_series: public Series,detail::power_series_tag,detail::toolbox<Series,power_series<Series,Enable>>
-{
-		BOOST_CONCEPT_ASSERT((concept::PowerSeriesTerm<typename Series::term_type>));
-		typedef Series base;
-		// TODO: fix usage of declval.
-		template <typename... Args>
-		struct degree_type
-		{
-			typedef decltype(std::declval<typename Series::term_type>().degree(
-				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
-		};
-		template <typename... Args>
-		struct ldegree_type
-		{
-			typedef decltype(std::declval<typename Series::term_type>().ldegree(
-				std::declval<typename std::decay<Args>::type>()...,std::declval<symbol_set>())) type;
-		};
-		template <typename... Args>
-		typename degree_type<Args ...>::type degree_impl(Args && ... params) const
-		{
-			// NOTE: this code is partially re-used in Poisson series, keep it in mind
-			// if it gets changed.
-			typedef typename degree_type<Args ...>::type return_type;
+			typedef decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),
+				std::forward<Args>(args)...,std::declval<symbol_set>())) return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = it->degree(std::forward<Args>(params)...,this->m_symbol_set);
+			return_type retval = degree_utils<T>::lget(*it,std::forward<Args>(args)...,this->m_symbol_set);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = it->degree(std::forward<Args>(params)...,this->m_symbol_set);
-				if (tmp > retval) {
-					retval = std::move(tmp);
-				}
-			}
-			return retval;
-		}
-		template <typename... Args>
-		typename ldegree_type<Args ...>::type ldegree_impl(Args && ... params) const
-		{
-			typedef typename ldegree_type<Args ...>::type return_type;
-			if (this->empty()) {
-				return return_type(0);
-			}
-			auto it = this->m_container.begin();
-			const auto it_f = this->m_container.end();
-			return_type retval = it->ldegree(std::forward<Args>(params)...,this->m_symbol_set);
-			++it;
-			return_type tmp;
-			for (; it != it_f; ++it) {
-				tmp = it->ldegree(std::forward<Args>(params)...,this->m_symbol_set);
+				tmp = degree_utils<T>::lget(*it,std::forward<Args>(args)...,this->m_symbol_set);
 				if (tmp < retval) {
 					retval = std::move(tmp);
 				}
@@ -262,206 +214,99 @@ class power_series: public Series,detail::power_series_tag,detail::toolbox<Serie
 		/// Defaulted move constructor.
 		power_series(power_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(power_series,base)
-		/// Trivial destructor.
-		~power_series() noexcept(true)
-		{
-			PIRANHA_TT_CHECK(is_series,power_series);
-		}
 		/// Defaulted copy assignment operator.
 		power_series &operator=(const power_series &) = default;
 		/// Defaulted move assignment operator.
 		power_series &operator=(power_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
+		/// Trivial destructor.
+		~power_series() noexcept(true)
+		{
+			PIRANHA_TT_CHECK(is_series,power_series);
+		}
 		/// Total degree.
 		/**
-		 * The degree of the series is the maximum degree of its terms. The degree of each term is calculated using piranha::power_series_term::degree().
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * The degree of the series is the maximum degree of its terms. If the series is empty, zero will be returned.
+		 *
 		 * @return the total degree of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type from zero,
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename degree_type<>::type degree() const
+		template <typename T = power_series>
+		auto degree() const -> decltype(this->degree_impl<T>())
 		{
-			return degree_impl();
+			return degree_impl<T>();
 		}
 		/// Partial degree.
 		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
 		 * The partial degree of the series is the maximum partial degree of its terms
 		 * (i.e., the total degree when only variables with names in \p s are considered).
-		 * The partial degree of each term is calculated using piranha::power_series_term::degree().
-		 * 
 		 * If the series is empty, zero will be returned.
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
+		 *
 		 * @param[in] s the set of names of the variables that will be considered in the computation of the partial degree.
-		 * 
+		 *
 		 * @return the partial degree of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type from zero,
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename degree_type<std::set<std::string>>::type degree(const std::set<std::string> &s) const
+		template <typename T = power_series>
+		auto degree(const std::set<std::string> &s) const -> decltype(this->degree_impl<T>(s))
 		{
-			return degree_impl(s);
-		}
-		/// Partial degree.
-		/**
-		 * Convenience overload that will call degree() with a set built from the
-		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
-		 * @param[in] name name of the variable that will be considered in the computation of the partial degree.
-		 * 
-		 * @return the partial degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by degree(const std::set<std::string> &s) or by memory allocation
-		 * errors in standard containers.
-		 */
-		template <typename Str>
-		typename degree_type<std::set<std::string>>::type degree(Str &&name,
-			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) const
-		{
-			return degree(std::set<std::string>{std::string(name)});
+			return degree_impl<T>(s);
 		}
 		/// Low degree.
 		/**
-		 * The low degree of the series is the minimum low degree of its terms. The low degree of each term is calculated
-		 * using piranha::power_series_term::ldegree().
-		 * 
-		 * If the series is empty, zero will be returned.
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * The low degree of the series is the minimum low degree of its terms. If the series is empty, zero will be returned.
+		 *
 		 * @return the total low degree of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type from zero,
 		 * - the calculation of the low degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename ldegree_type<>::type ldegree() const
+		template <typename T = power_series>
+		auto ldegree() const -> decltype(this->ldegree_impl<T>())
 		{
-			return ldegree_impl();
+			return ldegree_impl<T>();
 		}
 		/// Partial low degree.
 		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
 		 * The partial low degree of the series is the minimum partial low degree of its terms
 		 * (i.e., the total low degree when only variables with names in \p s are considered).
-		 * The partial low degree of each term is calculated using piranha::power_series_term::degree().
-		 * 
 		 * If the series is empty, zero will be returned.
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
+		 *
 		 * @param[in] s the set of names of the variables that will be considered in the computation of the partial low degree.
-		 * 
+		 *
 		 * @return the partial low degree of the series.
-		 * 
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type from zero,
 		 * - the calculation of the degree of each term,
 		 * - the assignment and greater-than operators for the return type.
 		 */
-		typename ldegree_type<std::set<std::string>>::type ldegree(const std::set<std::string> &s) const
+		template <typename T = power_series>
+		auto ldegree(const std::set<std::string> &s) const -> decltype(this->ldegree_impl<T>(s))
 		{
-			return ldegree_impl(s);
-		}
-		/// Partial low degree.
-		/**
-		 * Convenience overload that will call ldegree() with a set built from the
-		 * single string \p name. This template method is activated only if \p Str is a string type (either C or C++).
-		 * 
-		 * This method is available only if the class satisfies the power series concept.
-		 * 
-		 * @param[in] name name of the variable that will be considered in the computation of the partial low degree.
-		 * 
-		 * @return the partial low degree of the series.
-		 * 
-		 * @throws unspecified any exception thrown by ldegree(const std::set<std::string> &s) or by memory allocation
-		 * errors in standard containers.
-		 */
-		template <typename Str>
-		typename ldegree_type<std::set<std::string>>::type ldegree(Str &&name,
-			typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) const
-		{
-			return ldegree(std::set<std::string>{std::string(name)});
-		}
-};
-
-template <typename Series>
-class power_series<Series,typename std::enable_if<!is_power_series_term<typename Series::term_type>::value>::type>:
-	public Series,detail::toolbox<Series,power_series<Series>>
-{
-		typedef Series base;
-	public:
-		power_series() = default;
-		power_series(const power_series &) = default;
-		power_series(power_series &&) = default;
-		PIRANHA_FORWARDING_CTOR(power_series,base)
-		~power_series() = default;
-		power_series &operator=(const power_series &) = default;
-		power_series &operator=(power_series &&) = default;
-		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
-};
-
-/// Type trait for power series.
-/**
- * The value of the type trait will be \p true if \p Series is an instance of piranha::power_series that provides the methods
- * for querying the degree of the series, \p false otherwise.
- */
-template <typename Series>
-class is_power_series
-{
-	public:
-		/// Type trait value.
-		static const bool value = std::is_base_of<detail::power_series_tag,Series>::value;
-};
-
-template <typename Series>
-const bool is_power_series<Series>::value;
-
-/// Specialization of piranha::has_degree for power series.
-/**
- * This specialization is enabled for types satisfying the type trait piranha::is_power_series.
- */
-template <typename PowerSeries>
-class has_degree<PowerSeries,typename std::enable_if<is_power_series<PowerSeries>::value>::type>
-{
-	public:
-		/// Type trait value.
-		static const bool value = true;
-		/// Getter for total degree.
-		static auto get(const PowerSeries &ps) -> decltype(ps.degree())
-		{
-			return ps.degree();
-		}
-		/// Getter for partial degree.
-		static auto get(const PowerSeries &ps, const std::set<std::string> &s) -> decltype(ps.degree(s))
-		{
-			return ps.degree(s);
-		}
-		/// Getter for low degree.
-		static auto lget(const PowerSeries &ps) -> decltype(ps.ldegree())
-		{
-			return ps.ldegree();
-		}
-		/// Getter for partial low degree.
-		static auto lget(const PowerSeries &ps, const std::set<std::string> &s) -> decltype(ps.ldegree(s))
-		{
-			return ps.ldegree(s);
+			return ldegree_impl<T>(s);
 		}
 };
 

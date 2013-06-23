@@ -153,7 +153,6 @@ namespace detail {}
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "power_series.hpp"
-#include "power_series_term.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 #include "rational.hpp"

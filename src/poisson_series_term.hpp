@@ -30,7 +30,6 @@
 #include "base_term.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
-#include "power_series_term.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
@@ -74,13 +73,13 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf>
-class poisson_series_term: public power_series_term<base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>>>
+class poisson_series_term: public base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>>
 {
 		PIRANHA_TT_CHECK(is_multipliable,Cf);
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
 		PIRANHA_TT_CHECK(is_divisible_in_place,Cf,int);
-		typedef power_series_term<base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>>> base;
+		typedef base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>> base;
 		// MP for enabling partial derivative.
 		template <typename Cf2, typename Key2, typename = void>
 		struct partial_enabler
