@@ -72,6 +72,8 @@ class thread
 		 * after invoking the original callable \p c (so that it is safe to use MPFR functions from multiple thread objects). The wrapped
 		 * function object is used as argument for the construction of the internal thread object.
 		 *
+		 * @param[in] c function object that will be used to construct the internal thread object.
+		 *
 		 * @throws unspecified any exception thrown by the move/copy constructor of \p c or by the constructor of the internal thread object.
 		 *
 		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Memory-Handling
