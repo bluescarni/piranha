@@ -869,6 +869,7 @@ inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
  * The actual implementation of this function is in the piranha::math::degree_impl functor.
  * 
  * @param[in] x object whose partial degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation.
  * 
  * @return partial degree.
  * 
@@ -918,6 +919,7 @@ inline auto ldegree(const T &x) -> decltype(ldegree_impl<T>()(x))
  * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
  *
  * @param[in] x object whose partial low degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation.
  *
  * @return partial low degree.
  *
