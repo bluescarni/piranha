@@ -29,7 +29,7 @@
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <functional>
-#include <memory> // For std unique_ptr workaround in custom derivative.
+#include <memory>
 #include <iostream>
 #include <iterator>
 #include <mutex>
@@ -1643,8 +1643,7 @@ class series: series_binary_operators, detail::series_tag
 		/// Terms container.
 		container_type	m_container;
 	private:
-		// NOTE: this unique_ptr is needed to work around this GCC 4.8 bug:
-		// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=57684
+		// NOTE: Derived is not a complete type here, so we need to wrap everything in a unique_ptr.
 		typedef std::unique_ptr<std::unordered_map<std::string,std::function<Derived(const Derived &)>>> cp_map_type;
 		static std::mutex	cp_mutex;
 		static cp_map_type	cp_map;
