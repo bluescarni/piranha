@@ -79,8 +79,12 @@ class base_term: detail::base_term_tag
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
 		base_term(const base_term &) = default;
-		/// Defaulted move constructor.
-		base_term(base_term &&) = default;
+		/// Trivial move constructor.
+		/**
+		 * @param[in] other term used for construction.
+		 */
+		base_term(base_term &&other) noexcept(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key))
+		{}
 		/// Constructor from generic coefficient and key.
 		/**
 		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key. The constructor is
@@ -113,8 +117,20 @@ class base_term: detail::base_term_tag
 			}
 			return *this;
 		}
-		/// Defaulted move-assignment operator.
-		base_term &operator=(base_term &&) = default;
+		/// Trivial move-assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		base_term &operator=(base_term &&other) noexcept(true)
+		{
+			if (likely(this != &other)) {
+				m_cf = std::move(other.m_cf);
+				m_key = std::move(other.m_key);
+			}
+			return *this;
+		}
 		/// Equality operator.
 		/**
 		 * Equivalence of terms is defined by the equivalence of their keys.
