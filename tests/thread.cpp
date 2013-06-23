@@ -20,7 +20,7 @@
 
 #include "../src/thread.hpp"
 
-#define BOOST_TEST_MODULE threading_test
+#define BOOST_TEST_MODULE thread_test
 #include <boost/test/unit_test.hpp>
 
 #include <type_traits>
@@ -30,7 +30,7 @@
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(threading_thread_test)
+BOOST_AUTO_TEST_CASE(thread_main_test)
 {
 	environment env;
 	real r1(0), r2(r1);
@@ -100,7 +100,7 @@ struct functor_03
 	void operator()();
 };
 
-BOOST_AUTO_TEST_CASE(threading_thread_type_traits_test)
+BOOST_AUTO_TEST_CASE(thread_type_traits_test)
 {
 	auto f = [](){};
 	BOOST_CHECK((std::is_constructible<thread,decltype(f)>::value));
