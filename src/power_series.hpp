@@ -203,24 +203,24 @@ class power_series: public Series
 		 * - the calculation of the degree of each term,
 		 * - the assignment and less-than operators for the return type.
 		 */
-		template <typename ... Args>
+		template <typename ... Args, typename T = power_series>
 		auto degree(Args && ... args) const ->
-			decltype(degree_utils<power_series>::get(std::declval<typename power_series::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
+			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
 		{
 			// NOTE: here (and ldegree() as well) this could be implemented with std::max_element, but for this to work we need
 			// a lambda that can capture the variadic arguments. Check back with more recent versions of GCC.
-			typedef decltype(degree_utils<power_series>::get(std::declval<typename power_series::term_type>(),
+			typedef decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),
 				std::declval<symbol_set>(),std::forward<Args>(args)...)) return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<power_series>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
+			return_type retval = degree_utils<T>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<power_series>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
+				tmp = degree_utils<T>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
 				if (retval < tmp) {
 					retval = std::move(tmp);
 				}
@@ -246,22 +246,22 @@ class power_series: public Series
 		 * - the calculation of the low degree of each term,
 		 * - the assignment and less-than operators for the return type.
 		 */
-		template <typename ... Args>
+		template <typename ... Args, typename T = power_series>
 		auto ldegree(Args && ... args) const ->
-			decltype(degree_utils<power_series>::lget(std::declval<typename power_series::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
+			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
 		{
-			typedef decltype(degree_utils<power_series>::lget(std::declval<typename power_series::term_type>(),
+			typedef decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),
 				std::declval<symbol_set>(),std::forward<Args>(args)...)) return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<power_series>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
+			return_type retval = degree_utils<T>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<power_series>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
+				tmp = degree_utils<T>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
 				if (tmp < retval) {
 					retval = std::move(tmp);
 				}
