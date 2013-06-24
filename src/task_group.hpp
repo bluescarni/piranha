@@ -146,7 +146,7 @@ class task_group
 		 */
 		void wait_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[this](f_type &f) {
+			std::for_each(m_container.begin(),m_container.end(),[](f_type &f) {
 				if (f.valid()) {
 					f.wait();
 				}
@@ -161,7 +161,7 @@ class task_group
 		 */
 		void get_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[this](f_type &f) {
+			std::for_each(m_container.begin(),m_container.end(),[](f_type &f) {
 				if (f.valid()) {
 					f.get();
 				}
