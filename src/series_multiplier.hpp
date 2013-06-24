@@ -646,7 +646,7 @@ class series_multiplier
 			if (unlikely(!real_size)) {
 				return;
 			}
-			tracing::trace("number_of_estimates",[](boost::any &x) -> void {
+			tracing::trace("number_of_estimates",[](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -655,7 +655,7 @@ class series_multiplier
 					++*ptr;
 				}
 			});
-			tracing::trace("number_of_correct_estimates",[real_size,estimate](boost::any &x) -> void {
+			tracing::trace("number_of_correct_estimates",[real_size,estimate](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -664,7 +664,7 @@ class series_multiplier
 					*ptr += static_cast<unsigned long long>(estimate >= real_size);
 				}
 			});
-			tracing::trace("accumulated_estimate_ratio",[real_size,estimate](boost::any &x) -> void {
+			tracing::trace("accumulated_estimate_ratio",[real_size,estimate](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0.;
 				}
@@ -744,7 +744,7 @@ class series_multiplier
 									// Assert the existing term is not ignorable and it is compatible.
 									piranha_assert(!it->is_ignorable(retval.m_symbol_set) && it->is_compatible(retval.m_symbol_set));
 									// Cleanup function.
-									auto cleanup = [&]() -> void {
+									auto cleanup = [&]() {
 										if (unlikely(!it->is_compatible(retval.m_symbol_set) || it->is_ignorable(retval.m_symbol_set))) {
 											retval.m_container._erase(it);
 											// After term is erased, update count.

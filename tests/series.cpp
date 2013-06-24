@@ -420,7 +420,7 @@ class debug_access<merge_terms_tag>
 				s1_copy.template merge_terms<false>(std::move(s3));
 				BOOST_CHECK_EQUAL(s1_copy.size(),unsigned(7));
 				it = s1_copy.m_container.begin();
-				auto check_neg_merge = [&it]() -> void {
+				auto check_neg_merge = [&it]() {
 					BOOST_CHECK(it->m_cf == value_type(1) || it->m_cf == value_type(2) || it->m_cf == value_type(3) ||
 						it->m_cf == value_type(-4) || it->m_cf == value_type(-5) ||
 						it->m_cf == value_type(-6) || it->m_cf == value_type(-7));
@@ -532,7 +532,7 @@ class debug_access<merge_args_tag>
 				auto merge_out = s.merge_args(ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));
 				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1),key_type{Expo(0)})) != merge_out.m_container.end());
-				auto compat_check = [](const typename series_type::base &series) -> void {
+				auto compat_check = [](const typename series_type::base &series) {
 					for (auto it = series.m_container.begin(); it != series.m_container.end(); ++it) {
 						BOOST_CHECK(it->is_compatible(series.m_symbol_set));
 					}

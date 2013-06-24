@@ -229,7 +229,7 @@ class series: series_binary_operators, detail::series_tag
 			const auto it = m_container._find(term,bucket_idx);
 			// Cleanup function that checks ignorability and compatibility of an element in the hash set,
 			// and removes it if necessary.
-			auto cleanup = [this](const typename container_type::const_iterator &it) -> void {
+			auto cleanup = [this](const typename container_type::const_iterator &it) {
 				if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
 					this->m_container.erase(it);
 				}
@@ -584,7 +584,7 @@ class series: series_binary_operators, detail::series_tag
 		{
 			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
 			auto retval = sm();
-			tracing::trace("number_of_series_multiplications",[&retval](boost::any &x) -> void {
+			tracing::trace("number_of_series_multiplications",[&retval](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -593,7 +593,7 @@ class series: series_binary_operators, detail::series_tag
 					++*ptr;
 				}
 			});
-			tracing::trace("accumulated_sparsity",[this,&series,&retval](boost::any &x) -> void {
+			tracing::trace("accumulated_sparsity",[this,&series,&retval](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0.;
 				}

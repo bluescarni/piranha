@@ -1588,7 +1588,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						math::multiply_accumulate(it->m_cf,cf1,cf2);
 					} else {
 						// Cleanup function.
-						auto cleanup = [&it,&args,&container]() -> void {
+						auto cleanup = [&it,&args,&container]() {
 							if (unlikely(it->is_ignorable(args))) {
 								container.erase(it);
 							}
