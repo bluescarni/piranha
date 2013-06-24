@@ -175,7 +175,7 @@ class poisson_series:
 			typedef typename term_type::cf_type cf_type;
 			integer degree;
 			try {
-				degree = math::integral_cast(term.m_cf.degree({s.get_name()}));
+				degree = math::integral_cast(math::degree(term.m_cf,{s.get_name()}));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
 					"unable to perform Poisson series integration: cannot extract the integral form of a polynomial degree");

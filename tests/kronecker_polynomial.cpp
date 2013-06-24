@@ -33,6 +33,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
+#include "../src/math.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/rational.hpp"
@@ -56,10 +57,10 @@ struct multiplication_tester
 		BOOST_CHECK((p_type1{} * xy).empty());
 		BOOST_CHECK((xy * p_type1{}).empty());
 		// Check for correct throwing on overflow.
-		for (std::int_least8_t i = 2; tmp.degree({"x"}) < std::get<0u>(ka1::get_limits()[2u])[0u]; ++i) {
+		for (std::int_least8_t i = 2; math::degree(tmp,{"x"}) < std::get<0u>(ka1::get_limits()[2u])[0u]; ++i) {
 			tmp *= p_type1("x");
-			BOOST_CHECK_EQUAL(i,tmp.degree({"x"}));
-			BOOST_CHECK_EQUAL(1,tmp.degree({"y"}));
+			BOOST_CHECK_EQUAL(i,math::degree(tmp,{"x"}));
+			BOOST_CHECK_EQUAL(1,math::degree(tmp,{"y"}));
 		}
 		BOOST_CHECK_THROW(tmp * xy,std::overflow_error);
 		BOOST_CHECK_THROW(xy * tmp,std::overflow_error);
