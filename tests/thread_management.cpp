@@ -29,7 +29,6 @@
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/task_group.hpp"
-#include "../src/thread.hpp"
 #include "../src/thread_barrier.hpp"
 
 // TODO: check for exceptions throwing.
@@ -53,8 +52,9 @@ BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
 	piranha::environment env;
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		piranha::thread t([](){test_function();});
-		t.join();
+		piranha::task_group tg;
+		tg.add_task([](){test_function();});
+		tg.wait_all();
 	}
 }
 
