@@ -279,9 +279,25 @@ class power_series: public Series
 namespace math
 {
 
+/// Specialisation of the piranha::math::degree() functor for instances of piranha::power_series.
+/**
+ * This specialisation is activated if \p Series is an instance of piranha::power_series. If \p Series
+ * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
+ */
 template <typename Series>
 struct degree_impl<Series,typename std::enable_if<is_instance_of<Series,power_series>::value>::type>
 {
+	/// Call operator.
+	/**
+	 * If available, it will call piranha::power_series::degree().
+	 * 
+	 * @param[in] s input power series.
+	 * @param[in] args additional arguments that will be passed to the series' method.
+	 * 
+	 * @return the degree of input series \p s.
+	 * 
+	 * @throws unspecified any exception thrown by the invoked method of the series.
+	 */
 	template <typename ... Args>
 	auto operator()(const Series &s, Args && ... args) const -> decltype(s.degree(std::forward<Args>(args)...))
 	{
@@ -289,9 +305,25 @@ struct degree_impl<Series,typename std::enable_if<is_instance_of<Series,power_se
 	}
 };
 
+/// Specialisation of the piranha::math::ldegree() functor for instances of piranha::power_series.
+/**
+ * This specialisation is activated if \p Series is an instance of piranha::power_series. If \p Series
+ * does not fulfill the requirements outlined in piranha::power_series, the call operator will be disabled.
+ */
 template <typename Series>
 struct ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,power_series>::value>::type>
 {
+	/// Call operator.
+	/**
+	 * If available, it will call piranha::power_series::ldegree().
+	 * 
+	 * @param[in] s input power series.
+	 * @param[in] args additional arguments that will be passed to the series' method.
+	 * 
+	 * @return the low degree of input series \p s.
+	 * 
+	 * @throws unspecified any exception thrown by the invoked method of the series.
+	 */
 	template <typename ... Args>
 	auto operator()(const Series &s, Args && ... args) const -> decltype(s.ldegree(std::forward<Args>(args)...))
 	{
