@@ -22,14 +22,12 @@
 #define PIRANHA_POISSON_SERIES_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -54,7 +52,7 @@ namespace piranha
  * (represented by the piranha::poisson_series_term class). The coefficient
  * type \p Cf represents the ring over which the Poisson series is defined.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section type_requirements Type requirements
  * 

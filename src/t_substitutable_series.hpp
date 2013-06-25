@@ -53,7 +53,7 @@ struct t_subs_term_score
  * and sine of a symbolic variable). These methods are enabled only if either the coefficient or the key support trigonometric
  * substitution, as established by the piranha::has_t_subs and piranha::key_has_t_subs type traits.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section exception_safety Exception safety guarantee
  * 

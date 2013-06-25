@@ -13,9 +13,6 @@ SET(SRC_LIST
 SET(HEADERS_LIST
 	forwarding.hpp
 	series.hpp
-	concepts/series.hpp
-	concepts/container_element.hpp
-	concepts/term.hpp
 	power_series.hpp
 	poisson_series.hpp
 	polynomial_term.hpp
@@ -37,7 +34,6 @@ SET(HEADERS_LIST
 	thread_management.hpp
 	malloc_allocator.hpp
 	kronecker_array.hpp
-	concepts.hpp
 	static_vector.hpp
 	real.hpp
 	piranha.hpp

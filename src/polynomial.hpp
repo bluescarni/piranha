@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/algorithm/minmax_element.hpp>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
@@ -44,7 +43,6 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
-#include "concepts/series.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/poisson_series_fwd.hpp"
@@ -79,7 +77,7 @@ namespace piranha
  * the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
  * Laurent polynomials and Puiseux polynomials.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section type_requirements Type requirements
  * 
@@ -571,8 +569,8 @@ namespace detail
 template <typename Series1, typename Series2>
 struct kronecker_enabler
 {
-	BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
-	BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+	PIRANHA_TT_CHECK(is_series,Series1);
+	PIRANHA_TT_CHECK(is_series,Series2);
 	template <typename Key1, typename Key2>
 	struct are_same_kronecker_monomial
 	{
@@ -613,8 +611,8 @@ template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
 	public series_multiplier<Series1,Series2,int>
 {
-		BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
-		BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+		PIRANHA_TT_CHECK(is_series,Series1);
+		PIRANHA_TT_CHECK(is_series,Series2);
 		typedef typename Series1::term_type::key_type::value_type value_type;
 		typedef kronecker_array<value_type> ka;
 	public:

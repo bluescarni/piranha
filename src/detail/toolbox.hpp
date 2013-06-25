@@ -21,11 +21,10 @@
 #ifndef PIRANHA_TOOLBOX_HPP
 #define PIRANHA_TOOLBOX_HPP
 
-#include <boost/concept/assert.hpp>
 #include <type_traits>
 
-#include "../concepts/series.hpp"
-#include "../detail/series_fwd.hpp"
+#include "../type_traits.hpp"
+#include "series_fwd.hpp"
 
 namespace piranha
 {
@@ -36,13 +35,13 @@ namespace detail
 // Base toolbox class.
 /*
  * This class implements convenient static checks for series toolbox classes. Specifically, it will check
- * that \p Base is an instance of piranha::series and \p Derived satisfies the piranha::concept::Series
- * concept. If any of these conditions is not met, a compile-time error will be produced.
+ * that \p Base is an instance of piranha::series and \p Derived satisfies the piranha::is_series
+ * type trait. If any of these conditions is not met, a compile-time error will be produced.
  */
 template <typename Base, typename Derived>
 class toolbox
 {
-		static_assert(std::is_base_of<series_tag,Base>::value,"Toolbox base class must be an instance of piranha::series.");
+		PIRANHA_TT_CHECK(is_instance_of,Base,series);
 	public:
 		// Trivial destructor.
 		/*
@@ -50,7 +49,7 @@ class toolbox
 		 */
 		~toolbox() noexcept(true)
 		{
-			BOOST_CONCEPT_ASSERT((concept::Series<Derived>));
+			PIRANHA_TT_CHECK(is_series,Derived);
 		}
 };
 

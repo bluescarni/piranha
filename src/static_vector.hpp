@@ -22,7 +22,6 @@
 #define PIRANHA_STATIC_VECTOR_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -31,9 +30,9 @@
 #include <new>
 #include <type_traits>
 
-#include "concepts/container_element.hpp"
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -48,7 +47,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must be a model of piranha::concept::ContainerElement.
+ * - \p T must satisfy piranha::is_container_element.
  * - \p MaxSize must be non-null.
  * 
  * \section exception_safety Exception safety guarantee
@@ -68,7 +67,7 @@ class static_vector
 		/// Size type.
 		typedef std::uint_least8_t size_type;
 	private:
-		BOOST_CONCEPT_ASSERT((concept::ContainerElement<T>));
+		PIRANHA_TT_CHECK(is_container_element,T);
 		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
 		// This check is against overflows when using memcpy.
 		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),

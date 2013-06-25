@@ -21,13 +21,13 @@
 #ifndef PIRANHA_ECHELON_SIZE_HPP
 #define PIRANHA_ECHELON_SIZE_HPP
 
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <type_traits>
 
-#include "concepts/term.hpp"
+#include "detail/base_term_fwd.hpp"
 #include "detail/series_fwd.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -62,12 +62,12 @@ struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<seri
  * 
  * \section type_requirements Type requirements
  * 
- * \p Term must be a model of piranha::concept::Term.
+ * \p Term must satisfy piranha::is_term.
  */
 template <typename Term>
 class echelon_size
 {
-		BOOST_CONCEPT_ASSERT((concept::Term<Term>));
+		PIRANHA_TT_CHECK(is_term,Term);
 		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
 	public:
 		/// Value of echelon size.
