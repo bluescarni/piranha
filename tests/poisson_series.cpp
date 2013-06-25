@@ -259,32 +259,31 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	typedef poisson_series<polynomial<rational>> p_type1;
 	BOOST_CHECK(has_degree<p_type1>::value);
 	BOOST_CHECK(has_ldegree<p_type1>::value);
-#if 0
-	BOOST_CHECK(p_type1{}.degree() == 0);
-	BOOST_CHECK(p_type1{"x"}.degree() == 1);
-	BOOST_CHECK((p_type1{"x"} + 1).degree() == 1);
-	BOOST_CHECK((p_type1{"x"}.pow(2) + 1).degree() == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree() == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x","y"}) == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"z"}) == 0);
-	BOOST_CHECK((p_type1{"x"} + 1).ldegree() == 0);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x","y"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"y"}) == 0);
+	BOOST_CHECK(math::degree(p_type1{}) == 0);
+	BOOST_CHECK(math::degree(p_type1{"x"}) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"} + 1) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"}.pow(2) + 1) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"x"}) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"x","y"}) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"z"}) == 0);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} + 1) == 0);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"x","y"}) == 1);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"x"}) == 1);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"y"}) == 0);
 	p_type1 x{"x"}, y{"y"};
-	BOOST_CHECK((pow(x,2) * cos(y) + 1).degree() == 2);
-	BOOST_CHECK((pow(x,2) * cos(y) + 1).ldegree() == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"y"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"y"}) == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree() == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x","y"}) == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x","y"}) == 0);
+	BOOST_CHECK(math::degree(pow(x,2) * cos(y) + 1) == 2);
+	BOOST_CHECK(math::ldegree(pow(x,2) * cos(y) + 1) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"x"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"y"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"y"}) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"x"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"x","y"}) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"x","y"}) == 0);
 	typedef poisson_series<rational> p_type2;
-	BOOST_CHECK(!is_power_series<p_type2>::value);
-#endif
+	BOOST_CHECK(!has_degree<p_type2>::value);
+	BOOST_CHECK(!has_ldegree<p_type2>::value);
 }
 
 // Mock coefficient.
