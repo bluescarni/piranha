@@ -41,6 +41,7 @@
 #include <boost/python/stl_iterator.hpp>
 #include <cstddef>
 #include <iterator>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -63,7 +64,7 @@ using namespace piranha;
 #include "exceptions.hpp"
 #include "series_exposer.hpp"
 
-static mutex global_mutex;
+static std::mutex global_mutex;
 static bool inited = false;
 
 // Used for debugging on Python side.
@@ -89,7 +90,7 @@ BOOST_PYTHON_MODULE(_core)
 {
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
 	// if the module is loaded from multiple threads.
-	lock_guard<mutex>::type lock(global_mutex);
+	std::lock_guard<std::mutex> lock(global_mutex);
 	if (inited) {
 		return;
 	}
