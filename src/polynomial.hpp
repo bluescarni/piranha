@@ -22,7 +22,6 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
-#include <boost/algorithm/minmax_element.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
