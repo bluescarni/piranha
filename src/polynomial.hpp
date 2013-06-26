@@ -94,8 +94,7 @@ namespace piranha
  */
 template <typename Cf, typename Expo = int>
 class polynomial:
-	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>>,
-	detail::polynomial_tag
+	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>>
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -469,7 +468,7 @@ namespace math
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -503,7 +502,7 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomi
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -538,7 +537,7 @@ struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::pol
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -579,8 +578,8 @@ struct kronecker_enabler
 	};
 	typedef typename Series1::term_type::key_type key_type1;
 	typedef typename Series2::term_type::key_type key_type2;
-	static const bool value = std::is_base_of<detail::polynomial_tag,Series1>::value &&
-		std::is_base_of<detail::polynomial_tag,Series2>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
+	static const bool value = is_instance_of<Series1,polynomial>::value &&
+		is_instance_of<Series2,polynomial>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
 };
 
 }

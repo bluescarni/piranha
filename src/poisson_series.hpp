@@ -249,7 +249,7 @@ class poisson_series:
 		 */
 		poisson_series sin() const
 		{
-			return sin_cos_impl<false>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
+			return sin_cos_impl<false>(std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 		}
 		/// Override cosine implementation.
 		/**
@@ -261,7 +261,7 @@ class poisson_series:
 		 */
 		poisson_series cos() const
 		{
-			return sin_cos_impl<true>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
+			return sin_cos_impl<true>(std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 		}
 		/// Substitution.
 		/**
@@ -411,8 +411,7 @@ class poisson_series:
 					retval.insert(term_type(it->m_cf / key_int.first,std::move(key_int.second)));
 				} else {
 					// With the variable both in the coefficient and the key, we only know how to proceed with polynomials.
-					retval += integrate_impl(s,*it,std::integral_constant<bool,
-						std::is_base_of<detail::polynomial_tag,Cf>::value>());
+					retval += integrate_impl(s,*it,std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 				}
 			}
 			return retval;
