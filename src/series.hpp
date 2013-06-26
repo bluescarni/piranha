@@ -820,7 +820,7 @@ class series: series_binary_operators, detail::series_tag
 		 * is a copy of the coefficient of the term, the second element a single-term instance of \p Derived constructed from
 		 * the term's key and a unitary coefficient.
 		 * 
-		 * @see begin() and end().
+		 * @see piranha::series::begin() and piranha::series::end().
 		 */
 		typedef const_iterator_impl const_iterator;
 		/// Defaulted default constructor.
@@ -1386,9 +1386,9 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * Note that terms are stored unordered in the series, hence it is not defined which particular
 		 * term will be returned by calling this method. The only guarantee is that the iterator can be used to transverse
-		 * all the series' terms until end() is eventually reached.
+		 * all the series' terms until piranha::series::end() is eventually reached.
 		 * 
-		 * Calling any non-const method on the series will invalidate the iterators obtained via begin() and end().
+		 * Calling any non-const method on the series will invalidate the iterators obtained via piranha::series::begin() and piranha::series::end().
 		 * 
 		 * @return an iterator to the first term of the series.
 		 * 
@@ -1408,7 +1408,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// End iterator.
 		/**
-		 * Return an iterator one past the last term of the series. See the documentation of begin()
+		 * Return an iterator one past the last term of the series. See the documentation of piranha::series::begin()
 		 * on how the returned iterator can be used.
 		 * 
 		 * @return an iterator to the end of the serie.
@@ -1432,7 +1432,7 @@ class series: series_binary_operators, detail::series_tag
 		 * This method will apply the functor \p func to each term in the series, and produce a return series
 		 * containing all terms in \p this for which \p func returns \p true.
 		 * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
-		 * via begin().
+		 * via piranha::series::begin().
 		 * 
 		 * @param[in] func filtering functor.
 		 * 
@@ -1460,7 +1460,7 @@ class series: series_binary_operators, detail::series_tag
 		/**
 		 * This method will apply the functor \p func to each term in the series, and will use the return
 		 * value of the functor to construct a new series. Terms are passed to \p func in the same format
-		 * resulting from dereferencing the iterators obtained via begin(), and \p func is expected to produce
+		 * resulting from dereferencing the iterators obtained via piranha::series::begin(), and \p func is expected to produce
 		 * a return value of the same type.
 		 * 
 		 * The return series is first initialised as an empty series. For each input term \p t, the return value
