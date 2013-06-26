@@ -70,8 +70,7 @@ namespace piranha
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>,
-	detail::poisson_series_tag
+	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>
 {
 		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>> base;
 		template <bool IsCos, typename T>
@@ -426,7 +425,7 @@ namespace math
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -460,7 +459,7 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -495,7 +494,7 @@ struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poi
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	/// Call operator.
 	/**
