@@ -29,19 +29,16 @@
 #include <functional> // For std::bind.
 #include <initializer_list>
 #include <iterator>
-#include <list>
 #include <map>
 #include <mutex>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "cache_aligning_allocator.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/poisson_series_fwd.hpp"
