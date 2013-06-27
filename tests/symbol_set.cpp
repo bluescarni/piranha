@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <stdexcept>
+#include <type_traits>
 
 #include "../src/environment.hpp"
 #include "../src/symbol.hpp"
@@ -56,6 +57,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
 	ss4 = std::move(ss4);
 	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
+	BOOST_CHECK(std::is_nothrow_move_constructible<symbol_set>::value);
 }
 
 BOOST_AUTO_TEST_CASE(symbol_set_add_test)
