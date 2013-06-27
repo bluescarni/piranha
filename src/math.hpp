@@ -1834,6 +1834,23 @@ class is_evaluable: detail::sfinae_types
 template <typename T, typename U>
 const bool is_evaluable<T,U>::value;
 
+template <typename Key, typename T>
+class key_is_evaluable: detail::sfinae_types
+{
+		typedef typename std::decay<Key>::type Keyd;
+		PIRANHA_TT_CHECK(is_key,Keyd);
+		template <typename Key1, typename T1>
+		static auto test(const Key1 &k, const std::unordered_map<std::string,T1> &dict) ->
+			decltype(k.evaluate(dict,std::declval<const symbol_set &>()),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test(std::declval<Keyd>(),
+			std::declval<std::unordered_map<std::string,T>>())),yes>::value;
+};
+
+template <typename Key, typename T>
+const bool key_is_evaluable<Key,T>::value;
+
 }
 
 #endif
