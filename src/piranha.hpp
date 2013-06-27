@@ -107,6 +107,7 @@
  * start by introducing a new_integer class and use it in kronecker.
  * \todo clean up the int128 detection in the build system now that we require gcc 4.7.
  * \todo get rid of the detail::toolbox class, check that all type checks are explicit in toolbox classes.
+ * \todo in series math::sin/math::cos implementation we should check if the coefficient supports sin/cos, and otherwise just disable it.
  */
 namespace piranha
 {
