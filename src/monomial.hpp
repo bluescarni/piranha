@@ -77,10 +77,15 @@ class monomial: public array_key<T,monomial<T>>
 {
 		typedef array_key<T,monomial<T>> base;
 		// Eval and subs type definition.
+		template <typename U, typename = void>
+		struct eval_type {};
 		template <typename U>
-		struct eval_type
+		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<typename base::value_type const &>()));
+		template <typename U>
+		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
+			std::is_constructible<e_type<U>,int>::value>::type>
 		{
-			typedef decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>())) type;
+			using type = e_type<U>;
 		};
 	public:
 		/// Defaulted default constructor.
@@ -509,8 +514,6 @@ class monomial: public array_key<T,monomial<T>>
 		 * - construction of the return type,
 		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
-		 * 
-		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
 		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
