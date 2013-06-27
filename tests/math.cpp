@@ -614,3 +614,18 @@ BOOST_AUTO_TEST_CASE(math_term_is_differentiable_test)
 	BOOST_CHECK(!term_is_differentiable<term3>::value);
 	BOOST_CHECK(!term_is_differentiable<term4>::value);
 }
+
+BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
+{
+	BOOST_CHECK((is_evaluable<int,int>::value));
+	BOOST_CHECK((is_evaluable<double,double>::value));
+	BOOST_CHECK((is_evaluable<double,int>::value));
+	BOOST_CHECK((is_evaluable<int &,int>::value));
+	BOOST_CHECK((is_evaluable<double,int>::value));
+	BOOST_CHECK((is_evaluable<double &,int>::value));
+	BOOST_CHECK((is_evaluable<double &&,int>::value));
+	BOOST_CHECK((!is_evaluable<std::string,int>::value));
+	BOOST_CHECK((!is_evaluable<std::set<int>,int>::value));
+	BOOST_CHECK((!is_evaluable<std::string &,int>::value));
+	BOOST_CHECK((!is_evaluable<std::set<int> &&,int>::value));
+}

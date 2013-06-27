@@ -1813,6 +1813,27 @@ class has_multiply_accumulate: detail::sfinae_types
 template <typename T, typename U, typename V>
 const bool has_multiply_accumulate<T,U,V>::value;
 
+/// Type trait to detect the availability of piranha::math::evaluate.
+/**
+ * This type trait will be \p true if piranha::math::evaluate can be called with arguments of type \p T and \p U,
+ * \p false otherwise.
+ */
+template <typename T, typename U>
+class is_evaluable: detail::sfinae_types
+{
+		template <typename T2, typename U2>
+		static auto test(const T2 &t, const std::unordered_map<std::string,U2> &dict) ->
+			decltype(math::evaluate(t,dict),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>(),
+			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool is_evaluable<T,U>::value;
+
 }
 
 #endif

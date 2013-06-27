@@ -1008,4 +1008,9 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK(is_hashable<rational>::value);
 	BOOST_CHECK(is_hashable<rational &>::value);
 	BOOST_CHECK(is_hashable<const rational &>::value);
+	BOOST_CHECK((is_evaluable<rational,int>::value));
+	BOOST_CHECK((is_evaluable<rational,double>::value));
+	BOOST_CHECK((is_evaluable<rational &,double>::value));
+	BOOST_CHECK((is_evaluable<rational const &,double>::value));
+	BOOST_CHECK((is_evaluable<rational &&,double>::value));
 }
