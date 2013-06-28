@@ -499,6 +499,12 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Evaluation.
 		/**
+		 * \note
+		 * This method is available only if \p U satisfies the following requirements:
+		 * - it can be used in piranha::math::pow() with the monomial exponents as powers,
+		 * - it is constructible from \p int,
+		 * - it is multipliable in place.
+		 * 
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
 		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
 		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned.
