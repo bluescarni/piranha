@@ -530,6 +530,7 @@ BOOST_AUTO_TEST_CASE(monomial_evaluate_test)
 	BOOST_CHECK((!key_is_evaluable<monomial<rational>,double>::value));
 	BOOST_CHECK((!key_is_evaluable<monomial<rational>,real>::value));
 	BOOST_CHECK((!key_is_evaluable<monomial<rational>,std::string>::value));
+	BOOST_CHECK((!key_is_evaluable<monomial<rational>,void *>::value));
 }
 
 struct subs_tester

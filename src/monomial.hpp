@@ -555,7 +555,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back().
 		 * 
-		 * \todo require constructability from int and exponentiability.
+		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
