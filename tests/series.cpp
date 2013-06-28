@@ -1436,6 +1436,17 @@ struct mock_cf
 	mock_cf operator*(const mock_cf &) const;
 };
 
+namespace piranha { namespace math {
+/*
+// Provide mock cosine implementation returning unusable return type.
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_same<T,mock_cf>::value>::type>
+{
+	std::string operator()(const T &) const;
+};
+*/
+}}
+
 BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
 	typedef g_series_type<double,int> p_type1;

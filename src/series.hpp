@@ -1256,6 +1256,10 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Apply functor to single-coefficient series.
 		/**
+		 * \note
+		 * This method is enabled only if \p Functor is a callable object taking a const coefficient
+		 * as parameter and returning an object that can be used to construct a coefficient.
+		 * 
 		 * This method can be called successfully only on single-coefficient series.
 		 * 
 		 * If the series is empty, the return value will be a series with single term and unitary key in which the coefficient
@@ -1276,7 +1280,9 @@ class series: series_binary_operators, detail::series_tag
 		 * - is_single_coefficient().
 		 */
 		template <typename Functor>
-		Derived apply_cf_functor(Functor &&f) const
+		auto apply_cf_functor(Functor &&f) const -> typename std::enable_if<
+			std::is_constructible<term_type,decltype(f(std::declval<typename term_type::cf_type const &>())),typename term_type::key_type>::value,
+			Derived>::type
 		{
 			if (!is_single_coefficient()) {
 				piranha_throw(std::invalid_argument,"cannot apply functor, series is not single-coefficient");
