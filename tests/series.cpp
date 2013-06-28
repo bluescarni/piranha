@@ -1415,20 +1415,6 @@ BOOST_AUTO_TEST_CASE(series_apply_cf_functor_test)
 	BOOST_CHECK_EQUAL((p_type{3}).apply_cf_functor([](const integer &n) {return -n;}),-3);
 }
 
-BOOST_AUTO_TEST_CASE(series_sin_cos_test)
-{
-	typedef g_series_type<double,int> p_type1;
-	BOOST_CHECK_EQUAL(math::sin(p_type1{.5}),math::sin(.5));
-	BOOST_CHECK_EQUAL(math::cos(p_type1{.5}),math::cos(.5));
-	BOOST_CHECK_THROW(math::sin(p_type1{"x"}),std::invalid_argument);
-	BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::cos(p_type1{"x"}),std::invalid_argument);
-	BOOST_CHECK_THROW(math::cos(p_type1{"x"} - 1),std::invalid_argument);
-	typedef g_series_type2<double,int> p_type2;
-	BOOST_CHECK_EQUAL(math::sin(p_type2{.5}),double(42));
-	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
-}
-
 // Mock coefficient.
 struct mock_cf
 {
@@ -1449,6 +1435,26 @@ struct mock_cf
 	mock_cf &operator*=(const mock_cf &);
 	mock_cf operator*(const mock_cf &) const;
 };
+
+BOOST_AUTO_TEST_CASE(series_sin_cos_test)
+{
+	typedef g_series_type<double,int> p_type1;
+	BOOST_CHECK(has_sine<p_type1>::value);
+	BOOST_CHECK(has_cosine<p_type1>::value);
+	BOOST_CHECK((!has_sine<g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((!has_cosine<g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK_EQUAL(math::sin(p_type1{.5}),math::sin(.5));
+	BOOST_CHECK_EQUAL(math::cos(p_type1{.5}),math::cos(.5));
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p_type1{"x"} - 1),std::invalid_argument);
+	typedef g_series_type2<double,int> p_type2;
+	BOOST_CHECK(has_sine<p_type2>::value);
+	BOOST_CHECK(has_cosine<p_type2>::value);
+	BOOST_CHECK_EQUAL(math::sin(p_type2{.5}),double(42));
+	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
+}
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
