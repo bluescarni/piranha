@@ -1697,4 +1697,9 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 	BOOST_CHECK((is_evaluable<real &,double>::value));
 	BOOST_CHECK((is_evaluable<real const &,double>::value));
 	BOOST_CHECK((is_evaluable<real &&,double>::value));
+	BOOST_CHECK(has_sine<real>::value);
+	BOOST_CHECK(has_cosine<real>::value);
+	BOOST_CHECK(has_sine<real &>::value);
+	BOOST_CHECK(has_cosine<real const &>::value);
+	BOOST_CHECK(has_cosine<real &&>::value);
 }

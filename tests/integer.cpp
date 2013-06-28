@@ -1069,4 +1069,9 @@ BOOST_AUTO_TEST_CASE(integer_type_traits_test)
 	BOOST_CHECK((piranha::is_evaluable<piranha::integer &,double>::value));
 	BOOST_CHECK((piranha::is_evaluable<piranha::integer const &,double>::value));
 	BOOST_CHECK((piranha::is_evaluable<piranha::integer &&,double>::value));
+	BOOST_CHECK(piranha::has_sine<piranha::integer>::value);
+	BOOST_CHECK(piranha::has_cosine<piranha::integer>::value);
+	BOOST_CHECK(piranha::has_sine<piranha::integer &>::value);
+	BOOST_CHECK(piranha::has_cosine<piranha::integer const &>::value);
+	BOOST_CHECK(piranha::has_cosine<piranha::integer &&>::value);
 }

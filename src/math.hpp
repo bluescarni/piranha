@@ -1860,6 +1860,44 @@ class key_is_evaluable: detail::sfinae_types
 template <typename Key, typename T>
 const bool key_is_evaluable<Key,T>::value;
 
+/// Type trait to detect piranha::math::sin().
+/**
+ * The type trait will be \p true if piranha::math::sin() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_sine: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::sin(x),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_sine<T>::value;
+
+/// Type trait to detect piranha::math::cos().
+/**
+ * The type trait will be \p true if piranha::math::cos() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_cosine: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::cos(x),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_cosine<T>::value;
+
 }
 
 #endif

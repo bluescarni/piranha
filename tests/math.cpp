@@ -629,3 +629,33 @@ BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
 	BOOST_CHECK((!is_evaluable<std::string &,int>::value));
 	BOOST_CHECK((!is_evaluable<std::set<int> &&,int>::value));
 }
+
+BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
+{
+	BOOST_CHECK(has_sine<float>::value);
+	BOOST_CHECK(has_sine<float &>::value);
+	BOOST_CHECK(has_sine<float const>::value);
+	BOOST_CHECK(has_sine<float &&>::value);
+	BOOST_CHECK(has_sine<double>::value);
+	BOOST_CHECK(has_sine<long double &>::value);
+	BOOST_CHECK(has_sine<double const>::value);
+	BOOST_CHECK(has_sine<long double &&>::value);
+	BOOST_CHECK(has_cosine<float>::value);
+	BOOST_CHECK(has_cosine<float &>::value);
+	BOOST_CHECK(has_cosine<float const>::value);
+	BOOST_CHECK(has_cosine<float &&>::value);
+	BOOST_CHECK(has_cosine<double>::value);
+	BOOST_CHECK(has_cosine<long double &>::value);
+	BOOST_CHECK(has_cosine<double const>::value);
+	BOOST_CHECK(has_cosine<long double &&>::value);
+	BOOST_CHECK(!has_sine<int>::value);
+	BOOST_CHECK(!has_sine<long &>::value);
+	BOOST_CHECK(!has_sine<long long &&>::value);
+	BOOST_CHECK(!has_sine<long long const &>::value);
+	BOOST_CHECK(!has_cosine<int>::value);
+	BOOST_CHECK(!has_cosine<long &>::value);
+	BOOST_CHECK(!has_cosine<long long &&>::value);
+	BOOST_CHECK(!has_cosine<long long const &>::value);
+	BOOST_CHECK(!has_cosine<std::string>::value);
+	BOOST_CHECK(!has_cosine<void *>::value);
+}

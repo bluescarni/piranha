@@ -1013,4 +1013,9 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK((is_evaluable<rational &,double>::value));
 	BOOST_CHECK((is_evaluable<rational const &,double>::value));
 	BOOST_CHECK((is_evaluable<rational &&,double>::value));
+	BOOST_CHECK(has_sine<rational>::value);
+	BOOST_CHECK(has_cosine<rational>::value);
+	BOOST_CHECK(has_sine<rational &>::value);
+	BOOST_CHECK(has_cosine<rational const &>::value);
+	BOOST_CHECK(has_cosine<rational &&>::value);
 }
