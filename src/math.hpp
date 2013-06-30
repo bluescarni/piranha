@@ -200,6 +200,10 @@ struct multiply_accumulate_impl
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This call operator is enabled only if the arguments support binary multiplication
+	 * and in-place addition.
+	 *
 	 * The body of the operator is equivalent to:
 	 * @code
 	 * x += y * z;
