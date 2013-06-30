@@ -107,9 +107,7 @@
  * start by introducing a new_integer class and use it in kronecker.
  * \todo clean up the int128 detection in the build system now that we require gcc 4.7.
  * \todo get rid of the detail::toolbox class, check that all type checks are explicit in toolbox classes.
- * \todo in series math::sin/math::cos implementation we should check if the coefficient supports sin/cos, and otherwise just disable it -> same treatment
- * goes for the various implementations of pow, need to sfinae down to cf and key types.
- * \todo apply_cf_functor needs to be sfinaed as well.
+ * \todo in series pow() implementation we should check if the coefficient supports pow(), and otherwise just disable it.
  */
 namespace piranha
 {
