@@ -1788,6 +1788,84 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
 	}
 };
 
+}
+
+namespace detail
+{
+
+// All this gook can go back into the private impl methods once we switch to GCC 4.8.
+template <typename T>
+class series_has_sin: sfinae_types
+{
+		template <typename U>
+		static auto test(const U *t) -> decltype(t->sin());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+};
+
+template <typename T>
+inline T series_sin_call_impl(const T &s, typename std::enable_if<series_has_sin<T>::value>::type * = nullptr)
+{
+	return s.sin();
+}
+
+// This is another strange thing: if we use directly decltype() instead of this alias in the enabler
+// below, GCC (both 4.7 and 4.8) gets confused. clang seems to handle this correctly. Need to check
+// and file a report if this is a real bug.
+template <typename T>
+using sin_cf_ret_type = decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()));
+
+template <typename T>
+inline T series_sin_call_impl(const T &s, typename std::enable_if<!series_has_sin<T>::value &&
+	std::is_same<typename T::term_type::cf_type,sin_cf_ret_type<T>>::value>::type * = nullptr)
+{
+	typedef typename T::term_type::cf_type cf_type;
+	auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
+	try {
+		return s.apply_cf_functor(f);
+	} catch (const std::invalid_argument &) {
+		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
+	}
+}
+
+template <typename T>
+class series_has_cos: sfinae_types
+{
+		template <typename U>
+		static auto test(const U *t) -> decltype(t->cos());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+};
+
+template <typename T>
+inline T series_cos_call_impl(const T &s, typename std::enable_if<series_has_cos<T>::value>::type * = nullptr)
+{
+	return s.cos();
+}
+
+template <typename T>
+using cos_cf_ret_type = decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()));
+
+template <typename T>
+inline T series_cos_call_impl(const T &s, typename std::enable_if<!series_has_cos<T>::value &&
+	std::is_same<typename T::term_type::cf_type,cos_cf_ret_type<T>>::value>::type * = nullptr)
+{
+	typedef typename T::term_type::cf_type cf_type;
+	auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
+	try {
+		return s.apply_cf_functor(f);
+	} catch (const std::invalid_argument &) {
+		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
+	}
+}
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
@@ -1800,60 +1878,28 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
 template <typename Series>
 struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
-	private:
-		template <typename T>
-		class has_sin: detail::sfinae_types
-		{
-				template <typename U>
-				static auto test(const U *t) -> decltype(t->sin());
-				static no test(...);
-			public:
-				static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
-		};
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_sin<T>::value>::type * = nullptr) const
-		{
-			return s.sin();
-		}
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value &&
-			std::is_same<typename T::term_type::cf_type,decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()))>::value>::type * = nullptr) const
-		{
-			typedef typename T::term_type::cf_type cf_type;
-			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
-			try {
-				return s.apply_cf_functor(f);
-			} catch (const std::invalid_argument &) {
-				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
-			}
-		}
-		// NOTE: this alias is a workaround for what seems to be a problem in GCC 4.7. We should use directly
-		// decltype(call_impl(s)) in the call operator below. Check back in later versions.
-		template <typename T>
-		using ret_type = decltype(std::declval<sin_impl const &>().call_impl(std::declval<T const &>()));
-	public:
-		/// Call operator.
-		/**
-		 * \note
-		 * This operator is enabled if one of these conditions apply:
-		 * - the input series type has a const <tt>sin()</tt> method, or
-		 * - the coefficient type of the series satisfies piranha::has_sine, returning an instance of the
-		 *   coefficient type as result.
-		 * 
-		 * @param[in] s argument.
-		 * 
-		 * @return sine of \p s.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the <tt>Series::sin()</tt> method,
-		 * - piranha::math::sin(),
-		 * - piranha::series::apply_cf_functor().
-		 */
-		template <typename T>
-		ret_type<T> operator()(const T &s) const
-		{
-			return call_impl(s);
-		}
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled if one of these conditions apply:
+	 * - the input series type has a const <tt>sin()</tt> method, or
+	 * - the coefficient type of the series satisfies piranha::has_sine, returning an instance of the
+	 *   coefficient type as result.
+	 *
+	 * @param[in] s argument.
+	 *
+	 * @return sine of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::sin()</tt> method,
+	 * - piranha::math::sin(),
+	 * - piranha::series::apply_cf_functor().
+	 */
+	template <typename T>
+	auto operator()(const T &s) const -> decltype(detail::series_sin_call_impl(s))
+	{
+		return detail::series_sin_call_impl(s);
+	}
 };
 
 /// Specialisation of the piranha::math::cos() functor for piranha::series.
@@ -1868,58 +1914,28 @@ struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
 template <typename Series>
 struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
-	private:
-		template <typename T>
-		class has_cos: detail::sfinae_types
-		{
-				template <typename U>
-				static auto test(const U *t) -> decltype(t->cos());
-				static no test(...);
-			public:
-				static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
-		};
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_cos<T>::value>::type * = nullptr) const
-		{
-			return s.cos();
-		}
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value &&
-			std::is_same<typename T::term_type::cf_type,decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()))>::value>::type * = nullptr) const
-		{
-			typedef typename T::term_type::cf_type cf_type;
-			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
-			try {
-				return s.apply_cf_functor(f);
-			} catch (const std::invalid_argument &) {
-				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
-			}
-		}
-		template <typename T>
-		using ret_type = decltype(std::declval<cos_impl const &>().call_impl(std::declval<T const &>()));
-	public:
-		/// Call operator.
-		/**
-		 * \note
-		 * This operator is enabled if one of these conditions apply:
-		 * - the input series type has a const <tt>cos()</tt> method, or
-		 * - the coefficient type of the series satisfies piranha::has_cosine, returning an instance of the
-		 *   coefficient type as result.
-		 *
-		 * @param[in] s argument.
-		 * 
-		 * @return cosine of \p s.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the <tt>Series::cos()</tt> method,
-		 * - piranha::math::cos(),
-		 * - piranha::series::apply_cf_functor().
-		 */
-		template <typename T>
-		ret_type<T> operator()(const T &s) const
-		{
-			return call_impl(s);
-		}
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled if one of these conditions apply:
+	 * - the input series type has a const <tt>cos()</tt> method, or
+	 * - the coefficient type of the series satisfies piranha::has_cosine, returning an instance of the
+	 *   coefficient type as result.
+	 *
+	 * @param[in] s argument.
+	 *
+	 * @return cosine of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::cos()</tt> method,
+	 * - piranha::math::cos(),
+	 * - piranha::series::apply_cf_functor().
+	 */
+	template <typename T>
+	auto operator()(const T &s) const -> decltype(detail::series_cos_call_impl(s))
+	{
+		return detail::series_cos_call_impl(s);
+	}
 };
 
 /// Specialisation of the piranha::math::partial() functor for series types.
