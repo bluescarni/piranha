@@ -1817,7 +1817,7 @@ struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
 		}
 		template <typename T>
 		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value &&
-			has_sine<typename T::term_type::cf_type>::value>::type * = nullptr) const
+			std::is_same<typename T::term_type::cf_type,decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()))>::value>::type * = nullptr) const
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
@@ -1837,7 +1837,8 @@ struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
 		 * \note
 		 * This operator is enabled if one of these conditions apply:
 		 * - the input series type has a const <tt>sin()</tt> method, or
-		 * - the coefficient type of the series satisfies piranha::has_sine.
+		 * - the coefficient type of the series satisfies piranha::has_sine, returning an instance of the
+		 *   coefficient type as result.
 		 * 
 		 * @param[in] s argument.
 		 * 
@@ -1884,7 +1885,7 @@ struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
 		}
 		template <typename T>
 		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value &&
-			has_cosine<typename T::term_type::cf_type>::value>::type * = nullptr) const
+			std::is_same<typename T::term_type::cf_type,decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()))>::value>::type * = nullptr) const
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
@@ -1902,7 +1903,8 @@ struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
 		 * \note
 		 * This operator is enabled if one of these conditions apply:
 		 * - the input series type has a const <tt>cos()</tt> method, or
-		 * - the coefficient type of the series satisfies piranha::has_cosine.
+		 * - the coefficient type of the series satisfies piranha::has_cosine, returning an instance of the
+		 *   coefficient type as result.
 		 *
 		 * @param[in] s argument.
 		 * 

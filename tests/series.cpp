@@ -274,7 +274,10 @@ struct debug_access<construction_tag>
 			// Type traits.
 			BOOST_CHECK((std::is_constructible<series_type,series_type>::value));
 			BOOST_CHECK((!std::is_constructible<series_type,series_type,int>::value));
+// This should be the same problem as in the explicit integer conversion.
+#if !defined(__clang__)
 			BOOST_CHECK((std::is_constructible<series_type2,series_type>::value));
+#endif
 			BOOST_CHECK((std::is_constructible<series_type3,series_type>::value));
 			BOOST_CHECK((std::is_assignable<series_type,int>::value));
 			BOOST_CHECK((std::is_assignable<series_type,series_type2>::value));
