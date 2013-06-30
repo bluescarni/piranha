@@ -110,80 +110,49 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag
 		{
 			// Paranoia check.
 			static_assert(detail::cf_trig_score<typename Term::cf_type>::value == 4,"Invalid trig score.");
-			// NOTE: here and below we could do this with variadic templates, avoiding the dual overload for partial degree/order.
-			// Unfortunately, as of GCC 4.6 decltype() with variadic unpacking is not implemented. Keep this in mind for future improvement:
-			// template <typename ... Args>
-			// static auto t_degree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_degree(t.m_cf,args...))
-			// {
-			//	return math::t_degree(t.m_cf,args...);
-			// }
-			static auto t_degree(const Term &t, const symbol_set &) -> decltype(math::t_degree(t.m_cf))
+			template <typename ... Args>
+			static auto t_degree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_degree(t.m_cf,args...))
 			{
-				return math::t_degree(t.m_cf);
+				return math::t_degree(t.m_cf,args...);
 			}
-			static auto t_degree(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_degree(t.m_cf,names))
+			template <typename ... Args>
+			static auto t_ldegree(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_ldegree(t.m_cf,args...))
 			{
-				return math::t_degree(t.m_cf,names);
+				return math::t_ldegree(t.m_cf,args...);
 			}
-			static auto t_ldegree(const Term &t, const symbol_set &) -> decltype(math::t_ldegree(t.m_cf))
+			template <typename ... Args>
+			static auto t_order(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_order(t.m_cf,args...))
 			{
-				return math::t_ldegree(t.m_cf);
+				return math::t_order(t.m_cf,args...);
 			}
-			static auto t_ldegree(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_ldegree(t.m_cf,names))
+			template <typename ... Args>
+			static auto t_lorder(const Term &t, const symbol_set &, const Args & ... args) -> decltype(math::t_lorder(t.m_cf,args...))
 			{
-				return math::t_ldegree(t.m_cf,names);
-			}
-			static auto t_order(const Term &t, const symbol_set &) -> decltype(math::t_order(t.m_cf))
-			{
-				return math::t_order(t.m_cf);
-			}
-			static auto t_order(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_order(t.m_cf,names))
-			{
-				return math::t_order(t.m_cf,names);
-			}
-			static auto t_lorder(const Term &t, const symbol_set &) -> decltype(math::t_lorder(t.m_cf))
-			{
-				return math::t_lorder(t.m_cf);
-			}
-			static auto t_lorder(const Term &t, const symbol_set &, const std::set<std::string> &names) -> decltype(math::t_lorder(t.m_cf,names))
-			{
-				return math::t_lorder(t.m_cf,names);
+				return math::t_lorder(t.m_cf,args...);
 			}
 		};
 		template <typename Term>
 		struct t_get<Term,typename std::enable_if<detail::key_trig_score<typename Term::key_type>::value == 4>::type>
 		{
-			static auto t_degree(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_degree(s))
+			template <typename ... Args>
+			static auto t_degree(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_degree(args...,s))
 			{
-				return t.m_key.t_degree(s);
+				return t.m_key.t_degree(args...,s);
 			}
-			static auto t_degree(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_degree(names,s))
+			template <typename ... Args>
+			static auto t_ldegree(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_ldegree(args...,s))
 			{
-				return t.m_key.t_degree(names,s);
+				return t.m_key.t_ldegree(args...,s);
 			}
-			static auto t_ldegree(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_ldegree(s))
+			template <typename ... Args>
+			static auto t_order(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_order(args...,s))
 			{
-				return t.m_key.t_ldegree(s);
+				return t.m_key.t_order(args...,s);
 			}
-			static auto t_ldegree(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_ldegree(names,s))
+			template <typename ... Args>
+			static auto t_lorder(const Term &t, const symbol_set &s, const Args & ... args) -> decltype(t.m_key.t_lorder(args...,s))
 			{
-				return t.m_key.t_ldegree(names,s);
-			}
-			static auto t_order(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_order(s))
-			{
-				return t.m_key.t_order(s);
-			}
-			static auto t_order(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_order(names,s))
-			{
-				return t.m_key.t_order(names,s);
-			}
-			static auto t_lorder(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_lorder(s))
-			{
-				return t.m_key.t_lorder(s);
-			}
-			static auto t_lorder(const Term &t, const symbol_set &s, const std::set<std::string> &names) -> decltype(t.m_key.t_lorder(names,s))
-			{
-				return t.m_key.t_lorder(names,s);
+				return t.m_key.t_lorder(args...,s);
 			}
 		};
 	public:
