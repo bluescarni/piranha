@@ -229,7 +229,7 @@ class series: series_binary_operators, detail::series_tag
 			const auto it = m_container._find(term,bucket_idx);
 			// Cleanup function that checks ignorability and compatibility of an element in the hash set,
 			// and removes it if necessary.
-			auto cleanup = [this](const typename container_type::const_iterator &it) -> void {
+			auto cleanup = [this](const typename container_type::const_iterator &it) {
 				if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
 					this->m_container.erase(it);
 				}
@@ -584,7 +584,7 @@ class series: series_binary_operators, detail::series_tag
 		{
 			series_multiplier<Derived,T> sm(*static_cast<Derived const *>(this),series);
 			auto retval = sm();
-			tracing::trace("number_of_series_multiplications",[&retval](boost::any &x) -> void {
+			tracing::trace("number_of_series_multiplications",[&retval](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -593,7 +593,7 @@ class series: series_binary_operators, detail::series_tag
 					++*ptr;
 				}
 			});
-			tracing::trace("accumulated_sparsity",[this,&series,&retval](boost::any &x) -> void {
+			tracing::trace("accumulated_sparsity",[this,&series,&retval](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0.;
 				}
@@ -682,12 +682,22 @@ class series: series_binary_operators, detail::series_tag
 		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
 			typename container_type::const_iterator> const_iterator_impl;
 		// Evaluation utilities.
-		template <typename T>
-		struct eval_type
+		// NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the decltype
+		// will fail as series is not a template parameter.
+		template <typename Series, typename U, typename = void>
+		struct eval_type {};
+		template <typename Series, typename U>
+		using e_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>()) *
+			std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),
+			std::declval<const symbol_set &>()));
+		template <typename Series, typename U>
+		struct eval_type<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
+			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>())),
+			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),std::declval<const symbol_set &>()))>::value &&
+			std::is_constructible<e_type<Series,U>,int>::value
+			>::type>
 		{
-			typedef decltype(math::evaluate(std::declval<typename term_type::cf_type>(),std::declval<std::unordered_map<std::string,T>>()) *
-				std::declval<const typename term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,T> &>(),
-				std::declval<const symbol_set &>())) type;
+			using type = e_type<Series,U>;
 		};
 		// Print utilities.
 		template <bool TexMode, typename Iterator>
@@ -820,7 +830,7 @@ class series: series_binary_operators, detail::series_tag
 		 * is a copy of the coefficient of the term, the second element a single-term instance of \p Derived constructed from
 		 * the term's key and a unitary coefficient.
 		 * 
-		 * @see begin() and end().
+		 * @see piranha::series::begin() and piranha::series::end().
 		 */
 		typedef const_iterator_impl const_iterator;
 		/// Defaulted default constructor.
@@ -1275,8 +1285,7 @@ class series: series_binary_operators, detail::series_tag
 		 * - insert(),
 		 * - is_single_coefficient().
 		 */
-		template <typename Functor>
-		Derived apply_cf_functor(Functor &&f) const
+		Derived apply_cf_functor(std::function<typename term_type::cf_type (const typename term_type::cf_type &)> f) const
 		{
 			if (!is_single_coefficient()) {
 				piranha_throw(std::invalid_argument,"cannot apply functor, series is not single-coefficient");
@@ -1386,9 +1395,9 @@ class series: series_binary_operators, detail::series_tag
 		 * 
 		 * Note that terms are stored unordered in the series, hence it is not defined which particular
 		 * term will be returned by calling this method. The only guarantee is that the iterator can be used to transverse
-		 * all the series' terms until end() is eventually reached.
+		 * all the series' terms until piranha::series::end() is eventually reached.
 		 * 
-		 * Calling any non-const method on the series will invalidate the iterators obtained via begin() and end().
+		 * Calling any non-const method on the series will invalidate the iterators obtained via piranha::series::begin() and piranha::series::end().
 		 * 
 		 * @return an iterator to the first term of the series.
 		 * 
@@ -1408,7 +1417,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// End iterator.
 		/**
-		 * Return an iterator one past the last term of the series. See the documentation of begin()
+		 * Return an iterator one past the last term of the series. See the documentation of piranha::series::begin()
 		 * on how the returned iterator can be used.
 		 * 
 		 * @return an iterator to the end of the serie.
@@ -1432,7 +1441,7 @@ class series: series_binary_operators, detail::series_tag
 		 * This method will apply the functor \p func to each term in the series, and produce a return series
 		 * containing all terms in \p this for which \p func returns \p true.
 		 * Terms are passed to \p func in the format resulting from dereferencing the iterators obtained
-		 * via begin().
+		 * via piranha::series::begin().
 		 * 
 		 * @param[in] func filtering functor.
 		 * 
@@ -1460,7 +1469,7 @@ class series: series_binary_operators, detail::series_tag
 		/**
 		 * This method will apply the functor \p func to each term in the series, and will use the return
 		 * value of the functor to construct a new series. Terms are passed to \p func in the same format
-		 * resulting from dereferencing the iterators obtained via begin(), and \p func is expected to produce
+		 * resulting from dereferencing the iterators obtained via piranha::series::begin(), and \p func is expected to produce
 		 * a return value of the same type.
 		 * 
 		 * The return series is first initialised as an empty series. For each input term \p t, the return value
@@ -1498,7 +1507,13 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Evaluation.
 		/**
-		 * Series evaluation starts with a default-constructed instance of the return type, which is determined
+		 * \note
+		 * This method is enabled only if:
+		 * - both the coefficient and the key types are evaluable,
+		 * - the evaluated types are suitable for use in piranha::math::multiply_accumulate(),
+		 * - the return type is constructible from \p int.
+		 *
+		 * Series evaluation starts with a zero-initialised instance of the return type, which is determined
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
 		 * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
 		 * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
@@ -1511,22 +1526,20 @@ class series: series_binary_operators, detail::series_tag
 		 * - coefficient and key evaluation,
 		 * - insertion operations on \p std::unordered_map,
 		 * - piranha::math::multiply_accumulate().
-		 * 
-		 * \todo require support for multiply_accumulate and evaluable coefficient and key.
 		 */
-		template <typename T>
-		typename eval_type<T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
+		template <typename T, typename Series = series>
+		typename eval_type<Series,T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
 		{
 			// NOTE: possible improvement: if the evaluation type is less-than comparable,
 			// build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
 			// with fp types and maybe improve performance - e.g., for integers).
-			typedef typename eval_type<T>::type return_type;
+			typedef typename eval_type<Series,T>::type return_type;
 			// Transform the string dict into symbol dict for use in keys.
 			std::unordered_map<symbol,T> s_dict;
 			for (auto it = dict.begin(); it != dict.end(); ++it) {
 				s_dict[symbol(it->first)] = it->second;
 			}
-			return_type retval = return_type();
+			return_type retval = return_type(0);
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(s_dict,m_symbol_set));
@@ -1789,6 +1802,84 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
 	}
 };
 
+}
+
+namespace detail
+{
+
+// All this gook can go back into the private impl methods once we switch to GCC 4.8.
+template <typename T>
+class series_has_sin: sfinae_types
+{
+		template <typename U>
+		static auto test(const U *t) -> decltype(t->sin());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+};
+
+template <typename T>
+inline T series_sin_call_impl(const T &s, typename std::enable_if<series_has_sin<T>::value>::type * = nullptr)
+{
+	return s.sin();
+}
+
+// This is another strange thing: if we use directly decltype() instead of this alias in the enabler
+// below, GCC (both 4.7 and 4.8) gets confused. clang seems to handle this correctly. GCC 4.9 GIT
+// too.
+template <typename T>
+using sin_cf_ret_type = decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()));
+
+template <typename T>
+inline T series_sin_call_impl(const T &s, typename std::enable_if<!series_has_sin<T>::value &&
+	std::is_same<typename T::term_type::cf_type,sin_cf_ret_type<T>>::value>::type * = nullptr)
+{
+	typedef typename T::term_type::cf_type cf_type;
+	auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
+	try {
+		return s.apply_cf_functor(f);
+	} catch (const std::invalid_argument &) {
+		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
+	}
+}
+
+template <typename T>
+class series_has_cos: sfinae_types
+{
+		template <typename U>
+		static auto test(const U *t) -> decltype(t->cos());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+};
+
+template <typename T>
+inline T series_cos_call_impl(const T &s, typename std::enable_if<series_has_cos<T>::value>::type * = nullptr)
+{
+	return s.cos();
+}
+
+template <typename T>
+using cos_cf_ret_type = decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()));
+
+template <typename T>
+inline T series_cos_call_impl(const T &s, typename std::enable_if<!series_has_cos<T>::value &&
+	std::is_same<typename T::term_type::cf_type,cos_cf_ret_type<T>>::value>::type * = nullptr)
+{
+	typedef typename T::term_type::cf_type cf_type;
+	auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
+	try {
+		return s.apply_cf_functor(f);
+	} catch (const std::invalid_argument &) {
+		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
+	}
+}
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series.
@@ -1799,50 +1890,30 @@ struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_
  * calculates piranha::math::sin().
  */
 template <typename Series>
-struct sin_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
-	private:
-		template <typename T>
-		class has_sin: detail::sfinae_types
-		{
-				template <typename U>
-				static auto test(const U *t) -> decltype(t->sin());
-				static no test(...);
-			public:
-				static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
-		};
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_sin<T>::value>::type * = nullptr) const
-		{
-			return s.sin();
-		}
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_sin<T>::value>::type * = nullptr) const
-		{
-			typedef typename T::term_type::cf_type cf_type;
-			auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
-			try {
-				return s.apply_cf_functor(f);
-			} catch (const std::invalid_argument &) {
-				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
-			}
-		}
-	public:
-		/// Call operator.
-		/**
-		 * @param[in] s argument.
-		 * 
-		 * @return sine of \p s.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the <tt>Series::sin()</tt> method,
-		 * - piranha::math::sin(),
-		 * - piranha::series::apply_cf_functor().
-		 */
-		Series operator()(const Series &s) const
-		{
-			return call_impl(s);
-		}
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled if one of these conditions apply:
+	 * - the input series type has a const <tt>sin()</tt> method, or
+	 * - the coefficient type of the series satisfies piranha::has_sine, returning an instance of the
+	 *   coefficient type as result.
+	 *
+	 * @param[in] s argument.
+	 *
+	 * @return sine of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::sin()</tt> method,
+	 * - piranha::math::sin(),
+	 * - piranha::series::apply_cf_functor().
+	 */
+	template <typename T>
+	auto operator()(const T &s) const -> decltype(detail::series_sin_call_impl(s))
+	{
+		return detail::series_sin_call_impl(s);
+	}
 };
 
 /// Specialisation of the piranha::math::cos() functor for piranha::series.
@@ -1855,50 +1926,30 @@ struct sin_impl<Series,typename std::enable_if<std::is_base_of<detail::series_ta
  * calculates piranha::math::cos().
  */
 template <typename Series>
-struct cos_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
-	private:
-		template <typename T>
-		class has_cos: detail::sfinae_types
-		{
-				template <typename U>
-				static auto test(const U *t) -> decltype(t->cos());
-				static no test(...);
-			public:
-				static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
-		};
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<has_cos<T>::value>::type * = nullptr) const
-		{
-			return s.cos();
-		}
-		template <typename T>
-		T call_impl(const T &s, typename std::enable_if<!has_cos<T>::value>::type * = nullptr) const
-		{
-			typedef typename T::term_type::cf_type cf_type;
-			auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
-			try {
-				return s.apply_cf_functor(f);
-			} catch (const std::invalid_argument &) {
-				piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
-			}
-		}
-	public:
-		/// Call operator.
-		/**
-		 * @param[in] s argument.
-		 * 
-		 * @return cosine of \p s.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the <tt>Series::cos()</tt> method,
-		 * - piranha::math::cos(),
-		 * - piranha::series::apply_cf_functor().
-		 */
-		Series operator()(const Series &s) const
-		{
-			return call_impl(s);
-		}
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled if one of these conditions apply:
+	 * - the input series type has a const <tt>cos()</tt> method, or
+	 * - the coefficient type of the series satisfies piranha::has_cosine, returning an instance of the
+	 *   coefficient type as result.
+	 *
+	 * @param[in] s argument.
+	 *
+	 * @return cosine of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::cos()</tt> method,
+	 * - piranha::math::cos(),
+	 * - piranha::series::apply_cf_functor().
+	 */
+	template <typename T>
+	auto operator()(const T &s) const -> decltype(detail::series_cos_call_impl(s))
+	{
+		return detail::series_cos_call_impl(s);
+	}
 };
 
 /// Specialisation of the piranha::math::partial() functor for series types.
@@ -1953,29 +2004,22 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
 template <typename Series>
 struct evaluate_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
 {
-	private:
-		template <typename T>
-		struct eval_type
-		{
-			typedef decltype(std::declval<Series>().evaluate(std::declval<std::unordered_map<std::string,T>>())) type;
-		};
-	public:
-		/// Call operator.
-		/**
-		 * The implementation will use piranha::series::evaluate().
-		 * 
-		 * @param[in] s evaluation argument.
-		 * @param[in] dict evaluation dictionary.
-		 * 
-		 * @return output of piranha::series::evaluate().
-		 * 
-		 * @throws unspecified any exception thrown by piranha::series::evaluate().
-		 */
-		template <typename T>
-		typename eval_type<T>::type operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const
-		{
-			return s.evaluate(dict);
-		}
+	/// Call operator.
+	/**
+	 * The implementation will use piranha::series::evaluate().
+	 *
+	 * @param[in] s evaluation argument.
+	 * @param[in] dict evaluation dictionary.
+	 *
+	 * @return output of piranha::series::evaluate().
+	 *
+	 * @throws unspecified any exception thrown by piranha::series::evaluate().
+	 */
+	template <typename T>
+	auto operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const -> decltype(s.evaluate(dict))
+	{
+		return s.evaluate(dict);
+	}
 };
 
 }

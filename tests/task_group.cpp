@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(task_group_run_test_02)
 {
 	task_group tg;
 	for (int i = 0; i < 1000; ++i) {
-		BOOST_CHECK_NO_THROW(tg.add_task(std::bind([](int x, int y) -> void {(void)(x + y);},i,i + 1)));
+		BOOST_CHECK_NO_THROW(tg.add_task(std::bind([](int x, int y) {(void)(x + y);},i,i + 1)));
 	}
 }
 

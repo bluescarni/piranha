@@ -2,7 +2,7 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranhapp0x)
 
-ADD_LIBRARY(_core SHARED core.cpp)
+ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp series_exposer.hpp)
 # Prefix and visibility setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "" COMPILE_DEFINITIONS "PIRANHA_USING_DLL")
 IF(PYDEXTENSION)

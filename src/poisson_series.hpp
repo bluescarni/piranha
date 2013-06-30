@@ -22,14 +22,12 @@
 #define PIRANHA_POISSON_SERIES_HPP
 
 #include <algorithm>
-#include <boost/concept/assert.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -54,7 +52,7 @@ namespace piranha
  * (represented by the piranha::poisson_series_term class). The coefficient
  * type \p Cf represents the ring over which the Poisson series is defined.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section type_requirements Type requirements
  * 
@@ -72,8 +70,7 @@ namespace piranha
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>,
-	detail::poisson_series_tag
+	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>
 {
 		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>> base;
 		template <bool IsCos, typename T>
@@ -175,7 +172,7 @@ class poisson_series:
 			typedef typename term_type::cf_type cf_type;
 			integer degree;
 			try {
-				degree = math::integral_cast(term.m_cf.degree({s.get_name()}));
+				degree = math::integral_cast(math::degree(term.m_cf,{s.get_name()}));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
 					"unable to perform Poisson series integration: cannot extract the integral form of a polynomial degree");
@@ -251,7 +248,7 @@ class poisson_series:
 		 */
 		poisson_series sin() const
 		{
-			return sin_cos_impl<false>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
+			return sin_cos_impl<false>(std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 		}
 		/// Override cosine implementation.
 		/**
@@ -263,7 +260,7 @@ class poisson_series:
 		 */
 		poisson_series cos() const
 		{
-			return sin_cos_impl<true>(std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
+			return sin_cos_impl<true>(std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 		}
 		/// Substitution.
 		/**
@@ -413,8 +410,7 @@ class poisson_series:
 					retval.insert(term_type(it->m_cf / key_int.first,std::move(key_int.second)));
 				} else {
 					// With the variable both in the coefficient and the key, we only know how to proceed with polynomials.
-					retval += integrate_impl(s,*it,std::integral_constant<bool,
-						std::is_base_of<detail::polynomial_tag,Cf>::value>());
+					retval += integrate_impl(s,*it,std::integral_constant<bool,is_instance_of<Cf,polynomial>::value>());
 				}
 			}
 			return retval;
@@ -429,7 +425,7 @@ namespace math
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -463,7 +459,7 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -498,7 +494,7 @@ struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::poi
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::poisson_series_tag,Series>::value>::type>
+struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
 {
 	/// Call operator.
 	/**

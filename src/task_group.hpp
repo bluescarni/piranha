@@ -22,14 +22,12 @@
 #define PIRANHA_TASK_GROUP_HPP
 
 #include <algorithm>
-#include <exception>
 #include <forward_list>
 #include <future>
-#include <iterator>
-#include <utility>
 
 #include "config.hpp"
-#include "thread.hpp"
+#include "detail/mpfr.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -48,32 +46,31 @@ namespace piranha
  */
 class task_group
 {
-		// Various typedefs.
-		typedef std::promise<void> p_type;
 		typedef std::future<void> f_type;
-		typedef std::pair<p_type,f_type> pair_type;
-		typedef std::forward_list<pair_type> container_type;
-		// Task wrapper.
+		typedef std::forward_list<f_type> container_type;
+		// Simple wrapper that will call the callable and afterwards will
+		// clear up the MPFR caches.
 		template <typename Callable>
-		struct task_wrapper
+		struct wrapper
 		{
+			wrapper() = delete;
 			template <typename T>
-			explicit task_wrapper(T &&c, pair_type &pair):m_c(std::forward<T>(c)),m_pair(pair)
-			{
-				// NOTE: this is noexcept.
-				m_pair.second = m_pair.first.get_future();
-			}
+			explicit wrapper(T &&c):m_c(std::forward<T>(c)) {}
+			wrapper(const wrapper &) = delete;
+			wrapper(wrapper &&) = default;
+			wrapper &operator=(const wrapper &) = delete;
+			wrapper &operator=(wrapper &&) = delete;
 			void operator()()
 			{
 				try {
 					m_c();
-					m_pair.first.set_value();
 				} catch (...) {
-					m_pair.first.set_exception(std::current_exception());
+					::mpfr_free_cache();
+					throw;
 				}
+				::mpfr_free_cache();
 			}
-			Callable	m_c;
-			pair_type	&m_pair;
+			Callable m_c;
 		};
 	public:
 		/// Defaulted default constructor.
@@ -100,41 +97,42 @@ class task_group
 		/// Add task.
 		/**
 		 * \note
-		 * This method is enabled if piranha::thread is constructible from <tt>Callable &&</tt>.
+		 * This method is enabled if the decay type of \p Callable is a function object returning \p void, move-constructible
+		 * and constructible from <tt>Callable &&</tt>.
 		 *
 		 * The nullary function object \p c will be invoked in a separate thread of execution. Any exception
-		 * thrown by \p c will be stored within the object and can be retrieved later by the get_all() method.
+		 * thrown by \p c will be stored and can be retrieved later by the get_all() method.
+		 * 
+		 * This method will encapsulate \p c in a wrapper that will take care of calling the MPFR function <tt>mpfr_free_cache()</tt>
+		 * from within the thread after the execution of \p c has completed (even in case of exceptions). This means that it is safe
+		 * to use the MPFR API within \p c (provided that a thread-safe MPFR version is being used).
 		 *
 		 * This method offers the following exception safety guarantee: in case of errors, the object is left
-		 * in the same state as it was before the call to add_task(). In face of exceptions, it's not specified
-		 * if the function \p c has been invoked or not.
+		 * in the same state as it was before the call to add_task(). In face of exceptions, it is not specified
+		 * if \p c has been invoked or not.
 		 *
 		 * @param[in] c function object to be invoked.
 		 *
-		 * @throws unspecified any exception thrown by threading primitives or by memory allocation errors
-		 * in standard containers or when copying \p c into the thread object.
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - memory allocation errors in standard containers,
+		 * - the move/copy constructor of \p c.
+		 * 
+		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Memory-Handling
 		 */
-		template <typename Callable, typename = typename std::enable_if<std::is_constructible<thread,Callable &&>::value>::type>
+		template <typename Callable, typename = typename std::enable_if<is_function_object<
+			typename std::decay<Callable>::type,void>::value &&
+			std::is_move_constructible<typename std::decay<Callable>::type>::value &&
+			std::is_constructible<typename std::decay<Callable>::type,Callable &&>::value>::type>
 		void add_task(Callable &&c)
 		{
-			// First let's try to append an empty pair. If an error happens here, no big deal.
-			m_container.emplace_front(p_type{},f_type{});
+			// First let's try to append an empty future. If an error happens here, no big deal.
+			m_container.emplace_front();
 			try {
 				// Create the functor.
-				task_wrapper<typename std::decay<Callable>::type> tw(std::forward<Callable>(c),m_container.front());
-				// Now the future has been assigned to the back of m_container. Launch the thread.
-				thread thr(std::move(tw));
-				piranha_assert(thr.joinable());
-				// Try detaching.
-				// NOTE: it is not clear here what kind of guarantees we can offer, could be a good candidate for fatal error
-				// logging, or maybe terminate().
-				try {
-					thr.detach();
-				} catch (...) {
-					// Last-ditch effort: try join()ing before re-throwing.
-					thr.join();
-					throw;
-				}
+				wrapper<typename std::decay<Callable>::type> tw(std::forward<Callable>(c));
+				// Assign the future to the back of m_container and launch the thread.
+				m_container.front() = std::async(std::launch::async,std::move(tw));
 			} catch (...) {
 				// The error happened *after* the empty item was added,
 				// we have to remove it as it is invalid.
@@ -148,9 +146,9 @@ class task_group
 		 */
 		void wait_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[this](pair_type &p) {
-				if (p.second.valid()) {
-					p.second.wait();
+			std::for_each(m_container.begin(),m_container.end(),[](f_type &f) {
+				if (f.valid()) {
+					f.wait();
 				}
 			});
 		}
@@ -163,9 +161,9 @@ class task_group
 		 */
 		void get_all()
 		{
-			std::for_each(m_container.begin(),m_container.end(),[this](pair_type &p) {
-				if (p.second.valid()) {
-					p.second.get();
+			std::for_each(m_container.begin(),m_container.end(),[](f_type &f) {
+				if (f.valid()) {
+					f.get();
 				}
 			});
 		}

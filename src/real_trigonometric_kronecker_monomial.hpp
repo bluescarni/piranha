@@ -110,16 +110,20 @@ class real_trigonometric_kronecker_monomial
 		typedef static_vector<value_type,max_size> v_type;
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
-		// Eval and subs typedefs.
+		// Eval and subs type definition.
+		template <typename U, typename = void>
+		struct eval_type {};
 		template <typename U>
-		struct eval_type
+		using e_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
+		template <typename U>
+		struct eval_type<U,typename std::enable_if<is_addable_in_place<e_type<U>>::value &&
+			std::is_constructible<e_type<U>,int>::value &&
+			std::is_same<decltype(math::cos(std::declval<e_type<U>>())),decltype(math::sin(std::declval<e_type<U>>()))>::value &&
+			std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),int>::value
+			>::type>
 		{
-			typedef decltype(math::cos(std::declval<U>() * std::declval<value_type>())) type;
+			using type = decltype(math::cos(std::declval<e_type<U>>()));
 		};
-		// NOTE: here the idea is that it would be possible to use decltype() directly in the substitution methods' declarations,
-		// but it's not supported yet in GCC. The idea of using decltype()/enable_if to automatically disable the method if the template
-		// parameter does not satisfy the requirements of the function's body is interesting, but might be too cumbersome to implement
-		// without something like compiler-level concepts.
 		template <typename U>
 		struct subs_type
 		{
@@ -829,15 +833,11 @@ class real_trigonometric_kronecker_monomial
 		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::cos(), piranha::math::sin(), or the in-place addition and binary multiplication operators of the types
 		 *   involved in the computation.
-		 * 
-		 * \todo request constructability from 1, addability and multipliability.
 		 */
 		template <typename U>
 		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
 			typedef typename eval_type<U>::type return_type;
-			static_assert(std::is_same<return_type,decltype(math::sin(std::declval<U>() * std::declval<value_type>()))>::value,
-				"Inconsistent return type.");
 			auto v = unpack(args);
 			if (args.size() == 0u) {
 				if (get_flavour()) {
@@ -846,8 +846,8 @@ class real_trigonometric_kronecker_monomial
 					return return_type(0);
 				}
 			}
-			typedef decltype(std::declval<U>() * std::declval<value_type>()) tmp_type;
-			tmp_type tmp = tmp_type();
+			typedef decltype(std::declval<U const &>() * std::declval<value_type const &>()) tmp_type;
+			tmp_type tmp(0);
 			const auto it_f = dict.end();
 			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
 				const auto it = dict.find(args[i]);

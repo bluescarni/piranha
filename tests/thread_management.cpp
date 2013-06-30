@@ -29,7 +29,6 @@
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/task_group.hpp"
-#include "../src/thread.hpp"
 #include "../src/thread_barrier.hpp"
 
 // TODO: check for exceptions throwing.
@@ -53,8 +52,9 @@ BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
 	piranha::environment env;
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
-		piranha::thread t([](){test_function();});
-		t.join();
+		piranha::task_group tg;
+		tg.add_task([](){test_function();});
+		tg.wait_all();
 	}
 }
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 	for (unsigned i = 0u; i < hc; ++i) {
 		piranha::task_group tg;
 		for (unsigned j = 0u; j < i; ++j) {
-			auto f = []() -> void {
+			auto f = []() {
 				piranha::thread_management::binder b;
 				std::lock_guard<std::mutex> lock(mutex);
 				BOOST_CHECK_EQUAL(true,piranha::thread_management::bound_proc().first);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(thread_management_binder)
 	piranha::task_group tg;
 	piranha::thread_barrier tb(hc + 1u);
 	for (unsigned i = 0u; i < hc + 1u; ++i) {
-		auto f = [&count,&tb,hc]() -> void {
+		auto f = [&count,&tb,hc]() {
 			std::unique_lock<std::mutex> lock(mutex);
 			piranha::thread_management::binder b;
 			if (count >= hc) {

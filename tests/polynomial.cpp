@@ -80,6 +80,27 @@ class polynomial_alt:
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial_alt,base)
 };
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 struct constructor_tester
 {
 	template <typename Cf>
@@ -145,6 +166,38 @@ BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 	boost::mpl::for_each<cf_types>(constructor_tester());
 }
 
+struct is_evaluable_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		// NOTE: this is temporary, the enable_if has to be removed once we implement evaluation for the univariate monomial.
+		template <typename Expo>
+		void operator()(const Expo &, typename std::enable_if<!is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
+		{
+			typedef polynomial<Cf,Expo> p_type;
+			BOOST_CHECK((is_evaluable<p_type,double>::value));
+			BOOST_CHECK((is_evaluable<p_type,float>::value));
+			BOOST_CHECK((is_evaluable<p_type,integer>::value));
+			BOOST_CHECK((!is_evaluable<p_type,int>::value));
+		}
+		template <typename Expo>
+		void operator()(const Expo &, typename std::enable_if<is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
+		{}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_is_evaluable_test)
+{
+	boost::mpl::for_each<cf_types>(is_evaluable_tester());
+	BOOST_CHECK((!is_evaluable<polynomial<mock_cf,int>,double>::value));
+}
+
 struct assignment_tester
 {
 	template <typename Cf>
@@ -203,39 +256,46 @@ BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 	typedef polynomial<double,univariate_monomial<int>> p_type1;
 	typedef polynomial<p_type1,univariate_monomial<int>> p_type11;
 	typedef polynomial<p_type11,univariate_monomial<int>> p_type111;
+	BOOST_CHECK(has_degree<p_type1>::value);
+	BOOST_CHECK(has_ldegree<p_type1>::value);
+	BOOST_CHECK(has_degree<p_type11>::value);
+	BOOST_CHECK(has_ldegree<p_type11>::value);
+	BOOST_CHECK(has_degree<p_type111>::value);
+	BOOST_CHECK(has_ldegree<p_type111>::value);
 	p_type1 x("x");
-	BOOST_CHECK(x.degree() == 1);
-	BOOST_CHECK(x.ldegree() == 1);
-	BOOST_CHECK((x * x).degree() == 2);
-	BOOST_CHECK((x * x).ldegree() == 2);
-	BOOST_CHECK((x * x).degree({"y","z"}) == 0);
-	BOOST_CHECK((x * x).ldegree({"y","z"}) == 0);
+	BOOST_CHECK(math::degree(x) == 1);
+	BOOST_CHECK(math::ldegree(x) == 1);
+	BOOST_CHECK(math::degree(x * x) == 2);
+	BOOST_CHECK(math::ldegree(x * x) == 2);
+	BOOST_CHECK(math::degree(x * x,{"y","z"}) == 0);
+	BOOST_CHECK(math::ldegree(x * x,{"y","z"}) == 0);
 	p_type11 y("y");
 	p_type111 z("z");
-	BOOST_CHECK((x * y* z).degree() == 3);
-	BOOST_CHECK((x * y* z).ldegree() == 3);
-	BOOST_CHECK((x * y* z).degree({"x"}) == 1);
-	BOOST_CHECK((x * y* z).ldegree({"x"}) == 1);
-	BOOST_CHECK((x * y* z).degree({"y"}) == 1);
-	BOOST_CHECK((x * y* z).ldegree({"y"}) == 1);
-	BOOST_CHECK((x * y* z).degree({"z"}) == 1);
-	BOOST_CHECK((x * y* z).ldegree({"z"}) == 1);
-	BOOST_CHECK((x * y* z).degree({"z","y"}) == 2);
-	BOOST_CHECK((x * y* z).ldegree({"z","y"}) == 2);
-	BOOST_CHECK((x * y* z).degree({"z","x"}) == 2);
-	BOOST_CHECK((x * y* z).ldegree({"z","x"}) == 2);
-	BOOST_CHECK((x * y* z).degree({"y","x"}) == 2);
-	BOOST_CHECK((x * y* z).ldegree({"y","x"}) == 2);
-	BOOST_CHECK((x * y* z).degree({"y","x","z"}) == 3);
-	BOOST_CHECK((x * y* z).ldegree({"y","x","z"}) == 3);
-	BOOST_CHECK((x + y + z).degree() == 1);
-	BOOST_CHECK((x + y + z).ldegree() == 1);
-	BOOST_CHECK((x + y + z).degree({"x"}) == 1);
-	BOOST_CHECK((x + y + z).ldegree({"x"}) == 0);
-	BOOST_CHECK((x + y + z).ldegree({"x","y"}) == 0);
-	BOOST_CHECK((x + y + 1).ldegree({"x","y"}) == 0);
-	BOOST_CHECK((x + y + 1).ldegree({"x","y","t"}) == 0);
-	BOOST_CHECK((x + y + 1).ldegree() == 0);
+	BOOST_CHECK(math::degree(x * y) == 2);
+	BOOST_CHECK(math::degree(x * y* z) == 3);
+	BOOST_CHECK(math::ldegree(x * y* z) == 3);
+	BOOST_CHECK(math::degree(x * y* z,{"x"}) == 1);
+	BOOST_CHECK(math::ldegree(x * y* z,{"x"}) == 1);
+	BOOST_CHECK(math::degree(x * y* z,{"y"}) == 1);
+	BOOST_CHECK(math::ldegree(x * y* z,{"y"}) == 1);
+	BOOST_CHECK(math::degree(x * y* z,{"z"}) == 1);
+	BOOST_CHECK(math::ldegree(x * y* z,{"z"}) == 1);
+	BOOST_CHECK(math::degree(x * y* z,{"z","y"}) == 2);
+	BOOST_CHECK(math::ldegree(x * y* z,{"z","y"}) == 2);
+	BOOST_CHECK(math::degree(x * y* z,{"z","x"}) == 2);
+	BOOST_CHECK(math::ldegree(x * y* z,{"z","x"}) == 2);
+	BOOST_CHECK(math::degree(x * y* z,{"y","x"}) == 2);
+	BOOST_CHECK(math::ldegree(x * y* z,{"y","x"}) == 2);
+	BOOST_CHECK(math::degree(x * y* z,{"y","x","z"}) == 3);
+	BOOST_CHECK(math::ldegree(x * y* z,{"y","x","z"}) == 3);
+	BOOST_CHECK(math::degree(x + y + z) == 1);
+	BOOST_CHECK(math::ldegree(x + y + z) == 1);
+	BOOST_CHECK(math::degree(x + y + z,{"x"}) == 1);
+	BOOST_CHECK(math::ldegree(x + y + z,{"x"}) == 0);
+	BOOST_CHECK(math::ldegree(x + y + z,{"x","y"}) == 0);
+	BOOST_CHECK(math::ldegree(x + y + 1,{"x","y"}) == 0);
+	BOOST_CHECK(math::ldegree(x + y + 1,{"x","y","t"}) == 0);
+	BOOST_CHECK(math::ldegree(x + y + 1) == 0);
 }
 
 struct multiplication_tester
@@ -463,27 +523,6 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	BOOST_CHECK((is_exponentiable<p_type2,real>::value));
 	BOOST_CHECK((!is_exponentiable<p_type2,std::string>::value));
 }
-
-// Mock coefficient.
-struct mock_cf
-{
-	mock_cf();
-	mock_cf(const int &);
-	mock_cf(const mock_cf &);
-	mock_cf(mock_cf &&) noexcept(true);
-	mock_cf &operator=(const mock_cf &);
-	mock_cf &operator=(mock_cf &&) noexcept(true);
-	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
-	mock_cf operator-() const;
-	bool operator==(const mock_cf &) const;
-	bool operator!=(const mock_cf &) const;
-	mock_cf &operator+=(const mock_cf &);
-	mock_cf &operator-=(const mock_cf &);
-	mock_cf operator+(const mock_cf &) const;
-	mock_cf operator-(const mock_cf &) const;
-	mock_cf &operator*=(const mock_cf &);
-	mock_cf operator*(const mock_cf &) const;
-};
 
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {

@@ -77,10 +77,15 @@ class monomial: public array_key<T,monomial<T>>
 {
 		typedef array_key<T,monomial<T>> base;
 		// Eval and subs type definition.
+		template <typename U, typename = void>
+		struct eval_type {};
 		template <typename U>
-		struct eval_type
+		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<typename base::value_type const &>()));
+		template <typename U>
+		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
+			std::is_constructible<e_type<U>,int>::value>::type>
 		{
-			typedef decltype(math::pow(std::declval<U>(),std::declval<typename base::value_type>())) type;
+			using type = e_type<U>;
 		};
 	public:
 		/// Defaulted default constructor.
@@ -494,6 +499,12 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Evaluation.
 		/**
+		 * \note
+		 * This method is available only if \p U satisfies the following requirements:
+		 * - it can be used in piranha::math::pow() with the monomial exponents as powers,
+		 * - it is constructible from \p int,
+		 * - it is multipliable in place.
+		 * 
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
 		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
 		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned.
@@ -509,8 +520,6 @@ class monomial: public array_key<T,monomial<T>>
 		 * - construction of the return type,
 		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
-		 * 
-		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
 		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
@@ -552,7 +561,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back().
 		 * 
-		 * \todo require constructability from int and exponentiability.
+		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const

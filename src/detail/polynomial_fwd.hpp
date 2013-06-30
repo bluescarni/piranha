@@ -24,14 +24,6 @@
 namespace piranha
 {
 
-namespace detail
-{
-
-// Tag for polynomial class.
-struct polynomial_tag {};
-
-}
-
 // Forward declaration of polynomial class.
 template <typename, typename>
 class polynomial;

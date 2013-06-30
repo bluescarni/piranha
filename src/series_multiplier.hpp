@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
@@ -42,7 +41,6 @@
 #include <vector>
 
 #include "cache_aligning_allocator.hpp"
-#include "concepts/series.hpp"
 #include "config.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
@@ -54,6 +52,7 @@
 #include "task_group.hpp"
 #include "thread_management.hpp"
 #include "tracing.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -73,7 +72,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * - \p Series1 and \p Series2 must be models of piranha::concept::Series. Additionally, the echelon sizes of
+ * - \p Series1 and \p Series2 must satisfy the piranha::is_series type trait. Additionally, the echelon sizes of
  *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail.
  * 
  * \section exception_safety Exception safety guarantee
@@ -98,8 +97,8 @@ namespace piranha
 template <typename Series1, typename Series2, typename Enable = void>
 class series_multiplier
 {
-		BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
-		BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+		PIRANHA_TT_CHECK(is_series,Series1);
+		PIRANHA_TT_CHECK(is_series,Series2);
 		static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
 			"Mismatch in echelon sizes.");
 	protected:
@@ -646,7 +645,7 @@ class series_multiplier
 			if (unlikely(!real_size)) {
 				return;
 			}
-			tracing::trace("number_of_estimates",[](boost::any &x) -> void {
+			tracing::trace("number_of_estimates",[](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -655,7 +654,7 @@ class series_multiplier
 					++*ptr;
 				}
 			});
-			tracing::trace("number_of_correct_estimates",[real_size,estimate](boost::any &x) -> void {
+			tracing::trace("number_of_correct_estimates",[real_size,estimate](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0ull;
 				}
@@ -664,7 +663,7 @@ class series_multiplier
 					*ptr += static_cast<unsigned long long>(estimate >= real_size);
 				}
 			});
-			tracing::trace("accumulated_estimate_ratio",[real_size,estimate](boost::any &x) -> void {
+			tracing::trace("accumulated_estimate_ratio",[real_size,estimate](boost::any &x) {
 				if (unlikely(x.empty())) {
 					x = 0.;
 				}
@@ -744,7 +743,7 @@ class series_multiplier
 									// Assert the existing term is not ignorable and it is compatible.
 									piranha_assert(!it->is_ignorable(retval.m_symbol_set) && it->is_compatible(retval.m_symbol_set));
 									// Cleanup function.
-									auto cleanup = [&]() -> void {
+									auto cleanup = [&]() {
 										if (unlikely(!it->is_compatible(retval.m_symbol_set) || it->is_ignorable(retval.m_symbol_set))) {
 											retval.m_container._erase(it);
 											// After term is erased, update count.

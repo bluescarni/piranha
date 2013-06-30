@@ -40,6 +40,7 @@
 #include "../src/power_series.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -48,7 +49,7 @@ typedef boost::mpl::vector<double,rational,real,polynomial<rational>,polynomial<
 struct constructor_tester
 {
 	template <typename Cf>
-	void poly_ctor_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
+	void poly_ctor_test(typename std::enable_if<is_instance_of<Cf,polynomial>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		// Construction from symbol name.
@@ -64,7 +65,7 @@ struct constructor_tester
 		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
 	}
 	template <typename Cf>
-	void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
+	void poly_ctor_test(typename std::enable_if<!is_instance_of<Cf,polynomial>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		if (!std::is_constructible<Cf,std::string>::value) {
@@ -124,7 +125,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 struct assignment_tester
 {
 	template <typename Cf>
-	void poly_assignment_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
+	void poly_assignment_test(typename std::enable_if<is_instance_of<Cf,polynomial>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		p_type p1;
@@ -132,7 +133,7 @@ struct assignment_tester
 		BOOST_CHECK(p1 == p_type("x"));
 	}
 	template <typename Cf>
-	void poly_assignment_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
+	void poly_assignment_test(typename std::enable_if<!is_instance_of<Cf,polynomial>::value>::type * = nullptr)
 	{}
 	template <typename Cf>
 	void operator()(const Cf &)
@@ -257,31 +258,33 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	using math::cos;
 	using math::pow;
 	typedef poisson_series<polynomial<rational>> p_type1;
-	BOOST_CHECK(is_power_series<p_type1>::value);
-	BOOST_CHECK(p_type1{}.degree() == 0);
-	BOOST_CHECK(p_type1{"x"}.degree() == 1);
-	BOOST_CHECK((p_type1{"x"} + 1).degree() == 1);
-	BOOST_CHECK((p_type1{"x"}.pow(2) + 1).degree() == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree() == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"x","y"}) == 2);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + 1).degree({"z"}) == 0);
-	BOOST_CHECK((p_type1{"x"} + 1).ldegree() == 0);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x","y"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"x"}) == 1);
-	BOOST_CHECK((p_type1{"x"} * p_type1{"y"} + p_type1{"x"}).ldegree({"y"}) == 0);
+	BOOST_CHECK(has_degree<p_type1>::value);
+	BOOST_CHECK(has_ldegree<p_type1>::value);
+	BOOST_CHECK(math::degree(p_type1{}) == 0);
+	BOOST_CHECK(math::degree(p_type1{"x"}) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"} + 1) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"}.pow(2) + 1) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"x"}) == 1);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"x","y"}) == 2);
+	BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1,{"z"}) == 0);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} + 1) == 0);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"x","y"}) == 1);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"x"}) == 1);
+	BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"},{"y"}) == 0);
 	p_type1 x{"x"}, y{"y"};
-	BOOST_CHECK((pow(x,2) * cos(y) + 1).degree() == 2);
-	BOOST_CHECK((pow(x,2) * cos(y) + 1).ldegree() == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"y"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"y"}) == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x"}) == 0);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree() == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + y).ldegree({"x","y"}) == 1);
-	BOOST_CHECK(((x * y + y) * cos(y) + 1).ldegree({"x","y"}) == 0);
+	BOOST_CHECK(math::degree(pow(x,2) * cos(y) + 1) == 2);
+	BOOST_CHECK(math::ldegree(pow(x,2) * cos(y) + 1) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"x"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"y"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"y"}) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"x"}) == 0);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + y,{"x","y"}) == 1);
+	BOOST_CHECK(math::ldegree((x * y + y) * cos(y) + 1,{"x","y"}) == 0);
 	typedef poisson_series<rational> p_type2;
-	BOOST_CHECK(!is_power_series<p_type2>::value);
+	BOOST_CHECK(!has_degree<p_type2>::value);
+	BOOST_CHECK(!has_ldegree<p_type2>::value);
 }
 
 // Mock coefficient.
@@ -342,7 +345,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
 	p_type1 x{"x"}, y{"y"};
 	auto s = pow(1 + x + y,3) * cos(x) + pow(y,3) * sin(x);
 	auto s_t = s.transform([](const pair_type &p) {
-		return std::make_pair(p.first.filter([](const pair_type2 &p2) {return p2.second.degree() < 2;}),p.second);
+		return std::make_pair(p.first.filter([](const pair_type2 &p2) {return math::degree(p2.second) < 2;}),p.second);
 	});
 	BOOST_CHECK_EQUAL(s_t,(3*x + 3*y + 1) * cos(x));
 }
@@ -515,4 +518,20 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(-4),z),(z * x.pow(-3)) * math::cos(x) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(4),z),x.pow(-7) * math::cos(x) + y + z);
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
+{
+	typedef poisson_series<polynomial<rational>> p_type1;
+	BOOST_CHECK((is_evaluable<p_type1,double>::value));
+	BOOST_CHECK((is_evaluable<p_type1,float>::value));
+	BOOST_CHECK((is_evaluable<p_type1,real>::value));
+	BOOST_CHECK((is_evaluable<p_type1,rational>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,std::string>::value));
+	BOOST_CHECK((is_evaluable<p_type1,integer>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,int>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,long>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,long long>::value));
+	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf>>,double>::value));
+	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
 }

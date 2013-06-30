@@ -36,13 +36,7 @@
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
- * \todo modify concepts to use declval where applicable, instead of dereferencing nullptr.
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
- * \todo concepts: how to deal with generic methods (e.g., coefficient in-place multiply by whatever)? We could add another parameter to the concept, with default void,
- * and use it explictly only when actually using that generic method? ADDENDUM: connected to this, the question of dealing with methods that
- * have additional type requirements wrt those delcared in class. Probably need to review all generic methods and add type requirements there.
- * This should all tie in with the work of starting using type traits more extensively, especially arithmetic ones, an is_exponentiable() type trait, etc.
- * \todo check the series concept: where is it used?
  * \todo check wherever use use std::vector as class member that we implement copy assignment with copy+move. There is no guarantee that copy operator=() on vector
  * (or standard containers) has strong exception safety guarantee.
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
@@ -72,12 +66,6 @@
  * might not be exception-safe.
  * \todo think about the generic binary term constrcutor, especially in conjunction with the generic series interop. Do we want to leave it generic
  * or force it to be strictly from (cf_type,key_type)? In the latter case, we should review its usage.
- * \todo think about replacing the concept system with static_asserts in conjunction with extensive use of type traits. It seems like it
- * would allow a finer control with generic methods (e.g., polynomial is a Poisson series coefficient only if it supports
- * division by int, partial() requires multipliability by int/integer, etc.) and enable meta-programming. But how to implement
- * concept inheriting? Where to put the static asserts? Is it worth it? NOTE: related to this, should we restrict generic and forwarding
- * constructors in series to accept only parameters for which the construction can happen? This way also the type trait is_constructible would
- * work, whereas now the generic constructors gobble up everything.
  * \todo univariate_monomial has been left behind a bit feature-wise.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
@@ -118,6 +106,8 @@
  * \todo when migrating to boost multiprecision, start by checking and rooting out uses of integer in the core of the library -> maybe
  * start by introducing a new_integer class and use it in kronecker.
  * \todo clean up the int128 detection in the build system now that we require gcc 4.7.
+ * \todo get rid of the detail::toolbox class, check that all type checks are explicit in toolbox classes.
+ * \todo in series pow() implementation we should check if the coefficient supports pow(), and otherwise just disable it.
  */
 namespace piranha
 {
@@ -134,7 +124,6 @@ namespace detail {}
 #include "array_key.hpp"
 #include "base_term.hpp"
 #include "cache_aligning_allocator.hpp"
-#include "concepts.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "echelon_size.hpp"
@@ -153,7 +142,6 @@ namespace detail {}
 #include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "power_series.hpp"
-#include "power_series_term.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 #include "rational.hpp"
@@ -169,7 +157,6 @@ namespace detail {}
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
 #include "task_group.hpp"
-#include "thread.hpp"
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
 #include "tracing.hpp"

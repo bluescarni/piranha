@@ -102,10 +102,15 @@ class kronecker_monomial
 	private:
 		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
 		// Eval and sub typedef.
+		template <typename U, typename = void>
+		struct eval_type {};
 		template <typename U>
-		struct eval_type
+		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<value_type const &>()));
+		template <typename U>
+		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
+			std::is_constructible<e_type<U>,int>::value>::type>
 		{
-			typedef decltype(math::pow(std::declval<U>(),std::declval<value_type>())) type;
+			using type = e_type<U>;
 		};
 	public:
 		/// Vector type used for temporary packing/unpacking.
@@ -662,6 +667,12 @@ class kronecker_monomial
 		}
 		/// Evaluation.
 		/**
+		 * \note
+		 * This method is available only if \p U satisfies the following requirements:
+		 * - it can be used in piranha::math::pow() with the monomial exponents as powers,
+		 * - it is constructible from \p int,
+		 * - it is multipliable in place.
+		 * 
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
 		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
 		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned.
@@ -677,8 +688,6 @@ class kronecker_monomial
 		 * - construction of the return type,
 		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
-		 * 
-		 * \todo request constructability from 1, multipliability and exponentiability.
 		 */
 		template <typename U>
 		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
@@ -715,7 +724,7 @@ class kronecker_monomial
 		 * - piranha::static_vector::push_back(),
 		 * - piranha::kronecker_array::encode().
 		 * 
-		 * \todo require constructability from int and exponentiability.
+		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,kronecker_monomial> subs(const symbol &s, const U &x, const symbol_set &args) const

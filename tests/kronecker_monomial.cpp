@@ -553,6 +553,7 @@ struct evaluate_tester
 	{
 		typedef kronecker_monomial<T> k_type;
 		typedef std::unordered_map<symbol,integer> dict_type;
+		BOOST_CHECK((key_is_evaluable<k_type,integer>::value));
 		symbol_set vs;
 		k_type k1;
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(1));
@@ -585,6 +586,10 @@ struct evaluate_tester
 BOOST_AUTO_TEST_CASE(kronecker_monomial_evaluate_test)
 {
 	boost::mpl::for_each<int_types>(evaluate_tester());
+	BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>,std::vector<int>>::value));
+	BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>,char *>::value));
+	BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>,std::string>::value));
+	BOOST_CHECK((!key_is_evaluable<kronecker_monomial<>,void *>::value));
 }
 
 struct subs_tester

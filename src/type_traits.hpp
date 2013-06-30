@@ -129,39 +129,6 @@ boost::has_trivial_copy_constructor<T>
 #endif
 {};
 
-/// Type has degree.
-/**
- * This type trait establishes if a type is provided with a "degree" and "low degree" property (in the mathematical sense,
- * as in polynomial degree),
- * and how such property can be queried. The default implementation's value is \p false.
- * 
- * Any specialisation which sets the value to \p true shall also provide a set of static methods
- * to query the total or partial (low) degree of an instance of type \p T as follows:
- * 
- * - a <tt>get(const T &x)</tt> static method, returning the total degree of \p x,
- * - a <tt>get(const T &x, const std::set<std::string> &s)</tt> static method, returning
- *   the partial degree of \p x when only the literal variables with names in \p s are considered
- *   in the computation of the degree,
- * - a <tt>lget(const T &x)</tt> static method, returning the total low degree of \p x (i.e.,
- *   the smallest degree appearing in the collection of items composing \p x - this is essentially
- *   analogous to the notion of order in formal power series),
- * - a <tt>lget(const T &x, const std::set<std::string> &s)</tt> static method, returning the
- *   the partial low degree.
- * 
- * \todo we could probably do away with this, and just introduce math::degree() functions similar to
- * pow(), cos(), etc. and the auto-detect the type trait with SFINAE.
- */
-template <typename T, typename Enable = void>
-class has_degree
-{
-	public:
-		/// Value of the type trait.
-		static const bool value = false;
-};
-
-template <typename T, typename Enable>
-const bool has_degree<T,Enable>::value;
-
 namespace detail
 {
 

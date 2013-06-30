@@ -33,7 +33,6 @@
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
-#include "power_series_term.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "univariate_monomial.hpp"
@@ -111,12 +110,12 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Cf, typename ExpoType>
-class polynomial_term: public power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>>
+class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>
 {
 		PIRANHA_TT_CHECK(is_multipliable,Cf);
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
-		typedef power_series_term<base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>> base;
+		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
 		// Make friend with series multipliers.
 		template <typename Series1, typename Series2, typename Enable>
 		friend class series_multiplier;

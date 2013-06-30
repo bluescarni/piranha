@@ -83,7 +83,7 @@ struct is_trigonometric_term
  * If the above requirements are not satisfied, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section exception_safety Exception safety guarantee
  * 

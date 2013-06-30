@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(tracing_trace_test)
 	environment env;
 	settings::set_tracing(true);
 	tracing::trace("event1",[](boost::any &){});
-	auto f2 = [](boost::any &x) -> void {
+	auto f2 = [](boost::any &x) {
 		if (x.empty()) {
 			x = 0;
 		} else {
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(tracing_trace_test)
 	tracing::trace("event2",f2);
 	tracing::trace(std::string("event2"),f2);
 	tracing::trace("event2",f2);
-	auto f3 = [](boost::any &x) -> void {
+	auto f3 = [](boost::any &x) {
 		if (x.empty()) {
 			x = 0;
 		} else {
@@ -60,10 +60,10 @@ BOOST_AUTO_TEST_CASE(tracing_trace_test)
 	tracing::trace("event3",f3);
 	BOOST_CHECK_THROW(tracing::trace("event3",f3),boost::bad_any_cast);
 	BOOST_CHECK_THROW(tracing::trace("event4",
-		[](boost::any &) -> void {throw std::runtime_error("");}),std::runtime_error);
+		[](boost::any &) {throw std::runtime_error("");}),std::runtime_error);
 	settings::set_tracing(false);
 	BOOST_CHECK_NO_THROW(tracing::trace("event4",
-		[](boost::any &) -> void {throw std::runtime_error("");}));
+		[](boost::any &) {throw std::runtime_error("");}));
 }
 
 BOOST_AUTO_TEST_CASE(tracing_dump_test)

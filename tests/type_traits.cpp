@@ -32,7 +32,6 @@
 #include <set>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 
 #include "../src/base_term.hpp"
@@ -136,27 +135,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy &>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_dtor *>::value,true);
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<nontrivial_copy *>::value,true);
-}
-
-namespace piranha
-{
-
-template <typename T>
-class has_degree<T,typename std::enable_if<std::is_same<trivial,T>::value>::type>
-{
-	public:
-		static const bool value = true;
-		int get(const T &, const std::set<std::string> & = std::set<std::string>{});
-		int lget(const T &, const std::set<std::string> & = std::set<std::string>{});
-};
-
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_has_degree_test)
-{
-	BOOST_CHECK(!has_degree<int>::value);
-	BOOST_CHECK(!has_degree<double>::value);
-	BOOST_CHECK(has_degree<trivial>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)

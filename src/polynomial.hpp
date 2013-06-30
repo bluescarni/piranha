@@ -22,8 +22,6 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
-#include <boost/algorithm/minmax_element.hpp>
-#include <boost/concept/assert.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
@@ -31,20 +29,16 @@
 #include <functional> // For std::bind.
 #include <initializer_list>
 #include <iterator>
-#include <list>
 #include <map>
 #include <mutex>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "cache_aligning_allocator.hpp"
-#include "concepts/series.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/poisson_series_fwd.hpp"
@@ -79,7 +73,7 @@ namespace piranha
  * the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
  * Laurent polynomials and Puiseux polynomials.
  * 
- * This class is a model of the piranha::concept::Series concept.
+ * This class satisfies the piranha::is_series type trait.
  * 
  * \section type_requirements Type requirements
  * 
@@ -100,8 +94,7 @@ namespace piranha
  */
 template <typename Cf, typename Expo = int>
 class polynomial:
-	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>>,
-	detail::polynomial_tag
+	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>>
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -475,7 +468,7 @@ namespace math
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -509,7 +502,7 @@ struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomi
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -544,7 +537,7 @@ struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::pol
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -571,8 +564,8 @@ namespace detail
 template <typename Series1, typename Series2>
 struct kronecker_enabler
 {
-	BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
-	BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+	PIRANHA_TT_CHECK(is_series,Series1);
+	PIRANHA_TT_CHECK(is_series,Series2);
 	template <typename Key1, typename Key2>
 	struct are_same_kronecker_monomial
 	{
@@ -585,8 +578,8 @@ struct kronecker_enabler
 	};
 	typedef typename Series1::term_type::key_type key_type1;
 	typedef typename Series2::term_type::key_type key_type2;
-	static const bool value = std::is_base_of<detail::polynomial_tag,Series1>::value &&
-		std::is_base_of<detail::polynomial_tag,Series2>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
+	static const bool value = is_instance_of<Series1,polynomial>::value &&
+		is_instance_of<Series2,polynomial>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
 };
 
 }
@@ -613,8 +606,8 @@ template <typename Series1, typename Series2>
 class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
 	public series_multiplier<Series1,Series2,int>
 {
-		BOOST_CONCEPT_ASSERT((concept::Series<Series1>));
-		BOOST_CONCEPT_ASSERT((concept::Series<Series2>));
+		PIRANHA_TT_CHECK(is_series,Series1);
+		PIRANHA_TT_CHECK(is_series,Series2);
 		typedef typename Series1::term_type::key_type::value_type value_type;
 		typedef kronecker_array<value_type> ka;
 	public:
@@ -1588,7 +1581,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						math::multiply_accumulate(it->m_cf,cf1,cf2);
 					} else {
 						// Cleanup function.
-						auto cleanup = [&it,&args,&container]() -> void {
+						auto cleanup = [&it,&args,&container]() {
 							if (unlikely(it->is_ignorable(args))) {
 								container.erase(it);
 							}

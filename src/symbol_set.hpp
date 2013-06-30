@@ -86,10 +86,8 @@ class symbol_set
 		 * @throws unspecified any exception thrown by memory allocation errors in \p std::vector.
 		 */
 		symbol_set(const symbol_set &) = default;
-		// NOTE: this can be defaulted in GCC 4.7 (?). GCC 4.6 apparently does
-		// not have noexcept in std::vector.
 		/// Defaulted move constructor.
-		symbol_set(symbol_set &&other) noexcept(true) : m_values(std::move(other.m_values)) {}
+		symbol_set(symbol_set &&) = default;
 		/// Constructor from initializer list of piranha::symbol.
 		/**
 		 * Each symbol in the list will be added via add() to the set.

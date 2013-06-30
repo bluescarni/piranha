@@ -102,7 +102,7 @@ class kronecker_array
 			std::mt19937 engine(static_cast<unsigned long>(m));
 			std::uniform_int_distribution<int> dist(-5,5);
 			// Perturb integer value: add random quantity and then take next prime.
-			auto perturb = [&engine,&dist] (integer &arg) -> void {
+			auto perturb = [&engine,&dist] (integer &arg) {
 				arg += (dist(engine) * (arg)) / 100;
 				arg = arg.nextprime();
 			};

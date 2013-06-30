@@ -200,6 +200,10 @@ struct multiply_accumulate_impl
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This call operator is enabled only if the arguments support binary multiplication
+	 * and in-place addition.
+	 *
 	 * The body of the operator is equivalent to:
 	 * @code
 	 * x += y * z;
@@ -831,6 +835,106 @@ inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::ini
 	return detail::is_canonical_impl(pv,qv,p_list,q_list);
 }
 
+/// Default functor for the implementation of piranha::math::degree().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ * 
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::degree() (the total degree), the other for the binary form of piranha::math::degree()
+ * (the partial degree).
+ */
+template <typename T, typename Enable = void>
+struct degree_impl
+{};
+
+/// Total degree.
+/**
+ * Return the total degree (as in polynomial degree).
+ * 
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
+ * 
+ * @param[in] x object whose degree will be computed.
+ * 
+ * @return total degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
+ */
+template <typename T>
+inline auto degree(const T &x) -> decltype(degree_impl<T>()(x))
+{
+	return degree_impl<T>()(x);
+}
+
+/// Partial degree.
+/**
+ * Return the partial degree (as in polynomial degree, but only a set of variables is considered in the computation).
+ * 
+ * The actual implementation of this function is in the piranha::math::degree_impl functor.
+ * 
+ * @param[in] x object whose partial degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation.
+ * 
+ * @return partial degree.
+ * 
+ * @throws unspecified any exception thrown by the call operator of piranha::math::degree_impl.
+ */
+template <typename T>
+inline auto degree(const T &x, const std::set<std::string> &names) -> decltype(degree_impl<T>()(x,names))
+{
+	return degree_impl<T>()(x,names);
+}
+
+/// Default functor for the implementation of piranha::math::ldegree().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ *
+ * Note that the implementation of this functor requires two overloaded call operators, one for the unary form
+ * of piranha::math::ldegree() (the total low degree), the other for the binary form of piranha::math::ldegree()
+ * (the partial low degree).
+ */
+template <typename T, typename Enable = void>
+struct ldegree_impl
+{};
+
+/// Total low degree.
+/**
+ * Return the total low degree (as in polynomial low degree).
+ *
+ * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
+ *
+ * @param[in] x object whose low degree will be computed.
+ *
+ * @return total low degree.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::ldegree_impl.
+ */
+template <typename T>
+inline auto ldegree(const T &x) -> decltype(ldegree_impl<T>()(x))
+{
+	return ldegree_impl<T>()(x);
+}
+
+/// Partial low degree.
+/**
+ * Return the partial low degree (as in polynomial low degree, but only a set of variables is considered in the computation).
+ *
+ * The actual implementation of this function is in the piranha::math::ldegree_impl functor.
+ *
+ * @param[in] x object whose partial low degree will be computed.
+ * @param[in] names names of the variables that will be considered in the computation.
+ *
+ * @return partial low degree.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::ldegree_impl.
+ */
+template <typename T>
+inline auto ldegree(const T &x, const std::set<std::string> &names) -> decltype(ldegree_impl<T>()(x,names))
+{
+	return ldegree_impl<T>()(x,names);
+}
+
 /// Default functor for the implementation of piranha::math::t_degree().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1255,6 +1359,54 @@ class is_exponentiable: detail::sfinae_types
 template <typename T, typename U>
 const bool is_exponentiable<T,U>::value;
 
+/// Type trait to detect if type has a degree property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::degree()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_degree: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(const U &u) -> decltype(math::degree(u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(const U &u) -> decltype(math::degree(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1(std::declval<T>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>())),yes>::value;
+};
+
+// Static init.
+template <typename T>
+const bool has_degree<T>::value;
+
+/// Type trait to detect if type has a low degree property.
+/**
+ * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::ldegree()
+ * (both in the unary and binary version of the function).
+ */
+template <typename T>
+class has_ldegree: detail::sfinae_types
+{
+		template <typename U>
+		static auto test1(const U &u) -> decltype(math::ldegree(u),void(),yes());
+		static no test1(...);
+		template <typename U>
+		static auto test2(const U &u) -> decltype(math::ldegree(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1(std::declval<T>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>())),yes>::value;
+};
+
+// Static init.
+template <typename T>
+const bool has_ldegree<T>::value;
+
 /// Type trait to detect if type has a trigonometric degree property.
 /**
  * The type trait will be true if instances of type \p T can be used as arguments of piranha::math::t_degree()
@@ -1358,8 +1510,6 @@ const bool has_t_lorder<T>::value;
  * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
  * 
  * \p Key must satisfy piranha::is_key.
- * 
- * \todo check docs once we implement piranha::has_degree.
  */
 template <typename Key>
 class key_has_degree: detail::sfinae_types
@@ -1666,6 +1816,91 @@ class has_multiply_accumulate: detail::sfinae_types
 // Static init.
 template <typename T, typename U, typename V>
 const bool has_multiply_accumulate<T,U,V>::value;
+
+/// Type trait to detect the availability of piranha::math::evaluate.
+/**
+ * This type trait will be \p true if piranha::math::evaluate can be called with arguments of type \p T and \p U,
+ * \p false otherwise.
+ */
+template <typename T, typename U>
+class is_evaluable: detail::sfinae_types
+{
+		template <typename T2, typename U2>
+		static auto test(const T2 &t, const std::unordered_map<std::string,U2> &dict) ->
+			decltype(math::evaluate(t,dict),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>(),
+			std::declval<std::unordered_map<std::string,U>>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool is_evaluable<T,U>::value;
+
+/// Type trait to detect evaluable keys.
+/**
+ * This type trait will be \p true if \p Key is a key type providing a const method <tt>evaluate()</tt> taking a const instance of
+ * <tt>std::unordered_map<piranha::symbol,T></tt> and a const instance of piranha::symbol_set as input, \p false otherwise.
+ * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ *
+ * The decay type of \p Key is considered in this type trait.
+ */
+template <typename Key, typename T>
+class key_is_evaluable: detail::sfinae_types
+{
+		typedef typename std::decay<Key>::type Keyd;
+		PIRANHA_TT_CHECK(is_key,Keyd);
+		template <typename Key1, typename T1>
+		static auto test(const Key1 &k, const std::unordered_map<symbol,T1> &dict) ->
+			decltype(k.evaluate(dict,std::declval<const symbol_set &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Keyd>(),
+			std::declval<std::unordered_map<symbol,T>>())),yes>::value;
+};
+
+template <typename Key, typename T>
+const bool key_is_evaluable<Key,T>::value;
+
+/// Type trait to detect piranha::math::sin().
+/**
+ * The type trait will be \p true if piranha::math::sin() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_sine: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::sin(x),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_sine<T>::value;
+
+/// Type trait to detect piranha::math::cos().
+/**
+ * The type trait will be \p true if piranha::math::cos() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_cosine: detail::sfinae_types
+{
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::cos(x),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_cosine<T>::value;
 
 }
 

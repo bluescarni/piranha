@@ -39,7 +39,6 @@ class g_term_type: public base_term<Cf,monomial<int>,g_term_type<Cf>>
 		g_term_type(g_term_type &&) = default;
 		g_term_type &operator=(const g_term_type &) = default;
 		g_term_type &operator=(g_term_type &&) = default;
-		// Needed to satisfy concept checking.
 		explicit g_term_type(const Cf &, const monomial<int> &) {}
 };
 

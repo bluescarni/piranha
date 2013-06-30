@@ -306,18 +306,16 @@ struct series_exposer
 	// Power series exposer.
 	template <typename T>
 	static void power_series_exposer(bp::class_<T> &series_class,
-		typename std::enable_if<is_power_series<T>::value>::type * = nullptr)
+		typename std::enable_if<has_degree<T>::value && has_ldegree<T>::value>::type * = nullptr)
 	{
 		series_class.def("degree",wrap_degree<T>);
 		series_class.def("degree",wrap_partial_degree_set<T>);
-		series_class.def("degree",wrap_partial_degree_string<T>);
 		series_class.def("ldegree",wrap_ldegree<T>);
 		series_class.def("ldegree",wrap_partial_ldegree_set<T>);
-		series_class.def("ldegree",wrap_partial_ldegree_string<T>);
 	}
 	template <typename T>
 	static void power_series_exposer(bp::class_<T> &,
-		typename std::enable_if<!is_power_series<T>::value>::type * = nullptr)
+		typename std::enable_if<!has_degree<T>::value || !has_ldegree<T>::value>::type * = nullptr)
 	{}
 	// Trigonometric wrappers.
 	template <typename S>
