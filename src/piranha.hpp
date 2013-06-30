@@ -97,8 +97,6 @@
  * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
  * \todo think about deuglifying enable_if by moving enabling conditions in template list with default value:
  * http://loungecpp.wikidot.com/tips-and-tricks:enable-if-for-c-11
- * \todo what about changing the toolbox classes not to be specialised, but simply enabling-if the appropriate methods
- * and then use the type traits? E.g., compare t_substitutable toolbox vs power/trig series.
  * \todo base_term_fwd must go -> maybe not really, just the tag... need fwd declaration of type trait.
  * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
@@ -106,7 +104,6 @@
  * \todo when migrating to boost multiprecision, start by checking and rooting out uses of integer in the core of the library -> maybe
  * start by introducing a new_integer class and use it in kronecker.
  * \todo clean up the int128 detection in the build system now that we require gcc 4.7.
- * \todo get rid of the detail::toolbox class, check that all type checks are explicit in toolbox classes.
  * \todo in series pow() implementation we should check if the coefficient supports pow(), and otherwise just disable it.
  */
 namespace piranha

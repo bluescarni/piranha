@@ -28,10 +28,11 @@
 #include <utility>
 
 #include "detail/degree_commons.hpp"
-#include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
+#include "series.hpp"
 #include "symbol_set.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -89,6 +90,10 @@ struct is_trigonometric_term
  * 
  * This class provides the same guarantee as \p Series.
  * 
+ * \section type_requirements Type requirements
+ *
+ * \p Series must be an instance of piranha::series.
+ * 
  * \section move_semantics Move semantics
  * 
  * Move semantics is equivalent to the move semantics of \p Series.
@@ -96,9 +101,10 @@ struct is_trigonometric_term
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Enable = void>
-class trigonometric_series: public Series,detail::trigonometric_series_tag,detail::toolbox<Series,trigonometric_series<Series,Enable>>
+class trigonometric_series: public Series,detail::trigonometric_series_tag
 {
 		typedef Series base;
+		PIRANHA_TT_CHECK(is_instance_of,base,series);
 		template <typename Term, typename = void>
 		struct t_get
 		{
@@ -192,6 +198,11 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,detai
 		trigonometric_series &operator=(const trigonometric_series &) = default;
 		/// Defaulted move assignment operator.
 		trigonometric_series &operator=(trigonometric_series &&) = default;
+		/// Trivial destructor.
+		~trigonometric_series() noexcept(true)
+		{
+			PIRANHA_TT_CHECK(is_series,trigonometric_series);
+		}
 		PIRANHA_FORWARDING_ASSIGNMENT(trigonometric_series,base)
 		// NOTE: this could be implemented generically with variadic template capture in the lambda, in order to avoid the partial overloads. Not implemented
 		// yet in GCC though:
@@ -356,7 +367,7 @@ class trigonometric_series: public Series,detail::trigonometric_series_tag,detai
 
 template <typename Series>
 class trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>
-	: public Series,detail::toolbox<Series,trigonometric_series<Series,typename std::enable_if<!detail::is_trigonometric_term<typename Series::term_type>::value>::type>>
+	: public Series
 {
 		typedef Series base;
 	public:

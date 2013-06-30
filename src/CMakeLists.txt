@@ -57,7 +57,6 @@ SET(HEADERS_LIST
 	detail/poisson_series_fwd.hpp
 	detail/series_fwd.hpp
 	detail/rational_fwd.hpp
-	detail/toolbox.hpp
 	detail/polynomial_fwd.hpp
 	detail/config_gcc.hpp
 	detail/symbol_set_fwd.hpp

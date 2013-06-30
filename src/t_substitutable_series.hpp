@@ -25,9 +25,9 @@
 #include <type_traits>
 #include <utility>
 
-#include "detail/toolbox.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
+#include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -55,6 +55,10 @@ struct t_subs_term_score
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
+ * \section type_requirements Type requirements
+ *
+ * \p Series must be an instance of piranha::series, and \p Derived must satisfy the piranha::is_series type trait.
+ * 
  * \section exception_safety Exception safety guarantee
  * 
  * This class provides the same guarantee as \p Series.
@@ -66,9 +70,10 @@ struct t_subs_term_score
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename Series, typename Derived>
-class t_substitutable_series: public Series,detail::toolbox<Series,t_substitutable_series<Series,Derived>>
+class t_substitutable_series: public Series
 {
 		typedef Series base;
+		PIRANHA_TT_CHECK(is_instance_of,base,series);
 		template <typename T, typename U, typename Term = typename Series::term_type, typename = void>
 		struct t_subs_utils
 		{
@@ -135,6 +140,12 @@ class t_substitutable_series: public Series,detail::toolbox<Series,t_substitutab
 		t_substitutable_series &operator=(const t_substitutable_series &) = default;
 		/// Defaulted move assignment operator.
 		t_substitutable_series &operator=(t_substitutable_series &&) = default;
+		/// Trivial destructor.
+		~t_substitutable_series() noexcept(true)
+		{
+			PIRANHA_TT_CHECK(is_series,t_substitutable_series);
+			PIRANHA_TT_CHECK(is_series,Derived);
+		}
 		PIRANHA_FORWARDING_ASSIGNMENT(t_substitutable_series,base)
 		/// Trigonometric substitution.
 		/**
