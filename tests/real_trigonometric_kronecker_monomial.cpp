@@ -1360,3 +1360,27 @@ BOOST_AUTO_TEST_CASE(rtkm_t_subs_test)
 {
 	boost::mpl::for_each<int_types>(t_subs_tester());
 }
+
+struct is_evaluable_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		BOOST_CHECK((key_is_evaluable<k_type,float>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,double>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,real>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,integer>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,rational>::value));
+		BOOST_CHECK((!key_is_evaluable<k_type,int>::value));
+		BOOST_CHECK((!key_is_evaluable<k_type,long>::value));
+		BOOST_CHECK((!key_is_evaluable<k_type,long long>::value));
+		BOOST_CHECK((!key_is_evaluable<k_type,std::string>::value));
+		BOOST_CHECK((!key_is_evaluable<k_type,void *>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(rtkm_key_is_evaluable_test)
+{
+	boost::mpl::for_each<int_types>(is_evaluable_tester());
+}
