@@ -80,6 +80,27 @@ class polynomial_alt:
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial_alt,base)
 };
 
+// Mock coefficient.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 struct constructor_tester
 {
 	template <typename Cf>
@@ -143,6 +164,38 @@ BOOST_AUTO_TEST_CASE(polynomial_constructors_test)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
+}
+
+struct is_evaluable_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		// NOTE: this is temporary, the enable_if has to be removed once we implement evaluation for the univariate monomial.
+		template <typename Expo>
+		void operator()(const Expo &, typename std::enable_if<!is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
+		{
+			typedef polynomial<Cf,Expo> p_type;
+			BOOST_CHECK((is_evaluable<p_type,double>::value));
+			BOOST_CHECK((is_evaluable<p_type,float>::value));
+			BOOST_CHECK((is_evaluable<p_type,integer>::value));
+			BOOST_CHECK((!is_evaluable<p_type,int>::value));
+		}
+		template <typename Expo>
+		void operator()(const Expo &, typename std::enable_if<is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
+		{}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<expo_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_is_evaluable_test)
+{
+	boost::mpl::for_each<cf_types>(is_evaluable_tester());
+	BOOST_CHECK((!is_evaluable<polynomial<mock_cf,int>,double>::value));
 }
 
 struct assignment_tester
@@ -470,27 +523,6 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	BOOST_CHECK((is_exponentiable<p_type2,real>::value));
 	BOOST_CHECK((!is_exponentiable<p_type2,std::string>::value));
 }
-
-// Mock coefficient.
-struct mock_cf
-{
-	mock_cf();
-	mock_cf(const int &);
-	mock_cf(const mock_cf &);
-	mock_cf(mock_cf &&) noexcept(true);
-	mock_cf &operator=(const mock_cf &);
-	mock_cf &operator=(mock_cf &&) noexcept(true);
-	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
-	mock_cf operator-() const;
-	bool operator==(const mock_cf &) const;
-	bool operator!=(const mock_cf &) const;
-	mock_cf &operator+=(const mock_cf &);
-	mock_cf &operator-=(const mock_cf &);
-	mock_cf operator+(const mock_cf &) const;
-	mock_cf operator-(const mock_cf &) const;
-	mock_cf &operator*=(const mock_cf &);
-	mock_cf operator*(const mock_cf &) const;
-};
 
 BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {

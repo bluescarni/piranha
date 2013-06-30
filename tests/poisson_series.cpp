@@ -519,3 +519,19 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(-4),z),(z * x.pow(-3)) * math::cos(x) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(4),z),x.pow(-7) * math::cos(x) + y + z);
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
+{
+	typedef poisson_series<polynomial<rational>> p_type1;
+	BOOST_CHECK((is_evaluable<p_type1,double>::value));
+	BOOST_CHECK((is_evaluable<p_type1,float>::value));
+	BOOST_CHECK((is_evaluable<p_type1,real>::value));
+	BOOST_CHECK((is_evaluable<p_type1,rational>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,std::string>::value));
+	BOOST_CHECK((is_evaluable<p_type1,integer>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,int>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,long>::value));
+	BOOST_CHECK((!is_evaluable<p_type1,long long>::value));
+	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf>>,double>::value));
+	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
+}

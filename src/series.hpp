@@ -682,12 +682,22 @@ class series: series_binary_operators, detail::series_tag
 		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
 			typename container_type::const_iterator> const_iterator_impl;
 		// Evaluation utilities.
-		template <typename T>
-		struct eval_type
+		// NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the decltype
+		// will fail as series is not a template parameter.
+		template <typename Series, typename U, typename = void>
+		struct eval_type {};
+		template <typename Series, typename U>
+		using e_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>()) *
+			std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),
+			std::declval<const symbol_set &>()));
+		template <typename Series, typename U>
+		struct eval_type<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
+			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>())),
+			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),std::declval<const symbol_set &>()))>::value &&
+			std::is_constructible<e_type<Series,U>,int>::value
+			>::type>
 		{
-			typedef decltype(math::evaluate(std::declval<typename term_type::cf_type>(),std::declval<std::unordered_map<std::string,T>>()) *
-				std::declval<const typename term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,T> &>(),
-				std::declval<const symbol_set &>())) type;
+			using type = e_type<Series,U>;
 		};
 		// Print utilities.
 		template <bool TexMode, typename Iterator>
@@ -1497,7 +1507,13 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Evaluation.
 		/**
-		 * Series evaluation starts with a default-constructed instance of the return type, which is determined
+		 * \note
+		 * This method is enabled only if:
+		 * - both the coefficient and the key types are evaluable,
+		 * - the evaluated types are suitable for use in piranha::math::multiply_accumulate(),
+		 * - the return type is constructible from \p int.
+		 *
+		 * Series evaluation starts with a zero-initialised instance of the return type, which is determined
 		 * according to the evaluation types of coefficient and key. The return value accumulates the evaluation
 		 * of all terms in the series via the product of the evaluations of the coefficient-key pairs in each term.
 		 * The input dictionary \p dict specifies with which value each symbolic quantity will be evaluated.
@@ -1510,22 +1526,20 @@ class series: series_binary_operators, detail::series_tag
 		 * - coefficient and key evaluation,
 		 * - insertion operations on \p std::unordered_map,
 		 * - piranha::math::multiply_accumulate().
-		 * 
-		 * \todo require support for multiply_accumulate and evaluable coefficient and key.
 		 */
-		template <typename T>
-		typename eval_type<T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
+		template <typename T, typename Series = series>
+		typename eval_type<Series,T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
 		{
 			// NOTE: possible improvement: if the evaluation type is less-than comparable,
 			// build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
 			// with fp types and maybe improve performance - e.g., for integers).
-			typedef typename eval_type<T>::type return_type;
+			typedef typename eval_type<Series,T>::type return_type;
 			// Transform the string dict into symbol dict for use in keys.
 			std::unordered_map<symbol,T> s_dict;
 			for (auto it = dict.begin(); it != dict.end(); ++it) {
 				s_dict[symbol(it->first)] = it->second;
 			}
-			return_type retval = return_type();
+			return_type retval = return_type(0);
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(s_dict,m_symbol_set));
@@ -1811,8 +1825,8 @@ inline T series_sin_call_impl(const T &s, typename std::enable_if<series_has_sin
 }
 
 // This is another strange thing: if we use directly decltype() instead of this alias in the enabler
-// below, GCC (both 4.7 and 4.8) gets confused. clang seems to handle this correctly. Need to check
-// and file a report if this is a real bug.
+// below, GCC (both 4.7 and 4.8) gets confused. clang seems to handle this correctly. GCC 4.9 GIT
+// too.
 template <typename T>
 using sin_cf_ret_type = decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()));
 
@@ -1990,29 +2004,22 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
 template <typename Series>
 struct evaluate_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
 {
-	private:
-		template <typename T>
-		struct eval_type
-		{
-			typedef decltype(std::declval<Series>().evaluate(std::declval<std::unordered_map<std::string,T>>())) type;
-		};
-	public:
-		/// Call operator.
-		/**
-		 * The implementation will use piranha::series::evaluate().
-		 * 
-		 * @param[in] s evaluation argument.
-		 * @param[in] dict evaluation dictionary.
-		 * 
-		 * @return output of piranha::series::evaluate().
-		 * 
-		 * @throws unspecified any exception thrown by piranha::series::evaluate().
-		 */
-		template <typename T>
-		typename eval_type<T>::type operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const
-		{
-			return s.evaluate(dict);
-		}
+	/// Call operator.
+	/**
+	 * The implementation will use piranha::series::evaluate().
+	 *
+	 * @param[in] s evaluation argument.
+	 * @param[in] dict evaluation dictionary.
+	 *
+	 * @return output of piranha::series::evaluate().
+	 *
+	 * @throws unspecified any exception thrown by piranha::series::evaluate().
+	 */
+	template <typename T>
+	auto operator()(const Series &s, const std::unordered_map<std::string,T> &dict) const -> decltype(s.evaluate(dict))
+	{
+		return s.evaluate(dict);
+	}
 };
 
 }
