@@ -1474,6 +1474,11 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK(has_cosine<p_type2>::value);
 	BOOST_CHECK_EQUAL(math::sin(p_type2{.5}),double(42));
 	BOOST_CHECK_EQUAL(math::cos(p_type2{.5}),double(-42));
+	typedef g_series_type2<p_type2,int> p_type3;
+	BOOST_CHECK(has_sine<p_type3>::value);
+	BOOST_CHECK(has_cosine<p_type3>::value);
+	BOOST_CHECK_EQUAL(math::sin(p_type3{.5}),double(42));
+	BOOST_CHECK_EQUAL(math::cos(p_type3{.5}),double(-42));
 }
 
 BOOST_AUTO_TEST_CASE(series_partial_test)
