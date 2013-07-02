@@ -101,23 +101,23 @@ class power_series: public Series
 		{
 			// NOTE: this one is just a hack to work around what seems an issue in GCC 4.7 (4.8 and clang compile it just fine).
 			// Remove it in next versions.
-			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,std::forward<Args>(args)...)
-			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args>()...)
+			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,args...)
+			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
 			template <typename Term, typename ... Args>
 			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
 			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &, Args && ... args) -> degree_return_type<Term,Args...>
+			static auto get(const Term &t, const symbol_set &, const Args & ... args) -> degree_return_type<Term,Args...>
 			{
 				return PIRANHA_TMP_RETURN;
 			}
 			#undef PIRANHA_TMP_RETURN
 			#undef PIRANHA_TMP_RETURN2
-			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,std::forward<Args>(args)...)
-			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args>()...)
+			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,args...)
+			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
 			template <typename Term, typename ... Args>
 			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
 			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &, Args && ... args) -> ldegree_return_type<Term,Args...>
+			static auto lget(const Term &t, const symbol_set &, const Args & ... args) -> ldegree_return_type<Term,Args...>
 			{
 				return PIRANHA_TMP_RETURN;
 			}
@@ -128,17 +128,17 @@ class power_series: public Series
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 2u>::type>
 		{
-			#define PIRANHA_TMP_RETURN t.m_key.degree(std::forward<Args>(args)...,s)
+			#define PIRANHA_TMP_RETURN t.m_key.degree(args...,s)
 			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &s, Args && ... args) ->
+			static auto get(const Term &t, const symbol_set &s, const Args & ... args) ->
 				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
 			{
 				return PIRANHA_TMP_RETURN;
 			}
 			#undef PIRANHA_TMP_RETURN
-			#define PIRANHA_TMP_RETURN t.m_key.ldegree(std::forward<Args>(args)...,s)
+			#define PIRANHA_TMP_RETURN t.m_key.ldegree(args...,s)
 			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &s, Args && ... args) ->
+			static auto lget(const Term &t, const symbol_set &s, const Args & ... args) ->
 				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
 			{
 				return PIRANHA_TMP_RETURN;
@@ -149,23 +149,25 @@ class power_series: public Series
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 3u>::type>
 		{
-			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,std::forward<Args>(args)...) + t.m_key.degree(std::forward<Args>(args)...,s)
-			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args>()...) + std::declval<const Term &>().m_key.degree(std::declval<Args>()...,std::declval<const symbol_set &>())
+			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,args...) + t.m_key.degree(args...,s)
+			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
+				std::declval<const Term &>().m_key.degree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
 			template <typename Term, typename ... Args>
 			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
 			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &s, Args && ... args) -> degree_return_type<Term,Args...>
+			static auto get(const Term &t, const symbol_set &s, const Args & ... args) -> degree_return_type<Term,Args...>
 			{
 				return PIRANHA_TMP_RETURN;
 			}
 			#undef PIRANHA_TMP_RETURN
 			#undef PIRANHA_TMP_RETURN2
-			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,std::forward<Args>(args)...) + t.m_key.ldegree(std::forward<Args>(args)...,s)
-			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args>()...) + std::declval<const Term &>().m_key.ldegree(std::declval<Args>()...,std::declval<const symbol_set &>())
+			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,args...) + t.m_key.ldegree(args...,s)
+			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
+				std::declval<const Term &>().m_key.ldegree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
 			template <typename Term, typename ... Args>
 			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
 			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &s, Args && ... args) -> ldegree_return_type<Term,Args...>
+			static auto lget(const Term &t, const symbol_set &s, const Args & ... args) -> ldegree_return_type<Term,Args...>
 			{
 				return PIRANHA_TMP_RETURN;
 			}
@@ -210,23 +212,23 @@ class power_series: public Series
 		 * - the assignment and less-than operators for the return type.
 		 */
 		template <typename ... Args, typename T = power_series>
-		auto degree(Args && ... args) const ->
-			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
+		auto degree(const Args & ... args) const ->
+			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
 		{
 			// NOTE: here (and ldegree() as well) this could be implemented with std::max_element, but for this to work we need
 			// a lambda that can capture the variadic arguments. Check back with more recent versions of GCC.
 			typedef decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),
-				std::declval<symbol_set>(),std::forward<Args>(args)...)) return_type;
+				std::declval<symbol_set>(),args...)) return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<T>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
+			return_type retval = degree_utils<T>::get(*it,this->m_symbol_set,args...);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<T>::get(*it,this->m_symbol_set,std::forward<Args>(args)...);
+				tmp = degree_utils<T>::get(*it,this->m_symbol_set,args...);
 				if (retval < tmp) {
 					retval = std::move(tmp);
 				}
@@ -253,21 +255,21 @@ class power_series: public Series
 		 * - the assignment and less-than operators for the return type.
 		 */
 		template <typename ... Args, typename T = power_series>
-		auto ldegree(Args && ... args) const ->
-			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::declval<symbol_set>(),std::forward<Args>(args)...))
+		auto ldegree(const Args & ... args) const ->
+			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
 		{
 			typedef decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),
-				std::declval<symbol_set>(),std::forward<Args>(args)...)) return_type;
+				std::declval<symbol_set>(),args...)) return_type;
 			if (this->empty()) {
 				return return_type(0);
 			}
 			auto it = this->m_container.begin();
 			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<T>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
+			return_type retval = degree_utils<T>::lget(*it,this->m_symbol_set,args...);
 			++it;
 			return_type tmp;
 			for (; it != it_f; ++it) {
-				tmp = degree_utils<T>::lget(*it,this->m_symbol_set,std::forward<Args>(args)...);
+				tmp = degree_utils<T>::lget(*it,this->m_symbol_set,args...);
 				if (tmp < retval) {
 					retval = std::move(tmp);
 				}
@@ -299,9 +301,9 @@ struct degree_impl<Series,typename std::enable_if<is_instance_of<Series,power_se
 	 * @throws unspecified any exception thrown by the invoked method of the series.
 	 */
 	template <typename ... Args>
-	auto operator()(const Series &s, Args && ... args) const -> decltype(s.degree(std::forward<Args>(args)...))
+	auto operator()(const Series &s, const Args & ... args) const -> decltype(s.degree(args...))
 	{
-		return s.degree(std::forward<Args>(args)...);
+		return s.degree(args...);
 	}
 };
 
@@ -325,9 +327,9 @@ struct ldegree_impl<Series,typename std::enable_if<is_instance_of<Series,power_s
 	 * @throws unspecified any exception thrown by the invoked method of the series.
 	 */
 	template <typename ... Args>
-	auto operator()(const Series &s, Args && ... args) const -> decltype(s.ldegree(std::forward<Args>(args)...))
+	auto operator()(const Series &s, const Args & ... args) const -> decltype(s.ldegree(args...))
 	{
-		return s.ldegree(std::forward<Args>(args)...);
+		return s.ldegree(args...);
 	}
 };
 
