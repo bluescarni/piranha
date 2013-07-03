@@ -45,9 +45,9 @@ namespace piranha
  * for the key type.
  * 
  * Note that in order for the trigonometric methods to be enabled, coefficient and key type cannot satisfy these type traits at the same time,
- * and all degree/order type traits need to be satisfied for the coefficient/key type. Note also that the types representing the degree/order
- * must be constructible from the integral constant zero and less-than and greater-than comparable.
- * 
+ * and all degree/order type traits need to be satisfied for the coefficient/key type. As an additional requirement, the types returned when
+ * querying the degree and order must be constructible from \p int, copy or move constructible, and less-than comparable.
+ *
  * If the above requirements are not satisfied, this class will not add any new functionality to the \p Series class and
  * will just provide generic constructors and assignment operators that will forward their arguments to \p Series.
  * 
@@ -89,7 +89,9 @@ class trigonometric_series: public Series
 		template <typename T>
 		struct common_type_checks
 		{
-			static const bool value = is_less_than_comparable<T>::value && std::is_constructible<T,int>::value;
+			static const bool value = is_less_than_comparable<T>::value &&
+						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
+						  std::is_constructible<T,int>::value;
 		};
 		template <typename Term, typename = void>
 		struct t_get {};

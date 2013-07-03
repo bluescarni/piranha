@@ -21,11 +21,13 @@
 #ifndef PIRANHA_POWER_SERIES_HPP
 #define PIRANHA_POWER_SERIES_HPP
 
+#include <functional>
 #include <set>
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include "detail/degree_commons.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "series.hpp"
@@ -43,8 +45,8 @@ namespace piranha
  * of a \p Series object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query
  * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits).
  *
- * As an additional requirement, the types returned when querying the degree must be default-constructible, constructible from \p int,
- * copy-constructible, assignable, move-assignable, and less-than comparable. If these additional requirements are not satisfied,
+ * As an additional requirement, the types returned when querying the degree must be constructible from \p int,
+ * copy or move constructible, and less-than comparable. If these additional requirements are not satisfied,
  * the degree-querying methods will be disabled.
  *
  * This class satisfies the piranha::is_series type trait.
@@ -81,11 +83,8 @@ class power_series: public Series
 		template <typename T>
 		struct common_type_checks
 		{
-			static const bool value = std::is_default_constructible<T>::value &&
-						  std::is_constructible<T,int>::value &&
-						  std::is_copy_constructible<T>::value &&
-						  std::is_assignable<T &,T>::value &&
-						  std::is_move_assignable<T>::value &&
+			static const bool value = std::is_constructible<T,int>::value &&
+						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
 						  is_less_than_comparable<T>::value;
 		};
 		// Utilities to compute the degree.
@@ -215,25 +214,9 @@ class power_series: public Series
 		auto degree(const Args & ... args) const ->
 			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
 		{
-			// NOTE: here (and ldegree() as well) this could be implemented with std::max_element, but for this to work we need
-			// a lambda that can capture the variadic arguments. Check back with more recent versions of GCC.
-			typedef decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),
-				std::declval<symbol_set>(),args...)) return_type;
-			if (this->empty()) {
-				return return_type(0);
-			}
-			auto it = this->m_container.begin();
-			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<T>::get(*it,this->m_symbol_set,args...);
-			++it;
-			return_type tmp;
-			for (; it != it_f; ++it) {
-				tmp = degree_utils<T>::get(*it,this->m_symbol_set,args...);
-				if (retval < tmp) {
-					retval = std::move(tmp);
-				}
-			}
-			return retval;
+			auto g = std::bind(degree_utils<T>::template get<typename T::term_type,Args...>,std::placeholders::_1,
+				std::cref(this->m_symbol_set),std::cref(args)...);
+			return detail::generic_series_degree<0>(this->m_container,g);
 		}
 		/// Total and partial low degree.
 		/**
@@ -258,23 +241,9 @@ class power_series: public Series
 		auto ldegree(const Args & ... args) const ->
 			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
 		{
-			typedef decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),
-				std::declval<symbol_set>(),args...)) return_type;
-			if (this->empty()) {
-				return return_type(0);
-			}
-			auto it = this->m_container.begin();
-			const auto it_f = this->m_container.end();
-			return_type retval = degree_utils<T>::lget(*it,this->m_symbol_set,args...);
-			++it;
-			return_type tmp;
-			for (; it != it_f; ++it) {
-				tmp = degree_utils<T>::lget(*it,this->m_symbol_set,args...);
-				if (tmp < retval) {
-					retval = std::move(tmp);
-				}
-			}
-			return retval;
+			auto g = std::bind(degree_utils<T>::template lget<typename T::term_type,Args...>,std::placeholders::_1,
+				std::cref(this->m_symbol_set),std::cref(args)...);
+			return detail::generic_series_degree<1>(this->m_container,g);
 		}
 };
 
