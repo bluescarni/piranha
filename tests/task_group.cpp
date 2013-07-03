@@ -98,13 +98,20 @@ BOOST_AUTO_TEST_CASE(task_group_run_test_05)
 
 BOOST_AUTO_TEST_CASE(task_group_run_test_06)
 {
-	task_group tg;
+	task_group tg1;
 	std::forward_list<int> values;
 	for (auto i = 0u; i < 1000u; ++i) {
 		values.push_front(0);
 		int *ptr = &values.front();
-		tg.add_task([ptr](){*ptr += 1;});
+		tg1.add_task([ptr](){*ptr += 1;});
 	}
-	tg.wait_all();
+	task_group tg2;
+	for (auto i = 0u; i < 1000u; ++i) {
+		values.push_front(0);
+		int *ptr = &values.front();
+		tg2.add_task([ptr](){*ptr += 1;});
+	}
+	tg1.wait_all();
+	tg2.wait_all();
 	BOOST_CHECK((std::all_of(values.begin(),values.end(),[](unsigned n){return n == 1u;})));
 }
