@@ -365,7 +365,8 @@ struct series_exposer
 	// Trigonometric exposer.
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &series_class,
-		typename std::enable_if<std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = nullptr)
+		// NOTE: here the enabler should contain the other traits as well.
+		typename std::enable_if<has_t_degree<T>::value>::type * = nullptr)
 	{
 		series_class.def("t_degree",wrap_t_degree<T>);
 		series_class.def("t_degree",wrap_partial_t_degree<T>);
@@ -378,7 +379,7 @@ struct series_exposer
 	}
 	template <typename T>
 	static void trigonometric_series_exposer(bp::class_<T> &,
-		typename std::enable_if<!std::is_base_of<detail::trigonometric_series_tag,T>::value>::type * = nullptr)
+		typename std::enable_if<!has_t_degree<T>::value>::type * = nullptr)
 	{}
 	// t_subs exposer.
 	template <typename S, typename T>
@@ -489,7 +490,9 @@ struct series_exposer
 		interop_exposer(series_class,m_interop_types);
 		// Partial derivative.
 		bp::def("_partial",partial_wrapper<series_type>);
-		series_class.def("partial",&series_type::partial);
+		// template <typename T = term_type, typename = typename std::enable_if<term_is_differentiable<T>::value>::type>
+		// Derived partial(const std::string &name) const
+		series_class.def("partial",&series_type::template partial<typename series_type::term_type,void>);
 		series_class.def("register_custom_derivative",register_custom_derivative<series_type>).staticmethod("register_custom_derivative");
 		series_class.def("unregister_custom_derivative",
 			series_type::unregister_custom_derivative).staticmethod("unregister_custom_derivative");

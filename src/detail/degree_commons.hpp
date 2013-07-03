@@ -80,15 +80,35 @@ inline Retval monomial_partial_degree(const Container &c, const Op &op, const st
 	return retval;
 }
 
+// Less-than comparator (we do not use std::less because that can be specialised, and here
+// we want to force the use of the builtin operator in conjunction with the is_less_than_comparable
+// type trait).
+struct less_than_comparator
+{
+	template <typename T>
+	bool operator()(const T &a, const T &b) const
+	{
+		return a < b;
+	}
+};
+
 // Generic functor to calculate degree-like properties in series.
-template <typename Container, typename Getter, typename Cmp>
-inline auto generic_series_degree(const Container &c, Getter &&g, Cmp &&cmp) -> decltype(g(std::declval<typename Container::key_type>()))
+template <int N, typename Container, typename Getter>
+inline auto generic_series_degree(const Container &c, Getter &g) -> decltype(g(std::declval<typename Container::key_type>()))
 {
 	typedef typename Container::key_type term_type;
 	typedef decltype(g(std::declval<term_type>())) return_type;
-	const auto it = std::max_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
-		return cmp(g(t1),g(t2));
+	less_than_comparator cmp;
+	decltype(c.begin()) it;
+	if (N == 0) {
+		it = std::max_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
+			return cmp(g(t1),g(t2));
 		});
+	} else {
+		it = std::min_element(c.begin(),c.end(),[&g,&cmp](const term_type &t1, const term_type &t2) {
+			return cmp(g(t1),g(t2));
+		});
+	}
 	return (it == c.end()) ? return_type(0) : g(*it);
 }
 
