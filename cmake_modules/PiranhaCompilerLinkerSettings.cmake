@@ -37,22 +37,13 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	ENDIF(GNUCXX_VISIBILITY_INLINES_HIDDEN AND GNUCXX_VISIBILITY_HIDDEN AND NOT MINGW)
 	# Add to the base flags extra warnings.
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic-errors -Wdisabled-optimization")
-	# Try to see if we have the 128-bit integer type available. Can be either
-	# __int128_t or __int128 (in later versions).
-	CHECK_TYPE_SIZE("__int128_t" PIRANHA_GCC___INT128_T)
-	IF(PIRANHA_GCC___INT128_T)
-		SET(PIRANHA_HAVE_GCC_INT128 "#define PIRANHA_GCC_INT128_T __int128_t")
-		SET(PIRANHA_HAVE_GCC_UINT128 "#define PIRANHA_GCC_UINT128_T __uint128_t")
-	ELSE(PIRANHA_GCC___INT128_T)
-		CHECK_TYPE_SIZE("__int128" PIRANHA_GCC___INT128)
-		IF(PIRANHA_GCC___INT128)
-			SET(PIRANHA_HAVE_GCC_INT128 "#define PIRANHA_GCC_INT128_T __int128")
-			SET(PIRANHA_HAVE_GCC_UINT128 "#define PIRANHA_GCC_UINT128_T unsigned __int128")
-		ENDIF(PIRANHA_GCC___INT128)
-	ENDIF(PIRANHA_GCC___INT128_T)
-	IF(PIRANHA_HAVE_GCC_INT128)
-		MESSAGE(STATUS "GCC 128-bit integer type detected.")
-	ENDIF(PIRANHA_HAVE_GCC_INT128)
+	# Try to see if we have the 128-bit integer type available.
+	CHECK_TYPE_SIZE("__int128" PIRANHA_GCC___INT128)
+	IF(PIRANHA_GCC___INT128)
+                MESSAGE(STATUS "GCC 128-bit integer type detected.")
+		SET(PIRANHA_HAVE_GCC_INT128 "#define PIRANHA_GCC_INT128_T __int128")
+		SET(PIRANHA_HAVE_GCC_UINT128 "#define PIRANHA_GCC_UINT128_T unsigned __int128")
+	ENDIF()
 	# Enable libstdc++ pedantic debug mode in debug builds.
 	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
 	# flag enabled in order to be reliable (and this is not the case usually):
