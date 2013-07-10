@@ -37,8 +37,9 @@ namespace piranha
 /// Toolbox for series that support trigonometric substitution.
 /**
  * This toolbox extends a series class with methods to perform trigonometric substitution (i.e., substitution of cosine
- * and sine of a symbolic variable). These methods are enabled only if either the coefficient or the key support trigonometric
- * substitution, as established by the piranha::has_t_subs and piranha::key_has_t_subs type traits.
+ * and sine of a symbolic variable). These methods are enabled only if either the coefficient or the key supports trigonometric
+ * substitution, as established by the piranha::has_t_subs and piranha::key_has_t_subs type traits, and if
+ * the types involved in the computation of the substitution are constructible from \p int and support basic arithmetics.
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
@@ -152,11 +153,9 @@ class t_substitutable_series: public Series
 		/// Trigonometric substitution.
 		/**
 		 * \note
-		 * This method is available only if the series' coefficient and key types support trigonometric substitution.
+		 * This method is available only if the requirements outlined in piranha::t_substitutable_series are satisfied.
 		 * 
-		 * Trigonometric substitution is the substitution of the cosine and sine of \p name for \p c and \p s. This method requires
-		 * the deduced return type (and any intermediary type involved in the computation) to be constructible from \p int,
-		 * and to support basic arithmetics.
+		 * Trigonometric substitution is the substitution of the cosine and sine of \p name for \p c and \p s.
 		 * 
 		 * @param[in] name name of the symbol that will be subject to substitution.
 		 * @param[in] c cosine of \p name.
@@ -191,14 +190,16 @@ namespace math
 
 /// Specialisation of the piranha::math::t_subs() functor for instances of piranha::t_substitutable_series.
 /**
- * This specialisation is activated if \p Series derives from piranha::t_substitutable_series. The call operator
- * is available only if \p Series satisfies the requirements explained in piranha::t_substitutable_series.
+ * This specialisation is activated if \p Series is an instance of piranha::t_substitutable_series.
  */
 template <typename Series>
 struct t_subs_impl<Series,typename std::enable_if<is_instance_of<Series,t_substitutable_series>::value>::type>
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This call operator is available only if \p Series satisfies the requirements outlined in piranha::t_substitutable_series.
+	 *
 	 * Will use piranha::t_substitutable_series::t_subs().
 	 * 
 	 * @param[in] series argument for the substitution.

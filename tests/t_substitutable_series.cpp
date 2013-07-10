@@ -23,18 +23,87 @@
 #define BOOST_TEST_MODULE t_substitutable_series_test
 #include <boost/test/unit_test.hpp>
 
+#include <cstddef>
+#include <iostream>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
+#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
+#include "../src/forwarding.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
+
+// NOTE: when series mutliplication SFINAEs out, change the signature of t_subs in key02 to be the correct one
+// and check that has_t_subs fails for the series type because g_series is not multipliable by std::string any more.
+
+struct key02
+{
+	key02() = default;
+	key02(const key02 &) = default;
+	key02(key02 &&) noexcept(true);
+	key02 &operator=(const key02 &) = default;
+	key02 &operator=(key02 &&) noexcept(true);
+	key02(const symbol_set &);
+	bool operator==(const key02 &) const;
+	bool operator!=(const key02 &) const;
+	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept(true);
+	key02 merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+	template <typename T, typename U>
+	std::vector<std::pair<std::string,int>> t_subs(const std::string &, const T &, const U &, const symbol_set &) const;
+};
+
+namespace std
+{
+
+template <>
+struct hash<key02>
+{
+	std::size_t operator()(const key02 &) const noexcept(true);
+};
+
+}
+
+template <typename Cf, typename Key>
+class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
+{
+		typedef base_term<Cf,Key,g_term_type> base;
+	public:
+		g_term_type() = default;
+		g_term_type(const g_term_type &) = default;
+		g_term_type(g_term_type &&) = default;
+		g_term_type &operator=(const g_term_type &) = default;
+		g_term_type &operator=(g_term_type &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_term_type,base)
+};
+
+template <typename Cf, typename Key>
+class g_series_type: public t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>>
+{
+	public:
+		typedef t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>> base;
+		g_series_type() = default;
+		g_series_type(const g_series_type &) = default;
+		g_series_type(g_series_type &&) = default;
+		g_series_type &operator=(const g_series_type &) = default;
+		g_series_type &operator=(g_series_type &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
+};
 
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
@@ -124,4 +193,6 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK((has_t_subs<p_type2,double>::value));
 	BOOST_CHECK((has_t_subs<p_type2,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type2,double,int>::value));
+	BOOST_CHECK((!key_has_t_subs<key02,int,int>::value));
+	BOOST_CHECK((!has_t_subs<g_series_type<double,key02>,double,double>::value));
 }
