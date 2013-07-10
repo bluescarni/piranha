@@ -34,19 +34,6 @@
 namespace piranha
 {
 
-namespace detail
-{
-
-// Detect t_subs term.
-template <typename Term, typename T, typename U>
-struct t_subs_term_score
-{
-	static const unsigned value = static_cast<unsigned>(has_t_subs<typename Term::cf_type,T,U>::value) |
-		(static_cast<unsigned>(key_has_t_subs<typename Term::key_type,T,U>::value) << 1u);
-};
-
-}
-
 /// Toolbox for series that support trigonometric substitution.
 /**
  * This toolbox extends a series class with methods to perform trigonometric substitution (i.e., substitution of cosine
@@ -74,45 +61,60 @@ class t_substitutable_series: public Series
 {
 		typedef Series base;
 		PIRANHA_TT_CHECK(is_instance_of,base,series);
+		// Detect t_subs term.
+		template <typename Term, typename T, typename U>
+		struct t_subs_term_score
+		{
+			static const unsigned value = static_cast<unsigned>(has_t_subs<typename Term::cf_type,T,U>::value) |
+				(static_cast<unsigned>(key_has_t_subs<typename Term::key_type,T,U>::value) << 1u);
+		};
 		template <typename T, typename U, typename Term = typename Series::term_type, typename = void>
 		struct t_subs_utils
 		{
-			static_assert(detail::t_subs_term_score<Term,T,U>::value == 0u,"Wrong t_subs_term_score value.");
-			typedef void type;
+			static_assert(t_subs_term_score<Term,T,U>::value == 0u,"Wrong t_subs_term_score value.");
 		};
 		// Case 1: t_subs on cf only.
 		template <typename T, typename U, typename Term>
-		struct t_subs_utils<T,U,Term,typename std::enable_if<detail::t_subs_term_score<Term,T,U>::value == 1u>::type>
+		struct t_subs_utils<T,U,Term,typename std::enable_if<t_subs_term_score<Term,T,U>::value == 1u>::type>
 		{
-			typedef decltype(math::t_subs(std::declval<typename Term::cf_type>(),std::declval<std::string>(),std::declval<T>(),std::declval<U>()) *
-				std::declval<Derived>()) type;
-			static type subs(const Term &t, const std::string &name, const T &c, const U &s, const symbol_set &s_set)
+			#define PIRANHA_TMP_RETURN_TYPE decltype(math::t_subs(std::declval<typename Term1::cf_type const &>(),std::declval<std::string const &>(), \
+				std::declval<T1 const &>(),std::declval<U1 const &>()) * std::declval<Derived const &>())
+			template <typename T1, typename U1, typename Term1>
+			using return_type = typename std::enable_if<std::is_constructible<PIRANHA_TMP_RETURN_TYPE,int>::value &&
+				is_addable_in_place<PIRANHA_TMP_RETURN_TYPE>::value,PIRANHA_TMP_RETURN_TYPE>::type;
+			template <typename T1, typename U1, typename Term1>
+			static return_type<T1,U1,Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s, const symbol_set &s_set)
 			{
 				Derived tmp;
 				tmp.m_symbol_set = s_set;
-				tmp.insert(Term(typename Term::cf_type(1),t.m_key));
+				tmp.insert(Term1(typename Term1::cf_type(1),t.m_key));
 				return math::t_subs(t.m_cf,name,c,s) * tmp;
 			}
+			#undef PIRANHA_TMP_RETURN_TYPE
 		};
 		// Case 2: t_subs on key only.
 		template <typename T, typename U, typename Term>
-		struct t_subs_utils<T,U,Term,typename std::enable_if<detail::t_subs_term_score<Term,T,U>::value == 2u>::type>
+		struct t_subs_utils<T,U,Term,typename std::enable_if<t_subs_term_score<Term,T,U>::value == 2u>::type>
 		{
-			typedef decltype(std::declval<typename Term::key_type>().t_subs(std::declval<std::string>(),std::declval<T>(),
-				std::declval<U>(),std::declval<symbol_set>())) key_t_subs_type;
-			typedef decltype(std::declval<typename key_t_subs_type::value_type::first_type>() * std::declval<Derived>()) type;
-			static type subs(const Term &t, const std::string &name, const T &c, const U &s, const symbol_set &s_set)
+			#define PIRANHA_TMP_RETURN_TYPE decltype(std::declval<typename Term1::key_type const &>().t_subs(std::declval<std::string const &>(), \
+				std::declval<T1 const &>(),std::declval<U1 const &>(),std::declval<symbol_set const &>())[0u].first * std::declval<Derived const &>())
+			template <typename T1, typename U1, typename Term1>
+			using return_type = typename std::enable_if<std::is_constructible<PIRANHA_TMP_RETURN_TYPE,int>::value &&
+				is_addable_in_place<PIRANHA_TMP_RETURN_TYPE>::value,PIRANHA_TMP_RETURN_TYPE>::type;
+			template <typename T1, typename U1, typename Term1>
+			static return_type<T1,U1,Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s, const symbol_set &s_set)
 			{
-				type retval(0);
+				return_type<T1,U1,Term1> retval(0);
 				const auto key_subs = t.m_key.t_subs(name,c,s,s_set);
 				for (const auto &x: key_subs) {
 					Derived tmp;
 					tmp.m_symbol_set = s_set;
-					tmp.insert(Term(t.m_cf,x.second));
+					tmp.insert(Term1(t.m_cf,x.second));
 					retval += x.first * tmp;
 				}
 				return retval;
 			}
+			#undef PIRANHA_TMP_RETURN_TYPE
 		};
 		// NOTE: we have no way of testing this at the moment, so better leave it out at present time.
 #if 0
@@ -170,11 +172,12 @@ class t_substitutable_series: public Series
 		 * - piranha::series::insert(),
 		 * - the substitution methods of coefficient and key.
 		 */
-		template <typename T, typename U, typename =
-			typename std::enable_if<detail::t_subs_term_score<typename Series::term_type,T,U>::value != 0u>::type>
-		typename t_subs_utils<T,U>::type t_subs(const std::string &name, const T &c, const U &s) const
+		template <typename T, typename U>
+		auto t_subs(const std::string &name, const T &c, const U &s) const ->
+			decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),name,c,s,std::declval<symbol_set const &>()))
 		{
-			typedef typename t_subs_utils<T,U>::type ret_type;
+			typedef decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),name,c,s,std::declval<symbol_set const &>()))
+				ret_type;
 			ret_type retval(0);
 			for (const auto &t: this->m_container) {
 				retval += t_subs_utils<T,U>::subs(t,name,c,s,this->m_symbol_set);
