@@ -100,28 +100,24 @@ class power_series: public Series
 		{
 			// NOTE: this one is just a hack to work around what seems an issue in GCC 4.7 (4.8 and clang compile it just fine).
 			// Remove it in next versions.
-			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,args...)
-			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
+			#define PIRANHA_TMP_RETURN math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
 			template <typename Term, typename ... Args>
-			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
+			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
 			template <typename Term, typename ... Args>
 			static auto get(const Term &t, const symbol_set &, const Args & ... args) -> degree_return_type<Term,Args...>
 			{
-				return PIRANHA_TMP_RETURN;
+				return math::degree(t.m_cf,args...);
 			}
 			#undef PIRANHA_TMP_RETURN
-			#undef PIRANHA_TMP_RETURN2
-			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,args...)
-			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
+			#define PIRANHA_TMP_RETURN math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
 			template <typename Term, typename ... Args>
-			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
+			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
 			template <typename Term, typename ... Args>
 			static auto lget(const Term &t, const symbol_set &, const Args & ... args) -> ldegree_return_type<Term,Args...>
 			{
-				return PIRANHA_TMP_RETURN;
+				return math::ldegree(t.m_cf,args...);
 			}
 			#undef PIRANHA_TMP_RETURN
-			#undef PIRANHA_TMP_RETURN2
 		};
 		// Case 2: only key has degree/ldegree.
 		template <typename T>
@@ -148,30 +144,26 @@ class power_series: public Series
 		template <typename T>
 		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 3u>::type>
 		{
-			#define PIRANHA_TMP_RETURN math::degree(t.m_cf,args...) + t.m_key.degree(args...,s)
-			#define PIRANHA_TMP_RETURN2 math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
+			#define PIRANHA_TMP_RETURN math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
 				std::declval<const Term &>().m_key.degree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
 			template <typename Term, typename ... Args>
-			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
+			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
 			template <typename Term, typename ... Args>
 			static auto get(const Term &t, const symbol_set &s, const Args & ... args) -> degree_return_type<Term,Args...>
 			{
-				return PIRANHA_TMP_RETURN;
+				return math::degree(t.m_cf,args...) + t.m_key.degree(args...,s);
 			}
 			#undef PIRANHA_TMP_RETURN
-			#undef PIRANHA_TMP_RETURN2
-			#define PIRANHA_TMP_RETURN math::ldegree(t.m_cf,args...) + t.m_key.ldegree(args...,s)
-			#define PIRANHA_TMP_RETURN2 math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
+			#define PIRANHA_TMP_RETURN math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
 				std::declval<const Term &>().m_key.ldegree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
 			template <typename Term, typename ... Args>
-			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN2)>::value,decltype(PIRANHA_TMP_RETURN2)>::type;
+			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
 			template <typename Term, typename ... Args>
 			static auto lget(const Term &t, const symbol_set &s, const Args & ... args) -> ldegree_return_type<Term,Args...>
 			{
-				return PIRANHA_TMP_RETURN;
+				return math::ldegree(t.m_cf,args...) + t.m_key.ldegree(args...,s);
 			}
 			#undef PIRANHA_TMP_RETURN
-			#undef PIRANHA_TMP_RETURN2
 		};
 	public:
 		/// Defaulted default constructor.
