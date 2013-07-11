@@ -1734,6 +1734,28 @@ class has_negate: detail::sfinae_types
 template <typename T>
 const bool has_negate<T>::value;
 
+/// Type trait to detect the presence of the piranha::math::subs function.
+/**
+ * The type trait will be \p true if piranha::math::subs can be successfully called on instances
+ * of type \p T, with an instance of type \p U as substitution argument.
+ */
+template <typename T, typename U = T>
+class has_subs: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(math::subs(t,std::declval<std::string const &>(),u),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
+};
+
+// Static init.
+template <typename T, typename U>
+const bool has_subs<T,U>::value;
+
 /// Type trait to detect the presence of the piranha::math::t_subs function.
 /**
  * The type trait will be \p true if piranha::math::t_subs can be successfully called on instances
