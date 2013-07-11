@@ -1844,6 +1844,9 @@ class integer
 		}
 		/// Binomial coefficient.
 		/**
+		 * \note
+		 * This method is enabled only if \p T is an integral type or piranha::integer.
+		 *
 		 * Will return \p this choose \p k using the GMP <tt>mpz_bin_ui</tt> function.
 		 * 
 		 * @param[in] k bottom argument for the binomial coefficient.
@@ -2289,16 +2292,16 @@ inline integer factorial(const integer &n)
 
 /// Specialisation of the piranha::math::binomial() functor for piranha::integer.
 /**
- * This specialisation is enabled if \p T is piranha::integer and \p U can be used as argument for piranha::integer::binomial().
+ * This specialisation is enabled if \p T is piranha::integer.
  */
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<
-	std::is_same<T,integer>::value &&
-	std::is_same<decltype(std::declval<integer>().binomial(std::declval<U>())),integer>::value
-	>::type>
+struct binomial_impl<T,U,typename std::enable_if<std::is_same<T,integer>::value>::type>
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This call operator is enabled only if \p k can be used as argument to piranha::integer::binomial().
+	 *
 	 * @param[in] n top number.
 	 * @param[in] k bottom number.
 	 * 
@@ -2306,7 +2309,8 @@ struct binomial_impl<T,U,typename std::enable_if<
 	 * 
 	 * @throws unspecified any exception thrown by piranha::integer::binomial().
 	 */
-	integer operator()(const integer &n, const U &k) const
+	template <typename U1>
+	auto operator()(const integer &n, const U1 &k) const -> decltype(n.binomial(k))
 	{
 		return n.binomial(k);
 	}
@@ -2314,17 +2318,16 @@ struct binomial_impl<T,U,typename std::enable_if<
 
 /// Specialisation of the piranha::math::binomial() functor for integral types.
 /**
- * This specialisation is enabled if \p T is an integral type that can be used to construct piranha::integer
- * and \p U can be used as argument for piranha::integer::binomial().
+ * This specialisation is enabled if \p T is an integral type that can be used to construct piranha::integer.
  */
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<
-	std::is_integral<T>::value && std::is_constructible<integer,T>::value &&
-	std::is_same<decltype(std::declval<integer>().binomial(std::declval<U>())),integer>::value
-	>::type>
+struct binomial_impl<T,U,typename std::enable_if<std::is_integral<T>::value && std::is_constructible<integer,T>::value>::type>
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This call operator is enabled only if \p k can be used as argument to piranha::integer::binomial().
+	 *
 	 * @param[in] n top number.
 	 * @param[in] k bottom number.
 	 * 
@@ -2332,7 +2335,8 @@ struct binomial_impl<T,U,typename std::enable_if<
 	 * 
 	 * @throws unspecified any exception thrown by constructing piranha::integer from \p n or by piranha::integer::binomial().
 	 */
-	integer operator()(const T &n, const U &k) const
+	template <typename U1>
+	auto operator()(const T &n, const U1 &k) const -> decltype(integer(n).binomial(k))
 	{
 		return integer(n).binomial(k);
 	}

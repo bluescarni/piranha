@@ -1006,6 +1006,8 @@ BOOST_AUTO_TEST_CASE(integer_binomial_test)
 	BOOST_CHECK((piranha::has_binomial<int,unsigned>::value));
 	BOOST_CHECK((piranha::has_binomial<char,long>::value));
 	BOOST_CHECK((piranha::has_binomial<int,piranha::integer>::value));
+	BOOST_CHECK((!piranha::has_binomial<int,double>::value));
+	BOOST_CHECK((!piranha::has_binomial<long,float>::value));
 	BOOST_CHECK((!piranha::has_binomial<std::string,int>::value));
 	BOOST_CHECK_EQUAL(piranha::math::binomial(20,3),1140);
 	BOOST_CHECK_EQUAL(piranha::math::binomial(20,3ul),1140);
