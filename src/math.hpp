@@ -1737,7 +1737,7 @@ const bool has_negate<T>::value;
 /// Type trait to detect the presence of the piranha::math::t_subs function.
 /**
  * The type trait will be \p true if piranha::math::t_subs can be successfully called on instances
- * of type \p T, with instances of type \p U  and \p V as substitution arguments.
+ * of type \p T, with instances of type \p U and \p V as substitution arguments.
  */
 template <typename T, typename U = T, typename V = U>
 class has_t_subs: detail::sfinae_types
@@ -1746,7 +1746,7 @@ class has_t_subs: detail::sfinae_types
 		typedef typename std::decay<U>::type Ud;
 		typedef typename std::decay<V>::type Vd;
 		template <typename T1, typename U1, typename V1>
-		static auto test(const T1 &t, const U1 &u, const V1 &v) -> decltype(math::t_subs(t,std::declval<std::string>(),u,v),void(),yes());
+		static auto test(const T1 &t, const U1 &u, const V1 &v) -> decltype(math::t_subs(t,std::declval<std::string const &>(),u,v),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
