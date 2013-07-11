@@ -920,6 +920,11 @@ BOOST_AUTO_TEST_CASE(integer_subs_test)
 	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer(-2),"foo",4.5),piranha::integer(-2));
 	BOOST_CHECK_EQUAL(piranha::math::subs(piranha::integer("3"),"bar","frob"),piranha::integer(3));
 	BOOST_CHECK((std::is_same<decltype(piranha::math::subs(piranha::integer(),"",2)),piranha::integer>::value));
+	BOOST_CHECK(piranha::has_subs<piranha::integer>::value);
+	BOOST_CHECK((piranha::has_subs<piranha::integer,int>::value));
+	BOOST_CHECK((piranha::has_subs<piranha::integer,std::string>::value));
+	BOOST_CHECK((piranha::has_subs<piranha::integer,const double &>::value));
+	BOOST_CHECK((piranha::has_subs<piranha::integer &&,const double &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(integer_factorial_test)

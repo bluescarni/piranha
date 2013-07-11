@@ -894,6 +894,11 @@ BOOST_AUTO_TEST_CASE(rational_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(rational(-3.5),"bar",55),rational(-3.5));
 	BOOST_CHECK_EQUAL(math::subs(rational(4,5),"","frob"),rational(-8,-10));
 	BOOST_CHECK((std::is_same<decltype(math::subs(rational(4,5),"","frob")),rational>::value));
+	BOOST_CHECK(has_subs<rational>::value);
+	BOOST_CHECK((has_subs<rational,int>::value));
+	BOOST_CHECK((has_subs<rational,std::string>::value));
+	BOOST_CHECK((has_subs<rational,const double &>::value));
+	BOOST_CHECK((has_subs<rational &&,const double &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(rational_print_tex_test)
