@@ -175,8 +175,7 @@ class t_substitutable_series: public Series
 		auto t_subs(const std::string &name, const T &c, const U &s) const ->
 			decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),name,c,s,std::declval<symbol_set const &>()))
 		{
-			typedef decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),name,c,s,std::declval<symbol_set const &>()))
-				ret_type;
+			typedef decltype(this->t_subs(name,c,s)) ret_type;
 			ret_type retval(0);
 			for (const auto &t: this->m_container) {
 				retval += t_subs_utils<T,U>::subs(t,name,c,s,this->m_symbol_set);
