@@ -687,12 +687,12 @@ class series: series_binary_operators, detail::series_tag
 		template <typename Series, typename U, typename = void>
 		struct eval_type {};
 		template <typename Series, typename U>
-		using e_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>()) *
+		using e_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>()) *
 			std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),
 			std::declval<const symbol_set &>()));
 		template <typename Series, typename U>
 		struct eval_type<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
-			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type>(),std::declval<std::unordered_map<std::string,U>>())),
+			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
 			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),std::declval<const symbol_set &>()))>::value &&
 			std::is_constructible<e_type<Series,U>,int>::value
 			>::type>
