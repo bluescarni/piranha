@@ -870,7 +870,7 @@ struct check_integral_cast
 
 BOOST_AUTO_TEST_CASE(integer_integral_cast_test)
 {
-	BOOST_CHECK_THROW(piranha::math::integral_cast(""),std::invalid_argument);
+	BOOST_CHECK(!piranha::has_integral_cast<std::string>::value);
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 &&
 		std::numeric_limits<float>::has_infinity && std::numeric_limits<float>::has_quiet_NaN)
 	{
@@ -894,9 +894,14 @@ BOOST_AUTO_TEST_CASE(integer_integral_cast_test)
 		BOOST_CHECK_THROW(piranha::math::integral_cast(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
 	// Long double is not interoperable.
-	BOOST_CHECK_THROW(piranha::math::integral_cast(2.L),std::invalid_argument);
+	BOOST_CHECK(!piranha::has_integral_cast<long double>::value);
 	boost::fusion::for_each(arithmetic_values,check_integral_cast());
 	BOOST_CHECK_EQUAL(piranha::math::integral_cast(piranha::integer(-23)),-23);
+	BOOST_CHECK(!piranha::has_integral_cast<void *>::value);
+	BOOST_CHECK(!piranha::has_integral_cast<std::vector<int>>::value);
+	BOOST_CHECK(!piranha::has_integral_cast<std::vector<int> &>::value);
+	BOOST_CHECK(!piranha::has_integral_cast<std::vector<int> &&>::value);
+	BOOST_CHECK(!piranha::has_integral_cast<const std::vector<int>>::value);
 }
 
 BOOST_AUTO_TEST_CASE(integer_partial_test)

@@ -489,6 +489,8 @@ class kronecker_monomial
 		 * - piranha::math::integral_cast(),
 		 * - the cast and binary multiplication operators of piranha::integer,
 		 * - piranha::kronecker_array::encode().
+		 *
+		 * \todo type requirements.
 		 */
 		template <typename U>
 		kronecker_monomial pow(const U &x, const symbol_set &args) const
@@ -764,7 +766,7 @@ class kronecker_monomial
 		 * - the in-place subtraction operator of the exponent type,
 		 * - piranha::kronecker_array::encode().
 		 * 
-		 * \todo require constructability from int, exponentiability, subtractability.
+		 * \todo require constructability from int, exponentiability, subtractability, integral_cast.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const

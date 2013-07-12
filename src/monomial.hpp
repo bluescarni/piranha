@@ -265,6 +265,9 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Name of the linear argument.
 		/**
+		 * \note
+		 * This method is enabled only if the exponent type supports piranha::math::integral_cast().
+		 *
 		 * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
 		 * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
 		 * 
@@ -274,6 +277,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
 		 */
+		template <typename U = typename base::value_type, typename = typename std::enable_if<
+			has_integral_cast<U>::value>::type>
 		std::string linear_argument(const symbol_set &args) const
 		{
 			if (!is_compatible(args)) {
@@ -613,7 +618,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * - piranha::array_key::push_back(),
 		 * - the in-place subtraction operator of the exponent type.
 		 * 
-		 * \todo require constructability from int, exponentiability, subtractability.
+		 * \todo require constructability from int, exponentiability, subtractability, integral_cast.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const

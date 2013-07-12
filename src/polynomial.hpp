@@ -426,7 +426,7 @@ class polynomial:
 		 * - insert(),
 		 * - series arithmetics.
 		 * 
-		 * \todo requirements on dividability by degree type, etc.
+		 * \todo requirements on dividability by degree type, integral_cast, etc.
 		 */
 		polynomial integrate(const std::string &name) const
 		{

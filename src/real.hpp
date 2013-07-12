@@ -1793,27 +1793,23 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 	/**
 	 * The call will be successful if \p x is finite and if it does not change after truncation.
 	 * 
-	 * @param[out] result flag to signal the outcome of the operation.
 	 * @param[in] x cast argument.
 	 * 
-	 * @return result of the cast operation, or a default-constructed instance of piranha::integer
-	 * if the cast fails.
+	 * @return result of the cast operation.
+	 *
+	 * @throws std::invalid_argument if the conversion is not successful.
 	 */
-	integer operator()(bool &result, const T &x) const
+	integer operator()(const T &x) const
 	{
 		if (x.is_nan() || x.is_inf()) {
-			result = false;
-			return integer{};
+			piranha_throw(std::invalid_argument,"invalid real value");
 		}
 		auto x_copy(x);
 		x_copy.truncate();
 		if (x == x_copy) {
-			result = true;
 			return integer(x);
-		} else {
-			result = false;
-			return integer();
 		}
+		piranha_throw(std::invalid_argument,"invalid real value");
 	}
 };
 

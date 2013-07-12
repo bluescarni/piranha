@@ -245,6 +245,8 @@ class poisson_series:
 		 * - piranha::math::integral_cast(), piranha::math::sin(),
 		 * - the cast operator of piranha::integer,
 		 * - the constructors of coefficient, key and term types.
+		 *
+		 * \todo type requirements: integral_cast for use in linear combination.
 		 */
 		poisson_series sin() const
 		{
@@ -257,6 +259,8 @@ class poisson_series:
 		 * @return cosine of \p this.
 		 * 
 		 * @throws unspecified any exception thrown by sin().
+		 *
+		 * \todo type requirements: integral_cast for use in linear combination.
 		 */
 		poisson_series cos() const
 		{
@@ -383,7 +387,7 @@ class poisson_series:
 		 * - piranha::polynomial::degree(),
 		 * - series arithmetics.
 		 * 
-		 * \todo requirements on dividability by multiplier type (or integer), etc.
+		 * \todo requirements on dividability by multiplier type (or integer), integral_cast, etc.
 		 */
 		poisson_series integrate(const std::string &name) const
 		{

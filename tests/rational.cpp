@@ -869,6 +869,10 @@ BOOST_AUTO_TEST_CASE(rational_integral_cast_test)
 	BOOST_CHECK_EQUAL(math::integral_cast(rational(62,-2)),-31);
 	BOOST_CHECK_THROW(math::integral_cast(rational(1,-2)),std::invalid_argument);
 	BOOST_CHECK_THROW(math::integral_cast(rational("2/3") * 2),std::invalid_argument);
+	BOOST_CHECK(has_integral_cast<rational>::value);
+	BOOST_CHECK(has_integral_cast<rational &>::value);
+	BOOST_CHECK(has_integral_cast<rational const &>::value);
+	BOOST_CHECK(has_integral_cast<rational &&>::value);
 }
 
 BOOST_AUTO_TEST_CASE(rational_partial_test)

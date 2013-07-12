@@ -1651,21 +1651,18 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::va
 	/**
 	 * The call will be successful if the denominator of \p x is unitary.
 	 * 
-	 * @param[out] result flag to signal the outcome of the operation.
 	 * @param[in] x cast argument.
 	 * 
-	 * @return result of the cast operation, or a default-constructed instance of piranha::integer
-	 * if the cast fails.
+	 * @return result of the cast operation.
+	 *
+	 * @throws std::invalid_argument if the call is unsuccessful.
 	 */
-	integer operator()(bool &result, const T &x) const
+	integer operator()(const T &x) const
 	{
 		if (x.get_denominator() == 1) {
-			result = true;
 			return x.get_numerator();
-		} else {
-			result = false;
-			return integer();
 		}
+		piranha_throw(std::invalid_argument,"invalid rational");
 	}
 };
 

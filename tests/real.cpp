@@ -1567,6 +1567,10 @@ BOOST_AUTO_TEST_CASE(real_integral_cast_test)
 	BOOST_CHECK_THROW(math::integral_cast(real{"-7.99"}),std::invalid_argument);
 	BOOST_CHECK_EQUAL(math::integral_cast(real{"-3."}),-3);
 	BOOST_CHECK_EQUAL(math::integral_cast(real{"15.00"}),15);
+	BOOST_CHECK(has_integral_cast<real>::value);
+	BOOST_CHECK(has_integral_cast<real &>::value);
+	BOOST_CHECK(has_integral_cast<real const &>::value);
+	BOOST_CHECK(has_integral_cast<real &&>::value);
 }
 
 BOOST_AUTO_TEST_CASE(real_pi_test)
