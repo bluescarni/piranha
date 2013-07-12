@@ -18,7 +18,6 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <boost/iterator/counting_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <mutex>
 #include <stdexcept>
