@@ -1,26 +1,30 @@
+# POSIX thread setup. Intended both for UNIX and Windows (the latter when using some sort of
+# pthread emulation/wrapper like pthreads-win32).
+IF(CMAKE_USE_PTHREADS_INIT)
+	MESSAGE(STATUS "POSIX threads detected.")
+	# For POSIX threads, we try to see if the compiler accepts the -pthread flag. It is a bit of a kludge,
+	# but I do not have any better idea at the moment. The situation is hairy, e.g.,
+	# different systems require different GCC flags:
+	# http://gcc.gnu.org/onlinedocs/libstdc++/manual/using_concurrency.html
+	CHECK_CXX_COMPILER_FLAG(-pthread PIRANHA_PTHREAD_COMPILER_FLAG)
+	IF(PIRANHA_PTHREAD_COMPILER_FLAG)
+		MESSAGE(STATUS "Enabling the -pthread compiler flag.")
+		# NOTE: according to GCC docs, this sets the flag for both compiler and linker. This should
+		# work similarly for clang as well.
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	ENDIF()
+	TRY_COMPILE(PIRANHA_PTHREAD_AFFINITY_TESTS ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/pthread_affinity_tests.cpp")
+	IF(PIRANHA_PTHREAD_AFFINITY_TESTS)
+		MESSAGE(STATUS "POSIX threads affinity extensions detected.")
+		SET(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
+	ELSE()
+		MESSAGE(STATUS "POSIX threads affinity extensions not detected.")
+	ENDIF()
+ENDIF()
+
 IF(UNIX)
 	# Install path for libraries.
 	SET(LIB_INSTALL_PATH "lib")
-	# POSIX thread setup on Unix.
-	IF(CMAKE_USE_PTHREADS_INIT)
-		MESSAGE(STATUS "POSIX threads detected.")
-		# NOTE: here the situation is very hairy: e.g., different systems require different GCC flags:
-		# http://gcc.gnu.org/onlinedocs/libstdc++/manual/using_concurrency.html
-		CHECK_CXX_COMPILER_FLAG(-pthread PIRANHA_PTHREAD_COMPILER_FLAG)
-		IF(PIRANHA_PTHREAD_COMPILER_FLAG)
-			MESSAGE(STATUS "Enabling the -pthread compiler flag.")
-			# NOTE: according to GCC docs, this sets the flag for both compiler and linker. This should
-			# work similarly for clang as well.
-			SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-		ENDIF()
-		TRY_COMPILE(PIRANHA_PTHREAD_AFFINITY_TESTS ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/pthread_affinity_tests.cpp")
-		IF(PIRANHA_PTHREAD_AFFINITY_TESTS)
-			MESSAGE(STATUS "POSIX threads affinity extensions detected.")
-			SET(PIRANHA_PTHREAD_AFFINITY "#define PIRANHA_HAVE_PTHREAD_AFFINITY")
-		ELSE()
-			MESSAGE(STATUS "POSIX threads affinity extensions not detected.")
-		ENDIF()
-	ENDIF(CMAKE_USE_PTHREADS_INIT)
 	TRY_COMPILE(PIRANHA_POSIX_MEMALIGN_TEST ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/posix_memalign_test.cpp")
 	IF(PIRANHA_POSIX_MEMALIGN_TEST)
 		MESSAGE(STATUS "POSIX memalign detected.")
@@ -31,17 +35,23 @@ IF(UNIX)
 ENDIF(UNIX)
 
 IF(MINGW)
-	# The -mthreads flag is needed both in compiling and linking.
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads")
-	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mthreads")
-	SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -mthreads")
-	SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -mthreads")
+	IF(NOT CMAKE_USE_PTHREADS_INIT)
+		# NOTE: the idea here is that the -mthreads flag is useful only when using the native Windows
+		# threads, apparently if we are using some pthread variant it is not needed:
+		# http://mingw-users.1079350.n2.nabble.com/pthread-vs-mthreads-td7114500.html
+		MESSAGE(STATUS "Native Windows threads detected on MinGW, enabling the -mthreads flag.")
+		# The -mthreads flag is needed both in compiling and linking.
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads")
+		SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mthreads")
+		SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -mthreads")
+		SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -mthreads")
+	ENDIF()
 	# NOTE: workaround for CMake being unable to locate Boost libraries in certain
 	# configurations. See:
 	# http://www.ogre3d.org/tikiwiki/Setting%20Up%20An%20Application%20-%20Mac%20OSX
 	# http://www.gccxml.org/Bug/view.php?id=9865
 	SET(CMAKE_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES} "")
-ENDIF(MINGW)
+ENDIF()
 
 # Setup for the machinery to detect cache line size in Windows. It's not supported everywhere, so we
 # check for the existence of the SYSTEM_LOGICAL_PROCESSOR_INFORMATION type.

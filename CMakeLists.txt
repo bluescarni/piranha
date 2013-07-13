@@ -31,13 +31,9 @@ OPTION(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 SET(MANDATORY_LIBRARIES "")
 
 # Initial thread setup.
-# NOTE: we do it only on Unix for now, as on MinGW it might find and try to use the internal libpthread
-# implementation, which is not what we want (we want the native Win32 threads).
-IF(NOT WIN32)
-	FIND_PACKAGE(Threads REQUIRED)
-	MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
-	SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-ENDIF(NOT WIN32)
+FIND_PACKAGE(Threads REQUIRED)
+MESSAGE(STATUS "Thread library: ${CMAKE_THREAD_LIBS_INIT}")
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 # Include these macros here as they reference variables defined above.
 INCLUDE(PiranhaCompilerLinkerSettings)
