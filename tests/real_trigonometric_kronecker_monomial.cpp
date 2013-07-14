@@ -1214,10 +1214,50 @@ BOOST_AUTO_TEST_CASE(rtkm_tt_test)
 	boost::mpl::for_each<int_types>(tt_tester());
 }
 
+struct fake_int_01
+{
+	fake_int_01();
+	explicit fake_int_01(int);
+	fake_int_01(const fake_int_01 &);
+	fake_int_01(fake_int_01 &&) noexcept(true);
+	fake_int_01 &operator=(const fake_int_01 &);
+	fake_int_01 &operator=(fake_int_01 &&) noexcept(true);
+	~fake_int_01() noexcept(true);
+	fake_int_01 operator+(const fake_int_01 &) const;
+	fake_int_01 operator*(const fake_int_01 &) const;
+	fake_int_01 &operator+=(const fake_int_01 &);
+	fake_int_01 &operator+=(const integer &);
+	bool operator==(const fake_int_01 &) const;
+	bool operator!=(const fake_int_01 &) const;
+};
+
+integer &operator+=(integer &, const fake_int_01 &);
+integer operator*(const integer &, const fake_int_01 &);
+
+// Missing math operators.
+struct fake_int_02
+{
+	fake_int_02();
+	explicit fake_int_02(int);
+	fake_int_02(const fake_int_02 &);
+	fake_int_02(fake_int_02 &&) noexcept(true);
+	fake_int_02 &operator=(const fake_int_02 &);
+	fake_int_02 &operator=(fake_int_02 &&) noexcept(true);
+	~fake_int_02() noexcept(true);
+	fake_int_02 operator+(const fake_int_02 &) const;
+	fake_int_02 operator*(const fake_int_02 &) const;
+	fake_int_02 &operator+=(const fake_int_02 &);
+	fake_int_02 &operator+=(const integer &);
+	bool operator==(const fake_int_02 &) const;
+	bool operator!=(const fake_int_02 &) const;
+};
+
 BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
 {
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int>::value));
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int,int>::value));
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,fake_int_01,fake_int_01>::value));
+	BOOST_CHECK((!key_has_t_subs<real_trigonometric_kronecker_monomial<int>,fake_int_02,fake_int_02>::value));
 	// This fails because the cos and sin replacements must be the same type.
 	BOOST_CHECK((!key_has_t_subs<real_trigonometric_kronecker_monomial<short>,int,long>::value));
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<short>,long,long>::value));

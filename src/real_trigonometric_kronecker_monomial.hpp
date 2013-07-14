@@ -130,12 +130,16 @@ class real_trigonometric_kronecker_monomial
 			typedef std::pair<typename eval_type<U>::type,real_trigonometric_kronecker_monomial> pair_type;
 			typedef std::pair<pair_type,pair_type> type;
 		};
+		#define PIRANHA_TMP_TYPE decltype((std::declval<value_type const &>() * math::binomial(std::declval<value_type const &>(),std::declval<value_type const &>())) * \
+			(std::declval<const U &>() * std::declval<const U &>()))
 		template <typename U>
-		struct t_subs_type
-		{
-			typedef decltype(std::declval<value_type>() * math::binomial(std::declval<value_type>(),std::declval<value_type>()) *
-				std::declval<const U &>() * std::declval<const U &>()) type;
-		};
+		using t_subs_type = typename std::enable_if<std::is_constructible<U,int>::value &&
+			std::is_default_constructible<U>::value && std::is_assignable<U &, U>::value &&
+			std::is_assignable<U &,decltype(std::declval<const U &>() * std::declval<const U &>())>::value &&
+			is_addable_in_place<PIRANHA_TMP_TYPE,decltype(std::declval<const value_type &>() * std::declval<PIRANHA_TMP_TYPE const &>())>::value &&
+			has_negate<PIRANHA_TMP_TYPE>::value,
+			PIRANHA_TMP_TYPE>::type;
+		#undef PIRANHA_TMP_TYPE
 		// Implementation of canonicalisation.
 		static bool canonicalise_impl(v_type &unpacked)
 		{
@@ -942,11 +946,13 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Trigonometric substitution.
 		/**
-		 * This method works in the same way as the subs() method, but the cosine \p c and sine \p s of \p name will be substituted instead of a direct
-		 * substitution of \p name.
+		 * \note
+		 * This method is enabled only if \p U supports the mathematical operations needed to compute the result. In particular,
+		 * the implementation uses piranha::math::binomial() internally (thus, \p U must be interoperable with piranha::integer).
+		 *
+		 * This method works in the same way as the subs() method, but the cosine \p c and sine \p s of \p name will be substituted (instead of a direct
+		 * substitution of \p name).
 		 * The substitution is performed using standard trigonometric formulae, and it will result in a list of two (substitution result,new monomial) pairs.
-		 * 
-		 * This method requires \p U to be constructible from \p int, multipliable, addable and suitable as argument for piranha::math::negate().
 		 * 
 		 * @param[in] name symbol whose cosine and sine will be substituted.
 		 * @param[in] c cosine of \p name.
@@ -963,7 +969,7 @@ class real_trigonometric_kronecker_monomial
 		 * - piranha::kronecker_array::encode().
 		 */
 		template <typename U>
-		std::vector<std::pair<typename t_subs_type<U>::type,
+		std::vector<std::pair<t_subs_type<U>,
 			real_trigonometric_kronecker_monomial>> t_subs(const std::string &name, const U &c, const U &s, const symbol_set &args) const
 		{
 			typedef decltype(this->t_subs(name,c,s,args)) ret_type;
@@ -992,15 +998,15 @@ class real_trigonometric_kronecker_monomial
 				s_map[k + value_type(1)] = s_map[k] * s;
 			}
 			// Init with the first element in the summation.
-			res_type cos_nx(cos_phase(abs_n) * math::binomial(abs_n,value_type(0)) * c_map[value_type(0)] * s_map[abs_n]),
-				sin_nx(sin_phase(abs_n) * math::binomial(abs_n,value_type(0)) * c_map[value_type(0)] * s_map[abs_n]);
+			res_type cos_nx((cos_phase(abs_n) * math::binomial(abs_n,value_type(0))) * (c_map[value_type(0)] * s_map[abs_n])),
+				sin_nx((sin_phase(abs_n) * math::binomial(abs_n,value_type(0))) * (c_map[value_type(0)] * s_map[abs_n]));
 			for (value_type k(0); k < abs_n; ++k) {
 				const value_type p = abs_n - (k + value_type(1));
 				piranha_assert(p >= value_type(0));
-				// NOTE: here the type is slightly different from the decltype() in the prototype, but as long
+				// NOTE: here the type is slightly different from the decltype() that determines the return type, but as long
 				// as binomial(value_type,value_type) returns integer there will be no difference because of the
 				// left-to-right associativity of multiplication.
-				res_type tmp(math::binomial(abs_n,k + value_type(1)) * c_map[k + value_type(1)] * s_map[p]);
+				res_type tmp(math::binomial(abs_n,k + value_type(1)) * (c_map[k + value_type(1)] * s_map[p]));
 				cos_nx += cos_phase(p) * tmp;
 				sin_nx += sin_phase(p) * tmp;
 			}
