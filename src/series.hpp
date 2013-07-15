@@ -1590,7 +1590,7 @@ class series: series_binary_operators, detail::series_tag
 		/// Print in TeX mode.
 		/**
 		 * Print series to stream \p os in TeX mode. The representation is constructed in the same way as explained in
-		 * operator<<(), but using piranha::print_tex_coefficient() and the key's TeX printing method instead of the plain
+		 * piranha::series::operator<<(), but using piranha::print_tex_coefficient() and the key's TeX printing method instead of the plain
 		 * printing functions.
 		 * 
 		 * @param os target stream.
