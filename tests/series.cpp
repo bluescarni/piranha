@@ -1323,6 +1323,66 @@ BOOST_AUTO_TEST_CASE(series_table_info_test)
 	boost::mpl::for_each<cf_types>(table_info_tester());
 }
 
+struct fake_int_01
+{
+	fake_int_01();
+	explicit fake_int_01(int);
+	fake_int_01(const fake_int_01 &);
+	fake_int_01(fake_int_01 &&) noexcept(true);
+	fake_int_01 &operator=(const fake_int_01 &);
+	fake_int_01 &operator=(fake_int_01 &&) noexcept(true);
+	~fake_int_01() noexcept(true);
+};
+
+struct fake_int_02
+{
+	fake_int_02();
+	explicit fake_int_02(int);
+	fake_int_02(const fake_int_02 &);
+	fake_int_02(fake_int_02 &&) noexcept(true);
+	fake_int_02 &operator=(const fake_int_02 &);
+	fake_int_02 &operator=(fake_int_02 &&) noexcept(true);
+	~fake_int_02() noexcept(true);
+};
+
+namespace piranha
+{
+namespace math
+{
+
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
+	std::is_same<U,fake_int_01>::value>::type>
+{
+	T operator()(const T &, const U &) const;
+};
+
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,fake_int_01>::value>::type>
+{
+	bool operator()(const T &) const;
+};
+
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,fake_int_01>::value>::type>
+{
+	integer operator()(const T &) const;
+};
+
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,fake_int_02>::value>::type>
+{
+	bool operator()(const T &) const;
+};
+
+template <typename T>
+struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,fake_int_02>::value>::type>
+{
+	integer operator()(const T &) const;
+};
+
+}}
+
 struct pow_tester
 {
 	template <typename Cf>
@@ -1400,6 +1460,8 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
+	BOOST_CHECK((is_exponentiable<p_type1,fake_int_01>::value));
+	BOOST_CHECK((!is_exponentiable<p_type1,fake_int_02>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_division_test)
