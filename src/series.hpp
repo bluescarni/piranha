@@ -1221,8 +1221,13 @@ class series: series_binary_operators, detail::series_tag
 		//@}
 		/// Exponentiation.
 		/**
-		 * Return \p this raised to the <tt>x</tt>-th power. This template method is enabled only if the coefficient type
-		 * is exponentiable with exponent type \p T.
+		 * \note
+		 * This method is enabled only if:
+		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
+		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::math::integral_cast(),
+		 * - \p Derived is multipliable in place.
+		 *
+		 * Return \p this raised to the <tt>x</tt>-th power.
 		 * 
 		 * The exponentiation algorithm proceeds as follows:
 		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
@@ -1247,9 +1252,11 @@ class series: series_binary_operators, detail::series_tag
 		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::math::integral_cast(),
 		 * - series multiplication.
 		 */
-		template <typename T>
-		typename std::enable_if<is_exponentiable<typename term_type::cf_type,T>::value,Derived>::type
-			pow(const T &x) const
+		template <typename T, typename U = Derived, typename = typename std::enable_if<
+			std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),typename term_type::cf_type>::value &&
+			has_is_zero<T>::value && has_integral_cast<T>::value && is_multipliable_in_place<U>::value
+			>::type>
+		Derived pow(const T &x) const
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
