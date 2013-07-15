@@ -192,6 +192,11 @@ class polynomial:
 		{
 			piranha_throw(std::invalid_argument,"unable to perform polynomial integration: coefficient type is not integrable");
 		}
+		// Template alias for use in pow() overload. Will check via SFINAE that the base pow() method can be called with argument T
+		// and that exponentiation of key type is legal.
+		template <typename T, typename Series>
+		using pow_ret_type = decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()),void(),
+			std::declval<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> const &>().pow(std::declval<const T &>()));
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -269,8 +274,9 @@ class polynomial:
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 		/// Override default exponentiation method.
 		/**
-		 * This template method is enabled only if the coefficient type
-		 * is exponentiable with exponent type \p T.
+		 * \note
+		 * This method is enabled only if piranha::series::pow() can be called with exponent \p x
+		 * and the key type can be raised to the power of \p x via its exponentiation method.
 		 * 
 		 * This exponentiation override will check if the polynomial consists of a single-term with non-unitary
 		 * key. In that case, the return polynomial will consist of a single term with coefficient computed via
@@ -289,9 +295,8 @@ class polynomial:
 		 * - the copy assignment operator of piranha::symbol_set,
 		 * - piranha::series::insert() and piranha::series::pow().
 		 */
-		template <typename T>
-		typename std::enable_if<is_exponentiable<typename base::term_type::cf_type,T>::value,polynomial>::type
-			pow(const T &x) const
+		template <typename T, typename Series = polynomial>
+		pow_ret_type<T,Series> pow(const T &x) const
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
