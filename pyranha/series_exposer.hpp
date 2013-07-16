@@ -38,14 +38,14 @@ struct series_exposer
 	// Handle division specially (allowed only with non-series types).
 	template <typename S, typename T>
 	static void expose_division(bp::class_<S> &series_class, const T &in,
-		typename std::enable_if<!std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
+		typename std::enable_if<!is_instance_of<T,series>::value>::type * = nullptr)
 	{
 		series_class.def(bp::self /= in);
 		series_class.def(bp::self / in);
 	}
 	template <typename S, typename T>
 	static void expose_division(bp::class_<S> &, const T &,
-		typename std::enable_if<std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
+		typename std::enable_if<is_instance_of<T,series>::value>::type * = nullptr)
 	{}
 	// TMP to check if a type is in the tuple.
 	template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>

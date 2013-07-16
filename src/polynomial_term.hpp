@@ -230,8 +230,8 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		// Overload if no coefficient is series.
 		template <typename Cf2, typename ExpoType2>
 		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value &&
-			!std::is_base_of<detail::series_tag,Cf2>::value>::type * = nullptr) const
+			typename std::enable_if<!is_instance_of<Cf,series>::value &&
+			!is_instance_of<Cf2,series>::value>::type * = nullptr) const
 		{
 			retval.m_cf = this->m_cf;
 			retval.m_cf *= other.m_cf;
@@ -239,8 +239,8 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		// Overload if at least one coefficient is series.
 		template <typename Cf2, typename ExpoType2>
 		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,ExpoType2> &other,
-			typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value ||
-			std::is_base_of<detail::series_tag,Cf2>::value>::type * = nullptr) const
+			typename std::enable_if<is_instance_of<Cf,series>::value ||
+			is_instance_of<Cf2,series>::value>::type * = nullptr) const
 		{
 			retval.m_cf = this->m_cf * other.m_cf;
 		}

@@ -43,7 +43,7 @@ struct echelon_level_impl
 };
 
 template <typename Cf, std::size_t Level>
-struct echelon_level_impl<Cf,Level,typename std::enable_if<!std::is_base_of<series_tag,Cf>::value>::type>
+struct echelon_level_impl<Cf,Level,typename std::enable_if<!is_instance_of<Cf,series>::value>::type>
 {
 	static const std::size_t value = Level;
 };
