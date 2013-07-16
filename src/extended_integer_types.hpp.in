@@ -26,7 +26,7 @@
 
 #if defined(PIRANHA_GCC_INT128_T)
 
-#include "detail/gcc_int128.hpp"
+//#include "detail/gcc_int128.hpp"
 
 #endif
 
