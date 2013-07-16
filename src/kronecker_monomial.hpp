@@ -475,6 +475,9 @@ class kronecker_monomial
 		}
 		/// Exponentiation.
 		/**
+		 * \note
+		 * This method is enabled only if \p U can be used in piranha::math::integral_cast().
+		 *
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
 		 * is computed via multiplication of the exponents by the output of piranha::math::integral_cast()
 		 * on \p x.
@@ -489,10 +492,8 @@ class kronecker_monomial
 		 * - piranha::math::integral_cast(),
 		 * - the cast and binary multiplication operators of piranha::integer,
 		 * - piranha::kronecker_array::encode().
-		 *
-		 * \todo type requirements.
 		 */
-		template <typename U>
+		template <typename U, typename = typename std::enable_if<has_integral_cast<U>::value>::type>
 		kronecker_monomial pow(const U &x, const symbol_set &args) const
 		{
 			auto v = unpack(args);

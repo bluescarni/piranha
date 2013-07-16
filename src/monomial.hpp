@@ -310,6 +310,9 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Monomial exponentiation.
 		/**
+		 * \note
+		 * This method is enabled if the exponent type is multipliable in-place by \p U.
+		 *
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
 		 * is computed via in-place multiplication of the exponents by \p x.
 		 * 
@@ -321,10 +324,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by monomial copy construction
 		 * or in-place multiplication of exponents by \p x.
-		 * 
-		 * \todo require multipliability.
 		 */
-		template <typename U>
+		template <typename U, typename = typename std::enable_if<is_multipliable_in_place<typename base::value_type,U>::value>::type>
 		monomial pow(const U &x, const symbol_set &args) const
 		{
 			// NOTE: here it might make sense to allow this only if retval[i] * x has the type of
