@@ -817,6 +817,11 @@ class series: series_binary_operators, detail::series_tag
 		{
 			return s;
 		}
+		// Typedef for pow().
+		template <typename T, typename U>
+		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),
+			typename term_type::cf_type>::value && has_is_zero<T>::value && has_integral_cast<T>::value && is_multipliable_in_place<U>::value,U
+			>::type;
 	public:
 		/// Size type.
 		/**
@@ -1252,11 +1257,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::math::integral_cast(),
 		 * - series multiplication.
 		 */
-		template <typename T, typename U = Derived, typename = typename std::enable_if<
-			std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),typename term_type::cf_type>::value &&
-			has_is_zero<T>::value && has_integral_cast<T>::value && is_multipliable_in_place<U>::value
-			>::type>
-		Derived pow(const T &x) const
+		template <typename T, typename U = Derived>
+		pow_ret_type<T,U> pow(const T &x) const
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
