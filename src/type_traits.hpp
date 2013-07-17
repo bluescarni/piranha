@@ -37,6 +37,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "config.hpp"
 #include "detail/base_term_fwd.hpp"
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
@@ -99,19 +100,7 @@ const bool is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T
  * Will use an implementation-defined type trait internally.
  */
 template <typename T>
-struct is_trivially_destructible :
-#if defined(__clang__)
-std::is_trivially_destructible<T>
-#elif defined(__GNUC__)
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 8
-std::has_trivial_destructor<T>
-#else
-std::is_trivially_destructible<T>
-#endif
-#else
-boost::has_trivial_destructor<T>
-#endif
-{};
+struct is_trivially_destructible : PIRANHA_IS_TRIVIALLY_DESTRUCTIBLE <T> {};
 
 /// Type is trivially copyable.
 /**
@@ -119,15 +108,7 @@ boost::has_trivial_destructor<T>
  * Will use an implementation-defined type trait internally.
  */
 template <typename T>
-struct is_trivially_copyable :
-#if defined(__clang__)
-std::is_trivially_copyable<T>
-#elif defined(__GNUC__)
-std::has_trivial_copy_constructor<T>
-#else
-boost::has_trivial_copy_constructor<T>
-#endif
-{};
+struct is_trivially_copyable : PIRANHA_IS_TRIVIALLY_COPYABLE <T> {};
 
 namespace detail
 {

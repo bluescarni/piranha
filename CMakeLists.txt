@@ -38,6 +38,8 @@ SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # Include these macros here as they reference variables defined above.
 INCLUDE(PiranhaCompilerLinkerSettings)
 INCLUDE(PiranhaPlatformSettings)
+message(STATUS "Current CXX flags: ${CMAKE_CXX_FLAGS}")
+
 IF(BUILD_PYRANHA)
 	INCLUDE(PyranhaPythonSetup)
 ENDIF(BUILD_PYRANHA)
