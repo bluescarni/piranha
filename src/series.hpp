@@ -402,7 +402,7 @@ class series: series_binary_operators, detail::series_tag
 		};
 		template <typename T>
 		struct generic_ctor_enabler<T,typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			(echelon_size<term_type>::value == echelon_size<typename std::decay<T>::type::term_type>::value)
 			>::type>
 		{
@@ -417,7 +417,7 @@ class series: series_binary_operators, detail::series_tag
 		};
 		template <typename T>
 		struct generic_ctor_enabler<T,typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			(echelon_size<term_type>::value < echelon_size<typename std::decay<T>::type::term_type>::value)
 			>::type>
 		{
@@ -426,7 +426,7 @@ class series: series_binary_operators, detail::series_tag
 		// Series with same echelon size, same term type, move.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
 			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
 			is_nonconst_rvalue_ref<Series &&>::value
@@ -439,7 +439,7 @@ class series: series_binary_operators, detail::series_tag
 		// Series with same echelon size, same term type, copy.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
 			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
 			!is_nonconst_rvalue_ref<Series &&>::value
@@ -452,7 +452,7 @@ class series: series_binary_operators, detail::series_tag
 		// Series with same echelon size and different term type, move.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
 			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
 			is_nonconst_rvalue_ref<Series &&>::value
@@ -464,7 +464,7 @@ class series: series_binary_operators, detail::series_tag
 		// Series with same echelon size and different term type, copy.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
 			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
 			!is_nonconst_rvalue_ref<Series &&>::value
@@ -476,7 +476,7 @@ class series: series_binary_operators, detail::series_tag
 		// Series with smaller echelon size.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<Series>::type>::value &&
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<typename std::decay<Series>::type::term_type>::value < echelon_size<term_type>::value
 			>::type * = nullptr)
 		{
@@ -485,7 +485,7 @@ class series: series_binary_operators, detail::series_tag
 		// Non-series.
 		template <typename T>
 		void dispatch_generic_construction(T &&x,
-			typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
+			typename std::enable_if<!is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
 		{
 			dispatch_generic_construction_from_cf(std::forward<T>(x));
 		}
@@ -503,14 +503,14 @@ class series: series_binary_operators, detail::series_tag
 		// =====================
 		// Overload for non-series type.
 		template <bool Sign, typename T>
-		void dispatch_in_place_add(T &&x, typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
+		void dispatch_in_place_add(T &&x, typename std::enable_if<!is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
 		{
 			term_type tmp(typename term_type::cf_type(std::forward<T>(x)),typename term_type::key_type(m_symbol_set));
 			insert<Sign>(std::move(tmp));
 		}
 		// Overload for series type with smaller echelon size.
 		template <bool Sign, typename T>
-		void dispatch_in_place_add(T &&series, typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+		void dispatch_in_place_add(T &&series, typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<term_type>::value>::type * = nullptr)
 		{
 			term_type tmp(typename term_type::cf_type(std::forward<T>(series)),typename term_type::key_type(m_symbol_set));
@@ -518,7 +518,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		// Overload for series with same echelon size.
 		template <bool Sign, typename T>
-		void dispatch_in_place_add(T &&other, typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+		void dispatch_in_place_add(T &&other, typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value>::type * = nullptr)
 		{
 			// NOTE: if they are not the same, we are going to do heavy calculations anyway: mark it "likely".
@@ -565,13 +565,13 @@ class series: series_binary_operators, detail::series_tag
 			}
 		}
 		template <typename T>
-		void dispatch_multiply(T &&x, typename std::enable_if<!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
+		void dispatch_multiply(T &&x, typename std::enable_if<!is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
 		{
 			mixed_multiply(std::forward<T>(x));
 		}
 		template <typename T>
 		void dispatch_multiply(T &&x, typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			echelon_size<typename std::decay<T>::type::term_type>::value < echelon_size<term_type>::value
 			>::type * = nullptr)
 		{
@@ -606,7 +606,7 @@ class series: series_binary_operators, detail::series_tag
 		}
 		template <typename T>
 		void dispatch_multiply(T &&other, typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
+			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
 			echelon_size<typename std::decay<T>::type::term_type>::value == echelon_size<term_type>::value
 			>::type * = nullptr)
 		{
@@ -766,7 +766,7 @@ class series: series_binary_operators, detail::series_tag
 		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
-			typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type * = nullptr)
+			typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
 		{
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
@@ -807,13 +807,13 @@ class series: series_binary_operators, detail::series_tag
 		}
 		template <typename T>
 		static T trim_cf_impl(const T &s, typename std::enable_if<
-			std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
+			is_instance_of<T,piranha::series>::value>::type * = nullptr)
 		{
 			return s.trim();
 		}
 		template <typename T>
 		static const T &trim_cf_impl(const T &s, typename std::enable_if<
-			!std::is_base_of<detail::series_tag,T>::value>::type * = nullptr)
+			!is_instance_of<T,piranha::series>::value>::type * = nullptr)
 		{
 			return s;
 		}
@@ -1179,7 +1179,7 @@ class series: series_binary_operators, detail::series_tag
 		 */
 		template <typename T>
 		typename std::enable_if<
-			!std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value,Derived &>::type operator/=(T &&other)
+			!is_instance_of<typename std::decay<T>::type,piranha::series>::value,Derived &>::type operator/=(T &&other)
 		{
 			in_place_divide(std::forward<T>(other));
 			return *static_cast<Derived *>(this);
@@ -1684,7 +1684,7 @@ typename series<Term,Derived>::cp_map_type series<Term,Derived>::cp_map =
  */
 template <typename Series>
 struct print_coefficient_impl<Series,typename std::enable_if<
-	std::is_base_of<detail::series_tag,Series>::value>::type>
+	is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -1714,7 +1714,7 @@ struct print_coefficient_impl<Series,typename std::enable_if<
  */
 template <typename Series>
 struct print_tex_coefficient_impl<Series,typename std::enable_if<
-	std::is_base_of<detail::series_tag,Series>::value>::type>
+	is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -1769,7 +1769,7 @@ struct negate_impl<T,typename std::enable_if<is_instance_of<T,series>::value>::t
  * The result will be computed via the series' <tt>empty()</tt> method.
  */
 template <typename Series>
-struct is_zero_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct is_zero_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -1789,7 +1789,7 @@ struct is_zero_impl<Series,typename std::enable_if<std::is_base_of<detail::serie
  * The result will be computed via the series' <tt>pow()</tt> method.
  */
 template <typename Series, typename T>
-struct pow_impl<Series,T,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct pow_impl<Series,T,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2009,7 +2009,7 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
 template <typename Series>
-struct evaluate_impl<Series,typename std::enable_if<std::is_base_of<detail::series_tag,Series>::value>::type>
+struct evaluate_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
 {
 	/// Call operator.
 	/**
