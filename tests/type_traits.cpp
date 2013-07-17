@@ -107,24 +107,6 @@ struct nontrivial_dtor
 	int n;
 };
 
-BOOST_AUTO_TEST_CASE(type_traits_is_trivially_copyable_test)
-{
-	BOOST_CHECK_EQUAL(is_trivially_copyable<int>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_copyable<trivial_copy>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_copyable<nontrivial_copy>::value,false);
-	BOOST_CHECK_EQUAL(is_trivially_copyable<std::string>::value,false);
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_is_trivially_destructible_test)
-{
-	BOOST_CHECK_EQUAL(is_trivially_destructible<int>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_destructible<trivial>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_destructible<nontrivial_copy>::value,true);
-	BOOST_CHECK_EQUAL(is_trivially_destructible<nontrivial_dtor>::value,false);
-	BOOST_CHECK_EQUAL(is_trivially_destructible<std::string>::value,false);
-}
-
 BOOST_AUTO_TEST_CASE(type_traits_is_nothrow_destructible_test)
 {
 	BOOST_CHECK_EQUAL(is_nothrow_destructible<int>::value,true);

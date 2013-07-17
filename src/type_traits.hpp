@@ -27,8 +27,6 @@
  * This header contains general-purpose type traits classes.
  */
 
-#include <boost/type_traits/has_trivial_copy.hpp>
-#include <boost/type_traits/has_trivial_destructor.hpp>
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
@@ -93,22 +91,6 @@ const bool is_nothrow_destructible<T,typename std::enable_if<!std::is_destructib
 
 template <typename T>
 const bool is_nothrow_destructible<T,typename std::enable_if<std::is_reference<T>::value>::type>::value;
-
-/// Type is trivially destructible.
-/**
- * Equivalent to <tt>std::is_trivially_destructible</tt>.
- * Will use an implementation-defined type trait internally.
- */
-template <typename T>
-struct is_trivially_destructible : PIRANHA_IS_TRIVIALLY_DESTRUCTIBLE <T> {};
-
-/// Type is trivially copyable.
-/**
- * Equivalent to <tt>std::is_trivially_copyable</tt>.
- * Will use an implementation-defined type trait internally.
- */
-template <typename T>
-struct is_trivially_copyable : PIRANHA_IS_TRIVIALLY_COPYABLE <T> {};
 
 namespace detail
 {
