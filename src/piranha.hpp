@@ -89,7 +89,7 @@
  * http://www.mpfr.org/mpfr-current/mpfr.html (implement in terms of gamma functions as indicated by the Wolfram link)
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL -> note that placement new cannot be overloaded:
- * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new
+ * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the standard)
  * so we might as well keep ::new in those cases.
  * \todo similarly, review all struct/class is_/has_is_ type traits to prevent ADL by using piranha specifiers as needed.
  * \todo should we always use piranha when calling functions in order to prevent ADL? -> note that these ADL concerns apply

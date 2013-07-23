@@ -114,6 +114,7 @@ class hash_set
 			// seems to be the only standard-conforming way of getting out a pointer to T.
 			// http://stackoverflow.com/questions/1082378/what-is-the-basic-use-of-aligned-storage
 			// http://stackoverflow.com/questions/13466556/aligned-storage-and-strict-aliasing
+			// http://en.cppreference.com/w/cpp/types/aligned_storage
 			// A couple of further notes:
 			// - pointer casting to/from void * is ok (4.10.2 and 5.2.9.13, via static_cast);
 			// - the placement new operator (which we use to construct the object into the storage)
