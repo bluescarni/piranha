@@ -109,6 +109,18 @@ class hash_set
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
 			node():m_next(nullptr) {}
+			// NOTE: the idea here is that we use these helpers only *after* the object has been constructed,
+			// for constructing the object we must always access m_storage directly. The chain of two casts
+			// seems to be the only standard-conforming way of getting out a pointer to T.
+			// http://stackoverflow.com/questions/1082378/what-is-the-basic-use-of-aligned-storage
+			// http://stackoverflow.com/questions/13466556/aligned-storage-and-strict-aliasing
+			// A couple of further notes:
+			// - pointer casting to/from void * is ok (4.10.2 and 5.2.9.13, via static_cast);
+			// - the placement new operator (which we use to construct the object into the storage)
+			//   is guaranteed to construct the object at the beginning of the storage, and taking
+			//   a void * out of the storage will return the address of the object stored within;
+			// - the lifetime of the original POD storage_type ends when we reuse its storage via
+			//   placement new.
 			const T *ptr() const
 			{
 				piranha_assert(m_next);
