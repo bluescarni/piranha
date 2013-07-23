@@ -45,7 +45,7 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization timer)
+SET(REQUIRED_BOOST_LIBS serialization timer system)
 # Look for Boost.Test only if we are building unit tests.
 IF(BUILD_TESTS)
 	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
@@ -64,7 +64,7 @@ MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 # Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
 # when compiling tests.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_TIMER_LIBRARY})
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
