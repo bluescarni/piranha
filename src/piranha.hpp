@@ -149,6 +149,7 @@ namespace detail {}
 #include "series_binary_operators.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
+#include "small_vector.hpp"
 #include "static_vector.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
