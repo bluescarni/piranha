@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE static_vector_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
@@ -171,6 +172,14 @@ struct iterator_tester
 BOOST_AUTO_TEST_CASE(static_vector_iterator_test)
 {
 	boost::mpl::for_each<value_types>(iterator_tester());
+}
+
+BOOST_AUTO_TEST_CASE(static_vector_size_type_test)
+{
+	BOOST_CHECK((std::is_same<detail::static_vector_size_type<10u>::type,unsigned char>::value));
+	BOOST_CHECK((std::is_same<detail::static_vector_size_type<255u>::type,unsigned char>::value));
+	BOOST_CHECK((std::is_same<detail::static_vector_size_type<10000u>::type,unsigned char>::value) ||
+		(std::is_same<detail::static_vector_size_type<10000u>::type,unsigned short>::value));
 }
 
 struct equality_tester

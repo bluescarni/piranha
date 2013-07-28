@@ -28,6 +28,7 @@
 #include <cstring>
 #include <iostream>
 #include <new>
+#include <tuple>
 #include <type_traits>
 
 #include "config.hpp"
@@ -37,11 +38,35 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+using static_vector_size_types = std::tuple<unsigned char, unsigned short, unsigned, unsigned long, unsigned long long>;
+
+template <std::size_t Size, std::size_t Index = 0u>
+struct static_vector_size_type
+{
+	using candidate_type = typename std::tuple_element<Index,static_vector_size_types>::type;
+	using type = typename std::conditional<(boost::integer_traits<candidate_type>::const_max >= Size),
+		candidate_type,
+		typename static_vector_size_type<Size,static_cast<std::size_t>(Index + 1u)>::type>::type;
+};
+
+template <std::size_t Size>
+struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<static_vector_size_types>::value - 1u)>
+{
+	using type = typename std::tuple_element<static_cast<std::size_t>(std::tuple_size<static_vector_size_types>::value - 1u),
+		static_vector_size_types>::type;
+	static_assert(boost::integer_traits<type>::const_max >= Size,"Cannot determine size type for static vector.");
+};
+
+}
+
 /// Static vector class.
 /**
- * This class represents a dynamic array that avoids runtime memory allocation. Memory storage is provided by an internal
- * array of statically allocated objects of type \p T. The size of the internal storage is enough to fit
- * a maximum of \p MaxSize objects.
+ * This class represents a dynamic array that avoids runtime memory allocation. Memory storage is provided by
+ * a contiguous memory block stored within the class. The size of the internal storage is enough to fit
+ * at least \p MaxSize objects.
  * 
  * The interface of this class mimics part of the interface of \p std::vector.
  * 
@@ -60,21 +85,50 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, std::uint_least8_t MaxSize>
+template <typename T, std::size_t MaxSize>
 class static_vector
 {
+		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
 	public:
 		/// Size type.
-		typedef std::uint_least8_t size_type;
+		/**
+		 * An unsigned integer type large enough to represent \p MaxSize.
+		 */
+		using size_type = typename detail::static_vector_size_type<MaxSize>::type;
 	private:
 		PIRANHA_TT_CHECK(is_container_element,T);
-		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
 		// This check is against overflows when using memcpy.
 		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),
 			"The size type for static_vector might overflow.");
-		typedef typename std::aligned_storage<sizeof(T[MaxSize]),alignof(T[MaxSize])>::type storage_type;
+		// Check for overflow in the definition of the storage type.
+		static_assert(MaxSize < boost::integer_traits<std::size_t>::const_max / sizeof(T),"Overflow in the computation of storage size.");
+		// NOTE: some notes about the use of raw storage, after some research in the standard:
+		// - storage type is guaranteed to be a POD able to hold any object whose size is at most Len
+		//   and alignment a divisor of Align (20.9.7.6). Thus, we can store on object of type T at the
+		//   beginning of the storage;
+		// - POD types are trivially copyable, and thus they occupy contiguous bytes of storage (1.8/5);
+		// - the meaning of "contiguous" seems not to be explicitly stated, but it can be inferred
+		//   (e.g., 23.3.2.1/1) that it has to do with the fact that one can do pointer arithmetics
+		//   to move around in the storage;
+		// - the footnote in 5.7/6 implies that casting around to different pointer types and then doing
+		//   pointer arithmetics has the expected behaviour of moving about with discrete offsets equal to the sizeof
+		//   the pointed-to object (i.e., it seems like pointer arithmetics does not suffer from
+		//   strict aliasing and type punning issues - at least as long as one goest through void *
+		//   conversions to get the address of the storage - note also 3.9.2/3). This supposedly applies to arrays only,
+		//   but, again, it is implied in other places that it also holds true for contiguous storage;
+		// - the no-padding guarantee for arrays (which also consist of contiguous storage) implies that sizeof must be
+		//   a multiple of the alignment for a given type;
+		// - the definition of alignment (3.11) implies that if one has contiguous storage starting at an address in
+		//   which T can be constructed, the offsetting the initial address by multiples of the alignment value will
+		//   still produce addresses at which the object can be constructed;
+		// - in general, we are assuming here that we can handle contiguous storage the same way arrays can be handled (e.g.,
+		//   to get the end() iterator we get one past the lat element).
+		typedef typename std::aligned_storage<sizeof(T) * MaxSize,alignof(T)>::type storage_type;
 	public:
 		/// Maximum size.
+		/**
+		 * Alias for \p MaxSize.
+		 */
 		static const size_type max_size = MaxSize;
 		/// Contained type.
 		typedef T value_type;
@@ -95,8 +149,11 @@ class static_vector
 		 */
 		static_vector(const static_vector &other):m_size(0u)
 		{
+			// NOTE: here and elsewhere, the standard implies (3.9/2) that we can use this optimisation
+			// for trivially copyable types. GCC does not support the type trait yet, so we restrict the
+			// optimisation to POD types (which are trivially copyable).
 			if (std::is_pod<T>::value) {
-				std::memcpy(static_cast<void *>(&m_storage),static_cast<void const *>(&other.m_storage),other.m_size * sizeof(T));
+				std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
 				m_size = other.m_size;
 			} else {
 				try {
@@ -118,7 +175,7 @@ class static_vector
 		static_vector(static_vector &&other) noexcept(true):m_size(0u)
 		{
 			if (std::is_pod<T>::value) {
-				std::memcpy(static_cast<void *>(&m_storage),static_cast<void const *>(&other.m_storage),other.m_size * sizeof(T));
+				std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
 				m_size = other.m_size;
 			} else {
 				// NOTE: here no need for rollback, as we assume move ctors do not throw.
@@ -170,7 +227,7 @@ class static_vector
 		{
 			if (likely(this != &other)) {
 				if (std::is_pod<T>::value) {
-					std::memcpy(static_cast<void *>(&m_storage),static_cast<void const *>(&other.m_storage),other.m_size * sizeof(T));
+					std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
 					m_size = other.m_size;
 				} else {
 					static_vector tmp(other);
@@ -189,7 +246,7 @@ class static_vector
 		{
 			if (likely(this != &other)) {
 				if (std::is_pod<T>::value) {
-					std::memcpy(static_cast<void *>(&m_storage),static_cast<void const *>(&other.m_storage),other.m_size * sizeof(T));
+					std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
 				} else {
 					const size_type old_size = m_size, new_size = other.m_size;
 					if (old_size <= new_size) {
@@ -199,7 +256,7 @@ class static_vector
 						}
 						// Move construct remaining elements.
 						for (size_type i = old_size; i < new_size; ++i) {
-							::new ((void *)(ptr() + i)) value_type(std::move(other[i]));
+							::new (static_cast<void *>(ptr() + i)) value_type(std::move(other[i]));
 						}
 					} else {
 						// Move assign new content into old content.
@@ -309,7 +366,7 @@ class static_vector
 			if (unlikely(m_size == MaxSize)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			::new ((void *)(ptr() + m_size)) value_type(x);
+			::new (static_cast<void *>(ptr() + m_size)) value_type(x);
 			++m_size;
 		}
 		/// Move-add element at the end of the vector.
@@ -325,7 +382,7 @@ class static_vector
 			if (unlikely(m_size == MaxSize)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			::new ((void *)(ptr() + m_size)) value_type(std::move(x));
+			::new (static_cast<void *>(ptr() + m_size)) value_type(std::move(x));
 			++m_size;
 		}
 		/// Construct in-place at the end of the vector.
@@ -343,7 +400,7 @@ class static_vector
 			if (unlikely(m_size == MaxSize)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			::new ((void *)(ptr() + m_size)) value_type(std::forward<Args>(params)...);
+			::new (static_cast<void *>(ptr() + m_size)) value_type(std::forward<Args>(params)...);
 			++m_size;
 		}
 		/// Reserve space.
@@ -387,7 +444,7 @@ class static_vector
 				// Construct new in case of larger size.
 				const value_type tmp = value_type();
 				for (size_type i = old_size; i < new_size; ++i) {
-					::new ((void *)(ptr() + i)) value_type(tmp);
+					::new (static_cast<void *>(ptr() + i)) value_type(tmp);
 					piranha_assert(m_size != MaxSize);
 					++m_size;
 				}
@@ -431,20 +488,30 @@ class static_vector
 				ptr()[i].~T();
 			}
 		}
+		// Getters for storage cast to void.
+		void *vs()
+		{
+			return static_cast<void *>(&m_storage);
+		}
+		const void *vs() const
+		{
+			return static_cast<const void *>(&m_storage);
+		}
+		// Getters for T pointer.
 		T *ptr()
 		{
-			return static_cast<T *>(static_cast<void *>(&m_storage));
+			return static_cast<T *>(vs());
 		}
 		const T *ptr() const
 		{
-			return static_cast<const T *>(static_cast<const void *>(&m_storage));
+			return static_cast<const T *>(vs());
 		}
 	private:
 		storage_type	m_storage;
 		size_type	m_size;
 };
 
-template <typename T, std::uint_least8_t MaxSize>
+template <typename T, std::size_t MaxSize>
 const typename static_vector<T,MaxSize>::size_type static_vector<T,MaxSize>::max_size;
 
 }
