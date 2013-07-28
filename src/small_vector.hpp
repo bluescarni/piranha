@@ -22,11 +22,11 @@
 #define PIRANHA_SMALL_VECTOR_HPP
 
 #include <algorithm>
-#include <boost/compressed_pair.hpp>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <memory>
 #include <new>
+#include <tuple>
 #include <type_traits>
 
 #include "config.hpp"
@@ -56,10 +56,47 @@ class dynamic_storage
 			"The pointer type of the allocator must be a raw pointer.");
 	public:
 		// NOTE: this is guaranteed to be within the range of unsigned short.
-		static const size_type max_size = 65535u;
+		static const size_type max_size = 32768u;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
 		dynamic_storage():m_pair(nullptr,allocator_type()),m_size(0u),m_capacity(0u) {}
+		dynamic_storage(dynamic_storage &&other) noexcept : m_pair(std::move(other.m_pair)),m_size(other.m_size),m_capacity(other.m_capacity)
+		{
+			// Erase the other.
+			other.ptr() = nullptr;
+			other.m_size = 0u;
+			other.m_capacity = 0u;
+		}
+		dynamic_storage(const dynamic_storage &other) : m_pair(nullptr,a_traits::select_on_container_copy_construction(other.alloc())),
+			m_size(0u),m_capacity(other.m_size) // NOTE: when copying, we set the capacity to the same value of the size.
+		{
+			// No need to allocate or to do anything if other is empty.
+			if (other.empty()) {
+				return;
+			}
+			// Obtain storage.
+			// NOTE: here we are using the allocator obtained from copy, and we know the allocator can satisfy this (in terms of max_size()) as it
+			// satisfied already a request equal or larger in other.
+			ptr() = obtain_new_storage(other.m_size);
+			// Attempt to copy-construct the elements from other.
+			try {
+				for (; m_size < other.m_size; ++m_size) {
+					a_traits::construct(alloc(),ptr() + m_size,other[m_size]);
+				}
+			} catch (...) {
+				// Roll back the construction and deallocate before re-throwing.
+				destroy_and_deallocate();
+				throw;
+			}
+		}
+		~dynamic_storage() noexcept
+		{
+			destroy_and_deallocate();
+		}
+		bool empty() const
+		{
+			return m_size == 0u;
+		}
 		void push_back(const value_type &x)
 		{
 			piranha_assert(consistency_checks());
@@ -79,26 +116,14 @@ class dynamic_storage
 			a_traits::construct(alloc(),ptr() + m_size,std::move(x));
 			++m_size;
 		}
-		~dynamic_storage() noexcept
-		{
-			piranha_assert(consistency_checks());
-			for (size_type i = 0u; i < m_size; ++i) {
-				// NOTE: we do not try to use POD optimisations here as the allocator
-				// might have side effects.
-				a_traits::destroy(alloc(),ptr() + i);
-			}
-			if (ptr() != nullptr) {
-				// NOTE: deallocate can never throw.
-				// http://en.cppreference.com/w/cpp/concept/Allocator
-				a_traits::deallocate(alloc(),ptr(),m_capacity);
-			}
-		}
 		value_type &operator[](const size_type &n)
 		{
+			piranha_assert(n < m_size);
 			return ptr()[n];
 		}
 		const value_type &operator[](const size_type &n) const
 		{
+			piranha_assert(n < m_size);
 			return ptr()[n];
 		}
 		size_type size() const
@@ -135,16 +160,13 @@ class dynamic_storage
 			if (unlikely(new_capacity > max_size || new_capacity > a_traits::max_size(alloc()))) {
 				piranha_throw(std::bad_alloc,);
 			}
-			// Start by allocating the new storage.
-			pointer new_storage = a_traits::allocate(alloc(),new_capacity);
-			if (unlikely(new_storage == nullptr)) {
-				piranha_throw(std::bad_alloc,);
-			}
+			// Start by allocating the new storage. New capacity is at least one at this point.
+			pointer new_storage = obtain_new_storage(new_capacity);
 			// Move in existing elements and destroy the original ones. Consistency checks ensure
 			// that m_size is not greater than m_capacity and, by extension, new_capacity.
 			for (size_type i = 0u; i < m_size; ++i) {
-				a_traits::construct(alloc(),new_storage + i,std::move(*this[i]));
-				a_traits::destroy(alloc(),ptr() + i);
+				a_traits::construct(alloc(),new_storage + i,std::move((*this)[i]));
+				destroy_helper(ptr() + i);
 			}
 			// Deallocate original storage.
 			if (ptr() != nullptr) {
@@ -159,6 +181,39 @@ class dynamic_storage
 			return m_capacity;
 		}
 	private:
+		void destroy_and_deallocate() noexcept
+		{
+			piranha_assert(consistency_checks());
+			for (size_type i = 0u; i < m_size; ++i) {
+				// NOTE: we do not try to use POD optimisations here as the allocator
+				// might have side effects.
+				// NOTE: no need for the helper as we are marked noexcept already.
+				a_traits::destroy(alloc(),ptr() + i);
+			}
+			if (ptr() != nullptr) {
+				// NOTE: deallocate can never throw.
+				// http://en.cppreference.com/w/cpp/concept/Allocator
+				a_traits::deallocate(alloc(),ptr(),m_capacity);
+			}
+		}
+		// Obtain new storage, and throw an error in case something goes wrong.
+		pointer obtain_new_storage(const size_type &size)
+		{
+			piranha_assert(size > 0u);
+			pointer storage = a_traits::allocate(alloc(),size);
+			if (unlikely(storage == nullptr)) {
+				piranha_throw(std::bad_alloc,);
+			}
+			return storage;
+		}
+		// This helper function is here because apparently there's no requirement on the allocator
+		// method destroy() not to throw, even in presence of noexcept on the destructor. The idea
+		// here is to get noexcept behaviour, as in presence of exceptions in the dtor
+		// there is not much we can do.
+		void destroy_helper(pointer p) noexcept
+		{
+			a_traits::destroy(alloc(),p);
+		}
 		// Will try to double the capacity, or, in case this is not possible,
 		// will set the capacity to max_size. If the initial capacity is already max,
 		// then will throw an error.
@@ -167,24 +222,26 @@ class dynamic_storage
 			if (unlikely(m_capacity == max_size)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			const size_type new_capacity = (m_capacity > max_size / 2u) ? max_size : static_cast<size_type>(m_capacity * 2u);
+			// NOTE: capacity should double, but without going past max_size, and in cast it is zero it should go to 1.
+			const size_type new_capacity = (m_capacity > max_size / 2u) ? max_size : ((m_capacity != 0u) ?
+				static_cast<size_type>(m_capacity * 2u) : static_cast<size_type>(1u));
 			reserve(new_capacity);
 		}
 		pointer &ptr()
 		{
-			return m_pair.first();
+			return std::get<0u>(m_pair);
 		}
 		const pointer &ptr() const
 		{
-			return m_pair.first();
+			return std::get<0u>(m_pair);
 		}
 		allocator_type &alloc()
 		{
-			return m_pair.second();
+			return std::get<1u>(m_pair);
 		}
 		const allocator_type &alloc() const
 		{
-			return m_pair.second();
+			return std::get<1u>(m_pair);
 		}
 		bool consistency_checks()
 		{
@@ -203,10 +260,12 @@ class dynamic_storage
 			return true;
 		}
 	private:
-		// NOTE: compressed pair to reduce the size in case of stateless allocators.
-		boost::compressed_pair<pointer,allocator_type>		m_pair;
-		size_type						m_size;
-		size_type						m_capacity;
+		// NOTE: common tuple implementations use EBCO, try to reduce size in case
+		// of stateless allocators.
+		// http://flamingdangerzone.com/cxx11/2012/07/06/optimal-tuple-i.html
+		std::tuple<pointer,allocator_type>	m_pair;
+		size_type				m_size;
+		size_type				m_capacity;
 };
 
 // TMP to determine automatically the size of the static storage in small_vector.
