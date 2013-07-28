@@ -208,7 +208,7 @@ class dynamic_storage
 		}
 		// This helper function is here because apparently there's no requirement on the allocator
 		// method destroy() not to throw, even in presence of noexcept on the destructor. The idea
-		// here is to get noexcept behaviour, as in presence of exceptions in the dtor
+		// here is to force noexcept behaviour, as in presence of exceptions in the dtor
 		// there is not much we can do.
 		void destroy_helper(pointer p) noexcept
 		{
@@ -222,7 +222,7 @@ class dynamic_storage
 			if (unlikely(m_capacity == max_size)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			// NOTE: capacity should double, but without going past max_size, and in cast it is zero it should go to 1.
+			// NOTE: capacity should double, but without going past max_size, and in case it is zero it should go to 1.
 			const size_type new_capacity = (m_capacity > max_size / 2u) ? max_size : ((m_capacity != 0u) ?
 				static_cast<size_type>(m_capacity * 2u) : static_cast<size_type>(1u));
 			reserve(new_capacity);
