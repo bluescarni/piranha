@@ -180,6 +180,11 @@ BOOST_AUTO_TEST_CASE(static_vector_size_type_test)
 	BOOST_CHECK((std::is_same<detail::static_vector_size_type<255u>::type,unsigned char>::value));
 	BOOST_CHECK((std::is_same<detail::static_vector_size_type<10000u>::type,unsigned char>::value) ||
 		(std::is_same<detail::static_vector_size_type<10000u>::type,unsigned short>::value));
+	BOOST_CHECK((std::is_same<detail::static_vector_size_type<4294967295ul>::type,unsigned char>::value) ||
+		(std::is_same<detail::static_vector_size_type<4294967295ul>::type,unsigned short>::value) ||
+		(std::is_same<detail::static_vector_size_type<4294967295ul>::type,unsigned>::value) ||
+		(std::is_same<detail::static_vector_size_type<4294967295ul>::type,unsigned long>::value)
+		);
 }
 
 struct equality_tester

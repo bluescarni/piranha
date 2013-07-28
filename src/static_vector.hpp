@@ -41,6 +41,7 @@ namespace piranha
 namespace detail
 {
 
+// TMP to determine size type big enough to represent Size. The candidate types are the fundamental unsigned integer types.
 using static_vector_size_types = std::tuple<unsigned char, unsigned short, unsigned, unsigned long, unsigned long long>;
 
 template <std::size_t Size, std::size_t Index = 0u>
@@ -387,6 +388,9 @@ class static_vector
 		}
 		/// Construct in-place at the end of the vector.
 		/**
+		 * \note
+		 * This method is enabled only if \p value_type is constructible from the variadic arguments pack.
+		 *
 		 * Input parameters will be used to construct an instance of \p T at the end of the container.
 		 * 
 		 * @param[in] params arguments that will be used to construct the new element.
@@ -394,7 +398,7 @@ class static_vector
 		 * @throws std::bad_alloc if the insertion of the new element would lead to a size greater than \p MaxSize.
 		 * @throws unspecified any exception thrown by the constructor of \p T from the input parameters.
 		 */
-		template <typename... Args>
+		template <typename... Args, typename = typename std::enable_if<std::is_constructible<value_type,Args && ...>::value>::type>
 		void emplace_back(Args && ... params)
 		{
 			if (unlikely(m_size == MaxSize)) {
@@ -442,9 +446,11 @@ class static_vector
 				return;
 			} else if (new_size > old_size) {
 				// Construct new in case of larger size.
-				const value_type tmp = value_type();
 				for (size_type i = old_size; i < new_size; ++i) {
-					::new (static_cast<void *>(ptr() + i)) value_type(tmp);
+					// NOTE: placement-new syntax for value initialization, the same as performed by
+					// std::vector (see 23.3.6.2 and 23.3.6.3/9).
+					// http://en.cppreference.com/w/cpp/language/value_initialization
+					::new (static_cast<void *>(ptr() + i)) value_type();
 					piranha_assert(m_size != MaxSize);
 					++m_size;
 				}
