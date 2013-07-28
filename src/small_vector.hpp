@@ -21,23 +21,29 @@
 #ifndef PIRANHA_SMALL_VECTOR_HPP
 #define PIRANHA_SMALL_VECTOR_HPP
 
+#include <algorithm>
+#include <boost/compressed_pair.hpp>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
-#include <iterator>
 #include <memory>
-#include <tuple>
+#include <new>
 #include <type_traits>
 
 #include "config.hpp"
+#include "static_vector.hpp"
+#include "type_traits.hpp"
 
 namespace piranha {
 
 namespace detail
 {
 
+// This is essentially a reduced std::vector replacement that should use less storage on most implementations
+// (e.g., it has a size of 16 on Linux 64-bit and it _should_ have a size of 8 on many 32-bit archs).
 template <typename T, typename Allocator>
 class dynamic_storage
 {
+		PIRANHA_TT_CHECK(is_container_element,T);
 	public:
 		using size_type = unsigned short;
 		using value_type = T;
@@ -48,32 +54,42 @@ class dynamic_storage
 		using const_pointer = typename a_traits::const_pointer;
 		static_assert(std::is_same<pointer,value_type *>::value && std::is_same<const_pointer,const value_type *>::value,
 			"The pointer type of the allocator must be a raw pointer.");
+	public:
 		// NOTE: this is guaranteed to be within the range of unsigned short.
 		static const size_type max_size = 65535u;
-	public:
 		using iterator = pointer;
 		using const_iterator = const_pointer;
-		dynamic_storage():m_tuple(nullptr,allocator_type()),m_size(0u),m_capacity(0u) {}
-		template <typename InputIt, typename = typename std::enable_if<
-			std::is_constructible<T,typename std::iterator_traits<InputIt>::value_type>::value
-			>::type>
-		explicit dynamic_storage(InputIt first, InputIt last):m_tuple(nullptr,allocator_type()),m_size(0u),m_capacity(0u)
-		{
-
-		}
+		dynamic_storage():m_pair(nullptr,allocator_type()),m_size(0u),m_capacity(0u) {}
 		void push_back(const value_type &x)
 		{
+			piranha_assert(consistency_checks());
+			// Increase capacity if we are at the limit.
 			if (m_capacity == m_size) {
 				increase_capacity();
 			}
+			a_traits::construct(alloc(),ptr() + m_size,x);
+			++m_size;
+		}
+		void push_back(value_type &&x)
+		{
+			piranha_assert(consistency_checks());
+			if (m_capacity == m_size) {
+				increase_capacity();
+			}
+			a_traits::construct(alloc(),ptr() + m_size,std::move(x));
+			++m_size;
 		}
 		~dynamic_storage() noexcept
 		{
 			piranha_assert(consistency_checks());
 			for (size_type i = 0u; i < m_size; ++i) {
+				// NOTE: we do not try to use POD optimisations here as the allocator
+				// might have side effects.
 				a_traits::destroy(alloc(),ptr() + i);
 			}
 			if (ptr() != nullptr) {
+				// NOTE: deallocate can never throw.
+				// http://en.cppreference.com/w/cpp/concept/Allocator
 				a_traits::deallocate(alloc(),ptr(),m_capacity);
 			}
 		}
@@ -105,126 +121,95 @@ class dynamic_storage
 		{
 			return ptr() + m_size;
 		}
-		void reserve(const size_type &size) const
+		void reserve(const size_type &new_capacity)
 		{
+			piranha_assert(consistency_checks());
 			// No need to do anything if we already have enough capacity.
-			if (size <= m_capacity) {
+			if (new_capacity <= m_capacity) {
 				return;
 			}
-			// TODO likely/unlikely.
 			// Check that we are not asking too much.
-			if (size > max_size || size > a_traits::max_size(alloc())) {
-				// TODO throw error.
+			// NOTE: a_traits::max_size() returns an unsigned integer type, so we are sure the comparison
+			// will work as expected.
+			// http://en.cppreference.com/w/cpp/concept/Allocator
+			if (unlikely(new_capacity > max_size || new_capacity > a_traits::max_size(alloc()))) {
+				piranha_throw(std::bad_alloc,);
 			}
 			// Start by allocating the new storage.
-			pointer new_storage = a_traits::allocate(alloc(),size);
-			if (new_storage == nullptr) {
-				// TODO throw throw.
+			pointer new_storage = a_traits::allocate(alloc(),new_capacity);
+			if (unlikely(new_storage == nullptr)) {
+				piranha_throw(std::bad_alloc,);
 			}
-			// Move in existing elements.
-
+			// Move in existing elements and destroy the original ones. Consistency checks ensure
+			// that m_size is not greater than m_capacity and, by extension, new_capacity.
+			for (size_type i = 0u; i < m_size; ++i) {
+				a_traits::construct(alloc(),new_storage + i,std::move(*this[i]));
+				a_traits::destroy(alloc(),ptr() + i);
+			}
+			// Deallocate original storage.
+			if (ptr() != nullptr) {
+				a_traits::deallocate(alloc(),ptr(),m_capacity);
+			}
+			// Move in the new pointer and capacity.
+			ptr() = new_storage;
+			m_capacity = new_capacity;
+		}
+		size_type capacity() const
+		{
+			return m_capacity;
 		}
 	private:
+		// Will try to double the capacity, or, in case this is not possible,
+		// will set the capacity to max_size. If the initial capacity is already max,
+		// then will throw an error.
 		void increase_capacity()
 		{
-
+			if (unlikely(m_capacity == max_size)) {
+				piranha_throw(std::bad_alloc,);
+			}
+			const size_type new_capacity = (m_capacity > max_size / 2u) ? max_size : static_cast<size_type>(m_capacity * 2u);
+			reserve(new_capacity);
 		}
 		pointer &ptr()
 		{
-			return std::get<0u>(m_tuple);
+			return m_pair.first();
 		}
 		const pointer &ptr() const
 		{
-			return std::get<0u>(m_tuple);
+			return m_pair.first();
 		}
 		allocator_type &alloc()
 		{
-			return std::get<1u>(m_tuple);
+			return m_pair.second();
 		}
 		const allocator_type &alloc() const
 		{
-			return std::get<1u>(m_tuple);
+			return m_pair.second();
 		}
 		bool consistency_checks()
 		{
 			// Size cannot be greater than capacity.
-			if (m_size > m_capacity) {
+			if (unlikely(m_size > m_capacity)) {
 				return false;
 			}
 			// If we allocated something, capacity cannot be zero.
-			if (ptr() != nullptr && m_capacity == 0u) {
+			if (unlikely(ptr() != nullptr && m_capacity == 0u)) {
 				return false;
 			}
 			// If we have nothing allocated, capacity must be zero.
-			if (ptr() == nullptr && m_capacity != 0u) {
+			if (unlikely(ptr() == nullptr && m_capacity != 0u)) {
 				return false;
 			}
 			return true;
 		}
 	private:
-		// NOTE: here we use a tuple because many implementations will optimise the size
-		// to be the same size of pointer when the allocator is stateless (using empty
-		// base optimisation). Consider replacing this with boost compressed pair if we need
-		// to enforce the behaviour.
-		std::tuple<pointer,allocator_type>	m_tuple;
-		size_type				m_size;
-		size_type				m_capacity;
+		// NOTE: compressed pair to reduce the size in case of stateless allocators.
+		boost::compressed_pair<pointer,allocator_type>		m_pair;
+		size_type						m_size;
+		size_type						m_capacity;
 };
 
-template <typename T, std::size_t Size>
-class static_storage
-{
-		// NOTE: some notes about the use of raw storage, after some research in the standard:
-		// - storage type is guaranteed to be a POD able to hold any object whose size is at most Len
-		//   and alignment a divisor of Align (20.9.7.6). Thus, we can store on object of type T at the
-		//   beginning of the storage;
-		// - POD types are trivially copyable, and thus they occupy contiguous bytes of storage (1.8/5);
-		// - the meaning of "contiguous" seems not to be explicitly stated, but it can be inferred
-		//   (e.g., 23.3.2.1/1) that it has to do with the fact that one can do pointer arithmetics
-		//   to move around in the storage;
-		// - the footnote in 5.7/6 implies that casting around to different pointer types and then doing
-		//   pointer arithmetics has the expected behaviour of moving about with discrete offsets equal to the sizeof
-		//   the pointed-to object (i.e., it seems like pointer arithmetics does not suffer from
-		//   strict aliasing and type punning issues - at least as long as one goest through void *
-		//   conversions to get the address of the storage - note also 3.9.2/3). This supposedly applies to arrays only,
-		//   but, again, it is implied in other places that it also holds true for contiguous storage;
-		// - the no-padding guarantee for arrays (which also consist of contiguous storage) implies that sizeof must be
-		//   a multiple of the alignment for a given type;
-		// - the definition of alignment (3.11) implies that if one has contiguous storage starting at an address in
-		//   which T can be constructed, the offsetting the initial address by multiples of the alignment value will
-		//   still produce addresses at which the object can be constructed.
-		// TODO overflow assert guard.
-		using storage_type = typename std::aligned_storage<sizeof(T) * Size,alignof(T)>::type;
-	public:
-		using size_type = unsigned char;
-		using value_type = T;
-		static_storage():m_size(0u) {}
-		~static_storage() noexcept
-		{
-			// NOTE: here it could be optimised for trivially destructible types (3.8),
-			// but GCC 4.7 does not implement the trait yet and the compiler is likely
-			// to optimise the loop away anyway.
-			for (size_type i = 0u; i < m_size; ++i) {
-				(*this)[i].~value_type();
-			}
-		}
-		value_type &operator[](const size_type &n)
-		{
-			return *(static_cast<value_type *>(static_cast<void *>(&m_storage)) + n);
-		}
-		const value_type &operator[](const size_type &n) const
-		{
-			return *(static_cast<const value_type *>(static_cast<const void *>(&m_storage)) + n);
-		}
-		size_type size() const
-		{
-			return m_size;
-		}
-	private:
-		storage_type	m_storage;
-		size_type	m_size;
-};
-
+// TMP to determine automatically the size of the static storage in small_vector.
 template <typename T, typename Allocator, std::size_t Size = 1u, typename = void>
 struct auto_static_size
 {
@@ -233,20 +218,48 @@ struct auto_static_size
 
 template <typename T, typename Allocator, std::size_t Size>
 struct auto_static_size<T,Allocator,Size,typename std::enable_if<
-	(sizeof(dynamic_storage<T,Allocator>) > sizeof(static_storage<T,Size>))
+	(sizeof(dynamic_storage<T,Allocator>) > sizeof(static_vector<T,Size>))
 	>::type>
 {
-	// TODO static assert overflow.
+	static_assert(Size < boost::integer_traits<std::size_t>::const_max,"Overflow error in auto_static_size.");
 	static const std::size_t value = auto_static_size<T,Allocator,Size + 1u>::value;
 };
 
 }
 
+/// Small vector class.
+/**
+ * This class is a sequence container similar to the standard <tt>std::vector</tt> class. The class will avoid dynamic
+ * memory allocation by using internal static storage up to a certain number of elements. If \p Size is zero, this
+ * number is calculated automatically (so that the size of the static storage block is not greater than the size of the
+ * members used to manage dynamically-allocated memory). Otherwise, the limit number is set to \p Size.
+ *
+ * The container is partially allocator-aware. The \p Allocator will be used only when using dynamic memory, and it is subject
+ * to the following restrictions:
+ * - its pointer types must be raw pointers,
+ * - only default-constructed instances of the allocator will be used.
+ *
+ * \section type_requirements Type requirements
+ *
+ * - \p T must satisfy piranha::is_container_element.
+ * - \p Allocator must be a standard-conforming allocator whose pointer types are raw pointers.
+ *
+ * \section exception_safety Exception safety guarantee
+ *
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
+ *
+ * \section move_semantics Move semantics
+ *
+ * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 template <typename T, std::size_t Size = 0u, typename Allocator = std::allocator<T>>
 class small_vector
 {
-		using s_storage = typename std::conditional<Size == 0u,static_storage<T,auto_static_size<T,Allocator>::value>,static_storage<T,Size>>::type;
-		using d_storage = dynamic_storage<T,Allocator>;
+		PIRANHA_TT_CHECK(is_container_element,T);
+		using s_storage = typename std::conditional<Size == 0u,static_vector<T,detail::auto_static_size<T,Allocator>::value>,static_vector<T,Size>>::type;
+		using d_storage = detail::dynamic_storage<T,Allocator>;
 		static constexpr std::size_t get_max(const std::size_t &a, const std::size_t &b)
 		{
 			return (a > b) ? a : b;
@@ -278,6 +291,7 @@ class small_vector
 		{
 			return static_cast<const void *>(&m_storage);
 		}
+		// The size type will be the one with most range among the two storages.
 		using size_type_impl = typename std::conditional<(boost::integer_traits<typename s_storage::size_type>::const_max >
 			boost::integer_traits<typename d_storage::size_type>::const_max),typename s_storage::size_type,
 			typename d_storage::size_type>::type;

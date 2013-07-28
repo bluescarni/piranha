@@ -82,9 +82,11 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * 
  * \section move_semantics Move semantics
  * 
- * After a move operation, the size of the object will not change, and its elements will be left in a moved-from state.
+ * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ *
+ * \todo go back to reserve() and re-evaluate it once we move to small_vector in array_key.
  */
 template <typename T, std::size_t MaxSize>
 class static_vector
