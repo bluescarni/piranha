@@ -125,7 +125,9 @@ class static_vector
 		//   which T can be constructed, the offsetting the initial address by multiples of the alignment value will
 		//   still produce addresses at which the object can be constructed;
 		// - in general, we are assuming here that we can handle contiguous storage the same way arrays can be handled (e.g.,
-		//   to get the end() iterator we get one past the lat element).
+		//   to get the end() iterator we get one past the lat element);
+		// - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
+		//   in as parameter).
 		typedef typename std::aligned_storage<sizeof(T) * MaxSize,alignof(T)>::type storage_type;
 	public:
 		/// Maximum size.
