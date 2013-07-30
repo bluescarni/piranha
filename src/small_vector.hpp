@@ -60,6 +60,7 @@ class dynamic_storage
 		using iterator = pointer;
 		using const_iterator = const_pointer;
 		dynamic_storage():m_pair(nullptr,allocator_type()),m_size(0u),m_capacity(0u) {}
+		// NOTE: move ctor of allocator is guaranteed not to throw (23.2.1/7).
 		dynamic_storage(dynamic_storage &&other) noexcept : m_pair(std::move(other.m_pair)),m_size(other.m_size),m_capacity(other.m_capacity)
 		{
 			// Erase the other.
@@ -136,6 +137,8 @@ class dynamic_storage
 		}
 		iterator end()
 		{
+			// NOTE: in case m_size is zero, this is guaranteed to return
+			// the original pointer (5.7/7).
 			return ptr() + m_size;
 		}
 		const_iterator begin() const
