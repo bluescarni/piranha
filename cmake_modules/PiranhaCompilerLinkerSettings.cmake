@@ -70,6 +70,9 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wextra)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnon-virtual-dtor)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnoexcept)
+	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wlogical-op)
+	# NOTE: this looks useful, investigate the warnings it produces.
+	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wconversion)
 	# NOTE: this can be useful, but at the moment it triggers lots of warnings in type traits.
 	# Keep it in mind for the next time we touch type traits.
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wold-style-cast)
