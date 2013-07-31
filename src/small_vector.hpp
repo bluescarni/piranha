@@ -49,11 +49,16 @@ class dynamic_storage
 		using value_type = T;
 		using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 	private:
+		PIRANHA_TT_CHECK(std::is_nothrow_destructible,allocator_type);
 		using a_traits = std::allocator_traits<allocator_type>;
 		using pointer = typename a_traits::pointer;
 		using const_pointer = typename a_traits::const_pointer;
 		static_assert(std::is_same<pointer,value_type *>::value && std::is_same<const_pointer,const value_type *>::value,
 			"The pointer type of the allocator must be a raw pointer.");
+		// NOTE: common tuple implementations use EBCO, try to reduce size in case
+		// of stateless allocators.
+		// http://flamingdangerzone.com/cxx11/2012/07/06/optimal-tuple-i.html
+		using pair_type = std::tuple<pointer,allocator_type>;
 	public:
 		// NOTE: this is guaranteed to be within the range of unsigned short.
 		static const size_type max_size = 32768u;
@@ -100,22 +105,11 @@ class dynamic_storage
 		}
 		void push_back(const value_type &x)
 		{
-			piranha_assert(consistency_checks());
-			// Increase capacity if we are at the limit.
-			if (m_capacity == m_size) {
-				increase_capacity();
-			}
-			a_traits::construct(alloc(),ptr() + m_size,x);
-			++m_size;
+			push_back_impl(x);
 		}
 		void push_back(value_type &&x)
 		{
-			piranha_assert(consistency_checks());
-			if (m_capacity == m_size) {
-				increase_capacity();
-			}
-			a_traits::construct(alloc(),ptr() + m_size,std::move(x));
-			++m_size;
+			push_back_impl(std::move(x));
 		}
 		value_type &operator[](const size_type &n)
 		{
@@ -184,6 +178,17 @@ class dynamic_storage
 			return m_capacity;
 		}
 	private:
+		// Common implementation of push_back().
+		template <typename U>
+		void push_back_impl(U &&x)
+		{
+			piranha_assert(consistency_checks());
+			if (unlikely(m_capacity == m_size)) {
+				increase_capacity();
+			}
+			a_traits::construct(alloc(),ptr() + m_size,std::forward<U>(x));
+			++m_size;
+		}
 		void destroy_and_deallocate() noexcept
 		{
 			piranha_assert(consistency_checks());
@@ -263,12 +268,9 @@ class dynamic_storage
 			return true;
 		}
 	private:
-		// NOTE: common tuple implementations use EBCO, try to reduce size in case
-		// of stateless allocators.
-		// http://flamingdangerzone.com/cxx11/2012/07/06/optimal-tuple-i.html
-		std::tuple<pointer,allocator_type>	m_pair;
-		size_type				m_size;
-		size_type				m_capacity;
+		pair_type	m_pair;
+		size_type	m_size;
+		size_type	m_capacity;
 };
 
 // TMP to determine automatically the size of the static storage in small_vector.
@@ -299,6 +301,8 @@ struct auto_static_size<T,Allocator,Size,typename std::enable_if<
  * The container is partially allocator-aware. The \p Allocator will be used only when using dynamic memory, and it is subject
  * to the following restrictions:
  * - its pointer types must be raw pointers,
+ * - it must be nothrow destructible,
+ * - any exception thrown by the allocator's <tt>destroy()</tt> method will result in program termination,
  * - only default-constructed instances of the allocator will be used.
  *
  * \section type_requirements Type requirements

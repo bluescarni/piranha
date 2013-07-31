@@ -94,6 +94,7 @@ namespace piranha
  * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
  * \todo: use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
  * in static_vector for instance.
+ * \todo store functors in a tuple to get advantage of EBMO.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set

@@ -78,6 +78,8 @@ struct dynamic_tester
 		{
 			typedef detail::dynamic_storage<T,U> d1;
 			typedef detail::dynamic_storage<T,typename std::allocator_traits<U>::template rebind_alloc<int>> d2;
+			BOOST_CHECK(std::is_nothrow_destructible<d1>::value);
+			BOOST_CHECK(std::is_nothrow_destructible<d2>::value);
 			BOOST_CHECK((std::is_same<typename d1::allocator_type,typename d2::allocator_type>::value));
 			d1 ds1;
 			BOOST_CHECK(ds1.size() == 0u);
