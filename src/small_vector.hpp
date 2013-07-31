@@ -40,26 +40,37 @@ namespace detail
 
 // This is essentially a reduced std::vector replacement that should use less storage on most implementations
 // (e.g., it has a size of 16 on Linux 64-bit and it _should_ have a size of 8 on many 32-bit archs).
-template <typename T, typename Allocator>
+// NOTE: earlier versions of this class used to have support for custom allocation. See, e.g., commit
+// 6e1dd235c729ed05eb6e872dceece2f20a624f32
+// It seems however that there are some defects currently in the standard C++ library that make it quite hard
+// to implement reasonably strong exception safety and nothrow guarantees. See, e.g.,
+// http://cplusplus.github.io/LWG/lwg-defects.html#2103
+// It seems like in the current standard it is not possible to implemement noexcept move assignment not even
+// for std::alloc. The crux of the matter is that if propagate_on_container_move_assignment is not defined,
+// we will need in general a memory allocation (that can fail).
+// Another, less important, problem is that for copy assignment the presence of
+// propagate_on_container_copy_assignment seems to force one to nuke pre-emptively the content of the container
+// before doing anything (thus preventing strong forms of exception safety).
+// The approach taken here is thus to just hard-code std::allocator, which is stateless, and force nothrow
+// behaviour when doing assignments. This should work with all stateless allocators (including our own allocator).
+// Unfortunately it is not clear if the extension allocators from GCC are stateless, so better not to muck
+// with them (apart from experimentation).
+// See also:
+// http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
+template <typename T>
 class dynamic_storage
 {
 		PIRANHA_TT_CHECK(is_container_element,T);
 	public:
 		using size_type = unsigned short;
 		using value_type = T;
-		using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
+		using allocator_type = std::allocator<T>;
 	private:
-		PIRANHA_TT_CHECK(std::is_nothrow_destructible,allocator_type);
-		PIRANHA_TT_CHECK(std::is_default_constructible,allocator_type);
 		using a_traits = std::allocator_traits<allocator_type>;
-		static_assert(a_traits::propagate_on_container_move_assignment::value,"The allocator must propagate on move assignment.");
-		PIRANHA_TT_CHECK(std::is_nothrow_move_assignable,allocator_type);
 		using pointer = typename a_traits::pointer;
 		using const_pointer = typename a_traits::const_pointer;
-		static_assert(std::is_same<pointer,value_type *>::value && std::is_same<const_pointer,const value_type *>::value,
-			"The pointer type of the allocator must be a raw pointer.");
 		// NOTE: common tuple implementations use EBCO, try to reduce size in case
-		// of stateless allocators.
+		// of stateless allocators (such as std::allocator).
 		// http://flamingdangerzone.com/cxx11/2012/07/06/optimal-tuple-i.html
 		using pair_type = std::tuple<pointer,allocator_type>;
 	public:
@@ -76,6 +87,7 @@ class dynamic_storage
 			other.m_size = 0u;
 			other.m_capacity = 0u;
 		}
+		// NOTE: just keep the used of a_traits for copying the allocator, it won't hurt.
 		dynamic_storage(const dynamic_storage &other) : m_pair(nullptr,a_traits::select_on_container_copy_construction(other.alloc())),
 			m_size(0u),m_capacity(other.m_size) // NOTE: when copying, we set the capacity to the same value of the size.
 		{
@@ -100,14 +112,10 @@ class dynamic_storage
 		}
 		dynamic_storage &operator=(dynamic_storage &&other) noexcept
 		{
-			// NOTE: this SO reply is pretty insightful for the implementation of assignment operators:
-			// http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
 			if (likely(this != &other)) {
 				// Destroy and deallocate this.
 				destroy_and_deallocate();
-				// Just pilfer the resources, we require that the allocator propagates on move.
-				// NOTE: the idea here is that other's allocator was in charge of other's pointer. Since the allocator
-				// propagates on move, it will keep on managing the same pointer but in this instead of other.
+				// Just pilfer the resources.
 				m_pair = std::move(other.m_pair);
 				m_size = other.m_size;
 				m_capacity = other.m_capacity;
@@ -120,35 +128,8 @@ class dynamic_storage
 		}
 		dynamic_storage &operator=(const dynamic_storage &other)
 		{
-			if (likely(this != &other)) {
-				// This will zero out the content of this, if necessary, and assign the allocator from other.
-				// Otherwise, it will be a no-op.
-				copy_assign_allocator(other.alloc());
-				// Get enough new storage to contain other's elements, using the current allocator.
-				pointer new_storage = obtain_new_storage(other.m_size);
-				size_type i = 0u;
-				// Copy construct from other using the current allocator.
-				try {
-					for (; i < other.m_size; ++i) {
-						a_traits::construct(alloc(),new_storage + i,other[i]);
-					}
-				} catch (...) {
-					// Roll back the construction and deallocate before re-throwing.
-					for (size_type j = 0u; j < i; ++j) {
-						a_traits::destroy(alloc(),new_storage + j);
-					}
-					if (new_storage != nullptr) {
-						a_traits::deallocate(alloc(),new_storage,other.m_size);
-					}
-					throw;
-				}
-				// If everything went ok, remove the current content and move in the new.
-				destroy_and_deallocate();
-				ptr() = new_storage;
-				m_size = other.m_size;
-				m_capacity = m_size;
-			}
-			return *this;
+			// Copy + move for strong exception safety.
+			return operator=(dynamic_storage(other));
 		}
 		bool empty() const
 		{
@@ -226,33 +207,6 @@ class dynamic_storage
 			return m_capacity;
 		}
 	private:
-		// NOTE: the idea is that, if the allocator propagates on copy assignment, we do have to copy
-		// it into this and use it to allocate the new elements (after having erased the elements that where
-		// managed by the existing allocator). After wiping everything out, copy assign the new elements
-		// using the new allocator. Unfortunately, it seems rather hard with these constraints to provide
-		// strong exception safety in this situation.
-		template <typename U>
-		void copy_assign_allocator(const U &other_alloc, typename std::enable_if<
-			std::allocator_traits<U>::propagate_on_container_copy_assignment::value
-			>::type * = nullptr)
-		{
-			// NOTE: we do not need to nuke if the allocators are equal, as they can manage each other's
-			// storage.
-			if (alloc() != other_alloc) {
-				// First thing, we need to nuke everything.
-				destroy_and_deallocate();
-				ptr() = nullptr;
-				m_size = 0u;
-				m_capacity = 0u;
-			}
-			// Now replace the allocator.
-			alloc() = other_alloc;
-		}
-		template <typename U>
-		void copy_assign_allocator(const U &, typename std::enable_if<
-			!std::allocator_traits<U>::propagate_on_container_copy_assignment::value
-			>::type * = nullptr)
-		{}
 		// Common implementation of push_back().
 		template <typename U>
 		void push_back_impl(U &&x)
@@ -343,19 +297,19 @@ class dynamic_storage
 };
 
 // TMP to determine automatically the size of the static storage in small_vector.
-template <typename T, typename Allocator, std::size_t Size = 1u, typename = void>
+template <typename T, std::size_t Size = 1u, typename = void>
 struct auto_static_size
 {
 	static const std::size_t value = Size;
 };
 
-template <typename T, typename Allocator, std::size_t Size>
-struct auto_static_size<T,Allocator,Size,typename std::enable_if<
-	(sizeof(dynamic_storage<T,Allocator>) > sizeof(static_vector<T,Size>))
+template <typename T, std::size_t Size>
+struct auto_static_size<T,Size,typename std::enable_if<
+	(sizeof(dynamic_storage<T>) > sizeof(static_vector<T,Size>))
 	>::type>
 {
 	static_assert(Size < boost::integer_traits<std::size_t>::const_max,"Overflow error in auto_static_size.");
-	static const std::size_t value = auto_static_size<T,Allocator,Size + 1u>::value;
+	static const std::size_t value = auto_static_size<T,Size + 1u>::value;
 };
 
 }
@@ -367,20 +321,9 @@ struct auto_static_size<T,Allocator,Size,typename std::enable_if<
  * number is calculated automatically (so that the size of the static storage block is not greater than the totals size of the
  * members used to manage dynamically-allocated memory). Otherwise, the limit number is set to \p Size.
  *
- * The container is partially allocator-aware. The \p Allocator will be employed only when using dynamic memory, and it is subject
- * to the following restrictions:
- * - its pointer types must be raw pointers,
- * - it must be nothrow destructible,
- * - any exception thrown by the allocator's <tt>destroy()</tt> method will result in program termination,
- * - only default-constructed instances of the allocator will be used (hence the allocator must be default
- *   constructible),
- * - the \p propagate_on_container_move_assignment trait of the allocator must be \p true, and the move assignment operator
- *   must not throw.
- *
  * \section type_requirements Type requirements
  *
- * - \p T must satisfy piranha::is_container_element.
- * - \p Allocator must be a standard-conforming allocator whose pointer types are raw pointers.
+ * \p T must satisfy piranha::is_container_element.
  *
  * \section exception_safety Exception safety guarantee
  *
@@ -392,12 +335,12 @@ struct auto_static_size<T,Allocator,Size,typename std::enable_if<
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, std::size_t Size = 0u, typename Allocator = std::allocator<T>>
+template <typename T, std::size_t Size = 0u>
 class small_vector
 {
 		PIRANHA_TT_CHECK(is_container_element,T);
-		using s_storage = typename std::conditional<Size == 0u,static_vector<T,detail::auto_static_size<T,Allocator>::value>,static_vector<T,Size>>::type;
-		using d_storage = detail::dynamic_storage<T,Allocator>;
+		using s_storage = typename std::conditional<Size == 0u,static_vector<T,detail::auto_static_size<T>::value>,static_vector<T,Size>>::type;
+		using d_storage = detail::dynamic_storage<T>;
 		static constexpr std::size_t get_max(const std::size_t &a, const std::size_t &b)
 		{
 			return (a > b) ? a : b;
