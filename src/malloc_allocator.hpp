@@ -99,6 +99,11 @@ class malloc_allocator
 			/// Rebound allocator type.
 			typedef malloc_allocator<U> other;
 		};
+		/// Move assignment propagation.
+		/**
+		 * This allocator can be move assigned when the container using it is move assigned.
+		 */
+		using propagate_on_container_move_assignment = std::true_type;
 		/// Trivial default constructor.
 		/**
 		 * Default construction is always successful and equivalent to construction with an alignment value of zero.
