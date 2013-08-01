@@ -21,7 +21,6 @@
 #ifndef PIRANHA_SMALL_VECTOR_HPP
 #define PIRANHA_SMALL_VECTOR_HPP
 
-#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <memory>

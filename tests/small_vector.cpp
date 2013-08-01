@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <iterator>
 #include <new>
 #include <stdexcept>
 #include <type_traits>
@@ -42,6 +43,7 @@ typedef boost::mpl::vector<signed char,short,int,long,long long,integer,rational
 typedef boost::mpl::vector<std::integral_constant<std::size_t,0u>,std::integral_constant<std::size_t,1u>,std::integral_constant<std::size_t,5u>,
 	std::integral_constant<std::size_t,10u>> size_types;
 
+// Class that throws after a few copies.
 struct time_bomb
 {
 	time_bomb():m_vector(5) {}
@@ -71,8 +73,9 @@ struct dynamic_tester
 	void operator()(const T &)
 	{
 		typedef detail::dynamic_storage<T> d1;
-		BOOST_CHECK(std::is_nothrow_destructible<d1>::value);
+		BOOST_CHECK(is_container_element<d1>::value);
 		d1 ds1;
+		BOOST_CHECK(ds1.empty());
 		BOOST_CHECK(ds1.size() == 0u);
 		BOOST_CHECK(ds1.capacity() == 0u);
 		d1 ds2(ds1);
@@ -82,6 +85,7 @@ struct dynamic_tester
 		BOOST_CHECK(ds1[0u] == T(0));
 		BOOST_CHECK(ds1.capacity() == 1u);
 		BOOST_CHECK(ds1.size() == 1u);
+		BOOST_CHECK(!ds1.empty());
 		d1 ds3(ds1);
 		BOOST_CHECK(ds3[0u] == T(0));
 		BOOST_CHECK(ds3.capacity() == 1u);
@@ -142,6 +146,42 @@ struct dynamic_tester
 		ds10.push_back(time_bomb{});
 		ds10.push_back(time_bomb{});
 		BOOST_CHECK_THROW((detail::dynamic_storage<time_bomb>{ds10}),std::runtime_error);
+		// Assignment.
+		d1 ds11, ds12;
+		ds11.push_back(T(42));
+		ds11 = ds11;
+		BOOST_CHECK(ds11.size() == 1u);
+		BOOST_CHECK(ds11.capacity() == 1u);
+		BOOST_CHECK(ds11[0u] == T(42));
+		ds12 = std::move(ds11);
+		BOOST_CHECK(ds12.size() == 1u);
+		BOOST_CHECK(ds12.capacity() == 1u);
+		BOOST_CHECK(ds12[0u] == T(42));
+		BOOST_CHECK(ds11.size() == 0u);
+		BOOST_CHECK(ds11.capacity() == 0u);
+		// Revive with assignment.
+		ds11 = ds12;
+		BOOST_CHECK(ds11.size() == 1u);
+		BOOST_CHECK(ds11.capacity() == 1u);
+		BOOST_CHECK(ds11[0u] == T(42));
+		auto ds13 = std::move(ds11);
+		ds11 = std::move(ds13);
+		BOOST_CHECK(ds11.size() == 1u);
+		BOOST_CHECK(ds11.capacity() == 1u);
+		BOOST_CHECK(ds11[0u] == T(42));
+		ds11.push_back(T(43));
+		ds11.push_back(T(44));
+		ds11.push_back(T(45));
+		BOOST_CHECK(ds11.size() == 4u);
+		BOOST_CHECK(ds11.capacity() == 4u);
+		// Iterators tests.
+		auto it1 = ds11.begin();
+		std::advance(it1,4);
+		BOOST_CHECK(it1 == ds11.end());
+		auto it2 = static_cast<d1 const &>(ds11).begin();
+		std::advance(it2,4);
+		BOOST_CHECK(it2 == static_cast<d1 const &>(ds11).end());
+		BOOST_CHECK(ds11.begin() == &ds11[0u]);
 	}
 };
 
