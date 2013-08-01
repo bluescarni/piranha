@@ -765,7 +765,7 @@ class real_trigonometric_kronecker_monomial
 		std::pair<integer,real_trigonometric_kronecker_monomial> partial(const symbol &s, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<decltype(args.size()),decltype(v.size())> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero(v[i])) {
 					integer tmp_n(v[i]);
 					real_trigonometric_kronecker_monomial tmp_m(*this);
