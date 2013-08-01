@@ -74,7 +74,8 @@ class kronecker_array
 		/// Signed integer type used for encoding.
 		typedef SignedInteger int_type;
 	private:
-		static_assert(std::is_signed<int_type>::value && std::numeric_limits<int_type>::is_bounded,"This class can be used only with bounded signed integers.");
+		static_assert(std::is_integral<int_type>::value && std::is_signed<int_type>::value &&
+			std::numeric_limits<int_type>::is_bounded,"This class can be used only with bounded signed integers.");
 		// This is a 4-tuple of int_type built as follows:
 		// 0. vector of absolute values of the upper/lower limit for each component,
 		// 1. h_min,

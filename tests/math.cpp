@@ -65,7 +65,7 @@ struct check_negate
 	template <typename T>
 	void operator()(const T &value) const
 	{
-		if (std::is_signed<T>::value) {
+		if (std::is_signed<T>::value && std::is_integral<T>::value) {
 			T negation(value);
 			math::negate(negation);
 			BOOST_CHECK_EQUAL(negation,-value);
@@ -206,7 +206,7 @@ struct check_multiply_accumulate
 		T x(2);
 		math::multiply_accumulate(x,T(4),T(6));
 		BOOST_CHECK_EQUAL(x,T(2) + T(4) * T(6));
-		if (std::is_signed<T>::value || std::is_floating_point<T>::value) {
+		if ((std::is_signed<T>::value && std::is_integral<T>::value) || std::is_floating_point<T>::value) {
 			x = T(-2);
 			math::multiply_accumulate(x,T(5),T(-7));
 			BOOST_CHECK_EQUAL(x,T(-2) + T(5) * T(-7));

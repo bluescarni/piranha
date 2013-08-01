@@ -852,8 +852,8 @@ template <typename T, typename ... Args>
 struct min_int_impl
 {
 	using next = typename min_int_impl<Args...>::type;
-	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
-		(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
+	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value && std::is_integral<next>::value) ||
+		(std::is_signed<T>::value && std::is_signed<next>::value && std::is_integral<next>::value),"The type trait's arguments must all be (un)signed integers.");
 	using type = typename std::conditional<(
 		boost::integer_traits<T>::const_max < boost::integer_traits<next>::const_max &&
 		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min > boost::integer_traits<next>::const_min)),
@@ -873,8 +873,8 @@ template <typename T, typename ... Args>
 struct max_int_impl
 {
 	using next = typename max_int_impl<Args...>::type;
-	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
-		(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
+	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value && std::is_integral<next>::value) ||
+		(std::is_signed<T>::value && std::is_signed<next>::value && std::is_integral<next>::value),"The type trait's arguments must all be (un)signed integers.");
 	using type = typename std::conditional<(
 		boost::integer_traits<T>::const_max > boost::integer_traits<next>::const_max &&
 		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min < boost::integer_traits<next>::const_min)),
