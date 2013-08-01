@@ -601,12 +601,16 @@ struct check_integral_in_place_mod
 			BOOST_CHECK_THROW(i %= x,std::invalid_argument);
 		}
 		{
-			T y(::abs(x));
+			// NOTE: the problem here is that, when T is char, there's no exactly-matching overload for std::abs
+			// and some other overload gets picked (double, it seems). To avoid possible fp conversion problems
+			// we cast everything to long or unsigned long (we are sure all integer arithmetic values are representable).
+			using cast_type = typename std::conditional<std::is_signed<T>::value,long,unsigned long>::type;
+			T y(static_cast<T>(std::abs(static_cast<cast_type>(x))));
 			piranha::integer i(10);
 			y %= i;
 			BOOST_CHECK_EQUAL(static_cast<T>(2), y);
 			if (std::is_signed<T>::value) {
-				T z(-::abs(x));
+				T z(static_cast<T>(-std::abs(static_cast<cast_type>(x))));
 				BOOST_CHECK_THROW(z %= i,std::invalid_argument);
 			}
 		}
