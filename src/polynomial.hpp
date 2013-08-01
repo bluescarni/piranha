@@ -1005,10 +1005,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						const decltype(mins.size()) old_i = i;
 						++i;
 						piranha_assert(n >= mins[old_i]);
-						return c * (n - mins[old_i]);
+						return static_cast<value_type>(c * (n - mins[old_i]));
 					}
 				);
-				return retval + hmin;
+				return static_cast<value_type>(retval + hmin);
 			};
 			// Build copies of the input keys repacked according to the new Kronecker substitution. Attach
 			// also a pointer to the term.
@@ -1219,7 +1219,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					auto retval = (n % c_vec[i + 1u]) / c_vec[i] + mins[i];
 					piranha_assert(retval >= mins[i] && retval <= maxs[i]);
 					++i;
-					return retval;
+					return static_cast<value_type>(retval);
 				});
 			};
 			const auto cf_size = cf_vector.size();
@@ -1455,7 +1455,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				const auto b_count = retval.m_container.bucket_count();
 				piranha_assert(b_count);
 				// Adjust the number of threads if they are more than the bucket count.
-				const unsigned nt = (n_threads <= b_count) ? n_threads : b_count;
+				const unsigned nt = (n_threads <= b_count) ? n_threads : static_cast<unsigned>(b_count);
 				std::mutex m;
 				auto eraser = [b_count,&retval,&m](const bucket_size_type &start, const bucket_size_type &end) {
 					piranha_assert(start < end && end <= b_count);
@@ -1524,8 +1524,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			{}
 			void operator()(const index_type &i, const index_type &j) const
 			{
+				using int_type = decltype(this->m_ptr1[i]->m_key.get_int());
 				piranha_assert(i < this->m_s1 && j < this->m_s2);
-				this->m_tmp.m_key.set_int(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int());
+				this->m_tmp.m_key.set_int(static_cast<int_type>(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int()));
 				m_cached_i = i;
 				m_cached_j = j;
 			}
