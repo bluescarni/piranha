@@ -128,8 +128,11 @@ class dynamic_storage
 		}
 		dynamic_storage &operator=(const dynamic_storage &other)
 		{
-			// Copy + move for strong exception safety.
-			return operator=(dynamic_storage(other));
+			if (likely(this != &other)) {
+				dynamic_storage tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
 		}
 		bool empty() const
 		{
