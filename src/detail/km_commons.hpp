@@ -31,6 +31,7 @@
 #include "../exceptions.hpp"
 #include "../math.hpp"
 #include "../symbol_set.hpp"
+#include "../type_traits.hpp"
 
 // Common routines for use in kronecker monomial classes.
 
@@ -42,7 +43,7 @@ inline VType km_unpack(const symbol_set &args, const T &value)
 	if (unlikely(args.size() > VType::max_size)) {
 		piranha_throw(std::invalid_argument,"input set of arguments is too large for unpacking");
 	}
-	VType retval(args.size(),0);
+	VType retval(static_cast<typename VType::size_type>(args.size()),0);
 	piranha_assert(args.size() == retval.size());
 	KaType::decode(retval,value);
 	return retval;
@@ -51,7 +52,7 @@ inline VType km_unpack(const symbol_set &args, const T &value)
 template <typename VType, typename KaType, typename T>
 inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, const T &value)
 {
-	typedef typename KaType::size_type size_type;
+	using size_type = typename min_int<typename VType::size_type,decltype(new_args.size())>::type;
 	if (unlikely(new_args.size() <= orig_args.size() ||
 		!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
 	{
@@ -94,7 +95,7 @@ inline void km_safe_adder(T &a, const T &b)
 			piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 		}
 	}
-	a += b;
+	a = static_cast<T>(a + b);
 }
 
 template <typename T>
@@ -124,7 +125,7 @@ inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, con
 template <typename VType, typename KaType, typename T>
 inline T km_trim(const symbol_set &trim_args, const symbol_set &orig_args, const T &value)
 {
-	typedef typename KaType::size_type size_type;
+	using size_type = typename min_int<typename VType::size_type,decltype(orig_args.size())>::type;
 	const VType tmp = km_unpack<VType,KaType>(orig_args,value);
 	VType new_vector;
 	for (size_type i = 0u; i < tmp.size(); ++i) {
