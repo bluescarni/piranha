@@ -86,7 +86,8 @@ struct coding_tester
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-1}) == -1);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{-10}) == -10);
 		BOOST_CHECK(ka_type::encode(std::vector<std::int16_t>{10}) == 10);
-		const T emax1 = std::get<0u>(l[1u])[0u], emin1 = -emax1;
+		// NOTE: static_cast for use when T is a char.
+		const T emax1 = std::get<0u>(l[1u])[0u], emin1 = static_cast<T>(-emax1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emin1}) == emin1);
 		BOOST_CHECK(ka_type::encode(std::vector<T>{emax1}) == emax1);
 		std::mt19937 rng;
@@ -95,7 +96,7 @@ struct coding_tester
 			auto M = std::get<0u>(l[i]);
 			auto m = M;
 			for (auto it = m.begin(); it != m.end(); ++it) {
-				*it = -(*it);
+				*it = static_cast<T>(-(*it));
 			}
 			auto tmp(m);
 			auto c = ka_type::encode(m);

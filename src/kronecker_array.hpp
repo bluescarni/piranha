@@ -269,14 +269,15 @@ class kronecker_array
 				}
 			}
 			piranha_assert(minmax_vec[0u] > 0);
-			int_type retval = boost::numeric_cast<int_type>(v[0u]) + minmax_vec[0u], cur_c = 2 * minmax_vec[0u] + 1;
+			int_type retval = static_cast<int_type>(boost::numeric_cast<int_type>(v[0u]) + minmax_vec[0u]),
+				cur_c = static_cast<int_type>(2 * minmax_vec[0u] + 1);
 			piranha_assert(retval >= 0);
 			for (decltype(v.size()) i = 1u; i < size; ++i) {
-				retval += (boost::numeric_cast<int_type>(v[i]) + minmax_vec[i]) * cur_c;
+				retval = static_cast<int_type>(retval + ((boost::numeric_cast<int_type>(v[i]) + minmax_vec[i]) * cur_c));
 				piranha_assert(minmax_vec[i] > 0);
-				cur_c *= 2 * minmax_vec[i] + 1;
+				cur_c = static_cast<int_type>(cur_c * (2 * minmax_vec[i] + 1));
 			}
-			return retval + std::get<1u>(limit);
+			return static_cast<int_type>(retval + std::get<1u>(limit));
 		}
 		/// Decode into vector.
 		/**
@@ -319,16 +320,19 @@ class kronecker_array
 			if (unlikely(n < hmin || n > hmax)) {
 				piranha_throw(std::invalid_argument,"the integer to be decoded is out of bounds");
 			}
-			const int_type code = n - hmin;
+			// NOTE: the static_cast here is useful when working with int_type == char. In that case,
+			// the binary operation on the RHS produces an int (due to integer promotion rules), which gets
+			// assigned back to char causing the compiler to complain about potentially lossy conversion.
+			const int_type code = static_cast<int_type>(n - hmin);
 			piranha_assert(code >= 0);
 			piranha_assert(minmax_vec[0u] > 0);
-			int_type mod_arg = 2 * minmax_vec[0u] + 1;
+			int_type mod_arg = static_cast<int_type>(2 * minmax_vec[0u] + 1);
 			// Do the first value manually.
 			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
 			for (size_type i = 1u; i < m; ++i) {
 				piranha_assert(minmax_vec[i] > 0);
 				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
-				mod_arg *= (2 * minmax_vec[i] + 1);
+				mod_arg = static_cast<int_type>(mod_arg * (2 * minmax_vec[i] + 1));
 			}
 		}
 };
