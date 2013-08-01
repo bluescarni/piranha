@@ -52,7 +52,7 @@ inline VType km_unpack(const symbol_set &args, const T &value)
 template <typename VType, typename KaType, typename T>
 inline T km_merge_args(const symbol_set &orig_args, const symbol_set &new_args, const T &value)
 {
-	using size_type = typename min_int<typename VType::size_type,decltype(new_args.size())>::type;
+	using size_type = min_int<typename VType::size_type,decltype(new_args.size())>;
 	if (unlikely(new_args.size() <= orig_args.size() ||
 		!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
 	{
@@ -125,7 +125,7 @@ inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, con
 template <typename VType, typename KaType, typename T>
 inline T km_trim(const symbol_set &trim_args, const symbol_set &orig_args, const T &value)
 {
-	using size_type = typename min_int<typename VType::size_type,decltype(orig_args.size())>::type;
+	using size_type = min_int<typename VType::size_type,decltype(orig_args.size())>;
 	const VType tmp = km_unpack<VType,KaType>(orig_args,value);
 	VType new_vector;
 	for (size_type i = 0u; i < tmp.size(); ++i) {

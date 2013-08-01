@@ -1462,38 +1462,38 @@ BOOST_AUTO_TEST_CASE(type_traits_term_is_multipliable_test)
 
 BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 {
-	BOOST_CHECK((std::is_same<int,min_int<int>::type>::value));
-	BOOST_CHECK((std::is_same<unsigned,min_int<unsigned>::type>::value));
-	BOOST_CHECK((std::is_same<int,max_int<int>::type>::value));
-	BOOST_CHECK((std::is_same<unsigned,max_int<unsigned>::type>::value));
-	BOOST_CHECK((std::is_same<int,max_int<short, int>::type>::value));
-	BOOST_CHECK((std::is_same<unsigned,max_int<unsigned short, unsigned>::type>::value));
+	BOOST_CHECK((std::is_same<int,min_int<int>>::value));
+	BOOST_CHECK((std::is_same<unsigned,min_int<unsigned>>::value));
+	BOOST_CHECK((std::is_same<int,max_int<int>>::value));
+	BOOST_CHECK((std::is_same<unsigned,max_int<unsigned>>::value));
+	BOOST_CHECK((std::is_same<int,max_int<short, int>>::value));
+	BOOST_CHECK((std::is_same<unsigned,max_int<unsigned short, unsigned>>::value));
 	if (boost::integer_traits<long long>::const_max > boost::integer_traits<int>::const_max &&
 		boost::integer_traits<long long>::const_min < boost::integer_traits<int>::const_min)
 	{
-		BOOST_CHECK((std::is_same<long long,max_int<short, int, signed char, long long>::type>::value));
-		BOOST_CHECK((std::is_same<long long,max_int<long long, int, signed char, short>::type>::value));
-		BOOST_CHECK((std::is_same<long long,max_int<int, long long, signed char, short>::type>::value));
-		BOOST_CHECK((std::is_same<long long,max_int<short, signed char, long long, int>::type>::value));
+		BOOST_CHECK((std::is_same<long long,max_int<short, int, signed char, long long>>::value));
+		BOOST_CHECK((std::is_same<long long,max_int<long long, int, signed char, short>>::value));
+		BOOST_CHECK((std::is_same<long long,max_int<int, long long, signed char, short>>::value));
+		BOOST_CHECK((std::is_same<long long,max_int<short, signed char, long long, int>>::value));
 	}
 	if (boost::integer_traits<unsigned long long>::const_max > boost::integer_traits<unsigned>::const_max) {
-		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned short, unsigned, unsigned char, unsigned long long>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned long long, unsigned, unsigned char, unsigned short>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned, unsigned long long, unsigned char, unsigned short>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned short, unsigned char, unsigned long long, unsigned>::type>::value));
+		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned short, unsigned, unsigned char, unsigned long long>>::value));
+		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned long long, unsigned, unsigned char, unsigned short>>::value));
+		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned, unsigned long long, unsigned char, unsigned short>>::value));
+		BOOST_CHECK((std::is_same<unsigned long long,max_int<unsigned short, unsigned char, unsigned long long, unsigned>>::value));
 	}
 	if (boost::integer_traits<signed char>::const_max < boost::integer_traits<short>::const_max &&
 		boost::integer_traits<signed char>::const_min > boost::integer_traits<short>::const_min)
 	{
-		BOOST_CHECK((std::is_same<signed char,min_int<short, int, signed char, long long>::type>::value));
-		BOOST_CHECK((std::is_same<signed char,min_int<long long, int, signed char, short>::type>::value));
-		BOOST_CHECK((std::is_same<signed char,min_int<int, long long, signed char, short>::type>::value));
-		BOOST_CHECK((std::is_same<signed char,min_int<short, signed char, long long, int>::type>::value));
+		BOOST_CHECK((std::is_same<signed char,min_int<short, int, signed char, long long>>::value));
+		BOOST_CHECK((std::is_same<signed char,min_int<long long, int, signed char, short>>::value));
+		BOOST_CHECK((std::is_same<signed char,min_int<int, long long, signed char, short>>::value));
+		BOOST_CHECK((std::is_same<signed char,min_int<short, signed char, long long, int>>::value));
 	}
 	if (boost::integer_traits<unsigned char>::const_min < boost::integer_traits<unsigned short>::const_max) {
-		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned short, unsigned, unsigned char, unsigned long long>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned long long, unsigned, unsigned char, unsigned short>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned, unsigned long long, unsigned char, unsigned short>::type>::value));
-		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned short, unsigned char, unsigned long long, unsigned>::type>::value));
+		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned short, unsigned, unsigned char, unsigned long long>>::value));
+		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned long long, unsigned, unsigned char, unsigned short>>::value));
+		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned, unsigned long long, unsigned char, unsigned short>>::value));
+		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned short, unsigned char, unsigned long long, unsigned>>::value));
 	}
 }

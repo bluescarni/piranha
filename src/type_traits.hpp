@@ -845,63 +845,68 @@ class term_is_multipliable: detail::sfinae_types
 template <typename Term>
 const bool term_is_multipliable<Term>::value;
 
-/// Detect narrowest integer type
-/**
- * This type trait requires \p T and \p Args (if any) to be all signed or unsigned integer types.
- * \p type will be defined as the input type with the narrowest numerical range.
- */
-template <typename T, typename ... Args>
-class min_int
+namespace detail
 {
-		using next = typename min_int<Args...>::type;
-		static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
-			(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
-	public:
-		/// Type definition.
-		using type = typename std::conditional<(
-			boost::integer_traits<T>::const_max < boost::integer_traits<next>::const_max &&
-			(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min > boost::integer_traits<next>::const_min)),
-			T,
-			next
-			>::type;
+
+template <typename T, typename ... Args>
+struct min_int_impl
+{
+	using next = typename min_int_impl<Args...>::type;
+	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
+		(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
+	using type = typename std::conditional<(
+		boost::integer_traits<T>::const_max < boost::integer_traits<next>::const_max &&
+		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min > boost::integer_traits<next>::const_min)),
+		T,
+		next
+		>::type;
 };
 
 template <typename T>
-class min_int<T>
+struct min_int_impl<T>
 {
-		static_assert(std::is_integral<T>::value,"The type trait's arguments must all be (un)signed integers.");
-	public:
-		using type = T;
+	static_assert(std::is_integral<T>::value,"The type trait's arguments must all be (un)signed integers.");
+	using type = T;
 };
+
+template <typename T, typename ... Args>
+struct max_int_impl
+{
+	using next = typename max_int_impl<Args...>::type;
+	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
+		(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
+	using type = typename std::conditional<(
+		boost::integer_traits<T>::const_max > boost::integer_traits<next>::const_max &&
+		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min < boost::integer_traits<next>::const_min)),
+		T,
+		next
+		>::type;
+};
+
+template <typename T>
+struct max_int_impl<T>
+{
+	static_assert(std::is_integral<T>::value,"The type trait's arguments must all be (un)signed integers.");
+	using type = T;
+};
+
+}
+
+/// Detect narrowest integer type
+/**
+ * This type alias requires \p T and \p Args (if any) to be all signed or unsigned integer types.
+ * It will be defined as the input type with the narrowest numerical range.
+ */
+template <typename T, typename ... Args>
+using min_int = typename detail::min_int_impl<T,Args...>::type;
 
 /// Detect widest integer type
 /**
- * This type trait requires \p T and \p Args (if any) to be all signed or unsigned integer types.
- * \p type will be defined as the input type with the widest numerical range.
+ * This type alias requires \p T and \p Args (if any) to be all signed or unsigned integer types.
+ * It will be defined as the input type with the widest numerical range.
  */
 template <typename T, typename ... Args>
-class max_int
-{
-		using next = typename max_int<Args...>::type;
-		static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value) ||
-			(std::is_signed<T>::value && std::is_signed<next>::value),"The type trait's arguments must all be (un)signed integers.");
-	public:
-		/// Type definition.
-		using type = typename std::conditional<(
-			boost::integer_traits<T>::const_max > boost::integer_traits<next>::const_max &&
-			(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min < boost::integer_traits<next>::const_min)),
-			T,
-			next
-			>::type;
-};
-
-template <typename T>
-class max_int<T>
-{
-		static_assert(std::is_integral<T>::value,"The type trait's arguments must all be (un)signed integers.");
-	public:
-		using type = T;
-};
+using max_int = typename detail::max_int_impl<T,Args...>::type;
 
 }
 
