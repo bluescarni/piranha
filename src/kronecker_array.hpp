@@ -36,6 +36,7 @@
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -329,7 +330,8 @@ class kronecker_array
 			int_type mod_arg = static_cast<int_type>(2 * minmax_vec[0u] + 1);
 			// Do the first value manually.
 			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
-			for (size_type i = 1u; i < m; ++i) {
+			using s_type = typename min_int<typename Vector::size_type,decltype(minmax_vec.size())>::type;
+			for (s_type i = 1u; i < m; ++i) {
 				piranha_assert(minmax_vec[i] > 0);
 				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
 				mod_arg = static_cast<int_type>(mod_arg * (2 * minmax_vec[i] + 1));
