@@ -400,7 +400,7 @@ class kronecker_monomial
 			const auto size = args.size();
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result;
-			for (decltype(args.size()) i = 0u; i < size; ++i) {
+			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				result.push_back(tmp1[i]);
 				detail::km_safe_adder(result[i],tmp2[i]);
 			}
@@ -452,7 +452,7 @@ class kronecker_monomial
 			const auto v = unpack(args);
 			const auto size = args.size();
 			decltype(args.size()) n_linear = 0u, candidate = 0u;
-			for (decltype(args.size()) i = 0u; i < size; ++i) {
+			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				integer tmp;
 				try {
 					tmp = math::integral_cast(v[i]);
@@ -499,7 +499,7 @@ class kronecker_monomial
 			auto v = unpack(args);
 			const auto size = args.size();
 			const integer n = math::integral_cast(x);
-			for (decltype(args.size()) i = 0u; i < size; ++i) {
+			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				// NOTE: here operator* produces an integer, which is safely cast back
 				// to the signed int type.
 				v[i] = static_cast<value_type>(n * v[i]);
@@ -605,7 +605,7 @@ class kronecker_monomial
 		std::pair<integer,kronecker_monomial> partial(const symbol &s, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero(v[i])) {
 					integer tmp_n(v[i]);
 					v[i] = static_cast<value_type>(tmp_n - 1);
@@ -642,7 +642,7 @@ class kronecker_monomial
 		{
 			v_type v = unpack(args), retval;
 			value_type expo(0), one(1);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				if (math::is_zero(expo) && s < args[i]) {
 					// If we went past the position of s in args and still we
 					// have not performed the integration, it means that we need to add
@@ -699,7 +699,7 @@ class kronecker_monomial
 			auto v = unpack(args);
 			return_type retval(1);
 			const auto it_f = dict.end();
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				const auto it = dict.find(args[i]);
 				if (it == it_f) {
 					piranha_throw(std::invalid_argument,
@@ -736,7 +736,7 @@ class kronecker_monomial
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s) {
 					retval_s = math::pow(x,v[i]);
 				} else {
@@ -776,7 +776,7 @@ class kronecker_monomial
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				new_v.push_back(v[i]);
 				if (args[i] == s) {
 					const rational tmp(math::integral_cast(v[i]),n);
