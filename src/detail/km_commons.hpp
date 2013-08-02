@@ -113,9 +113,8 @@ inline void km_safe_abs_adder(T &a, const T &b)
 template <typename VType, typename KaType, typename T>
 inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, const T &value)
 {
-	typedef typename KaType::size_type size_type;
 	const VType tmp = km_unpack<VType,KaType>(args,value);
-	for (size_type i = 0u; i < tmp.size(); ++i) {
+	for (min_int<decltype(tmp.size()),decltype(args.size())> i = 0u; i < tmp.size(); ++i) {
 		if (!math::is_zero(tmp[i]) && std::binary_search(candidates.begin(),candidates.end(),args[i])) {
 			candidates.remove(args[i]);
 		}

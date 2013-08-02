@@ -371,7 +371,7 @@ class real_trigonometric_kronecker_monomial
 			const auto unpacked = unpack(args);
 			// We know that s != 0.
 			piranha_assert(unpacked.size() > 0u);
-			for (decltype(args.size()) i = 0u; i < s; ++i) {
+			for (typename v_type::size_type i = 0u; i < s; ++i) {
 				if (unpacked[i] < value_type(0)) {
 					return false;
 				} else if (unpacked[i] > value_type(0)) {
@@ -852,7 +852,7 @@ class real_trigonometric_kronecker_monomial
 			typedef decltype(std::declval<U const &>() * std::declval<value_type const &>()) tmp_type;
 			tmp_type tmp(0);
 			const auto it_f = dict.end();
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
 				const auto it = dict.find(args[i]);
 				if (it == it_f) {
 					piranha_throw(std::invalid_argument,

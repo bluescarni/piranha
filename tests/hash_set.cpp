@@ -211,7 +211,7 @@ struct random_failure
 	~random_failure() noexcept(true) {}
 	std::size_t hash() const
 	{
-		return boost::lexical_cast<int>(m_str);
+		return static_cast<std::size_t>(boost::lexical_cast<int>(m_str));
 	}
 	bool operator==(const random_failure &rf) const
 	{

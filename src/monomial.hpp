@@ -336,7 +336,7 @@ class monomial: public array_key<T,monomial<T>>
 			}
 			monomial retval(*this);
 			const size_type size = retval.size();
-			for (size_type i = 0u; i < size; ++i) {
+			for (decltype(retval.size()) i = 0u; i < size; ++i) {
 				retval[i] *= x;
 			}
 			return retval;

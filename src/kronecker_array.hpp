@@ -265,7 +265,7 @@ class kronecker_array
 			const auto &minmax_vec = std::get<0u>(limit);
 			// Check that the vector's components are compatible with the limits.
 			// NOTE: here size is not greater than m_limits.size(), which in turn is compatible with the minmax vectors.
-			for (size_type i = 0u; i < size; ++i) {
+			for (min_int<decltype(v.size()),decltype(minmax_vec.size())> i = 0u; i < size; ++i) {
 				if (unlikely(boost::numeric_cast<int_type>(v[i]) < -minmax_vec[i] || boost::numeric_cast<int_type>(v[i]) > minmax_vec[i])) {
 					piranha_throw(std::invalid_argument,"a component of the vector to be encoded is out of bounds");
 				}
@@ -331,8 +331,7 @@ class kronecker_array
 			int_type mod_arg = static_cast<int_type>(2 * minmax_vec[0u] + 1);
 			// Do the first value manually.
 			retval[0u] = boost::numeric_cast<v_type>((code % mod_arg) - minmax_vec[0u]);
-			using s_type = min_int<typename Vector::size_type,decltype(minmax_vec.size())>;
-			for (s_type i = 1u; i < m; ++i) {
+			for (min_int<typename Vector::size_type,decltype(minmax_vec.size())> i = 1u; i < m; ++i) {
 				piranha_assert(minmax_vec[i] > 0);
 				retval[i] = boost::numeric_cast<v_type>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]);
 				mod_arg = static_cast<int_type>(mod_arg * (2 * minmax_vec[i] + 1));

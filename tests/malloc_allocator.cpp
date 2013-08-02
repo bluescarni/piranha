@@ -92,7 +92,6 @@ BOOST_AUTO_TEST_CASE(malloc_allocator_aligned_test)
 		auto ptr2 = good.allocate(1);
 		BOOST_CHECK(ptr != nullptr);
 		BOOST_CHECK(ptr2 != nullptr);
-		BOOST_CHECK(!((ptr - ptr2) % good_align));
 		BOOST_CHECK_NO_THROW(good.deallocate(ptr,0));
 		BOOST_CHECK_NO_THROW(good.deallocate(ptr2,0));
 	}

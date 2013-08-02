@@ -340,7 +340,7 @@ class malloc_allocator
 					piranha_throw(std::invalid_argument,"invalid alignment: smaller than alignof(T)");
 				}
 				// NOTE: also extended alignments are required to be powers of 2 according to 3.11.
-				if (unlikely(alignment & (alignment - 1u))) {
+				if (unlikely(static_cast<bool>(alignment & (alignment - 1u)))) {
 					piranha_throw(std::invalid_argument,"invalid alignment: not a power of 2");
 				}
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
