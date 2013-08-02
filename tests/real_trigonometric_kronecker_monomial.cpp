@@ -1275,7 +1275,7 @@ BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
 struct t_subs_tester
 {
 	template <typename T>
-	void operator()(const T &)
+	void operator()(const T &, typename std::enable_if<!std::is_same<T,signed char>::value>::type * = nullptr)
 	{
 		// Test with no substitution.
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
@@ -1394,6 +1394,9 @@ struct t_subs_tester
 		k.set_flavour(false);
 		BOOST_CHECK(res2[1u].second == k);
 	}
+	template <typename T>
+	void operator()(const T &, typename std::enable_if<std::is_same<T,signed char>::value>::type * = nullptr)
+	{}
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_t_subs_test)

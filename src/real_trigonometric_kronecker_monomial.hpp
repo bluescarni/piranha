@@ -147,7 +147,7 @@ class real_trigonometric_kronecker_monomial
 			bool sign_change = false;
 			for (decltype(unpacked.size()) i = 0u; i < size; ++i) {
 				if (sign_change || unpacked[i] < value_type(0)) {
-					unpacked[i] = -unpacked[i];
+					unpacked[i] = static_cast<value_type>(-unpacked[i]);
 					sign_change = true;
 				} else if (unpacked[i] > value_type(0)) {
 					break;
@@ -973,12 +973,11 @@ class real_trigonometric_kronecker_monomial
 		{
 			typedef decltype(this->t_subs(name,c,s,args)) ret_type;
 			typedef typename ret_type::value_type::first_type res_type;
-			typedef decltype(args.size()) size_type;
 			const auto v = unpack(args);
 			v_type new_v;
 			value_type n(0);
 			// Build the new vector key.
-			for (size_type i = 0u; i < args.size(); ++i) {
+			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
 				if (args[i].get_name() == name) {
 					new_v.push_back(value_type(0));
 					n = v[i];
@@ -987,7 +986,7 @@ class real_trigonometric_kronecker_monomial
 				}
 			}
 			// Absolute value of the multiplier.
-			const value_type abs_n = (n >= 0) ? n : -n;
+			const value_type abs_n = (n >= 0) ? n : static_cast<value_type>(-n);
 			// Prepare the powers of c and s to be used in the multiple angles formulae.
 			std::unordered_map<value_type,U> c_map, s_map;
 			c_map[0] = U(1);
