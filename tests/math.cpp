@@ -191,7 +191,10 @@ struct no_fma{};
 struct check_multiply_accumulate
 {
 	template <typename T>
-	void operator()(const T &) const
+	void operator()(const T &, typename std::enable_if<
+		!std::is_same<T,char>::value && !std::is_same<T,unsigned char>::value && !std::is_same<T,signed char>::value &&
+		!std::is_same<T,short>::value && !std::is_same<T,unsigned short>::value
+		>::type * = nullptr) const
 	{
 		BOOST_CHECK(has_multiply_accumulate<T>::value);
 		BOOST_CHECK(has_multiply_accumulate<T &>::value);
@@ -212,6 +215,12 @@ struct check_multiply_accumulate
 			BOOST_CHECK_EQUAL(x,T(-2) + T(5) * T(-7));
 		}
 	}
+	// NOTE: avoid testing with char and short types, the promotion rules will generate warnings about assigning int to
+	// narrower types.
+	template <typename T>
+	void operator()(const T &, typename std::enable_if<std::is_same<T,char>::value || std::is_same<T,unsigned char>::value ||
+		std::is_same<T,signed char>::value || std::is_same<T,short>::value || std::is_same<T,unsigned short>::value>::type * = nullptr) const
+	{}
 };
 
 BOOST_AUTO_TEST_CASE(math_multiply_accumulate_test)
