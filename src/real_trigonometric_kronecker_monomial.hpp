@@ -582,13 +582,12 @@ class real_trigonometric_kronecker_monomial
 		void multiply(real_trigonometric_kronecker_monomial &retval_plus, real_trigonometric_kronecker_monomial &retval_minus,
 			const real_trigonometric_kronecker_monomial &other, bool &sign_plus, bool &sign_minus, const symbol_set &args) const
 		{
-			typedef decltype(args.size()) size_type;
 			sign_plus = false;
 			sign_minus = false;
 			const auto size = args.size();
 			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
 			v_type result_plus, result_minus;
-			for (size_type i = 0u; i < size; ++i) {
+			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				result_plus.push_back(tmp1[i]);
 				detail::km_safe_adder(result_plus[i],tmp2[i]);
 				// NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
