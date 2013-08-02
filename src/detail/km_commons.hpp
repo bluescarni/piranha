@@ -107,7 +107,7 @@ inline void km_safe_abs_adder(T &a, const T &b)
 	if (unlikely(a > boost::integer_traits<T>::const_max - abs_b)) {
 		piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
 	}
-	a += abs_b;
+	a = static_cast<T>(a + abs_b);
 }
 
 template <typename VType, typename KaType, typename T>
