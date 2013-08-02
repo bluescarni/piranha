@@ -201,7 +201,7 @@ class PIRANHA_PUBLIC real
 				}
 			}
 			if (std::is_same<T,double>::value) {
-				return ::mpfr_get_d(m_value,default_rnd);
+				return static_cast<T>(::mpfr_get_d(m_value,default_rnd));
 			}
 			return ::mpfr_get_flt(m_value,default_rnd);
 		}
