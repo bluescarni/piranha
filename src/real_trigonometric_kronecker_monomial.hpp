@@ -801,7 +801,7 @@ class real_trigonometric_kronecker_monomial
 		std::pair<integer,real_trigonometric_kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero(v[i])) {
 					integer tmp_n(v[i]);
 					real_trigonometric_kronecker_monomial tmp_m(*this);
@@ -913,7 +913,7 @@ class real_trigonometric_kronecker_monomial
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s_cos(1), retval_s_sin(0);
-			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s) {
 					retval_s_cos = math::cos(v[i] * x);
 					retval_s_sin = math::sin(v[i] * x);
