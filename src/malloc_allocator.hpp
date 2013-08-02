@@ -71,6 +71,7 @@ namespace piranha
  * way namespace pollution is prevented and platform-specific parts are isolated).
  * \todo: investigate using std::align for platform-independent memory aligning: allocate n bytes + alignment and use
  * std::align on it.
+ * \todo rexamine the equality operators, they might be wrong (look at allocator concept on cppreference).
  */
 template <typename T>
 class malloc_allocator
