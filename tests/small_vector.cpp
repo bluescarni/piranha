@@ -149,7 +149,10 @@ struct dynamic_tester
 		// Assignment.
 		d1 ds11, ds12;
 		ds11.push_back(T(42));
+		auto ptr1 = &ds11[0u];
 		ds11 = ds11;
+		ds11 = std::move(ds11);
+		BOOST_CHECK(ptr1 == &ds11[0u]);
 		BOOST_CHECK(ds11.size() == 1u);
 		BOOST_CHECK(ds11.capacity() == 1u);
 		BOOST_CHECK(ds11[0u] == T(42));
@@ -182,6 +185,23 @@ struct dynamic_tester
 		std::advance(it2,4);
 		BOOST_CHECK(it2 == static_cast<d1 const &>(ds11).end());
 		BOOST_CHECK(ds11.begin() == &ds11[0u]);
+		// Some STL algos.
+		d1 ds14;
+		std::copy(tmp_vec.rbegin(),tmp_vec.rend(),std::back_inserter(ds14));
+		std::random_shuffle(ds14.begin(),ds14.end());
+		std::sort(ds14.begin(),ds14.end());
+		BOOST_CHECK(*std::max_element(ds14.begin(),ds14.end()) == T(10));
+		BOOST_CHECK(*std::min_element(ds14.begin(),ds14.end()) == T(0));
+		BOOST_CHECK(std::equal(ds14.begin(),ds14.end(),tmp_vec.begin()));
+		// Capacity tests.
+		const auto orig_cap = ds14.capacity();
+		const auto orig_ptr = ds14[0u];
+		ds14.reserve(0u);
+		BOOST_CHECK(ds14.capacity() == orig_cap);
+		BOOST_CHECK(orig_ptr == ds14[0u]);
+		ds14.reserve(orig_cap);
+		BOOST_CHECK(ds14.capacity() == orig_cap);
+		BOOST_CHECK(orig_ptr == ds14[0u]);
 	}
 };
 

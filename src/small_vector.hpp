@@ -193,6 +193,7 @@ class dynamic_storage
 			}
 			// Start by allocating the new storage. New capacity is at least one at this point.
 			pointer new_storage = obtain_new_storage(new_capacity);
+			assert(new_storage != nullptr);
 			// Move in existing elements. Consistency checks ensure
 			// that m_size is not greater than m_capacity and, by extension, new_capacity.
 			for (size_type i = 0u; i < m_size; ++i) {
@@ -320,7 +321,7 @@ struct auto_static_size<T,Size,typename std::enable_if<
 /**
  * This class is a sequence container similar to the standard <tt>std::vector</tt> class. The class will avoid dynamic
  * memory allocation by using internal static storage up to a certain number of elements. If \p Size is zero, this
- * number is calculated automatically (so that the size of the static storage block is not greater than the totals size of the
+ * number is calculated automatically (so that the size of the static storage block is not greater than the total size of the
  * members used to manage dynamically-allocated memory). Otherwise, the limit number is set to \p Size.
  *
  * \section type_requirements Type requirements
@@ -333,7 +334,8 @@ struct auto_static_size<T,Size,typename std::enable_if<
  *
  * \section move_semantics Move semantics
  *
- * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
+ * After a move operation, the container is left in a state which is destructible and assignable (as long as \p T
+ * is as well).
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -352,18 +354,22 @@ class small_vector
 		typedef typename std::aligned_storage<size_union,align_union>::type storage_type;
 		s_storage *get_s()
 		{
+			piranha_assert(m_static);
 			return static_cast<s_storage *>(get_vs());
 		}
 		const s_storage *get_s() const
 		{
+			piranha_assert(m_static);
 			return static_cast<const s_storage *>(get_vs());
 		}
 		d_storage *get_d()
 		{
+			piranha_assert(!m_static);
 			return static_cast<d_storage *>(get_vs());
 		}
 		const d_storage *get_d() const
 		{
+			piranha_assert(!m_static);
 			return static_cast<const d_storage *>(get_vs());
 		}
 		void *get_vs()
@@ -375,9 +381,7 @@ class small_vector
 			return static_cast<const void *>(&m_storage);
 		}
 		// The size type will be the one with most range among the two storages.
-		using size_type_impl = typename std::conditional<(boost::integer_traits<typename s_storage::size_type>::const_max >
-			boost::integer_traits<typename d_storage::size_type>::const_max),typename s_storage::size_type,
-			typename d_storage::size_type>::type;
+		using size_type_impl = max_int<typename s_storage::size_type,typename d_storage::size_type>;
 	public:
 		/// An unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
@@ -393,6 +397,14 @@ class small_vector
 				::new (get_vs()) d_storage(*other.get_d());
 			}
 		}
+		small_vector(small_vector &&other) noexcept : m_static(other.m_static)
+		{
+			if (m_static) {
+				::new (get_vs()) s_storage(std::move(*other.get_s()));
+			} else {
+				::new (get_vs()) d_storage(std::move(*other.get_d()));
+			}
+		}
 		~small_vector() noexcept
 		{
 			if (m_static) {
@@ -405,8 +417,9 @@ class small_vector
 		{
 			if (m_static) {
 				return get_s()->size();
+			} else {
+				return get_d()->size();
 			}
-			return get_d()->size();
 		}
 	private:
 		storage_type	m_storage;
