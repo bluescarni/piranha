@@ -154,7 +154,7 @@ inline auto is_zero(const T &x) -> decltype(is_zero_impl<T>()(x))
 template <typename T, typename = void>
 struct negate_impl
 {
-	/// Call operator.
+	/// Generic call operator.
 	/**
 	 * The body of the operator is equivalent to:
 	 * @code
@@ -168,9 +168,17 @@ struct negate_impl
 	 * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
 	 */
 	template <typename U>
-	auto operator()(U &x) const -> decltype(x = -x)
+	auto operator()(U &x, typename std::enable_if<!std::is_integral<U>::value>::type * = nullptr) const -> decltype(x = -x)
 	{
 		return x = -x;
+	}
+	/// Call operator specialised for integral types.
+	template <typename U>
+	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const
+	{
+		// NOTE: here we use the explicit static_cast to cope with integral promotions
+		// (e.g., in case of char).
+		return x = static_cast<U>(-x);
 	}
 };
 
@@ -642,18 +650,27 @@ struct abs_impl
  * while for unsigned integer types it will be the input value unchanged.
  */
 template <typename T>
-struct abs_impl<T,typename std::enable_if<std::is_signed<T>::value || std::is_unsigned<T>::value ||
+struct abs_impl<T,typename std::enable_if<(std::is_signed<T>::value && std::is_integral<T>::value) ||
+	(std::is_unsigned<T>::value && std::is_integral<T>::value) ||
 	std::is_floating_point<T>::value>::type>
 {
 	private:
 		template <typename U>
-		static U impl(const U &x, typename std::enable_if<std::is_signed<U>::value ||
-			std::is_floating_point<U>::value>::type * = nullptr)
+		static U impl(const U &x, typename std::enable_if<std::is_floating_point<U>::value>::type * = nullptr)
 		{
 			return std::abs(x);
 		}
+		// NOTE: use decltype here so, in the remote case we are dealing with an extended integer types (for which std::abs()
+		// will not exist and cast to long long might be lossy), the overload will be discarded.
 		template <typename U>
-		static U impl(const U &x, typename std::enable_if<std::is_unsigned<U>::value>::type * = nullptr)
+		static auto impl(const U &x, typename std::enable_if<std::is_integral<U>::value && std::is_signed<U>::value>::type * = nullptr) ->
+			decltype(static_cast<U>(std::abs(static_cast<long long>(x))))
+		{
+			// Cast to long long in order to avoid conversion derps when dealing with chars.
+			return static_cast<U>(std::abs(static_cast<long long>(x)));
+		}
+		template <typename U>
+		static U impl(const U &x, typename std::enable_if<std::is_integral<U>::value && std::is_unsigned<U>::value>::type * = nullptr)
 		{
 			return x;
 		}
@@ -664,7 +681,7 @@ struct abs_impl<T,typename std::enable_if<std::is_signed<T>::value || std::is_un
 		 * 
 		 * @return absolute value of \p x.
 		 */
-		T operator()(const T &x) const
+		auto operator()(const T &x) const -> decltype(impl(x))
 		{
 			return impl(x);
 		}
@@ -1197,9 +1214,9 @@ inline T generic_binomial(const T &x, const U &k)
 	}
 	T tmp(x), retval = x / k;
 	--tmp;
-	for (U i(k - one); i >= one; --i, --tmp) {
+	for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
 		retval *= tmp;
-		retval /= i;
+		retval /= T(i);
 	}
 	return retval;
 }
