@@ -799,16 +799,15 @@ struct evaluate_tester
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),0);
 		k1 = k_type({T(2),T(-3)});
 		vs.add("y");
-		typedef std::unordered_map<symbol,double> dict_type2;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::cos((0. + (3.2 * 2)) + (-4.3 * -3)));
+		typedef std::unordered_map<symbol,real> dict_type2;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}},vs),math::cos((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::sin((0. + (3.2 * 2)) + (-4.3 * -3)));
-		typedef std::unordered_map<symbol,real> dict_type4;
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}},vs),math::sin((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
 		k1 = k_type({T(-2),T(-3)});
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
 			math::cos((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
 			math::sin((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
 		typedef std::unordered_map<symbol,rational> dict_type3;
 		k1 = k_type({T(3),T(-2)});
@@ -1281,31 +1280,31 @@ struct t_subs_tester
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
 		symbol_set v;
 		k_type k;
-		auto res = k.t_subs("x",.5,.0,v);
+		auto res = k.t_subs("x",real(.5),real(.0),v);
 		typedef decltype(res) res_type1;
-		BOOST_CHECK((std::is_same<typename res_type1::value_type::first_type,double>::value));
+		BOOST_CHECK((std::is_same<typename res_type1::value_type::first_type,real>::value));
 		BOOST_CHECK_EQUAL(res.size(),2u);
-		BOOST_CHECK_EQUAL(res[0u].first,double(1));
-		BOOST_CHECK_EQUAL(res[1u].first,double(0));
+		BOOST_CHECK_EQUAL(res[0u].first,real(1));
+		BOOST_CHECK_EQUAL(res[1u].first,real(0));
 		k.set_flavour(false);
-		res = k.t_subs("x",.5,.0,v);
+		res = k.t_subs("x",real(.5),real(.0),v);
 		BOOST_CHECK_EQUAL(res.size(),2u);
-		BOOST_CHECK_EQUAL(res[0u].first,double(0));
-		BOOST_CHECK_EQUAL(res[1u].first,double(1));
+		BOOST_CHECK_EQUAL(res[0u].first,real(0));
+		BOOST_CHECK_EQUAL(res[1u].first,real(1));
 		k = k_type{T(3)};
 		k.set_flavour(true);
 		v.add("x");
-		res = k.t_subs("y",.5,.0,v);
+		res = k.t_subs("y",real(.5),real(.0),v);
 		BOOST_CHECK_EQUAL(res.size(),2u);
-		BOOST_CHECK_EQUAL(res[0u].first,double(1));
-		BOOST_CHECK_EQUAL(res[1u].first,double(0));
+		BOOST_CHECK_EQUAL(res[0u].first,real(1));
+		BOOST_CHECK_EQUAL(res[1u].first,real(0));
 		BOOST_CHECK(res[0u].second == k);
 		k.set_flavour(false);
 		BOOST_CHECK(res[1u].second == k);
-		res = k.t_subs("y",.5,.0,v);
+		res = k.t_subs("y",real(.5),real(.0),v);
 		BOOST_CHECK_EQUAL(res.size(),2u);
-		BOOST_CHECK_EQUAL(res[0u].first,double(0));
-		BOOST_CHECK_EQUAL(res[1u].first,double(1));
+		BOOST_CHECK_EQUAL(res[0u].first,real(0));
+		BOOST_CHECK_EQUAL(res[1u].first,real(1));
 		BOOST_CHECK(res[1u].second == k);
 		k.set_flavour(true);
 		BOOST_CHECK(res[0u].second == k);

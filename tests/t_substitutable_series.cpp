@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK_EQUAL(math::pow(math::sin(p_type3{"x"}),7).t_subs("x",real(math::pow(real(3),.5))/2,real(.5)),math::pow(real(.5),7));
 	BOOST_CHECK_EQUAL(math::t_subs(math::pow(math::sin(p_type3{"x"}),7),"x",real(math::pow(real(3),.5))/2,real(.5)),math::pow(real(.5),7));
 	BOOST_CHECK(math::abs(((math::pow(math::sin(p_type3{"x"}),5)*math::pow(math::cos(p_type3{"x"}),5)).t_subs(
-		"x",real(math::pow(real(3),.5))/2,real(.5)) - math::pow(real(.5),5)*math::pow(real(math::pow(real(3),.5))/2,5)).trim().evaluate(std::unordered_map<std::string,double>{})) < 1E-9);
+		"x",real(math::pow(real(3),.5))/2,real(.5)) - math::pow(real(.5),5)*math::pow(real(math::pow(real(3),.5))/2,5)).trim().evaluate(std::unordered_map<std::string,real>{})) < 1E-9);
 	BOOST_CHECK(has_t_subs<p_type3>::value);
 	BOOST_CHECK((has_t_subs<p_type3,double>::value));
 	BOOST_CHECK((has_t_subs<p_type3,real>::value));

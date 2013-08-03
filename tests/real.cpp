@@ -347,9 +347,9 @@ struct check_integral_conversion
 		BOOST_CHECK_EQUAL(static_cast<T>(real{value}),value);
 		if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2) {
 			if (value > T(0)) {
-				BOOST_CHECK_EQUAL(static_cast<T>(real{value + 0.5}),value);
+				BOOST_CHECK_EQUAL(static_cast<T>(real{static_cast<double>(value) + 0.5}),value);
 			} else {
-				BOOST_CHECK_EQUAL(static_cast<T>(real{value - 0.5}),value);
+				BOOST_CHECK_EQUAL(static_cast<T>(real{static_cast<double>(value) - 0.5}),value);
 			}
 		}
 		BOOST_CHECK_THROW((void)static_cast<T>(real{integer(boost::integer_traits<T>::const_max) * 2}),std::overflow_error);

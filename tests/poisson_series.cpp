@@ -358,9 +358,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 	typedef poisson_series<polynomial<rational>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	auto s = (x + y) * cos(x + y) + pow(y,3) * sin(x + y);
-	auto eval = s.evaluate(std::unordered_map<std::string,double>{{"x",1.234},{"y",5.678}});
-	BOOST_CHECK_EQUAL(eval,(1.234 + 5.678) * cos(1.234 + 5.678) + pow(5.678,3) * sin(1.234 + 5.678));
-	BOOST_CHECK_EQUAL(eval,math::evaluate(s,std::unordered_map<std::string,double>{{"x",1.234},{"y",5.678}}));
+	auto eval = s.evaluate(std::unordered_map<std::string,real>{{"x",real(1.234)},{"y",real(5.678)}});
+	BOOST_CHECK_EQUAL(eval,(real(1.234) + real(5.678)) * cos(real(1.234) + real(5.678)) + pow(real(5.678),3) * sin(real(1.234) + real(5.678)));
+	BOOST_CHECK_EQUAL(eval,math::evaluate(s,std::unordered_map<std::string,real>{{"x",real(1.234)},{"y",real(5.678)}}));
 	BOOST_CHECK((std::is_same<double,decltype(eval)>::value));
 }
 

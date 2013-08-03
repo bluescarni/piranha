@@ -319,7 +319,7 @@ class series_multiplier
 				}
 				// Try to see if a series already has enough buckets.
 				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {
-					return r.m_container.bucket_count() * r.m_container.max_load_factor() >= final_estimate;
+					return static_cast<double>(r.m_container.bucket_count()) * r.m_container.max_load_factor() >= final_estimate;
 				});
 				if (it != retval_list.end()) {
 					retval = std::move(*it);
@@ -327,7 +327,7 @@ class series_multiplier
 				} else {
 					// Otherwise, just rehash to the desired value, corrected for max load factor.
 					retval.m_container.rehash(
-						boost::numeric_cast<typename Series1::size_type>(std::ceil(final_estimate / retval.m_container.max_load_factor()))
+						boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(final_estimate) / retval.m_container.max_load_factor()))
 					);
 				}
 				// Cleanup functor that will erase all elements in retval_list.
@@ -669,7 +669,7 @@ class series_multiplier
 				}
 				auto ptr = boost::any_cast<double>(&x);
 				if (likely((bool)ptr && estimate)) {
-					*ptr += static_cast<double>(estimate) / real_size;
+					*ptr += static_cast<double>(estimate) / static_cast<double>(real_size);
 				}
 			});
 		}
@@ -783,7 +783,7 @@ class series_multiplier
 			// Take care of rehashing, if needed.
 			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					boost::numeric_cast<typename Series1::size_type>(std::ceil(retval.size() / retval.m_container.max_load_factor()))
+					boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(retval.size()) / retval.m_container.max_load_factor()))
 				);
 			}
 		}
@@ -801,7 +801,7 @@ class series_multiplier
 				// up retval just to be sure, and proceed.
 				try {
 					auto size = estimate_final_series_size(f);
-					r.m_container.rehash(boost::numeric_cast<decltype(size)>(std::ceil(size / r.m_container.max_load_factor())));
+					r.m_container.rehash(boost::numeric_cast<decltype(size)>(std::ceil(static_cast<double>(size) / r.m_container.max_load_factor())));
 					return std::make_pair(true,size);
 				} catch (...) {
 					r.m_container.clear();

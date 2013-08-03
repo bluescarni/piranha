@@ -900,7 +900,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			// Rehash the retun value's container accordingly.
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(estimate / retval.m_container.max_load_factor())));
+			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(estimate) /
+				retval.m_container.max_load_factor())));
 			piranha_assert(retval.m_container.bucket_count());
 			if ((integer(size1) * integer(size2)) / estimate > 200) {
 				dense_multiplication(retval);
@@ -1506,7 +1507,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Finally, cope with excessive load factor.
 			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					boost::numeric_cast<bucket_size_type>(std::ceil(retval.m_container.size() / retval.m_container.max_load_factor()))
+					boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(retval.m_container.size()) / retval.m_container.max_load_factor()))
 				);
 			}
 		}
@@ -1551,7 +1552,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					// NOTE: the check here is done outside.
 					piranha_assert(container.size() < boost::integer_traits<bucket_size_type>::const_max);
 					// Term is new. Handle the case in which we need to rehash because of load factor.
-					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / container.bucket_count() >
+					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / static_cast<double>(container.bucket_count()) >
 						container.max_load_factor()))
 					{
 						container._increase_size();

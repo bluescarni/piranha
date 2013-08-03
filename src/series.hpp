@@ -239,7 +239,7 @@ class series: series_binary_operators, detail::series_tag
 					piranha_throw(std::overflow_error,"maximum number of elements reached");
 				}
 				// Term is new. Handle the case in which we need to rehash because of load factor.
-				if (unlikely(static_cast<double>(m_container.size() + size_type(1u)) / m_container.bucket_count() >
+				if (unlikely(static_cast<double>(m_container.size() + size_type(1u)) / static_cast<double>(m_container.bucket_count()) >
 					m_container.max_load_factor()))
 				{
 					m_container._increase_size();
@@ -334,7 +334,7 @@ class series: series_binary_operators, detail::series_tag
 			size_type max_n_buckets;
 			try {
 				piranha_assert(c1.max_load_factor() > 0);
-				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(max_size / c1.max_load_factor()));
+				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(static_cast<double>(max_size) / c1.max_load_factor()));
 			} catch (...) {
 				// Ignore any error on conversions.
 				return;
@@ -599,7 +599,7 @@ class series: series_binary_operators, detail::series_tag
 				}
 				auto ptr = boost::any_cast<double>(&x);
 				if (likely((bool)ptr && retval.size())) {
-					*ptr += (static_cast<double>(this->size()) * series.size()) / retval.size();
+					*ptr += (static_cast<double>(this->size()) * static_cast<double>(series.size())) / static_cast<double>(retval.size());
 				}
 			});
 			return retval;

@@ -1212,7 +1212,7 @@ inline T generic_binomial(const T &x, const U &k)
 	if (k == zero) {
 		return T(1);
 	}
-	T tmp(x), retval = x / k;
+	T tmp(x), retval = x / T(k);
 	--tmp;
 	for (auto i = static_cast<U>(k - one); i >= one; --i, --tmp) {
 		retval *= tmp;
