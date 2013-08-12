@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <new>
@@ -207,6 +208,11 @@ struct dynamic_tester
 		ds14.reserve(orig_cap);
 		BOOST_CHECK(ds14.capacity() == orig_cap);
 		BOOST_CHECK(orig_ptr == ds14[0u]);
+		// Hash.
+		d1 ds15;
+		BOOST_CHECK(ds15.hash() == 0u);
+		ds15.push_back(T(1));
+		BOOST_CHECK(ds15.hash() == std::hash<T>()(T(1)));
 	}
 };
 

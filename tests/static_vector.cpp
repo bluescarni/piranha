@@ -29,6 +29,7 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <iterator>
 #include <new>
 #include <sstream>
@@ -59,7 +60,23 @@ class custom_string: public std::string
 		~custom_string() noexcept(true) {}
 };
 
+namespace std
+{
+
+template <>
+struct hash<custom_string>
+{
+	size_t operator()(const custom_string &s) const noexcept
+	{
+		return hash<std::string>()(s);
+	}
+};
+
+}
+
 using namespace piranha;
+
+static_assert(is_hashable<custom_string>::value,"cc");
 
 typedef boost::mpl::vector<int,integer,custom_string> value_types;
 typedef boost::mpl::vector<std::integral_constant<std::uint_least8_t,1u>,std::integral_constant<std::uint_least8_t,5u>,
@@ -386,4 +403,31 @@ struct type_traits_tester
 BOOST_AUTO_TEST_CASE(static_vector_type_traits_test)
 {
 	boost::mpl::for_each<value_types>(type_traits_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v1;
+			BOOST_CHECK(v1.hash() == 0u);
+			v1.push_back(T());
+			BOOST_CHECK(v1.hash() == std::hash<T>()(T()));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_hash_test)
+{
+	boost::mpl::for_each<value_types>(hash_tester());
 }

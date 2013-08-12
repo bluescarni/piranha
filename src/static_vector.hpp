@@ -32,6 +32,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "type_traits.hpp"
 
@@ -466,6 +467,30 @@ class static_vector
 					--m_size;
 				}
 			}
+		}
+		/// Hash value.
+		/**
+		 * \note
+		 * This method is enabled only if \p T satisfies piranha::is_hashable.
+		 *
+		 * @return one of the following:
+		 * - 0 if size() is 0,
+		 * - the hash of the first element (via \p std::hash) if size() is 1,
+		 * - in all other cases, the result of iteratively mixing via \p boost::hash_combine the hash
+		 *   values of all the elements of the container, calculated via \p std::hash,
+		 *   with the hash value of the first element as seed value.
+		 *
+		 * @throws unspecified any exception resulting from calculating the hash value(s) of the
+		 * individual elements.
+		 *
+		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
+		 */
+		template <typename U = T, typename = typename std::enable_if<
+			is_hashable<U>::value
+			>::type>
+		std::size_t hash() const noexcept
+		{
+			return detail::vector_hasher(*this);
 		}
 		/// Stream operator overload for piranha::static_vector.
 		/**

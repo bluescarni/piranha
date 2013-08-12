@@ -31,6 +31,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/vector_hasher.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 
@@ -210,6 +211,10 @@ class dynamic_storage
 		size_type capacity() const
 		{
 			return m_capacity;
+		}
+		std::size_t hash() const
+		{
+			return detail::vector_hasher(*this);
 		}
 	private:
 		// Common implementation of push_back().
