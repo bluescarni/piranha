@@ -28,6 +28,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <iterator>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <type_traits>
@@ -75,6 +76,10 @@ struct dynamic_tester
 		typedef detail::dynamic_storage<T> d1;
 		BOOST_CHECK(is_container_element<d1>::value);
 		d1 ds1;
+		BOOST_CHECK(ds1.begin() == ds1.end());
+		BOOST_CHECK(static_cast<const d1 &>(ds1).begin() == static_cast<const d1 &>(ds1).end());
+		BOOST_CHECK(static_cast<const d1 &>(ds1).begin() == ds1.end());
+		BOOST_CHECK(ds1.begin() == static_cast<const d1 &>(ds1).end());
 		BOOST_CHECK(ds1.empty());
 		BOOST_CHECK(ds1.size() == 0u);
 		BOOST_CHECK(ds1.capacity() == 0u);
@@ -209,4 +214,220 @@ BOOST_AUTO_TEST_CASE(small_vector_dynamic_test)
 {
 	environment env;
 	boost::mpl::for_each<value_types>(dynamic_tester());
+}
+
+struct constructor_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			BOOST_CHECK(v1.size() == 0u);
+			BOOST_CHECK(v1.begin() == v1.end());
+			BOOST_CHECK(static_cast<v_type const &>(v1).begin() == static_cast<v_type const &>(v1).end());
+			BOOST_CHECK(v1.begin() == static_cast<v_type const &>(v1).end());
+			BOOST_CHECK(static_cast<v_type const &>(v1).begin() == v1.end());
+			BOOST_CHECK(v1.is_static());
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size) * 8 + 3,[&n](){return T(n++);});
+			BOOST_CHECK(!v1.is_static());
+			v_type v2(v1);
+			BOOST_CHECK(!v2.is_static());
+			BOOST_CHECK(std::equal(v1.begin(),v1.end(),v2.begin()));
+			v_type v3(std::move(v2));
+			BOOST_CHECK(std::equal(v1.begin(),v1.end(),v3.begin()));
+			n = 0;
+			v_type v4;
+			std::generate_n(std::back_inserter(v4),integer(v_type::max_static_size),[&n](){return T(n++);});
+			BOOST_CHECK(v4.is_static());
+			v_type v5(v4);
+			BOOST_CHECK(v5.is_static());
+			BOOST_CHECK(std::equal(v4.begin(),v4.end(),v5.begin()));
+			v_type v6(std::move(v5));
+			BOOST_CHECK(std::equal(v4.begin(),v4.end(),v6.begin()));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_constructor_test)
+{
+	boost::mpl::for_each<value_types>(constructor_tester());
+}
+
+struct assignment_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			v1.push_back(T(0));
+			auto *ptr = std::addressof(v1[0]);
+			// Verify that self assignment does not do anything funky.
+			v1 = v1;
+			v1 = std::move(v1);
+			BOOST_CHECK(ptr == std::addressof(v1[0]));
+			v_type v2;
+			// This will be static vs static (there is always enough static storage for at least 1 element).
+			v2 = v1;
+			BOOST_CHECK(v2.size() == 1u);
+			BOOST_CHECK(v2[0] == v1[0]);
+			// Push enough into v1 to make it dynamic.
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size),[&n](){return T(n++);});
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(v2.is_static());
+			// Static vs dynamic.
+			v2 = v1;
+			BOOST_CHECK(!v2.is_static());
+			BOOST_CHECK(std::equal(v2.begin(),v2.end(),v1.begin()));
+			v_type v3;
+			// Dynamic vs static.
+			v1 = v3;
+			BOOST_CHECK(v1.is_static());
+			BOOST_CHECK(v1.size() == 0u);
+			// Dynamic vs dynamic.
+			v_type v4(v2), v5(v2);
+			std::transform(v5.begin(),v5.end(),v5.begin(),[](const T &x) {return x / 2;});
+			v4 = v5;
+			BOOST_CHECK(std::equal(v4.begin(),v4.end(),v5.begin()));
+			v4 = std::move(v5);
+			BOOST_CHECK(v5.size() == 0u);
+			BOOST_CHECK(!v5.is_static());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_assignment_test)
+{
+	boost::mpl::for_each<value_types>(assignment_tester());
+}
+
+struct push_back_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			std::vector<T> check;
+			BOOST_CHECK(v1.size() == 0u);
+			for (typename std::decay<decltype(v_type::max_static_size)>::type i = 0u; i < v_type::max_static_size; ++i) {
+				v1.push_back(T(i));
+				check.push_back(T(i));
+			}
+			v1.push_back(T(5));
+			check.push_back(T(5));
+			v1.push_back(T(6));
+			check.push_back(T(6));
+			v1.push_back(T(7));
+			check.push_back(T(7));
+			BOOST_CHECK(v1.size() == integer(v_type::max_static_size) + 3);
+			BOOST_CHECK(std::equal(check.begin(),check.end(),v1.begin()));
+			check.resize(0u);
+			v_type v2;
+			BOOST_CHECK(v2.size() == 0u);
+			T tmp;
+			for (typename std::decay<decltype(v_type::max_static_size)>::type i = 0u; i < v_type::max_static_size; ++i) {
+				tmp = T(i);
+				check.push_back(tmp);
+				v2.push_back(tmp);
+			}
+			tmp = T(5);
+			v2.push_back(tmp);
+			check.push_back(tmp);
+			tmp = T(6);
+			v2.push_back(tmp);
+			check.push_back(tmp);
+			tmp = T(7);
+			v2.push_back(tmp);
+			check.push_back(tmp);
+			BOOST_CHECK(v2.size() == integer(v_type::max_static_size) + 3);
+			BOOST_CHECK(std::equal(check.begin(),check.end(),v2.begin()));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_push_back_test)
+{
+	boost::mpl::for_each<value_types>(push_back_tester());
+}
+
+struct equality_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			BOOST_CHECK(v1 == v1);
+			BOOST_CHECK(!(v1 != v1));
+			v_type v2 = v1;
+			v1.push_back(T(0));
+			BOOST_CHECK(v2 != v1);
+			BOOST_CHECK(!(v2 == v1));
+			BOOST_CHECK(v1 != v2);
+			BOOST_CHECK(!(v1 == v2));
+			v2.push_back(T(0));
+			BOOST_CHECK(v2 == v1);
+			BOOST_CHECK(!(v2 != v1));
+			BOOST_CHECK(v1 == v2);
+			BOOST_CHECK(!(v1 != v2));
+			// Push enough into v1 to make it dynamic.
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size),[&n](){return T(n++);});
+			BOOST_CHECK(v2 != v1);
+			BOOST_CHECK(!(v2 == v1));
+			BOOST_CHECK(v1 != v2);
+			BOOST_CHECK(!(v1 == v2));
+			v2 = v1;
+			BOOST_CHECK(v2 == v1);
+			BOOST_CHECK(!(v2 != v1));
+			BOOST_CHECK(v1 == v2);
+			BOOST_CHECK(!(v1 != v2));
+			v2.push_back(T(5));
+			BOOST_CHECK(v2 != v1);
+			BOOST_CHECK(!(v2 == v1));
+			BOOST_CHECK(v1 != v2);
+			BOOST_CHECK(!(v1 == v2));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_equality_test)
+{
+	boost::mpl::for_each<value_types>(equality_tester());
 }

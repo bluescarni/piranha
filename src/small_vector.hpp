@@ -21,8 +21,10 @@
 #ifndef PIRANHA_SMALL_VECTOR_HPP
 #define PIRANHA_SMALL_VECTOR_HPP
 
+#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 #include <new>
 #include <tuple>
@@ -225,8 +227,8 @@ class dynamic_storage
 		{
 			piranha_assert(consistency_checks());
 			for (size_type i = 0u; i < m_size; ++i) {
-				// NOTE: we do not try to use POD optimisations here as the allocator
-				// might have side effects.
+				// NOTE: could use POD optimisations here in principle, but keep it like
+				// this in case in the future we allow to select the allocator.
 				// NOTE: exceptions here will call std::abort(), as we are in noexcept land.
 				a_traits::destroy(alloc(),ptr() + i);
 			}
@@ -382,9 +384,17 @@ class small_vector
 		}
 		// The size type will be the one with most range among the two storages.
 		using size_type_impl = max_int<typename s_storage::size_type,typename d_storage::size_type>;
+		// Sanity check: the size type of dynamic storage must be able to represent the max size of the static
+		// storage plus one (needed when pushing back).
+		static_assert(boost::integer_traits<typename d_storage::size_type>::const_max >
+			s_storage::max_size,"Invalid size type(s).");
 	public:
+		static const auto max_static_size = s_storage::max_size;
 		/// An unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
+		using value_type = T;
+		using iterator = value_type *;
+		using const_iterator = value_type const *;
 		small_vector():m_static(true)
 		{
 			::new (get_vs()) s_storage();
@@ -413,12 +423,158 @@ class small_vector
 				get_d()->~d_storage();
 			}
 		}
+		small_vector &operator=(const small_vector &other)
+		{
+			if (likely(this != &other)) {
+				*this = small_vector(other);
+			}
+			return *this;
+		}
+		small_vector &operator=(small_vector &&other) noexcept
+		{
+			if (unlikely(this == &other)) {
+				return *this;
+			}
+			if (m_static == other.m_static) {
+				if (m_static) {
+					get_s()->operator=(std::move(*other.get_s()));
+				} else {
+					get_d()->operator=(std::move(*other.get_d()));
+				}
+			} else {
+				if (m_static) {
+					// static vs dynamic.
+					// Destroy static.
+					get_s()->~s_storage();
+					m_static = false;
+					// Move construct dynamic from other.
+					::new (get_vs()) d_storage(std::move(*other.get_d()));
+				} else {
+					// dynamic vs static.
+					get_d()->~d_storage();
+					m_static = true;
+					::new (get_vs()) s_storage(std::move(*other.get_s()));
+				}
+			}
+			return *this;
+		}
+		const value_type &operator[](const size_type &n) const
+		{
+			if (m_static) {
+				return get_s()->operator[](static_cast<typename s_storage::size_type>(n));
+			} else {
+				return get_d()->operator[](static_cast<typename d_storage::size_type>(n));
+			}
+		}
+		value_type &operator[](const size_type &n)
+		{
+			if (m_static) {
+				return get_s()->operator[](static_cast<typename s_storage::size_type>(n));
+			} else {
+				return get_d()->operator[](static_cast<typename d_storage::size_type>(n));
+			}
+		}
+		void push_back(const value_type &x)
+		{
+			push_back_impl(x);
+		}
+		void push_back(value_type &&x)
+		{
+			push_back_impl(std::move(x));
+		}
+		iterator begin()
+		{
+			if (m_static) {
+				return get_s()->begin();
+			} else {
+				return get_d()->begin();
+			}
+		}
+		iterator end()
+		{
+			if (m_static) {
+				return get_s()->end();
+			} else {
+				return get_d()->end();
+			}
+		}
+		const_iterator begin() const
+		{
+			if (m_static) {
+				return get_s()->begin();
+			} else {
+				return get_d()->begin();
+			}
+		}
+		const_iterator end() const
+		{
+			if (m_static) {
+				return get_s()->end();
+			} else {
+				return get_d()->end();
+			}
+		}
 		size_type size() const
 		{
 			if (m_static) {
 				return get_s()->size();
 			} else {
 				return get_d()->size();
+			}
+		}
+		bool is_static() const
+		{
+			return m_static;
+		}
+		bool operator==(const small_vector &other) const
+		{
+			const unsigned mask = static_cast<unsigned>(m_static) |
+				(static_cast<unsigned>(other.m_static) << 1u);
+			switch (mask)
+			{
+				case (0u):
+					return get_d()->size() == other.get_d()->size() &&
+						std::equal(get_d()->begin(),get_d()->end(),other.get_d()->begin());
+				case (1u):
+					return get_s()->size() == other.get_d()->size() &&
+						std::equal(get_s()->begin(),get_s()->end(),other.get_d()->begin());
+				case (2u):
+					return get_d()->size() == other.get_s()->size() &&
+						std::equal(get_d()->begin(),get_d()->end(),other.get_s()->begin());
+			}
+			return get_s()->size() == other.get_s()->size() &&
+				std::equal(get_s()->begin(),get_s()->end(),other.get_s()->begin());
+		}
+		bool operator!=(const small_vector &other) const
+		{
+			return !operator==(other);
+		}
+	private:
+		template <typename U>
+		void push_back_impl(U &&x)
+		{
+			if (m_static) {
+				if (get_s()->size() == get_s()->max_size) {
+					// Create a new dynamic vector, and move in the current
+					// elements in static storage.
+					using d_size_type = typename d_storage::size_type;
+					d_storage tmp_d;
+					tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(get_s()->max_size) + 1u));
+					std::move(get_s()->begin(),get_s()->end(),std::back_inserter(tmp_d));
+					// Now destroy the current static storage, and move-construct new dynamic storage.
+					// NOTE: in face of custom allocators here we should be ok, as move construction
+					// of custom alloc will not throw and it will preserve the ownership of the moved-in elements.
+					get_s()->~s_storage();
+					m_static = false;
+					::new (get_vs()) d_storage(std::move(tmp_d));
+					// Finally, push back the new element.
+					get_d()->push_back(std::forward<U>(x));
+				} else {
+					get_s()->push_back(std::forward<U>(x));
+				}
+			} else {
+				// In case we are already in dynamic storage, don't do anything special.
+				get_d()->push_back(std::forward<U>(x));
 			}
 		}
 	private:
