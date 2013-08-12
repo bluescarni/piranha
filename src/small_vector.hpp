@@ -531,9 +531,12 @@ class small_vector
 		{
 			return m_static;
 		}
+		template <typename U = value_type, typename = typename std::enable_if<
+			is_equality_comparable<U>::value
+			>::type>
 		bool operator==(const small_vector &other) const
 		{
-			const unsigned mask = static_cast<unsigned>(m_static) |
+			const unsigned mask = static_cast<unsigned>(m_static) +
 				(static_cast<unsigned>(other.m_static) << 1u);
 			switch (mask)
 			{
@@ -550,9 +553,23 @@ class small_vector
 			return get_s()->size() == other.get_s()->size() &&
 				std::equal(get_s()->begin(),get_s()->end(),other.get_s()->begin());
 		}
+		template <typename U = value_type, typename = typename std::enable_if<
+			is_equality_comparable<U>::value
+			>::type>
 		bool operator!=(const small_vector &other) const
 		{
-			return !operator==(other);
+			return !(this->operator==(other));
+		}
+		template <typename U = value_type, typename = typename std::enable_if<
+			is_hashable<U>::value
+			>::type>
+		std::size_t hash() const noexcept
+		{
+			if (m_static) {
+				return get_s()->hash();
+			} else {
+				return get_d()->hash();
+			}
 		}
 	private:
 		template <typename U>

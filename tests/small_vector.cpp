@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <boost/functional/hash.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <functional>
@@ -436,4 +437,40 @@ struct equality_tester
 BOOST_AUTO_TEST_CASE(small_vector_equality_test)
 {
 	boost::mpl::for_each<value_types>(equality_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			BOOST_CHECK(v1.hash() == 0u);
+			v1.push_back(T(2));
+			BOOST_CHECK(v1.hash() == std::hash<T>()(T(2)));
+			// Push enough into v1 to make it dynamic.
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size),[&n](){return T(n++);});
+			std::hash<T> hasher;
+			std::size_t retval = hasher(v1[0u]);
+			for (decltype(v1.size()) i = 1u; i < v1.size(); ++i) {
+				boost::hash_combine(retval,hasher(v1[i]));
+			}
+			BOOST_CHECK(retval == v1.hash());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_hash_test)
+{
+	boost::mpl::for_each<value_types>(hash_tester());
 }
