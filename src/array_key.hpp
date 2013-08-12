@@ -22,7 +22,6 @@
 #define PIRANHA_ARRAY_KEY_HPP
 
 #include <algorithm>
-#include <boost/functional/hash.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -33,6 +32,7 @@
 
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "static_vector.hpp"
@@ -389,27 +389,9 @@ class array_key
 		 * 
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
 		 */
-		std::size_t hash() const noexcept(true)
+		std::size_t hash() const noexcept
 		{
-			const auto size = m_container.size();
-			switch (size) {
-				case 0u:
-					return 0u;
-				case 1u:
-				{
-					std::hash<value_type> hasher;
-					return hasher(m_container[0u]);
-				}
-				default:
-				{
-					std::hash<value_type> hasher;
-					std::size_t retval = hasher(m_container[0u]);
-					for (decltype(m_container.size()) i = 1u; i < size; ++i) {
-						boost::hash_combine(retval,hasher(m_container[i]));
-					}
-					return retval;
-				}
-			}
+			return detail::vector_hasher(m_container);
 		}
 		/// Add element at the end.
 		/**
