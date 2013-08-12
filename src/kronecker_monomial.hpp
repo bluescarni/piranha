@@ -24,12 +24,12 @@
 #include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/utility.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -568,7 +568,7 @@ class kronecker_monomial
 				cur_value = tmp[i];
 				if (cur_value != zero) {
 					// NOTE: here negate() is safe because of the symmetry in kronecker_array.
-					cur_oss = (cur_value > zero) ? boost::addressof(oss_num) : (math::negate(cur_value),boost::addressof(oss_den));
+					cur_oss = (cur_value > zero) ? std::addressof(oss_num) : (math::negate(cur_value),std::addressof(oss_den));
 					(*cur_oss) << "{" << args[i].get_name() << "}";
 					if (cur_value != one) {
 						(*cur_oss) << "^{" << static_cast<long long>(cur_value) << "}";

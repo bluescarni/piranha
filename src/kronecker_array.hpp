@@ -310,7 +310,7 @@ class kronecker_array
 				piranha_throw(std::invalid_argument,"size of vector to be decoded is too large");
 			}
 			if (unlikely(!m)) {
-				if (unlikely(n)) {
+				if (unlikely(n != 0)) {
 					piranha_throw(std::invalid_argument,"a vector of size 0 must always be encoded as 0");
 				}
 				return;

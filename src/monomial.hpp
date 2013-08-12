@@ -22,10 +22,10 @@
 #define PIRANHA_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/utility.hpp> // For addressof.
 #include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -487,7 +487,7 @@ class monomial: public array_key<T,monomial<T>>
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				cur_value = (*this)[i];
 				if (cur_value != zero) {
-					cur_oss = (cur_value > zero) ? boost::addressof(oss_num) : (math::negate(cur_value),boost::addressof(oss_den));
+					cur_oss = (cur_value > zero) ? std::addressof(oss_num) : (math::negate(cur_value),std::addressof(oss_den));
 					(*cur_oss) << "{" << args[i].get_name() << "}";
 					if (cur_value != one) {
 						(*cur_oss) << "^{" << cur_value << "}";
