@@ -394,7 +394,7 @@ class small_vector
 		static_assert(boost::integer_traits<typename d_storage::size_type>::const_max >
 			s_storage::max_size,"Invalid size type(s).");
 	public:
-		static const auto max_static_size = s_storage::max_size;
+		static const typename std::decay<decltype(s_storage::max_size)>::type max_static_size = s_storage::max_size;
 		/// An unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
 		using value_type = T;
@@ -578,19 +578,19 @@ class small_vector
 			if (m_static) {
 				if (get_s()->size() == get_s()->max_size) {
 					// Create a new dynamic vector, and move in the current
-					// elements in static storage.
+					// elements from static storage.
 					using d_size_type = typename d_storage::size_type;
 					d_storage tmp_d;
 					tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(get_s()->max_size) + 1u));
 					std::move(get_s()->begin(),get_s()->end(),std::back_inserter(tmp_d));
+					// Push back the new element.
+					tmp_d.push_back(std::forward<U>(x));
 					// Now destroy the current static storage, and move-construct new dynamic storage.
 					// NOTE: in face of custom allocators here we should be ok, as move construction
 					// of custom alloc will not throw and it will preserve the ownership of the moved-in elements.
 					get_s()->~s_storage();
 					m_static = false;
 					::new (get_vs()) d_storage(std::move(tmp_d));
-					// Finally, push back the new element.
-					get_d()->push_back(std::forward<U>(x));
 				} else {
 					get_s()->push_back(std::forward<U>(x));
 				}
@@ -603,6 +603,9 @@ class small_vector
 		storage_type	m_storage;
 		bool		m_static;
 };
+
+template <typename T, std::size_t Size>
+const typename std::decay<decltype(small_vector<T,Size>::s_storage::max_size)>::type small_vector<T,Size>::max_static_size;
 
 }
 

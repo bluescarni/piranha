@@ -66,7 +66,7 @@ class t_substitutable_series: public Series
 		template <typename Term, typename T, typename U>
 		struct t_subs_term_score
 		{
-			static const unsigned value = static_cast<unsigned>(has_t_subs<typename Term::cf_type,T,U>::value) |
+			static const unsigned value = static_cast<unsigned>(has_t_subs<typename Term::cf_type,T,U>::value) +
 				(static_cast<unsigned>(key_has_t_subs<typename Term::key_type,T,U>::value) << 1u);
 		};
 		template <typename T, typename U, typename Term = typename Series::term_type, typename = void>
