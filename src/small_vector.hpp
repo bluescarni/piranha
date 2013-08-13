@@ -32,6 +32,7 @@
 
 #include "config.hpp"
 #include "detail/vector_hasher.hpp"
+#include "exceptions.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 
@@ -216,6 +217,54 @@ class dynamic_storage
 		{
 			return detail::vector_hasher(*this);
 		}
+		void resize(const size_type &new_size)
+		{
+			if (unlikely(new_size > max_size)) {
+				piranha_throw(std::bad_alloc,);
+			}
+			if (new_size == m_size) {
+				return;
+			}
+			// The storage we are going to operate on is either the old one, if it has enough capacity,
+			// or new storage.
+			const bool new_storage = (m_capacity < new_size);
+			pointer storage = new_storage ? obtain_new_storage(new_size) : ptr();
+			// Default-construct excess elements. We need to do this regardless of where the storage is coming from.
+			// This is also the only place we care about exception handling.
+			size_type i = m_size;
+			try {
+				for (; i < new_size; ++i) {
+					a_traits::construct(alloc(),storage + i);
+				}
+			} catch (...) {
+				// Roll back and dealloc.
+				for (size_type j = m_size; j < i; ++j) {
+					a_traits::destroy(alloc(),storage + j);
+				}
+				a_traits::deallocate(alloc(),storage,new_size);
+				throw;
+			}
+			// NOTE: no more exceptions thrown after this point.
+			if (new_storage) {
+				// Move in old elements into the new storage. As we had to increase the capacity,
+				// we know that new_size has to be greater than the old one, hence all old elements
+				// need to be moved over.
+				for (size_type i = 0u; i < m_size; ++i) {
+					a_traits::construct(alloc(),storage + i,std::move((*this)[i]));
+				}
+				// Erase the old content and assign new.
+				destroy_and_deallocate();
+				ptr() = storage;
+				m_capacity = new_size;
+			} else {
+				// Destroy excess elements in the old storage.
+				for (size_type i = new_size; i < m_size; ++i) {
+					a_traits::destroy(alloc(),storage + i);
+				}
+			}
+			// In any case, we need to update the size.
+			m_size = new_size;
+		}
 	private:
 		// Common implementation of push_back().
 		template <typename U>
@@ -305,6 +354,9 @@ class dynamic_storage
 		size_type	m_size;
 		size_type	m_capacity;
 };
+
+template <typename T>
+const typename dynamic_storage<T>::size_type dynamic_storage<T>::max_size;
 
 // TMP to determine automatically the size of the static storage in small_vector.
 template <typename T, std::size_t Size = 1u, typename = void>
