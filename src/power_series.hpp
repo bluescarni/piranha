@@ -76,7 +76,7 @@ class power_series: public Series
 		{
 			typedef typename T::term_type::cf_type cf_type;
 			typedef typename T::term_type::key_type key_type;
-			static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) |
+			static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) +
 						      (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_ldegree<key_type>::value) << 1u);
 		};
 		// Common checks on degree/ldegree type for use in enabling conditions below.
