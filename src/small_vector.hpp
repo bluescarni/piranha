@@ -623,6 +623,34 @@ class small_vector
 				return get_d()->hash();
 			}
 		}
+		void resize(const size_type &size)
+		{
+			if (m_static) {
+				if (size <= max_static_size) {
+					get_s()->resize(static_cast<typename s_storage::size_type>(size));
+				} else {
+					if (unlikely(size > d_storage::max_size)) {
+						piranha_throw(std::bad_alloc,);
+					}
+					// Move the existing elements into new dynamic storage.
+					const auto d_size = static_cast<typename d_storage::size_type>(size);
+					d_storage tmp_d;
+					tmp_d.reserve(d_size);
+					std::move(get_s()->begin(),get_s()->end(),std::back_inserter(tmp_d));
+					// Fill in the missing elements.
+					tmp_d.resize(d_size);
+					// Destroy static, move in dynamic.
+					get_s()->~s_storage();
+					m_static = false;
+					::new (get_vs()) d_storage(std::move(tmp_d));
+				}
+			} else {
+				if (unlikely(size > d_storage::max_size)) {
+					piranha_throw(std::bad_alloc,);
+				}
+				get_d()->resize(static_cast<typename d_storage::size_type>(size));
+			}
+		}
 	private:
 		template <typename U>
 		void push_back_impl(U &&x)
