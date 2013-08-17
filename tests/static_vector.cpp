@@ -33,6 +33,7 @@
 #include <iterator>
 #include <new>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
@@ -311,6 +312,34 @@ BOOST_AUTO_TEST_CASE(static_vector_emplace_back_test)
 	boost::mpl::for_each<value_types>(emplace_back_tester());
 }
 
+// Class that throws after a few default constructions.
+struct time_bomb
+{
+	time_bomb():m_vector(5)
+	{
+		if (s_counter == 2u) {
+			throw std::runtime_error("ka-pow!");
+		}
+		++s_counter;
+	}
+	time_bomb(time_bomb &&) = default;
+	time_bomb(const time_bomb &) = default;
+	time_bomb &operator=(time_bomb &&other) noexcept
+	{
+		m_vector = std::move(other.m_vector);
+		return *this;
+	}
+	bool operator==(const time_bomb &other) const
+	{
+		return m_vector == other.m_vector;
+	}
+	~time_bomb() noexcept {}
+	std::vector<int> m_vector;
+	static unsigned s_counter;
+};
+
+unsigned time_bomb::s_counter = 0u;
+
 struct resize_tester
 {
 	template <typename T>
@@ -330,6 +359,19 @@ struct resize_tester
 			BOOST_CHECK_EQUAL(v[0],T());
 			v.resize(0u);
 			BOOST_CHECK_EQUAL(v.size(),0u);
+			if (U::value < 3u) {
+				return;
+			}
+			typedef static_vector<time_bomb,U::value> vector_type2;
+			time_bomb::s_counter = 0u;
+			vector_type2 v2;
+			v2.resize(1);
+			v2.resize(2);
+			BOOST_CHECK_THROW(v2.resize(3),std::runtime_error);
+			BOOST_CHECK_EQUAL(v2.size(),2u);
+			time_bomb::s_counter = 0u;
+			BOOST_CHECK(v2[0] == time_bomb());
+			BOOST_CHECK(v2[1] == time_bomb());
 		}
 	};
 	template <typename T>

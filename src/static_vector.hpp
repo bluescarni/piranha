@@ -429,17 +429,14 @@ class static_vector
 		/// Resize.
 		/**
 		 * After this operation, the number of elements stored in the container will be \p new_size. If \p new_size is greater than
-		 * the size of the object before the operation, the new elements will be copy-constructed from a default-constructed instance of \p T
-		 * and placed at the end().
-		 * If \p new_size is smaller than the size of the object before the operation, the first \p new_size object in the vector will be preserved.
-		 * 
-		 * This method offers the strong exception safety guarantee when reducing the size of the vector or if the size does not change.
-		 * If an exception is thrown while increasing the size of the vector, the object will be left in a valid but non-specified state.
+		 * the size of the object before the operation, the new elements will be value-initialized and placed at the end of the container.
+		 * If \p new_size is smaller than the size of the object before the operation, the first \p new_size
+		 * object in the vector will be preserved.
 		 * 
 		 * @param[in] new_size new size for the vector.
 		 * 
 		 * @throws std::bad_alloc if \p new_size is greater than \p MaxSize.
-		 * @throws unspecified any exception thrown by the copy and default constructors of \p T.
+		 * @throws unspecified any exception thrown by the default constructor of \p T.
 		 */
 		void resize(const size_type &new_size)
 		{
@@ -450,14 +447,24 @@ class static_vector
 			if (new_size == old_size) {
 				return;
 			} else if (new_size > old_size) {
+				size_type i = old_size;
 				// Construct new in case of larger size.
-				for (size_type i = old_size; i < new_size; ++i) {
-					// NOTE: placement-new syntax for value initialization, the same as performed by
-					// std::vector (see 23.3.6.2 and 23.3.6.3/9).
-					// http://en.cppreference.com/w/cpp/language/value_initialization
-					::new (static_cast<void *>(ptr() + i)) value_type();
-					piranha_assert(m_size != MaxSize);
-					++m_size;
+				try {
+					for (; i < new_size; ++i) {
+						// NOTE: placement-new syntax for value initialization, the same as performed by
+						// std::vector (see 23.3.6.2 and 23.3.6.3/9).
+						// http://en.cppreference.com/w/cpp/language/value_initialization
+						::new (static_cast<void *>(ptr() + i)) value_type();
+						piranha_assert(m_size != MaxSize);
+						++m_size;
+					}
+				} catch (...) {
+					for (size_type j = old_size; j < i; ++j) {
+						ptr()[j].~T();
+						piranha_assert(m_size);
+						--m_size;
+					}
+					throw;
 				}
 			} else {
 				// Destroy in case of smaller size.
