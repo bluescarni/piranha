@@ -80,7 +80,8 @@ namespace piranha
  * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
  * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate (which both return integers). Review the code for degree() use after the
  * change has been made to spot possible problems.
- * \todo abstract the km_commons in a class and use it both here and in rtkm.
+ * \todo consider abstracting the km_commons in a class and use it both here and in rtkm.
+ * \todo needs sfinaeing.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial

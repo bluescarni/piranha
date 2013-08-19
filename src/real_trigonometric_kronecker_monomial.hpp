@@ -88,6 +88,7 @@ namespace piranha
  * 
  * \todo in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
  * of t_degree around the code to make sure the change has no nasty effects.
+ * \todo needs sfinaeing.
  */
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
