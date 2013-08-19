@@ -404,7 +404,8 @@ class small_vector
 		PIRANHA_TT_CHECK(is_container_element,T);
 		using s_storage = typename std::conditional<Size == 0u,static_vector<T,detail::auto_static_size<T>::value>,static_vector<T,Size>>::type;
 		using d_storage = detail::dynamic_storage<T>;
-		static constexpr std::size_t get_max(const std::size_t &a, const std::size_t &b)
+		template <typename U>
+		static constexpr U get_max(const U &a, const U &b)
 		{
 			return (a > b) ? a : b;
 		}
@@ -441,14 +442,12 @@ class small_vector
 		}
 		// The size type will be the one with most range among the two storages.
 		using size_type_impl = max_int<typename s_storage::size_type,typename d_storage::size_type>;
-		// Sanity check: the size type of dynamic storage must be able to represent the max size of the static
-		// storage plus one (needed when pushing back).
-		static_assert(boost::integer_traits<typename d_storage::size_type>::const_max >
-			s_storage::max_size,"Invalid size type(s).");
 	public:
 		static const typename std::decay<decltype(s_storage::max_size)>::type max_static_size = s_storage::max_size;
+		static const typename std::decay<decltype(d_storage::max_size)>::type max_dynamic_size = d_storage::max_size;
 		/// An unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
+		static const size_type max_size = get_max<size_type>(max_static_size,s_storage::max_size);
 		using value_type = T;
 		using iterator = value_type *;
 		using const_iterator = value_type const *;
@@ -517,19 +516,11 @@ class small_vector
 		}
 		const value_type &operator[](const size_type &n) const
 		{
-			if (m_static) {
-				return get_s()->operator[](static_cast<typename s_storage::size_type>(n));
-			} else {
-				return get_d()->operator[](static_cast<typename d_storage::size_type>(n));
-			}
+			return begin()[n];
 		}
 		value_type &operator[](const size_type &n)
 		{
-			if (m_static) {
-				return get_s()->operator[](static_cast<typename s_storage::size_type>(n));
-			} else {
-				return get_d()->operator[](static_cast<typename d_storage::size_type>(n));
-			}
+			return begin()[n];
 		}
 		void push_back(const value_type &x)
 		{
@@ -592,13 +583,13 @@ class small_vector
 				(static_cast<unsigned>(other.m_static) << 1u);
 			switch (mask)
 			{
-				case (0u):
+				case 0u:
 					return get_d()->size() == other.get_d()->size() &&
 						std::equal(get_d()->begin(),get_d()->end(),other.get_d()->begin());
-				case (1u):
+				case 1u:
 					return get_s()->size() == other.get_d()->size() &&
 						std::equal(get_s()->begin(),get_s()->end(),other.get_d()->begin());
-				case (2u):
+				case 2u:
 					return get_d()->size() == other.get_s()->size() &&
 						std::equal(get_d()->begin(),get_d()->end(),other.get_s()->begin());
 			}
@@ -629,6 +620,9 @@ class small_vector
 				if (size <= max_static_size) {
 					get_s()->resize(static_cast<typename s_storage::size_type>(size));
 				} else {
+					// NOTE: this check is a repetition of an existing check in dynamic storage's
+					// resize. The reason for putting it here as well is to ensure the safety
+					// of the static_cast below.
 					if (unlikely(size > d_storage::max_size)) {
 						piranha_throw(std::bad_alloc,);
 					}
@@ -636,6 +630,8 @@ class small_vector
 					const auto d_size = static_cast<typename d_storage::size_type>(size);
 					d_storage tmp_d;
 					tmp_d.reserve(d_size);
+					// NOTE: this will not throw, as tmp_d is guaranteed to be of adequate size
+					// and thus push_back() will not fail.
 					std::move(get_s()->begin(),get_s()->end(),std::back_inserter(tmp_d));
 					// Fill in the missing elements.
 					tmp_d.resize(d_size);
@@ -660,6 +656,15 @@ class small_vector
 					// Create a new dynamic vector, and move in the current
 					// elements from static storage.
 					using d_size_type = typename d_storage::size_type;
+					// NOTE: this check ensures that the d_storage::max_size is strictly greater than
+					// the current (static) size (equal to max static size). This means we can compute safely
+					// current size + 1 while casting to dynamic storage size type and try to allocate enough space for
+					// the std::move and push_back() below.
+					// NOTE: this check is analogous to current_size + 1 > d_storage::max_size, i.e., the same
+					// check in resize(), but it will use static const variables written as this.
+					if (unlikely(s_storage::max_size >= d_storage::max_size)) {
+						piranha_throw(std::bad_alloc,);
+					}
 					d_storage tmp_d;
 					tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(get_s()->max_size) + 1u));
 					std::move(get_s()->begin(),get_s()->end(),std::back_inserter(tmp_d));
@@ -686,6 +691,12 @@ class small_vector
 
 template <typename T, std::size_t Size>
 const typename std::decay<decltype(small_vector<T,Size>::s_storage::max_size)>::type small_vector<T,Size>::max_static_size;
+
+template <typename T, std::size_t Size>
+const typename std::decay<decltype(small_vector<T,Size>::d_storage::max_size)>::type small_vector<T,Size>::max_dynamic_size;
+
+template <typename T, std::size_t Size>
+const typename small_vector<T,Size>::size_type small_vector<T,Size>::max_size;
 
 }
 

@@ -40,6 +40,13 @@
 #include "../src/integer.hpp"
 #include "../src/rational.hpp"
 
+// NOTE: in these tests we are assuming a few things:
+// - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,
+// - the static size will be less than the dynamic size,
+// - we can interoperate safely with the size_type of std::vector.
+// These seem pretty safe in any concievable situation, but just keep it in mind. Note that the implementation
+// does not care about these assumptions, it's just the tests that do.
+
 using namespace piranha;
 
 typedef boost::mpl::vector<signed char,short,int,long,long long,integer,rational> value_types;
@@ -76,6 +83,7 @@ struct dynamic_tester
 	void operator()(const T &)
 	{
 		typedef detail::dynamic_storage<T> d1;
+		using size_type = typename d1::size_type;
 		BOOST_CHECK(is_container_element<d1>::value);
 		d1 ds1;
 		BOOST_CHECK(ds1.begin() == ds1.end());
@@ -121,7 +129,7 @@ struct dynamic_tester
 		BOOST_CHECK(ds6[1u] == T(1));
 		BOOST_CHECK(ds6.capacity() == 2u);
 		BOOST_CHECK(ds6.size() == 2u);
-		BOOST_CHECK_THROW(ds6.reserve(d1::max_size + 1u),std::bad_alloc);
+		BOOST_CHECK_THROW(ds6.reserve(static_cast<size_type>(d1::max_size + 1u)),std::bad_alloc);
 		d1 ds7;
 		ds7.reserve(10u);
 		BOOST_CHECK(ds7.capacity() == 10u);
@@ -215,7 +223,7 @@ struct dynamic_tester
 		ds15.push_back(T(1));
 		BOOST_CHECK(ds15.hash() == std::hash<T>()(T(1)));
 		// Resizing.
-		BOOST_CHECK_THROW(ds15.resize(static_cast<typename d1::size_type>(integer(d1::max_size) + 1u)),std::bad_alloc);
+		BOOST_CHECK_THROW(ds15.resize(static_cast<size_type>(d1::max_size + 1u)),std::bad_alloc);
 		auto ptr = &ds15[0u];
 		ds15.resize(1u);
 		BOOST_CHECK(ds15.size() == 1u);
@@ -523,4 +531,52 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(small_vector_hash_test)
 {
 	boost::mpl::for_each<value_types>(hash_tester());
+}
+
+struct resize_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1;
+			v1.resize(0);
+			BOOST_CHECK(v1.size() == 0u);
+			v1.resize(1);
+			BOOST_CHECK(v1.size() == 1u);
+			BOOST_CHECK(v1[0] == T());
+			auto ptr = &v1[0];
+			v1.resize(v_type::max_static_size);
+			std::vector<T> cmp;
+			cmp.resize(v_type::max_static_size);
+			BOOST_CHECK(ptr == &v1[0]);
+			BOOST_CHECK(std::equal(v1.begin(),v1.end(),cmp.begin()));
+			v1.resize(v_type::max_static_size + 1u);
+			cmp.resize(v_type::max_static_size + 1u);
+			BOOST_CHECK(ptr != &v1[0]);
+			BOOST_CHECK(std::equal(v1.begin(),v1.end(),cmp.begin()));
+			v1.resize(v_type::max_static_size + 2u);
+			cmp.resize(v_type::max_static_size + 2u);
+			ptr = &v1[0];
+			BOOST_CHECK(std::equal(v1.begin(),v1.end(),cmp.begin()));
+			BOOST_CHECK_THROW(v1.resize(v_type::max_dynamic_size + 1u),std::bad_alloc);
+			v1.resize(0);
+			BOOST_CHECK(v1.size() == 0u);
+			v1.resize(1);
+			BOOST_CHECK(ptr == &v1[0]);
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_resize_test)
+{
+	boost::mpl::for_each<value_types>(resize_tester());
 }
