@@ -66,7 +66,6 @@
  * might not be exception-safe.
  * \todo think about the generic binary term constrcutor, especially in conjunction with the generic series interop. Do we want to leave it generic
  * or force it to be strictly from (cf_type,key_type)? In the latter case, we should review its usage.
- * \todo univariate_monomial has been left behind a bit feature-wise.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
  * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)

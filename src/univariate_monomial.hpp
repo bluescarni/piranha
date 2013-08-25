@@ -61,6 +61,10 @@ namespace piranha
  * Move semantics is equivalent to <tt>T</tt>'s move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
+ *
+ * \todo this has been left behind a bit feature-wise.
+ * \todo needs sfinaeing
+ * \todo review type requirements.
  */
 template <typename T>
 class univariate_monomial
