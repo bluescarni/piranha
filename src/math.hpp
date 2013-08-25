@@ -184,6 +184,9 @@ struct negate_impl
 
 /// In-place negation.
 /**
+ * \note
+ * This function is enabled only if \p T is not const.
+ *
  * Negate value in-place. The actual implementation of this function is in the piranha::math::negate_impl functor's
  * call operator.
  * 
@@ -193,7 +196,7 @@ struct negate_impl
  * 
  * @throws unspecified any exception thrown by the call operator of piranha::math::negate_impl.
  */
-template <typename T>
+template <typename T, typename = typename std::enable_if<!std::is_const<typename std::remove_reference<T>::type>::value>::type>
 inline auto negate(T &x) -> decltype(negate_impl<T>()(x))
 {
 	return negate_impl<T>()(x);
@@ -263,6 +266,9 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_p
 
 /// Multiply-accumulate.
 /**
+ * \note
+ * This function is enabled only if \p T is not const.
+ *
  * Will set \p x to <tt>x + y * z</tt>. The actual implementation of this function is in the piranha::math::multiply_accumulate_impl functor's
  * call operator.
  * 
@@ -274,7 +280,8 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_floating_p
  * 
  * @throws unspecified any exception thrown by the call operator of piranha::math::multiply_accumulate_impl.
  */
-template <typename T, typename U, typename V>
+template <typename T, typename U, typename V, typename = typename std::enable_if<
+	!std::is_const<typename std::remove_reference<T>::type>::value>::type>
 inline auto multiply_accumulate(T &x, U &&y, V &&z) -> decltype(multiply_accumulate_impl<typename std::decay<T>::type,
 		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z)))
 {
@@ -1733,13 +1740,12 @@ const bool has_is_zero<T>::value;
 template <typename T>
 class has_negate: detail::sfinae_types
 {
-		typedef typename std::remove_reference<T>::type Td;
 		template <typename T1>
 		static auto test(T1 &t) -> decltype(math::negate(t),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(*(Td *)nullptr)),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<T &>())),yes>::value;
 };
 
 template <typename T>
