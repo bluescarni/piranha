@@ -28,8 +28,10 @@
 #include <iterator>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "detail/vector_hasher.hpp"
@@ -813,7 +815,53 @@ class small_vector
 				get_d()->resize(static_cast<typename d_storage::size_type>(size));
 			}
 		}
+		/// Vector addition.
+		/**
+		 * \note
+		 * This method is enabled only if \p value_type is addable and assignable.
+		 *
+		 * Will compute the element-wise addition of \p this and \p other, storing the result in \p retval.
+		 *
+		 * @param[out] retval result of the addition.
+		 * @param[in] other argument for the addition.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
+		 * @throws unspecified any exception thrown by:
+		 * - resize(),
+		 * - the addition and assignment operators of \p value_type.
+		 */
+		template <typename U = value_type, typename = typename std::enable_if<
+			std::is_convertible<decltype(std::declval<U const &>() + std::declval<U const &>()),U>::value &&
+			std::is_assignable<value_type &, value_type>::value>::type>
+		void add(small_vector &retval, const small_vector &other) const
+		{
+			const auto s = size();
+			if (unlikely(other.size() != s)) {
+				piranha_throw(std::invalid_argument,"vector size mismatch");
+			}
+			retval.resize(s);
+			std::transform(begin(),end(),other.begin(),retval.begin(),adder<value_type>());
+		}
 	private:
+		// NOTE: need this to silence warnings when operating on short ints: they will get
+		// promoted to int during addition, hence resulting in a warning when casting back down
+		// to short int on return.
+		template <typename U, typename = void>
+		struct adder
+		{
+			U operator()(const U &a, const U &b) const
+			{
+				return a + b;
+			}
+		};
+		template <typename U>
+		struct adder<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		{
+			U operator()(const U &a, const U &b) const
+			{
+				return static_cast<U>(a + b);
+			}
+		};
 		template <typename U>
 		void push_back_impl(U &&x)
 		{

@@ -644,3 +644,45 @@ BOOST_AUTO_TEST_CASE(small_vector_init_list_test)
 {
 	boost::mpl::for_each<value_types>(init_list_tester());
 }
+
+struct add_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1, v2, v3;
+			v1.add(v3,v2);
+			BOOST_CHECK(v3.size() == 0u);
+			v1.push_back(T(1));
+			BOOST_CHECK_THROW(v1.add(v3,v2),std::invalid_argument);
+			v2.push_back(T(2));
+			v1.add(v3,v2);
+			BOOST_CHECK(v3.size() == 1u);
+			BOOST_CHECK(v3[0] == T(3));
+			v1 = v_type{1,2,3,4,5,6};
+			v2 = v_type{7,8,9,0,1,2};
+			v1.add(v3,v2);
+			BOOST_CHECK((v3 == v_type{8,10,12,4,6,8}));
+			v3.resize(0);
+			v1.add(v3,v2);
+			BOOST_CHECK((v3 == v_type{8,10,12,4,6,8}));
+			v3.resize(100);
+			v1.add(v3,v2);
+			BOOST_CHECK((v3 == v_type{8,10,12,4,6,8}));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_add_test)
+{
+	boost::mpl::for_each<value_types>(add_tester());
+}
