@@ -558,7 +558,7 @@ class hash_set
 		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		template <typename U>
-		hash_set(std::initializer_list<U> list):
+		explicit hash_set(std::initializer_list<U> list):
 			m_container(nullptr),m_log2_size(0u),m_hasher(),m_key_equal(),m_n_elements(0u),m_allocator()
 		{
 			// We do not care here for possible truncation of list.size(), as this is only an optimization.

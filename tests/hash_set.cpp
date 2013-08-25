@@ -182,7 +182,7 @@ struct initializer_list_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		hash_set<T> h = {boost::lexical_cast<T>("1"),boost::lexical_cast<T>("2"),boost::lexical_cast<T>("3"),boost::lexical_cast<T>("4"),boost::lexical_cast<T>("4")};
+		hash_set<T> h({boost::lexical_cast<T>("1"),boost::lexical_cast<T>("2"),boost::lexical_cast<T>("3"),boost::lexical_cast<T>("4"),boost::lexical_cast<T>("4")});
 		BOOST_CHECK_EQUAL(h.size(),unsigned(4));
 		for (int i = 1; i <= 4; ++i) {
 			BOOST_CHECK(h.find(boost::lexical_cast<T>(i)) != h.end());
