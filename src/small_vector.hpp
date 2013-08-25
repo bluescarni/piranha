@@ -300,6 +300,9 @@ class dynamic_storage
 				return pointer(nullptr);
 			}
 			pointer storage = a_traits::allocate(alloc(),size);
+			// NOTE: here the check is redundant if we hard-code std::allocator (it will just throw
+			// std::bad_alloc if the allocation fails). Just keep it
+			// like this for future compatibility if we ever implement custom allocators.
 			if (unlikely(storage == nullptr)) {
 				piranha_throw(std::bad_alloc,);
 			}
@@ -443,18 +446,37 @@ class small_vector
 		// The size type will be the one with most range among the two storages.
 		using size_type_impl = max_int<typename s_storage::size_type,typename d_storage::size_type>;
 	public:
+		/// Maximum number of elements that can be stored in static storage.
 		static const typename std::decay<decltype(s_storage::max_size)>::type max_static_size = s_storage::max_size;
+		/// Maximum number of elements that can be stored in dynamic storage.
 		static const typename std::decay<decltype(d_storage::max_size)>::type max_dynamic_size = d_storage::max_size;
-		/// An unsigned integer type representing the number of elements stored in the vector.
+		/// A fundamental unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
+		/// Maximum number of elements that can be stored.
 		static const size_type max_size = get_max<size_type>(max_static_size,s_storage::max_size);
+		/// Alias for \p T.
 		using value_type = T;
+		/// Iterator type.
 		using iterator = value_type *;
+		/// Const iterator type.
 		using const_iterator = value_type const *;
+		/// Default constructor.
+		/**
+		 * Will initialise an empty vector with internal static storage.
+		 */
 		small_vector():m_static(true)
 		{
 			::new (get_vs()) s_storage();
 		}
+		/// Copy constructor.
+		/**
+		 * The storage type after successful construction will be the same of \p other.
+		 *
+		 * @param[in] other object to be copied.
+		 *
+		 * @throws std::bad_alloc in case of memory allocation errors.
+		 * @throws unspecified any exception thrown by the copy constructor of \p T.
+		 */
 		small_vector(const small_vector &other):m_static(other.m_static)
 		{
 			if (m_static) {
@@ -463,6 +485,12 @@ class small_vector
 				::new (get_vs()) d_storage(*other.get_d());
 			}
 		}
+		/// Move constructor.
+		/**
+		 * The storage type after successful construction will be the same of \p other.
+		 *
+		 * @param[in] other object to be moved.
+		 */
 		small_vector(small_vector &&other) noexcept : m_static(other.m_static)
 		{
 			if (m_static) {
@@ -471,6 +499,17 @@ class small_vector
 				::new (get_vs()) d_storage(std::move(*other.get_d()));
 			}
 		}
+		/// Constructor from initializer list.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p T is constructible from \p U.
+		 *
+		 * The elements of \p l will be added to a default-constructed object.
+		 *
+		 * @param[in] l list that will be used for initialisation.
+		 *
+		 * @throws unspecified any exception thrown by push_back().
+		 */
 		template <typename U, typename = typename std::enable_if<std::is_constructible<T,U const &>::value>::type>
 		explicit small_vector(std::initializer_list<U> l):m_static(true)
 		{
@@ -490,6 +529,7 @@ class small_vector
 				throw;
 			}
 		}
+		/// Destructor.
 		~small_vector() noexcept
 		{
 			if (m_static) {
@@ -498,6 +538,14 @@ class small_vector
 				get_d()->~d_storage();
 			}
 		}
+		/// Copy assignment operator.
+		/**
+		 * @param[in] other object to be used for assignment.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
 		small_vector &operator=(const small_vector &other)
 		{
 			if (likely(this != &other)) {
@@ -505,6 +553,12 @@ class small_vector
 			}
 			return *this;
 		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other object to be used for assignment.
+		 *
+		 * @return reference to \p this.
+		 */
 		small_vector &operator=(small_vector &&other) noexcept
 		{
 			if (unlikely(this == &other)) {
@@ -533,22 +587,51 @@ class small_vector
 			}
 			return *this;
 		}
+		/// Const subscript operator.
+		/**
+		 * @param[in] n index of the element to be accessed.
+		 *
+		 * @return const reference to the <tt>n</tt>-th element of the vector.
+		 */
 		const value_type &operator[](const size_type &n) const
 		{
 			return begin()[n];
 		}
+		/// Subscript operator.
+		/**
+		 * @param[in] n index of the element to be accessed.
+		 *
+		 * @return reference to the <tt>n</tt>-th element of the vector.
+		 */
 		value_type &operator[](const size_type &n)
 		{
 			return begin()[n];
 		}
+		/// Copy-add element at the end.
+		/**
+		 * @param[in] x object that will be added at the end of the vector.
+		 *
+		 * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
+		 * @throws unspecified any exception thrown by the copy constructor of \p T.
+		 */
 		void push_back(const value_type &x)
 		{
 			push_back_impl(x);
 		}
+		/// Move-add element at the end.
+		/**
+		 * @param[in] x object that will be added at the end of the vector.
+		 *
+		 * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
+		 */
 		void push_back(value_type &&x)
 		{
 			push_back_impl(std::move(x));
 		}
+		/// Mutable begin iterator.
+		/**
+		 * @return iterator to the beginning of the vector.
+		 */
 		iterator begin()
 		{
 			if (m_static) {
@@ -557,6 +640,10 @@ class small_vector
 				return get_d()->begin();
 			}
 		}
+		/// Mutable end iterator.
+		/**
+		 * @return iterator to the end of the vector.
+		 */
 		iterator end()
 		{
 			if (m_static) {
@@ -565,6 +652,10 @@ class small_vector
 				return get_d()->end();
 			}
 		}
+		/// Const begin iterator.
+		/**
+		 * @return iterator to the beginning of the vector.
+		 */
 		const_iterator begin() const
 		{
 			if (m_static) {
@@ -573,6 +664,10 @@ class small_vector
 				return get_d()->begin();
 			}
 		}
+		/// Const end iterator.
+		/**
+		 * @return iterator to the end of the vector.
+		 */
 		const_iterator end() const
 		{
 			if (m_static) {
@@ -581,6 +676,10 @@ class small_vector
 				return get_d()->end();
 			}
 		}
+		/// Size.
+		/**
+		 * @return number of elements stored in the vector.
+		 */
 		size_type size() const
 		{
 			if (m_static) {
@@ -589,15 +688,35 @@ class small_vector
 				return get_d()->size();
 			}
 		}
+		/// Static storage flag.
+		/**
+		 * @return \p true if the storage being used is the static one, \p false otherwise.
+		 */
 		bool is_static() const
 		{
 			return m_static;
 		}
+		/// Equality operator.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is equality comparable.
+		 *
+		 * @param[in] other argument for the comparison.
+		 *
+		 * @return \p true if the sizes of \p this and \p other coincide and the element-wise comparison
+		 * of the stored objects is \p true, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the equality operator of \p T.
+		 */
 		template <typename U = value_type, typename = typename std::enable_if<
 			is_equality_comparable<U>::value
 			>::type>
 		bool operator==(const small_vector &other) const
 		{
+			// NOTE: it seems like in C++14 the check on equal sizes is embedded in std::equal
+			// when using the new algorithm signature:
+			// http://en.cppreference.com/w/cpp/algorithm/equal
+			// Just keep it in mind for the future.
 			const unsigned mask = static_cast<unsigned>(m_static) +
 				(static_cast<unsigned>(other.m_static) << 1u);
 			switch (mask)
@@ -615,6 +734,17 @@ class small_vector
 			return get_s()->size() == other.get_s()->size() &&
 				std::equal(get_s()->begin(),get_s()->end(),other.get_s()->begin());
 		}
+		/// Inequality operator.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is equality comparable.
+		 *
+		 * @param[in] other argument for the comparison.
+		 *
+		 * @return the opposite of operator==().
+		 *
+		 * @throws unspecified any exception thrown by operator==().
+		 */
 		template <typename U = value_type, typename = typename std::enable_if<
 			is_equality_comparable<U>::value
 			>::type>
@@ -622,6 +752,13 @@ class small_vector
 		{
 			return !(this->operator==(other));
 		}
+		/// Hash method.
+		/**
+		 * \note
+		 * This method is enabled only if \p T satisfies piranha::is_hashable.
+		 *
+		 * @return a hash value for \p this.
+		 */
 		template <typename U = value_type, typename = typename std::enable_if<
 			is_hashable<U>::value
 			>::type>
@@ -633,6 +770,16 @@ class small_vector
 				return get_d()->hash();
 			}
 		}
+		/// Resize.
+		/**
+		 * Resize the vector to \p size. Elements in excess will be destroyed,
+		 * new elements will be value-initialised and placed at the end.
+		 *
+		 * @param[in] size new size.
+		 *
+		 * @throws std::bad_alloc in case of memory allocation errors or if the size limit is exceeded.
+		 * @throws unspecified any exception thrown by the default constructor of \p T.
+		 */
 		void resize(const size_type &size)
 		{
 			if (m_static) {
