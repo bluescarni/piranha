@@ -29,6 +29,7 @@
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <functional>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <new>
@@ -579,4 +580,67 @@ struct resize_tester
 BOOST_AUTO_TEST_CASE(small_vector_resize_test)
 {
 	boost::mpl::for_each<value_types>(resize_tester());
+}
+
+// Class that throws after a few constructions.
+struct time_bomb2
+{
+	time_bomb2():m_vector(5) {}
+	time_bomb2(time_bomb2 &&) = default;
+	time_bomb2(const time_bomb2 &) = default;
+	time_bomb2(int)
+	{
+		if (s_counter == 4u) {
+			throw std::runtime_error("ka-pow!");
+		}
+		++s_counter;
+	}
+	time_bomb2 &operator=(time_bomb2 &&other) noexcept
+	{
+		m_vector = std::move(other.m_vector);
+		return *this;
+	}
+	~time_bomb2() noexcept {}
+	std::vector<int> m_vector;
+	static unsigned s_counter;
+};
+
+unsigned time_bomb2::s_counter = 0u;
+
+struct init_list_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U::value>;
+			v_type v1({1});
+			BOOST_CHECK(v1[0] == T(1));
+			v_type v2({1,2,3});
+			BOOST_CHECK(v2[0] == T(1));
+			BOOST_CHECK(v2[1] == T(2));
+			BOOST_CHECK(v2[2] == T(3));
+			v_type v3({1,2,3,4,5,6,7,8,9,0});
+			std::vector<int> cmp({1,2,3,4,5,6,7,8,9,0});
+			BOOST_CHECK(v3.size() == cmp.size());
+			BOOST_CHECK(std::equal(v3.begin(),v3.end(),cmp.begin()));
+			BOOST_CHECK((std::is_constructible<v_type,std::initializer_list<int>>::value));
+			BOOST_CHECK((!std::is_constructible<v_type,std::initializer_list<time_bomb2>>::value));
+			using v_type2 = small_vector<time_bomb2,U::value>;
+			time_bomb2::s_counter = 0u;
+			BOOST_CHECK_THROW(v_type2({1,2,3,4,5,6,7}),std::runtime_error);
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_init_list_test)
+{
+	boost::mpl::for_each<value_types>(init_list_tester());
 }

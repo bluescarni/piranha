@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <new>
@@ -379,9 +380,8 @@ struct auto_static_size<T,Size,typename std::enable_if<
 /// Small vector class.
 /**
  * This class is a sequence container similar to the standard <tt>std::vector</tt> class. The class will avoid dynamic
- * memory allocation by using internal static storage up to a certain number of elements. If \p Size is zero, this
- * number is calculated automatically (so that the size of the static storage block is not greater than the total size of the
- * members used to manage dynamically-allocated memory). Otherwise, the limit number is set to \p Size.
+ * memory allocation by using internal static storage up to a certain number of stored elements. If \p Size is zero, this
+ * number is calculated automatically (but it will always be at least 1). Otherwise, the limit number is set to \p Size.
  *
  * \section type_requirements Type requirements
  *
@@ -469,6 +469,25 @@ class small_vector
 				::new (get_vs()) s_storage(std::move(*other.get_s()));
 			} else {
 				::new (get_vs()) d_storage(std::move(*other.get_d()));
+			}
+		}
+		template <typename U, typename = typename std::enable_if<std::is_constructible<T,U const &>::value>::type>
+		explicit small_vector(std::initializer_list<U> l):m_static(true)
+		{
+			::new (get_vs()) s_storage();
+			try {
+				for (const U &x : l) {
+					push_back(T(x));
+				}
+			} catch (...) {
+				// NOTE: push_back has strong exception safety, all we need to do is to invoke
+				// the appropriate destructor.
+				if (m_static) {
+					get_s()->~s_storage();
+				} else {
+					get_d()->~d_storage();
+				}
+				throw;
 			}
 		}
 		~small_vector() noexcept
