@@ -104,7 +104,7 @@ class monomial: public array_key<T,monomial<T>>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
-		~monomial() noexcept(true)
+		~monomial() noexcept
 		{
 			PIRANHA_TT_CHECK(is_key,monomial);
 			PIRANHA_TT_CHECK(key_has_degree,monomial);
@@ -174,7 +174,7 @@ class monomial: public array_key<T,monomial<T>>
 			if(unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			return std::all_of(this->m_container.begin(),this->m_container.end(),
+			return std::all_of(this->begin(),this->end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
 		/// Degree.
@@ -192,7 +192,7 @@ class monomial: public array_key<T,monomial<T>>
 		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &args) const
 		{
 			typedef typename base::value_type value_type;
-			return detail::monomial_degree<value_type>(this->m_container,[](value_type &retval, const value_type &x) -> void {retval += x;},args);
+			return detail::monomial_degree<value_type>(*this,[](value_type &retval, const value_type &x) -> void {retval += x;},args);
 		}
 		/// Low degree.
 		/**
@@ -225,7 +225,7 @@ class monomial: public array_key<T,monomial<T>>
 		typename array_key<T,monomial<T>>::value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			typedef typename base::value_type value_type;
-			return detail::monomial_partial_degree<value_type>(this->m_container,[](value_type &retval, const value_type &x) -> void {retval += x;},
+			return detail::monomial_partial_degree<value_type>(*this,[](value_type &retval, const value_type &x) -> void {retval += x;},
 				active_args,args);
 		}
 		/// Partial low degree.
@@ -245,6 +245,10 @@ class monomial: public array_key<T,monomial<T>>
 		}
 		/// Multiply monomial.
 		/**
+		 * \note
+		 * This method is enabled only if the underlying call to piranha::array_key::add()
+		 * is well-formed.
+		 *
 		 * Multiplies \p this by \p other and stores the result in \p retval. The exception safety
 		 * guarantee is the same as for piranha::array_key::add().
 		 * 
@@ -255,8 +259,9 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by piranha::array_key::add().
 		 */
-		template <typename U>
-		void multiply(monomial &retval, const monomial<U> &other, const symbol_set &args) const
+		template <typename U = monomial>
+		auto multiply(monomial &retval, const monomial &other, const symbol_set &args) const -> decltype(
+			std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()))
 		{
 			if(unlikely(other.size() != args.size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");

@@ -86,8 +86,6 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- *
- * \todo go back to reserve() and re-evaluate it once we move to small_vector in array_key.
  */
 template <typename T, std::size_t MaxSize>
 class static_vector
@@ -412,12 +410,6 @@ class static_vector
 			::new (static_cast<void *>(ptr() + m_size)) value_type(std::forward<Args>(params)...);
 			++m_size;
 		}
-		/// Reserve space.
-		/**
-		 * This method is a no-op, kept for compatibility with \p std::vector.
-		 */
-		void reserve(const size_type &)
-		{}
 		/// Size.
 		/**
 		 * @return the number of elements currently stored in \p this.

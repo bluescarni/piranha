@@ -341,14 +341,6 @@ class debug_access<add_tag>
 			k1.add(retval,k2);
 			BOOST_CHECK(retval.size() == 1u);
 			BOOST_CHECK(retval[0] == T(3));
-			g_key_type<unsigned short> k2a;
-			k2a.resize(1);
-			k2a[0] = 2;
-			k1.add(retval,k2a);
-			BOOST_CHECK(retval.size() == 1u);
-			BOOST_CHECK(retval[0] == T(3));
-			k2a.resize(2);
-			BOOST_CHECK_THROW(k1.add(retval,k2a),std::invalid_argument);
 		}
 };
 

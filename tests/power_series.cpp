@@ -87,7 +87,7 @@ struct degree_tester
 		void operator()(const Expo &)
 		{
 			typedef polynomial<Cf,Expo> p_type1;
-			typedef polynomial<polynomial<Cf,int>,Expo> p_type11;
+			typedef polynomial<polynomial<Cf,Expo>,Expo> p_type11;
 			BOOST_CHECK((std::is_same<Expo,decltype(math::degree(p_type1{}))>::value));
 			BOOST_CHECK((std::is_same<Expo,decltype(math::degree(p_type1{},std::set<std::string>{}))>::value));
 			BOOST_CHECK((std::is_same<Expo,decltype(math::ldegree(p_type1{}))>::value));
