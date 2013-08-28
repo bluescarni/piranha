@@ -159,13 +159,14 @@ struct push_back_tester
 	void operator()(const T &)
 	{
 		typedef g_key_type<T> key_type;
+		using size_type = typename key_type::size_type;
 		key_type k0;
-		for (unsigned i = 0u; i < 4u; ++i) {
+		for (size_type i = 0u; i < 4u; ++i) {
 			k0.push_back(T(i));
 			BOOST_CHECK_EQUAL(k0[i],T(i));
 		}
 		key_type k1;
-		for (unsigned i = 0u; i < 4u; ++i) {
+		for (size_type i = 0u; i < 4u; ++i) {
 			T tmp(i);
 			k1.push_back(tmp);
 			BOOST_CHECK_EQUAL(k1[i],tmp);
