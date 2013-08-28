@@ -28,7 +28,6 @@
 
 #include "base_term.hpp"
 #include "detail/series_fwd.hpp"
-#include "detail/series_multiplier_fwd.hpp"
 #include "forwarding.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
@@ -79,10 +78,6 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * @endcode
  * is a multivariate polynomial term with double-precision coefficient and \p int exponents.
  * @code
- * polynomial_term<double,static_size<int,5>>
- * @endcode
- * is a multivariate polynomial term with double-precision coefficient and a maximum of 5 \p int exponents.
- * @code
  * polynomial_term<double,univariate_monomial<int>>
  * @endcode
  * is a univariate polynomial term with double-precision coefficient and \p int exponent.
@@ -115,10 +110,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		PIRANHA_TT_CHECK(is_multipliable,Cf);
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
-		typedef base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>> base;
-		// Make friend with series multipliers.
-		template <typename Series1, typename Series2, typename Enable>
-		friend class series_multiplier;
+		using base = base_term<Cf,typename detail::polynomial_term_key<ExpoType>::type,polynomial_term<Cf,ExpoType>>;
 		// MP for enabling partial derivative.
 		template <typename Cf2, typename Key2, typename = void>
 		struct partial_enabler
