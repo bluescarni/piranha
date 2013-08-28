@@ -1012,7 +1012,7 @@ class integer
 		explicit integer(const nlimbs &n)
 		{
 			// NOTE: use unsigned types everywhere, so that in case of overflow we just allocate a different amount of memory.
-			::mpz_init2(m_value,static_cast<::mp_bitcnt_t>(
+			::mpz_init2(m_value,static_cast< ::mp_bitcnt_t>(
 				n.m_n * std::make_unsigned<decltype(::mp_bits_per_limb)>::type(::mp_bits_per_limb)));
 		}
 		/// Copy constructor.
