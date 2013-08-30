@@ -61,6 +61,7 @@ SET(HEADERS_LIST
 	detail/config_gcc.hpp
 	detail/symbol_set_fwd.hpp
 	detail/vector_hasher.hpp
+	detail/prepare_for_print.hpp
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp
