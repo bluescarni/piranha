@@ -36,6 +36,7 @@
 
 #include "array_key.hpp"
 #include "detail/degree_commons.hpp"
+#include "detail/prepare_for_print.hpp"
 #include "config.hpp"
 #include "forwarding.hpp"
 #include "integer.hpp"
@@ -56,7 +57,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T must be suitable for use in piranha::array_key.
+ * \p T and \p Args must be suitable for use as template arguments in piranha::array_key
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -68,14 +69,13 @@ namespace piranha
  * 
  * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
  * monomial classes arises.
- * \todo think about fixing printing when T is (unsigned) char: cast to int, otherwise the output will be nasty.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T>
-class monomial: public array_key<T,monomial<T>>
+template <typename T, typename ... Args>
+class monomial: public array_key<T,monomial<T,Args...>,Args...>
 {
-		typedef array_key<T,monomial<T>> base;
+		using base = array_key<T,monomial<T,Args...>,Args...>;
 		// Eval and subs type definition.
 		template <typename U, typename = void>
 		struct eval_type {};
@@ -86,6 +86,55 @@ class monomial: public array_key<T,monomial<T>>
 			std::is_constructible<e_type<U>,int>::value>::type>
 		{
 			using type = e_type<U>;
+		};
+		// Functors to shut off conversion warnings.
+		template <typename U, typename = void>
+		struct in_place_adder
+		{
+			void operator()(U &x, const U &y) const
+			{
+				x += y;
+			}
+		};
+		template <typename U>
+		struct in_place_adder<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		{
+			void operator()(U &x, const U &y) const
+			{
+				x = static_cast<U>(x + y);
+			}
+		};
+		template <typename U, typename V, typename = void>
+		struct in_place_multiplier
+		{
+			void operator()(U &x, const V &y) const
+			{
+				x *= y;
+			}
+		};
+		template <typename U, typename V>
+		struct in_place_multiplier<U,V,typename std::enable_if<std::is_integral<U>::value && std::is_integral<V>::value>::type>
+		{
+			void operator()(U &x, const V &y) const
+			{
+				x = static_cast<U>(x * y);
+			}
+		};
+		template <typename U, typename = void>
+		struct in_place_subber
+		{
+			void operator()(U &x, const U &y) const
+			{
+				x -= y;
+			}
+		};
+		template <typename U>
+		struct in_place_subber<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		{
+			void operator()(U &x, const U &y) const
+			{
+				x = static_cast<U>(x - y);
+			}
 		};
 	public:
 		/// Defaulted default constructor.
@@ -100,7 +149,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
-		template <typename U>
+		template <typename U, typename = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value>::type>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
@@ -189,10 +238,9 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
 		 */
-		typename array_key<T,monomial<T>>::value_type degree(const symbol_set &args) const
+		typename base::value_type degree(const symbol_set &args) const
 		{
-			typedef typename base::value_type value_type;
-			return detail::monomial_degree<value_type>(*this,[](value_type &retval, const value_type &x) -> void {retval += x;},args);
+			return detail::monomial_degree<typename base::value_type>(*this,in_place_adder<typename base::value_type>(),args);
 		}
 		/// Low degree.
 		/**
@@ -204,7 +252,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws unspecified any exception thrown by degree().
 		 */
-		typename array_key<T,monomial<T>>::value_type ldegree(const symbol_set &args) const
+		typename base::value_type ldegree(const symbol_set &args) const
 		{
 			return degree(args);
 		}
@@ -222,11 +270,9 @@ class monomial: public array_key<T,monomial<T>>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
 		 */
-		typename array_key<T,monomial<T>>::value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
+		typename base::value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
-			typedef typename base::value_type value_type;
-			return detail::monomial_partial_degree<value_type>(*this,[](value_type &retval, const value_type &x) -> void {retval += x;},
-				active_args,args);
+			return detail::monomial_partial_degree<typename base::value_type>(*this,in_place_adder<typename base::value_type>(),active_args,args);
 		}
 		/// Partial low degree.
 		/**
@@ -239,7 +285,7 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws unspecified any exception thrown by degree().
 		 */
-		typename array_key<T,monomial<T>>::value_type ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
+		typename base::value_type ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
 		{
 			return degree(active_args,args);
 		}
@@ -343,8 +389,9 @@ class monomial: public array_key<T,monomial<T>>
 			}
 			monomial retval(*this);
 			const size_type size = retval.size();
+			const in_place_multiplier<typename base::value_type,U> m;
 			for (decltype(retval.size()) i = 0u; i < size; ++i) {
-				retval[i] *= x;
+				m(retval[i],x);
 			}
 			return retval;
 		}
@@ -373,11 +420,12 @@ class monomial: public array_key<T,monomial<T>>
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
+			const in_place_subber<value_type> sub;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero((*this)[i])) {
 					monomial tmp_m(*this);
 					value_type tmp_v(tmp_m[i]);
-					tmp_m[i] -= value_type(1);
+					sub(tmp_m[i],value_type(1));
 					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
 				}
 			}
@@ -414,6 +462,7 @@ class monomial: public array_key<T,monomial<T>>
 			}
 			monomial retval;
 			value_type expo(0), one(1);
+			const in_place_adder<value_type> adder;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (math::is_zero(expo) && s < args[i]) {
 					// If we went past the position of s in args and still we
@@ -426,7 +475,7 @@ class monomial: public array_key<T,monomial<T>>
 				if (args[i] == s) {
 					// NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
 					// we are never going to land here as args[i] is at this point never going to be s.
-					retval[i] += one;
+					adder(retval[i],one);
 					if (math::is_zero(retval[i])) {
 						piranha_throw(std::invalid_argument,"unable to perform monomial integration: negative unitary exponent");
 					}
@@ -464,7 +513,7 @@ class monomial: public array_key<T,monomial<T>>
 				if ((*this)[i] != zero) {
 					os << args[i].get_name();
 					if ((*this)[i] != one) {
-						os << "**" << (*this)[i];
+						os << "**" << detail::prepare_for_print((*this)[i]);
 					}
 				}
 			}
@@ -497,7 +546,7 @@ class monomial: public array_key<T,monomial<T>>
 					cur_oss = (cur_value > zero) ? std::addressof(oss_num) : (math::negate(cur_value),std::addressof(oss_den));
 					(*cur_oss) << "{" << args[i].get_name() << "}";
 					if (cur_value != one) {
-						(*cur_oss) << "^{" << cur_value << "}";
+						(*cur_oss) << "^{" << detail::prepare_for_print(cur_value) << "}";
 					}
 				}
 			}
@@ -661,8 +710,8 @@ namespace std
 /**
  * Functionally equivalent to the \p std::hash specialisation for piranha::array_key.
  */
-template <typename T>
-struct hash<piranha::monomial<T>>: public hash<piranha::array_key<T,piranha::monomial<T>>> {};
+template <typename T, typename ... Args>
+struct hash<piranha::monomial<T,Args...>>: public hash<piranha::array_key<T,piranha::monomial<T,Args...>,Args...>> {};
 
 }
 
