@@ -67,10 +67,6 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  *
- * \todo: maybe it makes sense to move the allocation/free methods in a separate .cpp, as we do for runtime_info (this
- * way namespace pollution is prevented and platform-specific parts are isolated).
- * \todo: investigate using std::align for platform-independent memory aligning: allocate n bytes + alignment and use
- * std::align on it.
  * \todo rexamine the equality operators, they might be wrong (look at allocator concept on cppreference).
  */
 template <typename T>
