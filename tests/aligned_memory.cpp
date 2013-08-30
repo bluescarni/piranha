@@ -51,5 +51,11 @@ BOOST_AUTO_TEST_CASE(aligned_memory_aligned_malloc_test)
 		ptr = aligned_palloc(sizeof(void *),sizeof(int));
 		BOOST_CHECK_NO_THROW(aligned_pfree(sizeof(void *),ptr));
 	}
+#elif defined(_WIN32)
+	// _aligned_malloc requires power of two.
+	BOOST_CHECK_THROW(aligned_palloc(3,1),std::bad_alloc);
+	BOOST_CHECK_THROW(aligned_palloc(7,1),std::bad_alloc);
+	ptr = aligned_palloc(16,sizeof(int));
+	BOOST_CHECK_NO_THROW(aligned_pfree(16,ptr));
 #endif
 }

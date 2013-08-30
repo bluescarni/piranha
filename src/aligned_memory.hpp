@@ -176,7 +176,7 @@ inline void aligned_pfree(const std::size_t &alignment, void *ptr)
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
 	std::free(ptr);
 #elif defined(_WIN32)
-	::aligned_free(ptr);
+	::_aligned_free(ptr);
 #else
 	piranha_throw(not_implemented_error,"memory alignment primitives are not available");
 #endif
