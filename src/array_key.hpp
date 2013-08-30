@@ -164,7 +164,7 @@ class array_key
 		 * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error will
 		 * be produced.
 		 * 
-		 * @param[in] x construction argument.
+		 * @param[in] other construction argument.
 		 * @param[in] args reference piranha::symbol_set.
 		 *
 		 * @throws std::invalid_argument if the sizes of \p x and \p args differ.
@@ -192,6 +192,8 @@ class array_key
 		/// Defaulted copy assignment operator.
 		/**
 		 * @throws unspecified any exception thrown by the copy constructor of piranha::small_vector.
+		 *
+		 * @return reference to \p this.
 		 */
 		array_key &operator=(const array_key &) = default;
 		/// Defaulted move assignment operator.
@@ -441,6 +443,8 @@ class array_key
 		 * @param[in] other piranha::array_key that will be added to \p this.
 		 * 
 		 * @throws unspecified amy exception thrown by piranha::small_vector::add().
+		 *
+		 * @return the return value of piranha::small_vector::add().
 		 */
 		template <typename U = container_type>
 		auto add(array_key &retval, const array_key &other) const -> decltype(

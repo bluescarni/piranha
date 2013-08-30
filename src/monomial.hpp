@@ -258,6 +258,8 @@ class monomial: public array_key<T,monomial<T>>
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by piranha::array_key::add().
+		 *
+		 * @return the return value of piranha::array_key::add().
 		 */
 		template <typename U = monomial>
 		auto multiply(monomial &retval, const monomial &other, const symbol_set &args) const -> decltype(
