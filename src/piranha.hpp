@@ -117,6 +117,7 @@ namespace detail {}
 
 }
 
+#include "aligned_memory.hpp"
 #include "array_key.hpp"
 #include "base_term.hpp"
 #include "cache_aligning_allocator.hpp"
