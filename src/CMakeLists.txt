@@ -72,6 +72,7 @@ SET(HEADERS_LIST
 	trigonometric_series.hpp
 	monomial.hpp
 	small_vector.hpp
+	aligned_memory.hpp
 )
 
 IF(BUILD_MAIN OR BUILD_TESTS)
