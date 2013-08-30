@@ -25,6 +25,7 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -42,7 +43,7 @@
 using namespace piranha;
 
 typedef boost::mpl::vector<double,integer,real,polynomial<integer>> cf_types;
-typedef boost::mpl::vector<unsigned,integer> expo_types;
+typedef boost::mpl::vector<short,unsigned,integer> expo_types;
 
 typedef polynomial<real> other_cf_type;
 
@@ -249,4 +250,16 @@ BOOST_AUTO_TEST_CASE(polynomial_term_partial_test)
 {
 	boost::mpl::for_each<cf_types>(partial_tester());
 	BOOST_CHECK((!term_is_differentiable<polynomial_term<mock_cf,int>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_term_static_size_test)
+{
+	polynomial_term<double,int,std::integral_constant<std::size_t,0u>> t1;
+	std::cout << "Size 0 int  : " << sizeof(polynomial_term<double,int,std::integral_constant<std::size_t,0u>>) << '\n';
+	polynomial_term<double,short,std::integral_constant<std::size_t,0u>> t2;
+	std::cout << "Size 0 short: " << sizeof(polynomial_term<double,short,std::integral_constant<std::size_t,0u>>) << '\n';
+	polynomial_term<double,signed char,std::integral_constant<std::size_t,0u>> t3;
+	std::cout << "Size 0 char : " << sizeof(polynomial_term<double,signed char,std::integral_constant<std::size_t,0u>>) << '\n';
+	polynomial_term<double,signed char,std::integral_constant<std::size_t,30u>> t4;
+	std::cout << "Size 30 char: " << sizeof(polynomial_term<double,signed char,std::integral_constant<std::size_t,30u>>) << '\n';
 }
