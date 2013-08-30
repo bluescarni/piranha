@@ -69,6 +69,8 @@ namespace piranha
  * 
  * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
  * monomial classes arises.
+ * \todo think about modifying the arithmetic functors to return integer when operating on integral values, to avoid possible overflows
+ * when computing degree and friends. This change could go into detail/degree_commons to propagate it everywhere.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
