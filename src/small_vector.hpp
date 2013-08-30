@@ -818,11 +818,12 @@ class small_vector
 		/// Vector addition.
 		/**
 		 * \note
-		 * This method is enabled only if value_type is addable and assignable.
+		 * This method is enabled only if \p value_type is addable and assignable, and if the result
+		 * of the addition is convertible to \p value_type.
 		 *
 		 * Will compute the element-wise addition of \p this and \p other, storing the result in \p retval.
 		 * In face of exceptions during the addition of two elements, retval will be left in an unspecified
-		 * but valid state, provided that the addition operator of value_type offers the basic exception
+		 * but valid state, provided that the addition operator of \p value_type offers the basic exception
 		 * safety guarantee.
 		 *
 		 * @param[out] retval result of the addition.
@@ -831,7 +832,7 @@ class small_vector
 		 * @throws std::invalid_argument if the sizes of \p this and \p other do not coincide.
 		 * @throws unspecified any exception thrown by:
 		 * - resize(),
-		 * - the addition and assignment operators of value_type.
+		 * - the addition and assignment operators of \p value_type.
 		 */
 		template <typename U = value_type, typename = typename std::enable_if<
 			std::is_convertible<decltype(std::declval<U const &>() + std::declval<U const &>()),U>::value &&
