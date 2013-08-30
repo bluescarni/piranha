@@ -23,7 +23,11 @@
 #define BOOST_TEST_MODULE aligned_memory_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <cstdlib>
+#include <iterator>
 #include <new>
+#include <vector>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
@@ -47,15 +51,27 @@ BOOST_AUTO_TEST_CASE(aligned_memory_aligned_malloc_test)
 	// posix_memalign requires power of two and multiple of sizeof(void *) for alignment value.
 	BOOST_CHECK_THROW(aligned_palloc(3,1),std::bad_alloc);
 	BOOST_CHECK_THROW(aligned_palloc(7,1),std::bad_alloc);
-	if (sizeof(void *) % alignof(int) == 0) {
-		ptr = aligned_palloc(sizeof(void *),sizeof(int));
+	// For these tests, require that the alignment is valid for int and that it is a power of 2.
+	if (sizeof(void *) % alignof(int) == 0 && !(sizeof(void *) & (sizeof(void *) - 1u))) {
+		ptr = aligned_palloc(sizeof(void *),sizeof(int) * 10000u);
+		std::vector<int> v;
+		std::generate_n(std::back_inserter(v),10000u,std::rand);
+		std::copy(v.begin(),v.end(),static_cast<int *>(ptr));
+		BOOST_CHECK(std::equal(v.begin(),v.end(),static_cast<int *>(ptr)));
 		BOOST_CHECK_NO_THROW(aligned_pfree(sizeof(void *),ptr));
 	}
 #elif defined(_WIN32)
 	// _aligned_malloc requires power of two.
 	BOOST_CHECK_THROW(aligned_palloc(3,1),std::bad_alloc);
 	BOOST_CHECK_THROW(aligned_palloc(7,1),std::bad_alloc);
-	ptr = aligned_palloc(16,sizeof(int));
-	BOOST_CHECK_NO_THROW(aligned_pfree(16,ptr));
+	// Check that the alignment is valid for int.
+	if (16 % alignof(int) == 0) {
+		ptr = aligned_palloc(16,sizeof(int) * 10000u);
+		std::vector<int> v;
+		std::generate_n(std::back_inserter(v),10000u,std::rand);
+		std::copy(v.begin(),v.end(),static_cast<int *>(ptr));
+		BOOST_CHECK(std::equal(v.begin(),v.end(),static_cast<int *>(ptr)));
+		BOOST_CHECK_NO_THROW(aligned_pfree(16,ptr));
+	}
 #endif
 }
