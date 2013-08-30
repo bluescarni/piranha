@@ -380,17 +380,30 @@ struct auto_static_size<T,Size,typename std::enable_if<
 	static const std::size_t value = auto_static_size<T,Size + 1u>::value;
 };
 
+template <typename T>
+struct check_integral_constant
+{
+	static const bool value = false;
+};
+
+template <std::size_t Size>
+struct check_integral_constant<std::integral_constant<std::size_t,Size>>
+{
+	static const bool value = true;
+};
+
 }
 
 /// Small vector class.
 /**
  * This class is a sequence container similar to the standard <tt>std::vector</tt> class. The class will avoid dynamic
- * memory allocation by using internal static storage up to a certain number of stored elements. If \p Size is zero, this
- * number is calculated automatically (but it will always be at least 1). Otherwise, the limit number is set to \p Size.
+ * memory allocation by using internal static storage up to a certain number of stored elements. If \p S is a zero integral constant, this
+ * number is calculated automatically (but it will always be at least 1). Otherwise, the limit number is set to \p S::value.
  *
  * \section type_requirements Type requirements
  *
- * \p T must satisfy piranha::is_container_element.
+ * - \p T must satisfy piranha::is_container_element.
+ * - \p S must be an \p std::integral_constant of type \p std::size_t.
  *
  * \section exception_safety Exception safety guarantee
  *
@@ -403,11 +416,12 @@ struct auto_static_size<T,Size,typename std::enable_if<
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, std::size_t Size = 0u>
+template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class small_vector
 {
 		PIRANHA_TT_CHECK(is_container_element,T);
-		using s_storage = typename std::conditional<Size == 0u,static_vector<T,detail::auto_static_size<T>::value>,static_vector<T,Size>>::type;
+		PIRANHA_TT_CHECK(detail::check_integral_constant,S);
+		using s_storage = typename std::conditional<S::value == 0u,static_vector<T,detail::auto_static_size<T>::value>,static_vector<T,S::value>>::type;
 		using d_storage = detail::dynamic_storage<T>;
 		template <typename U>
 		static constexpr U get_max(const U &a, const U &b)
@@ -757,7 +771,7 @@ class small_vector
 		/// Hash method.
 		/**
 		 * \note
-		 * This method is enabled only if \p T satisfies piranha::is_hashable.
+		 * This method is enabled only if \p value_type satisfies piranha::is_hashable.
 		 *
 		 * @return a hash value for \p this.
 		 */
@@ -907,14 +921,14 @@ class small_vector
 		bool		m_static;
 };
 
-template <typename T, std::size_t Size>
-const typename std::decay<decltype(small_vector<T,Size>::s_storage::max_size)>::type small_vector<T,Size>::max_static_size;
+template <typename T, typename S>
+const typename std::decay<decltype(small_vector<T,S>::s_storage::max_size)>::type small_vector<T,S>::max_static_size;
 
-template <typename T, std::size_t Size>
-const typename std::decay<decltype(small_vector<T,Size>::d_storage::max_size)>::type small_vector<T,Size>::max_dynamic_size;
+template <typename T, typename S>
+const typename std::decay<decltype(small_vector<T,S>::d_storage::max_size)>::type small_vector<T,S>::max_dynamic_size;
 
-template <typename T, std::size_t Size>
-const typename small_vector<T,Size>::size_type small_vector<T,Size>::max_size;
+template <typename T, typename S>
+const typename small_vector<T,S>::size_type small_vector<T,S>::max_size;
 
 }
 

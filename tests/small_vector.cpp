@@ -290,7 +290,7 @@ struct constructor_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			BOOST_CHECK(v1.size() == 0u);
 			BOOST_CHECK(v1.begin() == v1.end());
@@ -337,7 +337,7 @@ struct assignment_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			v1.push_back(T(0));
 			auto *ptr = std::addressof(v1[0]);
@@ -394,7 +394,7 @@ struct push_back_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			std::vector<T> check;
 			BOOST_CHECK(v1.size() == 0u);
@@ -452,7 +452,7 @@ struct equality_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			BOOST_CHECK(v1 == v1);
 			BOOST_CHECK(!(v1 != v1));
@@ -506,7 +506,7 @@ struct hash_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			BOOST_CHECK(v1.hash() == 0u);
 			v1.push_back(T(2));
@@ -542,7 +542,7 @@ struct resize_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1;
 			v1.resize(0);
 			BOOST_CHECK(v1.size() == 0u);
@@ -615,7 +615,7 @@ struct init_list_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1({1});
 			BOOST_CHECK(v1[0] == T(1));
 			v_type v2({1,2,3});
@@ -628,7 +628,7 @@ struct init_list_tester
 			BOOST_CHECK(std::equal(v3.begin(),v3.end(),cmp.begin()));
 			BOOST_CHECK((std::is_constructible<v_type,std::initializer_list<int>>::value));
 			BOOST_CHECK((!std::is_constructible<v_type,std::initializer_list<time_bomb2>>::value));
-			using v_type2 = small_vector<time_bomb2,U::value>;
+			using v_type2 = small_vector<time_bomb2,U>;
 			time_bomb2::s_counter = 0u;
 			BOOST_CHECK_THROW(v_type2({1,2,3,4,5,6,7}),std::runtime_error);
 		}
@@ -653,7 +653,7 @@ struct add_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			using v_type = small_vector<T,U::value>;
+			using v_type = small_vector<T,U>;
 			v_type v1, v2, v3;
 			v1.add(v3,v2);
 			BOOST_CHECK(v3.size() == 0u);
