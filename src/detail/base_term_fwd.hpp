@@ -24,12 +24,6 @@
 namespace piranha
 {
 
-namespace detail
-{
-// Tag structure for base_term.
-struct base_term_tag {};
-}
-
 // Forward-declarations.
 template <typename, typename, typename>
 class base_term;

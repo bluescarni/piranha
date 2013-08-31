@@ -1007,7 +1007,7 @@ class series: series_binary_operators, detail::series_tag
 		 * @throws std::invalid_argument if \p term is incompatible.
 		 */
 		template <bool Sign, typename T>
-		typename std::enable_if<std::is_base_of<detail::base_term_tag,typename std::decay<T>::type>::value,void>::type insert(T &&term)
+		typename std::enable_if<is_instance_of<typename std::decay<T>::type,base_term>::value,void>::type insert(T &&term)
 		{
 			dispatch_insertion<Sign>(std::forward<T>(term));
 		}

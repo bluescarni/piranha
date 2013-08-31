@@ -58,7 +58,7 @@ namespace piranha
  * \todo test move constructor in inherited term.
  */
 template <typename Cf, typename Key, typename Derived>
-class base_term: detail::base_term_tag
+class base_term
 {
 		PIRANHA_TT_CHECK(is_cf,Cf);
 		PIRANHA_TT_CHECK(is_key,Key);
