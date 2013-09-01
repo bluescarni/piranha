@@ -93,7 +93,7 @@ class dynamic_storage
 			other.m_size = 0u;
 			other.m_capacity = 0u;
 		}
-		// NOTE: just keep the used of a_traits for copying the allocator, it won't hurt.
+		// NOTE: just keep the use of a_traits for copying the allocator, it won't hurt.
 		dynamic_storage(const dynamic_storage &other) : m_pair(nullptr,a_traits::select_on_container_copy_construction(other.alloc())),
 			m_size(0u),m_capacity(other.m_size) // NOTE: when copying, we set the capacity to the same value of the size.
 		{
