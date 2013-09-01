@@ -30,6 +30,7 @@
 #include <boost/mpl/vector.hpp>
 #include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <new>
@@ -37,6 +38,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "../src/detail/prepare_for_print.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/rational.hpp"
@@ -685,4 +687,11 @@ struct add_tester
 BOOST_AUTO_TEST_CASE(small_vector_add_test)
 {
 	boost::mpl::for_each<value_types>(add_tester());
+}
+
+BOOST_AUTO_TEST_CASE(small_vector_print_sizes)
+{
+	std::cout << "Signed char: " << sizeof(small_vector<signed char>) << ',' << detail::prepare_for_print(small_vector<signed char>::max_static_size) << '\n';
+	std::cout << "Short      : " << sizeof(small_vector<short>) << ',' << detail::prepare_for_print(small_vector<short>::max_static_size) << '\n';
+	std::cout << "Int        : " << sizeof(small_vector<int>) << ',' << detail::prepare_for_print(small_vector<int>::max_static_size) << '\n';
 }

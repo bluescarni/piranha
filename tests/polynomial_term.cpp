@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(polynomial_term_partial_test)
 	BOOST_CHECK((!term_is_differentiable<polynomial_term<mock_cf,int>>::value));
 }
 
-BOOST_AUTO_TEST_CASE(polynomial_term_static_size_test)
+BOOST_AUTO_TEST_CASE(polynomial_term_size_print)
 {
 	polynomial_term<double,int,std::integral_constant<std::size_t,0u>> t1;
 	std::cout << "Size 0 int  : " << sizeof(polynomial_term<double,int,std::integral_constant<std::size_t,0u>>) << '\n';
