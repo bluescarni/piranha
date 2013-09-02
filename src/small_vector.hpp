@@ -26,13 +26,12 @@
 #include <cstddef>
 #include <initializer_list>
 #include <iterator>
-#include <memory>
 #include <new>
 #include <stdexcept>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
+#include "aligned_memory.hpp"
 #include "config.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
@@ -63,48 +62,39 @@ namespace detail
 // with them (apart from experimentation).
 // See also:
 // http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
+// NOTE: now we do not use the allocator at all, as we cannot guarantee it has a standard layout.
 template <typename T>
 class dynamic_storage
 {
 		PIRANHA_TT_CHECK(is_container_element,T);
 	public:
-		using size_type = unsigned short;
+		using size_type = unsigned char;
 		using value_type = T;
-		using allocator_type = std::allocator<T>;
 	private:
-		using a_traits = std::allocator_traits<allocator_type>;
-		using pointer = typename a_traits::pointer;
-		using const_pointer = typename a_traits::const_pointer;
-		// NOTE: common tuple implementations use EBCO, try to reduce size in case
-		// of stateless allocators (such as std::allocator).
-		// http://flamingdangerzone.com/cxx11/2012/07/06/optimal-tuple-i.html
-		using pair_type = std::tuple<pointer,allocator_type>;
+		using pointer = value_type *;
+		using const_pointer = value_type const *;
 	public:
-		// NOTE: this is guaranteed to be within the range of unsigned short.
-		static const size_type max_size = 32768u;
+		static const size_type max_size = boost::integer_traits<size_type>::const_max;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
-		dynamic_storage():m_pair(nullptr,allocator_type()),m_size(0u),m_capacity(0u) {}
-		// NOTE: move ctor of allocator is guaranteed not to throw (23.2.1/7).
-		dynamic_storage(dynamic_storage &&other) noexcept : m_pair(std::move(other.m_pair)),m_size(other.m_size),m_capacity(other.m_capacity)
+		dynamic_storage() : m_size(0u),m_capacity(0u),m_ptr(nullptr) {}
+		dynamic_storage(dynamic_storage &&other) noexcept : m_size(other.m_size),m_capacity(other.m_capacity),m_ptr(other.m_ptr)
 		{
 			// Erase the other.
-			other.ptr() = nullptr;
 			other.m_size = 0u;
 			other.m_capacity = 0u;
+			other.m_ptr = nullptr;
 		}
-		// NOTE: just keep the use of a_traits for copying the allocator, it won't hurt.
-		dynamic_storage(const dynamic_storage &other) : m_pair(nullptr,a_traits::select_on_container_copy_construction(other.alloc())),
-			m_size(0u),m_capacity(other.m_size) // NOTE: when copying, we set the capacity to the same value of the size.
+		dynamic_storage(const dynamic_storage &other) :
+			m_size(0u),m_capacity(other.m_size), // NOTE: when copying, we set the capacity to the same value of the size.
+			m_ptr(nullptr)
 		{
-			// Obtain storage.
-			// NOTE: here we are using the allocator obtained from copy, and we know the allocator can satisfy this (in terms of max_size()) as it
-			// satisfied already a request equal or larger in other. Will just return nullptr if requested size is zero.
-			ptr() = obtain_new_storage(other.m_size);
+			// Obtain storage. Will just return nullptr if requested size is zero.
+			m_ptr = obtain_new_storage(other.m_size);
 			// Attempt to copy-construct the elements from other.
 			try {
 				for (; m_size < other.m_size; ++m_size) {
-					a_traits::construct(alloc(),ptr() + m_size,other[m_size]);
+					construct(m_ptr + m_size,other[m_size]);
 				}
 			} catch (...) {
 				// Roll back the construction and deallocate before re-throwing.
@@ -122,13 +112,13 @@ class dynamic_storage
 				// Destroy and deallocate this.
 				destroy_and_deallocate();
 				// Just pilfer the resources.
-				m_pair = std::move(other.m_pair);
 				m_size = other.m_size;
 				m_capacity = other.m_capacity;
+				m_ptr = other.m_ptr;
 				// Nuke the other.
-				other.ptr() = nullptr;
 				other.m_size = 0u;
 				other.m_capacity = 0u;
+				other.m_ptr = nullptr;
 			}
 			return *this;
 		}
@@ -155,12 +145,12 @@ class dynamic_storage
 		value_type &operator[](const size_type &n)
 		{
 			piranha_assert(n < m_size);
-			return ptr()[n];
+			return m_ptr[n];
 		}
 		const value_type &operator[](const size_type &n) const
 		{
 			piranha_assert(n < m_size);
-			return ptr()[n];
+			return m_ptr[n];
 		}
 		size_type size() const
 		{
@@ -168,21 +158,21 @@ class dynamic_storage
 		}
 		iterator begin()
 		{
-			return ptr();
+			return m_ptr;
 		}
 		iterator end()
 		{
 			// NOTE: in case m_size is zero, this is guaranteed to return
 			// the original pointer (5.7/7).
-			return ptr() + m_size;
+			return m_ptr + m_size;
 		}
 		const_iterator begin() const
 		{
-			return ptr();
+			return m_ptr;
 		}
 		const_iterator end() const
 		{
-			return ptr() + m_size;
+			return m_ptr + m_size;
 		}
 		void reserve(const size_type &new_capacity)
 		{
@@ -192,10 +182,8 @@ class dynamic_storage
 				return;
 			}
 			// Check that we are not asking too much.
-			// NOTE: a_traits::max_size() returns an unsigned integer type, so we are sure the comparison
-			// will work as expected.
-			// http://en.cppreference.com/w/cpp/concept/Allocator
-			if (unlikely(new_capacity > max_size || new_capacity > a_traits::max_size(alloc()))) {
+			// NOTE: the first check is redundant right now, just keep it in case max_size changes in the future.
+			if (unlikely(new_capacity > max_size || new_capacity > boost::integer_traits<std::size_t>::const_max / sizeof(value_type))) {
 				piranha_throw(std::bad_alloc,);
 			}
 			// Start by allocating the new storage. New capacity is at least one at this point.
@@ -204,13 +192,13 @@ class dynamic_storage
 			// Move in existing elements. Consistency checks ensure
 			// that m_size is not greater than m_capacity and, by extension, new_capacity.
 			for (size_type i = 0u; i < m_size; ++i) {
-				a_traits::construct(alloc(),new_storage + i,std::move((*this)[i]));
+				construct(new_storage + i,std::move((*this)[i]));
 			}
 			// Destroy and deallocate original content.
 			destroy_and_deallocate();
 			// Move in the new pointer and capacity.
-			ptr() = new_storage;
 			m_capacity = new_capacity;
+			m_ptr = new_storage;
 		}
 		size_type capacity() const
 		{
@@ -231,20 +219,25 @@ class dynamic_storage
 			// The storage we are going to operate on is either the old one, if it has enough capacity,
 			// or new storage.
 			const bool new_storage = (m_capacity < new_size);
-			pointer storage = new_storage ? obtain_new_storage(new_size) : ptr();
+			pointer storage = new_storage ? obtain_new_storage(new_size) : m_ptr;
+			// NOTE: storage cannot be nullptr:
+			// - if new storage, new_size has to be at least 1 (new_size > m_capacity);
+			// - if not new storage, new_size <= m_capacity; m_ptr can be null only if capacity is 0, but then
+			//   m_size is zero and new_size is 0 as well, and the function never arrived here because of the check above.
+			piranha_assert(storage != nullptr);
 			// Default-construct excess elements. We need to do this regardless of where the storage is coming from.
 			// This is also the only place we care about exception handling.
 			size_type i = m_size;
 			try {
 				for (; i < new_size; ++i) {
-					a_traits::construct(alloc(),storage + i);
+					construct(storage + i);
 				}
 			} catch (...) {
 				// Roll back and dealloc.
 				for (size_type j = m_size; j < i; ++j) {
-					a_traits::destroy(alloc(),storage + j);
+					destroy(storage + j);
 				}
-				a_traits::deallocate(alloc(),storage,new_size);
+				deallocate(storage);
 				throw;
 			}
 			// NOTE: no more exceptions thrown after this point.
@@ -253,22 +246,39 @@ class dynamic_storage
 				// we know that new_size has to be greater than the old one, hence all old elements
 				// need to be moved over.
 				for (size_type i = 0u; i < m_size; ++i) {
-					a_traits::construct(alloc(),storage + i,std::move((*this)[i]));
+					construct(storage + i,std::move((*this)[i]));
 				}
 				// Erase the old content and assign new.
 				destroy_and_deallocate();
-				ptr() = storage;
 				m_capacity = new_size;
+				m_ptr = storage;
 			} else {
 				// Destroy excess elements in the old storage.
 				for (size_type i = new_size; i < m_size; ++i) {
-					a_traits::destroy(alloc(),storage + i);
+					destroy(storage + i);
 				}
 			}
 			// In any case, we need to update the size.
 			m_size = new_size;
 		}
 	private:
+		template <typename ... Args>
+		static void construct(pointer p, Args && ... args)
+		{
+			::new (static_cast<void *>(p)) value_type(std::forward<Args>(args)...);
+		}
+		static void destroy(pointer p)
+		{
+			p->~value_type();
+		}
+		static pointer allocate(const size_type &s)
+		{
+			return static_cast<pointer>(aligned_palloc(0u,static_cast<std::size_t>(s * sizeof(value_type))));
+		}
+		static void deallocate(pointer p)
+		{
+			aligned_pfree(0u,p);
+		}
 		// Common implementation of push_back().
 		template <typename U>
 		void push_back_impl(U &&x)
@@ -277,38 +287,25 @@ class dynamic_storage
 			if (unlikely(m_capacity == m_size)) {
 				increase_capacity();
 			}
-			a_traits::construct(alloc(),ptr() + m_size,std::forward<U>(x));
+			construct(m_ptr + m_size,std::forward<U>(x));
 			++m_size;
 		}
 		void destroy_and_deallocate() noexcept
 		{
 			piranha_assert(consistency_checks());
 			for (size_type i = 0u; i < m_size; ++i) {
-				// NOTE: could use POD optimisations here in principle, but keep it like
-				// this in case in the future we allow to select the allocator.
-				// NOTE: exceptions here will call std::abort(), as we are in noexcept land.
-				a_traits::destroy(alloc(),ptr() + i);
+				// NOTE: could use POD optimisations here in principle.
+				destroy(m_ptr + i);
 			}
-			if (ptr() != nullptr) {
-				// NOTE: deallocate can never throw.
-				// http://en.cppreference.com/w/cpp/concept/Allocator
-				a_traits::deallocate(alloc(),ptr(),m_capacity);
+			if (m_ptr != nullptr) {
+				deallocate(m_ptr);
 			}
 		}
 		// Obtain new storage, and throw an error in case something goes wrong.
 		pointer obtain_new_storage(const size_type &size)
 		{
-			if (size == 0u) {
-				return pointer(nullptr);
-			}
-			pointer storage = a_traits::allocate(alloc(),size);
-			// NOTE: here the check is redundant if we hard-code std::allocator (it will just throw
-			// std::bad_alloc if the allocation fails). Just keep it
-			// like this for future compatibility if we ever implement custom allocators.
-			if (unlikely(storage == nullptr)) {
-				piranha_throw(std::bad_alloc,);
-			}
-			return storage;
+			// NOTE: no need to check for zero, will aready return nullptr in that case.
+			return allocate(size);
 		}
 		// Will try to double the capacity, or, in case this is not possible,
 		// will set the capacity to max_size. If the initial capacity is already max,
@@ -323,22 +320,6 @@ class dynamic_storage
 				static_cast<size_type>(m_capacity * 2u) : static_cast<size_type>(1u));
 			reserve(new_capacity);
 		}
-		pointer &ptr()
-		{
-			return std::get<0u>(m_pair);
-		}
-		const pointer &ptr() const
-		{
-			return std::get<0u>(m_pair);
-		}
-		allocator_type &alloc()
-		{
-			return std::get<1u>(m_pair);
-		}
-		const allocator_type &alloc() const
-		{
-			return std::get<1u>(m_pair);
-		}
 		bool consistency_checks()
 		{
 			// Size cannot be greater than capacity.
@@ -346,19 +327,20 @@ class dynamic_storage
 				return false;
 			}
 			// If we allocated something, capacity cannot be zero.
-			if (unlikely(ptr() != nullptr && m_capacity == 0u)) {
+			if (unlikely(m_ptr != nullptr && m_capacity == 0u)) {
 				return false;
 			}
 			// If we have nothing allocated, capacity must be zero.
-			if (unlikely(ptr() == nullptr && m_capacity != 0u)) {
+			if (unlikely(m_ptr == nullptr && m_capacity != 0u)) {
 				return false;
 			}
 			return true;
 		}
 	private:
-		pair_type	m_pair;
+		unsigned char	m_tag;
 		size_type	m_size;
 		size_type	m_capacity;
+		pointer		m_ptr;
 };
 
 template <typename T>
