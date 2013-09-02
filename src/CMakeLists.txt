@@ -62,6 +62,7 @@ SET(HEADERS_LIST
 	detail/symbol_set_fwd.hpp
 	detail/vector_hasher.hpp
 	detail/prepare_for_print.hpp
+	detail/small_vector_fwd.hpp
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp

@@ -690,4 +690,8 @@ BOOST_AUTO_TEST_CASE(small_vector_print_sizes)
 	std::cout << "Signed char: " << sizeof(small_vector<signed char>) << ',' << detail::prepare_for_print(small_vector<signed char>::max_static_size) << '\n';
 	std::cout << "Short      : " << sizeof(small_vector<short>) << ',' << detail::prepare_for_print(small_vector<short>::max_static_size) << '\n';
 	std::cout << "Int        : " << sizeof(small_vector<int>) << ',' << detail::prepare_for_print(small_vector<int>::max_static_size) << '\n';
+
+	using svu_type = detail::small_vector_union<char,std::integral_constant<std::size_t,0u>>;
+	svu_type svu, svu2(svu), svu3(std::move(svu));
+	std::cout << sizeof(svu_type) << '\n';
 }

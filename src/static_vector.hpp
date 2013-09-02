@@ -32,6 +32,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "type_traits.hpp"
@@ -91,6 +92,8 @@ template <typename T, std::size_t MaxSize>
 class static_vector
 {
 		static_assert(MaxSize > 0u,"Maximum size must be strictly positive.");
+		template <typename, typename>
+		friend union detail::small_vector_union;
 	public:
 		/// Size type.
 		/**
@@ -144,14 +147,14 @@ class static_vector
 		/**
 		 * Will construct a vector of size 0.
 		 */
-		static_vector():m_size(0u) {}
+		static_vector():m_tag(1u),m_size(0u) {}
 		/// Copy constructor.
 		/**
 		 * @param[in] other target of the copy operation.
 		 * 
 		 * @throws unspecified any exception thrown by the copy constructor of \p T.
 		 */
-		static_vector(const static_vector &other):m_size(0u)
+		static_vector(const static_vector &other):m_tag(1u),m_size(0u)
 		{
 			// NOTE: here and elsewhere, the standard implies (3.9/2) that we can use this optimisation
 			// for trivially copyable types. GCC does not support the type trait yet, so we restrict the
@@ -176,7 +179,7 @@ class static_vector
 		/**
 		 * @param[in] other target of the move operation.
 		 */
-		static_vector(static_vector &&other) noexcept(true):m_size(0u)
+		static_vector(static_vector &&other) noexcept(true):m_tag(1u),m_size(0u)
 		{
 			if (std::is_pod<T>::value) {
 				std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
@@ -198,7 +201,7 @@ class static_vector
 		 * 
 		 * @throws unspecified any exception thrown by push_back().
 		 */
-		explicit static_vector(const size_type &n, const value_type &x):m_size(0u)
+		explicit static_vector(const size_type &n, const value_type &x):m_tag(1u),m_size(0u)
 		{
 			try {
 				for (size_type i = 0u; i < n; ++i) {
@@ -215,6 +218,7 @@ class static_vector
 		 */
 		~static_vector() noexcept(true)
 		{
+			piranha_assert(m_tag == 1u);
 			if (!std::is_pod<T>::value) {
 				destroy_items();
 			}
@@ -541,8 +545,9 @@ class static_vector
 			return static_cast<const T *>(vs());
 		}
 	private:
-		storage_type	m_storage;
+		unsigned char	m_tag;
 		size_type	m_size;
+		storage_type	m_storage;
 };
 
 template <typename T, std::size_t MaxSize>

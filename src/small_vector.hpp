@@ -33,6 +33,7 @@
 
 #include "aligned_memory.hpp"
 #include "config.hpp"
+#include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "static_vector.hpp"
@@ -63,6 +64,7 @@ namespace detail
 // See also:
 // http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
 // NOTE: now we do not use the allocator at all, as we cannot guarantee it has a standard layout.
+// NOTE: POD optimizations are possible again.
 template <typename T>
 class dynamic_storage
 {
@@ -77,8 +79,8 @@ class dynamic_storage
 		static const size_type max_size = boost::integer_traits<size_type>::const_max;
 		using iterator = pointer;
 		using const_iterator = const_pointer;
-		dynamic_storage() : m_size(0u),m_capacity(0u),m_ptr(nullptr) {}
-		dynamic_storage(dynamic_storage &&other) noexcept : m_size(other.m_size),m_capacity(other.m_capacity),m_ptr(other.m_ptr)
+		dynamic_storage() : m_tag(0u),m_size(0u),m_capacity(0u),m_ptr(nullptr) {}
+		dynamic_storage(dynamic_storage &&other) noexcept : m_tag(0u),m_size(other.m_size),m_capacity(other.m_capacity),m_ptr(other.m_ptr)
 		{
 			// Erase the other.
 			other.m_size = 0u;
@@ -86,7 +88,7 @@ class dynamic_storage
 			other.m_ptr = nullptr;
 		}
 		dynamic_storage(const dynamic_storage &other) :
-			m_size(0u),m_capacity(other.m_size), // NOTE: when copying, we set the capacity to the same value of the size.
+			m_tag(0u),m_size(0u),m_capacity(other.m_size), // NOTE: when copying, we set the capacity to the same value of the size.
 			m_ptr(nullptr)
 		{
 			// Obtain storage. Will just return nullptr if requested size is zero.
@@ -104,6 +106,7 @@ class dynamic_storage
 		}
 		~dynamic_storage() noexcept
 		{
+			piranha_assert(m_tag == 0u);
 			destroy_and_deallocate();
 		}
 		dynamic_storage &operator=(dynamic_storage &&other) noexcept
@@ -372,6 +375,46 @@ template <std::size_t Size>
 struct check_integral_constant<std::integral_constant<std::size_t,Size>>
 {
 	static const bool value = true;
+};
+
+template <typename T, typename S>
+union small_vector_union
+{
+		using s_storage = typename std::conditional<S::value == 0u,static_vector<T,auto_static_size<T>::value>,static_vector<T,S::value>>::type;
+		using d_storage = dynamic_storage<T>;
+	public:
+		small_vector_union():st() {}
+		small_vector_union(const small_vector_union &other)
+		{
+			if (other.is_static()) {
+				::new (static_cast<void *>(&st)) s_storage(other.st);
+			} else {
+				::new (static_cast<void *>(&dy)) d_storage(other.dy);
+			}
+		}
+		small_vector_union(small_vector_union &&other) noexcept
+		{
+			if (other.is_static()) {
+				::new (static_cast<void *>(&st)) s_storage(other.st);
+			} else {
+				::new (static_cast<void *>(&dy)) d_storage(other.dy);
+			}
+		}
+		~small_vector_union()
+		{
+			if (is_static()) {
+				st.~s_storage();
+			} else {
+				dy.~d_storage();
+			}
+		}
+		bool is_static() const
+		{
+			return static_cast<bool>(st.m_tag);
+		}
+	private:
+		s_storage	st;
+		d_storage	dy;
 };
 
 }
