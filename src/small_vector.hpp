@@ -75,6 +75,18 @@ class dynamic_storage
 	private:
 		using pointer = value_type *;
 		using const_pointer = value_type const *;
+		// NOTE: this bit of TMP is to avoid checking an always-false condition on reserve() on most platforms, which triggers a compiler
+		// warning on GCC 4.7.
+		static const std::size_t max_alloc_size = boost::integer_traits<std::size_t>::const_max / sizeof(value_type);
+		static const bool need_reserve_check = boost::integer_traits<size_type>::const_max > max_alloc_size;
+		static bool reserve_check_size(const size_type &, const std::false_type &)
+		{
+			return false;
+		}
+		static bool reserve_check_size(const size_type &new_capacity, const std::true_type &)
+		{
+			return new_capacity > max_alloc_size;
+		}
 	public:
 		static const size_type max_size = boost::integer_traits<size_type>::const_max;
 		using iterator = pointer;
@@ -185,8 +197,8 @@ class dynamic_storage
 				return;
 			}
 			// Check that we are not asking too much.
-			// NOTE: the first check is redundant right now, just keep it in case max_size changes in the future.
-			if (unlikely(new_capacity > max_size || new_capacity > boost::integer_traits<std::size_t>::const_max / sizeof(value_type))) {
+			// NOTE: the first check is redundant right now, just keep it around in case max_size changes in the future.
+			if (unlikely(/*new_capacity > max_size ||*/ reserve_check_size(new_capacity,std::integral_constant<bool,need_reserve_check>()))) {
 				piranha_throw(std::bad_alloc,);
 			}
 			// Start by allocating the new storage. New capacity is at least one at this point.
@@ -213,9 +225,10 @@ class dynamic_storage
 		}
 		void resize(const size_type &new_size)
 		{
-			if (unlikely(new_size > max_size)) {
-				piranha_throw(std::bad_alloc,);
-			}
+			// NOTE: another redundant size check at the moment.
+			// if (unlikely(new_size > max_size)) {
+			// 	piranha_throw(std::bad_alloc,);
+			// }
 			if (new_size == m_size) {
 				return;
 			}
@@ -348,6 +361,9 @@ class dynamic_storage
 
 template <typename T>
 const typename dynamic_storage<T>::size_type dynamic_storage<T>::max_size;
+
+template <typename T>
+const std::size_t dynamic_storage<T>::max_alloc_size;
 
 // TMP to determine automatically the size of the static storage in small_vector.
 template <typename T, std::size_t Size = 1u, typename = void>
@@ -511,6 +527,18 @@ class small_vector
 		static const typename std::decay<decltype(d_storage::max_size)>::type max_dynamic_size = d_storage::max_size;
 		/// A fundamental unsigned integer type representing the number of elements stored in the vector.
 		using size_type = size_type_impl;
+	private:
+		// If the size type can assume values larger than d_storage::max_size, then we need to run a check in resize().
+		static const bool need_resize_check = boost::integer_traits<size_type>::const_max > d_storage::max_size;
+		static bool resize_check_size(const size_type &, const std::false_type &)
+		{
+			return false;
+		}
+		static bool resize_check_size(const size_type &size, const std::true_type &)
+		{
+			return size > d_storage::max_size;
+		}
+	public:
 		/// Maximum number of elements that can be stored.
 		static const size_type max_size = get_max<size_type>(max_static_size,max_dynamic_size);
 		/// Alias for \p T.
@@ -772,7 +800,7 @@ class small_vector
 					// NOTE: this check is a repetition of an existing check in dynamic storage's
 					// resize. The reason for putting it here as well is to ensure the safety
 					// of the static_cast below.
-					if (unlikely(size > d_storage::max_size)) {
+					if (unlikely(resize_check_size(size,std::integral_constant<bool,need_resize_check>()))) {
 						piranha_throw(std::bad_alloc,);
 					}
 					// Move the existing elements into new dynamic storage.
@@ -789,7 +817,7 @@ class small_vector
 					::new (static_cast<void *>(&(m_union.dy))) d_storage(std::move(tmp_d));
 				}
 			} else {
-				if (unlikely(size > d_storage::max_size)) {
+				if (unlikely(resize_check_size(size,std::integral_constant<bool,need_resize_check>()))) {
 					piranha_throw(std::bad_alloc,);
 				}
 				m_union.dy.resize(static_cast<typename d_storage::size_type>(size));
