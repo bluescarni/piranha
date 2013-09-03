@@ -103,6 +103,9 @@
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
  * \todo when migrating to boost multiprecision, start by checking and rooting out uses of integer in the core of the library -> maybe
  * start by introducing a new_integer class and use it in kronecker.
+ * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
+ * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
+ * the operator overloaded (via decltype SFINAE).
  */
 namespace piranha
 {

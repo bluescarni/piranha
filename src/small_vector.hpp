@@ -381,6 +381,10 @@ struct check_integral_constant<std::integral_constant<std::size_t,Size>>
 // standard-layout classes, it will be possible to inspect the value of the common initial part of any of them. That is,
 // we can access the initial m_tag member of the static and dynamic storage via both st and dy, and use it to detect
 // which class of the union is active.
+// See also:
+// http://stackoverflow.com/questions/18564497/writing-into-the-last-byte-of-a-class
+// http://www.informit.com/guides/content.aspx?g=cplusplus&seqNum=556
+// http://en.wikipedia.org/wiki/C%2B%2B11#Unrestricted_unions
 template <typename T, typename S>
 union small_vector_union
 {
@@ -388,6 +392,7 @@ union small_vector_union
 		using s_storage = typename std::conditional<S::value == 0u,static_vector<T,auto_static_size<T>::value>,static_vector<T,S::value>>::type;
 		using d_storage = dynamic_storage<T>;
 	public:
+		// NOTE: each constructor must be invoked explicitly.
 		small_vector_union():st() {}
 		small_vector_union(const small_vector_union &other)
 		{
