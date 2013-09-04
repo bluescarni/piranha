@@ -75,6 +75,7 @@ SET(HEADERS_LIST
 	monomial.hpp
 	small_vector.hpp
 	aligned_memory.hpp
+	dynamic_aligning_allocator.hpp
 )
 
 IF(BUILD_MAIN OR BUILD_TESTS)
