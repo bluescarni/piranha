@@ -28,6 +28,7 @@
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/runtime_info.hpp"
+#include "../src/settings.hpp"
 
 using namespace piranha;
 
@@ -35,12 +36,23 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 {
 	environment env;
 	cache_aligning_allocator<char> caa1;
-	BOOST_CHECK_EQUAL(caa1.get_alignment(),runtime_info::get_cache_line_size());
+	BOOST_CHECK_EQUAL(caa1.alignment(),runtime_info::get_cache_line_size());
 	cache_aligning_allocator<integer> caa2;
-	BOOST_CHECK_EQUAL(caa2.get_alignment(),runtime_info::get_cache_line_size());
+	BOOST_CHECK_EQUAL(caa2.alignment(),runtime_info::get_cache_line_size());
 	cache_aligning_allocator<std::string> caa3;
-	BOOST_CHECK_EQUAL(caa3.get_alignment(),runtime_info::get_cache_line_size());
+	BOOST_CHECK_EQUAL(caa3.alignment(),runtime_info::get_cache_line_size());
 	// Constructor from different instance.
-	cache_aligning_allocator<char> caa4(caa1);
-	BOOST_CHECK_EQUAL(caa4.get_alignment(),caa1.get_alignment());
+	cache_aligning_allocator<int> caa4(caa1);
+	BOOST_CHECK_EQUAL(caa4.alignment(),caa1.alignment());
+	// Constructor from different instance.
+	cache_aligning_allocator<int> caa5(std::move(caa1));
+	BOOST_CHECK_EQUAL(caa4.alignment(),caa5.alignment());
+	settings::set_cache_line_size(settings::get_cache_line_size() * 2u);
+	cache_aligning_allocator<char> caa6;
+	BOOST_CHECK(caa6.alignment() == settings::get_cache_line_size());
+	cache_aligning_allocator<int> caa7(std::move(caa6));
+	BOOST_CHECK(caa7.alignment() == settings::get_cache_line_size());
+	settings::set_cache_line_size(3);
+	cache_aligning_allocator<int> caa8;
+	BOOST_CHECK(caa8.alignment() == 0u);
 }

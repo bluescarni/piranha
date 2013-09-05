@@ -32,7 +32,6 @@ SET(HEADERS_LIST
 	real_trigonometric_kronecker_monomial.hpp
 	series_binary_operators.hpp
 	thread_management.hpp
-	malloc_allocator.hpp
 	kronecker_array.hpp
 	static_vector.hpp
 	real.hpp

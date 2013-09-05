@@ -26,6 +26,7 @@
 #include <iostream>
 #include <thread>
 
+#include "../src/aligned_memory.hpp"
 #include "../src/environment.hpp"
 #include "../src/settings.hpp"
 
@@ -42,7 +43,12 @@ BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 {
 	std::cout << "Concurrency: " << runtime_info::get_hardware_concurrency() << '\n';
 	std::cout << "Cache line size: " << runtime_info::get_cache_line_size() << '\n';
-	std::cout << "Memory alignment primitives: " << (runtime_info::have_memalign_primitives() ? "available" : "unavailable") << '\n';
+	std::cout << "Memory alignment primitives: " <<
+#if defined(PIRANHA_HAVE_MEMORY_ALIGNMENT_PRIMITIVES)
+		"available\n";
+#else
+		"not available\n";
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(runtime_info_settings_test)

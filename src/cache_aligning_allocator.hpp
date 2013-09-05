@@ -24,7 +24,8 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 
-#include "malloc_allocator.hpp"
+#include "aligned_memory.hpp"
+#include "dynamic_aligning_allocator.hpp"
 #include "settings.hpp"
 
 namespace piranha
@@ -33,56 +34,66 @@ namespace piranha
 /// Allocator that tries to align memory to the cache line size.
 /**
  * This allocator will try to allocate memory aligned to the cache line size (as reported by piranha::settings).
- * If the cache line size cannot be detected, or if it is incompatible with the alignment requirements on the platform,
- * or if no memory aligning primitives are available, memory will be allocated via <tt>std::malloc()</tt>.
  * 
- * Exception safety and move semantics are equivalent to piranha::malloc_allocator.
+ * Exception safety and move semantics are equivalent to piranha::dynamic_aligning_allocator.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T>
-class cache_aligning_allocator: public malloc_allocator<T>
+class cache_aligning_allocator: public dynamic_aligning_allocator<T>
 {
-		typedef malloc_allocator<T> base;
+		using base = dynamic_aligning_allocator<T>;
 		static std::size_t determine_alignment()
 		{
+#if !defined(PIRANHA_HAVE_MEMORY_ALIGNMENT_PRIMITIVES)
+			return 0u;
+#endif
 			try {
 				const std::size_t alignment = boost::numeric_cast<std::size_t>(settings::get_cache_line_size());
-				base::check_alignment(alignment);
+				if (!alignment_check<T>(alignment)) {
+					return 0u;
+				}
 				return alignment;
 			} catch (...) {
 				return 0u;
 			}
 		}
 	public:
-		// Typedefs from base are good enough.
-		/// Allocator rebinding.
-		template <typename U>
-		struct rebind
-		{
-			/// Rebound allocator type.
-			typedef cache_aligning_allocator<U> other;
-		};
 		/// Default constructor.
 		/**
-		 * Will invoke the base constructor with an alignment argument that is either 0,
-		 * or the cache line size on the host platform - if such value is suitable as alignment value
-		 * in piranha::malloc_allocator. In other words, construction is always guaranteed to be
-		 * successful.
+		 * Will invoke the base constructor with an alignment value determined as follows:
+		 * - if no memory alignment primitives are available on the host platform, the value will be zero;
+		 * - if the cache line size reported by piranha::settings::get_cache_line_size() passes the checks
+		 *   performed by piranha::alignment_check() of \p T, it will be used as construction value;
+		 * - otherwise, zero will be used.
 		 */
 		cache_aligning_allocator():base(determine_alignment()) {}
 		/// Defaulted copy constructor.
 		cache_aligning_allocator(const cache_aligning_allocator &) = default;
-		/// Constructor from different instance.
+		/// Defaulted move constructor.
+		cache_aligning_allocator(cache_aligning_allocator &&) = default;
+		/// Copy-constructor from different instance.
 		/**
-		 * Will forward the call to the corresponding constructor in piranha::malloc_allocator.
-		 * 
+		 * Will forward the call to the corresponding constructor in piranha::dynamic_aligning_allocator.
+		 *
 		 * @param[in] other construction argument.
 		 */
 		template <typename U>
-		cache_aligning_allocator(const cache_aligning_allocator<U> &other):base(other) {}
+		explicit cache_aligning_allocator(const cache_aligning_allocator<U> &other):base(other) {}
+		/// Move-constructor from different instance.
+		/**
+		 * Will forward the call to the corresponding constructor in piranha::dynamic_aligning_allocator.
+		 *
+		 * @param[in] other construction argument.
+		 */
+		template <typename U>
+		explicit cache_aligning_allocator(cache_aligning_allocator<U> &&other):base(std::move(other)) {}
+		/// Defaulted destructor.
+		~cache_aligning_allocator() = default;
 		/// Defaulted copy assignment operator.
 		cache_aligning_allocator &operator=(const cache_aligning_allocator &) = default;
+		/// Defaulted move assignment operator.
+		cache_aligning_allocator &operator=(cache_aligning_allocator &&) = default;
 };
 
 }

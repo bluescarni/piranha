@@ -25,7 +25,6 @@
 #include <thread>
 
 #include "config.hpp"
-#include "malloc_allocator.hpp"
 
 namespace piranha
 {
@@ -50,14 +49,6 @@ class PIRANHA_PUBLIC runtime_info
 		}
 		static unsigned get_cache_line_size();
 		static unsigned get_hardware_concurrency();
-		/// Availability of memory alignment primitives.
-		/**
-		 * @return \p true if memory alignment primitives are available, \p false otherwise.
-		 */
-		static bool have_memalign_primitives()
-		{
-			return malloc_allocator<char>::have_memalign_primitives;
-		}
 	private:
 		static std::mutex		m_mutex;
 		static const std::thread::id	m_main_thread_id;

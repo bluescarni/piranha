@@ -134,7 +134,6 @@ namespace detail {}
 #include "integer.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
-#include "malloc_allocator.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
 #include "poisson_series.hpp"
