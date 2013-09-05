@@ -75,7 +75,7 @@ class dynamic_aligning_allocator
 		 * @param[in] other construction argument.
 		 */
 		template <typename U>
-		explicit dynamic_aligning_allocator(const dynamic_aligning_allocator<U> &other):m_alignment(other.m_alignment) {}
+		explicit dynamic_aligning_allocator(const dynamic_aligning_allocator<U> &other):m_alignment(other.alignment()) {}
 		/// Converting move constructor.
 		/**
 		 * After construction, the alignment will be the same as \p other.
@@ -83,7 +83,7 @@ class dynamic_aligning_allocator
 		 * @param[in] other construction argument.
 		 */
 		template <typename U>
-		explicit dynamic_aligning_allocator(dynamic_aligning_allocator<U> &&other):m_alignment(other.m_alignment) {}
+		explicit dynamic_aligning_allocator(dynamic_aligning_allocator<U> &&other):m_alignment(other.alignment()) {}
 		/// Defaulted destructor.
 		~dynamic_aligning_allocator() = default;
 		/// Defaulted copy assignment operator.

@@ -63,6 +63,10 @@ BOOST_AUTO_TEST_CASE(dynamic_aligning_allocator_general_test)
 	if (sizeof(int) > 1u) {
 		BOOST_CHECK_THROW(daa4.allocate(boost::integer_traits<std::size_t>::const_max),std::bad_alloc);
 	}
+	// Constructors from different instances.
+	dynamic_aligning_allocator<long> daa1a(daa4), daa2a(std::move(daa3));
+	BOOST_CHECK(daa1a.alignment() == daa4.alignment());
+	BOOST_CHECK(daa2a.alignment() == daa4.alignment());
 }
 
 struct std_container_tester
