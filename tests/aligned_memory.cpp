@@ -75,3 +75,40 @@ BOOST_AUTO_TEST_CASE(aligned_memory_aligned_malloc_test)
 	}
 #endif
 }
+
+// NOTE: here we are assuming we can do some basic arithmetics on the alignment and size values.
+BOOST_AUTO_TEST_CASE(aligned_memory_alignment_check_test)
+{
+	BOOST_CHECK(piranha::alignment_check<int>(0));
+	BOOST_CHECK(piranha::alignment_check<long long>(0));
+	BOOST_CHECK(piranha::alignment_check<std::string>(0));
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
+	// posix_memalign has additional requirements.
+	if (sizeof(void *) >= alignof(int) && !(sizeof(void *) & ((sizeof(void *) - 1u)))) {
+		// sizeof(void *) is a power of two greater than the alignment of int.
+		BOOST_CHECK(piranha::alignment_check<int>(sizeof(void *) * 2u));
+		BOOST_CHECK(piranha::alignment_check<int>(sizeof(void *) * 4u));
+		BOOST_CHECK(piranha::alignment_check<int>(sizeof(void *) * 8u));
+	}
+	if (sizeof(void *) >= alignof(long) && !(sizeof(void *) & ((sizeof(void *) - 1u)))) {
+		BOOST_CHECK(piranha::alignment_check<long>(sizeof(void *) * 2u));
+		BOOST_CHECK(piranha::alignment_check<long>(sizeof(void *) * 4u));
+		BOOST_CHECK(piranha::alignment_check<long>(sizeof(void *) * 8u));
+	}
+#else
+	BOOST_CHECK(piranha::alignment_check<int>(alignof(int)));
+	BOOST_CHECK(piranha::alignment_check<std::string>(alignof(std::string)));
+	BOOST_CHECK(piranha::alignment_check<int>(alignof(int) * 2u));
+	BOOST_CHECK(piranha::alignment_check<std::string>(alignof(std::string) * 4u));
+	BOOST_CHECK(piranha::alignment_check<std::string>(alignof(std::string) * 8u));
+	if (alignof(int) > 1u) {
+		BOOST_CHECK(!piranha::alignment_check<int>(alignof(int) / 2u));
+	}
+	if (alignof(long) > 1u) {
+		BOOST_CHECK(!piranha::alignment_check<long>(alignof(long) / 2u));
+	}
+	if (alignof(std::string) > 1u) {
+		BOOST_CHECK(!piranha::alignment_check<std::string>(alignof(std::string) / 2u));
+	}
+#endif
+}

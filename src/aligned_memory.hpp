@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <new>
+#include <type_traits>
 
 #include "config.hpp"
 #include "exceptions.hpp"
@@ -180,6 +181,52 @@ inline void aligned_pfree(const std::size_t &alignment, void *ptr)
 #else
 	piranha_throw(not_implemented_error,"memory alignment primitives are not available");
 #endif
+}
+
+/// Alignment checks.
+/**
+ * This function will run a series of checks on an alignment value to be used to allocate storage for objects of the decay
+ * type of \p T using piranha::aligned_palloc(),
+ * and it will retun \p true if the alignment value passes these checks, \p false otherwise.
+ * An alignment of zero will always return \p true.
+ *
+ * The checks performed are the following:
+ * - the alignment must be a power of 2 (3.11/4),
+ * - the alignment must not be smaller than the default alignment of \p T, as reported by
+ *   \p alignas(),
+ * - the alignment must satisfy additional platform-dependent checks (e.g., \p posix_memalign() requires
+ *   the alignment to be a multiple of <tt>sizeof(void *)</tt>.
+ *
+ * Note that piranha::aligned_palloc() will not check the alignment via this function, and that even if this function returns \p true on an alignment value,
+ * this will not guarantee that the allocation via piranha::aligned_palloc() will succeed.
+ *
+ * @param[in] alignment alignment value to be checked.
+ *
+ * @return \p true if the input value is zero or if it passes the alignment checks, \p false otherwise.
+ */
+template <typename T>
+inline bool alignment_check(const std::size_t &alignment)
+{
+	// Platform-independent checks.
+	if (alignment == 0u) {
+		return true;
+	}
+	// Alignment must be power of 2.
+	if (unlikely(static_cast<bool>(alignment & (alignment - 1u)))) {
+		return false;
+	}
+	// Alignment must not be less than the natural alignment of T. We just need the '<' check
+	// as we already know that alignment is either a multiple of alignof(T) or a divisor.
+	if (unlikely(alignment < alignof(typename std::decay<T>::type))) {
+		return false;
+	}
+#if defined(PIRANHA_HAVE_POSIX_MEMALIGN)
+	// Extra check for posix_memalign requirements.
+	if (unlikely(static_cast<bool>(alignment % sizeof(void *)))) {
+		return false;
+	}
+#endif
+	return true;
 }
 
 }
