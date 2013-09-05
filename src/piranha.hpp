@@ -29,9 +29,6 @@
 
 /// Root piranha namespace.
 /**
- * \todo implement is_instance_of when GCC support for variadic templates improves, and remove the tag structs
- * (see http://stackoverflow.com/questions/4749863/variadic-templates-and-copy-construction-via-assignment) ->
- * keep in mind in some cases the tags are actually used for discriminating between types, adjust it accordingly (e.g., power series).
  * \todo switch to auto -> decltype declarations of member functions for complicated types (e.g., tuples) when decltype on this
  * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that

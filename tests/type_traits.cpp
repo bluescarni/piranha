@@ -476,6 +476,12 @@ struct iio_derived: iio_base<T> {};
 template <typename T>
 struct iio_derived2: iio_base<T>, std::vector<T> {};
 
+template <typename ... Args>
+struct variadic_iio1 {};
+
+template <typename Arg0, typename ... Args>
+struct variadic_iio2 {};
+
 BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
 {
 	BOOST_CHECK((is_instance_of<std::vector<double>,std::vector>::value));
@@ -494,6 +500,12 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
 	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
 	BOOST_CHECK((is_instance_of<iio_derived2<int> const &,iio_base>::value));
 	BOOST_CHECK((is_instance_of<std::complex<double>,std::complex>::value));
+	BOOST_CHECK((is_instance_of<variadic_iio1<>,variadic_iio1>::value));
+	BOOST_CHECK((is_instance_of<variadic_iio1<int>,variadic_iio1>::value));
+	BOOST_CHECK((is_instance_of<variadic_iio1<int,double>,variadic_iio1>::value));
+	// This seems to be a GCC bug.
+	// BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
+	// BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
 }
 
 struct stream1 {};

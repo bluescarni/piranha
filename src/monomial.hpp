@@ -57,7 +57,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T and \p Args must be suitable for use as template arguments in piranha::array_key
+ * \p T and \p Args must be suitable for use as first and third template arguments in piranha::array_key.
  * 
  * \section exception_safety Exception safety guarantee
  * 
