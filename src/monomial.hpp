@@ -391,7 +391,7 @@ class monomial: public array_key<T,monomial<T,Args...>,Args...>
 			}
 			monomial retval(*this);
 			const size_type size = retval.size();
-			const in_place_multiplier<typename base::value_type,U> m;
+			in_place_multiplier<typename base::value_type,U> m;
 			for (decltype(retval.size()) i = 0u; i < size; ++i) {
 				m(retval[i],x);
 			}
@@ -422,7 +422,7 @@ class monomial: public array_key<T,monomial<T,Args...>,Args...>
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			const in_place_subber<value_type> sub;
+			in_place_subber<value_type> sub;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero((*this)[i])) {
 					monomial tmp_m(*this);
@@ -464,7 +464,7 @@ class monomial: public array_key<T,monomial<T,Args...>,Args...>
 			}
 			monomial retval;
 			value_type expo(0), one(1);
-			const in_place_adder<value_type> adder;
+			in_place_adder<value_type> adder;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (math::is_zero(expo) && s < args[i]) {
 					// If we went past the position of s in args and still we
