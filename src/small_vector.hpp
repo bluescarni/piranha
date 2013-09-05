@@ -401,6 +401,7 @@ struct check_integral_constant<std::integral_constant<std::size_t,Size>>
 // http://stackoverflow.com/questions/18564497/writing-into-the-last-byte-of-a-class
 // http://www.informit.com/guides/content.aspx?g=cplusplus&seqNum=556
 // http://en.wikipedia.org/wiki/C%2B%2B11#Unrestricted_unions
+// NOTE: here we could potentially share the m_size member as well in many cases.
 template <typename T, typename S>
 union small_vector_union
 {
