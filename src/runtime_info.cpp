@@ -70,6 +70,7 @@ std::mutex runtime_info::m_mutex;
 // ID of the main thread.
 const std::thread::id runtime_info::m_main_thread_id = std::this_thread::get_id();
 
+// NOTE: here we do not use boost's as we do not want to depend on Boost thread.
 /// Hardware concurrency.
 /**
  * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
