@@ -48,6 +48,10 @@ BOOST_AUTO_TEST_CASE(dynamic_aligning_allocator_general_test)
 	dynamic_aligning_allocator<int> daa1, daa2;
 	BOOST_CHECK(daa1 == daa2);
 	BOOST_CHECK(!(daa1 != daa2));
+	dynamic_aligning_allocator<int> daa1_copy(daa1);
+	BOOST_CHECK(daa1 == daa1_copy);
+	dynamic_aligning_allocator<int> daa1_move(std::move(daa1_copy));
+	BOOST_CHECK(daa1 == daa1_move);
 	BOOST_CHECK(daa1.alignment() == 0);
 	BOOST_CHECK(daa2.alignment() == 0);
 	dynamic_aligning_allocator<int> daa3, daa4(alignof(int));
@@ -66,6 +70,8 @@ BOOST_AUTO_TEST_CASE(dynamic_aligning_allocator_general_test)
 	// Constructors from different instances.
 	dynamic_aligning_allocator<long> daa1a(daa4), daa2a(std::move(daa3));
 	BOOST_CHECK(daa1a.alignment() == daa4.alignment());
+	BOOST_CHECK(dynamic_aligning_allocator<int>(daa1a) == daa4);
+	BOOST_CHECK(dynamic_aligning_allocator<long>(daa4) == daa1a);
 	BOOST_CHECK(daa2a.alignment() == daa4.alignment());
 }
 
