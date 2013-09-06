@@ -65,19 +65,45 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+struct polynomial_tag {};
+
+}
+
 /// Polynomial class.
 /**
  * This class represents multivariate polynomials as collections of multivariate polynomial terms
  * (represented by the piranha::polynomial_term class). The coefficient
- * type \p Cf represents the ring over which the polynomial is defined, while \p Expo is the type used to represent
- * the exponents. Depending on \p Expo, the class can represent various types of polynomials, including
- * Laurent polynomials and Puiseux polynomials.
+ * type \p Cf represents the ring over which the polynomial is defined, while \p Arg0 and \p Args are used
+ * to represent the exponent type and representation in the same way as explained in the documentation of
+ * piranha::polynomial_term.
+ *
+ * Examples:
+ * @code
+ * polynomial<double,int>
+ * @endcode
+ * is a multivariate polynomial with double-precision coefficients and \p int exponents.
+ * @code
+ * polynomial<double,short,std::integral_constant<std::size_t,5>>
+ * @endcode
+ * is a multivariate polynomial with double-precision coefficients and \p short exponents, up to 5 of which
+ * will be stored in static storage.
+ * @code
+ * polynomial<double,univariate_monomial<int>>
+ * @endcode
+ * is a univariate polynomial with double-precision coefficients and \p int exponent.
+ * @code
+ * polynomial<double,kronecker_monomial<>>
+ * @endcode
+ * is a multivariate polynomial with double-precision coefficients and integral exponents packed into a piranha::kronecker_monomial.
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
  * \section type_requirements Type requirements
  * 
- * \p Cf and \p Expo must be suitable for use in piranha::polynomial_term.
+ * \p Cf, \p Arg0 and \p Args must be suitable for use in piranha::polynomial_term.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -92,9 +118,10 @@ namespace piranha
  * \todo here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
  * This is useful to simplify the notation, and needs not to be done for lower level methods in keys.
  */
-template <typename Cf, typename Expo = int>
+template <typename Cf, typename Arg0, typename ... Args>
 class polynomial:
-	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>>
+	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Arg0,Args...>,
+	polynomial<Cf,Arg0,Args...>>,polynomial<Cf,Arg0,Args...>>>>,detail::polynomial_tag
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -102,7 +129,8 @@ class polynomial:
 		// Make friend with Poisson series.
 		template <typename T>
 		friend class poisson_series;
-		typedef power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>>> base;
+		using base = power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Arg0,Args...>,
+			polynomial<Cf,Arg0,Args...>>,polynomial<Cf,Arg0,Args...>>>>;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -196,7 +224,7 @@ class polynomial:
 		// and that exponentiation of key type is legal.
 		template <typename T, typename Series>
 		using pow_ret_type = decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()),void(),
-			std::declval<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> const &>().pow(std::declval<const T &>()));
+			std::declval<series<polynomial_term<Cf,Arg0,Args...>,polynomial<Cf,Arg0,Args...>> const &>().pow(std::declval<const T &>()));
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -309,7 +337,7 @@ class polynomial:
 				retval.insert(term_type(std::move(cf),std::move(key)));
 				return retval;
 			}
-			return static_cast<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>> const *>(this)->pow(x);
+			return static_cast<series<polynomial_term<Cf,Arg0,Args...>,polynomial<Cf,Arg0,Args...>> const *>(this)->pow(x);
 		}
 		/// Substitution.
 		/**
@@ -473,7 +501,7 @@ namespace math
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
+struct subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -507,7 +535,7 @@ struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
+struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
 {
 	private:
 		// TODO: fix declval usage.
@@ -542,7 +570,7 @@ struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,polyn
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,polynomial>::value>::type>
+struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -583,8 +611,8 @@ struct kronecker_enabler
 	};
 	typedef typename Series1::term_type::key_type key_type1;
 	typedef typename Series2::term_type::key_type key_type2;
-	static const bool value = is_instance_of<Series1,polynomial>::value &&
-		is_instance_of<Series2,polynomial>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
+	static const bool value = std::is_base_of<detail::polynomial_tag,Series1>::value &&
+		std::is_base_of<detail::polynomial_tag,Series2>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
 };
 
 }

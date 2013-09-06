@@ -127,10 +127,10 @@ BOOST_PYTHON_MODULE(_core)
 		std::make_tuple(integer(),std::string("integer")),
 		std::make_tuple(rational(),std::string("rational")),
 		std::make_tuple(real(),std::string("real")),
-		std::make_tuple(polynomial<double>(),std::string("polynomial_double")),
-		std::make_tuple(polynomial<integer>(),std::string("polynomial_integer")),
-		std::make_tuple(polynomial<rational>(),std::string("polynomial_rational")),
-		std::make_tuple(polynomial<real>(),std::string("polynomial_real"))
+		std::make_tuple(polynomial<double,signed char>(),std::string("polynomial_double")),
+		std::make_tuple(polynomial<integer,signed char>(),std::string("polynomial_integer")),
+		std::make_tuple(polynomial<rational,signed char>(),std::string("polynomial_rational")),
+		std::make_tuple(polynomial<real,signed char>(),std::string("polynomial_real"))
 	);
 	auto ps_interop_types = std::make_tuple(double(),integer(),rational(),real());
 	series_exposer<poisson_series,decltype(ps_cf_types),decltype(ps_interop_types)>

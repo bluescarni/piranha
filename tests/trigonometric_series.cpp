@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	environment env;
 	using math::sin;
 	using math::cos;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(x.t_degree(),0);
 	BOOST_CHECK_EQUAL(cos(3 * x).t_degree(),3);
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK(!has_t_ldegree<poisson_series<p_type1>>::value);
 	BOOST_CHECK(!has_t_order<poisson_series<p_type1>>::value);
 	BOOST_CHECK(!has_t_lorder<poisson_series<p_type1>>::value);
-	typedef polynomial<p_type1> p_type2;
+	typedef polynomial<p_type1,short> p_type2;
 	BOOST_CHECK(has_t_degree<p_type2>::value);
 	BOOST_CHECK(has_t_ldegree<p_type2>::value);
 	BOOST_CHECK(has_t_order<p_type2>::value);

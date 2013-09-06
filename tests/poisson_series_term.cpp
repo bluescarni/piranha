@@ -43,7 +43,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,real,rational,polynomial<real>> cf_types;
+typedef boost::mpl::vector<double,integer,real,rational,polynomial<real,short>> cf_types;
 
 struct constructor_tester
 {
@@ -146,12 +146,12 @@ struct multiplication_tester
 		BOOST_CHECK_EQUAL(std::get<1u>(retval).m_key.get_int(),expo_type(1));
 		BOOST_CHECK(!std::get<0u>(retval).m_key.get_flavour());
 		BOOST_CHECK(!std::get<1u>(retval).m_key.get_flavour());
-		typedef poisson_series_term<polynomial<real>> other_term_type;
+		typedef poisson_series_term<polynomial<real,short>> other_term_type;
 		std::tuple<other_term_type,other_term_type> other_retval;
 		symbol_set other_ed;
 		other_ed.add("x");
 		other_term_type t4;
-		t4.m_cf = polynomial<real>(2);
+		t4.m_cf = polynomial<real,short>(2);
 		t4.m_key = key_type{expo_type(2)};
 		t4.multiply(other_retval,t2,other_ed);
 		BOOST_CHECK_EQUAL(std::get<0u>(other_retval).m_cf,(t4.m_cf * t2.m_cf) / 2);

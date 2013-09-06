@@ -44,12 +44,12 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,rational,real,polynomial<rational>,polynomial<real>> cf_types;
+typedef boost::mpl::vector<double,rational,real,polynomial<rational,int>,polynomial<real,signed char>> cf_types;
 
 struct constructor_tester
 {
 	template <typename Cf>
-	void poly_ctor_test(typename std::enable_if<is_instance_of<Cf,polynomial>::value>::type * = nullptr)
+	void poly_ctor_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		// Construction from symbol name.
@@ -65,7 +65,7 @@ struct constructor_tester
 		BOOST_CHECK((!std::is_assignable<p_type,environment>::value));
 	}
 	template <typename Cf>
-	void poly_ctor_test(typename std::enable_if<!is_instance_of<Cf,polynomial>::value>::type * = nullptr)
+	void poly_ctor_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		if (!std::is_constructible<Cf,std::string>::value) {
@@ -100,8 +100,8 @@ struct constructor_tester
 		BOOST_CHECK(p3 == p3a);
 #endif
 		// Construction from poisson series of different type.
-		typedef poisson_series<polynomial<rational>> p_type1;
-		typedef poisson_series<polynomial<integer>> p_type2;
+		typedef poisson_series<polynomial<rational,short>> p_type1;
+		typedef poisson_series<polynomial<integer,short>> p_type2;
 		p_type1 p4(1);
 		p_type2 p5(p4);
 		BOOST_CHECK(p4 == p5);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_constructors_test)
 struct assignment_tester
 {
 	template <typename Cf>
-	void poly_assignment_test(typename std::enable_if<is_instance_of<Cf,polynomial>::value>::type * = nullptr)
+	void poly_assignment_test(typename std::enable_if<std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
 	{
 		typedef poisson_series<Cf> p_type;
 		p_type p1;
@@ -133,7 +133,7 @@ struct assignment_tester
 		BOOST_CHECK(p1 == p_type("x"));
 	}
 	template <typename Cf>
-	void poly_assignment_test(typename std::enable_if<!is_instance_of<Cf,polynomial>::value>::type * = nullptr)
+	void poly_assignment_test(typename std::enable_if<!std::is_base_of<detail::polynomial_tag,Cf>::value>::type * = nullptr)
 	{}
 	template <typename Cf>
 	void operator()(const Cf &)
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{}),"0");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{rational(1,2)}),"1/2");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type2{real("-0.5")}),"-1/2");
-	typedef poisson_series<polynomial<rational>> p_type3;
+	typedef poisson_series<polynomial<rational,short>> p_type3;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{}),"0");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p_type3{"x"}),"x");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(3,-2) * p_type3{"x"}),"-3/2*x");
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_stream_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 {
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	p_type1 p1{"x"};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x)");
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_THROW(math::cos(p_type1{"x"} * rational(1,2)),std::invalid_argument);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type1{"x"} * rational(4,-2))),"-sin(2x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-math::cos(p_type1{"x"} * rational(4,2))),"-cos(2x)");
-	typedef poisson_series<polynomial<real>> p_type2;
+	typedef poisson_series<polynomial<real,short>> p_type2;
 	BOOST_CHECK_EQUAL(math::sin(p_type2{3}),math::sin(real(3)));
 	BOOST_CHECK_EQUAL(math::cos(p_type2{3}),math::cos(real(3)));
 	p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
 {
 	// Just some random arithmetic tests using known trigonometric identities.
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(math::cos(x) * math::cos(y),(math::cos(x - y) + math::cos(x + y)) / 2);
 	BOOST_CHECK_EQUAL(math::cos(-x) * math::cos(y),(math::cos(x - y) + math::cos(x + y)) / 2);
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
 	BOOST_CHECK_EQUAL(pow(cos(x),5),(10 * cos(x) + 5 * cos(3 * x) + cos(5 * x)) / 16);
 	BOOST_CHECK_EQUAL(pow(cos(x),5) * pow(sin(x),5),(10 * sin(2 * x) - 5 * sin(6 * x) + sin(10 * x)) / 512);
 	BOOST_CHECK_EQUAL(pow(p_type1{rational(1,2)},5),pow(rational(1,2),5));
-	typedef poisson_series<polynomial<real>> p_type2;
+	typedef poisson_series<polynomial<real,short>> p_type2;
 	BOOST_CHECK_EQUAL(pow(p_type2(real("1.234")),real("-5.678")),pow(real("1.234"),real("-5.678")));
 	BOOST_CHECK_EQUAL(sin(p_type2(real("1.234"))),sin(real("1.234")));
 	BOOST_CHECK_EQUAL(cos(p_type2(real("1.234"))),cos(real("1.234")));
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	using math::sin;
 	using math::cos;
 	using math::pow;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	BOOST_CHECK(has_degree<p_type1>::value);
 	BOOST_CHECK(has_ldegree<p_type1>::value);
 	BOOST_CHECK(math::degree(p_type1{}) == 0);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	using math::cos;
 	using math::pow;
 	using math::partial;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	BOOST_CHECK(is_differentiable<p_type1>::value);
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(partial(x * cos(y),"x"),cos(y));
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	});
 	BOOST_CHECK_EQUAL(partial(x + cos(y),"x"),1 + sin(y) * sin(x));
 	BOOST_CHECK_EQUAL(partial(x + x * cos(y),"x"),1 + cos(y) + x * sin(y) * sin(x));
-	BOOST_CHECK(!is_differentiable<poisson_series<polynomial<mock_cf>>>::value);
+	BOOST_CHECK((!is_differentiable<poisson_series<polynomial<mock_cf,short>>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
 	using math::sin;
 	using math::cos;
 	using math::pow;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	typedef std::decay<decltype(*(p_type1{}.begin()))>::type pair_type;
 	typedef std::decay<decltype(*(p_type1{}.begin()->first.begin()))>::type pair_type2;
 	p_type1 x{"x"}, y{"y"};
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_evaluate_test)
 	using math::sin;
 	using math::cos;
 	using math::pow;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	std::unordered_map<std::string,real> dict{{"x",real(1.234)},{"y",real(5.678)}};
 	p_type1 x{"x"}, y{"y"};
 	auto s1 = (x + y) * cos(x + y);
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	using math::cos;
 	using math::pow;
 	using math::subs;
-	typedef poisson_series<polynomial<real>> p_type1;
+	typedef poisson_series<polynomial<real,short>> p_type1;
 	BOOST_CHECK(p_type1{}.subs("x",integer(4)).empty());
 	p_type1 x{"x"}, y{"y"};
 	auto s = (x + y) * cos(x) + pow(y,3) * sin(x);
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y)) + pow(y,3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
 	s = (x + y) * cos(-2 * x + y) + pow(x,3) * sin(-5 * x + y);
 	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y)) + pow(r,3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
-	typedef poisson_series<polynomial<rational>> p_type2;
+	typedef poisson_series<polynomial<rational,short>> p_type2;
 	p_type2 a{"a"}, b{"b"};
 	auto t = a * cos(a + b) + b * sin(a);
 	BOOST_CHECK_EQUAL(t.subs("a",b),b * cos(b + b) + b * sin(b));
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_print_tex_test)
 {
 	using math::sin;
 	using math::cos;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	std::ostringstream oss;
 	std::string s1 = "3\\frac{{x}}{{y}}\\cos{\\left({x}+{y}\\right)}";
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 {
 	using math::sin;
 	using math::cos;
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	p_type1 x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK_EQUAL(p_type1{}.integrate("x"),p_type1{});
 	BOOST_CHECK_EQUAL(x.integrate("x"),x*x/2);
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	{
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(4),integer(1)),p_type1{"x"});
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(1),p_type1{"x"}),p_type1{"x"});
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x",integer(3),p_type1{}),x.pow(2) * y + z);
 	}
 	{
-	typedef poisson_series<polynomial<real>> p_type2;
+	typedef poisson_series<polynomial<real,short>> p_type2;
 	p_type2 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(1),real(1.234)),y*y + math::pow(real(1.234),3));
 	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(3),real(1.234)),y*y + real(1.234));
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
 {
-	typedef poisson_series<polynomial<rational>> p_type1;
+	typedef poisson_series<polynomial<rational,short>> p_type1;
 	BOOST_CHECK((is_evaluable<p_type1,double>::value));
 	BOOST_CHECK((is_evaluable<p_type1,float>::value));
 	BOOST_CHECK((is_evaluable<p_type1,real>::value));
@@ -543,6 +543,6 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
 	BOOST_CHECK((!is_evaluable<p_type1,int>::value));
 	BOOST_CHECK((!is_evaluable<p_type1,long>::value));
 	BOOST_CHECK((!is_evaluable<p_type1,long long>::value));
-	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf>>,double>::value));
+	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf,short>>,double>::value));
 	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
 }

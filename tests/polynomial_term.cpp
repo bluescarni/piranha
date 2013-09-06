@@ -42,10 +42,10 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,real,polynomial<integer>> cf_types;
+typedef boost::mpl::vector<double,integer,real,polynomial<integer,short>> cf_types;
 typedef boost::mpl::vector<short,unsigned,integer> expo_types;
 
-typedef polynomial<real> other_cf_type;
+typedef polynomial<real,short> other_cf_type;
 
 struct constructor_tester
 {

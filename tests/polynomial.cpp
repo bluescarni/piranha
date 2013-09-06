@@ -528,20 +528,20 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {
 	using math::partial;
 	using math::pow;
-	typedef polynomial<rational> p_type1;
+	typedef polynomial<rational,short> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(partial(x * y,"x"),y);
 	BOOST_CHECK_EQUAL(partial(x * y,"y"),x);
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"y"),10 * (x * y + x - 3 * pow(y,2)).pow(9) * (x - 6 * y));
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"z"),0);
 	BOOST_CHECK(is_differentiable<p_type1>::value);
-	BOOST_CHECK(!is_differentiable<polynomial<mock_cf>>::value);
+	BOOST_CHECK((!is_differentiable<polynomial<mock_cf,short>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 {
 	{
-	typedef polynomial<rational> p_type1;
+	typedef polynomial<rational,short> p_type1;
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",integer(1)),1);
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",p_type1{"x"}),p_type1{"x"});
 	p_type1 x{"x"}, y{"y"}, z{"z"};
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 {
 	// Simple echelon-1 polynomial.
-	typedef polynomial<rational> p_type1;
+	typedef polynomial<rational,short> p_type1;
 	BOOST_CHECK(is_integrable<p_type1>::value);
 	BOOST_CHECK(is_integrable<p_type1 &>::value);
 	BOOST_CHECK(is_integrable<const p_type1>::value);
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	BOOST_CHECK_EQUAL(p_type1{4}.integrate("z"),4 * z);
 	BOOST_CHECK_EQUAL((x * y * z).pow(-5).integrate("x"),(y * z).pow(-5) * x.pow(-4) * rational(1,-4));
 	// Polynomial with polynomial coefficient, no variable mixing.
-	typedef polynomial<p_type1> p_type11;
+	typedef polynomial<p_type1,short> p_type11;
 	BOOST_CHECK(is_integrable<p_type11>::value);
 	BOOST_CHECK(is_integrable<p_type11 &>::value);
 	BOOST_CHECK(is_integrable<const p_type11>::value);
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	BOOST_CHECK_THROW((x*yy.pow(-1)).integrate("y"),std::invalid_argument);
 	BOOST_CHECK_EQUAL((x*yy.pow(-2)).integrate("y"),-x*yy.pow(-1));
 	// Non-integrable coefficient.
-	typedef polynomial<polynomial_alt<rational,int>> p_type_alt;
+	typedef polynomial<polynomial_alt<rational,int>,int> p_type_alt;
 	p_type_alt n("n"), m("m");
 	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"n"),n*n*m/2 + m*n);
 	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"m"),m*n*m/2 + m*m/2);
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 {
-	typedef polynomial<rational> p_type1;
+	typedef polynomial<rational,int> p_type1;
 	{
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(4),integer(1)),p_type1{"x"});
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(1),p_type1{"x"}),p_type1{"x"});

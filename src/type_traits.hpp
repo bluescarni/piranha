@@ -399,6 +399,10 @@ struct iio_converter
  * is_instance_of<int,std::list>::value == false;
  * @endcode
  */
+// WARNING: due to a GCC bug, this will not work if TT has a certain number of template arguments > 0
+// and a final variadic pack. E.g.,
+// class <typename T, typename U, typename ... Args> class TT;
+// will not be detected.
 template <class T, template <typename ...> class TT>
 class is_instance_of
 {

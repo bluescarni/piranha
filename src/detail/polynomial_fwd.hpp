@@ -24,8 +24,16 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Polynomial tag struct to work around is_instace_of bug in GCC.
+struct polynomial_tag;
+
+}
+
 // Forward declaration of polynomial class.
-template <typename, typename>
+template <typename, typename, typename ...>
 class polynomial;
 
 }
