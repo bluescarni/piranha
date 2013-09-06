@@ -29,6 +29,7 @@
 #include "../src/integer.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
@@ -56,4 +57,5 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 	cache_aligning_allocator<int> caa8;
 	BOOST_CHECK(caa8.alignment() == 0u);
 	BOOST_CHECK(cache_aligning_allocator<int>::propagate_on_container_move_assignment::value);
+	BOOST_CHECK(is_container_element<cache_aligning_allocator<int>>::value);
 }
