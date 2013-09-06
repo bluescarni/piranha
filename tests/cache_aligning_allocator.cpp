@@ -55,4 +55,5 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 	settings::set_cache_line_size(3);
 	cache_aligning_allocator<int> caa8;
 	BOOST_CHECK(caa8.alignment() == 0u);
+	BOOST_CHECK(cache_aligning_allocator<int>::propagate_on_container_move_assignment::value);
 }

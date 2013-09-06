@@ -73,6 +73,8 @@ BOOST_AUTO_TEST_CASE(dynamic_aligning_allocator_general_test)
 	BOOST_CHECK(dynamic_aligning_allocator<int>(daa1a) == daa4);
 	BOOST_CHECK(dynamic_aligning_allocator<long>(daa4) == daa1a);
 	BOOST_CHECK(daa2a.alignment() == daa4.alignment());
+	dynamic_aligning_allocator<long> daa1_foo, daa1_bar(daa1_foo);
+	BOOST_CHECK(dynamic_aligning_allocator<int>(std::move(daa1_foo)) == dynamic_aligning_allocator<int>(daa1_bar));
 }
 
 struct std_container_tester
