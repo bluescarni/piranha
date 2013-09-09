@@ -59,6 +59,51 @@ class cache_aligning_allocator: public dynamic_aligning_allocator<T>
 			}
 		}
 	public:
+		// NOTE: these members (down to the default ctor) are not needed according
+		// to the C++11 standard, but GCC's stdlib does not support allocator aware
+		// containers yet.
+		/// Allocator rebind
+		template <typename U>
+		struct rebind
+		{
+			/// Allocator re-parametrised over \p U.
+			using other = cache_aligning_allocator<U>;
+		};
+		/// Pointer type.
+		using pointer = T *;
+		/// Const pointer type.
+		using const_pointer = T const *;
+		/// Reference type.
+		using reference = T &;
+		/// Const reference type.
+		using const_reference = T const &;
+		/// Destructor method.
+		/**
+		 * @param[in] p address of the object of type \p T to be destroyed.
+		 */
+		void destroy(pointer p)
+		{
+			p->~T();
+		}
+		/// Copy constructor method.
+		/**
+		 * @param[in] p address where the object will be constructed.
+		 * @param[in] val argument for the copy construction.
+		 */
+		void construct(pointer p, const_reference val)
+		{
+			::new(static_cast<void *>(p)) T(val);
+		}
+		/// Variadic construction method.
+		/**
+		 * @param[in] p address where the object will be constructed.
+		 * @param[in] args arguments that will be forwarded for construction.
+		 */
+		template <typename U, typename ... Args>
+		void construct(pointer p, Args && ... args)
+		{
+			::new(static_cast<void *>(p)) U(std::forward<Args>(args)...);
+		}
 		/// Default constructor.
 		/**
 		 * Will invoke the base constructor with an alignment value determined as follows:
