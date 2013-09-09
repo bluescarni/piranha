@@ -41,6 +41,7 @@
 #include <boost/python/stl_iterator.hpp>
 #include <cstddef>
 #include <iterator>
+#include <map>
 #include <mutex>
 #include <set>
 #include <sstream>
@@ -57,12 +58,47 @@
 namespace bp = boost::python;
 using namespace piranha;
 
+// Series archive, will store the description of exposed series.
+static std::map<std::string,std::set<std::vector<std::string>>> series_archive;
+
 // NOTE: these headers are not meant to be used anywhere else, they are just being
 // used to group together common functionality and not oversize core.cpp.
 
 #include "python_converters.hpp"
 #include "exceptions.hpp"
-#include "series_exposer.hpp"
+#include "exposer.hpp"
+
+struct p_double
+{
+	using type = double;
+	static const std::string name;
+};
+
+const std::string p_double::name = "double";
+
+struct p_integer
+{
+	using type = integer;
+	static const std::string name;
+};
+
+const std::string p_integer::name = "integer";
+
+struct p_signed_char
+{
+	using type = signed char;
+	static const std::string name;
+};
+
+const std::string p_signed_char::name = "signed char";
+
+struct p_short
+{
+	using type = short;
+	static const std::string name;
+};
+
+const std::string p_short::name = "short";
 
 static std::mutex global_mutex;
 static bool inited = false;
@@ -111,6 +147,14 @@ BOOST_PYTHON_MODULE(_core)
 	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
+	// Descriptor for polynomial exposition.
+	struct poly_desc
+	{
+		using params = std::tuple<std::tuple<p_double,p_signed_char>,std::tuple<p_double,p_short>,
+			std::tuple<p_integer,p_signed_char>,std::tuple<p_integer,p_short>>;
+	};
+	exposer<polynomial,poly_desc> poly_exposer("polynomial");
+/*
 	// Polynomials.
 	auto poly_cf_types = std::make_tuple(
 		std::make_tuple(double(),std::string("double")),
@@ -135,6 +179,7 @@ BOOST_PYTHON_MODULE(_core)
 	auto ps_interop_types = std::make_tuple(double(),integer(),rational(),real());
 	series_exposer<poisson_series,decltype(ps_cf_types),decltype(ps_interop_types)>
 		pse("poisson_series",ps_cf_types,ps_interop_types);
+*/
 	// Expose the settings class.
 	bp::class_<settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",settings::get_max_term_output).staticmethod("_get_max_term_output");
