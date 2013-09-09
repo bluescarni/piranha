@@ -164,6 +164,9 @@ class integer
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
 			// Check that each character is a digit.
+			// NOTE: apparently isdigit() is not guaranteed not to be affected by the current locale:
+			// http://en.cppreference.com/w/cpp/string/byte/isdigit
+			// TODO change it.
 			std::for_each(str + has_minus, str + size,[](char c){if (!std::isdigit(c)) {piranha_throw(std::invalid_argument,"invalid string input for integer type");}});
 		}
 		// Construction.

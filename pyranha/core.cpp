@@ -61,44 +61,67 @@ using namespace piranha;
 // Series archive, will store the description of exposed series.
 static std::map<std::string,std::set<std::vector<std::string>>> series_archive;
 
+// Descriptor for template parameters to be exposed to Python.
+template <typename>
+struct p_descriptor {};
+
+static inline const std::string &check_name(const std::string &str)
+{
+	if (str.empty()) {
+		piranha_throw(std::runtime_error,"invalid template parameter name: empty string");
+	}
+	if (str.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") != std::string::npos) {
+		piranha_throw(std::runtime_error,"invalid template parameter name: invalid character detected");
+	}
+	if (str.front() == '_' || str.back() == '_') {
+		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start or end with underscore");
+	}
+	if (std::string(str.begin(),str.begin() + 1).find_first_not_of("0123456789") == std::string::npos) {
+		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start with a digit ");
+	}
+	// This will be used as separator.
+	if (str.find("___") != std::string::npos) {
+		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot contain '___'");
+	}
+	return str;
+}
+
+#define PYRANHA_DECLARE_P_DESCRIPTOR(type,...) \
+template <> \
+struct p_descriptor<type> \
+{ \
+	static const std::string name; \
+}; \
+const std::string p_descriptor<type>::name = check_name(std::string(#__VA_ARGS__) == "" ? #type : #__VA_ARGS__);
+
+PYRANHA_DECLARE_P_DESCRIPTOR(double,)
+PYRANHA_DECLARE_P_DESCRIPTOR(integer,)
+PYRANHA_DECLARE_P_DESCRIPTOR(rational,)
+PYRANHA_DECLARE_P_DESCRIPTOR(real,)
+PYRANHA_DECLARE_P_DESCRIPTOR(signed char,signed_char)
+PYRANHA_DECLARE_P_DESCRIPTOR(short,)
+PYRANHA_DECLARE_P_DESCRIPTOR(kronecker_monomial<>,kronecker_monomial)
+using p_rat_sc = polynomial<rational,signed char>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_rat_sc,polynomial_rational_signed_char)
+using p_rat_short = polynomial<rational,short>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_rat_short,polynomial_rational_short)
+using p_double_sc = polynomial<double,signed char>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_double_sc,polynomial_double_signed_char)
+using p_double_short = polynomial<double,short>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_double_short,polynomial_double_short)
+using p_real_short = polynomial<real,short>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_real_short,polynomial_real_short)
+using p_real_sc = polynomial<real,signed char>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_real_sc,polynomial_real_signed_char)
+
+#undef PYRANHA_DECLARE_P_DESCRIPTOR
+
 // NOTE: these headers are not meant to be used anywhere else, they are just being
 // used to group together common functionality and not oversize core.cpp.
 
 #include "python_converters.hpp"
 #include "exceptions.hpp"
 #include "exposer.hpp"
-
-struct p_double
-{
-	using type = double;
-	static const std::string name;
-};
-
-const std::string p_double::name = "double";
-
-struct p_integer
-{
-	using type = integer;
-	static const std::string name;
-};
-
-const std::string p_integer::name = "integer";
-
-struct p_signed_char
-{
-	using type = signed char;
-	static const std::string name;
-};
-
-const std::string p_signed_char::name = "signed char";
-
-struct p_short
-{
-	using type = short;
-	static const std::string name;
-};
-
-const std::string p_short::name = "short";
 
 static std::mutex global_mutex;
 static bool inited = false;
@@ -150,10 +173,20 @@ BOOST_PYTHON_MODULE(_core)
 	// Descriptor for polynomial exposition.
 	struct poly_desc
 	{
-		using params = std::tuple<std::tuple<p_double,p_signed_char>,std::tuple<p_double,p_short>,
-			std::tuple<p_integer,p_signed_char>,std::tuple<p_integer,p_short>>;
+		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,kronecker_monomial<>>,
+			std::tuple<integer,signed char>,std::tuple<integer,short>,std::tuple<integer,kronecker_monomial<>>,
+			std::tuple<rational,signed char>,std::tuple<rational,short>,std::tuple<rational,kronecker_monomial<>>,
+			std::tuple<real,signed char>,std::tuple<real,short>,std::tuple<real,kronecker_monomial<>>>;
+		using interop_types = std::tuple<double,rational,integer,real>;
 	};
 	exposer<polynomial,poly_desc> poly_exposer("polynomial");
+	struct ps_desc
+	{
+		using params = std::tuple<std::tuple<double>,std::tuple<rational>,std::tuple<real>,std::tuple<polynomial<rational,signed char>>,
+			std::tuple<polynomial<rational,short>>,std::tuple<polynomial<double,signed char>>,std::tuple<polynomial<double,short>>,
+			std::tuple<polynomial<real,signed char>>,std::tuple<polynomial<real,short>>>;
+	};
+	exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
 /*
 	// Polynomials.
 	auto poly_cf_types = std::make_tuple(
