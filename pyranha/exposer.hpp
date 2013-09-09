@@ -79,6 +79,27 @@ class exposer
 		{
 			static const bool value = false;
 		};
+		// Expose arithmetics operations with another type.
+		// NOTE: this will have to be conditional in the future.
+		template <typename T, typename S>
+		static void expose_arithmetics(bp::class_<S> &series_class)
+		{
+			namespace sn = boost::python::self_ns;
+			T in;
+			series_class.def(sn::operator+=(bp::self,in));
+			series_class.def(sn::operator+(bp::self,in));
+			series_class.def(sn::operator+(in,bp::self));
+			series_class.def(sn::operator-=(bp::self,in));
+			series_class.def(sn::operator-(bp::self,in));
+			series_class.def(sn::operator-(in,bp::self));
+			series_class.def(sn::operator*=(bp::self,in));
+			series_class.def(sn::operator*(bp::self,in));
+			series_class.def(sn::operator*(in,bp::self));
+			series_class.def(sn::operator==(bp::self,in));
+			series_class.def(sn::operator==(in,bp::self));
+			series_class.def(sn::operator!=(bp::self,in));
+			series_class.def(sn::operator!=(in,bp::self));
+		}
 		// Interaction with interoperable types.
 		template <typename S, std::size_t I = 0u, typename... T>
 		void interop_exposer_(bp::class_<S> &series_class, const std::tuple<T...> &,
