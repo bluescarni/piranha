@@ -85,24 +85,15 @@ class cache_aligning_allocator: public dynamic_aligning_allocator<T>
 		{
 			p->~T();
 		}
-		/// Copy constructor method.
-		/**
-		 * @param[in] p address where the object will be constructed.
-		 * @param[in] val argument for the copy construction.
-		 */
-		void construct(pointer p, const_reference val)
-		{
-			::new(static_cast<void *>(p)) T(val);
-		}
 		/// Variadic construction method.
 		/**
 		 * @param[in] p address where the object will be constructed.
 		 * @param[in] args arguments that will be forwarded for construction.
 		 */
-		template <typename U, typename ... Args>
+		template <typename ... Args>
 		void construct(pointer p, Args && ... args)
 		{
-			::new(static_cast<void *>(p)) U(std::forward<Args>(args)...);
+			::new(static_cast<void *>(p)) T(std::forward<Args>(args)...);
 		}
 		/// Default constructor.
 		/**

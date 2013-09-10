@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <type_traits>
 
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
@@ -58,4 +59,34 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
 	BOOST_CHECK(caa8.alignment() == 0u);
 	BOOST_CHECK(cache_aligning_allocator<int>::propagate_on_container_move_assignment::value);
 	BOOST_CHECK(is_container_element<cache_aligning_allocator<int>>::value);
+}
+
+PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
+PIRANHA_DECLARE_HAS_TYPEDEF(const_pointer);
+PIRANHA_DECLARE_HAS_TYPEDEF(reference);
+PIRANHA_DECLARE_HAS_TYPEDEF(const_reference);
+
+BOOST_AUTO_TEST_CASE(cache_aligning_allocator_construct_destroy_test)
+{
+	cache_aligning_allocator<char> caa1;
+	char c1;
+	caa1.construct(&c1,'f');
+	BOOST_CHECK(c1 == 'f');
+	caa1.destroy(&c1);
+	std::aligned_storage<sizeof(std::string),alignof(std::string)>::type st1;
+	cache_aligning_allocator<std::string> caa2;
+	caa2.construct(static_cast<std::string *>(static_cast<void *>(&st1)),std::string("foo"));
+	BOOST_CHECK(*static_cast<std::string *>(static_cast<void *>(&st1)) == "foo");
+	caa2.destroy(static_cast<std::string *>(static_cast<void *>(&st1)));
+	caa2.construct(static_cast<std::string *>(static_cast<void *>(&st1)),"bar");
+	BOOST_CHECK(*static_cast<std::string *>(static_cast<void *>(&st1)) == "bar");
+	caa2.destroy(static_cast<std::string *>(static_cast<void *>(&st1)));
+	caa2.construct(static_cast<std::string *>(static_cast<void *>(&st1)));
+	BOOST_CHECK(*static_cast<std::string *>(static_cast<void *>(&st1)) == "");
+	caa2.destroy(static_cast<std::string *>(static_cast<void *>(&st1)));
+	BOOST_CHECK(cache_aligning_allocator<std::string>::rebind<char>::other{} == caa1);
+	BOOST_CHECK(has_typedef_pointer<cache_aligning_allocator<std::string>>::value);
+	BOOST_CHECK(has_typedef_const_pointer<cache_aligning_allocator<std::string>>::value);
+	BOOST_CHECK(has_typedef_reference<cache_aligning_allocator<std::string>>::value);
+	BOOST_CHECK(has_typedef_const_reference<cache_aligning_allocator<std::string>>::value);
 }
