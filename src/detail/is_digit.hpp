@@ -18,13 +18,25 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "detail/mpfr.hpp"
-#include "real.hpp"
+#ifndef PIRANHA_DETAIL_IS_DIGIT_HPP
+#define PIRANHA_DETAIL_IS_DIGIT_HPP
+
+#include <algorithm>
 
 namespace piranha
 {
 
-const ::mpfr_rnd_t real::default_rnd;
-const ::mpfr_prec_t real::default_prec;
+namespace detail
+{
+
+inline bool is_digit(char c)
+{
+	const char digits[] = "0123456789";
+	return std::find(digits,digits + 10,c) != (digits + 10);
+}
 
 }
+
+}
+
+#endif
