@@ -100,7 +100,7 @@ PYRANHA_DECLARE_P_DESCRIPTOR(rational,)
 PYRANHA_DECLARE_P_DESCRIPTOR(real,)
 PYRANHA_DECLARE_P_DESCRIPTOR(signed char,signed_char)
 PYRANHA_DECLARE_P_DESCRIPTOR(short,)
-PYRANHA_DECLARE_P_DESCRIPTOR(kronecker_monomial<>,kronecker_monomial)
+PYRANHA_DECLARE_P_DESCRIPTOR(kronecker_monomial<>,kronecker)
 using p_rat_sc = polynomial<rational,signed char>;
 PYRANHA_DECLARE_P_DESCRIPTOR(p_rat_sc,polynomial_rational_signed_char)
 using p_rat_short = polynomial<rational,short>;
@@ -145,6 +145,23 @@ static inline auto binomial_rational(const rational &q, const integer &k) -> dec
 	return math::binomial(q,k);
 }
 
+static inline bp::list get_series_list()
+{
+	bp::list retval;
+	for (auto &p: series_archive) {
+		bp::list tmp1;
+		for (auto &v: p.second) {
+			bp::list tmp2;
+			for (auto &str: v) {
+				tmp2.append(str);
+			}
+			tmp1.append(tmp2);
+		}
+		retval.append(bp::make_tuple(p.first,tmp1));
+	}
+	return retval;
+}
+
 BOOST_PYTHON_MODULE(_core)
 {
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
@@ -170,6 +187,8 @@ BOOST_PYTHON_MODULE(_core)
 	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
+	// Series list.
+	bp::def("_get_series_list",get_series_list);
 	// Descriptor for polynomial exposition.
 	struct poly_desc
 	{

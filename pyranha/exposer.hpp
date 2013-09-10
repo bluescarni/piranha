@@ -79,6 +79,18 @@ class exposer
 		{
 			static const bool value = false;
 		};
+		// Handle division specially (allowed only with non-series types).
+		template <typename S, typename T>
+		static void expose_division(bp::class_<S> &series_class, const T &in,
+			typename std::enable_if<!is_instance_of<T,series>::value>::type * = nullptr)
+		{
+			series_class.def(bp::self /= in);
+			series_class.def(bp::self / in);
+		}
+		template <typename S, typename T>
+		static void expose_division(bp::class_<S> &, const T &,
+			typename std::enable_if<is_instance_of<T,series>::value>::type * = nullptr)
+		{}
 		// Expose arithmetics operations with another type.
 		// NOTE: this will have to be conditional in the future.
 		template <typename T, typename S>
@@ -99,6 +111,7 @@ class exposer
 			series_class.def(sn::operator==(in,bp::self));
 			series_class.def(sn::operator!=(bp::self,in));
 			series_class.def(sn::operator!=(in,bp::self));
+			expose_division(series_class,in);
 		}
 		// Interaction with interoperable types.
 		template <typename S, std::size_t I = 0u, typename... T>
@@ -150,6 +163,22 @@ class exposer
 			t_subs_exposer<interop_type>(series_class);
 			interop_exposer<S,I + 1u,T...>(series_class,t);*/
 		}
+		// Exponentiation support.
+		template <typename T, typename U>
+		static auto pow_wrapper(const T &s, const U &x) -> decltype(math::pow(s,x))
+		{
+			return math::pow(s,x);
+		}
+		template <typename U, typename T>
+		static void expose_pow(bp::class_<T> &series_class,
+			typename std::enable_if<is_exponentiable<T,U>::value>::type * = nullptr)
+		{
+			series_class.def("__pow__",pow_wrapper<T,U>);
+		}
+		template <typename U, typename T>
+		static void expose_pow(bp::class_<T> &,
+			typename std::enable_if<!is_exponentiable<T,U>::value>::type * = nullptr)
+		{}
 		template <typename S>
 		struct interop_exposer
 		{
@@ -158,7 +187,8 @@ class exposer
 			void operator()(const T &) const
 			{
 				expose_ctor<const T &>(m_series_class);
-				//expose_arithmetics<T>(m_series_class);
+				expose_arithmetics<T>(m_series_class);
+				expose_pow<T>(m_series_class);
 			}
 			bp::class_<S> &m_series_class;
 		};
