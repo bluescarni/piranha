@@ -53,6 +53,7 @@
 #include <utility>
 #include <vector>
 
+#include "../src/detail/is_digit.hpp"
 #include "../src/piranha.hpp"
 
 namespace bp = boost::python;
@@ -76,7 +77,7 @@ static inline const std::string &check_name(const std::string &str)
 	if (str.front() == '_' || str.back() == '_') {
 		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start or end with underscore");
 	}
-	if (std::string(str.begin(),str.begin() + 1).find_first_not_of("0123456789") == std::string::npos) {
+	if (detail::is_digit(*str.begin())) {
 		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start with a digit ");
 	}
 	// This will be used as separator.
