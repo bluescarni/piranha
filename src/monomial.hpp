@@ -115,7 +115,8 @@ class monomial: public array_key<T,monomial<T,Args...>,Args...>
 			}
 		};
 		template <typename U, typename V>
-		struct in_place_multiplier<U,V,typename std::enable_if<std::is_integral<U>::value && std::is_integral<V>::value>::type>
+		struct in_place_multiplier<U,V,typename std::enable_if<(std::is_integral<U>::value && std::is_integral<V>::value) ||
+			(std::is_integral<U>::value && std::is_floating_point<V>::value)>::type>
 		{
 			void operator()(U &x, const V &y) const
 			{
