@@ -1,7 +1,6 @@
 SET(SRC_LIST
 	environment.cpp
 	exceptions.cpp
-	real.cpp
 	runtime_info.cpp
 	settings.cpp
 	symbol.cpp
@@ -62,6 +61,7 @@ SET(HEADERS_LIST
 	detail/vector_hasher.hpp
 	detail/prepare_for_print.hpp
 	detail/small_vector_fwd.hpp
+	detail/is_digit.hpp
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp

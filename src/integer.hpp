@@ -27,7 +27,6 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
-#include <cctype> // For std::isdigit().
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -43,6 +42,7 @@
 
 #include "config.hpp" // For (un)likely.
 #include "detail/integer_fwd.hpp"
+#include "detail/is_digit.hpp"
 #include "detail/rational_fwd.hpp"
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
@@ -164,10 +164,7 @@ class integer
 				piranha_throw(std::invalid_argument,"invalid string input for integer type");
 			}
 			// Check that each character is a digit.
-			// NOTE: apparently isdigit() is not guaranteed not to be affected by the current locale:
-			// http://en.cppreference.com/w/cpp/string/byte/isdigit
-			// TODO change it.
-			std::for_each(str + has_minus, str + size,[](char c){if (!std::isdigit(c)) {piranha_throw(std::invalid_argument,"invalid string input for integer type");}});
+			std::for_each(str + has_minus, str + size,[](char c){if (!detail::is_digit(c)) {piranha_throw(std::invalid_argument,"invalid string input for integer type");}});
 		}
 		// Construction.
 		void construct_from_string(const char *str)

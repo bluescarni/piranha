@@ -25,7 +25,6 @@
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <cctype>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
@@ -36,6 +35,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/is_digit.hpp"
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
@@ -46,6 +46,33 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+template <typename = int>
+struct real_base
+{
+	/// Default rounding mode.
+	/**
+	 * All operations will use the \p MPFR_RNDN (round to nearest) rounding mode.
+	 */
+	static const ::mpfr_rnd_t default_rnd = MPFR_RNDN;
+	/// Default significand precision.
+	/**
+	 * The precision is the number of bits used to represent the significand of a floating-point number.
+	 * This default value is equivalent to the IEEE 754 quadruple-precision binary floating-point format.
+	 */
+	static const ::mpfr_prec_t default_prec = 113;
+};
+
+template <typename T>
+const ::mpfr_rnd_t real_base<T>::default_rnd;
+
+template <typename T>
+const ::mpfr_prec_t real_base<T>::default_prec;
+
+}
 
 /// Arbitrary precision floating-point class.
 /**
@@ -72,7 +99,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC real
+class PIRANHA_PUBLIC real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>
@@ -97,8 +124,6 @@ class PIRANHA_PUBLIC real
 			}
 			char *m_str;
 		};
-		// Default rounding mode.
-		static const ::mpfr_rnd_t default_rnd = MPFR_RNDN;
 		static void prec_check(const ::mpfr_prec_t &prec)
 		{
 			if (prec < MPFR_PREC_MIN || prec > MPFR_PREC_MAX) {
@@ -227,7 +252,7 @@ class PIRANHA_PUBLIC real
 			// Transform into fraction.
 			std::size_t digits = 0u;
 			for (; *str != '\0'; ++str) {
-				if (std::isdigit(*str)) {
+				if (detail::is_digit(*str)) {
 					++digits;
 				}
 			}
@@ -714,12 +739,6 @@ class PIRANHA_PUBLIC real
 			return pow_impl(integer(n));
 		}
 	public:
-		/// Default significand precision.
-		/**
-		 * The precision is the number of bits used to represent the significand of a floating-point number.
-		 * This default value is equivalent to the IEEE 754 quadruple-precision binary floating-point format.
-		 */
-		static const ::mpfr_prec_t default_prec = 113;
 		/// Default constructor.
 		/**
 		 * Will initialize the number to zero, using real::default_prec as significand precision.
