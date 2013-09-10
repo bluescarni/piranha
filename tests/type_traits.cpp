@@ -53,11 +53,17 @@ struct foo
 
 struct bar {};
 
+struct frobniz
+{
+	typedef int & foo_type;
+};
+
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
 	environment env;
 	BOOST_CHECK(has_typedef_foo_type<foo>::value);
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
+	BOOST_CHECK(has_typedef_foo_type<frobniz>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_nonconst_rvalue_ref_test)

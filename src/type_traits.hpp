@@ -746,15 +746,13 @@ const bool is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type
  */
 #define PIRANHA_DECLARE_HAS_TYPEDEF(type_name) \
 template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT> \
-struct has_typedef_##type_name \
+class has_typedef_##type_name: piranha::detail::sfinae_types \
 { \
-	typedef char yes[1]; \
-	typedef char no[2]; \
-	template <typename C> \
-	static yes &test(typename C::type_name *); \
-	template <typename> \
-	static no &test(...); \
-	static const bool value = sizeof(test<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>(0)) == sizeof(yes); \
+		template <typename T> \
+		static auto test(const T &) -> decltype(std::declval<typename T::type_name>(),void(),yes()); \
+		static no test(...); \
+	public: \
+		static const bool value = std::is_same<yes,decltype(test(std::declval<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>()))>::value; \
 }
 
 /// Macro for static type trait checks.
