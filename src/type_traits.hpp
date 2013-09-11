@@ -383,8 +383,8 @@ namespace detail
 template <template <typename ...> class TT>
 struct iio_converter
 {
-     template <typename ... Args>
-     iio_converter(const TT<Args ...> &);
+	template <typename ... Args>
+	iio_converter(const TT<Args ...> &);
 };
 
 }
