@@ -31,6 +31,7 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/integer_traits.hpp>
 #include <cmath>
+#include <complex>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -114,7 +115,6 @@ struct check_is_zero_01
 	void operator()(const T &value) const
 	{
 		BOOST_CHECK(math::is_zero(value));
-		BOOST_CHECK(math::is_zero(std::complex<T>(value)));
 	}
 };
 
@@ -124,7 +124,6 @@ struct check_is_zero_02
 	void operator()(const T &value) const
 	{
 		BOOST_CHECK(!math::is_zero(value));
-		BOOST_CHECK(!math::is_zero(std::complex<T>(value)));
 	}
 };
 
@@ -174,7 +173,12 @@ BOOST_AUTO_TEST_CASE(math_is_zero_test)
 	BOOST_CHECK(has_is_zero<const double &>::value);
 	BOOST_CHECK(has_is_zero<unsigned>::value);
 	BOOST_CHECK(has_is_zero<std::complex<double>>::value);
+	BOOST_CHECK(has_is_zero<std::complex<long double>>::value);
 	BOOST_CHECK(has_is_zero<std::complex<float>>::value);
+	BOOST_CHECK(math::is_zero(std::complex<double>(0.)));
+	BOOST_CHECK(math::is_zero(std::complex<double>(0.,0.)));
+	BOOST_CHECK(!math::is_zero(std::complex<double>(1.)));
+	BOOST_CHECK(!math::is_zero(std::complex<double>(1.,-1.)));
 	BOOST_CHECK(!has_is_zero<std::string>::value);
 	BOOST_CHECK((!has_is_zero<trivial>::value));
 	BOOST_CHECK((!has_is_zero<trivial &>::value));
@@ -297,6 +301,9 @@ BOOST_AUTO_TEST_CASE(math_partial_test)
 BOOST_AUTO_TEST_CASE(math_evaluate_test)
 {
 	BOOST_CHECK_EQUAL(math::evaluate(5,std::unordered_map<std::string,double>{}),5);
+	BOOST_CHECK_EQUAL(math::evaluate(std::complex<float>(5.,4.),std::unordered_map<std::string,double>{}),std::complex<float>(5.,4.));
+	BOOST_CHECK_EQUAL(math::evaluate(std::complex<double>(5.,4.),std::unordered_map<std::string,double>{}),std::complex<double>(5.,4.));
+	BOOST_CHECK_EQUAL(math::evaluate(std::complex<long double>(5.,4.),std::unordered_map<std::string,double>{}),std::complex<long double>(5.,4.));
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5,std::unordered_map<std::string,double>{})),int>::value));
 	BOOST_CHECK_EQUAL(math::evaluate(5.,std::unordered_map<std::string,int>{}),5.);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,std::unordered_map<std::string,short>{})),double>::value));

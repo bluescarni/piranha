@@ -23,8 +23,8 @@
 
 #include <algorithm>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/type_traits/is_complex.hpp>
 #include <cmath>
+#include <complex>
 #include <cstdarg>
 #include <initializer_list>
 #include <iterator>
@@ -110,9 +110,10 @@ struct is_zero_impl
 	}
 };
 
-/// Specialisation of the piranha::math::is_zero() functor for C++ complex types.
+/// Specialisation of the piranha::math::is_zero() functor for C++ complex floating-point types.
 template <typename T>
-struct is_zero_impl<T,typename std::enable_if<boost::is_complex<T>::value>::type>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,std::complex<float>>::value ||
+	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -522,13 +523,14 @@ template <typename T, typename Enable = void>
 struct evaluate_impl
 {};
 
-/// Specialisation of the piranha::math::evaluate() functor for arithmetic types.
+/// Specialisation of the piranha::math::evaluate() functor for (complex) arithmetic types.
 /**
- * This specialisation is activated when \p T is a C++ arithmetic type.
+ * This specialisation is activated when \p T is a C++ arithmetic type, or \p std::complex of a floating-point type.
  * The result will be the input value unchanged.
  */
 template <typename T>
-struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<T,std::complex<float>>::value ||
+	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type>
 {
 	/// Call operator.
 	/**
