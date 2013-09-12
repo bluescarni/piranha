@@ -23,7 +23,6 @@
 #define BOOST_TEST_MODULE static_vector_test
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
@@ -38,7 +37,6 @@
 #include <string>
 #include <type_traits>
 
-#include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/integer.hpp"
 #include "../src/type_traits.hpp"
@@ -475,88 +473,3 @@ BOOST_AUTO_TEST_CASE(static_vector_hash_test)
 {
 	boost::mpl::for_each<value_types>(hash_tester());
 }
-
-#if defined(PIRANHA_ENABLE_VECTORIZATION)
-
-using v_type = static_vector<std::int8_t,14>;
-
-namespace piranha
-{
-
-template <>
-class debug_access<v_type>
-{
-	public:
-		void operator()() const
-		{
-			v_type v1;
-			BOOST_CHECK(v1.size() == 0u);
-			BOOST_CHECK(is_container_element<v_type>::value);
-			BOOST_CHECK(std::all_of(v1.m_storage,v1.m_storage + v1.max_size,[](v_type::value_type c){return c == 0;}));
-			v_type v2(v1);
-			BOOST_CHECK(v2.size() == 0u);
-			BOOST_CHECK(std::all_of(v2.m_storage,v2.m_storage + v2.max_size,[](v_type::value_type c){return c == 0;}));
-			BOOST_CHECK(v1.begin() == v1.end());
-			BOOST_CHECK(static_cast<v_type const &>(v1).begin() == static_cast<v_type const &>(v1).end());
-			BOOST_CHECK(v1.begin() == static_cast<v_type const &>(v1).end());
-			v_type v3(4,5);
-			BOOST_CHECK(v3.size() == 4u);
-			BOOST_CHECK(std::all_of(v3.begin(),v3.end(),[](v_type::value_type c){return c == 5;}));
-			BOOST_CHECK(std::all_of(v3.m_storage + 4,v3.m_storage + v3.max_size,
-				[](v_type::value_type c){return c == 0;}));
-			BOOST_CHECK(v3[0] == 5);
-			BOOST_CHECK(v3[1] == 5);
-			BOOST_CHECK(static_cast<v_type const &>(v3)[2] == 5);
-			v_type v4(std::move(v3));
-			BOOST_CHECK(v4.size() == 4u);
-			BOOST_CHECK(std::all_of(v4.begin(),v4.end(),[](v_type::value_type c){return c == 5;}));
-			BOOST_CHECK(std::all_of(v4.m_storage + 4,v4.m_storage + v4.max_size,
-				[](v_type::value_type c){return c == 0;}));
-			BOOST_CHECK(v4 == v3);
-			BOOST_CHECK(!(v4 != v3));
-			v_type::value_type tmp(1);
-			v4.push_back(tmp);
-			BOOST_CHECK(v4 != v3);
-			BOOST_CHECK(!(v4 == v3));
-			BOOST_CHECK(v4.size() == 5u);
-			BOOST_CHECK(v4[4] == 1);
-			v4.push_back(std::move(tmp));
-			BOOST_CHECK(v4 != v3);
-			BOOST_CHECK(!(v4 == v3));
-			BOOST_CHECK(v4.size() == 6u);
-			BOOST_CHECK(v4[5] == 1);
-			v4.emplace_back(7.);
-			BOOST_CHECK(v4 != v3);
-			BOOST_CHECK(!(v4 == v3));
-			BOOST_CHECK(v4.size() == 7u);
-			BOOST_CHECK(v4[6] == v_type::value_type(7.));
-			v_type v5(v4.max_size,2);
-			BOOST_CHECK_THROW(v5.push_back(tmp),std::bad_alloc);
-			BOOST_CHECK_THROW(v5.push_back(std::move(tmp)),std::bad_alloc);
-			BOOST_CHECK_THROW(v5.emplace_back(8.),std::bad_alloc);
-			BOOST_CHECK_THROW(v5.resize(static_cast<v_type::size_type>(v4.max_size + 1u)),std::bad_alloc);
-			v5.resize(2);
-			BOOST_CHECK(v5.size() == 2u);
-			BOOST_CHECK(v5[0] == 2);
-			BOOST_CHECK(v5[1] == 2);
-			BOOST_CHECK(std::all_of(v5.m_storage + 2,v5.m_storage + v5.max_size,
-				[](v_type::value_type c){return c == 0;}));
-			v5.resize(3);
-			BOOST_CHECK(v5.size() == 3u);
-			BOOST_CHECK(v5[0] == 2);
-			BOOST_CHECK(v5[1] == 2);
-			BOOST_CHECK(v5[2] == 0);
-			BOOST_CHECK(std::all_of(v5.m_storage + 3,v5.m_storage + v5.max_size,
-				[](v_type::value_type c){return c == 0;}));
-			std::cout << v5.hash() << '\n';
-		}
-};
-
-}
-
-BOOST_AUTO_TEST_CASE(static_vector_vectorization_test)
-{
-	debug_access<v_type>{}();
-}
-
-#endif
