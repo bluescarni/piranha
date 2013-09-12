@@ -6,6 +6,8 @@ class exposer
 		PIRANHA_DECLARE_HAS_TYPEDEF(interop_types);
 		// Detect the presence of pow types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(pow_types);
+		// Detect the presence of evaluation types.
+		PIRANHA_DECLARE_HAS_TYPEDEF(eval_types);
 		// for_each tuple algorithm.
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
@@ -195,6 +197,41 @@ class exposer
 		template <typename S, typename T = Descriptor>
 		static void expose_pow(bp::class_<S> &, typename std::enable_if<!has_typedef_pow_types<T>::value>::type * = nullptr)
 		{}
+		// Evaluation.
+		template <typename S>
+		struct eval_exposer
+		{
+			eval_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
+			bp::class_<S> &m_series_class;
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<is_evaluable<S,T>::value>::type * = nullptr) const
+			{
+				m_series_class.def("_evaluate",evaluate_wrapper<S,T>);
+			}
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<!is_evaluable<S,T>::value>::type * = nullptr) const
+			{}
+		};
+		template <typename S, typename T>
+		static auto evaluate_wrapper(const S &s, bp::dict dict, const T &) -> decltype(s.evaluate(std::declval<std::unordered_map<std::string,T>>()))
+		{
+			std::unordered_map<std::string,T> cpp_dict;
+			bp::stl_input_iterator<std::string> it(dict), end;
+			for (; it != end; ++it) {
+				cpp_dict[*it] = bp::extract<T>(dict[*it])();
+			}
+			return s.evaluate(cpp_dict);
+		}
+		template <typename S, typename T = Descriptor>
+		static void expose_eval(bp::class_<S> &series_class, typename std::enable_if<has_typedef_eval_types<T>::value>::type * = nullptr)
+		{
+			using eval_types = typename Descriptor::eval_types;
+			eval_types et;
+			tuple_for_each(et,eval_exposer<S>(series_class));
+		}
+		template <typename S, typename T = Descriptor>
+		static void expose_eval(bp::class_<S> &, typename std::enable_if<!has_typedef_eval_types<T>::value>::type * = nullptr)
+		{}
 		// Interaction with interoperable types.
 		template <typename S>
 		struct interop_exposer
@@ -276,6 +313,8 @@ class exposer
 				expose_interoperable(series_class);
 				// Expose pow.
 				expose_pow(series_class);
+				// Evaluate.
+				expose_eval(series_class);
 			}
 			const std::string &m_name;
 		};

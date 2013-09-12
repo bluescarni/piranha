@@ -199,9 +199,11 @@ BOOST_PYTHON_MODULE(_core)
 			std::tuple<real,signed char>,std::tuple<real,short>,std::tuple<real,kronecker_monomial<>>>;
 		using interop_types = std::tuple<double,rational,integer,real>;
 		using pow_types = std::tuple<double,integer>;
+		using eval_types = std::tuple<double,integer,real,rational>;
 		// Need to instantiate these to silence a warning in GCC.
 		interop_types	it;
 		pow_types	pt;
+		eval_types	et;
 	};
 	exposer<polynomial,poly_desc> poly_exposer("polynomial");
 	struct ps_desc
