@@ -4,6 +4,8 @@ class exposer
 		using params = typename Descriptor::params;
 		// Detect the presence of interoperable types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(interop_types);
+		// Detect the presence of pow types.
+		PIRANHA_DECLARE_HAS_TYPEDEF(pow_types);
 		// for_each tuple algorithm.
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
@@ -164,33 +166,47 @@ class exposer
 			interop_exposer<S,I + 1u,T...>(series_class,t);*/
 		}
 		// Exponentiation support.
+		template <typename S>
+		struct pow_exposer
+		{
+			pow_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
+			bp::class_<S> &m_series_class;
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<is_exponentiable<S,T>::value>::type * = nullptr) const
+			{
+				m_series_class.def("__pow__",pow_wrapper<S,T>);
+			}
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<!is_exponentiable<S,T>::value>::type * = nullptr) const
+			{}
+		};
 		template <typename T, typename U>
 		static auto pow_wrapper(const T &s, const U &x) -> decltype(math::pow(s,x))
 		{
 			return math::pow(s,x);
 		}
-		template <typename U, typename T>
-		static void expose_pow(bp::class_<T> &series_class,
-			typename std::enable_if<is_exponentiable<T,U>::value>::type * = nullptr)
+		template <typename S, typename T = Descriptor>
+		static void expose_pow(bp::class_<S> &series_class, typename std::enable_if<has_typedef_pow_types<T>::value>::type * = nullptr)
 		{
-			series_class.def("__pow__",pow_wrapper<T,U>);
+			using pow_types = typename Descriptor::pow_types;
+			pow_types pt;
+			tuple_for_each(pt,pow_exposer<S>(series_class));
 		}
-		template <typename U, typename T>
-		static void expose_pow(bp::class_<T> &,
-			typename std::enable_if<!is_exponentiable<T,U>::value>::type * = nullptr)
+		template <typename S, typename T = Descriptor>
+		static void expose_pow(bp::class_<S> &, typename std::enable_if<!has_typedef_pow_types<T>::value>::type * = nullptr)
 		{}
+		// Interaction with interoperable types.
 		template <typename S>
 		struct interop_exposer
 		{
 			interop_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
+			bp::class_<S> &m_series_class;
 			template <typename T>
 			void operator()(const T &) const
 			{
 				expose_ctor<const T &>(m_series_class);
 				expose_arithmetics<T>(m_series_class);
-				expose_pow<T>(m_series_class);
 			}
-			bp::class_<S> &m_series_class;
 		};
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &series_class, typename std::enable_if<has_typedef_interop_types<T>::value>::type * = nullptr)
@@ -258,6 +274,8 @@ class exposer
 				series_class.def(-bp::self);
 				// Expose interoperable types.
 				expose_interoperable(series_class);
+				// Expose pow.
+				expose_pow(series_class);
 			}
 			const std::string &m_name;
 		};
