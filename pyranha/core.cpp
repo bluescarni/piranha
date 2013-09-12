@@ -114,6 +114,12 @@ using p_real_short = polynomial<real,short>;
 PYRANHA_DECLARE_P_DESCRIPTOR(p_real_short,polynomial_real_short)
 using p_real_sc = polynomial<real,signed char>;
 PYRANHA_DECLARE_P_DESCRIPTOR(p_real_sc,polynomial_real_signed_char)
+using p_double_k = polynomial<double,kronecker_monomial<>>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_double_k,polynomial_double_kronecker)
+using p_real_k = polynomial<real,kronecker_monomial<>>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_real_k,polynomial_real_kronecker)
+using p_rational_k = polynomial<rational,kronecker_monomial<>>;
+PYRANHA_DECLARE_P_DESCRIPTOR(p_rational_k,polynomial_rational_kronecker)
 
 #undef PYRANHA_DECLARE_P_DESCRIPTOR
 
@@ -208,9 +214,16 @@ BOOST_PYTHON_MODULE(_core)
 	exposer<polynomial,poly_desc> poly_exposer("polynomial");
 	struct ps_desc
 	{
-		using params = std::tuple<std::tuple<double>,std::tuple<rational>,std::tuple<real>,std::tuple<polynomial<rational,signed char>>,
-			std::tuple<polynomial<rational,short>>,std::tuple<polynomial<double,signed char>>,std::tuple<polynomial<double,short>>,
-			std::tuple<polynomial<real,signed char>>,std::tuple<polynomial<real,short>>>;
+		using params = std::tuple<std::tuple<double>,std::tuple<rational>,std::tuple<real>,
+			std::tuple<polynomial<double,signed char>>,std::tuple<polynomial<double,short>>,std::tuple<polynomial<double,kronecker_monomial<>>>,
+			std::tuple<polynomial<rational,signed char>>,std::tuple<polynomial<rational,short>>,std::tuple<polynomial<rational,kronecker_monomial<>>>,
+			std::tuple<polynomial<real,signed char>>,std::tuple<polynomial<real,short>>,std::tuple<polynomial<real,kronecker_monomial<>>>>;
+		using interop_types = std::tuple<double,rational,integer,real>;
+		using pow_types = std::tuple<double,integer>;
+		using eval_types = std::tuple<double,real,rational>;
+		interop_types	it;
+		pow_types	pt;
+		eval_types	et;
 	};
 	exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
 /*
