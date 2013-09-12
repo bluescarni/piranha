@@ -71,6 +71,9 @@ namespace piranha
  * monomial classes arises.
  * \todo think about modifying the arithmetic functors to return integer when operating on integral values, to avoid possible overflows
  * when computing degree and friends. This change could go into detail/degree_commons to propagate it everywhere.
+ * \todo consider disabling exponentiation if exponent is an integral or integer and the exponent is floating point or real, or something
+ * along these lines. Probably we need that in general (i.e., also for coefficients) in order to avoid surprises when ints interact with
+ * floats and are then cast back to int.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
