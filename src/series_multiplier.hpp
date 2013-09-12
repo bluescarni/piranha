@@ -27,8 +27,8 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
-#include <forward_list>
 #include <iterator>
+#include <list>
 #include <mutex>
 #include <new> // For bad_alloc.
 #include <numeric>
@@ -277,21 +277,16 @@ class series_multiplier
 				return retval;
 			} else {
 				// Build the return values and the multiplication functors.
-				std::forward_list<return_type,cache_aligning_allocator<return_type>> retval_list;
-				std::forward_list<Functor,cache_aligning_allocator<Functor>> functor_list;
+				std::list<return_type,cache_aligning_allocator<return_type>> retval_list;
+				std::list<Functor,cache_aligning_allocator<Functor>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
-					retval_list.push_front(return_type{});
-					retval_list.front().m_symbol_set = m_s1->m_symbol_set;
-					functor_list.push_front(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,retval_list.front()));
+					retval_list.push_back(return_type{});
+					retval_list.back().m_symbol_set = m_s1->m_symbol_set;
+					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,retval_list.back()));
 				}
-				// NOTE: here it is not clear if this is necessary at all, but keep it at the moment for retro
-				// compatibility: earlier versions used list (instead of forward_list) and push_back() (instead of
-				// push_front()), so the elements would be pushed in in the opposite order.
-				functor_list.reverse();
-				retval_list.reverse();
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
 				task_group tg;
@@ -322,10 +317,19 @@ class series_multiplier
 				if (unlikely(!final_estimate)) {
 					final_estimate = 1u;
 				}
-				// Rehash to the desired value, corrected for max load factor.
-				retval.m_container.rehash(
-					boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(final_estimate) / retval.m_container.max_load_factor()))
-				);
+				// Try to see if a series already has enough buckets.
+				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {
+					return static_cast<double>(r.m_container.bucket_count()) * r.m_container.max_load_factor() >= final_estimate;
+				});
+				if (it != retval_list.end()) {
+					retval = std::move(*it);
+					retval_list.erase(it);
+				} else {
+					// Otherwise, just rehash to the desired value, corrected for max load factor.
+					retval.m_container.rehash(
+						boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(final_estimate) / retval.m_container.max_load_factor()))
+					);
+				}
 				// Cleanup functor that will erase all elements in retval_list.
 				auto cleanup = [&retval_list]() {
 					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) {r.m_container.clear();});
@@ -683,8 +687,7 @@ class series_multiplier
 			container_type idx(size);
 			task_group tg1;
 			size_type i = 0u;
-			piranha_assert(static_cast<typename std::make_unsigned<decltype(std::distance(retval_list.begin(),retval_list.end()))>::type>(
-				std::distance(retval_list.begin(),retval_list.end())) <= n_threads);
+			piranha_assert(retval_list.size() <= n_threads);
 			try {
 				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
 					auto f = [&idx,&retval,i,r_it]() {
