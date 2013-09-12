@@ -8,6 +8,8 @@ class exposer
 		PIRANHA_DECLARE_HAS_TYPEDEF(pow_types);
 		// Detect the presence of evaluation types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(eval_types);
+		// Detect the presence of substitution types.
+		PIRANHA_DECLARE_HAS_TYPEDEF(subs_types);
 		// for_each tuple algorithm.
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
@@ -232,6 +234,31 @@ class exposer
 		template <typename S, typename T = Descriptor>
 		static void expose_eval(bp::class_<S> &, typename std::enable_if<!has_typedef_eval_types<T>::value>::type * = nullptr)
 		{}
+		// Substitution.
+		template <typename S>
+		struct subs_exposer
+		{
+			subs_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
+			bp::class_<S> &m_series_class;
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<has_subs<S,T>::value>::type * = nullptr) const
+			{
+				m_series_class.def("_subs",&S::template subs<T>);
+			}
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<!has_subs<S,T>::value>::type * = nullptr) const
+			{}
+		};
+		template <typename S, typename T = Descriptor>
+		static void expose_subs(bp::class_<S> &series_class, typename std::enable_if<has_typedef_subs_types<T>::value>::type * = nullptr)
+		{
+			using subs_types = typename Descriptor::subs_types;
+			subs_types st;
+			tuple_for_each(st,subs_exposer<S>(series_class));
+		}
+		template <typename S, typename T = Descriptor>
+		static void expose_subs(bp::class_<S> &, typename std::enable_if<!has_typedef_subs_types<T>::value>::type * = nullptr)
+		{}
 		// Interaction with interoperable types.
 		template <typename S>
 		struct interop_exposer
@@ -315,6 +342,8 @@ class exposer
 				expose_pow(series_class);
 				// Evaluate.
 				expose_eval(series_class);
+				// Subs.
+				expose_subs(series_class);
 			}
 			const std::string &m_name;
 		};

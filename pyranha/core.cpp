@@ -203,13 +203,15 @@ BOOST_PYTHON_MODULE(_core)
 			std::tuple<integer,signed char>,std::tuple<integer,short>,std::tuple<integer,kronecker_monomial<>>,
 			std::tuple<rational,signed char>,std::tuple<rational,short>,std::tuple<rational,kronecker_monomial<>>,
 			std::tuple<real,signed char>,std::tuple<real,short>,std::tuple<real,kronecker_monomial<>>>;
-		using interop_types = std::tuple<double,rational,integer,real>;
+		using interop_types = std::tuple<double,integer,real,rational>;
 		using pow_types = std::tuple<double,integer>;
-		using eval_types = std::tuple<double,integer,real,rational>;
-		// Need to instantiate these to silence a warning in GCC.
+		using eval_types = interop_types;
+		using subs_types = interop_types;
+		// Need to refer to these to silence a warning in GCC.
 		interop_types	it;
 		pow_types	pt;
 		eval_types	et;
+		subs_types	st;
 	};
 	exposer<polynomial,poly_desc> poly_exposer("polynomial");
 	struct ps_desc
@@ -221,9 +223,11 @@ BOOST_PYTHON_MODULE(_core)
 		using interop_types = std::tuple<double,rational,integer,real>;
 		using pow_types = std::tuple<double,integer>;
 		using eval_types = std::tuple<double,real,rational>;
+		using subs_types = eval_types;
 		interop_types	it;
 		pow_types	pt;
 		eval_types	et;
+		subs_types	st;
 	};
 	exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
 /*
