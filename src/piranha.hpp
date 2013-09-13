@@ -156,6 +156,7 @@ namespace detail {}
 #include "task_group.hpp"
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
+#include "thread_pool.hpp"
 #include "tracing.hpp"
 #include "trigonometric_series.hpp"
 #include "type_traits.hpp"
