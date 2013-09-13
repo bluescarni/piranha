@@ -677,18 +677,7 @@ class static_vector<std::int8_t,14u>
 		}
 		bool operator==(const static_vector &other) const
 		{
-			//return (m_size == other.m_size && std::equal(begin(),end(),other.begin()));
-			using vt = ::__m128i;
-			vt a0 = ::_mm_loadl_epi64((vt *)m_storage),
-				a1 = ::_mm_loadl_epi64((vt *)(m_storage + 6)),
-				b0 = ::_mm_loadl_epi64((vt *)(other.m_storage)),
-				b1 = ::_mm_loadl_epi64((vt *)(other.m_storage + 6));
-			vt a0b0 = ::_mm_cmpeq_epi64(a0,b0), a1b1 = ::_mm_cmpeq_epi64(a1,b1);
-			alignas(16) std::int64_t tmp0[2], tmp1[2];
-			::_mm_store_si128((vt *)tmp0,a0b0);
-			::_mm_store_si128((vt *)tmp1,a1b1);
-			return (m_size == other.m_size && tmp0[0] == 0 && tmp0[1] == 0 &&
-				tmp1[0] == 0 && tmp1[1] == 0);
+			return (m_size == other.m_size && std::equal(begin(),end(),other.begin()));
 		}
 		bool operator!=(const static_vector &other) const
 		{
@@ -729,6 +718,39 @@ class static_vector<std::int8_t,14u>
 		}
 		std::size_t hash() const noexcept
 		{
+			using vt = ::__m128i;
+			// Need to set to zero the first two values in the second vector.
+			vt mask0 = ::_mm_set_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,-128,-128);
+			vt a0 = ::_mm_loadl_epi64((vt *)m_storage), a1 = ::_mm_shuffle_epi8(::_mm_loadl_epi64((vt *)(m_storage + 6)),mask0);
+			// First four values of each piece as vectors of 32-bit values.
+			vt a00 = ::_mm_cvtepi8_epi32(a0), a10 = ::_mm_cvtepi8_epi32(a1);
+			// Same for the las four value of each piece, needs shuffling.
+			vt mask1 = ::_mm_set_epi8(-128,-128,-128,-128,-128,-128,-128,-128,-128,-128,-128,-128,7,6,5,4);
+			vt a01 = ::_mm_cvtepi8_epi32(::_mm_shuffle_epi8(a0,mask1)), a11 = ::_mm_cvtepi8_epi32(::_mm_shuffle_epi8(a1,mask1));
+			// Define the hashing vectors.
+			vt h00 = ::_mm_set_epi32(524155093,-1972188127,121159506,-303728460);
+			vt h01 = ::_mm_set_epi32(-1393113045,-411028698,-1585331377,-13103544);
+			vt h10 = ::_mm_set_epi32(-1441212315,-105549561,-1345010015,1838471089);
+			vt h11 = ::_mm_set_epi32(831189884,95775571,-238114836,-765281050);
+			// Compute the products.
+			vt prod00 = ::_mm_mullo_epi32(a00,h00);
+			vt prod01 = ::_mm_mullo_epi32(a01,h01);
+			vt prod10 = ::_mm_mullo_epi32(a10,h10);
+			vt prod11 = ::_mm_mullo_epi32(a11,h11);
+			// Add.
+			vt sum0 = ::_mm_hadd_epi32(prod00,prod01);
+			sum0 = ::_mm_hadd_epi32(sum0,sum0);
+			sum0 = ::_mm_hadd_epi32(sum0,sum0);
+			vt sum1 = ::_mm_hadd_epi32(prod10,prod11);
+			sum1 = ::_mm_hadd_epi32(sum1,sum1);
+			sum1 = ::_mm_hadd_epi32(sum1,sum1);
+			vt sum = ::_mm_hadd_epi32(sum0,sum1);
+			sum = ::_mm_hadd_epi32(sum,sum);
+			sum = ::_mm_hadd_epi32(sum,sum);
+			alignas(16) std::int32_t tmp[4];
+			::_mm_store_si128((vt *)tmp,sum);
+			return static_cast<std::size_t>(tmp[0]);
+
 /*
 			using vt = ::__m128i;
 			vt a0 = ::_mm_cvtepi8_epi16(::_mm_loadl_epi64((vt *)m_storage)),
@@ -750,7 +772,7 @@ class static_vector<std::int8_t,14u>
 			unroller<max_size - std::size_t(1)>([&retval](const_iterator it)
 				{boost::hash_combine(retval,std::hash<value_type>{}(*it));},&m_storage[0u] + 1);
 			return retval;*/
-			return detail::vector_hasher(*this);
+//			return detail::vector_hasher(*this);
 		}
 	private:
 		unsigned char	m_tag;

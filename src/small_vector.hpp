@@ -277,6 +277,10 @@ class dynamic_storage
 			// In any case, we need to update the size.
 			m_size = new_size;
 		}
+		bool operator==(const dynamic_storage &other) const
+		{
+			return (m_size == other.m_size && std::equal(begin(),end(),other.begin()));
+		}
 	private:
 		template <typename ... Args>
 		static void construct(pointer p, Args && ... args)
@@ -734,17 +738,16 @@ class small_vector
 			switch (mask)
 			{
 				case 0u:
-					return m_union.dy.size() == other.m_union.dy.size() &&
-						std::equal(m_union.dy.begin(),m_union.dy.end(),other.m_union.dy.begin());
+					return m_union.dy == other.m_union.dy;
 				case 1u:
 					return m_union.st.size() == other.m_union.dy.size() &&
 						std::equal(m_union.st.begin(),m_union.st.end(),other.m_union.dy.begin());
 				case 2u:
 					return m_union.dy.size() == other.m_union.st.size() &&
 						std::equal(m_union.dy.begin(),m_union.dy.end(),other.m_union.st.begin());
+				default:
+					return m_union.st == other.m_union.st;
 			}
-			return m_union.st.size() == other.m_union.st.size() &&
-				std::equal(m_union.st.begin(),m_union.st.end(),other.m_union.st.begin());
 		}
 		/// Inequality operator.
 		/**
@@ -776,10 +779,12 @@ class small_vector
 			>::type>
 		std::size_t hash() const noexcept
 		{
-			if (m_union.is_static()) {
-				return m_union.st.hash();
-			} else {
-				return m_union.dy.hash();
+			switch (m_union.is_static())
+			{
+				case true:
+					return m_union.st.hash();
+				case false:
+					return m_union.dy.hash();
 			}
 		}
 		/// Resize.
@@ -848,12 +853,44 @@ class small_vector
 			std::is_assignable<value_type &, value_type>::value>::type>
 		void add(small_vector &retval, const small_vector &other) const
 		{
-			const auto s = size();
+/*			const auto s = size();
 			if (unlikely(other.size() != s)) {
 				piranha_throw(std::invalid_argument,"vector size mismatch");
 			}
 			retval.resize(s);
 			std::transform(begin(),end(),other.begin(),retval.begin(),adder<value_type>());
+*/
+#define PIRANHA_SMALL_VECTOR_ADD_IMPL(t1,t2,tr) \
+{ \
+const auto s = m_union.t1.size(); \
+if (unlikely(other.m_union.t2.size() != s)) { \
+	piranha_throw(std::invalid_argument,"vector size mismatch"); \
+} \
+retval.m_union.tr.resize(s); \
+std::transform(m_union.t1.begin(),m_union.t1.end(),other.m_union.t2.begin(),retval.m_union.tr.begin(),adder<value_type>()); \
+break;\
+}
+
+			const unsigned mask = static_cast<unsigned>(m_union.is_static()) +
+				(static_cast<unsigned>(other.m_union.is_static()) << 1u) + (static_cast<unsigned>(retval.m_union.is_static()) << 2u);
+			switch (mask) {
+				case 0u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(dy,dy,dy)
+				case 1u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(st,dy,dy)
+				case 2u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(dy,st,dy)
+				case 3u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(st,st,dy)
+				case 4u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(dy,dy,st)
+				case 5u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(st,dy,st)
+				case 6u:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(dy,st,st)
+				default:
+					PIRANHA_SMALL_VECTOR_ADD_IMPL(st,st,st)
+			}
 		}
 	private:
 		// NOTE: need this to silence warnings when operating on short ints: they will get

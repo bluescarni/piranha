@@ -32,10 +32,10 @@ template <typename Cf,typename Key>
 inline polynomial<Cf,Key> fateman1()
 {
 	typedef polynomial<Cf,Key> p_type;
-	p_type x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1;
+	p_type x("x"), y("y"), z("z"), t("t"), u("u"), v("v"), n("n"), m("m"), o("o"), p("p"), q("q"), r("r");
+	auto f = x + y + z + t + u + v + n + m + o + p + q + r + 1;
 	auto tmp(f);
-	for (auto i = 1; i < 20; ++i) {
+	for (auto i = 1; i < 5; ++i) {
 		f *= tmp;
 	}
 	{

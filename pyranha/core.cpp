@@ -198,6 +198,7 @@ BOOST_PYTHON_MODULE(_core)
 			std::tuple<rational,signed char>,std::tuple<rational,short>,std::tuple<rational,kronecker_monomial<>>,
 			std::tuple<real,signed char>,std::tuple<real,short>,std::tuple<real,kronecker_monomial<>>>;
 		using interop_types = std::tuple<double,rational,integer,real>;
+		using pow_types = std::tuple<double,integer>
 	};
 	exposer<polynomial,poly_desc> poly_exposer("polynomial");
 	struct ps_desc
