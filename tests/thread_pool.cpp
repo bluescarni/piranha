@@ -31,6 +31,8 @@
 
 #include "../src/environment.hpp"
 #include "../src/real.hpp"
+#include "../src/runtime_info.hpp"
+#include "../src/thread_management.hpp"
 
 using namespace piranha;
 
@@ -127,5 +129,28 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	for (int i = 0; i < 100; ++i) {
 		tq.enqueue([](){real{}.pi();});
 	}
+	}
+	// Check the binding.
+	const unsigned hc = runtime_info::get_hardware_concurrency();
+	auto bind_checker = [](unsigned n) {
+		auto res = thread_management::bound_proc();
+		if (!res.first || res.second != n) {
+			throw std::runtime_error("");
+		}
+	};
+	for (unsigned i = 0u; i < hc; ++i) {
+		detail::task_queue tq(i);
+		BOOST_CHECK_NO_THROW(tq.enqueue(bind_checker,i).get());
+	}
+	if (hc != 0) {
+		detail::task_queue tq(hc);
+		BOOST_CHECK_THROW(tq.enqueue(bind_checker,hc).get(),std::runtime_error);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(thread_pool_test)
+{
+	if (thread_pool::size() != 0u) {
+		thread_pool::enqueue(0,[](){});
 	}
 }
