@@ -134,7 +134,6 @@ void thread_management::bind_to_proc(unsigned n)
 		piranha_throw(std::runtime_error,"the call to SetThreadAffinityMask() failed");
 	}
 #else
-	(void)n;
 	piranha_throw(not_implemented_error,"bind_to_proc() is not available on this platform");
 #endif
 }
