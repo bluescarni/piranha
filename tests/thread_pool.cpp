@@ -174,4 +174,11 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 	for (unsigned i = 0u; i < initial_size; ++i) {
 		thread_pool::enqueue(i,[](){}).get();
 	}
+	auto slow_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(250));};
+	if (initial_size != 0u) {
+		thread_pool::resize(1);
+	}
+	thread_pool::enqueue(0,slow_task);
+	thread_pool::resize(2);
+	BOOST_CHECK(thread_pool::size() == 2u);
 }
