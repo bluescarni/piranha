@@ -160,6 +160,7 @@ static inline std::vector<std::unique_ptr<task_queue>> get_initial_thread_queues
 {
 	std::vector<std::unique_ptr<task_queue>> retval;
 	const unsigned hc = runtime_info::get_hardware_concurrency();
+	retval.reserve(static_cast<decltype(retval.size())>(hc));
 	for (unsigned i = 0u; i < hc; ++i) {
 		retval.emplace_back(::new task_queue(i));
 	}
@@ -214,7 +215,7 @@ class thread_pool: private detail::thread_pool_base<>
 		 * @throws unspecified any exception thrown by:
 		 * - threading primitives,
 		 * - memory allocation errors,
-		 * - the copy constructors of \p f or \p args.
+		 * - the constructors of \p f or \p args.
 		 */
 		template <typename F, typename ... Args>
 		static auto enqueue(unsigned n, F &&f, Args && ... args) ->
@@ -262,6 +263,7 @@ class thread_pool: private detail::thread_pool_base<>
 				piranha_throw(std::invalid_argument,"invalid size");
 			}
 			std::vector<std::unique_ptr<detail::task_queue>> new_queues;
+			new_queues.reserve(new_s);
 			for (size_type i = 0u; i < new_s; ++i) {
 				new_queues.emplace_back(::new detail::task_queue(static_cast<unsigned>(i)));
 			}

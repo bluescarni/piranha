@@ -28,6 +28,7 @@
 #include <list>
 #include <stdexcept>
 #include <thread>
+#include <utility>
 
 #include "../src/environment.hpp"
 #include "../src/real.hpp"
@@ -148,9 +149,29 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	}
 }
 
+static int adder(int a, int b)
+{
+	return a + b;
+}
+
 BOOST_AUTO_TEST_CASE(thread_pool_test)
 {
-	if (thread_pool::size() != 0u) {
-		thread_pool::enqueue(0,[](){});
+	const unsigned initial_size = thread_pool::size();
+	if (initial_size != 0u) {
+		BOOST_CHECK(thread_pool::enqueue(0,adder,1,2).get() == 3);
+		thread_pool::enqueue(0,[](){std::this_thread::sleep_for(std::chrono::milliseconds(100));});
+		BOOST_CHECK(thread_pool::enqueue(0,adder,4,-5).get() == -1);
+		BOOST_CHECK_THROW(thread_pool::enqueue(initial_size,adder,4,-5),std::invalid_argument);
+		BOOST_CHECK(thread_pool::enqueue(0,[](){return thread_management::bound_proc();}).get() == std::make_pair(true,0u));
+		BOOST_CHECK_THROW(thread_pool::enqueue(0,[](){throw std::runtime_error("");}).get(),std::runtime_error);
+	}
+	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
+	for (unsigned i = 0u; i < initial_size; ++i) {
+		for (int n = 0; n < 1000; ++n) {
+			thread_pool::enqueue(i,fast_task,n);
+		}
+	}
+	for (unsigned i = 0u; i < initial_size; ++i) {
+		thread_pool::enqueue(i,[](){}).get();
 	}
 }
