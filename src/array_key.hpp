@@ -78,7 +78,7 @@ const bool is_array_key_value_type<T>::value;
 /**
  * Key type represented by an array-like sequence of instances of type \p T. Interface and semantics
  * mimic those of \p std::vector. The underlying container used to store the elements is piranha::small_vector.
- * The variadic arguments pack \p Args is passed down as second argument to piranha::small_vector in the definition
+ * The template argument \p S is passed down as second argument to piranha::small_vector in the definition
  * of the internal container.
  * 
  * \section type_requirements Type requirements
@@ -86,7 +86,7 @@ const bool is_array_key_value_type<T>::value;
  * - \p T must satisfy piranha::is_array_key_value_type,
  * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
  * - \p Derived must satisfy the piranha::is_container_element type trait.
- * - \p Args must be suitable as second template argument to piranha::small_vector.
+ * - \p S must be suitable as second template argument to piranha::small_vector.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -101,13 +101,13 @@ const bool is_array_key_value_type<T>::value;
  * \todo think about introducing range-checking in element access not only in debug mode, to make it completely
  * safe to use.
  */
-template <typename T, typename Derived, typename ... Args>
+template <typename T, typename Derived, typename S = std::integral_constant<std::size_t,0u>>
 class array_key
 {
 		PIRANHA_TT_CHECK(is_array_key_value_type,T);
 		template <typename U>
 		friend class debug_access;
-		using container_type = small_vector<T,Args...>;
+		using container_type = small_vector<T,S>;
 	public:
 		/// Value type.
 		using value_type = typename container_type::value_type;
@@ -175,10 +175,10 @@ class array_key
 		 * - piranha::small_vector::push_back(),
 		 * - construction of piranha::array_key::value_type from \p U.
 		 */
-		template <typename U, typename Derived2, typename ... Args2, typename = typename std::enable_if<
+		template <typename U, typename Derived2, typename S2, typename = typename std::enable_if<
 			std::is_constructible<value_type,U const &>::value
 			>::type>
-		explicit array_key(const array_key<U,Derived2,Args2...> &other, const symbol_set &args)
+		explicit array_key(const array_key<U,Derived2,S2> &other, const symbol_set &args)
 		{
 			if (unlikely(other.size() != args.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
@@ -466,13 +466,13 @@ namespace std
 {
 
 /// Specialisation of \p std::hash for piranha::array_key.
-template <typename T, typename Derived, typename ... Args>
-struct hash<piranha::array_key<T,Derived,Args...>>
+template <typename T, typename Derived, typename S>
+struct hash<piranha::array_key<T,Derived,S>>
 {
 	/// Result type.
 	typedef size_t result_type;
 	/// Argument type.
-	typedef piranha::array_key<T,Derived,Args...> argument_type;
+	typedef piranha::array_key<T,Derived,S> argument_type;
 	/// Hash operator.
 	/**
 	 * @param[in] a piranha::array_key whose hash value will be returned.

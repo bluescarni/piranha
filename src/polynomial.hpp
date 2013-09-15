@@ -76,7 +76,7 @@ struct polynomial_tag {};
 /**
  * This class represents multivariate polynomials as collections of multivariate polynomial terms
  * (represented by the piranha::polynomial_term class). The coefficient
- * type \p Cf represents the ring over which the polynomial is defined, while \p Arg0 and \p Args are used
+ * type \p Cf represents the ring over which the polynomial is defined, while \p Expo and \p S are used
  * to represent the exponent type and representation in the same way as explained in the documentation of
  * piranha::polynomial_term.
  *
@@ -103,7 +103,7 @@ struct polynomial_tag {};
  * 
  * \section type_requirements Type requirements
  * 
- * \p Cf, \p Arg0 and \p Args must be suitable for use in piranha::polynomial_term.
+ * \p Cf, \p Expo and \p S must be suitable for use in piranha::polynomial_term.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -111,17 +111,17 @@ struct polynomial_tag {};
  * 
  * \section move_semantics Move semantics
  * 
- * Move semantics is equivalent to piranha::power_series's move semantics.
+ * Move semantics is equivalent to piranha::power_series' move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
  * This is useful to simplify the notation, and needs not to be done for lower level methods in keys.
  */
-template <typename Cf, typename Arg0, typename ... Args>
+template <typename Cf, typename Expo, typename S = std::integral_constant<std::size_t,0u>>
 class polynomial:
-	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Arg0,Args...>,
-	polynomial<Cf,Arg0,Args...>>,polynomial<Cf,Arg0,Args...>>>>,detail::polynomial_tag
+	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
+	polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>>,detail::polynomial_tag
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -129,8 +129,8 @@ class polynomial:
 		// Make friend with Poisson series.
 		template <typename T>
 		friend class poisson_series;
-		using base = power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Arg0,Args...>,
-			polynomial<Cf,Arg0,Args...>>,polynomial<Cf,Arg0,Args...>>>>;
+		using base = power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
+			polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>>;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -224,7 +224,7 @@ class polynomial:
 		// and that exponentiation of key type is legal.
 		template <typename T, typename Series>
 		using pow_ret_type = decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()),void(),
-			std::declval<series<polynomial_term<Cf,Arg0,Args...>,polynomial<Cf,Arg0,Args...>> const &>().pow(std::declval<const T &>()));
+			std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()));
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -337,7 +337,7 @@ class polynomial:
 				retval.insert(term_type(std::move(cf),std::move(key)));
 				return retval;
 			}
-			return static_cast<series<polynomial_term<Cf,Arg0,Args...>,polynomial<Cf,Arg0,Args...>> const *>(this)->pow(x);
+			return static_cast<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const *>(this)->pow(x);
 		}
 		/// Substitution.
 		/**

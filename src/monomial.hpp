@@ -57,7 +57,7 @@ namespace piranha
  * 
  * \section type_requirements Type requirements
  * 
- * \p T and \p Args must be suitable for use as first and third template arguments in piranha::array_key.
+ * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -77,10 +77,10 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename T, typename ... Args>
-class monomial: public array_key<T,monomial<T,Args...>,Args...>
+template <typename T, typename S = std::integral_constant<std::size_t,0u>>
+class monomial: public array_key<T,monomial<T,S>,S>
 {
-		using base = array_key<T,monomial<T,Args...>,Args...>;
+		using base = array_key<T,monomial<T,S>,S>;
 		// Eval and subs type definition.
 		template <typename U, typename = void>
 		struct eval_type {};
@@ -716,8 +716,8 @@ namespace std
 /**
  * Functionally equivalent to the \p std::hash specialisation for piranha::array_key.
  */
-template <typename T, typename ... Args>
-struct hash<piranha::monomial<T,Args...>>: public hash<piranha::array_key<T,piranha::monomial<T,Args...>,Args...>> {};
+template <typename T, typename S>
+struct hash<piranha::monomial<T,S>>: public hash<piranha::array_key<T,piranha::monomial<T,S>,S>> {};
 
 }
 

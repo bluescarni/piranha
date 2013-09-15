@@ -43,20 +43,20 @@ namespace piranha
 namespace detail
 {
 
-template <typename Arg0, typename ... Args>
+template <typename T, typename S>
 struct polynomial_term_key
 {
-	typedef monomial<Arg0,Args...> type;
+	typedef monomial<T,S> type;
 };
 
-template <typename T>
-struct polynomial_term_key<univariate_monomial<T>>
+template <typename T, typename S>
+struct polynomial_term_key<univariate_monomial<T>,S>
 {
 	typedef univariate_monomial<T> type;
 };
 
-template <typename T>
-struct polynomial_term_key<kronecker_monomial<T>>
+template <typename T, typename S>
+struct polynomial_term_key<kronecker_monomial<T>,S>
 {
 	typedef kronecker_monomial<T> type;
 };
@@ -68,9 +68,9 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * This class extends piranha::base_term for use in polynomials. The coefficient type \p Cf is generic,
  * the key type is determined as follows:
  * 
- * - if \p Arg0 is piranha::univariate_monomial of \p T and \p Args is empty, the key will also be piranha::univariate_monomial of \p T,
- * - if \p Arg0 is piranha::kronecker_monomial of \p T and \p Args is empty, the key will also be piranha::kronecker_monomial of \p T,
- * - otherwise, the key will be piranha::monomial of \p Args and \p Arg0.
+ * - if \p Expo is piranha::univariate_monomial of \p T, the key will also be piranha::univariate_monomial of \p T,
+ * - if \p Expo is piranha::kronecker_monomial of \p T, the key will also be piranha::kronecker_monomial of \p T,
+ * - otherwise, the key will be piranha::monomial of \p Expo and \p S.
  * 
  * Examples:
  * @code
@@ -97,7 +97,7 @@ struct polynomial_term_key<kronecker_monomial<T>>
  * - \p Cf must satisfy the following type traits:
  *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
  *   - piranha::has_multiply_accumulate.
- * - \p Arg0 and \p Args must be suitable for use in piranha::monomial, or \p Args must be empty and \p Arg0 an instance of
+ * - \p Expo and \p S must be suitable for use in piranha::monomial, or \p Expo must be an instance of
  *   piranha::univariate_monomial or piranha::kronecker_monomial.
  * 
  * \section exception_safety Exception safety guarantee
@@ -112,13 +112,13 @@ struct polynomial_term_key<kronecker_monomial<T>>
  *
  * \todo sfinaeing or something analogous for the multiplication method, once we sort out series multiplication.
  */
-template <typename Cf, typename Arg0, typename ... Args>
-class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<Arg0,Args...>::type,polynomial_term<Cf,Arg0,Args...>>
+template <typename Cf, typename Expo, typename S = std::integral_constant<std::size_t,0u>>
+class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<Expo,S>::type,polynomial_term<Cf,Expo,S>>
 {
 		PIRANHA_TT_CHECK(is_multipliable,Cf);
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
-		using base = base_term<Cf,typename detail::polynomial_term_key<Arg0,Args...>::type,polynomial_term<Cf,Arg0,Args...>>;
+		using base = base_term<Cf,typename detail::polynomial_term_key<Expo,S>::type,polynomial_term<Cf,Expo,S>>;
 		// MP for enabling partial derivative.
 		template <typename Cf2, typename Key2, typename = void>
 		struct partial_enabler
@@ -179,7 +179,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		 * - the multiplication operators of the coefficient types.
 		 */
 		template <typename Cf2>
-		void multiply(polynomial_term &retval, const polynomial_term<Cf2,Arg0,Args...> &other, const symbol_set &args) const
+		void multiply(polynomial_term &retval, const polynomial_term<Cf2,Expo,S> &other, const symbol_set &args) const
 		{
 			cf_mult_impl(retval,other);
 			this->m_key.multiply(retval.m_key,other.m_key,args);
@@ -229,7 +229,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 	private:
 		// Overload if no coefficient is series.
 		template <typename Cf2>
-		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,Arg0,Args...> &other,
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,Expo,S> &other,
 			typename std::enable_if<!is_instance_of<Cf,series>::value &&
 			!is_instance_of<Cf2,series>::value>::type * = nullptr) const
 		{
@@ -238,7 +238,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		}
 		// Overload if at least one coefficient is series.
 		template <typename Cf2>
-		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,Arg0,Args...> &other,
+		void cf_mult_impl(polynomial_term &retval, const polynomial_term<Cf2,Expo,S> &other,
 			typename std::enable_if<is_instance_of<Cf,series>::value ||
 			is_instance_of<Cf2,series>::value>::type * = nullptr) const
 		{
