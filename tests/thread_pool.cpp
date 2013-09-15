@@ -24,11 +24,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <boost/integer_traits.hpp>
 #include <chrono>
 #include <list>
 #include <stdexcept>
 #include <thread>
 #include <utility>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/real.hpp"
@@ -181,4 +183,23 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 	thread_pool::enqueue(0,slow_task);
 	thread_pool::resize(2);
 	BOOST_CHECK(thread_pool::size() == 2u);
+	for (unsigned i = 0u; i < 2u; ++i) {
+		thread_pool::enqueue(0u,slow_task);
+		for (int n = 1; n < 1000; ++n) {
+			thread_pool::enqueue(i,fast_task,n);
+		}
+	}
+	BOOST_CHECK(thread_pool::size() == 2u);
+	thread_pool::resize(10u);
+	BOOST_CHECK(thread_pool::size() == 10u);
+	if (initial_size != boost::integer_traits<unsigned>::const_max && initial_size != 0u) {
+		thread_pool::resize(initial_size + 1u);
+		auto func = [](){return thread_management::bound_proc();};
+		std::vector<decltype(thread_pool::enqueue(0u,func))> list;
+		for (unsigned i = 0; i < initial_size + 1u; ++i) {
+			list.push_back(thread_pool::enqueue(i,func));
+		}
+		std::all_of(list.begin(),list.begin() + initial_size,[](decltype(thread_pool::enqueue(0u,func)) &f){return f.get().first;});
+		BOOST_CHECK(!(list.begin() + initial_size)->get().second);
+	}
 }
