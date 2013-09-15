@@ -181,15 +181,15 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 		thread_pool::resize(1);
 	}
 	thread_pool::enqueue(0,slow_task);
-	thread_pool::resize(2);
-	BOOST_CHECK(thread_pool::size() == 2u);
-	for (unsigned i = 0u; i < 2u; ++i) {
+	thread_pool::resize(20u);
+	BOOST_CHECK(thread_pool::size() == 20u);
+	for (unsigned i = 0u; i < 20u; ++i) {
 		thread_pool::enqueue(0u,slow_task);
 		for (int n = 1; n < 1000; ++n) {
 			thread_pool::enqueue(i,fast_task,n);
 		}
 	}
-	BOOST_CHECK(thread_pool::size() == 2u);
+	BOOST_CHECK(thread_pool::size() == 20u);
 	thread_pool::resize(10u);
 	BOOST_CHECK(thread_pool::size() == 10u);
 	if (initial_size != boost::integer_traits<unsigned>::const_max && initial_size != 0u) {

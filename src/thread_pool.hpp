@@ -44,6 +44,8 @@ namespace piranha
 namespace detail
 {
 
+// Task queue class. Inspired by:
+// https://github.com/progschj/ThreadPool
 class task_queue
 {
 		struct runner
