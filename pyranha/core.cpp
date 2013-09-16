@@ -59,6 +59,75 @@
 namespace bp = boost::python;
 using namespace piranha;
 
+template <typename T>
+struct is_integral_constant
+{
+	static const bool value = false;
+};
+
+template <typename T, T N>
+struct is_integral_constant<std::integral_constant<T,N>>
+{
+	static const bool value = true;
+};
+
+template <typename T>
+struct descriptor {};
+
+#define PYRANHA_DECLARE_DESCRIPTOR(type) \
+template <> \
+struct descriptor<type> \
+{ \
+	static std::string name() \
+	{ \
+		return #type; \
+	} \
+};
+
+#define PYRANHA_DECLARE_T_DESCRIPTOR(t_type) \
+template <typename ... Args> \
+struct descriptor<t_type<Args...>> \
+{ \
+	static std::string name() \
+	{ \
+		return std::string(#t_type) + "<" + iterate<Args...>() + ">"; \
+	} \
+	template <typename Arg0, typename ... Args2> \
+	static std::string iterate(typename std::enable_if<sizeof...(Args2) != 0 && !is_integral_constant<Arg0>::value>::type * = nullptr) \
+	{ \
+		const auto tmp1 = descriptor<Arg0>::name(), tmp2 = iterate<Args2...>(); \
+		if (tmp2 == "") { \
+			return tmp1; \
+		} \
+		if (tmp1 == "") { \
+			return tmp2; \
+		} \
+		return tmp1 + "," + tmp2; \
+	} \
+	template <typename Arg0, typename ... Args2> \
+	static std::string iterate(typename std::enable_if<sizeof...(Args2) == 0 && !is_integral_constant<Arg0>::value>::type * = nullptr) \
+	{ \
+		return descriptor<Arg0>::name(); \
+	} \
+	template <typename Arg0> \
+	static std::string iterate (typename std::enable_if<is_integral_constant<Arg0>::value>::type * = nullptr) \
+	{ \
+		return ""; \
+	} \
+};
+
+PYRANHA_DECLARE_DESCRIPTOR(integer)
+PYRANHA_DECLARE_DESCRIPTOR(double)
+PYRANHA_DECLARE_DESCRIPTOR(real)
+PYRANHA_DECLARE_DESCRIPTOR(rational)
+PYRANHA_DECLARE_DESCRIPTOR(signed char)
+PYRANHA_DECLARE_DESCRIPTOR(short)
+PYRANHA_DECLARE_DESCRIPTOR(long)
+PYRANHA_DECLARE_DESCRIPTOR(long long)
+PYRANHA_DECLARE_T_DESCRIPTOR(polynomial)
+PYRANHA_DECLARE_T_DESCRIPTOR(poisson_series)
+PYRANHA_DECLARE_T_DESCRIPTOR(kronecker_monomial)
+
 // Series archive, will store the description of exposed series.
 static std::map<std::string,std::set<std::vector<std::string>>> series_archive;
 
@@ -171,6 +240,10 @@ static inline bp::list get_series_list()
 
 BOOST_PYTHON_MODULE(_core)
 {
+	std::cout << descriptor<integer>::name() << '\n';
+	std::cout << descriptor<polynomial<double,signed char>>::name() << '\n';
+	std::cout << descriptor<poisson_series<polynomial<double,signed char>>>::name() << '\n';
+	std::cout << descriptor<kronecker_monomial<>>::name() << '\n';
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
 	// if the module is loaded from multiple threads.
 	std::lock_guard<std::mutex> lock(global_mutex);
@@ -213,7 +286,7 @@ BOOST_PYTHON_MODULE(_core)
 		eval_types	et;
 		subs_types	st;
 	};
-	exposer<polynomial,poly_desc> poly_exposer("polynomial");
+	//exposer<polynomial,poly_desc> poly_exposer("polynomial");
 	struct ps_desc
 	{
 		using params = std::tuple<std::tuple<double>,std::tuple<rational>,std::tuple<real>,
@@ -229,7 +302,7 @@ BOOST_PYTHON_MODULE(_core)
 		eval_types	et;
 		subs_types	st;
 	};
-	exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
+	//exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
 /*
 	// Polynomials.
 	auto poly_cf_types = std::make_tuple(
