@@ -21,18 +21,6 @@ class exposer
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
 		static void tuple_for_each(const Tuple &, const Op &, typename std::enable_if<Idx == std::tuple_size<Tuple>::value>::type * = nullptr)
 		{}
-		// Turn template parameters into a list of strings, via their p_descriptor<>::name members.
-		template <typename Arg0, typename ... Args>
-		static void stringify_params(std::vector<std::string> &params_list, typename std::enable_if<sizeof...(Args) != 0u>::type * = nullptr)
-		{
-			params_list.push_back(p_descriptor<Arg0>::name);
-			stringify_params<Args...>(params_list);
-		}
-		template <typename Arg0, typename ... Args>
-		static void stringify_params(std::vector<std::string> &params_list, typename std::enable_if<sizeof...(Args) == 0u>::type * = nullptr)
-		{
-			params_list.push_back(p_descriptor<Arg0>::name);
-		}
 		// Expose constructor conditionally.
 		template <typename U, typename T>
 		static void expose_ctor(bp::class_<T> &cl,
@@ -285,29 +273,21 @@ class exposer
 		// Main exposer.
 		struct exposer_op
 		{
-			explicit exposer_op(const std::string &name):m_name(name) {}
-			std::string create_class_name(const std::vector<std::string> &params_list) const
-			{
-				return std::string("_") + m_name + std::accumulate(params_list.begin(),params_list.end(),std::string(""),
-					[](const std::string &a, const std::string &b) {return a + "___" + b;});
-			}
+			explicit exposer_op() = default;
 			template <typename ... Args>
 			void operator()(const std::tuple<Args...> &) const
 			{
 				using s_type = Series<Args...>;
-				piranha_assert(series_archive.find(m_name) != series_archive.end());
-				// Transform the pack of template parameters into a list of strings representing them.
-				std::vector<std::string> params_list;
-				stringify_params<Args...>(params_list);
-				// Check that the params list is not there already, and insert it.
-				if (unlikely(series_archive[m_name].find(params_list) != series_archive[m_name].end())) {
-					piranha_throw(std::runtime_error,"trying to expose the same set of template parameters for the same series type twice");
+				// Get the series name.
+				const std::string s_name = descriptor<s_type>::name();
+				if (series_archive.find(s_name) != series_archive.end()) {
+					piranha_throw(std::runtime_error,"series was already registered");
 				}
-				auto i_retval = series_archive[m_name].insert(params_list);
-				piranha_assert(i_retval.second);
-				(void)i_retval;
+				const std::string exposed_name = std::string("_series_") + boost::lexical_cast<std::string>(series_counter);
 				// Start exposing.
-				bp::class_<s_type> series_class(create_class_name(params_list).c_str(),bp::init<>());
+				bp::class_<s_type> series_class(exposed_name.c_str(),bp::init<>());
+				series_archive[s_name] = series_counter;
+				++series_counter;
 				// Constructor from string, if available.
 				expose_ctor<const std::string &>(series_class);
 				// Copy constructor.
@@ -345,29 +325,16 @@ class exposer
 				// Subs.
 				expose_subs(series_class);
 			}
-			const std::string &m_name;
 		};
 	public:
-		explicit exposer(const std::string &name):m_name(name)
+		exposer()
 		{
-			// Check that series name is a valid identifier.
-			check_name(name);
-			// We don't want to split the exposition of a series in multiple instances of this class. Just assume
-			// we are exposing all series of the same root type at a time.
-			if (unlikely(series_archive.find(m_name) != series_archive.end())) {
-				piranha_throw(std::runtime_error,"trying to expose the same series twice");
-			}
-			series_archive[m_name] = std::set<std::vector<std::string>>{};
 			params p;
-			tuple_for_each(p,exposer_op{m_name});
+			tuple_for_each(p,exposer_op{});
 		}
-		// Delete all other ctors and assignment operators, keep only the destructor.
-		exposer() = delete;
 		exposer(const exposer &) = delete;
 		exposer(exposer &&) = delete;
 		exposer &operator=(const exposer &) = delete;
 		exposer &operator=(exposer &&) = delete;
 		~exposer() = default;
-	private:
-		const std::string m_name;
 };

@@ -43,7 +43,6 @@
 #include <iterator>
 #include <map>
 #include <mutex>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -51,7 +50,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "../src/detail/is_digit.hpp"
 #include "../src/piranha.hpp"
@@ -114,75 +112,20 @@ PYRANHA_DECLARE_DESCRIPTOR(real)
 PYRANHA_DECLARE_DESCRIPTOR(rational)
 PYRANHA_DECLARE_DESCRIPTOR(signed char)
 PYRANHA_DECLARE_DESCRIPTOR(short)
+PYRANHA_DECLARE_DESCRIPTOR(int)
 PYRANHA_DECLARE_DESCRIPTOR(long)
 PYRANHA_DECLARE_DESCRIPTOR(long long)
 PYRANHA_DECLARE_T_DESCRIPTOR(polynomial)
 PYRANHA_DECLARE_T_DESCRIPTOR(poisson_series)
 PYRANHA_DECLARE_T_DESCRIPTOR(kronecker_monomial)
 
-// Series archive, will store the description of exposed series.
-static std::map<std::string,std::set<std::vector<std::string>>> series_archive;
+#undef PYRANHA_DECLARE_DESCRIPTOR
+#undef PYRANHA_DECLARE_T_DESCRIPTOR
 
-// Descriptor for template parameters to be exposed to Python.
-template <typename>
-struct p_descriptor {};
-
-static inline const std::string &check_name(const std::string &str)
-{
-	if (str.empty()) {
-		piranha_throw(std::runtime_error,"invalid template parameter name: empty string");
-	}
-	if (str.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") != std::string::npos) {
-		piranha_throw(std::runtime_error,"invalid template parameter name: invalid character detected");
-	}
-	if (str.front() == '_' || str.back() == '_') {
-		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start or end with underscore");
-	}
-	if (detail::is_digit(*str.begin())) {
-		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot start with a digit ");
-	}
-	// This will be used as separator.
-	if (str.find("___") != std::string::npos) {
-		piranha_throw(std::runtime_error,"invalid template parameter name: name cannot contain '___'");
-	}
-	return str;
-}
-
-#define PYRANHA_DECLARE_P_DESCRIPTOR(type,...) \
-template <> \
-struct p_descriptor<type> \
-{ \
-	static const std::string name; \
-}; \
-const std::string p_descriptor<type>::name = check_name(std::string(#__VA_ARGS__) == "" ? #type : #__VA_ARGS__);
-
-PYRANHA_DECLARE_P_DESCRIPTOR(double,)
-PYRANHA_DECLARE_P_DESCRIPTOR(integer,)
-PYRANHA_DECLARE_P_DESCRIPTOR(rational,)
-PYRANHA_DECLARE_P_DESCRIPTOR(real,)
-PYRANHA_DECLARE_P_DESCRIPTOR(signed char,signed_char)
-PYRANHA_DECLARE_P_DESCRIPTOR(short,)
-PYRANHA_DECLARE_P_DESCRIPTOR(kronecker_monomial<>,kronecker)
-using p_rat_sc = polynomial<rational,signed char>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_rat_sc,polynomial_rational_signed_char)
-using p_rat_short = polynomial<rational,short>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_rat_short,polynomial_rational_short)
-using p_double_sc = polynomial<double,signed char>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_double_sc,polynomial_double_signed_char)
-using p_double_short = polynomial<double,short>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_double_short,polynomial_double_short)
-using p_real_short = polynomial<real,short>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_real_short,polynomial_real_short)
-using p_real_sc = polynomial<real,signed char>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_real_sc,polynomial_real_signed_char)
-using p_double_k = polynomial<double,kronecker_monomial<>>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_double_k,polynomial_double_kronecker)
-using p_real_k = polynomial<real,kronecker_monomial<>>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_real_k,polynomial_real_kronecker)
-using p_rational_k = polynomial<rational,kronecker_monomial<>>;
-PYRANHA_DECLARE_P_DESCRIPTOR(p_rational_k,polynomial_rational_kronecker)
-
-#undef PYRANHA_DECLARE_P_DESCRIPTOR
+// Archive of series type names.
+static std::map<std::string,std::size_t> series_archive;
+// Counter to be incremented each time a series is exposed.
+static std::size_t series_counter = 0u;
 
 // NOTE: these headers are not meant to be used anywhere else, they are just being
 // used to group together common functionality and not oversize core.cpp.
@@ -217,25 +160,13 @@ static inline bp::list get_series_list()
 {
 	bp::list retval;
 	for (auto &p: series_archive) {
-		bp::list tmp1;
-		for (auto &v: p.second) {
-			bp::list tmp2;
-			for (auto &str: v) {
-				tmp2.append(str);
-			}
-			tmp1.append(tmp2);
-		}
-		retval.append(bp::make_tuple(p.first,tmp1));
+		retval.append(p.first);
 	}
 	return retval;
 }
 
 BOOST_PYTHON_MODULE(_core)
 {
-	std::cout << descriptor<integer>::name() << '\n';
-	std::cout << descriptor<polynomial<double,signed char>>::name() << '\n';
-	std::cout << descriptor<poisson_series<polynomial<double,signed char>>>::name() << '\n';
-	std::cout << descriptor<kronecker_monomial<>>::name() << '\n';
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
 	// if the module is loaded from multiple threads.
 	std::lock_guard<std::mutex> lock(global_mutex);
@@ -278,7 +209,7 @@ BOOST_PYTHON_MODULE(_core)
 		eval_types	et;
 		subs_types	st;
 	};
-	//exposer<polynomial,poly_desc> poly_exposer("polynomial");
+	exposer<polynomial,poly_desc> poly_exposer;
 	struct ps_desc
 	{
 		using params = std::tuple<std::tuple<double>,std::tuple<rational>,std::tuple<real>,
@@ -294,7 +225,7 @@ BOOST_PYTHON_MODULE(_core)
 		eval_types	et;
 		subs_types	st;
 	};
-	//exposer<poisson_series,ps_desc> ps_exposer("poisson_series");
+	exposer<poisson_series,ps_desc> ps_exposer;
 /*
 	// Polynomials.
 	auto poly_cf_types = std::make_tuple(
