@@ -60,19 +60,16 @@ namespace bp = boost::python;
 using namespace piranha;
 
 template <typename T>
-struct is_integral_constant
-{
-	static const bool value = false;
-};
+struct descriptor {};
 
 template <typename T, T N>
-struct is_integral_constant<std::integral_constant<T,N>>
+struct descriptor<std::integral_constant<T,N>>
 {
-	static const bool value = true;
+	static std::string name()
+	{
+		return "";
+	}
 };
-
-template <typename T>
-struct descriptor {};
 
 #define PYRANHA_DECLARE_DESCRIPTOR(type) \
 template <> \
@@ -93,7 +90,7 @@ struct descriptor<t_type<Args...>> \
 		return std::string(#t_type) + "<" + iterate<Args...>() + ">"; \
 	} \
 	template <typename Arg0, typename ... Args2> \
-	static std::string iterate(typename std::enable_if<sizeof...(Args2) != 0 && !is_integral_constant<Arg0>::value>::type * = nullptr) \
+	static std::string iterate() \
 	{ \
 		const auto tmp1 = descriptor<Arg0>::name(), tmp2 = iterate<Args2...>(); \
 		if (tmp2 == "") { \
@@ -104,13 +101,8 @@ struct descriptor<t_type<Args...>> \
 		} \
 		return tmp1 + "," + tmp2; \
 	} \
-	template <typename Arg0, typename ... Args2> \
-	static std::string iterate(typename std::enable_if<sizeof...(Args2) == 0 && !is_integral_constant<Arg0>::value>::type * = nullptr) \
-	{ \
-		return descriptor<Arg0>::name(); \
-	} \
-	template <typename Arg0> \
-	static std::string iterate (typename std::enable_if<is_integral_constant<Arg0>::value>::type * = nullptr) \
+	template <typename ... Args2> \
+	static std::string iterate(typename std::enable_if<sizeof...(Args2) == 0>::type * = nullptr) \
 	{ \
 		return ""; \
 	} \
