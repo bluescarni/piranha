@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <functional>
 #include <future>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -275,6 +276,47 @@ class thread_pool: private detail::thread_pool_base<>
 			// If an exception gets actually thrown, no big deal.
 			new_queues.swap(base::s_queues);
 		}
+};
+
+template <typename F>
+class future_list
+{
+	public:
+		void push_back(F &&f)
+		{
+			// Push back empty future.
+			try {
+				m_list.emplace_back();
+			} catch (...) {
+				// If we get some error here, we want to make sure we wait on the future
+				// before escaping out.
+				// NOTE: calling wait() on invalid future is UB.
+				if (f.valid()) {
+					f.wait();
+				}
+				throw;
+			}
+			// This cannot throw.
+			m_list.back() = std::move(f);
+		}
+		void wait_all()
+		{
+			for (auto &f: m_list) {
+				if (f.valid()) {
+					f.wait();
+				}
+			}
+		}
+		void get_all()
+		{
+			for (auto &f: m_list) {
+				if (f.valid()) {
+					(void)f.get();
+				}
+			}
+		}
+	private:
+		std::list<F> m_list;
 };
 
 }
