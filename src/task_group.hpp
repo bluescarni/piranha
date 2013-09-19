@@ -154,9 +154,6 @@ class task_group
 		}
 		/// Get an exception thrown by a task.
 		/**
-		 * Depending on the threading model (C++ vs Boost.Thread), calling this method multiple times
-		 * can either re-throw the same exception or be a no-op.
-		 * 
 		 * @throws unspecified an exception thrown by a task.
 		 */
 		void get_all()

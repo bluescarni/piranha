@@ -38,6 +38,7 @@
 #include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "thread_management.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -278,10 +279,44 @@ class thread_pool: private detail::thread_pool_base<>
 		}
 };
 
+/// Class to store a list of futures.
+/**
+ * This class is a minimal thin wrapper around an \p std::list of \p std::future objects.
+ * The class provides convenience methods to interact with the set of futures in an exception-safe manner.
+ *
+ * \section type_requirements Type requirements
+ *
+ * \p F must be an instance of \p std::future.
+ */
 template <typename F>
 class future_list
 {
+		PIRANHA_TT_CHECK(is_instance_of,F,std::future);
 	public:
+		/// Destructor
+		/**
+		 * Will call wait_all().
+		 */
+		~future_list() noexcept
+		{
+			try {
+				wait_all();
+			} catch (...) {
+				// NOTE: logging candidate.
+				std::abort();
+			}
+		}
+		/// Move-insert a future.
+		/**
+		 * Will move-insert the input future \p f into the internal container.
+		 * If the insertion fails due to memory allocation errors and \p f is a valid
+		 * future, then the method will wait on \p f before throwing the exception.
+		 *
+		 * @param[in] f std::future to be move-inserted.
+		 *
+		 * @throws unspecified any exception thrown by memory allocation errors or
+		 * by threading primitives.
+		 */
 		void push_back(F &&f)
 		{
 			// Push back empty future.
@@ -299,6 +334,12 @@ class future_list
 			// This cannot throw.
 			m_list.back() = std::move(f);
 		}
+		/// Wait on all the futures.
+		/**
+		 * This method will call <tt>wait()</tt> on all the valid futures stored within the object.
+		 *
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
 		void wait_all()
 		{
 			for (auto &f: m_list) {
@@ -307,6 +348,13 @@ class future_list
 				}
 			}
 		}
+		/// Get all the futures.
+		/**
+		 * This method will call <tt>get()</tt> on all the valid futures stored within the object.
+		 * The return values resulting from the calls to <tt>get()</tt> will be ignored.
+		 *
+		 * @throws unspecified an exception stored by a future or any exception thrown by threading primitives.
+		 */
 		void get_all()
 		{
 			for (auto &f: m_list) {
