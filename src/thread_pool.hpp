@@ -163,7 +163,7 @@ class task_queue
 static inline std::vector<std::unique_ptr<task_queue>> get_initial_thread_queues()
 {
 	std::vector<std::unique_ptr<task_queue>> retval;
-	const unsigned hc = runtime_info::get_hardware_concurrency();
+	const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;
 	retval.reserve(static_cast<decltype(retval.size())>(hc));
 	for (unsigned i = 0u; i < hc; ++i) {
 		retval.emplace_back(::new task_queue(i));
@@ -190,7 +190,8 @@ std::mutex thread_pool_base<T>::s_mutex;
 /**
  * This class manages, via a set of static methods, a pool of threads created at program startup.
  * The number of threads created initially is equal to piranha::runtime_info::get_hardware_concurrency(),
- * and, if possible, each thread is bound to a different processor.
+ * and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined,
+ * the size of the thread pool will be one.
  *
  * This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool
  * and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong
@@ -253,13 +254,16 @@ class thread_pool: private detail::thread_pool_base<>
 		 *
 		 * @param[in] new_size the new size of the pool.
 		 *
-		 * @throws std::invalid_argument if \p new_size is larger than an implementation-defined value.
+		 * @throws std::invalid_argument if \p new_size is larger than an implementation-defined value or zero.
 		 * @throws unspecified any exception thrown by:
 		 * - threading primitives,
 		 * - memory allocation errors.
 		 */
 		static void resize(unsigned new_size)
 		{
+			if (unlikely(new_size == 0u)) {
+				piranha_throw(std::invalid_argument,"cannot resize the thread pool to zero");
+			}
 			std::lock_guard<std::mutex> lock(s_mutex);
 			using size_type = decltype(base::s_queues.size());
 			const size_type new_s = static_cast<size_type>(new_size);

@@ -159,14 +159,13 @@ static int adder(int a, int b)
 BOOST_AUTO_TEST_CASE(thread_pool_test)
 {
 	const unsigned initial_size = thread_pool::size();
-	if (initial_size != 0u) {
-		BOOST_CHECK(thread_pool::enqueue(0,adder,1,2).get() == 3);
-		thread_pool::enqueue(0,[](){std::this_thread::sleep_for(std::chrono::milliseconds(100));});
-		BOOST_CHECK(thread_pool::enqueue(0,adder,4,-5).get() == -1);
-		BOOST_CHECK_THROW(thread_pool::enqueue(initial_size,adder,4,-5),std::invalid_argument);
-		BOOST_CHECK(thread_pool::enqueue(0,[](){return thread_management::bound_proc();}).get() == std::make_pair(true,0u));
-		BOOST_CHECK_THROW(thread_pool::enqueue(0,[](){throw std::runtime_error("");}).get(),std::runtime_error);
-	}
+	BOOST_CHECK(initial_size > 0u);
+	BOOST_CHECK(thread_pool::enqueue(0,adder,1,2).get() == 3);
+	thread_pool::enqueue(0,[](){std::this_thread::sleep_for(std::chrono::milliseconds(100));});
+	BOOST_CHECK(thread_pool::enqueue(0,adder,4,-5).get() == -1);
+	BOOST_CHECK_THROW(thread_pool::enqueue(initial_size,adder,4,-5),std::invalid_argument);
+	BOOST_CHECK(thread_pool::enqueue(0,[](){return thread_management::bound_proc();}).get() == std::make_pair(true,0u));
+	BOOST_CHECK_THROW(thread_pool::enqueue(0,[](){throw std::runtime_error("");}).get(),std::runtime_error);
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
 	for (unsigned i = 0u; i < initial_size; ++i) {
 		for (int n = 0; n < 1000; ++n) {
@@ -177,9 +176,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 		thread_pool::enqueue(i,[](){}).get();
 	}
 	auto slow_task = [](){std::this_thread::sleep_for(std::chrono::milliseconds(250));};
-	if (initial_size != 0u) {
-		thread_pool::resize(1);
-	}
+	thread_pool::resize(1);
 	thread_pool::enqueue(0,slow_task);
 	thread_pool::resize(20u);
 	BOOST_CHECK(thread_pool::size() == 20u);
@@ -192,7 +189,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 	BOOST_CHECK(thread_pool::size() == 20u);
 	thread_pool::resize(10u);
 	BOOST_CHECK(thread_pool::size() == 10u);
-	if (initial_size != boost::integer_traits<unsigned>::const_max && initial_size != 0u) {
+	if (initial_size != boost::integer_traits<unsigned>::const_max) {
 		thread_pool::resize(initial_size + 1u);
 		auto func = [](){return thread_management::bound_proc();};
 		std::vector<decltype(thread_pool::enqueue(0u,func))> list;
@@ -202,6 +199,8 @@ BOOST_AUTO_TEST_CASE(thread_pool_test)
 		std::all_of(list.begin(),list.begin() + initial_size,[](decltype(thread_pool::enqueue(0u,func)) &f){return f.get().first;});
 		BOOST_CHECK(!(list.begin() + initial_size)->get().second);
 	}
+	BOOST_CHECK_THROW(thread_pool::resize(0u),std::invalid_argument);
+	BOOST_CHECK(thread_pool::size() != 0u);
 }
 
 BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
