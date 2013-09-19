@@ -21,7 +21,6 @@
 #ifndef PIRANHA_RUNTIME_INFO_HPP
 #define PIRANHA_RUNTIME_INFO_HPP
 
-#include <mutex>
 #include <thread>
 
 #include "config.hpp"
@@ -32,7 +31,6 @@ namespace piranha
 /// Runtime information.
 /**
  * This class allows to query information about the runtime environment.
- * All methods are thread-safe.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -50,7 +48,6 @@ class PIRANHA_PUBLIC runtime_info
 		static unsigned get_cache_line_size();
 		static unsigned get_hardware_concurrency();
 	private:
-		static std::mutex		m_mutex;
 		static const std::thread::id	m_main_thread_id;
 };
 

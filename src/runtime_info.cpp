@@ -54,7 +54,6 @@ extern "C"
 
 #include <boost/numeric/conversion/cast.hpp>
 #include <memory>
-#include <mutex>
 #include <thread>
 
 #include "config.hpp"
@@ -63,9 +62,6 @@ extern "C"
 
 namespace piranha
 {
-
-// Static init of mutex.
-std::mutex runtime_info::m_mutex;
 
 // ID of the main thread.
 const std::thread::id runtime_info::m_main_thread_id = std::this_thread::get_id();
@@ -80,7 +76,6 @@ const std::thread::id runtime_info::m_main_thread_id = std::this_thread::get_id(
  */
 unsigned runtime_info::get_hardware_concurrency()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(__linux__)
 	int candidate = ::get_nprocs();
 	return (candidate <= 0) ? 0u : static_cast<unsigned>(candidate);
@@ -113,7 +108,6 @@ unsigned runtime_info::get_hardware_concurrency()
  */
 unsigned runtime_info::get_cache_line_size()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(__linux__)
 	auto ls = ::sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
 	// This can fail on some systems, resort to try reading the /sys entry.
