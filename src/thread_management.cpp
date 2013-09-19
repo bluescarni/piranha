@@ -61,7 +61,6 @@ namespace piranha
 {
 
 // Static init.
-std::mutex thread_management::m_mutex;
 std::mutex thread_management::binder::m_binder_mutex;
 std::unordered_set<unsigned> thread_management::binder::m_used_procs;
 
@@ -83,7 +82,6 @@ std::unordered_set<unsigned> thread_management::binder::m_used_procs;
  */
 void thread_management::bind_to_proc(unsigned n)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
 	const auto hc = runtime_info::get_hardware_concurrency();
 	if (hc != 0u && n >= hc) {
 		piranha_throw(std::invalid_argument,"processor index is larger than the detected hardware concurrency");
@@ -154,7 +152,6 @@ void thread_management::bind_to_proc(unsigned n)
  */
 std::pair<bool,unsigned> thread_management::bound_proc()
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
 #if defined(PIRANHA_HAVE_PTHREAD_AFFINITY)
 	cpu_set_t cpuset;
 	CPU_ZERO(&cpuset);

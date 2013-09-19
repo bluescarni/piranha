@@ -76,8 +76,6 @@ class PIRANHA_PUBLIC thread_management
 				static std::mutex			m_binder_mutex;
 				static std::unordered_set<unsigned>	m_used_procs;
 		};
-	private:
-		static std::mutex m_mutex;
 };
 
 }
