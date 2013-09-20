@@ -122,9 +122,25 @@ namespace piranha
 class PIRANHA_PUBLIC base_exception: public std::exception
 {
         public:
-		explicit base_exception(const std::string &);
-		virtual const char *what() const throw() override;
-		virtual ~base_exception() throw();
+		/// Constructor.
+		/**
+		 * The string parameter is an error message that will be stored intenally.
+		 *
+		 * @param[in] s std::string representing an error message.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor of \p std::string.
+		 */
+		explicit base_exception(const std::string &s):m_what(s) {}
+		/// Error description.
+		/**
+		 * @return const pointer to the internal error message.
+		 */
+		virtual const char *what() const throw() override
+		{
+			return m_what.c_str();
+		}
+		/// Trivial destructor.
+		virtual ~base_exception() throw() {}
 	private:
 		const std::string m_what;
 };
@@ -132,15 +148,26 @@ class PIRANHA_PUBLIC base_exception: public std::exception
 /// Exception for functionality not implemented or not available on the current platform.
 struct PIRANHA_PUBLIC not_implemented_error: public base_exception
 {
-	explicit not_implemented_error(const std::string &s);
+	/// Constructor.
+	/**
+	 * @param[in] s std::string representing an error message.
+	 *
+	 * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
+	 */
+	explicit not_implemented_error(const std::string &s): base_exception(s) {}
 };
 
 /// Exception for signalling division by zero.
 struct PIRANHA_PUBLIC zero_division_error: public base_exception
 {
-	explicit zero_division_error(const std::string &s);
+	/// Constructor.
+	/**
+	 * @param[in] s std::string representing an error message.
+	 *
+	 * @throws unspecified any exception thrown by the constructor from string of piranha::base_exception.
+	 */
+	explicit zero_division_error(const std::string &s): base_exception(s) {}
 };
-
 
 }
 
