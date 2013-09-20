@@ -1,8 +1,6 @@
 SET(SRC_LIST
 	runtime_info.cpp
 	settings.cpp
-	symbol.cpp
-	thread_barrier.cpp
 	thread_management.cpp
 	tracing.cpp
 )

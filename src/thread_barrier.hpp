@@ -23,6 +23,10 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <stdexcept>
+
+#include "exceptions.hpp"
+#include "thread_barrier.hpp"
 
 namespace piranha
 {
@@ -53,7 +57,21 @@ namespace piranha
 class thread_barrier
 {
 	public:
-		thread_barrier(unsigned);
+		/// Constructor.
+		/**
+		 * Construct a barrier for \p count threads.
+		 *
+		 * @param[in] count number of threads for which the barrier is configured.
+		 *
+		 * @throws std::invalid_argument if <tt>count == 0</tt>.
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		explicit thread_barrier(unsigned count):m_mutex(),m_cond(),m_threshold(count),m_count(count),m_generation(0)
+		{
+			if (count == 0) {
+				piranha_throw(std::invalid_argument,"count cannot be zero");
+			}
+		}
 		/// Deleted copy constructor.
 		thread_barrier(const thread_barrier &) = delete;
 		/// Deleted move constructor.
@@ -67,7 +85,30 @@ class thread_barrier
 		 * No threads must be waiting on this when the destructor is called.
 		 */
 		~thread_barrier() = default;
-		bool wait();
+		/// Wait method.
+		/**
+		 * Block until \p count threads have called wait() on this. When the <tt>count</tt>-th thread calls
+		 * wait(), all waiting threads are unblocked, and the barrier is reset.
+		 *
+		 * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		bool wait()
+		{
+			std::unique_lock<std::mutex> lock(m_mutex);
+			unsigned gen = m_generation;
+			if (--m_count == 0) {
+				++m_generation;
+				m_count = m_threshold;
+				m_cond.notify_all();
+				return true;
+			}
+			while (gen == m_generation) {
+				m_cond.wait(lock);
+			}
+			return false;
+		}
 	private:
 		std::mutex		m_mutex;
 		std::condition_variable	m_cond;
