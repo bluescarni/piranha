@@ -103,6 +103,7 @@
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
  * the operator overloaded (via decltype SFINAE).
+ * \todo figure out the role of visibility stuff now that we are moving to header-only library.
  */
 namespace piranha
 {
