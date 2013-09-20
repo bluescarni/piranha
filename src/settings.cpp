@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "config.hpp"
-#include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 
@@ -32,60 +31,9 @@ namespace piranha
 
 // Static init.
 std::mutex settings::m_mutex;
-std::pair<bool,unsigned> settings::m_n_threads(false,0u);
 std::pair<bool,unsigned> settings::m_cache_line_size(false,0u);
 bool settings::m_tracing = false;
 unsigned long settings::m_max_term_output = settings::m_default_max_term_output;
-
-/// Get the number of threads available for use by piranha.
-/**
- * The initial value is set to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
- * 
- * @return the number of threads that will be available for use by piranha.
- * 
- * @throws std::system_error in case of failure(s) by threading primitives.
- */
-unsigned settings::get_n_threads()
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	if (unlikely(!m_n_threads.first)) {
-		const auto candidate = runtime_info::get_hardware_concurrency();
-		m_n_threads.second = (candidate > 0u) ? candidate : 1u;
-		m_n_threads.first = true;
-	}
-	return m_n_threads.second;
-}
-
-/// Set the number of threads available for use by piranha.
-/**
- * @param[in] n the desired number of threads.
- * 
- * @throws std::invalid_argument if <tt>n == 0</tt>.
- * @throws std::system_error in case of failure(s) by threading primitives.
- */
-void settings::set_n_threads(unsigned n)
-{
-	if (n == 0u) {
-		piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
-	}
-	std::lock_guard<std::mutex> lock(m_mutex);
-	m_n_threads.first = true;
-	m_n_threads.second = n;
-}
-
-/// Reset the number of threads available for use by piranha.
-/**
- * Will set the number of threads to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
- * 
- * @throws std::system_error in case of failure(s) by threading primitives.
- */
-void settings::reset_n_threads()
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	const auto candidate = runtime_info::get_hardware_concurrency();
-	m_n_threads.second = (candidate > 0u) ? candidate : 1u;
-	m_n_threads.first = true;
-}
 
 /// Get the cache line size.
 /**

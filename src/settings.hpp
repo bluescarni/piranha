@@ -25,6 +25,8 @@
 #include <utility>
 
 #include "config.hpp"
+#include "runtime_info.hpp"
+#include "thread_pool.hpp"
 
 namespace piranha
 {
@@ -39,9 +41,42 @@ namespace piranha
 class PIRANHA_PUBLIC settings
 {
 	public:
-		static unsigned get_n_threads();
-		static void set_n_threads(unsigned);
-		static void reset_n_threads();
+		/// Get the number of threads available for use by piranha.
+		/**
+		 * The initial value is set to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
+		 * This function is equivalent to piranha::thread_pool::size().
+		 *
+		 * @return the number of threads that will be available for use by piranha.
+		 *
+		 * @throws unspecified any exception thrown by piranha::thread_pool::size().
+		 */
+		static unsigned get_n_threads()
+		{
+			return thread_pool::size();
+		}
+		/// Set the number of threads available for use by piranha.
+		/**
+		 * This function is equivalent to piranha::thread_pool::resize().
+		 *
+		 * @param[in] n the desired number of threads.
+		 *
+		 * @throws unspecfied any exception thrown by piranha::thread_pool::resize().
+		 */
+		static void set_n_threads(unsigned n)
+		{
+			thread_pool::resize(n);
+		}
+		/// Reset the number of threads available for use by piranha.
+		/**
+		 * Will set the number of threads to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
+		 *
+		 * @throws unspecfied any exception thrown by set_n_threads().
+		 */
+		static void reset_n_threads()
+		{
+			const auto candidate = runtime_info::get_hardware_concurrency();
+			set_n_threads((candidate > 0u) ? candidate : 1u);
+		}
 		static unsigned get_cache_line_size();
 		static void set_cache_line_size(unsigned);
 		static void reset_cache_line_size();
@@ -52,7 +87,6 @@ class PIRANHA_PUBLIC settings
 		static void reset_max_term_output();
 	private:
 		static std::mutex		m_mutex;
-		static std::pair<bool,unsigned>	m_n_threads;
 		static std::pair<bool,unsigned>	m_cache_line_size;
 		static bool			m_tracing;
 		static unsigned long		m_max_term_output;
