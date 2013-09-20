@@ -34,6 +34,24 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+template <typename = int>
+struct base_symbol
+{
+	static std::mutex		m_mutex;
+	static std::set<std::string>	m_symbol_list;
+};
+
+template <typename T>
+std::mutex base_symbol<T>::m_mutex;
+
+template <typename T>
+std::set<std::string> base_symbol<T>::m_symbol_list;
+
+}
+
 /// Literal symbol class.
 /**
  * This class represents a symbolic variable uniquely identified by its name. Symbol instances
@@ -53,7 +71,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC symbol
+class PIRANHA_PUBLIC symbol: private detail::base_symbol<>
 {
 	public:
 		/// Constructor from name.
@@ -138,7 +156,6 @@ class PIRANHA_PUBLIC symbol
 			return os;
 		}
 	private:
-		typedef std::set<std::string> container_type;
 		static std::string const *get_pointer(const std::string &name)
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
@@ -157,8 +174,6 @@ class PIRANHA_PUBLIC symbol
 			return &*it;
 		}
 		std::string const		*m_ptr;
-		static std::mutex		m_mutex;
-		static container_type		m_symbol_list;
 };
 
 }
