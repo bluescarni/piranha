@@ -2,7 +2,6 @@ SET(SRC_LIST
 	runtime_info.cpp
 	settings.cpp
 	thread_management.cpp
-	tracing.cpp
 )
 
 SET(HEADERS_LIST

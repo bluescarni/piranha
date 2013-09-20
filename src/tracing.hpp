@@ -22,10 +22,12 @@
 #define PIRANHA_TRACING_HPP
 
 #include <boost/any.hpp>
+#include <cstddef>
 #include <iostream>
 #include <map>
 #include <mutex>
 #include <string>
+#include <typeinfo>
 #include <utility>
 
 #include "config.hpp"
@@ -33,6 +35,60 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+template <typename = int>
+struct base_tracing
+{
+	static std::map<std::string,boost::any>	m_container;
+	static std::mutex			m_mutex;
+};
+
+template <typename T>
+std::map<std::string,boost::any> base_tracing<T>::m_container;
+
+template <typename T>
+std::mutex base_tracing<T>::m_mutex;
+
+#define piranha_tracing_print_case(T) \
+if (typeid(T) == x.type()) { \
+	os << boost::any_cast<T>(x); \
+} else
+
+struct generic_printer
+{
+	static void run(std::ostream &os,const boost::any &x)
+	{
+		piranha_tracing_print_case(char)
+		piranha_tracing_print_case(wchar_t)
+		piranha_tracing_print_case(char16_t)
+		piranha_tracing_print_case(char32_t)
+		piranha_tracing_print_case(unsigned char)
+		piranha_tracing_print_case(signed char)
+		piranha_tracing_print_case(unsigned short)
+		piranha_tracing_print_case(short)
+		piranha_tracing_print_case(unsigned)
+		piranha_tracing_print_case(int)
+		piranha_tracing_print_case(unsigned long)
+		piranha_tracing_print_case(long)
+		piranha_tracing_print_case(unsigned long long)
+		piranha_tracing_print_case(long long)
+		piranha_tracing_print_case(float)
+		piranha_tracing_print_case(double)
+		piranha_tracing_print_case(long double)
+		piranha_tracing_print_case(std::string)
+		piranha_tracing_print_case(const char *)
+		{
+			os << "unprintable value of type '" << x.type().name() << "'";
+		}
+	}
+};
+
+#undef piranha_tracing_print_case
+
+}
 
 /// Tracing class.
 /**
@@ -50,9 +106,8 @@ namespace piranha
  * \todo settings::get_tracing() should use an atomic variable instead of mutex, to maximize performance
  * in those cases in which we are not tracing.
  */
-class PIRANHA_PUBLIC tracing
+class PIRANHA_PUBLIC tracing: private detail::base_tracing<>
 {
-		typedef std::map<std::string,boost::any> container_type;
 	public:
 		/// Trace event.
 		/**
@@ -85,9 +140,60 @@ class PIRANHA_PUBLIC tracing
 			}
 			trace_impl(str,f);
 		}
-		static void reset();
-		static boost::any get(const std::string &);
-		static void dump(std::ostream & = std::cout);
+		/// Reset the contents of the database of events.
+		/**
+		 * @throws unspecified any exception thrown by threading primitives or by the <tt>clear()</tt> method
+		 * of the internal container.
+		 */
+		static void reset()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_container.clear();
+		}
+		/// Get data associated to an event.
+		/**
+		 * @param[in] str event descriptor.
+		 *
+		 * @return an instance of \p boost::any containing the data associated to the event described by \p str,
+		 * or an empty \p boost::any instance if the event is not in the database.
+		 *
+		 * @throws unspecified any exception thrown by threading primitives, or by the copy constructor
+		 * of \p boost::any.
+		 */
+		static boost::any get(const std::string &str)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			const auto it = m_container.find(str);
+			if (it == m_container.end()) {
+				return boost::any();
+			} else {
+				return it->second;
+			}
+		}
+		/// Dump contents of the events database.
+		/**
+		 * Write the contents of the events database to stream in human-readable
+		 * format. Currently, the tracing data types for which
+		 * visualization is supported are the fundamental C++ arithmetic types,
+		 * \p std::string and <tt>const char *</tt>.
+		 *
+		 * @param[in] os target output stream.
+		 *
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
+		static void dump(std::ostream &os = std::cout)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				os << it->first << '=';
+				if (it->second.empty()) {
+					os << "empty\n";
+				} else {
+					detail::generic_printer::run(os,it->second);
+					os << '\n';
+				}
+			}
+		}
 	private:
 		template <typename Functor>
 		static void trace_impl(const char *str, const Functor &f)
@@ -115,9 +221,6 @@ class PIRANHA_PUBLIC tracing
 				throw;
 			}
 		}
-	private:
-		static container_type	m_container;
-		static std::mutex	m_mutex;
 };
 
 }

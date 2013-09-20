@@ -18,118 +18,15 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <boost/any.hpp>
-#include <cstddef>
-#include <iostream>
-#include <mutex>
-#include <string>
-#include <typeinfo>
 
-#include "tracing.hpp"
 
 namespace piranha
 {
 
-// Static init.
-tracing::container_type tracing::m_container;
-std::mutex tracing::m_mutex;
-
 namespace detail
 {
 
-#define piranha_tracing_print_case(T) \
-if (typeid(T) == x.type()) { \
-	os << boost::any_cast<T>(x); \
-} else
 
-struct generic_printer
-{
-	static void run(std::ostream &os,const boost::any &x)
-	{
-		piranha_tracing_print_case(char)
-		piranha_tracing_print_case(wchar_t)
-		piranha_tracing_print_case(char16_t)
-		piranha_tracing_print_case(char32_t)
-		piranha_tracing_print_case(unsigned char)
-		piranha_tracing_print_case(signed char)
-		piranha_tracing_print_case(unsigned short)
-		piranha_tracing_print_case(short)
-		piranha_tracing_print_case(unsigned)
-		piranha_tracing_print_case(int)
-		piranha_tracing_print_case(unsigned long)
-		piranha_tracing_print_case(long)
-		piranha_tracing_print_case(unsigned long long)
-		piranha_tracing_print_case(long long)
-		piranha_tracing_print_case(float)
-		piranha_tracing_print_case(double)
-		piranha_tracing_print_case(long double)
-		piranha_tracing_print_case(std::string)
-		piranha_tracing_print_case(const char *)
-		{
-			os << "unprintable value of type '" << x.type().name() << "'";
-		}
-	}
-};
-
-#undef piranha_tracing_print_case
-
-}
-
-/// Dump contents of the events database.
-/**
- * Write the contents of the events database to stream in human-readable
- * format. Currently, the tracing data types for which
- * visualization is supported are the fundamental C++ arithmetic types,
- * \p std::string and <tt>const char *</tt>.
- * 
- * @param[in] os target output stream.
- * 
- * @throws unspecified any exception thrown by threading primitives.
- */
-void tracing::dump(std::ostream &os)
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	for (auto it = m_container.begin(); it != m_container.end(); ++it) {
-		os << it->first << '=';
-		if (it->second.empty()) {
-			os << "empty\n";
-		} else {
-			detail::generic_printer::run(os,it->second);
-			os << '\n';
-		}
-	}
-}
-
-/// Get data associated to an event.
-/**
- * @param[in] str event descriptor.
- * 
- * @return an instance of \p boost::any containing the data associated to the event described by \p str,
- * or an empty \p boost::any instance if the event is not in the database.
- * 
- * @throws unspecified any exception thrown by threading primitives, or by the copy constructor
- * of \p boost::any.
- */
-boost::any tracing::get(const std::string &str)
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	const auto it = m_container.find(str);
-	if (it == m_container.end()) {
-		return boost::any();
-	} else {
-		return it->second;
-	}
-}
-
-/// Reset the contents of the database of events.
-/**
- * @throws unspecified any exception thrown by threading primitives or by the <tt>clear()</tt> method
- * of the internal container.
- */
-void tracing::reset()
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-	m_container.clear();
 }
 
 }
