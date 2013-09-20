@@ -1,5 +1,4 @@
 SET(SRC_LIST
-	environment.cpp
 	exceptions.cpp
 	runtime_info.cpp
 	settings.cpp

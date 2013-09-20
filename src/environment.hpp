@@ -21,12 +21,38 @@
 #ifndef PIRANHA_ENVIRONMENT_HPP
 #define PIRANHA_ENVIRONMENT_HPP
 
+#include <cstdlib>
+#include <iostream>
 #include <mutex>
 
 #include "config.hpp"
+#include "detail/mpfr.hpp"
+#include "environment.hpp"
 
 namespace piranha
 {
+
+namespace detail
+{
+
+template <typename = int>
+struct base_environment
+{
+	static std::mutex	m_mutex;
+	static bool		m_inited;
+	static bool		m_shutdown;
+};
+
+template <typename T>
+std::mutex base_environment<T>::m_mutex;
+
+template <typename T>
+bool base_environment<T>::m_inited = false;
+
+template <typename T>
+bool base_environment<T>::m_shutdown = false;
+
+}
 
 /// Piranha environment.
 /**
@@ -39,10 +65,28 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC environment
+class PIRANHA_PUBLIC environment: private detail::base_environment<>
 {
 	public:
-		environment();
+		/// Environment constructor.
+		/**
+		 * Will perform the initialisation of the runtime environment in a thread-safe manner.
+		 *
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
+		environment()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			if (m_inited) {
+				return;
+			}
+			if (std::atexit(environment::cleanup_function)) {
+				std::cout << "Unable to register cleanup function with std::atexit().\n";
+				std::cout.flush();
+				std::abort();
+			}
+			m_inited = true;
+		}
 		/// Deleted copy constructor.
 		environment(const environment &) = delete;
 		/// Deleted move constructor.
@@ -65,11 +109,13 @@ class PIRANHA_PUBLIC environment
 			return m_shutdown;
 		}
 	private:
-		static void cleanup_function();
-	private:
-		static std::mutex	m_mutex;
-		static bool		m_inited;
-		static bool		m_shutdown;
+		static void cleanup_function()
+		{
+			std::cout << "Freeing MPFR caches.\n";
+			::mpfr_free_cache();
+			std::cout << "Setting shutdown flag.\n";
+			environment::m_shutdown = true;
+		}
 };
 
 }
