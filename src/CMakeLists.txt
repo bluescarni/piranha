@@ -1,5 +1,4 @@
 SET(SRC_LIST
-	runtime_info.cpp
 	settings.cpp
 )
 
