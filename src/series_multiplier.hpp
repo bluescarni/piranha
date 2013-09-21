@@ -27,6 +27,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
+#include <future>
 #include <iterator>
 #include <list>
 #include <mutex>
@@ -49,8 +50,7 @@
 #include "integer.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
-#include "task_group.hpp"
-#include "thread_management.hpp"
+#include "thread_pool.hpp"
 #include "tracing.hpp"
 #include "type_traits.hpp"
 
@@ -289,24 +289,23 @@ class series_multiplier
 				}
 				auto f_it = functor_list.begin();
 				auto r_it = retval_list.begin();
-				task_group tg;
+				future_list<std::future<void>> f_list;
 				try {
 					for (size_type i = 0u; i < n_threads; ++i, ++f_it, ++r_it) {
 						// Functor for use in the thread.
 						auto f = [f_it,r_it,this]() {
-							thread_management::binder binder;
 							const auto tmp = this->rehasher(*f_it);
 							this->blocked_multiplication(*f_it);
 							if (tmp.first) {
 								this->trace_estimates(r_it->m_container.size(),tmp.second);
 							}
 						};
-						tg.add_task(f);
+						f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(i),f));
 					}
-					tg.wait_all();
-					tg.get_all();
+					f_list.wait_all();
+					f_list.get_all();
 				} catch (...) {
-					tg.wait_all();
+					f_list.wait_all();
 					throw;
 				}
 				return_type retval;
@@ -685,13 +684,13 @@ class series_multiplier
 			const size_type size = static_cast<size_type>(
 				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const return_type &r) {return n + r.size();}));
 			container_type idx(size);
-			task_group tg1;
+			future_list<std::future<void>> f_list1;
 			size_type i = 0u;
 			piranha_assert(retval_list.size() <= n_threads);
 			try {
-				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it) {
+				unsigned thread_idx = 0u;
+				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it, ++thread_idx) {
 					auto f = [&idx,&retval,i,r_it]() {
-						thread_management::binder b;
 						const auto it_f = r_it->m_container._m_end();
 						// NOTE: size_type can represent the sum of the sizes of all retvals,
 						// so it will not overflow here.
@@ -701,19 +700,19 @@ class series_multiplier
 							idx[tmp_i] = std::make_pair(retval.m_container._bucket(*it),it);
 						}
 					};
-					tg1.add_task(f);
+					f_list1.push_back(thread_pool::enqueue(thread_idx,f));
 					i += r_it->size();
 				}
-				tg1.wait_all();
-				tg1.get_all();
+				f_list1.wait_all();
+				f_list1.get_all();
 			} catch (...) {
-				tg1.wait_all();
+				f_list1.wait_all();
 				throw;
 			}
-			task_group tg2;
+			future_list<std::future<void>> f_list2;
 			std::mutex m;
 			std::vector<integer> new_sizes;
-			new_sizes.reserve(n_threads);
+			new_sizes.reserve(static_cast<std::vector<integer>::size_type>(n_threads));
 			if (unlikely(new_sizes.capacity() != n_threads)) {
 				piranha_throw(std::bad_alloc,);
 			}
@@ -723,7 +722,6 @@ class series_multiplier
 					// These are the bucket indices allowed to the current thread.
 					const typename Series1::size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
 					auto f = [start,end,&size,&retval,&idx,&m,&new_sizes]() {
-						thread_management::binder b;
 						size_type count_plus = 0u, count_minus = 0u;
 						for (size_type i = 0u; i < size; ++i) {
 							const auto &bucket_idx = idx[i].first;
@@ -767,13 +765,14 @@ class series_multiplier
 						std::lock_guard<std::mutex> lock(m);
 						new_sizes.push_back(integer(count_plus) - integer(count_minus));
 					};
-					tg2.add_task(f);
+					// NOTE: here the static cast is safe as nthreads is coming from a call to
+					// the size of the thread pool.
+					f_list2.push_back(thread_pool::enqueue(static_cast<unsigned>(n),f));
 				}
-				//piranha_assert(tg2.size() == n_threads);
-				tg2.wait_all();
-				tg2.get_all();
+				f_list2.wait_all();
+				f_list2.get_all();
 			} catch (...) {
-				tg2.wait_all();
+				f_list2.wait_all();
 				throw;
 			}
 			// Final update of retval's size.
