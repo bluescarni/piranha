@@ -1139,7 +1139,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				std::condition_variable cond;
 				// Thread function.
 				auto thread_function = [&cond,&m,&task_list,&busy_regions,&new_keys1,&new_keys2,hmin,&cf_vector,this] () {
-					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{
@@ -1338,7 +1337,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				std::condition_variable cond;
 				// Thread function.
 				auto thread_function = [&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
-					thread_management::binder b;
 					task_type task;
 					while (true) {
 						{
