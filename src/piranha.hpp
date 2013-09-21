@@ -104,6 +104,8 @@
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
  * the operator overloaded (via decltype SFINAE).
  * \todo figure out the role of visibility stuff now that we are moving to header-only library.
+ * \todo in pyranha, we should be able to provide self-descriptivie docstrings for the exposed series, based on the
+ * template enable_if mechanism.
  */
 namespace piranha
 {
