@@ -22,7 +22,7 @@
 #define PIRANHA_SETTINGS_HPP
 
 #include <mutex>
-#include <utility>
+#include <stdexcept>
 
 #include "config.hpp"
 #include "runtime_info.hpp"
@@ -31,6 +31,36 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+template <typename = int>
+struct base_settings
+{
+	static std::mutex		m_mutex;
+	static bool			m_tracing;
+	static unsigned			m_cache_line_size;
+	static unsigned long		m_max_term_output;
+	static const unsigned long	m_default_max_term_output = 20ul;
+};
+
+template <typename T>
+std::mutex base_settings<T>::m_mutex;
+
+template <typename T>
+bool base_settings<T>::m_tracing = false;
+
+template <typename T>
+unsigned base_settings<T>::m_cache_line_size = runtime_info::get_cache_line_size();
+
+template <typename T>
+unsigned long base_settings<T>::m_max_term_output = base_settings<T>::m_default_max_term_output;
+
+template <typename T>
+const unsigned long base_settings<T>::m_default_max_term_output;
+
+}
+
 /// Global settings.
 /**
  * This class stores the global settings of piranha's runtime environment.
@@ -38,7 +68,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC settings
+class PIRANHA_PUBLIC settings: private detail::base_settings<>
 {
 	public:
 		/// Get the number of threads available for use by piranha.
@@ -77,20 +107,104 @@ class PIRANHA_PUBLIC settings
 			const auto candidate = runtime_info::get_hardware_concurrency();
 			set_n_threads((candidate > 0u) ? candidate : 1u);
 		}
-		static unsigned get_cache_line_size();
-		static void set_cache_line_size(unsigned);
-		static void reset_cache_line_size();
-		static bool get_tracing();
-		static void set_tracing(bool);
-		static unsigned long get_max_term_output();
-		static void set_max_term_output(unsigned long);
-		static void reset_max_term_output();
-	private:
-		static std::mutex		m_mutex;
-		static std::pair<bool,unsigned>	m_cache_line_size;
-		static bool			m_tracing;
-		static unsigned long		m_max_term_output;
-		static const unsigned long	m_default_max_term_output = 20ul;
+		/// Get the cache line size.
+		/**
+		 * The initial value is set to the output of piranha::runtime_info::get_cache_line_size(). The value
+		 * can be overridden with set_cache_line_size() in case the detection fails and the value is set to zero.
+		 *
+		 * @return data cache line size (in bytes).
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static unsigned get_cache_line_size()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			return m_cache_line_size;
+		}
+		/// Set the cache line size.
+		/**
+		 * Overrides the detected cache line size. This method should be used only if the automatic
+		 * detection fails.
+		 *
+		 * @param[in] n data cache line size (in bytes).
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static void set_cache_line_size(unsigned n)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_cache_line_size = n;
+		}
+		/// Reset the cache line size.
+		/**
+		 * Will set the value to the output of piranha::runtime_info::get_cache_line_size().
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static void reset_cache_line_size()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_cache_line_size = runtime_info::get_cache_line_size();
+		}
+		/// Get tracing status.
+		/**
+		 * Tracing is disabled by default on program startup.
+		 *
+		 * @return \p true if tracing is enabled, \p false otherwise.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static bool get_tracing()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			return m_tracing;
+		}
+		/// Set tracing status.
+		/**
+		 * Tracing is disabled by default on program startup.
+		 *
+		 * @param[in] flag \p true to enable tracing, \p false to disable it.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static void set_tracing(bool flag)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_tracing = flag;
+		}
+		/// Get max term output.
+		/**
+		 * @return maximum number of terms displayed when printing series.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static unsigned long get_max_term_output()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			return m_max_term_output;
+		}
+		/// Set max term output.
+		/**
+		 * @param[in] n maximum number of terms to be displayed when printing series.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static void set_max_term_output(unsigned long n)
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_max_term_output = n;
+		}
+		/// Reset max term output.
+		/**
+		 * Will set the max term output value to the default.
+		 *
+		 * @throws std::system_error in case of failure(s) by threading primitives.
+		 */
+		static void reset_max_term_output()
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_max_term_output = m_default_max_term_output;
+		}
 };
 
 }

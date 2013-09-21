@@ -15,7 +15,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 	FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-# Build Option: when active the file main.cpp is built and linked to the piranha static library.
+# Build Option: when active the file main.cpp is built.
 OPTION(BUILD_MAIN "Build 'main.cpp'." OFF)
 
 # Build option: enable test set.
@@ -125,7 +125,6 @@ ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/src")
 # Link main to piranha library.
 IF(BUILD_MAIN)
 	ADD_EXECUTABLE(main main.cpp)
-	TARGET_LINK_LIBRARIES(main piranha)
 ENDIF(BUILD_MAIN)
 
 IF(BUILD_TESTS)
