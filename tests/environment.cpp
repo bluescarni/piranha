@@ -25,7 +25,8 @@
 
 #include <iostream>
 
-#include "../src/task_group.hpp"
+#include "../src/settings.hpp"
+#include "../src/thread_pool.hpp"
 
 using namespace piranha;
 
@@ -41,11 +42,13 @@ dummy d;
 
 BOOST_AUTO_TEST_CASE(environment_main_test)
 {
+	settings::set_n_threads(3);
 	// Multiple concurrent constructions.
-	task_group tg;
-	tg.add_task([]() {environment env;});
-	tg.add_task([]() {environment env;});
-	tg.add_task([]() {environment env;});
-	tg.wait_all();
+	auto f0 = thread_pool::enqueue(0,[]() {environment env;});
+	auto f1 = thread_pool::enqueue(1,[]() {environment env;});
+	auto f2 = thread_pool::enqueue(2,[]() {environment env;});
+	f0.wait();
+	f1.wait();
+	f2.wait();
 	BOOST_CHECK(!environment::shutdown());
 }

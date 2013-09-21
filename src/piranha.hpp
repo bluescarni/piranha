@@ -154,7 +154,6 @@ namespace detail {}
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
-#include "task_group.hpp"
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
 #include "thread_pool.hpp"

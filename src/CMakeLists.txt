@@ -12,7 +12,6 @@ SET(HEADERS_LIST
 	polynomial_term.hpp
 	poisson_series_term.hpp
 	settings.hpp
-	task_group.hpp
 	exceptions.hpp
 	tracing.hpp
 	base_term.hpp
