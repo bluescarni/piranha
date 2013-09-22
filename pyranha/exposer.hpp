@@ -386,6 +386,25 @@ class exposer
 			};
 			return s.transform(cpp_func);
 		}
+		// Sin and cos.
+		template <bool IsCos, typename S>
+		static S sin_cos_wrapper(const S &s)
+		{
+			if (IsCos) {
+				return math::cos(s);
+			} else {
+				return math::sin(s);
+			}
+		}
+		template <typename S>
+		static void expose_sin_cos(typename std::enable_if<has_sine<S>::value && has_cosine<S>::value>::type * = nullptr)
+		{
+			bp::def("_sin",sin_cos_wrapper<false,S>);
+			bp::def("_cos",sin_cos_wrapper<true,S>);
+		}
+		template <typename S>
+		static void expose_sin_cos(typename std::enable_if<!has_sine<S>::value || !has_cosine<S>::value>::type * = nullptr)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -453,6 +472,8 @@ class exposer
 				series_class.def("transform",wrap_transform<s_type>);
 				// Trimming.
 				series_class.def("trim",&s_type::trim);
+				// Sin and cos.
+				expose_sin_cos<s_type>();
 			}
 		};
 	public:
