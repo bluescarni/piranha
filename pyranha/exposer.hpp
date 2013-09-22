@@ -225,6 +225,40 @@ class exposer
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &, typename std::enable_if<!has_typedef_interop_types<T>::value>::type * = nullptr)
 		{}
+		// Expose integration conditionally.
+		template <typename S>
+		static S integrate_wrapper(const S &s, const std::string &name)
+		{
+			return math::integrate(s,name);
+		}
+		template <typename S>
+		static void expose_integrate(bp::class_<S> &series_class,
+			typename std::enable_if<is_integrable<S>::value>::type * = nullptr)
+		{
+			series_class.def("integrate",&S::integrate);
+			bp::def("_integrate",integrate_wrapper<S>);
+		}
+		template <typename S>
+		static void expose_integrate(bp::class_<S> &,
+			typename std::enable_if<!is_integrable<S>::value>::type * = nullptr)
+		{}
+		// Differentiation.
+		template <typename S>
+		static S partial_wrapper(const S &s, const std::string &name)
+		{
+			return math::partial(s,name);
+		}
+		template <typename S>
+		static void expose_partial(bp::class_<S> &series_class,
+			typename std::enable_if<is_differentiable<S>::value>::type * = nullptr)
+		{
+			series_class.def("partial",&S::partial);
+			bp::def("_partial",partial_wrapper<S>);
+		}
+		template <typename S>
+		static void expose_partial(bp::class_<S> &,
+			typename std::enable_if<!is_differentiable<S>::value>::type * = nullptr)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -279,6 +313,10 @@ class exposer
 				expose_eval(series_class);
 				// Subs.
 				expose_subs(series_class);
+				// Integration.
+				expose_integrate(series_class);
+				// Partial differentiation.
+				expose_partial(series_class);
 			}
 		};
 	public:
