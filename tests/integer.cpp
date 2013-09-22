@@ -1062,6 +1062,9 @@ BOOST_AUTO_TEST_CASE(integer_type_traits_test)
 	BOOST_CHECK(piranha::is_differentiable<piranha::integer>::value);
 	BOOST_CHECK(piranha::is_differentiable<piranha::integer &>::value);
 	BOOST_CHECK(piranha::is_differentiable<const piranha::integer &>::value);
+	BOOST_CHECK(piranha::has_pbracket<piranha::integer>::value);
+	BOOST_CHECK(piranha::has_pbracket<piranha::integer &>::value);
+	BOOST_CHECK(piranha::has_pbracket<piranha::integer const &>::value);
 	BOOST_CHECK(!piranha::has_degree<piranha::integer>::value);
 	BOOST_CHECK(piranha::is_addable<piranha::integer>::value);
 	BOOST_CHECK((piranha::is_addable<double,piranha::integer>::value));

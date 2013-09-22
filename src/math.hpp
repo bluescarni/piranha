@@ -739,9 +739,9 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
  */
 template <typename T>
 inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_list,
-	const std::vector<std::string> &q_list) -> decltype(partial(f,q_list[0]) * partial(g,p_list[0]))
+	const std::vector<std::string> &q_list) -> decltype(partial(f,q_list[0]) * partial(g,p_list[0]) + partial(f,q_list[0]) * partial(g,p_list[0]))
 {
-	typedef decltype(partial(f,q_list[0]) * partial(g,p_list[0])) return_type;
+	using return_type = decltype(partial(f,q_list[0]) * partial(g,p_list[0]) + partial(f,q_list[0]) * partial(g,p_list[0]));
 	if (p_list.size() != q_list.size()) {
 		piranha_throw(std::invalid_argument,"the number of coordinates is different from the number of momenta");
 	}
@@ -1942,6 +1942,27 @@ class has_cosine: detail::sfinae_types
 
 template <typename T>
 const bool has_cosine<T>::value;
+
+/// Detect piranha::math::pbracket().
+/**
+ * The type trait will be \p true if piranha::math::pbracket() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_pbracket: detail::sfinae_types
+{
+		using v_string = std::vector<std::string>;
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::pbracket(x,x,std::declval<v_string const &>(),
+			std::declval<v_string const &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_pbracket<T>::value;
 
 }
 

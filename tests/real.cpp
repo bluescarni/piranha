@@ -1682,6 +1682,10 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 	BOOST_CHECK(is_differentiable<real &>::value);
 	BOOST_CHECK(is_differentiable<const real &>::value);
 	BOOST_CHECK(is_differentiable<const real>::value);
+	BOOST_CHECK(has_pbracket<real>::value);
+	BOOST_CHECK(has_pbracket<real &>::value);
+	BOOST_CHECK(has_pbracket<real const &>::value);
+	BOOST_CHECK(has_pbracket<real const>::value);
 	BOOST_CHECK(!has_degree<real>::value);
 	BOOST_CHECK(is_addable<real>::value);
 	BOOST_CHECK((is_addable<real,integer>::value));
