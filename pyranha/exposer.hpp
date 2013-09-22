@@ -248,12 +248,29 @@ class exposer
 		{
 			return math::partial(s,name);
 		}
+		// Custom partial derivatives registration wrapper.
+		// NOTE: here we need to take care of multithreading in the future, most likely by adding
+		// the Python threading bits inside the lambda and also outside when checking func.
+		template <typename S>
+		static void register_custom_derivative(const std::string &name, bp::object func)
+		{
+			check_callable(func);
+			S::register_custom_derivative(name,[func](const S &s) -> S {
+				return bp::extract<S>(func(s));
+			});
+		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<is_differentiable<S>::value>::type * = nullptr)
 		{
 			series_class.def("partial",&S::partial);
 			bp::def("_partial",partial_wrapper<S>);
+			// Custom derivatives support.
+			series_class.def("register_custom_derivative",register_custom_derivative<S>).staticmethod("register_custom_derivative");
+			series_class.def("unregister_custom_derivative",
+				S::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
+			series_class.def("unregister_all_custom_derivatives",
+				S::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
 		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &,
@@ -327,7 +344,7 @@ class exposer
 		{
 			typedef typename S::term_type::cf_type cf_type;
 			check_callable(func);
-			auto cpp_func = [func](const std::pair<cf_type,S> &p) {
+			auto cpp_func = [func](const std::pair<cf_type,S> &p) -> bool {
 				return bp::extract<bool>(func(bp::make_tuple(p.first,p.second)));
 			};
 			return s.filter(cpp_func);
@@ -434,6 +451,8 @@ class exposer
 				// Filter and transform.
 				series_class.def("filter",wrap_filter<s_type>);
 				series_class.def("transform",wrap_transform<s_type>);
+				// Trimming.
+				series_class.def("trim",&s_type::trim);
 			}
 		};
 	public:
