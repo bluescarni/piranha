@@ -352,6 +352,7 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	BOOST_CHECK(has_pbracket<int>::value);
 	BOOST_CHECK(has_pbracket<double>::value);
 	BOOST_CHECK(has_pbracket<long double>::value);
+	BOOST_CHECK(!has_pbracket<std::string>::value);
 	typedef polynomial<rational,int> p_type;
 	BOOST_CHECK(has_pbracket<p_type>::value);
 	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{},{}),p_type(0));
