@@ -405,6 +405,44 @@ class exposer
 		template <typename S>
 		static void expose_sin_cos(typename std::enable_if<!has_sine<S>::value || !has_cosine<S>::value>::type * = nullptr)
 		{}
+		// Power series exposer.
+		template <typename T>
+		static void expose_power_series(bp::class_<T> &series_class,
+			typename std::enable_if<has_degree<T>::value && has_ldegree<T>::value>::type * = nullptr)
+		{
+			// NOTE: maybe we should make these math:: wrappers.
+			series_class.def("degree",wrap_degree<T>);
+			series_class.def("degree",wrap_partial_degree_set<T>);
+			series_class.def("ldegree",wrap_ldegree<T>);
+			series_class.def("ldegree",wrap_partial_ldegree_set<T>);
+		}
+		template <typename T>
+		static void expose_power_series(bp::class_<T> &,
+			typename std::enable_if<!has_degree<T>::value || !has_ldegree<T>::value>::type * = nullptr)
+		{}
+		// degree() wrappers.
+		template <typename S>
+		static auto wrap_degree(const S &s) -> decltype(s.degree())
+		{
+			return s.degree();
+		}
+		template <typename S>
+		static auto wrap_partial_degree_set(const S &s, bp::list l) -> decltype(s.degree(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.degree(std::set<std::string>(begin,end));
+		}
+		template <typename S>
+		static auto wrap_ldegree(const S &s) -> decltype(s.ldegree())
+		{
+			return s.ldegree();
+		}
+		template <typename S>
+		static auto wrap_partial_ldegree_set(const S &s, bp::list l) -> decltype(s.ldegree(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.ldegree(std::set<std::string>(begin,end));
+		}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -474,6 +512,8 @@ class exposer
 				series_class.def("trim",&s_type::trim);
 				// Sin and cos.
 				expose_sin_cos<s_type>();
+				// Power series.
+				expose_power_series(series_class);
 			}
 		};
 	public:
