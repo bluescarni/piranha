@@ -1,6 +1,6 @@
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
-SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranhapp0x)
+SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
 ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp series_exposer.hpp exposer.hpp)
 # Prefix and visibility setup.
@@ -14,9 +14,8 @@ IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
 	SET_TARGET_PROPERTIES(_core PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing")
 ENDIF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
 
-# Module needs to link to pyranha, as a general policy,
-# and of course Boost.Python and the Python libs.
-TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES} pyranha)
+# Module needs to Boost.Python and the Python libs, plus the mandatory libraries.
+TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
 INSTALL(TARGETS _core
 	RUNTIME DESTINATION ${PYRANHA_INSTALL_PATH}
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}
