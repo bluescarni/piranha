@@ -195,7 +195,7 @@ inline void aligned_pfree(const std::size_t &alignment, void *ptr)
  * - the alignment must not be smaller than the default alignment of \p T, as reported by
  *   \p alignas(),
  * - the alignment must satisfy additional platform-dependent checks (e.g., \p posix_memalign() requires
- *   the alignment to be a multiple of <tt>sizeof(void *)</tt>.
+ *   the alignment to be a multiple of <tt>sizeof(void *)</tt>).
  *
  * Note that piranha::aligned_palloc() will not check the alignment via this function, and that even if this function returns \p true on an alignment value,
  * this will not guarantee that the allocation via piranha::aligned_palloc() will succeed.
