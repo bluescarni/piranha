@@ -259,6 +259,25 @@ class exposer
 		static void expose_partial(bp::class_<S> &,
 			typename std::enable_if<!is_differentiable<S>::value>::type * = nullptr)
 		{}
+		// Poisson bracket.
+		template <typename S>
+		static S pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list)
+		{
+			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+			return math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
+				std::vector<std::string>(begin_q,end_q));
+		}
+		template <typename S>
+		static void expose_pbracket(bp::class_<S> &,
+			typename std::enable_if<has_pbracket<S>::value>::type * = nullptr)
+		{
+			bp::def("_pbracket",pbracket_wrapper<S>);
+		}
+		template <typename S>
+		static void expose_pbracket(bp::class_<S> &,
+			typename std::enable_if<!has_pbracket<S>::value>::type * = nullptr)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -317,6 +336,8 @@ class exposer
 				expose_integrate(series_class);
 				// Partial differentiation.
 				expose_partial(series_class);
+				// Poisson bracket.
+				expose_pbracket(series_class);
 			}
 		};
 	public:
