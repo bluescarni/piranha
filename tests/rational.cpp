@@ -995,6 +995,9 @@ BOOST_AUTO_TEST_CASE(rational_type_traits_test)
 	BOOST_CHECK(has_pbracket<rational>::value);
 	BOOST_CHECK(has_pbracket<rational &>::value);
 	BOOST_CHECK(has_pbracket<rational &&>::value);
+	BOOST_CHECK(has_transformation_is_canonical<rational>::value);
+	BOOST_CHECK(has_transformation_is_canonical<rational &>::value);
+	BOOST_CHECK(has_transformation_is_canonical<rational &&>::value);
 	BOOST_CHECK(!has_degree<rational>::value);
 	BOOST_CHECK(is_addable<rational>::value);
 	BOOST_CHECK((is_addable<rational,integer>::value));

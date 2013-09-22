@@ -588,6 +588,16 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
 	BOOST_CHECK((!math::transformation_is_canonical({P*Q*math::cos(p)*q,Q*P*math::sin(3*q)*p*math::pow(q,-1)},{P*math::sin(p),Q*math::sin(q)},{"P","Q"},{"p","q"})));
 	BOOST_CHECK((!math::transformation_is_canonical(std::vector<p_type2>{P2*math::cos(p)*q,Q2*math::cos(q)*p},std::vector<p_type2>{P2*math::sin(p),Q2*math::sin(q)},
 		{"P","Q"},{"p","q"})));
+	BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
+	BOOST_CHECK(has_transformation_is_canonical<p_type1 &>::value);
+	BOOST_CHECK(has_transformation_is_canonical<p_type1 const &>::value);
+	BOOST_CHECK(has_transformation_is_canonical<p_type2>::value);
+	BOOST_CHECK(has_transformation_is_canonical<int>::value);
+	BOOST_CHECK(has_transformation_is_canonical<double>::value);
+	BOOST_CHECK(has_transformation_is_canonical<double &&>::value);
+	BOOST_CHECK(!has_transformation_is_canonical<std::string>::value);
+	BOOST_CHECK(!has_transformation_is_canonical<std::string &>::value);
+	BOOST_CHECK(!has_transformation_is_canonical<std::string const &>::value);
 }
 
 struct term1: base_term<double,monomial<int>,term1>

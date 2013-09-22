@@ -766,10 +766,13 @@ namespace detail
 {
 
 template <typename T>
-static inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+static inline auto is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) -> typename std::enable_if<
+	has_is_zero<decltype(math::pbracket(*new_p[0],*new_p[0],p_list,q_list))>::value &&
+	std::is_constructible<decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list)),int>::value &&
+	is_equality_comparable<decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list))>::value,bool>::type
 {
-	typedef decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list)) p_type;
+	using p_type = decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list));
 	if (p_list.size() != q_list.size()) {
 		piranha_throw(std::invalid_argument,"the number of coordinates is different from the number of momenta");
 	}
@@ -812,6 +815,12 @@ namespace math
 
 /// Check if a transformation is canonical.
 /**
+ * \note
+ * This function is enabled only if all the following requirements are met:
+ * - \p T satisfies piranha::has_pbracket,
+ * - the output type of piranha::has_pbracket for \p T satisfies piranha::has_is_zero, it is constructible from \p int
+ *   and it is equality comparable.
+ *
  * This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.
  * The transformation is expressed as two separate collections of objects, \p new_p and \p new_q, representing the new momenta
  * and coordinates as functions of the old momenta \p p_list and \p q_list.
@@ -835,8 +844,9 @@ namespace math
  * - memory errors in standard containers.
  */
 template <typename T>
-inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::vector<T> &new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+inline auto transformation_is_canonical(const std::vector<T> &new_p, const std::vector<T> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) ->
+	decltype(detail::is_canonical_impl(std::declval<std::vector<T const *> const &>(),std::declval<std::vector<T const *> const &>(),p_list,q_list))
 {
 	std::vector<T const *> pv, qv;
 	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
@@ -846,8 +856,9 @@ inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::
 
 /// Check if a transformation is canonical (alternative overload).
 template <typename T>
-inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
+inline auto transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) ->
+	decltype(detail::is_canonical_impl(std::declval<std::vector<T const *> const &>(),std::declval<std::vector<T const *> const &>(),p_list,q_list))
 {
 	std::vector<T const *> pv, qv;
 	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
@@ -1963,6 +1974,27 @@ class has_pbracket: detail::sfinae_types
 
 template <typename T>
 const bool has_pbracket<T>::value;
+
+/// Detect piranha::math::transformation_is_canonical().
+/**
+ * The type trait will be \p true if piranha::math::transformation_is_canonical() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_transformation_is_canonical: detail::sfinae_types
+{
+		using v_string = std::vector<std::string>;
+		template <typename T1>
+		static auto test(const T1 &) -> decltype(math::transformation_is_canonical(std::declval<std::vector<T1> const &>(),std::declval<std::vector<T1> const &>(),
+			std::declval<v_string const &>(),std::declval<v_string const &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_transformation_is_canonical<T>::value;
 
 }
 
