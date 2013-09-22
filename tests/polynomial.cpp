@@ -535,7 +535,11 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"y"),10 * (x * y + x - 3 * pow(y,2)).pow(9) * (x - 6 * y));
 	BOOST_CHECK_EQUAL(partial((x * y + x - 3 * pow(y,2)).pow(10),"z"),0);
 	BOOST_CHECK(is_differentiable<p_type1>::value);
+	BOOST_CHECK(has_pbracket<p_type1>::value);
+	BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
 	BOOST_CHECK((!is_differentiable<polynomial<mock_cf,short>>::value));
+	BOOST_CHECK((!has_pbracket<polynomial<mock_cf,short>>::value));
+	BOOST_CHECK((!has_transformation_is_canonical<polynomial<mock_cf,short>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_subs_test)

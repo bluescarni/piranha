@@ -317,6 +317,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	using math::partial;
 	typedef poisson_series<polynomial<rational,short>> p_type1;
 	BOOST_CHECK(is_differentiable<p_type1>::value);
+	BOOST_CHECK(has_pbracket<p_type1>::value);
+	BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(partial(x * cos(y),"x"),cos(y));
 	BOOST_CHECK_EQUAL(partial(x * cos(2 * x),"x"),cos(2 * x) - 2 * x * sin(2 * x));
@@ -332,6 +334,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_partial_test)
 	BOOST_CHECK_EQUAL(partial(x + cos(y),"x"),1 + sin(y) * sin(x));
 	BOOST_CHECK_EQUAL(partial(x + x * cos(y),"x"),1 + cos(y) + x * sin(y) * sin(x));
 	BOOST_CHECK((!is_differentiable<poisson_series<polynomial<mock_cf,short>>>::value));
+	BOOST_CHECK((!has_pbracket<poisson_series<polynomial<mock_cf,short>>>::value));
+	BOOST_CHECK((!has_transformation_is_canonical<poisson_series<polynomial<mock_cf,short>>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
