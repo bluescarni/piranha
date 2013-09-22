@@ -107,56 +107,6 @@ class exposer
 			series_class.def(sn::operator!=(in,bp::self));
 			expose_division(series_class,in);
 		}
-		// Interaction with interoperable types.
-		template <typename S, std::size_t I = 0u, typename... T>
-		void interop_exposer_(bp::class_<S> &series_class, const std::tuple<T...> &,
-			typename std::enable_if<I == sizeof...(T)>::type * = nullptr) const
-		{
-			// Add interoperability with coefficient type if it is not already included in
-			// the interoperable types.
-			if (!type_in_tuple<typename S::term_type::cf_type,std::tuple<T...>>::value) {
-				typename S::term_type::cf_type cf;
-				interop_exposer_(series_class,std::make_tuple(cf));
-			}
-		}
-		template <typename S, std::size_t I = 0u, typename... T>
-		void interop_exposer_(bp::class_<S> &series_class, const std::tuple<T...> &t,
-			typename std::enable_if<(I < sizeof...(T))>::type * = nullptr) const
-		{
-			namespace sn = boost::python::self_ns;
-			using interop_type = typename std::tuple_element<I,std::tuple<T...>>::type;
-			interop_type in;
-			// Constructor from interoperable.
-			series_class.def(bp::init<const interop_type &>());
-			// Arithmetic and comparison with interoperable type.
-			// NOTE: in order to resolve ambiguities when we interop with other series types,
-			// we use the namespace-qualified operators from Boost.Python.
-			// NOTE: if we fix is_addable type traits for series the above is not needed any more,
-			// as series + bp::self is not available any more.
-			series_class.def(sn::operator+=(bp::self,in));
-			series_class.def(sn::operator+(bp::self,in));
-			series_class.def(sn::operator+(in,bp::self));
-			series_class.def(sn::operator-=(bp::self,in));
-			series_class.def(sn::operator-(bp::self,in));
-			series_class.def(sn::operator-(in,bp::self));
-			series_class.def(sn::operator*=(bp::self,in));
-			series_class.def(sn::operator*(bp::self,in));
-			series_class.def(sn::operator*(in,bp::self));
-			series_class.def(sn::operator==(bp::self,in));
-			series_class.def(sn::operator==(in,bp::self));
-			series_class.def(sn::operator!=(bp::self,in));
-			series_class.def(sn::operator!=(in,bp::self));
-			expose_division(series_class,in);
-			// Exponentiation.
-			/*pow_exposer(series_class,in);*/
-			// Evaluation.
-			/*series_class.def("_evaluate",wrap_evaluate<S,interop_type>);*/
-			// Substitutions.
-			/*series_class.def("subs",&S::template subs<interop_type>);
-			series_class.def("ipow_subs",&S::template ipow_subs<interop_type>);
-			t_subs_exposer<interop_type>(series_class);
-			interop_exposer<S,I + 1u,T...>(series_class,t);*/
-		}
 		// Exponentiation support.
 		template <typename S>
 		struct pow_exposer
