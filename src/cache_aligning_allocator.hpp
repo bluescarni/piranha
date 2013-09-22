@@ -90,10 +90,13 @@ class cache_aligning_allocator: public dynamic_aligning_allocator<T>
 		 * @param[in] p address where the object will be constructed.
 		 * @param[in] args arguments that will be forwarded for construction.
 		 */
-		template <typename ... Args>
-		void construct(pointer p, Args && ... args)
+		// NOTE: here, according to the standard, the allocator must be
+		// able to construct objects of arbitrary type:
+		// http://en.cppreference.com/w/cpp/concept/Allocator
+		template <typename U, typename ... Args>
+		void construct(U *p, Args && ... args)
 		{
-			::new(static_cast<void *>(p)) T(std::forward<Args>(args)...);
+			::new(static_cast<void *>(p)) U(std::forward<Args>(args)...);
 		}
 		/// Default constructor.
 		/**
