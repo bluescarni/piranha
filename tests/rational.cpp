@@ -931,6 +931,9 @@ BOOST_AUTO_TEST_CASE(rational_ipow_subs_test)
 {
 	BOOST_CHECK_EQUAL(math::ipow_subs(rational(-42,2),"a",integer(4),5),rational(-21));
 	BOOST_CHECK_EQUAL(math::ipow_subs(rational(42,3),"a",integer(4),5),rational(14));
+	BOOST_CHECK(has_ipow_subs<rational>::value);
+	BOOST_CHECK((has_ipow_subs<rational,double>::value));
+	BOOST_CHECK((has_ipow_subs<rational,integer>::value));
 }
 
 BOOST_AUTO_TEST_CASE(rational_abs_test)

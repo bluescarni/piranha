@@ -2351,6 +2351,28 @@ class has_integral_cast: detail::sfinae_types
 template <typename T>
 const bool has_integral_cast<T>::value;
 
+/// Type trait to detect the presence of the piranha::math::ipow_subs function.
+/**
+ * The type trait will be \p true if piranha::math::ipow_subs can be successfully called on instances
+ * of type \p T, with an instance of type \p U as substitution argument.
+ */
+template <typename T, typename U = T>
+class has_ipow_subs: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(math::ipow_subs(t,std::declval<std::string const &>(),
+			std::declval<integer const &>(),u),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool has_ipow_subs<T,U>::value;
+
 }
 
 namespace std

@@ -504,6 +504,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
 	typedef poisson_series<polynomial<rational,short>> p_type1;
+	BOOST_CHECK(has_ipow_subs<p_type1>::value);
+	BOOST_CHECK((has_ipow_subs<p_type1,integer>::value));
+	BOOST_CHECK((has_ipow_subs<p_type1,typename p_type1::term_type::cf_type>::value));
 	{
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(4),integer(1)),p_type1{"x"});
 	BOOST_CHECK_EQUAL(p_type1{"x"}.ipow_subs("x",integer(1),p_type1{"x"}),p_type1{"x"});
@@ -515,6 +518,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	}
 	{
 	typedef poisson_series<polynomial<real,short>> p_type2;
+	BOOST_CHECK(has_ipow_subs<p_type2>::value);
+	BOOST_CHECK((has_ipow_subs<p_type2,integer>::value));
+	BOOST_CHECK((has_ipow_subs<p_type2,typename p_type2::term_type::cf_type>::value));
 	p_type2 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(1),real(1.234)),y*y + math::pow(real(1.234),3));
 	BOOST_CHECK_EQUAL((x*x*x + y*y).ipow_subs("x",integer(3),real(1.234)),y*y + real(1.234));

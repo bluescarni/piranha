@@ -961,6 +961,10 @@ BOOST_AUTO_TEST_CASE(integer_ipow_subs_test)
 	boost::fusion::for_each(arithmetic_values,check_ipow_subs());
 	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(-42),"a",piranha::integer(4),5),piranha::integer(-42));
 	BOOST_CHECK_EQUAL(piranha::math::ipow_subs(piranha::integer(42),"a",piranha::integer(4),5),piranha::integer(42));
+	BOOST_CHECK(piranha::has_ipow_subs<piranha::integer>::value);
+	BOOST_CHECK((piranha::has_ipow_subs<piranha::integer,int>::value));
+	BOOST_CHECK((piranha::has_ipow_subs<piranha::integer,long>::value));
+	BOOST_CHECK((piranha::has_ipow_subs<piranha::integer,double>::value));
 }
 
 BOOST_AUTO_TEST_CASE(integer_abs_test)
