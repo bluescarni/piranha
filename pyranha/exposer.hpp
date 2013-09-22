@@ -410,7 +410,7 @@ class exposer
 		static void expose_power_series(bp::class_<T> &series_class,
 			typename std::enable_if<has_degree<T>::value && has_ldegree<T>::value>::type * = nullptr)
 		{
-			// NOTE: maybe we should make these math:: wrappers.
+			// NOTE: probably we should make these math:: wrappers. Same for the trig ones.
 			series_class.def("degree",wrap_degree<T>);
 			series_class.def("degree",wrap_partial_degree_set<T>);
 			series_class.def("ldegree",wrap_ldegree<T>);
@@ -442,6 +442,86 @@ class exposer
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
 			return s.ldegree(std::set<std::string>(begin,end));
+		}
+		// Trigonometric exposer.
+		template <typename S>
+		static void expose_trigonometric_series(bp::class_<S> &series_class, typename std::enable_if<
+			has_t_degree<S>::value && has_t_ldegree<S>::value && has_t_order<S>::value && has_t_lorder<S>::value>::type * = nullptr)
+		{
+			series_class.def("t_degree",wrap_t_degree<S>);
+			series_class.def("t_degree",wrap_partial_t_degree<S>);
+			series_class.def("t_ldegree",wrap_t_ldegree<S>);
+			series_class.def("t_ldegree",wrap_partial_t_ldegree<S>);
+			series_class.def("t_order",wrap_t_order<S>);
+			series_class.def("t_order",wrap_partial_t_order<S>);
+			series_class.def("t_lorder",wrap_t_lorder<S>);
+			series_class.def("t_lorder",wrap_partial_t_lorder<S>);
+		}
+		template <typename S>
+		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
+			!has_t_degree<S>::value || !has_t_ldegree<S>::value || !has_t_order<S>::value || !has_t_lorder<S>::value>::type * = nullptr)
+		{}
+		template <typename S>
+		static auto wrap_t_degree(const S &s) -> decltype(s.t_degree())
+		{
+			return s.t_degree();
+		}
+		template <typename S>
+		static auto wrap_partial_t_degree(const S &s, bp::list l) -> decltype(s.t_degree(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.t_degree(std::set<std::string>(begin,end));
+		}
+		template <typename S>
+		static auto wrap_t_ldegree(const S &s) -> decltype(s.t_ldegree())
+		{
+			return s.t_ldegree();
+		}
+		template <typename S>
+		static auto wrap_partial_t_ldegree(const S &s, bp::list l) -> decltype(s.t_ldegree(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.t_ldegree(std::set<std::string>(begin,end));
+		}
+		template <typename S>
+		static auto wrap_t_order(const S &s) -> decltype(s.t_order())
+		{
+			return s.t_order();
+		}
+		template <typename S>
+		static auto wrap_partial_t_order(const S &s, bp::list l) -> decltype(s.t_order(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.t_order(std::set<std::string>(begin,end));
+		}
+		template <typename S>
+		static auto wrap_t_lorder(const S &s) -> decltype(s.t_lorder())
+		{
+			return s.t_lorder();
+		}
+		template <typename S>
+		static auto wrap_partial_t_lorder(const S &s, bp::list l) -> decltype(s.t_lorder(std::set<std::string>{}))
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.t_lorder(std::set<std::string>(begin,end));
+		}
+		// Latex representation.
+		template <typename S>
+		static std::string wrap_latex(const S &s)
+		{
+			std::ostringstream oss;
+			s.print_tex(oss);
+			return oss.str();
+		}
+		// Symbol set wrapper.
+		template <typename S>
+		static bp::list symbol_set_wrapper(const S &s)
+		{
+			bp::list retval;
+			for (auto it = s.get_symbol_set().begin(); it != s.get_symbol_set().end(); ++it) {
+				retval.append(it->get_name());
+			}
+			return retval;
 		}
 		// Main exposer.
 		struct exposer_op
@@ -514,6 +594,12 @@ class exposer
 				expose_sin_cos<s_type>();
 				// Power series.
 				expose_power_series(series_class);
+				// Trigonometric series.
+				expose_trigonometric_series(series_class);
+				// Latex.
+				series_class.def("_latex_",wrap_latex<s_type>);
+				// Arguments set.
+				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 			}
 		};
 	public:
