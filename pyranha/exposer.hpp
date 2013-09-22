@@ -278,6 +278,97 @@ class exposer
 		static void expose_pbracket(bp::class_<S> &,
 			typename std::enable_if<!has_pbracket<S>::value>::type * = nullptr)
 		{}
+		// Canonical transformation.
+		// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
+		template <typename S>
+		static bool canonical_wrapper(bp::list new_p, bp::list new_q, bp::list p_list, bp::list q_list, const S &)
+		{
+			bp::stl_input_iterator<S> begin_new_p(new_p), end_new_p;
+			bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
+			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
+			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
+			return math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
+				std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
+		}
+		template <typename S>
+		static void expose_canonical(bp::class_<S> &,
+			typename std::enable_if<has_transformation_is_canonical<S>::value>::type * = nullptr)
+		{
+			bp::def("_transformation_is_canonical",canonical_wrapper<S>);
+		}
+		template <typename S>
+		static void expose_canonical(bp::class_<S> &,
+			typename std::enable_if<!has_transformation_is_canonical<S>::value>::type * = nullptr)
+		{}
+		// Utility function to check if object is callable. Will throw TypeError if not.
+		static void check_callable(bp::object func)
+		{
+#if PY_MAJOR_VERSION < 3
+			bp::object builtin_module = bp::import("__builtin__");
+			if (!builtin_module.attr("callable")(func)) {
+				::PyErr_SetString(PyExc_TypeError,"object is not callable");
+				bp::throw_error_already_set();
+			}
+#else
+			// This will throw on failure.
+			try {
+				bp::object call_method = func.attr("__call__");
+				(void)call_method;
+			} catch (...) {
+				::PyErr_Clear();
+				::PyErr_SetString(PyExc_TypeError,"object is not callable");
+				bp::throw_error_already_set();
+			}
+#endif
+		}
+		// filter() wrap.
+		template <typename S>
+		static S wrap_filter(const S &s, bp::object func)
+		{
+			typedef typename S::term_type::cf_type cf_type;
+			check_callable(func);
+			auto cpp_func = [func](const std::pair<cf_type,S> &p) {
+				return bp::extract<bool>(func(bp::make_tuple(p.first,p.second)));
+			};
+			return s.filter(cpp_func);
+		}
+		// Check if type is tuple with two elements (for use in wrap_transform).
+		static void check_tuple_2(bp::object obj)
+		{
+			bp::object builtin_module = bp::import(
+#if PY_MAJOR_VERSION < 3
+			"__builtin__"
+#else
+			"builtins"
+#endif
+			);
+			bp::object isinstance = builtin_module.attr("isinstance");
+			bp::object tuple_type = builtin_module.attr("tuple");
+			if (!isinstance(obj,tuple_type)) {
+				::PyErr_SetString(PyExc_TypeError,"object is not a tuple");
+				bp::throw_error_already_set();
+			}
+			const std::size_t len = bp::extract<std::size_t>(obj.attr("__len__")());
+			if (len != 2u) {
+				::PyErr_SetString(PyExc_ValueError,"the tuple to be returned in series transformation must have 2 elements");
+				bp::throw_error_already_set();
+			}
+		}
+		// transform() wrap.
+		template <typename S>
+		static S wrap_transform(const S &s, bp::object func)
+		{
+			typedef typename S::term_type::cf_type cf_type;
+			check_callable(func);
+			auto cpp_func = [func](const std::pair<cf_type,S> &p) -> std::pair<cf_type,S> {
+				bp::object tmp = func(bp::make_tuple(p.first,p.second));
+				check_tuple_2(tmp);
+				cf_type tmp_cf = bp::extract<cf_type>(tmp[0]);
+				S tmp_key = bp::extract<S>(tmp[1]);
+				return std::make_pair(std::move(tmp_cf),std::move(tmp_key));
+			};
+			return s.transform(cpp_func);
+		}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -338,6 +429,11 @@ class exposer
 				expose_partial(series_class);
 				// Poisson bracket.
 				expose_pbracket(series_class);
+				// Canonical test.
+				expose_canonical(series_class);
+				// Filter and transform.
+				series_class.def("filter",wrap_filter<s_type>);
+				series_class.def("transform",wrap_transform<s_type>);
 			}
 		};
 	public:
