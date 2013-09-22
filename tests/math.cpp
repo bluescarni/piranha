@@ -355,8 +355,8 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	BOOST_CHECK(!has_pbracket<std::string>::value);
 	typedef polynomial<rational,int> p_type;
 	BOOST_CHECK(has_pbracket<p_type>::value);
-	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{},{}),p_type(0));
-	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},{}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},std::vector<std::string>{},std::vector<std::string>{}),p_type(0));
+	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},std::vector<std::string>{}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},{"q","r"}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p","p"},{"q","r"}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p","q"},{"q","q"}),std::invalid_argument);

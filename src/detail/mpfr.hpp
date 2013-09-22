@@ -21,6 +21,8 @@
 #ifndef PIRANHA_DETAIL_MPFR_HPP
 #define PIRANHA_DETAIL_MPFR_HPP
 
+// NOTE: this extra include seems to be necessary in GCC 4.9.
+#include <cstddef>
 #include <mpfr.h>
 
 #if MPFR_VERSION_MAJOR < 3

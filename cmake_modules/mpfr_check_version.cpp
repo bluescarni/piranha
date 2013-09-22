@@ -1,10 +1,4 @@
-#include <mpfr.h>
-
-#if MPFR_VERSION_MAJOR < 3
-
-#error Unsupported MPFR version.
-
-#endif
+#include "../src/detail/mpfr.hpp"
 
 int main()
 {
