@@ -84,13 +84,11 @@ struct std_container_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		// Test rebinding as well.
-		using a_type = dynamic_aligning_allocator<int>;
 		using a_type2 = dynamic_aligning_allocator<T>;
-		std::vector<T,a_type> v;
+		std::vector<T,a_type2> v;
 		std::generate_n(std::back_inserter(v),100,[](){return boost::lexical_cast<T>(1);});
 		BOOST_CHECK(std::all_of(v.begin(),v.end(),[](const T &x) {return x == boost::lexical_cast<T>(1);}));
-		std::vector<T,a_type> l;
+		std::vector<T,a_type2> l;
 		std::generate_n(std::back_inserter(l),100,[](){return boost::lexical_cast<T>(1);});
 		BOOST_CHECK(std::all_of(l.begin(),l.end(),[](const T &x) {return x == boost::lexical_cast<T>(1);}));
 		std::vector<T,a_type2> va(a_type2(alignof(T)));
