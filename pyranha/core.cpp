@@ -51,7 +51,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../src/detail/is_digit.hpp"
 #include "../src/piranha.hpp"
 
 namespace bp = boost::python;
@@ -226,32 +225,6 @@ BOOST_PYTHON_MODULE(_core)
 		subs_types	st;
 	};
 	exposer<poisson_series,ps_desc> ps_exposer;
-/*
-	// Polynomials.
-	auto poly_cf_types = std::make_tuple(
-		std::make_tuple(double(),std::string("double")),
-		std::make_tuple(integer(),std::string("integer")),
-		std::make_tuple(rational(),std::string("rational")),
-		std::make_tuple(real(),std::string("real"))
-	);
-	auto poly_interop_types = std::make_tuple(double(),integer(),rational(),real());
-	series_exposer<polynomial,decltype(poly_cf_types),decltype(poly_interop_types)>
-		pe("polynomial",poly_cf_types,poly_interop_types);
-	// Poisson series.
-	auto ps_cf_types = std::make_tuple(
-		std::make_tuple(double(),std::string("double")),
-		std::make_tuple(integer(),std::string("integer")),
-		std::make_tuple(rational(),std::string("rational")),
-		std::make_tuple(real(),std::string("real")),
-		std::make_tuple(polynomial<double,signed char>(),std::string("polynomial_double")),
-		std::make_tuple(polynomial<integer,signed char>(),std::string("polynomial_integer")),
-		std::make_tuple(polynomial<rational,signed char>(),std::string("polynomial_rational")),
-		std::make_tuple(polynomial<real,signed char>(),std::string("polynomial_real"))
-	);
-	auto ps_interop_types = std::make_tuple(double(),integer(),rational(),real());
-	series_exposer<poisson_series,decltype(ps_cf_types),decltype(ps_interop_types)>
-		pse("poisson_series",ps_cf_types,ps_interop_types);
-*/
 	// Expose the settings class.
 	bp::class_<settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",settings::get_max_term_output).staticmethod("_get_max_term_output");
