@@ -32,13 +32,16 @@ def _cpp_type_catcher(func,*args):
 # Function to be run at module unload to clear registered custom derivatives.
 # The rationale is that custom derivatives will contain Python objects, and we
 # want to remove them before the C++ library exits.
-def _cleanup_custom_derivatives(series_name):
-	import re
-	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
-	for s in s_names:
-		print('Unregistering custom derivatives for: ' + s)
-		s_type = getattr(_core,s)
-		s_type.unregister_all_custom_derivatives()
+def _cleanup_custom_derivatives():
+	from ._core import _get_series_list as gsl
+	# Get the series list as a dictionary.
+	sd = dict(gsl())
+	for k in sd:
+		s_type = getattr(_core,'_series_' + str(sd[k]))
+		if hasattr(s_type,'unregister_all_custom_derivatives'):
+			print('Unregistering custom derivatives for: ' + str(s_type))
+			setattr(s_type,'evaluate',_evaluate_wrapper)
+			s_type.unregister_all_custom_derivatives()
 
 # Wrapper for the evaluate() method. Will first check input dict,
 # and then try to invoke the underlying C++ exposed method.
@@ -55,13 +58,16 @@ def _evaluate_wrapper(self,d):
 		raise TypeError('all values in the evaluation dictionary must be of the same type')
 	return _cpp_type_catcher(self._evaluate,d,d[list(d.keys())[0]])
 
-# Register the evaluate wrapper for a particular series.
-def _register_evaluate_wrapper(series_name):
-	import re
-	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
-	for s in s_names:
-		s_type = getattr(_core,s)
-		setattr(s_type,'evaluate',_evaluate_wrapper)
+# Register the evaluate wrappers.
+def _register_evaluate_wrappers():
+	from ._core import _get_series_list as gsl
+	# Get the series list as a dictionary.
+	sd = dict(gsl())
+	for k in sd:
+		s_type = getattr(_core,'_series_' + str(sd[k]))
+		# Some series might not have evaluate.
+		if hasattr(s_type,'_evaluate'):
+			setattr(s_type,'evaluate',_evaluate_wrapper)
 
 # Render a series in png format using latex + dvipng.
 # Code adapted from and inspired by:
@@ -120,17 +126,25 @@ def _repr_png_(self):
 		rmtree(tempd_name)
 
 # Register the png representation method for a particular series.
-def _register_repr_png(series_name):
-	import re
-	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
-	for s in s_names:
-		s_type = getattr(_core,s)
+def _register_repr_png():
+	from ._core import _get_series_list as gsl
+	sd = dict(gsl())
+	for k in sd:
+		s_type = getattr(_core,'_series_' + str(sd[k]))
 		setattr(s_type,'_repr_png_',_repr_png_)
 
 # Register the latex representation method for a particular series.
-def _register_repr_latex(series_name):
-	import re
-	s_names = list(filter(lambda s: re.match('\_' + series_name + '\_\d+',s),dir(_core)))
-	for s in s_names:
-		s_type = getattr(_core,s)
+def _register_repr_latex():
+	from ._core import _get_series_list as gsl
+	sd = dict(gsl())
+	for k in sd:
+		s_type = getattr(_core,'_series_' + str(sd[k]))
 		setattr(s_type,'_repr_latex_',lambda self: r'\[ ' + self._latex_() + r' \]')
+
+# Register common wrappers.
+def _register_wrappers():
+	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
+	# Keep this in mind in case problem arises.
+	_register_evaluate_wrappers()
+	_register_repr_png()
+	_register_repr_latex()

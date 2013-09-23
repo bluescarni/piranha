@@ -28,7 +28,7 @@ from __future__ import absolute_import as _ai
 __all__ = ['celmec', 'math', 'test', 'settings']
 
 import threading as _thr
-from ._common import _cpp_type_catcher
+from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives
 
 def get_series(s):
 	"""Get series type.
@@ -41,8 +41,8 @@ def get_series(s):
 	:raises: :exc:`TypeError` if the type of *s* is not *str*
 	:raises: :exc:`ValueError` if *s* does not correspond to any series known by Pyranha
 	
-	>>> t1 = get_series('polynomial<integer,short>')
-	>>> t1('x') + t1('y')
+	>>> t = get_series('polynomial<integer,short>')
+	>>> t('x') + t('y')
 	x+y
 	>>> get_series(1) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
@@ -65,18 +65,7 @@ def get_series(s):
 		raise ValueError('the series type \'' + s + '\' could not be found')
 
 # Register common wrappers.
-def _register_wrappers():
-	from ._common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
-	pass
-
 _register_wrappers()
-
-# TODO: evaluate the role of these things. Might need to protect with a mutex for consistency.
-#for n in _series_types:
-#	_register_evaluate_wrapper(n)
-#	_register_repr_png(n)
-#	_register_repr_latex(n)
-#del n
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.
@@ -124,3 +113,6 @@ class _settings(object):
 						delattr(getattr(_core,s),'_repr_latex_')
 
 settings = _settings()
+
+import atexit as _atexit
+_atexit.register(lambda : _cleanup_custom_derivatives())
