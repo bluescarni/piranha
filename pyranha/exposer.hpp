@@ -1,3 +1,6 @@
+// TODO: still remains:
+// - interop with cf type,
+// - subs methods with self.
 template <template <typename ...> class Series, typename Descriptor>
 class exposer
 {

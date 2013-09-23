@@ -159,7 +159,7 @@ static inline bp::list get_series_list()
 {
 	bp::list retval;
 	for (auto &p: series_archive) {
-		retval.append(p.first);
+		retval.append(bp::make_tuple(p.first,p.second));
 	}
 	return retval;
 }

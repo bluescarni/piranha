@@ -22,4 +22,4 @@ INSTALL(TARGETS _core
 )
 
 # Add the global init file.
-INSTALL(FILES __init__.py _common.py polynomial.py poisson_series.py celmec.py math.py test.py DESTINATION ${PYRANHA_INSTALL_PATH})
+INSTALL(FILES __init__.py _common.py celmec.py math.py test.py DESTINATION ${PYRANHA_INSTALL_PATH})

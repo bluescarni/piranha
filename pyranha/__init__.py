@@ -25,18 +25,24 @@
 
 from __future__ import absolute_import as _ai
 
-_series_types = ['polynomial', 'poisson_series']
-
-__all__ = _series_types + ['celmec', 'math', 'test', 'settings']
+__all__ = ['celmec', 'math', 'test', 'settings']
 
 from ._common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
 import threading as _thr
 
-for n in _series_types:
-	_register_evaluate_wrapper(n)
-	_register_repr_png(n)
-	_register_repr_latex(n)
-del n
+def get_series(s):
+	# TODO: check input, docs, catch error on return and provide better error message.
+	from ._core import _get_series_list as gsl
+	# Get the series list as a dictionary.
+	sd = dict(gsl())
+	return getattr(_core,'_series_'+str(sd[s]))
+
+# TODO: evaluate the role of these things. Might need to protect with a mutex for consistency.
+#for n in _series_types:
+#	_register_evaluate_wrapper(n)
+#	_register_repr_png(n)
+#	_register_repr_latex(n)
+#del n
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.
