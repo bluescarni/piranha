@@ -199,7 +199,7 @@ BOOST_PYTHON_MODULE(_core)
 			std::tuple<rational,signed char>,std::tuple<rational,short>,std::tuple<rational,kronecker_monomial<>>,
 			std::tuple<real,signed char>,std::tuple<real,short>,std::tuple<real,kronecker_monomial<>>>;
 		using interop_types = std::tuple<double,integer,real,rational>;
-		using pow_types = std::tuple<double,integer>;
+		using pow_types = std::tuple<double,integer,real>;
 		using eval_types = interop_types;
 		using subs_types = interop_types;
 		// Need to refer to these to silence a warning in GCC.
@@ -216,7 +216,7 @@ BOOST_PYTHON_MODULE(_core)
 			std::tuple<polynomial<rational,signed char>>,std::tuple<polynomial<rational,short>>,std::tuple<polynomial<rational,kronecker_monomial<>>>,
 			std::tuple<polynomial<real,signed char>>,std::tuple<polynomial<real,short>>,std::tuple<polynomial<real,kronecker_monomial<>>>>;
 		using interop_types = std::tuple<double,rational,integer,real>;
-		using pow_types = std::tuple<double,integer>;
+		using pow_types = std::tuple<double,integer,real>;
 		using eval_types = std::tuple<double,real,rational>;
 		using subs_types = eval_types;
 		interop_types	it;

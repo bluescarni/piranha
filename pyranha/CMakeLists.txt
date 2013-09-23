@@ -4,6 +4,7 @@ SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
 ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp series_exposer.hpp exposer.hpp)
 # Prefix setup.
+SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
 	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".pyd")
 ENDIF(PYDEXTENSION)
