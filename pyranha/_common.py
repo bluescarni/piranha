@@ -27,7 +27,7 @@ def _cpp_type_catcher(func,*args):
 	try:
 		return func(*args)
 	except TypeError:
-		raise TypeError("invalid argument type(s)")
+		raise TypeError('invalid argument type(s)')
 
 # Function to be run at module unload to clear registered custom derivatives.
 # The rationale is that custom derivatives will contain Python objects, and we
@@ -125,7 +125,7 @@ def _repr_png_(self):
 		# No matter what happens, always remove the temp directory with all the content.
 		rmtree(tempd_name)
 
-# Register the png representation method for a particular series.
+# Register the png representation method.
 def _register_repr_png():
 	from ._core import _get_series_list as gsl
 	sd = dict(gsl())
@@ -133,7 +133,7 @@ def _register_repr_png():
 		s_type = getattr(_core,'_series_' + str(sd[k]))
 		setattr(s_type,'_repr_png_',_repr_png_)
 
-# Register the latex representation method for a particular series.
+# Register the latex representation method.
 def _register_repr_latex():
 	from ._core import _get_series_list as gsl
 	sd = dict(gsl())
