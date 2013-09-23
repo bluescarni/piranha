@@ -236,6 +236,7 @@ def run_test_suite():
 	# Run the doctests.
 	import doctest
 	from . import celmec, math, test
+	doctest.testmod(pyranha)
 	doctest.testmod(celmec)
 	doctest.testmod(math)
 	doctest.testmod(test)

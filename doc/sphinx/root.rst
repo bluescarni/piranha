@@ -9,6 +9,9 @@ Reference
 ---------
 
 .. py:module:: pyranha
+
+.. autofunction:: pyranha.get_series
+
 .. data:: pyranha.settings
 
    Settings class.
