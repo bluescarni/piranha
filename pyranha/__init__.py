@@ -25,7 +25,7 @@
 
 from __future__ import absolute_import as _ai
 
-__all__ = ['celmec', 'math', 'test', 'settings']
+__all__ = ['celmec', 'math', 'test', 'settings', 'get_series']
 
 import threading as _thr
 from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives
@@ -90,27 +90,29 @@ class _settings(object):
 	# Wrapper method to enable/disable latex representation.
 	@property
 	def latex_repr(self):
-		import re
-		from . import _core
+		from ._core import _get_series_list as gsl
+		sd = dict(gsl())
+		s_type = getattr(_core,'_series_' + str(sd[sd.keys()[0]]))
 		with self.__lock:
-			s_names = list(filter(lambda s: re.match('\_' + _series_types[0] + '\_\d+',s),dir(_core)))
-			return hasattr(getattr(_core,s_names[0]),'_repr_latex_')
+			return hasattr(s_type,'_repr_latex_')
 	@latex_repr.setter
 	def latex_repr(self,flag):
-		import re
 		from . import _core
+		from ._core import _get_series_list as gsl
+		from ._common import _register_repr_latex
 		f = bool(flag)
 		with self.__lock:
+			# NOTE: reentrant lock in action.
 			if f == self.latex_repr:
 				return
 			if f:
-				for n in _series_types:
-					_register_repr_latex(n)
+				_register_repr_latex()
 			else:
-				for n in _series_types:
-					s_names = list(filter(lambda s: re.match('\_' + n + '\_\d+',s),dir(_core)))
-					for s in s_names:
-						delattr(getattr(_core,s),'_repr_latex_')
+				sd = dict(gsl())
+				for k in sd:
+					s_type = getattr(_core,'_series_' + str(sd[k]))
+					assert(hasattr(s_type,'_repr_latex_'))
+					delattr(s_type,'_repr_latex_')
 
 settings = _settings()
 
