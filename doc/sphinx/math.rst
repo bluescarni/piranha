@@ -1,6 +1,6 @@
 .. _math:
 
-:mod:`pyranhapp0x.math`
+:mod:`pyranha.math`
 =======================
 
 Math module.
@@ -8,5 +8,5 @@ Math module.
 Reference
 ---------
 
-.. automodule:: pyranhapp0x.math
+.. automodule:: pyranha.math
    :members:

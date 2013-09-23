@@ -1,6 +1,6 @@
 .. _celmec:
 
-:mod:`pyranhapp0x.celmec`
+:mod:`pyranha.celmec`
 =========================
 
 Celestial mechanics module.
@@ -8,5 +8,5 @@ Celestial mechanics module.
 Reference
 ---------
 
-.. automodule:: pyranhapp0x.celmec
+.. automodule:: pyranha.celmec
    :members:

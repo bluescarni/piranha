@@ -1,6 +1,6 @@
 .. _root:
 
-:mod:`pyranhapp0x`
+:mod:`pyranha`
 ==================
 
 Root pyranha module.
@@ -8,11 +8,11 @@ Root pyranha module.
 Reference
 ---------
 
-.. py:module:: pyranhapp0x
-.. data:: pyranhapp0x.settings
+.. py:module:: pyranha
+.. data:: pyranha.settings
 
    Settings class.
-.. attribute:: pyranhapp0x.settings.max_term_output
+.. attribute:: pyranha.settings.max_term_output
 
    Maximum number of terms that will be printed in the representation of series.
 

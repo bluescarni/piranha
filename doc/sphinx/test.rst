@@ -1,6 +1,6 @@
 .. _test:
 
-:mod:`pyranhapp0x.test`
+:mod:`pyranha.test`
 =======================
 
 Test module.
@@ -8,5 +8,5 @@ Test module.
 Reference
 ---------
 
-.. automodule:: pyranhapp0x.test
+.. automodule:: pyranha.test
    :members:
