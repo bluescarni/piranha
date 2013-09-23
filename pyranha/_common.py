@@ -29,29 +29,6 @@ def _cpp_type_catcher(func,*args):
 	except TypeError:
 		raise TypeError("invalid argument type(s)")
 
-# Get a list of coefficients supported by series type named series_name.
-def _get_cf_types(series_name):
-	cf_list_getter = getattr(_core,'_' + series_name + '_get_coefficient_list')
-	return [(t[1],type(t[0]) if not t[0] is None else None) for t in cf_list_getter()]
-
-# Try to fetch a series types for series named series_name with coefficient cf_type.
-def _get_series_type(series_name,cf_type):
-	cf_list_getter = getattr(_core,'_' + series_name + '_get_coefficient_list')
-	cfl = [(type(t[0]) if not t[0] is None else None,t[1],t[2]) for t in cf_list_getter()]
-	# First let's search by type.
-	cand = list(filter(lambda t: t[0] == cf_type if not t[0] is None else False,cfl))
-	assert(len(cand) < 2)
-	if len(cand) == 0:
-		# Let's try to search by name if we had no matches.
-		cand = list(filter(lambda t: t[1] == cf_type,cfl))
-		assert(len(cand) < 2)
-	if len(cand) == 0:
-		raise TypeError('no series type available for this coefficient type')
-	# Build series name and get it from _core.
-	s_name = list(filter(lambda s: s.startswith('_' + series_name + '_' + str(cand[0][2])),dir(_core)))
-	assert(len(s_name) == 1)
-	return getattr(_core,s_name[0])
-
 # Function to be run at module unload to clear registered custom derivatives.
 # The rationale is that custom derivatives will contain Python objects, and we
 # want to remove them before the C++ library exits.

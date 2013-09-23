@@ -291,6 +291,9 @@ class thread_pool: private detail::thread_pool_base<>
  * \section type_requirements Type requirements
  *
  * \p F must be an instance of \p std::future.
+ *
+ * \todo provide method to retrieve future values from get_all() using a vector (in case the future type
+ * is not void or a reference, in which case the get_all() method stays as it is).
  */
 template <typename F>
 class future_list

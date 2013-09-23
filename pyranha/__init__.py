@@ -27,15 +27,49 @@ from __future__ import absolute_import as _ai
 
 __all__ = ['celmec', 'math', 'test', 'settings']
 
-from ._common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
 import threading as _thr
+from ._common import _cpp_type_catcher
 
 def get_series(s):
-	# TODO: check input, docs, catch error on return and provide better error message.
+	"""Get series type.
+	
+	This function is used to get a series type base on its textual description in a C++ template-like syntax.
+	
+	:param s: textual description of the series type
+	:type s: *str*
+	:rtype: a Python type corresponding to the series description *s*
+	:raises: :exc:`TypeError` if the type of *s* is not *str*
+	:raises: :exc:`ValueError` if *s* does not correspond to any series known by Pyranha
+	
+	>>> t1 = get_series('polynomial<integer,short>')
+	>>> t1('x') + t1('y')
+	x+y
+	>>> get_series(1) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: the input value must be a string
+	>>> get_series('invalid_string') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: the series type could not be found
+	
+	"""
+	if not isinstance(s,str):
+		raise TypeError('the input value must be a string')
 	from ._core import _get_series_list as gsl
 	# Get the series list as a dictionary.
 	sd = dict(gsl())
-	return getattr(_core,'_series_'+str(sd[s]))
+	try:
+		return getattr(_core,'_series_' + str(sd[s]))
+	except KeyError:
+		raise ValueError('the series type \'' + s + '\' could not be found')
+
+# Register common wrappers.
+def _register_wrappers():
+	from ._common import _register_evaluate_wrapper, _register_repr_png, _register_repr_latex
+	pass
+
+_register_wrappers()
 
 # TODO: evaluate the role of these things. Might need to protect with a mutex for consistency.
 #for n in _series_types:
@@ -55,7 +89,15 @@ class _settings(object):
 	@max_term_output.setter
 	def max_term_output(self,n):
 		from ._core import _settings as _s
-		_s._set_max_term_output(n)
+		return _cpp_type_catcher(_s._set_max_term_output,n)
+	@property
+	def n_threads(self):
+		from ._core import _settings as _s
+		return _s._get_n_threads()
+	@n_threads.setter
+	def n_threads(self,n):
+		from ._core import _settings as _s
+		return _cpp_type_catcher(_s._set_n_threads,n)
 	# Wrapper method to enable/disable latex representation.
 	@property
 	def latex_repr(self):

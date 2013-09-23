@@ -66,7 +66,7 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC thread_management
+class thread_management
 {
 	public:
 		/// Bind thread to specific processor.

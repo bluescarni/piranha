@@ -28,17 +28,4 @@
 #define likely(x) __builtin_expect((x),1)
 #define unlikely(x) __builtin_expect((x),0)
 
-// Visibility support.
-#if defined(_WIN32)
-	#if defined(PIRANHA_BUILDING_DLL)
-		#define PIRANHA_PUBLIC __declspec(dllexport)
-	#elif defined(PIRANHA_USING_DLL)
-		#define PIRANHA_PUBLIC __declspec(dllimport)
-	#else
-		#define PIRANHA_PUBLIC
-	#endif
-#else
-	#define PIRANHA_PUBLIC __attribute__ ((visibility ("default")))
-#endif
-
 #endif

@@ -65,7 +65,7 @@ bool base_environment<T>::m_shutdown = false;
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC environment: private detail::base_environment<>
+class environment: private detail::base_environment<>
 {
 	public:
 		/// Environment constructor.

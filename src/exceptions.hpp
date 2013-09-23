@@ -33,8 +33,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "config.hpp" // For visibility support.
-
 namespace piranha
 {
 namespace detail
@@ -110,16 +108,13 @@ struct ex_thrower
 namespace piranha
 {
 
-// NOTE: all exception classes must be declared as visible:
-// http://gcc.gnu.org/wiki/Visibility
-
 /// Base exception class.
 /**
  * All piranha exceptions derive from this class.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC base_exception: public std::exception
+class base_exception: public std::exception
 {
         public:
 		/// Constructor.
@@ -146,7 +141,7 @@ class PIRANHA_PUBLIC base_exception: public std::exception
 };
 
 /// Exception for functionality not implemented or not available on the current platform.
-struct PIRANHA_PUBLIC not_implemented_error: public base_exception
+struct not_implemented_error: public base_exception
 {
 	/// Constructor.
 	/**
@@ -158,7 +153,7 @@ struct PIRANHA_PUBLIC not_implemented_error: public base_exception
 };
 
 /// Exception for signalling division by zero.
-struct PIRANHA_PUBLIC zero_division_error: public base_exception
+struct zero_division_error: public base_exception
 {
 	/// Constructor.
 	/**

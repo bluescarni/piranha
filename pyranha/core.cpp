@@ -229,6 +229,9 @@ BOOST_PYTHON_MODULE(_core)
 	bp::class_<settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",settings::get_max_term_output).staticmethod("_get_max_term_output");
 	settings_class.def("_set_max_term_output",settings::set_max_term_output).staticmethod("_set_max_term_output");
+	settings_class.def("_set_n_threads",settings::set_n_threads).staticmethod("_set_n_threads");
+	settings_class.def("_get_n_threads",settings::get_n_threads).staticmethod("_get_n_threads");
+	settings_class.def("_reset_n_threads",settings::reset_n_threads).staticmethod("_reset_n_threads");
 	// Factorial.
 	bp::def("_factorial",&math::factorial);
 	// Binomial coefficient.

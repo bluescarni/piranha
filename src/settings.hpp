@@ -68,7 +68,7 @@ const unsigned long base_settings<T>::m_default_max_term_output;
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC settings: private detail::base_settings<>
+class settings: private detail::base_settings<>
 {
 	public:
 		/// Get the number of threads available for use by piranha.

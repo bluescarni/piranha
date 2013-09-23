@@ -23,48 +23,5 @@ from __future__ import absolute_import as _ai
 
 from ._common import _get_cf_types, _get_series_type, _cleanup_custom_derivatives
 
-def get_cf_types():
-	"""Get the list of implemented coefficient types.
-	
-	The returned value is a list of pairs consisting of a string and either a type or *None*.
-	The string is a descriptor which can be used in :func:`get_type` to request a Poisson series
-	type with a specific coefficient. The type can be used in exactly the same way, but it will be
-	present (i.e., not *None*) only if a direct conversion to/from the underlying C++ type is available.
-	
-	:rtype: list of types that can be used as Poisson series coefficients
-	
-	>>> l = get_cf_types()
-	>>> all([isinstance(t[1],type) if not t[1] is None else True for t in l])
-	True
-	>>> all([isinstance(t[0],str) for t in l])
-	True
-	>>> t1 = get_type('integer')
-	>>> t2 = get_type(int)
-	>>> t1 == t2
-	True
-	
-	"""
-	return _get_cf_types('poisson_series')
-
-def get_type(cf_type):
-	"""Get a Poisson series type.
-	
-	The argument must be either a string or a type, and it represents the requested coefficient type
-	for the output Poisson series type. *cf_type*, either in string form or in type form, must be
-	present in the output of :func:`get_cf_types`, otherwise an error will be produced.
-	
-	:param cf_type: coefficient type
-	:type cf_type: type or string
-	:rtype: Poisson series type
-	:raises: :exc:`TypeError` if the Poisson series type could not be determined
-	
-	>>> from fractions import Fraction
-	>>> tq = get_type('rational')
-	>>> print(tq(Fraction(1,2))**2)
-	1/4
-	
-	"""
-	return _get_series_type('poisson_series',cf_type)
-
 import atexit as _atexit
 _atexit.register(lambda : _cleanup_custom_derivatives('poisson_series'))

@@ -86,7 +86,7 @@ const std::thread::id base_runtime_info<T>::m_main_thread_id = std::this_thread:
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC runtime_info: private detail::base_runtime_info<>
+class runtime_info: private detail::base_runtime_info<>
 {
 		using base = detail::base_runtime_info<>;
 	public:

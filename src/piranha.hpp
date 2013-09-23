@@ -103,13 +103,13 @@
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
  * the operator overloaded (via decltype SFINAE).
- * \todo figure out the role of visibility stuff now that we are moving to header-only library -> it seems like we might forget
- * about the whole complication altogether.
  * \todo in pyranha, we should be able to provide self-descriptivie docstrings for the exposed series, based on the
  * template enable_if mechanism.
  * \todo consider bringing back the unroller from the vectorization work into the small_vector class.
  * \todo some versions of mingw want __mingw_aligned_malloc instead of _aligned_malloc, fix this with a check in the build system. Or
  * maybe check whether __mingw_aligned_malloc is available in all mingw versions.
+ * \todo pyranha: try to understand what is the best way to have functions which are extensible from the user. E.g., we have math.cos
+ * that works on series, mpmath, etc., how can we provide a mechanism for a user to add her own specialisations?
  */
 namespace piranha
 {

@@ -99,7 +99,7 @@ const ::mpfr_prec_t real_base<T>::default_prec;
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC real: public detail::real_base<>
+class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
 		template <typename T, typename U>

@@ -71,7 +71,7 @@ std::set<std::string> base_symbol<T>::m_symbol_list;
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class PIRANHA_PUBLIC symbol: private detail::base_symbol<>
+class symbol: private detail::base_symbol<>
 {
 	public:
 		/// Constructor from name.

@@ -106,7 +106,7 @@ struct generic_printer
  * \todo settings::get_tracing() should use an atomic variable instead of mutex, to maximize performance
  * in those cases in which we are not tracing.
  */
-class PIRANHA_PUBLIC tracing: private detail::base_tracing<>
+class tracing: private detail::base_tracing<>
 {
 	public:
 		/// Trace event.
