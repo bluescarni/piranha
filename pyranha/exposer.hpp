@@ -186,9 +186,9 @@ class exposer
 				has_t_subs<S,T>::value>::type * = nullptr) const
 			{
 				// NOTE: this should probably be replaced with a wrapper that calls math::... functions.
-				m_series_class.def("_subs",&S::template subs<T>);
-				m_series_class.def("_ipow_subs",&S::template ipow_subs<T>);
-				m_series_class.def("_t_subs",&S::template t_subs<T,T>);
+				m_series_class.def("subs",&S::template subs<T>);
+				m_series_class.def("ipow_subs",&S::template ipow_subs<T>);
+				m_series_class.def("t_subs",&S::template t_subs<T,T>);
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!has_subs<S,T>::value || !has_ipow_subs<S,T>::value ||
@@ -201,6 +201,10 @@ class exposer
 			using subs_types = typename Descriptor::subs_types;
 			subs_types st;
 			tuple_for_each(st,subs_exposer<S>(series_class));
+			// Implement subs with self.
+			S tmp;
+			subs_exposer<S> se(series_class);
+			se(tmp);
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_subs(bp::class_<S> &, typename std::enable_if<!has_typedef_subs_types<T>::value>::type * = nullptr)
