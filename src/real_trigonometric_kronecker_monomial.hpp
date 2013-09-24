@@ -39,6 +39,7 @@
 #include "config.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/degree_commons.hpp"
+#include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "math.hpp"
@@ -689,8 +690,7 @@ class real_trigonometric_kronecker_monomial
 					if (tmp[i] == m_one) {
 						os << "-";
 					} else if (tmp[i] != one) {
-						// NOTE: long long cast here is safe, as long long is the widest signed int type.
-						os << static_cast<long long>(tmp[i]);
+						os << detail::prepare_for_print(tmp[i]) << '*';
 					}
 					// Finally, print name of variable.
 					os << args[i].get_name();

@@ -696,19 +696,19 @@ struct print_tester
 		k5 = k_type{T(1),T(2)};
 		k5.set_flavour(false);
 		k5.print(oss,vs);
-		BOOST_CHECK(oss.str() == "sin(x+2y)");
+		BOOST_CHECK(oss.str() == "sin(x+2*y)");
 		oss.str("");
 		k5 = k_type{T(1),T(-2)};
 		k5.print(oss,vs);
-		BOOST_CHECK_EQUAL(oss.str(),"cos(x-2y)");
+		BOOST_CHECK_EQUAL(oss.str(),"cos(x-2*y)");
 		oss.str("");
 		k5 = k_type{T(-1),T(-2)};
 		k5.print(oss,vs);
-		BOOST_CHECK_EQUAL(oss.str(),"cos(-x-2y)");
+		BOOST_CHECK_EQUAL(oss.str(),"cos(-x-2*y)");
 		oss.str("");
 		k5 = k_type{T(-2),T(1)};
 		k5.print(oss,vs);
-		BOOST_CHECK_EQUAL(oss.str(),"cos(-2x+y)");
+		BOOST_CHECK_EQUAL(oss.str(),"cos(-2*x+y)");
 		oss.str("");
 		// Representation bug: would display cos(+y).
 		k5 = k_type{T(0),T(1)};

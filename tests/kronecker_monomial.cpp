@@ -432,11 +432,11 @@ struct print_tester
 		vs.add("y");
 		oss.str("");
 		k5.print(oss,vs);
-		BOOST_CHECK(oss.str() == "x**-1y");
+		BOOST_CHECK(oss.str() == "x**-1*y");
 		k_type k6({T(-1),T(-2)});
 		oss.str("");
 		k6.print(oss,vs);
-		BOOST_CHECK(oss.str() == "x**-1y**-2");
+		BOOST_CHECK(oss.str() == "x**-1*y**-2");
 	}
 };
 

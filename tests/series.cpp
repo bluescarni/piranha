@@ -1215,7 +1215,7 @@ struct stream_tester
 			BOOST_CHECK(oss.str() == "-x");
 			oss.str("");
 			oss << (-p_type1{"x"} * p_type1{"y"});
-			BOOST_CHECK(oss.str() == "-xy");
+			BOOST_CHECK(oss.str() == "-x*y");
 			oss.str("");
 			oss << (-p_type1{"x"} + 1);
 			BOOST_CHECK(oss.str() == "1-x" || oss.str() == "-x+1");
@@ -1236,10 +1236,10 @@ struct stream_tester
 			BOOST_CHECK(oss.str() == "-1");
 			oss.str("");
 			oss << (p_type11{"x"} * p_type11{"y"});
-			BOOST_CHECK(oss.str() == "xy");
+			BOOST_CHECK(oss.str() == "x*y");
 			oss.str("");
 			oss << (-p_type11{"x"} * p_type11{"y"});
-			BOOST_CHECK(oss.str() == "-xy");
+			BOOST_CHECK(oss.str() == "-x*y");
 			oss.str("");
 			oss << (-p_type11{"x"} + 1);
 			BOOST_CHECK(oss.str() == "1-x" || oss.str() == "-x+1");

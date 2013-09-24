@@ -41,6 +41,7 @@
 #include "config.hpp"
 #include "detail/degree_commons.hpp"
 #include "detail/km_commons.hpp"
+#include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
 #include "integer.hpp"
 #include "kronecker_array.hpp"
@@ -539,13 +540,16 @@ class kronecker_monomial
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
 			const value_type zero(0), one(1);
+			bool empty_output = true;
 			for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i) {
 				if (tmp[i] != zero) {
+					if (!empty_output) {
+						os << '*';
+					}
 					os << args[i].get_name();
+					empty_output = false;
 					if (tmp[i] != one) {
-						// NOTE: cast to long long is always safe as it is the
-						// widest signed int type.
-						os << "**" << static_cast<long long>(tmp[i]);
+						os << "**" << detail::prepare_for_print(tmp[i]);
 					}
 				}
 			}

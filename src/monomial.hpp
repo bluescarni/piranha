@@ -515,9 +515,16 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			typedef typename base::value_type value_type;
 			const value_type zero(0), one(1);
+			bool empty_output = true;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				if ((*this)[i] != zero) {
+					// If we are going to print a symbol, and something has been printed before,
+					// then we are going to place the multiplication sign.
+					if (!empty_output) {
+						os << '*';
+					}
 					os << args[i].get_name();
+					empty_output = false;
 					if ((*this)[i] != one) {
 						os << "**" << detail::prepare_for_print((*this)[i]);
 					}

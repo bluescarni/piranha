@@ -492,7 +492,7 @@ struct pow_tester
 			p *= p_type{"y"}.pow(2);
 			BOOST_CHECK_EQUAL((3 * p).pow(4),p_type{math::pow(Cf(1) * 3,4)} * p * p * p * p);
 			if (!std::is_unsigned<Expo>::value) {
-				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p.pow(-1)),"x**-1y**-2");
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p.pow(-1)),"x**-1*y**-2");
 			}
 			BOOST_CHECK_EQUAL(p.pow(0),p_type{math::pow(Cf(1),0)});
 			BOOST_CHECK_EQUAL(p_type{3}.pow(4),math::pow(Cf(3),4));
