@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE series_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
@@ -1266,14 +1267,15 @@ struct stream_tester
 			BOOST_CHECK(oss.str() == "-1");
 			oss.str("");
 			oss << (p_type11{"x"} * p_type11{"y"});
-			BOOST_CHECK(oss.str() == "xy");
+			BOOST_CHECK(oss.str() == "x*y");
 			oss.str("");
 			oss << (-p_type11{"x"} * p_type11{"y"});
-			BOOST_CHECK(oss.str() == "-xy");
-			// Test wih no term output.
-			settings::set_max_term_output(0u);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
-				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}),"...");
+			BOOST_CHECK(oss.str() == "-x*y");
+			// Test wih small term output.
+			settings::set_max_term_output(1u);
+			const std::string tmp_out = boost::lexical_cast<std::string>(3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} +
+				poly_type{"x"} * poly_type{"x"} * poly_type{"x"}), tmp_cmp = "...";
+			BOOST_CHECK(std::equal(tmp_cmp.begin(),tmp_cmp.end(),tmp_out.rbegin()));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(poly_type{}),"0");
 			settings::reset_max_term_output();
 		}
@@ -1840,12 +1842,13 @@ struct print_tex_tester
 			oss.str("");
 			(-p_type11{"x"} * p_type11{"y"}).print_tex(oss);
 			BOOST_CHECK(oss.str() == "-{x}{y}");
-			// Test wih no term output.
+			// Test wih little term output.
 			typedef polynomial<Cf,Expo> poly_type;
-			settings::set_max_term_output(0u);
+			settings::set_max_term_output(1u);
 			oss.str("");
 			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
-			BOOST_CHECK_EQUAL(oss.str(),"\\ldots");
+			const std::string tmp_out = oss.str(), tmp_cmp = "\\ldots";
+			BOOST_CHECK(std::equal(tmp_cmp.rbegin(),tmp_cmp.rend(),tmp_out.rbegin()));
 			oss.str("");
 			poly_type{}.print_tex(oss);
 			BOOST_CHECK_EQUAL(oss.str(),"0");

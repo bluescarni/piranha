@@ -709,7 +709,7 @@ class series: series_binary_operators, detail::series_tag
 			std::ostringstream oss;
 			auto it = start;
 			for (; it != end;) {
-				if (count == limit) {
+				if (limit && count == limit) {
 					break;
 				}
 				std::ostringstream oss_cf;
@@ -744,7 +744,7 @@ class series: series_binary_operators, detail::series_tag
 			}
 			auto str = oss.str();
 			// If we reached the limit without printing all terms in the series, print the ellipsis.
-			if (count == limit && it != end) {
+			if (limit && count == limit && it != end) {
 				if (TexMode) {
 					str += "\\ldots";
 				} else {
@@ -1634,7 +1634,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - if the key output is empty, the sign "*" is not printed;
 		 * - the sequence of characters "+-" is transformed into "-";
 		 * - at most piranha::settings::get_max_term_output() terms are printed, and terms in excess are
-		 *   represented with ellipsis "..." at the end of the output.
+		 *   represented with ellipsis "..." at the end of the output; if piranha::settings::get_max_term_output()
+		 *   is zero, all the terms will be printed.
 		 * 
 		 * Note that the print order of the terms will be undefined.
 		 * 
