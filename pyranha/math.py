@@ -24,6 +24,9 @@ from __future__ import absolute_import as _ai
 
 from ._common import _cpp_type_catcher
 
+# NOTE: some ideas to improve the extensibility of these functions:
+# http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
+
 def cos(arg):
 	"""Cosine.
 	
