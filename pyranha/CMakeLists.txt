@@ -3,16 +3,21 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
 ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp series_exposer.hpp exposer.hpp)
-# Prefix setup.
+# Prefix and suffix setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
 	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".pyd")
 ENDIF(PYDEXTENSION)
 
 # Strict aliasing setup.
-IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
+# NOTE: Python < 3 is not strict C, as per:
+# http://www.python.org/dev/peps/pep-3123/
+# When using GCC or Clang, we add -fno-strict-aliasing here and when compiling core.cpp to prevent possible problems.
+# Other compilers should probably use similar flags.
+IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX))
+	MESSAGE(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
 	SET_TARGET_PROPERTIES(_core PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing")
-ENDIF(${PYTHON_LIBRARY_VERSION} LESS 30 AND CMAKE_COMPILER_IS_GNUCXX)
+ENDIF()
 
 # Module needs to Boost.Python and the Python libs, plus the mandatory libraries.
 TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})

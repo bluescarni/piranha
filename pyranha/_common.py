@@ -145,6 +145,7 @@ def _register_repr_latex():
 def _register_wrappers():
 	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
 	# Keep this in mind in case problem arises.
+	# NOTE: probably we should put a mutex here against concurrent loads from multiple threads.
 	_register_evaluate_wrappers()
 	_register_repr_png()
 	_register_repr_latex()
