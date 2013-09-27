@@ -95,6 +95,8 @@ namespace piranha
  * \todo: use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
  * in static_vector for instance.
  * \todo store functors in a tuple to get advantage of EBMO.
+ * \todo inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
+ * when iterating over the series with the fat iterator).
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
