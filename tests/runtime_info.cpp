@@ -53,6 +53,6 @@ BOOST_AUTO_TEST_CASE(runtime_info_print_test)
 
 BOOST_AUTO_TEST_CASE(runtime_info_settings_test)
 {
-	BOOST_CHECK_EQUAL(runtime_info::get_hardware_concurrency(),settings::get_n_threads());
+	BOOST_CHECK(runtime_info::get_hardware_concurrency() == settings::get_n_threads() || runtime_info::get_hardware_concurrency() == 0u);
 	BOOST_CHECK_EQUAL(runtime_info::get_cache_line_size(),settings::get_cache_line_size());
 }

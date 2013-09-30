@@ -53,6 +53,16 @@ extern "C"
 #include <cstdlib>
 #include <new>
 
+#elif defined(__APPLE_CC__)
+
+#include <cstddef>
+
+extern "C"
+{
+#include <sys/sysctl.h>
+#include <unistd.h>
+}
+
 #endif
 
 #include <boost/numeric/conversion/cast.hpp>
@@ -103,8 +113,6 @@ class runtime_info: private detail::base_runtime_info<>
 		/**
 		 * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
 		 * the detection fails.
-		 * 
-		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 */
 		static unsigned get_hardware_concurrency()
 		{
@@ -127,6 +135,12 @@ class runtime_info: private detail::base_runtime_info<>
 				// Do not do anything, just keep zero.
 			}
 			return retval;
+#elif defined(__APPLE_CC__)
+			try {
+				return boost::numeric_cast<unsigned>(::sysconf(_SC_NPROCESSORS_ONLN));
+			} catch (...) {
+				return 0u;
+			}
 #else
 			return 0u;
 #endif
@@ -134,8 +148,6 @@ class runtime_info: private detail::base_runtime_info<>
 		/// Size of the data cache line.
 		/**
 		 * @return data cache line size (in bytes), or 0 if the value cannot be determined.
-		 * 
-		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 */
 		static unsigned get_cache_line_size()
 		{
@@ -192,8 +204,18 @@ class runtime_info: private detail::base_runtime_info<>
 				return boost::numeric_cast<unsigned>(line_size);
 			} catch (...) {}
 			return 0u;
+#elif defined(__APPLE_CC__)
+			// NOTE: apparently here we are expecting a std::size_t because the docs say
+			// that size_t is used to represent sizes, and we are getting the size of the cache line.
+			// Compare to the usage above for the FreeBSD cpu count, were we expect ints.
+			std::size_t ls, size = sizeof(ls);
+			try {
+				return ::sysctlbyname("hw.cachelinesize",&ls,&size,NULL,0) ? 0u : boost::numeric_cast<unsigned>(ls);
+			} catch (...) {
+				return 0u;
+			}
 #else
-			// TODO: FreeBSD, OSX, etc.?
+			// TODO: FreeBSD, etc.?
 			return 0u;
 #endif
 		}
