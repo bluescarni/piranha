@@ -27,12 +27,11 @@
 #include <mutex>
 
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/thread_barrier.hpp"
 #include "../src/thread_pool.hpp"
-
-// TODO: check for exceptions throwing.
 
 std::mutex mutex;
 
@@ -48,17 +47,22 @@ static inline void test_function()
 	}
 }
 
-// Check binding on new threads thread.
 BOOST_AUTO_TEST_CASE(thread_management_new_threads_bind)
 {
 	piranha::environment env;
 	for (unsigned i = 0u; i < piranha::runtime_info::get_hardware_concurrency(); ++i) {
 		auto f = piranha::thread_pool::enqueue(i,[](){test_function();});
 		f.wait();
+		try {
+			f.get();
+		} catch (const piranha::not_implemented_error &) {
+			// If we are getting a NIE it's good, it means the platform does not
+			// support binding.
+		}
 	}
 }
 
-// Check thread-safe binding using a thread group.
+// Check thread-safe binding using thread_pool.
 BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 {
 	piranha::future_list<std::future<void>> f_list;
@@ -66,4 +70,7 @@ BOOST_AUTO_TEST_CASE(thread_management_task_group_bind)
 		f_list.push_back(piranha::thread_pool::enqueue(0,[](){test_function();}));
 	}
 	f_list.wait_all();
+	try {
+		f_list.get_all();
+	} catch (const piranha::not_implemented_error &) {}
 }
