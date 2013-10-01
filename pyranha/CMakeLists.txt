@@ -2,7 +2,7 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
-ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp series_exposer.hpp exposer.hpp)
+ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp exposer.hpp)
 # Prefix and suffix setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
