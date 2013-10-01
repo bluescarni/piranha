@@ -181,18 +181,34 @@ class exposer
 			subs_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
 			bp::class_<S> &m_series_class;
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<has_subs<S,T>::value && has_ipow_subs<S,T>::value &&
-				has_t_subs<S,T>::value>::type * = nullptr) const
+			void operator()(const T &x) const
 			{
-				// NOTE: this should probably be replaced with a wrapper that calls math::... functions.
+				// NOTE: we should probably add wrappers that call math::... functions.
+				impl_subs(x);
+				impl_ipow_subs(x);
+				impl_t_subs(x);
+			}
+			template <typename T>
+			void impl_subs(const T &, typename std::enable_if<has_subs<S,T>::value>::type * = nullptr) const
+			{
 				m_series_class.def("subs",&S::template subs<T>);
+			}
+			template <typename T>
+			void impl_subs(const T &, typename std::enable_if<!has_subs<S,T>::value>::type * = nullptr) const {}
+			template <typename T>
+			void impl_ipow_subs(const T &, typename std::enable_if<has_ipow_subs<S,T>::value>::type * = nullptr) const
+			{
 				m_series_class.def("ipow_subs",&S::template ipow_subs<T>);
+			}
+			template <typename T>
+			void impl_ipow_subs(const T &, typename std::enable_if<!has_ipow_subs<S,T>::value>::type * = nullptr) const {}
+			template <typename T>
+			void impl_t_subs(const T &, typename std::enable_if<has_t_subs<S,T>::value>::type * = nullptr) const
+			{
 				m_series_class.def("t_subs",&S::template t_subs<T,T>);
 			}
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<!has_subs<S,T>::value || !has_ipow_subs<S,T>::value ||
-				!has_t_subs<S,T>::value>::type * = nullptr) const
-			{}
+			void impl_t_subs(const T &, typename std::enable_if<!has_t_subs<S,T>::value>::type * = nullptr) const {}
 		};
 		template <typename S, typename T = Descriptor>
 		static void expose_subs(bp::class_<S> &series_class, typename std::enable_if<has_typedef_subs_types<T>::value>::type * = nullptr)
