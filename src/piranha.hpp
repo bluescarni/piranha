@@ -114,6 +114,7 @@
  * \todo OSX todo:
  * - remove the -pthread flag,
  * - implement the workarounds for is_constructible problem in libc++,
+ * - change the extension pyranha to .so,
  * - hard-code the -stdlib=libc++ compile and link flags?
  */
 namespace piranha
