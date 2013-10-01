@@ -221,12 +221,28 @@ class exposer
 				expose_arithmetics<T>(m_series_class);
 			}
 		};
+		template <typename InteropTypes, typename S>
+		static void expose_cf_interop(bp::class_<S> &series_class,
+			typename std::enable_if<!type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+		{
+			using cf_type = typename S::term_type::cf_type;
+			cf_type cf;
+			interop_exposer<S> ie(series_class);
+			ie(cf);
+		}
+		template <typename InteropTypes, typename S>
+		static void expose_cf_interop(bp::class_<S> &,
+			typename std::enable_if<type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+		{}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &series_class, typename std::enable_if<has_typedef_interop_types<T>::value>::type * = nullptr)
 		{
 			using interop_types = typename Descriptor::interop_types;
 			interop_types it;
 			tuple_for_each(it,interop_exposer<S>(series_class));
+			// Interoperate conditionally with coefficient type, if it is not already in the
+			// list of interoperable types.
+			expose_cf_interop<interop_types>(series_class);
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &, typename std::enable_if<!has_typedef_interop_types<T>::value>::type * = nullptr)
