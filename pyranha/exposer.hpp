@@ -254,6 +254,11 @@ class exposer
 		{
 			return math::partial(s,name);
 		}
+		template <typename S>
+		static S partial_member_wrapper(const S &s, const std::string &name)
+		{
+			return s.partial(name);
+		}
 		// Custom partial derivatives registration wrapper.
 		// NOTE: here we need to take care of multithreading in the future, most likely by adding
 		// the Python threading bits inside the lambda and also outside when checking func.
@@ -269,7 +274,7 @@ class exposer
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<is_differentiable<S>::value>::type * = nullptr)
 		{
-			series_class.def("partial",&S::partial);
+			series_class.def("partial",partial_member_wrapper<S>);
 			bp::def("_partial",partial_wrapper<S>);
 			// Custom derivatives support.
 			series_class.def("register_custom_derivative",register_custom_derivative<S>).staticmethod("register_custom_derivative");
