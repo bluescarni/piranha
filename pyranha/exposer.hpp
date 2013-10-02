@@ -1,5 +1,39 @@
-// TODO: still remains:
-// - interop with cf type.
+// NOTE: here we are adopting a workaround for a bug (?) in libc++ where the explicit
+// conversion operator of real, rational and integer to double is not considered by std::is_constructible.
+// This will prevent interoperability with these types when using the generic series constructor.
+// We then explicitly specialise the is_constructible type trait as needed (including const and reference
+// variants).
+// NOTE: the inclusion of this header is a trick to check for the presence of the _LIBCPP_VERSION definition.
+// http://www.boost.org/doc/libs/1_47_0/boost/config/stdlib/libcpp.hpp
+// http://clang-developers.42468.n3.nabble.com/Best-way-to-detect-libc-at-compile-time-td4025578.html
+
+#include <ciso646>
+#if defined(_LIBCPP_VERSION)
+
+#define PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND(type) \
+template <> \
+struct is_constructible<double,type>: true_type {}; \
+template <> \
+struct is_constructible<double,const type>: true_type {}; \
+template <> \
+struct is_constructible<double,type &>: true_type {}; \
+template <> \
+struct is_constructible<double,type &&>: true_type {}; \
+template <> \
+struct is_constructible<double,type const &>: true_type {};
+
+namespace std
+{
+
+PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND(piranha::rational)
+PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND(piranha::real)
+PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND(piranha::integer)
+
+}
+
+#undef PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND
+#endif
+
 template <template <typename ...> class Series, typename Descriptor>
 class exposer
 {
