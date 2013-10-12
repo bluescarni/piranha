@@ -7,7 +7,8 @@ IF(CMAKE_USE_PTHREADS_INIT)
 	# different systems require different GCC flags:
 	# http://gcc.gnu.org/onlinedocs/libstdc++/manual/using_concurrency.html
 	CHECK_CXX_COMPILER_FLAG(-pthread PIRANHA_PTHREAD_COMPILER_FLAG)
-	IF(PIRANHA_PTHREAD_COMPILER_FLAG)
+	# NOTE: we do not enable the -pthread flag on OS X as it is apparently ignored.
+	IF(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND PIRANHA_PTHREAD_COMPILER_FLAG)
 		MESSAGE(STATUS "Enabling the -pthread compiler flag.")
 		# NOTE: according to GCC docs, this sets the flag for both compiler and linker. This should
 		# work similarly for clang as well.
@@ -87,3 +88,12 @@ IF(UNIX OR MINGW)
 		MESSAGE(STATUS "Explicit linking to the math library is not needed.")
 	ENDIF(NOT PIRANHA_IGNORE_LIBM)
 ENDIF(UNIX OR MINGW)
+
+# OS X setup.
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	IF(CMAKE_COMPILER_IS_CLANGXX)
+		# On OS X with clang we need to use libc++.
+		MESSAGE(STATUS "Clang compiler on OS X detected, using libc++ as standard library.")
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+	ENDIF()
+ENDIF()

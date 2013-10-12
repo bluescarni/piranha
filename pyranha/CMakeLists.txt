@@ -7,7 +7,11 @@ ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp exposer.h
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
 	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".pyd")
-ENDIF(PYDEXTENSION)
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	# Apparently on OS X Python expects the .so extension for compiled modules.
+	MESSAGE(STATUS "OS X detected, pyranha's module suffix will be '.so'.")
+	SET_TARGET_PROPERTIES(_core PROPERTIES SUFFIX ".so")
+ENDIF()
 
 # Strict aliasing setup.
 # NOTE: Python < 3 is not strict C, as per:

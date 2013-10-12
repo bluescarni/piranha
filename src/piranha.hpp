@@ -111,11 +111,6 @@
  * \todo pyranha: try to understand what is the best way to have functions which are extensible from the user. E.g., we have math.cos
  * that works on series, mpmath, etc., how can we provide a mechanism for a user to add her own specialisations?
  * http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
- * \todo OSX todo:
- * - remove the -pthread flag,
- * - implement the workarounds for is_constructible problem in libc++,
- * - change the extension pyranha to .so,
- * - hard-code the -stdlib=libc++ compile and link flags?
  */
 namespace piranha
 {
