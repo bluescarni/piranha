@@ -807,6 +807,8 @@ struct tuple_is_homogeneous<std::tuple<>>
  *   as third parameter a const reference to a piranha::symbol_set.
  *
  * This type trait requires \p Term to satisfy piranha::is_term.
+ * \todo: replace the multiplication_result_type detection with the detection of member function signature, something like this:
+ * http://stackoverflow.com/questions/19387339/type-deduction-given-member-function-pointer-with-variadic-templates
  */
 template <typename Term>
 class term_is_multipliable: detail::sfinae_types
