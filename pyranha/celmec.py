@@ -71,7 +71,7 @@ def orbitalR(angles):
 	from .math import cos, sin
 	l = len(angles)
 	if l != 3 and l != 6:
-		raise ValueError("input list must contain either 3 or 6 elements")
+		raise ValueError('input list must contain either 3 or 6 elements')
 	if l == 3:
 		omega, i, Omega = angles
 		cos_omega, sin_omega = cos(omega), sin(omega)
