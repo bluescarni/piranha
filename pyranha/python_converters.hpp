@@ -131,21 +131,24 @@ struct real_converter
 			}
 		}
 	};
-	static void *convertible(::PyObject *obj_ptr)
+	// Check if obj_ptr is an instance of the class str_class in the module str_mod. In case
+	// of import or attr errors, false will be returned.
+	static bool is_instance_of(::PyObject *obj_ptr, const char *str_mod, const char *str_class)
 	{
-		if (!obj_ptr) {
-			return nullptr;
-		}
 		try {
-			// NOTE: here we want to ignore errors when mpmath is missing, and just report that
-			// the object is not convertible.
-			bp::object mpmath = bp::import("mpmath");
-			bp::object mpf = mpmath.attr("mpf");
-			if (!::PyObject_IsInstance(obj_ptr,mpf.ptr())) {
-				return nullptr;
+			bp::object c_obj = bp::import(str_mod).attr(str_class);
+			if (::PyObject_IsInstance(obj_ptr,c_obj.ptr())) {
+				return true;
 			}
 		} catch (...) {
 			::PyErr_Clear();
+		}
+		return false;
+	}
+	static void *convertible(::PyObject *obj_ptr)
+	{
+		// Not convertible if nullptr, or obj_ptr is not an instance of any of the supported classes.
+		if (!obj_ptr || (!is_instance_of(obj_ptr,"mpmath","mpf") && !is_instance_of(obj_ptr,"sympy","Float"))) {
 			return nullptr;
 		}
 		return obj_ptr;
@@ -157,9 +160,14 @@ struct real_converter
 		// NOTE: here the handle is from borrowed because we are not responsible for the generation of obj_ptr.
 		bp::handle<> obj_handle(bp::borrowed(obj_ptr));
 		bp::object obj(obj_handle);
+		// NOTE: sympy Float seems to be a wrapper around an instance of mpmath mpf,
+		// accessbile via the num attribute.
+		if (is_instance_of(obj_ptr,"sympy","Float")) {
+			obj = obj.attr("num");
+		}
 		const ::mpfr_prec_t prec = boost::numeric_cast< ::mpfr_prec_t>(
 			static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
-		::PyObject *str_obj = ::PyObject_Repr(obj_ptr);
+		::PyObject *str_obj = ::PyObject_Repr(obj.ptr());
 		if (!str_obj) {
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
 		}
