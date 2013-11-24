@@ -92,7 +92,7 @@ class _settings(object):
 	def latex_repr(self):
 		from ._core import _get_series_list as gsl
 		sd = dict(gsl())
-		s_type = getattr(_core,'_series_' + str(sd[sd.keys()[0]]))
+		s_type = getattr(_core,'_series_' + str(sd[list(sd.keys())[0]]))
 		with self.__lock:
 			return hasattr(s_type,'_repr_latex_')
 	@latex_repr.setter
