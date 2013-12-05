@@ -299,7 +299,7 @@ class hash_set
 					auto old = cur;
 					// Assign the next.
 					cur = cur->m_next;
-					// Destroy the old payload and erase connections
+					// Destroy the old payload and erase connections.
 					old->ptr()->~T();
 					old->m_next = nullptr;
 					// If the old node was not the initial one, delete it.
