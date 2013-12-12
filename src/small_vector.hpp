@@ -63,7 +63,8 @@ namespace detail
 // with them (apart from experimentation).
 // See also:
 // http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
-// NOTE: now we do not use the allocator at all, as we cannot guarantee it has a standard layout.
+// NOTE: now we do not use the allocator at all, as we cannot guarantee it has a standard layout. Keep the comments
+// above as an historical reference, might come useful in the future :)
 // NOTE: POD optimizations are possible again.
 template <typename T>
 class dynamic_storage
@@ -104,7 +105,7 @@ class dynamic_storage
 			m_ptr(nullptr)
 		{
 			// Obtain storage. Will just return nullptr if requested size is zero.
-			m_ptr = obtain_new_storage(other.m_size);
+			m_ptr = allocate(other.m_size);
 			// Attempt to copy-construct the elements from other.
 			try {
 				for (; m_size < other.m_size; ++m_size) {
@@ -202,7 +203,7 @@ class dynamic_storage
 				piranha_throw(std::bad_alloc,);
 			}
 			// Start by allocating the new storage. New capacity is at least one at this point.
-			pointer new_storage = obtain_new_storage(new_capacity);
+			pointer new_storage = allocate(new_capacity);
 			assert(new_storage != nullptr);
 			// Move in existing elements. Consistency checks ensure
 			// that m_size is not greater than m_capacity and, by extension, new_capacity.
@@ -235,7 +236,7 @@ class dynamic_storage
 			// The storage we are going to operate on is either the old one, if it has enough capacity,
 			// or new storage.
 			const bool new_storage = (m_capacity < new_size);
-			pointer storage = new_storage ? obtain_new_storage(new_size) : m_ptr;
+			pointer storage = new_storage ? allocate(new_size) : m_ptr;
 			// NOTE: storage cannot be nullptr:
 			// - if new storage, new_size has to be at least 1 (new_size > m_capacity);
 			// - if not new storage, new_size <= m_capacity; m_ptr can be null only if capacity is 0, but then
@@ -287,6 +288,8 @@ class dynamic_storage
 		{
 			p->~value_type();
 		}
+		// Obtain new storage, and throw an error in case something goes wrong.
+		// NOTE: no need to check for zero, will aready return nullptr in that case.
 		static pointer allocate(const size_type &s)
 		{
 			return static_cast<pointer>(aligned_palloc(0u,static_cast<std::size_t>(s * sizeof(value_type))));
@@ -313,15 +316,8 @@ class dynamic_storage
 				// NOTE: could use POD optimisations here in principle.
 				destroy(m_ptr + i);
 			}
-			if (m_ptr != nullptr) {
-				deallocate(m_ptr);
-			}
-		}
-		// Obtain new storage, and throw an error in case something goes wrong.
-		pointer obtain_new_storage(const size_type &size)
-		{
-			// NOTE: no need to check for zero, will aready return nullptr in that case.
-			return allocate(size);
+			// NOTE: no need to check for nullptr, aligned_pfree already does it.
+			deallocate(m_ptr);
 		}
 		// Will try to double the capacity, or, in case this is not possible,
 		// will set the capacity to max_size. If the initial capacity is already max,
