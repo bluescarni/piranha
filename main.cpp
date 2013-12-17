@@ -1,11 +1,99 @@
+#include <boost/timer/timer.hpp>
+
 #include "src/piranha.hpp"
+
+#include "new_integer.hpp"
+
+namespace piranha
+{
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> fateman1()
+{
+	typedef polynomial<Cf,Key> p_type;
+	p_type x("x"), y("y"), z("z"), t("t");
+	auto f = x + y + z + t + 1;
+	auto tmp(f);
+	for (auto i = 1; i < 20; ++i) {
+		f *= tmp;
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * (f + 1);
+	}
+}
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> pearce1()
+{
+	typedef polynomial<Cf,Key> p_type;
+	p_type x("x"), y("y"), z("z"), t("t"), u("u");
+
+	auto f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
+	auto tmp_f(f);
+	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+	auto tmp_g(g);
+	for (int i = 1; i < /*12*/6; ++i) {
+		f *= tmp_f;
+		g *= tmp_g;
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * g;
+	}
+}
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> pearce2()
+{
+	typedef polynomial<Cf,Key> p_type;
+	p_type x("x"), y("y"), z("z"), t("t"), u("u");
+
+	auto f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
+	auto tmp_f(f);
+	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+	auto tmp_g(g);
+	for (int i = 1; i < 16; ++i) {
+		f *= tmp_f;
+		g *= tmp_g;
+	}
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * g;
+	}
+}
+
+namespace math
+{
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<std::is_same<T,new_integer>::value>::type>
+{
+	bool operator()(const T &n) const
+	{
+		return n.is_zero();
+	}
+};
+
+template <typename T>
+struct negate_impl<T,typename std::enable_if<std::is_same<T,new_integer>::value>::type>
+{
+	void operator()(new_integer &n) const
+	{
+		n.negate();
+	}
+};
+
+}}
 
 using namespace piranha;
 
 int main()
 {
 	environment env;
-	polynomial<double,unsigned> p{"x"}, q{1}, mq{-1}, l{"y"};
+	settings::set_n_threads(1);
+	std::cout << pearce1<new_integer,kronecker_monomial<>>().size() << '\n';
+
+	/*polynomial<double,unsigned> p{"x"}, q{1}, mq{-1}, l{"y"};
 	std::cout << p << '\n';
 	std::cout << q << '\n';
 	std::cout << mq << '\n';
@@ -14,5 +102,5 @@ int main()
 	std::cout << (p + pp + 1) << '\n';
 	std::cout << ((-p + 1) * pp - pp) << '\n';
 	std::cout << (p * pp) << '\n';
-	std::cout << (-polynomial<double,unsigned>{"x"} + 1) << '\n';
+	std::cout << (-polynomial<double,unsigned>{"x"} + 1) << '\n';*/
 }
