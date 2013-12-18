@@ -417,6 +417,9 @@ class new_integer
 			auto proxy_r = retval.m_union.st.mpz_proxy(), proxy_1 = n1.m_union.st.mpz_proxy(),
 				proxy_2 = n2.m_union.st.mpz_proxy();
 			::mpz_addmul(&proxy_r,&proxy_1,&proxy_2);
+			// Update the size in the real result.
+			retval.m_union.st._mp_size = proxy_r._mp_size;
+			// TODO assert alloc?
 		}
 		// In-place add/sub/mul when static operations are not possible.
 		template <decltype( ::mpz_add) Func>
@@ -462,7 +465,7 @@ class new_integer
 			}
 			return *this;
 		}
-		void static_mul(new_integer &retval, const new_integer &op1, const new_integer &op2)
+		static void static_mul(new_integer &retval, const new_integer &op1, const new_integer &op2)
 		{
 			::mp_limb_t *ptr1 = op1.m_union.st.m_storage, *ptr2 = op2.m_union.st.m_storage,
 				*res_ptr = retval.m_union.st.m_storage;
@@ -521,7 +524,7 @@ class new_integer
 			retval.m_union.st._mp_size = sign_product ? res_size : -res_size;
 		}
 		template <bool AddOrSub>
-		void static_add_sub(new_integer &retval, const new_integer &op1, const new_integer &op2)
+		static void static_add_sub(new_integer &retval, const new_integer &op1, const new_integer &op2)
 		{
 			auto size1 = op1.m_union.size(), size2 = (AddOrSub) ? op2.m_union.size() : -op2.m_union.size(),
 				asize1 = op1.m_union.abs_size(), asize2 = op2.m_union.abs_size();

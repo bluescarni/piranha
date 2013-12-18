@@ -24,6 +24,22 @@ inline polynomial<Cf,Key> fateman1()
 }
 
 template <typename Cf,typename Key>
+inline polynomial<Cf,Key> fateman2()
+{
+        typedef polynomial<Cf,Key> p_type;
+        p_type x("x"), y("y"), z("z"), t("t");
+        auto f = x + y + z + t + 1;
+        auto tmp(f);
+        for (auto i = 1; i < 30; ++i) {
+                f *= tmp;
+        }
+        {
+        boost::timer::auto_cpu_timer t;
+        return f * (f + 1);
+        }
+}
+
+template <typename Cf,typename Key>
 inline polynomial<Cf,Key> pearce1()
 {
 	typedef polynomial<Cf,Key> p_type;
@@ -33,7 +49,7 @@ inline polynomial<Cf,Key> pearce1()
 	auto tmp_f(f);
 	auto g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
 	auto tmp_g(g);
-	for (int i = 1; i < /*12*/6; ++i) {
+	for (int i = 1; i < 12; ++i) {
 		f *= tmp_f;
 		g *= tmp_g;
 	}
@@ -83,6 +99,15 @@ struct negate_impl<T,typename std::enable_if<std::is_same<T,new_integer>::value>
 	}
 };
 
+template <typename T>
+struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,new_integer>::value>::type>
+{
+	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
+	{
+		return x.multiply_accumulate(y,z);
+	}
+};
+
 }}
 
 using namespace piranha;
@@ -90,8 +115,8 @@ using namespace piranha;
 int main()
 {
 	environment env;
-	settings::set_n_threads(1);
-	std::cout << pearce1<new_integer,kronecker_monomial<>>().size() << '\n';
+	settings::set_n_threads(4);
+	std::cout << pearce2<new_integer,kronecker_monomial<>>().size() << '\n';
 
 	/*polynomial<double,unsigned> p{"x"}, q{1}, mq{-1}, l{"y"};
 	std::cout << p << '\n';
