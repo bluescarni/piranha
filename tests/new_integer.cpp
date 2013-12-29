@@ -18,16 +18,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_EXTENDED_INTEGER_TYPES_HPP
-#define PIRANHA_EXTENDED_INTEGER_TYPES_HPP
+#include "../src/new_integer.hpp"
 
-@PIRANHA_HAVE_GCC_INT128@
-@PIRANHA_HAVE_GCC_UINT128@
+#define BOOST_TEST_MODULE new_integer_test
+#include <boost/test/unit_test.hpp>
 
-#if defined(PIRANHA_GCC_INT128_T)
+#define FUSION_MAX_VECTOR_SIZE 20
 
-//#include "detail/gcc_int128.hpp"
+#include <boost/fusion/algorithm.hpp>
+#include <boost/fusion/include/algorithm.hpp>
+#include <boost/fusion/include/sequence.hpp>
+#include <boost/fusion/sequence.hpp>
 
-#endif
+#include "../src/environment.hpp"
 
-#endif
+using namespace piranha;
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_test)
+{
+	environment env;
+}

@@ -113,9 +113,6 @@ ELSE(PIRANHA_GIT_EXECUTABLE)
 	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"Undetermined\"")
 ENDIF(PIRANHA_GIT_EXECUTABLE)
 
-# Configure extended integer types.
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/extended_integer_types.hpp.in" "${CMAKE_SOURCE_DIR}/src/extended_integer_types.hpp")
-
 # Configure config.hpp.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")
 

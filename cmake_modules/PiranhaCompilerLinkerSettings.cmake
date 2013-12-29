@@ -20,6 +20,21 @@ macro(PIRANHA_CHECK_ENABLE_CXX_FLAG flag)
 	unset(PIRANHA_CHECK_CXX_FLAG CACHE)
 endmacro(PIRANHA_CHECK_ENABLE_CXX_FLAG)
 
+# Macro to detect the 128-bit unsigned integer type available on some compilers.
+macro(PIRANHA_CHECK_UINT128_T)
+	MESSAGE(STATUS "Checking the existence of a 128-bit unsigned integer type.")
+	# NOTE: for now we support only the GCC integer.
+	# NOTE: use this instead of the unsigned __int128. See:
+	# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50454
+	CHECK_TYPE_SIZE("__uint128_t" PIRANHA_UINT128_T)
+	IF(PIRANHA_UINT128_T)
+		MESSAGE(STATUS "128-bit unsigned integer type detected.")
+		SET(PIRANHA_HAVE_UINT128_T "#define PIRANHA_UINT128_T __uint128_t")
+	ELSE()
+		MESSAGE(STATUS "No 128-bit unsigned integer type detected.")
+	ENDIF()
+endmacro(PIRANHA_CHECK_UINT128_T)
+
 # Configuration for GCC.
 IF(CMAKE_COMPILER_IS_GNUCXX)
 	MESSAGE(STATUS "GNU compiler detected, checking version.")
@@ -30,13 +45,6 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 	MESSAGE(STATUS "GCC version is ok.")
 	MESSAGE(STATUS "Enabling c++11 flag.")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-	# Try to see if we have the 128-bit integer type available.
-	CHECK_TYPE_SIZE("__int128" PIRANHA_GCC___INT128)
-	IF(PIRANHA_GCC___INT128)
-                MESSAGE(STATUS "GCC 128-bit integer type detected.")
-		SET(PIRANHA_HAVE_GCC_INT128 "#define PIRANHA_GCC_INT128_T __int128")
-		SET(PIRANHA_HAVE_GCC_UINT128 "#define PIRANHA_GCC_UINT128_T unsigned __int128")
-	ENDIF()
 	# Enable libstdc++ pedantic debug mode in debug builds.
 	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
 	# flag enabled in order to be reliable (and this is not the case usually):
@@ -50,6 +58,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		SET(CMAKE_CXX_FLAGS_DEBUG "-g0 -Os")
 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
 	ENDIF(MINGW)
+	PIRANHA_CHECK_UINT128_T()
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 IF(CMAKE_COMPILER_IS_CLANGXX)
@@ -62,6 +71,7 @@ IF(CMAKE_COMPILER_IS_CLANGXX)
 	MESSAGE(STATUS "Enabling c++11 flag.")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 	#PIRANHA_CHECK_ENABLE_CXX_FLAG(-stdlib=libc++)
+	PIRANHA_CHECK_UINT128_T()
 ENDIF(CMAKE_COMPILER_IS_CLANGXX)
 
 # Common configuration for GCC and Clang.
