@@ -22,7 +22,7 @@ endmacro(PIRANHA_CHECK_ENABLE_CXX_FLAG)
 
 # Macro to detect the 128-bit unsigned integer type available on some compilers.
 macro(PIRANHA_CHECK_UINT128_T)
-	MESSAGE(STATUS "Checking the existence of a 128-bit unsigned integer type.")
+	MESSAGE(STATUS "Looking for a 128-bit unsigned integer type.")
 	# NOTE: for now we support only the GCC integer.
 	# NOTE: use this instead of the unsigned __int128. See:
 	# http://gcc.gnu.org/bugzilla/show_bug.cgi?id=50454

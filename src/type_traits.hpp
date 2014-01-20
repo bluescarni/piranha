@@ -631,8 +631,8 @@ class is_cf
 		/// Value of the type trait.
 		static const bool value = is_container_element<T>::value &&
 					  has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value &&
-					  /*has_is_zero<T>::value && has_negate<T>::value &&
-					  is_equality_comparable<T>::value && is_addable<T>::value &&*/
+					  has_is_zero<T>::value && has_negate<T>::value &&
+					  is_equality_comparable<T>::value && is_addable<T>::value &&
 					  is_addable_in_place<T>::value && is_subtractable_in_place<T>::value &&
 					  is_subtractable<T>::value && std::is_constructible<T,int>::value;
 };
