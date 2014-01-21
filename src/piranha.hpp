@@ -111,6 +111,9 @@
  * \todo pyranha: try to understand what is the best way to have functions which are extensible from the user. E.g., we have math.cos
  * that works on series, mpmath, etc., how can we provide a mechanism for a user to add her own specialisations?
  * http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
+ * \todo check usages of std algorithms against the assumptions on the functors used:
+ * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
+ * \todo probably better to remove the thread_management class and use free functions directly for the binding.
  */
 namespace piranha
 {
