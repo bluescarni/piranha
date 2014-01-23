@@ -1,10 +1,16 @@
 #include <algorithm>
+#include <boost/integer_traits.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <gmp.h>
+#include <iostream>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
 #include "config.hpp"
+#include "exceptions.hpp"
+#include "small_vector.hpp"
 
 namespace piranha { namespace detail {
 
@@ -25,8 +31,10 @@ struct si_limb_types
 template <>
 struct si_limb_types<64>
 {
-	using limb_t = std::uint_fast64_t;
+	using limb_t = std::uint_least64_t;
 	using dlimb_t = PIRANHA_UINT128_T;
+	static_assert(static_cast<dlimb_t>(boost::integer_traits<limb_t>::const_max) <=
+		(dlimb_t(0) - dlimb_t(1)) / boost::integer_traits<limb_t>::const_max,"128-bit integer is too narrow.");
 	static const limb_t limb_bits = 64;
 };
 #endif
@@ -34,17 +42,25 @@ struct si_limb_types<64>
 template <>
 struct si_limb_types<32>
 {
-	using limb_t = std::uint_fast32_t;
-	using dlimb_t = std::uint_fast64_t;
+	using limb_t = std::uint_least32_t;
+	using dlimb_t = std::uint_least64_t;
 	static const limb_t limb_bits = 32;
 };
 
 template <>
 struct si_limb_types<16>
 {
-	using limb_t = std::uint_fast16_t;
-	using dlimb_t = std::uint_fast32_t;
+	using limb_t = std::uint_least16_t;
+	using dlimb_t = std::uint_least32_t;
 	static const limb_t limb_bits = 16;
+};
+
+template <>
+struct si_limb_types<8>
+{
+	using limb_t = std::uint_least8_t;
+	using dlimb_t = std::uint_least16_t;
+	static const limb_t limb_bits = 8;
 };
 
 template <>
@@ -57,24 +73,175 @@ struct si_limb_types<0> : public si_limb_types<
 	>
 {};
 
+struct mpz_raii
+{
+	mpz_raii()
+	{
+		::mpz_init(&m_mpz);
+	}
+	mpz_raii(const mpz_raii &) = delete;
+	mpz_raii(mpz_raii &&) = delete;
+	mpz_raii &operator=(const mpz_raii &) = delete;
+	mpz_raii &operator=(mpz_raii &&) = delete;
+	~mpz_raii() noexcept
+	{
+		::mpz_clear(&m_mpz);
+	}
+	mpz_struct_t m_mpz;
+};
+
 template <int NBits>
 struct static_integer
 {
 	using dlimb_t = typename si_limb_types<NBits>::dlimb_t;
 	using limb_t = typename si_limb_types<NBits>::limb_t;
 	static const limb_t limb_bits = si_limb_types<NBits>::limb_bits;
-	// NOTE: better to init everything otherwise zero is gonna be represented by undefined
+	// Check: we need to be able to address all bits in the 3 limbs using limb_t.
+	static_assert(limb_bits < boost::integer_traits<limb_t>::const_max / 3u,"Overflow error.");
+	// NOTE: init everything otherwise zero is gonna be represented by undefined
 	// values in lo/mid/hi.
 	static_integer():_mp_alloc(0),_mp_size(0),m_lo(0),m_mid(0),m_hi(0) {}
+	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
+	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_lo(0),m_mid(0),m_hi(0)
+	{
+		const auto orig_n = n;
+		limb_t bit_idx = 0;
+		while (n != Integer(0)) {
+			if (bit_idx == limb_bits * 3u) {
+				piranha_throw(std::overflow_error,"insufficient bit width");
+			}
+			// NOTE: in C++11 division will round to zero always (for negative numbers as well).
+			// The bit shift operator >> has implementation defined behaviour if n is signed and negative,
+			// so we do not use it.
+			const Integer quot = static_cast<Integer>(n / Integer(2)), rem = static_cast<Integer>(n % Integer(2));
+			if (rem) {
+				set_bit(bit_idx);
+			}
+			n = quot;
+			++bit_idx;
+		}
+		fix_sign_ctor(orig_n);
+	}
+	template <typename T>
+	void fix_sign_ctor(T, typename std::enable_if<std::is_unsigned<T>::value>::type * = nullptr) {}
+	template <typename T>
+	void fix_sign_ctor(T n, typename std::enable_if<std::is_signed<T>::value>::type * = nullptr)
+	{
+		if (n < T(0)) {
+			negate();
+		}
+	}
 	static_integer(const static_integer &) = default;
 	static_integer(static_integer &&) = default;
 	~static_integer() noexcept
 	{
-		// TODO assert sizes.
-		// TODO assert consistency checks as well.
+		piranha_assert(consistency_checks());
 	}
 	static_integer &operator=(const static_integer &) = default;
 	static_integer &operator=(static_integer &&) = default;
+	void negate()
+	{
+		// NOTE: this is 3 at most, no danger in taking the negative.
+		_mp_size = -_mp_size;
+	}
+	void set_bit(const limb_t &idx)
+	{
+		piranha_assert(idx < limb_bits * 3u);
+		// Crossing fingers for compiler optimising this out.
+		const auto quot = idx / limb_bits, rem = idx % limb_bits;
+		limb_t *l;
+		switch (quot) {
+			case 0u:
+				l = &m_lo;
+				break;
+			case 1u:
+				l = &m_mid;
+				break;
+			case 2u:
+				l = &m_hi;
+		}
+		*l = static_cast<limb_t>(*l | limb_t(1) << rem);
+		// Update the size if needed.
+		const auto new_size = static_cast<mpz_size_t>(quot + 1u);
+		if (_mp_size < 0) {
+			if (-new_size < _mp_size) {
+				_mp_size = -new_size;
+			}
+		} else {
+			if (new_size > _mp_size) {
+				_mp_size = new_size;
+			}
+		}
+	}
+	mpz_size_t calculate_n_limbs() const
+	{
+		if (m_hi != 0) {
+			return 3;
+		}
+		if (m_mid != 0) {
+			return 2;
+		}
+		if (m_lo != 0) {
+			return 1;
+		}
+		return 0;
+	}
+	bool consistency_checks() const
+	{
+		return _mp_alloc == 0 && _mp_size <= 3 && _mp_size >= -3 && (calculate_n_limbs() == _mp_size || -calculate_n_limbs() == _mp_size);
+	}
+	// Convert static integer to a GMP mpz. The out struct must be initialized to zero.
+	void to_mpz(mpz_struct_t &out) const
+	{
+		// mp_bitcnt_t must be able to count all the bits in the static integer.
+		static_assert(limb_bits * 3u < boost::integer_traits< ::mp_bitcnt_t>::const_max,"Overflow error.");
+		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
+		auto l = m_lo;
+		for (limb_t i = 0u; i < limb_bits; ++i) {
+			const auto bit = l % 2u;
+			if (bit) {
+				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i));
+			}
+			l = static_cast<limb_t>(l >> 1u);
+		}
+		l = m_mid;
+		for (limb_t i = 0u; i < limb_bits; ++i) {
+			const auto bit = l % 2u;
+			if (bit) {
+				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i + limb_bits));
+			}
+			l = static_cast<limb_t>(l >> 1u);
+		}
+		l = m_hi;
+		for (limb_t i = 0u; i < limb_bits; ++i) {
+			const auto bit = l % 2u;
+			if (bit) {
+				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i + limb_bits * 2u));
+			}
+			l = static_cast<limb_t>(l >> 1u);
+		}
+		if (_mp_size < 0) {
+			// Switch the sign as needed.
+			::mpz_neg(&out,&out);
+		}
+	}
+	friend std::ostream &operator<<(std::ostream &os, const static_integer &si)
+	{
+		mpz_raii m;
+		si.to_mpz(m.m_mpz);
+		const std::size_t size_base10 = ::mpz_sizeinbase(&m.m_mpz,10);
+		if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
+			piranha_throw(std::overflow_error,"number of digits is too large");
+		}
+		const auto total_size = size_base10 + 2u;
+		small_vector<char> tmp;
+		tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
+		if (unlikely(tmp.size() != total_size)) {
+			piranha_throw(std::overflow_error,"number of digits is too large");
+		}
+		os << ::mpz_get_str(&tmp[0u],10,&m.m_mpz);
+		return os;
+	}
 	// TODO test 0 == 0.
 	/*bool operator==(const static_integer &other) const
 	{
@@ -159,6 +326,10 @@ struct static_integer
 	limb_t		m_mid;
 	limb_t		m_hi;
 };
+
+// Static init.
+template <int NBits>
+const typename static_integer<NBits>::limb_t static_integer<NBits>::limb_bits;
 
 template <int NBits>
 union integer_union

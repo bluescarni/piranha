@@ -29,12 +29,277 @@
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
+#include <boost/integer_traits.hpp>
+#include <boost/lexical_cast.hpp>
+#include <cstddef>
+#include <gmp.h>
+#include <iostream>
+#include <random>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
+#include "../src/small_vector.hpp"
+
+static std::mt19937 rng;
 
 using namespace piranha;
+using mpz_raii = detail::mpz_raii;
 
-BOOST_AUTO_TEST_CASE(new_integer_static_integer_test)
+using size_types = boost::mpl::vector<std::integral_constant<int,0>,std::integral_constant<int,8>,std::integral_constant<int,16>,
+	std::integral_constant<int,32>
+#if defined(PIRANHA_UINT128_T)
+	,std::integral_constant<int,64>
+#endif
+	>;
+
+// Constructors and assignments.
+struct constructor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		std::cout << "Size of " << T::value << ": " << sizeof(int_type) << '\n';
+		std::cout << "Alignment of " << T::value << ": " << alignof(int_type) << '\n';
+		int_type n;
+		BOOST_CHECK(n._mp_alloc == 0);
+		BOOST_CHECK(n._mp_size == 0);
+		BOOST_CHECK(n.m_hi == 0);
+		BOOST_CHECK(n.m_mid == 0);
+		BOOST_CHECK(n.m_lo == 0);
+		n.m_lo = 4;
+		n._mp_size = 1;
+		int_type m;
+		m = n;
+		BOOST_CHECK(m._mp_alloc == 0);
+		BOOST_CHECK(m._mp_size == 1);
+		BOOST_CHECK(m.m_hi == 0);
+		BOOST_CHECK(m.m_mid == 0);
+		BOOST_CHECK(m.m_lo == 4);
+		n.m_lo = 5;
+		n._mp_size = -1;
+		m = std::move(n);
+		BOOST_CHECK(m._mp_alloc == 0);
+		BOOST_CHECK(m._mp_size == -1);
+		BOOST_CHECK(m.m_hi == 0);
+		BOOST_CHECK(m.m_mid == 0);
+		BOOST_CHECK(m.m_lo == 5);
+		int_type o(m);
+		BOOST_CHECK(o._mp_alloc == 0);
+		BOOST_CHECK(o._mp_size == -1);
+		BOOST_CHECK(o.m_hi == 0);
+		BOOST_CHECK(o.m_mid == 0);
+		BOOST_CHECK(o.m_lo == 5);
+		int_type p(std::move(o));
+		BOOST_CHECK(p._mp_alloc == 0);
+		BOOST_CHECK(p._mp_size == -1);
+		BOOST_CHECK(p.m_hi == 0);
+		BOOST_CHECK(p.m_mid == 0);
+		BOOST_CHECK(p.m_lo == 5);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(4),boost::lexical_cast<std::string>(int_type(4)));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-4),boost::lexical_cast<std::string>(int_type(-4)));
+		std::uniform_int_distribution<short> short_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = short_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned short> ushort_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = ushort_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<int> int_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = int_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned> uint_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = uint_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long> long_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = long_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long> ulong_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = ulong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long long> llong_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = llong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long long> ullong_dist;
+		for (int i = 0; i < 100; ++i) {
+			const auto tmp = ullong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
+			} catch (const std::overflow_error &) {}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_constructor_test)
 {
 	environment env;
+	boost::mpl::for_each<size_types>(constructor_tester());
+}
+
+static inline std::string mpz_lexcast(const mpz_raii &m)
+{
+	std::ostringstream os;
+	const std::size_t size_base10 = ::mpz_sizeinbase(&m.m_mpz,10);
+	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
+		piranha_throw(std::overflow_error,"number of digits is too large");
+	}
+	const auto total_size = size_base10 + 2u;
+	small_vector<char> tmp;
+	tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
+	if (unlikely(tmp.size() != total_size)) {
+		piranha_throw(std::overflow_error,"number of digits is too large");
+	}
+	os << ::mpz_get_str(&tmp[0u],10,&m.m_mpz);
+	return os.str();
+}
+
+struct set_bit_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n1;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(0));
+		n1.set_bit(0);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(1));
+		n1.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(-1));
+		n1.set_bit(1);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(-3));
+		n1.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(3));
+		mpz_raii m2;
+		int_type n2;
+		n2.set_bit(0);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(0u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		n2.set_bit(3);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(3u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		n2.negate();
+		::mpz_neg(&m2.m_mpz,&m2.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		n2.negate();
+		::mpz_neg(&m2.m_mpz,&m2.m_mpz);
+		BOOST_CHECK_EQUAL(n2._mp_size,1);
+		n2.set_bit(limb_bits);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		BOOST_CHECK_EQUAL(n2._mp_size,2);
+		n2.set_bit(limb_bits + 4u);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits + 4u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		n2.set_bit(4u);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(4u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		BOOST_CHECK_EQUAL(n2._mp_size,2);
+		n2.set_bit(limb_bits * 2u);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits * 2u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		BOOST_CHECK_EQUAL(n2._mp_size,3);
+		n2.set_bit(limb_bits * 2u + 5u);
+		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits * 2u + 5u));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		for (typename int_type::limb_t i = 0u; i < int_type::limb_bits * 3u; ++i) {
+			n2.set_bit(i);
+			::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+		}
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		n2.negate();
+		::mpz_neg(&m2.m_mpz,&m2.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
+		BOOST_CHECK_EQUAL(n2._mp_size,-3);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_set_bit_test)
+{
+	boost::mpl::for_each<size_types>(set_bit_tester());
+}
+
+struct calculate_n_limbs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n;
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),0u);
+		n.set_bit(0);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),1u);
+		n.set_bit(1);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),1u);
+		n.set_bit(limb_bits);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),2u);
+		n.set_bit(limb_bits * 2u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),3u);
+		n.set_bit(limb_bits * 2u + 1u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),3u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_calculate_n_limbs_test)
+{
+	boost::mpl::for_each<size_types>(calculate_n_limbs_tester());
+}
+
+struct static_negate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		int_type n;
+		n.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"0");
+		n.set_bit(0);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"1");
+		n.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-1");
+		n = int_type(123);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"123");
+		n.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-123");
+		BOOST_CHECK(n._mp_size < 0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_negate_test)
+{
+	boost::mpl::for_each<size_types>(static_negate_tester());
 }
