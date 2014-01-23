@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstdint>
@@ -96,13 +97,14 @@ struct static_integer
 	using dlimb_t = typename si_limb_types<NBits>::dlimb_t;
 	using limb_t = typename si_limb_types<NBits>::limb_t;
 	static const limb_t limb_bits = si_limb_types<NBits>::limb_bits;
+	using limbs_type = std::array<limb_t,std::size_t(3)>;
 	// Check: we need to be able to address all bits in the 3 limbs using limb_t.
 	static_assert(limb_bits < boost::integer_traits<limb_t>::const_max / 3u,"Overflow error.");
 	// NOTE: init everything otherwise zero is gonna be represented by undefined
 	// values in lo/mid/hi.
-	static_integer():_mp_alloc(0),_mp_size(0),m_lo(0),m_mid(0),m_hi(0) {}
+	static_integer():_mp_alloc(0),_mp_size(0),m_limbs() {}
 	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
-	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_lo(0),m_mid(0),m_hi(0)
+	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_limbs()
 	{
 		const auto orig_n = n;
 		limb_t bit_idx = 0;
@@ -146,21 +148,11 @@ struct static_integer
 	}
 	void set_bit(const limb_t &idx)
 	{
+		using size_type = typename limbs_type::size_type;
 		piranha_assert(idx < limb_bits * 3u);
 		// Crossing fingers for compiler optimising this out.
 		const auto quot = idx / limb_bits, rem = idx % limb_bits;
-		limb_t *l;
-		switch (quot) {
-			case 0u:
-				l = &m_lo;
-				break;
-			case 1u:
-				l = &m_mid;
-				break;
-			case 2u:
-				l = &m_hi;
-		}
-		*l = static_cast<limb_t>(*l | limb_t(1) << rem);
+		m_limbs[static_cast<size_type>(quot)] = static_cast<limb_t>(m_limbs[static_cast<size_type>(quot)] | limb_t(1) << rem);
 		// Update the size if needed.
 		const auto new_size = static_cast<mpz_size_t>(quot + 1u);
 		if (_mp_size < 0) {
@@ -175,13 +167,13 @@ struct static_integer
 	}
 	mpz_size_t calculate_n_limbs() const
 	{
-		if (m_hi != 0) {
+		if (m_limbs[2u] != 0) {
 			return 3;
 		}
-		if (m_mid != 0) {
+		if (m_limbs[1u] != 0) {
 			return 2;
 		}
-		if (m_lo != 0) {
+		if (m_limbs[0u] != 0) {
 			return 1;
 		}
 		return 0;
@@ -196,7 +188,7 @@ struct static_integer
 		// mp_bitcnt_t must be able to count all the bits in the static integer.
 		static_assert(limb_bits * 3u < boost::integer_traits< ::mp_bitcnt_t>::const_max,"Overflow error.");
 		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
-		auto l = m_lo;
+		auto l = m_limbs[0u];
 		for (limb_t i = 0u; i < limb_bits; ++i) {
 			const auto bit = l % 2u;
 			if (bit) {
@@ -204,7 +196,7 @@ struct static_integer
 			}
 			l = static_cast<limb_t>(l >> 1u);
 		}
-		l = m_mid;
+		l = m_limbs[1u];
 		for (limb_t i = 0u; i < limb_bits; ++i) {
 			const auto bit = l % 2u;
 			if (bit) {
@@ -212,7 +204,7 @@ struct static_integer
 			}
 			l = static_cast<limb_t>(l >> 1u);
 		}
-		l = m_hi;
+		l = m_limbs[2u];
 		for (limb_t i = 0u; i < limb_bits; ++i) {
 			const auto bit = l % 2u;
 			if (bit) {
@@ -242,11 +234,10 @@ struct static_integer
 		os << ::mpz_get_str(&tmp[0u],10,&m.m_mpz);
 		return os;
 	}
-	// TODO test 0 == 0.
-	/*bool operator==(const static_integer &other) const
+	bool operator==(const static_integer &other) const
 	{
-		// TODO assert alloc.
-		return _mp_size == other._mp_size && m_lo == other.m_lo && m_mid == other.m_mid && m_hi == other.m_hi;
+		piranha_assert(_mp_alloc == 0 && other._mp_alloc == 0);
+		return _mp_size == other._mp_size && m_limbs == other.m_limbs;
 	}
 	bool operator!=(const static_integer &other) const
 	{
@@ -256,6 +247,57 @@ struct static_integer
 	{
 		return _mp_size == 0;
 	}
+	bool operator<(const static_integer &other) const
+	{
+		using size_type = typename limbs_type::size_type;
+		const auto size0 = _mp_size, size1 = other._mp_size;
+		if (size0 < size1) {
+			return true;
+		} else if (size1 < size0) {
+			return false;
+		} else {
+			size_type limb_idx;
+			if (size0 < 0) {
+				limb_idx = static_cast<size_type>(-size0 - 1);
+				return m_limbs[limb_idx] > other.m_limbs[limb_idx];
+			} else if (size0 > 0) {
+				limb_idx = static_cast<size_type>(size0 - 1);
+				return m_limbs[limb_idx] < other.m_limbs[limb_idx];
+			} else {
+				return false;
+			}
+		}
+	}
+	bool operator>(const static_integer &other) const
+	{
+		using size_type = typename limbs_type::size_type;
+		const auto size0 = _mp_size, size1 = other._mp_size;
+		if (size0 < size1) {
+			return false;
+		} else if (size1 < size0) {
+			return true;
+		} else {
+			size_type limb_idx;
+			if (size0 < 0) {
+				limb_idx = static_cast<size_type>(-size0 - 1);
+				return m_limbs[limb_idx] < other.m_limbs[limb_idx];
+			} else if (size0 > 0) {
+				limb_idx = static_cast<size_type>(size0 - 1);
+				return m_limbs[limb_idx] > other.m_limbs[limb_idx];
+			} else {
+				return false;
+			}
+		}
+	}
+	bool operator>=(const static_integer &other) const
+	{
+		return !operator<(other);
+	}
+	bool operator<=(const static_integer &other) const
+	{
+		return !operator>(other);
+	}
+	/*
 	static_integer &operator+=(const static_integer &other)
 	{
 		add(*this,*this,other);
@@ -322,9 +364,7 @@ struct static_integer
 	}*/
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
-	limb_t		m_lo;
-	limb_t		m_mid;
-	limb_t		m_hi;
+	limbs_type	m_limbs;
 };
 
 // Static init.

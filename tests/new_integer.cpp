@@ -64,43 +64,42 @@ struct constructor_tester
 	void operator()(const T &)
 	{
 		using int_type = detail::static_integer<T::value>;
+		using limbs_type = typename int_type::limbs_type;
 		std::cout << "Size of " << T::value << ": " << sizeof(int_type) << '\n';
 		std::cout << "Alignment of " << T::value << ": " << alignof(int_type) << '\n';
 		int_type n;
 		BOOST_CHECK(n._mp_alloc == 0);
 		BOOST_CHECK(n._mp_size == 0);
-		BOOST_CHECK(n.m_hi == 0);
-		BOOST_CHECK(n.m_mid == 0);
-		BOOST_CHECK(n.m_lo == 0);
-		n.m_lo = 4;
+		BOOST_CHECK(n.m_limbs == limbs_type());
+		n.m_limbs[0u] = 4;
 		n._mp_size = 1;
 		int_type m;
 		m = n;
 		BOOST_CHECK(m._mp_alloc == 0);
 		BOOST_CHECK(m._mp_size == 1);
-		BOOST_CHECK(m.m_hi == 0);
-		BOOST_CHECK(m.m_mid == 0);
-		BOOST_CHECK(m.m_lo == 4);
-		n.m_lo = 5;
+		BOOST_CHECK(m.m_limbs[2u] == 0);
+		BOOST_CHECK(m.m_limbs[1u] == 0);
+		BOOST_CHECK(m.m_limbs[0u] == 4);
+		n.m_limbs[0u] = 5;
 		n._mp_size = -1;
 		m = std::move(n);
 		BOOST_CHECK(m._mp_alloc == 0);
 		BOOST_CHECK(m._mp_size == -1);
-		BOOST_CHECK(m.m_hi == 0);
-		BOOST_CHECK(m.m_mid == 0);
-		BOOST_CHECK(m.m_lo == 5);
+		BOOST_CHECK(m.m_limbs[2u] == 0);
+		BOOST_CHECK(m.m_limbs[1u] == 0);
+		BOOST_CHECK(m.m_limbs[0u] == 5);
 		int_type o(m);
 		BOOST_CHECK(o._mp_alloc == 0);
 		BOOST_CHECK(o._mp_size == -1);
-		BOOST_CHECK(o.m_hi == 0);
-		BOOST_CHECK(o.m_mid == 0);
-		BOOST_CHECK(o.m_lo == 5);
+		BOOST_CHECK(o.m_limbs[2u] == 0);
+		BOOST_CHECK(o.m_limbs[1u] == 0);
+		BOOST_CHECK(o.m_limbs[0u] == 5);
 		int_type p(std::move(o));
 		BOOST_CHECK(p._mp_alloc == 0);
 		BOOST_CHECK(p._mp_size == -1);
-		BOOST_CHECK(p.m_hi == 0);
-		BOOST_CHECK(p.m_mid == 0);
-		BOOST_CHECK(p.m_lo == 5);
+		BOOST_CHECK(p.m_limbs[2u] == 0);
+		BOOST_CHECK(p.m_limbs[1u] == 0);
+		BOOST_CHECK(p.m_limbs[0u] == 5);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(4),boost::lexical_cast<std::string>(int_type(4)));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-4),boost::lexical_cast<std::string>(int_type(-4)));
 		std::uniform_int_distribution<short> short_dist;
@@ -302,4 +301,139 @@ struct static_negate_tester
 BOOST_AUTO_TEST_CASE(new_integer_static_integer_negate_test)
 {
 	boost::mpl::for_each<size_types>(static_negate_tester());
+}
+
+struct static_comparison_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		const auto limb_bits = int_type::limb_bits;
+		BOOST_CHECK_EQUAL(int_type{},int_type{});
+		BOOST_CHECK(!(int_type{} < int_type{}));
+		BOOST_CHECK(int_type{} >= int_type{});
+		int_type n, m;
+		m.negate();
+		BOOST_CHECK_EQUAL(n,m);
+		BOOST_CHECK(!(n != m));
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(!(n > m));
+		BOOST_CHECK(n >= m);
+		BOOST_CHECK(n <= m);
+		n = int_type(1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(m < n);
+		BOOST_CHECK(!(m > n));
+		BOOST_CHECK(m <= n);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(n > m);
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		BOOST_CHECK(!(m >= n));
+		n = int_type(-1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(n < m);
+		BOOST_CHECK(!(n > m));
+		BOOST_CHECK(n <= m);
+		BOOST_CHECK(!(n >= m));
+		BOOST_CHECK(m > n);
+		BOOST_CHECK(!(m < n));
+		BOOST_CHECK(m >= n);
+		BOOST_CHECK(!(n >= m));
+		n = int_type(2);
+		m = int_type(1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(m < n);
+		BOOST_CHECK(!(m > n));
+		BOOST_CHECK(m <= n);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(n > m);
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		n = int_type(-1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(n < m);
+		BOOST_CHECK(!(n > m));
+		BOOST_CHECK(n <= m);
+		BOOST_CHECK(!(n >= m));
+		BOOST_CHECK(m > n);
+		BOOST_CHECK(!(m < n));
+		BOOST_CHECK(m >= n);
+		BOOST_CHECK(!(n >= m));
+		n = int_type(-2);
+		m = int_type(-1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(n < m);
+		BOOST_CHECK(!(n > m));
+		BOOST_CHECK(n <= m);
+		BOOST_CHECK(!(n >= m));
+		BOOST_CHECK(m > n);
+		BOOST_CHECK(!(m < n));
+		BOOST_CHECK(m >= n);
+		BOOST_CHECK(!(n >= m));
+		n = int_type();
+		n.set_bit(limb_bits * 1u + 3u);
+		m = int_type(1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(m < n);
+		BOOST_CHECK(!(m > n));
+		BOOST_CHECK(m <= n);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(n > m);
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		m = int_type(-1);
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(m < n);
+		BOOST_CHECK(!(m > n));
+		BOOST_CHECK(m <= n);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(n > m);
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		BOOST_CHECK(!(m >= n));
+		BOOST_CHECK(!(n < m));
+		BOOST_CHECK(n >= m);
+		n.negate();
+		BOOST_CHECK(m != n);
+		BOOST_CHECK(n < m);
+		BOOST_CHECK(!(n > m));
+		BOOST_CHECK(n <= m);
+		BOOST_CHECK(!(n >= m));
+		BOOST_CHECK(m > n);
+		BOOST_CHECK(!(m < n));
+		BOOST_CHECK(m >= n);
+		BOOST_CHECK(!(n >= m));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_comparison_test)
+{
+	boost::mpl::for_each<size_types>(static_comparison_tester());
+}
+
+struct static_is_zero_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		BOOST_CHECK(int_type{}.is_zero());
+		BOOST_CHECK(!int_type{1}.is_zero());
+		int_type n;
+		n.negate();
+		BOOST_CHECK(n.is_zero());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_is_zero_test)
+{
+	boost::mpl::for_each<size_types>(static_is_zero_tester());
 }
