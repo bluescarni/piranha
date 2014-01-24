@@ -46,6 +46,7 @@
 #include "../src/small_vector.hpp"
 
 static std::mt19937 rng;
+static const int ntries = 1000;
 
 using namespace piranha;
 using mpz_raii = detail::mpz_raii;
@@ -102,57 +103,57 @@ struct constructor_tester
 		BOOST_CHECK(p.m_limbs[0u] == 5);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(4),boost::lexical_cast<std::string>(int_type(4)));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-4),boost::lexical_cast<std::string>(int_type(-4)));
-		std::uniform_int_distribution<short> short_dist;
-		for (int i = 0; i < 100; ++i) {
+		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = short_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
 		std::uniform_int_distribution<unsigned short> ushort_dist;
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = ushort_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<int> int_dist;
-		for (int i = 0; i < 100; ++i) {
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = int_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
 		std::uniform_int_distribution<unsigned> uint_dist;
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = uint_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<long> long_dist;
-		for (int i = 0; i < 100; ++i) {
+		std::uniform_int_distribution<long> long_dist(boost::integer_traits<long>::const_min,boost::integer_traits<long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = long_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
 		std::uniform_int_distribution<unsigned long> ulong_dist;
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = ulong_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<long long> llong_dist;
-		for (int i = 0; i < 100; ++i) {
+		std::uniform_int_distribution<long long> llong_dist(boost::integer_traits<long long>::const_min,boost::integer_traits<long long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = llong_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
 			} catch (const std::overflow_error &) {}
 		}
 		std::uniform_int_distribution<unsigned long long> ullong_dist;
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < ntries; ++i) {
 			const auto tmp = ullong_dist(rng);
 			try {
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp),boost::lexical_cast<std::string>(int_type(tmp)));
@@ -411,6 +412,117 @@ struct static_comparison_tester
 		BOOST_CHECK(!(m < n));
 		BOOST_CHECK(m >= n);
 		BOOST_CHECK(!(n >= m));
+		n = int_type();
+		m = n;
+		n.set_bit(0);
+		n.set_bit(limb_bits);
+		m.set_bit(limb_bits);
+		BOOST_CHECK(m < n);
+		BOOST_CHECK(n > m);
+		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned short> ushort_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ushort_dist(rng), tmp2 = ushort_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned> uint_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = uint_dist(rng), tmp2 = uint_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long> long_dist(boost::integer_traits<long>::const_min,boost::integer_traits<long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = long_dist(rng), tmp2 = long_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long> ulong_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ulong_dist(rng), tmp2 = ulong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long long> llong_dist(boost::integer_traits<long long>::const_min,boost::integer_traits<long long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = llong_dist(rng), tmp2 = llong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long long> ullong_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ullong_dist(rng), tmp2 = ullong_dist(rng);
+			try {
+				BOOST_CHECK_EQUAL((tmp1 > tmp2),(int_type(tmp1) > int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 < tmp1),(int_type(tmp2) < int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 >= tmp2),(int_type(tmp1) >= int_type(tmp2)));
+				BOOST_CHECK_EQUAL((tmp2 <= tmp1),(int_type(tmp2) <= int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 == tmp1),(int_type(tmp2) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp1 == tmp1),(int_type(tmp1) == int_type(tmp1)));
+				BOOST_CHECK_EQUAL((tmp2 != tmp1),(int_type(tmp2) != int_type(tmp1)));
+			} catch (const std::overflow_error &) {}
+		}
 	}
 };
 
@@ -436,4 +548,124 @@ struct static_is_zero_tester
 BOOST_AUTO_TEST_CASE(new_integer_static_integer_is_zero_test)
 {
 	boost::mpl::for_each<size_types>(static_is_zero_tester());
+}
+
+struct static_add_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using int_type = detail::static_integer<T::value>;
+		const auto limb_bits = int_type::limb_bits;
+		int_type a, b, c;
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		b = int_type(1);
+		c = int_type(2);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{3});
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{3});
+		b = int_type(-1);
+		c = int_type(-2);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{-3});
+		b = int_type(1);
+		c = int_type();
+		int_type cmp;
+		cmp.set_bit(limb_bits);
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			c.set_bit(i);
+		}
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		cmp.set_bit(limb_bits);
+		cmp.negate();
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			c.set_bit(i);
+		}
+		c.negate();
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(1);
+		c = int_type();
+		cmp = c;
+		cmp.set_bit(limb_bits * 2u);
+		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+			c.set_bit(i);
+		}
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		cmp.set_bit(limb_bits * 2u);
+		cmp.negate();
+		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+			c.set_bit(i);
+		}
+		c.negate();
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type(1);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type(0));
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type(0));
+		b.set_bit(limb_bits);
+		c.set_bit(limb_bits);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type(0));
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type(0));
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		c.set_bit(limb_bits);
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			cmp.set_bit(i);
+		}
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b.negate();
+		c.negate();
+		cmp.negate();
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type(0);
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,c);
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,c);
+		c.negate();
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,c);
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,c);
+		// Random testing.
+		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min / 100,boost::integer_traits<short>::const_max / 100);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				int_type::add(c,a,b);
+				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+			} catch (const std::overflow_error &) {}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_add_test)
+{
+	boost::mpl::for_each<size_types>(static_add_tester());
 }
