@@ -182,6 +182,10 @@ struct static_integer
 	{
 		return _mp_alloc == 0 && _mp_size <= 3 && _mp_size >= -3 && (calculate_n_limbs() == _mp_size || -calculate_n_limbs() == _mp_size);
 	}
+	mpz_size_t abs_size() const
+	{
+		return (_mp_size >= 0) ? _mp_size : -_mp_size;
+	}
 	// Convert static integer to a GMP mpz. The out struct must be initialized to zero.
 	void to_mpz(mpz_struct_t &out) const
 	{
@@ -236,7 +240,6 @@ struct static_integer
 	}
 	bool operator==(const static_integer &other) const
 	{
-		piranha_assert(_mp_alloc == 0 && other._mp_alloc == 0);
 		return _mp_size == other._mp_size && m_limbs == other.m_limbs;
 	}
 	bool operator!=(const static_integer &other) const
@@ -247,13 +250,13 @@ struct static_integer
 	{
 		return _mp_size == 0;
 	}
-	// Compare absolute values of two integers of the same size >= 0.
+	// Compare absolute values of two integers whose sizes are the same in absolute value.
 	static int compare(const static_integer &a, const static_integer &b, const mpz_size_t &size)
 	{
 		using size_type = typename limbs_type::size_type;
 		piranha_assert(size >= 0 && size <= 3);
 		piranha_assert(a._mp_size == size || -a._mp_size == size);
-		piranha_assert(a._mp_size == b._mp_size);
+		piranha_assert(a._mp_size == b._mp_size || a._mp_size == -b._mp_size);
 		auto limb_idx = static_cast<size_type>(size);
 		while (limb_idx != 0u) {
 			--limb_idx;
@@ -299,49 +302,25 @@ struct static_integer
 	{
 		return !operator>(other);
 	}
-	/*static void raw_add(static_integer &res, const static_integer &x, const static_integer &y)
-	{
-		piranha_assert(x._mp_size <= 2 && x._mp_size >= -2 && y._mp_size <= 2 && y._mp_size >= -2);
-		piranha_assert(x._mp_size )
-	}*/
-
-
-
-	template <unsigned SignMask>
 	static void raw_add(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		static_assert(SignMask == 0u || SignMask == 3u,"Invalid sign mask.");
-		piranha_assert(x._mp_size <= 2 && x._mp_size >= -2 && y._mp_size <= 2 && y._mp_size >= -2);
-		using size_type = typename limbs_type::size_type;
+		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
+		piranha_assert((x._mp_size >= 0) == (y._mp_size >= 0));
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
-		const dlimb_t mid = static_cast<dlimb_t>(static_cast<dlimb_t>((x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
+		const dlimb_t mid = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
 		res.m_limbs[0u] = static_cast<limb_t>(lo);
 		res.m_limbs[1u] = static_cast<limb_t>(mid);
 		res.m_limbs[2u] = static_cast<limb_t>(mid >> limb_bits);
-		if (SignMask == 3u) {
-			const mpz_size_t max_abs_size = std::max(x._mp_size,y._mp_size);
-			piranha_assert(max_abs_size <= 2 && max_abs_size >= 0);
-			res._mp_size = static_cast<mpz_size_t>(max_abs_size + mpz_size_t(res.m_limbs[static_cast<size_type>(max_abs_size)] != 0u));
-		} else {
-			const mpz_size_t max_abs_size = std::max(-x._mp_size,-y._mp_size);
-			piranha_assert(max_abs_size <= 2 && max_abs_size >= 0);
-			res._mp_size = static_cast<mpz_size_t>(max_abs_size + mpz_size_t(res.m_limbs[static_cast<size_type>(max_abs_size)] != 0u));
-		}
 	}
 	static void raw_sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		piranha_assert(x._mp_size <= 2 && x._mp_size >= -2 && y._mp_size <= 2 && y._mp_size >= -2);
-		piranha_assert(std::abs(x._mp_size) >= std::abs(y._mp_size));
-		piranha_assert(x.m_limbs[2u] == 0u && y.m_limbs[2u] == 0u);
+		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
+		piranha_assert(x.abs_size() >= y.abs_size());
 		piranha_assert(x.m_limbs[1u] >= y.m_limbs[1u]);
 		const bool has_borrow = x.m_limbs[0u] < y.m_limbs[0u];
-		//piranha_assert(x.m_limbs[1u] > y.m_limbs[1u] || !has_borrow);
-		if (!(x.m_limbs[1u] > y.m_limbs[1u] || !has_borrow)) {
-			std::cout << x << ',' << y << '\n';
-			assert(false);
-		}
+		piranha_assert(x.m_limbs[1u] > y.m_limbs[1u] || !has_borrow);
 		res.m_limbs[0u] = static_cast<limb_t>(x.m_limbs[0u] - y.m_limbs[0u]);
-		res.m_limbs[1u] = static_cast<limb_t>((x.m_limbs[1u] - y.m_limbs[1u]) - unsigned(has_borrow));
+		res.m_limbs[1u] = static_cast<limb_t>((x.m_limbs[1u] - y.m_limbs[1u]) - limb_t(has_borrow));
 		res.m_limbs[2u] = limb_t(0u);
 		if (res.m_limbs[1u] != 0u) {
 			res._mp_size = 2;
@@ -353,43 +332,38 @@ struct static_integer
 	}
 	static void add(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		piranha_assert(x._mp_size <= 2 && x._mp_size >= -2 && y._mp_size <= 2 && y._mp_size >= -2);
 		using size_type = typename limbs_type::size_type;
-		const unsigned sign_mask = unsigned(x._mp_size >= 0) + (unsigned(y._mp_size >= 0) << 1u);
-		switch (sign_mask) {
-			case 0u:
-				// (-x) + (-y) = -(x+y).
-				raw_add<0u>(res,x,y);
+		mpz_size_t asizex = x._mp_size, asizey = y._mp_size;
+		bool signx = true, signy = true;
+		if (asizex < 0) {
+			asizex = -asizex;
+			signx = false;
+		}
+		if (asizey < 0) {
+			asizey = -asizey;
+			signy = false;
+		}
+		piranha_assert(asizex <= 2 && asizey <= 2);
+		if (signx == signy) {
+			raw_add(res,x,y);
+			const mpz_size_t max_asize = std::max(asizex,asizey);
+			piranha_assert(res.m_limbs[static_cast<size_type>(max_asize)] == 0u || res.m_limbs[static_cast<size_type>(max_asize)] == 1u);
+			res._mp_size = static_cast<mpz_size_t>(max_asize + mpz_size_t(res.m_limbs[static_cast<size_type>(max_asize)]));
+			if (!signx) {
 				res.negate();
-				return;
-			case 1u:
-				// x + (-y) = x-y or -(y-x).
-				if (x._mp_size > -y._mp_size || (x._mp_size == -y._mp_size &&
-					// NOTE: here we are sure that the two abs sizes are different from zero, otherwise
-					// we would be in case 0.
-					x.m_limbs[size_type(x._mp_size - 1)] > y.m_limbs[size_type(x._mp_size - 1)]))
-				{
-					raw_sub(res,x,y);
-				} else {
-					raw_sub(res,y,x);
+			}
+		} else {
+			if (asizex > asizey || (asizex == asizey && compare(x,y,asizex) >= 0)) {
+				raw_sub(res,x,y);
+				if (!signx) {
 					res.negate();
 				}
-				return;
-			case 2u:
-				// (-x) + y = -(x-y) or y-x.
-				if (-x._mp_size > y._mp_size || (-x._mp_size == y._mp_size &&
-					x.m_limbs[size_type(y._mp_size - 1)] > y.m_limbs[size_type(y._mp_size - 1)]))
-				{
-					raw_sub(res,x,y);
+			} else {
+				raw_sub(res,y,x);
+				if (!signy) {
 					res.negate();
-				} else {
-					raw_sub(res,y,x);
 				}
-				return;
-			case 3u:
-				// x + y.
-				raw_add<3u>(res,x,y);
-				return;
+			}
 		}
 	}
 	/*
