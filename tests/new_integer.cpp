@@ -64,7 +64,7 @@ struct constructor_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		using int_type = detail::static_integer<T::value>;
+		typedef detail::static_integer<T::value> int_type;
 		using limbs_type = typename int_type::limbs_type;
 		std::cout << "Size of " << T::value << ": " << sizeof(int_type) << '\n';
 		std::cout << "Alignment of " << T::value << ": " << alignof(int_type) << '\n';
@@ -190,7 +190,7 @@ struct set_bit_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		using int_type = detail::static_integer<T::value>;
+		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		int_type n1;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),boost::lexical_cast<std::string>(0));
@@ -555,7 +555,7 @@ struct static_add_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		using int_type = detail::static_integer<T::value>;
+		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		int_type a, b, c;
 		int_type::add(a,b,c);
