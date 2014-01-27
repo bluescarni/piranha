@@ -1195,3 +1195,33 @@ BOOST_AUTO_TEST_CASE(new_integer_static_integer_sub_test)
 {
 	boost::mpl::for_each<size_types>(static_sub_tester());
 }
+
+struct static_mul_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type a, b, c;
+		int_type::mul(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		int_type::mul(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		c = int_type(1);
+		int_type::mul(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		int_type::mul(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		c = int_type(-1);
+		int_type::mul(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		int_type::mul(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{});
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_mul_test)
+{
+	boost::mpl::for_each<size_types>(static_mul_tester());
+}

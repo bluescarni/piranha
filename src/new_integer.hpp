@@ -374,6 +374,36 @@ struct static_integer
 	{
 		add_or_sub<false>(res,x,y);
 	}
+	static void mul(static_integer &res, const static_integer &x, const static_integer &y)
+	{
+		piranha_assert(x.abs_size() <= 1 && y.abs_size() <= 1);
+		mpz_size_t asizex = x._mp_size, asizey = y._mp_size;
+		if (asizex == 0 || asizey == 0) {
+			res._mp_size = 0;
+			res.m_limbs[0u] = 0u;
+			res.m_limbs[1u] = 0u;
+			res.m_limbs[2u] = 0u;
+			return;
+		}
+		bool signx = true, signy = true;
+		if (asizex < 0) {
+			asizex = -asizex;
+			signx = false;
+		}
+		if (asizey < 0) {
+			asizey = -asizey;
+			signy = false;
+		}
+		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) * y.m_limbs[0u]);
+		res.m_limbs[0u] = static_cast<limb_t>(lo);
+		const limb_t cy_limb = static_cast<limb_t>(lo >> limb_bits);
+		res.m_limbs[1u] = cy_limb;
+		res.m_limbs[2u] = 0u;
+		res._mp_size = static_cast<mpz_size_t>((asizex + asizey) - mpz_size_t(cy_limb == 0u));
+		if (signx != signy) {
+			res.negate();
+		}
+	}
 	static_integer &operator+=(const static_integer &other)
 	{
 		add(*this,*this,other);
