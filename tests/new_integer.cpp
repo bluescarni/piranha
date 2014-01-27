@@ -708,8 +708,34 @@ struct static_add_tester
 		BOOST_CHECK_EQUAL(a,cmp);
 		int_type::add(a,c,b);
 		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		b.set_bit(limb_bits);
+		c.set_bit(0u);
+		c.negate();
+		int_type::add(a,b,c);
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			cmp.set_bit(i);
+		}
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		b.set_bit(0u);
+		c.set_bit(0u);
+		b.set_bit(limb_bits);
+		c.set_bit(limb_bits);
+		c.negate();
+		int_type::add(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::add(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
 		// Random testing.
-		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min / 100,boost::integer_traits<short>::const_max / 100);
+		detail::mpz_raii mc, ma, mb;
+		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
 			try {
@@ -717,11 +743,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<unsigned short> ushort_dist(0u,boost::integer_traits<unsigned short>::const_max / 10u);
+		std::uniform_int_distribution<unsigned short> ushort_dist;
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = ushort_dist(rng), tmp2 = ushort_dist(rng);
 			try {
@@ -729,11 +758,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min / 100,boost::integer_traits<int>::const_max / 100);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
 			try {
@@ -741,11 +773,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<unsigned> uint_dist(0u,boost::integer_traits<unsigned>::const_max / 10u);
+		std::uniform_int_distribution<unsigned> uint_dist;
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = uint_dist(rng), tmp2 = uint_dist(rng);
 			try {
@@ -753,11 +788,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<long> long_dist(boost::integer_traits<long>::const_min / 100,boost::integer_traits<long>::const_max / 100);
+		std::uniform_int_distribution<long> long_dist(boost::integer_traits<long>::const_min,boost::integer_traits<long>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = long_dist(rng), tmp2 = long_dist(rng);
 			try {
@@ -765,11 +803,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<unsigned long> ulong_dist(0u,boost::integer_traits<unsigned long>::const_max / 10u);
+		std::uniform_int_distribution<unsigned long> ulong_dist;
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = ulong_dist(rng), tmp2 = ulong_dist(rng);
 			try {
@@ -777,11 +818,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<long long> llong_dist(boost::integer_traits<long long>::const_min / 100,boost::integer_traits<long long>::const_max / 100);
+		std::uniform_int_distribution<long long> llong_dist(boost::integer_traits<long long>::const_min,boost::integer_traits<long long>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = llong_dist(rng), tmp2 = llong_dist(rng);
 			try {
@@ -789,11 +833,14 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
-		std::uniform_int_distribution<unsigned long long> ullong_dist(0u,boost::integer_traits<unsigned long long>::const_max / 10u);
+		std::uniform_int_distribution<unsigned long long> ullong_dist;
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = ullong_dist(rng), tmp2 = ullong_dist(rng);
 			try {
@@ -801,8 +848,11 @@ struct static_add_tester
 				if (a.abs_size() > 2 || b.abs_size() > 2) {
 					continue;
 				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
 				int_type::add(c,a,b);
-				BOOST_CHECK_EQUAL(c,int_type(tmp1 + tmp2));
+				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
 	}
