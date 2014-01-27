@@ -862,3 +862,322 @@ BOOST_AUTO_TEST_CASE(new_integer_static_integer_add_test)
 {
 	boost::mpl::for_each<size_types>(static_add_tester());
 }
+
+struct static_sub_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type a, b, c;
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{});
+		b = int_type(1);
+		c = int_type(2);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{-1});
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type{1});
+		b = int_type(-1);
+		c = int_type(-2);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type{1});
+		b = int_type(1);
+		c = int_type();
+		int_type cmp;
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			if (i != 0u) {
+				cmp.set_bit(i);
+			}
+			c.set_bit(i);
+		}
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			if (i != 0u) {
+				cmp.set_bit(i);
+			}
+			c.set_bit(i);
+		}
+		c.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(1);
+		c = int_type();
+		cmp = c;
+		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+			if (i != 0u) {
+				cmp.set_bit(i);
+			}
+			c.set_bit(i);
+		}
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		cmp.set_bit(limb_bits * 2u);
+		cmp.negate();
+		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+			c.set_bit(i);
+		}
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(cmp,a);
+		b = int_type(-1);
+		c = int_type(1);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type(-2));
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type(2));
+		b.set_bit(limb_bits);
+		c.set_bit(limb_bits);
+		cmp = int_type();
+		cmp.set_bit(1u);
+		cmp.set_bit(limb_bits + 1u);
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,c,b);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type(-1);
+		c = int_type();
+		cmp = c;
+		c.set_bit(limb_bits);
+		cmp.set_bit(0u);
+		cmp.set_bit(limb_bits);
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		cmp.negate();
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b.negate();
+		c.negate();
+		cmp.negate();
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type(0);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,-c);
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,c);
+		c.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,-c);
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,c);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		for (typename int_type::limb_t i = limb_bits; i < limb_bits * 2u; ++i) {
+			if (i != limb_bits) {
+				cmp.set_bit(i);
+			}
+			b.set_bit(i);
+		}
+		c.set_bit(limb_bits);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,c,b);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b.negate();
+		c.negate();
+		cmp.negate();
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,b,c);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			if (i != 0u) {
+				cmp.set_bit(i);
+			}
+			b.set_bit(i);
+		}
+		c.set_bit(0u);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,c,b);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b.negate();
+		c.negate();
+		cmp.negate();
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		b.set_bit(limb_bits);
+		c.set_bit(0u);
+		c.negate();
+		int_type::sub(a,b,c);
+		cmp.set_bit(0u);
+		cmp.set_bit(limb_bits);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,c,b);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type();
+		c = int_type();
+		cmp = int_type();
+		b.set_bit(0u);
+		c.set_bit(0u);
+		b.set_bit(limb_bits);
+		c.set_bit(limb_bits);
+		c.negate();
+		cmp.set_bit(1u);
+		cmp.set_bit(limb_bits + 1u);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		cmp.negate();
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		// Random testing.
+		detail::mpz_raii mc, ma, mb;
+		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned short> ushort_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ushort_dist(rng), tmp2 = ushort_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned> uint_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = uint_dist(rng), tmp2 = uint_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long> long_dist(boost::integer_traits<long>::const_min,boost::integer_traits<long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = long_dist(rng), tmp2 = long_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long> ulong_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ulong_dist(rng), tmp2 = ulong_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<long long> llong_dist(boost::integer_traits<long long>::const_min,boost::integer_traits<long long>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = llong_dist(rng), tmp2 = llong_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+		std::uniform_int_distribution<unsigned long long> ullong_dist;
+		for (int i = 0; i < ntries; ++i) {
+			const auto tmp1 = ullong_dist(rng), tmp2 = ullong_dist(rng);
+			try {
+				int_type a(tmp1), b(tmp2), c;
+				if (a.abs_size() > 2 || b.abs_size() > 2) {
+					continue;
+				}
+				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
+				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
+				int_type::sub(c,a,b);
+				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+			} catch (const std::overflow_error &) {}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_sub_test)
+{
+	boost::mpl::for_each<size_types>(static_sub_tester());
+}

@@ -305,7 +305,6 @@ struct static_integer
 	static void raw_add(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
-		piranha_assert((x._mp_size >= 0) == (y._mp_size >= 0));
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
 		const dlimb_t mid = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
 		res.m_limbs[0u] = static_cast<limb_t>(lo);
@@ -330,10 +329,11 @@ struct static_integer
 			res._mp_size = 0;
 		}
 	}
-	static void add(static_integer &res, const static_integer &x, const static_integer &y)
+	template <bool AddOrSub>
+	static void add_or_sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		using size_type = typename limbs_type::size_type;
-		mpz_size_t asizex = x._mp_size, asizey = y._mp_size;
+		mpz_size_t asizex = x._mp_size, asizey = AddOrSub ? y._mp_size : -y._mp_size;
 		bool signx = true, signy = true;
 		if (asizex < 0) {
 			asizex = -asizex;
@@ -366,29 +366,47 @@ struct static_integer
 			}
 		}
 	}
-	/*
+	static void add(static_integer &res, const static_integer &x, const static_integer &y)
+	{
+		add_or_sub<true>(res,x,y);
+	}
+	static void sub(static_integer &res, const static_integer &x, const static_integer &y)
+	{
+		add_or_sub<false>(res,x,y);
+	}
 	static_integer &operator+=(const static_integer &other)
 	{
 		add(*this,*this,other);
 		return *this;
 	}
-	static_integer operator+(const static_integer &other) const
-	{
-		static_integer retval(*this);
-		retval += other;
-		return retval;
-	}
 	static_integer &operator-=(const static_integer &other)
 	{
-		add(*this,*this,other);
+		sub(*this,*this,other);
 		return *this;
 	}
-	static_integer operator-(const static_integer &other) const
+	static_integer operator+() const
 	{
-		static_integer retval(*this);
-		retval += other;
+		return *this;
+	}
+	friend static_integer operator+(const static_integer &x, const static_integer &y)
+	{
+		static_integer retval(x);
+		retval += y;
 		return retval;
 	}
+	static_integer operator-() const
+	{
+		static_integer retval(*this);
+		retval.negate();
+		return retval;
+	}
+	friend static_integer operator-(const static_integer &x, const static_integer &y)
+	{
+		static_integer retval(x);
+		retval -= y;
+		return retval;
+	}
+	/*
 	static_integer &operator*=(const static_integer &other)
 	{
 		mult(*this,*this,other);
@@ -406,21 +424,6 @@ struct static_integer
 		mult(tmp,n1,n2);
 		add(*this,*this,tmp);
 		return *this;
-	}
-	friend std::ostream &operator<<(std::ostream &os, const static_integer &)
-	{
-		return os;
-	}
-	static void add(static_integer &res, const static_integer &x, const static_integer &y)
-	{
-		// TODO: assert sizes here -> max 2.
-		const dlimb_t lo = static_cast<dlimb_t>(x.m_lo) + y.m_lo;
-		const dlimb_t mid = static_cast<dlimb_t>(x.m_mid) + y.m_mid + (lo >> limb_bits);
-		res.m_lo = static_cast<limb_t>(lo);
-		res.m_mid = static_cast<limb_t>(mid);
-		res.m_hi = static_cast<limb_t>(mid >> limb_bits);
-		// TODO: abs sizes here.
-		res._mp_size = std::max(x._mp_size,y._mp_size) + (res.m_hi != 0);
 	}
 	static void mult(static_integer &res, const static_integer &x, const static_integer &y)
 	{
