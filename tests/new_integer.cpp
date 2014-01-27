@@ -855,6 +855,13 @@ struct static_add_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
+		// Test the operators.
+		a = int_type(1);
+		b = int_type(2);
+		BOOST_CHECK_EQUAL(a+b,int_type(3));
+		a += int_type(-5);
+		BOOST_CHECK_EQUAL(a,int_type(-4));
+		BOOST_CHECK_EQUAL(+a,int_type(-4));
 	}
 };
 
@@ -1174,6 +1181,13 @@ struct static_sub_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
+		// Test the operators.
+		a = int_type(1);
+		b = int_type(2);
+		BOOST_CHECK_EQUAL(a-b,int_type(-1));
+		a -= int_type(5);
+		BOOST_CHECK_EQUAL(a,int_type(-4));
+		BOOST_CHECK_EQUAL(-a,int_type(4));
 	}
 };
 
