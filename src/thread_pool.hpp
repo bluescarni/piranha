@@ -196,6 +196,10 @@ std::mutex thread_pool_base<T>::s_mutex;
  * This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool
  * and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong
  * exception safety guarantee.
+ *
+ * \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:
+ * http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
+ * \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
  */
 class thread_pool: private detail::thread_pool_base<>
 {
