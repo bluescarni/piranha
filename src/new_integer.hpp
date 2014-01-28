@@ -374,6 +374,18 @@ struct static_integer
 	{
 		add_or_sub<false>(res,x,y);
 	}
+	static void raw_mul(static_integer &res, const static_integer &x, const static_integer &y, const mpz_size_t &asizex,
+		const mpz_size_t &asizey)
+	{
+		piranha_assert(asizex > 0 && asizey > 0 && asizex <= 1 && asizey <= 1);
+		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) * y.m_limbs[0u]);
+		res.m_limbs[0u] = static_cast<limb_t>(lo);
+		const limb_t cy_limb = static_cast<limb_t>(lo >> limb_bits);
+		res.m_limbs[1u] = cy_limb;
+		res.m_limbs[2u] = 0u;
+		res._mp_size = static_cast<mpz_size_t>((asizex + asizey) - mpz_size_t(cy_limb == 0u));
+		piranha_assert(res._mp_size > 0);
+	}
 	static void mul(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		piranha_assert(x.abs_size() <= 1 && y.abs_size() <= 1);
@@ -394,13 +406,7 @@ struct static_integer
 			asizey = -asizey;
 			signy = false;
 		}
-		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) * y.m_limbs[0u]);
-		res.m_limbs[0u] = static_cast<limb_t>(lo);
-		const limb_t cy_limb = static_cast<limb_t>(lo >> limb_bits);
-		res.m_limbs[1u] = cy_limb;
-		res.m_limbs[2u] = 0u;
-		res._mp_size = static_cast<mpz_size_t>((asizex + asizey) - mpz_size_t(cy_limb == 0u));
-		piranha_assert(res._mp_size > 0);
+		raw_mul(res,x,y,asizex,asizey);
 		if (signx != signy) {
 			res.negate();
 		}
@@ -448,34 +454,54 @@ struct static_integer
 		retval *= y;
 		return retval;
 	}
-	/*
-	static_integer &operator*=(const static_integer &other)
+	void multiply_accumulate(const static_integer &b, const static_integer &c)
 	{
-		mult(*this,*this,other);
-		return *this;
-	}
-	static_integer operator*(const static_integer &other) const
-	{
-		static_integer retval(*this);
-		retval *= other;
-		return retval;
-	}
-	static_integer &multiply_accumulate(const static_integer &n1, const static_integer &n2)
-	{
+		using size_type = typename limbs_type::size_type;
+		mpz_size_t asizea = _mp_size, asizeb = b._mp_size, asizec = c._mp_size;
+		bool signa = true, signb = true, signc = true;
+		if (asizea < 0) {
+			asizea = -asizea;
+			signa = false;
+		}
+		if (asizeb < 0) {
+			asizeb = -asizeb;
+			signb = false;
+		}
+		if (asizec < 0) {
+			asizec = -asizec;
+			signc = false;
+		}
+		piranha_assert(asizea <= 2 && asizeb <= 1 && asizec <= 1);
+		if (unlikely(asizea == 0 || asizeb == 0)) {
+			return;
+		}
 		static_integer tmp;
-		mult(tmp,n1,n2);
-		add(*this,*this,tmp);
-		return *this;
+		raw_mul(tmp,b,c,asizeb,asizec);
+		const mpz_size_t asizetmp = tmp._mp_size;
+		const bool signtmp = (signb == signc);
+		piranha_assert(asizetmp <= 2 && asizetmp > 0);
+		if (signa == signtmp) {
+			raw_add(*this,*this,tmp);
+			const mpz_size_t max_asize = std::max(asizea,asizetmp);
+			piranha_assert(m_limbs[static_cast<size_type>(max_asize)] == 0u || m_limbs[static_cast<size_type>(max_asize)] == 1u);
+			_mp_size = static_cast<mpz_size_t>(max_asize + mpz_size_t(m_limbs[static_cast<size_type>(max_asize)]));
+			if (!signa) {
+				negate();
+			}
+		} else {
+			if (asizea > asizetmp || (asizea == asizetmp && compare(*this,tmp,asizea) >= 0)) {
+				raw_sub(*this,*this,tmp);
+				if (!signa) {
+					negate();
+				}
+			} else {
+				raw_sub(*this,tmp,*this);
+				if (!signtmp) {
+					negate();
+				}
+			}
+		}
 	}
-	static void mult(static_integer &res, const static_integer &x, const static_integer &y)
-	{
-		// TODO: assert sizes here -> max 1.
-		const dlimb_t lo = static_cast<dlimb_t>(x.m_lo) * y.m_lo;
-		res.m_lo = static_cast<limb_t>(lo);
-		res.m_mid = static_cast<limb_t>(lo >> limb_bits);
-		res.m_hi = 0;
-		res._mp_size = 2;
-	}*/
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
 	limbs_type	m_limbs;

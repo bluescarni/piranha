@@ -1397,3 +1397,63 @@ BOOST_AUTO_TEST_CASE(new_integer_static_integer_mul_test)
 {
 	boost::mpl::for_each<size_types>(static_mul_tester());
 }
+
+struct static_addmul_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		detail::mpz_raii mc, ma, mb;
+		int_type a, b, c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type());
+		a = int_type(1);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1));
+		a = int_type(-2);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(-2));
+		a = int_type(1);
+		b = int_type(2);
+		c = int_type(3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(7));
+		b = int_type(-2);
+		c = int_type(-3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(13));
+		b = int_type(2);
+		c = int_type(-3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(7));
+		b = int_type(-2);
+		c = int_type(3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(1));
+		a = int_type(-1);
+		b = int_type(2);
+		c = int_type(3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(5));
+		b = int_type(-2);
+		c = int_type(-3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(11));
+		b = int_type(2);
+		c = int_type(-3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(5));
+		b = int_type(-2);
+		c = int_type(3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,int_type(-1));
+		// TODO: test with a or b*c consisting of 2 limbs.
+		// TODO: random tests.
+	}
+};
+
+BOOST_AUTO_TEST_CASE(new_integer_static_integer_addmul_test)
+{
+	boost::mpl::for_each<size_types>(static_addmul_tester());
+}
