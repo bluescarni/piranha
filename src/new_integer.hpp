@@ -400,6 +400,7 @@ struct static_integer
 		res.m_limbs[1u] = cy_limb;
 		res.m_limbs[2u] = 0u;
 		res._mp_size = static_cast<mpz_size_t>((asizex + asizey) - mpz_size_t(cy_limb == 0u));
+		piranha_assert(res._mp_size > 0);
 		if (signx != signy) {
 			res.negate();
 		}
@@ -412,6 +413,11 @@ struct static_integer
 	static_integer &operator-=(const static_integer &other)
 	{
 		sub(*this,*this,other);
+		return *this;
+	}
+	static_integer &operator*=(const static_integer &other)
+	{
+		mul(*this,*this,other);
 		return *this;
 	}
 	static_integer operator+() const
@@ -434,6 +440,12 @@ struct static_integer
 	{
 		static_integer retval(x);
 		retval -= y;
+		return retval;
+	}
+	friend static_integer operator*(const static_integer &x, const static_integer &y)
+	{
+		static_integer retval(x);
+		retval *= y;
 		return retval;
 	}
 	/*
