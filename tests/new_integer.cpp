@@ -1404,6 +1404,7 @@ struct static_addmul_tester
 	void operator()(const T &)
 	{
 		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
 		detail::mpz_raii mc, ma, mb;
 		int_type a, b, c;
 		a.multiply_accumulate(b,c);
@@ -1448,8 +1449,238 @@ struct static_addmul_tester
 		c = int_type(3);
 		a.multiply_accumulate(b,c);
 		BOOST_CHECK_EQUAL(a,int_type(-1));
-		// TODO: test with a or b*c consisting of 2 limbs.
-		// TODO: random tests.
+		a = int_type(5);
+		b = int_type();
+		c = b;
+		b.set_bit(limb_bits / 2u + 1u);
+		c.set_bit(limb_bits / 2u + 2u);
+		auto cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(5);
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(-5);
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(-5);
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		b.negate();
+		a = int_type(-5);
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(-5);
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type();
+		a.set_bit(limb_bits + 2u);
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type();
+		a.set_bit(limb_bits + 2u);
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type();
+		a.set_bit(limb_bits + 2u);
+		a.negate();
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type();
+		a.set_bit(limb_bits + 2u);
+		a.negate();
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(2);
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(2);
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(2);
+		a.negate();
+		cmp = a + b*c;
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		a = int_type(2);
+		a.negate();
+		cmp = a + c*b;
+		a.multiply_accumulate(c,b);
+		BOOST_CHECK_EQUAL(a,cmp);
+		// This used to be a bug.
+		a = int_type();
+		b = int_type(2);
+		c = int_type(3);
+		a.multiply_accumulate(b,c);
+		a = int_type();
+		b = int_type(2);
+		c = int_type(-3);
+		a.multiply_accumulate(b,c);
+		BOOST_CHECK_EQUAL(a,-int_type(6));
+		// Random tests.
+		std::uniform_int_distribution<int> int_dist(0,1);
+		// 1 limb for all three operands.
+		for (int i = 0; i < ntries; ++i) {
+			int_type a, b, c;
+			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					b.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					c.set_bit(i);
+				}
+			}
+			if (int_dist(rng)) {
+				a.negate();
+			}
+			if (int_dist(rng)) {
+				b.negate();
+			}
+			if (int_dist(rng)) {
+				c.negate();
+			}
+			int_type old_a(a);
+			::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
+			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
+			int_type cmp = a + b*c;
+			a.multiply_accumulate(b,c);
+			BOOST_CHECK_EQUAL(a,cmp);
+			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		}
+		// 2-1-1 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			int_type a, b, c;
+			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					b.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					c.set_bit(i);
+				}
+			}
+			for (typename int_type::limb_t i = limb_bits; i < 2u * limb_bits; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+			}
+			if (int_dist(rng)) {
+				a.negate();
+			}
+			if (int_dist(rng)) {
+				b.negate();
+			}
+			if (int_dist(rng)) {
+				c.negate();
+			}
+			int_type old_a(a);
+			::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
+			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
+			int_type cmp = a + b*c;
+			a.multiply_accumulate(b,c);
+			BOOST_CHECK_EQUAL(a,cmp);
+			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		}
+		// 1-half-half limbs.
+		for (int i = 0; i < ntries; ++i) {
+			int_type a, b, c;
+			for (typename int_type::limb_t i = 0u; i < limb_bits / 2u; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					b.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					c.set_bit(i);
+				}
+			}
+			for (typename int_type::limb_t i = limb_bits / 2u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+			}
+			if (int_dist(rng)) {
+				a.negate();
+			}
+			if (int_dist(rng)) {
+				b.negate();
+			}
+			if (int_dist(rng)) {
+				c.negate();
+			}
+			int_type old_a(a);
+			::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
+			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
+			int_type cmp = a + b*c;
+			a.multiply_accumulate(b,c);
+			BOOST_CHECK_EQUAL(a,cmp);
+			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		}
+		// 2-half-half limbs.
+		for (int i = 0; i < ntries; ++i) {
+			int_type a, b, c;
+			for (typename int_type::limb_t i = 0u; i < limb_bits / 2u; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					b.set_bit(i);
+				}
+				if (int_dist(rng)) {
+					c.set_bit(i);
+				}
+			}
+			for (typename int_type::limb_t i = limb_bits / 2u; i < 2u * limb_bits; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+				}
+			}
+			if (int_dist(rng)) {
+				a.negate();
+			}
+			if (int_dist(rng)) {
+				b.negate();
+			}
+			if (int_dist(rng)) {
+				c.negate();
+			}
+			int_type old_a(a);
+			::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
+			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
+			int_type cmp = a + b*c;
+			a.multiply_accumulate(b,c);
+			BOOST_CHECK_EQUAL(a,cmp);
+			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		}
 	}
 };
 

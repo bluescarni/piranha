@@ -21,6 +21,25 @@ using mpz_struct_t = std::remove_extent< ::mpz_t>::type;
 using mpz_alloc_t = decltype(std::declval<mpz_struct_t>()._mp_alloc);
 using mpz_size_t = decltype(std::declval<mpz_struct_t>()._mp_size);
 
+// Some misc checks to check that the mpz struct conforms to our expectations.
+// This is crucial for the implementation of the union integer type.
+struct expected_mpz_struct_t
+{
+	mpz_alloc_t	_mp_alloc;
+	mpz_size_t	_mp_size;
+	::mp_limb_t	*_mp_d;
+};
+
+static_assert(sizeof(expected_mpz_struct_t) == sizeof(mpz_struct_t) &&
+	std::is_standard_layout<mpz_struct_t>::value && std::is_standard_layout<expected_mpz_struct_t>::value &&
+	offsetof(mpz_struct_t,_mp_alloc) == 0u &&
+	offsetof(mpz_struct_t,_mp_size) == offsetof(expected_mpz_struct_t,_mp_size) &&
+	offsetof(mpz_struct_t,_mp_d) == offsetof(expected_mpz_struct_t,_mp_d) &&
+	std::is_same<mpz_alloc_t,decltype(std::declval<mpz_struct_t>()._mp_alloc)>::value &&
+	std::is_same<mpz_size_t,decltype(std::declval<mpz_struct_t>()._mp_size)>::value &&
+	std::is_same< ::mp_limb_t *,decltype(std::declval<mpz_struct_t>()._mp_d)>::value,
+	"Invalid mpz_t struct layout.");
+
 // Metaprogramming to select the limb/dlimb types.
 template <int NBits>
 struct si_limb_types
@@ -74,6 +93,7 @@ struct si_limb_types<0> : public si_limb_types<
 	>
 {};
 
+// Simple RAII holder for GMP integers.
 struct mpz_raii
 {
 	mpz_raii()
@@ -472,7 +492,7 @@ struct static_integer
 			signc = false;
 		}
 		piranha_assert(asizea <= 2 && asizeb <= 1 && asizec <= 1);
-		if (unlikely(asizea == 0 || asizeb == 0)) {
+		if (unlikely(asizeb == 0 || asizec == 0)) {
 			return;
 		}
 		static_integer tmp;
