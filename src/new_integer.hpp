@@ -522,6 +522,29 @@ struct static_integer
 			}
 		}
 	}
+	// Left-shift by one.
+	void lshift1()
+	{
+		piranha_assert(m_limbs[2u] < (limb_t(1) << (limb_bits - 1u)));
+		using size_type = typename limbs_type::size_type;
+		dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(m_limbs[0u]) << dlimb_t(1));
+		dlimb_t mid = static_cast<dlimb_t>(static_cast<dlimb_t>(m_limbs[1u]) << dlimb_t(1));
+		dlimb_t hi = static_cast<dlimb_t>(static_cast<dlimb_t>(m_limbs[2u]) << dlimb_t(1));
+		m_limbs[0u] = static_cast<limb_t>(lo);
+		m_limbs[1u] = static_cast<limb_t>(mid + (lo >> limb_bits));
+		m_limbs[2u] = static_cast<limb_t>(hi + (mid >> limb_bits));
+		piranha_assert((hi >> limb_bits) != 1u);
+		mpz_size_t asize = _mp_size;
+		bool sign = true;
+		if (asize < 0) {
+			asize = -asize;
+			sign = false;
+		}
+		if (asize < 3) {
+			asize += m_limbs[static_cast<size_type>(asize)] != 0u;
+			_mp_size = sign ? asize : -asize;
+		}
+	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
 	limbs_type	m_limbs;
