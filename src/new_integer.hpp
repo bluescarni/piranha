@@ -545,6 +545,51 @@ struct static_integer
 			_mp_size = sign ? asize : -asize;
 		}
 	}
+	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
+	{
+		piranha_assert(!b.is_zero());
+		mpz_size_t asizea = a._mp_size, asizeb = b._mp_size;
+		bool signa = true, signb = true;
+		if (asizea < 0) {
+			asizea = -asizea;
+			signa = false;
+		}
+		if (asizeb < 0) {
+			asizeb = -asizeb;
+			signb = false;
+		}
+		// Init q to zero.
+		q._mp_size = 0;
+		q.m_limbs[0u] = 0u;
+		q.m_limbs[1u] = 0u;
+		q.m_limbs[2u] = 0u;
+		// If |b| > |a|, quotient is 0.
+		if (asizeb > asizea || (asizea == asizeb && compare(b,a,asizea) > 0)) {
+			// NOTE: remainder will have same sign as a.
+			r = a;
+			return;
+		}
+		// Init r to zero.
+		r._mp_size = 0;
+		r.m_limbs[0u] = 0u;
+		r.m_limbs[1u] = 0u;
+		r.m_limbs[2u] = 0u;
+	}
+	limb_t bits_size() const
+	{
+		using size_type = typename limbs_type::size_type;
+		const auto asize = abs_size();
+		if (asize == 0) {
+			return 0u;
+		}
+		const auto idx = static_cast<size_type>(asize - 1);
+		limb_t size = static_cast<limb_t>(limb_bits * idx), limb = limbs[idx];
+		while (limb != 0u) {
+			++size;
+			limb >>= 1u;
+		}
+		return size;
+	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
 	limbs_type	m_limbs;
