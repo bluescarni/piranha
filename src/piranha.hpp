@@ -143,6 +143,7 @@ namespace detail {}
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
+#include "mp_integer.hpp"
 #include "poisson_series.hpp"
 #include "poisson_series_term.hpp"
 #include "polynomial_term.hpp"

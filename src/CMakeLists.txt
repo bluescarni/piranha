@@ -52,7 +52,7 @@ SET(HEADERS_LIST
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp
-	new_integer.hpp
+	mp_integer.hpp
 	integer.hpp
 	math.hpp
 	environment.hpp
