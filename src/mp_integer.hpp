@@ -567,7 +567,8 @@ struct static_integer
 		}
 		clear_extra_bits();
 	}
-	/*static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
+	// Division.
+	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
 	{
 		piranha_assert(!b.is_zero());
 		mpz_size_t asizea = a._mp_size, asizeb = b._mp_size;
@@ -594,7 +595,28 @@ struct static_integer
 		r._mp_size = 0;
 		r.m_limbs[0u] = 0u;
 		r.m_limbs[1u] = 0u;
-	}*/
+		const auto a_bits_size = a.bits_size();
+		piranha_assert(a_bits_size > 0u);
+		for (limb_t i = a_bits_size; i > 0u; --i) {
+			const limb_t idx = static_cast<limb_t>(i - 1u);
+			r.lshift1();
+			if (a.test_bit(idx)) {
+				r.set_bit(0u);
+			}
+			if (r._mp_size > asizeb || (r._mp_size == asizeb && compare(r,b,asizeb) >= 0)) {
+				raw_sub(r,r,b);
+				q.set_bit(idx);
+			}
+		}
+		// The sign of the remainder is the same as the numerator.
+		if (!signa) {
+			r.negate();
+		}
+		// The sign of the quotient is the sign of a/b.
+		if (signa != signb) {
+			q.negate();
+		}
+	}
 	// Compute the number of bits used in the representation of the integer.
 	limb_t bits_size() const
 	{

@@ -1870,3 +1870,235 @@ BOOST_AUTO_TEST_CASE(mp_integer_static_integer_test_bit_test)
 {
 	boost::mpl::for_each<size_types>(static_test_bit_tester());
 }
+
+struct static_test_div_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n, m(1), q, r;
+		detail::mpz_raii mn, mm, mq, mr;
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		m = int_type(-12);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(1);
+		m = int_type(2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type(1));
+		n = int_type(2);
+		m = int_type(2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(1));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(3);
+		m = int_type(2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(1));
+		BOOST_CHECK_EQUAL(r,int_type(1));
+		n = int_type(4);
+		m = int_type(2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(2));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(-4);
+		m = int_type(-2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(2));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(-4);
+		m = int_type(2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-2));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(4);
+		m = int_type(-2);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-2));
+		BOOST_CHECK_EQUAL(r,int_type(0));
+		n = int_type(0);
+		m = int_type(-3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type(0 % -3));
+		n = int_type(1);
+		m = int_type(-3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type(1 % -3));
+		n = int_type(-1);
+		m = int_type(3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(0));
+		BOOST_CHECK_EQUAL(r,int_type((-1) % 3));
+		n = int_type(-4);
+		m = int_type(3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-1));
+		BOOST_CHECK_EQUAL(r,int_type((-4) % 3));
+		n = int_type(4);
+		m = int_type(-3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-1));
+		BOOST_CHECK_EQUAL(r,int_type(4 % -3));
+		n = int_type(-6);
+		m = int_type(3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-2));
+		BOOST_CHECK_EQUAL(r,int_type((-6) % 3));
+		n = int_type(6);
+		m = int_type(-3);
+		int_type::div(q,r,n,m);
+		BOOST_CHECK_EQUAL(q,int_type(-2));
+		BOOST_CHECK_EQUAL(r,int_type(6 % -3));
+		// Random testing.
+		std::uniform_int_distribution<int> int_dist(0,1);
+		// 1-1 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			// Clear out the variables.
+			n = int_type();
+			m = n;
+			::mpz_set_si(&mn.m_mpz,0);
+			::mpz_set_si(&mm.m_mpz,0);
+			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					n.set_bit(i);
+					::mpz_setbit(&mn.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+				if (int_dist(rng)) {
+					m.set_bit(i);
+					::mpz_setbit(&mm.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (int_dist(rng)) {
+				n.negate();
+				::mpz_neg(&mn.m_mpz,&mn.m_mpz);
+			}
+			if (int_dist(rng)) {
+				m.negate();
+				::mpz_neg(&mm.m_mpz,&mm.m_mpz);
+			}
+			if (m.is_zero()) {
+				continue;
+			}
+			::mpz_tdiv_qr(&mq.m_mpz,&mr.m_mpz,&mn.m_mpz,&mm.m_mpz);
+			int_type::div(q,r,n,m);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),mpz_lexcast(mq));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),mpz_lexcast(mr));
+		}
+		// 1-2 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			// Clear out the variables.
+			n = int_type();
+			m = n;
+			::mpz_set_si(&mn.m_mpz,0);
+			::mpz_set_si(&mm.m_mpz,0);
+			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					n.set_bit(i);
+					::mpz_setbit(&mn.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+				if (int_dist(rng)) {
+					m.set_bit(i);
+					::mpz_setbit(&mm.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (int_dist(rng)) {
+				n.negate();
+				::mpz_neg(&mn.m_mpz,&mn.m_mpz);
+			}
+			if (int_dist(rng)) {
+				m.negate();
+				::mpz_neg(&mm.m_mpz,&mm.m_mpz);
+			}
+			if (m.is_zero()) {
+				continue;
+			}
+			::mpz_tdiv_qr(&mq.m_mpz,&mr.m_mpz,&mn.m_mpz,&mm.m_mpz);
+			int_type::div(q,r,n,m);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),mpz_lexcast(mq));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),mpz_lexcast(mr));
+		}
+		// 2-1 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			// Clear out the variables.
+			n = int_type();
+			m = n;
+			::mpz_set_si(&mn.m_mpz,0);
+			::mpz_set_si(&mm.m_mpz,0);
+			for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+				if (int_dist(rng)) {
+					n.set_bit(i);
+					::mpz_setbit(&mn.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+				if (int_dist(rng)) {
+					m.set_bit(i);
+					::mpz_setbit(&mm.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (int_dist(rng)) {
+				n.negate();
+				::mpz_neg(&mn.m_mpz,&mn.m_mpz);
+			}
+			if (int_dist(rng)) {
+				m.negate();
+				::mpz_neg(&mm.m_mpz,&mm.m_mpz);
+			}
+			if (m.is_zero()) {
+				continue;
+			}
+			::mpz_tdiv_qr(&mq.m_mpz,&mr.m_mpz,&mn.m_mpz,&mm.m_mpz);
+			int_type::div(q,r,n,m);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),mpz_lexcast(mq));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),mpz_lexcast(mr));
+		}
+		// 2-2 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			// Clear out the variables.
+			n = int_type();
+			m = n;
+			::mpz_set_si(&mn.m_mpz,0);
+			::mpz_set_si(&mm.m_mpz,0);
+			for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
+				if (int_dist(rng)) {
+					n.set_bit(i);
+					::mpz_setbit(&mn.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+				if (int_dist(rng)) {
+					m.set_bit(i);
+					::mpz_setbit(&mm.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (int_dist(rng)) {
+				n.negate();
+				::mpz_neg(&mn.m_mpz,&mn.m_mpz);
+			}
+			if (int_dist(rng)) {
+				m.negate();
+				::mpz_neg(&mm.m_mpz,&mm.m_mpz);
+			}
+			if (m.is_zero()) {
+				continue;
+			}
+			::mpz_tdiv_qr(&mq.m_mpz,&mr.m_mpz,&mn.m_mpz,&mm.m_mpz);
+			int_type::div(q,r,n,m);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),mpz_lexcast(mq));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r),mpz_lexcast(mr));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_integer_division_test)
+{
+	boost::mpl::for_each<size_types>(static_test_div_tester());
+}
