@@ -568,6 +568,7 @@ struct static_integer
 		clear_extra_bits();
 	}
 	// Division.
+	// http://en.wikipedia.org/wiki/Division_algorithm#Long_division
 	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
 	{
 		piranha_assert(!b.is_zero());
@@ -649,66 +650,59 @@ struct static_integer
 template <int NBits>
 const typename static_integer<NBits>::limb_t static_integer<NBits>::limb_bits;
 
+// Integer union.
 template <int NBits>
 union integer_union
 {
-	private:
-		using s_storage = static_integer<NBits>;
-		using d_storage = mpz_struct_t;
-	public:
-		integer_union():st() {}
-		integer_union(const integer_union &other)
-		{
-			if (other.is_static()) {
-				::new (static_cast<void *>(&st)) s_storage(other.st);
-			} else {
-				::new (static_cast<void *>(&dy)) d_storage;
-				::mpz_init_set(&dy,&other.dy);
-			}
+	using s_storage = static_integer<NBits>;
+	using d_storage = mpz_struct_t;
+	integer_union():st() {}
+	integer_union(const integer_union &other)
+	{
+		if (other.is_static()) {
+			::new (static_cast<void *>(&st)) s_storage(other.st);
+		} else {
+			::new (static_cast<void *>(&dy)) d_storage;
+			::mpz_init_set(&dy,&other.dy);
 		}
-		integer_union(integer_union &&other) noexcept
-		{
-			if (other.is_static()) {
-				::new (static_cast<void *>(&st)) s_storage(other.st);
-			} else {
-				// TODO move semantics.
-				::new (static_cast<void *>(&dy)) d_storage;
-				::mpz_init_set(&dy,&other.dy);
-			}
+	}
+	integer_union(integer_union &&other) noexcept
+	{
+		if (other.is_static()) {
+			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
+		} else {
+			::new (static_cast<void *>(&dy)) d_storage;
+			dy._mp_alloc = other.dy._mp_alloc;
+			dy._mp_size = other.dy._mp_size;
+			dy._mp_d = other.dy._mp_d;
+			// Nuke the other.
+			other.dy._mp_d = nullptr;
 		}
-		~integer_union() noexcept
-		{
-			if (is_static()) {
-				st.~s_storage();
-			} else {
-				destroy_dynamic();
-			}
+	}
+	~integer_union() noexcept
+	{
+		if (is_static()) {
+			st.~s_storage();
+		} else {
+			destroy_dynamic();
 		}
-		bool is_static() const
-		{
-			return st._mp_alloc == 0;
+	}
+	bool is_static() const
+	{
+		return st._mp_alloc == 0;
+	}
+	void destroy_dynamic()
+	{
+		piranha_assert(!is_static());
+		// Handle moved-from objects, marked by nullptr in _mp_d.
+		if (dy._mp_d != nullptr) {
+			piranha_assert(dy._mp_alloc > 0);
+			::mpz_clear(&dy);
 		}
-		void upgrade()
-		{
-			mpz_struct_t new_mpz;
-			::mpz_init(&new_mpz);
-			auto lo = st.m_lo;
-			
-		}
-	private:
-		void destroy_dynamic()
-		{
-			// TODO assert(!is_static())
-			// Handle moved-from objects.
-			if (dy._mp_d != nullptr) {
-				// TODO: assert assert
-				::mpz_clear(&dy);
-			}
-			dy.~d_storage();
-		}
-	private:
-		s_storage	st;
-		d_storage	dy;
+		dy.~d_storage();
+	}
+	s_storage	st;
+	d_storage	dy;
 };
 
 }

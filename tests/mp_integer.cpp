@@ -2102,3 +2102,19 @@ BOOST_AUTO_TEST_CASE(mp_integer_static_integer_division_test)
 {
 	boost::mpl::for_each<size_types>(static_test_div_tester());
 }
+
+struct union_ctor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::integer_union<T::value> int_type;
+		int_type n;
+		BOOST_CHECK(n.is_static());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_integer_union_ctor_test)
+{
+	boost::mpl::for_each<size_types>(union_ctor_tester());
+}
