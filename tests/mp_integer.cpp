@@ -78,7 +78,6 @@ struct constructor_tester
 		m = n;
 		BOOST_CHECK(m._mp_alloc == 0);
 		BOOST_CHECK(m._mp_size == 1);
-		BOOST_CHECK(m.m_limbs[2u] == 0);
 		BOOST_CHECK(m.m_limbs[1u] == 0);
 		BOOST_CHECK(m.m_limbs[0u] == 4);
 		n.m_limbs[0u] = 5;
@@ -86,19 +85,16 @@ struct constructor_tester
 		m = std::move(n);
 		BOOST_CHECK(m._mp_alloc == 0);
 		BOOST_CHECK(m._mp_size == -1);
-		BOOST_CHECK(m.m_limbs[2u] == 0);
 		BOOST_CHECK(m.m_limbs[1u] == 0);
 		BOOST_CHECK(m.m_limbs[0u] == 5);
 		int_type o(m);
 		BOOST_CHECK(o._mp_alloc == 0);
 		BOOST_CHECK(o._mp_size == -1);
-		BOOST_CHECK(o.m_limbs[2u] == 0);
 		BOOST_CHECK(o.m_limbs[1u] == 0);
 		BOOST_CHECK(o.m_limbs[0u] == 5);
 		int_type p(std::move(o));
 		BOOST_CHECK(p._mp_alloc == 0);
 		BOOST_CHECK(p._mp_size == -1);
-		BOOST_CHECK(p.m_limbs[2u] == 0);
 		BOOST_CHECK(p.m_limbs[1u] == 0);
 		BOOST_CHECK(p.m_limbs[0u] == 5);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(4),boost::lexical_cast<std::string>(int_type(4)));
@@ -227,14 +223,7 @@ struct set_bit_tester
 		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(4u));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
 		BOOST_CHECK_EQUAL(n2._mp_size,2);
-		n2.set_bit(limb_bits * 2u);
-		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits * 2u));
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
-		BOOST_CHECK_EQUAL(n2._mp_size,3);
-		n2.set_bit(limb_bits * 2u + 5u);
-		::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits * 2u + 5u));
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
-		for (typename int_type::limb_t i = 0u; i < int_type::limb_bits * 3u; ++i) {
+		for (typename int_type::limb_t i = 0u; i < int_type::limb_bits * 2u; ++i) {
 			n2.set_bit(i);
 			::mpz_setbit(&m2.m_mpz,static_cast< ::mp_bitcnt_t>(i));
 		}
@@ -242,7 +231,7 @@ struct set_bit_tester
 		n2.negate();
 		::mpz_neg(&m2.m_mpz,&m2.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n2),mpz_lexcast(m2));
-		BOOST_CHECK_EQUAL(n2._mp_size,-3);
+		BOOST_CHECK_EQUAL(n2._mp_size,-2);
 	}
 };
 
@@ -266,10 +255,8 @@ struct calculate_n_limbs_tester
 		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),1u);
 		n.set_bit(limb_bits);
 		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),2u);
-		n.set_bit(limb_bits * 2u);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),3u);
-		n.set_bit(limb_bits * 2u + 1u);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),3u);
+		n.set_bit(limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),2u);
 	}
 };
 
@@ -610,26 +597,6 @@ struct static_add_tester
 		c.negate();
 		int_type::add(a,b,c);
 		BOOST_CHECK_EQUAL(cmp,a);
-		b = int_type(1);
-		c = int_type();
-		cmp = c;
-		cmp.set_bit(limb_bits * 2u);
-		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
-			c.set_bit(i);
-		}
-		int_type::add(a,b,c);
-		BOOST_CHECK_EQUAL(cmp,a);
-		b = int_type(-1);
-		c = int_type();
-		cmp = c;
-		cmp.set_bit(limb_bits * 2u);
-		cmp.negate();
-		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
-			c.set_bit(i);
-		}
-		c.negate();
-		int_type::add(a,b,c);
-		BOOST_CHECK_EQUAL(cmp,a);
 		b = int_type(-1);
 		c = int_type(1);
 		int_type::add(a,b,c);
@@ -670,25 +637,6 @@ struct static_add_tester
 		BOOST_CHECK_EQUAL(a,c);
 		int_type::add(a,c,b);
 		BOOST_CHECK_EQUAL(a,c);
-		b = int_type();
-		c = int_type();
-		for (typename int_type::limb_t i = limb_bits; i < limb_bits * 2u; ++i) {
-			b.set_bit(i);
-		}
-		c.set_bit(limb_bits);
-		cmp = int_type();
-		cmp.set_bit(limb_bits * 2u);
-		int_type::add(a,b,c);
-		BOOST_CHECK_EQUAL(a,cmp);
-		int_type::add(a,c,b);
-		BOOST_CHECK_EQUAL(a,cmp);
-		b.negate();
-		c.negate();
-		cmp.negate();
-		int_type::add(a,b,c);
-		BOOST_CHECK_EQUAL(a,cmp);
-		int_type::add(a,c,b);
-		BOOST_CHECK_EQUAL(a,cmp);
 		b = int_type();
 		c = int_type();
 		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
@@ -928,33 +876,6 @@ struct static_sub_tester
 		cmp.negate();
 		int_type::sub(a,b,c);
 		BOOST_CHECK_EQUAL(cmp,a);
-		b = int_type(-1);
-		c = int_type();
-		cmp = c;
-		cmp.set_bit(limb_bits * 2u);
-		cmp.negate();
-		for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
-			c.set_bit(i);
-		}
-		int_type::sub(a,b,c);
-		BOOST_CHECK_EQUAL(cmp,a);
-		b = int_type(-1);
-		c = int_type(1);
-		int_type::sub(a,b,c);
-		BOOST_CHECK_EQUAL(a,int_type(-2));
-		int_type::sub(a,c,b);
-		BOOST_CHECK_EQUAL(a,int_type(2));
-		b.set_bit(limb_bits);
-		c.set_bit(limb_bits);
-		cmp = int_type();
-		cmp.set_bit(1u);
-		cmp.set_bit(limb_bits + 1u);
-		cmp.negate();
-		int_type::sub(a,b,c);
-		BOOST_CHECK_EQUAL(a,cmp);
-		int_type::sub(a,c,b);
-		cmp.negate();
-		BOOST_CHECK_EQUAL(a,cmp);
 		b = int_type(-1);
 		c = int_type();
 		cmp = c;
@@ -1597,8 +1518,13 @@ struct static_addmul_tester
 			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
 			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
 			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
-			int_type cmp = a + b*c;
-			a.multiply_accumulate(b,c);
+			int_type cmp;
+			try {
+				cmp = a + b*c;
+				a.multiply_accumulate(b,c);
+			} catch (const std::overflow_error &) {
+				continue;
+			}
 			BOOST_CHECK_EQUAL(a,cmp);
 			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
@@ -1675,8 +1601,13 @@ struct static_addmul_tester
 			::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
 			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
 			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
-			int_type cmp = a + b*c;
-			a.multiply_accumulate(b,c);
+			int_type cmp;
+			try {
+				cmp = a + b*c;
+				a.multiply_accumulate(b,c);
+			} catch (const std::overflow_error &) {
+				continue;
+			}
 			BOOST_CHECK_EQUAL(a,cmp);
 			BOOST_CHECK_EQUAL(a,old_a - (-b * c));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
@@ -1714,32 +1645,6 @@ struct static_lshift1_tester
 		m.set_bit(limb_bits);
 		BOOST_CHECK_EQUAL(n,m);
 		BOOST_CHECK_EQUAL(n._mp_size,2);
-		n.negate();
-		n.set_bit(0);
-		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
-			n.lshift1();
-		}
-		m = int_type();
-		m.set_bit(limb_bits);
-		m.set_bit(limb_bits * 2u - 1u);
-		m.set_bit(limb_bits * 2u);
-		m.negate();
-		BOOST_CHECK_EQUAL(n,m);
-		BOOST_CHECK_EQUAL(n._mp_size,-3);
-		n.set_bit(0);
-		n.set_bit(limb_bits - 1u);
-		for (typename int_type::limb_t i = 0u; i < limb_bits - 1u; ++i) {
-			n.lshift1();
-		}
-		m = int_type();
-		m.set_bit(limb_bits - 1u);
-		m.set_bit(limb_bits * 2u - 2u);
-		m.set_bit(limb_bits * 2u - 1u);
-		m.set_bit(limb_bits * 3u - 2u);
-		m.set_bit(limb_bits * 3u - 1u);
-		m.negate();
-		BOOST_CHECK_EQUAL(n,m);
-		BOOST_CHECK_EQUAL(n._mp_size,-3);
 		// Random tests.
 		std::uniform_int_distribution<int> int_dist(0,1);
 		// Half limb.
@@ -1778,6 +1683,24 @@ struct static_lshift1_tester
 			::mpz_mul_2exp(&ma.m_mpz,&ma.m_mpz,1u);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
 		}
+		// 2 limbs.
+		for (int i = 0; i < ntries; ++i) {
+			::mpz_set_si(&ma.m_mpz,0);
+			int_type a;
+			for (typename int_type::limb_t i = 0u; i < limb_bits * 2u - 1u; ++i) {
+				if (int_dist(rng)) {
+					a.set_bit(i);
+					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (int_dist(rng)) {
+				::mpz_neg(&ma.m_mpz,&ma.m_mpz);
+				a.negate();
+			}
+			a.lshift1();
+			::mpz_mul_2exp(&ma.m_mpz,&ma.m_mpz,1u);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		}
 		// half + half limbs.
 		for (int i = 0; i < ntries; ++i) {
 			::mpz_set_si(&ma.m_mpz,0);
@@ -1786,67 +1709,9 @@ struct static_lshift1_tester
 				if (int_dist(rng)) {
 					a.set_bit(i);
 					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i));
-					a.set_bit(static_cast<typename int_type::limb_t>(i + limb_bits));
-					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i + limb_bits));
-				}
-			}
-			if (int_dist(rng)) {
-				::mpz_neg(&ma.m_mpz,&ma.m_mpz);
-				a.negate();
-			}
-			a.lshift1();
-			::mpz_mul_2exp(&ma.m_mpz,&ma.m_mpz,1u);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
-		}
-		// 2 limbs.
-		for (int i = 0; i < ntries; ++i) {
-			::mpz_set_si(&ma.m_mpz,0);
-			int_type a;
-			for (typename int_type::limb_t i = 0u; i < limb_bits * 2u; ++i) {
-				if (int_dist(rng)) {
-					a.set_bit(i);
-					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i));
-				}
-			}
-			if (int_dist(rng)) {
-				::mpz_neg(&ma.m_mpz,&ma.m_mpz);
-				a.negate();
-			}
-			a.lshift1();
-			::mpz_mul_2exp(&ma.m_mpz,&ma.m_mpz,1u);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
-		}
-		// 3 limbs.
-		for (int i = 0; i < ntries; ++i) {
-			::mpz_set_si(&ma.m_mpz,0);
-			int_type a;
-			for (typename int_type::limb_t i = 0u; i < limb_bits * 3u - 1u; ++i) {
-				if (int_dist(rng)) {
-					a.set_bit(i);
-					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i));
-				}
-			}
-			if (int_dist(rng)) {
-				::mpz_neg(&ma.m_mpz,&ma.m_mpz);
-				a.negate();
-			}
-			a.lshift1();
-			::mpz_mul_2exp(&ma.m_mpz,&ma.m_mpz,1u);
-			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
-		}
-		// half + half + half limbs.
-		for (int i = 0; i < ntries; ++i) {
-			::mpz_set_si(&ma.m_mpz,0);
-			int_type a;
-			for (typename int_type::limb_t i = limb_bits / 2u; i < limb_bits; ++i) {
-				if (int_dist(rng)) {
-					a.set_bit(i);
-					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i));
-					a.set_bit(static_cast<typename int_type::limb_t>(i + limb_bits));
-					::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i + limb_bits));
 					if (i != limb_bits - 1u) {
-						a.set_bit(static_cast<typename int_type::limb_t>(i + 2u * limb_bits));
-						::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i + 2u * limb_bits));
+						a.set_bit(static_cast<typename int_type::limb_t>(i + limb_bits));
+						::mpz_setbit(&ma.m_mpz,static_cast< ::mp_bitcnt_t>(i + limb_bits));
 					}
 				}
 			}

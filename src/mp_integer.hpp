@@ -562,7 +562,7 @@ struct static_integer
 			sign = false;
 		}
 		if (asize < 2) {
-			asize = static_cast<mpz_size_t>(asize + m_limbs[static_cast<size_type>(asize)] != 0u);
+			asize = static_cast<mpz_size_t>(asize + (m_limbs[static_cast<size_type>(asize)] != 0u));
 			_mp_size = static_cast<mpz_size_t>(sign ? asize : -asize);
 		}
 	}
