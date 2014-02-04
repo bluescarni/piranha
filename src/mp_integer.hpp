@@ -199,8 +199,8 @@ struct static_integer
 		using size_type = typename limbs_type::size_type;
 		piranha_assert(idx < limb_bits * 2u);
 		// Crossing fingers for compiler optimising this out.
-		const auto quot = idx / limb_bits, rem = idx % limb_bits;
-		m_limbs[static_cast<size_type>(quot)] = static_cast<limb_t>(m_limbs[static_cast<size_type>(quot)] | limb_t(1) << rem);
+		const auto quot = static_cast<limb_t>(idx / limb_bits), rem = static_cast<limb_t>(idx % limb_bits);
+		m_limbs[static_cast<size_type>(quot)] = static_cast<limb_t>(m_limbs[static_cast<size_type>(quot)] | static_cast<limb_t>(limb_t(1) << rem));
 		// Update the size if needed. The new size must be at least quot + 1, as we set a bit
 		// in the limb with index quot.
 		const auto new_size = static_cast<mpz_size_t>(quot + 1u);
@@ -360,13 +360,13 @@ struct static_integer
 		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
 		const dlimb_t hi = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
+		if (unlikely(static_cast<limb_t>(hi >> limb_bits) != 0u)) {
+			piranha_throw(std::overflow_error,"overflow in raw addition");
+		}
 		res.m_limbs[0u] = static_cast<limb_t>(lo);
 		res.m_limbs[1u] = static_cast<limb_t>(hi);
 		res._mp_size = res.calculate_n_limbs();
 		res.clear_extra_bits();
-		if (unlikely(static_cast<limb_t>(hi >> limb_bits))) {
-			piranha_throw(std::overflow_error,"overflow in raw addition");
-		}
 	}
 	static void raw_sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
@@ -565,6 +565,7 @@ struct static_integer
 			asize = static_cast<mpz_size_t>(asize + (m_limbs[static_cast<size_type>(asize)] != 0u));
 			_mp_size = static_cast<mpz_size_t>(sign ? asize : -asize);
 		}
+		clear_extra_bits();
 	}
 	/*static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
 	{
