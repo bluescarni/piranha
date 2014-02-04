@@ -681,6 +681,24 @@ struct static_add_tester
 		BOOST_CHECK_EQUAL(a,cmp);
 		int_type::add(a,c,b);
 		BOOST_CHECK_EQUAL(a,cmp);
+		// Check overflow throwing.
+		b = int_type();
+		c = int_type();
+		b.set_bit(2u * limb_bits - 1u);
+		c.set_bit(2u * limb_bits - 1u);
+		c.set_bit(0u);
+		auto old_a(a);
+		BOOST_CHECK_THROW(int_type::add(a,c,b),std::overflow_error);
+		BOOST_CHECK_EQUAL(old_a,a);
+		b = int_type();
+		c = int_type();
+		b.set_bit(2u * limb_bits - 1u);
+		c.set_bit(2u * limb_bits - 1u);
+		c.set_bit(0u);
+		b.negate();
+		c.negate();
+		BOOST_CHECK_THROW(int_type::add(a,c,b),std::overflow_error);
+		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
 		detail::mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
@@ -853,6 +871,23 @@ struct static_sub_tester
 		int_type::sub(a,b,c);
 		BOOST_CHECK_EQUAL(cmp,a);
 		b = int_type(-1);
+		c = int_type(1);
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,int_type(-2));
+		int_type::sub(a,c,b);
+		BOOST_CHECK_EQUAL(a,int_type(2));
+		b.set_bit(limb_bits);
+		c.set_bit(limb_bits);
+		cmp = int_type();
+		cmp.set_bit(1u);
+		cmp.set_bit(limb_bits + 1u);
+		cmp.negate();
+		int_type::sub(a,b,c);
+		BOOST_CHECK_EQUAL(a,cmp);
+		int_type::sub(a,c,b);
+		cmp.negate();
+		BOOST_CHECK_EQUAL(a,cmp);
+		b = int_type(-1);
 		c = int_type();
 		cmp = c;
 		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
@@ -980,6 +1015,24 @@ struct static_sub_tester
 		cmp.negate();
 		int_type::sub(a,c,b);
 		BOOST_CHECK_EQUAL(a,cmp);
+		// Check overflow throwing.
+		b = int_type();
+		c = int_type();
+		b.set_bit(2u * limb_bits - 1u);
+		c.set_bit(2u * limb_bits - 1u);
+		c.set_bit(0u);
+		b.negate();
+		auto old_a(a);
+		BOOST_CHECK_THROW(int_type::sub(a,c,b),std::overflow_error);
+		BOOST_CHECK_EQUAL(old_a,a);
+		b = int_type();
+		c = int_type();
+		b.set_bit(2u * limb_bits - 1u);
+		c.set_bit(2u * limb_bits - 1u);
+		c.set_bit(0u);
+		c.negate();
+		BOOST_CHECK_THROW(int_type::sub(a,b,c),std::overflow_error);
+		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
 		detail::mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
@@ -1449,6 +1502,31 @@ struct static_addmul_tester
 		c = int_type(-3);
 		a.multiply_accumulate(b,c);
 		BOOST_CHECK_EQUAL(a,-int_type(6));
+		// Overflow checking.
+		a = int_type();
+		b = int_type();
+		c = int_type();
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			b.set_bit(i);
+			c.set_bit(i);
+		}
+		a.set_bit(2u * limb_bits - 1u);
+		auto old_a(a);
+		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK_EQUAL(a,old_a);
+		a = int_type();
+		b = int_type();
+		c = int_type();
+		for (typename int_type::limb_t i = 0u; i < limb_bits; ++i) {
+			b.set_bit(i);
+			c.set_bit(i);
+		}
+		b.negate();
+		a.set_bit(2u * limb_bits - 1u);
+		a.negate();
+		old_a = a;
+		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK_EQUAL(a,old_a);
 		// Random tests.
 		std::uniform_int_distribution<int> int_dist(0,1);
 		// 1 limb for all three operands.
