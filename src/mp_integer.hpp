@@ -584,7 +584,6 @@ struct static_integer
 		q._mp_size = 0;
 		q.m_limbs[0u] = 0u;
 		q.m_limbs[1u] = 0u;
-		q.m_limbs[2u] = 0u;
 		// If |b| > |a|, quotient is 0.
 		if (asizeb > asizea || (asizea == asizeb && compare(b,a,asizea) > 0)) {
 			// NOTE: remainder will have same sign as a.
@@ -595,7 +594,6 @@ struct static_integer
 		r._mp_size = 0;
 		r.m_limbs[0u] = 0u;
 		r.m_limbs[1u] = 0u;
-		r.m_limbs[2u] = 0u;
 	}*/
 	// Compute the number of bits used in the representation of the integer.
 	limb_t bits_size() const
@@ -612,6 +610,13 @@ struct static_integer
 			limb = static_cast<limb_t>(limb >> 1u);
 		}
 		return size;
+	}
+	limb_t test_bit(const limb_t &idx) const
+	{
+		using size_type = typename limbs_type::size_type;
+		piranha_assert(idx < limb_bits * 2u);
+		const auto quot = static_cast<limb_t>(idx / limb_bits), rem = static_cast<limb_t>(idx % limb_bits);
+		return (static_cast<limb_t>(m_limbs[static_cast<size_type>(quot)] & static_cast<limb_t>(limb_t(1u) << rem)) != 0u);
 	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;

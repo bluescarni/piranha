@@ -1838,3 +1838,35 @@ BOOST_AUTO_TEST_CASE(mp_integer_static_integer_bits_size_test)
 {
 	boost::mpl::for_each<size_types>(static_bits_size_tester());
 }
+
+struct static_test_bit_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n;
+		BOOST_CHECK_EQUAL(n.test_bit(0u),0u);
+		n.set_bit(0u);
+		BOOST_CHECK_EQUAL(n.test_bit(0u),1u);
+		n.set_bit(2u);
+		BOOST_CHECK_EQUAL(n.test_bit(1u),0u);
+		BOOST_CHECK_EQUAL(n.test_bit(2u),1u);
+		n.set_bit(limb_bits - 1u);
+		BOOST_CHECK_EQUAL(n.test_bit(limb_bits - 1u),1u);
+		n.set_bit(limb_bits);
+		BOOST_CHECK_EQUAL(n.test_bit(limb_bits),1u);
+		n.set_bit(limb_bits + 1u);
+		BOOST_CHECK_EQUAL(n.test_bit(limb_bits + 1u),1u);
+		BOOST_CHECK_EQUAL(n.test_bit(limb_bits + 2u),0u);
+		BOOST_CHECK_EQUAL(n.test_bit(2u * limb_bits - 1u),0u);
+		n.set_bit(2u * limb_bits - 1u);
+		BOOST_CHECK_EQUAL(n.test_bit(2u * limb_bits - 1u),1u);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_integer_test_bit_test)
+{
+	boost::mpl::for_each<size_types>(static_test_bit_tester());
+}
