@@ -596,7 +596,8 @@ struct static_integer
 		r.m_limbs[0u] = 0u;
 		r.m_limbs[1u] = 0u;
 		r.m_limbs[2u] = 0u;
-	}
+	}*/
+	// Compute the number of bits used in the representation of the integer.
 	limb_t bits_size() const
 	{
 		using size_type = typename limbs_type::size_type;
@@ -605,13 +606,13 @@ struct static_integer
 			return 0u;
 		}
 		const auto idx = static_cast<size_type>(asize - 1);
-		limb_t size = static_cast<limb_t>(limb_bits * idx), limb = limbs[idx];
+		limb_t size = static_cast<limb_t>(limb_bits * idx), limb = m_limbs[idx];
 		while (limb != 0u) {
 			++size;
-			limb >>= 1u;
+			limb = static_cast<limb_t>(limb >> 1u);
 		}
 		return size;
-	}*/
+	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
 	limbs_type	m_limbs;
