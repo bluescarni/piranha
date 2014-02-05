@@ -2111,6 +2111,18 @@ struct union_ctor_tester
 		typedef detail::integer_union<T::value> int_type;
 		int_type n;
 		BOOST_CHECK(n.is_static());
+		n.promote();
+		BOOST_CHECK(!n.is_static());
+		BOOST_CHECK(n.dy._mp_alloc > 0);
+		BOOST_CHECK(n.dy._mp_d != nullptr);
+		int_type n1;
+		n1.st.set_bit(1u);
+		n1.promote();
+		BOOST_CHECK(!n1.is_static());
+		BOOST_CHECK(::mpz_tstbit(&n1.dy,1u) == 1);
+		int_type n2(n1);
+		BOOST_CHECK(!n2.is_static());
+		BOOST_CHECK(::mpz_tstbit(&n2.dy,1u) == 1);
 	}
 };
 

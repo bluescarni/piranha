@@ -124,6 +124,7 @@ struct mpz_raii
 	mpz_raii()
 	{
 		::mpz_init(&m_mpz);
+		piranha_assert(m_mpz._mp_alloc > 0);
 	}
 	mpz_raii(const mpz_raii &) = delete;
 	mpz_raii(mpz_raii &&) = delete;
@@ -131,7 +132,9 @@ struct mpz_raii
 	mpz_raii &operator=(mpz_raii &&) = delete;
 	~mpz_raii() noexcept
 	{
-		::mpz_clear(&m_mpz);
+		if (m_mpz._mp_d != nullptr) {
+			::mpz_clear(&m_mpz);
+		}
 	}
 	mpz_struct_t m_mpz;
 };
@@ -656,6 +659,14 @@ union integer_union
 {
 	using s_storage = static_integer<NBits>;
 	using d_storage = mpz_struct_t;
+	static void move_mpz(mpz_struct_t &to, mpz_struct_t &from)
+	{
+		to._mp_alloc = from._mp_alloc;
+		to._mp_size = from._mp_size;
+		to._mp_d = from._mp_d;
+		// Nuke the other.
+		from._mp_d = nullptr;
+	}
 	integer_union():st() {}
 	integer_union(const integer_union &other)
 	{
@@ -664,6 +675,7 @@ union integer_union
 		} else {
 			::new (static_cast<void *>(&dy)) d_storage;
 			::mpz_init_set(&dy,&other.dy);
+			piranha_assert(dy._mp_alloc > 0);
 		}
 	}
 	integer_union(integer_union &&other) noexcept
@@ -672,11 +684,7 @@ union integer_union
 			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
 		} else {
 			::new (static_cast<void *>(&dy)) d_storage;
-			dy._mp_alloc = other.dy._mp_alloc;
-			dy._mp_size = other.dy._mp_size;
-			dy._mp_d = other.dy._mp_d;
-			// Nuke the other.
-			other.dy._mp_d = nullptr;
+			move_mpz(dy,other.dy);
 		}
 	}
 	~integer_union() noexcept
@@ -686,6 +694,57 @@ union integer_union
 		} else {
 			destroy_dynamic();
 		}
+	}
+	integer_union &operator=(const integer_union &other)
+	{
+		if (unlikely(this == &other)) {
+			return *this;
+		}
+		const bool s1 = is_static(), s2 = other.is_static();
+		if (s1 && s2) {
+			st = other.st;
+		} else if (s1 && !s2) {
+			// Destroy static.
+			st.~s_storage();
+			// Construct the dynamic struct.
+			::new (static_cast<void *>(&dy)) d_storage;
+			// Init + assign the mpz.
+			::mpz_init_set(&dy,&other.dy);
+			piranha_assert(dy._mp_alloc > 0);
+		} else if (!s1 && s2) {
+			// Create a copy of other and promote it.
+			auto other_copy(other);
+			other_copy.promote();
+			::mpz_set(&dy,&other_copy.dy);
+		} else {
+			::mpz_set(&dy,&other.dy);
+		}
+		return *this;
+	}
+	integer_union &operator=(integer_union &&other) noexcept
+	{
+		if (unlikely(this == &other)) {
+			return *this;
+		}
+		const bool s1 = is_static(), s2 = other.is_static();
+		if (s1 && s2) {
+			st = std::move(other.st);
+		} else if (s1 && !s2) {
+			// Destroy static.
+			st.~s_storage();
+			// Construct the dynamic struct.
+			::new (static_cast<void *>(&dy)) d_storage;
+			move_mpz(dy,other.dy);
+		} else if (!s1 && s2) {
+			// Create a copy of other and promote it.
+			auto other_copy(other);
+			other_copy.promote();
+			// Move the copy.
+			move_mpz(dy,other_copy.dy);
+		} else {
+			move_mpz(dy,other.dy);
+		}
+		return *this;
 	}
 	bool is_static() const
 	{
@@ -700,6 +759,17 @@ union integer_union
 			::mpz_clear(&dy);
 		}
 		dy.~d_storage();
+	}
+	void promote()
+	{
+		piranha_assert(is_static());
+		mpz_raii tmp;
+		st.to_mpz(tmp.m_mpz);
+		// Destroy static.
+		st.~s_storage();
+		// Construct the dynamic struct.
+		::new (static_cast<void *>(&dy)) d_storage;
+		move_mpz(dy,tmp.m_mpz);
 	}
 	s_storage	st;
 	d_storage	dy;
