@@ -694,3 +694,58 @@ BOOST_AUTO_TEST_CASE(small_vector_print_sizes)
 	std::cout << "Int        : " << sizeof(small_vector<int>) << ',' << detail::prepare_for_print(small_vector<int>::max_static_size) <<
 		',' << detail::prepare_for_print(small_vector<int>::max_dynamic_size) << '\n';
 }
+
+struct move_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U>;
+			v_type v1;
+			v1.push_back(T(1));
+			v_type v2(std::move(v1));
+			BOOST_CHECK_EQUAL(v2.size(),1u);
+			BOOST_CHECK_EQUAL(v2[0u],T(1));
+			BOOST_CHECK_EQUAL(v1.size(),0u);
+			BOOST_CHECK(v1.begin() == v1.end());
+			BOOST_CHECK(v1.is_static());
+			BOOST_CHECK(v2.is_static());
+			v1 = std::move(v2);
+			BOOST_CHECK_EQUAL(v1.size(),1u);
+			BOOST_CHECK_EQUAL(v1[0u],T(1));
+			BOOST_CHECK_EQUAL(v2.size(),0u);
+			BOOST_CHECK(v2.begin() == v2.end());
+			BOOST_CHECK(v2.is_static());
+			BOOST_CHECK(v1.is_static());
+			v1 = v_type();
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size) + 1,[&n](){return T(n++);});
+			BOOST_CHECK(!v1.is_static());
+			v_type v3(std::move(v1));
+			BOOST_CHECK_EQUAL(integer(v3.size()),integer(v_type::max_static_size) + 1);
+			BOOST_CHECK_EQUAL(v1.size(),0u);
+			BOOST_CHECK(v1.begin() == v1.end());
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(!v3.is_static());
+			v1 = std::move(v3);
+			BOOST_CHECK_EQUAL(integer(v1.size()),integer(v_type::max_static_size) + 1);
+			BOOST_CHECK_EQUAL(v3.size(),0u);
+			BOOST_CHECK(v3.begin() == v3.end());
+			BOOST_CHECK(!v3.is_static());
+			BOOST_CHECK(!v1.is_static());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_move_test)
+{
+	boost::mpl::for_each<value_types>(move_tester());
+}
