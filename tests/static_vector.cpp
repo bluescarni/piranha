@@ -473,3 +473,55 @@ BOOST_AUTO_TEST_CASE(static_vector_hash_test)
 {
 	boost::mpl::for_each<value_types>(hash_tester());
 }
+
+// Move semantics tester.
+struct move_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v1;
+			v1.push_back(T());
+			vector_type v2(std::move(v1));
+			BOOST_CHECK_EQUAL(T(),v2[0u]);
+			BOOST_CHECK_EQUAL(v1.size(),0u);
+			BOOST_CHECK(v1.begin() == v1.end());
+			v1 = std::move(v2);
+			BOOST_CHECK_EQUAL(T(),v1[0u]);
+			BOOST_CHECK_EQUAL(v2.size(),0u);
+			BOOST_CHECK(v2.begin() == v2.end());
+			if (U::value > 1u) {
+				v1.push_back(boost::lexical_cast<T>("2"));
+				v1.push_back(boost::lexical_cast<T>("3"));
+				vector_type v3(std::move(v1));
+				BOOST_CHECK_EQUAL(v3.size(),3u);
+				BOOST_CHECK_EQUAL(v3[0u],T());
+				BOOST_CHECK_EQUAL(v3[1u],boost::lexical_cast<T>("2"));
+				BOOST_CHECK_EQUAL(v3[2u],boost::lexical_cast<T>("3"));
+				BOOST_CHECK_EQUAL(v1.size(),0u);
+				BOOST_CHECK(v1.begin() == v1.end());
+				v1 = std::move(v3);
+				BOOST_CHECK_EQUAL(v1.size(),3u);
+				BOOST_CHECK_EQUAL(v1[0u],T());
+				BOOST_CHECK_EQUAL(v1[1u],boost::lexical_cast<T>("2"));
+				BOOST_CHECK_EQUAL(v1[2u],boost::lexical_cast<T>("3"));
+				BOOST_CHECK_EQUAL(v3.size(),0u);
+				BOOST_CHECK(v3.begin() == v3.end());
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_move_semantics_test)
+{
+	boost::mpl::for_each<value_types>(move_tester());
+}

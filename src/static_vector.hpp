@@ -84,7 +84,7 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * 
  * \section move_semantics Move semantics
  * 
- * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
+ * After a move operation, the container will be left in a state equivalent to a default-constructed instance.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -181,16 +181,21 @@ class static_vector
 		 */
 		static_vector(static_vector &&other) noexcept(true):m_tag(1u),m_size(0u)
 		{
+			const auto size = other.size();
 			if (std::is_pod<T>::value) {
-				std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
-				m_size = other.m_size;
+				std::memcpy(vs(),other.vs(),size * sizeof(T));
+				m_size = size;
 			} else {
 				// NOTE: here no need for rollback, as we assume move ctors do not throw.
-				const auto size = other.size();
 				for (size_type i = 0u; i < size; ++i) {
 					push_back(std::move(other[i]));
 				}
 			}
+			// Nuke other.
+			for (size_type i = 0u; i < size; ++i) {
+				other.ptr()[i].~T();
+			}
+			other.m_size = 0u;
 		}
 		/// Constructor from multiple copies.
 		/**
@@ -278,6 +283,11 @@ class static_vector
 					}
 				}
 				m_size = other.m_size;
+				// Nuke the other.
+				for (size_type i = 0u; i < other.m_size; ++i) {
+					other.ptr()[i].~T();
+				}
+				other.m_size = 0u;
 			}
 			return *this;
 		}
