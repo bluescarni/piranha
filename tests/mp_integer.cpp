@@ -2109,20 +2109,155 @@ struct union_ctor_tester
 	void operator()(const T &)
 	{
 		typedef detail::integer_union<T::value> int_type;
+		const auto limb_bits = int_type::s_storage::limb_bits;
 		int_type n;
 		BOOST_CHECK(n.is_static());
 		n.promote();
 		BOOST_CHECK(!n.is_static());
 		BOOST_CHECK(n.dy._mp_alloc > 0);
 		BOOST_CHECK(n.dy._mp_d != nullptr);
+		// Copy ctor tests.
 		int_type n1;
 		n1.st.set_bit(1u);
+		BOOST_CHECK(n1.is_static());
+		// From S.
+		int_type n2(n1);
+		BOOST_CHECK(n2.is_static());
+		BOOST_CHECK_EQUAL(n2.st.test_bit(1u),1u);
+		// From D.
+		n1.st.set_bit(limb_bits);
 		n1.promote();
 		BOOST_CHECK(!n1.is_static());
-		BOOST_CHECK(::mpz_tstbit(&n1.dy,1u) == 1);
-		int_type n2(n1);
-		BOOST_CHECK(!n2.is_static());
-		BOOST_CHECK(::mpz_tstbit(&n2.dy,1u) == 1);
+		int_type n3(n1);
+		BOOST_CHECK(!n3.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.dy,1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.dy,limb_bits),1);
+		// Move ctor tests.
+		int_type n1a;
+		n1a.st.set_bit(1u);
+		BOOST_CHECK(n1a.is_static());
+		// From S.
+		int_type n2a(std::move(n1a));
+		BOOST_CHECK(n2a.is_static());
+		BOOST_CHECK_EQUAL(n2a.st.test_bit(1u),1u);
+		BOOST_CHECK(n1a.is_static());
+		BOOST_CHECK_EQUAL(n1a.st.test_bit(1u),1u);
+		// From D.
+		n1a.st.set_bit(limb_bits);
+		n1a.promote();
+		BOOST_CHECK(!n1a.is_static());
+		int_type n3a(std::move(n1a));
+		BOOST_CHECK(!n3a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.dy,1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.dy,limb_bits),1);
+		BOOST_CHECK(n1a.is_static());
+		BOOST_CHECK_EQUAL(n1a.st,typename int_type::s_storage());
+		// Copy assignment tests.
+		int_type n4, n5, n6;
+		n4.st.set_bit(4u);
+		// Self assignment.
+		n4 = n4;
+		BOOST_CHECK(n4.is_static());
+		BOOST_CHECK_EQUAL(n4.st.test_bit(4u),1u);
+		// S vs S.
+		n5 = n4;
+		BOOST_CHECK(n5.is_static());
+		BOOST_CHECK_EQUAL(n5.st.test_bit(4u),1u);
+		// S vs D.
+		n4.st.set_bit(limb_bits);
+		n4.promote();
+		n5 = n4;
+		BOOST_CHECK(!n5.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),1);
+		// D vs S.
+		n6.st.set_bit(2u);
+		n5 = n6;
+		BOOST_CHECK(!n5.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),0);
+		// D vs D.
+		n5 = n4;
+		BOOST_CHECK(!n5.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,2u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),1);
+		// Move assignment tests.
+		int_type n4a, n5a, n6a;
+		n4a.st.set_bit(4u);
+		// Self assignment.
+		n4a = std::move(n4a);
+		BOOST_CHECK(n4a.is_static());
+		BOOST_CHECK_EQUAL(n4a.st.test_bit(4u),1u);
+		// S vs S.
+		n5a = std::move(n4a);
+		BOOST_CHECK(n5a.is_static());
+		BOOST_CHECK_EQUAL(n5a.st.test_bit(4u),1u);
+		BOOST_CHECK(n4a.is_static());
+		BOOST_CHECK_EQUAL(n4a.st.test_bit(4u),1u);
+		// S vs D.
+		n4a.st.set_bit(limb_bits);
+		n4a.promote();
+		n5a = std::move(n4a);
+		BOOST_CHECK(!n5a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
+		BOOST_CHECK(n4a.is_static());
+		BOOST_CHECK_EQUAL(n4a.st,typename int_type::s_storage());
+		// D vs S.
+		n6a.st.set_bit(2u);
+		n5a = std::move(n6a);
+		BOOST_CHECK(!n5a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),0);
+		BOOST_CHECK(!n6a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,limb_bits),1);
+		// D vs D.
+		::mpz_setbit(&n6a.dy,limb_bits + 1u);
+		n5a = std::move(n6a);
+		BOOST_CHECK(!n5a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits + 1u),1);
+		BOOST_CHECK(!n6a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,limb_bits),0);
+		// NOTE: this is here only for historical reasons, moved-from objects
+		// are not special any more.
+		// Check if reviving moved-from objects works.
+		// Need to check only when the first operand is dynamic.
+		// Copy-assignment revive.
+		BOOST_CHECK(!n5a.is_static());
+		int_type n7(std::move(n5a));
+		BOOST_CHECK(n5a.is_static());
+		n5a = n7;
+		BOOST_CHECK(!n5a.is_static());
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits + 1u),1);
+		int_type n8;
+		n8.st.set_bit(3u);
+		int_type n7a(std::move(n5a));
+		(void)n7a;
+		BOOST_CHECK(n5a.is_static());
+		n5a = n8;
+		BOOST_CHECK(n5a.is_static());
+		// Move-assignment revive.
+		int_type n7b(std::move(n5a));
+		(void)n7b;
+		BOOST_CHECK(n8.is_static());
+		BOOST_CHECK(n5a.is_static());
+		n5a = std::move(n8);
+		BOOST_CHECK(n5a.is_static());
+		BOOST_CHECK(n8.is_static());
+		// n8 now can be revived,
+		n8 = std::move(n5a);
+		BOOST_CHECK(n8.is_static());
+		BOOST_CHECK(n5a.is_static());
 	}
 };
 

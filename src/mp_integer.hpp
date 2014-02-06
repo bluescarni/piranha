@@ -659,13 +659,21 @@ union integer_union
 {
 	using s_storage = static_integer<NBits>;
 	using d_storage = mpz_struct_t;
-	static void move_mpz(mpz_struct_t &to, mpz_struct_t &from)
+	static void move_ctor_mpz(mpz_struct_t &to, mpz_struct_t &from) noexcept
 	{
 		to._mp_alloc = from._mp_alloc;
 		to._mp_size = from._mp_size;
 		to._mp_d = from._mp_d;
-		// Nuke the other.
-		from._mp_d = nullptr;
+	}
+	// Private implementation of swap.
+	static void swap_mpz_t(mpz_struct_t &n1,mpz_struct_t &n2)
+	{
+		// NOTE: implement swap manually because this function is used in assignment, and hence when potentially
+		// reviving moved-from objects. It seems like we do not have the guarantee that ::mpz_swap() is gonna work
+		// on uninitialised objects.
+		std::swap(n1._mp_d,n2._mp_d);
+		std::swap(n1._mp_size,n2._mp_size);
+		std::swap(n1._mp_alloc,n2._mp_alloc);
 	}
 	integer_union():st() {}
 	integer_union(const integer_union &other)
@@ -684,7 +692,10 @@ union integer_union
 			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
 		} else {
 			::new (static_cast<void *>(&dy)) d_storage;
-			move_mpz(dy,other.dy);
+			move_ctor_mpz(dy,other.dy);
+			// Downgrade the other to an empty static.
+			other.dy.~d_storage();
+			::new (static_cast<void *>(&other.st)) s_storage();
 		}
 	}
 	~integer_union() noexcept
@@ -734,15 +745,18 @@ union integer_union
 			st.~s_storage();
 			// Construct the dynamic struct.
 			::new (static_cast<void *>(&dy)) d_storage;
-			move_mpz(dy,other.dy);
+			move_ctor_mpz(dy,other.dy);
+			// Downgrade the other to an empty static.
+			other.dy.~d_storage();
+			::new (static_cast<void *>(&other.st)) s_storage();
 		} else if (!s1 && s2) {
-			// Create a copy of other and promote it.
-			auto other_copy(other);
-			other_copy.promote();
-			// Move the copy.
-			move_mpz(dy,other_copy.dy);
+			// Promote directly other, no need for copy.
+			other.promote();
+			// Swap with the promoted other.
+			swap_mpz_t(dy,other.dy);
 		} else {
-			move_mpz(dy,other.dy);
+			// Swap with other.
+			swap_mpz_t(dy,other.dy);
 		}
 		return *this;
 	}
@@ -753,11 +767,9 @@ union integer_union
 	void destroy_dynamic()
 	{
 		piranha_assert(!is_static());
-		// Handle moved-from objects, marked by nullptr in _mp_d.
-		if (dy._mp_d != nullptr) {
-			piranha_assert(dy._mp_alloc > 0);
-			::mpz_clear(&dy);
-		}
+		piranha_assert(dy._mp_alloc > 0);
+		piranha_assert(dy._mp_d != nullptr);
+		::mpz_clear(&dy);
 		dy.~d_storage();
 	}
 	void promote()
@@ -769,7 +781,8 @@ union integer_union
 		st.~s_storage();
 		// Construct the dynamic struct.
 		::new (static_cast<void *>(&dy)) d_storage;
-		move_mpz(dy,tmp.m_mpz);
+		move_ctor_mpz(dy,tmp.m_mpz);
+		tmp.m_mpz._mp_d = nullptr;
 	}
 	s_storage	st;
 	d_storage	dy;
