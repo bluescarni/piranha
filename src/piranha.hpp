@@ -114,6 +114,7 @@
  * \todo check usages of std algorithms against the assumptions on the functors used:
  * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
+ * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  */
 namespace piranha
 {

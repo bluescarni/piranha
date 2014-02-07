@@ -139,6 +139,22 @@ struct mpz_raii
 	mpz_struct_t m_mpz;
 };
 
+static inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
+{
+	const std::size_t size_base10 = ::mpz_sizeinbase(&mpz,10);
+	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
+		piranha_throw(std::overflow_error,"number of digits is too large");
+	}
+	const auto total_size = size_base10 + 2u;
+	small_vector<char> tmp;
+	tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
+	if (unlikely(tmp.size() != total_size)) {
+		piranha_throw(std::overflow_error,"number of digits is too large");
+	}
+	os << ::mpz_get_str(&tmp[0u],10,&mpz);
+	return os;
+}
+
 template <int NBits>
 struct static_integer
 {
@@ -268,18 +284,7 @@ struct static_integer
 	{
 		mpz_raii m;
 		si.to_mpz(m.m_mpz);
-		const std::size_t size_base10 = ::mpz_sizeinbase(&m.m_mpz,10);
-		if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
-			piranha_throw(std::overflow_error,"number of digits is too large");
-		}
-		const auto total_size = size_base10 + 2u;
-		small_vector<char> tmp;
-		tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
-		if (unlikely(tmp.size() != total_size)) {
-			piranha_throw(std::overflow_error,"number of digits is too large");
-		}
-		os << ::mpz_get_str(&tmp[0u],10,&m.m_mpz);
-		return os;
+		return stream_mpz(os,m.m_mpz);
 	}
 	bool operator==(const static_integer &other) const
 	{
@@ -789,6 +794,41 @@ union integer_union
 };
 
 }
+
+/// Multi-precision integer class.
+/**
+ * foo.
+ */
+template <int NBits>
+class mp_integer
+{
+	public:
+		mp_integer() = default;
+		mp_integer(const mp_integer &) = default;
+		mp_integer(mp_integer &&) = default;
+		~mp_integer() = default;
+		mp_integer &operator=(const mp_integer &) = default;
+		mp_integer &operator=(mp_integer &&) = default;
+		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
+		{
+			if (n.m_int.is_static()) {
+				return (os << n.m_int.st);
+			} else {
+				return detail::stream_mpz(os,n.m_int.dy);
+			}
+		}
+		void promote()
+		{
+			if (unlikely(!m_int.is_static())) {
+				piranha_throw(std::invalid_argument,"cannot promote non-static integer");
+			}
+			m_int.promote();
+		}
+	private:
+		detail::integer_union<NBits> m_int;
+};
+
+//using integer = mp_integer<>;
 
 }
 

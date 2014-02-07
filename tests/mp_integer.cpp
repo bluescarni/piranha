@@ -2265,3 +2265,22 @@ BOOST_AUTO_TEST_CASE(mp_integer_integer_union_ctor_test)
 {
 	boost::mpl::for_each<size_types>(union_ctor_tester());
 }
+
+struct ctor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n1;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
+		n1.promote();
+		BOOST_CHECK_THROW(n1.promote(),std::invalid_argument);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ctor_test)
+{
+	boost::mpl::for_each<size_types>(ctor_tester());
+}
