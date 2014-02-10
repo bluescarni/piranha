@@ -670,16 +670,6 @@ union integer_union
 		to._mp_size = from._mp_size;
 		to._mp_d = from._mp_d;
 	}
-	// Private implementation of swap.
-	static void swap_mpz_t(mpz_struct_t &n1,mpz_struct_t &n2)
-	{
-		// NOTE: implement swap manually because this function is used in assignment, and hence when potentially
-		// reviving moved-from objects. It seems like we do not have the guarantee that ::mpz_swap() is gonna work
-		// on uninitialised objects.
-		std::swap(n1._mp_d,n2._mp_d);
-		std::swap(n1._mp_size,n2._mp_size);
-		std::swap(n1._mp_alloc,n2._mp_alloc);
-	}
 	integer_union():st() {}
 	integer_union(const integer_union &other)
 	{
@@ -758,10 +748,10 @@ union integer_union
 			// Promote directly other, no need for copy.
 			other.promote();
 			// Swap with the promoted other.
-			swap_mpz_t(dy,other.dy);
+			::mpz_swap(&dy,&other.dy);
 		} else {
 			// Swap with other.
-			swap_mpz_t(dy,other.dy);
+			::mpz_swap(&dy,&other.dy);
 		}
 		return *this;
 	}
@@ -795,20 +785,67 @@ union integer_union
 
 }
 
-/// Multi-precision integer class.
+/// Multiple precision integer class.
 /**
- * foo.
+ * This class is a wrapper around the GMP arbitrary precision \p mpz_t type, and it can represent integer numbers of arbitrary size
+ * (i.e., the range is limited only by the available memory).
+ *
+ * As an optimisation, this class will store in static internal storage a fixed number of digits before resorting to dynamic
+ * memory allocation. The internal storage consists of two limbs of size \p NBits bits, for a total of <tt>2*NBits</tt> bits
+ * of static storage. The possible values for \p NBits, supported on all platforms, are 8, 16, and 32.
+ * A value of 64 is supported on some platforms. The special
+ * default value of 0 is used to automatically select the optimal \p NBits value on the current platform.
+ *
+ * \section exception_safety Exception safety guarantee
+ *
+ * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
+ * the program will terminate.
+ *
+ * \section move_semantics Move semantics
+ *
+ * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
+ *
+ * \section implementation_details Implementation details
+ *
+ * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
+ * across different versions. GMP versions 4.x and 5.x are explicitly supported by this class.
+ *
+ * @see http://gmplib.org/manual/Integer-Internals.html
+ * @see http://gmplib.org/
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <int NBits>
+template <int NBits = 0>
 class mp_integer
 {
 	public:
+		/// Defaulted default constructor.
+		/**
+		 * The value of the integer will be initialised to 0.
+		 */
 		mp_integer() = default;
+		/// Defaulted copy constructor.
 		mp_integer(const mp_integer &) = default;
+		/// Defaulted move constructor.
 		mp_integer(mp_integer &&) = default;
+		/// Defaulted destructor.
 		~mp_integer() = default;
+		/// Defaulted copy-assignment operator.
 		mp_integer &operator=(const mp_integer &) = default;
+		/// Defaulted move-assignment operator.
 		mp_integer &operator=(mp_integer &&) = default;
+		/// Overload output stream operator for piranha::integer.
+		/**
+		 * The input \p n will be directed to the output stream \p os as a string of digits in base 10.
+		 *
+		 * @param[in] os output stream.
+		 * @param[in] n piranha::mp_integer to be directed to stream.
+		 *
+		 * @return reference to \p os.
+		 *
+		 * @throws std::overflow_error if the number of digits is larger than an implementation-defined maximum.
+		 * @throws unspecified any exception thrown by piranha::small_vector::resize().
+		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
 		{
 			if (n.m_int.is_static()) {
@@ -817,12 +854,27 @@ class mp_integer
 				return detail::stream_mpz(os,n.m_int.dy);
 			}
 		}
+		/// Promote to dynamic storage.
+		/**
+		 * This method will promote \p this to dynamic storage, if \p this is currently stored in static
+		 * storage. Otherwise, an error will be raised.
+		 *
+		 * @throws std::invalid_argument if \p this is not currently stored in static storage.
+		 */
 		void promote()
 		{
 			if (unlikely(!m_int.is_static())) {
 				piranha_throw(std::invalid_argument,"cannot promote non-static integer");
 			}
 			m_int.promote();
+		}
+		/// Test storage status.
+		/**
+		 * @return \p true if \p this is currently stored in static storage, \p false otherwise.
+		 */
+		bool is_static() const noexcept
+		{
+			return m_int.is_static();
 		}
 	private:
 		detail::integer_union<NBits> m_int;
