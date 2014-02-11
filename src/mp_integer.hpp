@@ -834,7 +834,7 @@ class mp_integer
 		mp_integer &operator=(const mp_integer &) = default;
 		/// Defaulted move-assignment operator.
 		mp_integer &operator=(mp_integer &&) = default;
-		/// Overload output stream operator for piranha::integer.
+		/// Overload output stream operator for piranha::mp_integer.
 		/**
 		 * The input \p n will be directed to the output stream \p os as a string of digits in base 10.
 		 *
