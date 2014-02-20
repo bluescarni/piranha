@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <array>
 #include <boost/integer_traits.hpp>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <gmp.h>
@@ -818,6 +819,32 @@ union integer_union
 template <int NBits = 0>
 class mp_integer
 {
+	private:
+		template <typename Float>
+		void construct_from_floating_point(Float x)
+		{
+			if (unlikely(!std::isfinite(x))) {
+				piranha_throw(std::invalid_argument,"cannot construct integer from non-finite floating-point number");
+			}
+			if (x == Float(0)) {
+				return;
+			}
+			Float abs_x = std::abs(x);
+			const unsigned radix = static_cast<unsigned>(std::numeric_limits<Float>::radix);
+			detail::mpz_raii m, tmp;
+			int exp = std::ilogb(abs_x);
+			while (exp >= 0) {
+				::mpz_ui_pow_ui(&tmp.m_mpz,radix,static_cast<unsigned>(exp));
+				::mpz_add(&m.m_mpz,&m.m_mpz,&tmp.m_mpz);
+				abs_x -= std::scalbn(Float(1),exp);
+				exp = std::ilogb(abs_x);
+			}
+			if (std::signbit(x)) {
+				::mpz_neg(&m.m_mpz,&m.m_mpz);
+			}
+			detail::stream_mpz(std::cout,m.m_mpz);
+			std::cout << '\n';
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -828,6 +855,11 @@ class mp_integer
 		mp_integer(const mp_integer &) = default;
 		/// Defaulted move constructor.
 		mp_integer(mp_integer &&) = default;
+		template <typename T>
+		explicit mp_integer(const T &x)
+		{
+			construct_from_floating_point(x);
+		}
 		/// Defaulted destructor.
 		~mp_integer() = default;
 		/// Defaulted copy-assignment operator.

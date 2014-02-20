@@ -2277,6 +2277,17 @@ struct ctor_tester
 		n1.promote();
 		BOOST_CHECK_THROW(n1.promote(),std::invalid_argument);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
+		int_type(1.23);
+		int_type(-1.23);
+		int_type(.23);
+		int_type(-.23);
+		int_type(12.345);
+		int_type(123.45);
+		int_type(1234.5);
+		int_type(54321.987);
+		int_type(1.383905040202E32);
+		int_type(1.383905040202E32l);
+		int_type(1.383905040202323212E32);
 	}
 };
 
