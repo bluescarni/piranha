@@ -845,6 +845,12 @@ class mp_integer
 			detail::stream_mpz(std::cout,m.m_mpz);
 			std::cout << '\n';
 		}
+		template <typename T>
+		struct is_interoperable_type
+		{
+			static const bool value = std::is_floating_point<T>::value ||
+				std::is_integral<T>::value;
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -855,7 +861,7 @@ class mp_integer
 		mp_integer(const mp_integer &) = default;
 		/// Defaulted move constructor.
 		mp_integer(mp_integer &&) = default;
-		template <typename T>
+		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
 		explicit mp_integer(const T &x)
 		{
 			construct_from_floating_point(x);
