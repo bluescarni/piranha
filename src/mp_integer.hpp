@@ -756,9 +756,14 @@ union integer_union
 		}
 		return *this;
 	}
-	bool is_static() const
+	bool is_static() const noexcept
 	{
 		return st._mp_alloc == 0;
+	}
+	static bool fits_in_static(const mpz_struct_t &mpz) noexcept
+	{
+		// NOTE: sizeinbase returns the index of the highest bit *counting from 1* (like a logarithm).
+		return (::mpz_sizeinbase(&mpz,2) <= s_storage::limb_bits * 2u);
 	}
 	void destroy_dynamic()
 	{

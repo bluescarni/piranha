@@ -2266,6 +2266,36 @@ BOOST_AUTO_TEST_CASE(mp_integer_integer_union_ctor_test)
 	boost::mpl::for_each<size_types>(union_ctor_tester());
 }
 
+struct fits_in_static_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::integer_union<T::value> int_type;
+		const auto limb_bits = int_type::s_storage::limb_bits;
+		detail::mpz_raii mpz;
+		::mpz_setbit(&mpz.m_mpz,0);
+		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,1);
+		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits));
+		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,static_cast< ::mp_bitcnt_t>(limb_bits + 1));
+		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,static_cast< ::mp_bitcnt_t>(2u * limb_bits - 1u));
+		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,static_cast< ::mp_bitcnt_t>(2u * limb_bits));
+		BOOST_CHECK(!int_type::fits_in_static(mpz.m_mpz));
+		::mpz_setbit(&mpz.m_mpz,static_cast< ::mp_bitcnt_t>(2u * limb_bits - 2u));
+		BOOST_CHECK(!int_type::fits_in_static(mpz.m_mpz));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_integer_union_fits_in_static_test)
+{
+	boost::mpl::for_each<size_types>(fits_in_static_tester());
+}
+
 struct ctor_tester
 {
 	template <typename T>
