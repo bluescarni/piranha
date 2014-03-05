@@ -2334,6 +2334,7 @@ struct ctor_tester
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
 		}
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.)),boost::lexical_cast<std::string>(0));
+		BOOST_CHECK(int_type{0.}.is_static());
 		if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::quiet_NaN()},std::invalid_argument);
@@ -2351,6 +2352,7 @@ struct ctor_tester
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
 		}
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.l)),boost::lexical_cast<std::string>(0));
+		BOOST_CHECK(int_type{0.l}.is_static());
 		if (std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN) {
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::quiet_NaN()},std::invalid_argument);
@@ -2368,6 +2370,7 @@ struct ctor_tester
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
 		}
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.f)),boost::lexical_cast<std::string>(0));
+		BOOST_CHECK(int_type{0.f}.is_static());
 		if (std::numeric_limits<float>::has_infinity && std::numeric_limits<float>::has_quiet_NaN) {
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::quiet_NaN()},std::invalid_argument);
