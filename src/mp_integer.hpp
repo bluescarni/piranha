@@ -33,11 +33,11 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
-#include "small_vector.hpp"
 
 namespace piranha { namespace detail {
 
@@ -147,8 +147,8 @@ static inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz
 		piranha_throw(std::overflow_error,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
-	small_vector<char> tmp;
-	tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
+	std::vector<char> tmp;
+	tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
 	if (unlikely(tmp.size() != total_size)) {
 		piranha_throw(std::overflow_error,"number of digits is too large");
 	}
@@ -887,7 +887,7 @@ class mp_integer
 		 * @return reference to \p os.
 		 *
 		 * @throws std::overflow_error if the number of digits is larger than an implementation-defined maximum.
-		 * @throws unspecified any exception thrown by piranha::small_vector::resize().
+		 * @throws unspecified any exception thrown by <tt>std::vector::resize()</tt>.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
 		{
