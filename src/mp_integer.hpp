@@ -824,7 +824,6 @@ union integer_union
 template <int NBits = 0>
 class mp_integer
 {
-	private:
 		template <typename Float>
 		void construct_from_floating_point(Float x)
 		{
@@ -841,14 +840,42 @@ class mp_integer
 			while (exp >= 0) {
 				::mpz_ui_pow_ui(&tmp.m_mpz,radix,static_cast<unsigned>(exp));
 				::mpz_add(&m.m_mpz,&m.m_mpz,&tmp.m_mpz);
-				abs_x -= std::scalbn(Float(1),exp);
+				const Float tmp = std::scalbn(Float(1),exp);
+				if (unlikely(tmp == HUGE_VAL)) {
+					piranha_throw(std::invalid_argument,"output of std::scalbn is HUGE_VAL");
+				}
+				abs_x -= tmp;
+				// NOTE: if the float is an integer exactly divisible by the radix, we eventually
+				// get to abs_x == 0, in which case we have to prevent the call to ilogb below.
+				if (unlikely(abs_x == Float(0))) {
+					break;
+				}
+				// NOTE: in principle, here ilogb could return funky values if something goes wrong
+				// or the initial call to ilogb gave an undefined result for some reason:
+				// http://en.cppreference.com/w/cpp/numeric/math/ilogb
 				exp = std::ilogb(abs_x);
+				if (unlikely(exp == INT_MAX || exp == FP_ILOGBNAN)) {
+					piranha_throw(std::invalid_argument,"error calling std::ilogb");
+				}
 			}
-			if (std::signbit(x)) {
-				::mpz_neg(&m.m_mpz,&m.m_mpz);
+			if (m_int.fits_in_static(m.m_mpz)) {
+				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
+				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
+				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
+					if (::mpz_tstbit(&m.m_mpz,i)) {
+						m_int.st.set_bit(static_cast<limb_t>(i));
+					}
+				}
+				if (std::signbit(x)) {
+					m_int.st.negate();
+				}
+			} else {
+				m_int.promote();
+				::mpz_swap(&m.m_mpz,&m_int.dy);
+				if (std::signbit(x)) {
+					::mpz_neg(&m_int.dy,&m_int.dy);
+				}
 			}
-			detail::stream_mpz(std::cout,m.m_mpz);
-			std::cout << '\n';
 		}
 		template <typename T>
 		struct is_interoperable_type
@@ -856,6 +883,11 @@ class mp_integer
 			static const bool value = std::is_floating_point<T>::value ||
 				std::is_integral<T>::value;
 		};
+		template <typename Float, typename = typename std::enable_if<std::is_floating_point<Float>::value>::type>
+		void construct_from_interoperable(const Float &x)
+		{
+			construct_from_floating_point(x);
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -866,10 +898,11 @@ class mp_integer
 		mp_integer(const mp_integer &) = default;
 		/// Defaulted move constructor.
 		mp_integer(mp_integer &&) = default;
+		/// Generic constructor.
 		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
 		explicit mp_integer(const T &x)
 		{
-			construct_from_floating_point(x);
+			construct_from_interoperable(x);
 		}
 		/// Defaulted destructor.
 		~mp_integer() = default;

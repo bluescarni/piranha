@@ -2296,6 +2296,18 @@ BOOST_AUTO_TEST_CASE(mp_integer_integer_union_fits_in_static_test)
 	boost::mpl::for_each<size_types>(fits_in_static_tester());
 }
 
+// Maximum exponent n such that radix**n is representable by long long.
+static inline int get_max_exp(int radix)
+{
+	int retval(0);
+	long long tmp(1);
+	while (tmp < boost::integer_traits<long long>::const_max / radix) {
+		tmp *= radix;
+		++retval;
+	}
+	return retval;
+}
+
 struct ctor_tester
 {
 	template <typename T>
@@ -2307,17 +2319,59 @@ struct ctor_tester
 		n1.promote();
 		BOOST_CHECK_THROW(n1.promote(),std::invalid_argument);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
-		int_type(1.23);
-		int_type(-1.23);
-		int_type(.23);
-		int_type(-.23);
-		int_type(12.345);
-		int_type(123.45);
-		int_type(1234.5);
-		int_type(54321.987);
-		int_type(1.383905040202E32);
-		int_type(1.383905040202E32l);
-		int_type(1.383905040202323212E32);
+		std::uniform_int_distribution<int> sign_dist(0,1);
+		// NOTE: the idea here is that we are going to multiply by radix**n, and we need to make sure both long long and the FP
+		// type can represent the result.
+		std::uniform_int_distribution<int> exp_dist_d(0,std::min(get_max_exp(std::numeric_limits<double>::radix),
+			std::numeric_limits<double>::max_exponent));
+		std::uniform_real_distribution<double> urd_d(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = urd_d(rng);
+			if (sign_dist(rng)) {
+				tmp = -tmp;
+			}
+			tmp = std::scalbn(tmp,exp_dist_d(rng));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
+		}
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.)),boost::lexical_cast<std::string>(0));
+		if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::infinity()},std::invalid_argument);
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::quiet_NaN()},std::invalid_argument);
+		}
+		// Long double.
+		std::uniform_int_distribution<int> exp_dist_ld(0,std::min(get_max_exp(std::numeric_limits<long double>::radix),
+			std::numeric_limits<long double>::max_exponent));
+		std::uniform_real_distribution<long double> urd_ld(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = urd_ld(rng);
+			if (sign_dist(rng)) {
+				tmp = -tmp;
+			}
+			tmp = std::scalbn(tmp,exp_dist_ld(rng));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
+		}
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.l)),boost::lexical_cast<std::string>(0));
+		if (std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::infinity()},std::invalid_argument);
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::quiet_NaN()},std::invalid_argument);
+		}
+		// Float.
+		std::uniform_int_distribution<int> exp_dist_f(0,std::min(get_max_exp(std::numeric_limits<float>::radix),
+			std::numeric_limits<float>::max_exponent));
+		std::uniform_real_distribution<float> urd_f(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = urd_f(rng);
+			if (sign_dist(rng)) {
+				tmp = -tmp;
+			}
+			tmp = std::scalbn(tmp,exp_dist_f(rng));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
+		}
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.f)),boost::lexical_cast<std::string>(0));
+		if (std::numeric_limits<float>::has_infinity && std::numeric_limits<float>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::infinity()},std::invalid_argument);
+			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::quiet_NaN()},std::invalid_argument);
+		}
 	}
 };
 

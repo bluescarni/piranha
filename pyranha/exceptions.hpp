@@ -16,4 +16,3 @@ inline void generic_translate()
 {
 	bp::register_exception_translator<CppEx>(generic_translator<PyEx,CppEx>);
 }
-
