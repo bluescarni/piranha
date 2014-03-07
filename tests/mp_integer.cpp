@@ -2308,12 +2308,13 @@ static inline int get_max_exp(int radix)
 	return retval;
 }
 
-struct ctor_tester
+struct float_ctor_tester
 {
 	template <typename T>
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		detail::mpz_raii m;
 		int_type n1;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
 		n1.promote();
@@ -2331,7 +2332,9 @@ struct ctor_tester
 				tmp = -tmp;
 			}
 			tmp = std::scalbn(tmp,exp_dist_d(rng));
+			::mpz_set_d(&m.m_mpz,tmp);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),mpz_lexcast(m));
 		}
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.)),boost::lexical_cast<std::string>(0));
 		BOOST_CHECK(int_type{0.}.is_static());
@@ -2367,7 +2370,9 @@ struct ctor_tester
 				tmp = -tmp;
 			}
 			tmp = std::scalbn(tmp,exp_dist_f(rng));
+			::mpz_set_d(&m.m_mpz,tmp);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),boost::lexical_cast<std::string>(static_cast<long long>(tmp)));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(tmp)),mpz_lexcast(m));
 		}
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(0.f)),boost::lexical_cast<std::string>(0));
 		BOOST_CHECK(int_type{0.f}.is_static());
@@ -2380,5 +2385,5 @@ struct ctor_tester
 
 BOOST_AUTO_TEST_CASE(mp_integer_ctor_test)
 {
-	boost::mpl::for_each<size_types>(ctor_tester());
+	boost::mpl::for_each<size_types>(float_ctor_tester());
 }
