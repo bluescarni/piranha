@@ -115,6 +115,8 @@
  * http://stackoverflow.com/questions/20119810/parallel-implementations-of-std-algorithms-and-side-effects
  * \todo probably better to remove the thread_management class and use free functions directly for the binding.
  * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
+ * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
+ * sure they behave consistently wrt locale settings.
  */
 namespace piranha
 {

@@ -824,6 +824,12 @@ union integer_union
 template <int NBits = 0>
 class mp_integer
 {
+		template <typename T>
+		struct is_interoperable_type
+		{
+			static const bool value = std::is_floating_point<T>::value ||
+				std::is_integral<T>::value;
+		};
 		template <typename Float>
 		void construct_from_floating_point(Float x)
 		{
@@ -877,16 +883,63 @@ class mp_integer
 				}
 			}
 		}
-		template <typename T>
-		struct is_interoperable_type
+		template <typename Integer>
+		void construct_from_integral(Integer n_orig)
 		{
-			static const bool value = std::is_floating_point<T>::value ||
-				std::is_integral<T>::value;
-		};
-		template <typename Float, typename = typename std::enable_if<std::is_floating_point<Float>::value>::type>
-		void construct_from_interoperable(const Float &x)
+			if (n_orig == Integer(0)) {
+				return;
+			}
+			Integer n = n_orig;
+			detail::mpz_raii m;
+			::mp_bitcnt_t bit_idx = 0;
+			while (n != Integer(0)) {
+				Integer div = static_cast<Integer>(n / Integer(2)), rem = static_cast<Integer>(n % Integer(2));
+				if (rem != Integer(0)) {
+					::mpz_setbit(&m.m_mpz,bit_idx);
+				}
+				if (unlikely(bit_idx == boost::integer_traits< ::mp_bitcnt_t>::const_max)) {
+					piranha_throw(std::invalid_argument,"overflow in the construction from integral type");
+				}
+				++bit_idx;
+				n = div;
+			}
+			if (m_int.fits_in_static(m.m_mpz)) {
+				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
+				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
+				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
+					if (::mpz_tstbit(&m.m_mpz,i)) {
+						m_int.st.set_bit(static_cast<limb_t>(i));
+					}
+				}
+				// NOTE: keep the == here, so we prevent warnings from the compiler when cting from unsigned types.
+				// It is inconsequential as n == 0 is already handled on top.
+				if (n_orig <= Integer(0)) {
+					m_int.st.negate();
+				}
+			} else {
+				m_int.promote();
+				::mpz_swap(&m.m_mpz,&m_int.dy);
+				if (n_orig <= Integer(0)) {
+					::mpz_neg(&m_int.dy,&m_int.dy);
+				}
+			}
+		}
+		template <typename Float>
+		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
 		{
 			construct_from_floating_point(x);
+		}
+		template <typename Integer>
+		void construct_from_interoperable(const Integer &n, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			construct_from_integral(n);
+		}
+		// Special casing for bool.
+		void construct_from_interoperable(bool v)
+		{
+			if (v) {
+				m_int.st.set_bit(0);
+			}
 		}
 	public:
 		/// Defaulted default constructor.
