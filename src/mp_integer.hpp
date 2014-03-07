@@ -801,6 +801,16 @@ union integer_union
  * of static storage. The possible values for \p NBits, supported on all platforms, are 8, 16, and 32.
  * A value of 64 is supported on some platforms. The special
  * default value of 0 is used to automatically select the optimal \p NBits value on the current platform.
+ * 
+ * \section interop Interoperability with fundamental types
+ * 
+ * Full interoperability with all integral and floating-point C++ types is provided.
+ * 
+ * Every function interacting with floating-point types will check that the floating-point values are not
+ * non-finite: in case of infinities or NaNs, an <tt>std::invalid_argument</tt> exception will be thrown.
+ * It should be noted that interoperability with floating-point types is provided for convenience, and it should
+ * not be relied upon in case exact results are required (e.g., the conversion of a large integer to a floating-point value
+ * might not be exact).
  *
  * \section exception_safety Exception safety guarantee
  *
@@ -952,6 +962,18 @@ class mp_integer
 		/// Defaulted move constructor.
 		mp_integer(mp_integer &&) = default;
 		/// Generic constructor.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
+		 * 
+		 * Construction from a floating-point type will result in the truncated
+		 * counterpart of the original value.
+		 * 
+		 * @param[in] x object used to construct \p this.
+		 * 
+		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
+		 * floating-point value).
+		 */
 		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
 		explicit mp_integer(const T &x)
 		{
