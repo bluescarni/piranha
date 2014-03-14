@@ -40,6 +40,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
@@ -2434,8 +2435,57 @@ struct integral_ctor_tester
 	}
 };
 
+struct str_ctor_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::lowest(),std::numeric_limits<T>::max());
+			std::ostringstream oss;
+			for (int i = 0; i < ntries; ++i) {
+				auto tmp = int_dist(rng);
+				if (std::is_signed<T>::value) {
+					oss << static_cast<long long>(tmp);
+				} else {
+					oss << static_cast<unsigned long long>(tmp);
+				}
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(oss.str().c_str())),oss.str());
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(oss.str())),oss.str());
+				oss.str("");
+			}
+			oss << static_cast<typename std::conditional<std::is_signed<T>::value,long long, unsigned long long>::type>
+				(std::numeric_limits<T>::lowest());
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(oss.str().c_str())),oss.str());
+			oss.str("");
+			oss << static_cast<typename std::conditional<std::is_signed<T>::value,long long, unsigned long long>::type>
+				(std::numeric_limits<T>::max());
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(int_type(oss.str().c_str())),oss.str());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		// Random testing.
+		boost::mpl::for_each<integral_types>(runner<T>());
+		// Well- and mal- formed strings.
+		BOOST_CHECK_EQUAL("123",boost::lexical_cast<std::string>(int_type("123")));
+		BOOST_CHECK_EQUAL("-123",boost::lexical_cast<std::string>(int_type("-123")));
+		const std::vector<std::string> invalid_strings{"-0","+0","01","+1","+01","-01","123f"," 123","123 ","123.56","-","+",
+			""," +0"," -0","-123 ","12a","-12a"};
+		for (const std::string &s: invalid_strings) {
+			BOOST_CHECK_THROW(int_type{s},std::invalid_argument);
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_ctor_test)
 {
 	boost::mpl::for_each<size_types>(float_ctor_tester());
 	boost::mpl::for_each<size_types>(integral_ctor_tester());
+	boost::mpl::for_each<size_types>(str_ctor_tester());
 }

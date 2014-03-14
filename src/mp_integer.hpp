@@ -31,11 +31,13 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "config.hpp"
+#include "detail/is_digit.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 
@@ -951,6 +953,63 @@ class mp_integer
 				m_int.st.set_bit(0);
 			}
 		}
+		static void validate_string(const char *str, const std::size_t &size)
+		{
+			if (!size) {
+				piranha_throw(std::invalid_argument,"invalid string input for integer type");
+			}
+			const std::size_t has_minus = (str[0] == '-'), signed_size = static_cast<std::size_t>(size - has_minus);
+			if (!signed_size) {
+				piranha_throw(std::invalid_argument,"invalid string input for integer type");
+			}
+			// A number starting with zero cannot be multi-digit and cannot have a leading minus sign (no '-0' allowed).
+			if (str[has_minus] == '0' && (signed_size > 1u || has_minus)) {
+				piranha_throw(std::invalid_argument,"invalid string input for integer type");
+			}
+			// Check that each character is a digit.
+			std::for_each(str + has_minus, str + size,[](char c){
+				if (!detail::is_digit(c)) {
+					piranha_throw(std::invalid_argument,"invalid string input for integer type");
+				}
+			});
+		}
+		void construct_from_string(const char *str)
+		{
+			// NOTE: it seems to be ok to call strlen on a char pointer obtained from std::string::c_str()
+			// (as we do in the constructor from std::string). The output of c_str() is guaranteed
+			// to be NULL terminated, and if the string is empty, this will still work (21.4.7 and around).
+			validate_string(str,std::strlen(str));
+			// String is OK.
+			detail::mpz_raii m;
+			// Use set() as m is already inited.
+			const int retval = ::mpz_set_str(&m.m_mpz,str,10);
+			if (retval == -1) {
+				piranha_throw(std::invalid_argument,"invalid string input for integer type");
+			}
+			piranha_assert(retval == 0);
+			const bool negate = (mpz_sgn(&m.m_mpz) == -1);
+			if (negate) {
+				::mpz_neg(&m.m_mpz,&m.m_mpz);
+			}
+			if (m_int.fits_in_static(m.m_mpz)) {
+				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
+				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
+				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
+					if (::mpz_tstbit(&m.m_mpz,i)) {
+						m_int.st.set_bit(static_cast<limb_t>(i));
+					}
+				}
+				if (negate) {
+					m_int.st.negate();
+				}
+			} else {
+				m_int.promote();
+				::mpz_swap(&m.m_mpz,&m_int.dy);
+				if (negate) {
+					::mpz_neg(&m_int.dy,&m_int.dy);
+				}
+			}
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -978,6 +1037,32 @@ class mp_integer
 		explicit mp_integer(const T &x)
 		{
 			construct_from_interoperable(x);
+		}
+		/// Constructor from string.
+		/**
+		 * The string must be a sequence of decimal digits, preceded by a minus sign for
+		 * strictly negative numbers. The first digit of a non-zero number must not be zero. A malformed string will throw an \p std::invalid_argument
+		 * exception.
+		 * 
+		 * @param[in] str decimal string representation of the number used to initialise the integer object.
+		 * 
+		 * @throws std::invalid_argument if the string is malformed.
+		 */
+		explicit mp_integer(const std::string &str)
+		{
+			construct_from_string(str.c_str());
+		}
+		/// Constructor from C string.
+		/**
+		 * Equivalent to the constructor from C++ string.
+		 * 
+		 * @param[in] str decimal string representation of the number used to initialise the integer object.
+		 * 
+		 * @see mp_integer(const std::string &)
+		 */
+		explicit mp_integer(const char *str)
+		{
+			construct_from_string(str);
 		}
 		/// Defaulted destructor.
 		~mp_integer() = default;
