@@ -430,6 +430,9 @@ class hash_set
 		}
 	public:
 		/// Iterator type.
+		/**
+		 * A read-only forward iterator.
+		 */
 		typedef iterator_impl<key_type const> iterator;
 		/// Const iterator type.
 		/**
