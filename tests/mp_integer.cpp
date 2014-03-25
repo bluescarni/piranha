@@ -2513,8 +2513,13 @@ struct generic_assignment_tester
 	{
 		typedef mp_integer<T::value> int_type;
 		boost::mpl::for_each<integral_types>(runner<T>());
-		// Some tests for floats.
 		int_type n;
+		// Special casing for bool.
+		n = true;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"1");
+		n = false;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"0");
+		// Some tests for floats.
 		n = 1.0f;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"1");
 		if (std::numeric_limits<float>::has_infinity && std::numeric_limits<float>::has_quiet_NaN) {
@@ -2590,4 +2595,68 @@ BOOST_AUTO_TEST_CASE(mp_integer_ctor_assign_test)
 	boost::mpl::for_each<size_types>(str_ctor_tester());
 	boost::mpl::for_each<size_types>(generic_assignment_tester());
 	boost::mpl::for_each<size_types>(str_assignment_tester());
+}
+
+struct integral_conversion_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK_EQUAL(T(0),static_cast<T>(int_type{}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::max(),static_cast<T>(int_type{std::numeric_limits<T>::max()}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::min(),static_cast<T>(int_type{std::numeric_limits<T>::min()}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::max() - T(1),static_cast<T>(int_type{std::numeric_limits<T>::max() - T(1)}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::min() + T(1),static_cast<T>(int_type{std::numeric_limits<T>::min() + T(1)}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::max() - T(2),static_cast<T>(int_type{std::numeric_limits<T>::max() - T(2)}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::min() + T(2),static_cast<T>(int_type{std::numeric_limits<T>::min() + T(2)}));
+			detail::mpz_raii tmp;
+			std::ostringstream oss;
+			oss << static_cast<typename std::conditional<std::is_signed<T>::value,long long, unsigned long long>::type>
+				(std::numeric_limits<T>::max());
+			::mpz_set_str(&tmp.m_mpz,oss.str().c_str(),10);
+			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
+			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
+			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,2ul);
+			BOOST_CHECK_EQUAL(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::numeric_limits<T>::max());
+			oss.str("");
+			oss << static_cast<typename std::conditional<std::is_signed<T>::value,long long, unsigned long long>::type>
+				(std::numeric_limits<T>::min());
+			::mpz_set_str(&tmp.m_mpz,oss.str().c_str(),10);
+			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
+			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
+			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,2ul);
+			BOOST_CHECK_EQUAL(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::numeric_limits<T>::min());
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::lowest(),std::numeric_limits<T>::max());
+			for (int i = 0; i < ntries; ++i) {
+				auto tmp = int_dist(rng);
+				BOOST_CHECK_EQUAL(tmp,static_cast<T>(int_type{tmp}));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		// Random testing.
+		boost::mpl::for_each<integral_types>(runner<T>());
+		// Special casing for bool.
+		BOOST_CHECK_EQUAL(true,static_cast<bool>(int_type{1}));
+		BOOST_CHECK_EQUAL(true,static_cast<bool>(int_type{-1}));
+		BOOST_CHECK_EQUAL(true,static_cast<bool>(int_type{-2}));
+		BOOST_CHECK_EQUAL(false,static_cast<bool>(int_type{0}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ctor_conversion_test)
+{
+	boost::mpl::for_each<size_types>(integral_conversion_tester());
 }

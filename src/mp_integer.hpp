@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <array>
 #include <boost/integer_traits.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -1010,6 +1011,90 @@ class mp_integer
 				}
 			}
 		}
+		// Conversion to integral types.
+		template <typename T>
+		static void check_mult2(const T &n, typename std::enable_if<std::is_signed<T>::value>::type * = nullptr)
+		{
+			if (n < std::numeric_limits<T>::min() / T(2) || n > std::numeric_limits<T>::max() / T(2)) {
+				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+			}
+		}
+		template <typename T>
+		static void check_mult2(const T &n, typename std::enable_if<!std::is_signed<T>::value>::type * = nullptr)
+		{
+			if (n > std::numeric_limits<T>::max() / T(2)) {
+				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+			}
+		}
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_integral<T>::value && !std::is_same<T,bool>::value>::type * = nullptr) const
+		{
+			if (m_int.st._mp_size == 0) {
+				return T(0);
+			}
+			const bool negative = m_int.st._mp_size < 0;
+			// We cannot convert to unsigned type if this is negative.
+			if (std::is_unsigned<T>::value && negative) {
+				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+			}
+			T retval(0), tmp(negative ? -1 : 1);
+			if (m_int.is_static()) {
+				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
+				const limb_t bits_size = m_int.st.bits_size();
+				piranha_assert(bits_size != 0u);
+				for (limb_t i = 0u; i < bits_size; ++i) {
+					if (i != 0u) {
+						check_mult2(tmp);
+						tmp = static_cast<T>(tmp * T(2));
+					}
+					if (m_int.st.test_bit(i)) {
+						if (negative && retval < std::numeric_limits<T>::min() - tmp) {
+							piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+						} else if (!negative && retval > std::numeric_limits<T>::max() - tmp) {
+							piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+						}
+						retval = static_cast<T>(retval + tmp);
+					}
+				}
+			} else {
+				// NOTE: copy here, it's not the fastest way but it should be safer.
+				detail::mpz_raii tmp_mpz;
+				::mpz_set(&tmp_mpz.m_mpz,&m_int.dy);
+				// Adjust the sign as needed, in order to use the test bit function below.
+				if (mpz_sgn(&tmp_mpz.m_mpz) == -1) {
+					::mpz_neg(&tmp_mpz.m_mpz,&tmp_mpz.m_mpz);
+				}
+				const std::size_t bits_size = ::mpz_sizeinbase(&tmp_mpz.m_mpz,2);
+				piranha_assert(bits_size != 0u);
+				for (std::size_t i = 0u; i < bits_size; ++i) {
+					if (i != 0u) {
+						check_mult2(tmp);
+						tmp = static_cast<T>(tmp * T(2));
+					}
+					::mp_bitcnt_t bit_idx;
+					try {
+						bit_idx = boost::numeric_cast< ::mp_bitcnt_t>(i);
+					} catch (...) {
+						piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+					}
+					if (::mpz_tstbit(&tmp_mpz.m_mpz,bit_idx)) {
+						if (negative && retval < std::numeric_limits<T>::min() - tmp) {
+							piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+						} else if (!negative && retval > std::numeric_limits<T>::max() - tmp) {
+							piranha_throw(std::overflow_error,"overflow in conversion to integral type");
+						}
+						retval = static_cast<T>(retval + tmp);
+					}
+				}
+			}
+			return retval;
+		}
+		// Special casing for bool.
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_same<T,bool>::value>::type * = nullptr) const
+		{
+			return m_int.st._mp_size != 0;
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -1119,6 +1204,11 @@ class mp_integer
 		{
 			operator=(mp_integer(str));
 			return *this;
+		}
+		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
+		explicit operator T() const
+		{
+			return convert_to_impl<T>();
 		}
 		/// Overload output stream operator for piranha::mp_integer.
 		/**
