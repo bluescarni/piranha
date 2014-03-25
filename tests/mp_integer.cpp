@@ -2483,9 +2483,111 @@ struct str_ctor_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_ctor_test)
+struct generic_assignment_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::lowest(),std::numeric_limits<T>::max());
+			std::ostringstream oss;
+			int_type n;
+			for (int i = 0; i < ntries; ++i) {
+				auto tmp = int_dist(rng);
+				if (std::is_signed<T>::value) {
+					oss << static_cast<long long>(tmp);
+				} else {
+					oss << static_cast<unsigned long long>(tmp);
+				}
+				n = tmp;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),oss.str());
+				oss.str("");
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		boost::mpl::for_each<integral_types>(runner<T>());
+		// Some tests for floats.
+		int_type n;
+		n = 1.0f;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"1");
+		if (std::numeric_limits<float>::has_infinity && std::numeric_limits<float>::has_quiet_NaN) {
+			BOOST_CHECK_THROW((n = std::numeric_limits<float>::infinity()),std::invalid_argument);
+			BOOST_CHECK_THROW((n = std::numeric_limits<float>::quiet_NaN()),std::invalid_argument);
+		}
+		n = -2.0;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-2");
+		if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW((n = std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_THROW((n = std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+		}
+		n = 3.0L;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"3");
+		if (std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW((n = std::numeric_limits<long double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_THROW((n = std::numeric_limits<long double>::quiet_NaN()),std::invalid_argument);
+		}
+	}
+};
+
+struct str_assignment_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::lowest(),std::numeric_limits<T>::max());
+			std::ostringstream oss;
+			int_type n;
+			for (int i = 0; i < ntries; ++i) {
+				auto tmp = int_dist(rng);
+				if (std::is_signed<T>::value) {
+					oss << static_cast<long long>(tmp);
+				} else {
+					oss << static_cast<unsigned long long>(tmp);
+				}
+				n = oss.str();
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),oss.str());
+				n = oss.str().c_str();
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),oss.str());
+				oss.str("");
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		// Random testing.
+		boost::mpl::for_each<integral_types>(runner<T>());
+		// Well- and mal- formed strings.
+		int_type n;
+		n = "123";
+		BOOST_CHECK_EQUAL("123",boost::lexical_cast<std::string>(n));
+		n = "-123";
+		BOOST_CHECK_EQUAL("-123",boost::lexical_cast<std::string>(n));
+		const std::vector<std::string> invalid_strings{"-0","+0","01","+1","+01","-01","123f"," 123","123 ","123.56","-","+",
+			""," +0"," -0","-123 ","12a","-12a"};
+		for (const std::string &s: invalid_strings) {
+			BOOST_CHECK_THROW((n = s),std::invalid_argument);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_ctor_assign_test)
 {
 	boost::mpl::for_each<size_types>(float_ctor_tester());
 	boost::mpl::for_each<size_types>(integral_ctor_tester());
 	boost::mpl::for_each<size_types>(str_ctor_tester());
+	boost::mpl::for_each<size_types>(generic_assignment_tester());
+	boost::mpl::for_each<size_types>(str_assignment_tester());
 }

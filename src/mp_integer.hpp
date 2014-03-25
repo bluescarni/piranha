@@ -1070,6 +1070,56 @@ class mp_integer
 		mp_integer &operator=(const mp_integer &) = default;
 		/// Defaulted move-assignment operator.
 		mp_integer &operator=(mp_integer &&) = default;
+		/// Generic assignment operator.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * 
+		 * This assignment operator is equivalent to constructing a temporary instance of mp_integer from \p x
+		 * and then move-assigning it to \p this.
+		 * 
+		 * @param[in] x object that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the generic constructor of mp_integer.
+		 */
+		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
+		mp_integer &operator=(const T &x)
+		{
+			operator=(mp_integer(x));
+			return *this;
+		}
+		/// Assignment from C++ string.
+		/**
+		 * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
+		 * 
+		 * @param[in] str C++ string that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor of mp_integer from string.
+		 */
+		mp_integer &operator=(const std::string &str)
+		{
+			operator=(mp_integer(str));
+			return *this;
+		}
+		/// Assignment from C string.
+		/**
+		 * Equivalent to the construction and susbequent move to \p this of a temporary mp_integer from \p str.
+		 * 
+		 * @param[in] str C string that will be assigned to \p this.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor of mp_integer from string.
+		 */
+		mp_integer &operator=(const char *str)
+		{
+			operator=(mp_integer(str));
+			return *this;
+		}
 		/// Overload output stream operator for piranha::mp_integer.
 		/**
 		 * The input \p n will be directed to the output stream \p os as a string of digits in base 10.
