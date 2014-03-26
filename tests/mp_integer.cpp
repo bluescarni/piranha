@@ -52,6 +52,8 @@ using integral_types = boost::mpl::vector<char,
 	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,
 	wchar_t,char16_t,char32_t>;
 
+using floating_point_types = boost::mpl::vector<float,double,long double>;
+
 static std::mt19937 rng;
 static const int ntries = 1000;
 
@@ -2655,7 +2657,61 @@ struct integral_conversion_tester
 	}
 };
 
+struct float_conversion_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			const auto radix = std::numeric_limits<T>::radix;
+			BOOST_CHECK_EQUAL(T(0),static_cast<T>(int_type{}));
+			BOOST_CHECK_EQUAL(T(1),static_cast<T>(int_type{1}));
+			BOOST_CHECK_EQUAL(T(-1),static_cast<T>(int_type{-1}));
+			BOOST_CHECK_EQUAL(T(2),static_cast<T>(int_type{2}));
+			BOOST_CHECK_EQUAL(T(-2),static_cast<T>(int_type{-2}));
+			// NOTE: hopefully the radix value is not insane here and we can take negative and +-1.
+			BOOST_CHECK_EQUAL(T(radix),static_cast<T>(int_type{radix}));
+			BOOST_CHECK_EQUAL(T(-radix),static_cast<T>(int_type{-radix}));
+			BOOST_CHECK_EQUAL(T(radix + 1),static_cast<T>(int_type{radix + 1}));
+			BOOST_CHECK_EQUAL(T(-radix - 1),static_cast<T>(int_type{-radix - 1}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::max(),static_cast<T>(int_type{std::numeric_limits<T>::max()}));
+			BOOST_CHECK_EQUAL(std::numeric_limits<T>::lowest(),static_cast<T>(int_type{std::numeric_limits<T>::lowest()}));
+			// Random testing.
+			std::uniform_int_distribution<int> sign_dist(0,1);
+			std::uniform_int_distribution<int> exp_dist(0,std::min(get_max_exp(std::numeric_limits<T>::radix),
+				std::numeric_limits<T>::max_exponent));
+			std::uniform_real_distribution<T> urd(0,1);
+			for (int i = 0; i < ntries; ++i) {
+				auto tmp = urd(rng);
+				if (sign_dist(rng)) {
+					tmp = -tmp;
+				}
+				tmp = std::scalbn(tmp,exp_dist(rng));
+				BOOST_CHECK_EQUAL(std::trunc(tmp),static_cast<T>(int_type{tmp}));
+			}
+			if (std::numeric_limits<T>::has_infinity) {
+				detail::mpz_raii tmp;
+				::mpz_set_str(&tmp.m_mpz,boost::lexical_cast<std::string>(int_type{std::numeric_limits<T>::max()}).c_str(),10);
+				::mpz_mul_si(&tmp.m_mpz,&tmp.m_mpz,radix);
+				BOOST_CHECK_EQUAL(std::numeric_limits<T>::infinity(),static_cast<T>(int_type{mpz_lexcast(tmp)}));
+				::mpz_neg(&tmp.m_mpz,&tmp.m_mpz);
+				BOOST_CHECK_EQUAL(std::copysign(std::numeric_limits<T>::infinity(),std::numeric_limits<T>::lowest()),
+					static_cast<T>(int_type{mpz_lexcast(tmp)}));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<floating_point_types>(runner<T>());
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_ctor_conversion_test)
 {
 	boost::mpl::for_each<size_types>(integral_conversion_tester());
+	boost::mpl::for_each<size_types>(float_conversion_tester());
 }

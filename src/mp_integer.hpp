@@ -1095,6 +1095,73 @@ class mp_integer
 		{
 			return m_int.st._mp_size != 0;
 		}
+		// Convert to floating-point.
+		template <typename T>
+		T convert_to_impl(typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
+		{
+			// Special case for zero.
+			if (m_int.st._mp_size == 0) {
+				return T(0);
+			}
+			// Extract a GMP mpz to work with.
+			detail::mpz_raii tmp;
+			if (m_int.is_static()) {
+				m_int.st.to_mpz(tmp.m_mpz);
+			} else {
+				::mpz_set(&tmp.m_mpz,&m_int.dy);
+			}
+			// Work on absolute value.
+			if (m_int.st._mp_size < 0) {
+				::mpz_neg(&tmp.m_mpz,&tmp.m_mpz);
+			}
+			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
+			// NOTE: radix must be between 2 and 62 for GMP functions to work.
+			if (unlikely(radix < 2u || radix > 62u)) {
+				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
+			}
+			unsigned long r_size;
+			try {
+				r_size = boost::numeric_cast<unsigned long>(::mpz_sizeinbase(&tmp.m_mpz,static_cast<int>(radix)));
+			} catch (...) {
+				piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
+			}
+			// NOTE: sizeinbase might return the correct value, or increased by one. Check
+			// which one is which.
+			// https://gmplib.org/manual/Miscellaneous-Integer-Functions.html#Miscellaneous-Integer-Functions
+			piranha_assert(r_size >= 1u);
+			detail::mpz_raii tmp2, tmp3;
+			::mpz_ui_pow_ui(&tmp2.m_mpz,static_cast<unsigned long>(radix),r_size - 1ul);
+			::mpz_sub_ui(&tmp2.m_mpz,&tmp2.m_mpz,1ul);
+			if (::mpz_cmp(&tmp2.m_mpz,&tmp.m_mpz) > 0) {
+				--r_size;
+			}
+			// Init return value.
+			T retval(0);
+			int exp = 0;
+			for (unsigned long i = 0u; i < r_size; ++i) {
+				const auto rem = ::mpz_fdiv_q_ui(&tmp.m_mpz,&tmp.m_mpz,static_cast<unsigned long>(radix));
+				const auto exp_val = std::scalbn(static_cast<T>(rem),exp);
+				if (unlikely(exp_val == HUGE_VAL)) {
+					// Return infinity if possible.
+					if (std::numeric_limits<T>::has_infinity) {
+						retval = std::numeric_limits<T>::infinity();
+						break;
+					} else {
+						piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
+					}
+				}
+				retval += exp_val;
+				if (unlikely(exp == std::numeric_limits<int>::max())) {
+					piranha_throw(std::overflow_error,"overflow in conversion to floating-point type");
+				}
+				++exp;
+			}
+			// Adjust sign.
+			if (m_int.st._mp_size < 0) {
+				retval = std::copysign(retval,std::numeric_limits<T>::lowest());
+			}
+			return retval;
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -1205,6 +1272,20 @@ class mp_integer
 			operator=(mp_integer(str));
 			return *this;
 		}
+		/// Conversion operator.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * 
+		 * Conversion to integral types, if possible, will always be exact. Conversion to \p bool produces
+		 * \p true for nonzero values, \p false for zero. Conversion to floating-point types is performed
+		 * via arithmetic operations and might generate infinities in case the value is too large.
+		 * 
+		 * @return the value of \p this converted to type \p T.
+		 * 
+		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
+		 * is insufficient to represent the value of <tt>this</tt>).
+		 */
 		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
 		explicit operator T() const
 		{
