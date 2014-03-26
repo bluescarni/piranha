@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <gmp.h>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -45,7 +46,6 @@
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
-#include "../src/small_vector.hpp"
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
@@ -179,8 +179,8 @@ static inline std::string mpz_lexcast(const mpz_raii &m)
 		piranha_throw(std::overflow_error,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
-	small_vector<char> tmp;
-	tmp.resize(static_cast<small_vector<char>::size_type>(total_size));
+	std::vector<char> tmp;
+	tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
 	if (unlikely(tmp.size() != total_size)) {
 		piranha_throw(std::overflow_error,"number of digits is too large");
 	}
@@ -2646,7 +2646,6 @@ struct integral_conversion_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		// Random testing.
 		boost::mpl::for_each<integral_types>(runner<T>());
 		// Special casing for bool.
 		BOOST_CHECK_EQUAL(true,static_cast<bool>(int_type{1}));
