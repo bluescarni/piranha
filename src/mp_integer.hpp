@@ -147,13 +147,13 @@ static inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz
 {
 	const std::size_t size_base10 = ::mpz_sizeinbase(&mpz,10);
 	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
-		piranha_throw(std::overflow_error,"number of digits is too large");
+		piranha_throw(std::invalid_argument,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
 	std::vector<char> tmp;
 	tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
 	if (unlikely(tmp.size() != total_size)) {
-		piranha_throw(std::overflow_error,"number of digits is too large");
+		piranha_throw(std::invalid_argument,"number of digits is too large");
 	}
 	os << ::mpz_get_str(&tmp[0u],10,&mpz);
 	return os;
@@ -1300,7 +1300,7 @@ class mp_integer
 		 *
 		 * @return reference to \p os.
 		 *
-		 * @throws std::overflow_error if the number of digits is larger than an implementation-defined maximum.
+		 * @throws std::invalid_argument if the number of digits is larger than an implementation-defined maximum.
 		 * @throws unspecified any exception thrown by <tt>std::vector::resize()</tt>.
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
