@@ -19,7 +19,6 @@
 
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
-# Use absolute imports to avoid issues with the main math module.
 from __future__ import absolute_import as _ai
 
 def orbitalR(angles):

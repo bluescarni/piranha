@@ -25,7 +25,7 @@
 
 from __future__ import absolute_import as _ai
 
-__all__ = ['celmec', 'math', 'test', 'settings', 'get_series']
+__all__ = ['celmec', 'math', 'test', 'settings', 'get_series', 'types']
 
 import threading as _thr
 from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives

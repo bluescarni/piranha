@@ -2,7 +2,7 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
-ADD_LIBRARY(_core SHARED core.cpp python_converters.hpp exceptions.hpp exposer.hpp)
+ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptions.hpp exposer.hpp type_system.hpp)
 # Prefix and suffix setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
@@ -30,5 +30,5 @@ INSTALL(TARGETS _core
 	LIBRARY DESTINATION ${PYRANHA_INSTALL_PATH}
 )
 
-# Add the global init file.
-INSTALL(FILES __init__.py _common.py celmec.py math.py test.py DESTINATION ${PYRANHA_INSTALL_PATH})
+# Add the global init file and the additional submodules.
+INSTALL(FILES __init__.py _common.py celmec.py math.py test.py types.py DESTINATION ${PYRANHA_INSTALL_PATH})

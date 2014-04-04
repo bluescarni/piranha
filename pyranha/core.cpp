@@ -18,28 +18,18 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-// NOTE: the order of inclusion in the first two items here is forced by these two issues:
-// http://mail.python.org/pipermail/python-list/2004-March/907592.html
-// http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
-#if defined(_WIN32)
-#include <cmath>
-#include <Python.h>
-#else
-#include <Python.h>
-#include <cmath>
-#endif
-
-#if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6)
-	#error Minimum supported Python version is 2.6.
-#endif
+#include "python_includes.hpp"
 
 #include <algorithm>
+#include <boost/functional/hash.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <boost/utility.hpp>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <mutex>
@@ -48,10 +38,15 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 #include "../src/piranha.hpp"
+
+#include "type_system.hpp"
 
 namespace bp = boost::python;
 using namespace piranha;
@@ -163,6 +158,46 @@ static inline bp::list get_series_list()
 	}
 	return retval;
 }
+/*template <typename T>
+static inline bp::class_<T> register_and_expose_type()
+{
+	// Check if the type is already registered.
+	const auto t_idx = std::type_index(typeid(T));
+	if (et_map.find(t_idx) != et_map.end()) {
+		piranha_throw(std::runtime_error,std::string("the type '") + t_idx.name() + "' has already been exposed");
+	}
+	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	++exposed_types_counter;
+	bp::object type_object(bp::handle<>(::PyObject_Type(class_inst().ptr())));
+	et_map[t_idx] = type_object;
+	return class_inst;
+}
+
+template <template <typename ...> class TT, typename ... Args>
+static inline bp::class_<TT<Args...>> register_and_expose_type()
+{
+	using T = TT<Args...>;
+	const auto retval = register_and_expose_type<T>();
+	const std::string name = t_t_namer<T>::name;
+	auto v_t_idx = args_to_t_idx<Args...>();
+	auto &dict = gtw_map[name];
+	if (dict.find(v_t_idx) != dict.end()) {
+		// TODO TODO
+		piranha_throw(std::runtime_error,std::string("the type '") + t_idx.name() + "' has already been exposed");
+	}
+	
+	return retval;
+}*/
+
+namespace pyranha
+{
+
+DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
+DECLARE_TT_NAMER(piranha::kronecker_monomial,"kronecker_monomial")
+
+}
+
+namespace bp = boost::python;
 
 BOOST_PYTHON_MODULE(_core)
 {
@@ -174,6 +209,43 @@ BOOST_PYTHON_MODULE(_core)
 	}
 	// Piranha environment setup.
 	environment env;
+	// Docstring options setup.
+	bp::docstring_options doc_options(true,true,false);
+	// Type getter class.
+	bp::class_<pyranha::type_getter> tg_class("_type_getter",bp::no_init);
+	tg_class.def("__call__",&pyranha::type_getter::operator());
+	tg_class.def("__repr__",&pyranha::type_getter::repr);
+	// Generic type getter class.
+	bp::class_<pyranha::generic_type_getter> gtg_class("_generic_type_getter",bp::no_init);
+	gtg_class.def("__call__",&pyranha::generic_type_getter::operator());
+	gtg_class.def("__repr__",&pyranha::generic_type_getter::repr);
+	// Create the types submodule.
+	std::string types_module_name = bp::extract<std::string>(bp::scope().attr("__name__") + ".types");
+	// NOTE: the pointer obtained from PyImport_AddModule() is borrowed. The nested namespace is created
+	// if not there, otherwise it will be returned.
+	::PyObject *types_module_ptr = ::PyImport_AddModule(types_module_name.c_str());
+	if (!types_module_ptr) {
+		::PyErr_Clear();
+		::PyErr_SetString(PyExc_RuntimeError,"error while creating the 'types' submodule");
+		bp::throw_error_already_set();
+	}
+	bp::object types_module(bp::handle<>(bp::borrowed(types_module_ptr)));
+	bp::scope().attr("types") = types_module;
+	// Expose concrete instances of the type getter.
+	pyranha::expose_type_getter<signed char>("signed_char");
+	pyranha::expose_type_getter<short>("short");
+	pyranha::expose_type_getter<float>("float");
+	pyranha::expose_type_getter<double>("double");
+	pyranha::expose_type_getter<long double>("long_double");
+	pyranha::expose_type_getter<piranha::integer>("integer");
+	pyranha::expose_type_getter<piranha::rational>("rational");
+	pyranha::expose_type_getter<piranha::real>("real");
+	pyranha::expose_generic_type_getter<piranha::kronecker_monomial>();
+	/*const auto t_idx = std::type_index(typeid(std::vector<double>));
+	bp::class_<std::vector<double>> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	++exposed_types_counter;
+	bp::object type_object(bp::handle<>(::PyObject_Type(class_inst().ptr())));
+	et_map[t_idx] = type_object;*/
 	// Arithmetic converters.
 	integer_converter i_c;
 	rational_converter ra_c;
@@ -185,12 +257,11 @@ BOOST_PYTHON_MODULE(_core)
 	generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
 	generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
-	// Docstring options setup.
-	bp::docstring_options doc_options(true,true,false);
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
 	// Series list.
 	bp::def("_get_series_list",get_series_list);
+/*
 	// Descriptor for polynomial exposition.
 	struct poly_desc
 	{
@@ -237,6 +308,7 @@ BOOST_PYTHON_MODULE(_core)
 	// Binomial coefficient.
 	bp::def("_binomial",&binomial_integer);
 	bp::def("_binomial",&binomial_rational);
+*/
 	// Set the inited flag.
 	inited = true;
 }
