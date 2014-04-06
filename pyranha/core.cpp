@@ -46,6 +46,7 @@
 
 #include "../src/piranha.hpp"
 
+#include "python_converters.hpp"
 #include "type_system.hpp"
 
 namespace bp = boost::python;
@@ -124,7 +125,6 @@ static std::size_t series_counter = 0u;
 // NOTE: these headers are not meant to be used anywhere else, they are just being
 // used to group together common functionality and not oversize core.cpp.
 
-#include "python_converters.hpp"
 #include "exceptions.hpp"
 #include "exposer.hpp"
 
@@ -158,36 +158,6 @@ static inline bp::list get_series_list()
 	}
 	return retval;
 }
-/*template <typename T>
-static inline bp::class_<T> register_and_expose_type()
-{
-	// Check if the type is already registered.
-	const auto t_idx = std::type_index(typeid(T));
-	if (et_map.find(t_idx) != et_map.end()) {
-		piranha_throw(std::runtime_error,std::string("the type '") + t_idx.name() + "' has already been exposed");
-	}
-	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
-	++exposed_types_counter;
-	bp::object type_object(bp::handle<>(::PyObject_Type(class_inst().ptr())));
-	et_map[t_idx] = type_object;
-	return class_inst;
-}
-
-template <template <typename ...> class TT, typename ... Args>
-static inline bp::class_<TT<Args...>> register_and_expose_type()
-{
-	using T = TT<Args...>;
-	const auto retval = register_and_expose_type<T>();
-	const std::string name = t_t_namer<T>::name;
-	auto v_t_idx = args_to_t_idx<Args...>();
-	auto &dict = gtw_map[name];
-	if (dict.find(v_t_idx) != dict.end()) {
-		// TODO TODO
-		piranha_throw(std::runtime_error,std::string("the type '") + t_idx.name() + "' has already been exposed");
-	}
-	
-	return retval;
-}*/
 
 namespace pyranha
 {
@@ -254,9 +224,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_type_getter<piranha::real>("real");
 	pyranha::expose_generic_type_getter<piranha::kronecker_monomial>();
 	// Arithmetic converters.
-	integer_converter i_c;
-	rational_converter ra_c;
-	real_converter re_c;
+	pyranha::integer_converter i_c;
+	pyranha::rational_converter ra_c;
+	pyranha::real_converter re_c;
 	// Exceptions translation.
 	generic_translate<&PyExc_ZeroDivisionError,zero_division_error>();
 	generic_translate<&PyExc_NotImplementedError,not_implemented_error>();
