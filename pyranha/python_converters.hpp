@@ -190,7 +190,7 @@ struct real_converter
 		while (*s != '\0' && *s != '\'') {
 			++s;
 		}
-		if (s == '\0') {
+		if (*s == '\0') {
 			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
 		}
 		++s;
@@ -198,7 +198,7 @@ struct real_converter
 		while (*s != '\0' && *s != '\'') {
 			++s;
 		}
-		if (s == '\0') {
+		if (*s == '\0') {
 			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
 		}
 		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<real> *>(data)->storage.bytes;
