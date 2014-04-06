@@ -32,13 +32,14 @@
 #include <boost/python/scope.hpp>
 #include <boost/python/stl_iterator.hpp>
 #include <cstddef>
-#include <unordered_map>
-#include <unordered_set>
+#include <functional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -97,30 +98,6 @@ extern std::unordered_set<std::string> tg_names;
 // TODO: clean this up on unload? We don't want bp::objects dangling around on shutdown.
 extern std::unordered_map<std::type_index,bp::object> et_map;
 
-// Hash value computation for std::type_index.
-inline std::size_t hash_value(const std::type_index &t_idx)
-{
-	return t_idx.hash_code();
-}
-
-// Hasher for vector of type indices.
-struct v_idx_hasher
-{
-	std::size_t operator()(const std::vector<std::type_index> &v) const
-	{
-		std::size_t retval = 0u;
-		for (const auto &t_idx: v) {
-			boost::hash_combine(retval,t_idx);
-		}
-		return retval;
-	}
-};
-
-// Map of generic type getters. Each item in the map is associated to another map, which establishes the
-// connection between the concrete set of types used as template parameters for the template template class
-// and the final concrete instantiated type.
-extern std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
-
 // Type getter structure. It establishes the connection between a C++ type (the m_t_idx member)
 // and its exposed Python counterpart via the call operator, which will query the et_map archive.
 struct type_getter
@@ -144,6 +121,38 @@ struct type_getter
 	const std::type_index m_t_idx;
 };
 
+// Hasher for vector of type indices.
+struct v_idx_hasher
+{
+	std::size_t operator()(const std::vector<std::type_index> &v) const
+	{
+		std::size_t retval = 0u;
+		std::hash<std::type_index> hasher;
+		for (const auto &t_idx: v) {
+			boost::hash_combine(retval,hasher(t_idx));
+		}
+		return retval;
+	}
+};
+
+// Map of generic type getters. Each item in the map is associated to another map, which establishes the
+// connection between the concrete set of types used as template parameters for the template template class
+// and the final concrete instantiated type.
+extern std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
+
+inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
+{
+	std::string tv_name = "[";
+	for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
+		tv_name += demangled_type_name(v_t_idx[i]);
+		if (i != v_t_idx.size() - 1u) {
+			tv_name += ",";
+		}
+	}
+	tv_name += "]";
+	return tv_name;
+}
+
 // Like above, but this instead establishes the connection between a template template class instantiated
 // with a certain set of params and a type_getter.
 struct generic_type_getter
@@ -164,16 +173,8 @@ struct generic_type_getter
 		}
 		const auto it1 = gtg_map[m_name].find(v_t_idx);
 		if (it1 == gtg_map[m_name].end()) {
-			std::string tv_name = "[";
-			for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-				tv_name += demangled_type_name(v_t_idx[i]);
-				if (i != v_t_idx.size() - 1u) {
-					tv_name += ",";
-				}
-			}
-			tv_name += "]";
 			::PyErr_SetString(PyExc_TypeError,(std::string("the generic type getter '") + m_name +
-				std::string("' has not been instantiated with the type pack ") + tv_name).c_str());
+				std::string("' has not been instantiated with the type pack ") + v_t_idx_to_str(v_t_idx)).c_str());
 			bp::throw_error_already_set();
 		}
 		return type_getter{it1->second};
@@ -190,8 +191,6 @@ inline void expose_type_getter(const std::string &name)
 {
 	// We do not want to have duplicate instances on the Python side.
 	if (tg_names.find(name) != tg_names.end()) {
-		// NOTE: as a rule of thumb, we throw C++ exceptions during the init of the core module, we throw
-		// Python exceptions during the usage of the classes (i.e., the call operators of the type getters).
 		piranha_throw(std::runtime_error,std::string("a type getter called '") + name + "' has already been instantiated");
 	}
 	tg_names.insert(name);
@@ -227,17 +226,8 @@ inline void expose_generic_type_getter()
 	// NOTE: the new key in gtg_map, if needed, will be created by the first call
 	// to gtg_map[name].
 	if (gtg_map[name].find(v_t_idx) != gtg_map[name].end()) {
-		// TODO abstract into own function.
-		std::string tv_name = "[";
-		for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-			tv_name += demangled_type_name(v_t_idx[i]);
-			if (i != v_t_idx.size() - 1u) {
-				tv_name += ",";
-			}
-		}
-		tv_name += "]";
 		piranha_throw(std::runtime_error,std::string("the generic type getter '") + name +
-			std::string("' has already been instantiated with the type pack ") + tv_name);
+			std::string("' has already been instantiated with the type pack ") + v_t_idx_to_str(v_t_idx));
 	}
 	gtg_map[name].emplace(std::make_pair(v_t_idx,std::type_index(typeid(TT<Args...>))));
 }
