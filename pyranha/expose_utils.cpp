@@ -18,24 +18,11 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "python_includes.hpp"
-
-#include <boost/python/object.hpp>
-#include <string>
-#include <typeindex>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
-#include "type_system.hpp"
+#include "expose_utils.hpp"
 
 namespace pyranha
 {
 
-namespace bp = boost::python;
-
-std::unordered_set<std::string> tg_names;
-std::unordered_map<std::type_index,bp::object> et_map;
-std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
+std::size_t exposed_types_counter = 0u;
 
 }

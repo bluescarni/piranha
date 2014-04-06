@@ -87,9 +87,6 @@ struct tt_namer<TT<Args...>> \
 template <typename ... Args> \
 const std::string tt_namer<TT<Args...>>::name = tt_name;
 
-// Counter of exposed types, used for naming said types.
-extern std::size_t exposed_types_counter;
-
 // Names of Python instances of type getters. We keep track because we do not want multiple instances
 // with the same name on the Python side.
 extern std::unordered_set<std::string> tg_names;
@@ -140,6 +137,7 @@ struct v_idx_hasher
 // and the final concrete instantiated type.
 extern std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
 
+// Small utility to convert a vector of type indices to a string representation for error reporting purposes.
 inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
 {
 	std::string tv_name = "[";

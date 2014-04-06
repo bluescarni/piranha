@@ -193,11 +193,10 @@ namespace pyranha
 {
 
 DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
+DECLARE_TT_NAMER(piranha::poisson_series,"poisson_series")
 DECLARE_TT_NAMER(piranha::kronecker_monomial,"kronecker_monomial")
 
 }
-
-namespace bp = boost::python;
 
 BOOST_PYTHON_MODULE(_core)
 {
@@ -207,6 +206,11 @@ BOOST_PYTHON_MODULE(_core)
 	if (inited) {
 		return;
 	}
+	// Set the inited flag.
+	// NOTE: we do it here because if something goes wrong in the rest of the init, we do not have a way
+	// to roll back the initialisation, and if the user tries again the init probably a lot of things would
+	// go haywire. Like this, we will not re-run any init code in a successive attempt at loading the module.
+	inited = true;
 	// Piranha environment setup.
 	environment env;
 	// Docstring options setup.
@@ -221,8 +225,7 @@ BOOST_PYTHON_MODULE(_core)
 	gtg_class.def("__repr__",&pyranha::generic_type_getter::repr);
 	// Create the types submodule.
 	std::string types_module_name = bp::extract<std::string>(bp::scope().attr("__name__") + ".types");
-	// NOTE: the pointer obtained from PyImport_AddModule() is borrowed. The nested namespace is created
-	// if not there, otherwise it will be returned.
+	// NOTE: the nested namespace is created if not there, otherwise it will be returned.
 	::PyObject *types_module_ptr = ::PyImport_AddModule(types_module_name.c_str());
 	if (!types_module_ptr) {
 		::PyErr_Clear();
@@ -250,11 +253,6 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_type_getter<piranha::rational>("rational");
 	pyranha::expose_type_getter<piranha::real>("real");
 	pyranha::expose_generic_type_getter<piranha::kronecker_monomial>();
-	/*const auto t_idx = std::type_index(typeid(std::vector<double>));
-	bp::class_<std::vector<double>> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
-	++exposed_types_counter;
-	bp::object type_object(bp::handle<>(::PyObject_Type(class_inst().ptr())));
-	et_map[t_idx] = type_object;*/
 	// Arithmetic converters.
 	integer_converter i_c;
 	rational_converter ra_c;
@@ -318,6 +316,4 @@ BOOST_PYTHON_MODULE(_core)
 	bp::def("_binomial",&binomial_integer);
 	bp::def("_binomial",&binomial_rational);
 */
-	// Set the inited flag.
-	inited = true;
 }

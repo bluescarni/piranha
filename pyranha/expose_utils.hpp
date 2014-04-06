@@ -18,15 +18,23 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef PYRANHA_EXPOSE_UTILS_HPP
+#define PYRANHA_EXPOSE_UTILS_HPP
+
 #include "python_includes.hpp"
 
+#include <boost/lexical_cast.hpp>
+#include <boost/python/class.hpp>
+#include <boost/python/errors.hpp>
+#include <boost/python/handle.hpp>
 #include <boost/python/object.hpp>
+#include <cstddef>
+#include <stdexcept>
 #include <string>
 #include <typeindex>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include <typeinfo>
 
+#include "../src/exceptions.hpp"
 #include "type_system.hpp"
 
 namespace pyranha
@@ -34,8 +42,32 @@ namespace pyranha
 
 namespace bp = boost::python;
 
-std::unordered_set<std::string> tg_names;
-std::unordered_map<std::type_index,bp::object> et_map;
-std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
+// Counter of exposed types, used for naming said types.
+extern std::size_t exposed_types_counter;
+
+// Expose class with a default constructor and map it into the pyranha type system.
+template <typename T>
+inline bp::class_<T> expose_class()
+{
+	const auto t_idx = std::type_index(typeid(T));
+	if (et_map.find(t_idx) != et_map.end()) {
+		piranha_throw(std::runtime_error,std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed");
+	}
+	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	++exposed_types_counter;
+	auto ptr = ::PyObject_Type(class_inst().ptr());
+	if (!ptr) {
+		::PyErr_Clear();
+		::PyErr_SetString(PyExc_RuntimeError,"cannot extract the Python type of an instantiated class");
+		bp::throw_error_already_set();
+	}
+	// This is always a new reference being returned.
+	bp::object type_object(bp::handle<>(ptr));
+	// Map the C++ type to the Python type.
+	et_map[t_idx] = type_object;
+	return class_inst;
+}
 
 }
+
+#endif
