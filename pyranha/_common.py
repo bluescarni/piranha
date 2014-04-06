@@ -34,10 +34,7 @@ def _cpp_type_catcher(func,*args):
 # want to remove them before the C++ library exits.
 def _cleanup_custom_derivatives():
 	from ._core import _get_series_list as gsl
-	# Get the series list as a dictionary.
-	sd = dict(gsl())
-	for k in sd:
-		s_type = getattr(_core,'_series_' + str(sd[k]))
+	for s_type in gsl():
 		if hasattr(s_type,'unregister_all_custom_derivatives'):
 			print('Unregistering custom derivatives for: ' + str(s_type))
 			setattr(s_type,'evaluate',_evaluate_wrapper)
@@ -61,10 +58,7 @@ def _evaluate_wrapper(self,d):
 # Register the evaluate wrappers.
 def _register_evaluate_wrappers():
 	from ._core import _get_series_list as gsl
-	# Get the series list as a dictionary.
-	sd = dict(gsl())
-	for k in sd:
-		s_type = getattr(_core,'_series_' + str(sd[k]))
+	for s_type in gsl():
 		# Some series might not have evaluate.
 		if hasattr(s_type,'_evaluate'):
 			setattr(s_type,'evaluate',_evaluate_wrapper)
@@ -128,17 +122,13 @@ def _repr_png_(self):
 # Register the png representation method.
 def _register_repr_png():
 	from ._core import _get_series_list as gsl
-	sd = dict(gsl())
-	for k in sd:
-		s_type = getattr(_core,'_series_' + str(sd[k]))
+	for s_type in gsl():
 		setattr(s_type,'_repr_png_',_repr_png_)
 
 # Register the latex representation method.
 def _register_repr_latex():
 	from ._core import _get_series_list as gsl
-	sd = dict(gsl())
-	for k in sd:
-		s_type = getattr(_core,'_series_' + str(sd[k]))
+	for s_type in gsl():
 		setattr(s_type,'_repr_latex_',lambda self: r'\[ ' + self._latex_() + r' \]')
 
 # Register common wrappers.

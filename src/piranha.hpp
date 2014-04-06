@@ -93,8 +93,6 @@
  * and hence always include the math:: qualifier).
  * \todo consider replacing uses of iterator facade with inheritance from std::iterator.
  * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
- * \todo think about deuglifying enable_if by moving enabling conditions in template list with default value:
- * http://loungecpp.wikidot.com/tips-and-tricks:enable-if-for-c-11
  * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
@@ -117,6 +115,8 @@
  * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
  * sure they behave consistently wrt locale settings.
+ * \todo review the usage of std::set of strings/symbols for the partial degree/order methods. Need to uniform this once and for all
+ * with a good rationale.
  */
 namespace piranha
 {

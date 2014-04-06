@@ -24,6 +24,7 @@
 #include "python_includes.hpp"
 
 #include <boost/functional/hash.hpp>
+#include <boost/integer_traits.hpp>
 #include <boost/python/errors.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
@@ -35,6 +36,7 @@
 #include <functional>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
@@ -197,16 +199,23 @@ inline void expose_type_getter(const std::string &name)
 }
 
 // Convert variadic arguments into a vector of type indices.
-template <typename Arg0, typename ... Args>
-inline void vargs_to_v_t_idx(std::vector<std::type_index> &v_t_idx, typename std::enable_if<sizeof...(Args) != 0u>::type * = nullptr)
+template <typename Tuple, std::size_t Idx = 0u, typename = void>
+struct vargs_to_v_t_idx
 {
-	v_t_idx.push_back(std::type_index(typeid(Arg0)));
-	vargs_to_v_t_idx<Args...>(v_t_idx);
-}
+	void operator()(std::vector<std::type_index> &v_t_idx) const
+	{
+		static_assert(Idx < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+		v_t_idx.push_back(std::type_index(typeid(typename std::tuple_element<Idx,Tuple>::type)));
+		vargs_to_v_t_idx<Tuple,static_cast<std::size_t>(Idx + 1u)>()(v_t_idx);
+	}
+};
 
-template <typename ... Args>
-inline void vargs_to_v_t_idx(std::vector<std::type_index> &, typename std::enable_if<sizeof...(Args) == 0u>::type * = nullptr)
-{}
+template <typename Tuple, std::size_t Idx>
+struct vargs_to_v_t_idx<Tuple,Idx,typename std::enable_if<Idx == std::tuple_size<Tuple>::value>::type>
+{
+	void operator()(std::vector<std::type_index> &) const
+	{}
+};
 
 // Expose generic type getter.
 template <template <typename ...> class TT, typename ... Args>
@@ -220,7 +229,7 @@ inline void expose_generic_type_getter()
 	}
 	// Convert the variadic args to a vector of type indices.
 	std::vector<std::type_index> v_t_idx;
-	vargs_to_v_t_idx<Args...>(v_t_idx);
+	vargs_to_v_t_idx<std::tuple<Args...>>()(v_t_idx);
 	// NOTE: the new key in gtg_map, if needed, will be created by the first call
 	// to gtg_map[name].
 	if (gtg_map[name].find(v_t_idx) != gtg_map[name].end()) {
