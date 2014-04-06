@@ -62,7 +62,7 @@ inline bp::class_<T> expose_class()
 		bp::throw_error_already_set();
 	}
 	// This is always a new reference being returned.
-	bp::object type_object(bp::handle<>(ptr));
+	auto type_object = bp::object(bp::handle<>(ptr));
 	// Map the C++ type to the Python type.
 	et_map[t_idx] = type_object;
 	return class_inst;

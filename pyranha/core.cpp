@@ -46,6 +46,7 @@
 
 #include "../src/piranha.hpp"
 
+#include "exceptions.hpp"
 #include "python_converters.hpp"
 #include "type_system.hpp"
 
@@ -125,7 +126,6 @@ static std::size_t series_counter = 0u;
 // NOTE: these headers are not meant to be used anywhere else, they are just being
 // used to group together common functionality and not oversize core.cpp.
 
-#include "exceptions.hpp"
 #include "exposer.hpp"
 
 static std::mutex global_mutex;
@@ -208,9 +208,9 @@ BOOST_PYTHON_MODULE(_core)
 	// versus
 	// https://docs.python.org/2/c-api/import.html
 #if PY_MAJOR_VERSION < 3
-	bp::object types_module(bp::handle<>(bp::borrowed(types_module_ptr)));
+	auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr));
 #else
-	bp::object types_module(bp::handle<>(types_module_ptr));
+	auto types_module = bp::object(bp::handle<>(types_module_ptr));
 #endif
 	bp::scope().attr("types") = types_module;
 	// Expose concrete instances of the type getter.
@@ -228,12 +228,12 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::rational_converter ra_c;
 	pyranha::real_converter re_c;
 	// Exceptions translation.
-	generic_translate<&PyExc_ZeroDivisionError,zero_division_error>();
-	generic_translate<&PyExc_NotImplementedError,not_implemented_error>();
-	generic_translate<&PyExc_OverflowError,std::overflow_error>();
-	generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
-	generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
-	generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
+	pyranha::generic_translate<&PyExc_ZeroDivisionError,zero_division_error>();
+	pyranha::generic_translate<&PyExc_NotImplementedError,not_implemented_error>();
+	pyranha::generic_translate<&PyExc_OverflowError,std::overflow_error>();
+	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
+	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
+	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
 	// Debug functions.
 	bp::def("_get_big_int",&get_big_int);
 	// Series list.
