@@ -139,3 +139,13 @@ def _register_wrappers():
 	_register_evaluate_wrappers()
 	_register_repr_png()
 	_register_repr_latex()
+
+# Monkey patch the generic type getter class to accept normal args instead of a list.
+def _replace_gtg_call():
+	_orig_gtg_call = _core._generic_type_getter.__call__
+	def _gtg_call_wrapper(self,*args):
+		l_args = list(args)
+		if not all([isinstance(_,_core._type_getter) for _ in l_args]):
+			raise TypeError('all the arguments must be type getters')
+		return _orig_gtg_call(self,l_args)
+	_core._generic_type_getter.__call__ = _gtg_call_wrapper

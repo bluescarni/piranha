@@ -28,10 +28,12 @@ from __future__ import absolute_import as _ai
 __all__ = ['celmec', 'math', 'test', 'settings', 'types']
 
 import threading as _thr
-from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives
+from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives, _replace_gtg_call
 
 # Register common wrappers.
 _register_wrappers()
+# Monkey patch the generic type getter.
+_replace_gtg_call()
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.
