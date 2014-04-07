@@ -36,9 +36,8 @@ def _cleanup_custom_derivatives():
 	from ._core import _get_series_list as gsl
 	for s_type in gsl():
 		if hasattr(s_type,'unregister_all_custom_derivatives'):
-			print('Unregistering custom derivatives for: ' + str(s_type))
-			setattr(s_type,'evaluate',_evaluate_wrapper)
 			s_type.unregister_all_custom_derivatives()
+	print('Custom derivatives cleanup completed.')
 
 # Wrapper for the evaluate() method. Will first check input dict,
 # and then try to invoke the underlying C++ exposed method.
@@ -133,9 +132,6 @@ def _register_repr_latex():
 
 # Register common wrappers.
 def _register_wrappers():
-	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
-	# Keep this in mind in case problem arises.
-	# NOTE: probably we should put a mutex here against concurrent loads from multiple threads.
 	_register_evaluate_wrappers()
 	_register_repr_png()
 	_register_repr_latex()
@@ -149,6 +145,13 @@ def _replace_gtg_call():
 			raise TypeError('all the arguments must be type getters')
 		return _orig_gtg_call(self,l_args)
 	_core._generic_type_getter.__call__ = _gtg_call_wrapper
+
+def _monkey_patch_series():
+	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
+	# Keep this in mind in case problem arises.
+	# NOTE: probably we should put a mutex here against concurrent loads from multiple threads.
+	_register_wrappers()
+	_replace_gtg_call()
 
 # Cleanup function.
 def _cleanup():
