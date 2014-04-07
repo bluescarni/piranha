@@ -48,7 +48,7 @@ def orbitalR(angles):
 	   \end{bmatrix}
 	
 	:param angles: list of rotation angles
-	:rtype: orbital rotation matrix
+	:returns: orbital rotation matrix
 	:raises: :exc:`ValueError` if the length of the input list is different from 3 or 6
 	:raises: any exception raised by the invoked mathematical functions
 	
