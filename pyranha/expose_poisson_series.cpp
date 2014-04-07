@@ -18,6 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "python_includes.hpp"
+
 #include <tuple>
 
 #include "../src/integer.hpp"

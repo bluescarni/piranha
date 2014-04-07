@@ -128,7 +128,7 @@ BOOST_PYTHON_MODULE(_core)
 	// versus
 	// https://docs.python.org/2/c-api/import.html
 #if PY_MAJOR_VERSION < 3
-	auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr));
+	auto types_module = bp::object(bp::handle<>(bp::borrowed(types_module_ptr)));
 #else
 	auto types_module = bp::object(bp::handle<>(types_module_ptr));
 #endif

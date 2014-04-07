@@ -94,7 +94,6 @@ const std::string tt_namer<TT<Args...>>::name = tt_name;
 extern std::unordered_set<std::string> tg_names;
 
 // Connection between C++ types (type_index) and Python types (encapsulated in bp::object).
-// TODO: clean this up on unload? We don't want bp::objects dangling around on shutdown.
 extern std::unordered_map<std::type_index,bp::object> et_map;
 
 // Type getter structure. It establishes the connection between a C++ type (the m_t_idx member)
