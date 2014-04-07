@@ -38,10 +38,10 @@ class basic_test_case(_ut.TestCase):
 		from copy import copy, deepcopy
 		from ._core import _get_big_int
 		# Use polynomial for testing.
-		from . import get_series
+		from .types import polynomial, integer, rational, short, double
 		# Arithmetic with int and Fraction, len, str and comparisons.
-		for s,t in [('integer',int),('rational',Fraction)]:
-			tp = get_series('polynomial<' + s + ',short>')
+		for s,t in [(integer,int),(rational,Fraction)]:
+			tp = polynomial(s,short)()
 			self.assertEqual(tp('x') - tp('x'),t(1) - t(1))
 			self.assertEqual(tp(tp('x')) - tp('x'),t(1) - t(1))
 			self.assertEqual(tp(),t(0))
@@ -75,14 +75,14 @@ class basic_test_case(_ut.TestCase):
 			self.assertTrue(tp(t(1)) == t(1))
 			self.assertTrue(t(1) == tp(t(1)))
 			self.assertTrue(tp('x') ** 3 == tp('x') * tp('x') * tp('x'))
-		tp_int = get_series('polynomial<integer,short>')
+		tp_int = polynomial(integer,short)()
 		self.assertRaises(ValueError,tp_int,float('inf'))
 		self.assertRaises(ZeroDivisionError,lambda : tp_int() ** -1)
-		tp_q = get_series('polynomial<rational,short>')
+		tp_q = polynomial(rational,short)()
 		self.assertRaises(ZeroDivisionError,lambda : tp_q(Fraction(0,1)) ** -1)
 		self.assertEqual(tp_q(Fraction(1,3)) ** -2,9)
 		self.assertRaises(ZeroDivisionError,lambda : tp_int(Fraction(1,3)) ** -2)
-		tp_f = get_series('polynomial<double,short>')
+		tp_f = polynomial(double,short)()
 		# NOTE: here we are going to assume that Python's float implementation uses C++ doubles and
 		# the corresponding pow() function.
 		self.assertEqual(tp_f(0.1) ** (0.5),0.1**0.5)
@@ -125,8 +125,8 @@ class mpmath_test_case(_ut.TestCase):
 			from mpmath import workdps, mpf, pi
 		except ImportError:
 			return
-		from . import get_series
-		pt = get_series('polynomial<real,short>')
+		from .types import polynomial, real, short
+		pt = polynomial(real,short)()
 		self.assertEqual(pt(mpf("4.5667")),mpf("4.5667"))
 		self.assertEqual(pt(mpf("4.5667")) ** mpf("1.234567"),mpf("4.5667") ** mpf("1.234567"))
 		for n in [11,21,51,101,501]:
@@ -148,12 +148,12 @@ class math_test_case(_ut.TestCase):
 	def runTest(self):
 		import math
 		from .math import cos as pcos, sin as psin
-		from . import get_series
+		from .types import polynomial, kronecker_monomial, double, real
 		self.assertEqual(math.cos(3),pcos(3))
 		self.assertEqual(math.cos(3.1234),pcos(3.1234))
 		self.assertEqual(math.sin(3),psin(3))
 		self.assertEqual(math.sin(3.1234),psin(3.1234))
-		pt = get_series('polynomial<double,kronecker_monomial<long>>')
+		pt = polynomial(double,kronecker_monomial())()
 		self.assertEqual(math.cos(3),pcos(pt(3)))
 		self.assertEqual(math.cos(-2.456),pcos(pt(2.456)))
 		self.assertEqual(math.sin(3),psin(pt(3)))
@@ -163,7 +163,7 @@ class math_test_case(_ut.TestCase):
 		try:
 			from mpmath import mpf, workdps
 			from mpmath import cos as mpcos, sin as mpsin
-			pt = get_series('polynomial<real,kronecker_monomial<long>>')
+			pt = polynomial(real,kronecker_monomial())()
 			self.assertEqual(mpcos(mpf("1.2345")),pcos(mpf("1.2345")))
 			self.assertEqual(mpcos(mpf("3")),pcos(pt(mpf("3"))))
 			self.assertEqual(mpcos(mpf("-2.456")),pcos(pt(mpf("-2.456"))))
@@ -191,14 +191,14 @@ class polynomial_test_case(_ut.TestCase):
 	
 	"""
 	def runTest(self):
-		from . import get_series
+		from .types import polynomial, rational, short, integer, double, real
 		from fractions import Fraction
-		self.assertEqual(type(get_series('polynomial<rational,short>')(1).list[0][0]),Fraction)
-		self.assertEqual(type(get_series('polynomial<integer,short>')(1).list[0][0]),int)
-		self.assertEqual(type(get_series('polynomial<double,short>')(1).list[0][0]),float)
+		self.assertEqual(type(polynomial(rational,short)()(1).list[0][0]),Fraction)
+		self.assertEqual(type(polynomial(integer,short)()(1).list[0][0]),int)
+		self.assertEqual(type(polynomial(double,short)()(1).list[0][0]),float)
 		try:
 			from mpmath import mpf
-			self.assertEqual(type(get_series('polynomial<real,short>')(1).list[0][0]),mpf)
+			self.assertEqual(type(polynomial(real,short)()(1).list[0][0]),mpf)
 		except ImportError:
 			pass
 
@@ -213,13 +213,13 @@ class poisson_series_test_case(_ut.TestCase):
 	
 	"""
 	def runTest(self):
-		from . import get_series
+		from .types import poisson_series, rational, double, real
 		from fractions import Fraction
-		self.assertEqual(type(get_series('poisson_series<rational>')(1).list[0][0]),Fraction)
-		self.assertEqual(type(get_series('poisson_series<double>')(1).list[0][0]),float)
+		self.assertEqual(type(poisson_series(rational)()(1).list[0][0]),Fraction)
+		self.assertEqual(type(poisson_series(double)()(1).list[0][0]),float)
 		try:
 			from mpmath import mpf
-			self.assertEqual(type(get_series('poisson_series<real>')(1).list[0][0]),mpf)
+			self.assertEqual(type(poisson_series(real)()(1).list[0][0]),mpf)
 		except ImportError:
 			pass
 
@@ -235,6 +235,7 @@ def run_test_suite():
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest
+	import pyranha
 	from . import celmec, math, test
 	doctest.testmod(pyranha)
 	doctest.testmod(celmec)
