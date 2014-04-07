@@ -104,9 +104,9 @@ def binomial(x,k):
 	supporting integers and rationals as first argument, and integers as second argument.
 	
 	:param x: top argument for the binomial coefficient
-	:type x: integer or rational
+	:type x: *int* or *Fraction*
 	:param k: bottom argument for the binomial coefficient
-	:type k: integer
+	:type k: *int*
 	:rtype: *x* choose *k*
 	:raises: :exc:`TypeError` if the types of *x* and/or *k* are not supported
 	:raises: :exc:`ValueError` if the absolute value of input values is too large
