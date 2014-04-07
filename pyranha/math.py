@@ -40,10 +40,10 @@ def cos(arg):
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> t = get_series('poisson_series<polynomial<rational,short>>')
+	>>> from .types import poisson_series, polynomial, rational, short
+	>>> t = poisson_series(polynomial(rational,short))()
 	>>> cos(2 * t('x'))
-	cos(2x)
+	cos(2*x)
 	>>> cos('y') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
@@ -75,10 +75,10 @@ def sin(arg):
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> t = get_series('poisson_series<polynomial<rational,short>>')
+	>>> from .types import poisson_series, polynomial, rational, short
+	>>> t = poisson_series(polynomial(rational,short))()
 	>>> sin(2 * t('x'))
-	sin(2x)
+	sin(2*x)
 	>>> sin('y') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
@@ -150,8 +150,8 @@ def partial(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<integer,short>')
+	>>> from .types import polynomial, integer, short
+	>>> pt = polynomial(integer,short)()
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
 	2*x
@@ -179,8 +179,8 @@ def integrate(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,kronecker_monomial<long>>')
+	>>> from .types import polynomial, rational, kronecker_monomial
+	>>> pt = polynomial(rational,kronecker_monomial())()
 	>>> x,y = pt('x'), pt('y')
 	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
 	True
@@ -250,8 +250,8 @@ def pbracket(f,g,p_list,q_list):
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,short>')
+	>>> from .types import polynomial, rational, short
+	>>> pt = polynomial(rational,short)()
 	>>> x,v = pt('x'), pt('v')
 	>>> pbracket(x+v,x+v,['v'],['x']) == 0
 	True
@@ -295,8 +295,8 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,kronecker_monomial<long>>')
+	>>> from .types import polynomial, rational, kronecker_monomial
+	>>> pt = polynomial(rational,kronecker_monomial())()
 	>>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
 	>>> transformation_is_canonical([-l],[L],['L'],['l'])
 	True
