@@ -74,6 +74,12 @@ static inline auto binomial_rational(const piranha::rational &q, const piranha::
 	return piranha::math::binomial(q,k);
 }
 
+// Cleanup function to be called on module unload.
+static inline void cleanup_type_system()
+{
+	pyranha::et_map.clear();
+}
+
 namespace pyranha
 {
 
@@ -168,4 +174,6 @@ BOOST_PYTHON_MODULE(_core)
 	// Binomial coefficient.
 	bp::def("_binomial",&binomial_integer);
 	bp::def("_binomial",&binomial_rational);
+	// Cleanup function.
+	bp::def("_cleanup_type_system",&cleanup_type_system);
 }

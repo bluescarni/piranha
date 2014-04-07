@@ -149,3 +149,9 @@ def _replace_gtg_call():
 			raise TypeError('all the arguments must be type getters')
 		return _orig_gtg_call(self,l_args)
 	_core._generic_type_getter.__call__ = _gtg_call_wrapper
+
+# Cleanup function.
+def _cleanup():
+	_cleanup_custom_derivatives()
+	_core._cleanup_type_system()
+	print("Pyranha type system cleanup completed.")
