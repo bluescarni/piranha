@@ -199,6 +199,7 @@ std::mutex thread_pool_base<T>::s_mutex;
  *
  * \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:
  * http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
+ * detach() and wait as a workaround?
  * \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
  */
 class thread_pool: private detail::thread_pool_base<>
