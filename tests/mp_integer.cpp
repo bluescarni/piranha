@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "../src/config.hpp"
+#include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 
@@ -2710,8 +2711,98 @@ struct float_conversion_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_integer_ctor_conversion_test)
+BOOST_AUTO_TEST_CASE(mp_integer_conversion_test)
 {
 	boost::mpl::for_each<size_types>(integral_conversion_tester());
 	boost::mpl::for_each<size_types>(float_conversion_tester());
+}
+
+struct mp_integer_access_tag {};
+
+namespace piranha
+{
+
+template <>
+struct debug_access<mp_integer_access_tag>
+{
+	template <int NBits>
+	static detail::integer_union<NBits> &get(mp_integer<NBits> &i)
+	{
+		return i.m_int;
+	}
+};
+
+}
+
+template <int NBits>
+inline detail::integer_union<NBits> &get_m(mp_integer<NBits> &i)
+{
+	return piranha::debug_access<mp_integer_access_tag>::get(i);
+}
+
+struct in_place_add_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type a, b;
+		a += b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{0}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"1"};
+		b = a;
+		a += b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{2}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"1"};
+		b = int_type{"-1"};
+		a += b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{0}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"-1"};
+		b = int_type{"-1"};
+		a += b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{-2}));
+		BOOST_CHECK(a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		detail::mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			a += b;
+			::mpz_add(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		}
+		// Check when static add fails.
+		a = int_type{"67"};
+		b = int_type{"15"};
+		BOOST_CHECK(a.is_static());
+		BOOST_CHECK(b.is_static());
+		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
+		auto &st_a = get_m(a).st, &st_b = get_m(b).st;
+		st_a.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
+		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
+		::mpz_set_str(&m_a.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+		::mpz_set_str(&m_b.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+		a += b;
+		::mpz_add(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_add_test)
+{
+	boost::mpl::for_each<size_types>(in_place_add_tester());
 }

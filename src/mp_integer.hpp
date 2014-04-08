@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "config.hpp"
+#include "debug_access.hpp"
 #include "detail/is_digit.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -372,6 +373,7 @@ struct static_integer
 		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
 		const dlimb_t hi = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
+		// NOTE: throw before modifying anything here, for exception safety.
 		if (unlikely(static_cast<limb_t>(hi >> limb_bits) != 0u)) {
 			piranha_throw(std::overflow_error,"overflow in raw addition");
 		}
@@ -837,6 +839,9 @@ union integer_union
 template <int NBits = 0>
 class mp_integer
 {
+		// Make friend with debugging class.
+		template <typename>
+		friend class debug_access;
 		template <typename T>
 		struct is_interoperable_type
 		{
@@ -1332,6 +1337,32 @@ class mp_integer
 		bool is_static() const noexcept
 		{
 			return m_int.is_static();
+		}
+		mp_integer &operator+=(const mp_integer &other)
+		{
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				// Attempt the static add.
+				try {
+					// NOTE: the static add will try to do the operation, if it fails an overflow error
+					// will be generated. The operation is exception-safe, and m_int.st will be untouched
+					// in case of problems.
+					m_int.st.add(m_int.st,m_int.st,other.m_int.st);
+					return *this;
+				} catch (const std::overflow_error &) {}
+			}
+			// Promote as needed, we need GMP types on both sides.
+			if (s1) {
+				m_int.promote();
+			}
+			if (s2) {
+				detail::mpz_raii m;
+				other.m_int.st.to_mpz(m.m_mpz);
+				::mpz_add(&m_int.dy,&m_int.dy,&m.m_mpz);
+			} else {
+				::mpz_add(&m_int.dy,&m_int.dy,&other.m_int.dy);
+			}
+			return *this;
 		}
 	private:
 		detail::integer_union<NBits> m_int;
