@@ -45,12 +45,6 @@
 #include <utility>
 #include <vector>
 
-#if defined(__GNUC__)
-#include <cxxabi.h>
-#include <cstdlib>
-#include <memory>
-#endif
-
 #include "../src/config.hpp"
 #include "../src/exceptions.hpp"
 
@@ -60,18 +54,7 @@ namespace pyranha
 // Namespace alias for Boost.Python.
 namespace bp = boost::python;
 
-inline std::string demangled_type_name(const std::type_index &t_idx)
-{
-#if defined(__GNUC__)
-	int status = -4;
-	// NOTE: abi::__cxa_demangle will return a pointer allocated by std::malloc, which we will delete via std::free.
-	std::unique_ptr<char,void(*)(void *)> res{abi::__cxa_demangle(t_idx.name(),nullptr,nullptr,&status),std::free};
-	return (status == 0) ? std::string(res.get()) : std::string(t_idx.name());
-#else
-	// TODO demangling for other platforms.
-	return std::string(t_idx.name());
-#endif
-}
+std::string demangled_type_name(const std::type_index &);
 
 // Meta/macro programming to connect a template template class to a name expressed as a string.
 template <typename T>
