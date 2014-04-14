@@ -23,17 +23,13 @@
 
 #include "python_includes.hpp"
 
-#include <boost/functional/hash.hpp>
 #include <boost/integer_traits.hpp>
-#include <boost/python/errors.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
-#include <boost/python/stl_iterator.hpp>
 #include <cstddef>
-#include <functional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -45,7 +41,6 @@
 #include <utility>
 #include <vector>
 
-#include "../src/config.hpp"
 #include "../src/exceptions.hpp"
 
 namespace pyranha
@@ -83,37 +78,16 @@ extern std::unordered_map<std::type_index,bp::object> et_map;
 // and its exposed Python counterpart via the call operator, which will query the et_map archive.
 struct type_getter
 {
-	explicit type_getter(const std::type_index &t_idx):m_t_idx(t_idx)
-	{}
-	bp::object operator()() const
-	{
-		const auto it = et_map.find(m_t_idx);
-		if (it == et_map.end()) {
-			::PyErr_SetString(PyExc_TypeError,(std::string("the type '") + demangled_type_name(m_t_idx)
-				+ "' has not been exposed").c_str());
-			bp::throw_error_already_set();
-		}
-		return it->second;
-	}
-	std::string repr() const
-	{
-		return std::string("Type getter for the C++ type '") + demangled_type_name(m_t_idx) + "'";
-	}
+	explicit type_getter(const std::type_index &t_idx):m_t_idx(t_idx) {}
+	bp::object operator()() const;
+	std::string repr() const;
 	const std::type_index m_t_idx;
 };
 
 // Hasher for vector of type indices.
 struct v_idx_hasher
 {
-	std::size_t operator()(const std::vector<std::type_index> &v) const
-	{
-		std::size_t retval = 0u;
-		std::hash<std::type_index> hasher;
-		for (const auto &t_idx: v) {
-			boost::hash_combine(retval,hasher(t_idx));
-		}
-		return retval;
-	}
+	std::size_t operator()(const std::vector<std::type_index> &) const;
 };
 
 // Map of generic type getters. Each item in the map is associated to another map, which establishes the
@@ -142,29 +116,8 @@ struct generic_type_getter
 	explicit generic_type_getter(const std::string &name):m_name(name) {}
 	// Get the type getter corresponding to the C++ type defined by name<l[0],l[1],...>,
 	// where l is a list of type getters.
-	type_getter operator()(bp::list l) const
-	{
-		// We assume that this is created concurrently with the exposition of the gtg
-		// (and hence its registration on the C++ and Python sides).
-		piranha_assert(gtg_map.find(m_name) != gtg_map.end());
-		// Convert the list to a vector of type idx objects.
-		std::vector<std::type_index> v_t_idx;
-		bp::stl_input_iterator<type_getter> it(l), end;
-		for (; it != end; ++it) {
-			v_t_idx.push_back((*it).m_t_idx);
-		}
-		const auto it1 = gtg_map[m_name].find(v_t_idx);
-		if (it1 == gtg_map[m_name].end()) {
-			::PyErr_SetString(PyExc_TypeError,(std::string("the generic type getter '") + m_name +
-				std::string("' has not been instantiated with the type pack ") + v_t_idx_to_str(v_t_idx)).c_str());
-			bp::throw_error_already_set();
-		}
-		return type_getter{it1->second};
-	}
-	std::string repr() const
-	{
-		return std::string("Generic type getter for the type '") + m_name + "'";
-	}
+	type_getter operator()(bp::list) const;
+	std::string repr() const;
 	const std::string m_name;
 };
 
