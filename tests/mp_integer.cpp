@@ -2748,6 +2748,7 @@ struct in_place_mp_integer_add_tester
 	{
 		typedef mp_integer<T::value> int_type;
 		BOOST_CHECK(is_addable_in_place<int_type>::value);
+		BOOST_CHECK((!is_addable_in_place<const int_type,int_type>::value));
 		int_type a, b;
 		a += b;
 		BOOST_CHECK((std::is_same<decltype(a += b),int_type &>::value));

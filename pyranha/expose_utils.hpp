@@ -772,6 +772,8 @@ class series_exposer
 	public:
 		series_exposer()
 		{
+			// TODO probably we can avoid instantiating p here, look at the tuple for_each
+			// in vargs_to_v_t_idx.
 			params p;
 			tuple_for_each(p,exposer_op{});
 		}
