@@ -96,18 +96,7 @@ struct v_idx_hasher
 extern std::unordered_map<std::string,std::unordered_map<std::vector<std::type_index>,std::type_index,v_idx_hasher>> gtg_map;
 
 // Small utility to convert a vector of type indices to a string representation for error reporting purposes.
-inline std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
-{
-	std::string tv_name = "[";
-	for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
-		tv_name += demangled_type_name(v_t_idx[i]);
-		if (i != v_t_idx.size() - 1u) {
-			tv_name += ",";
-		}
-	}
-	tv_name += "]";
-	return tv_name;
-}
+std::string v_t_idx_to_str(const std::vector<std::type_index> &);
 
 // Like above, but this instead establishes the connection between a template template class instantiated
 // with a certain set of params and a type_getter.

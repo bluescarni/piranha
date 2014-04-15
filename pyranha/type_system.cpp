@@ -115,4 +115,17 @@ std::string generic_type_getter::repr() const
 	return std::string("Generic type getter for the type '") + m_name + "'";
 }
 
+std::string v_t_idx_to_str(const std::vector<std::type_index> &v_t_idx)
+{
+	std::string tv_name = "[";
+	for (decltype(v_t_idx.size()) i = 0u; i < v_t_idx.size(); ++i) {
+		tv_name += demangled_type_name(v_t_idx[i]);
+		if (i != v_t_idx.size() - 1u) {
+			tv_name += ",";
+		}
+	}
+	tv_name += "]";
+	return tv_name;
+}
+
 }
