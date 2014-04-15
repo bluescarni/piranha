@@ -151,8 +151,7 @@ static inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz
 		piranha_throw(std::invalid_argument,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
-	std::vector<char> tmp;
-	tmp.resize(static_cast<std::vector<char>::size_type>(total_size));
+	std::vector<char> tmp(static_cast<std::vector<char>::size_type>(total_size));
 	if (unlikely(tmp.size() != total_size)) {
 		piranha_throw(std::invalid_argument,"number of digits is too large");
 	}
@@ -835,6 +834,9 @@ union integer_union
  * @see http://gmplib.org/
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo performance improvements: reduce usage of gmp integers in internal implementation, change the semantics of the raii
+ * holder so that we avoid double allocations.
  */
 template <int NBits = 0>
 class mp_integer
@@ -847,6 +849,31 @@ class mp_integer
 		{
 			static const bool value = std::is_floating_point<T>::value ||
 				std::is_integral<T>::value;
+		};
+		// Types allowed in binary operations involving mp_integer.
+		template <typename T, typename U>
+		struct are_binary_op_types: std::integral_constant<bool,
+			(std::is_same<T,mp_integer>::value && is_interoperable_type<U>::value) ||
+			(std::is_same<U,mp_integer>::value && is_interoperable_type<T>::value) ||
+			(std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value)>
+		{};
+		// Metaprogramming to establish the return type of binary arithmetic operations involving mp_integers.
+		// Default result type will be mp_integer itself; for consistency with C/C++ when one of the arguments
+		// is a floating point type, we will return a value of the same floating point type.
+		template <typename T, typename U, typename Enable = void>
+		struct deduce_binary_op_result_type
+		{
+			using type = mp_integer;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<T>::value>::type>
+		{
+			using type = T;
+		};
+		template <typename T, typename U>
+		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<U>::value>::type>
+		{
+			using type = U;
 		};
 		template <typename Float>
 		void construct_from_floating_point(Float x)
@@ -1042,7 +1069,7 @@ class mp_integer
 			if (std::is_unsigned<T>::value && negative) {
 				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 			}
-			T retval(0), tmp(negative ? -1 : 1);
+			T retval(0), tmp(static_cast<T>(negative ? -1 : 1));
 			if (m_int.is_static()) {
 				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
 				const limb_t bits_size = m_int.st.bits_size();
@@ -1166,6 +1193,95 @@ class mp_integer
 				retval = std::copysign(retval,std::numeric_limits<T>::lowest());
 			}
 			return retval;
+		}
+		// In-place add.
+		template <bool AddOrSub>
+		mp_integer &in_place_add_or_sub(const mp_integer &other)
+		{
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				// Attempt the static add/sub.
+				try {
+					// NOTE: the static add/sub will try to do the operation, if it fails an overflow error
+					// will be generated. The operation is exception-safe, and m_int.st will be untouched
+					// in case of problems.
+					if (AddOrSub) {
+						m_int.st.add(m_int.st,m_int.st,other.m_int.st);
+					} else {
+						m_int.st.sub(m_int.st,m_int.st,other.m_int.st);
+					}
+					return *this;
+				} catch (const std::overflow_error &) {}
+			}
+			// Promote as needed, we need GMP types on both sides.
+			if (s1) {
+				m_int.promote();
+			}
+			if (s2) {
+				detail::mpz_raii m;
+				other.m_int.st.to_mpz(m.m_mpz);
+				if (AddOrSub) {
+					::mpz_add(&m_int.dy,&m_int.dy,&m.m_mpz);
+				} else {
+					::mpz_sub(&m_int.dy,&m_int.dy,&m.m_mpz);
+				}
+			} else {
+				if (AddOrSub) {
+					::mpz_add(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				} else {
+					::mpz_sub(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				}
+			}
+			return *this;
+		}
+		mp_integer &in_place_add(const mp_integer &other)
+		{
+			return in_place_add_or_sub<true>(other);
+		}
+		template <typename T>
+		mp_integer &in_place_add(const T &other, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			return in_place_add(mp_integer(other));
+		}
+		template <typename T>
+		mp_integer &in_place_add(const T &other, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (*this = static_cast<T>(*this) + other);
+		}
+		// Binary add.
+		template <typename T, typename U>
+		static mp_integer binary_plus(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval += n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_plus(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval += n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_plus(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
+		{
+			mp_integer retval(n2);
+			retval += n1;
+			return retval;
+		}
+		template <typename T>
+		static T binary_plus(const mp_integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (static_cast<T>(n) + x);
+		}
+		template <typename T>
+		static T binary_plus(const T &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return binary_plus(n,x);
 		}
 	public:
 		/// Defaulted default constructor.
@@ -1338,31 +1454,24 @@ class mp_integer
 		{
 			return m_int.is_static();
 		}
-		mp_integer &operator+=(const mp_integer &other)
+		template <typename T>
+		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
+			mp_integer &>::type operator+=(const T &other)
 		{
-			const bool s1 = is_static(), s2 = other.is_static();
-			if (s1 && s2) {
-				// Attempt the static add.
-				try {
-					// NOTE: the static add will try to do the operation, if it fails an overflow error
-					// will be generated. The operation is exception-safe, and m_int.st will be untouched
-					// in case of problems.
-					m_int.st.add(m_int.st,m_int.st,other.m_int.st);
-					return *this;
-				} catch (const std::overflow_error &) {}
-			}
-			// Promote as needed, we need GMP types on both sides.
-			if (s1) {
-				m_int.promote();
-			}
-			if (s2) {
-				detail::mpz_raii m;
-				other.m_int.st.to_mpz(m.m_mpz);
-				::mpz_add(&m_int.dy,&m_int.dy,&m.m_mpz);
-			} else {
-				::mpz_add(&m_int.dy,&m_int.dy,&other.m_int.dy);
-			}
-			return *this;
+			return in_place_add(other);
+		}
+		template <typename T, typename I>
+		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
+			std::is_same<mp_integer,I>::value,T &>::type operator+=(T &x, const I &n)
+		{
+			x = static_cast<T>(n + x);
+			return x;
+		}
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator+(const T &x, const U &y)
+		{
+			return binary_plus(x,y);
 		}
 	private:
 		detail::integer_union<NBits> m_int;

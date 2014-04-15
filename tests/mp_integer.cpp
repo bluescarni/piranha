@@ -47,6 +47,7 @@
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/math.hpp"
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
@@ -2740,14 +2741,16 @@ inline detail::integer_union<NBits> &get_m(mp_integer<NBits> &i)
 	return piranha::debug_access<mp_integer_access_tag>::get(i);
 }
 
-struct in_place_add_tester
+struct in_place_mp_integer_add_tester
 {
 	template <typename T>
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_addable_in_place<int_type>::value);
 		int_type a, b;
 		a += b;
+		BOOST_CHECK((std::is_same<decltype(a += b),int_type &>::value));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{0}));
 		BOOST_CHECK(a.is_static());
 		a = int_type{"1"};
@@ -2802,7 +2805,55 @@ struct in_place_add_tester
 	}
 };
 
+struct in_place_int_add_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_addable_in_place<int_type,T>::value));
+			BOOST_CHECK((!is_addable_in_place<const int_type,T>::value));
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			int_type n1;
+			n1 += T(1);
+			BOOST_CHECK((std::is_same<decltype(n1 += T(1)),int_type &>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"1");
+			n1 += T(100);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"101");
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			detail::mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				int_type n(tmp1);
+				n += tmp2;
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_add(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),mpz_lexcast(m1));
+			}
+			BOOST_CHECK((is_addable_in_place<T,int_type>::value));
+			BOOST_CHECK((!is_addable_in_place<const T,int_type>::value));
+			T n2(0);
+			n2 += int_type(1);
+			BOOST_CHECK((std::is_same<T &,decltype(n2 += int_type(1))>::value));
+			BOOST_CHECK_EQUAL(n2,T(1));
+			/*const T n3(0);
+			n3 += int_type(1);*/
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<integral_types>(runner<T>());
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_add_test)
 {
-	boost::mpl::for_each<size_types>(in_place_add_tester());
+	boost::mpl::for_each<size_types>(in_place_mp_integer_add_tester());
+	boost::mpl::for_each<size_types>(in_place_int_add_tester());
 }
