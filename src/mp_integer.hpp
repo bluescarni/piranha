@@ -1460,9 +1460,9 @@ class mp_integer
 		{
 			return in_place_add(other);
 		}
-		template <typename T, typename I>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
-			std::is_same<mp_integer,I>::value,T &>::type operator+=(T &x, const I &n)
+		template <typename T>
+		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
+			operator+=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(n + x);
 			return x;

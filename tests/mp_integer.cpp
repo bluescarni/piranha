@@ -2836,14 +2836,21 @@ struct in_place_int_add_tester
 				::mpz_add(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),mpz_lexcast(m1));
 			}
+			// int += mp_integer.
 			BOOST_CHECK((is_addable_in_place<T,int_type>::value));
 			BOOST_CHECK((!is_addable_in_place<const T,int_type>::value));
 			T n2(0);
 			n2 += int_type(1);
 			BOOST_CHECK((std::is_same<T &,decltype(n2 += int_type(1))>::value));
 			BOOST_CHECK_EQUAL(n2,T(1));
-			/*const T n3(0);
-			n3 += int_type(1);*/
+			BOOST_CHECK_THROW(n2 += int_type(std::numeric_limits<T>::max()),std::overflow_error);
+			BOOST_CHECK_EQUAL(n2,T(1));
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1(0), tmp2 = int_dist(rng);
+				tmp1 += int_type(tmp2);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)),mpz_lexcast(m1));
+			}
 		}
 	};
 	template <typename T>
@@ -2853,8 +2860,32 @@ struct in_place_int_add_tester
 	}
 };
 
+struct in_place_float_add_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_addable_in_place<int_type,T>::value));
+			BOOST_CHECK((!is_addable_in_place<const int_type,T>::value));
+			// float += mp_integer.
+			BOOST_CHECK((is_addable_in_place<T,int_type>::value));
+			BOOST_CHECK((!is_addable_in_place<const T,int_type>::value));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<floating_point_types>(runner<T>());
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_add_test)
 {
 	boost::mpl::for_each<size_types>(in_place_mp_integer_add_tester());
 	boost::mpl::for_each<size_types>(in_place_int_add_tester());
+	boost::mpl::for_each<size_types>(in_place_float_add_tester());
 }
