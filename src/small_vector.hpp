@@ -496,6 +496,10 @@ union small_vector_union
  * After a move operation, the container will be empty.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo in the dynamic storage, it look like we can use 16-bit ints for the sizes and not increase the total size too much.
+ * This means that we could store up to 65k elements as opposed to the 255 in the current implementation.
+ * \todo the standard_layout constraint on T seems not to be necessary.
  */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class small_vector

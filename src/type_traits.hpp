@@ -852,6 +852,7 @@ const bool term_is_multipliable<Term>::value;
 namespace detail
 {
 
+// TODO: replace use of boost::integer_traits with numeric_limits.
 template <typename T, typename ... Args>
 struct min_int_impl
 {
