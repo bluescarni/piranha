@@ -2623,9 +2623,9 @@ struct integral_conversion_tester
 				(std::numeric_limits<T>::max());
 			::mpz_set_str(&tmp.m_mpz,oss.str().c_str(),10);
 			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
-			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
 			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
-			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
 			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,2ul);
 			BOOST_CHECK_EQUAL(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::numeric_limits<T>::max());
 			oss.str("");
@@ -2633,9 +2633,9 @@ struct integral_conversion_tester
 				(std::numeric_limits<T>::min());
 			::mpz_set_str(&tmp.m_mpz,oss.str().c_str(),10);
 			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
-			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
 			::mpz_sub_ui(&tmp.m_mpz,&tmp.m_mpz,1ul);
-			BOOST_CHECK_THROW(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(int_type{mpz_lexcast(tmp)}),std::overflow_error);
 			::mpz_add_ui(&tmp.m_mpz,&tmp.m_mpz,2ul);
 			BOOST_CHECK_EQUAL(static_cast<T>(int_type{mpz_lexcast(tmp)}),std::numeric_limits<T>::min());
 			// Random testing.
