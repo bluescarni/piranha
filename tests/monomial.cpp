@@ -63,9 +63,9 @@ struct constructor_tester
 			typedef monomial<T,U> monomial_type;
 			PIRANHA_TT_CHECK(is_key,monomial_type);
 			monomial_type m0;
-			BOOST_CHECK_NO_THROW(monomial_type());
-			BOOST_CHECK_NO_THROW(monomial_type(monomial_type()));
-			BOOST_CHECK_NO_THROW(monomial_type(m0));
+			BOOST_CHECK_NO_THROW(monomial_type tmp = monomial_type());
+			BOOST_CHECK_NO_THROW(monomial_type tmp = monomial_type(monomial_type()));
+			BOOST_CHECK_NO_THROW(monomial_type tmp(m0));
 			// From init list.
 			monomial_type m1{T(0),T(1),T(2),T(3)};
 			BOOST_CHECK_EQUAL(m1.size(),static_cast<decltype(m1.size())>(4));
