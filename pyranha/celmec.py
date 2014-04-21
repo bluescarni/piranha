@@ -47,6 +47,9 @@ def orbitalR(angles):
 	   \cos i
 	   \end{bmatrix}
 	
+	Note that this function requires the availability of the NumPy library: the rotation matrix will be returned as a
+	NumPy array.
+	
 	:param angles: list of rotation angles
 	:returns: orbital rotation matrix
 	:raises: :exc:`ValueError` if the length of the input list is different from 3 or 6
