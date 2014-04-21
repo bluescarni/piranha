@@ -2871,9 +2871,41 @@ struct in_place_float_add_tester
 			typedef mp_integer<U::value> int_type;
 			BOOST_CHECK((is_addable_in_place<int_type,T>::value));
 			BOOST_CHECK((!is_addable_in_place<const int_type,T>::value));
+			int_type n1;
+			n1 += T(1);
+			BOOST_CHECK((std::is_same<decltype(n1 += T(1)),int_type &>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"1");
+			// Random testing
+			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
+			for (int i = 0; i < ntries; ++i) {
+				int_type n(0);
+				const T tmp1 = urd1(rng);
+				n += tmp1;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),boost::lexical_cast<std::string>(int_type{tmp1}));
+				n = 0;
+				const T tmp2 = urd2(rng);
+				n += tmp2;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),boost::lexical_cast<std::string>(int_type{tmp2}));
+			}
 			// float += mp_integer.
 			BOOST_CHECK((is_addable_in_place<T,int_type>::value));
 			BOOST_CHECK((!is_addable_in_place<const T,int_type>::value));
+			T x1(0);
+			x1 += int_type(1);
+			BOOST_CHECK((std::is_same<T &,decltype(x1 += int_type(1))>::value));
+			BOOST_CHECK_EQUAL(x1,T(1));
+			x1 = 0;
+			// NOTE: limit the number of times we run this test, as the conversion from int to float
+			// is slow as the random values are taken from the entire float range and thus use a lot of digits.
+			for (int i = 0; i < ntries / 100; ++i) {
+				T tmp1(0), tmp2 = urd1(rng);
+				tmp1 += int_type{tmp2};
+				BOOST_CHECK_EQUAL(tmp1,static_cast<T>(int_type{tmp2}));
+				tmp1 = T(0);
+				tmp2 = urd2(rng);
+				tmp1 += int_type{tmp2};
+				BOOST_CHECK_EQUAL(tmp1,static_cast<T>(int_type{tmp2}));
+			}
 		}
 	};
 	template <typename T>
