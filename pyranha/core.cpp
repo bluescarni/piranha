@@ -105,14 +105,14 @@ BOOST_PYTHON_MODULE(_core)
 	piranha::environment env;
 	// Docstring options setup.
 	bp::docstring_options doc_options(true,true,false);
-	// Type getter class.
-	bp::class_<pyranha::type_getter> tg_class("_type_getter",bp::no_init);
-	tg_class.def("__call__",&pyranha::type_getter::operator());
-	tg_class.def("__repr__",&pyranha::type_getter::repr);
-	// Generic type getter class.
-	bp::class_<pyranha::generic_type_getter> gtg_class("_generic_type_getter",bp::no_init);
-	gtg_class.def("__call__",&pyranha::generic_type_getter::operator());
-	gtg_class.def("__repr__",&pyranha::generic_type_getter::repr);
+	// Type generator class.
+	bp::class_<pyranha::type_generator> tg_class("_type_generator",bp::no_init);
+	tg_class.def("__call__",&pyranha::type_generator::operator());
+	tg_class.def("__repr__",&pyranha::type_generator::repr);
+	// Generic type generator class.
+	bp::class_<pyranha::generic_type_generator> gtg_class("_generic_type_generator",bp::no_init);
+	gtg_class.def("__call__",&pyranha::generic_type_generator::operator());
+	gtg_class.def("__repr__",&pyranha::generic_type_generator::repr);
 	// Create the types submodule.
 	std::string types_module_name = bp::extract<std::string>(bp::scope().attr("__name__") + ".types");
 	// NOTE: the nested namespace is created if not there, otherwise it will be returned.
@@ -133,16 +133,16 @@ BOOST_PYTHON_MODULE(_core)
 	auto types_module = bp::object(bp::handle<>(types_module_ptr));
 #endif
 	bp::scope().attr("types") = types_module;
-	// Expose concrete instances of the type getter.
-	pyranha::expose_type_getter<signed char>("signed_char");
-	pyranha::expose_type_getter<short>("short");
-	pyranha::expose_type_getter<float>("float");
-	pyranha::expose_type_getter<double>("double");
-	pyranha::expose_type_getter<long double>("long_double");
-	pyranha::expose_type_getter<piranha::integer>("integer");
-	pyranha::expose_type_getter<piranha::rational>("rational");
-	pyranha::expose_type_getter<piranha::real>("real");
-	pyranha::expose_generic_type_getter<piranha::kronecker_monomial>();
+	// Expose concrete instances of the type generator.
+	pyranha::expose_type_generator<signed char>("signed_char");
+	pyranha::expose_type_generator<short>("short");
+	pyranha::expose_type_generator<float>("float");
+	pyranha::expose_type_generator<double>("double");
+	pyranha::expose_type_generator<long double>("long_double");
+	pyranha::expose_type_generator<piranha::integer>("integer");
+	pyranha::expose_type_generator<piranha::rational>("rational");
+	pyranha::expose_type_generator<piranha::real>("real");
+	pyranha::expose_generic_type_generator<piranha::kronecker_monomial>();
 	// Arithmetic converters.
 	pyranha::integer_converter i_c;
 	pyranha::rational_converter ra_c;

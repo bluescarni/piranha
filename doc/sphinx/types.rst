@@ -8,4 +8,5 @@ Types module.
 Reference
 ---------
 
-.. py:module:: pyranha.types
+.. automodule:: pyranha.types
+   :members:

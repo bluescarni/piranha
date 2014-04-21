@@ -702,8 +702,8 @@ class series_exposer
 			void operator()(const std::tuple<Args...> &) const
 			{
 				using s_type = Series<Args...>;
-				// Register in the generic type getter map.
-				expose_generic_type_getter<Series,Args...>();
+				// Register in the generic type generator map.
+				expose_generic_type_generator<Series,Args...>();
 				// Start exposing.
 				auto series_class = expose_class<s_type>();
 				// Add the _is_series tag.
