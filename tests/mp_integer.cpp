@@ -2718,6 +2718,55 @@ BOOST_AUTO_TEST_CASE(mp_integer_conversion_test)
 	boost::mpl::for_each<size_types>(float_conversion_tester());
 }
 
+struct negate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK(n.is_static());
+		n.negate();
+		BOOST_CHECK(n.is_static());
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"0");
+		n = 11;
+		n.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-11");
+		n.negate();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"11");
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = int_dist(rng);
+			int_type tmp_int(tmp);
+			if (promote_dist(rng) == 1 && tmp_int.is_static()) {
+				tmp_int.promote();
+			}
+			if (tmp < 0) {
+				tmp_int.negate();
+				std::string tmp_str = boost::lexical_cast<std::string>(tmp);
+				tmp_str = std::string(tmp_str.begin() + 1,tmp_str.end());
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_int),tmp_str);
+				tmp_int.negate();
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_int),boost::lexical_cast<std::string>(tmp));
+			} else if (tmp > 0) {
+				tmp_int.negate();
+				std::string tmp_str = boost::lexical_cast<std::string>(tmp);
+				tmp_str = std::string("-") + tmp_str;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_int),tmp_str);
+				tmp_int.negate();
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_int),boost::lexical_cast<std::string>(tmp));
+			}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_negate_test)
+{
+	boost::mpl::for_each<size_types>(negate_tester());
+}
+
 struct mp_integer_access_tag {};
 
 namespace piranha

@@ -144,7 +144,7 @@ struct mpz_raii
 	mpz_struct_t m_mpz;
 };
 
-static inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
+inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
 {
 	const std::size_t size_base10 = ::mpz_sizeinbase(&mpz,10);
 	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
@@ -1453,6 +1453,15 @@ class mp_integer
 		bool is_static() const noexcept
 		{
 			return m_int.is_static();
+		}
+		/// Negate in-place.
+		void negate() noexcept
+		{
+			if (is_static()) {
+				m_int.st.negate();
+			} else {
+				::mpz_neg(&m_int.dy,&m_int.dy);
+			}
 		}
 		/// In-place addition.
 		/**
