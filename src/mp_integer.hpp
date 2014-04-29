@@ -1454,12 +1454,44 @@ class mp_integer
 		{
 			return m_int.is_static();
 		}
+		/// In-place addition.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * 
+		 * Add \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is added to \p x,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the addition.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
-			mp_integer &>::type operator+=(const T &other)
+			mp_integer &>::type operator+=(const T &x)
 		{
-			return in_place_add(other);
+			return in_place_add(x);
 		}
+		/// Generic in-place addition with piranha::mp_integer.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Add a piranha::mp_integer in-place. This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
+		 */
 		template <typename T>
 		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
 			operator+=(T &x, const mp_integer &n)
@@ -1467,6 +1499,26 @@ class mp_integer
 			x = static_cast<T>(n + x);
 			return x;
 		}
+		/// Generic binary addition involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator+(const T &x, const U &y)

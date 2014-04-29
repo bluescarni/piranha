@@ -711,7 +711,7 @@ struct static_add_tester
 		BOOST_CHECK_THROW(int_type::add(a,c,b),std::overflow_error);
 		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
-		detail::mpz_raii mc, ma, mb;
+		mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
@@ -1045,7 +1045,7 @@ struct static_sub_tester
 		BOOST_CHECK_THROW(int_type::sub(a,b,c),std::overflow_error);
 		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
-		detail::mpz_raii mc, ma, mb;
+		mpz_raii mc, ma, mb;
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
 		for (int i = 0; i < ntries; ++i) {
 			const auto tmp1 = short_dist(rng), tmp2 = short_dist(rng);
@@ -1188,7 +1188,7 @@ struct static_mul_tester
 	{
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
-		detail::mpz_raii mc, ma, mb;
+		mpz_raii mc, ma, mb;
 		int_type a, b, c;
 		int_type::mul(a,b,c);
 		BOOST_CHECK_EQUAL(a,int_type{});
@@ -1390,7 +1390,7 @@ struct static_addmul_tester
 	{
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
-		detail::mpz_raii mc, ma, mb;
+		mpz_raii mc, ma, mb;
 		int_type a, b, c;
 		a.multiply_accumulate(b,c);
 		BOOST_CHECK_EQUAL(a,int_type());
@@ -1716,7 +1716,7 @@ struct static_lshift1_tester
 	{
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
-		detail::mpz_raii mc, ma, mb;
+		mpz_raii mc, ma, mb;
 		int_type n;
 		n.lshift1();
 		BOOST_CHECK_EQUAL(n,int_type());
@@ -1890,7 +1890,7 @@ struct static_test_div_tester
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		int_type n, m(1), q, r;
-		detail::mpz_raii mn, mm, mq, mr;
+		mpz_raii mn, mm, mq, mr;
 		int_type::div(q,r,n,m);
 		BOOST_CHECK_EQUAL(q,int_type(0));
 		BOOST_CHECK_EQUAL(r,int_type(0));
@@ -2284,7 +2284,7 @@ struct fits_in_static_tester
 	{
 		typedef detail::integer_union<T::value> int_type;
 		const auto limb_bits = int_type::s_storage::limb_bits;
-		detail::mpz_raii mpz;
+		mpz_raii mpz;
 		::mpz_setbit(&mpz.m_mpz,0);
 		BOOST_CHECK(int_type::fits_in_static(mpz.m_mpz));
 		::mpz_setbit(&mpz.m_mpz,1);
@@ -2325,7 +2325,7 @@ struct float_ctor_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		detail::mpz_raii m;
+		mpz_raii m;
 		int_type n1;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(0),boost::lexical_cast<std::string>(n1));
 		n1.promote();
@@ -2617,7 +2617,7 @@ struct integral_conversion_tester
 			BOOST_CHECK_EQUAL(std::numeric_limits<T>::min() + T(1),static_cast<T>(int_type{std::numeric_limits<T>::min() + T(1)}));
 			BOOST_CHECK_EQUAL(std::numeric_limits<T>::max() - T(2),static_cast<T>(int_type{std::numeric_limits<T>::max() - T(2)}));
 			BOOST_CHECK_EQUAL(std::numeric_limits<T>::min() + T(2),static_cast<T>(int_type{std::numeric_limits<T>::min() + T(2)}));
-			detail::mpz_raii tmp;
+			mpz_raii tmp;
 			std::ostringstream oss;
 			oss << static_cast<typename std::conditional<std::is_signed<T>::value,long long, unsigned long long>::type>
 				(std::numeric_limits<T>::max());
@@ -2695,7 +2695,7 @@ struct float_conversion_tester
 				BOOST_CHECK_EQUAL(std::trunc(tmp),static_cast<T>(int_type{tmp}));
 			}
 			if (std::numeric_limits<T>::has_infinity) {
-				detail::mpz_raii tmp;
+				mpz_raii tmp;
 				::mpz_set_str(&tmp.m_mpz,boost::lexical_cast<std::string>(int_type{std::numeric_limits<T>::max()}).c_str(),10);
 				::mpz_mul_si(&tmp.m_mpz,&tmp.m_mpz,radix);
 				BOOST_CHECK_EQUAL(std::numeric_limits<T>::infinity(),static_cast<T>(int_type{mpz_lexcast(tmp)}));
@@ -2772,7 +2772,7 @@ struct in_place_mp_integer_add_tester
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
 		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
-		detail::mpz_raii m_a, m_b;
+		mpz_raii m_a, m_b;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
 			int_type a{tmp1}, b{tmp2};
@@ -2826,7 +2826,7 @@ struct in_place_int_add_tester
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"101");
 			// Random testing.
 			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
-			detail::mpz_raii m1, m2;
+			mpz_raii m1, m2;
 			for (int i = 0; i < ntries; ++i) {
 				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
 				int_type n(tmp1);
@@ -2915,9 +2915,103 @@ struct in_place_float_add_tester
 	}
 };
 
+struct binary_add_tester
+{
+	template <typename U>
+	struct runner1
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			BOOST_CHECK((is_addable<int_type,T>::value));
+			BOOST_CHECK((is_addable<T,int_type>::value));
+			int_type n;
+			T m;
+			BOOST_CHECK((std::is_same<decltype(n + m),int_type>::value));
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				int_type n(tmp1);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_add(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n + tmp2),mpz_lexcast(m1));
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp2 + n),mpz_lexcast(m1));
+			}
+		}
+	};
+	template <typename U>
+	struct runner2
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_addable<int_type,T>::value));
+			BOOST_CHECK((is_addable<T,int_type>::value));
+			int_type n;
+			T m;
+			BOOST_CHECK((std::is_same<decltype(n + m),T>::value));
+			// Random testing
+			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
+			for (int i = 0; i < ntries; ++i) {
+				int_type n(0);
+				const T tmp1 = urd1(rng);
+				BOOST_CHECK_EQUAL(n + tmp1,tmp1);
+				BOOST_CHECK_EQUAL(tmp1 + n,tmp1);
+				n = 0;
+				const T tmp2 = urd2(rng);
+				BOOST_CHECK_EQUAL(n + tmp2,tmp2);
+				BOOST_CHECK_EQUAL(tmp2 + n,tmp2);
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_addable<int_type>::value);
+		int_type n1, n2;
+		BOOST_CHECK((std::is_same<decltype(n1 + n2),int_type>::value));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1+n2),"0");
+		n1 = 1;
+		n2 = 4;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1+n2),"5");
+		n2 = -6;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1+n2),"-5");
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			::mpz_add(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a + b),mpz_lexcast(m_a));
+		}
+		// Test vs hardware int and float types.
+		boost::mpl::for_each<integral_types>(runner1<T>());
+		boost::mpl::for_each<floating_point_types>(runner2<T>());
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_add_test)
 {
 	boost::mpl::for_each<size_types>(in_place_mp_integer_add_tester());
 	boost::mpl::for_each<size_types>(in_place_int_add_tester());
 	boost::mpl::for_each<size_types>(in_place_float_add_tester());
+	boost::mpl::for_each<size_types>(binary_add_tester());
 }
