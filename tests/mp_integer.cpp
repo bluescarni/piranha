@@ -3064,12 +3064,48 @@ struct binary_add_tester
 	}
 };
 
+struct plus_ops_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		++n;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"1");
+		n++;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(+n),"2");
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = int_dist(rng);
+			int_type a{tmp};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp));
+			// Promote randomly.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			::mpz_add_ui(&m_a.m_mpz,&m_a.m_mpz,1ul);
+			++a;
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+			::mpz_add_ui(&m_a.m_mpz,&m_a.m_mpz,1ul);
+			a++;
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(+a),mpz_lexcast(m_a));
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_add_test)
 {
 	boost::mpl::for_each<size_types>(in_place_mp_integer_add_tester());
 	boost::mpl::for_each<size_types>(in_place_int_add_tester());
 	boost::mpl::for_each<size_types>(in_place_float_add_tester());
 	boost::mpl::for_each<size_types>(binary_add_tester());
+	boost::mpl::for_each<size_types>(plus_ops_tester());
 }
 
 struct in_place_mp_integer_sub_tester

@@ -1585,6 +1585,36 @@ class mp_integer
 		{
 			return binary_plus(x,y);
 		}
+		/// Identity operation.
+		/**
+		 * @return copy of \p this.
+		 */
+		mp_integer operator+() const noexcept
+		{
+			return *this;
+		}
+		/// Prefix increment.
+		/**
+		 * Increment \p this by one.
+		 * 
+		 * @return reference to \p this after the increment.
+		 */
+		mp_integer &operator++() noexcept
+		{
+			return operator+=(1);
+		}
+		/// Suffix increment.
+		/**
+		 * Increment \p this by one and return a copy of \p this as it was before the increment.
+		 * 
+		 * @return copy of \p this before the increment.
+		 */
+		mp_integer operator++(int) noexcept
+		{
+			const mp_integer retval(*this);
+			++(*this);
+			return retval;
+		}
 		/// In-place subtraction.
 		/**
 		 * \note
