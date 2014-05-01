@@ -1684,6 +1684,38 @@ class mp_integer
 		{
 			return binary_subtract(x,y);
 		}
+		/// Negated copy.
+		/**
+		 * @return copy of \p -this.
+		 */
+		mp_integer operator-() const noexcept
+		{
+			mp_integer retval(*this);
+			retval.negate();
+			return retval;
+		}
+		/// Prefix decrement.
+		/**
+		 * Decrement \p this by one and return.
+		 * 
+		 * @return reference to \p this.
+		 */
+		mp_integer &operator--() noexcept
+		{
+			return operator-=(1);
+		}
+		/// Suffix decrement.
+		/**
+		 * Decrement \p this by one and return a copy of \p this as it was before the decrement.
+		 * 
+		 * @return copy of \p this before the decrement.
+		 */
+		mp_integer operator--(int)
+		{
+			const mp_integer retval(*this);
+			--(*this);
+			return retval;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
