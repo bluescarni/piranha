@@ -1236,18 +1236,31 @@ struct static_mul_tester
 		}
 		int_type::mul(a,b,c);
 		::mpz_mul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
 		int_type::mul(a,c,b);
 		::mpz_mul(&ma.m_mpz,&mc.m_mpz,&mb.m_mpz);
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
 		b.negate();
 		::mpz_neg(&mb.m_mpz,&mb.m_mpz);
 		int_type::mul(a,b,c);
 		::mpz_mul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
 		int_type::mul(a,c,b);
 		::mpz_mul(&ma.m_mpz,&mc.m_mpz,&mb.m_mpz);
-		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(ma));
+		// Check overflow condition.
+		b = int_type();
+		c = b;
+		a = b;
+		c.set_bit(typename int_type::limb_t(2));
+		b.set_bit(limb_bits);
+		BOOST_CHECK_THROW(int_type::mul(a,c,b),std::overflow_error);
+		BOOST_CHECK_THROW(int_type::mul(a,b,c),std::overflow_error);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		c.set_bit(limb_bits);
+		BOOST_CHECK_THROW(int_type::mul(a,c,b),std::overflow_error);
+		BOOST_CHECK_THROW(int_type::mul(a,b,c),std::overflow_error);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		// Random testing.
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
 		for (int i = 0; i < ntries; ++i) {
@@ -1538,6 +1551,19 @@ struct static_addmul_tester
 		old_a = a;
 		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
 		BOOST_CHECK_EQUAL(a,old_a);
+		// Overflow in the mult part.
+		a = int_type();
+		b = int_type();
+		c = int_type();
+		b.set_bit(typename int_type::limb_t(2));
+		c.set_bit(limb_bits);
+		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK_THROW(a.multiply_accumulate(c,b),std::overflow_error);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		b.set_bit(limb_bits);
+		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK_THROW(a.multiply_accumulate(c,b),std::overflow_error);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		// Random tests.
 		std::uniform_int_distribution<int> int_dist(0,1);
 		// 1 limb for all three operands.

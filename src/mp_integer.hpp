@@ -437,7 +437,7 @@ struct static_integer
 	static void raw_mul(static_integer &res, const static_integer &x, const static_integer &y, const mpz_size_t &asizex,
 		const mpz_size_t &asizey)
 	{
-		piranha_assert(asizex > 0 && asizey > 0 && asizex <= 1 && asizey <= 1);
+		piranha_assert(asizex > 0 && asizey > 0);
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) * y.m_limbs[0u]);
 		res.m_limbs[0u] = static_cast<limb_t>(lo);
 		const limb_t cy_limb = static_cast<limb_t>(lo >> limb_bits);
@@ -448,7 +448,6 @@ struct static_integer
 	}
 	static void mul(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		piranha_assert(x.abs_size() <= 1 && y.abs_size() <= 1);
 		mpz_size_t asizex = x._mp_size, asizey = y._mp_size;
 		if (unlikely(asizex == 0 || asizey == 0)) {
 			res._mp_size = 0;
@@ -464,6 +463,9 @@ struct static_integer
 		if (asizey < 0) {
 			asizey = -asizey;
 			signy = false;
+		}
+		if (unlikely(asizex > 1 || asizey > 1)) {
+			piranha_throw(std::overflow_error,"overflow in multiplication");
 		}
 		raw_mul(res,x,y,asizex,asizey);
 		if (signx != signy) {
@@ -529,7 +531,10 @@ struct static_integer
 			asizec = -asizec;
 			signc = false;
 		}
-		piranha_assert(asizea <= 2 && asizeb <= 1 && asizec <= 1);
+		piranha_assert(asizea <= 2);
+		if (unlikely(asizeb > 1 || asizec > 1)) {
+			piranha_throw(std::overflow_error,"overflow in multadd");
+		}
 		if (unlikely(asizeb == 0 || asizec == 0)) {
 			return;
 		}
