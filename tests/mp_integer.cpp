@@ -2859,6 +2859,17 @@ struct is_zero_tester
 		BOOST_CHECK(!math::is_zero(n));
 		n = -101;
 		BOOST_CHECK(!math::is_zero(n));
+		n = 0;
+		n.promote();
+		BOOST_CHECK(math::is_zero(n));
+		n = 1;
+		BOOST_CHECK(!math::is_zero(n));
+		n = 101;
+		BOOST_CHECK(!math::is_zero(n));
+		n = -1;
+		BOOST_CHECK(!math::is_zero(n));
+		n = -101;
+		BOOST_CHECK(!math::is_zero(n));
 	}
 };
 

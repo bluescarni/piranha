@@ -1525,13 +1525,17 @@ class mp_integer
 		 */
 		int sign() const noexcept
 		{
-			if (m_int.st._mp_size > 0) {
-				return 1;
+			if (is_static()) {
+				if (m_int.st._mp_size > 0) {
+					return 1;
+				}
+				if (m_int.st._mp_size < 0) {
+					return -1;
+				}
+				return 0;
+			} else {
+				return mpz_sgn(&m_int.dy);
 			}
-			if (m_int.st._mp_size < 0) {
-				return -1;
-			}
-			return 0;
 		}
 		/// In-place addition.
 		/**
