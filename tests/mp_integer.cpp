@@ -2785,12 +2785,86 @@ struct negate_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_int),boost::lexical_cast<std::string>(tmp));
 			}
 		}
+		// Function overload.
+		BOOST_CHECK(has_negate<int_type>::value);
+		BOOST_CHECK(has_negate<int_type &>::value);
+		BOOST_CHECK(has_negate<int_type &&>::value);
+		BOOST_CHECK(!has_negate<const int_type>::value);
+		BOOST_CHECK(!has_negate<const int_type &>::value);
+		math::negate(n);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"-11");
+		n = 0;
+		math::negate(n);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"0");
 	}
 };
 
 BOOST_AUTO_TEST_CASE(mp_integer_negate_test)
 {
 	boost::mpl::for_each<size_types>(negate_tester());
+}
+
+struct sign_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK_EQUAL(n.sign(),0);
+		n = 1;
+		BOOST_CHECK_EQUAL(n.sign(),1);
+		n = 101;
+		BOOST_CHECK_EQUAL(n.sign(),1);
+		n = -1;
+		BOOST_CHECK_EQUAL(n.sign(),-1);
+		n = -101;
+		BOOST_CHECK_EQUAL(n.sign(),-1);
+		n.promote();
+		n = 0;
+		BOOST_CHECK_EQUAL(n.sign(),0);
+		n = 1;
+		BOOST_CHECK_EQUAL(n.sign(),1);
+		n = 101;
+		BOOST_CHECK_EQUAL(n.sign(),1);
+		n = -1;
+		BOOST_CHECK_EQUAL(n.sign(),-1);
+		n = -101;
+		BOOST_CHECK_EQUAL(n.sign(),-1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_sign_test)
+{
+	boost::mpl::for_each<size_types>(sign_tester());
+}
+
+struct is_zero_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(has_is_zero<int_type>::value);
+		BOOST_CHECK(has_is_zero<const int_type>::value);
+		BOOST_CHECK(has_is_zero<int_type &>::value);
+		BOOST_CHECK(has_is_zero<const int_type &>::value);
+		int_type n;
+		BOOST_CHECK(math::is_zero(n));
+		n = 1;
+		BOOST_CHECK(!math::is_zero(n));
+		n = 101;
+		BOOST_CHECK(!math::is_zero(n));
+		n = -1;
+		BOOST_CHECK(!math::is_zero(n));
+		n = -101;
+		BOOST_CHECK(!math::is_zero(n));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_is_zero_test)
+{
+	boost::mpl::for_each<size_types>(is_zero_tester());
 }
 
 struct mp_integer_access_tag {};
@@ -2976,7 +3050,6 @@ struct in_place_float_add_tester
 			x1 += int_type(1);
 			BOOST_CHECK((std::is_same<T &,decltype(x1 += int_type(1))>::value));
 			BOOST_CHECK_EQUAL(x1,T(1));
-			x1 = 0;
 			// NOTE: limit the number of times we run this test, as the conversion from int to float
 			// is slow as the random values are taken from the entire float range and thus use a lot of digits.
 			for (int i = 0; i < ntries / 100; ++i) {
@@ -3045,7 +3118,6 @@ struct binary_add_tester
 				const T tmp1 = urd1(rng);
 				BOOST_CHECK_EQUAL(n + tmp1,tmp1);
 				BOOST_CHECK_EQUAL(tmp1 + n,tmp1);
-				n = 0;
 				const T tmp2 = urd2(rng);
 				BOOST_CHECK_EQUAL(n + tmp2,tmp2);
 				BOOST_CHECK_EQUAL(tmp2 + n,tmp2);
@@ -3300,7 +3372,6 @@ struct in_place_float_sub_tester
 			x1 -= int_type(1);
 			BOOST_CHECK((std::is_same<T &,decltype(x1 -= int_type(1))>::value));
 			BOOST_CHECK_EQUAL(x1,T(-1));
-			x1 = 0;
 			for (int i = 0; i < ntries / 100; ++i) {
 				T tmp1(0), tmp2 = urd1(rng);
 				tmp1 -= int_type{tmp2};
@@ -3368,7 +3439,6 @@ struct binary_sub_tester
 				const T tmp1 = urd1(rng);
 				BOOST_CHECK_EQUAL(n - tmp1,-tmp1);
 				BOOST_CHECK_EQUAL(tmp1 - n,tmp1);
-				n = 0;
 				const T tmp2 = urd2(rng);
 				BOOST_CHECK_EQUAL(n - tmp2,-tmp2);
 				BOOST_CHECK_EQUAL(tmp2 - n,tmp2);

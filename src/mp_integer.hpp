@@ -1519,6 +1519,20 @@ class mp_integer
 				::mpz_neg(&m_int.dy,&m_int.dy);
 			}
 		}
+		/// Sign.
+		/**
+		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>.
+		 */
+		int sign() const noexcept
+		{
+			if (m_int.st._mp_size > 0) {
+				return 1;
+			}
+			if (m_int.st._mp_size < 0) {
+				return -1;
+			}
+			return 0;
+		}
 		/// In-place addition.
 		/**
 		 * \note
@@ -1721,11 +1735,73 @@ class mp_integer
 			--(*this);
 			return retval;
 		}
+		template <typename T>
+		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
+			mp_integer &>::type operator*=(const T &x)
+		{
+			return in_place_mul(x);
+		}
+		template <typename T>
+		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
+			operator*=(T &x, const mp_integer &n)
+		{
+			x = static_cast<T>(x * n);
+			return x;
+		}
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
+			operator*(const T &x, const U &y)
+		{
+			return binary_mul(x,y);
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
 
 //using integer = mp_integer<>;
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::negate() functor for piranha::mp_integer.
+template <int NBits>
+struct negate_impl<mp_integer<NBits>,void>
+{
+	/// Call operator.
+	/**
+	 * Will use internally piranha::mp_integer::negate().
+	 * 
+	 * @param[in,out] n piranha::mp_integer to be negated.
+	 *
+	 * @throws unspecified any exception thrown by piranha::mp_integer::negate().
+	 */
+	void operator()(mp_integer<NBits> &n) const
+	{
+		n.negate();
+	}
+};
+
+/// Specialisation of the piranha::math::is_zero() functor for piranha::mp_integer.
+template <int NBits>
+struct is_zero_impl<mp_integer<NBits>,void>
+{
+	/// Call operator.
+	/**
+	 * Will use internally piranha::mp_integer::sign().
+	 * 
+	 * @param[in] n piranha::mp_integer to be tested.
+	 * 
+	 * @return \p true if \p n is zero, \p false otherwise.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::mp_integer::sign().
+	 */
+	bool operator()(const mp_integer<NBits> &n) const
+	{
+		return n.sign() == 0;
+	}
+};
+
+}
 
 }
 
