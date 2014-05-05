@@ -177,6 +177,10 @@ struct static_integer
 	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
 	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_limbs()
 	{
+		// NOTE: in order to improve performance, we could attempt a boost::numeric_cast to the limb type
+		// and use the result directly into the first limb. How to deal with negative values?
+		// NOTE: this should be a separate function to be called from the constructor from int of mp_integer. If
+		// it throws, go through the construction via mpz but in case it works we could save quite a bit of time.
 		const auto orig_n = n;
 		limb_t bit_idx = 0;
 		while (n != Integer(0)) {
