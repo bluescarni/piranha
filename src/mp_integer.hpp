@@ -1266,16 +1266,18 @@ class mp_integer
 		static mp_integer binary_plus(const T &n1, const U &n2, typename std::enable_if<
 			std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
 		{
-			mp_integer retval(n1);
-			retval += n2;
+			// NOTE: for binary ops, let's do first the conversion to mp_integer and then
+			// use the mp_integer vs mp_integer operator.
+			mp_integer retval(n2);
+			retval += n1;
 			return retval;
 		}
 		template <typename T, typename U>
 		static mp_integer binary_plus(const T &n1, const U &n2, typename std::enable_if<
 			std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
 		{
-			mp_integer retval(n2);
-			retval += n1;
+			mp_integer retval(n1);
+			retval += n2;
 			return retval;
 		}
 		template <typename T>
@@ -1308,25 +1310,26 @@ class mp_integer
 		static mp_integer binary_subtract(const T &n1, const U &n2, typename std::enable_if<
 			std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value>::type * = nullptr)
 		{
-			mp_integer retval(n1);
-			retval -= n2;
+			mp_integer retval(n2);
+			retval -= n1;
+			retval.negate();
 			return retval;
 		}
 		template <typename T, typename U>
 		static mp_integer binary_subtract(const T &n1, const U &n2, typename std::enable_if<
 			std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
 		{
-			mp_integer retval(n1);
-			retval -= n2;
+			mp_integer retval(n2);
+			retval -= n1;
+			retval.negate();
 			return retval;
 		}
 		template <typename T, typename U>
 		static mp_integer binary_subtract(const T &n1, const U &n2, typename std::enable_if<
 			std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
 		{
-			mp_integer retval(n2);
-			retval -= n1;
-			retval.negate();
+			mp_integer retval(n1);
+			retval -= n2;
 			return retval;
 		}
 		template <typename T>
