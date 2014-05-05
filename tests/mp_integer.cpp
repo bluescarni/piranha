@@ -3538,3 +3538,285 @@ BOOST_AUTO_TEST_CASE(mp_integer_sub_test)
 	boost::mpl::for_each<size_types>(binary_sub_tester());
 	boost::mpl::for_each<size_types>(minus_ops_tester());
 }
+
+struct in_place_mp_integer_mul_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_multipliable_in_place<int_type>::value);
+		BOOST_CHECK((!is_multipliable_in_place<const int_type,int_type>::value));
+		int_type a, b;
+		a *= b;
+		BOOST_CHECK((std::is_same<decltype(a *= b),int_type &>::value));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{0}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"1"};
+		b = a;
+		a *= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{1}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"1"};
+		b = int_type{"-1"};
+		a *= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{-1}));
+		BOOST_CHECK(a.is_static());
+		a = int_type{"-1"};
+		b = int_type{"-1"};
+		a *= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(int_type{1}));
+		BOOST_CHECK(a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			a *= b;
+			::mpz_mul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		}
+		// Check when static mul fails.
+		a = int_type{"67"};
+		b = int_type{"15"};
+		BOOST_CHECK(a.is_static());
+		BOOST_CHECK(b.is_static());
+		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
+		auto &st_a = get_m(a).st, &st_b = get_m(b).st;
+		st_a.set_bit(static_cast<limb_t>(st_a.limb_bits - 1u));
+		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits - 1u));
+		::mpz_set_str(&m_a.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
+		::mpz_set_str(&m_b.m_mpz,boost::lexical_cast<std::string>(b).c_str(),10);
+		a *= b;
+		::mpz_mul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+	}
+};
+
+struct in_place_int_mul_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_multipliable_in_place<int_type,T>::value));
+			BOOST_CHECK((!is_multipliable_in_place<const int_type,T>::value));
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			int_type n1;
+			n1 *= T(1);
+			BOOST_CHECK((std::is_same<decltype(n1 *= T(1)),int_type &>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"0");
+			n1 = T(2);
+			n1 *= T(50);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"100");
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				int_type n(tmp1);
+				n *= tmp2;
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_mul(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),mpz_lexcast(m1));
+			}
+			// int *= mp_integer.
+			BOOST_CHECK((is_multipliable_in_place<T,int_type>::value));
+			BOOST_CHECK((!is_multipliable_in_place<const T,int_type>::value));
+			T n2(2);
+			n2 *= int_type(2);
+			BOOST_CHECK((std::is_same<T &,decltype(n2 *= int_type(2))>::value));
+			BOOST_CHECK_EQUAL(n2,T(4));
+			BOOST_CHECK_THROW(n2 *= int_type(std::numeric_limits<T>::max()),std::overflow_error);
+			BOOST_CHECK_EQUAL(n2,T(4));
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				try {
+					tmp1 *= int_type(tmp2);
+				} catch (const std::overflow_error &) {
+					// Catch overflow errors and move on.
+					continue;
+				}
+				::mpz_mul(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)),mpz_lexcast(m1));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<integral_types>(runner<T>());
+	}
+};
+
+
+struct in_place_float_mul_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_multipliable_in_place<int_type,T>::value));
+			BOOST_CHECK((!is_multipliable_in_place<const int_type,T>::value));
+			int_type n1(2);
+			n1 *= T(2);
+			BOOST_CHECK((std::is_same<decltype(n1 *= T(2)),int_type &>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"4");
+			// Random testing
+			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
+			for (int i = 0; i < ntries; ++i) {
+				int_type n(1);
+				const T tmp1 = urd1(rng);
+				n *= tmp1;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),boost::lexical_cast<std::string>(int_type{tmp1}));
+				n = 1;
+				const T tmp2 = urd2(rng);
+				n *= tmp2;
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),boost::lexical_cast<std::string>(int_type{tmp2}));
+			}
+			// float *= mp_integer.
+			BOOST_CHECK((is_multipliable_in_place<T,int_type>::value));
+			BOOST_CHECK((!is_multipliable_in_place<const T,int_type>::value));
+			T x1(2);
+			x1 *= int_type(3);
+			BOOST_CHECK((std::is_same<T &,decltype(x1 *= int_type(3))>::value));
+			BOOST_CHECK_EQUAL(x1,T(6));
+			// NOTE: limit the number of times we run this test, as the conversion from int to float
+			// is slow as the random values are taken from the entire float range and thus use a lot of digits.
+			for (int i = 0; i < ntries / 100; ++i) {
+				T tmp1(1), tmp2 = urd1(rng);
+				tmp1 *= int_type{tmp2};
+				BOOST_CHECK_EQUAL(tmp1,static_cast<T>(int_type{tmp2}));
+				tmp1 = T(1);
+				tmp2 = urd2(rng);
+				tmp1 *= int_type{tmp2};
+				BOOST_CHECK_EQUAL(tmp1,static_cast<T>(int_type{tmp2}));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<floating_point_types>(runner<T>());
+	}
+};
+
+struct binary_mul_tester
+{
+	template <typename U>
+	struct runner1
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			BOOST_CHECK((is_multipliable<int_type,T>::value));
+			BOOST_CHECK((is_multipliable<T,int_type>::value));
+			int_type n;
+			T m;
+			BOOST_CHECK((std::is_same<decltype(n * m),int_type>::value));
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				int_type n(tmp1);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_mul(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n * tmp2),mpz_lexcast(m1));
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp2 * n),mpz_lexcast(m1));
+			}
+		}
+	};
+	template <typename U>
+	struct runner2
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_multipliable<int_type,T>::value));
+			BOOST_CHECK((is_multipliable<T,int_type>::value));
+			int_type n;
+			T m;
+			BOOST_CHECK((std::is_same<decltype(n * m),T>::value));
+			// Random testing
+			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
+			for (int i = 0; i < ntries; ++i) {
+				int_type n(1);
+				const T tmp1 = urd1(rng);
+				BOOST_CHECK_EQUAL(n * tmp1,tmp1);
+				BOOST_CHECK_EQUAL(tmp1 * n,tmp1);
+				const T tmp2 = urd2(rng);
+				BOOST_CHECK_EQUAL(n * tmp2,tmp2);
+				BOOST_CHECK_EQUAL(tmp2 * n,tmp2);
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_multipliable<int_type>::value);
+		int_type n1, n2;
+		BOOST_CHECK((std::is_same<decltype(n1 * n2),int_type>::value));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1*n2),"0");
+		n1 = 2;
+		n2 = 4;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1*n2),"8");
+		n2 = -6;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1*n2),"-12");
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			::mpz_mul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a * b),mpz_lexcast(m_a));
+		}
+		// Test vs hardware int and float types.
+		boost::mpl::for_each<integral_types>(runner1<T>());
+		boost::mpl::for_each<floating_point_types>(runner2<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_mul_test)
+{
+	boost::mpl::for_each<size_types>(in_place_mp_integer_mul_tester());
+	boost::mpl::for_each<size_types>(in_place_int_mul_tester());
+	boost::mpl::for_each<size_types>(in_place_float_mul_tester());
+	boost::mpl::for_each<size_types>(binary_mul_tester());
+}

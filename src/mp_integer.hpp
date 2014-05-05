@@ -1342,6 +1342,74 @@ class mp_integer
 		{
 			return -binary_subtract(n,x);
 		}
+		// Multiplication.
+		mp_integer &in_place_mul(const mp_integer &other)
+		{
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				// Attempt the static mul.
+				try {
+					m_int.st.mul(m_int.st,m_int.st,other.m_int.st);
+					return *this;
+				} catch (const std::overflow_error &) {}
+			}
+			// Promote as needed, we need GMP types on both sides.
+			if (s1) {
+				m_int.promote();
+			}
+			if (s2) {
+				detail::mpz_raii m;
+				other.m_int.st.to_mpz(m.m_mpz);
+				::mpz_mul(&m_int.dy,&m_int.dy,&m.m_mpz);
+			} else {
+				::mpz_mul(&m_int.dy,&m_int.dy,&other.m_int.dy);
+			}
+			return *this;
+		}
+		template <typename T>
+		mp_integer &in_place_mul(const T &other, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			return in_place_mul(mp_integer(other));
+		}
+		template <typename T>
+		mp_integer &in_place_mul(const T &other, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (*this = static_cast<T>(*this) * other);
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mul(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value>::type * = nullptr)
+		{
+			mp_integer retval(n2);
+			retval *= n1;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mul(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
+		{
+			mp_integer retval(n2);
+			retval *= n1;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mul(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval *= n2;
+			return retval;
+		}
+		template <typename T>
+		static T binary_mul(const mp_integer &n, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (static_cast<T>(n) * x);
+		}
+		template <typename T>
+		static T binary_mul(const T &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return binary_mul(n,x);
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -1742,12 +1810,44 @@ class mp_integer
 			--(*this);
 			return retval;
 		}
+		/// In-place multiplication.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * 
+		 * Multiply by \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p x is multiplied by \p f,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the multiplication.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
 			mp_integer &>::type operator*=(const T &x)
 		{
 			return in_place_mul(x);
 		}
+		/// Generic in-place multiplication with piranha::mp_integer.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Multiply by a piranha::mp_integer in-place. This method will first compute <tt>x * n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
+		 */
 		template <typename T>
 		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
 			operator*=(T &x, const mp_integer &n)
@@ -1755,6 +1855,24 @@ class mp_integer
 			x = static_cast<T>(x * n);
 			return x;
 		}
+		/// Generic binary multiplication involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and multiplied by \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x * y</tt>.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator*(const T &x, const U &y)
