@@ -30,6 +30,7 @@
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <ostream>
 #include <tuple>
 #include <type_traits>
@@ -912,6 +913,57 @@ using min_int = typename detail::min_int_impl<T,Args...>::type;
  */
 template <typename T, typename ... Args>
 using max_int = typename detail::max_int_impl<T,Args...>::type;
+
+namespace detail
+{
+
+// Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
+// iterator concept.
+template <typename It>
+struct has_iterator_traits
+{
+	PIRANHA_DECLARE_HAS_TYPEDEF(difference_type);
+	PIRANHA_DECLARE_HAS_TYPEDEF(value_type);
+	PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
+	PIRANHA_DECLARE_HAS_TYPEDEF(reference);
+	PIRANHA_DECLARE_HAS_TYPEDEF(iterator_category);
+	using i_traits = std::iterator_traits<It>;
+	static const bool value = has_typedef_difference_type<i_traits>::value && has_typedef_value_type<i_traits>::value &&
+		has_typedef_pointer<i_traits>::value && has_typedef_reference<i_traits>::value &&
+		has_typedef_iterator_category<i_traits>::value && std::is_copy_constructible<It>::value &&
+		std::is_copy_assignable<It>::value && std::is_destructible<It>::value;
+};
+
+template <typename It>
+const bool has_iterator_traits<It>::value;
+
+template <typename T, typename = void>
+struct is_iterator_impl
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_iterator_impl<T,typename std::enable_if<std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&
+	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T is an iterator (as defined by the C++ standard), \p false otherwise.
+ * 
+ * @see http://en.cppreference.com/w/cpp/concept/Iterator
+ */
+template <typename T>
+struct is_iterator
+{
+	/// Value of the type trait.
+	static const bool value = detail::is_iterator_impl<typename std::decay<T>::type>::value;
+};
 
 }
 

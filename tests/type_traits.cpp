@@ -1521,3 +1521,86 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 		BOOST_CHECK((std::is_same<unsigned char,min_int<unsigned short, unsigned char, unsigned long long, unsigned>>::value));
 	}
 }
+
+template <typename T>
+struct fake_it_traits
+{
+	using difference_type = void;
+	using value_type = void;
+	using pointer = void;
+	using reference = T &;
+	using iterator_category = void;
+};
+
+template <typename T>
+struct fake_it_traits_broken
+{
+	using value_type = void;
+	using pointer = void;
+	using iterator_category = void;
+};
+
+struct iter01
+{
+	iter01 &operator*();
+	iter01 &operator++();
+};
+
+struct iter02
+{
+	int operator*();
+	iter02 &operator++();
+};
+
+struct iter03
+{
+	iter03 &operator*();
+	iter03 &operator++();
+};
+
+struct iter04
+{
+	iter04 &operator*();
+	iter04 &operator++();
+	~iter04() = delete;
+};
+
+namespace std
+{
+
+template <>
+struct iterator_traits<iter01>: fake_it_traits<iter01> {};
+
+template <>
+struct iterator_traits<iter02>: fake_it_traits<iter02> {};
+
+template <>
+struct iterator_traits<iter03>: fake_it_traits_broken<iter03> {};
+
+template <>
+struct iterator_traits<iter04>: fake_it_traits<iter04> {};
+
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
+{
+	BOOST_CHECK(detail::has_iterator_traits<int *>::value);
+	BOOST_CHECK(detail::has_iterator_traits<const int *>::value);
+	BOOST_CHECK(!detail::has_iterator_traits<int>::value);
+	BOOST_CHECK(!detail::has_iterator_traits<double>::value);
+	BOOST_CHECK(detail::has_iterator_traits<std::vector<int>::iterator>::value);
+	BOOST_CHECK(detail::has_iterator_traits<std::vector<int>::const_iterator>::value);
+	BOOST_CHECK(is_iterator<int *>::value);
+	BOOST_CHECK(is_iterator<const int *>::value);
+	BOOST_CHECK(is_iterator<std::vector<int>::iterator>::value);
+	BOOST_CHECK(is_iterator<std::vector<int>::const_iterator>::value);
+	BOOST_CHECK(is_iterator<std::vector<int>::iterator &>::value);
+	BOOST_CHECK(!is_iterator<int>::value);
+	BOOST_CHECK(!is_iterator<std::string>::value);
+	BOOST_CHECK(is_iterator<iter01>::value);
+	BOOST_CHECK(is_iterator<iter01 &>::value);
+	BOOST_CHECK(is_iterator<const iter01>::value);
+	BOOST_CHECK(!is_iterator<iter02>::value);
+	BOOST_CHECK(!is_iterator<iter03>::value);
+	BOOST_CHECK(!is_iterator<iter04>::value);
+}
