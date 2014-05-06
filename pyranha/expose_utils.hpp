@@ -23,7 +23,6 @@
 
 #include "python_includes.hpp"
 
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
@@ -39,6 +38,7 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -51,6 +51,7 @@
 #include <utility>
 #include <vector>
 
+#include "../src/detail/type_in_tuple.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
 #include "../src/math.hpp"
@@ -145,7 +146,7 @@ class series_exposer
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
 		{
 			op(std::get<Idx>(t));
-			static_assert(Idx != boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+			static_assert(Idx != std::numeric_limits<std::size_t>::max(),"Overflow error.");
 			tuple_for_each<Tuple,Op,Idx + std::size_t(1)>(t,op);
 		}
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
@@ -190,19 +191,6 @@ class series_exposer
 			}
 			return retval;
 		}
-		// TMP to check if a type is in the tuple.
-		template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
-		struct type_in_tuple
-		{
-			static_assert(I < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
-			static const bool value = std::is_same<T,typename std::tuple_element<I,Tuple>::type>::value ||
-				type_in_tuple<T,Tuple,I + 1u>::value;
-		};
-		template <typename T, typename Tuple, std::size_t I>
-		struct type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
-		{
-			static const bool value = false;
-		};
 		// Handle division specially (allowed only with non-series types).
 		template <typename S, typename T>
 		static void expose_division(bp::class_<S> &series_class, const T &in,
@@ -367,7 +355,7 @@ class series_exposer
 		};
 		template <typename InteropTypes, typename S>
 		static void expose_cf_interop(bp::class_<S> &series_class,
-			typename std::enable_if<!type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
 		{
 			using cf_type = typename S::term_type::cf_type;
 			cf_type cf;
@@ -376,7 +364,7 @@ class series_exposer
 		}
 		template <typename InteropTypes, typename S>
 		static void expose_cf_interop(bp::class_<S> &,
-			typename std::enable_if<type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
 		{}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &series_class, typename std::enable_if<has_typedef_interop_types<T>::value>::type * = nullptr)
