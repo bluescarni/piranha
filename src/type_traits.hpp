@@ -41,6 +41,7 @@
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/symbol_set_fwd.hpp"
+#include "detail/type_in_tuple.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 
@@ -922,6 +923,8 @@ namespace detail
 template <typename It>
 struct has_iterator_traits
 {
+	using it_tags = std::tuple<std::input_iterator_tag,std::output_iterator_tag,std::forward_iterator_tag,
+		std::bidirectional_iterator_tag,std::random_access_iterator_tag>;
 	PIRANHA_DECLARE_HAS_TYPEDEF(difference_type);
 	PIRANHA_DECLARE_HAS_TYPEDEF(value_type);
 	PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
@@ -945,7 +948,8 @@ struct is_iterator_impl
 
 template <typename T>
 struct is_iterator_impl<T,typename std::enable_if<std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&
-	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value>::type>
+	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value &&
+	detail::type_in_tuple<typename std::iterator_traits<T>::iterator_category,typename has_iterator_traits<T>::it_tags>::value>::type>
 {
 	static const bool value = true;
 };
@@ -964,6 +968,47 @@ struct is_iterator
 	/// Value of the type trait.
 	static const bool value = detail::is_iterator_impl<typename std::decay<T>::type>::value;
 };
+
+template <typename T>
+const bool is_iterator<T>::value;
+
+namespace detail
+{
+
+template <typename T, typename = void>
+struct is_input_iterator_impl
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::value && is_equality_comparable<T>::value &&
+	std::is_convertible<decltype(*std::declval<T &>()),typename std::iterator_traits<T>::value_type>::value &&
+	std::is_same<decltype(++std::declval<T &>()),T &>::value &&
+	std::is_same<decltype((void)std::declval<T &>()++),decltype((void)std::declval<T &>()++)>::value &&
+	std::is_convertible<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::value_type>::value &&
+	std::is_base_of<std::input_iterator_tag,typename std::iterator_traits<T>::iterator_category>::value>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Input iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T is an input iterator (as defined by the C++ standard), \p false otherwise.
+ * 
+ * @see http://en.cppreference.com/w/cpp/concept/InputIterator
+ */
+template <typename T>
+struct is_input_iterator
+{
+	/// Value of the type trait.
+	static const bool value = detail::is_input_iterator_impl<typename std::decay<T>::type>::value;
+};
+
+template <typename T>
+const bool is_input_iterator<T>::value;
 
 }
 

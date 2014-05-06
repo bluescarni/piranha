@@ -1525,9 +1525,29 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 template <typename T>
 struct fake_it_traits
 {
-	using difference_type = void;
-	using value_type = void;
-	using pointer = void;
+	using difference_type = std::ptrdiff_t;
+	using value_type = T;
+	using pointer = T *;
+	using reference = T &;
+	using iterator_category = std::forward_iterator_tag;
+};
+
+template <typename T>
+struct fake_it_traits_output
+{
+	using difference_type = std::ptrdiff_t;
+	using value_type = T;
+	using pointer = T *;
+	using reference = T &;
+	using iterator_category = std::output_iterator_tag;
+};
+
+template <typename T>
+struct fake_it_traits_wrong_tag
+{
+	using difference_type = std::ptrdiff_t;
+	using value_type = T;
+	using pointer = T *;
 	using reference = T &;
 	using iterator_category = void;
 };
@@ -1544,6 +1564,9 @@ struct iter01
 {
 	iter01 &operator*();
 	iter01 &operator++();
+	iter01 &operator++(int);
+	bool operator==(const iter01 &) const;
+	bool operator!=(const iter01 &) const;
 };
 
 struct iter02
@@ -1565,6 +1588,42 @@ struct iter04
 	~iter04() = delete;
 };
 
+struct iter05
+{
+	iter05 &operator*();
+	iter05 &operator++();
+	iter05 &operator++(int);
+	bool operator==(const iter05 &) const;
+	// bool operator!=(const iter05 &) const;
+};
+
+struct iter06
+{
+	iter06 &operator*();
+	iter06 &operator++();
+	// iter06 &operator++(int);
+	bool operator==(const iter06 &) const;
+	bool operator!=(const iter06 &) const;
+};
+
+struct iter07
+{
+	iter07 &operator*();
+	iter07 &operator++();
+	iter07 &operator++(int);
+	bool operator==(const iter07 &) const;
+	bool operator!=(const iter07 &) const;
+};
+
+struct iter08
+{
+	iter08 &operator*();
+	iter08 &operator++();
+	iter08 &operator++(int);
+	bool operator==(const iter08 &) const;
+	bool operator!=(const iter08 &) const;
+};
+
 namespace std
 {
 
@@ -1579,6 +1638,18 @@ struct iterator_traits<iter03>: fake_it_traits_broken<iter03> {};
 
 template <>
 struct iterator_traits<iter04>: fake_it_traits<iter04> {};
+
+template <>
+struct iterator_traits<iter05>: fake_it_traits<iter05> {};
+
+template <>
+struct iterator_traits<iter06>: fake_it_traits<iter06> {};
+
+template <>
+struct iterator_traits<iter07>: fake_it_traits_wrong_tag<iter07> {};
+
+template <>
+struct iterator_traits<iter08>: fake_it_traits_output<iter08> {};
 
 }
 
@@ -1603,4 +1674,17 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 	BOOST_CHECK(!is_iterator<iter02>::value);
 	BOOST_CHECK(!is_iterator<iter03>::value);
 	BOOST_CHECK(!is_iterator<iter04>::value);
+	BOOST_CHECK(is_input_iterator<int *>::value);
+	BOOST_CHECK(is_input_iterator<const int *>::value);
+	BOOST_CHECK(is_input_iterator<iter01>::value);
+	BOOST_CHECK(is_input_iterator<iter01 &>::value);
+	BOOST_CHECK(is_input_iterator<const iter01>::value);
+	BOOST_CHECK(!is_input_iterator<iter05>::value);
+	BOOST_CHECK(!is_input_iterator<iter06>::value);
+	BOOST_CHECK(is_input_iterator<std::list<int>::const_iterator>::value);
+	BOOST_CHECK(is_input_iterator<const std::set<double>::iterator &>::value);
+	BOOST_CHECK(!is_iterator<iter07>::value);
+	BOOST_CHECK(!is_input_iterator<iter07>::value);
+	BOOST_CHECK(is_iterator<iter08>::value);
+	BOOST_CHECK(!is_input_iterator<iter08>::value);
 }
