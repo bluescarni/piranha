@@ -688,11 +688,15 @@ BOOST_AUTO_TEST_CASE(small_vector_add_test)
 BOOST_AUTO_TEST_CASE(small_vector_print_sizes)
 {
 	std::cout << "Signed char: " << sizeof(small_vector<signed char>) << ',' << detail::prepare_for_print(small_vector<signed char>::max_static_size) <<
-		',' << detail::prepare_for_print(small_vector<signed char>::max_dynamic_size) << '\n';
+		',' << detail::prepare_for_print(small_vector<signed char>::max_dynamic_size) << ',' << alignof(small_vector<signed char>) << '\n';
 	std::cout << "Short      : " << sizeof(small_vector<short>) << ',' << detail::prepare_for_print(small_vector<short>::max_static_size) <<
-		',' << detail::prepare_for_print(small_vector<short>::max_dynamic_size) << '\n';
+		',' << detail::prepare_for_print(small_vector<short>::max_dynamic_size) << ',' << alignof(small_vector<short>) << '\n';
 	std::cout << "Int        : " << sizeof(small_vector<int>) << ',' << detail::prepare_for_print(small_vector<int>::max_static_size) <<
-		',' << detail::prepare_for_print(small_vector<int>::max_dynamic_size) << '\n';
+		',' << detail::prepare_for_print(small_vector<int>::max_dynamic_size) << ',' << alignof(small_vector<int>) << '\n';
+	std::cout << "Long       : " << sizeof(small_vector<long>) << ',' << detail::prepare_for_print(small_vector<long>::max_static_size) <<
+		',' << detail::prepare_for_print(small_vector<long>::max_dynamic_size) << ',' << alignof(small_vector<long>) << '\n';
+	std::cout << "Long long  : " << sizeof(small_vector<long long>) << ',' << detail::prepare_for_print(small_vector<long long>::max_static_size) <<
+		',' << detail::prepare_for_print(small_vector<long long>::max_dynamic_size) << ',' << alignof(small_vector<long long>) << '\n';
 }
 
 struct move_tester
