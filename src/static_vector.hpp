@@ -22,11 +22,11 @@
 #define PIRANHA_STATIC_VECTOR_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <new>
 #include <tuple>
 #include <type_traits>
@@ -50,7 +50,7 @@ template <std::size_t Size, std::size_t Index = 0u>
 struct static_vector_size_type
 {
 	using candidate_type = typename std::tuple_element<Index,static_vector_size_types>::type;
-	using type = typename std::conditional<(boost::integer_traits<candidate_type>::const_max >= Size),
+	using type = typename std::conditional<(std::numeric_limits<candidate_type>::max() >= Size),
 		candidate_type,
 		typename static_vector_size_type<Size,static_cast<std::size_t>(Index + 1u)>::type>::type;
 };
@@ -60,7 +60,7 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
 {
 	using type = typename std::tuple_element<static_cast<std::size_t>(std::tuple_size<static_vector_size_types>::value - 1u),
 		static_vector_size_types>::type;
-	static_assert(boost::integer_traits<type>::const_max >= Size,"Cannot determine size type for static vector.");
+	static_assert(std::numeric_limits<type>::max() >= Size,"Cannot determine size type for static vector.");
 };
 
 }
@@ -103,10 +103,10 @@ class static_vector
 	private:
 		PIRANHA_TT_CHECK(is_container_element,T);
 		// This check is against overflows when using memcpy.
-		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),
+		static_assert(std::numeric_limits<size_type>::max() <= std::numeric_limits<std::size_t>::max() / sizeof(T),
 			"The size type for static_vector might overflow.");
 		// Check for overflow in the definition of the storage type.
-		static_assert(MaxSize < boost::integer_traits<std::size_t>::const_max / sizeof(T),"Overflow in the computation of storage size.");
+		static_assert(MaxSize < std::numeric_limits<std::size_t>::max() / sizeof(T),"Overflow in the computation of storage size.");
 		// NOTE: some notes about the use of raw storage, after some research in the standard:
 		// - storage type is guaranteed to be a POD able to hold any object whose size is at most Len
 		//   and alignment a divisor of Align (20.9.7.6). Thus, we can store on object of type T at the
