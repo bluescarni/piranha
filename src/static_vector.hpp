@@ -179,7 +179,7 @@ class static_vector
 		/**
 		 * @param[in] other target of the move operation.
 		 */
-		static_vector(static_vector &&other) noexcept(true):m_tag(1u),m_size(0u)
+		static_vector(static_vector &&other) noexcept:m_tag(1u),m_size(0u)
 		{
 			const auto size = other.size();
 			if (std::is_pod<T>::value) {
@@ -221,7 +221,7 @@ class static_vector
 		/**
 		 * Will destroy all elements of the vector.
 		 */
-		~static_vector() noexcept(true)
+		~static_vector() noexcept
 		{
 			piranha_assert(m_tag == 1u);
 			if (!std::is_pod<T>::value) {
@@ -255,7 +255,7 @@ class static_vector
 		 * 
 		 * @return reference to \p this.
 		 */
-		static_vector &operator=(static_vector &&other) noexcept(true)
+		static_vector &operator=(static_vector &&other) noexcept
 		{
 			if (likely(this != &other)) {
 				if (std::is_pod<T>::value) {
