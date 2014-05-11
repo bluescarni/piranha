@@ -29,6 +29,7 @@
 #include <functional>
 #include <ios>
 #include <iostream>
+#include <iterator>
 #include <list>
 #include <set>
 #include <string>
@@ -1522,8 +1523,40 @@ BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
 	}
 }
 
+// Boilerplate to test the arrow op type trait.
 template <typename T>
-struct fake_it_traits
+using aot = detail::arrow_operator_type<T>;
+
+PIRANHA_DECLARE_HAS_TYPEDEF(type);
+
+struct arrow01
+{
+	int *operator->();
+};
+
+struct arrow02
+{
+	arrow01 operator->();
+};
+
+struct arrow03
+{
+	int operator->();
+};
+
+struct arrow03a
+{
+	arrow02 operator->();
+};
+
+struct arrow04
+{
+	arrow03 operator->();
+};
+
+// Good forward iterator.
+template <typename T>
+struct fake_it_traits_forward
 {
 	using difference_type = std::ptrdiff_t;
 	using value_type = T;
@@ -1532,6 +1565,18 @@ struct fake_it_traits
 	using iterator_category = std::forward_iterator_tag;
 };
 
+// Broken reference type for forward it.
+template <typename T>
+struct fake_it_traits_forward_broken_ref
+{
+	using difference_type = std::ptrdiff_t;
+	using value_type = T;
+	using pointer = T *;
+	using reference = void;
+	using iterator_category = std::forward_iterator_tag;
+};
+
+// Good output iterator.
 template <typename T>
 struct fake_it_traits_output
 {
@@ -1542,6 +1587,18 @@ struct fake_it_traits_output
 	using iterator_category = std::output_iterator_tag;
 };
 
+// Good input iterator.
+template <typename T>
+struct fake_it_traits_input
+{
+	using difference_type = std::ptrdiff_t;
+	using value_type = T;
+	using pointer = T *;
+	using reference = T &;
+	using iterator_category = std::input_iterator_tag;
+};
+
+// Broken trait, incorrect category.
 template <typename T>
 struct fake_it_traits_wrong_tag
 {
@@ -1552,109 +1609,287 @@ struct fake_it_traits_wrong_tag
 	using iterator_category = void;
 };
 
+// Broken trait, missing typedefs.
 template <typename T>
-struct fake_it_traits_broken
+struct fake_it_traits_missing
 {
 	using value_type = void;
 	using pointer = void;
 	using iterator_category = void;
 };
 
+#define PIRANHA_DECL_ITT_SPEC(it_type,trait_class) \
+namespace std \
+{ \
+template <> \
+struct iterator_traits<it_type>: trait_class {}; \
+}
+
+// Good input iterator.
 struct iter01
 {
-	iter01 &operator*();
+	int &operator*();
+	int *operator->();
 	iter01 &operator++();
 	iter01 &operator++(int);
 	bool operator==(const iter01 &) const;
 	bool operator!=(const iter01 &) const;
 };
 
+PIRANHA_DECL_ITT_SPEC(iter01,fake_it_traits_input<int>)
+
+// Good iterator, minimal requirements.
 struct iter02
 {
-	int operator*();
+	int &operator*();
 	iter02 &operator++();
 };
 
+PIRANHA_DECL_ITT_SPEC(iter02,fake_it_traits_input<int>)
+
+// Broken iterator, minimal requirements.
 struct iter03
 {
-	iter03 &operator*();
+	//int &operator*();
 	iter03 &operator++();
 };
 
+PIRANHA_DECL_ITT_SPEC(iter03,fake_it_traits_input<int>)
+
+// Broken iterator, minimal requirements.
 struct iter04
 {
-	iter04 &operator*();
-	iter04 &operator++();
 	~iter04() = delete;
+	int &operator*();
+	iter04 &operator++();
 };
 
+PIRANHA_DECL_ITT_SPEC(iter04,fake_it_traits_input<int>)
+
+// Broken iterator, missing itt spec.
 struct iter05
 {
-	iter05 &operator*();
+	int &operator*();
 	iter05 &operator++();
-	iter05 &operator++(int);
-	bool operator==(const iter05 &) const;
-	// bool operator!=(const iter05 &) const;
 };
 
+//PIRANHA_DECL_ITT_SPEC(iter05,fake_it_traits_input<int>)
+
+// Broken input iterator: missing arrow.
 struct iter06
 {
-	iter06 &operator*();
+	int &operator*();
+	//int *operator->();
 	iter06 &operator++();
-	// iter06 &operator++(int);
+	iter06 &operator++(int);
 	bool operator==(const iter06 &) const;
 	bool operator!=(const iter06 &) const;
 };
 
+PIRANHA_DECL_ITT_SPEC(iter06,fake_it_traits_input<int>)
+
+// Broken input iterator: missing equality.
 struct iter07
 {
-	iter07 &operator*();
+	int &operator*();
+	int *operator->();
 	iter07 &operator++();
 	iter07 &operator++(int);
-	bool operator==(const iter07 &) const;
+	//bool operator==(const iter07 &) const;
 	bool operator!=(const iter07 &) const;
 };
 
+PIRANHA_DECL_ITT_SPEC(iter07,fake_it_traits_input<int>)
+
+// Broken input iterator: missing itt spec.
 struct iter08
 {
-	iter08 &operator*();
+	int &operator*();
+	int *operator->();
 	iter08 &operator++();
 	iter08 &operator++(int);
 	bool operator==(const iter08 &) const;
 	bool operator!=(const iter08 &) const;
 };
 
-namespace std
+//PIRANHA_DECL_ITT_SPEC(iter08,fake_it_traits_input<int>)
+
+// Broken input iterator: broken arrow.
+struct iter09
 {
+	int &operator*();
+	int operator->();
+	iter09 &operator++();
+	iter09 &operator++(int);
+	bool operator==(const iter09 &) const;
+	bool operator!=(const iter09 &) const;
+};
 
-template <>
-struct iterator_traits<iter01>: fake_it_traits<iter01> {};
+PIRANHA_DECL_ITT_SPEC(iter09,fake_it_traits_input<int>)
 
-template <>
-struct iterator_traits<iter02>: fake_it_traits<iter02> {};
+// Good input iterator: multiple arrow.
+struct iter10
+{
+	int &operator*();
+	arrow03a operator->();
+	iter10 &operator++();
+	iter10 &operator++(int);
+	bool operator==(const iter10 &) const;
+	bool operator!=(const iter10 &) const;
+};
 
-template <>
-struct iterator_traits<iter03>: fake_it_traits_broken<iter03> {};
+PIRANHA_DECL_ITT_SPEC(iter10,fake_it_traits_input<int>)
 
-template <>
-struct iterator_traits<iter04>: fake_it_traits<iter04> {};
+// Bad input iterator: multiple broken arrow.
+struct iter11
+{
+	int &operator*();
+	arrow04 operator->();
+	iter11 &operator++();
+	iter11 &operator++(int);
+	bool operator==(const iter11 &) const;
+	bool operator!=(const iter11 &) const;
+};
 
-template <>
-struct iterator_traits<iter05>: fake_it_traits<iter05> {};
+PIRANHA_DECL_ITT_SPEC(iter11,fake_it_traits_input<int>)
 
-template <>
-struct iterator_traits<iter06>: fake_it_traits<iter06> {};
+// Bad input iterator: inconsistent arrow / star.
+struct foo_it_12 {};
 
-template <>
-struct iterator_traits<iter07>: fake_it_traits_wrong_tag<iter07> {};
+struct iter12
+{
+	int &operator*();
+	foo_it_12 *operator->();
+	iter12 &operator++();
+	iter12 &operator++(int);
+	bool operator==(const iter12 &) const;
+	bool operator!=(const iter12 &) const;
+};
 
-template <>
-struct iterator_traits<iter08>: fake_it_traits_output<iter08> {};
+PIRANHA_DECL_ITT_SPEC(iter12,fake_it_traits_input<int>)
 
-}
+// Good input iterator: different but compatible arrow / star.
+struct iter13
+{
+	int operator*();
+	int *operator->();
+	iter13 &operator++();
+	iter13 &operator++(int);
+	bool operator==(const iter13 &) const;
+	bool operator!=(const iter13 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter13,fake_it_traits_input<int>)
+
+// Good forward iterator.
+struct iter14
+{
+	int &operator*();
+	int *operator->();
+	iter14 &operator++();
+	iter14 &operator++(int);
+	bool operator==(const iter14 &) const;
+	bool operator!=(const iter14 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter14,fake_it_traits_forward<int>)
+
+// Bad forward iterator: missing def ctor.
+struct iter15
+{
+	iter15() = delete;
+	int &operator*();
+	int *operator->();
+	iter15 &operator++();
+	iter15 &operator++(int);
+	bool operator==(const iter15 &) const;
+	bool operator!=(const iter15 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter15,fake_it_traits_forward<int>)
+
+// Bad forward iterator: not having reference types as reference in traits.
+struct iter16
+{
+	int &operator*();
+	int *operator->();
+	iter16 &operator++();
+	iter16 &operator++(int);
+	bool operator==(const iter16 &) const;
+	bool operator!=(const iter16 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter16,fake_it_traits_forward_broken_ref<int>)
+
+// Bad forward iterator: broken tag in traits.
+struct iter17
+{
+	int &operator*();
+	int *operator->();
+	iter17 &operator++();
+	iter17 &operator++(int);
+	bool operator==(const iter17 &) const;
+	bool operator!=(const iter17 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter17,fake_it_traits_output<int>)
+
+// Bad forward iterator: broken traits.
+struct iter18
+{
+	int &operator*();
+	int *operator->();
+	iter18 &operator++();
+	iter18 &operator++(int);
+	bool operator==(const iter18 &) const;
+	bool operator!=(const iter18 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter18,fake_it_traits_missing<int>)
+
+// Bad forward iterator: broken ++.
+struct iter19
+{
+	int &operator*();
+	int *operator->();
+	iter19 &operator++();
+	void operator++(int);
+	bool operator==(const iter19 &) const;
+	bool operator!=(const iter19 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter19,fake_it_traits_forward<int>)
+
+// Bad forward iterator: broken ++.
+struct iter20
+{
+	int &operator*();
+	int *operator->();
+	void operator++();
+	iter20 &operator++(int);
+	bool operator==(const iter20 &) const;
+	bool operator!=(const iter20 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter20,fake_it_traits_forward<int>)
+
+
+#undef PIRANHA_DECL_ITT_SPEC
 
 BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 {
+	// Check the arrow operator type trait in detail::.
+	BOOST_CHECK(has_typedef_type<aot<int *>>::value);
+	BOOST_CHECK((std::is_same<typename aot<int *>::type,int *>::value));
+	BOOST_CHECK(!has_typedef_type<aot<int>>::value);
+	BOOST_CHECK(has_typedef_type<aot<arrow01>>::value);
+	BOOST_CHECK((std::is_same<typename aot<arrow01>::type,int *>::value));
+	BOOST_CHECK(has_typedef_type<aot<arrow02>>::value);
+	BOOST_CHECK((std::is_same<typename aot<arrow02>::type,int *>::value));
+	BOOST_CHECK(!has_typedef_type<aot<arrow03>>::value);
+	BOOST_CHECK(has_typedef_type<aot<arrow03a>>::value);
+	BOOST_CHECK((std::is_same<typename aot<arrow03a>::type,int *>::value));
+	// Iterator.
 	BOOST_CHECK(detail::has_iterator_traits<int *>::value);
 	BOOST_CHECK(detail::has_iterator_traits<const int *>::value);
 	BOOST_CHECK(!detail::has_iterator_traits<int>::value);
@@ -1671,20 +1906,110 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 	BOOST_CHECK(is_iterator<iter01>::value);
 	BOOST_CHECK(is_iterator<iter01 &>::value);
 	BOOST_CHECK(is_iterator<const iter01>::value);
-	BOOST_CHECK(!is_iterator<iter02>::value);
+	BOOST_CHECK(is_iterator<iter02>::value);
+	BOOST_CHECK(is_iterator<iter02 &>::value);
+	BOOST_CHECK(is_iterator<const iter02>::value);
 	BOOST_CHECK(!is_iterator<iter03>::value);
+	BOOST_CHECK(!is_iterator<iter03 &>::value);
+	BOOST_CHECK(!is_iterator<const iter03>::value);
 	BOOST_CHECK(!is_iterator<iter04>::value);
+	BOOST_CHECK(!is_iterator<iter04 &>::value);
+	BOOST_CHECK(!is_iterator<const iter04>::value);
+	BOOST_CHECK(!is_iterator<iter05>::value);
+	BOOST_CHECK(!is_iterator<iter05 &>::value);
+	BOOST_CHECK(!is_iterator<const iter05>::value);
+	BOOST_CHECK(is_iterator<std::ostream_iterator<int>>::value);
+	BOOST_CHECK(is_iterator<std::insert_iterator<std::list<int>>>::value);
+	// Input iterator.
 	BOOST_CHECK(is_input_iterator<int *>::value);
 	BOOST_CHECK(is_input_iterator<const int *>::value);
+	BOOST_CHECK(is_input_iterator<std::vector<int>::iterator>::value);
+	BOOST_CHECK(is_input_iterator<std::vector<int>::const_iterator>::value);
+	BOOST_CHECK(is_input_iterator<std::vector<int>::iterator &>::value);
+	BOOST_CHECK(is_input_iterator<std::istream_iterator<double>>::value);
 	BOOST_CHECK(is_input_iterator<iter01>::value);
 	BOOST_CHECK(is_input_iterator<iter01 &>::value);
 	BOOST_CHECK(is_input_iterator<const iter01>::value);
-	BOOST_CHECK(!is_input_iterator<iter05>::value);
+	BOOST_CHECK(!is_input_iterator<iter02>::value);
+	BOOST_CHECK(!is_input_iterator<iter02 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter02>::value);
 	BOOST_CHECK(!is_input_iterator<iter06>::value);
-	BOOST_CHECK(is_input_iterator<std::list<int>::const_iterator>::value);
-	BOOST_CHECK(is_input_iterator<const std::set<double>::iterator &>::value);
-	BOOST_CHECK(!is_iterator<iter07>::value);
+	BOOST_CHECK(!is_input_iterator<iter06 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter06>::value);
+	BOOST_CHECK(is_iterator<iter06>::value);
+	BOOST_CHECK(is_iterator<iter06 &>::value);
+	BOOST_CHECK(is_iterator<const iter06>::value);
 	BOOST_CHECK(!is_input_iterator<iter07>::value);
-	BOOST_CHECK(is_iterator<iter08>::value);
+	BOOST_CHECK(!is_input_iterator<iter07 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter07>::value);
+	BOOST_CHECK(is_iterator<iter07>::value);
+	BOOST_CHECK(is_iterator<iter07 &>::value);
+	BOOST_CHECK(is_iterator<const iter07>::value);
 	BOOST_CHECK(!is_input_iterator<iter08>::value);
+	BOOST_CHECK(!is_input_iterator<iter08 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter08>::value);
+	BOOST_CHECK(!is_iterator<iter08>::value);
+	BOOST_CHECK(!is_iterator<iter08 &>::value);
+	BOOST_CHECK(!is_iterator<const iter08>::value);
+	BOOST_CHECK(!is_input_iterator<iter09>::value);
+	BOOST_CHECK(!is_input_iterator<iter09 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter09>::value);
+	BOOST_CHECK(is_input_iterator<iter10>::value);
+	BOOST_CHECK(is_input_iterator<iter10 &>::value);
+	BOOST_CHECK(is_input_iterator<const iter10>::value);
+	BOOST_CHECK(!is_input_iterator<iter11>::value);
+	BOOST_CHECK(!is_input_iterator<iter11 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter11>::value);
+	BOOST_CHECK(is_iterator<iter11>::value);
+	BOOST_CHECK(is_iterator<iter11 &>::value);
+	BOOST_CHECK(is_iterator<const iter11>::value);
+	BOOST_CHECK(!is_input_iterator<iter12>::value);
+	BOOST_CHECK(!is_input_iterator<iter12 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter12>::value);
+	BOOST_CHECK(is_iterator<iter12>::value);
+	BOOST_CHECK(is_iterator<iter12 &>::value);
+	BOOST_CHECK(is_iterator<const iter12>::value);
+	BOOST_CHECK(is_input_iterator<iter13>::value);
+	BOOST_CHECK(is_input_iterator<iter13 &>::value);
+	BOOST_CHECK(is_input_iterator<const iter13>::value);
+	// Forward iterator.
+	BOOST_CHECK(is_forward_iterator<int *>::value);
+	BOOST_CHECK(is_forward_iterator<const int *>::value);
+	BOOST_CHECK(is_forward_iterator<std::vector<int>::iterator>::value);
+	BOOST_CHECK(is_forward_iterator<std::vector<int>::const_iterator>::value);
+	BOOST_CHECK(is_forward_iterator<std::vector<int>::iterator &>::value);
+	BOOST_CHECK(!is_forward_iterator<std::istream_iterator<double>>::value);
+	BOOST_CHECK(is_forward_iterator<iter14>::value);
+	BOOST_CHECK(is_forward_iterator<iter14 &>::value);
+	BOOST_CHECK(is_forward_iterator<const iter14>::value);
+	BOOST_CHECK(!is_forward_iterator<iter15>::value);
+	BOOST_CHECK(!is_forward_iterator<iter15 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter15>::value);
+	BOOST_CHECK(is_input_iterator<iter15>::value);
+	BOOST_CHECK(is_input_iterator<iter15 &>::value);
+	BOOST_CHECK(is_input_iterator<const iter15>::value);
+	BOOST_CHECK(!is_forward_iterator<iter17>::value);
+	BOOST_CHECK(!is_forward_iterator<iter17 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter17>::value);
+	BOOST_CHECK(is_iterator<iter17>::value);
+	BOOST_CHECK(is_iterator<iter17 &>::value);
+	BOOST_CHECK(is_iterator<const iter17>::value);
+	BOOST_CHECK(!is_forward_iterator<iter18>::value);
+	BOOST_CHECK(!is_forward_iterator<iter18 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter18>::value);
+	BOOST_CHECK(!is_iterator<iter18>::value);
+	BOOST_CHECK(!is_iterator<iter18 &>::value);
+	BOOST_CHECK(!is_iterator<const iter18>::value);
+	BOOST_CHECK(!is_forward_iterator<iter19>::value);
+	BOOST_CHECK(!is_forward_iterator<iter19 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter19>::value);
+	BOOST_CHECK(!is_input_iterator<iter19>::value);
+	BOOST_CHECK(!is_input_iterator<iter19 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter19>::value);
+	BOOST_CHECK(!is_forward_iterator<iter20>::value);
+	BOOST_CHECK(!is_forward_iterator<iter20 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter20>::value);
+	BOOST_CHECK(!is_input_iterator<iter20>::value);
+	BOOST_CHECK(!is_input_iterator<iter20 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter20>::value);
 }

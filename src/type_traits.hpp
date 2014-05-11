@@ -920,6 +920,12 @@ namespace detail
 
 // Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
 // iterator concept.
+// NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly because
+// it seems that:
+// - we cannot detect a specialised std::swap (so if it is not specialised, it will pick the default implementation
+//   which could fail in the implementation without giving hints in the prototype),
+// - it's tricky to fulfill the requirement that swap has to be called unqualified (cannot use 'using std::swap' within a decltype()
+//   SFINAE, might be doable with automatic return type deduction for regular functions in C++14?).
 template <typename It>
 struct has_iterator_traits
 {
@@ -931,8 +937,8 @@ struct has_iterator_traits
 	PIRANHA_DECLARE_HAS_TYPEDEF(reference);
 	PIRANHA_DECLARE_HAS_TYPEDEF(iterator_category);
 	using i_traits = std::iterator_traits<It>;
-	static const bool value = has_typedef_difference_type<i_traits>::value && has_typedef_value_type<i_traits>::value &&
-		has_typedef_pointer<i_traits>::value && has_typedef_reference<i_traits>::value &&
+	static const bool value = has_typedef_reference<i_traits>::value && has_typedef_value_type<i_traits>::value &&
+		has_typedef_pointer<i_traits>::value && has_typedef_difference_type<i_traits>::value  &&
 		has_typedef_iterator_category<i_traits>::value && std::is_copy_constructible<It>::value &&
 		std::is_copy_assignable<It>::value && std::is_destructible<It>::value;
 };
@@ -946,8 +952,16 @@ struct is_iterator_impl
 	static const bool value = false;
 };
 
+// NOTE: here the correct condition is the commented one, as opposed to the first one appearing. However, it seems like
+// there are inconsistencies between the commented condition and the definition of many output iterators in the standard library:
+//
+// http://stackoverflow.com/questions/23567244/apparent-inconsistency-in-iterator-requirements
+//
+// Until this is clarified, it is probably better to keep this workaround.
 template <typename T>
-struct is_iterator_impl<T,typename std::enable_if<std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&
+struct is_iterator_impl<T,typename std::enable_if</*std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&*/
+	// That is the one that would need to be replaced with the one above. Just check that operator*() is defined.
+	std::is_same<decltype(*std::declval<T &>()),decltype(*std::declval<T &>())>::value &&
 	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value &&
 	detail::type_in_tuple<typename std::iterator_traits<T>::iterator_category,typename has_iterator_traits<T>::it_tags>::value>::type>
 {
@@ -958,9 +972,8 @@ struct is_iterator_impl<T,typename std::enable_if<std::is_same<typename std::ite
 
 /// Iterator type trait.
 /**
- * This type trait will be \p true if the decayed type of \p T is an iterator (as defined by the C++ standard), \p false otherwise.
- * 
- * @see http://en.cppreference.com/w/cpp/concept/Iterator
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an iterator (as defined by the C++ standard),
+ * \p false otherwise.
  */
 template <typename T>
 struct is_iterator
@@ -981,12 +994,39 @@ struct is_input_iterator_impl
 	static const bool value = false;
 };
 
+template <typename T, typename = void>
+struct arrow_operator_type
+{};
+
+template <typename T>
+struct arrow_operator_type<T,typename std::enable_if<std::is_pointer<T>::value>::type>
+{
+	using type = T;
+};
+
+template <typename T>
+struct arrow_operator_type<T,typename std::enable_if<std::is_same<
+	typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
+	typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type
+	>::value>::type>
+{
+	using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
+};
+
 template <typename T>
 struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::value && is_equality_comparable<T>::value &&
 	std::is_convertible<decltype(*std::declval<T &>()),typename std::iterator_traits<T>::value_type>::value &&
 	std::is_same<decltype(++std::declval<T &>()),T &>::value &&
 	std::is_same<decltype((void)std::declval<T &>()++),decltype((void)std::declval<T &>()++)>::value &&
 	std::is_convertible<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::value_type>::value &&
+	// NOTE: here we know that the arrow op has to return a pointer, if implemented correctly, and operator*()
+	// has to return something that is both convertible to the value type and admits the syntax (*it).member
+	// [input.iterators]. This essentially means that *it has to be either a reference to value type or
+	// value type itself (otherwise it->m and (*it).m would not be equivalent).
+	std::is_same<
+		typename std::decay<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
+		typename std::decay<decltype(*std::declval<T &>())>::type
+	>::value &&
 	std::is_base_of<std::input_iterator_tag,typename std::iterator_traits<T>::iterator_category>::value>::type>
 {
 	static const bool value = true;
@@ -996,9 +1036,8 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 
 /// Input iterator type trait.
 /**
- * This type trait will be \p true if the decayed type of \p T is an input iterator (as defined by the C++ standard), \p false otherwise.
- * 
- * @see http://en.cppreference.com/w/cpp/concept/InputIterator
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an input iterator (as defined by the C++ standard),
+ * \p false otherwise.
  */
 template <typename T>
 struct is_input_iterator
@@ -1009,6 +1048,43 @@ struct is_input_iterator
 
 template <typename T>
 const bool is_input_iterator<T>::value;
+
+namespace detail
+{
+
+template <typename T, typename = void>
+struct is_forward_iterator_impl
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_forward_iterator_impl<T,typename std::enable_if<is_input_iterator_impl<T>::value && std::is_default_constructible<T>::value &&
+	(std::is_same<typename std::iterator_traits<T>::value_type &,typename std::iterator_traits<T>::reference>::value ||
+	std::is_same<typename std::iterator_traits<T>::value_type const &,typename std::iterator_traits<T>::reference>::value) &&
+	std::is_convertible<decltype(std::declval<T &>()++),const T &>::value &&
+	std::is_same<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::reference>::value &&
+	std::is_base_of<std::forward_iterator_tag,typename std::iterator_traits<T>::iterator_category>::value
+	>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Forward iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of a forward iterator (as defined by the C++ standard),
+ * \p false otherwise.
+ */
+template <typename T>
+struct is_forward_iterator
+{
+	static const bool value = detail::is_forward_iterator_impl<typename std::decay<T>::type>::value;
+};
+
+template <typename T>
+const bool is_forward_iterator<T>::value;
 
 }
 
