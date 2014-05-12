@@ -223,6 +223,9 @@ class static_vector
 		 */
 		~static_vector() noexcept
 		{
+			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 1u);
 			if (!std::is_pod<T>::value) {
 				destroy_items();

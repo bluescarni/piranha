@@ -119,6 +119,9 @@ class dynamic_storage
 		}
 		~dynamic_storage() noexcept
 		{
+			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 0u);
 			destroy_and_deallocate();
 		}
@@ -544,6 +547,11 @@ class small_vector
 		using iterator = value_type *;
 		/// Const iterator type.
 		using const_iterator = value_type const *;
+	private:
+		// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+		PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+		PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
+	public:
 		/// Default constructor.
 		/**
 		 * Will initialise an empty vector with internal static storage.
