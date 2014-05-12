@@ -1041,8 +1041,8 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 	// [input.iterators]. This essentially means that *it has to be either a reference to value type or
 	// value type itself (otherwise it->m and (*it).m would not be equivalent).
 	std::is_same<
-		typename std::decay<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
-		typename std::decay<decltype(*std::declval<T &>())>::type
+		typename std::remove_reference<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
+		typename std::remove_reference<decltype(*std::declval<T &>())>::type
 	>::value &&
 	// NOTE: here the usage of is_convertible guarantees we catch both iterators higher in the type hierarchy and
 	// the Boost versions of standard iterators as well.

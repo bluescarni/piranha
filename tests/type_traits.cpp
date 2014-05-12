@@ -1873,6 +1873,18 @@ struct iter20
 
 PIRANHA_DECL_ITT_SPEC(iter20,fake_it_traits_forward<int>)
 
+// Bad forward iterator: arrow returns type with different constness from star operator.
+struct iter21
+{
+	int &operator*();
+	const int *operator->();
+	iter21 &operator++();
+	iter21 &operator++(int);
+	bool operator==(const iter21 &) const;
+	bool operator!=(const iter21 &) const;
+};
+
+PIRANHA_DECL_ITT_SPEC(iter21,fake_it_traits_forward<int>)
 
 #undef PIRANHA_DECL_ITT_SPEC
 
@@ -2012,4 +2024,13 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 	BOOST_CHECK(!is_input_iterator<iter20>::value);
 	BOOST_CHECK(!is_input_iterator<iter20 &>::value);
 	BOOST_CHECK(!is_input_iterator<const iter20>::value);
+	BOOST_CHECK(!is_forward_iterator<iter21>::value);
+	BOOST_CHECK(!is_forward_iterator<iter21 &>::value);
+	BOOST_CHECK(!is_forward_iterator<const iter21>::value);
+	BOOST_CHECK(!is_input_iterator<iter21>::value);
+	BOOST_CHECK(!is_input_iterator<iter21 &>::value);
+	BOOST_CHECK(!is_input_iterator<const iter21>::value);
+	BOOST_CHECK(is_iterator<iter21>::value);
+	BOOST_CHECK(is_iterator<iter21 &>::value);
+	BOOST_CHECK(is_iterator<const iter21>::value);
 }
