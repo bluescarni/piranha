@@ -834,6 +834,8 @@ class series: series_binary_operators, detail::series_tag
 		 * The object returned upon dereferentiation is an \p std::pair in which the first element
 		 * is a copy of the coefficient of the term, the second element a single-term instance of \p Derived constructed from
 		 * the term's key and a unitary coefficient.
+		 *
+		 * This iterator is an input iterator which additionally offers the multi-pass guarantee.
 		 * 
 		 * @see piranha::series::begin() and piranha::series::end().
 		 */
@@ -886,6 +888,8 @@ class series: series_binary_operators, detail::series_tag
 		{
 			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
 			PIRANHA_TT_CHECK(is_container_element,Derived);
+			// Static checks on the iterator types.
+			PIRANHA_TT_CHECK(is_input_iterator,const_iterator);
 			piranha_assert(destruction_checks());
 		}
 		/// Copy-assignment operator.
