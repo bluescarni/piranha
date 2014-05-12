@@ -1036,10 +1036,9 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 	std::is_same<decltype(++std::declval<T &>()),T &>::value &&
 	std::is_same<decltype((void)std::declval<T &>()++),decltype((void)std::declval<T &>()++)>::value &&
 	std::is_convertible<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::value_type>::value &&
-	// NOTE: here we know that the arrow op has to return a pointer, if implemented correctly, and operator*()
-	// has to return something that is both convertible to the value type and admits the syntax (*it).member
-	// [input.iterators]. This essentially means that *it has to be either a reference to value type or
-	// value type itself (otherwise it->m and (*it).m would not be equivalent).
+	// NOTE: here we know that the arrow op has to return a pointer, if implemented correctly, and that the syntax
+	// it->m must be equivalent to (*it).m. This means that, barring differences in reference qualifications,
+	// it-> and *it must return the same thing.
 	std::is_same<
 		typename std::remove_reference<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
 		typename std::remove_reference<decltype(*std::declval<T &>())>::type
