@@ -41,7 +41,6 @@
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/symbol_set_fwd.hpp"
-#include "detail/type_in_tuple.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 
@@ -946,6 +945,21 @@ struct has_iterator_traits
 template <typename It>
 const bool has_iterator_traits<It>::value;
 
+// TMP to check if a type is convertible to a type in the tuple.
+template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
+struct convertible_type_in_tuple
+{
+	static_assert(I < std::numeric_limits<std::size_t>::max(),"Overflow error.");
+	static const bool value = std::is_convertible<T,typename std::tuple_element<I,Tuple>::type>::value ||
+		convertible_type_in_tuple<T,Tuple,I + 1u>::value;
+};
+
+template <typename T, typename Tuple, std::size_t I>
+struct convertible_type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
+{
+	static const bool value = false;
+};
+
 template <typename T, typename = void>
 struct is_iterator_impl
 {
@@ -963,7 +977,10 @@ struct is_iterator_impl<T,typename std::enable_if</*std::is_same<typename std::i
 	// That is the one that would need to be replaced with the one above. Just check that operator*() is defined.
 	std::is_same<decltype(*std::declval<T &>()),decltype(*std::declval<T &>())>::value &&
 	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value &&
-	detail::type_in_tuple<typename std::iterator_traits<T>::iterator_category,typename has_iterator_traits<T>::it_tags>::value>::type>
+	// NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived from the standard
+	// ones. Hence, check that the category can be converted to one of the standard categories. This should not change anything for std iterators,
+	// and just enable support for Boost ones.
+	convertible_type_in_tuple<typename std::iterator_traits<T>::iterator_category,typename has_iterator_traits<T>::it_tags>::value>::type>
 {
 	static const bool value = true;
 };
@@ -1027,7 +1044,9 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 		typename std::decay<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
 		typename std::decay<decltype(*std::declval<T &>())>::type
 	>::value &&
-	std::is_base_of<std::input_iterator_tag,typename std::iterator_traits<T>::iterator_category>::value>::type>
+	// NOTE: here the usage of is_convertible guarantees we catch both iterators higher in the type hierarchy and
+	// the Boost versions of standard iterators as well.
+	std::is_convertible<typename std::iterator_traits<T>::iterator_category,std::input_iterator_tag>::value>::type>
 {
 	static const bool value = true;
 };
@@ -1064,7 +1083,7 @@ struct is_forward_iterator_impl<T,typename std::enable_if<is_input_iterator_impl
 	std::is_same<typename std::iterator_traits<T>::value_type const &,typename std::iterator_traits<T>::reference>::value) &&
 	std::is_convertible<decltype(std::declval<T &>()++),const T &>::value &&
 	std::is_same<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::reference>::value &&
-	std::is_base_of<std::forward_iterator_tag,typename std::iterator_traits<T>::iterator_category>::value
+	std::is_convertible<typename std::iterator_traits<T>::iterator_category,std::forward_iterator_tag>::value
 	>::type>
 {
 	static const bool value = true;
