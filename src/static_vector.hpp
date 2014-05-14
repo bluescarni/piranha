@@ -22,11 +22,11 @@
 #define PIRANHA_STATIC_VECTOR_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <new>
 #include <tuple>
 #include <type_traits>
@@ -50,7 +50,7 @@ template <std::size_t Size, std::size_t Index = 0u>
 struct static_vector_size_type
 {
 	using candidate_type = typename std::tuple_element<Index,static_vector_size_types>::type;
-	using type = typename std::conditional<(boost::integer_traits<candidate_type>::const_max >= Size),
+	using type = typename std::conditional<(std::numeric_limits<candidate_type>::max() >= Size),
 		candidate_type,
 		typename static_vector_size_type<Size,static_cast<std::size_t>(Index + 1u)>::type>::type;
 };
@@ -60,7 +60,7 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
 {
 	using type = typename std::tuple_element<static_cast<std::size_t>(std::tuple_size<static_vector_size_types>::value - 1u),
 		static_vector_size_types>::type;
-	static_assert(boost::integer_traits<type>::const_max >= Size,"Cannot determine size type for static vector.");
+	static_assert(std::numeric_limits<type>::max() >= Size,"Cannot determine size type for static vector.");
 };
 
 }
@@ -84,7 +84,7 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * 
  * \section move_semantics Move semantics
  * 
- * After a move operation, the size of the container will not change, and its elements will be left in a moved-from state.
+ * After a move operation, the container will be left in a state equivalent to a default-constructed instance.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -103,10 +103,10 @@ class static_vector
 	private:
 		PIRANHA_TT_CHECK(is_container_element,T);
 		// This check is against overflows when using memcpy.
-		static_assert(boost::integer_traits<size_type>::const_max <= boost::integer_traits<std::size_t>::const_max / sizeof(T),
+		static_assert(std::numeric_limits<size_type>::max() <= std::numeric_limits<std::size_t>::max() / sizeof(T),
 			"The size type for static_vector might overflow.");
 		// Check for overflow in the definition of the storage type.
-		static_assert(MaxSize < boost::integer_traits<std::size_t>::const_max / sizeof(T),"Overflow in the computation of storage size.");
+		static_assert(MaxSize < std::numeric_limits<std::size_t>::max() / sizeof(T),"Overflow in the computation of storage size.");
 		// NOTE: some notes about the use of raw storage, after some research in the standard:
 		// - storage type is guaranteed to be a POD able to hold any object whose size is at most Len
 		//   and alignment a divisor of Align (20.9.7.6). Thus, we can store on object of type T at the
@@ -127,7 +127,7 @@ class static_vector
 		//   which T can be constructed, the offsetting the initial address by multiples of the alignment value will
 		//   still produce addresses at which the object can be constructed;
 		// - in general, we are assuming here that we can handle contiguous storage the same way arrays can be handled (e.g.,
-		//   to get the end() iterator we get one past the lat element);
+		//   to get the end() iterator we get one past the last element);
 		// - note that placement new will work as expected (i.e., it will construct the object exactly at the address passed
 		//   in as parameter).
 		typedef typename std::aligned_storage<sizeof(T) * MaxSize,alignof(T)>::type storage_type;
@@ -179,18 +179,23 @@ class static_vector
 		/**
 		 * @param[in] other target of the move operation.
 		 */
-		static_vector(static_vector &&other) noexcept(true):m_tag(1u),m_size(0u)
+		static_vector(static_vector &&other) noexcept:m_tag(1u),m_size(0u)
 		{
+			const auto size = other.size();
 			if (std::is_pod<T>::value) {
-				std::memcpy(vs(),other.vs(),other.m_size * sizeof(T));
-				m_size = other.m_size;
+				std::memcpy(vs(),other.vs(),size * sizeof(T));
+				m_size = size;
 			} else {
 				// NOTE: here no need for rollback, as we assume move ctors do not throw.
-				const auto size = other.size();
 				for (size_type i = 0u; i < size; ++i) {
 					push_back(std::move(other[i]));
 				}
 			}
+			// Nuke other.
+			for (size_type i = 0u; i < size; ++i) {
+				other.ptr()[i].~T();
+			}
+			other.m_size = 0u;
 		}
 		/// Constructor from multiple copies.
 		/**
@@ -216,8 +221,11 @@ class static_vector
 		/**
 		 * Will destroy all elements of the vector.
 		 */
-		~static_vector() noexcept(true)
+		~static_vector() noexcept
 		{
+			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 1u);
 			if (!std::is_pod<T>::value) {
 				destroy_items();
@@ -250,7 +258,7 @@ class static_vector
 		 * 
 		 * @return reference to \p this.
 		 */
-		static_vector &operator=(static_vector &&other) noexcept(true)
+		static_vector &operator=(static_vector &&other) noexcept
 		{
 			if (likely(this != &other)) {
 				if (std::is_pod<T>::value) {
@@ -278,6 +286,11 @@ class static_vector
 					}
 				}
 				m_size = other.m_size;
+				// Nuke the other.
+				for (size_type i = 0u; i < other.m_size; ++i) {
+					other.ptr()[i].~T();
+				}
+				other.m_size = 0u;
 			}
 			return *this;
 		}

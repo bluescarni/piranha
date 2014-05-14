@@ -620,6 +620,56 @@ class series_multiplier
 				return static_cast<bucket_size_type>(mean * mean * multiplier);
 			}
 		}
+		template <typename Functor>
+		static typename Series1::size_type estimate_final_series_size2(const Functor &f)
+		{
+			typedef typename Series1::size_type bucket_size_type;
+			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
+			const size_type size1 = f.m_s1, size2 = f.m_s2;
+			// If one of the two series is empty, just return 0.
+			if (unlikely(!size1 || !size2)) {
+				return 0u;
+			}
+			// Cache reference to return series.
+			auto &retval = f.m_retval;
+			// Vectors of indices.
+			std::vector<size_type> v_idx1, v_idx2;
+			for (size_type i = 0u; i < size1; ++i) {
+				v_idx1.push_back(i);
+			}
+			for (size_type i = 0u; i < size2; ++i) {
+				v_idx2.push_back(i);
+			}
+			// Square root of the ratio: the number of term-by-term multiplications carried out in the estimation
+			// will be (size1 * size2) / sqrt_r**2.
+			// For each series, size / sqrt_r terms will be randomly picked.
+			const size_type sqrt_r = 10u;
+			size_type r_size1 = static_cast<size_type>(size1 / sqrt_r), r_size2 = static_cast<size_type>(size2 / sqrt_r);
+			// Fix zero values.
+			if (r_size1 == 0u) {
+				r_size1 = 1u;
+			}
+			if (r_size2 == 0u) {
+				r_size2 = 1u;
+			}
+			// RNG engine.
+			std::mt19937 engine;
+			// Run a Fisher-Yates shuffle on the indices vectors.
+			// http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+			// http://stackoverflow.com/questions/9345087/choose-m-elements-randomly-from-a-vector-containing-n-elements
+			auto s1_copy = size1;
+			// Use pointers here so we do not suffer from the hassle of iterator_distance.
+			auto begin1 = &v_idx1[0u];
+			while (r_size1--) {
+				// NOTE: the -1 here is because uniform int dist operates on a closed interval.
+				std::uniform_int_distribution<size_type> uid(size_type(0u),static_cast<size_type>(s1_copy - 1u));
+				auto tmp = begin1 + uid(engine);
+				// Swap the values between the current index and the randomly-chosen one.
+				std::swap(*begin1,*tmp);
+				++begin1;
+				--s1_copy;
+			}
+		}
 		/// Trace series size estimates.
 		/**
 		 * Record in the piranha::tracing framework the outcome of result size estimation via estimate_final_series_size().

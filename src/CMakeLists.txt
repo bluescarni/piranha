@@ -32,7 +32,6 @@ SET(HEADERS_LIST
 	detail/series_multiplier_fwd.hpp
 	detail/mpfr.hpp
 	detail/config_clang.hpp
-	detail/gcc_int128.hpp
 	detail/math_tt_fwd.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
@@ -53,6 +52,7 @@ SET(HEADERS_LIST
 	print_coefficient.hpp
 	type_traits.hpp
 	univariate_monomial.hpp
+	mp_integer.hpp
 	integer.hpp
 	math.hpp
 	environment.hpp

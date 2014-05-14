@@ -119,6 +119,9 @@ class dynamic_storage
 		}
 		~dynamic_storage() noexcept
 		{
+			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 0u);
 			destroy_and_deallocate();
 		}
@@ -401,79 +404,76 @@ struct check_integral_constant<std::integral_constant<std::size_t,Size>>
 template <typename T, typename S>
 union small_vector_union
 {
-		friend class small_vector<T,S>;
-		using s_storage = typename std::conditional<S::value == 0u,static_vector<T,auto_static_size<T>::value>,static_vector<T,S::value>>::type;
-		using d_storage = dynamic_storage<T>;
-	public:
-		// NOTE: each constructor must be invoked explicitly.
-		small_vector_union():st() {}
-		small_vector_union(const small_vector_union &other)
-		{
-			if (other.is_static()) {
-				::new (static_cast<void *>(&st)) s_storage(other.st);
-			} else {
-				::new (static_cast<void *>(&dy)) d_storage(other.dy);
-			}
+	using s_storage = typename std::conditional<S::value == 0u,static_vector<T,auto_static_size<T>::value>,static_vector<T,S::value>>::type;
+	using d_storage = dynamic_storage<T>;
+	// NOTE: each constructor must be invoked explicitly.
+	small_vector_union():st() {}
+	small_vector_union(const small_vector_union &other)
+	{
+		if (other.is_static()) {
+			::new (static_cast<void *>(&st)) s_storage(other.st);
+		} else {
+			::new (static_cast<void *>(&dy)) d_storage(other.dy);
 		}
-		small_vector_union(small_vector_union &&other) noexcept
-		{
-			if (other.is_static()) {
-				::new (static_cast<void *>(&st)) s_storage(other.st);
-			} else {
-				::new (static_cast<void *>(&dy)) d_storage(other.dy);
-			}
+	}
+	small_vector_union(small_vector_union &&other) noexcept
+	{
+		if (other.is_static()) {
+			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
+		} else {
+			::new (static_cast<void *>(&dy)) d_storage(std::move(other.dy));
 		}
-		~small_vector_union()
-		{
-			PIRANHA_TT_CHECK(std::is_standard_layout,s_storage);
-			PIRANHA_TT_CHECK(std::is_standard_layout,d_storage);
-			PIRANHA_TT_CHECK(std::is_standard_layout,small_vector_union);
+	}
+	~small_vector_union()
+	{
+		PIRANHA_TT_CHECK(std::is_standard_layout,s_storage);
+		PIRANHA_TT_CHECK(std::is_standard_layout,d_storage);
+		PIRANHA_TT_CHECK(std::is_standard_layout,small_vector_union);
+		if (is_static()) {
+			st.~s_storage();
+		} else {
+			dy.~d_storage();
+		}
+	}
+	small_vector_union &operator=(small_vector_union &&other) noexcept
+	{
+		if (unlikely(this == &other)) {
+			return *this;
+		}
+		if (is_static() == other.is_static()) {
 			if (is_static()) {
+				st = std::move(other.st);
+			} else {
+				dy = std::move(other.dy);
+			}
+		} else {
+			if (is_static()) {
+				// static vs dynamic.
+				// Destroy static.
 				st.~s_storage();
+				// Move construct dynamic from other.
+				::new (static_cast<void *>(&dy)) d_storage(std::move(other.dy));
 			} else {
+				// dynamic vs static.
 				dy.~d_storage();
+				::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
 			}
 		}
-		small_vector_union &operator=(small_vector_union &&other) noexcept
-		{
-			if (unlikely(this == &other)) {
-				return *this;
-			}
-			if (is_static() == other.is_static()) {
-				if (is_static()) {
-					st = std::move(other.st);
-				} else {
-					dy = std::move(other.dy);
-				}
-			} else {
-				if (is_static()) {
-					// static vs dynamic.
-					// Destroy static.
-					st.~s_storage();
-					// Move construct dynamic from other.
-					::new (static_cast<void *>(&dy)) d_storage(std::move(other.dy));
-				} else {
-					// dynamic vs static.
-					dy.~d_storage();
-					::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
-				}
-			}
-			return *this;
+		return *this;
+	}
+	small_vector_union &operator=(const small_vector_union &other)
+	{
+		if (likely(this != &other)) {
+			*this = small_vector_union(other);
 		}
-		small_vector_union &operator=(const small_vector_union &other)
-		{
-			if (likely(this != &other)) {
-				*this = small_vector_union(other);
-			}
-			return *this;
-		}
-		bool is_static() const
-		{
-			return static_cast<bool>(st.m_tag);
-		}
-	private:
-		s_storage	st;
-		d_storage	dy;
+		return *this;
+	}
+	bool is_static() const
+	{
+		return static_cast<bool>(st.m_tag);
+	}
+	s_storage	st;
+	d_storage	dy;
 };
 
 }
@@ -496,10 +496,13 @@ union small_vector_union
  *
  * \section move_semantics Move semantics
  *
- * After a move operation, the container is left in a state which is destructible and assignable (as long as \p T
- * is as well).
+ * After a move operation, the container will be empty.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
+ * 
+ * \todo in the dynamic storage, it look like we can use 16-bit ints for the sizes and not increase the total size too much.
+ * This means that we could store up to 65k elements as opposed to the 255 in the current implementation.
+ * \todo the standard_layout constraint on T seems not to be necessary.
  */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class small_vector
@@ -544,6 +547,11 @@ class small_vector
 		using iterator = value_type *;
 		/// Const iterator type.
 		using const_iterator = value_type const *;
+	private:
+		// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+		PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+		PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
+	public:
 		/// Default constructor.
 		/**
 		 * Will initialise an empty vector with internal static storage.

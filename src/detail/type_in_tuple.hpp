@@ -18,37 +18,30 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PYRANHA_EXCEPTIONS_HPP
-#define PYRANHA_EXCEPTIONS_HPP
+#ifndef PIRANHA_DETAIL_TYPE_IN_TUPLE_HPP
+#define PIRANHA_DETAIL_TYPE_IN_TUPLE_HPP
 
-#include "python_includes.hpp"
+#include <cstddef>
+#include <limits>
+#include <tuple>
+#include <type_traits>
 
-#include <boost/python/exception_translator.hpp>
+namespace piranha { namespace detail {
 
-namespace pyranha
+// TMP to check if a type is in the tuple.
+template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
+struct type_in_tuple
 {
-
-namespace bp = boost::python;
-
-// NOTE: the idea here is to use non-type template parameters to handle generically exceptions.
-// The standard Python exceptions are pointers with external linkage and as such they are usable as non-type template
-// parameters.
-// http://docs.python.org/extending/extending.html#intermezzo-errors-and-exceptions
-// http://stackoverflow.com/questions/1655271/explanation-of-pyapi-data-macro
-// http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Flanguage%2Fref%2Ftemplate_non-type_arguments.htm
-
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translator(const CppEx &cpp_ex)
+	static_assert(I < std::numeric_limits<std::size_t>::max(),"Overflow error.");
+	static const bool value = std::is_same<T,typename std::tuple_element<I,Tuple>::type>::value ||
+		type_in_tuple<T,Tuple,I + 1u>::value;
+};
+template <typename T, typename Tuple, std::size_t I>
+struct type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
 {
-	::PyErr_SetString(*PyEx,cpp_ex.what());
-}
+	static const bool value = false;
+};
 
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translate()
-{
-	bp::register_exception_translator<CppEx>(generic_translator<PyEx,CppEx>);
-}
-
-}
+}}
 
 #endif

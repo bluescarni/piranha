@@ -18,37 +18,45 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PYRANHA_EXCEPTIONS_HPP
-#define PYRANHA_EXCEPTIONS_HPP
-
 #include "python_includes.hpp"
 
-#include <boost/python/exception_translator.hpp>
+#include <tuple>
+
+#include "../src/integer.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/poisson_series.hpp"
+#include "../src/polynomial.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
+#include "expose_poisson_series.hpp"
+#include "expose_utils.hpp"
+#include "type_system.hpp"
 
 namespace pyranha
 {
 
-namespace bp = boost::python;
+DECLARE_TT_NAMER(piranha::poisson_series,"poisson_series")
 
-// NOTE: the idea here is to use non-type template parameters to handle generically exceptions.
-// The standard Python exceptions are pointers with external linkage and as such they are usable as non-type template
-// parameters.
-// http://docs.python.org/extending/extending.html#intermezzo-errors-and-exceptions
-// http://stackoverflow.com/questions/1655271/explanation-of-pyapi-data-macro
-// http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Flanguage%2Fref%2Ftemplate_non-type_arguments.htm
-
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translator(const CppEx &cpp_ex)
+void expose_poisson_series()
 {
-	::PyErr_SetString(*PyEx,cpp_ex.what());
+	struct ps_desc
+	{
+		using params = std::tuple<std::tuple<double>,std::tuple<piranha::rational>,std::tuple<piranha::real>,
+			std::tuple<piranha::polynomial<double,signed char>>,std::tuple<piranha::polynomial<double,short>>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>>,
+			std::tuple<piranha::polynomial<piranha::rational,signed char>>,std::tuple<piranha::polynomial<piranha::rational,short>>,
+			std::tuple<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>>,
+			std::tuple<piranha::polynomial<piranha::real,signed char>>,std::tuple<piranha::polynomial<piranha::real,short>>,
+			std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>>>;
+		using interop_types = std::tuple<double,piranha::rational,piranha::integer,piranha::real>;
+		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
+		using eval_types = std::tuple<double,piranha::real,piranha::rational>;
+		using subs_types = eval_types;
+		interop_types	it;
+		pow_types	pt;
+		eval_types	et;
+		subs_types	st;
+	};
+	series_exposer<piranha::poisson_series,ps_desc> ps_exposer;
 }
 
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translate()
-{
-	bp::register_exception_translator<CppEx>(generic_translator<PyEx,CppEx>);
 }
-
-}
-
-#endif

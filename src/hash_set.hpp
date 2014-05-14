@@ -182,6 +182,9 @@ class hash_set
 			};
 			typedef iterator_impl<T> iterator;
 			typedef iterator_impl<T const> const_iterator;
+			// Static checks on the iterator types.
+			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			list():m_node() {}
 			list(list &&other):m_node()
 			{
@@ -430,7 +433,14 @@ class hash_set
 		}
 	public:
 		/// Iterator type.
+		/**
+		 * A read-only forward iterator.
+		 */
 		typedef iterator_impl<key_type const> iterator;
+	private:
+		// Static checks on the iterator type.
+		PIRANHA_TT_CHECK(is_forward_iterator,iterator);
+	public:
 		/// Const iterator type.
 		/**
 		 * Equivalent to the iterator type.

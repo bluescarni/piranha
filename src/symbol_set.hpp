@@ -32,6 +32,7 @@
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "symbol.hpp"
+#include "type_traits.hpp"
 
 namespace piranha
 {
@@ -136,6 +137,8 @@ class symbol_set
 		/// Trivial destructor.
 		~symbol_set() noexcept(true)
 		{
+			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
+			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(run_destruction_checks());
 		}
 		/// Index operator.

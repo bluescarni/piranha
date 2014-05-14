@@ -10,3 +10,4 @@ Complete reference
    celmec.rst
    math.rst
    test.rst
+   types.rst

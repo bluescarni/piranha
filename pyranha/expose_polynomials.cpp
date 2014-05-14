@@ -18,37 +18,44 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PYRANHA_EXCEPTIONS_HPP
-#define PYRANHA_EXCEPTIONS_HPP
-
 #include "python_includes.hpp"
 
-#include <boost/python/exception_translator.hpp>
+#include <tuple>
+
+#include "../src/integer.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/polynomial.hpp"
+#include "expose_polynomials.hpp"
+#include "expose_utils.hpp"
+#include "type_system.hpp"
 
 namespace pyranha
 {
 
-namespace bp = boost::python;
+DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
 
-// NOTE: the idea here is to use non-type template parameters to handle generically exceptions.
-// The standard Python exceptions are pointers with external linkage and as such they are usable as non-type template
-// parameters.
-// http://docs.python.org/extending/extending.html#intermezzo-errors-and-exceptions
-// http://stackoverflow.com/questions/1655271/explanation-of-pyapi-data-macro
-// http://publib.boulder.ibm.com/infocenter/comphelp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8a.doc%2Flanguage%2Fref%2Ftemplate_non-type_arguments.htm
-
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translator(const CppEx &cpp_ex)
+void expose_polynomials()
 {
-	::PyErr_SetString(*PyEx,cpp_ex.what());
+	// Descriptor for polynomial exposition.
+	struct poly_desc
+	{
+		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::integer,signed char>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::rational,signed char>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::real,signed char>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
+		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
+		using eval_types = interop_types;
+		using subs_types = interop_types;
+		// Need to refer to these to silence a warning in GCC.
+		interop_types	it;
+		pow_types	pt;
+		eval_types	et;
+		subs_types	st;
+	};
+	pyranha::series_exposer<piranha::polynomial,poly_desc> poly_exposer;
 }
 
-template <PyObject **PyEx,typename CppEx>
-inline void generic_translate()
-{
-	bp::register_exception_translator<CppEx>(generic_translator<PyEx,CppEx>);
 }
-
-}
-
-#endif

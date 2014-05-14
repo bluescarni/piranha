@@ -19,7 +19,6 @@
 
 """.. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
 
-# Use absolute imports to avoid issues with the main math module.
 from __future__ import absolute_import as _ai
 
 def orbitalR(angles):
@@ -48,8 +47,11 @@ def orbitalR(angles):
 	   \cos i
 	   \end{bmatrix}
 	
+	Note that this function requires the availability of the NumPy library: the rotation matrix will be returned as a
+	NumPy array.
+	
 	:param angles: list of rotation angles
-	:rtype: orbital rotation matrix
+	:returns: orbital rotation matrix
 	:raises: :exc:`ValueError` if the length of the input list is different from 3 or 6
 	:raises: any exception raised by the invoked mathematical functions
 	

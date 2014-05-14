@@ -25,47 +25,13 @@
 
 from __future__ import absolute_import as _ai
 
-__all__ = ['celmec', 'math', 'test', 'settings', 'get_series']
+__all__ = ['celmec', 'math', 'test', 'settings', 'types']
 
 import threading as _thr
-from ._common import _cpp_type_catcher, _register_wrappers, _cleanup_custom_derivatives
+from ._common import _cpp_type_catcher, _monkey_patch_series, _cleanup
 
-def get_series(s):
-	"""Get series type.
-	
-	This function is used to get a series type base on its textual description in a C++ template-like syntax.
-	
-	:param s: textual description of the series type
-	:type s: *str*
-	:rtype: a Python type corresponding to the series description *s*
-	:raises: :exc:`TypeError` if the type of *s* is not *str*
-	:raises: :exc:`ValueError` if *s* does not correspond to any series known by Pyranha
-	
-	>>> t = get_series('polynomial<integer,short>')
-	>>> t('x') + t('y')
-	x+y
-	>>> get_series(1) # doctest: +IGNORE_EXCEPTION_DETAIL
-	Traceback (most recent call last):
-	   ...
-	TypeError: the input value must be a string
-	>>> get_series('invalid_string') # doctest: +IGNORE_EXCEPTION_DETAIL
-	Traceback (most recent call last):
-	   ...
-	ValueError: the series type could not be found
-	
-	"""
-	if not isinstance(s,str):
-		raise TypeError('the input value must be a string')
-	from ._core import _get_series_list as gsl
-	# Get the series list as a dictionary.
-	sd = dict(gsl())
-	try:
-		return getattr(_core,'_series_' + str(sd[s]))
-	except KeyError:
-		raise ValueError('the series type \'' + s + '\' could not be found')
-
-# Register common wrappers.
-_register_wrappers()
+# Monkey patching for series.
+_monkey_patch_series()
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.
@@ -91,8 +57,7 @@ class _settings(object):
 	@property
 	def latex_repr(self):
 		from ._core import _get_series_list as gsl
-		sd = dict(gsl())
-		s_type = getattr(_core,'_series_' + str(sd[list(sd.keys())[0]]))
+		s_type = gsl()[0]
 		with self.__lock:
 			return hasattr(s_type,'_repr_latex_')
 	@latex_repr.setter
@@ -108,13 +73,11 @@ class _settings(object):
 			if f:
 				_register_repr_latex()
 			else:
-				sd = dict(gsl())
-				for k in sd:
-					s_type = getattr(_core,'_series_' + str(sd[k]))
+				for s_type in gsl():
 					assert(hasattr(s_type,'_repr_latex_'))
 					delattr(s_type,'_repr_latex_')
 
 settings = _settings()
 
 import atexit as _atexit
-_atexit.register(lambda : _cleanup_custom_derivatives())
+_atexit.register(lambda : _cleanup())

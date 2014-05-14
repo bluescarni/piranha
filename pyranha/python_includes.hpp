@@ -18,16 +18,22 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_EXTENDED_INTEGER_TYPES_HPP
-#define PIRANHA_EXTENDED_INTEGER_TYPES_HPP
+#ifndef PYRANHA_PYTHON_INCLUDES_HPP
+#define PYRANHA_PYTHON_INCLUDES_HPP
 
-@PIRANHA_HAVE_GCC_INT128@
-@PIRANHA_HAVE_GCC_UINT128@
+// NOTE: the order of inclusion in the first two items here is forced by these two issues:
+// http://mail.python.org/pipermail/python-list/2004-March/907592.html
+// http://mail.python.org/pipermail/new-bugs-announce/2011-March/010395.html
+#if defined(_WIN32)
+#include <cmath>
+#include <Python.h>
+#else
+#include <Python.h>
+#include <cmath>
+#endif
 
-#if defined(PIRANHA_GCC_INT128_T)
-
-//#include "detail/gcc_int128.hpp"
-
+#if PY_MAJOR_VERSION < 2 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6)
+	#error Minimum supported Python version is 2.6.
 #endif
 
 #endif

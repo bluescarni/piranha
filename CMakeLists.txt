@@ -39,6 +39,7 @@ SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 INCLUDE(PiranhaCompilerLinkerSettings)
 INCLUDE(PiranhaPlatformSettings)
 message(STATUS "Current CXX flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Current CXX debug flags: ${CMAKE_CXX_FLAGS_DEBUG}")
 
 IF(BUILD_PYRANHA)
 	INCLUDE(PyranhaPythonSetup)
@@ -112,9 +113,6 @@ ELSE(PIRANHA_GIT_EXECUTABLE)
 	MESSAGE(STATUS "Git executable: not found")
 	SET(PIRANHA_VERSION "#define PIRANHA_VERSION \"Undetermined\"")
 ENDIF(PIRANHA_GIT_EXECUTABLE)
-
-# Configure extended integer types.
-CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/extended_integer_types.hpp.in" "${CMAKE_SOURCE_DIR}/src/extended_integer_types.hpp")
 
 # Configure config.hpp.
 CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/config.hpp.in" "${CMAKE_SOURCE_DIR}/src/config.hpp")

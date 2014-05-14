@@ -1,3 +1,66 @@
+/***************************************************************************
+ *   Copyright (C) 2009-2011 by Francesco Biscani                          *
+ *   bluescarni@gmail.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PYRANHA_EXPOSE_UTILS_HPP
+#define PYRANHA_EXPOSE_UTILS_HPP
+
+#include "python_includes.hpp"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/python/class.hpp>
+#include <boost/python/def.hpp>
+#include <boost/python/dict.hpp>
+#include <boost/python/errors.hpp>
+#include <boost/python/extract.hpp>
+#include <boost/python/handle.hpp>
+#include <boost/python/import.hpp>
+#include <boost/python/init.hpp>
+#include <boost/python/list.hpp>
+#include <boost/python/object.hpp>
+#include <boost/python/operators.hpp>
+#include <boost/python/stl_iterator.hpp>
+#include <boost/python/tuple.hpp>
+#include <cstddef>
+#include <limits>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+#include "../src/detail/type_in_tuple.hpp"
+#include "../src/exceptions.hpp"
+#include "../src/integer.hpp"
+#include "../src/math.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
+#include "../src/series.hpp"
+#include "../src/type_traits.hpp"
+#include "type_system.hpp"
+
 // NOTE: here we are adopting a workaround for a bug (?) in libc++ where the explicit
 // conversion operator of real, rational and integer to double is not considered by std::is_constructible.
 // This will prevent interoperability with these types when using the generic series constructor.
@@ -34,8 +97,40 @@ PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND(piranha::integer)
 #undef PYRANHA_EXPLICIT_CONVERSION_LIBCPP_WORKAROUND
 #endif
 
+namespace pyranha
+{
+
+namespace bp = boost::python;
+
+// Counter of exposed types, used for naming said types.
+extern std::size_t exposed_types_counter;
+
+// Expose class with a default constructor and map it into the pyranha type system.
+template <typename T>
+inline bp::class_<T> expose_class()
+{
+	const auto t_idx = std::type_index(typeid(T));
+	if (et_map.find(t_idx) != et_map.end()) {
+		piranha_throw(std::runtime_error,std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed");
+	}
+	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
+	++exposed_types_counter;
+	auto ptr = ::PyObject_Type(class_inst().ptr());
+	if (!ptr) {
+		::PyErr_Clear();
+		::PyErr_SetString(PyExc_RuntimeError,"cannot extract the Python type of an instantiated class");
+		bp::throw_error_already_set();
+	}
+	// This is always a new reference being returned.
+	auto type_object = bp::object(bp::handle<>(ptr));
+	// Map the C++ type to the Python type.
+	et_map[t_idx] = type_object;
+	return class_inst;
+}
+
+// Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor>
-class exposer
+class series_exposer
 {
 		using params = typename Descriptor::params;
 		// Detect the presence of interoperable types.
@@ -51,7 +146,7 @@ class exposer
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
 		{
 			op(std::get<Idx>(t));
-			static_assert(Idx != boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+			static_assert(Idx != std::numeric_limits<std::size_t>::max(),"Overflow error.");
 			tuple_for_each<Tuple,Op,Idx + std::size_t(1)>(t,op);
 		}
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
@@ -96,30 +191,17 @@ class exposer
 			}
 			return retval;
 		}
-		// TMP to check if a type is in the tuple.
-		template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
-		struct type_in_tuple
-		{
-			static_assert(I < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
-			static const bool value = std::is_same<T,typename std::tuple_element<I,Tuple>::type>::value ||
-				type_in_tuple<T,Tuple,I + 1u>::value;
-		};
-		template <typename T, typename Tuple, std::size_t I>
-		struct type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
-		{
-			static const bool value = false;
-		};
 		// Handle division specially (allowed only with non-series types).
 		template <typename S, typename T>
 		static void expose_division(bp::class_<S> &series_class, const T &in,
-			typename std::enable_if<!is_instance_of<T,series>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::is_instance_of<T,piranha::series>::value>::type * = nullptr)
 		{
 			series_class.def(bp::self /= in);
 			series_class.def(bp::self / in);
 		}
 		template <typename S, typename T>
 		static void expose_division(bp::class_<S> &, const T &,
-			typename std::enable_if<is_instance_of<T,series>::value>::type * = nullptr)
+			typename std::enable_if<piranha::is_instance_of<T,piranha::series>::value>::type * = nullptr)
 		{}
 		// Expose arithmetics operations with another type.
 		// NOTE: this will have to be conditional in the future.
@@ -150,18 +232,18 @@ class exposer
 			pow_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
 			bp::class_<S> &m_series_class;
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<is_exponentiable<S,T>::value>::type * = nullptr) const
+			void operator()(const T &, typename std::enable_if<piranha::is_exponentiable<S,T>::value>::type * = nullptr) const
 			{
 				m_series_class.def("__pow__",pow_wrapper<S,T>);
 			}
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<!is_exponentiable<S,T>::value>::type * = nullptr) const
+			void operator()(const T &, typename std::enable_if<!piranha::is_exponentiable<S,T>::value>::type * = nullptr) const
 			{}
 		};
 		template <typename T, typename U>
-		static auto pow_wrapper(const T &s, const U &x) -> decltype(math::pow(s,x))
+		static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::math::pow(s,x))
 		{
-			return math::pow(s,x);
+			return piranha::math::pow(s,x);
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_pow(bp::class_<S> &series_class, typename std::enable_if<has_typedef_pow_types<T>::value>::type * = nullptr)
@@ -180,12 +262,12 @@ class exposer
 			eval_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
 			bp::class_<S> &m_series_class;
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<is_evaluable<S,T>::value>::type * = nullptr) const
+			void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{
 				m_series_class.def("_evaluate",evaluate_wrapper<S,T>);
 			}
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<!is_evaluable<S,T>::value>::type * = nullptr) const
+			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{}
 		};
 		template <typename S, typename T>
@@ -217,32 +299,32 @@ class exposer
 			template <typename T>
 			void operator()(const T &x) const
 			{
-				// NOTE: we should probably add wrappers that call math::... functions.
+				// NOTE: we should probably add wrappers that call piranha::math::... functions.
 				impl_subs(x);
 				impl_ipow_subs(x);
 				impl_t_subs(x);
 			}
 			template <typename T>
-			void impl_subs(const T &, typename std::enable_if<has_subs<S,T>::value>::type * = nullptr) const
+			void impl_subs(const T &, typename std::enable_if<piranha::has_subs<S,T>::value>::type * = nullptr) const
 			{
 				m_series_class.def("subs",&S::template subs<T>);
 			}
 			template <typename T>
-			void impl_subs(const T &, typename std::enable_if<!has_subs<S,T>::value>::type * = nullptr) const {}
+			void impl_subs(const T &, typename std::enable_if<!piranha::has_subs<S,T>::value>::type * = nullptr) const {}
 			template <typename T>
-			void impl_ipow_subs(const T &, typename std::enable_if<has_ipow_subs<S,T>::value>::type * = nullptr) const
+			void impl_ipow_subs(const T &, typename std::enable_if<piranha::has_ipow_subs<S,T>::value>::type * = nullptr) const
 			{
 				m_series_class.def("ipow_subs",&S::template ipow_subs<T>);
 			}
 			template <typename T>
-			void impl_ipow_subs(const T &, typename std::enable_if<!has_ipow_subs<S,T>::value>::type * = nullptr) const {}
+			void impl_ipow_subs(const T &, typename std::enable_if<!piranha::has_ipow_subs<S,T>::value>::type * = nullptr) const {}
 			template <typename T>
-			void impl_t_subs(const T &, typename std::enable_if<has_t_subs<S,T>::value>::type * = nullptr) const
+			void impl_t_subs(const T &, typename std::enable_if<piranha::has_t_subs<S,T>::value>::type * = nullptr) const
 			{
 				m_series_class.def("t_subs",&S::template t_subs<T,T>);
 			}
 			template <typename T>
-			void impl_t_subs(const T &, typename std::enable_if<!has_t_subs<S,T>::value>::type * = nullptr) const {}
+			void impl_t_subs(const T &, typename std::enable_if<!piranha::has_t_subs<S,T>::value>::type * = nullptr) const {}
 		};
 		template <typename S, typename T = Descriptor>
 		static void expose_subs(bp::class_<S> &series_class, typename std::enable_if<has_typedef_subs_types<T>::value>::type * = nullptr)
@@ -273,7 +355,7 @@ class exposer
 		};
 		template <typename InteropTypes, typename S>
 		static void expose_cf_interop(bp::class_<S> &series_class,
-			typename std::enable_if<!type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
 		{
 			using cf_type = typename S::term_type::cf_type;
 			cf_type cf;
@@ -282,7 +364,7 @@ class exposer
 		}
 		template <typename InteropTypes, typename S>
 		static void expose_cf_interop(bp::class_<S> &,
-			typename std::enable_if<type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
 		{}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &series_class, typename std::enable_if<has_typedef_interop_types<T>::value>::type * = nullptr)
@@ -301,24 +383,24 @@ class exposer
 		template <typename S>
 		static S integrate_wrapper(const S &s, const std::string &name)
 		{
-			return math::integrate(s,name);
+			return piranha::math::integrate(s,name);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &series_class,
-			typename std::enable_if<is_integrable<S>::value>::type * = nullptr)
+			typename std::enable_if<piranha::is_integrable<S>::value>::type * = nullptr)
 		{
 			series_class.def("integrate",&S::integrate);
 			bp::def("_integrate",integrate_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &,
-			typename std::enable_if<!is_integrable<S>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::is_integrable<S>::value>::type * = nullptr)
 		{}
 		// Differentiation.
 		template <typename S>
 		static S partial_wrapper(const S &s, const std::string &name)
 		{
-			return math::partial(s,name);
+			return piranha::math::partial(s,name);
 		}
 		template <typename S>
 		static S partial_member_wrapper(const S &s, const std::string &name)
@@ -338,7 +420,7 @@ class exposer
 		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &series_class,
-			typename std::enable_if<is_differentiable<S>::value>::type * = nullptr)
+			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
 		{
 			series_class.def("partial",partial_member_wrapper<S>);
 			bp::def("_partial",partial_wrapper<S>);
@@ -351,7 +433,7 @@ class exposer
 		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &,
-			typename std::enable_if<!is_differentiable<S>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::is_differentiable<S>::value>::type * = nullptr)
 		{}
 		// Poisson bracket.
 		template <typename S>
@@ -359,18 +441,18 @@ class exposer
 		{
 			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
 			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
+			return piranha::math::pbracket(s1,s2,std::vector<std::string>(begin_p,end_p),
 				std::vector<std::string>(begin_q,end_q));
 		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
-			typename std::enable_if<has_pbracket<S>::value>::type * = nullptr)
+			typename std::enable_if<piranha::has_pbracket<S>::value>::type * = nullptr)
 		{
 			bp::def("_pbracket",pbracket_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_pbracket(bp::class_<S> &,
-			typename std::enable_if<!has_pbracket<S>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::has_pbracket<S>::value>::type * = nullptr)
 		{}
 		// Canonical transformation.
 		// NOTE: last param is dummy to let the Boost.Python type system to pick the correct type.
@@ -381,18 +463,18 @@ class exposer
 			bp::stl_input_iterator<S> begin_new_q(new_q), end_new_q;
 			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
 			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;
-			return math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
+			return piranha::math::transformation_is_canonical(std::vector<S>(begin_new_p,end_new_p),std::vector<S>(begin_new_q,end_new_q),
 				std::vector<std::string>(begin_p,end_p),std::vector<std::string>(begin_q,end_q));
 		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
-			typename std::enable_if<has_transformation_is_canonical<S>::value>::type * = nullptr)
+			typename std::enable_if<piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{
 			bp::def("_transformation_is_canonical",canonical_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_canonical(bp::class_<S> &,
-			typename std::enable_if<!has_transformation_is_canonical<S>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::has_transformation_is_canonical<S>::value>::type * = nullptr)
 		{}
 		// Utility function to check if object is callable. Will throw TypeError if not.
 		static void check_callable(bp::object func)
@@ -468,26 +550,26 @@ class exposer
 		static S sin_cos_wrapper(const S &s)
 		{
 			if (IsCos) {
-				return math::cos(s);
+				return piranha::math::cos(s);
 			} else {
-				return math::sin(s);
+				return piranha::math::sin(s);
 			}
 		}
 		template <typename S>
-		static void expose_sin_cos(typename std::enable_if<has_sine<S>::value && has_cosine<S>::value>::type * = nullptr)
+		static void expose_sin_cos(typename std::enable_if<piranha::has_sine<S>::value && piranha::has_cosine<S>::value>::type * = nullptr)
 		{
 			bp::def("_sin",sin_cos_wrapper<false,S>);
 			bp::def("_cos",sin_cos_wrapper<true,S>);
 		}
 		template <typename S>
-		static void expose_sin_cos(typename std::enable_if<!has_sine<S>::value || !has_cosine<S>::value>::type * = nullptr)
+		static void expose_sin_cos(typename std::enable_if<!piranha::has_sine<S>::value || !piranha::has_cosine<S>::value>::type * = nullptr)
 		{}
 		// Power series exposer.
 		template <typename T>
 		static void expose_power_series(bp::class_<T> &series_class,
-			typename std::enable_if<has_degree<T>::value && has_ldegree<T>::value>::type * = nullptr)
+			typename std::enable_if<piranha::has_degree<T>::value && piranha::has_ldegree<T>::value>::type * = nullptr)
 		{
-			// NOTE: probably we should make these math:: wrappers. Same for the trig ones.
+			// NOTE: probably we should make these piranha::math:: wrappers. Same for the trig ones.
 			series_class.def("degree",wrap_degree<T>);
 			series_class.def("degree",wrap_partial_degree_set<T>);
 			series_class.def("ldegree",wrap_ldegree<T>);
@@ -495,7 +577,7 @@ class exposer
 		}
 		template <typename T>
 		static void expose_power_series(bp::class_<T> &,
-			typename std::enable_if<!has_degree<T>::value || !has_ldegree<T>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::has_degree<T>::value || !piranha::has_ldegree<T>::value>::type * = nullptr)
 		{}
 		// degree() wrappers.
 		template <typename S>
@@ -523,7 +605,7 @@ class exposer
 		// Trigonometric exposer.
 		template <typename S>
 		static void expose_trigonometric_series(bp::class_<S> &series_class, typename std::enable_if<
-			has_t_degree<S>::value && has_t_ldegree<S>::value && has_t_order<S>::value && has_t_lorder<S>::value>::type * = nullptr)
+			piranha::has_t_degree<S>::value && piranha::has_t_ldegree<S>::value && piranha::has_t_order<S>::value && piranha::has_t_lorder<S>::value>::type * = nullptr)
 		{
 			series_class.def("t_degree",wrap_t_degree<S>);
 			series_class.def("t_degree",wrap_partial_t_degree<S>);
@@ -536,7 +618,7 @@ class exposer
 		}
 		template <typename S>
 		static void expose_trigonometric_series(bp::class_<S> &, typename std::enable_if<
-			!has_t_degree<S>::value || !has_t_ldegree<S>::value || !has_t_order<S>::value || !has_t_lorder<S>::value>::type * = nullptr)
+			!piranha::has_t_degree<S>::value || !piranha::has_t_ldegree<S>::value || !piranha::has_t_order<S>::value || !piranha::has_t_lorder<S>::value>::type * = nullptr)
 		{}
 		template <typename S>
 		static auto wrap_t_degree(const S &s) -> decltype(s.t_degree())
@@ -608,16 +690,12 @@ class exposer
 			void operator()(const std::tuple<Args...> &) const
 			{
 				using s_type = Series<Args...>;
-				// Get the series name.
-				const std::string s_name = descriptor<s_type>::name();
-				if (series_archive.find(s_name) != series_archive.end()) {
-					piranha_throw(std::runtime_error,"series was already registered");
-				}
-				const std::string exposed_name = std::string("_series_") + boost::lexical_cast<std::string>(series_counter);
+				// Register in the generic type generator map.
+				expose_generic_type_generator<Series,Args...>();
 				// Start exposing.
-				bp::class_<s_type> series_class(exposed_name.c_str(),bp::init<>());
-				series_archive[s_name] = series_counter;
-				++series_counter;
+				auto series_class = expose_class<s_type>();
+				// Add the _is_series tag.
+				series_class.attr("_is_series") = true;
 				// Constructor from string, if available.
 				expose_ctor<const std::string &>(series_class);
 				// Copy constructor.
@@ -680,14 +758,31 @@ class exposer
 			}
 		};
 	public:
-		exposer()
+		series_exposer()
 		{
+			// TODO probably we can avoid instantiating p here, look at the tuple for_each
+			// in vargs_to_v_t_idx.
 			params p;
 			tuple_for_each(p,exposer_op{});
 		}
-		exposer(const exposer &) = delete;
-		exposer(exposer &&) = delete;
-		exposer &operator=(const exposer &) = delete;
-		exposer &operator=(exposer &&) = delete;
-		~exposer() = default;
+		series_exposer(const series_exposer &) = delete;
+		series_exposer(series_exposer &&) = delete;
+		series_exposer &operator=(const series_exposer &) = delete;
+		series_exposer &operator=(series_exposer &&) = delete;
+		~series_exposer() = default;
 };
+
+inline bp::list get_series_list()
+{
+	bp::list retval;
+	for (const auto &p: et_map) {
+		if (::PyObject_HasAttrString(p.second.ptr(),"_is_series")) {
+			retval.append(p.second);
+		}
+	}
+	return retval;
+}
+
+}
+
+#endif

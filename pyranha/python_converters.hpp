@@ -1,9 +1,58 @@
+/***************************************************************************
+ *   Copyright (C) 2009-2011 by Francesco Biscani                          *
+ *   bluescarni@gmail.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PYRANHA_PYTHON_CONVERTERS_HPP
+#define PYRANHA_PYTHON_CONVERTERS_HPP
+
+#include "python_includes.hpp"
+
+#include <boost/lexical_cast.hpp>
+#include <boost/numeric/conversion/cast.hpp>
+#include <boost/python/converter/registry.hpp>
+#include <boost/python/converter/rvalue_from_python_data.hpp>
+#include <boost/python/extract.hpp>
+#include <boost/python/handle.hpp>
+#include <boost/python/import.hpp>
+#include <boost/python/object.hpp>
+#include <boost/python/type_id.hpp>
+#include <stdexcept>
+#include <string>
+
+#include "../src/config.hpp"
+#include "../src/detail/mpfr.hpp"
+#include "../src/exceptions.hpp"
+#include "../src/integer.hpp"
+#include "../src/rational.hpp"
+#include "../src/real.hpp"
+
 // NOTE: useful resources for python converters and C API:
 // - http://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
 // - http://svn.felspar.com/public/fost-py/trunk/fost-py/Cpp/fost-python/pystring.cpp
 // - http://svn.felspar.com/public/fost-py/trunk/fost-py/Cpp/fost-python/pyjson.cpp
 // - http://stackoverflow.com/questions/937884/how-do-i-import-modules-in-boostpython-embedded-python-code
 // - http://docs.python.org/c-api/
+
+namespace pyranha
+{
+
+namespace bp = boost::python;
 
 template <typename T>
 inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_python_stage1_data *data, const std::string &name)
@@ -37,12 +86,12 @@ struct integer_converter
 {
 	integer_converter()
 	{
-		bp::to_python_converter<integer,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<integer>());
+		bp::to_python_converter<piranha::integer,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<piranha::integer>());
 	}
 	struct to_python
 	{
-		static ::PyObject *convert(const integer &n)
+		static ::PyObject *convert(const piranha::integer &n)
 		{
 			// NOTE: use PyLong_FromString here instead?
 			const std::string str = boost::lexical_cast<std::string>(n);
@@ -68,7 +117,7 @@ struct integer_converter
 	}
 	static void construct(::PyObject *obj_ptr, bp::converter::rvalue_from_python_stage1_data *data)
 	{
-		construct_from_str<integer>(obj_ptr,data,"integer");
+		construct_from_str<piranha::integer>(obj_ptr,data,"integer");
 	}
 };
 
@@ -76,12 +125,12 @@ struct rational_converter
 {
 	rational_converter()
 	{
-		bp::to_python_converter<rational,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<rational>());
+		bp::to_python_converter<piranha::rational,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<piranha::rational>());
 	}
 	struct to_python
 	{
-		static ::PyObject *convert(const rational &q)
+		static ::PyObject *convert(const piranha::rational &q)
 		{
 			const std::string str = boost::lexical_cast<std::string>(q);
 			bp::object frac_module = bp::import("fractions");
@@ -103,7 +152,7 @@ struct rational_converter
 	}
 	static void construct(::PyObject *obj_ptr, bp::converter::rvalue_from_python_stage1_data *data)
 	{
-		construct_from_str<rational>(obj_ptr,data,"rational");
+		construct_from_str<piranha::rational>(obj_ptr,data,"rational");
 	}
 };
 
@@ -111,12 +160,12 @@ struct real_converter
 {
 	real_converter()
 	{
-		bp::to_python_converter<real,to_python>();
-		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<real>());
+		bp::to_python_converter<piranha::real,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<piranha::real>());
 	}
 	struct to_python
 	{
-		static PyObject *convert(const real &r)
+		static PyObject *convert(const piranha::real &r)
 		{
 			bp::object str(boost::lexical_cast<std::string>(r));
 			try {
@@ -190,7 +239,7 @@ struct real_converter
 		while (*s != '\0' && *s != '\'') {
 			++s;
 		}
-		if (s == '\0') {
+		if (*s == '\0') {
 			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
 		}
 		++s;
@@ -198,11 +247,15 @@ struct real_converter
 		while (*s != '\0' && *s != '\'') {
 			++s;
 		}
-		if (s == '\0') {
+		if (*s == '\0') {
 			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
 		}
-		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<real> *>(data)->storage.bytes;
-		::new (storage) real(std::string(start,s),prec);
+		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<piranha::real> *>(data)->storage.bytes;
+		::new (storage) piranha::real(std::string(start,s),prec);
 		data->convertible = storage;
 	}
 };
+
+}
+
+#endif

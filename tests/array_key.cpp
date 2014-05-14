@@ -79,9 +79,9 @@ struct constructor_tester
 		{
 			typedef g_key_type<T,U> key_type;
 			key_type k0;
-			BOOST_CHECK_NO_THROW(key_type());
-			BOOST_CHECK_NO_THROW(key_type(key_type()));
-			BOOST_CHECK_NO_THROW(key_type(k0));
+			BOOST_CHECK_NO_THROW(key_type tmp = key_type());
+			BOOST_CHECK_NO_THROW(key_type tmp = key_type(key_type()));
+			BOOST_CHECK_NO_THROW(key_type tmp(k0));
 			// From init list.
 			key_type k1{T(0),T(1),T(2),T(3)};
 			BOOST_CHECK_EQUAL(k1.size(),static_cast<decltype(k1.size())>(4));

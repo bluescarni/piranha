@@ -30,6 +30,7 @@
 #include <cstdarg>
 #include <cstddef>
 #include <functional>
+#include <iterator>
 #include <ostream>
 #include <tuple>
 #include <type_traits>
@@ -852,6 +853,7 @@ const bool term_is_multipliable<Term>::value;
 namespace detail
 {
 
+// TODO: replace use of boost::integer_traits with numeric_limits.
 template <typename T, typename ... Args>
 struct min_int_impl
 {
@@ -911,6 +913,196 @@ using min_int = typename detail::min_int_impl<T,Args...>::type;
  */
 template <typename T, typename ... Args>
 using max_int = typename detail::max_int_impl<T,Args...>::type;
+
+namespace detail
+{
+
+// Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
+// iterator concept.
+// NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly because
+// it seems that:
+// - we cannot detect a specialised std::swap (so if it is not specialised, it will pick the default implementation
+//   which could fail in the implementation without giving hints in the prototype),
+// - it's tricky to fulfill the requirement that swap has to be called unqualified (cannot use 'using std::swap' within a decltype()
+//   SFINAE, might be doable with automatic return type deduction for regular functions in C++14?).
+template <typename It>
+struct has_iterator_traits
+{
+	using it_tags = std::tuple<std::input_iterator_tag,std::output_iterator_tag,std::forward_iterator_tag,
+		std::bidirectional_iterator_tag,std::random_access_iterator_tag>;
+	PIRANHA_DECLARE_HAS_TYPEDEF(difference_type);
+	PIRANHA_DECLARE_HAS_TYPEDEF(value_type);
+	PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
+	PIRANHA_DECLARE_HAS_TYPEDEF(reference);
+	PIRANHA_DECLARE_HAS_TYPEDEF(iterator_category);
+	using i_traits = std::iterator_traits<It>;
+	static const bool value = has_typedef_reference<i_traits>::value && has_typedef_value_type<i_traits>::value &&
+		has_typedef_pointer<i_traits>::value && has_typedef_difference_type<i_traits>::value  &&
+		has_typedef_iterator_category<i_traits>::value && std::is_copy_constructible<It>::value &&
+		std::is_copy_assignable<It>::value && std::is_destructible<It>::value;
+};
+
+template <typename It>
+const bool has_iterator_traits<It>::value;
+
+// TMP to check if a type is convertible to a type in the tuple.
+template <typename T, typename Tuple, std::size_t I = 0u, typename Enable = void>
+struct convertible_type_in_tuple
+{
+	static_assert(I < std::numeric_limits<std::size_t>::max(),"Overflow error.");
+	static const bool value = std::is_convertible<T,typename std::tuple_element<I,Tuple>::type>::value ||
+		convertible_type_in_tuple<T,Tuple,I + 1u>::value;
+};
+
+template <typename T, typename Tuple, std::size_t I>
+struct convertible_type_in_tuple<T,Tuple,I,typename std::enable_if<I == std::tuple_size<Tuple>::value>::type>
+{
+	static const bool value = false;
+};
+
+template <typename T, typename = void>
+struct is_iterator_impl
+{
+	static const bool value = false;
+};
+
+// NOTE: here the correct condition is the commented one, as opposed to the first one appearing. However, it seems like
+// there are inconsistencies between the commented condition and the definition of many output iterators in the standard library:
+//
+// http://stackoverflow.com/questions/23567244/apparent-inconsistency-in-iterator-requirements
+//
+// Until this is clarified, it is probably better to keep this workaround.
+template <typename T>
+struct is_iterator_impl<T,typename std::enable_if</*std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value &&*/
+	// That is the one that would need to be replaced with the one above. Just check that operator*() is defined.
+	std::is_same<decltype(*std::declval<T &>()),decltype(*std::declval<T &>())>::value &&
+	std::is_same<decltype(++std::declval<T &>()),T &>::value && has_iterator_traits<T>::value &&
+	// NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived from the standard
+	// ones. Hence, check that the category can be converted to one of the standard categories. This should not change anything for std iterators,
+	// and just enable support for Boost ones.
+	convertible_type_in_tuple<typename std::iterator_traits<T>::iterator_category,typename has_iterator_traits<T>::it_tags>::value>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an iterator (as defined by the C++ standard),
+ * \p false otherwise.
+ */
+template <typename T>
+struct is_iterator
+{
+	/// Value of the type trait.
+	static const bool value = detail::is_iterator_impl<typename std::decay<T>::type>::value;
+};
+
+template <typename T>
+const bool is_iterator<T>::value;
+
+namespace detail
+{
+
+template <typename T, typename = void>
+struct is_input_iterator_impl
+{
+	static const bool value = false;
+};
+
+template <typename T, typename = void>
+struct arrow_operator_type
+{};
+
+template <typename T>
+struct arrow_operator_type<T,typename std::enable_if<std::is_pointer<T>::value>::type>
+{
+	using type = T;
+};
+
+template <typename T>
+struct arrow_operator_type<T,typename std::enable_if<std::is_same<
+	typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type,
+	typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type
+	>::value>::type>
+{
+	using type = typename arrow_operator_type<decltype(std::declval<T &>().operator->())>::type;
+};
+
+template <typename T>
+struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::value && is_equality_comparable<T>::value &&
+	std::is_convertible<decltype(*std::declval<T &>()),typename std::iterator_traits<T>::value_type>::value &&
+	std::is_same<decltype(++std::declval<T &>()),T &>::value &&
+	std::is_same<decltype((void)std::declval<T &>()++),decltype((void)std::declval<T &>()++)>::value &&
+	std::is_convertible<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::value_type>::value &&
+	// NOTE: here we know that the arrow op has to return a pointer, if implemented correctly, and that the syntax
+	// it->m must be equivalent to (*it).m. This means that, barring differences in reference qualifications,
+	// it-> and *it must return the same thing.
+	std::is_same<
+		typename std::remove_reference<decltype(*std::declval<typename arrow_operator_type<T>::type>())>::type,
+		typename std::remove_reference<decltype(*std::declval<T &>())>::type
+	>::value &&
+	// NOTE: here the usage of is_convertible guarantees we catch both iterators higher in the type hierarchy and
+	// the Boost versions of standard iterators as well.
+	std::is_convertible<typename std::iterator_traits<T>::iterator_category,std::input_iterator_tag>::value>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Input iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an input iterator (as defined by the C++ standard),
+ * \p false otherwise.
+ */
+template <typename T>
+struct is_input_iterator
+{
+	/// Value of the type trait.
+	static const bool value = detail::is_input_iterator_impl<typename std::decay<T>::type>::value;
+};
+
+template <typename T>
+const bool is_input_iterator<T>::value;
+
+namespace detail
+{
+
+template <typename T, typename = void>
+struct is_forward_iterator_impl
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_forward_iterator_impl<T,typename std::enable_if<is_input_iterator_impl<T>::value && std::is_default_constructible<T>::value &&
+	(std::is_same<typename std::iterator_traits<T>::value_type &,typename std::iterator_traits<T>::reference>::value ||
+	std::is_same<typename std::iterator_traits<T>::value_type const &,typename std::iterator_traits<T>::reference>::value) &&
+	std::is_convertible<decltype(std::declval<T &>()++),const T &>::value &&
+	std::is_same<decltype(*std::declval<T &>()++),typename std::iterator_traits<T>::reference>::value &&
+	std::is_convertible<typename std::iterator_traits<T>::iterator_category,std::forward_iterator_tag>::value
+	>::type>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Forward iterator type trait.
+/**
+ * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of a forward iterator (as defined by the C++ standard),
+ * \p false otherwise.
+ */
+template <typename T>
+struct is_forward_iterator
+{
+	static const bool value = detail::is_forward_iterator_impl<typename std::decay<T>::type>::value;
+};
+
+template <typename T>
+const bool is_forward_iterator<T>::value;
 
 }
 

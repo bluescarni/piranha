@@ -162,6 +162,7 @@ class kronecker_monomial
 		 * - \p boost::numeric_cast (in case the value type of \p Iterator is not the same as \p T),
 		 * - piranha::static_vector::push_back().
 		 */
+		// TODO: sfinaeing on iterators.
 		template <typename Iterator>
 		explicit kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0)
 		{

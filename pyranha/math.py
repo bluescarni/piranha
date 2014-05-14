@@ -36,14 +36,14 @@ def cos(arg):
 	to be a series type and a function from the piranha C++ library is used.
 	
 	:param arg: cosine argument
-	:rtype: cosine of *arg*
+	:returns: cosine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> t = get_series('poisson_series<polynomial<rational,short>>')
+	>>> from .types import poisson_series, polynomial, rational, short
+	>>> t = poisson_series(polynomial(rational,short))()
 	>>> cos(2 * t('x'))
-	cos(2x)
+	cos(2*x)
 	>>> cos('y') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
@@ -71,14 +71,14 @@ def sin(arg):
 	to be a series type and a function from the piranha C++ library is used.
 	
 	:param arg: sine argument
-	:rtype: sine of *arg*
+	:returns: sine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> t = get_series('poisson_series<polynomial<rational,short>>')
+	>>> from .types import poisson_series, polynomial, rational, short
+	>>> t = poisson_series(polynomial(rational,short))()
 	>>> sin(2 * t('x'))
-	sin(2x)
+	sin(2*x)
 	>>> sin('y') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
@@ -104,10 +104,10 @@ def binomial(x,k):
 	supporting integers and rationals as first argument, and integers as second argument.
 	
 	:param x: top argument for the binomial coefficient
-	:type x: integer or rational
+	:type x: *int* or *Fraction*
 	:param k: bottom argument for the binomial coefficient
-	:type k: integer
-	:rtype: *x* choose *k*
+	:type k: *int*
+	:returns: *x* choose *k*
 	:raises: :exc:`TypeError` if the types of *x* and/or *k* are not supported
 	:raises: :exc:`ValueError` if the absolute value of input values is too large
 	:raises: any exception raised by the invoked low-level function
@@ -146,12 +146,12 @@ def partial(arg,name):
 	:type arg: a series type
 	:param name: name of the variable with respect to which the derivative will be calculated
 	:type name: string
-	:rtype: partial derivative of *arg* with respect to *name*
+	:returns: partial derivative of *arg* with respect to *name*
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<integer,short>')
+	>>> from .types import polynomial, integer, short
+	>>> pt = polynomial(integer,short)()
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
 	2*x
@@ -175,12 +175,12 @@ def integrate(arg,name):
 	:type arg: a series type
 	:param name: name of the variable with respect to which the integration will be calculated
 	:type name: string
-	:rtype: antiderivative of *arg* with respect to *name*
+	:returns: antiderivative of *arg* with respect to *name*
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,kronecker_monomial<long>>')
+	>>> from .types import polynomial, rational, kronecker_monomial
+	>>> pt = polynomial(rational,kronecker_monomial())()
 	>>> x,y = pt('x'), pt('y')
 	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
 	True
@@ -204,7 +204,7 @@ def factorial(n):
 	
 	:param n: argument for the factorial
 	:type n: *int*
-	:rtype: factorial of *n*
+	:returns: factorial of *n*
 	:raises: :exc:`TypeError` if *n* is not an *int*
 	:raises: :exc:`ValueError` if *n* is negative or too large
 	
@@ -245,13 +245,13 @@ def pbracket(f,g,p_list,q_list):
 	:type p_list: list of strings
 	:param q_list: list of coordinates names
 	:type q_list: list of strings
-	:rtype: Poisson bracket of *f* and *g* with respect to momenta *p_list* and coordinates *q_list*
+	:returns: Poisson bracket of *f* and *g* with respect to momenta *p_list* and coordinates *q_list*
 	:raises: :exc:`ValueError` if *p_list* and *q_list* have different sizes or duplicate entries
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,short>')
+	>>> from .types import polynomial, rational, short
+	>>> pt = polynomial(rational,short)()
 	>>> x,v = pt('x'), pt('v')
 	>>> pbracket(x+v,x+v,['v'],['x']) == 0
 	True
@@ -290,13 +290,13 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	:type p_list: list of strings
 	:param q_list: list of coordinates names
 	:type q_list: list of strings
-	:rtype: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise.
+	:returns: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise.
 	:raises: :exc:`ValueError` if the size of all input lists is not the same
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from . import get_series
-	>>> pt = get_series('polynomial<rational,kronecker_monomial<long>>')
+	>>> from .types import polynomial, rational, kronecker_monomial
+	>>> pt = polynomial(rational,kronecker_monomial())()
 	>>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
 	>>> transformation_is_canonical([-l],[L],['L'],['l'])
 	True
