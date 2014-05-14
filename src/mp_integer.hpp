@@ -1883,6 +1883,21 @@ class mp_integer
 		{
 			return binary_mul(x,y);
 		}
+		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2)
+		{
+			const bool s1 = is_static(), s2 = n1.is_static(), s3 = n2.is_static();
+			if (s1 && s2 && s3) {
+				try {
+					m_int.st.multiply_accumulate(n1.m_int.st,n2.m_int.st);
+					return *this;
+				} catch (const std::overflow_error &) {
+				
+				}
+			}
+			std::abort();
+			//::mpz_addmul(m_value,n1.m_value,n2.m_value);
+			return *this;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
@@ -1891,6 +1906,28 @@ class mp_integer
 
 namespace math
 {
+
+/// Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::mp_integer.
+template <int NBits>
+struct multiply_accumulate_impl<mp_integer<NBits>,mp_integer<NBits>,mp_integer<NBits>,void>
+{
+	/// Call operator.
+	/**
+	 * This implementation will use piranha::mp_integer::multiply_accumulate().
+	 * 
+	 * @param[in,out] x target value for accumulation.
+	 * @param[in] y first argument.
+	 * @param[in] z second argument.
+	 * 
+	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::mp_integer::multiply_accumulate().
+	 */
+	auto operator()(mp_integer<NBits> &x, const mp_integer<NBits> &y, const mp_integer<NBits> &z) const -> decltype(x.multiply_accumulate(y,z))
+	{
+		return x.multiply_accumulate(y,z);
+	}
+};
 
 /// Specialisation of the piranha::math::negate() functor for piranha::mp_integer.
 template <int NBits>
