@@ -1838,15 +1838,19 @@ inline T series_sin_call_impl(const T &s, typename std::enable_if<series_has_sin
 	return s.sin();
 }
 
-// This is another strange thing: if we use directly decltype() instead of this alias in the enabler
-// below, GCC (both 4.7 and 4.8) gets confused. clang seems to handle this correctly. GCC 4.9 GIT
-// too.
+// NOTE: this is similar to the approach that we use in trigonometric series. It is one possible way of accomplishing this,
+// but this particular form seems to work ok across a variety of compilers - especially in GCC, the interplay between template
+// aliases, decltype() and sfinae seems to be brittle in early versions. Variations of this are used also in power_series
+// and t_subs series.
+// NOTE: template aliases are dispatched immediately where they are used, after that normal SFINAE rules apply. See, e.g., the usage
+// in this example:
+// http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_active.html#1558
 template <typename T>
-using sin_cf_ret_type = decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()));
+using sin_cf_enabler = typename std::enable_if<!series_has_sin<T>::value &&
+	std::is_same<typename T::term_type::cf_type,decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()))>::value>::type;
 
 template <typename T>
-inline T series_sin_call_impl(const T &s, typename std::enable_if<!series_has_sin<T>::value &&
-	std::is_same<typename T::term_type::cf_type,sin_cf_ret_type<T>>::value>::type * = nullptr)
+inline T series_sin_call_impl(const T &s, sin_cf_enabler<T> * = nullptr)
 {
 	typedef typename T::term_type::cf_type cf_type;
 	auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
@@ -1874,11 +1878,11 @@ inline T series_cos_call_impl(const T &s, typename std::enable_if<series_has_cos
 }
 
 template <typename T>
-using cos_cf_ret_type = decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()));
+using cos_cf_enabler = typename std::enable_if<!series_has_cos<T>::value &&
+	std::is_same<typename T::term_type::cf_type,decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()))>::value>::type;
 
 template <typename T>
-inline T series_cos_call_impl(const T &s, typename std::enable_if<!series_has_cos<T>::value &&
-	std::is_same<typename T::term_type::cf_type,cos_cf_ret_type<T>>::value>::type * = nullptr)
+inline T series_cos_call_impl(const T &s, cos_cf_enabler<T> * = nullptr)
 {
 	typedef typename T::term_type::cf_type cf_type;
 	auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
