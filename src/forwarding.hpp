@@ -40,7 +40,7 @@
  */
 #define PIRANHA_FORWARDING_CTOR(Derived,Base) \
 template <typename T_, typename ... Args_,typename = typename std::enable_if< \
-	std::is_constructible<Base,T_,Args_ && ...>::value && \
+	std::is_constructible<Base,T_ &&,Args_ && ...>::value && \
 	(sizeof...(Args_) || !std::is_same<Derived,typename std::decay<T_>::type>::value)>::type> \
 	explicit Derived(T_ &&arg0, Args_ && ... args):Base(std::forward<T_>(arg0),std::forward<Args_>(args)...) {}
 
