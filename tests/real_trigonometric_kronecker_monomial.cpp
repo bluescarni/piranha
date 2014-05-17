@@ -122,6 +122,12 @@ struct constructor_tester
 		BOOST_CHECK(v.size() == 2u);
 		BOOST_CHECK(v[0u] == 1);
 		BOOST_CHECK(v[1u] == -2);
+		BOOST_CHECK((std::is_constructible<k_type,T *, T *>::value));
+		// Iterators have to be of homogeneous type.
+		BOOST_CHECK((!std::is_constructible<k_type,T *, T const *>::value));
+		BOOST_CHECK((std::is_constructible<k_type,typename std::vector<T>::iterator,typename std::vector<T>::iterator>::value));
+		BOOST_CHECK((!std::is_constructible<k_type,typename std::vector<T>::const_iterator,typename std::vector<T>::iterator>::value));
+		BOOST_CHECK((!std::is_constructible<k_type,typename std::vector<T>::iterator,int>::value));
 		// Converting constructor.
 		k_type k16, k17(k16,symbol_set{});
 		BOOST_CHECK(k17.get_flavour());

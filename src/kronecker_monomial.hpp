@@ -150,6 +150,9 @@ class kronecker_monomial
 		}
 		/// Constructor from range.
 		/**
+		 * \note
+		 * This constructor is enabled only if \p Iterator is an input iterator.
+		 *
 		 * Will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
 		 * \p boost::numeric_cast.
@@ -162,8 +165,7 @@ class kronecker_monomial
 		 * - \p boost::numeric_cast (in case the value type of \p Iterator is not the same as \p T),
 		 * - piranha::static_vector::push_back().
 		 */
-		// TODO: sfinaeing on iterators.
-		template <typename Iterator>
+		template <typename Iterator, typename = typename std::enable_if<is_input_iterator<Iterator>::value>::type>
 		explicit kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0)
 		{
 			typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
