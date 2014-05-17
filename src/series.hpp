@@ -1433,7 +1433,7 @@ class series: series_binary_operators, detail::series_tag
 		 * Return an iterator one past the last term of the series. See the documentation of piranha::series::begin()
 		 * on how the returned iterator can be used.
 		 * 
-		 * @return an iterator to the end of the serie.
+		 * @return an iterator to the end of the series.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of piranha::symbol_set,
