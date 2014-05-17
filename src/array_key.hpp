@@ -153,7 +153,9 @@ class array_key
 		 */
 		explicit array_key(const symbol_set &args)
 		{
-			std::generate_n(std::back_inserter(m_container),args.size(),[]() {return value_type(0);});
+			for (decltype(args.size()) i = 0u; i < args.size(); ++i) {
+				m_container.push_back(value_type(0));
+			}
 		}
 		/// Constructor from piranha::array_key parametrized on a generic type.
 		/**
