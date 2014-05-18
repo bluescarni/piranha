@@ -18,29 +18,36 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "gastineau1.hpp"
+#ifndef PIRANHA_GASTINEAU3_HPP
+#define PIRANHA_GASTINEAU3_HPP
 
-#define BOOST_TEST_MODULE gastineau1_test
-#include <boost/test/unit_test.hpp>
+#include <boost/timer/timer.hpp>
 
-#include <boost/lexical_cast.hpp>
+#include "../src/polynomial.hpp"
 
-#include "../src/environment.hpp"
-#include "../src/kronecker_monomial.hpp"
-#include "../src/settings.hpp"
-
-using namespace piranha;
-
-// Gastineau's polynomial multiplication test number 1. Calculate:
-// f * (f+1)
-// where f = (1+x+y+z+t)**40.
-// http://arxiv.org/abs/1303.7425
-
-BOOST_AUTO_TEST_CASE(gastineau1_test)
+namespace piranha
 {
-	environment env;
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> gastineau3()
+{
+	typedef polynomial<Cf,Key> p_type;
+	p_type u("u"), v("v"), w("w"), x("x"), y("y");
+
+	auto f = (1 + u*u + v + w*w + x - y*y);
+	auto g = (1 + u + v*v + w + x*x + y*y*y);
+	auto tmp_f(f), tmp_g(g);
+	for (int i = 1; i < 28; ++i) {
+		f *= tmp_f;
+		g *= tmp_g;
 	}
-	BOOST_CHECK_EQUAL((gastineau1<double,kronecker_monomial<>>().size()),1929501u);
+	g += 1;
+	{
+	boost::timer::auto_cpu_timer t;
+	return f * g;
+	}
 }
+
+}
+
+#endif

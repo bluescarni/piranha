@@ -18,9 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "gastineau1.hpp"
+#include "gastineau2.hpp"
 
-#define BOOST_TEST_MODULE gastineau1_test
+#define BOOST_TEST_MODULE gastineau2_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -31,16 +31,17 @@
 
 using namespace piranha;
 
-// Gastineau's polynomial multiplication test number 1. Calculate:
-// f * (f+1)
-// where f = (1+x+y+z+t)**40.
-// http://arxiv.org/abs/1303.7425
+// Gastineau's polynomial multiplication test number 2. Calculate:
+// f * g
+// where
+// f = (1 + x + y + 2*z**2 + 3*t**3 + 5*u**5)**25
+// g = (1 + u + t + 2*z**2 + 3*y**3 + 5*x**5)**25
 
-BOOST_AUTO_TEST_CASE(gastineau1_test)
+BOOST_AUTO_TEST_CASE(gastineau2_test)
 {
 	environment env;
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	BOOST_CHECK_EQUAL((gastineau1<double,kronecker_monomial<>>().size()),1929501u);
+	BOOST_CHECK_EQUAL((gastineau2<double,kronecker_monomial<>>().size()),312855140ull);
 }
