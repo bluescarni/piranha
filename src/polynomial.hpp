@@ -716,8 +716,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				});
 			}
 			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
-			// NOTE: use m_minmax_values for the ranges of the result only, update it to include
-			// the ranges of the operands below.
+			// NOTE: first store in m_minmax_values the ranges of the result only, below we will update this with the range
+			// of the operands.
 			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
 				std::back_inserter(m_minmax_values),[](const std::pair<value_type,value_type> &p1,
 				const std::pair<value_type,value_type> &p2) {
