@@ -844,8 +844,15 @@ union integer_union
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo performance improvements: reduce usage of gmp integers in internal implementation, change the semantics of the raii
- * holder so that we avoid double allocations.
+ * \todo performance improvements:
+ *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
+ *     holder so that we avoid double allocations;
+ *   - avoid going through mpz for print to stream,
+ *   - try not to use dlimbs for addition, seems unnecessary (just low = low1 + low2, carry if low < low1/low2,
+ *     and another branch for overflow on high -> test if it makes any diff in performance),
+ *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer;
+ * - use getters for dy/st for added safety;
+ * - probably the assignment operator should demote to static if possible.
  */
 template <int NBits = 0>
 class mp_integer
@@ -1883,19 +1890,84 @@ class mp_integer
 		{
 			return binary_mul(x,y);
 		}
-		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2)
+		/// Combined multiply-add.
+		/**
+		 * Sets \p this to <tt>this + (n1 * n2)</tt>.
+		 * 
+		 * @param[in] n1 first argument.
+		 * @param[in] n2 second argument.
+		 * 
+		 * @return reference to \p this.
+		 */
+		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2) noexcept
 		{
-			const bool s1 = is_static(), s2 = n1.is_static(), s3 = n2.is_static();
-			if (s1 && s2 && s3) {
+			const bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			if (s0 && s1 && s2) {
 				try {
 					m_int.st.multiply_accumulate(n1.m_int.st,n2.m_int.st);
 					return *this;
-				} catch (const std::overflow_error &) {
-				
-				}
+				} catch (const std::overflow_error &) {}
 			}
-			std::abort();
-			//::mpz_addmul(m_value,n1.m_value,n2.m_value);
+			// 2**3 possibilities.
+			// NOTE: here the 1 flag means that the operand needs to be promoted.
+			const unsigned mask = static_cast<unsigned>(!s0) + (static_cast<unsigned>(!s1) << 1u)
+				+ (static_cast<unsigned>(!s2) << 2u);
+			switch (mask) {
+				case 0u:
+				{
+					// This is the case in which the static failed due to overflow.
+					m_int.promote();
+					detail::mpz_raii m1, m2;
+					n1.m_int.st.to_mpz(m1.m_mpz);
+					n2.m_int.st.to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.dy,&m1.m_mpz,&m2.m_mpz);
+					break;
+				}
+				case 1u:
+				{
+					detail::mpz_raii m1, m2;
+					n1.m_int.st.to_mpz(m1.m_mpz);
+					n2.m_int.st.to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.dy,&m1.m_mpz,&m2.m_mpz);
+					break;
+				}
+				case 2u:
+				{
+					m_int.promote();
+					detail::mpz_raii m2;
+					n2.m_int.st.to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
+					break;
+				}
+				case 3u:
+				{
+					detail::mpz_raii m2;
+					n2.m_int.st.to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
+					break;
+				}
+				case 4u:
+				{
+					m_int.promote();
+					detail::mpz_raii m1;
+					n1.m_int.st.to_mpz(m1.m_mpz);
+					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
+					break;
+				}
+				case 5u:
+				{
+					detail::mpz_raii m1;
+					n1.m_int.st.to_mpz(m1.m_mpz);
+					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
+					break;
+				}
+				case 6u:
+					m_int.promote();
+					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&n2.m_int.dy);
+					break;
+				case 7u:
+					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&n2.m_int.dy);
+			}
 			return *this;
 		}
 	private:
