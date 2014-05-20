@@ -985,6 +985,22 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 			piranha_assert(region_set_checker(busy_regions));
 		}
+		// Dense task sorter.
+		template <typename NKType1, typename NKType2>
+		struct dts_type
+		{
+			explicit dts_type(const std::vector<NKType1> &nk1, const std::vector<NKType2> &nk2):
+				m_new_keys1(nk1),m_new_keys2(nk2)
+			{}
+			template <typename Task>
+			bool operator()(const Task &t1, const Task &t2) const noexcept
+			{
+				return m_new_keys1[t1.m_b1.first].first + m_new_keys2[t1.m_b2.first].first <
+					m_new_keys1[t2.m_b1.first].first + m_new_keys2[t2.m_b2.first].first;
+			}
+			const std::vector<NKType1>	&m_new_keys1;
+			const std::vector<NKType2>	&m_new_keys2;
+		};
 		// Dense multiplication method.
 		void dense_multiplication(return_type &retval) const
 		{
@@ -1068,11 +1084,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Cast to hardware integers.
 			const auto bsize1 = static_cast<index_type>(bsizes.first), bsize2 = static_cast<index_type>(bsizes.second);
 			// Build the list of tasks.
-			auto dense_task_sorter = [&new_keys1,&new_keys2](const task_type &t1, const task_type &t2) {
-				return new_keys1[t1.m_b1.first].first + new_keys2[t1.m_b2.first].first <
-					new_keys1[t2.m_b1.first].first + new_keys2[t2.m_b2.first].first;
-			};
-			std::multiset<task_type,decltype(dense_task_sorter)> task_list(dense_task_sorter);
+			dts_type<new_key_type1,new_key_type2> dense_task_sorter(new_keys1,new_keys2);
+			std::multiset<task_type,dts_type<new_key_type1,new_key_type2>> task_list(dense_task_sorter);
 			decltype(task_list.insert(std::declval<task_type>())) ins_result;
 			auto dense_task_from_indices = [hmin,hmax,&new_keys1,&new_keys2](const index_type &i_start, const index_type &i_end,
 				const index_type &j_start, const index_type &j_end) -> task_type
