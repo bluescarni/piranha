@@ -29,10 +29,10 @@
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cstddef>
 #include <gmp.h>
+#include <limits>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -63,7 +63,7 @@ static inline std::string mpz_lexcast(const mpz_raii &m)
 {
 	std::ostringstream os;
 	const std::size_t size_base10 = ::mpz_sizeinbase(&m.m_mpz,10);
-	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
+	if (unlikely(size_base10 > std::numeric_limits<std::size_t>::max() - static_cast<std::size_t>(2))) {
 		piranha_throw(std::overflow_error,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
@@ -119,7 +119,7 @@ struct addmul_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-4");
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpz_raii m_a, m_b, m_c;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng), tmp3 = int_dist(rng);
