@@ -590,47 +590,26 @@ struct static_integer
 		clear_extra_bits();
 	}
 	// Division.
-	// http://en.wikipedia.org/wiki/Division_algorithm#Long_division
 	static void div(static_integer &q, static_integer &r, const static_integer &a, const static_integer &b)
 	{
 		piranha_assert(!b.is_zero());
-		mpz_size_t asizea = a._mp_size, asizeb = b._mp_size;
-		bool signa = true, signb = true;
-		if (asizea < 0) {
-			asizea = -asizea;
-			signa = false;
-		}
-		if (asizeb < 0) {
-			asizeb = -asizeb;
-			signb = false;
-		}
-		// Init q to zero.
-		q._mp_size = 0;
-		q.m_limbs[0u] = 0u;
-		q.m_limbs[1u] = 0u;
-		// If |b| > |a|, quotient is 0.
-		if (asizeb > asizea || (asizea == asizeb && compare(b,a,asizea) > 0)) {
-			// NOTE: remainder will have same sign as a.
-			r = a;
-			return;
-		}
-		// Init r to zero.
-		r._mp_size = 0;
-		r.m_limbs[0u] = 0u;
-		r.m_limbs[1u] = 0u;
-		const auto a_bits_size = a.bits_size();
-		piranha_assert(a_bits_size > 0u);
-		for (limb_t i = a_bits_size; i > 0u; --i) {
-			const limb_t idx = static_cast<limb_t>(i - 1u);
-			r.lshift1();
-			if (a.test_bit(idx)) {
-				r.set_bit(0u);
-			}
-			if (r._mp_size > asizeb || (r._mp_size == asizeb && compare(r,b,asizeb) >= 0)) {
-				raw_sub(r,r,b);
-				q.set_bit(idx);
-			}
-		}
+		// NOTE: here in principle q/r could overlap with a or b (e.g., in in-place division).
+		// We need to first read everything we need from a and b, and only then write into q/r.
+		// Store the signs.
+		const bool signa = a._mp_size >= 0, signb = b._mp_size >= 0;
+		// Compute the result in dlimb_t.
+		const dlimb_t ad = static_cast<dlimb_t>(a.m_limbs[0u] + (static_cast<dlimb_t>(a.m_limbs[1u]) << limb_bits)),
+			bd = static_cast<dlimb_t>(b.m_limbs[0u] + (static_cast<dlimb_t>(b.m_limbs[1u]) << limb_bits));
+		const dlimb_t qd = static_cast<dlimb_t>(ad / bd), rd = static_cast<dlimb_t>(ad % bd);
+		// Convert back to array of limb_t.
+		q.m_limbs[0u] = static_cast<limb_t>(qd);
+		q.m_limbs[1u] = static_cast<limb_t>(qd >> limb_bits);
+		q.clear_extra_bits();
+		q._mp_size = q.calculate_n_limbs();
+		r.m_limbs[0u] = static_cast<limb_t>(rd);
+		r.m_limbs[1u] = static_cast<limb_t>(rd >> limb_bits);
+		r.clear_extra_bits();
+		r._mp_size = r.calculate_n_limbs();
 		// The sign of the remainder is the same as the numerator.
 		if (!signa) {
 			r.negate();
@@ -850,7 +829,9 @@ union integer_union
  *   - avoid going through mpz for print to stream,
  *   - try not to use dlimbs for addition, seems unnecessary (just low = low1 + low2, carry if low < low1/low2,
  *     and another branch for overflow on high -> test if it makes any diff in performance),
- *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer;
+ *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
+ *   - in raw_add/sub/div we always operate assuming the static int has 2 limbs, maybe there's performance to be gained
+ *     by switch()ing the different cases for the operands sizes;
  * - use getters for dy/st for added safety;
  * - probably the assignment operator should demote to static if possible.
  */
@@ -1909,7 +1890,8 @@ class mp_integer
 				} catch (const std::overflow_error &) {}
 			}
 			// 2**3 possibilities.
-			// NOTE: here the 1 flag means that the operand needs to be promoted.
+			// NOTE: here the 0 flag means that the operand needs to be promoted,
+			// 1 means that it is dynamic already.
 			const unsigned mask = static_cast<unsigned>(!s0) + (static_cast<unsigned>(!s1) << 1u)
 				+ (static_cast<unsigned>(!s2) << 2u);
 			switch (mask) {
