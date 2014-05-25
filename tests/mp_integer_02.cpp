@@ -518,3 +518,223 @@ BOOST_AUTO_TEST_CASE(mp_integer_div_test)
 	boost::mpl::for_each<size_types>(in_place_float_div_tester());
 	boost::mpl::for_each<size_types>(binary_div_tester());
 }
+
+struct in_place_mp_integer_mod_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type a, b;
+		BOOST_CHECK((std::is_same<decltype(a %= b),int_type &>::value));
+		BOOST_CHECK_THROW(a %= b,zero_division_error);
+		BOOST_CHECK_EQUAL(a.sign(),0);
+		BOOST_CHECK_EQUAL(b.sign(),0);
+		b = 1;
+		a %= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		BOOST_CHECK(a.is_static());
+		a = 5;
+		b = 2;
+		a %= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"1");
+		BOOST_CHECK(a.is_static());
+		a = 7;
+		b = -2;
+		a %= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"1");
+		BOOST_CHECK(a.is_static());
+		a = -3;
+		b = 2;
+		a %= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1");
+		BOOST_CHECK(a.is_static());
+		a = -10;
+		b = -2;
+		a %= b;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
+		BOOST_CHECK(a.is_static());
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			// If tmp2 is zero, avoid doing the modulo.
+			if (tmp2 == 0) {
+				continue;
+			}
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			a %= b;
+			::mpz_tdiv_r(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+			if (tmp2 >= 1) {
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(tmp1 % tmp2));
+			}
+		}
+	}
+};
+
+struct in_place_int_mod_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			int_type n1;
+			n1 %= T(1);
+			BOOST_CHECK((std::is_same<decltype(n1 %= T(1)),int_type &>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"0");
+			n1 = 1;
+			BOOST_CHECK_THROW(n1 %= T(0),zero_division_error);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"1");
+			n1 = T(100);
+			n1 %= T(50);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"0");
+			n1 = T(99);
+			n1 %= T(50);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"49");
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				if (tmp2 == T(0)) {
+					continue;
+				}
+				int_type n(tmp1);
+				n %= tmp2;
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_tdiv_r(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),mpz_lexcast(m1));
+			}
+			// int %= mp_integer.
+			T n2(8);
+			n2 %= int_type(2);
+			BOOST_CHECK((std::is_same<T &,decltype(n2 %= int_type(2))>::value));
+			BOOST_CHECK_EQUAL(n2,T(0));
+			BOOST_CHECK_THROW(n2 %= int_type(0),zero_division_error);
+			BOOST_CHECK_EQUAL(n2,T(0));
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				if (tmp2 == T(0)) {
+					continue;
+				}
+				try {
+					tmp1 %= int_type(tmp2);
+				} catch (const std::overflow_error &) {
+					// Catch overflow errors and move on.
+					continue;
+				}
+				::mpz_tdiv_r(&m1.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)),mpz_lexcast(m1));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<integral_types>(runner<T>());
+	}
+};
+
+struct binary_mod_tester
+{
+	template <typename U>
+	struct runner1
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			int_type n(4);
+			T m(2);
+			BOOST_CHECK((std::is_same<decltype(n % m),int_type>::value));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n % m),"0");
+			BOOST_CHECK_THROW(n % T(0),zero_division_error);
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2, res;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				if (tmp2 == T(0)) {
+					continue;
+				}
+				int_type n(tmp1);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				::mpz_tdiv_r(&res.m_mpz,&m1.m_mpz,&m2.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n % tmp2),mpz_lexcast(res));
+				if (tmp1 == T(0)) {
+					continue;
+				}
+				::mpz_tdiv_r(&res.m_mpz,&m2.m_mpz,&m1.m_mpz);
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp2 % n),mpz_lexcast(res));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n1(4), n2(2);
+		BOOST_CHECK((std::is_same<decltype(n1 % n2),int_type>::value));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1%n2),"0");
+		n1 = 2;
+		n2 = 4;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1%n2),"2");
+		n1 = -6;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1%n2),"-2");
+		n2 = -5;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1%n2),"-1");
+		BOOST_CHECK_THROW(n1 % int_type(0),zero_division_error);
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		mpz_raii m_a, m_b;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			if (tmp2 == 0) {
+				continue;
+			}
+			int_type a{tmp1}, b{tmp2};
+			::mpz_set_si(&m_a.m_mpz,static_cast<long>(tmp1));
+			::mpz_set_si(&m_b.m_mpz,static_cast<long>(tmp2));
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			::mpz_tdiv_r(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a % b),mpz_lexcast(m_a));
+		}
+		// Test vs hardware int types.
+		boost::mpl::for_each<integral_types>(runner1<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_mod_test)
+{
+	boost::mpl::for_each<size_types>(in_place_mp_integer_mod_tester());
+	boost::mpl::for_each<size_types>(in_place_int_mod_tester());
+	boost::mpl::for_each<size_types>(binary_mod_tester());
+}

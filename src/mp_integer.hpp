@@ -854,6 +854,12 @@ class mp_integer
 			(std::is_same<U,mp_integer>::value && is_interoperable_type<T>::value) ||
 			(std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value)>
 		{};
+		// Types that can be used in a binary mod operation.
+		template <typename T, typename U>
+		struct are_mod_types: std::integral_constant<bool,
+			are_binary_op_types<T,U>::value && !std::is_floating_point<T>::value &&
+			!std::is_floating_point<U>::value>
+		{};
 		// Metaprogramming to establish the return type of binary arithmetic operations involving mp_integers.
 		// Default result type will be mp_integer itself; for consistency with C/C++ when one of the arguments
 		// is a floating point type, we will return a value of the same floating point type.
@@ -1469,6 +1475,59 @@ class mp_integer
 		static T binary_div(const T &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
 			return (x / static_cast<T>(n));
+		}
+		// Modulo.
+		mp_integer &in_place_mod(const mp_integer &other)
+		{
+			if (unlikely(other.sign() == 0)) {
+				piranha_throw(zero_division_error,"division by zero");
+			}
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				mp_integer q;
+				m_int.st.div(q.m_int.st,m_int.st,m_int.st,other.m_int.st);
+			} else if (s1 && !s2) {
+				// Promote this.
+				m_int.promote();
+				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&other.m_int.dy);
+			} else if (!s1 && s2) {
+				// Create a promoted copy of other.
+				detail::mpz_raii m;
+				other.m_int.st.to_mpz(m.m_mpz);
+				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&m.m_mpz);
+			} else {
+				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&other.m_int.dy);
+			}
+			return *this;
+		}
+		template <typename T>
+		mp_integer &in_place_mod(const T &other, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			return in_place_mod(mp_integer(other));
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mod(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval %= n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mod(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<T,mp_integer>::value && std::is_integral<U>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval %= n2;
+			return retval;
+		}
+		template <typename T, typename U>
+		static mp_integer binary_mod(const T &n1, const U &n2, typename std::enable_if<
+			std::is_same<U,mp_integer>::value && std::is_integral<T>::value>::type * = nullptr)
+		{
+			mp_integer retval(n1);
+			retval %= n2;
+			return retval;
 		}
 	public:
 		/// Defaulted default constructor.
@@ -2091,6 +2150,70 @@ class mp_integer
 			operator/(const T &x, const U &y)
 		{
 			return binary_div(x,y);
+		}
+		/// In-place modulo operation.
+		/**
+		 * \note
+		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type among the \ref interop "interoperable types".
+		 * 
+		 * Sets \p this to <tt>this % n</tt>. This operator behaves in the way specified by the C++ standard (specifically,
+		 * the sign of the remainder will be the sign of the numerator).
+		 * 
+		 * @param[in] n argument for the modulo operation.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
+		 */
+		template <typename T>
+		typename std::enable_if<
+			(std::is_integral<T>::value && is_interoperable_type<T>::value) ||
+			std::is_same<mp_integer,T>::value,mp_integer &>::type operator%=(const T &n)
+		{
+			return in_place_mod(n);
+		}
+		/// Generic in-place modulo with piranha::mp_integer.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const integral \ref interop "interoperable type".
+		 * 
+		 * Compute the remainder with respect to a piranha::mp_integer in-place. This method will first compute <tt>x % n</tt>,
+		 * cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] n second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
+		 */
+		template <typename T>
+		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value,T &>::type
+			operator%=(T &x, const mp_integer &n)
+		{
+			x = static_cast<T>(x % n);
+			return x;
+		}
+		/// Generic binary modulo operation involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an integral \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an integral \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x % y</tt>.
+		 * 
+		 * @throws piranha::zero_division_error if the second operand is zero.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_mod_types<T,U>::value,mp_integer>::type
+			operator%(const T &x, const U &y)
+		{
+			return binary_mod(x,y);
 		}
 	private:
 		detail::integer_union<NBits> m_int;
