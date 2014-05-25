@@ -113,14 +113,14 @@ class arith_tt_helper
  * Will be \p true if objects of type \p T can be added to objects of type \p U using the binary addition operator.
  * 
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- * @code
- * operator+(const Td &, const Ud &)
- * @endcode
+ @code
+ operator+(const Td &, const Ud &)
+ @endcode
  * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- * @code
- * is_addable<int>::value == true;
- * is_addable<int,std::string>::value == false;
- * @endcode
+ @code
+ is_addable<int>::value == true;
+ is_addable<int,std::string>::value == false;
+ @endcode
  */
 template <typename T, typename U = T>
 class is_addable: detail::sfinae_types
@@ -142,14 +142,14 @@ const bool is_addable<T,U>::value;
  * Will be \p true if objects of type \p U can be added in-place to objects of type \p T.
  * 
  * This type trait will strip \p T and \p U of reference qualifiers, and it will test the operator in the form
- * @code
- * operator+=(Td &, const Ud &)
- * @endcode
+ @code
+ operator+=(Td &, const Ud &)
+ @endcode
  * where \p Td and \p Ud are \p T and \p U after the removal of reference qualifiers. E.g.:
- * @code
- * is_addable_in_place<int>::value == true;
- * is_addable_in_place<int,std::string>::value == false;
- * @endcode
+ @code
+ is_addable_in_place<int>::value == true;
+ is_addable_in_place<int,std::string>::value == false;
+ @endcode
  */
 template <typename T, typename U = T>
 class is_addable_in_place: detail::sfinae_types
@@ -394,11 +394,11 @@ struct iio_converter
 /**
  * This type trait will be \p true if the decay type of \p T (or one of its base classes) is an instance
  * of the class template \p TT, \p false otherwise. E.g.,
- * @code
- * is_instance_of<std::vector<int>,std::vector>::value == true;
- * is_instance_of<std::ostream,std::basic_ios>::value == true;
- * is_instance_of<int,std::list>::value == false;
- * @endcode
+ @code
+ is_instance_of<std::vector<int>,std::vector>::value == true;
+ is_instance_of<std::ostream,std::basic_ios>::value == true;
+ is_instance_of<int,std::list>::value == false;
+ @endcode
  */
 // WARNING: due to a GCC bug, this will not work if TT has a certain number of template arguments > 0
 // and a final variadic pack. E.g.,
@@ -421,9 +421,9 @@ const bool is_instance_of<T,TT>::value;
  * This type trait will be \p true if instances of type \p T can be directed to
  * instances of \p std::ostream via the insertion operator. The operator must have a signature
  * compatible with
- * @code
- * std::ostream &operator<<(std::ostream &, const T &)
- * @endcode
+@code
+std::ostream &operator<<(std::ostream &, const T &)
+@endcode
  */
 template <typename T>
 class is_ostreamable: detail::sfinae_types
@@ -1098,6 +1098,7 @@ struct is_forward_iterator_impl<T,typename std::enable_if<is_input_iterator_impl
 template <typename T>
 struct is_forward_iterator
 {
+	/// Value of the type trait.
 	static const bool value = detail::is_forward_iterator_impl<typename std::decay<T>::type>::value;
 };
 

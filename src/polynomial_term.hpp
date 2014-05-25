@@ -73,22 +73,22 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  * - otherwise, the key will be piranha::monomial of \p Expo and \p S.
  * 
  * Examples:
- * @code
- * polynomial_term<double,int>
- * @endcode
+ @code
+ polynomial_term<double,int>
+ @endcode
  * is a multivariate polynomial term with double-precision coefficient and \p int exponents.
- * @code
- * polynomial_term<double,short,std::integral_constant<std::size_t,5>>
- * @endcode
+ @code
+ polynomial_term<double,short,std::integral_constant<std::size_t,5>>
+ @endcode
  * is a multivariate polynomial term with double-precision coefficient and \p short exponents, up to 5 of which
  * will be stored in static storage.
- * @code
- * polynomial_term<double,univariate_monomial<int>>
- * @endcode
+ @code
+ polynomial_term<double,univariate_monomial<int>>
+ @endcode
  * is a univariate polynomial term with double-precision coefficient and \p int exponent.
- * @code
- * polynomial_term<double,kronecker_monomial<>>
- * @endcode
+ @code
+ polynomial_term<double,kronecker_monomial<>>
+ @endcode
  * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
  * 
  * \section type_requirements Type requirements

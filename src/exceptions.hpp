@@ -94,13 +94,13 @@ struct ex_thrower
  *
  * Note that, in order to be fully standard-compliant, for use with exceptions that take no arguments on construction
  * the invocation must include a closing comma. E.g.,
- * @code
- * piranha_throw(std::bad_alloc);
- * @endcode
+ @code
+ piranha_throw(std::bad_alloc);
+ @endcode
  * is not correct, whereas
- * @code
- * piranha_throw(std::bad_alloc,);
- * @endcode
+ @code
+ piranha_throw(std::bad_alloc,);
+ @endcode
  * is correct.
  */
 #define piranha_throw(exception_type,...) piranha::detail::ex_thrower<exception_type>(__FILE__,__LINE__,__func__)(__VA_ARGS__);throw

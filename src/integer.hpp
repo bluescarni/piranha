@@ -1000,10 +1000,10 @@ class integer
 		 * (typically 32 or 64).
 		 * 
 		 * Example usage:
-		 * @code
-		 * using namespace piranha;
-		 * integer n(integer::nlimbs(4));
-		 * @endcode
+		 @code
+		 using namespace piranha;
+		 integer n(integer::nlimbs(4));
+		 @endcode
 		 * 
 		 * @param[in] n number of limbs to allocate during construction.
 		 * 

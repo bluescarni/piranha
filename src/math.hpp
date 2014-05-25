@@ -158,9 +158,9 @@ struct negate_impl
 	/// Generic call operator.
 	/**
 	 * The body of the operator is equivalent to:
-	 * @code
-	 * return x = -x;
-	 * @endcode
+	 @code
+	 return x = -x;
+	 @endcode
 	 * 
 	 * @param[in,out] x value to be negated.
 	 * 
@@ -217,9 +217,9 @@ struct multiply_accumulate_impl
 	 * and in-place addition.
 	 *
 	 * The body of the operator is equivalent to:
-	 * @code
-	 * x += y * z;
-	 * @endcode
+	 @code
+	 x += y * z;
+	 @endcode
 	 * where \p y and \p z are perfectly forwarded.
 	 * 
 	 * @param[in,out] x target value for accumulation.
