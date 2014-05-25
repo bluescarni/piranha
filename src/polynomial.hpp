@@ -80,22 +80,22 @@ struct polynomial_tag {};
  * piranha::polynomial_term.
  *
  * Examples:
- * @code
- * polynomial<double,int>
- * @endcode
+ @code
+ polynomial<double,int>
+ @endcode
  * is a multivariate polynomial with double-precision coefficients and \p int exponents.
- * @code
- * polynomial<double,short,std::integral_constant<std::size_t,5>>
- * @endcode
+ @code
+ polynomial<double,short,std::integral_constant<std::size_t,5>>
+ @endcode
  * is a multivariate polynomial with double-precision coefficients and \p short exponents, up to 5 of which
  * will be stored in static storage.
- * @code
- * polynomial<double,univariate_monomial<int>>
- * @endcode
+ @code
+ polynomial<double,univariate_monomial<int>>
+ @endcode
  * is a univariate polynomial with double-precision coefficients and \p int exponent.
- * @code
- * polynomial<double,kronecker_monomial<>>
- * @endcode
+ @code
+ polynomial<double,kronecker_monomial<>>
+ @endcode
  * is a multivariate polynomial with double-precision coefficients and integral exponents packed into a piranha::kronecker_monomial.
  * 
  * This class satisfies the piranha::is_series type trait.
