@@ -822,7 +822,8 @@ union integer_union
  * @see http://gmplib.org/
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
+ */
+/*
  * \todo performance improvements:
  *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
  *     holder so that we avoid double allocations;
@@ -831,7 +832,10 @@ union integer_union
  *     and another branch for overflow on high -> test if it makes any diff in performance),
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
  *   - in raw_add/sub/div we always operate assuming the static int has 2 limbs, maybe there's performance to be gained
- *     by switch()ing the different cases for the operands sizes;
+ *     by switch()ing the different cases for the operands sizes,
+ *   - actually, it seems like we could use a kind of static counterpart in many cases (comparison, addition, etc.):
+ *     just allocate the space in a static array and convert static_int to the GMP format, without actually allocating
+ *     any memory;
  * - use getters for dy/st for added safety;
  * - probably the assignment operator should demote to static if possible.
  */
@@ -1529,6 +1533,120 @@ class mp_integer
 			retval %= n2;
 			return retval;
 		}
+		// Comparison.
+		static bool binary_equality(const mp_integer &n1, const mp_integer &n2)
+		{
+			const bool s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				return (n1.m_int.st == n2.m_int.st);
+			} else if (s1 && !s2) {
+				// NOTE: clearly, this is highly inefficient and needs to be optimized
+				// in the future.
+				detail::mpz_raii tmp;
+				n1.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) == 0;
+			} else if (!s1 && s2) {
+				detail::mpz_raii tmp;
+				n2.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n1.m_int.dy) == 0;
+			} else {
+				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) == 0;
+			}
+		}
+		template <typename Integer>
+		static bool binary_equality(const mp_integer &n1, const Integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return n1 == mp_integer(n2);
+		}
+		template <typename Integer>
+		static bool binary_equality(const Integer &n1, const mp_integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return binary_equality(n2,n1);
+		}
+		template <typename FloatingPoint>
+		static bool binary_equality(const mp_integer &n, const FloatingPoint &x, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return static_cast<FloatingPoint>(n) == x;
+		}
+		template <typename FloatingPoint>
+		static bool binary_equality(const FloatingPoint &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return binary_equality(n,x);
+		}
+		static bool binary_less_than(const mp_integer &n1, const mp_integer &n2)
+		{
+			const bool s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				return (n1.m_int.st < n2.m_int.st);
+			} else if (s1 && !s2) {
+				detail::mpz_raii tmp;
+				n1.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) < 0;
+			} else if (!s1 && s2) {
+				detail::mpz_raii tmp;
+				n2.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&n1.m_int.dy,&tmp.m_mpz) < 0;
+			} else {
+				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) < 0;
+			}
+		}
+		template <typename Integer>
+		static bool binary_less_than(const mp_integer &n1, const Integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return n1 < mp_integer(n2);
+		}
+		template <typename Integer>
+		static bool binary_less_than(const Integer &n1, const mp_integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return mp_integer(n1) < n2;
+		}
+		template <typename FloatingPoint>
+		static bool binary_less_than(const mp_integer &n, const FloatingPoint &x, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return static_cast<FloatingPoint>(n) < x;
+		}
+		template <typename FloatingPoint>
+		static bool binary_less_than(const FloatingPoint &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return x < static_cast<FloatingPoint>(n);
+		}
+		static bool binary_leq(const mp_integer &n1, const mp_integer &n2)
+		{
+			const bool s1 = n1.is_static(), s2 = n2.is_static();
+			if (s1 && s2) {
+				return (n1.m_int.st <= n2.m_int.st);
+			} else if (s1 && !s2) {
+				detail::mpz_raii tmp;
+				n1.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) <= 0;
+			} else if (!s1 && s2) {
+				detail::mpz_raii tmp;
+				n2.m_int.st.to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&n1.m_int.dy,&tmp.m_mpz) <= 0;
+			} else {
+				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) <= 0;
+			}
+		}
+		template <typename Integer>
+		static bool binary_leq(const mp_integer &n1, const Integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return n1 <= mp_integer(n2);
+		}
+		template <typename Integer>
+		static bool binary_leq(const Integer &n1, const mp_integer &n2, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
+		{
+			return mp_integer(n1) <= n2;
+		}
+		template <typename FloatingPoint>
+		static bool binary_leq(const mp_integer &n, const FloatingPoint &x, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return static_cast<FloatingPoint>(n) <= x;
+		}
+		template <typename FloatingPoint>
+		static bool binary_leq(const FloatingPoint &x, const mp_integer &n, typename std::enable_if<std::is_floating_point<FloatingPoint>::value>::type * = nullptr)
+		{
+			return x <= static_cast<FloatingPoint>(n);
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -2214,6 +2332,153 @@ class mp_integer
 			operator%(const T &x, const U &y)
 		{
 			return binary_mod(x,y);
+		}
+		/// Generic equality operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		{
+			return binary_equality(x,y);
+		}
+		/// Generic inequality operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * This operator is the negation of operator==().
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception thrown by operator==().
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		{
+			return !(x == y);
+		}
+		/// Generic less-than operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		{
+			return binary_less_than(x,y);
+		}
+		/// Generic less-than or equal operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		{
+			return binary_leq(x,y);
+		}
+		/// Generic greater-than operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		{
+			return y < x;
+		}
+		/// Generic greater-than or equal operator involving piranha::mp_integer.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_integer.
+		 * 
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f to generate the return value.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 * 
+		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 */
+		template <typename T, typename U>
+		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		{
+			return y <= x;
 		}
 	private:
 		detail::integer_union<NBits> m_int;

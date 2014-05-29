@@ -232,7 +232,7 @@ struct in_place_mp_integer_div_tester
 		BOOST_CHECK(a.is_static());
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpz_raii m_a, m_b;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
@@ -485,7 +485,7 @@ struct binary_div_tester
 		BOOST_CHECK_THROW(n1 / int_type(0),zero_division_error);
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpz_raii m_a, m_b;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
@@ -556,7 +556,7 @@ struct in_place_mp_integer_mod_tester
 		BOOST_CHECK(a.is_static());
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpz_raii m_a, m_b;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
@@ -707,7 +707,7 @@ struct binary_mod_tester
 		BOOST_CHECK_THROW(n1 % int_type(0),zero_division_error);
 		// Random testing.
 		std::uniform_int_distribution<int> promote_dist(0,1);
-		std::uniform_int_distribution<int> int_dist(boost::integer_traits<int>::const_min,boost::integer_traits<int>::const_max);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpz_raii m_a, m_b;
 		for (int i = 0; i < ntries; ++i) {
 			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
@@ -737,4 +737,253 @@ BOOST_AUTO_TEST_CASE(mp_integer_mod_test)
 	boost::mpl::for_each<size_types>(in_place_mp_integer_mod_tester());
 	boost::mpl::for_each<size_types>(in_place_int_mod_tester());
 	boost::mpl::for_each<size_types>(binary_mod_tester());
+}
+
+struct mp_integer_cmp_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_equality_comparable<int_type>::value);
+		BOOST_CHECK(is_less_than_comparable<int_type>::value);
+		int_type a, b;
+		BOOST_CHECK((std::is_same<decltype(a == b),bool>::value));
+		BOOST_CHECK((std::is_same<decltype(a != b),bool>::value));
+		BOOST_CHECK((std::is_same<decltype(a < b),bool>::value));
+		BOOST_CHECK((std::is_same<decltype(a > b),bool>::value));
+		BOOST_CHECK((std::is_same<decltype(a <= b),bool>::value));
+		BOOST_CHECK((std::is_same<decltype(a >= b),bool>::value));
+		BOOST_CHECK(a == b);
+		BOOST_CHECK(a <= b);
+		BOOST_CHECK(a <= a);
+		BOOST_CHECK(a >= b);
+		BOOST_CHECK(a >= a);
+		BOOST_CHECK(!(a < b));
+		BOOST_CHECK(!(a < a));
+		BOOST_CHECK(!(b < a));
+		BOOST_CHECK(!(a > b));
+		BOOST_CHECK(!(a > a));
+		BOOST_CHECK(!(b > a));
+		BOOST_CHECK(!(a != b));
+		b = 1;
+		a = -1;
+		BOOST_CHECK(!(a == b));
+		BOOST_CHECK(a != b);
+		BOOST_CHECK(a < b);
+		BOOST_CHECK(a <= b);
+		BOOST_CHECK(b > a);
+		BOOST_CHECK(b >= a);
+		BOOST_CHECK(!(b < a));
+		BOOST_CHECK(!(a > b));
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+			int_type a{tmp1}, b{tmp2};
+			// Promote randomly a and/or b.
+			if (promote_dist(rng) == 1 && a.is_static()) {
+				a.promote();
+			}
+			if (promote_dist(rng) == 1 && b.is_static()) {
+				b.promote();
+			}
+			BOOST_CHECK(a == a);
+			BOOST_CHECK(a >= a);
+			BOOST_CHECK(a <= a);
+			BOOST_CHECK(!(a < a));
+			BOOST_CHECK(!(a > a));
+			BOOST_CHECK(b == b);
+			BOOST_CHECK((a == b) == (tmp1 == tmp2));
+			BOOST_CHECK((a < b) == (tmp1 < tmp2));
+			BOOST_CHECK((a > b) == (tmp1 > tmp2));
+			BOOST_CHECK((a != b) == (tmp1 != tmp2));
+			BOOST_CHECK((a >= b) == (tmp1 >= tmp2));
+			BOOST_CHECK((a <= b) == (tmp1 <= tmp2));
+		}
+	}
+};
+
+struct int_cmp_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			BOOST_CHECK((is_equality_comparable<int_type,T>::value));
+			BOOST_CHECK((is_equality_comparable<T,int_type>::value));
+			BOOST_CHECK((is_less_than_comparable<int_type,T>::value));
+			BOOST_CHECK((is_less_than_comparable<T,int_type>::value));
+			int_type n1;
+			BOOST_CHECK((std::is_same<decltype(n1 == T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) == n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 < T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) < n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 > T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) > n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 <= T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) <= n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 >= T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) >= n1),bool>::value));
+			BOOST_CHECK(n1 == T(0));
+			BOOST_CHECK(T(0) == n1);
+			BOOST_CHECK(n1 <= T(0));
+			BOOST_CHECK(T(0) <= n1);
+			BOOST_CHECK(n1 >= T(0));
+			BOOST_CHECK(T(0) >= n1);
+			BOOST_CHECK(!(n1 < T(0)));
+			BOOST_CHECK(!(n1 > T(0)));
+			BOOST_CHECK(!(T(0) < n1));
+			BOOST_CHECK(!(T(0) > n1));
+			n1 = -1;
+			BOOST_CHECK(n1 != T(0));
+			BOOST_CHECK(n1 < T(0));
+			BOOST_CHECK(n1 <= T(0));
+			BOOST_CHECK(T(0) > n1);
+			BOOST_CHECK(T(0) >= n1);
+			BOOST_CHECK(T(0) != n1);
+			BOOST_CHECK(!(T(0) < n1));
+			BOOST_CHECK(!(T(0) <= n1));
+			BOOST_CHECK(!(n1 > T(0)));
+			BOOST_CHECK(!(n1 >= T(0)));
+			// Random testing.
+			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
+			mpz_raii m1, m2;
+			for (int i = 0; i < ntries; ++i) {
+				T tmp1 = int_dist(rng), tmp2 = int_dist(rng);
+				int_type n(tmp1);
+				::mpz_set_str(&m1.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp1)).c_str(),10);
+				::mpz_set_str(&m2.m_mpz,boost::lexical_cast<std::string>(static_cast<int_cast_t>(tmp2)).c_str(),10);
+				BOOST_CHECK(n == tmp1);
+				BOOST_CHECK(tmp1 == n);
+				BOOST_CHECK(n <= tmp1);
+				BOOST_CHECK(tmp1 <= n);
+				BOOST_CHECK(n >= tmp1);
+				BOOST_CHECK(tmp1 >= n);
+				BOOST_CHECK(!(n < tmp1));
+				BOOST_CHECK(!(tmp1 < n));
+				BOOST_CHECK(!(n > tmp1));
+				BOOST_CHECK(!(tmp1 > n));
+				BOOST_CHECK_EQUAL(n == tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) == 0);
+				BOOST_CHECK_EQUAL(tmp2 == n, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) == 0);
+				BOOST_CHECK_EQUAL(n != tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) != 0);
+				BOOST_CHECK_EQUAL(tmp2 != n, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) != 0);
+				BOOST_CHECK_EQUAL(n < tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) < 0);
+				BOOST_CHECK_EQUAL(tmp2 < n, ::mpz_cmp(&m2.m_mpz,&m1.m_mpz) < 0);
+				BOOST_CHECK_EQUAL(n > tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) > 0);
+				BOOST_CHECK_EQUAL(tmp2 > n, ::mpz_cmp(&m2.m_mpz,&m1.m_mpz) > 0);
+				BOOST_CHECK_EQUAL(n <= tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) <= 0);
+				BOOST_CHECK_EQUAL(tmp2 <= n, ::mpz_cmp(&m2.m_mpz,&m1.m_mpz) <= 0);
+				BOOST_CHECK_EQUAL(n >= tmp2, ::mpz_cmp(&m1.m_mpz,&m2.m_mpz) >= 0);
+				BOOST_CHECK_EQUAL(tmp2 >= n, ::mpz_cmp(&m2.m_mpz,&m1.m_mpz) >= 0);
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<integral_types>(runner<T>());
+	}
+};
+
+struct float_cmp_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			BOOST_CHECK((is_equality_comparable<int_type,T>::value));
+			BOOST_CHECK((is_equality_comparable<T,int_type>::value));
+			BOOST_CHECK((is_less_than_comparable<int_type,T>::value));
+			BOOST_CHECK((is_less_than_comparable<T,int_type>::value));
+			int_type n1;
+			BOOST_CHECK((std::is_same<decltype(n1 == T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) == n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 < T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) < n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 > T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) > n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 <= T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) <= n1),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(n1 >= T(0)),bool>::value));
+			BOOST_CHECK((std::is_same<decltype(T(0) >= n1),bool>::value));
+			BOOST_CHECK(n1 == T(0));
+			BOOST_CHECK(T(0) == n1);
+			BOOST_CHECK(n1 <= T(0));
+			BOOST_CHECK(T(0) <= n1);
+			BOOST_CHECK(n1 >= T(0));
+			BOOST_CHECK(T(0) >= n1);
+			BOOST_CHECK(!(n1 != T(0)));
+			BOOST_CHECK(!(T(0) != n1));
+			BOOST_CHECK(!(n1 < T(0)));
+			BOOST_CHECK(!(T(0) < n1));
+			BOOST_CHECK(!(n1 > T(0)));
+			BOOST_CHECK(!(T(0) > n1));
+			n1 = -1;
+			BOOST_CHECK(n1 != T(0));
+			BOOST_CHECK(T(0) != n1);
+			BOOST_CHECK(!(n1 == T(0)));
+			BOOST_CHECK(!(T(0) == n1));
+			BOOST_CHECK(n1 < T(0));
+			BOOST_CHECK(n1 <= T(0));
+			BOOST_CHECK(!(T(0) < n1));
+			BOOST_CHECK(!(T(0) <= n1));
+			BOOST_CHECK(!(n1 > T(0)));
+			BOOST_CHECK(T(0) > n1);
+			BOOST_CHECK(!(n1 >= T(0)));
+			BOOST_CHECK(T(0) >= n1);
+			// Random testing
+			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
+			for (int i = 0; i < ntries / 100; ++i) {
+				const T tmp1 = urd1(rng);
+				int_type n(tmp1);
+				BOOST_CHECK((n == tmp1) == (static_cast<T>(n) == tmp1));
+				BOOST_CHECK((tmp1 == n) == (static_cast<T>(n) == tmp1));
+				BOOST_CHECK((n != tmp1) == (static_cast<T>(n) != tmp1));
+				BOOST_CHECK((tmp1 != n) == (static_cast<T>(n) != tmp1));
+				BOOST_CHECK((n < tmp1) == (static_cast<T>(n) < tmp1));
+				BOOST_CHECK((tmp1 < n) == (tmp1 < static_cast<T>(n)));
+				BOOST_CHECK((n > tmp1) == (static_cast<T>(n) > tmp1));
+				BOOST_CHECK((tmp1 > n) == (tmp1 > static_cast<T>(n)));
+				BOOST_CHECK((n <= tmp1) == (static_cast<T>(n) <= tmp1));
+				BOOST_CHECK((tmp1 <= n) == (tmp1 <= static_cast<T>(n)));
+				BOOST_CHECK((n >= tmp1) == (static_cast<T>(n) >= tmp1));
+				BOOST_CHECK((tmp1 >= n) == (tmp1 >= static_cast<T>(n)));
+				const T tmp2 = urd2(rng);
+				n = tmp2;
+				BOOST_CHECK((n == tmp2) == (static_cast<T>(n) == tmp2));
+				BOOST_CHECK((tmp2 == n) == (static_cast<T>(n) == tmp2));
+				BOOST_CHECK((n != tmp2) == (static_cast<T>(n) != tmp2));
+				BOOST_CHECK((tmp2 != n) == (static_cast<T>(n) != tmp2));
+				BOOST_CHECK((n < tmp2) == (static_cast<T>(n) < tmp2));
+				BOOST_CHECK((tmp2 < n) == (tmp2 < static_cast<T>(n)));
+				BOOST_CHECK((n > tmp2) == (static_cast<T>(n) > tmp2));
+				BOOST_CHECK((tmp2 > n) == (tmp2 > static_cast<T>(n)));
+				BOOST_CHECK((n <= tmp2) == (static_cast<T>(n) <= tmp2));
+				BOOST_CHECK((tmp2 <= n) == (tmp2 <= static_cast<T>(n)));
+				BOOST_CHECK((n >= tmp2) == (static_cast<T>(n) >= tmp2));
+				BOOST_CHECK((tmp2 >= n) == (tmp2 >= static_cast<T>(n)));
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<floating_point_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_cmp_test)
+{
+	boost::mpl::for_each<size_types>(mp_integer_cmp_tester());
+	boost::mpl::for_each<size_types>(int_cmp_tester());
+	boost::mpl::for_each<size_types>(float_cmp_tester());
 }
