@@ -1010,3 +1010,79 @@ BOOST_AUTO_TEST_CASE(mp_integer_cmp_test)
 	boost::mpl::for_each<size_types>(int_cmp_tester());
 	boost::mpl::for_each<size_types>(float_cmp_tester());
 }
+
+struct int_pow_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef mp_integer<U::value> int_type;
+			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
+			BOOST_CHECK((is_exponentiable<int_type,T>::value));
+			BOOST_CHECK((!is_exponentiable<int_type,float>::value));
+			BOOST_CHECK((!is_exponentiable<int_type,double>::value));
+			BOOST_CHECK((!is_exponentiable<int_type,long double>::value));
+			int_type n;
+			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
+			if (std::is_signed<T>::value) {
+				BOOST_CHECK_THROW(n.pow(T(-1)),zero_division_error);
+			}
+			n = 1;
+			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
+			if (std::is_signed<T>::value) {
+				BOOST_CHECK_EQUAL(n.pow(T(-1)),1);
+			}
+			n = -1;
+			BOOST_CHECK_EQUAL(n.pow(0),1);
+			if (std::is_signed<T>::value) {
+				BOOST_CHECK_EQUAL(n.pow(T(-1)),-1);
+			}
+			n = 2;
+			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
+			BOOST_CHECK_EQUAL(n.pow(T(1)),2);
+			BOOST_CHECK_EQUAL(n.pow(T(2)),4);
+			BOOST_CHECK_EQUAL(n.pow(T(4)),16);
+			BOOST_CHECK_EQUAL(n.pow(T(5)),32);
+			if (std::is_signed<T>::value) {
+				BOOST_CHECK_EQUAL(n.pow(T(-1)),0);
+			}
+			n = -3;
+			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
+			BOOST_CHECK_EQUAL(n.pow(T(1)),-3);
+			BOOST_CHECK_EQUAL(n.pow(T(2)),9);
+			BOOST_CHECK_EQUAL(n.pow(T(4)),81);
+			BOOST_CHECK_EQUAL(n.pow(T(5)),-243);
+			BOOST_CHECK_EQUAL(n.pow(T(13)),-1594323);
+			if (std::is_signed<T>::value) {
+				BOOST_CHECK_EQUAL(n.pow(T(-1)),0);
+			}
+			// Random testing.
+			const T max_exp = static_cast<T>(std::min(int_cast_t(1000),int_cast_t(std::numeric_limits<T>::max())));
+			std::uniform_int_distribution<T> exp_dist(T(0),max_exp);
+			std::uniform_int_distribution<int> base_dist(-1000,1000);
+			mpz_raii m_base;
+			for (int i = 0; i < ntries; ++i) {
+				auto base_int = base_dist(rng);
+				auto exp_int = exp_dist(rng);
+				auto retval = int_type(base_int).pow(exp_int);
+				::mpz_set_si(&m_base.m_mpz,static_cast<long>(base_int));
+				::mpz_pow_ui(&m_base.m_mpz,&m_base.m_mpz,static_cast<unsigned long>(exp_int));
+				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(retval),mpz_lexcast(m_base));
+				BOOST_CHECK_EQUAL(math::pow(int_type(base_int),exp_int),retval);
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<integral_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_pow_test)
+{
+	boost::mpl::for_each<size_types>(int_pow_tester());
+}

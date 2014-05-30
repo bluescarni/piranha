@@ -1650,6 +1650,50 @@ class mp_integer
 		{
 			return x <= static_cast<FloatingPoint>(n);
 		}
+		// Exponentiation.
+		// ebs = exponentiation by squaring.
+		mp_integer ebs(unsigned long n) const
+		{
+			mp_integer result(1), tmp(*this);
+			while (n) {
+				if (n % 2ul) {
+					result *= tmp;
+				}
+				tmp *= tmp;
+				n /= 2ul;
+			}
+			return result;
+		}
+		template <typename T>
+		mp_integer pow_impl(const T &ui, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value>::type * = nullptr) const
+		{
+			unsigned long exp;
+			try {
+				exp = boost::numeric_cast<unsigned long>(ui);
+			} catch (const boost::numeric::bad_numeric_cast &) {
+				piranha_throw(std::invalid_argument,"invalid argument for exponentiation");
+			}
+			return ebs(exp);
+		}
+		template <typename T>
+		mp_integer pow_impl(const T &si, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value>::type * = nullptr) const
+		{
+			return pow_impl(mp_integer(si));
+		}
+		mp_integer pow_impl(const mp_integer &n) const
+		{
+			if (n.sign() >= 0) {
+				unsigned long exp;
+				try {
+					exp = static_cast<unsigned long>(n);
+				} catch (const std::overflow_error &) {
+					piranha_throw(std::invalid_argument,"invalid argument for exponentiation");
+				}
+				return pow_impl(exp);
+			} else {
+				return 1 / pow_impl(-n);
+			}
+		}
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -2459,6 +2503,30 @@ class mp_integer
 		{
 			return y <= x;
 		}
+		/// Exponentiation.
+		/**
+		 * \note
+		 * This template method is activated only if \p T is an integral type or piranha::mp_integer.
+		 *
+		 * Return <tt>this ** exp</tt>.  Negative
+		 * powers are calculated as <tt>(1 / this) ** exp</tt>. Trying to raise zero to a negative exponent will throw a
+		 * piranha::zero_division_error exception. <tt>this ** 0</tt> will always return 1.
+		 * 
+		 * The value of \p exp cannot exceed in absolute value the maximum value representable by the <tt>unsigned long</tt> type, otherwise an
+		 * \p std::invalid_argument exception will be thrown.
+		 * 
+		 * @param[in] exp exponent.
+		 * 
+		 * @return <tt>this ** exp</tt>.
+		 * 
+		 * @throws std::invalid_argument if <tt>exp</tt>'s value is outside the range of the <tt>unsigned long</tt> type.
+		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
+		 */
+		template <typename T>
+		typename std::enable_if<std::is_integral<T>::value || std::is_same<T,mp_integer>::value,mp_integer>::type pow(const T &exp) const
+		{
+			return pow_impl(exp);
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
@@ -2525,6 +2593,36 @@ struct is_zero_impl<mp_integer<NBits>,void>
 	bool operator()(const mp_integer<NBits> &n) const
 	{
 		return n.sign() == 0;
+	}
+};
+
+/// Specialisation of the piranha::math::pow() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is piranha::mp_integer.
+ * The result will be computed via piranha::mp_integer::pow().
+ */
+template <typename U, int NBits>
+struct pow_impl<mp_integer<NBits>,U,void>
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This operator is enabled only if the corresponding call to piranha::mp_integer::pow()
+	 * is well-formed.
+	 *
+	 * The exponentiation will be computed via piranha::mp_integer::pow().
+	 * 
+	 * @param[in] n base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p n to the power of \p x.
+	 * 
+	 * @throws unspecified any exception resulting from piranha::mp_integer::pow().
+	 */
+	template <typename U2>
+	auto operator()(const mp_integer<NBits> &n, const U2 &x) const -> decltype(n.pow(x))
+	{
+		return n.pow(x);
 	}
 };
 
