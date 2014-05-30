@@ -3131,6 +3131,15 @@ struct in_place_mp_integer_add_tester
 		a += b;
 		::mpz_add(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		// Promotion bug.
+		int_type c;
+		mpz_raii m_c;
+		::mpz_setbit(&m_c.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(c).st.limb_bits * 2u - 1u));
+		BOOST_CHECK(c.is_static());
+		get_m(c).st.set_bit(static_cast<limb_t>(get_m(c).st.limb_bits * 2u - 1u));
+		c += c;
+		::mpz_add(&m_c.m_mpz,&m_c.m_mpz,&m_c.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(m_c));
 	}
 };
 
@@ -3769,6 +3778,16 @@ struct in_place_mp_integer_mul_tester
 		a *= b;
 		::mpz_mul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		// Test the bug when promoting both operands which are the same underlying
+		// object.
+		int_type c(2);
+		mpz_raii m_c;
+		::mpz_set_si(&m_c.m_mpz,2);
+		while (c.is_static()) {
+			c *= c;
+			::mpz_mul(&m_c.m_mpz,&m_c.m_mpz,&m_c.m_mpz);
+		}
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(m_c));
 	}
 };
 
@@ -3987,22 +4006,4 @@ BOOST_AUTO_TEST_CASE(mp_integer_mul_test)
 	boost::mpl::for_each<size_types>(in_place_int_mul_tester());
 	boost::mpl::for_each<size_types>(in_place_float_mul_tester());
 	boost::mpl::for_each<size_types>(binary_mul_tester());
-}
-
-struct addmul_tester
-{
-	template <typename T>
-	void operator()(const T &)
-	{
-		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK(has_multiply_accumulate<int_type>::value);
-		int_type a,b,c;
-		math::multiply_accumulate(a,b,c);
-		BOOST_CHECK_EQUAL(a.sign(),0);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(mp_integer_addmul_test)
-{
-	boost::mpl::for_each<size_types>(addmul_tester());
 }

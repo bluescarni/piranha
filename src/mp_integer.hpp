@@ -1205,7 +1205,7 @@ class mp_integer
 		template <bool AddOrSub>
 		mp_integer &in_place_add_or_sub(const mp_integer &other)
 		{
-			const bool s1 = is_static(), s2 = other.is_static();
+			bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				// Attempt the static add/sub.
 				try {
@@ -1223,6 +1223,8 @@ class mp_integer
 			// Promote as needed, we need GMP types on both sides.
 			if (s1) {
 				m_int.promote();
+				// NOTE: refresh the value of s2 in case other coincided with this.
+				s2 = other.is_static();
 			}
 			if (s2) {
 				detail::mpz_raii m;
@@ -1347,7 +1349,7 @@ class mp_integer
 		// Multiplication.
 		mp_integer &in_place_mul(const mp_integer &other)
 		{
-			const bool s1 = is_static(), s2 = other.is_static();
+			bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				// Attempt the static mul.
 				try {
@@ -1358,6 +1360,7 @@ class mp_integer
 			// Promote as needed, we need GMP types on both sides.
 			if (s1) {
 				m_int.promote();
+				s2 = other.is_static();
 			}
 			if (s2) {
 				detail::mpz_raii m;
@@ -2127,23 +2130,27 @@ class mp_integer
 		 */
 		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2) noexcept
 		{
-			const bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
+			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
 			if (s0 && s1 && s2) {
 				try {
 					m_int.st.multiply_accumulate(n1.m_int.st,n2.m_int.st);
 					return *this;
 				} catch (const std::overflow_error &) {}
 			}
-			// 2**3 possibilities.
-			// NOTE: here the 0 flag means that the operand needs to be promoted,
+			// this will have to be mpz in any case, promote it if needed and re-check the
+			// static flags in case this coincides with n1 and/or n2.
+			if (s0) {
+				m_int.promote();
+				s1 = n1.is_static();
+				s2 = n2.is_static();
+			}
+			// 2**2 possibilities.
+			// NOTE: here the 0 flag means that the operand is static and needs to be promoted,
 			// 1 means that it is dynamic already.
-			const unsigned mask = static_cast<unsigned>(!s0) + (static_cast<unsigned>(!s1) << 1u)
-				+ (static_cast<unsigned>(!s2) << 2u);
+			const unsigned mask = static_cast<unsigned>(!s1) + (static_cast<unsigned>(!s2) << 1u);
 			switch (mask) {
 				case 0u:
 				{
-					// This is the case in which the static failed due to overflow.
-					m_int.promote();
 					detail::mpz_raii m1, m2;
 					n1.m_int.st.to_mpz(m1.m_mpz);
 					n2.m_int.st.to_mpz(m2.m_mpz);
@@ -2152,47 +2159,19 @@ class mp_integer
 				}
 				case 1u:
 				{
-					detail::mpz_raii m1, m2;
-					n1.m_int.st.to_mpz(m1.m_mpz);
+					detail::mpz_raii m2;
 					n2.m_int.st.to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.dy,&m1.m_mpz,&m2.m_mpz);
+					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
 					break;
 				}
 				case 2u:
 				{
-					m_int.promote();
-					detail::mpz_raii m2;
-					n2.m_int.st.to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
+					detail::mpz_raii m1;
+					n1.m_int.st.to_mpz(m1.m_mpz);
+					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
 					break;
 				}
 				case 3u:
-				{
-					detail::mpz_raii m2;
-					n2.m_int.st.to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
-					break;
-				}
-				case 4u:
-				{
-					m_int.promote();
-					detail::mpz_raii m1;
-					n1.m_int.st.to_mpz(m1.m_mpz);
-					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
-					break;
-				}
-				case 5u:
-				{
-					detail::mpz_raii m1;
-					n1.m_int.st.to_mpz(m1.m_mpz);
-					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
-					break;
-				}
-				case 6u:
-					m_int.promote();
-					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&n2.m_int.dy);
-					break;
-				case 7u:
 					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&n2.m_int.dy);
 			}
 			return *this;

@@ -184,6 +184,29 @@ struct addmul_tester
 		BOOST_CHECK(!a.is_static());
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(old_a + b * c),boost::lexical_cast<std::string>(a));
 		}
+		{
+		// Promotion bug.
+		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
+		int_type a, b(2);
+		mpz_raii m_a, m_b;
+		::mpz_set_si(&m_b.m_mpz,2);
+		get_m(a).st.set_bit(static_cast<limb_t>(get_m(a).st.limb_bits * 2u - 1u));
+		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).st.limb_bits * 2u - 1u));
+		a.multiply_accumulate(a,b);
+		::mpz_addmul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		}
+		{
+		// Promotion bug.
+		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
+		int_type a;
+		mpz_raii m_a;
+		get_m(a).st.set_bit(static_cast<limb_t>(get_m(a).st.limb_bits * 2u - 1u));
+		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).st.limb_bits * 2u - 1u));
+		a.multiply_accumulate(a,a);
+		::mpz_addmul(&m_a.m_mpz,&m_a.m_mpz,&m_a.m_mpz);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
+		}
 	}
 };
 
