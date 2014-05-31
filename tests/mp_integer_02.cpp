@@ -25,6 +25,7 @@
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <algorithm>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
@@ -1026,6 +1027,7 @@ struct int_pow_tester
 			BOOST_CHECK((!is_exponentiable<int_type,double>::value));
 			BOOST_CHECK((!is_exponentiable<int_type,long double>::value));
 			int_type n;
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(n,T(0)))>::value));
 			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
 			if (std::is_signed<T>::value) {
 				BOOST_CHECK_THROW(n.pow(T(-1)),zero_division_error);
@@ -1036,7 +1038,7 @@ struct int_pow_tester
 				BOOST_CHECK_EQUAL(n.pow(T(-1)),1);
 			}
 			n = -1;
-			BOOST_CHECK_EQUAL(n.pow(0),1);
+			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
 			if (std::is_signed<T>::value) {
 				BOOST_CHECK_EQUAL(n.pow(T(-1)),-1);
 			}
@@ -1082,7 +1084,60 @@ struct int_pow_tester
 	}
 };
 
+struct mp_integer_pow_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((is_exponentiable<int_type,int_type>::value));
+		BOOST_CHECK((!is_exponentiable<int_type,float>::value));
+		BOOST_CHECK((!is_exponentiable<int_type,double>::value));
+		BOOST_CHECK((!is_exponentiable<int_type,long double>::value));
+		int_type n;
+		BOOST_CHECK((std::is_same<int_type,decltype(math::pow(n,n))>::value));
+		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
+		BOOST_CHECK_THROW(n.pow(int_type(-1)),zero_division_error);
+		n = 1;
+		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
+		BOOST_CHECK_EQUAL(n.pow(int_type(-1)),1);
+		n = -1;
+		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
+		BOOST_CHECK_EQUAL(n.pow(int_type(-1)),-1);
+		n = 2;
+		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
+		BOOST_CHECK_EQUAL(n.pow(int_type(1)),2);
+		BOOST_CHECK_EQUAL(n.pow(int_type(2)),4);
+		BOOST_CHECK_EQUAL(n.pow(int_type(4)),16);
+		BOOST_CHECK_EQUAL(n.pow(int_type(5)),32);
+		BOOST_CHECK_EQUAL(n.pow(int_type(-1)),0);
+		n = -3;
+		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
+		BOOST_CHECK_EQUAL(n.pow(int_type(1)),-3);
+		BOOST_CHECK_EQUAL(n.pow(int_type(2)),9);
+		BOOST_CHECK_EQUAL(n.pow(int_type(4)),81);
+		BOOST_CHECK_EQUAL(n.pow(int_type(5)),-243);
+		BOOST_CHECK_EQUAL(n.pow(int_type(13)),-1594323);
+		BOOST_CHECK_EQUAL(n.pow(int_type(-1)),0);
+		BOOST_CHECK_THROW(n.pow(int_type(std::numeric_limits<unsigned long>::max()) + 1),std::invalid_argument);
+		// Random testing.
+		std::uniform_int_distribution<int> exp_dist(0,1000);
+		std::uniform_int_distribution<int> base_dist(-1000,1000);
+		mpz_raii m_base;
+		for (int i = 0; i < ntries; ++i) {
+			auto base_int = base_dist(rng);
+			auto exp_int = exp_dist(rng);
+			auto retval = int_type(base_int).pow(int_type(exp_int));
+			::mpz_set_si(&m_base.m_mpz,static_cast<long>(base_int));
+			::mpz_pow_ui(&m_base.m_mpz,&m_base.m_mpz,static_cast<unsigned long>(exp_int));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(retval),mpz_lexcast(m_base));
+			BOOST_CHECK_EQUAL(math::pow(int_type(base_int),int_type(exp_int)),retval);
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_pow_test)
 {
 	boost::mpl::for_each<size_types>(int_pow_tester());
+	boost::mpl::for_each<size_types>(mp_integer_pow_tester());
 }
