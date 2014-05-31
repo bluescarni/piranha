@@ -2319,118 +2319,118 @@ struct union_ctor_tester
 		BOOST_CHECK(n.is_static());
 		n.promote();
 		BOOST_CHECK(!n.is_static());
-		BOOST_CHECK(n.dy._mp_alloc > 0);
-		BOOST_CHECK(n.dy._mp_d != nullptr);
+		BOOST_CHECK(n.g_dy()._mp_alloc > 0);
+		BOOST_CHECK(n.g_dy()._mp_d != nullptr);
 		// Copy ctor tests.
 		int_type n1;
-		n1.st.set_bit(1u);
+		n1.g_st().set_bit(1u);
 		BOOST_CHECK(n1.is_static());
 		// From S.
 		int_type n2(n1);
 		BOOST_CHECK(n2.is_static());
-		BOOST_CHECK_EQUAL(n2.st.test_bit(1u),1u);
+		BOOST_CHECK_EQUAL(n2.g_st().test_bit(1u),1u);
 		// From D.
-		n1.st.set_bit(limb_bits);
+		n1.g_st().set_bit(limb_bits);
 		n1.promote();
 		BOOST_CHECK(!n1.is_static());
 		int_type n3(n1);
 		BOOST_CHECK(!n3.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.dy,1u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.g_dy(),1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3.g_dy(),limb_bits),1);
 		// Move ctor tests.
 		int_type n1a;
-		n1a.st.set_bit(1u);
+		n1a.g_st().set_bit(1u);
 		BOOST_CHECK(n1a.is_static());
 		// From S.
 		int_type n2a(std::move(n1a));
 		BOOST_CHECK(n2a.is_static());
-		BOOST_CHECK_EQUAL(n2a.st.test_bit(1u),1u);
+		BOOST_CHECK_EQUAL(n2a.g_st().test_bit(1u),1u);
 		BOOST_CHECK(n1a.is_static());
-		BOOST_CHECK_EQUAL(n1a.st.test_bit(1u),1u);
+		BOOST_CHECK_EQUAL(n1a.g_st().test_bit(1u),1u);
 		// From D.
-		n1a.st.set_bit(limb_bits);
+		n1a.g_st().set_bit(limb_bits);
 		n1a.promote();
 		BOOST_CHECK(!n1a.is_static());
 		int_type n3a(std::move(n1a));
 		BOOST_CHECK(!n3a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.dy,1u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.g_dy(),1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n3a.g_dy(),limb_bits),1);
 		BOOST_CHECK(n1a.is_static());
-		BOOST_CHECK_EQUAL(n1a.st,typename int_type::s_storage());
+		BOOST_CHECK_EQUAL(n1a.g_st(),typename int_type::s_storage());
 		// Copy assignment tests.
 		int_type n4, n5, n6;
-		n4.st.set_bit(4u);
+		n4.g_st().set_bit(4u);
 		// Self assignment.
 		n4 = n4;
 		BOOST_CHECK(n4.is_static());
-		BOOST_CHECK_EQUAL(n4.st.test_bit(4u),1u);
+		BOOST_CHECK_EQUAL(n4.g_st().test_bit(4u),1u);
 		// S vs S.
 		n5 = n4;
 		BOOST_CHECK(n5.is_static());
-		BOOST_CHECK_EQUAL(n5.st.test_bit(4u),1u);
+		BOOST_CHECK_EQUAL(n5.g_st().test_bit(4u),1u);
 		// S vs D.
-		n4.st.set_bit(limb_bits);
+		n4.g_st().set_bit(limb_bits);
 		n4.promote();
 		n5 = n4;
 		BOOST_CHECK(!n5.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),limb_bits),1);
 		// D vs S.
-		n6.st.set_bit(2u);
+		n6.g_st().set_bit(2u);
 		n5 = n6;
 		BOOST_CHECK(!n5.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,2u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),limb_bits),0);
 		// D vs D.
 		n5 = n4;
 		BOOST_CHECK(!n5.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,2u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),2u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),limb_bits),1);
 		// Move assignment tests.
 		int_type n4a, n5a, n6a;
-		n4a.st.set_bit(4u);
+		n4a.g_st().set_bit(4u);
 		// Self assignment.
 		n4a = std::move(n4a);
 		BOOST_CHECK(n4a.is_static());
-		BOOST_CHECK_EQUAL(n4a.st.test_bit(4u),1u);
+		BOOST_CHECK_EQUAL(n4a.g_st().test_bit(4u),1u);
 		// S vs S.
 		n5a = std::move(n4a);
 		BOOST_CHECK(n5a.is_static());
-		BOOST_CHECK_EQUAL(n5a.st.test_bit(4u),1u);
+		BOOST_CHECK_EQUAL(n5a.g_st().test_bit(4u),1u);
 		BOOST_CHECK(n4a.is_static());
-		BOOST_CHECK_EQUAL(n4a.st.test_bit(4u),1u);
+		BOOST_CHECK_EQUAL(n4a.g_st().test_bit(4u),1u);
 		// S vs D.
-		n4a.st.set_bit(limb_bits);
+		n4a.g_st().set_bit(limb_bits);
 		n4a.promote();
 		n5a = std::move(n4a);
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),1);
 		BOOST_CHECK(n4a.is_static());
-		BOOST_CHECK_EQUAL(n4a.st,typename int_type::s_storage());
+		BOOST_CHECK_EQUAL(n4a.g_st(),typename int_type::s_storage());
 		// D vs S.
-		n6a.st.set_bit(2u);
+		n6a.g_st().set_bit(2u);
 		n5a = std::move(n6a);
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,2u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),0);
 		BOOST_CHECK(!n6a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),limb_bits),1);
 		// D vs D.
-		::mpz_setbit(&n6a.dy,limb_bits + 1u);
+		::mpz_setbit(&n6a.g_dy(),limb_bits + 1u);
 		n5a = std::move(n6a);
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits + 1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits + 1u),1);
 		BOOST_CHECK(!n6a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,2u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,4u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.dy,limb_bits),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),limb_bits),0);
 		// NOTE: this is here only for historical reasons, moved-from objects
 		// are not special any more.
 		// Check if reviving moved-from objects works.
@@ -2441,11 +2441,11 @@ struct union_ctor_tester
 		BOOST_CHECK(n5a.is_static());
 		n5a = n7;
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.dy,limb_bits + 1u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits + 1u),1);
 		int_type n8;
-		n8.st.set_bit(3u);
+		n8.g_st().set_bit(3u);
 		int_type n7a(std::move(n5a));
 		(void)n7a;
 		BOOST_CHECK(n5a.is_static());
@@ -3123,7 +3123,7 @@ struct in_place_mp_integer_add_tester
 		BOOST_CHECK(a.is_static());
 		BOOST_CHECK(b.is_static());
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-		auto &st_a = get_m(a).st, &st_b = get_m(b).st;
+		auto &st_a = get_m(a).g_st(), &st_b = get_m(b).g_st();
 		st_a.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		::mpz_set_str(&m_a.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
@@ -3134,9 +3134,9 @@ struct in_place_mp_integer_add_tester
 		// Promotion bug.
 		int_type c;
 		mpz_raii m_c;
-		::mpz_setbit(&m_c.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(c).st.limb_bits * 2u - 1u));
+		::mpz_setbit(&m_c.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(c).g_st().limb_bits * 2u - 1u));
 		BOOST_CHECK(c.is_static());
-		get_m(c).st.set_bit(static_cast<limb_t>(get_m(c).st.limb_bits * 2u - 1u));
+		get_m(c).g_st().set_bit(static_cast<limb_t>(get_m(c).g_st().limb_bits * 2u - 1u));
 		c += c;
 		::mpz_add(&m_c.m_mpz,&m_c.m_mpz,&m_c.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(m_c));
@@ -3448,7 +3448,7 @@ struct in_place_mp_integer_sub_tester
 		BOOST_CHECK(a.is_static());
 		BOOST_CHECK(b.is_static());
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-		auto &st_a = get_m(a).st, &st_b = get_m(b).st;
+		auto &st_a = get_m(a).g_st(), &st_b = get_m(b).g_st();
 		st_a.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		::mpz_set_str(&m_a.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);
@@ -3770,7 +3770,7 @@ struct in_place_mp_integer_mul_tester
 		BOOST_CHECK(a.is_static());
 		BOOST_CHECK(b.is_static());
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-		auto &st_a = get_m(a).st, &st_b = get_m(b).st;
+		auto &st_a = get_m(a).g_st(), &st_b = get_m(b).g_st();
 		st_a.set_bit(static_cast<limb_t>(st_a.limb_bits - 1u));
 		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits - 1u));
 		::mpz_set_str(&m_a.m_mpz,boost::lexical_cast<std::string>(a).c_str(),10);

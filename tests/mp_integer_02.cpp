@@ -160,7 +160,7 @@ struct addmul_tester
 		BOOST_CHECK(b.is_static());
 		BOOST_CHECK(c.is_static());
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-		auto &st_a = get_m(a).st, &st_b = get_m(b).st, &st_c = get_m(c).st;
+		auto &st_a = get_m(a).g_st(), &st_b = get_m(b).g_st(), &st_c = get_m(c).g_st();
 		st_b.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		st_c.set_bit(static_cast<limb_t>(st_a.limb_bits * 2u - 1u));
 		a.multiply_accumulate(b,c);
@@ -174,7 +174,7 @@ struct addmul_tester
 		BOOST_CHECK(b.is_static());
 		BOOST_CHECK(c.is_static());
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
-		auto &st_a = get_m(a).st, &st_b = get_m(b).st, &st_c = get_m(c).st;
+		auto &st_a = get_m(a).g_st(), &st_b = get_m(b).g_st(), &st_c = get_m(c).g_st();
 		for (limb_t i = 0u; i < st_a.limb_bits * 2u; ++i) {
 			st_a.set_bit(i);
 		}
@@ -191,8 +191,8 @@ struct addmul_tester
 		int_type a, b(2);
 		mpz_raii m_a, m_b;
 		::mpz_set_si(&m_b.m_mpz,2);
-		get_m(a).st.set_bit(static_cast<limb_t>(get_m(a).st.limb_bits * 2u - 1u));
-		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).st.limb_bits * 2u - 1u));
+		get_m(a).g_st().set_bit(static_cast<limb_t>(get_m(a).g_st().limb_bits * 2u - 1u));
+		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).g_st().limb_bits * 2u - 1u));
 		a.multiply_accumulate(a,b);
 		::mpz_addmul(&m_a.m_mpz,&m_a.m_mpz,&m_b.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));
@@ -202,8 +202,8 @@ struct addmul_tester
 		using limb_t = typename detail::integer_union<T::value>::s_storage::limb_t;
 		int_type a;
 		mpz_raii m_a;
-		get_m(a).st.set_bit(static_cast<limb_t>(get_m(a).st.limb_bits * 2u - 1u));
-		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).st.limb_bits * 2u - 1u));
+		get_m(a).g_st().set_bit(static_cast<limb_t>(get_m(a).g_st().limb_bits * 2u - 1u));
+		::mpz_setbit(&m_a.m_mpz,static_cast< ::mp_bitcnt_t>(get_m(a).g_st().limb_bits * 2u - 1u));
 		a.multiply_accumulate(a,a);
 		::mpz_addmul(&m_a.m_mpz,&m_a.m_mpz,&m_a.m_mpz);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(m_a));

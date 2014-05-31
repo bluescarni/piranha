@@ -655,130 +655,153 @@ const typename static_integer<NBits>::limb_t static_integer<NBits>::limb_bits;
 template <int NBits>
 union integer_union
 {
-	using s_storage = static_integer<NBits>;
-	using d_storage = mpz_struct_t;
-	static void move_ctor_mpz(mpz_struct_t &to, mpz_struct_t &from) noexcept
-	{
-		to._mp_alloc = from._mp_alloc;
-		to._mp_size = from._mp_size;
-		to._mp_d = from._mp_d;
-	}
-	integer_union():st() {}
-	integer_union(const integer_union &other)
-	{
-		if (other.is_static()) {
-			::new (static_cast<void *>(&st)) s_storage(other.st);
-		} else {
-			::new (static_cast<void *>(&dy)) d_storage;
-			::mpz_init_set(&dy,&other.dy);
-			piranha_assert(dy._mp_alloc > 0);
+	public:
+		using s_storage = static_integer<NBits>;
+		using d_storage = mpz_struct_t;
+		static void move_ctor_mpz(mpz_struct_t &to, mpz_struct_t &from) noexcept
+		{
+			to._mp_alloc = from._mp_alloc;
+			to._mp_size = from._mp_size;
+			to._mp_d = from._mp_d;
 		}
-	}
-	integer_union(integer_union &&other) noexcept
-	{
-		if (other.is_static()) {
-			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
-		} else {
-			::new (static_cast<void *>(&dy)) d_storage;
-			move_ctor_mpz(dy,other.dy);
-			// Downgrade the other to an empty static.
-			other.dy.~d_storage();
-			::new (static_cast<void *>(&other.st)) s_storage();
+		integer_union():m_st() {}
+		integer_union(const integer_union &other)
+		{
+			if (other.is_static()) {
+				::new (static_cast<void *>(&m_st)) s_storage(other.g_st());
+			} else {
+				::new (static_cast<void *>(&m_dy)) d_storage;
+				::mpz_init_set(&m_dy,&other.g_dy());
+				piranha_assert(m_dy._mp_alloc > 0);
+			}
 		}
-	}
-	~integer_union() noexcept
-	{
-		if (is_static()) {
-			st.~s_storage();
-		} else {
-			destroy_dynamic();
+		integer_union(integer_union &&other) noexcept
+		{
+			if (other.is_static()) {
+				::new (static_cast<void *>(&m_st)) s_storage(std::move(other.g_st()));
+			} else {
+				::new (static_cast<void *>(&m_dy)) d_storage;
+				move_ctor_mpz(m_dy,other.g_dy());
+				// Downgrade the other to an empty static.
+				other.g_dy().~d_storage();
+				::new (static_cast<void *>(&other.m_st)) s_storage();
+			}
 		}
-	}
-	integer_union &operator=(const integer_union &other)
-	{
-		if (unlikely(this == &other)) {
+		~integer_union() noexcept
+		{
+			if (is_static()) {
+				g_st().~s_storage();
+			} else {
+				destroy_dynamic();
+			}
+		}
+		integer_union &operator=(const integer_union &other)
+		{
+			if (unlikely(this == &other)) {
+				return *this;
+			}
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				g_st() = other.g_st();
+			} else if (s1 && !s2) {
+				// Destroy static.
+				g_st().~s_storage();
+				// Construct the dynamic struct.
+				::new (static_cast<void *>(&m_dy)) d_storage;
+				// Init + assign the mpz.
+				::mpz_init_set(&m_dy,&other.g_dy());
+				piranha_assert(m_dy._mp_alloc > 0);
+			} else if (!s1 && s2) {
+				// Create a copy of other and promote it.
+				auto other_copy(other);
+				other_copy.promote();
+				::mpz_set(&g_dy(),&other_copy.g_dy());
+			} else {
+				::mpz_set(&g_dy(),&other.g_dy());
+			}
 			return *this;
 		}
-		const bool s1 = is_static(), s2 = other.is_static();
-		if (s1 && s2) {
-			st = other.st;
-		} else if (s1 && !s2) {
-			// Destroy static.
-			st.~s_storage();
-			// Construct the dynamic struct.
-			::new (static_cast<void *>(&dy)) d_storage;
-			// Init + assign the mpz.
-			::mpz_init_set(&dy,&other.dy);
-			piranha_assert(dy._mp_alloc > 0);
-		} else if (!s1 && s2) {
-			// Create a copy of other and promote it.
-			auto other_copy(other);
-			other_copy.promote();
-			::mpz_set(&dy,&other_copy.dy);
-		} else {
-			::mpz_set(&dy,&other.dy);
-		}
-		return *this;
-	}
-	integer_union &operator=(integer_union &&other) noexcept
-	{
-		if (unlikely(this == &other)) {
+		integer_union &operator=(integer_union &&other) noexcept
+		{
+			if (unlikely(this == &other)) {
+				return *this;
+			}
+			const bool s1 = is_static(), s2 = other.is_static();
+			if (s1 && s2) {
+				g_st() = std::move(other.g_st());
+			} else if (s1 && !s2) {
+				// Destroy static.
+				g_st().~s_storage();
+				// Construct the dynamic struct.
+				::new (static_cast<void *>(&m_dy)) d_storage;
+				move_ctor_mpz(m_dy,other.g_dy());
+				// Downgrade the other to an empty static.
+				other.g_dy().~d_storage();
+				::new (static_cast<void *>(&other.m_st)) s_storage();
+			} else if (!s1 && s2) {
+				// Promote directly other, no need for copy.
+				other.promote();
+				// Swap with the promoted other.
+				::mpz_swap(&g_dy(),&other.g_dy());
+			} else {
+				// Swap with other.
+				::mpz_swap(&g_dy(),&other.g_dy());
+			}
 			return *this;
 		}
-		const bool s1 = is_static(), s2 = other.is_static();
-		if (s1 && s2) {
-			st = std::move(other.st);
-		} else if (s1 && !s2) {
-			// Destroy static.
-			st.~s_storage();
-			// Construct the dynamic struct.
-			::new (static_cast<void *>(&dy)) d_storage;
-			move_ctor_mpz(dy,other.dy);
-			// Downgrade the other to an empty static.
-			other.dy.~d_storage();
-			::new (static_cast<void *>(&other.st)) s_storage();
-		} else if (!s1 && s2) {
-			// Promote directly other, no need for copy.
-			other.promote();
-			// Swap with the promoted other.
-			::mpz_swap(&dy,&other.dy);
-		} else {
-			// Swap with other.
-			::mpz_swap(&dy,&other.dy);
+		bool is_static() const noexcept
+		{
+			return m_st._mp_alloc == 0;
 		}
-		return *this;
-	}
-	bool is_static() const noexcept
-	{
-		return st._mp_alloc == 0;
-	}
-	static bool fits_in_static(const mpz_struct_t &mpz) noexcept
-	{
-		// NOTE: sizeinbase returns the index of the highest bit *counting from 1* (like a logarithm).
-		return (::mpz_sizeinbase(&mpz,2) <= s_storage::limb_bits * 2u);
-	}
-	void destroy_dynamic()
-	{
-		piranha_assert(!is_static());
-		piranha_assert(dy._mp_alloc > 0);
-		piranha_assert(dy._mp_d != nullptr);
-		::mpz_clear(&dy);
-		dy.~d_storage();
-	}
-	void promote()
-	{
-		piranha_assert(is_static());
-		mpz_raii tmp;
-		st.to_mpz(tmp.m_mpz);
-		// Destroy static.
-		st.~s_storage();
-		// Construct the dynamic struct.
-		::new (static_cast<void *>(&dy)) d_storage;
-		move_ctor_mpz(dy,tmp.m_mpz);
-		tmp.m_mpz._mp_d = nullptr;
-	}
-	s_storage	st;
-	d_storage	dy;
+		static bool fits_in_static(const mpz_struct_t &mpz) noexcept
+		{
+			// NOTE: sizeinbase returns the index of the highest bit *counting from 1* (like a logarithm).
+			return (::mpz_sizeinbase(&mpz,2) <= s_storage::limb_bits * 2u);
+		}
+		void destroy_dynamic()
+		{
+			piranha_assert(!is_static());
+			piranha_assert(g_dy()._mp_alloc > 0);
+			piranha_assert(g_dy()._mp_d != nullptr);
+			::mpz_clear(&g_dy());
+			m_dy.~d_storage();
+		}
+		void promote()
+		{
+			piranha_assert(is_static());
+			mpz_raii tmp;
+			g_st().to_mpz(tmp.m_mpz);
+			// Destroy static.
+			g_st().~s_storage();
+			// Construct the dynamic struct.
+			::new (static_cast<void *>(&m_dy)) d_storage;
+			move_ctor_mpz(m_dy,tmp.m_mpz);
+			tmp.m_mpz._mp_d = nullptr;
+		}
+		// Getters for st and dy.
+		const s_storage &g_st() const
+		{
+			piranha_assert(is_static());
+			return m_st;
+		}
+		s_storage &g_st()
+		{
+			piranha_assert(is_static());
+			return m_st;
+		}
+		const d_storage &g_dy() const
+		{
+			piranha_assert(!is_static());
+			return m_dy;
+		}
+		d_storage &g_dy()
+		{
+			piranha_assert(!is_static());
+			return m_dy;
+		}
+	private:
+		s_storage	m_st;
+		d_storage	m_dy;
 };
 
 }
@@ -921,17 +944,17 @@ class mp_integer
 				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
 				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
 					if (::mpz_tstbit(&m.m_mpz,i)) {
-						m_int.st.set_bit(static_cast<limb_t>(i));
+						m_int.g_st().set_bit(static_cast<limb_t>(i));
 					}
 				}
 				if (std::signbit(x)) {
-					m_int.st.negate();
+					m_int.g_st().negate();
 				}
 			} else {
 				m_int.promote();
-				::mpz_swap(&m.m_mpz,&m_int.dy);
+				::mpz_swap(&m.m_mpz,&m_int.g_dy());
 				if (std::signbit(x)) {
-					::mpz_neg(&m_int.dy,&m_int.dy);
+					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 				}
 			}
 		}
@@ -960,19 +983,19 @@ class mp_integer
 				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
 				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
 					if (::mpz_tstbit(&m.m_mpz,i)) {
-						m_int.st.set_bit(static_cast<limb_t>(i));
+						m_int.g_st().set_bit(static_cast<limb_t>(i));
 					}
 				}
 				// NOTE: keep the == here, so we prevent warnings from the compiler when cting from unsigned types.
 				// It is inconsequential as n == 0 is already handled on top.
 				if (n_orig <= Integer(0)) {
-					m_int.st.negate();
+					m_int.g_st().negate();
 				}
 			} else {
 				m_int.promote();
-				::mpz_swap(&m.m_mpz,&m_int.dy);
+				::mpz_swap(&m.m_mpz,&m_int.g_dy());
 				if (n_orig <= Integer(0)) {
-					::mpz_neg(&m_int.dy,&m_int.dy);
+					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 				}
 			}
 		}
@@ -990,7 +1013,7 @@ class mp_integer
 		void construct_from_interoperable(bool v)
 		{
 			if (v) {
-				m_int.st.set_bit(0);
+				m_int.g_st().set_bit(0);
 			}
 		}
 		static void validate_string(const char *str, const std::size_t &size)
@@ -1036,17 +1059,17 @@ class mp_integer
 				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
 				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
 					if (::mpz_tstbit(&m.m_mpz,i)) {
-						m_int.st.set_bit(static_cast<limb_t>(i));
+						m_int.g_st().set_bit(static_cast<limb_t>(i));
 					}
 				}
 				if (negate) {
-					m_int.st.negate();
+					m_int.g_st().negate();
 				}
 			} else {
 				m_int.promote();
-				::mpz_swap(&m.m_mpz,&m_int.dy);
+				::mpz_swap(&m.m_mpz,&m_int.g_dy());
 				if (negate) {
-					::mpz_neg(&m_int.dy,&m_int.dy);
+					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 				}
 			}
 		}
@@ -1068,10 +1091,11 @@ class mp_integer
 		template <typename T>
 		T convert_to_impl(typename std::enable_if<std::is_integral<T>::value && !std::is_same<T,bool>::value>::type * = nullptr) const
 		{
-			if (m_int.st._mp_size == 0) {
+			const int s = sign();
+			if (s == 0) {
 				return T(0);
 			}
-			const bool negative = m_int.st._mp_size < 0;
+			const bool negative = s < 0;
 			// We cannot convert to unsigned type if this is negative.
 			if (std::is_unsigned<T>::value && negative) {
 				piranha_throw(std::overflow_error,"overflow in conversion to integral type");
@@ -1079,14 +1103,14 @@ class mp_integer
 			T retval(0), tmp(static_cast<T>(negative ? -1 : 1));
 			if (m_int.is_static()) {
 				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
-				const limb_t bits_size = m_int.st.bits_size();
+				const limb_t bits_size = m_int.g_st().bits_size();
 				piranha_assert(bits_size != 0u);
 				for (limb_t i = 0u; i < bits_size; ++i) {
 					if (i != 0u) {
 						check_mult2(tmp);
 						tmp = static_cast<T>(tmp * T(2));
 					}
-					if (m_int.st.test_bit(i)) {
+					if (m_int.g_st().test_bit(i)) {
 						if (negative && retval < std::numeric_limits<T>::min() - tmp) {
 							piranha_throw(std::overflow_error,"overflow in conversion to integral type");
 						} else if (!negative && retval > std::numeric_limits<T>::max() - tmp) {
@@ -1098,7 +1122,7 @@ class mp_integer
 			} else {
 				// NOTE: copy here, it's not the fastest way but it should be safer.
 				detail::mpz_raii tmp_mpz;
-				::mpz_set(&tmp_mpz.m_mpz,&m_int.dy);
+				::mpz_set(&tmp_mpz.m_mpz,&m_int.g_dy());
 				// Adjust the sign as needed, in order to use the test bit function below.
 				if (mpz_sgn(&tmp_mpz.m_mpz) == -1) {
 					::mpz_neg(&tmp_mpz.m_mpz,&tmp_mpz.m_mpz);
@@ -1132,25 +1156,26 @@ class mp_integer
 		template <typename T>
 		T convert_to_impl(typename std::enable_if<std::is_same<T,bool>::value>::type * = nullptr) const
 		{
-			return m_int.st._mp_size != 0;
+			return sign() != 0;
 		}
 		// Convert to floating-point.
 		template <typename T>
 		T convert_to_impl(typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
 		{
+			const int s = sign();
 			// Special case for zero.
-			if (m_int.st._mp_size == 0) {
+			if (s == 0) {
 				return T(0);
 			}
 			// Extract a GMP mpz to work with.
 			detail::mpz_raii tmp;
 			if (m_int.is_static()) {
-				m_int.st.to_mpz(tmp.m_mpz);
+				m_int.g_st().to_mpz(tmp.m_mpz);
 			} else {
-				::mpz_set(&tmp.m_mpz,&m_int.dy);
+				::mpz_set(&tmp.m_mpz,&m_int.g_dy());
 			}
 			// Work on absolute value.
-			if (m_int.st._mp_size < 0) {
+			if (s < 0) {
 				::mpz_neg(&tmp.m_mpz,&tmp.m_mpz);
 			}
 			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
@@ -1196,7 +1221,7 @@ class mp_integer
 				++exp;
 			}
 			// Adjust sign.
-			if (m_int.st._mp_size < 0) {
+			if (s < 0) {
 				retval = std::copysign(retval,std::numeric_limits<T>::lowest());
 			}
 			return retval;
@@ -1210,12 +1235,12 @@ class mp_integer
 				// Attempt the static add/sub.
 				try {
 					// NOTE: the static add/sub will try to do the operation, if it fails an overflow error
-					// will be generated. The operation is exception-safe, and m_int.st will be untouched
+					// will be generated. The operation is exception-safe, and m_int.g_st() will be untouched
 					// in case of problems.
 					if (AddOrSub) {
-						m_int.st.add(m_int.st,m_int.st,other.m_int.st);
+						m_int.g_st().add(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
 					} else {
-						m_int.st.sub(m_int.st,m_int.st,other.m_int.st);
+						m_int.g_st().sub(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
 					}
 					return *this;
 				} catch (const std::overflow_error &) {}
@@ -1228,17 +1253,17 @@ class mp_integer
 			}
 			if (s2) {
 				detail::mpz_raii m;
-				other.m_int.st.to_mpz(m.m_mpz);
+				other.m_int.g_st().to_mpz(m.m_mpz);
 				if (AddOrSub) {
-					::mpz_add(&m_int.dy,&m_int.dy,&m.m_mpz);
+					::mpz_add(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 				} else {
-					::mpz_sub(&m_int.dy,&m_int.dy,&m.m_mpz);
+					::mpz_sub(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 				}
 			} else {
 				if (AddOrSub) {
-					::mpz_add(&m_int.dy,&m_int.dy,&other.m_int.dy);
+					::mpz_add(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 				} else {
-					::mpz_sub(&m_int.dy,&m_int.dy,&other.m_int.dy);
+					::mpz_sub(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 				}
 			}
 			return *this;
@@ -1353,7 +1378,7 @@ class mp_integer
 			if (s1 && s2) {
 				// Attempt the static mul.
 				try {
-					m_int.st.mul(m_int.st,m_int.st,other.m_int.st);
+					m_int.g_st().mul(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
 					return *this;
 				} catch (const std::overflow_error &) {}
 			}
@@ -1364,10 +1389,10 @@ class mp_integer
 			}
 			if (s2) {
 				detail::mpz_raii m;
-				other.m_int.st.to_mpz(m.m_mpz);
-				::mpz_mul(&m_int.dy,&m_int.dy,&m.m_mpz);
+				other.m_int.g_st().to_mpz(m.m_mpz);
+				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 			} else {
-				::mpz_mul(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
 			return *this;
 		}
@@ -1424,18 +1449,18 @@ class mp_integer
 			const bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				mp_integer r;
-				m_int.st.div(m_int.st,r.m_int.st,m_int.st,other.m_int.st);
+				m_int.g_st().div(m_int.g_st(),r.m_int.g_st(),m_int.g_st(),other.m_int.g_st());
 			} else if (s1 && !s2) {
 				// Promote this.
 				m_int.promote();
-				::mpz_tdiv_q(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			} else if (!s1 && s2) {
 				// Create a promoted copy of other.
 				detail::mpz_raii m;
-				other.m_int.st.to_mpz(m.m_mpz);
-				::mpz_tdiv_q(&m_int.dy,&m_int.dy,&m.m_mpz);
+				other.m_int.g_st().to_mpz(m.m_mpz);
+				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 			} else {
-				::mpz_tdiv_q(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
 			return *this;
 		}
@@ -1492,18 +1517,18 @@ class mp_integer
 			const bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				mp_integer q;
-				m_int.st.div(q.m_int.st,m_int.st,m_int.st,other.m_int.st);
+				m_int.g_st().div(q.m_int.g_st(),m_int.g_st(),m_int.g_st(),other.m_int.g_st());
 			} else if (s1 && !s2) {
 				// Promote this.
 				m_int.promote();
-				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			} else if (!s1 && s2) {
 				// Create a promoted copy of other.
 				detail::mpz_raii m;
-				other.m_int.st.to_mpz(m.m_mpz);
-				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&m.m_mpz);
+				other.m_int.g_st().to_mpz(m.m_mpz);
+				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 			} else {
-				::mpz_tdiv_r(&m_int.dy,&m_int.dy,&other.m_int.dy);
+				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
 			return *this;
 		}
@@ -1541,19 +1566,19 @@ class mp_integer
 		{
 			const bool s1 = n1.is_static(), s2 = n2.is_static();
 			if (s1 && s2) {
-				return (n1.m_int.st == n2.m_int.st);
+				return (n1.m_int.g_st() == n2.m_int.g_st());
 			} else if (s1 && !s2) {
 				// NOTE: clearly, this is highly inefficient and needs to be optimized
 				// in the future.
 				detail::mpz_raii tmp;
-				n1.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) == 0;
+				n1.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) == 0;
 			} else if (!s1 && s2) {
 				detail::mpz_raii tmp;
-				n2.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n1.m_int.dy) == 0;
+				n2.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n1.m_int.g_dy()) == 0;
 			} else {
-				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) == 0;
+				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) == 0;
 			}
 		}
 		template <typename Integer>
@@ -1580,17 +1605,17 @@ class mp_integer
 		{
 			const bool s1 = n1.is_static(), s2 = n2.is_static();
 			if (s1 && s2) {
-				return (n1.m_int.st < n2.m_int.st);
+				return (n1.m_int.g_st() < n2.m_int.g_st());
 			} else if (s1 && !s2) {
 				detail::mpz_raii tmp;
-				n1.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) < 0;
+				n1.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) < 0;
 			} else if (!s1 && s2) {
 				detail::mpz_raii tmp;
-				n2.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&n1.m_int.dy,&tmp.m_mpz) < 0;
+				n2.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&n1.m_int.g_dy(),&tmp.m_mpz) < 0;
 			} else {
-				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) < 0;
+				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) < 0;
 			}
 		}
 		template <typename Integer>
@@ -1617,17 +1642,17 @@ class mp_integer
 		{
 			const bool s1 = n1.is_static(), s2 = n2.is_static();
 			if (s1 && s2) {
-				return (n1.m_int.st <= n2.m_int.st);
+				return (n1.m_int.g_st() <= n2.m_int.g_st());
 			} else if (s1 && !s2) {
 				detail::mpz_raii tmp;
-				n1.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.dy) <= 0;
+				n1.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) <= 0;
 			} else if (!s1 && s2) {
 				detail::mpz_raii tmp;
-				n2.m_int.st.to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&n1.m_int.dy,&tmp.m_mpz) <= 0;
+				n2.m_int.g_st().to_mpz(tmp.m_mpz);
+				return ::mpz_cmp(&n1.m_int.g_dy(),&tmp.m_mpz) <= 0;
 			} else {
-				return ::mpz_cmp(&n1.m_int.dy,&n2.m_int.dy) <= 0;
+				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) <= 0;
 			}
 		}
 		template <typename Integer>
@@ -1838,9 +1863,9 @@ class mp_integer
 		friend std::ostream &operator<<(std::ostream &os, const mp_integer &n)
 		{
 			if (n.m_int.is_static()) {
-				return (os << n.m_int.st);
+				return (os << n.m_int.g_st());
 			} else {
-				return detail::stream_mpz(os,n.m_int.dy);
+				return detail::stream_mpz(os,n.m_int.g_dy());
 			}
 		}
 		/// Promote to dynamic storage.
@@ -1869,9 +1894,9 @@ class mp_integer
 		void negate() noexcept
 		{
 			if (is_static()) {
-				m_int.st.negate();
+				m_int.g_st().negate();
 			} else {
-				::mpz_neg(&m_int.dy,&m_int.dy);
+				::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 			}
 		}
 		/// Sign.
@@ -1881,15 +1906,15 @@ class mp_integer
 		int sign() const noexcept
 		{
 			if (is_static()) {
-				if (m_int.st._mp_size > 0) {
+				if (m_int.g_st()._mp_size > 0) {
 					return 1;
 				}
-				if (m_int.st._mp_size < 0) {
+				if (m_int.g_st()._mp_size < 0) {
 					return -1;
 				}
 				return 0;
 			} else {
-				return mpz_sgn(&m_int.dy);
+				return mpz_sgn(&m_int.g_dy());
 			}
 		}
 		/// In-place addition.
@@ -2177,7 +2202,7 @@ class mp_integer
 			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
 			if (s0 && s1 && s2) {
 				try {
-					m_int.st.multiply_accumulate(n1.m_int.st,n2.m_int.st);
+					m_int.g_st().multiply_accumulate(n1.m_int.g_st(),n2.m_int.g_st());
 					return *this;
 				} catch (const std::overflow_error &) {}
 			}
@@ -2196,27 +2221,27 @@ class mp_integer
 				case 0u:
 				{
 					detail::mpz_raii m1, m2;
-					n1.m_int.st.to_mpz(m1.m_mpz);
-					n2.m_int.st.to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.dy,&m1.m_mpz,&m2.m_mpz);
+					n1.m_int.g_st().to_mpz(m1.m_mpz);
+					n2.m_int.g_st().to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&m2.m_mpz);
 					break;
 				}
 				case 1u:
 				{
 					detail::mpz_raii m2;
-					n2.m_int.st.to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&m2.m_mpz);
+					n2.m_int.g_st().to_mpz(m2.m_mpz);
+					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&m2.m_mpz);
 					break;
 				}
 				case 2u:
 				{
 					detail::mpz_raii m1;
-					n1.m_int.st.to_mpz(m1.m_mpz);
-					::mpz_addmul(&m_int.dy,&m1.m_mpz,&n2.m_int.dy);
+					n1.m_int.g_st().to_mpz(m1.m_mpz);
+					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&n2.m_int.g_dy());
 					break;
 				}
 				case 3u:
-					::mpz_addmul(&m_int.dy,&n1.m_int.dy,&n2.m_int.dy);
+					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&n2.m_int.g_dy());
 			}
 			return *this;
 		}
