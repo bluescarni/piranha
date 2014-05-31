@@ -407,21 +407,21 @@ union small_vector_union
 	using s_storage = typename std::conditional<S::value == 0u,static_vector<T,auto_static_size<T>::value>,static_vector<T,S::value>>::type;
 	using d_storage = dynamic_storage<T>;
 	// NOTE: each constructor must be invoked explicitly.
-	small_vector_union():st() {}
+	small_vector_union():m_st() {}
 	small_vector_union(const small_vector_union &other)
 	{
 		if (other.is_static()) {
-			::new (static_cast<void *>(&st)) s_storage(other.st);
+			::new (static_cast<void *>(&m_st)) s_storage(other.g_st());
 		} else {
-			::new (static_cast<void *>(&dy)) d_storage(other.dy);
+			::new (static_cast<void *>(&m_dy)) d_storage(other.g_dy());
 		}
 	}
 	small_vector_union(small_vector_union &&other) noexcept
 	{
 		if (other.is_static()) {
-			::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
+			::new (static_cast<void *>(&m_st)) s_storage(std::move(other.g_st()));
 		} else {
-			::new (static_cast<void *>(&dy)) d_storage(std::move(other.dy));
+			::new (static_cast<void *>(&m_dy)) d_storage(std::move(other.g_dy()));
 		}
 	}
 	~small_vector_union()
@@ -430,9 +430,9 @@ union small_vector_union
 		PIRANHA_TT_CHECK(std::is_standard_layout,d_storage);
 		PIRANHA_TT_CHECK(std::is_standard_layout,small_vector_union);
 		if (is_static()) {
-			st.~s_storage();
+			g_st().~s_storage();
 		} else {
-			dy.~d_storage();
+			g_dy().~d_storage();
 		}
 	}
 	small_vector_union &operator=(small_vector_union &&other) noexcept
@@ -442,21 +442,21 @@ union small_vector_union
 		}
 		if (is_static() == other.is_static()) {
 			if (is_static()) {
-				st = std::move(other.st);
+				g_st() = std::move(other.g_st());
 			} else {
-				dy = std::move(other.dy);
+				g_dy() = std::move(other.g_dy());
 			}
 		} else {
 			if (is_static()) {
 				// static vs dynamic.
 				// Destroy static.
-				st.~s_storage();
+				g_st().~s_storage();
 				// Move construct dynamic from other.
-				::new (static_cast<void *>(&dy)) d_storage(std::move(other.dy));
+				::new (static_cast<void *>(&m_dy)) d_storage(std::move(other.g_dy()));
 			} else {
 				// dynamic vs static.
-				dy.~d_storage();
-				::new (static_cast<void *>(&st)) s_storage(std::move(other.st));
+				g_dy().~d_storage();
+				::new (static_cast<void *>(&m_st)) s_storage(std::move(other.g_st()));
 			}
 		}
 		return *this;
@@ -470,10 +470,31 @@ union small_vector_union
 	}
 	bool is_static() const
 	{
-		return static_cast<bool>(st.m_tag);
+		return static_cast<bool>(m_st.m_tag);
 	}
-	s_storage	st;
-	d_storage	dy;
+	// Getters.
+	const s_storage &g_st() const
+	{
+		piranha_assert(is_static());
+		return m_st;
+	}
+	s_storage &g_st()
+	{
+		piranha_assert(is_static());
+		return m_st;
+	}
+	const d_storage &g_dy() const
+	{
+		piranha_assert(!is_static());
+		return m_dy;
+	}
+	d_storage &g_dy()
+	{
+		piranha_assert(!is_static());
+		return m_dy;
+	}
+	s_storage	m_st;
+	d_storage	m_dy;
 };
 
 }
@@ -651,9 +672,9 @@ class small_vector
 		iterator begin()
 		{
 			if (m_union.is_static()) {
-				return m_union.st.begin();
+				return m_union.g_st().begin();
 			} else {
-				return m_union.dy.begin();
+				return m_union.g_dy().begin();
 			}
 		}
 		/// Mutable end iterator.
@@ -663,9 +684,9 @@ class small_vector
 		iterator end()
 		{
 			if (m_union.is_static()) {
-				return m_union.st.end();
+				return m_union.g_st().end();
 			} else {
-				return m_union.dy.end();
+				return m_union.g_dy().end();
 			}
 		}
 		/// Const begin iterator.
@@ -675,9 +696,9 @@ class small_vector
 		const_iterator begin() const
 		{
 			if (m_union.is_static()) {
-				return m_union.st.begin();
+				return m_union.g_st().begin();
 			} else {
-				return m_union.dy.begin();
+				return m_union.g_dy().begin();
 			}
 		}
 		/// Const end iterator.
@@ -687,9 +708,9 @@ class small_vector
 		const_iterator end() const
 		{
 			if (m_union.is_static()) {
-				return m_union.st.end();
+				return m_union.g_st().end();
 			} else {
-				return m_union.dy.end();
+				return m_union.g_dy().end();
 			}
 		}
 		/// Size.
@@ -699,9 +720,9 @@ class small_vector
 		size_type size() const
 		{
 			if (m_union.is_static()) {
-				return m_union.st.size();
+				return m_union.g_st().size();
 			} else {
-				return m_union.dy.size();
+				return m_union.g_dy().size();
 			}
 		}
 		/// Static storage flag.
@@ -738,17 +759,17 @@ class small_vector
 			switch (mask)
 			{
 				case 0u:
-					return m_union.dy.size() == other.m_union.dy.size() &&
-						std::equal(m_union.dy.begin(),m_union.dy.end(),other.m_union.dy.begin());
+					return m_union.g_dy().size() == other.m_union.g_dy().size() &&
+						std::equal(m_union.g_dy().begin(),m_union.g_dy().end(),other.m_union.g_dy().begin());
 				case 1u:
-					return m_union.st.size() == other.m_union.dy.size() &&
-						std::equal(m_union.st.begin(),m_union.st.end(),other.m_union.dy.begin());
+					return m_union.g_st().size() == other.m_union.g_dy().size() &&
+						std::equal(m_union.g_st().begin(),m_union.g_st().end(),other.m_union.g_dy().begin());
 				case 2u:
-					return m_union.dy.size() == other.m_union.st.size() &&
-						std::equal(m_union.dy.begin(),m_union.dy.end(),other.m_union.st.begin());
+					return m_union.g_dy().size() == other.m_union.g_st().size() &&
+						std::equal(m_union.g_dy().begin(),m_union.g_dy().end(),other.m_union.g_st().begin());
 			}
-			return m_union.st.size() == other.m_union.st.size() &&
-				std::equal(m_union.st.begin(),m_union.st.end(),other.m_union.st.begin());
+			return m_union.g_st().size() == other.m_union.g_st().size() &&
+				std::equal(m_union.g_st().begin(),m_union.g_st().end(),other.m_union.g_st().begin());
 		}
 		/// Inequality operator.
 		/**
@@ -781,9 +802,9 @@ class small_vector
 		std::size_t hash() const noexcept
 		{
 			if (m_union.is_static()) {
-				return m_union.st.hash();
+				return m_union.g_st().hash();
 			} else {
-				return m_union.dy.hash();
+				return m_union.g_dy().hash();
 			}
 		}
 		/// Resize.
@@ -800,7 +821,7 @@ class small_vector
 		{
 			if (m_union.is_static()) {
 				if (size <= max_static_size) {
-					m_union.st.resize(static_cast<typename s_storage::size_type>(size));
+					m_union.g_st().resize(static_cast<typename s_storage::size_type>(size));
 				} else {
 					// NOTE: this check is a repetition of an existing check in dynamic storage's
 					// resize. The reason for putting it here as well is to ensure the safety
@@ -814,18 +835,18 @@ class small_vector
 					tmp_d.reserve(d_size);
 					// NOTE: this will not throw, as tmp_d is guaranteed to be of adequate size
 					// and thus push_back() will not fail.
-					std::move(m_union.st.begin(),m_union.st.end(),std::back_inserter(tmp_d));
+					std::move(m_union.g_st().begin(),m_union.g_st().end(),std::back_inserter(tmp_d));
 					// Fill in the missing elements.
 					tmp_d.resize(d_size);
 					// Destroy static, move in dynamic.
-					m_union.st.~s_storage();
-					::new (static_cast<void *>(&(m_union.dy))) d_storage(std::move(tmp_d));
+					m_union.g_st().~s_storage();
+					::new (static_cast<void *>(&(m_union.m_dy))) d_storage(std::move(tmp_d));
 				}
 			} else {
 				if (unlikely(resize_check_size(size,std::integral_constant<bool,need_resize_check>()))) {
 					piranha_throw(std::bad_alloc,);
 				}
-				m_union.dy.resize(static_cast<typename d_storage::size_type>(size));
+				m_union.g_dy().resize(static_cast<typename d_storage::size_type>(size));
 			}
 		}
 		/// Vector addition.
@@ -883,7 +904,7 @@ class small_vector
 		void push_back_impl(U &&x)
 		{
 			if (m_union.is_static()) {
-				if (m_union.st.size() == m_union.st.max_size) {
+				if (m_union.g_st().size() == m_union.g_st().max_size) {
 					// Create a new dynamic vector, and move in the current
 					// elements from static storage.
 					using d_size_type = typename d_storage::size_type;
@@ -897,21 +918,21 @@ class small_vector
 						piranha_throw(std::bad_alloc,);
 					}
 					d_storage tmp_d;
-					tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(m_union.st.max_size) + 1u));
-					std::move(m_union.st.begin(),m_union.st.end(),std::back_inserter(tmp_d));
+					tmp_d.reserve(static_cast<d_size_type>(static_cast<d_size_type>(m_union.g_st().max_size) + 1u));
+					std::move(m_union.g_st().begin(),m_union.g_st().end(),std::back_inserter(tmp_d));
 					// Push back the new element.
 					tmp_d.push_back(std::forward<U>(x));
 					// Now destroy the current static storage, and move-construct new dynamic storage.
 					// NOTE: in face of custom allocators here we should be ok, as move construction
 					// of custom alloc will not throw and it will preserve the ownership of the moved-in elements.
-					m_union.st.~s_storage();
-					::new (static_cast<void *>(&(m_union.dy))) d_storage(std::move(tmp_d));
+					m_union.g_st().~s_storage();
+					::new (static_cast<void *>(&(m_union.m_dy))) d_storage(std::move(tmp_d));
 				} else {
-					m_union.st.push_back(std::forward<U>(x));
+					m_union.g_st().push_back(std::forward<U>(x));
 				}
 			} else {
 				// In case we are already in dynamic storage, don't do anything special.
-				m_union.dy.push_back(std::forward<U>(x));
+				m_union.g_dy().push_back(std::forward<U>(x));
 			}
 		}
 	private:
