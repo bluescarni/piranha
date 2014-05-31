@@ -859,7 +859,6 @@ union integer_union
  *   - actually, it seems like we could use a kind of static counterpart in many cases (comparison, addition, etc.):
  *     just allocate the space in a static array and convert static_int to the GMP format, without actually allocating
  *     any memory;
- * - use getters for dy/st for added safety;
  * - probably the assignment operator should demote to static if possible.
  */
 template <int NBits = 0>
