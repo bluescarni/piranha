@@ -1141,3 +1141,48 @@ BOOST_AUTO_TEST_CASE(mp_integer_pow_test)
 	boost::mpl::for_each<size_types>(int_pow_tester());
 	boost::mpl::for_each<size_types>(mp_integer_pow_tester());
 }
+
+struct abs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK_EQUAL(n.abs(),0);
+		n = -5;
+		BOOST_CHECK_EQUAL(math::abs(n),5);
+		n = 50;
+		BOOST_CHECK_EQUAL(math::abs(n),50);
+		n = 0;
+		int_type m0, m1, m2;
+		m0.promote();
+		BOOST_CHECK_EQUAL(m0.abs(),0);
+		m1 = -5;
+		m1.promote();
+		BOOST_CHECK_EQUAL(math::abs(m1),5);
+		m2 = 50;
+		m2.promote();
+		BOOST_CHECK_EQUAL(math::abs(m2),50);
+		// Random testing.
+		std::uniform_int_distribution<int> promote_dist(0,1),
+			int_dist(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());
+		mpz_raii m_tmp;
+		for (int i = 0; i < ntries; ++i) {
+			int tmp = int_dist(rng);
+			int_type n(tmp);
+			if (promote_dist(rng) != 0 && n.is_static()) {
+				n.promote();
+			}
+			::mpz_set_si(&m_tmp.m_mpz,static_cast<long>(tmp));
+			::mpz_abs(&m_tmp.m_mpz,&m_tmp.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.abs()),mpz_lexcast(m_tmp));
+			BOOST_CHECK_EQUAL(n.abs(),math::abs(n));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_abs_test)
+{
+	boost::mpl::for_each<size_types>(abs_tester());
+}

@@ -2551,6 +2551,22 @@ class mp_integer
 		{
 			return pow_impl(exp);
 		}
+		/// Absolute value.
+		/**
+		 * @return absolute value of \p this.
+		 */
+		mp_integer abs() const noexcept
+		{
+			mp_integer retval(*this);
+			if (retval.is_static()) {
+				if (retval.m_int.g_st()._mp_size < 0) {
+					retval.m_int.g_st()._mp_size = -retval.m_int.g_st()._mp_size;
+				}
+			} else {
+				::mpz_abs(&retval.m_int.g_dy(),&retval.m_int.g_dy());
+			}
+			return retval;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
@@ -2647,6 +2663,22 @@ struct pow_impl<mp_integer<NBits>,U,void>
 	auto operator()(const mp_integer<NBits> &n, const U2 &x) const -> decltype(n.pow(x))
 	{
 		return n.pow(x);
+	}
+};
+
+/// Specialisation of the piranha::math::abs() functor for piranha::mp_integer.
+template <int NBits>
+struct abs_impl<mp_integer<NBits>,void>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n input parameter.
+	 * 
+	 * @return absolute value of \p n.
+	 */
+	mp_integer<NBits> operator()(const mp_integer<NBits> &n) const noexcept
+	{
+		return n.abs();
 	}
 };
 
