@@ -2610,7 +2610,7 @@ struct negate_impl<mp_integer<NBits>,void>
 	 *
 	 * @throws unspecified any exception thrown by piranha::mp_integer::negate().
 	 */
-	void operator()(mp_integer<NBits> &n) const
+	void operator()(mp_integer<NBits> &n) const noexcept
 	{
 		n.negate();
 	}
@@ -2630,7 +2630,7 @@ struct is_zero_impl<mp_integer<NBits>,void>
 	 * 
 	 * @throws unspecified any exception thrown by piranha::mp_integer::sign().
 	 */
-	bool operator()(const mp_integer<NBits> &n) const
+	bool operator()(const mp_integer<NBits> &n) const noexcept
 	{
 		return n.sign() == 0;
 	}
