@@ -383,15 +383,21 @@ struct in_place_float_div_tester
 			n1 = T(-4);
 			n1 /= T(-2);
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n1),"2");
-			BOOST_CHECK_THROW(n1 /= T(0),std::invalid_argument);
+			BOOST_CHECK_THROW(n1 /= T(0),zero_division_error);
 			// Random testing
 			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
 			for (int i = 0; i < ntries / 100; ++i) {
 				const T tmp1 = urd1(rng);
+				if (tmp1 == T(0)) {
+					continue;
+				}
 				int_type n(tmp1);
 				n /= tmp1;
 				BOOST_CHECK(boost::lexical_cast<std::string>(n) == "0" || boost::lexical_cast<std::string>(n) == "1");
 				const T tmp2 = urd2(rng);
+				if (tmp2 == T(0)) {
+					continue;
+				}
 				n = tmp2;
 				n /= tmp2;
 				BOOST_CHECK(boost::lexical_cast<std::string>(n) == "0" || boost::lexical_cast<std::string>(n) == "1");
@@ -403,14 +409,21 @@ struct in_place_float_div_tester
 			x1 /= int_type(2);
 			BOOST_CHECK((std::is_same<T &,decltype(x1 /= int_type(2))>::value));
 			BOOST_CHECK_EQUAL(x1,T(3) / T(2));
+			BOOST_CHECK_THROW(x1 /= int_type(0),zero_division_error);
 			// NOTE: limit the number of times we run this test, as the conversion from int to float
 			// is slow as the random values are taken from the entire float range and thus use a lot of digits.
 			for (int i = 0; i < ntries / 100; ++i) {
 				T tmp1(1), tmp2 = urd1(rng);
+				if (tmp2 == T(0)) {
+					continue;
+				}
 				tmp1 /= int_type{tmp2};
 				BOOST_CHECK_EQUAL(tmp1,T(1)/static_cast<T>(int_type{tmp2}));
 				tmp1 = T(1);
 				tmp2 = urd2(rng);
+				if (tmp2 == T(0)) {
+					continue;
+				}
 				tmp1 /= int_type{tmp2};
 				BOOST_CHECK_EQUAL(tmp1,T(1)/static_cast<T>(int_type{tmp2}));
 			}
@@ -440,6 +453,7 @@ struct binary_div_tester
 			BOOST_CHECK((std::is_same<decltype(n / m),int_type>::value));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n / m),"2");
 			BOOST_CHECK_THROW(n / T(0),zero_division_error);
+			BOOST_CHECK_THROW(T(1) / int_type(0),zero_division_error);
 			// Random testing.
 			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
 			mpz_raii m1, m2, res;
@@ -473,6 +487,8 @@ struct binary_div_tester
 			int_type n;
 			T m;
 			BOOST_CHECK((std::is_same<decltype(n / m),T>::value));
+			BOOST_CHECK_THROW(int_type(1) / T(0),zero_division_error);
+			BOOST_CHECK_THROW(T(1) / int_type(0),zero_division_error);
 			// Random testing
 			std::uniform_real_distribution<T> urd1(T(0),std::numeric_limits<T>::max()), urd2(std::numeric_limits<T>::lowest(),T(0));
 			for (int i = 0; i < ntries; ++i) {
@@ -694,6 +710,7 @@ struct binary_mod_tester
 			BOOST_CHECK((std::is_same<decltype(n % m),int_type>::value));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n % m),"0");
 			BOOST_CHECK_THROW(n % T(0),zero_division_error);
+			BOOST_CHECK_THROW(T(1) % int_type(0),zero_division_error);
 			// Random testing.
 			std::uniform_int_distribution<T> int_dist(std::numeric_limits<T>::min(),std::numeric_limits<T>::max());
 			mpz_raii m1, m2, res;

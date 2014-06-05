@@ -1504,9 +1504,6 @@ class mp_integer
 		// Division.
 		mp_integer &in_place_div(const mp_integer &other)
 		{
-			if (unlikely(other.sign() == 0)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			const bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				mp_integer r;
@@ -1572,9 +1569,6 @@ class mp_integer
 		// Modulo.
 		mp_integer &in_place_mod(const mp_integer &other)
 		{
-			if (unlikely(other.sign() == 0)) {
-				piranha_throw(zero_division_error,"division by zero");
-			}
 			const bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				mp_integer q;
@@ -2324,12 +2318,16 @@ class mp_integer
 		 * @return reference to \p this.
 		 * 
 		 * @throws unspecified any exception resulting from interoperating with floating-point types.
-		 * @throws piranha::zero_division_error if \p T is an integral type and \p x is zero.
+		 * @throws piranha::zero_division_error if \p T is an integral type and \p x is zero (as established by
+		 * piranha::math::is_zero()).
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
 			mp_integer &>::type operator/=(const T &x)
 		{
+			if (unlikely(math::is_zero(x))) {
+				piranha_throw(zero_division_error,"division by zero in mp_integer");
+			}
 			return in_place_div(x);
 		}
 		/// Generic in-place division with piranha::mp_integer.
@@ -2376,6 +2374,9 @@ class mp_integer
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
 			operator/(const T &x, const U &y)
 		{
+			if (unlikely(math::is_zero(y))) {
+				piranha_throw(zero_division_error,"division by zero in mp_integer");
+			}
 			return binary_div(x,y);
 		}
 		/// In-place modulo operation.
@@ -2397,6 +2398,9 @@ class mp_integer
 			(std::is_integral<T>::value && is_interoperable_type<T>::value) ||
 			std::is_same<mp_integer,T>::value,mp_integer &>::type operator%=(const T &n)
 		{
+			if (unlikely(math::is_zero(n))) {
+				piranha_throw(zero_division_error,"division by zero in mp_integer");
+			}
 			return in_place_mod(n);
 		}
 		/// Generic in-place modulo with piranha::mp_integer.
@@ -2440,6 +2444,9 @@ class mp_integer
 		friend typename std::enable_if<are_mod_types<T,U>::value,mp_integer>::type
 			operator%(const T &x, const U &y)
 		{
+			if (unlikely(math::is_zero(y))) {
+				piranha_throw(zero_division_error,"division by zero in mp_integer");
+			}
 			return binary_mod(x,y);
 		}
 		/// Generic equality operator involving piranha::mp_integer.
