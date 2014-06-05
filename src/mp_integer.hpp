@@ -45,6 +45,68 @@
 
 namespace piranha { namespace detail {
 
+// Small utility function to clear the upper n bits of an unsigned type.
+// The static_casts are needed to work around integer promotions when
+// operating on types smaller than unsigned int.
+template <typename UInt>
+inline UInt clear_top_bits(UInt input, unsigned n)
+{
+	static_assert(std::is_integral<UInt>::value && std::is_unsigned<UInt>::value,"Invalid type.");
+	piranha_assert(n < unsigned(std::numeric_limits<UInt>::digits));
+	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
+}
+
+// Considering an array of UIn (unsigned ints) of a certain size as a continuous sequence of bits,
+// read the index-th URet (unsigned int) that can be extracted from the sequence of bits.
+// The parameter IBits is the number of upper bits of UIn that should be discarded in the computation
+// (i.e., not considered as part of the continuous sequence of bits).
+template <typename URet, unsigned IBits = 0u, typename UIn>
+inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
+{
+	// We can work only with unsigned integer types.
+	static_assert(std::is_integral<UIn>::value && std::is_unsigned<UIn>::value,"Invalid type.");
+	static_assert(std::is_integral<URet>::value && std::is_unsigned<URet>::value,"Invalid type.");
+	// Bit size of the return type.
+	constexpr unsigned r_bits = static_cast<unsigned>(std::numeric_limits<URet>::digits);
+	// Bit size of the input type.
+	constexpr unsigned i_bits = static_cast<unsigned>(std::numeric_limits<UIn>::digits);
+	// The ignored bits in the input type cannot be larger than or equal to its bit size.
+	static_assert(IBits < i_bits,"Invalid ignored bits size");
+	// Bits effectively considered in the input type.
+	constexpr unsigned ei_bits = i_bits - IBits;
+	// Index in input array from where we will start reading, and bit index within
+	// that element from which the actual reading will start.
+	// NOTE: we need to protect against multiplication overflows in the upper level routine.
+	std::size_t s_index = static_cast<std::size_t>((r_bits * index) / ei_bits),
+		r_index = static_cast<std::size_t>((r_bits * index) % ei_bits);
+	// Check that we are not going to read past the end.
+	piranha_assert(s_index < size);
+	// Check for null.
+	piranha_assert(ptr != nullptr);
+	// Init the return value as 0.
+	URet retval = 0u;
+	// Bits read so far.
+	unsigned read_bits = 0u;
+	while (s_index < size && read_bits < r_bits) {
+		const unsigned unread_bits = r_bits - read_bits,
+			// This can be different from ei_bits only on the first iteration.
+			available_bits = static_cast<unsigned>(ei_bits - r_index),
+			bits_to_read = (available_bits > unread_bits) ? unread_bits : available_bits;
+		// On the first iteration, we might need to drop the first r_index bits.
+		UIn tmp = static_cast<UIn>(ptr[s_index] >> r_index);
+		// Zero out the bits we don't want to read.
+		tmp = clear_top_bits(tmp,i_bits - bits_to_read);
+		// Accumulate into return value.
+		retval = static_cast<URet>(retval + (static_cast<URet>(tmp) << read_bits));
+		// Update loop variables.
+		read_bits += bits_to_read;
+		++s_index;
+		r_index = 0u;
+	}
+	piranha_assert(s_index == size || read_bits == r_bits);
+	return retval;
+}
+
 // mpz_t is an array of some struct.
 using mpz_struct_t = std::remove_extent< ::mpz_t>::type;
 // Integral types used for allocation size and number of limbs.
@@ -366,8 +428,8 @@ struct static_integer
 	void clear_extra_bits(typename std::enable_if<T::limb_bits != T::total_bits>::type * = nullptr)
 	{
 		const auto delta_bits = total_bits - limb_bits;
-		m_limbs[0u] = static_cast<limb_t>((m_limbs[0u] << delta_bits) >> delta_bits);
-		m_limbs[1u] = static_cast<limb_t>((m_limbs[1u] << delta_bits) >> delta_bits);
+		m_limbs[0u] = clear_top_bits(m_limbs[0u],delta_bits);
+		m_limbs[1u] = clear_top_bits(m_limbs[1u],delta_bits);
 	}
 	template <typename T = static_integer>
 	void clear_extra_bits(typename std::enable_if<T::limb_bits == T::total_bits>::type * = nullptr) {}
