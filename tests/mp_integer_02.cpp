@@ -1475,3 +1475,245 @@ BOOST_AUTO_TEST_CASE(mp_integer_clear_top_bits_test)
 {
 	boost::mpl::for_each<integral_types>(ctb_tester());
 }
+
+struct static_hash_tester
+{
+	template <typename U>
+	struct runner
+	{
+		template <typename T>
+		void operator()(const T &)
+		{
+			typedef detail::static_integer<T::value> int_type1;
+			typedef detail::static_integer<U::value> int_type2;
+			using lt1 = typename int_type1::limb_t;
+			using lt2 = typename int_type2::limb_t;
+			const auto lbits1 = int_type1::limb_bits;
+			const auto lbits2 = int_type2::limb_bits;
+			BOOST_CHECK_EQUAL(int_type1{}.hash(),0u);
+			BOOST_CHECK_EQUAL(int_type1{}.hash(),int_type2{}.hash());
+			BOOST_CHECK_EQUAL(int_type1{1}.hash(),int_type2{1}.hash());
+			BOOST_CHECK_EQUAL(int_type1{-1}.hash(),int_type2{-1}.hash());
+			BOOST_CHECK_EQUAL(int_type1{5}.hash(),int_type2{5}.hash());
+			BOOST_CHECK_EQUAL(int_type1{-5}.hash(),int_type2{-5}.hash());
+			// Random tests.
+			std::uniform_int_distribution<int> udist(0,1);
+			for (int i = 0; i < ntries; ++i) {
+				// Build randomly two identical integers wide as much as the narrowest of the two int types,
+				// and compare their hashes.
+				int_type1 a(1);
+				int_type2 b(1);
+				while (a.m_limbs[1u] < (lt1(1) << (lbits1 - 1u)) && b.m_limbs[1u] < (lt2(1) << (lbits2 - 1u))) {
+					int tmp = udist(rng);
+					a.m_limbs[0u] = static_cast<lt1>(a.m_limbs[0u] + lt1(tmp));
+					b.m_limbs[0u] = static_cast<lt2>(b.m_limbs[0u] + lt2(tmp));
+					a.lshift1();
+					b.lshift1();
+				}
+				if (udist(rng)) {
+					a.negate();
+					b.negate();
+				}
+				BOOST_CHECK_EQUAL(a.hash(),b.hash());
+			}
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_hash_test)
+{
+	boost::mpl::for_each<size_types>(static_hash_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_hashable<int_type>::value);
+		BOOST_CHECK_EQUAL(int_type{}.hash(),0u);
+		{
+		int_type n;
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),0u);
+		}
+		{
+		int_type n(1), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-1), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(2), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-2), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(-100), m(n);
+		n.promote();
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		// Try squaring as well for more range.
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<long long> udll(std::numeric_limits<long long>::lowest(),std::numeric_limits<long long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udll(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udll(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<long> udl(std::numeric_limits<long>::lowest(),std::numeric_limits<long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udl(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udl(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<unsigned long> udul(std::numeric_limits<unsigned long>::lowest(),std::numeric_limits<unsigned long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udul(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udul(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		std::uniform_int_distribution<unsigned long long> udull(std::numeric_limits<unsigned long long>::lowest(),std::numeric_limits<unsigned long long>::max());
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udull(rng);
+			int_type n(tmp), m(n);
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+			BOOST_CHECK_EQUAL(n.hash(),std::hash<int_type>()(m));
+		}
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = udull(rng);
+			int_type n(int_type{tmp} * tmp), m(n);
+			if (promote_dist(rng)) {
+				n.negate();
+				m.negate();
+			}
+			if (promote_dist(rng) && m.is_static()) {
+				m.promote();
+			}
+			BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		// Try some extremals.
+		{
+		int_type n(std::numeric_limits<long long>::max()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<long long>::lowest()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<double>::max()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+		{
+		int_type n(std::numeric_limits<double>::lowest()), m(n);
+		if (n.is_static()) {
+			n.promote();
+		}
+		BOOST_CHECK_EQUAL(n.hash(),m.hash());
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
+{
+	boost::mpl::for_each<size_types>(hash_tester());
+}

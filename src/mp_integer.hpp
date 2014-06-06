@@ -23,11 +23,13 @@
 
 #include <algorithm>
 #include <array>
+#include <boost/functional/hash.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <gmp.h>
 #include <iostream>
 #include <limits>
@@ -703,6 +705,49 @@ struct static_integer
 		piranha_assert(idx < limb_bits * 2u);
 		const auto quot = static_cast<limb_t>(idx / limb_bits), rem = static_cast<limb_t>(idx % limb_bits);
 		return (static_cast<limb_t>(m_limbs[static_cast<size_type>(quot)] & static_cast<limb_t>(limb_t(1u) << rem)) != 0u);
+	}
+	// Some metaprogramming to make sure we can compute the hash safely. A bit of paranoid defensive programming.
+	struct hash_checks
+	{
+		// Total number of bits that can be stored. We know already this operation is safe.
+		static const limb_t tot_bits = static_cast<limb_t>(limb_bits * 2u);
+		static const unsigned nbits_size_t = static_cast<unsigned>(std::numeric_limits<std::size_t>::digits);
+		static const limb_t q = static_cast<limb_t>(tot_bits / nbits_size_t);
+		static const limb_t r = static_cast<limb_t>(tot_bits % nbits_size_t);
+		// Max number of size_t elements that can be extracted.
+		static const limb_t max_n_size_t = q + limb_t(r != 0u);
+		static const bool value =
+			// Compute tot_nbits as unsigned.
+			(tot_bits < std::numeric_limits<unsigned>::max()) &&
+			// Convert n_size_t to std::size_t for use as function param in read_uint.
+			(max_n_size_t < std::numeric_limits<std::size_t>::max()) &&
+			// Multiplication in read_uint that could overflow. max_n_size_t - 1u is the maximum
+			// value of the index param.
+			(limb_t(max_n_size_t - 1u) < std::size_t(std::numeric_limits<std::size_t>::max() / nbits_size_t));
+	};
+	std::size_t hash() const noexcept
+	{
+		static_assert(hash_checks::value,"Overflow error.");
+		// Hash of zero is zero.
+		if (_mp_size == 0) {
+			return 0;
+		}
+		// Use sign as seed value.
+		mpz_size_t asize = _mp_size;
+		std::size_t retval = 1u;
+		if (_mp_size < 0) {
+			asize = -asize;
+			retval = static_cast<std::size_t>(-1);
+		}
+		// Determine the number of std::size_t to extract.
+		const unsigned nbits_size_t = static_cast<unsigned>(std::numeric_limits<std::size_t>::digits),
+			tot_nbits  = static_cast<unsigned>(limb_bits * static_cast<unsigned>(asize)),
+			q = tot_nbits / nbits_size_t, r = tot_nbits % nbits_size_t,
+			n_size_t = q + unsigned(r != 0u);
+		for (unsigned i = 0u; i < n_size_t; ++i) {
+			boost::hash_combine(retval,read_uint<std::size_t,total_bits - limb_bits>(&m_limbs[0u],2u,static_cast<std::size_t>(i)));
+		}
+		return retval;
 	}
 	mpz_alloc_t	_mp_alloc;
 	mpz_size_t	_mp_size;
@@ -2637,6 +2682,62 @@ class mp_integer
 			return retval;
 		}
 	private:
+		struct hash_checks
+		{
+			static const unsigned nbits_size_t = static_cast<unsigned>(std::numeric_limits<std::size_t>::digits);
+			using s_storage = typename detail::integer_union<NBits>::s_storage;
+			// Check that the computation of the total number of bits does not overflow when the number
+			// of size_t to extract is no more than the corresponding quantity for the static int.
+			// This protects again both the computation of tot_nbits, but also the multiplication inside
+			// read_uint as return type coincides with std::size_t.
+			static const bool value = s_storage::hash_checks::max_n_size_t < std::numeric_limits<std::size_t>::max() / nbits_size_t;
+		};
+	public:
+		/// Hash value
+		/**
+		 * The returned hash value does not depend on how the integer is stored (i.e., dynamic or static
+		 * storage).
+		 *
+		 * @return a hash value for \p this.
+		 */
+		std::size_t hash() const noexcept
+		{
+			// NOTE: in order to check that this method can be called safely we need to make sure that:
+			// - the static hash calculation has no overflows (checked above),
+			// - dynamic hash calculation cannot overflow when operating on integers with size (in terms
+			//   of std::size_t elements) in the static range.
+			static_assert(hash_checks::value,"Overflow error.");
+			// NOTE: a possible performance improvement here is to go and read directly
+			// the first size_t from the storage if the value is positive. No loops and
+			// no hash combining.
+			if (is_static()) {
+				return m_int.g_st().hash();
+			}
+			const auto &dy = m_int.g_dy();
+			const std::size_t size = ::mpz_size(&dy);
+			if (size == 0u) {
+				return 0;
+			}
+			// Get a read-only pointer to the limbs.
+			auto l_ptr = ::mpz_limbs_read(&dy);
+			piranha_assert(l_ptr != nullptr);
+			// Init with sign.
+			std::size_t retval = static_cast<std::size_t>(mpz_sgn(&dy));
+			// Determine the number of std::size_t to extract.
+			const std::size_t nbits_size_t = static_cast<std::size_t>(std::numeric_limits<std::size_t>::digits),
+				// NOTE: in case of overflow here, we will underestimate the number of bits
+				// used in the representation of dy.
+				// NOTE: use GMP_NUMB_BITS in case we are operating with a GMP lib built with nails support.
+				tot_nbits  = static_cast<std::size_t>(std::size_t(GMP_NUMB_BITS) * size),
+				q = static_cast<std::size_t>(tot_nbits / nbits_size_t),
+				r = static_cast<std::size_t>(tot_nbits % nbits_size_t),
+				n_size_t = static_cast<std::size_t>(q + static_cast<std::size_t>(r != 0u));
+			for (std::size_t i = 0u; i < n_size_t; ++i) {
+				boost::hash_combine(retval,detail::read_uint<std::size_t,unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS)>(l_ptr,size,i));
+			}
+			return retval;
+		}
+	private:
 		detail::integer_union<NBits> m_int;
 };
 
@@ -2752,6 +2853,33 @@ struct abs_impl<mp_integer<NBits>,void>
 };
 
 }
+
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::mp_integer.
+template <int NBits>
+struct hash<piranha::mp_integer<NBits>>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::mp_integer<NBits> argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] n piranha::mp_integer whose hash value will be returned.
+	 * 
+	 * @return <tt>n.hash()</tt>.
+	 * 
+	 * @see piranha::mp_integer::hash()
+	 */
+	result_type operator()(const argument_type &n) const noexcept
+	{
+		return n.hash();
+	}
+};
 
 }
 
