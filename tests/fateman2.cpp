@@ -27,6 +27,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
@@ -41,5 +42,5 @@ BOOST_AUTO_TEST_CASE(fateman2_test)
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	BOOST_CHECK_EQUAL((fateman2<double,kronecker_monomial<>>().size()),635376u);
+	BOOST_CHECK_EQUAL((fateman2<mp_integer<>,kronecker_monomial<>>().size()),635376u);
 }
