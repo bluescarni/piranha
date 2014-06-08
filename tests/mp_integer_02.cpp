@@ -40,6 +40,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "../src/config.hpp"
@@ -1716,4 +1717,324 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(mp_integer_hash_test)
 {
 	boost::mpl::for_each<size_types>(hash_tester());
+}
+
+struct next_prime_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK_EQUAL(n.nextprime(),2);
+		n = 2;
+		BOOST_CHECK_EQUAL(n.nextprime(),3);
+		n = 3;
+		BOOST_CHECK_EQUAL(n.nextprime(),5);
+		n = 7901;
+		BOOST_CHECK_EQUAL(n.nextprime(),7907);
+		n = -1;
+		BOOST_CHECK_THROW(n.nextprime(),std::invalid_argument);
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			n = tmp;
+			if (promote_dist(rng) && n.is_static()) {
+				n.promote();
+			}
+			if (tmp < 0) {
+				BOOST_CHECK_THROW(n.nextprime(),std::invalid_argument);
+				continue;
+			}
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
+			::mpz_nextprime(&m.m_mpz,&m.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.nextprime()),mpz_lexcast(m));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_next_prime_test)
+{
+	boost::mpl::for_each<size_types>(next_prime_tester());
+}
+
+struct probab_prime_p_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK(n.probab_prime_p() == 0);
+		n = 1;
+		BOOST_CHECK(n.probab_prime_p() == 0);
+		n = 2;
+		BOOST_CHECK(n.probab_prime_p() != 0);
+		n = 3;
+		BOOST_CHECK(n.probab_prime_p() != 0);
+		n = 5;
+		BOOST_CHECK(n.probab_prime_p() != 0);
+		n = 11;
+		BOOST_CHECK(n.probab_prime_p() != 0);
+		n = 16;
+		BOOST_CHECK(n.probab_prime_p() != 2);
+		n = 7901;
+		BOOST_CHECK(n.probab_prime_p() != 0);
+		n = 7907;
+		BOOST_CHECK(n.probab_prime_p(5) != 0);
+		n = -1;
+		BOOST_CHECK_THROW(n.probab_prime_p(),std::invalid_argument);
+		n = 5;
+		BOOST_CHECK_THROW(n.probab_prime_p(0),std::invalid_argument);
+		BOOST_CHECK_THROW(n.probab_prime_p(-1),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_probab_prime_p_test)
+{
+	boost::mpl::for_each<size_types>(probab_prime_p_tester());
+}
+
+struct integer_sqrt_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK(n.sqrt() == 0);
+		n = 1;
+		BOOST_CHECK(n.sqrt() == 1);
+		n = 2;
+		BOOST_CHECK(n.sqrt() == 1);
+		n = 3;
+		BOOST_CHECK(n.sqrt() == 1);
+		n = 4;
+		BOOST_CHECK(n.sqrt() == 2);
+		n = 5;
+		BOOST_CHECK(n.sqrt() == 2);
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::lowest(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			n = tmp;
+			if (promote_dist(rng) && n.is_static()) {
+				n.promote();
+			}
+			if (tmp < 0) {
+				BOOST_CHECK_THROW(n.sqrt(),std::invalid_argument);
+				continue;
+			}
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
+			::mpz_sqrt(&m.m_mpz,&m.m_mpz);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.sqrt()),mpz_lexcast(m));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_integer_sqrt_test)
+{
+	boost::mpl::for_each<size_types>(integer_sqrt_tester());
+}
+
+struct factorial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n;
+		BOOST_CHECK(n.factorial() == 1);
+		n = 1;
+		BOOST_CHECK(n.factorial() == 1);
+		n = 2;
+		BOOST_CHECK(n.factorial() == 2);
+		n = 3;
+		BOOST_CHECK(n.factorial() == 6);
+		n = 4;
+		BOOST_CHECK(n.factorial() == 24);
+		n = 5;
+		BOOST_CHECK(n.factorial() == 24 * 5);
+		// Random tests.
+		std::uniform_int_distribution<int> ud(-1000,1000);
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			n = tmp;
+			if (promote_dist(rng) && n.is_static()) {
+				n.promote();
+			}
+			if (tmp < 0) {
+				BOOST_CHECK_THROW(n.factorial(),std::invalid_argument);
+				continue;
+			}
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
+			::mpz_fac_ui(&m.m_mpz,static_cast<unsigned long>(tmp));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.factorial()),mpz_lexcast(m));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_factorial_test)
+{
+	boost::mpl::for_each<size_types>(factorial_tester());
+}
+
+struct binomial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((has_binomial<int_type,int_type>::value));
+		BOOST_CHECK((has_binomial<int_type,int>::value));
+		BOOST_CHECK((has_binomial<int_type,unsigned>::value));
+		BOOST_CHECK((has_binomial<int_type,long>::value));
+		BOOST_CHECK((has_binomial<int_type,char>::value));
+		int_type n;
+		BOOST_CHECK(n.binomial(0) == 1);
+		BOOST_CHECK(n.binomial(1) == 0);
+		n = 1;
+		BOOST_CHECK(n.binomial(1) == 1);
+		n = 5;
+		BOOST_CHECK(n.binomial(3) == 10);
+		n = -5;
+		BOOST_CHECK(n.binomial(int_type(4)) == 70);
+		// Random tests.
+		std::uniform_int_distribution<int> ud(-1000,1000);
+		std::uniform_int_distribution<int> promote_dist(0,1);
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp1 = ud(rng), tmp2 = ud(rng);
+			n = tmp1;
+			if (promote_dist(rng) && n.is_static()) {
+				n.promote();
+			}
+			if (tmp2 < 0) {
+				BOOST_CHECK_THROW(n.binomial(tmp2),std::invalid_argument);
+				continue;
+			}
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp1));
+			::mpz_bin_ui(&m.m_mpz,&m.m_mpz,static_cast<unsigned long>(tmp2));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.binomial(tmp2)),mpz_lexcast(m));
+			BOOST_CHECK_EQUAL(n.binomial(tmp2),n.binomial(int_type(tmp2)));
+			BOOST_CHECK_EQUAL(n.binomial(long(tmp2)),n.binomial(int_type(tmp2)));
+			BOOST_CHECK_EQUAL(n.binomial((long long)(tmp2)),n.binomial(int_type(tmp2)));
+			BOOST_CHECK_EQUAL(n.binomial((unsigned long)(tmp2)),n.binomial(int_type(tmp2)));
+			BOOST_CHECK_EQUAL(n.binomial((unsigned long long)(tmp2)),n.binomial(int_type(tmp2)));
+		}
+		BOOST_CHECK_THROW(n.binomial(std::numeric_limits<unsigned long>::max() + int_type(1)),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_binomial_test)
+{
+	boost::mpl::for_each<size_types>(binomial_tester());
+	// Check the ints.
+	using int_type = mp_integer<>;
+	BOOST_CHECK((has_binomial<int,int>::value));
+	BOOST_CHECK_EQUAL(math::binomial(4,2),math::binomial(int_type(4),2));
+	BOOST_CHECK((has_binomial<char,unsigned>::value));
+	BOOST_CHECK_EQUAL(math::binomial(char(4),2u),math::binomial(int_type(4),2));
+	BOOST_CHECK((has_binomial<long long,int>::value));
+	BOOST_CHECK_EQUAL(math::binomial(7ll,4),math::binomial(int_type(7),4));
+	BOOST_CHECK((std::is_same<decltype(math::binomial(7ll,4)),int_type>::value));
+	BOOST_CHECK_EQUAL(math::binomial(-7ll,4u),math::binomial(int_type(-7),4));
+}
+
+struct sin_cos_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(has_sine<int_type>::value);
+		BOOST_CHECK(has_cosine<int_type>::value);
+		int_type n;
+		BOOST_CHECK_EQUAL(math::sin(n),0);
+		BOOST_CHECK_EQUAL(math::cos(n),1);
+		n = 1;
+		BOOST_CHECK_THROW(math::sin(n),std::invalid_argument);
+		BOOST_CHECK_THROW(math::cos(n),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_sin_cos_test)
+{
+	boost::mpl::for_each<size_types>(sin_cos_tester());
+}
+
+struct partial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(is_differentiable<int_type>::value);
+		int_type n;
+		BOOST_CHECK_EQUAL(math::partial(n,""),0);
+		n = 5;
+		BOOST_CHECK_EQUAL(math::partial(n,"abc"),0);
+		n = -5;
+		BOOST_CHECK_EQUAL(math::partial(n,"def"),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_partial_test)
+{
+	boost::mpl::for_each<size_types>(partial_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		using d_type = std::unordered_map<std::string,double>;
+		BOOST_CHECK((is_evaluable<int_type,int>::value));
+		BOOST_CHECK((is_evaluable<int_type,int_type>::value));
+		BOOST_CHECK((is_evaluable<int_type,double>::value));
+		int_type n;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{}),0);
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"foo",5.}}),0);
+		n = -1;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"foo",6.}}),-1);
+		n = 101;
+		BOOST_CHECK_EQUAL(math::evaluate(n,d_type{{"bar",6.},{"baz",.7}}),101);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_evaluate_test)
+{
+	boost::mpl::for_each<size_types>(evaluate_tester());
+}
+
+struct subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((has_subs<int_type,int_type>::value));
+		BOOST_CHECK((has_subs<int_type,double>::value));
+		BOOST_CHECK((has_subs<int_type,float>::value));
+		int_type n;
+		BOOST_CHECK_EQUAL(math::subs(n,"foo",5),0);
+		n = -6;
+		BOOST_CHECK_EQUAL(math::subs(n,"bar",0),-6);
+		n = 1034;
+		BOOST_CHECK_EQUAL(math::subs(n,"baz","std::string"),1034);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_subs_test)
+{
+	boost::mpl::for_each<size_types>(subs_tester());
 }

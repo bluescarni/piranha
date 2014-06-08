@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -2737,18 +2738,166 @@ class mp_integer
 			}
 			return retval;
 		}
+		/// Compute next prime number.
+		/**
+		 * Compute the next prime number after \p this. The method uses the GMP function <tt>mpz_nextprime()</tt>.
+		 *
+		 * @return next prime.
+		 *
+		 * @throws std::invalid_argument if the sign of this is negative.
+		 */
+		mp_integer nextprime() const
+		{
+			if (unlikely(sign() < 0)) {
+				piranha_throw(std::invalid_argument,"cannot compute the next prime of a negative number");
+			}
+			// NOTE: lots of optimisations here as well, ideally we should use just a single memory allocation,
+			// and demote to static if it fits.
+			mp_integer retval;
+			retval.promote();
+			auto copy(*this);
+			if (copy.is_static()) {
+				copy.promote();
+			}
+			::mpz_nextprime(&retval.m_int.g_dy(),&copy.m_int.g_dy());
+			return retval;
+		}
+		/// Check if \p this is a prime number
+		/**
+		 * The method uses the GMP function <tt>mpz_probab_prime_p()</tt>.
+		 *
+		 * @param[in] reps number of primality tests to be run.
+		 *
+		 * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
+		 *
+		 * @throws std::invalid_argument if \p reps is less than one or if this is negative.
+		 */
+		int probab_prime_p(int reps = 25) const
+		{
+			if (unlikely(reps < 1)) {
+				piranha_throw(std::invalid_argument,"invalid number of primality tests");
+			}
+			if (unlikely(sign() < 0)) {
+				piranha_throw(std::invalid_argument,"cannot run primality tests on a negative number");
+			}
+			auto copy(*this);
+			if (copy.is_static()) {
+				copy.promote();
+			}
+			return ::mpz_probab_prime_p(&copy.m_int.g_dy(),reps);
+		}
+		/// Integer square root.
+		/**
+		 * @return the truncated integer part of the square root of \p this.
+		 *
+		 * @throws std::invalid_argument if \p this is negative.
+		 */
+		mp_integer sqrt() const
+		{
+			if (unlikely(sign() < 0)) {
+				piranha_throw(std::invalid_argument,"cannot calculate square root of negative integer");
+			}
+			// NOTE: here in principle if this is static, we never need to go through dynamic
+			// allocation as the sqrt <= this always.
+			mp_integer retval(*this);
+			if (retval.is_static()) {
+				retval.promote();
+			}
+			::mpz_sqrt(&retval.m_int.g_dy(),&retval.m_int.g_dy());
+			return retval;
+		}
+		/// Factorial.
+		/**
+		 * The GMP function <tt>mpz_fac_ui()</tt> will be used.
+		 *
+		 * @return the factorial of \p this.
+		 *
+		 * @throws std::invalid_argument if \p this is negative or larger than an implementation-defined value.
+		 */
+		mp_integer factorial() const
+		{
+			if (*this > 100000L || sign() < 0) {
+				piranha_throw(std::invalid_argument,"invalid input for factorial()");
+			}
+			mp_integer retval;
+			retval.promote();
+			::mpz_fac_ui(&retval.m_int.g_dy(),static_cast<unsigned long>(*this));
+			return retval;
+		}
+	private:
+		template <typename T>
+		static unsigned long check_choose_k(const T &k,
+			typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			try {
+				return boost::numeric_cast<unsigned long>(k);
+			} catch (...) {
+				piranha_throw(std::invalid_argument,"invalid k argument for binomial coefficient");
+			}
+		}
+		template <typename T>
+		static unsigned long check_choose_k(const T &k,
+			typename std::enable_if<std::is_same<T,mp_integer>::value>::type * = nullptr)
+		{
+			try {
+				return static_cast<unsigned long>(k);
+			} catch (...) {
+				piranha_throw(std::invalid_argument,"invalid k argument for binomial coefficient");
+			}
+		}
+	public:
+		/// Binomial coefficient.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is an integral type or piranha::mp_integer.
+		 *
+		 * Will return \p this choose \p k using the GMP <tt>mpz_bin_ui</tt> function.
+		 *
+		 * @param[in] k bottom argument for the binomial coefficient.
+		 *
+		 * @return \p this choose \p k.
+		 *
+		 * @throws std::invalid_argument if \p k cannot be converted successfully to <tt>unsigned long</tt>.
+		 */
+		template <typename T, typename = typename std::enable_if<std::is_integral<T>::value ||
+			std::is_same<mp_integer,T>::value>::type>
+		mp_integer binomial(const T &k) const
+		{
+			mp_integer retval(*this);
+			if (is_static()) {
+				retval.promote();
+			}
+			::mpz_bin_ui(&retval.m_int.g_dy(),&retval.m_int.g_dy(),check_choose_k(k));
+			return retval;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
 
-//using integer = mp_integer<>;
+namespace detail
+{
+
+// Temporary TMP structure to detect mp_integer types.
+// Should be replaced by is_instance_of once (or if) we move
+// from NBits to an integral_constant for selecting limb
+// size in mp_integer.
+template <typename T>
+struct is_mp_integer: std::false_type {};
+
+template <int NBits>
+struct is_mp_integer<mp_integer<NBits>>: std::true_type {};
+
+}
 
 namespace math
 {
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for piranha::mp_integer.
-template <int NBits>
-struct multiply_accumulate_impl<mp_integer<NBits>,mp_integer<NBits>,mp_integer<NBits>,void>
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct multiply_accumulate_impl<T,T,T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2759,36 +2908,38 @@ struct multiply_accumulate_impl<mp_integer<NBits>,mp_integer<NBits>,mp_integer<N
 	 * @param[in] z second argument.
 	 * 
 	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::multiply_accumulate().
 	 */
-	auto operator()(mp_integer<NBits> &x, const mp_integer<NBits> &y, const mp_integer<NBits> &z) const -> decltype(x.multiply_accumulate(y,z))
+	auto operator()(T &x, const T &y, const T &z) const noexcept -> decltype(x.multiply_accumulate(y,z))
 	{
 		return x.multiply_accumulate(y,z);
 	}
 };
 
 /// Specialisation of the piranha::math::negate() functor for piranha::mp_integer.
-template <int NBits>
-struct negate_impl<mp_integer<NBits>,void>
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct negate_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**
 	 * Will use internally piranha::mp_integer::negate().
 	 * 
 	 * @param[in,out] n piranha::mp_integer to be negated.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::negate().
 	 */
-	void operator()(mp_integer<NBits> &n) const noexcept
+	void operator()(T &n) const noexcept
 	{
 		n.negate();
 	}
 };
 
 /// Specialisation of the piranha::math::is_zero() functor for piranha::mp_integer.
-template <int NBits>
-struct is_zero_impl<mp_integer<NBits>,void>
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2797,10 +2948,8 @@ struct is_zero_impl<mp_integer<NBits>,void>
 	 * @param[in] n piranha::mp_integer to be tested.
 	 * 
 	 * @return \p true if \p n is zero, \p false otherwise.
-	 * 
-	 * @throws unspecified any exception thrown by piranha::mp_integer::sign().
 	 */
-	bool operator()(const mp_integer<NBits> &n) const noexcept
+	bool operator()(const T &n) const noexcept
 	{
 		return n.sign() == 0;
 	}
@@ -2808,11 +2957,10 @@ struct is_zero_impl<mp_integer<NBits>,void>
 
 /// Specialisation of the piranha::math::pow() functor for piranha::mp_integer.
 /**
- * This specialisation is activated when \p T is piranha::mp_integer.
- * The result will be computed via piranha::mp_integer::pow().
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
  */
-template <typename U, int NBits>
-struct pow_impl<mp_integer<NBits>,U,void>
+template <typename T, typename U>
+struct pow_impl<T,U,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2830,15 +2978,18 @@ struct pow_impl<mp_integer<NBits>,U,void>
 	 * @throws unspecified any exception resulting from piranha::mp_integer::pow().
 	 */
 	template <typename U2>
-	auto operator()(const mp_integer<NBits> &n, const U2 &x) const -> decltype(n.pow(x))
+	auto operator()(const T &n, const U2 &x) const -> decltype(n.pow(x))
 	{
 		return n.pow(x);
 	}
 };
 
 /// Specialisation of the piranha::math::abs() functor for piranha::mp_integer.
-template <int NBits>
-struct abs_impl<mp_integer<NBits>,void>
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct abs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2846,13 +2997,177 @@ struct abs_impl<mp_integer<NBits>,void>
 	 * 
 	 * @return absolute value of \p n.
 	 */
-	mp_integer<NBits> operator()(const mp_integer<NBits> &n) const noexcept
+	T operator()(const T &n) const noexcept
 	{
 		return n.abs();
 	}
 };
 
+/// Specialisation of the piranha::math::sin() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct sin_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return zero if \p n is also zero, otherwise an
+	 * exception will be thrown.
+	 *
+	 * @param[in] n argument.
+	 *
+	 * @return sine of \p n.
+	 */
+	T operator()(const T &n) const
+	{
+		if (n.sign() == 0) {
+			return T{};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the sine of a nonzero integer");
+	}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct cos_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The operation will return one if \p n is zero, otherwise an
+	 * exception will be thrown.
+	 *
+	 * @param[in] n argument.
+	 *
+	 * @return cosine of \p n.
+	 */
+	T operator()(const T &n) const
+	{
+		if (n.sign() == 0) {
+			return T{1};
+		}
+		piranha_throw(std::invalid_argument,"cannot calculate the cosine of a nonzero integer");
+	}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct partial_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of piranha::mp_integer constructed from zero.
+	 */
+	T operator()(const T &, const std::string &) const noexcept
+	{
+		return T{};
+	}
+};
+
+/// Specialisation of the piranha::math::evaluate() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n evaluation argument.
+	 *
+	 * @return copy of \p n.
+	 */
+	template <typename U>
+	T operator()(const T &n, const std::unordered_map<std::string,U> &) const noexcept
+	{
+		return n;
+	}
+};
+
+/// Specialisation of the piranha::math::subs() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n substitution argument.
+	 *
+	 * @return copy of \p n.
+	 */
+	template <typename U>
+	T operator()(const T &n, const std::string &, const U &) const noexcept
+	{
+		return n;
+	}
+};
+
+/// Specialisation of the piranha::math::binomial() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This call operator is enabled only if \p k can be used as argument to piranha::mp_integer::binomial().
+	 *
+	 * @param[in] n top number.
+	 * @param[in] k bottom number.
+	 *
+	 * @return \p n choose \p k.
+	 *
+	 * @throws unspecified any exception thrown by piranha::mp_integer::binomial().
+	 */
+	template <typename U2>
+	auto operator()(const T &n, const U2 &k) const -> decltype(n.binomial(k))
+	{
+		return n.binomial(k);
+	}
+};
+
+/// Specialisation of the piranha::math::binomial() functor for integral types.
+/**
+ * This specialisation is enabled if \p T is an integral type.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * \note
+	 * This call operator is enabled only if \p k can be used as second argument to piranha::mp_integer::binomial().
+	 *
+	 * The input integral value will be converted to piranha::mp_integer<>, and piranha::mp_integer::binomial() will then be
+	 * used to compute the return value.
+	 *
+	 * @param[in] n top number.
+	 * @param[in] k bottom number.
+	 *
+	 * @return \p n choose \p k.
+	 *
+	 * @throws unspecified any exception thrown by constructing piranha::mp_integer from \p n or by piranha::mp_integer::binomial().
+	 */
+	template <typename U1>
+	auto operator()(const T &n, const U1 &k) const -> decltype(mp_integer<>(n).binomial(k))
+	{
+		return mp_integer<>(n).binomial(k);
+	}
+};
+
 }
+
+//using integer = mp_integer<>;
 
 }
 
