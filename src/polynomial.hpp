@@ -1283,10 +1283,55 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 		}
+//		template <typename Functor>
+//		void sparse_multiplication_new(return_type &retval) const
+//		{
+//			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
+//			// Build vectors of bucket positions into retval.
+//			using bucket_idx_type = decltype(retval.m_container._bucket_from_hash(0u));
+//			std::vector<std::pair<term_type1 const *,bucket_idx_type>> bvi1;
+//			std::vector<std::pair<term_type2 const *,bucket_idx_type>> bvi2;
+//			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(bvi1),[&retval](term_type1 const *ptr) {
+//				return std::make_pair(ptr,retval.m_container._bucket_from_hash(ptr->hash()));
+//			});
+//			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(bvi2),[&retval](term_type2 const *ptr) {
+//				return std::make_pair(ptr,retval.m_container._bucket_from_hash(ptr->hash()));
+//			});
+//			auto cmp1 = [](const std::pair<term_type1 const *,bucket_idx_type> &p1,
+//				const std::pair<term_type1 const *,bucket_idx_type> &p2)
+//			{
+//				return p1.second < p2.second;
+//			};
+//			std::sort(bvi1.begin(),bvi1.end(),cmp1);
+//			auto cmp2 = [](const std::pair<term_type2 const *,bucket_idx_type> &p1,
+//				const std::pair<term_type2 const *,bucket_idx_type> &p2)
+//			{
+//				return p1.second < p2.second;
+//			};
+//			std::sort(bvi2.begin(),bvi2.end(),cmp2);
+//			const auto bucket_count = retval.m_container.bucket_count();
+//			typedef decltype(this->determine_n_threads()) thread_size_type;
+//			const thread_size_type n_threads = this->determine_n_threads();
+//std::cout << "bucket count: " << bucket_count << '\n';
+//std::cout << "min1: " << std::min_element(bvi1.begin(),bvi1.end(),cmp1)->second << '\n';
+//std::cout << "max1: " << std::max_element(bvi1.begin(),bvi1.end(),cmp1)->second << '\n';
+//std::cout << "min2: " << std::min_element(bvi2.begin(),bvi2.end(),cmp2)->second << '\n';
+//std::cout << "max2: " << std::max_element(bvi2.begin(),bvi2.end(),cmp2)->second << '\n';
+//const auto a = (bucket_count / n_threads) * 1u, b = (bucket_count / n_threads) * 2u;
+//std::cout << "thread 0: " << a << ',' << b << '\n';
+
+//std::cout << (std::upper_bound(bvi2.begin(),bvi2.end(),std::make_pair(bvi2.begin()->first,b - bvi1.begin()->second),cmp2))->second << '\n';
+//std::cout << (--std::upper_bound(bvi2.begin(),bvi2.end(),std::make_pair(bvi2.begin()->first,b - bvi1.begin()->second),cmp2))->second << '\n';
+
+//		}
 		template <typename Functor>
 		void sparse_multiplication(return_type &retval) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
+//if (size1 > 5000u && size2 > 5000u) {
+//std::cout << "fooooo\n";
+//	sparse_multiplication_new<Functor>(retval);
+//}
 			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
 			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
 				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
