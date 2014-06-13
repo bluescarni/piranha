@@ -53,7 +53,10 @@ class mp_rational
 			}
 			canonicalise();
 		}
-		~mp_rational() = default;
+		~mp_rational() noexcept
+		{
+			piranha_assert(m_den.sign() != 0);
+		}
 		mp_rational &operator=(const mp_rational &) = default;
 		mp_rational &operator=(mp_rational &&) = default;
 		friend std::ostream &operator<<(std::ostream &os, const mp_rational &q)
