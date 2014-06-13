@@ -744,7 +744,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 * - (unlikely) conversion errors between numeric types,
 		 * - the public interface of piranha::hash_set,
 		 * - piranha::series_multiplier::estimate_final_series_size(),
-		 * - piranha::series_multiplier::blocked_multiplication(),
 		 * - piranha::math::multiply_accumulate() on the coefficient types.
 		 */
 		return_type operator()() const

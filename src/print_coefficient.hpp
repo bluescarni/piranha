@@ -39,6 +39,9 @@ struct print_coefficient_impl
 {
 	/// Call operator.
 	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>os << cf</tt> is well-formed.
+	 *
 	 * The default call operator will print to stream the object.
 	 * 
 	 * @param[in] os target stream.
