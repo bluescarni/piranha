@@ -148,6 +148,7 @@ namespace detail {}
 #include "math.hpp"
 #include "monomial.hpp"
 #include "mp_integer.hpp"
+#include "mp_rational.hpp"
 #include "poisson_series.hpp"
 #include "poisson_series_term.hpp"
 #include "polynomial_term.hpp"

@@ -33,6 +33,7 @@ SET(HEADERS_LIST
 	type_traits.hpp
 	univariate_monomial.hpp
 	mp_integer.hpp
+	mp_rational.hpp
 	integer.hpp
 	math.hpp
 	environment.hpp
