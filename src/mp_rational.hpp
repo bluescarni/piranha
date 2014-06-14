@@ -26,6 +26,7 @@
 #include <type_traits>
 
 #include "config.hpp"
+#include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "mp_integer.hpp"
 
@@ -52,6 +53,28 @@ class mp_rational
 				piranha_throw(zero_division_error,"zero denominator in rational");
 			}
 			canonicalise();
+		}
+	private:
+		template <typename T>
+		using generic_ctor_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
+			std::is_same<T,int_type>::value>::type;
+		template <typename T>
+		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			m_num = int_type(x);
+			m_den = 1;
+		}
+		template <typename T>
+		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_same<T,int_type>::value>::type * = nullptr)
+		{
+			m_num = x;
+			m_den = 1;
+		}
+	public:
+		template <typename T, typename = generic_ctor_enabler<T>>
+		explicit mp_rational(const T &x)
+		{
+			construct_from_interoperable(x);
 		}
 		~mp_rational() noexcept
 		{

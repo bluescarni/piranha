@@ -83,6 +83,7 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(q2.den(),1);
 		BOOST_CHECK(q2.is_canonical());
 		BOOST_CHECK_THROW((q_type{1,0}),zero_division_error);
+		q_type q3(-3);
 	}
 };
 

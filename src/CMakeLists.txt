@@ -58,6 +58,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/base_term_fwd.hpp
 	detail/km_commons.hpp
 	detail/integer_fwd.hpp
+	detail/mp_rational_fwd.hpp
 	detail/poisson_series_fwd.hpp
 	detail/series_fwd.hpp
 	detail/rational_fwd.hpp

@@ -43,6 +43,7 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/is_digit.hpp"
+#include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 
@@ -972,9 +973,11 @@ union integer_union
 template <int NBits = 0>
 class mp_integer
 {
-		// Make friend with debugging class.
+		// Make friend with debugging class and mp_rational.
 		template <typename>
 		friend class debug_access;
+		template <int>
+		friend class mp_rational;
 		template <typename T>
 		struct is_interoperable_type
 		{
