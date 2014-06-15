@@ -2585,6 +2585,16 @@ struct float_ctor_tester
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<float>::quiet_NaN()},std::invalid_argument);
 		}
+		// Test with some exact integers.
+		BOOST_CHECK_EQUAL(int_type{41.},41);
+		BOOST_CHECK_EQUAL(int_type{-42.},-42);
+		BOOST_CHECK_EQUAL(int_type{43.},43);
+		BOOST_CHECK_EQUAL(int_type{41.f},41);
+		BOOST_CHECK_EQUAL(int_type{-42.f},-42);
+		BOOST_CHECK_EQUAL(int_type{43.f},43);
+		BOOST_CHECK_EQUAL(int_type{41.l},41);
+		BOOST_CHECK_EQUAL(int_type{-42.l},-42);
+		BOOST_CHECK_EQUAL(int_type{43.l},43);
 	}
 };
 

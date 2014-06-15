@@ -1036,7 +1036,7 @@ class mp_integer
 					piranha_throw(std::invalid_argument,"output of std::scalbn is HUGE_VAL");
 				}
 				abs_x -= tmp;
-				// NOTE: if the float is an integer exactly divisible by the radix, we eventually
+				// NOTE: if the float is an exact integer, we eventually
 				// get to abs_x == 0, in which case we have to prevent the call to ilogb below.
 				if (unlikely(abs_x == Float(0))) {
 					break;
