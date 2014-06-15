@@ -26,6 +26,7 @@
 #include <boost/functional/hash.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <climits>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
