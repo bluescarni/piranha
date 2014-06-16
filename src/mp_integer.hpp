@@ -2724,7 +2724,9 @@ class mp_integer
 				return 0;
 			}
 			// Get a read-only pointer to the limbs.
-			auto l_ptr = ::mpz_limbs_read(&dy);
+			// NOTE: there is a specific mpz_limbs_read() function
+			// in later GMP versions for this.
+			const ::mp_limb_t *l_ptr = dy._mp_d;
 			piranha_assert(l_ptr != nullptr);
 			// Init with sign.
 			std::size_t retval = static_cast<std::size_t>(mpz_sgn(&dy));
