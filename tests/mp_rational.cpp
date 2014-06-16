@@ -84,6 +84,13 @@ struct constructor_tester
 		BOOST_CHECK(q2.is_canonical());
 		BOOST_CHECK_THROW((q_type{1,0}),zero_division_error);
 		q_type q3(-3);
+		q_type q4(123.456);
+		std::cout << q4 << '\n';
+		q_type q5(123.456l);
+		std::cout << q5 << '\n';
+		q_type q6(1.7);
+		std::cout << q6 << '\n';
+		std::cout << (long double)(q6) << '\n';
 	}
 };
 
