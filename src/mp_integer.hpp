@@ -961,14 +961,15 @@ union integer_union
  *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
  *     holder so that we avoid double allocations;
  *   - avoid going through mpz for print to stream,
- *   - try not to use dlimbs for addition, seems unnecessary (just low = low1 + low2, carry if low < low1/low2,
- *     and another branch for overflow on high -> test if it makes any diff in performance),
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
  *   - in raw_add/sub/div we always operate assuming the static int has 2 limbs, maybe there's performance to be gained
  *     by switch()ing the different cases for the operands sizes,
  *   - actually, it seems like we could use a kind of static counterpart in many cases (comparison, addition, etc.):
  *     just allocate the space in a static array and convert static_int to the GMP format, without actually allocating
  *     any memory;
+ *   - it seems like there might be performance to be gained by dropping exceptions for signalling overflow in add and mul;
+ *     try to replace with error code and see if it makes a difference. Probably we only want this for add, mul and
+ *     multiply_accumulate.
  * - probably the assignment operator should demote to static if possible.
  */
 template <int NBits = 0>
