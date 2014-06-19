@@ -319,6 +319,8 @@ class hash_set
 		// Allocator type.
 		// NOTE: if we move allocator choice in public interface we need to document the exception behaviour of the allocator. Also, check the validity
 		// of the assumptions on the type returned by allocate(): must it be a pointer or just convertible to pointer?
+		// NOTE: for std::allocator, pointer is guaranteed to be "T *":
+		// http://en.cppreference.com/w/cpp/memory/allocator
 		typedef std::allocator<list> allocator_type;
 		// The container is a pointer to an array of lists.
 		typedef list *container_type;
@@ -390,32 +392,23 @@ class hash_set
 		{
 			piranha_assert(!m_container && !m_log2_size && !m_n_elements);
 			// Proceed to actual construction only if the requested number of buckets is nonzero.
-			if (n_buckets) {
-				const size_type log2_size = get_log2_from_hint(n_buckets);
-				const size_type size = size_type(1u) << log2_size;
-				auto new_ptr = m_allocator.allocate(size);
-				if (unlikely(!new_ptr)) {
-					piranha_throw(std::bad_alloc,);
-				}
-				size_type i = 0u;
-				try {
-					// Default-construct the elements of the array.
-					for (; i < size; ++i) {
-						m_allocator.construct(&new_ptr[i],list{});
-					}
-				} catch (...) {
-					// Unwind the construction and deallocate, before re-throwing.
-					// NOTE: this should never happen, as the default constructor of list is non-throwing.
-					for (size_type j = 0u; j < i; ++j) {
-						m_allocator.destroy(&new_ptr[j]);
-					}
-					m_allocator.deallocate(new_ptr,size);
-					throw;
-				}
-				// Assign the members.
-				m_container = new_ptr;
-				m_log2_size = log2_size;
+			if (!n_buckets) {
+				return;
 			}
+			const size_type log2_size = get_log2_from_hint(n_buckets);
+			const size_type size = size_type(1u) << log2_size;
+			auto new_ptr = m_allocator.allocate(size);
+			if (unlikely(!new_ptr)) {
+				piranha_throw(std::bad_alloc,);
+			}
+			// Default-construct the elements of the array.
+			// NOTE: this is a noexcept operation, no need to account for rolling back.
+			for (size_type i = 0u; i < size; ++i) {
+				m_allocator.construct(&new_ptr[i]);
+			}
+			// Assign the members.
+			m_container = new_ptr;
+			m_log2_size = log2_size;
 		}
 		// Destroy all elements and deallocate m_container.
 		void destroy_and_deallocate()
