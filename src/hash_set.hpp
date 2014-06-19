@@ -111,7 +111,7 @@ class hash_set
 		struct node
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
-			node():m_next(nullptr) {}
+			node() noexcept : m_next(nullptr) {}
 			// NOTE: the idea here is that we use these helpers only *after* the object has been constructed,
 			// for constructing the object we must always access m_storage directly. The chain of two casts
 			// seems to be the only standard-conforming way of getting out a pointer to T.
@@ -185,8 +185,8 @@ class hash_set
 			// Static checks on the iterator types.
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
 			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
-			list():m_node() {}
-			list(list &&other):m_node()
+			list() noexcept : m_node() {}
+			list(list &&other) noexcept : m_node()
 			{
 				steal_from_rvalue(std::move(other));
 			}
@@ -237,11 +237,11 @@ class hash_set
 				}
 				return *this;
 			}
-			~list()
+			~list() noexcept
 			{
 				destroy();
 			}
-			void steal_from_rvalue(list &&other)
+			void steal_from_rvalue(list &&other) noexcept
 			{
 				piranha_assert(empty());
 				// Do something only if there is content in the other.
@@ -583,7 +583,7 @@ class hash_set
 		/**
 		 * No side effects.
 		 */
-		~hash_set() noexcept(true)
+		~hash_set() noexcept
 		{
 			piranha_assert(sanity_check());
 			destroy_and_deallocate();
