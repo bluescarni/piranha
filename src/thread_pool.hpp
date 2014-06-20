@@ -126,13 +126,8 @@ class task_queue
 			}
 			m_tasks.push([task](){(*task)();});
 			}
-			// NOTE: if an exception is thrown here, the thread might not get notified.
-			try {
-				m_cond.notify_one();
-			} catch (...) {
-				// NOTE: logging candidate.
-				std::abort();
-			}
+			// NOTE: notify_one is noexcept.
+			m_cond.notify_one();
 			return res;
 		}
 		// NOTE: we call this only from dtor, it is here in order to be able to test it.
