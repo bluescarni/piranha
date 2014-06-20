@@ -99,11 +99,16 @@ class thread_barrier
 			std::unique_lock<std::mutex> lock(m_mutex);
 			unsigned gen = m_generation;
 			if (--m_count == 0) {
+				// This is the last thread, update generation count
+				// and reset the count to the initial value, then
+				// notify the other threads.
 				++m_generation;
 				m_count = m_threshold;
 				m_cond.notify_all();
 				return true;
 			}
+			// This is not the last thread, wait for the other threads
+			// to clear the barrier.
 			while (gen == m_generation) {
 				m_cond.wait(lock);
 			}
