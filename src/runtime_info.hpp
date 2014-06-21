@@ -111,7 +111,7 @@ class runtime_info: private detail::base_runtime_info<>
 		// NOTE: here we do not use boost's as we do not want to depend on Boost thread.
 		/// Hardware concurrency.
 		/**
-		 * @return number of detected hardware thread contexts (typically equal to the number of logical CPU cores), or 0 if
+		 * @return number of concurrent threads supported by the environment (typically equal to the number of logical CPU cores), or 0 if
 		 * the detection fails.
 		 */
 		static unsigned get_hardware_concurrency()
@@ -142,7 +142,9 @@ class runtime_info: private detail::base_runtime_info<>
 				return 0u;
 			}
 #else
-			return 0u;
+			// Try the standard C++ version. Will return 0 in case the value cannot be
+			// determined.
+			return std::thread::hardware_concurrency();
 #endif
 		}
 		/// Size of the data cache line.
