@@ -21,6 +21,7 @@
 #ifndef PIRANHA_THREAD_POOL_HPP
 #define PIRANHA_THREAD_POOL_HPP
 
+#include <algorithm>
 #include <condition_variable>
 #include <cstdlib>
 #include <functional>
@@ -31,11 +32,14 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 #include "config.hpp"
 #include "detail/mpfr.hpp"
 #include "exceptions.hpp"
+#include "integer.hpp"
+#include "math.h"
 #include "runtime_info.hpp"
 #include "thread_management.hpp"
 #include "type_traits.hpp"
@@ -280,6 +284,49 @@ class thread_pool: private detail::thread_pool_base<>
 			// http://en.cppreference.com/w/cpp/container/vector/swap
 			// If an exception gets actually thrown, no big deal.
 			new_queues.swap(base::s_queues);
+		}
+		/// Compute number of threads to use.
+		/**
+		 * \note
+		 * This function is enabled only if \p Int is an unsigned integer type or piranha::integer.
+		 * 
+		 * This function computes the suggested number of threads to use, given an amount of total \p work_size units of work
+		 * and a minimum amount of work units per thread \p min_work_per_thread.
+		 * 
+		 * The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads
+		 * such that each thread has at least \p min_work_per_thread units of work to consume will be returned. In any case, the return
+		 * value is always greater than zero.
+		 * 
+		 * @param[in] work_size total number of work units.
+		 * @param[in] min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
+		 * 
+		 * @return the suggested number of threads to be used, always greater than zero.
+		 * 
+		 * @throws std::invalid_argument if \p min_work_per_thread is zero.
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
+		template <typename Int, typename = typename std::enable_if<(std::is_integral<Int>::value && std::is_unsigned<Int>::value) ||
+			std::is_same<Int,integer>::value>::type>
+		static unsigned use_threads(const Int &work_size, const Int &min_work_per_thread)
+		{
+			// Check input param.
+			if (unlikely(math::is_zero(min_work_per_thread))) {
+				piranha_throw(std::invalid_argument,"invalid value for minimum work per thread");
+			}
+			// Don't use threads if we are not in the main thread.
+			if (std::this_thread::get_id() != runtime_info::get_main_thread_id()) {
+				return 1u;
+			}
+			std::lock_guard<std::mutex> lock(s_mutex);
+			const auto n_threads = static_cast<unsigned>(base::s_queues.size());
+			piranha_assert(n_threads);
+			if (work_size / n_threads >= min_work_per_thread) {
+				// Enough work per thread, use them all.
+				return n_threads;
+			}
+			// Return a number of threads such that each thread consumes at least min_work_per_thread.
+			// Never return 0.
+			return static_cast<unsigned>(std::max(Int(1),static_cast<Int>(work_size / min_work_per_thread)));
 		}
 };
 

@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "../src/environment.hpp"
+#include "../src/integer.hpp"
 #include "../src/real.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/thread_management.hpp"
@@ -250,4 +251,56 @@ BOOST_AUTO_TEST_CASE(thread_pool_future_list_test)
 	f4.wait_all();
 	f4.get_all();
 	f4.get_all();
+}
+
+BOOST_AUTO_TEST_CASE(thread_pool_use_threads_test)
+{
+	thread_pool::resize(4u);
+	BOOST_CHECK(thread_pool::use_threads(100u,3u) == 4u);
+	BOOST_CHECK_THROW(thread_pool::use_threads(100u,0u),std::invalid_argument);
+	BOOST_CHECK(thread_pool::use_threads(100u,30u) == 3u);
+	auto f1 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,3u);
+	});
+	auto f2 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,1u);
+	});
+	auto f3 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,0u);
+	});
+	BOOST_CHECK_EQUAL(f1.get(),1u);
+	BOOST_CHECK_EQUAL(f2.get(),1u);
+	BOOST_CHECK_THROW(f3.get(),std::invalid_argument);
+	thread_pool::resize(1u);
+	BOOST_CHECK(thread_pool::use_threads(100u,3u) == 1u);
+	BOOST_CHECK_THROW(thread_pool::use_threads(100u,0u),std::invalid_argument);
+	BOOST_CHECK(thread_pool::use_threads(100u,30u) == 1u);
+	auto f4 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,3u);
+	});
+	auto f5 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,1u);
+	});
+	auto f6 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(100u,0u);
+	});
+	BOOST_CHECK_EQUAL(f4.get(),1u);
+	BOOST_CHECK_EQUAL(f5.get(),1u);
+	BOOST_CHECK_THROW(f6.get(),std::invalid_argument);
+	thread_pool::resize(4u);
+	BOOST_CHECK(thread_pool::use_threads(integer(100u),integer(3u)) == 4u);
+	BOOST_CHECK_THROW(thread_pool::use_threads(integer(100u),integer(0u)),std::invalid_argument);
+	BOOST_CHECK(thread_pool::use_threads(integer(100u),integer(30u)) == 3u);
+	auto f7 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(integer(100u),integer(3u));
+	});
+	auto f8 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(integer(100u),integer(1u));
+	});
+	auto f9 = thread_pool::enqueue(0u,[]() {
+		return thread_pool::use_threads(integer(100u),integer(0u));
+	});
+	BOOST_CHECK_EQUAL(f7.get(),1u);
+	BOOST_CHECK_EQUAL(f8.get(),1u);
+	BOOST_CHECK_THROW(f9.get(),std::invalid_argument);
 }
