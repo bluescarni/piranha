@@ -173,51 +173,6 @@ class series_multiplier
 			return execute<default_functor>();
 		}
 	protected:
-		/// Determine the number of threads to use in the multiplication.
-		/**
-		 * The number of threads that will be opened will never exceed \p n, the output of piranha::settings::get_n_threads(),
-		 * and it is determined as follows:
-		 * 
-		 * - if the method is not called from the main thread, then 1 will be returned;
-		 * - if the number of term-by-term multiplications that would be performed per thread using \p n
-		 *   threads is greater than an implementation-defined minimum, then \p n is returned;
-		 * - otherwise, the number of threads is decreased as necessary to meet the minimum thread workload.
-		 * 
-		 * The minimum threshold is determined by comparing the typical cost of thread creation and join
-		 * with the cost of a single term-by-term multiplication in the best-case scenario. Currently, the
-		 * value of the threshold is 100000.
-		 * 
-		 * @return the number of threads to use in the multiplication.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - piranha::settings::get_n_threads(),
-		 * - the cast operator of piranha::integer to integral types.
-		 */
-		unsigned determine_n_threads() const
-		{
-			// Use just one thread if we are not in the main thread.
-			if (runtime_info::get_main_thread_id() != std::this_thread::get_id()) {
-				return 1u;
-			}
-			const unsigned candidate = settings::get_n_threads();
-			piranha_assert(candidate);
-			// Avoid further calculations for just 1 thread.
-			if (candidate == 1u) {
-				return 1u;
-			}
-			// Minimum amount of term-by-term multiplications.
-			// NOTE: this corresponds to roughly a 10% overhead of thread creation/join
-			// in the fastest multiplication scenario (polynomials with double-precision
-			// coefficients suitable for Kronecker multiplication in lookup array - e.g.,
-			// Fateman benchmarks) on an Intel Sandy Bridge from 2011.
-			const auto min_work = 100000u;
-			const auto work_size = integer(m_s1->size()) * m_s2->size();
-			if (work_size / candidate >= min_work) {
-				return candidate;
-			} else {
-				return static_cast<unsigned>(std::max<integer>(integer(1),work_size / min_work));
-			}
-		}
 		/// Low-level implementation of series multiplication.
 		/**
 		 * The multiplication algorithm proceeds as follows:
@@ -257,7 +212,11 @@ class series_multiplier
 			const size_type size1 = m_v1.size(), size2 = boost::numeric_cast<size_type>(m_v2.size());
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
-			size_type n_threads = boost::numeric_cast<size_type>(determine_n_threads());
+			// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
+			// machine around 2012.
+			size_type n_threads = boost::numeric_cast<size_type>(thread_pool::use_threads(
+				integer(size1) * size2,integer(500000L)
+			));
 			piranha_assert(n_threads);
 			// An additional check on n_threads is that its size is not greater than the size of the first series,
 			// as we are using the first operand to split up the work.
@@ -618,56 +577,6 @@ class series_multiplier
 				return static_cast<bucket_size_type>(M);
 			} else {
 				return static_cast<bucket_size_type>(mean * mean * multiplier);
-			}
-		}
-		template <typename Functor>
-		static typename Series1::size_type estimate_final_series_size2(const Functor &f)
-		{
-			typedef typename Series1::size_type bucket_size_type;
-			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
-			const size_type size1 = f.m_s1, size2 = f.m_s2;
-			// If one of the two series is empty, just return 0.
-			if (unlikely(!size1 || !size2)) {
-				return 0u;
-			}
-			// Cache reference to return series.
-			auto &retval = f.m_retval;
-			// Vectors of indices.
-			std::vector<size_type> v_idx1, v_idx2;
-			for (size_type i = 0u; i < size1; ++i) {
-				v_idx1.push_back(i);
-			}
-			for (size_type i = 0u; i < size2; ++i) {
-				v_idx2.push_back(i);
-			}
-			// Square root of the ratio: the number of term-by-term multiplications carried out in the estimation
-			// will be (size1 * size2) / sqrt_r**2.
-			// For each series, size / sqrt_r terms will be randomly picked.
-			const size_type sqrt_r = 10u;
-			size_type r_size1 = static_cast<size_type>(size1 / sqrt_r), r_size2 = static_cast<size_type>(size2 / sqrt_r);
-			// Fix zero values.
-			if (r_size1 == 0u) {
-				r_size1 = 1u;
-			}
-			if (r_size2 == 0u) {
-				r_size2 = 1u;
-			}
-			// RNG engine.
-			std::mt19937 engine;
-			// Run a Fisher-Yates shuffle on the indices vectors.
-			// http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
-			// http://stackoverflow.com/questions/9345087/choose-m-elements-randomly-from-a-vector-containing-n-elements
-			auto s1_copy = size1;
-			// Use pointers here so we do not suffer from the hassle of iterator_distance.
-			auto begin1 = &v_idx1[0u];
-			while (r_size1--) {
-				// NOTE: the -1 here is because uniform int dist operates on a closed interval.
-				std::uniform_int_distribution<size_type> uid(size_type(0u),static_cast<size_type>(s1_copy - 1u));
-				auto tmp = begin1 + uid(engine);
-				// Swap the values between the current index and the randomly-chosen one.
-				std::swap(*begin1,*tmp);
-				++begin1;
-				--s1_copy;
 			}
 		}
 		/// Trace series size estimates.
