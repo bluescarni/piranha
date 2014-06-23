@@ -346,19 +346,38 @@ template <typename F>
 class future_list
 {
 		PIRANHA_TT_CHECK(is_instance_of,F,std::future);
+		// Wait on a valid future, or abort.
+		static void wait_or_abort(const F &fut)
+		{
+			piranha_assert(fut.valid());
+			try {
+				fut.wait();
+			} catch (...) {
+				// TODO logging candidate, with info from exception.
+				std::abort();
+			}
+		}
 	public:
+		/// Defaulted default constructor.
+		/**
+		 * This constructor will initialise an empty list of futures.
+		 */
+		future_list() = default;
+		/// Deleted copy constructor.
+		future_list(const future_list &) = delete;
+		/// Deleted move constructor.
+		future_list(future_list &&) = delete;
+		/// Deleted copy assignment.
+		future_list &operator=(const future_list &) = delete;
+		/// Deleted move assignment.
+		future_list &operator=(future_list &&) = delete;
 		/// Destructor
 		/**
 		 * Will call wait_all().
 		 */
 		~future_list() noexcept
 		{
-			try {
-				wait_all();
-			} catch (...) {
-				// NOTE: logging candidate.
-				std::abort();
-			}
+			wait_all();
 		}
 		/// Move-insert a future.
 		/**
@@ -368,8 +387,7 @@ class future_list
 		 *
 		 * @param[in] f std::future to be move-inserted.
 		 *
-		 * @throws unspecified any exception thrown by memory allocation errors or
-		 * by threading primitives.
+		 * @throws unspecified any exception thrown by memory allocation errors.
 		 */
 		void push_back(F &&f)
 		{
@@ -381,7 +399,7 @@ class future_list
 				// before escaping out.
 				// NOTE: calling wait() on invalid future is UB.
 				if (f.valid()) {
-					f.wait();
+					wait_or_abort(f);
 				}
 				throw;
 			}
@@ -391,14 +409,12 @@ class future_list
 		/// Wait on all the futures.
 		/**
 		 * This method will call <tt>wait()</tt> on all the valid futures stored within the object.
-		 *
-		 * @throws unspecified any exception thrown by threading primitives.
 		 */
-		void wait_all()
+		void wait_all() noexcept
 		{
 			for (auto &f: m_list) {
 				if (f.valid()) {
-					f.wait();
+					wait_or_abort(f);
 				}
 			}
 		}
@@ -407,11 +423,12 @@ class future_list
 		 * This method will call <tt>get()</tt> on all the valid futures stored within the object.
 		 * The return values resulting from the calls to <tt>get()</tt> will be ignored.
 		 *
-		 * @throws unspecified an exception stored by a future or any exception thrown by threading primitives.
+		 * @throws unspecified an exception stored by a future.
 		 */
 		void get_all()
 		{
 			for (auto &f: m_list) {
+				// NOTE: std::future's valid() method is noexcept.
 				if (f.valid()) {
 					(void)f.get();
 				}
