@@ -71,6 +71,7 @@ class task_queue
 						while (!m_ptr->m_stop && m_ptr->m_tasks.empty()) {
 							// Need to wait for something to happen only if the task
 							// list is empty and we are not stopping.
+							// NOTE: wait will be noexcept in C++14.
 							m_ptr->m_cond.wait(lock);
 						}
 						if (m_ptr->m_stop && m_ptr->m_tasks.empty()) {
