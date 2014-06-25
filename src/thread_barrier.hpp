@@ -22,6 +22,7 @@
 #define PIRANHA_THREAD_BARRIER_HPP
 
 #include <condition_variable>
+#include <cstdlib>
 #include <mutex>
 #include <stdexcept>
 
@@ -82,37 +83,54 @@ class thread_barrier
 		thread_barrier &operator=(thread_barrier &&) = delete;
 		/// Default destructor.
 		/**
-		 * No threads must be waiting on this when the destructor is called.
+		 * No threads must be waiting on this when the destructor is called, otherwise the program will abort.
 		 */
-		~thread_barrier() = default;
+		~thread_barrier() noexcept
+		{
+			try {
+				std::unique_lock<std::mutex> lock(m_mutex);
+				if (m_count != m_threshold) {
+					// NOTE: logging candidate.
+					std::abort();
+				}
+			} catch (...) {
+				// NOTE: logging candidate.
+				std::abort();
+			}
+		}
 		/// Wait method.
 		/**
 		 * Block until \p count threads have called wait() on this. When the <tt>count</tt>-th thread calls
 		 * wait(), all waiting threads are unblocked, and the barrier is reset.
 		 *
 		 * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
-		 *
-		 * @throws std::system_error in case of failure(s) by threading primitives.
 		 */
-		bool wait()
+		bool wait() noexcept
 		{
-			std::unique_lock<std::mutex> lock(m_mutex);
-			unsigned gen = m_generation;
-			if (--m_count == 0) {
-				// This is the last thread, update generation count
-				// and reset the count to the initial value, then
-				// notify the other threads.
-				++m_generation;
-				m_count = m_threshold;
-				m_cond.notify_all();
-				return true;
+			try {
+				std::unique_lock<std::mutex> lock(m_mutex);
+				unsigned gen = m_generation;
+				if (--m_count == 0) {
+					// This is the last thread, update generation count
+					// and reset the count to the initial value, then
+					// notify the other threads.
+					++m_generation;
+					m_count = m_threshold;
+					// NOTE: this is noexcept.
+					m_cond.notify_all();
+					return true;
+				}
+				// This is not the last thread, wait for the other threads
+				// to clear the barrier.
+				while (gen == m_generation) {
+					// NOTE: this will be noexcept in C++14.
+					m_cond.wait(lock);
+				}
+				return false;
+			} catch (...) {
+				// NOTE: logging candidate.
+				std::abort();
 			}
-			// This is not the last thread, wait for the other threads
-			// to clear the barrier.
-			while (gen == m_generation) {
-				m_cond.wait(lock);
-			}
-			return false;
 		}
 	private:
 		std::mutex		m_mutex;
