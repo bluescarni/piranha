@@ -398,7 +398,7 @@ class future_list
 			} catch (...) {
 				// If we get some error here, we want to make sure we wait on the future
 				// before escaping out.
-				// NOTE: calling wait() on invalid future is UB.
+				// NOTE: calling wait() on an invalid future is UB.
 				if (f.valid()) {
 					wait_or_abort(f);
 				}
