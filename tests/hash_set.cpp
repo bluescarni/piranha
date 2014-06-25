@@ -43,7 +43,10 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/integer.hpp"
+#include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
+
+static const int ntries = 1000;
 
 using namespace piranha;
 
@@ -563,4 +566,31 @@ struct type_traits_tester
 BOOST_AUTO_TEST_CASE(hash_set_type_traits_test)
 {
 	boost::mpl::for_each<key_types>(type_traits_tester());
+}
+
+BOOST_AUTO_TEST_CASE(hash_set_mt_test)
+{
+	thread_pool::resize(4u);
+	BOOST_CHECK_THROW(hash_set<int>(10000,std::hash<int>(),std::equal_to<int>(),0u),std::invalid_argument);
+	hash_set<int> h1(100000,std::hash<int>(),std::equal_to<int>(),1u);
+	hash_set<int> h2(100000,std::hash<int>(),std::equal_to<int>(),2u);
+	hash_set<int> h3(100000,std::hash<int>(),std::equal_to<int>(),3u);
+	hash_set<int> h4(100000,std::hash<int>(),std::equal_to<int>(),4u);
+	// Try with few buckets.
+	hash_set<int> h5(1,std::hash<int>(),std::equal_to<int>(),4u);
+	hash_set<int> h6(2,std::hash<int>(),std::equal_to<int>(),4u);
+	hash_set<int> h7(3,std::hash<int>(),std::equal_to<int>(),4u);
+	hash_set<int> h8(4,std::hash<int>(),std::equal_to<int>(),4u);
+	// Random testing.
+	using size_type = hash_set<int>::size_type;
+	std::uniform_int_distribution<size_type> size_dist(0u,100000u);
+	std::uniform_int_distribution<unsigned> thread_dist(1u,4u);
+	for (int i = 0; i < ntries; ++i) {
+		auto bcount = size_dist(rng);
+		hash_set<int> h(bcount,std::hash<int>(),std::equal_to<int>(),thread_dist(rng));
+		BOOST_CHECK(h.bucket_count() >= bcount);
+		bcount = size_dist(rng);
+		h.rehash(bcount,thread_dist(rng));
+		BOOST_CHECK(h.bucket_count() >= bcount);
+	}
 }

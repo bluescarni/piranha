@@ -30,16 +30,19 @@
 #include <initializer_list>
 #include <limits>
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
+#include "thread_pool.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -88,8 +91,6 @@ namespace piranha
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
  * \todo see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
  * implementation.
- * \todo replace direct use of numeric_limits with explicit routine that computes the max log2 size, for peace of mind (it's not clear if we can rely on 2**(n-1) being the
- * highest power of two representable.
  * \todo memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
  * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
  * \todo: use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
@@ -388,9 +389,12 @@ class hash_set
 				size_type	m_idx;
 				it_type		m_it;
 		};
-		void init_from_n_buckets(const size_type &n_buckets)
+		void init_from_n_buckets(const size_type &n_buckets, unsigned n_threads)
 		{
 			piranha_assert(!m_container && !m_log2_size && !m_n_elements);
+			if (unlikely(!n_threads)) {
+				piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
+			}
 			// Proceed to actual construction only if the requested number of buckets is nonzero.
 			if (!n_buckets) {
 				return;
@@ -401,10 +405,51 @@ class hash_set
 			if (unlikely(!new_ptr)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			// Default-construct the elements of the array.
-			// NOTE: this is a noexcept operation, no need to account for rolling back.
-			for (size_type i = 0u; i < size; ++i) {
-				m_allocator.construct(&new_ptr[i]);
+			if (n_threads == 1u) {
+				// Default-construct the elements of the array.
+				// NOTE: this is a noexcept operation, no need to account for rolling back.
+				for (size_type i = 0u; i < size; ++i) {
+					m_allocator.construct(&new_ptr[i]);
+				}
+			} else {
+				// Sync variables.
+				using crs_type = std::vector<std::pair<size_type,size_type>>;
+				crs_type constructed_ranges(static_cast<typename crs_type::size_type>(n_threads),std::make_pair(0u,0u));
+				if (unlikely(constructed_ranges.size() != n_threads)) {
+					piranha_throw(std::bad_alloc,);
+				}
+				// Thread function.
+				auto thread_function = [this,new_ptr,&constructed_ranges](const size_type &start, const size_type &end, const unsigned &thread_idx) {
+					for (size_type i = start; i != end; ++i) {
+						this->m_allocator.construct(&new_ptr[i]);
+					}
+					constructed_ranges[thread_idx] = std::make_pair(start,end);
+				};
+				// Work per thread.
+				const auto wpt = size / n_threads;
+				future_list<decltype(thread_pool::enqueue(0u,thread_function,0u,0u,0u))> f_list;
+				try {
+					for (unsigned i = 0u; i < n_threads; ++i) {
+						const auto start = static_cast<size_type>(wpt * i),
+							end = static_cast<size_type>((i == n_threads - 1u) ? size : wpt * (i + 1u));
+						f_list.push_back(thread_pool::enqueue(i,thread_function,start,end,i));
+					}
+					f_list.wait_all();
+					// NOTE: no need to get_all() here, as we know no exceptions will be generated inside thread_func.
+				} catch (...) {
+					// NOTE: everything in thread_func is noexcept, if we are here the exception was thrown by enqueue or push_back.
+					// Wait for everything to wind down.
+					f_list.wait_all();
+					// Destroy what was constructed.
+					for (const auto &r: constructed_ranges) {
+						for (size_type i = r.first; i != r.second; ++i) {
+							m_allocator.destroy(&new_ptr[i]);
+						}
+					}
+					// Deallocate before re-throwing.
+					m_allocator.deallocate(new_ptr,size);
+					throw;
+				}
 			}
 			// Assign the members.
 			m_container = new_ptr;
@@ -458,19 +503,26 @@ class hash_set
 			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator() {}
 		/// Constructor from number of buckets.
 		/**
-		 * Will construct a table whose number of buckets is at least equal to \p n_buckets.
+		 * Will construct a table whose number of buckets is at least equal to \p n_buckets. If \p n_threads is not 1,
+		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently for the initialisation
+		 * of the table.
 		 * 
 		 * @param[in] n_buckets desired number of buckets.
 		 * @param[in] h hasher functor.
 		 * @param[in] k equality predicate.
+		 * @param[in] n_threads number of threads to use during initialisation.
 		 * 
-		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
-		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>.
+		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum, or in case
+		 * of memory errors.
+		 * @throws std::invalid_argument if \p n_threads is zero.
+		 * @throws unspecified any exception thrown by:
+		 * - the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>,
+		 * - piranha::thread_pool::enqueue() or piranha::future_list::push_back(), if \p n_threads is not 1.
 		 */
-		explicit hash_set(const size_type &n_buckets, const hasher &h = hasher(), const key_equal &k = key_equal()):
+		explicit hash_set(const size_type &n_buckets, const hasher &h = hasher(), const key_equal &k = key_equal(), unsigned n_threads = 1u):
 			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
 		{
-			init_from_n_buckets(n_buckets);
+			init_from_n_buckets(n_buckets,n_threads);
 		}
 		/// Copy constructor.
 		/**
@@ -547,7 +599,7 @@ class hash_set
 			const hasher &h = hasher(), const key_equal &k = key_equal()):
 			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator()
 		{
-			init_from_n_buckets(n_buckets);
+			init_from_n_buckets(n_buckets,1u);
 			for (auto it = begin; it != end; ++it) {
 				insert(*it);
 			}
@@ -567,7 +619,7 @@ class hash_set
 			m_container(nullptr),m_log2_size(0u),m_hasher(),m_key_equal(),m_n_elements(0u),m_allocator()
 		{
 			// We do not care here for possible truncation of list.size(), as this is only an optimization.
-			init_from_n_buckets(static_cast<size_type>(list.size()));
+			init_from_n_buckets(static_cast<size_type>(list.size()),1u);
 			for (const auto &x: list) {
 				insert(x);
 			}
@@ -884,15 +936,22 @@ class hash_set
 		/// Rehash table.
 		/**
 		 * Change the number of buckets in the table to at least \p new_size. No rehash is performed
-		 * if rehashing would lead to exceeding the maximum load factor.
+		 * if rehashing would lead to exceeding the maximum load factor. If \p n_threads is not 1,
+		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently during
+		 * the rehash operation.
 		 * 
 		 * @param[in] new_size new desired number of buckets.
+		 * @param[in] n_threads number of threads to use.
 		 * 
+		 * @throws std::invalid_argument if \p n_threads is zero.
 		 * @throws unspecified any exception thrown by the constructor from number of buckets
 		 * or by _unique_insert().
 		 */
-		void rehash(const size_type &new_size)
+		void rehash(const size_type &new_size, unsigned n_threads = 1u)
 		{
+			if (unlikely(!n_threads)) {
+				piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
+			}
 			// If rehash is requested to zero, do something only if there are no items stored in the table.
 			if (!new_size) {
 				if (!size()) {
@@ -905,7 +964,7 @@ class hash_set
 				return;
 			}
 			// Create a new table with needed amount of buckets.
-			hash_set new_table(new_size,m_hasher,m_key_equal);
+			hash_set new_table(new_size,m_hasher,m_key_equal,n_threads);
 			try {
 				const auto it_f = _m_end();
 				for (auto it = _m_begin(); it != it_f; ++it) {
