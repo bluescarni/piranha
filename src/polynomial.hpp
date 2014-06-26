@@ -924,15 +924,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			if (unlikely(!estimate)) {
 				estimate = 1u;
 			}
+			// Get the number of threads to use.
+			// NOTE: tuning parameter here.
+			const unsigned n_threads = thread_pool::use_threads(
+				integer(size1) * size2,integer(500000L)
+			);
 			// Rehash the retun value's container accordingly.
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(estimate) /
-				retval.m_container.max_load_factor())));
+				retval.m_container.max_load_factor())),n_threads);
 			piranha_assert(retval.m_container.bucket_count());
+			// NOTE: tuning parameter.
 			if ((integer(size1) * integer(size2)) / estimate > 200) {
-				dense_multiplication(retval);
+				dense_multiplication(retval,n_threads);
 			} else {
-				sparse_multiplication<sparse_functor<>>(retval);
+				sparse_multiplication<sparse_functor<>>(retval,n_threads);
 			}
 			// Trace the result of estimation.
 			this->trace_estimates(retval.size(),estimate);
@@ -1001,7 +1007,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const std::vector<NKType2>	&m_new_keys2;
 		};
 		// Dense multiplication method.
-		void dense_multiplication(return_type &retval) const
+		void dense_multiplication(return_type &retval, const unsigned &n_threads) const
 		{
 			// Vectors of minimum / maximum values, cast to hardware int.
 			std::vector<value_type> mins;
@@ -1121,10 +1127,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Prepare the storage for multiplication.
 			std::vector<typename term_type1::cf_type> cf_vector;
 			cf_vector.resize(boost::numeric_cast<decltype(cf_vector.size())>((hmax - hmin) + 1));
-			// Get the number of threads.
-			const unsigned n_threads = thread_pool::use_threads(
-				integer(size1) * size2,integer(500000L)
-			);
 			if (n_threads == 1u) {
 				// Single-thread multiplication.
 				const auto it_f = task_list.end();
@@ -1284,7 +1286,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			}
 		}
 		template <typename Functor>
-		void sparse_multiplication(return_type &retval) const
+		void sparse_multiplication(return_type &retval, const unsigned &n_threads) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
 			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
@@ -1326,7 +1328,6 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
 				}
 			}
-			unsigned n_threads = thread_pool::use_threads(integer(size1) * size2,integer(500000L));
 			if (n_threads == 1u) {
 				// Perform the multiplication. We need this try/catch because, by using the fast interface,
 				// in case of an error the container in retval could be left in an inconsistent state.
@@ -1546,7 +1547,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Finally, cope with excessive load factor.
 			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(retval.m_container.size()) / retval.m_container.max_load_factor()))
+					boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(retval.m_container.size()) / retval.m_container.max_load_factor())),
+					n_threads
 				);
 			}
 		}

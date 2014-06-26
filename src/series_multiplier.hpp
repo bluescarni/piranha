@@ -214,6 +214,7 @@ class series_multiplier
 			// Establish the number of threads to use.
 			// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
 			// machine around 2012.
+			// NOTE: tuning parameter.
 			size_type n_threads = boost::numeric_cast<size_type>(thread_pool::use_threads(
 				integer(size1) * size2,integer(500000L)
 			));
