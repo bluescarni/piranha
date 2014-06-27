@@ -69,7 +69,7 @@ class mp_rational
 		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
 		{
 			if (unlikely(!std::isfinite(x))) {
-				piranha_throw(std::invalid_argument,"cannot construct integer from non-finite floating-point number");
+				piranha_throw(std::invalid_argument,"cannot construct a rational from a non-finite floating-point number");
 			}
 			if (x == Float(0)) {
 				m_den = 1;

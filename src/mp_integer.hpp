@@ -1021,7 +1021,7 @@ class mp_integer
 		void construct_from_floating_point(Float x)
 		{
 			if (unlikely(!std::isfinite(x))) {
-				piranha_throw(std::invalid_argument,"cannot construct integer from non-finite floating-point number");
+				piranha_throw(std::invalid_argument,"cannot construct an integer from a non-finite floating-point number");
 			}
 			if (x == Float(0)) {
 				return;
