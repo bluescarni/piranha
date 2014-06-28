@@ -102,7 +102,7 @@ class task_queue
 			const unsigned	m_n;
 		};
 	public:
-		task_queue(unsigned n = 0):m_stop(false)
+		task_queue(unsigned n):m_stop(false)
 		{
 			m_thread.reset(::new std::thread(runner{this,n}));
 		}

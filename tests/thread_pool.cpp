@@ -57,51 +57,51 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	auto fast_task = [](int n) -> int {std::this_thread::sleep_for(std::chrono::milliseconds(1)); return n;};
 	auto instant_task = [](){};
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	tq.stop();
 	tq.stop();
 	tq.stop();
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	tq.enqueue([](){});
 	tq.stop();
 	tq.stop();
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	tq.enqueue(slow_task);
 	tq.stop();
 	tq.stop();
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	tq.enqueue(slow_task);
 	tq.enqueue(slow_task);
 	tq.enqueue(slow_task);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	auto f1 = tq.enqueue(slow_task);
 	auto f2 = tq.enqueue(slow_task);
 	auto f3 = tq.enqueue(slow_task);
 	f3.get();
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	auto f1 = tq.enqueue([](int) {throw std::runtime_error("");},1);
 	BOOST_CHECK_THROW(f1.get(),std::runtime_error);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	auto f1 = tq.enqueue([](int n) {return n + n;},45);
 	BOOST_CHECK(f1.get() == 90);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	using f_type = decltype(tq.enqueue(fast_task,0));
 	std::list<f_type> l;
 	for (int i = 0; i < 100; ++i) {
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	BOOST_CHECK(result == 4950);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	for (int i = 0; i < 10000; ++i) {
 		tq.enqueue(instant_task);
 	}
@@ -123,13 +123,13 @@ BOOST_AUTO_TEST_CASE(thread_pool_task_queue_test)
 	BOOST_CHECK_THROW(tq.enqueue(instant_task),std::runtime_error);
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	noncopyable nc;
 	tq.enqueue([](noncopyable &){},std::ref(nc));
 	tq.enqueue([](const noncopyable &){},std::cref(nc));
 	}
 	{
-	detail::task_queue tq;
+	detail::task_queue tq(0);
 	for (int i = 0; i < 100; ++i) {
 		tq.enqueue([](){real{}.pi();});
 	}
