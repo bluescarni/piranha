@@ -59,6 +59,7 @@
 #include "t_substitutable_series.hpp"
 #include "thread_pool.hpp"
 #include "trigonometric_series.hpp"
+#include "tuning.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -930,9 +931,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				integer(size1) * size2,integer(500000L)
 			);
 			// Rehash the retun value's container accordingly.
+			// Check the tuning flag to see if we want to use multiple threads for initing the return value.
+			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(estimate) /
-				retval.m_container.max_load_factor())),n_threads);
+				retval.m_container.max_load_factor())),n_threads_rehash);
 			piranha_assert(retval.m_container.bucket_count());
 			// NOTE: tuning parameter.
 			if ((integer(size1) * integer(size2)) / estimate > 200) {

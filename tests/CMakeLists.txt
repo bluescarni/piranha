@@ -59,6 +59,7 @@ ADD_PIRANHA_TESTCASE(thread_management)
 ADD_PIRANHA_TESTCASE(thread_pool)
 ADD_PIRANHA_TESTCASE(tracing)
 ADD_PIRANHA_TESTCASE(trigonometric_series)
+ADD_PIRANHA_TESTCASE(tuning)
 ADD_PIRANHA_TESTCASE(type_traits)
 ADD_PIRANHA_TESTCASE(univariate_monomial)
 

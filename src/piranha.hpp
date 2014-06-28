@@ -174,6 +174,7 @@ namespace detail {}
 #include "thread_pool.hpp"
 #include "tracing.hpp"
 #include "trigonometric_series.hpp"
+#include "tuning.hpp"
 #include "type_traits.hpp"
 #include "univariate_monomial.hpp"
 

@@ -45,6 +45,7 @@ SET(HEADERS_LIST
 	aligned_memory.hpp
 	dynamic_aligning_allocator.hpp
 	thread_pool.hpp
+	tuning.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
