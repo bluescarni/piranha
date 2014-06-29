@@ -54,7 +54,7 @@ class tuning: private detail::base_tuning<>
 		/**
 		 * Piranha can use multiple threads when initialising large memory areas (e.g., during the initialisation
 		 * of the result of the multiplication of two large polynomials). This can improve performance on systems
-		 * with very fast/multiple memory buses, but it could lead to degraded performance on slower/single-socket machines.
+		 * with fast or multiple memory buses, but it could lead to degraded performance on slower/single-socket machines.
 		 *
 		 * The default value of this flag is \p true (i.e., Piranha will use multiple threads while initialising
 		 * large memory areas).
