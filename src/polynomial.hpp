@@ -930,8 +930,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const unsigned n_threads = thread_pool::use_threads(
 				integer(size1) * size2,integer(500000L)
 			);
-			// Rehash the retun value's container accordingly.
-			// Check the tuning flag to see if we want to use multiple threads for initing the return value.
+			// Rehash the retun value's container accordingly. Check the tuning flag to see if we want to use
+			// multiple threads for initing the return value.
+			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
+			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(estimate) /
