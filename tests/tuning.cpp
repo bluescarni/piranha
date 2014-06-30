@@ -23,14 +23,14 @@
 #define BOOST_TEST_MODULE tuning_test
 #include <boost/test/unit_test.hpp>
 
+#include <stdexcept>
 #include <thread>
 
 #include "../src/environment.hpp"
 
 using namespace piranha;
 
-// Check getting and setting number of threads.
-BOOST_AUTO_TEST_CASE(tuning_main_test)
+BOOST_AUTO_TEST_CASE(tuning_parallel_memory_set_test)
 {
 	environment env;
 	BOOST_CHECK(tuning::get_parallel_memory_set());
@@ -44,4 +44,21 @@ BOOST_AUTO_TEST_CASE(tuning_main_test)
 	});
 	t1.join();
 	t2.join();
+}
+
+BOOST_AUTO_TEST_CASE(tuning_block_size_test)
+{
+	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),256u);
+	tuning::set_multiplication_block_size(512u);
+	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),512u);
+	std::thread t1([](){
+		while (tuning::get_multiplication_block_size() != 1024u) {}
+	});
+	std::thread t2([](){
+		tuning::set_multiplication_block_size(1024u);
+	});
+	t1.join();
+	t2.join();
+	BOOST_CHECK_THROW(tuning::set_multiplication_block_size(8000u),std::invalid_argument);
+	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),1024u);
 }

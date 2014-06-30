@@ -22,7 +22,10 @@
 #define PIRANHA_TUNING_HPP
 
 #include <atomic>
+#include <stdexcept>
 
+#include "config.hpp"
+#include "exceptions.hpp"
 #include "runtime_info.hpp"
 
 namespace piranha
@@ -34,11 +37,15 @@ namespace detail
 template <typename = int>
 struct base_tuning
 {
-	static std::atomic<bool> s_parallel_memory_set;
+	static std::atomic<bool>	s_parallel_memory_set;
+	static std::atomic<unsigned>	s_mult_block_size;
 };
 
 template <typename T>
 std::atomic<bool> base_tuning<T>::s_parallel_memory_set(true);
+
+template <typename T>
+std::atomic<unsigned> base_tuning<T>::s_mult_block_size(256u);
 
 }
 
@@ -74,6 +81,37 @@ class tuning: private detail::base_tuning<>
 		static void set_parallel_memory_set(bool flag) noexcept
 		{
 			s_parallel_memory_set.store(flag);
+		}
+		/// Get the multiplication block size.
+		/**
+		 * The multiplication algorithms for certain series types (e.g., polynomials) divide the input operands in
+		 * blocks before processing them. This flag regulates the maximum size of these blocks.
+		 * 
+		 * Larger block have less overhead, but can degrade the performance of memory access. Smaller blocks can promote
+		 * faster memory access but can also incur in larger overhead.
+		 * 
+		 * The default value of this flag is 256.
+		 * 
+		 * @return the block size used in some series multiplication routines.
+		 */
+		static unsigned get_multiplication_block_size() noexcept
+		{
+			return s_mult_block_size.load();
+		}
+		/// Set the multiplication block size.
+		/**
+		 * @see piranha::tuning::get_multiplication_block_size() for an explanation of the meaning of this value.
+		 * 
+		 * @param[in] \p size desired value for the block size.
+		 * 
+		 * @throws std::invalid_argument if \p size is outside an implementation-defined range.
+		 */
+		static void set_multiplication_block_size(unsigned size)
+		{
+			if (unlikely(size < 16u || size > 4096u)) {
+				piranha_throw(std::invalid_argument,"invalid block size");
+			}
+			s_mult_block_size.store(size);
 		}
 
 };
