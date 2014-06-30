@@ -23,18 +23,22 @@
 
 #include <algorithm>
 #include <boost/integer_traits.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <condition_variable>
+#include <cstddef>
 #include <functional> // For std::bind.
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <mutex>
 #include <numeric>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -741,11 +745,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		/**
 		 * @return the result of the multiplication of the input series operands.
 		 * 
+		 * @throws std::overflow_error in case of (unlikely) overflow errors.
 		 * @throws unspecified any exception thrown by:
 		 * - (unlikely) conversion errors between numeric types,
 		 * - the public interface of piranha::hash_set,
 		 * - piranha::series_multiplier::estimate_final_series_size(),
-		 * - piranha::math::multiply_accumulate() on the coefficient types.
+		 * - piranha::math::multiply_accumulate() on the coefficient types,
+		 * - threading primitives,
+		 * - memory allocation errors in standard containers,
+		 * - piranha::thread_pool::enqueue(),
+		 * - piranha::future_list::push_back().
 		 */
 		return_type operator()() const
 		{
@@ -1290,10 +1299,160 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 		}
+		// Struct for extracting bucket indices.
+		// NOTE: use this instead of a lambda, since boost transform iterator needs the function
+		// object to be assignable.
+		struct bi_extractor
+		{
+			explicit bi_extractor(const return_type *retval):m_retval(retval) {}
+			template <typename Term>
+			bucket_size_type operator()(const Term *t) const
+			{
+				return m_retval->m_container._bucket_from_hash(t->hash());
+			}
+			const return_type *m_retval;
+		};
+		template <typename Functor>
+		void sparse_multiplication_new2(return_type &retval,const unsigned &n_threads) const
+		{
+			// Sort input terms according to bucket positions in retval.
+			auto cmp1 = [&retval](term_type1 const *p1,term_type1 const *p2)
+			{
+				return retval.m_container._bucket_from_hash(p1->hash()) <
+					retval.m_container._bucket_from_hash(p2->hash());
+			};
+			std::sort(this->m_v1.begin(),this->m_v1.end(),cmp1);
+			auto cmp2 = [&retval](term_type2 const *p1,term_type2 const *p2)
+			{
+				return retval.m_container._bucket_from_hash(p1->hash()) <
+					retval.m_container._bucket_from_hash(p2->hash());
+			};
+			std::sort(this->m_v2.begin(),this->m_v2.end(),cmp2);
+			// Determine buckets per thread.
+			const bucket_size_type bucket_count = retval.m_container.bucket_count();
+			const auto bpt = static_cast<bucket_size_type>(bucket_count / n_threads);
+			// Variable used to keep track of total unique insertions in retval.
+			bucket_size_type insertion_count = 0u;
+			// Will use to sync access to common vars.
+			std::mutex m;
+			// Debug variable.
+			std::vector<integer> n_mults(boost::numeric_cast<std::vector<integer>::size_type>(n_threads));
+			auto thread_function = [n_threads,bpt,bucket_count,this,&retval,&m,&n_mults,&insertion_count] (const unsigned &idx) {
+				// Cache some quantities from this.
+				auto &v1 = this->m_v1;
+				auto &v2 = this->m_v2;
+				const auto size1 = v1.size();
+				const auto size2 = v2.size();
+				// Range of bucket indices into which the thread is allowed to write.
+				const auto a = static_cast<bucket_size_type>(bpt * idx),
+					b = (idx == n_threads - 1u) ? bucket_count : static_cast<bucket_size_type>(bpt * (idx + 1u));
+				// Bucket index extractor.
+				const bi_extractor bi_ex{&retval};
+				// Start and end of task in v2, to be used in the loop.
+				term_type2 const **start, **end;
+				// A couple of handy shortcuts.
+				using diff_type = std::ptrdiff_t;
+				// NOTE: this is always legal as ptrdiff_t is a signed integer.
+				using udiff_type = typename std::make_unsigned<diff_type>::type;
+				// Check the safety of computing "end - start" in the loop.
+				if (unlikely(v2.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
+					piranha_throw(std::overflow_error,"the second operand in a sparse polynomial multiplication is too large");
+				}
+				// Block size. Tasks will be split into chunks with this max size.
+				const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size());
+				// Vector of term multiplication tasks to be undertaken by the thread.
+				using task_type = std::tuple<term_type1 const *,term_type2 const **,term_type2 const **>;
+				std::vector<task_type> tasks;
+				// Transform iterators that will compute the bucket indices from the terms in v2.
+				const auto t_start2 = boost::make_transform_iterator(&v2[0u],bi_ex),
+					t_end2 = boost::make_transform_iterator(&v2[0u] + size2,bi_ex);
+				for (decltype(v1.size()) i = 0u; i < size1; ++i) {
+					const bucket_size_type n = bi_ex(v1[i]);
+					start = (a < n) ? &v2[0u] :
+						std::lower_bound(t_start2,t_end2,bucket_size_type(a - n)).base();
+					end = (b < n) ? &v2[0u] :
+						std::lower_bound(t_start2,t_end2,bucket_size_type(b - n)).base();
+					// Split into smaller blocks.
+					while (end - start > block_size) {
+						tasks.emplace_back(v1[i],start,start + block_size);
+						start += block_size;
+					}
+					if (end != start) {
+						tasks.emplace_back(v1[i],start,end);
+					}
+					// Second batch.
+					// NOTE: a (or b) + bucket_count is always in the range of bucket_size_type as the maximum bucket size
+					// of a hash_set is 2**(n-1), where bucket_size_type has a bit width of n.
+					start = ((a + bucket_count) < n) ? &v2[0u] :
+						std::lower_bound(t_start2,t_end2,bucket_size_type((a + bucket_count) - n)).base();
+					end = ((b + bucket_count) < n) ? &v2[0u] :
+						std::lower_bound(t_start2,t_end2,bucket_size_type((b + bucket_count) - n)).base();
+					while (end - start > block_size) {
+						tasks.emplace_back(v1[i],start,start + block_size);
+						start += block_size;
+					}
+					if (end != start) {
+						tasks.emplace_back(v1[i],start,end);
+					}
+				}
+{
+std::lock_guard<std::mutex> lock(m);
+std::cout << "idx,task size: " << idx << ',' << tasks.size() << '\n';
+}
+				// Sort the tasks in ascending order for the first write bucket index.
+				std::sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
+					return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
+						retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
+				});
+				// Perform the multiplications.
+				using fast_functor_type = typename Functor::fast_rebind;
+				bucket_size_type ins_count(0);
+				for (const auto &t: tasks) {
+					auto t1_ptr = std::get<0u>(t);
+					auto start = std::get<1u>(t), end = std::get<2u>(t);
+					// NOTE: cast is safe, end - start cannot be larger than the size of v2.
+					const auto size = static_cast<index_type>(end - start);
+					fast_functor_type f(&t1_ptr,1u,start,size,retval);
+					for (index_type i = 0u; i < size; ++i) {
+						f(0u,i);
+						f.insert();
+					}
+					ins_count = static_cast<bucket_size_type>(ins_count + f.m_insertion_count);
+				}
+				// Final update of the insertion count, must be protected.
+				std::lock_guard<std::mutex> lock(m);
+				insertion_count += ins_count;
+std::cout << "finished " << idx << '\n';
+			};
+			// Go with the threads.
+			future_list<decltype(thread_pool::enqueue(0u,thread_function,0u))> f_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					f_list.push_back(thread_pool::enqueue(i,thread_function,i));
+				}
+				// First let's wait for everything to finish.
+				f_list.wait_all();
+				// Then, let's handle the exceptions.
+				f_list.get_all();
+boost::timer::auto_cpu_timer t;
+				// Finally, fix the series.
+				sanitize_series(retval,insertion_count,n_threads);
+			} catch (...) {
+				f_list.wait_all();
+				// Clean up and re-throw.
+				retval.m_container.clear();
+				throw;
+			}
+		}
 		template <typename Functor>
 		void sparse_multiplication(return_type &retval, const unsigned &n_threads) const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
+//if (size1 > 5000u && size2 > 5000u) {
+//std::cout << "fooooo\n";
+//        sparse_multiplication_new2<Functor>(retval,n_threads);
+//        return;
+//}
 			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
 			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
 				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
