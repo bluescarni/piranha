@@ -1535,7 +1535,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				future_list<decltype(thread_pool::enqueue(0u,eraser,bucket_size_type(),bucket_size_type()))> f_list;
 				try {
 					for (unsigned i = 0u; i < nt; ++i) {
-						const auto start = (b_count / nt) * i, end = (i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u);
+						const auto start = static_cast<bucket_size_type>((b_count / nt) * i),
+							end = static_cast<bucket_size_type>((i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u));
 						f_list.push_back(thread_pool::enqueue(i,eraser,start,end));
 					}
 					// First let's wait for everything to finish.
