@@ -1302,13 +1302,12 @@ struct table_info_tester
 		{
 			typedef g_series_type<Cf,Expo> p_type1;
 			p_type1 p;
-			BOOST_CHECK(std::get<0u>(p.table_sparsity()) == 0u);
-			BOOST_CHECK(std::get<1u>(p.table_sparsity()) == 0u);
+			using s_type = decltype(p.table_sparsity());
+			BOOST_CHECK(p.table_sparsity() == s_type{});
 			BOOST_CHECK(p.table_bucket_count() == 0u);
 			BOOST_CHECK(p.table_load_factor() == 0.);
 			p_type1 q{"x"};
-			BOOST_CHECK(std::get<0u>(q.table_sparsity()) == 1u);
-			BOOST_CHECK(std::get<1u>(q.table_sparsity()) == 1u);
+			BOOST_CHECK((q.table_sparsity() == s_type{{1u,1u}}));
 			BOOST_CHECK(q.table_load_factor() != 0.);
 			BOOST_CHECK(q.table_bucket_count() != 0u);
 		}

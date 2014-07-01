@@ -1202,7 +1202,9 @@ class series: series_binary_operators, detail::series_tag
 		 * Will call piranha::hash_set::evaluate_sparsity() on the internal terms container
 		 * and return the result.
 		 * 
-		 * @return an \p std::tuple containing information about the sparsity of the internal container.
+		 * @return the output of piranha::hash_set::evaluate_sparsity().
+		 * 
+		 * @throws unspecified any exception thrown by piranha::hash_set::evaluate_sparsity().
 		 */
 		sparsity_info_type table_sparsity() const
 		{

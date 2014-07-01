@@ -29,6 +29,7 @@
 #include <functional>
 #include <initializer_list>
 #include <limits>
+#include <map>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -986,27 +987,24 @@ class hash_set
 		}
 		/// Get information on the sparsity of the table.
 		/**
-		 * @return \p std::tuple built as follows:
-		 * - position 0: total number of occupied buckets (i.e., buckets storing at least 1 item),
-		 * - position 1: maximum number of items in a single bucket.
+		 * @return an <tt>std::map<size_type,size_type></tt> in which the key is the number of elements
+		 * stored in a bucket and the mapped type the number of buckets containing those many elements.
+		 * 
+		 * @throws unspecified any exception thrown by memory errors in standard containers.
 		 */
-		std::tuple<size_type,size_type> evaluate_sparsity() const
+		std::map<size_type,size_type> evaluate_sparsity() const
 		{
-			size_type n_occupied = 0u, n_max_items = 0u;
 			const auto it_f = m_container + bucket_count();
+			std::map<size_type,size_type> retval;
+			size_type counter;
 			for (auto it = m_container; it != it_f; ++it) {
-				if (!it->empty()) {
-					++n_occupied;
-					size_type counter = 0u;
-					for (auto l_it = it->begin(); l_it != it->end(); ++l_it) {
-						++counter;
-					}
-					if (counter > n_max_items) {
-						n_max_items = counter;
-					}
+				counter = 0u;
+				for (auto l_it = it->begin(); l_it != it->end(); ++l_it) {
+					++counter;
 				}
+				++retval[counter];
 			}
-			return std::make_tuple(n_occupied,n_max_items);
+			return retval;
 		}
 		/** @name Low-level interface
 		 * Low-level methods and types.

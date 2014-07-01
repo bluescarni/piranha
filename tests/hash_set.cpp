@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <map>
 #include <new>
 #include <random>
 #include <stdexcept>
@@ -536,12 +537,11 @@ struct evaluate_sparsity_tester
 	void operator()(const T &)
 	{
 		hash_set<T> h;
-		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 0u);
-		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 0u);
+		using size_type = typename hash_set<T>::size_type;
+		BOOST_CHECK((h.evaluate_sparsity() == std::map<size_type,size_type>{}));
 		T tmp = T();
 		h.insert(tmp);
-		BOOST_CHECK(std::get<0u>(h.evaluate_sparsity()) == 1u);
-		BOOST_CHECK(std::get<1u>(h.evaluate_sparsity()) == 1u);
+		BOOST_CHECK((h.evaluate_sparsity() == std::map<size_type,size_type>{{1u,1u}}));
 	}
 };
 

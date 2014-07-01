@@ -176,10 +176,14 @@ class series_exposer
 		}
 		// Sparsity wrapper.
 		template <typename S>
-		static bp::tuple table_sparsity_wrapper(const S &s)
+		static bp::dict table_sparsity_wrapper(const S &s)
 		{
-			const auto retval = s.table_sparsity();
-			return bp::make_tuple(std::get<0u>(retval),std::get<1u>(retval));
+			const auto tmp = s.table_sparsity();
+			bp::dict retval;
+			for (const auto &p: tmp) {
+				retval[p.first] = p.second;
+			}
+			return retval;
 		}
 		// Wrapper to list.
 		template <typename S>
