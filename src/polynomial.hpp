@@ -1313,8 +1313,18 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const return_type *m_retval;
 		};
 		template <typename Functor>
-		void sparse_multiplication_new2(return_type &retval,const unsigned &n_threads) const
+		void sparse_multiplication(return_type &retval,const unsigned &n_threads) const
 		{
+			// Type representing multiplication tasks.
+			using task_type = std::tuple<term_type1 const *,term_type2 const **,term_type2 const **>;
+			// A couple of handy shortcuts.
+			using diff_type = std::ptrdiff_t;
+			// NOTE: this is always legal as ptrdiff_t is a signed integer.
+			using udiff_type = typename std::make_unsigned<diff_type>::type;
+			// Fast functor type.
+			using fast_functor_type = typename Functor::fast_rebind;
+			// Block size. Tasks will be split into chunks with this max size.
+			const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size());
 			// Sort input terms according to bucket positions in retval.
 			auto cmp1 = [&retval](term_type1 const *p1,term_type1 const *p2)
 			{
@@ -1328,16 +1338,65 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					retval.m_container._bucket_from_hash(p2->hash());
 			};
 			std::sort(this->m_v2.begin(),this->m_v2.end(),cmp2);
-			// Determine buckets per thread.
-			const bucket_size_type bucket_count = retval.m_container.bucket_count();
-			const auto bpt = static_cast<bucket_size_type>(bucket_count / n_threads);
 			// Variable used to keep track of total unique insertions in retval.
 			bucket_size_type insertion_count = 0u;
+			// Number of buckets in retval.
+			const bucket_size_type bucket_count = retval.m_container.bucket_count();
+			// Special casing for single-thread.
+			if (n_threads == 1u) {
+				// Reduced version of the algorithm in single-threaded mode. See below for comments.
+				try {
+					integer n_mults(0);
+					auto &v1 = this->m_v1;
+					auto &v2 = this->m_v2;
+					const auto size1 = v1.size();
+					const auto size2 = v2.size();
+					std::vector<task_type> tasks;
+					term_type2 const **start, **end;
+					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
+						start = &v2[0u];
+						end = &v2[0u] + size2;
+						while (end - start > block_size) {
+							tasks.emplace_back(v1[i],start,start + block_size);
+							start += block_size;
+						}
+						if (end != start) {
+							tasks.emplace_back(v1[i],start,end);
+						}
+					}
+					std::sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
+						return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
+							retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
+					});
+					for (const auto &t: tasks) {
+						auto t1_ptr = std::get<0u>(t);
+						auto start = std::get<1u>(t), end = std::get<2u>(t);
+						const auto size = static_cast<index_type>(end - start);
+						piranha_assert(size != 0u);
+						fast_functor_type f(&t1_ptr,1u,start,size,retval);
+						for (index_type i = 0u; i < size; ++i) {
+							f(0u,i);
+							f.insert();
+						}
+						piranha_assert((n_mults += size,true));
+						insertion_count = static_cast<bucket_size_type>(insertion_count + f.m_insertion_count);
+					}
+					sanitize_series(retval,insertion_count,n_threads);
+					piranha_assert(n_mults == integer(this->m_v1.size()) * this->m_v2.size());
+					return;
+				} catch (...) {
+					retval.m_container.clear();
+					throw;
+				}
+			}
+			// Determine buckets per thread.
+			const auto bpt = static_cast<bucket_size_type>(bucket_count / n_threads);
 			// Will use to sync access to common vars.
 			std::mutex m;
 			// Debug variable.
-			std::vector<integer> n_mults(boost::numeric_cast<std::vector<integer>::size_type>(n_threads));
-			auto thread_function = [n_threads,bpt,bucket_count,this,&retval,&m,&n_mults,&insertion_count] (const unsigned &idx) {
+			using vi_size_type = std::vector<integer>::size_type;
+			std::vector<integer> n_mults(boost::numeric_cast<vi_size_type>(n_threads));
+			auto thread_function = [n_threads,bpt,bucket_count,this,&retval,&m,&n_mults,&insertion_count,block_size] (const unsigned &idx) {
 				// Cache some quantities from this.
 				auto &v1 = this->m_v1;
 				auto &v2 = this->m_v2;
@@ -1350,18 +1409,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				const bi_extractor bi_ex{&retval};
 				// Start and end of task in v2, to be used in the loop.
 				term_type2 const **start, **end;
-				// A couple of handy shortcuts.
-				using diff_type = std::ptrdiff_t;
-				// NOTE: this is always legal as ptrdiff_t is a signed integer.
-				using udiff_type = typename std::make_unsigned<diff_type>::type;
 				// Check the safety of computing "end - start" in the loop.
 				if (unlikely(v2.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
 					piranha_throw(std::overflow_error,"the second operand in a sparse polynomial multiplication is too large");
 				}
-				// Block size. Tasks will be split into chunks with this max size.
-				const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size());
 				// Vector of term multiplication tasks to be undertaken by the thread.
-				using task_type = std::tuple<term_type1 const *,term_type2 const **,term_type2 const **>;
 				std::vector<task_type> tasks;
 				// Transform iterators that will compute the bucket indices from the terms in v2.
 				const auto t_start2 = boost::make_transform_iterator(&v2[0u],bi_ex),
@@ -1395,34 +1447,35 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 						tasks.emplace_back(v1[i],start,end);
 					}
 				}
-{
-std::lock_guard<std::mutex> lock(m);
-std::cout << "idx,task size: " << idx << ',' << tasks.size() << '\n';
-}
 				// Sort the tasks in ascending order for the first write bucket index.
 				std::sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
 					return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
 						retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
 				});
 				// Perform the multiplications.
-				using fast_functor_type = typename Functor::fast_rebind;
 				bucket_size_type ins_count(0);
 				for (const auto &t: tasks) {
 					auto t1_ptr = std::get<0u>(t);
 					auto start = std::get<1u>(t), end = std::get<2u>(t);
 					// NOTE: cast is safe, end - start cannot be larger than the size of v2.
 					const auto size = static_cast<index_type>(end - start);
+					piranha_assert(size != 0u);
+					// NOTE: here we will need to re-evaluate the use of this functor, as now the blocks have
+					// always a size of 1 term in the first series. There might be some performance gains to be had
+					// by switching to a simpler implementation.
 					fast_functor_type f(&t1_ptr,1u,start,size,retval);
 					for (index_type i = 0u; i < size; ++i) {
 						f(0u,i);
+						piranha_assert(retval.m_container._bucket_from_hash(f.m_tmp.hash()) >= a &&
+							retval.m_container._bucket_from_hash(f.m_tmp.hash()) < b);
 						f.insert();
 					}
+					piranha_assert((n_mults[static_cast<vi_size_type>(idx)] += size,true));
 					ins_count = static_cast<bucket_size_type>(ins_count + f.m_insertion_count);
 				}
 				// Final update of the insertion count, must be protected.
 				std::lock_guard<std::mutex> lock(m);
 				insertion_count += ins_count;
-std::cout << "finished " << idx << '\n';
 			};
 			// Go with the threads.
 			future_list<decltype(thread_pool::enqueue(0u,thread_function,0u))> f_list;
@@ -1434,7 +1487,6 @@ std::cout << "finished " << idx << '\n';
 				f_list.wait_all();
 				// Then, let's handle the exceptions.
 				f_list.get_all();
-boost::timer::auto_cpu_timer t;
 				// Finally, fix the series.
 				sanitize_series(retval,insertion_count,n_threads);
 			} catch (...) {
@@ -1443,201 +1495,8 @@ boost::timer::auto_cpu_timer t;
 				retval.m_container.clear();
 				throw;
 			}
-		}
-		template <typename Functor>
-		void sparse_multiplication(return_type &retval, const unsigned &n_threads) const
-		{
-			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
-//if (size1 > 5000u && size2 > 5000u) {
-//std::cout << "fooooo\n";
-//        sparse_multiplication_new2<Functor>(retval,n_threads);
-//        return;
-//}
-			// Sort the input terms according to the position of the Kronecker keys in the estimated return value.
-			auto sorter1 = [&retval](term_type1 const *ptr1, term_type1 const *ptr2) {
-				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
-			};
-			auto sorter2 = [&retval](term_type2 const *ptr1, term_type2 const *ptr2) {
-				return retval.m_container._bucket_from_hash(ptr1->hash()) < retval.m_container._bucket_from_hash(ptr2->hash());
-			};
-			std::sort(this->m_v1.begin(),this->m_v1.end(),sorter1);
-			std::sort(this->m_v2.begin(),this->m_v2.end(),sorter2);
-			// Start defining the blocks for series multiplication.
-			const auto bsizes = get_block_sizes(size1,size2);
-			// Cast to hardware integers.
-			const auto bsize1 = static_cast<index_type>(bsizes.first), bsize2 = static_cast<index_type>(bsizes.second);
-			// Create the list of tasks.
-			// NOTE: the way tasks are created, there is never an empty task - all intervals have nonzero sizes.
-			// The task are sorted according to the index of the first bucket of retval that will be written to,
-			// so we need a multiset as different tasks might have the same starting position.
-			std::multiset<task_type,sparse_task_sorter> task_list(sparse_task_sorter(retval,this->m_v1,this->m_v2));
-			decltype(task_list.insert(std::declval<task_type>())) ins_result;
-			for (index_type i = 0u; i < size1 / bsize1; ++i) {
-				for (index_type j = 0u; j < size2 / bsize2; ++j) {
-					ins_result = task_list.insert(task_from_indices(i * bsize1,(i + 1u) * bsize1,j * bsize2,(j + 1u) * bsize2,retval));
-					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
-				}
-				if (size2 % bsize2) {
-					ins_result = task_list.insert(task_from_indices(i * bsize1,(i + 1u) * bsize1,(size2 / bsize2) * bsize2,size2,retval));
-					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
-				}
-			}
-			if (size1 % bsize1) {
-				for (index_type j = 0u; j < size2 / bsize2; ++j) {
-					ins_result = task_list.insert(task_from_indices((size1 / bsize1) * bsize1,size1,j * bsize2,(j + 1u) * bsize2,retval));
-					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
-				}
-				if (size2 % bsize2) {
-					ins_result = task_list.insert(task_from_indices((size1 / bsize1) * bsize1,size1,(size2 / bsize2) * bsize2,size2,retval));
-					piranha_assert(ins_result->m_b1.first != ins_result->m_b1.second && ins_result->m_b2.first != ins_result->m_b2.second);
-				}
-			}
-			if (n_threads == 1u) {
-				// Perform the multiplication. We need this try/catch because, by using the fast interface,
-				// in case of an error the container in retval could be left in an inconsistent state.
-				try {
-					sparse_single_thread<Functor>(retval,task_list);
-				} catch (...) {
-					retval.m_container.clear();
-					throw;
-				}
-			} else {
-				// Insertion counter.
-				bucket_size_type insertion_count = 0u;
-				// Set of busy bucket regions, ordered by starting point.
-				// NOTE: we do not need a multiset, as regions that compare equal (i.e., same starting point) will not exist
-				// at the same time in the set by design.
-				region_comparer rc;
-				std::set<region_type,region_comparer> busy_regions(rc);
-				// Synchronization.
-				std::mutex m;
-				std::condition_variable cond;
-				// Thread function.
-				auto thread_function = [&cond,&m,&insertion_count,&task_list,&busy_regions,&retval,this] () {
-					task_type task;
-					while (true) {
-						{
-							// First, lock down everything.
-							std::unique_lock<std::mutex> lock(m);
-							if (task_list.empty()) {
-								break;
-							}
-							// Look for a suitable task.
-							const auto it_f = task_list.end();
-							auto it = task_list.begin();
-							for (; it != it_f; ++it) {
-								// Check the regions.
-								if (this->region_checker(it->m_r1,busy_regions) &&
-									(!it->m_second_region || this->region_checker(it->m_r2,busy_regions)))
-								{
-									try {
-										// The regions are ok, insert them and break the cycle.
-										auto tmp = busy_regions.insert(it->m_r1);
-										piranha_assert(tmp.second);
-										if (it->m_second_region) {
-											tmp = busy_regions.insert(it->m_r2);
-											piranha_assert(tmp.second);
-										}
-										piranha_assert(this->region_set_checker(busy_regions));
-									} catch (...) {
-										// NOTE: the idea here is that in case of errors
-										// we want to restore the original situation
-										// as if nothing happened.
-										this->cleanup_regions(busy_regions,*it);
-										throw;
-									}
-									break;
-								}
-							}
-							// We might have identified a suitable task, check it is not end().
-							if (it == it_f) {
-								// The thread can't do anything, will have to wait until something happens
-								// and then re-identify a good task.
-								cond.wait(lock);
-								continue;
-							}
-							// Now we have a good task, pop it from the task list.
-							task = *it;
-							task_list.erase(it);
-						}
-						bucket_size_type tmp_ins_count = 0u;
-						try {
-							// Perform the multiplication on the selected task.
-							typedef typename Functor::fast_rebind fast_functor_type;
-							const index_type i_start = task.m_b1.first, j_start = task.m_b2.first,
-								i_end = task.m_b1.second, j_end = task.m_b2.second;
-							piranha_assert(i_end > i_start && j_end > j_start);
-							const index_type i_size = i_end - i_start, j_size = j_end - j_start;
-							fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,retval);
-							for (index_type i = 0u; i < i_size; ++i) {
-								for (index_type j = 0u; j < j_size; ++j) {
-									f(i,j);
-									f.insert();
-								}
-							}
-							tmp_ins_count = f.m_insertion_count;
-						} catch (...) {
-							// Re-acquire the lock.
-							std::lock_guard<std::mutex> lock(m);
-							// Cleanup the regions.
-							this->cleanup_regions(busy_regions,task);
-							// Notify all waiting threads that a region was removed from the busy set.
-							cond.notify_all();
-							throw;
-						}
-						{
-							// Re-acquire the lock.
-							std::lock_guard<std::mutex> lock(m);
-							// Update the insertion count.
-							insertion_count += tmp_ins_count;
-							// Take out the regions in which we just wrote from the set of busy regions.
-							this->cleanup_regions(busy_regions,task);
-							// Notify all waiting threads that a region was removed from the busy set.
-							cond.notify_all();
-						}
-					}
-				};
-				future_list<decltype(thread_pool::enqueue(0u,thread_function))> f_list;
-				try {
-					for (unsigned i = 0u; i < n_threads; ++i) {
-						f_list.push_back(thread_pool::enqueue(i,thread_function));
-					}
-					// First let's wait for everything to finish.
-					f_list.wait_all();
-					// Then, let's handle the exceptions.
-					f_list.get_all();
-					// Finally, fix the series.
-					sanitize_series(retval,insertion_count,n_threads);
-				} catch (...) {
-					f_list.wait_all();
-					// Clean up and re-throw.
-					retval.m_container.clear();
-					throw;
-				}
-			}
-		}
-		// Single-thread sparse multiplication.
-		template <typename Functor, typename TaskList>
-		void sparse_single_thread(return_type &retval, const TaskList &task_list) const
-		{
-			typedef typename Functor::fast_rebind fast_functor_type;
-			bucket_size_type insertion_count = 0u;
-			const auto it_f = task_list.end();
-			for (auto it = task_list.begin(); it != it_f; ++it) {
-				const index_type i_start = it->m_b1.first, j_start = it->m_b2.first,
-					i_end = it->m_b1.second, j_end = it->m_b2.second;
-				piranha_assert(i_end > i_start && j_end > j_start);
-				const index_type i_size = i_end - i_start, j_size = j_end - j_start;
-				fast_functor_type f(&this->m_v1[0u] + i_start,i_size,&this->m_v2[0u] + j_start,j_size,retval);
-				for (index_type i = 0u; i < i_size; ++i) {
-					for (index_type j = 0u; j < j_size; ++j) {
-						f(i,j);
-						f.insert();
-					}
-				}
-				insertion_count += f.m_insertion_count;
-			}
-			sanitize_series(retval,insertion_count);
+			// Check that we performed all the multiplications.
+			piranha_assert(std::accumulate(n_mults.begin(),n_mults.end(),integer(0)) == integer(this->m_v1.size()) * this->m_v2.size());
 		}
 		// Sanitize series after completion of sparse multiplication.
 		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count, unsigned n_threads = 1u)
