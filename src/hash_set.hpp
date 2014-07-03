@@ -127,6 +127,8 @@ class hash_set
 			//   a void * out of the storage will return the address of the object stored within;
 			// - the lifetime of the original POD storage_type ends when we reuse its storage via
 			//   placement new.
+			// This page contains some more info about storage reuse:
+			// http://en.cppreference.com/w/cpp/language/lifetime#Storage_reuse
 			const T *ptr() const
 			{
 				piranha_assert(m_next);
