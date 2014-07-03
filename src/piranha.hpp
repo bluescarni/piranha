@@ -131,7 +131,6 @@ namespace detail {}
 
 }
 
-#include "aligned_memory.hpp"
 #include "array_key.hpp"
 #include "base_term.hpp"
 #include "cache_aligning_allocator.hpp"
@@ -146,6 +145,7 @@ namespace detail {}
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
+#include "memory.hpp"
 #include "monomial.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"

@@ -31,11 +31,11 @@
 #include <type_traits>
 #include <utility>
 
-#include "aligned_memory.hpp"
 #include "config.hpp"
 #include "detail/small_vector_fwd.hpp"
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
+#include "memory.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 

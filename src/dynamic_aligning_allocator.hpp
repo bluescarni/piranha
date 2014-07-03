@@ -26,8 +26,8 @@
 #include <new>
 #include <type_traits>
 
-#include "aligned_memory.hpp"
 #include "config.hpp"
+#include "memory.hpp"
 
 namespace piranha
 {

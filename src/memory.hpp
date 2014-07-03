@@ -21,8 +21,8 @@
 #ifndef PIRANHA_ALIGNED_MEMORY_HPP
 #define PIRANHA_ALIGNED_MEMORY_HPP
 
-/** \file aligned_memory.hpp
- * \brief Functions to allocate and free aligned memory.
+/** \file memory.hpp
+ * \brief Low-level memory management functions.
  */
 
 #include <cstddef>

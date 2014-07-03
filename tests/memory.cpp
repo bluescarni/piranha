@@ -18,9 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/aligned_memory.hpp"
+#include "../src/memory.hpp"
 
-#define BOOST_TEST_MODULE aligned_memory_test
+#define BOOST_TEST_MODULE memory_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -34,7 +34,7 @@
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(aligned_memory_aligned_malloc_test)
+BOOST_AUTO_TEST_CASE(memory_aligned_malloc_test)
 {
 	environment env;
 	// Test the common codepath.
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(aligned_memory_aligned_malloc_test)
 }
 
 // NOTE: here we are assuming we can do some basic arithmetics on the alignment and size values.
-BOOST_AUTO_TEST_CASE(aligned_memory_alignment_check_test)
+BOOST_AUTO_TEST_CASE(memory_alignment_check_test)
 {
 	BOOST_CHECK(piranha::alignment_check<int>(0));
 	BOOST_CHECK(piranha::alignment_check<long long>(0));

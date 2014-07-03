@@ -26,8 +26,8 @@
 #include <iostream>
 #include <thread>
 
-#include "../src/aligned_memory.hpp"
 #include "../src/environment.hpp"
+#include "../src/memory.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;

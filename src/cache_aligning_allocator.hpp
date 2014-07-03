@@ -24,8 +24,8 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 
-#include "aligned_memory.hpp"
 #include "dynamic_aligning_allocator.hpp"
+#include "memory.hpp"
 #include "settings.hpp"
 
 namespace piranha

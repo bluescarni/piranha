@@ -42,7 +42,7 @@ SET(HEADERS_LIST
 	trigonometric_series.hpp
 	monomial.hpp
 	small_vector.hpp
-	aligned_memory.hpp
+	memory.hpp
 	dynamic_aligning_allocator.hpp
 	thread_pool.hpp
 	tuning.hpp
