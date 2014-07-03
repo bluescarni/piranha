@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_ALIGNED_MEMORY_HPP
-#define PIRANHA_ALIGNED_MEMORY_HPP
+#ifndef PIRANHA_MEMORY_HPP
+#define PIRANHA_MEMORY_HPP
 
 /** \file memory.hpp
  * \brief Low-level memory management functions.
@@ -27,10 +27,12 @@
 
 #include <cstddef>
 #include <new>
+#include <stdexcept>
 #include <type_traits>
 
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "type_traits.hpp"
 
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN) // POSIX memalign.
 // NOTE: this can go away once we have support for std::align.
