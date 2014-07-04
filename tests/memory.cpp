@@ -36,6 +36,8 @@
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
@@ -194,6 +196,20 @@ BOOST_AUTO_TEST_CASE(memory_parallel_array_perf_test)
 		std::cout << "n = " << i + 1u << '\n';
 		boost::timer::auto_cpu_timer t;
 		auto ptr1 = make_parallel_array<custom_string>(alloc_size,i + 1u);
+	}
+	std::cout <<	"Testing integer\n"
+			"===============\n";
+	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
+		std::cout << "n = " << i + 1u << '\n';
+		boost::timer::auto_cpu_timer t;
+		auto ptr1 = make_parallel_array<integer>(alloc_size,i + 1u);
+	}
+	std::cout <<	"Testing mp_integer\n"
+			"==================\n";
+	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
+		std::cout << "n = " << i + 1u << '\n';
+		boost::timer::auto_cpu_timer t;
+		auto ptr1 = make_parallel_array<mp_integer<>>(alloc_size,i + 1u);
 	}
 }
 
