@@ -24,11 +24,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <boost/timer/timer.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <new>
+#include <stdexcept>
 #include <vector>
 
 #include "../src/config.hpp"
@@ -116,8 +119,8 @@ BOOST_AUTO_TEST_CASE(memory_alignment_check_test)
 #endif
 }
 
-static const std::size_t alloc_size = 2000000ull;
-
+// Custom string class, will create a string with some content and
+// mark move operations as noexcept.
 class custom_string: public std::string
 {
 	public:
@@ -135,7 +138,48 @@ class custom_string: public std::string
 		~custom_string() noexcept {}
 };
 
-BOOST_AUTO_TEST_CASE(memory_parallel_perf_test)
+struct faulty_string: public custom_string
+{
+	faulty_string() : custom_string()
+	{
+		if (++s_counter == 500u) {
+			s_counter.store(0u);
+			throw std::runtime_error("oh noes!");
+		}
+	}
+	static std::atomic<unsigned> s_counter;
+};
+
+std::atomic<unsigned> faulty_string::s_counter(0u);
+
+static const std::size_t small_alloc_size = 100000u;
+
+BOOST_AUTO_TEST_CASE(memory_parallel_init_destroy_test)
+{
+	for (unsigned i = 0u; i <= settings::get_n_threads(); ++i) {
+		BOOST_CHECK_NO_THROW(parallel_value_init((int *)nullptr,0u,i));
+		BOOST_CHECK_NO_THROW(parallel_destroy((int *)nullptr,0u,i));
+		auto ptr1 = make_parallel_array<int>(small_alloc_size,i);
+		BOOST_CHECK(std::all_of(ptr1.get(),ptr1.get() + small_alloc_size,[](int n) {return n == 0;}));
+		auto ptr2 = make_parallel_array<custom_string>(small_alloc_size,i);
+		BOOST_CHECK(std::all_of(ptr2.get(),ptr2.get() + small_alloc_size,[](const std::string &str) {return str == "hello";}));
+		BOOST_CHECK_THROW(make_parallel_array<faulty_string>(small_alloc_size,i),std::runtime_error);
+		// Check zero sizes.
+		BOOST_CHECK(make_parallel_array<int>(0u,i).get() == nullptr);
+		BOOST_CHECK(make_parallel_array<custom_string>(0u,i).get() == nullptr);
+		BOOST_CHECK(make_parallel_array<faulty_string>(0u,i).get() == nullptr);
+		if (sizeof(int) > 1u) {
+			BOOST_CHECK_THROW(make_parallel_array<int>(std::numeric_limits<std::size_t>::max(),i),std::bad_alloc);
+		}
+	}
+}
+
+#ifdef NDEBUG
+
+// Size of the parallel arrays to allocate.
+static const std::size_t alloc_size = 20000000ull;
+
+BOOST_AUTO_TEST_CASE(memory_parallel_array_perf_test)
 {
 	std::cout <<	"Testing int\n"
 			"===========\n";
@@ -152,3 +196,5 @@ BOOST_AUTO_TEST_CASE(memory_parallel_perf_test)
 		auto ptr1 = make_parallel_array<custom_string>(alloc_size,i + 1u);
 	}
 }
+
+#endif

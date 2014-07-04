@@ -26,7 +26,6 @@
  */
 
 #include <cstddef>
-#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <new>
@@ -237,12 +236,35 @@ inline bool alignment_check(const std::size_t &alignment)
 	return true;
 }
 
+/// Parallel value initialisation.
+/**
+ * \note
+ * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
+ * 
+ * This function will value-initialise in parallel the array \p ptr
+ * of size \p size. The routine will use the first \p n_threads from piranha::thread_pool to perform
+ * the operation concurrently. If \p n_threads is 1 or 0, the operation will be performed in the
+ * calling thread. If \p ptr is null, this function will be a no-op.
+ * 
+ * This function provides the strong exception safety guarantee: in case of errors, any constructed
+ * instance of \p T will be destroyed before the error is re-thrown.
+ * 
+ * @param[in] ptr pointer to the array.
+ * @param[in] size size of the array.
+ * @param[in] n_threads number of threads to use.
+ * 
+ * @throws std::bad_alloc in case of memory allocation errors in multithread mode.
+ * @throws unspecified any exception thrown by:
+ * - the value initialisation of instances of type \p T,
+ * - piranha::thread_pool::enqueue() and piranha::future_list::push_back(), only in multithread mode.
+ */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
 inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned &n_threads)
 {
 	using ranges_vector = std::vector<std::pair<T *,T *>>;
 	using rv_size_type = typename ranges_vector::size_type;
 	if (unlikely(ptr == nullptr)) {
+		piranha_assert(!size);
 		return;
 	}
 	// Initing functor.
@@ -270,7 +292,7 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
 		init_function(ptr,ptr + size,0u,nullptr);
 	} else {
 		// Init the ranges vector with (ptr,ptr) pairs, so they are empty ranges.
-		std::vector<std::pair<T *,T *>> inited_ranges(static_cast<rv_size_type>(n_threads),std::make_pair(ptr,ptr));
+		ranges_vector inited_ranges(static_cast<rv_size_type>(n_threads),std::make_pair(ptr,ptr));
 		if (unlikely(inited_ranges.size() != n_threads)) {
 			piranha_throw(std::bad_alloc,);
 		}
@@ -297,9 +319,26 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
 	}
 }
 
+/// Parallel destruction.
+/**
+ * \note
+ * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
+ * 
+ * This function will destroy in parallel the element of an array \p ptr of size \p size. If \p n_threads
+ * is 0 or 1, the operation will be performed in the calling thread, otherwise the first \p n_threads in piranha::thread_pool
+ * will be used to perform the operation concurrently.
+ * 
+ * The function is a no-op if \p ptr is null or if \p T has a trivial destructor.
+ * 
+ * @param[in] ptr pointer to the array.
+ * @param[in] size size of the array.
+ * @param[in] n_threads number of threads to use.
+ */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
 inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads) noexcept
 {
+	using ranges_vector = std::vector<std::pair<T *,T *>>;
+	using rv_size_type = typename ranges_vector::size_type;
 	// Nothing to be done for null pointers.
 	if (unlikely(ptr == nullptr)) {
 		piranha_assert(!size);
@@ -319,20 +358,43 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
 	if (n_threads <= 1u) {
 		destroy_function(ptr,ptr + size);
 	} else {
-		// Work per thread.
-		const auto wpt = static_cast<std::size_t>(size / n_threads);
+		// A vector of ranges representing elements yet to be destroyed in case something goes wrong
+		// in the multithreaded part.
+		ranges_vector d_ranges;
 		future_list<decltype(thread_pool::enqueue(0u,destroy_function,ptr,ptr))> f_list;
 		try {
+			d_ranges.resize(static_cast<rv_size_type>(n_threads),std::make_pair(ptr,ptr));
+		} catch (...) {
+			// Just perform the single-threaded version, and GTFO.
+			destroy_function(ptr,ptr + size);
+			return;
+		}
+		try {
+			// Work per thread.
+			const auto wpt = static_cast<std::size_t>(size / n_threads);
+			// The ranges to destroy in the cleanup phase are, initially, all the ranges.
 			for (auto i = 0u; i < n_threads; ++i) {
 				auto start = ptr + i * wpt, end = (i == n_threads - 1u) ? ptr + size : ptr + (i + 1u) * wpt;
+				d_ranges[static_cast<rv_size_type>(i)] = std::make_pair(start,end);
+			}
+			// Perform the actual destruction and update the d_ranges vector.
+			for (auto i = 0u; i < n_threads; ++i) {
+				auto start = d_ranges[static_cast<rv_size_type>(i)].first, end = d_ranges[static_cast<rv_size_type>(i)].second;
 				f_list.push_back(thread_pool::enqueue(i,destroy_function,start,end));
+				// The range needs not to be destroyed anymore, as the enqueue/push_back was successful. Replace
+				// with an empty range.
+				d_ranges[static_cast<rv_size_type>(i)].first = ptr;
+				d_ranges[static_cast<rv_size_type>(i)].second = ptr;
 			}
 			f_list.wait_all();
 			// NOTE: T is a container_element, no need to get exceptions here.
 		} catch (...) {
 			f_list.wait_all();
-			// NOTE: logging candidate.
-			std::abort();
+			// If anything failed in the multithreaded part, just destroy in single-thread the ranges
+			// that were not destroyed.
+			for (const auto &p: d_ranges) {
+				destroy_function(p.first,p.second);
+			}
 		}
 	}
 }
@@ -340,6 +402,7 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
 namespace detail
 {
 
+// Deleter functor to be used in std::unique_ptr.
 template <typename T>
 class parallel_deleter
 {
@@ -349,29 +412,52 @@ class parallel_deleter
 		{}
 		void operator()(T *ptr) const noexcept
 		{
+			// Parallel destroy and pfree are no-ops with nullptr. All of this
+			// is noexcept.
 			parallel_destroy(ptr,m_size,m_n_threads);
 			aligned_pfree(0u,static_cast<void *>(ptr));
 		}
 	private:
-		std::size_t	m_size;
-		unsigned	m_n_threads;
+		const std::size_t	m_size;
+		const unsigned		m_n_threads;
 };
 
 }
 
+/// Create an array in parallel.
+/**
+ * \note
+ * This function is enabled only if \p T satisfies the piranha::is_container_element type trait.
+ * 
+ * This function will create an array whose values will be initialised in parallel using piranha::parallel_value_init().
+ * The pointer to the array is returned wrapped inside an \p std::unique_ptr that will take care of
+ * destroying the array elements (also in parallel using piranha::parallel_destroy()) and deallocating the memory when the
+ * destructor is called.
+ * 
+ * @param[in] size size of the array.
+ * @param[in] n_threads number of threads to use.
+ * 
+ * @return an \p std::unique_ptr wrapping the array.
+ * 
+ * @throws std::bad_alloc if \p size is greater than an implementation-defined value.
+ * @throws unspecified any exception thrown by:
+ * - piranha::aligned_palloc() (called with an alignment value of 0),
+ * - piranha::parallel_value_init().
+ */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
 inline std::unique_ptr<T,detail::parallel_deleter<T>> make_parallel_array(const std::size_t &size, const unsigned &n_threads)
 {
 	if (unlikely(size > std::numeric_limits<std::size_t>::max() / sizeof(T))) {
 		piranha_throw(std::bad_alloc,);
 	}
-	// TODO: handle the nullptr that could come out.
+	// Allocate space. This could be nullptr if size is zero.
 	auto ptr = static_cast<T *>(aligned_palloc(0u,static_cast<std::size_t>(size * sizeof(T))));
 	try {
+		// No problems here with nullptr, will be a no-op.
 		parallel_value_init(ptr,size,n_threads);
 	} catch (...) {
 		piranha_assert(ptr != nullptr);
-		// Free the allocated memory.
+		// Free the allocated memory. This is noexcept.
 		aligned_pfree(0u,static_cast<void *>(ptr));
 		throw;
 	}
