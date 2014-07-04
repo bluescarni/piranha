@@ -227,7 +227,12 @@ class static_vector
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
 			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 1u);
-			if (!std::is_pod<T>::value) {
+			// NOTE: no need to destroy anything in this case:
+			// http://en.cppreference.com/w/cpp/language/destructor
+			// NOTE: here we could have the destructor defined in a base class to be specialised
+			// if T is trivially destructible. Then we can default the dtor here and static_vector
+			// will be trivially destructible if T is.
+			if (!std::is_trivially_destructible<T>::value) {
 				destroy_items();
 			}
 		}
