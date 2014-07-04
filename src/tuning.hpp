@@ -102,7 +102,7 @@ class tuning: private detail::base_tuning<>
 		/**
 		 * @see piranha::tuning::get_multiplication_block_size() for an explanation of the meaning of this value.
 		 * 
-		 * @param[in] \p size desired value for the block size.
+		 * @param[in] size desired value for the block size.
 		 * 
 		 * @throws std::invalid_argument if \p size is outside an implementation-defined range.
 		 */
