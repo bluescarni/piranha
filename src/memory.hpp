@@ -26,12 +26,18 @@
  */
 
 #include <cstddef>
+#include <cstdlib>
+#include <limits>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "exceptions.hpp"
+#include "thread_pool.hpp"
 #include "type_traits.hpp"
 
 #if defined(PIRANHA_HAVE_POSIX_MEMALIGN) // POSIX memalign.
@@ -229,6 +235,147 @@ inline bool alignment_check(const std::size_t &alignment)
 	}
 #endif
 	return true;
+}
+
+template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
+inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned &n_threads)
+{
+	using ranges_vector = std::vector<std::pair<T *,T *>>;
+	using rv_size_type = typename ranges_vector::size_type;
+	if (unlikely(ptr == nullptr)) {
+		return;
+	}
+	// Initing functor.
+	auto init_function = [](T *start, T *end, const unsigned &thread_idx, ranges_vector *rv) {
+		auto orig_start = start;
+		try {
+			for (; start != end; ++start) {
+				::new (static_cast<void *>(start)) T();
+			}
+		} catch (...) {
+			// Cleanup.
+			for (; orig_start != start; ++orig_start) {
+				orig_start->~T();
+			}
+			// Re-throw.
+			throw;
+		}
+		// If the init was successful and we are in multithreaded mode, record
+		// the range that was inited.
+		if (rv != nullptr) {
+			(*rv)[static_cast<rv_size_type>(thread_idx)] = std::make_pair(orig_start,end);
+		}
+	};
+	if (n_threads <= 1) {
+		init_function(ptr,ptr + size,0u,nullptr);
+	} else {
+		// Init the ranges vector with (ptr,ptr) pairs, so they are empty ranges.
+		std::vector<std::pair<T *,T *>> inited_ranges(static_cast<rv_size_type>(n_threads),std::make_pair(ptr,ptr));
+		if (unlikely(inited_ranges.size() != n_threads)) {
+			piranha_throw(std::bad_alloc,);
+		}
+		// Work per thread.
+		const auto wpt = static_cast<std::size_t>(size / n_threads);
+		future_list<decltype(thread_pool::enqueue(0u,init_function,ptr,ptr,0u,&inited_ranges))> f_list;
+		try {
+			for (auto i = 0u; i < n_threads; ++i) {
+				auto start = ptr + i * wpt, end = (i == n_threads - 1u) ? ptr + size : ptr + (i + 1u) * wpt;
+				f_list.push_back(thread_pool::enqueue(i,init_function,start,end,i,&inited_ranges));
+			}
+			f_list.wait_all();
+			f_list.get_all();
+		} catch (...) {
+			f_list.wait_all();
+			// Rollback the ranges that were inited.
+			for (const auto &p: inited_ranges) {
+				for (auto start = p.first; start != p.second; ++start) {
+					start->~T();
+				}
+			}
+			throw;
+		}
+	}
+}
+
+template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
+inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads) noexcept
+{
+	// Nothing to be done for null pointers.
+	if (unlikely(ptr == nullptr)) {
+		piranha_assert(!size);
+		return;
+	}
+	// Nothing needs to be done for trivially destructible types:
+	// http://en.cppreference.com/w/cpp/language/lifetime
+	if (std::is_trivially_destructible<T>::value) {
+		return;
+	}
+	// Destroy functor.
+	auto destroy_function = [](T *start, T *end) {
+		for (; start != end; ++start) {
+			start->~T();
+		}
+	};
+	if (n_threads <= 1u) {
+		destroy_function(ptr,ptr + size);
+	} else {
+		// Work per thread.
+		const auto wpt = static_cast<std::size_t>(size / n_threads);
+		future_list<decltype(thread_pool::enqueue(0u,destroy_function,ptr,ptr))> f_list;
+		try {
+			for (auto i = 0u; i < n_threads; ++i) {
+				auto start = ptr + i * wpt, end = (i == n_threads - 1u) ? ptr + size : ptr + (i + 1u) * wpt;
+				f_list.push_back(thread_pool::enqueue(i,destroy_function,start,end));
+			}
+			f_list.wait_all();
+			// NOTE: T is a container_element, no need to get exceptions here.
+		} catch (...) {
+			f_list.wait_all();
+			// NOTE: logging candidate.
+			std::abort();
+		}
+	}
+}
+
+namespace detail
+{
+
+template <typename T>
+class parallel_deleter
+{
+	public:
+		explicit parallel_deleter(const std::size_t &size, const unsigned &n_threads) noexcept:
+			m_size(size),m_n_threads(n_threads)
+		{}
+		void operator()(T *ptr) const noexcept
+		{
+			parallel_destroy(ptr,m_size,m_n_threads);
+			aligned_pfree(0u,static_cast<void *>(ptr));
+		}
+	private:
+		std::size_t	m_size;
+		unsigned	m_n_threads;
+};
+
+}
+
+template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
+inline std::unique_ptr<T,detail::parallel_deleter<T>> make_parallel_array(const std::size_t &size, const unsigned &n_threads)
+{
+	if (unlikely(size > std::numeric_limits<std::size_t>::max() / sizeof(T))) {
+		piranha_throw(std::bad_alloc,);
+	}
+	// TODO: handle the nullptr that could come out.
+	auto ptr = static_cast<T *>(aligned_palloc(0u,static_cast<std::size_t>(size * sizeof(T))));
+	try {
+		parallel_value_init(ptr,size,n_threads);
+	} catch (...) {
+		piranha_assert(ptr != nullptr);
+		// Free the allocated memory.
+		aligned_pfree(0u,static_cast<void *>(ptr));
+		throw;
+	}
+	return std::unique_ptr<T,detail::parallel_deleter<T>>(ptr,detail::parallel_deleter<T>{size,n_threads});
 }
 
 }

@@ -24,13 +24,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <boost/timer/timer.hpp>
 #include <cstdlib>
+#include <iostream>
 #include <iterator>
 #include <new>
 #include <vector>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
+#include "../src/settings.hpp"
 
 using namespace piranha;
 
@@ -111,4 +114,41 @@ BOOST_AUTO_TEST_CASE(memory_alignment_check_test)
 		BOOST_CHECK(!piranha::alignment_check<std::string>(alignof(std::string) / 2u));
 	}
 #endif
+}
+
+static const std::size_t alloc_size = 2000000ull;
+
+class custom_string: public std::string
+{
+	public:
+		custom_string() : std::string("hello") {}
+		custom_string(const custom_string &) = default;
+		custom_string(custom_string &&other) noexcept : std::string(std::move(other)) {}
+		template <typename... Args>
+		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
+		custom_string &operator=(const custom_string &) = default;
+		custom_string &operator=(custom_string &&other) noexcept
+		{
+			std::string::operator=(std::move(other));
+			return *this;
+		}
+		~custom_string() noexcept {}
+};
+
+BOOST_AUTO_TEST_CASE(memory_parallel_perf_test)
+{
+	std::cout <<	"Testing int\n"
+			"===========\n";
+	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
+		std::cout << "n = " << i + 1u << '\n';
+		boost::timer::auto_cpu_timer t;
+		auto ptr1 = make_parallel_array<int>(alloc_size,i + 1u);
+	}
+	std::cout <<	"Testing string\n"
+			"==============\n";
+	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
+		std::cout << "n = " << i + 1u << '\n';
+		boost::timer::auto_cpu_timer t;
+		auto ptr1 = make_parallel_array<custom_string>(alloc_size,i + 1u);
+	}
 }
