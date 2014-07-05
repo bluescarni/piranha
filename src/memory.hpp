@@ -433,7 +433,11 @@ class parallel_deleter
  * The pointer to the array is returned wrapped inside an \p std::unique_ptr that will take care of
  * destroying the array elements (also in parallel using piranha::parallel_destroy()) and deallocating the memory when the
  * destructor is called.
- * 
+ *
+ * \note
+ * Due to the special semantics of the parallel deleter, the only valid write operation on the return value (beside destruction) is
+ * \p std::unique_ptr::release().
+ *
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.
  * 
@@ -445,7 +449,7 @@ class parallel_deleter
  * - piranha::parallel_value_init().
  */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
-inline std::unique_ptr<T,detail::parallel_deleter<T>> make_parallel_array(const std::size_t &size, const unsigned &n_threads)
+inline std::unique_ptr<T[],detail::parallel_deleter<T>> make_parallel_array(const std::size_t &size, const unsigned &n_threads)
 {
 	if (unlikely(size > std::numeric_limits<std::size_t>::max() / sizeof(T))) {
 		piranha_throw(std::bad_alloc,);
@@ -461,7 +465,7 @@ inline std::unique_ptr<T,detail::parallel_deleter<T>> make_parallel_array(const 
 		aligned_pfree(0u,static_cast<void *>(ptr));
 		throw;
 	}
-	return std::unique_ptr<T,detail::parallel_deleter<T>>(ptr,detail::parallel_deleter<T>{size,n_threads});
+	return std::unique_ptr<T[],detail::parallel_deleter<T>>(ptr,detail::parallel_deleter<T>{size,n_threads});
 }
 
 }

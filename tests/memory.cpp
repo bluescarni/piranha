@@ -174,6 +174,14 @@ BOOST_AUTO_TEST_CASE(memory_parallel_init_destroy_test)
 		if (sizeof(int) > 1u) {
 			BOOST_CHECK_THROW(make_parallel_array<int>(std::numeric_limits<std::size_t>::max(),i),std::bad_alloc);
 		}
+		// Check operator[] and release.
+		auto ptr3 = make_parallel_array<int>(small_alloc_size,i);
+		ptr3[10u] = 100;
+		BOOST_CHECK_EQUAL(ptr3[10u],100);
+		auto ptr4 = ptr3.release();
+		BOOST_CHECK(ptr3.get() == nullptr);
+		// Just deallocate, no need to destroy ints.
+		aligned_pfree(0u,static_cast<void *>(ptr4));
 	}
 }
 
