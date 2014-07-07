@@ -114,6 +114,13 @@ class hash_set
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
 			node() noexcept : m_next(nullptr) {}
+			// Erase all other ctors/assignments, we do not want to
+			// copy around this object as m_storage is not what it is
+			// (and often could be uninitialized, which would lead to UB if used).
+			node(const node &) = delete;
+			node(node &&) = delete;
+			node &operator=(const node &) = delete;
+			node &operator=(node &&) = delete;
 			// NOTE: the idea here is that we use these helpers only *after* the object has been constructed,
 			// for constructing the object we must always access m_storage directly. The chain of two casts
 			// seems to be the only standard-conforming way of getting out a pointer to T.
