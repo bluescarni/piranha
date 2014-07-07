@@ -206,7 +206,7 @@ class hash_set
 							piranha_assert(cur->m_next == &terminator);
 							// Create a new node with content equal to other_cur
 							// and linking forward to the terminator.
-							std::unique_ptr<node> new_node(new node());
+							std::unique_ptr<node> new_node(::new node());
 							::new ((void *)&new_node->m_storage) T(*other_cur->ptr());
 							new_node->m_next = &terminator;
 							// Link the new node.
@@ -266,7 +266,7 @@ class hash_set
 				// NOTE: optimize with likely/unlikely?
 				if (m_node.m_next) {
 					// Create the new node and forward-link it to the second node.
-					std::unique_ptr<node> new_node(new node());
+					std::unique_ptr<node> new_node(::new node());
 					::new ((void *)&new_node->m_storage) T(std::forward<U>(item));
 					new_node->m_next = m_node.m_next;
 					// Link first node to the new node.
