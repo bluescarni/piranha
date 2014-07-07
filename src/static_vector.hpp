@@ -192,9 +192,7 @@ class static_vector
 				}
 			}
 			// Nuke other.
-			for (size_type i = 0u; i < size; ++i) {
-				other.ptr()[i].~T();
-			}
+			other.destroy_items();
 			other.m_size = 0u;
 		}
 		/// Constructor from multiple copies.
@@ -227,14 +225,7 @@ class static_vector
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
 			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
 			piranha_assert(m_tag == 1u);
-			// NOTE: no need to destroy anything in this case:
-			// http://en.cppreference.com/w/cpp/language/destructor
-			// NOTE: here we could have the destructor defined in a base class to be specialised
-			// if T is trivially destructible. Then we can default the dtor here and static_vector
-			// will be trivially destructible if T is.
-			if (!std::is_trivially_destructible<T>::value) {
-				destroy_items();
-			}
+			destroy_items();
 		}
 		/// Copy assignment operator.
 		/**
@@ -292,9 +283,7 @@ class static_vector
 				}
 				m_size = other.m_size;
 				// Nuke the other.
-				for (size_type i = 0u; i < other.m_size; ++i) {
-					other.ptr()[i].~T();
-				}
+				other.destroy_items();
 				other.m_size = 0u;
 			}
 			return *this;
@@ -539,6 +528,14 @@ class static_vector
 	private:
 		void destroy_items()
 		{
+			// NOTE: no need to destroy anything in this case:
+			// http://en.cppreference.com/w/cpp/language/destructor
+			// NOTE: here we could have the destructor defined in a base class to be specialised
+			// if T is trivially destructible. Then we can default the dtor here and static_vector
+			// will be trivially destructible if T is.
+			if (std::is_trivially_destructible<T>::value) {
+				return;
+			}
 			const auto size = m_size;
 			for (size_type i = 0u; i < size; ++i) {
 				ptr()[i].~T();
