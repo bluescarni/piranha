@@ -1076,9 +1076,8 @@ class hash_set
 		 * 
 		 * @return iterator pointing to the newly-inserted element.
 		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - hash_set::key_type's copy constructor,
-		 * - <tt>std::vector::push_back()</tt>.
+		 * @throws unspecified any exception thrown by the copy constructor of hash_set::key_type or by memory allocation
+		 * errors.
 		 */
 		template <typename U>
 		iterator _unique_insert(U &&k, const size_type &bucket_idx,
@@ -1101,12 +1100,8 @@ class hash_set
 		 * @param[in] bucket_idx index of the destination bucket for \p k.
 		 * 
 		 * @return hash_set::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - _bucket(),
-		 * - the comparison functor.
 		 */
-		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
+		const_iterator _find(const key_type &k, const size_type &bucket_idx) const noexcept
 		{
 			// Assert bucket index is correct.
 			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < bucket_count());
@@ -1130,7 +1125,7 @@ class hash_set
 		 * 
 		 * @return index of the destination bucket for an object with hash value \p hash.
 		 */
-		size_type _bucket_from_hash(const std::size_t &hash) const
+		size_type _bucket_from_hash(const std::size_t &hash) const noexcept
 		{
 			piranha_assert(bucket_count());
 			return hash % (size_type(1u) << m_log2_size);
@@ -1144,7 +1139,7 @@ class hash_set
 		 * 
 		 * @return index of the destination bucket for \p k.
 		 */
-		size_type _bucket(const key_type &k) const
+		size_type _bucket(const key_type &k) const noexcept
 		{
 			return _bucket_from_hash(m_hasher(k));
 		}
@@ -1154,7 +1149,7 @@ class hash_set
 		 * 
 		 * @param[in] new_size new table size.
 		 */
-		void _update_size(const size_type &new_size)
+		void _update_size(const size_type &new_size) noexcept
 		{
 			m_n_elements = new_size;
 		}
@@ -1185,7 +1180,7 @@ class hash_set
 		 * @return a const reference to the list of items contained in the bucket positioned
 		 * at index \p idx.
 		 */
-		const list &_get_bucket_list(const size_type &idx) const
+		const list &_get_bucket_list(const size_type &idx) const noexcept
 		{
 			piranha_assert(idx < bucket_count());
 			return m_container[idx];
@@ -1206,7 +1201,7 @@ class hash_set
 		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
 		 * no such element exists.
 		 */
-		local_iterator _erase(const iterator &it)
+		local_iterator _erase(const iterator &it) noexcept
 		{
 			// Verify the iterator is valid.
 			piranha_assert(it.m_set == this);
