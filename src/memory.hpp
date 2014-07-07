@@ -253,7 +253,7 @@ inline bool alignment_check(const std::size_t &alignment)
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.
  * 
- * @throws std::bad_alloc in case of memory allocation errors in multithread mode.
+ * @throws std::bad_alloc in case of memory allocation errors in multithreaded mode.
  * @throws unspecified any exception thrown by:
  * - the value initialisation of instances of type \p T,
  * - piranha::thread_pool::enqueue() and piranha::future_list::push_back(), only in multithread mode.
