@@ -1302,11 +1302,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// Struct for extracting bucket indices.
 		// NOTE: use this instead of a lambda, since boost transform iterator needs the function
 		// object to be assignable.
-		struct bi_extractor
+		struct sparse_bi_extractor
 		{
-			explicit bi_extractor(const return_type *retval):m_retval(retval) {}
+			explicit sparse_bi_extractor(const return_type *retval) noexcept : m_retval(retval) {}
 			template <typename Term>
-			bucket_size_type operator()(const Term *t) const
+			bucket_size_type operator()(const Term *t) const noexcept
 			{
 				return m_retval->m_container._bucket_from_hash(t->hash());
 			}
@@ -1406,7 +1406,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				const auto a = static_cast<bucket_size_type>(bpt * idx),
 					b = (idx == n_threads - 1u) ? bucket_count : static_cast<bucket_size_type>(bpt * (idx + 1u));
 				// Bucket index extractor.
-				const bi_extractor bi_ex{&retval};
+				const sparse_bi_extractor bi_ex{&retval};
 				// Start and end of task in v2, to be used in the loop.
 				term_type2 const **start, **end;
 				// Check the safety of computing "end - start" in the loop.
