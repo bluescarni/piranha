@@ -54,6 +54,7 @@
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
+#include "memory.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
 #include "series.hpp"
@@ -1020,9 +1021,281 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const std::vector<NKType1>	&m_new_keys1;
 			const std::vector<NKType2>	&m_new_keys2;
 		};
+		struct dense_bi_extractor
+		{
+			explicit dense_bi_extractor(const value_type &n, const value_type &h_min) noexcept :
+				m_n(n),m_h_min(h_min)
+			{}
+			template <typename NewKey>
+			std::size_t operator()(const NewKey &nk) const noexcept
+			{
+				// NOTE: here n + nk.first is safe as it produces a code within the encoding range,
+				// the subtraction of h_min is safe too as we checked this in the original ka codification
+				// (of which the tighter codification is a subrange), and finally the cast to std::size_t
+				// is safe because of the numeric_cast when initing the output coefficients vector.
+				return static_cast<std::size_t>((m_n + nk.first) - m_h_min);
+			}
+			value_type	m_n;
+			value_type	m_h_min;
+		};
+		// Dense multiplication method.
+		void dense_multiplication_new(return_type &retval, const unsigned &n_threads) const
+		{
+			// Shortcuts.
+			typedef std::pair<value_type,term_type1 const *> new_key_type1;
+			typedef std::pair<value_type,term_type2 const *> new_key_type2;
+			// Type representing multiplication tasks.
+			using task_type = std::tuple<new_key_type1 const *,new_key_type2 const *,new_key_type2 const *>;
+			// A couple of handy shortcuts.
+			using diff_type = std::ptrdiff_t;
+			// NOTE: this is always legal as ptrdiff_t is a signed integer.
+			using udiff_type = typename std::make_unsigned<diff_type>::type;
+			// Block size. Tasks will be split into chunks with this max size.
+			// TODO cheeeeck
+			const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size()) * 5u;
+			// We need to re-encode all the monomials to a tighter Kronecker representation.
+			// Vectors of minimum / maximum values, cast to hardware int.
+			std::vector<value_type> mins;
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(mins),[](const std::pair<integer,integer> &p) {
+				return static_cast<value_type>(p.first);
+			});
+			std::vector<value_type> maxs;
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(maxs),[](const std::pair<integer,integer> &p) {
+				return static_cast<value_type>(p.second);
+			});
+			// Build the encoding vector.
+			std::vector<value_type> c_vec;
+			integer f_delta(1);
+			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(c_vec),
+				[&f_delta](const std::pair<integer,integer> &p) -> value_type {
+					auto old(f_delta);
+					f_delta *= p.second - p.first + 1;
+					return static_cast<value_type>(old);
+			});
+			// Try casting final delta. This must work as the new codification
+			// is tighter than the original (symmetric) one and f_delta = h_max - hmin + 1.
+			piranha_assert(((void)static_cast<value_type>(f_delta),true));
+			// Compute hmax and hmin.
+			piranha_assert(m_minmax_values.size() == c_vec.size());
+			const auto h_minmax = std::inner_product(m_minmax_values.begin(),m_minmax_values.end(),c_vec.begin(),
+				std::make_pair(integer(0),integer(0)),
+				[](const std::pair<integer,integer> &p1, const std::pair<integer,integer> &p2) {
+					return std::make_pair(p1.first + p2.first,p1.second + p2.second);
+				},[](const std::pair<integer,integer> &p, const value_type &value) {
+					return std::make_pair(p.first * value,p.second * value);
+				}
+			);
+			piranha_assert(f_delta == h_minmax.second - h_minmax.first + 1);
+			// Try casting hmax and hmin. This should always work as well, for the same reasons above.
+			const auto hmin = static_cast<value_type>(h_minmax.first);
+			const auto hmax = static_cast<value_type>(h_minmax.second);
+			// Encoding functor.
+			typedef typename term_type1::key_type::v_type unpack_type;
+			auto encoder = [&c_vec,hmin,&mins](const unpack_type &v) -> value_type {
+				piranha_assert(c_vec.size() == v.size());
+				piranha_assert(c_vec.size() == mins.size());
+				decltype(mins.size()) i = 0u;
+				value_type retval = std::inner_product(c_vec.begin(),c_vec.end(),v.begin(),value_type(0),
+					std::plus<value_type>(),[&i,&mins](const value_type &c, const value_type &n) -> value_type {
+						const decltype(mins.size()) old_i = i;
+						++i;
+						piranha_assert(n >= mins[old_i]);
+						return static_cast<value_type>(c * (n - mins[old_i]));
+					}
+				);
+				return static_cast<value_type>(retval + hmin);
+			};
+			// Build copies of the input keys repacked according to the new Kronecker substitution. Attach
+			// also a pointer to the term.
+			std::vector<new_key_type1> new_keys1;
+			std::vector<new_key_type2> new_keys2;
+			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(new_keys1),
+				[this,encoder](term_type1 const *ptr) {
+				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
+			});
+			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(new_keys2),
+				[this,encoder](term_type2 const *ptr) {
+				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
+			});
+			// Sort the the new keys.
+			std::sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type1 &p1, const new_key_type1 &p2) {
+				return p1.first < p2.first;
+			});
+			std::sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type2 &p1, const new_key_type2 &p2) {
+				return p1.first < p2.first;
+			});
+			// Prepare the storage for multiplication.
+			const auto cfv_size = boost::numeric_cast<std::size_t>((hmax - hmin) + 1);
+			auto cf_vector(make_parallel_array<typename term_type1::cf_type>(cfv_size,n_threads));
+			// Number of vector buckets per thread.
+			const auto bpt = static_cast<std::size_t>(cfv_size / n_threads);
+			// Number of interleaved blocks.
+			// TODO check 
+			const std::size_t n_ib = 13u;
+			// Size of regular interleaved blocks.
+			const std::size_t s_ib = static_cast<std::size_t>(cfv_size / n_ib);
+			// Size of regular thread blocks.
+			const std::size_t s_tb = static_cast<std::size_t>(s_ib / n_threads);
+			// Will use to sync access to common vars.
+			std::mutex m;
+			// Debug variable.
+			using vi_size_type = std::vector<integer>::size_type;
+			std::vector<integer> n_mults(boost::numeric_cast<vi_size_type>(n_threads));
+			auto thread_function = [n_threads,bpt,n_ib,s_ib,s_tb,cfv_size,hmin,block_size,&cf_vector,&new_keys1,&new_keys2,&m,&n_mults] (const unsigned &idx) {
+				// Construct the vector of thread blocks.
+				std::vector<std::pair<std::size_t,std::size_t>> v_tb;
+				for (std::size_t i = 0u; i < n_ib; ++i) {
+					std::size_t start = static_cast<std::size_t>(i * s_ib + idx * s_tb);
+					std::size_t end;
+					if (i == n_ib - 1u && idx == n_threads - 1u) {
+						// Last interleaved block and last thread block, pad to the absolute end.
+						end = cfv_size;
+					} else {
+						// We are not in the last interleaved block, check if we are in the last thread block.
+						if (idx == n_threads - 1u) {
+							// Last thread block, pad to the end of the ib.
+							end = static_cast<std::size_t>((i + 1u) * s_ib);
+						} else {
+							// Not the last thread block -> it is a regular block.
+							end = static_cast<std::size_t>(i * s_ib + (idx + 1u) * s_tb);
+						}
+					}
+					v_tb.emplace_back(start,end);
+				}
+{
+std::lock_guard<std::mutex> l(m);
+std::cout << "thread: " << idx << '\n';
+std::cout << "ranges: ";
+for (const auto &p: v_tb) {
+	std::cout << '[' << p.first << ',' << p.second << ']' << ' ';
+}
+std::cout << '\n';
+}
+			
+				// Range of bucket indices into which the thread is allowed to write.
+				/*const auto a = static_cast<std::size_t>(bpt * idx),
+					b = (idx == n_threads - 1u) ? cfv_size : static_cast<std::size_t>(bpt * (idx + 1u));*/
+				// Start and end of task in the second series, to be used in the loop.
+				new_key_type2 const *start, *end;
+				// Check the safety of computing "end - start" in the loop.
+				if (unlikely(new_keys2.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
+					piranha_throw(std::overflow_error,"the second operand in a dense polynomial multiplication is too large");
+				}
+				// Vector of term multiplication tasks to be undertaken by the thread.
+				std::vector<task_type> tasks;
+				const auto size1 = new_keys1.size();
+				const auto size2 = new_keys2.size();
+				for (decltype(new_keys1.size()) i = 0u; i < size1; ++i) {
+					const dense_bi_extractor bi_ex(new_keys1[i].first,hmin);
+					for (const auto &p: v_tb) {
+						const auto a = p.first, b = p.second;
+						// Transform iterators to locate bounds in the second series.
+						const auto t_start2 = boost::make_transform_iterator(&new_keys2[0u],bi_ex),
+							t_end2 = boost::make_transform_iterator(&new_keys2[0u] + size2,bi_ex);
+						start = std::lower_bound(t_start2,t_end2,a).base();
+						end = std::lower_bound(t_start2,t_end2,b).base();
+						// Split into smaller blocks.
+						while (end - start > block_size) {
+							tasks.emplace_back(&new_keys1[i],start,start + block_size);
+							start += block_size;
+						}
+						if (end != start) {
+							tasks.emplace_back(&new_keys1[i],start,end);
+						}
+					}
+//{
+//std::lock_guard<std::mutex> l(m);
+
+//std::cout << "thread: " << idx << ",    " <<
+//	((start == &new_keys2[0u] + size2) ? -123 : /*static_cast<std::size_t>*/((new_keys1[i].first + start->first) - hmin)) <<
+//	" to " <<
+//	((end == &new_keys2[0u] + size2) ? -123 : /*static_cast<std::size_t>*/((new_keys1[i].first + end->first) - hmin)) << '\n';
+//}
+				}
+				// Sort the tasks in ascending order for the first write bucket index.
+				std::sort(tasks.begin(),tasks.end(),[hmin](const task_type &t1, const task_type &t2) {
+					return (std::get<0u>(t1)->first + std::get<1u>(t1)->first) - hmin <
+						(std::get<0u>(t2)->first + std::get<1u>(t2)->first) - hmin;
+				});
+
+{
+//std::lock_guard<std::mutex> l(m);
+//std::cout << size1 << '\n';
+//std::cout << size2 << '\n';
+std::cout << "thread idx: " << idx  << ", task size: " << tasks.size() << '\n';
+}
+				// Go with the multiplications.
+				for (const auto &t: tasks) {
+					auto t1_ptr = std::get<0u>(t);
+					const auto end = std::get<2u>(t);
+					for (auto start = std::get<1u>(t); start != end; ++start) {
+						// TODO rename idx, avoid confusion with thread idx.
+						const auto idx = static_cast<std::size_t>((t1_ptr->first + start->first) - hmin);
+						//piranha_assert(idx < cfv_size);
+						//piranha_assert(idx >= a && idx < b);
+						//if (idx >= cfv_size || idx < a || idx >= b) {
+						//	throw;
+						//}
+						math::multiply_accumulate(cf_vector[idx],t1_ptr->second->m_cf,start->second->m_cf);
+					}
+				}
+{
+//std::lock_guard<std::mutex> l(m);
+//std::cout << "thread idx: " << idx << ", count: " << std::count_if(cf_vector.get() + a,cf_vector.get() + b,[](const typename term_type1::cf_type &cf) {return !math::is_zero(cf);}) << '\n';
+}
+			};
+			// Go with the threads.
+			future_list<decltype(thread_pool::enqueue(0u,thread_function,0u))> f_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					f_list.push_back(thread_pool::enqueue(i,thread_function,i));
+				}
+				// First let's wait for everything to finish.
+				f_list.wait_all();
+				// Then, let's handle the exceptions.
+				f_list.get_all();
+			} catch (...) {
+				f_list.wait_all();
+				// No need to clean up retval, it was not touched yet.
+				throw;
+			}
+			// Build the return value.
+			// Append the final delta to the coding vector for use in the decoding routine.
+			c_vec.push_back(static_cast<value_type>(f_delta));
+			// Temp vector for decoding.
+			std::vector<value_type> tmp_v;
+			tmp_v.resize(boost::numeric_cast<decltype(tmp_v.size())>(this->m_s1->m_symbol_set.size()));
+			piranha_assert(c_vec.size() - 1u == tmp_v.size());
+			piranha_assert(mins.size() == tmp_v.size());
+			auto decoder = [&tmp_v,&c_vec,&mins,&maxs](const value_type &n) {
+				decltype(c_vec.size()) i = 0u;
+				std::generate(tmp_v.begin(),tmp_v.end(),
+					[&n,&i,&mins,&maxs,&c_vec]() -> value_type
+				{
+					auto retval = (n % c_vec[i + 1u]) / c_vec[i] + mins[i];
+					piranha_assert(retval >= mins[i] && retval <= maxs[i]);
+					++i;
+					return static_cast<value_type>(retval);
+				});
+			};
+			term_type1 tmp_term;
+			for (std::size_t i = 0u; i < cfv_size; ++i) {
+				if (!math::is_zero(cf_vector[i])) {
+					tmp_term.m_cf = std::move(cf_vector[i]);
+					decoder(boost::numeric_cast<value_type>(i));
+					tmp_term.m_key = decltype(tmp_term.m_key)(tmp_v.begin(),tmp_v.end());
+					retval.insert(std::move(tmp_term));
+				}
+			}
+		}
 		// Dense multiplication method.
 		void dense_multiplication(return_type &retval, const unsigned &n_threads) const
 		{
+if (this->m_v1.size() > 8000u && this->m_v2.size() > 8000u) {
+	std::cout << "foo: " << n_threads << '\n';
+	dense_multiplication_new(retval,n_threads);
+	return;
+}
 			// Vectors of minimum / maximum values, cast to hardware int.
 			std::vector<value_type> mins;
 			std::transform(m_minmax_values.begin(),m_minmax_values.end(),std::back_inserter(mins),[](const std::pair<integer,integer> &p) {
@@ -1298,6 +1571,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					retval.insert(std::move(tmp_term));
 				}
 			}
+//for (unsigned i = 0u; i < n_threads; ++i) {
+//	std::cout << "thread idx: " << i << ", count: " << std::count_if(&cf_vector[0u] + i * (cf_vector.size() / n_threads),
+//	i == n_threads - 1u ? &cf_vector[0u] + cf_vector.size(): &cf_vector[0u] + (i + 1u) * (cf_vector.size() / n_threads),[](const typename term_type1::cf_type &cf) {return !math::is_zero(cf);}) << '\n';
+//}
 		}
 		// Struct for extracting bucket indices.
 		// NOTE: use this instead of a lambda, since boost transform iterator needs the function
