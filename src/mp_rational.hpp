@@ -71,8 +71,10 @@ class mp_rational
 			if (unlikely(!std::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"cannot construct a rational from a non-finite floating-point number");
 			}
+			// Denominator is always inited as 1.
+			m_den = 1;
 			if (x == Float(0)) {
-				m_den = 1;
+				// m_den is 1 already.
 				return;
 			}
 			Float abs_x = std::abs(x);
@@ -87,30 +89,30 @@ class mp_rational
 				}
 				abs_x -= tmp;
 				// Break out if x is an exact integer.
-				if (unlikely(abs_x == Float(0))) {
-					break;
+				if (abs_x == Float(0)) {
+					// m_den is 1 already.
+					m_num = i_part;
+					return;
 				}
 				exp = std::ilogb(abs_x);
 				if (unlikely(exp == INT_MAX || exp == FP_ILOGBNAN)) {
 					piranha_throw(std::invalid_argument,"error calling std::ilogb");
 				}
 			}
-			// Handle the case in which the float is an exact integer.
-			if (unlikely(abs_x == Float(0))) {
-				m_num = i_part;
-				m_den = 1;
-				return;
-			}
-			m_den = 1;
+			piranha_assert(abs_x < Float(1));
 			// Lift up the decimal part into an integer.
-			while (std::trunc(abs_x) != abs_x) {
+			while (abs_x != Float(0)) {
 				abs_x = std::scalbln(abs_x,1);
 				if (unlikely(abs_x == HUGE_VAL)) {
 					piranha_throw(std::invalid_argument,"output of std::scalbn is HUGE_VAL");
 				}
+				const auto t_abs_x = std::trunc(abs_x);
 				m_den *= radix;
+				m_num *= radix;
+				m_num += int_type(t_abs_x);
+				abs_x -= t_abs_x;
 			}
-			m_num = int_type(abs_x) + i_part * m_den;
+			math::multiply_accumulate(m_num,i_part,m_den);
 			canonicalise();
 			if (std::signbit(x)) {
 				m_num.negate();
