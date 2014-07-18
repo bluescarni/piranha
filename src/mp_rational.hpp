@@ -109,7 +109,9 @@ class mp_rational
 				const auto t_abs_x = std::trunc(abs_x);
 				m_den *= radix;
 				m_num *= radix;
-				m_num += int_type(t_abs_x);
+				// NOTE: here t_abs_x is guaranteed to be in
+				// [0,radix - 1], so the cast to unsigned should be ok.
+				m_num += static_cast<unsigned>(t_abs_x);
 				abs_x -= t_abs_x;
 			}
 			math::multiply_accumulate(m_num,i_part,m_den);
