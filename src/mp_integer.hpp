@@ -1018,7 +1018,7 @@ class mp_integer
 			using type = U;
 		};
 		template <typename Float>
-		void construct_from_floating_point(Float x)
+		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
 		{
 			if (unlikely(!std::isfinite(x))) {
 				piranha_throw(std::invalid_argument,"cannot construct an integer from a non-finite floating-point number");
@@ -1071,7 +1071,7 @@ class mp_integer
 			}
 		}
 		template <typename Integer>
-		void construct_from_integral(Integer n_orig)
+		void construct_from_interoperable(const Integer &n_orig, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
 		{
 			if (n_orig == Integer(0)) {
 				return;
@@ -1110,16 +1110,6 @@ class mp_integer
 					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 				}
 			}
-		}
-		template <typename Float>
-		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
-		{
-			construct_from_floating_point(x);
-		}
-		template <typename Integer>
-		void construct_from_interoperable(const Integer &n, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
-		{
-			construct_from_integral(n);
 		}
 		// Special casing for bool.
 		void construct_from_interoperable(bool v)
