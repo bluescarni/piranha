@@ -2029,7 +2029,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2076,7 +2076,9 @@ class mp_integer
 		 * 
 		 * @return <tt>x + y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -2130,7 +2132,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2175,7 +2177,9 @@ class mp_integer
 		 * 
 		 * @return <tt>x - y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -2231,7 +2235,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2276,7 +2280,9 @@ class mp_integer
 		 * 
 		 * @return <tt>x * y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
@@ -2358,7 +2364,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
 		 * @throws piranha::zero_division_error if \p T is an integral type and \p x is zero (as established by
 		 * piranha::math::is_zero()).
 		 */
@@ -2408,7 +2414,9 @@ class mp_integer
 		 * 
 		 * @return <tt>x / y</tt>.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
 		 * @throws piranha::zero_division_error if both operands are of integral type and a division by zero occurs.
 		 */
 		template <typename T, typename U>
@@ -2432,6 +2440,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
+		 * @throws unspecified any exception thrown by the generic constructor, if used.
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
 		 */
 		template <typename T>
@@ -2479,6 +2488,9 @@ class mp_integer
 		 * 
 		 * @return <tt>x % y</tt>.
 		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor, if used.
 		 * @throws piranha::zero_division_error if the second operand is zero.
 		 */
 		template <typename T, typename U>
