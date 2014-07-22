@@ -2520,7 +2520,7 @@ class mp_integer
 		 * 
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
@@ -2567,7 +2567,7 @@ class mp_integer
 		 * 
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
@@ -2592,7 +2592,7 @@ class mp_integer
 		 * 
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
@@ -2617,7 +2617,7 @@ class mp_integer
 		 * 
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by operator<().
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
@@ -2642,7 +2642,7 @@ class mp_integer
 		 * 
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 * 
-		 * @throws unspecified any exception resulting from interoperating with floating-point types.
+		 * @throws unspecified any exception thrown by operator<=().
 		 */
 		template <typename T, typename U>
 		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
@@ -2667,6 +2667,7 @@ class mp_integer
 		 * 
 		 * @throws std::invalid_argument if <tt>exp</tt>'s value is outside the range of the <tt>unsigned long</tt> type.
 		 * @throws piranha::zero_division_error if \p this is zero and \p exp is negative.
+		 * @throws unspecified any exception thrown by the generic constructor, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<std::is_integral<T>::value || std::is_same<T,mp_integer>::value,mp_integer>::type pow(const T &exp) const
