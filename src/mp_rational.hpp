@@ -278,7 +278,8 @@ class mp_rational
 			// NOTE: here the GCD only involves operations on mp_integers
 			// and thus it never throws. The construction from 1 in the comparisons will
 			// not throw either.
-			return m_den.sign() == 1 && ((m_num.sign() != 0 && detail::gcd(m_num,m_den) == 1) ||
+			const auto gcd = detail::gcd(m_num,m_den);
+			return m_den.sign() == 1 && ((m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
 				(m_num.sign() == 0 && m_den == 1));
 		}
 		/// Canonicalise.
@@ -329,12 +330,12 @@ class mp_rational
 	         * 
 	         * @param[in] den desired value for the denominator.
 	         * 
-	         * @throws piranha::zero_division_error if \p den is zero.
+	         * @throws std::invalid_argument if \p den is not positive.
 	         */
 		void _set_den(const int_type &den)
 		{
-			if (unlikely(den.sign() == 0)) {
-				piranha_throw(zero_division_error,"zero denominator in rational");
+			if (unlikely(den.sign() <= 0)) {
+				piranha_throw(std::invalid_argument,"cannot set non-positive denominator in rational");
 			}
 			m_den = den;
 		}
