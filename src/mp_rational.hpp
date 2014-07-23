@@ -21,7 +21,6 @@
 #ifndef PIRANHA_MP_RATIONAL_HPP
 #define PIRANHA_MP_RATIONAL_HPP
 
-#include <boost/math/common_factor_rt.hpp>
 #include <climits>
 #include <cmath>
 #include <iostream>
@@ -38,10 +37,59 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Greatest common divisor using the euclidean algorithm.
+template <typename T>
+inline T gcd(T a, T b)
+{
+	while (true) {
+		if (math::is_zero(a)) {
+			return b;
+		}
+		b %= a;
+		if (math::is_zero(b)) {
+			return a;
+		}
+		a %= b;
+	}
+}
+
+}
+
+/// Multiple precision rational class.
+/**
+ * This class encapsulates two instances of piranha::mp_integer to represent an arbitrary-precision rational number
+ * in terms of a numerator and a denominator.
+ * The meaning of the \p NBits template parameter is the same as in piranha::mp_integer, that is, it represents the
+ * bit width of the two limbs stored statically in the numerator and in the denominator.
+ * 
+ * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and denominator
+ * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
+ * 
+ * \section interop Interoperability with fundamental types
+ * 
+ * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
+ * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
+ * of piranha::mp_integer apply.
+ * 
+ * \section exception_safety Exception safety guarantee
+ * 
+ * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
+ * the program will terminate.
+ * 
+ * \section move_semantics Move semantics
+ * 
+ * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
+ * 
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 template <int NBits = 0>
 class mp_rational
 {
 	public:
+		/// The underlying piranha::mp_integer type used to represent numerator and denominator.
 		using int_type = mp_integer<NBits>;
 	private:
 		// Enabler for ctor from num den pair.
@@ -111,6 +159,9 @@ class mp_rational
 				m_num *= radix;
 				// NOTE: here t_abs_x is guaranteed to be in
 				// [0,radix - 1], so the cast to unsigned should be ok.
+				// Note that floating-point numbers are guaranteed to be able
+				// to represent exactly at least a [-exp,+exp] exponent range
+				// (see the minimum values for the FLT constants in the C standard).
 				m_num += static_cast<unsigned>(t_abs_x);
 				abs_x -= t_abs_x;
 			}
@@ -128,28 +179,32 @@ class mp_rational
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
 		{
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<Float>::radix);
-			int_type up_log_r(1);
-			int exp = 0;
-			while (up_log_r < m_den) {
-				up_log_r *= radix;
-				// TODO range check.
-				--exp;
-			}
-			auto r = m_den % up_log_r;
-			if (math::is_zero(r)) {
-				auto q = m_den / up_log_r;
-				auto i_part = (m_num * q) / up_log_r;
-				auto d_part = m_num * q - up_log_r * i_part;
-				// TODO: check output of scalbn.
-				return Float(i_part) + std::scalbln(Float(d_part),exp);
-			}
-			return 0.;
+			return static_cast<Float>(m_num) / static_cast<Float>(m_den);
 		}
 	public:
-		mp_rational():m_num(),m_den(1) {}
+		/// Default constructor.
+		/**
+		 * This constructor will initialise the rational to zero (that is, the numerator is set to zero, the denominator
+		 * to 1).
+		 * 
+		 * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from \p int.
+		 */
+		mp_rational(): m_num(),m_den(1) {}
+		/// Defaulted copy constructor.
 		mp_rational(const mp_rational &) = default;
+		/// Defaulted move constructor.
 		mp_rational(mp_rational &&) = default;
+		/// Constructor from numerator/denominator pair.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p I0 and \p I1 are either integral types or piranha::integer.
+		 * 
+		 * @param[in] n numerator.
+		 * @param[in] d denominator.
+		 * 
+		 * @throws piranha::zero_division_error if the denominator is zero.
+		 * @throws unspecified any exception thrown by the invoked constructor of piranha::mp_integer.
+		 */
 		template <typename I0, typename I1, typename = nd_ctor_enabler<I0,I1>>
 		explicit mp_rational(const I0 &n, const I1 &d):m_num(n),m_den(d)
 		{
@@ -158,58 +213,97 @@ class mp_rational
 			}
 			canonicalise();
 		}
+		/// Constructor from interoperable type.
 		template <typename T, typename = generic_ctor_enabler<T>>
 		explicit mp_rational(const T &x)
 		{
 			construct_from_interoperable(x);
 		}
+		/// Destructor.
 		~mp_rational() noexcept
 		{
+			// NOTE: no checks no the numerator as we might mess it up
+			// with the low-level methods.
 			piranha_assert(!math::is_zero(m_den) != 0);
-			piranha_assert(!math::is_zero(m_num) || (math::is_zero(m_num) && m_den == 1));
 			piranha_assert(m_den.sign() > 0);
 		}
+		/// Defaulted copy assignment operator.
 		mp_rational &operator=(const mp_rational &) = default;
+		/// Defaulted move assignment operator.
 		mp_rational &operator=(mp_rational &&) = default;
+		/// Stream operator.
+		/**
+		 * The printing format is as follows:
+		 * - only the numerator is printed if the denominator is 1,
+		 * - otherwise, numerator and denominator are printed separated by a '/' sign.
+		 * 
+		 * @param[in,out] os target stream.
+		 * @param[in] q rational to be printed.
+		 * 
+		 * @return reference to \p os.
+		 * 
+		 * @throws unspecified any exception thrown by the streaming operator of piranha::mp_integer.
+		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_rational &q)
 		{
-			if (q.m_num.sign() == 0) {
-				os << '0';
-			} else if (q.m_den == 1) {
+			if (q.m_den == 1) {
 				os << q.m_num;
 			} else {
 				os << q.m_num << '/' << q.m_den;
 			}
 			return os;
 		}
+		/// Get const reference to the numerator.
 		const int_type &num() const noexcept
 		{
 			return m_num;
 		}
+		/// Get const reference to the denominator.
 		const int_type &den() const noexcept
 		{
 			return m_den;
 		}
+		/// Canonicality check.
+		/**
+		 * A rational number is in canonical form when the denominator is positive
+		 * and numerator and denominator are coprime. A zero numerator must be paired
+		 * to a 1 denominator.
+		 * 
+		 * If low-level methods are not used, this function will always return \p true.
+		 * 
+		 * @return \p true if \p this is in canonical form, \p false otherwise.
+		 */
 		bool is_canonical() const noexcept
 		{
-			return boost::math::gcd(m_num,m_den) == 1;
+			// NOTE: here the GCD only involves operations on mp_integers
+			// and thus it never throws. The construction from 1 in the comparisons will
+			// not throw either.
+			return m_den.sign() == 1 && ((m_num.sign() != 0 && detail::gcd(m_num,m_den) == 1) ||
+				(m_num.sign() == 0 && m_den == 1));
 		}
-		void canonicalise()
+		/// Canonicalise.
+		/**
+		 * This method will convert \p this to the canonical form, if needed.
+		 * 
+		 * @see piranha::mp_rational::is_canonical().
+		 */
+		void canonicalise() noexcept
 		{
-			// Denominator cannot be negative.
-			if (m_den.sign() == -1) {
-				m_num.negate();
-				m_den.negate();
-			}
-			// Nothing to do if the denominator is 1.
-			if (m_den == 1) {
+			// If the top is null, den must be one.
+			if (m_num.sign() == 0) {
+				m_den = 1;
 				return;
 			}
-			const int_type gcd = boost::math::gcd(m_num,m_den);
+			const int_type gcd = detail::gcd(m_num,m_den);
 			// Num and den are coprime already, no need for further divisions.
 			if (gcd != 1) {
 				m_num /= gcd;
 				m_den /= gcd;
+			}
+			// Fix mismatch in signs.
+			if (m_den.sign() == -1) {
+				m_num.negate();
+				m_den.negate();
 			}
 		}
 		template <typename T, typename = cast_enabler<T>>
@@ -217,6 +311,34 @@ class mp_rational
 		{
 			return convert_to_impl<T>();
 		}
+		/** @name Low-level interface
+		 * Low-level methods.
+		 */
+		//@{
+		/// Mutable reference to the numerator.
+		/**
+		 * @return mutable reference to the numerator.
+		 */
+		int_type &_num() noexcept
+		{
+			return m_num;
+		}
+		/// Set denominator.
+	        /**
+	         * This method will set the denominator to \p den without canonicalising the rational.
+	         * 
+	         * @param[in] den desired value for the denominator.
+	         * 
+	         * @throws piranha::zero_division_error if \p den is zero.
+	         */
+		void _set_den(const int_type &den)
+		{
+			if (unlikely(den.sign() == 0)) {
+				piranha_throw(zero_division_error,"zero denominator in rational");
+			}
+			m_den = den;
+		}
+		//@}
 	private:
 		int_type	m_num;
 		int_type	m_den;
