@@ -233,7 +233,6 @@ class mp_rational
 		{
 			// NOTE: no checks no the numerator as we might mess it up
 			// with the low-level methods.
-			piranha_assert(!math::is_zero(m_den) != 0);
 			piranha_assert(m_den.sign() > 0);
 		}
 		/// Defaulted copy assignment operator.
@@ -321,7 +320,8 @@ class mp_rational
 			return convert_to_impl<T>();
 		}
 		/** @name Low-level interface
-		 * Low-level methods.
+		 * Low-level methods. These methods allow direct mutable access to numerator and
+		 * denominator, and they will not keep the rational in canonical form.
 		 */
 		//@{
 		/// Mutable reference to the numerator.
