@@ -213,7 +213,16 @@ class mp_rational
 			}
 			canonicalise();
 		}
-		/// Constructor from interoperable type.
+		/// Generic constructor.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
+		 * 
+		 * @param[in] x object used to construct \p this.
+		 * 
+		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
+		 * floating-point value).
+		 */
 		template <typename T, typename = generic_ctor_enabler<T>>
 		explicit mp_rational(const T &x)
 		{
@@ -265,9 +274,8 @@ class mp_rational
 		}
 		/// Canonicality check.
 		/**
-		 * A rational number is in canonical form when the denominator is positive
-		 * and numerator and denominator are coprime. A zero numerator must be paired
-		 * to a 1 denominator.
+		 * A rational number is in canonical form when numerator and denominator
+		 * are coprime. A zero numerator must be paired to a 1 denominator.
 		 * 
 		 * If low-level methods are not used, this function will always return \p true.
 		 * 
@@ -279,8 +287,8 @@ class mp_rational
 			// and thus it never throws. The construction from 1 in the comparisons will
 			// not throw either.
 			const auto gcd = detail::gcd(m_num,m_den);
-			return m_den.sign() == 1 && ((m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
-				(m_num.sign() == 0 && m_den == 1));
+			return (m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
+				(m_num.sign() == 0 && m_den == 1);
 		}
 		/// Canonicalise.
 		/**

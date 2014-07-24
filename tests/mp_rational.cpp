@@ -114,6 +114,7 @@ struct constructor_tester
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
 		std::cout << "NBits,size,align: " << T::value << ',' << sizeof(q_type) << ',' << alignof(q_type) << '\n';
 		q_type q;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),"0");
@@ -137,7 +138,7 @@ struct constructor_tester
 		BOOST_CHECK((std::is_constructible<q_type,int,int>::value));
 		BOOST_CHECK((std::is_constructible<q_type,int,unsigned>::value));
 		BOOST_CHECK((std::is_constructible<q_type,char,long>::value));
-		BOOST_CHECK((std::is_constructible<q_type,typename q_type::int_type,long>::value));
+		BOOST_CHECK((std::is_constructible<q_type,int_type,long>::value));
 		BOOST_CHECK(!(std::is_constructible<q_type,double,long>::value));
 		BOOST_CHECK(!(std::is_constructible<q_type,float,double>::value));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{2,4}),"1/2");
@@ -185,6 +186,59 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q6),boost::lexical_cast<std::string>(q_type(q5)));
 		q6 = std::move(q5);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q6),boost::lexical_cast<std::string>(q_type(q4)));
+		// Construction from interoperable types.
+		q_type q7{7};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q7),"7");
+		q_type q8{-8l};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q8),"-8");
+		q_type q9{100ull};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q9),"100");
+		q_type q10{(signed char)(-3)};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q10),"-3");
+		for (int i = 0; i < ntries; ++i) {
+			const int tmp = dist(rng);
+			q_type tmp_q{tmp};
+			::mpq_set_si(&m.m_mpq,static_cast<long>(tmp),1ul);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m),boost::lexical_cast<std::string>(tmp_q));
+		}
+		// Floating-point.
+		const unsigned dradix = static_cast<unsigned>(std::numeric_limits<double>::radix);
+		double tmp(1);
+		tmp /= dradix;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}),std::string("1/")+boost::lexical_cast<std::string>(dradix));
+		tmp /= dradix;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}),std::string("1/")+boost::lexical_cast<std::string>(int_type(dradix).pow(2)));
+		tmp = 0.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{tmp}),"0");
+		const unsigned ldradix = static_cast<unsigned>(std::numeric_limits<long double>::radix);
+		long double ltmp(1);
+		ltmp /= ldradix;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),std::string("1/")+boost::lexical_cast<std::string>(ldradix));
+		ltmp /= ldradix;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),std::string("1/")+boost::lexical_cast<std::string>(int_type(ldradix).pow(2)));
+		ltmp = 0.;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),"0");
+		// Random testing.
+		std::uniform_real_distribution<double> ddist(0,std::numeric_limits<double>::max());
+		for (int i = 0; i < ntries / 10; ++i) {
+			const double tmp = ddist(rng);
+			q_type tmp_q{tmp};
+			::mpq_set_d(&m.m_mpq,tmp);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m),boost::lexical_cast<std::string>(tmp_q));
+		}
+		std::uniform_real_distribution<double> ddist2(-5,5);
+		for (int i = 0; i < ntries / 10; ++i) {
+			const double tmp = ddist2(rng);
+			q_type tmp_q{tmp};
+			::mpq_set_d(&m.m_mpq,tmp);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m),boost::lexical_cast<std::string>(tmp_q));
+		}
+		if (std::numeric_limits<double>::has_infinity) {
+			BOOST_CHECK_THROW(q_type{std::numeric_limits<double>::infinity()},std::invalid_argument);
+		}
+		if (std::numeric_limits<double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(q_type{std::numeric_limits<double>::quiet_NaN()},std::invalid_argument);
+		}
 	}
 };
 
@@ -192,4 +246,41 @@ BOOST_AUTO_TEST_CASE(mp_rational_constructor_test)
 {
 	environment env;
 	boost::mpl::for_each<size_types>(constructor_tester());
+}
+
+struct ll_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		q_type q;
+		q._num() = int_type{3};
+		BOOST_CHECK_EQUAL(q.num(),3);
+		BOOST_CHECK_EQUAL(q.den(),1);
+		q._set_den(int_type{2});
+		BOOST_CHECK_EQUAL(q.den(),2);
+		q._num() = int_type{4};
+		BOOST_CHECK(!q.is_canonical());
+		q.canonicalise();
+		BOOST_CHECK(q.is_canonical());
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q),"2");
+		q._num() = int_type{0};
+		q._set_den(int_type{3});
+		BOOST_CHECK(!q.is_canonical());
+		q.canonicalise();
+		BOOST_CHECK_EQUAL(q.num(),0);
+		BOOST_CHECK_EQUAL(q.den(),1);
+		BOOST_CHECK(q.is_canonical());
+		BOOST_CHECK_THROW(q._set_den(int_type{0}),std::invalid_argument);
+		BOOST_CHECK_THROW(q._set_den(int_type{-1}),std::invalid_argument);
+		BOOST_CHECK_EQUAL(q.num(),0);
+		BOOST_CHECK_EQUAL(q.den(),1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_low_level_test)
+{
+	boost::mpl::for_each<size_types>(ll_tester());
 }
