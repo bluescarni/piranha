@@ -46,12 +46,16 @@ IF(BUILD_PYRANHA)
 ENDIF(BUILD_PYRANHA)
 
 # Boost libraries setup.
-SET(REQUIRED_BOOST_LIBS serialization timer system)
-# Look for Boost.Test only if we are building unit tests.
+SET(REQUIRED_BOOST_LIBS serialization system)
+# Look for test and timer only if we are building unit tests.
 IF(BUILD_TESTS)
 	MESSAGE(STATUS "Linking unit tests to Boost.Test.")
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} unit_test_framework)
-ENDIF(BUILD_TESTS)
+	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+		MESSAGE(STATUS "Linking performance tests to Boost Timer and Boost.Chrono.")
+		SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} timer chrono)
+	ENDIF()
+ENDIF()
 IF(BUILD_PYRANHA)
 	SET(REQUIRED_BOOST_LIBS ${REQUIRED_BOOST_LIBS} python)
 ENDIF(BUILD_PYRANHA)
@@ -63,9 +67,9 @@ MESSAGE(STATUS "Detected Boost version: ${Boost_VERSION}")
 MESSAGE(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
 MESSAGE(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-# Set the mandatory Boost libraries. NOTE: here we do not include the unit testing, since it will only be useful
-# when compiling tests.
-SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+# Set the mandatory Boost libraries. NOTE: here we do not include the test and timer libraries
+# since they will only be useful when compiling tests.
+SET(MANDATORY_LIBRARIES ${MANDATORY_LIBRARIES} ${Boost_SERIALIZATION_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 
 # GMP setup.
 FIND_PACKAGE(GMP REQUIRED)
