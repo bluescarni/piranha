@@ -284,3 +284,38 @@ BOOST_AUTO_TEST_CASE(mp_rational_low_level_test)
 {
 	boost::mpl::for_each<size_types>(ll_tester());
 }
+
+struct conversion_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		q_type q;
+		BOOST_CHECK_EQUAL(static_cast<int>(q),0);
+		BOOST_CHECK_EQUAL(static_cast<signed char>(q),0);
+		BOOST_CHECK_EQUAL(static_cast<double>(q),0.);
+		q_type q1(-3,5);
+		BOOST_CHECK_EQUAL(static_cast<int>(q1),0);
+		BOOST_CHECK_EQUAL(static_cast<int_type>(q1),0);
+		BOOST_CHECK_EQUAL(static_cast<double>(q1),-3./5.);
+		q_type q2(20,-5);
+		BOOST_CHECK_EQUAL(static_cast<int>(q2),-4);
+		BOOST_CHECK_EQUAL(static_cast<int_type>(q2),-4);
+		BOOST_CHECK_EQUAL(static_cast<long double>(q2),20.l/-5.l);
+		q_type q3(std::numeric_limits<long long>::max());
+		q3._num() += 1;
+		BOOST_CHECK_THROW(static_cast<long long>(q3),std::overflow_error);
+		if (std::numeric_limits<long double>::has_infinity) {
+			q_type q4(std::numeric_limits<long double>::max());
+			q4._num() *= q4._num();
+			BOOST_CHECK_EQUAL(static_cast<long double>(q4),std::numeric_limits<long double>::infinity());
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_conversion_test)
+{
+	boost::mpl::for_each<size_types>(conversion_tester());
+}

@@ -179,7 +179,21 @@ class mp_rational
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
 		{
+			// NOTE: there are better ways of doing this. For instance, here we could generate an inf even
+			// if the result is actually representable. It also would be nice if this routine could short-circuit,
+			// that is, for every rational generated from a float we get back exactly the same float after the cast.
+			// The approach in GMP mpq might work for this, but it's not essential really.
 			return static_cast<Float>(m_num) / static_cast<Float>(m_den);
+		}
+		template <typename Integral>
+		Integral convert_to_impl(typename std::enable_if<std::is_integral<Integral>::value>::type * = nullptr) const
+		{
+			return static_cast<Integral>(static_cast<int_type>(*this));
+		}
+		template <typename MpInteger>
+		MpInteger convert_to_impl(typename std::enable_if<std::is_same<MpInteger,int_type>::value>::type * = nullptr) const
+		{
+			return m_num / m_den;
 		}
 	public:
 		/// Default constructor.
@@ -314,6 +328,20 @@ class mp_rational
 				m_den.negate();
 			}
 		}
+		/// Conversion operator.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 *
+		 * The conversion to piranha::mp_integer is computed by dividing the numerator by the denominator.
+		 * The conversion to integral types is computed by casting first to piranha::mp_integer, then to
+		 * the target integral type. The conversion to floating-point types might generate non-finite values.
+		 *
+		 * @return the value of \p this converted to type \p T.
+		 *
+		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
+		 * is insufficient to represent the value of <tt>this</tt>).
+		 */
 		template <typename T, typename = cast_enabler<T>>
 		explicit operator T() const
 		{
