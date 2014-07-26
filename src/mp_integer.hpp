@@ -328,7 +328,7 @@ struct static_integer
 	}
 	mpz_size_t abs_size() const
 	{
-		return (_mp_size >= 0) ? _mp_size : -_mp_size;
+		return static_cast<mpz_size_t>((_mp_size >= 0) ? _mp_size : -_mp_size);
 	}
 	// Convert static integer to a GMP mpz. The out struct must be initialized to zero.
 	void to_mpz(mpz_struct_t &out) const
