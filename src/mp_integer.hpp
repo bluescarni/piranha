@@ -145,6 +145,9 @@ struct si_limb_types
 };
 
 #if defined(PIRANHA_UINT128_T)
+// NOTE: we are lacking native 128 bit types on MSVC, it should be possible to implement them
+// though using primitives like this:
+// http://msdn.microsoft.com/en-us/library/windows/desktop/hh802931(v=vs.85).aspx
 template <>
 struct si_limb_types<64>
 {
