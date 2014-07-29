@@ -205,7 +205,7 @@ struct mpz_raii
 	mpz_raii(mpz_raii &&) = delete;
 	mpz_raii &operator=(const mpz_raii &) = delete;
 	mpz_raii &operator=(mpz_raii &&) = delete;
-	~mpz_raii() noexcept
+	~mpz_raii()
 	{
 		if (m_mpz._mp_d != nullptr) {
 			::mpz_clear(&m_mpz);
@@ -280,7 +280,7 @@ struct static_integer
 	}
 	static_integer(const static_integer &) = default;
 	static_integer(static_integer &&) = default;
-	~static_integer() noexcept
+	~static_integer()
 	{
 		piranha_assert(consistency_checks());
 	}
@@ -800,7 +800,7 @@ union integer_union
 				::new (static_cast<void *>(&other.m_st)) s_storage();
 			}
 		}
-		~integer_union() noexcept
+		~integer_union()
 		{
 			if (is_static()) {
 				g_st().~s_storage();
@@ -960,9 +960,11 @@ union integer_union
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 /*
- * \todo performance improvements:
+ * TOO performance improvements:
  *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
  *     holder so that we avoid double allocations;
+ *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
+ *     we can use mp_integer directly - this could be a performance improvement;
  *   - avoid going through mpz for print to stream,
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
  *   - in raw_add/sub/div we always operate assuming the static int has 2 limbs, maybe there's performance to be gained
@@ -973,7 +975,9 @@ union integer_union
  *   - it seems like there might be performance to be gained by dropping exceptions for signalling overflow in add and mul;
  *     try to replace with error code and see if it makes a difference. Probably we only want this for add, mul and
  *     multiply_accumulate.
- * - probably the assignment operator should demote to static if possible.
+ * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
+ *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
+ *   rational.
  */
 template <int NBits = 0>
 class mp_integer

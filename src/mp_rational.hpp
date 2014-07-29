@@ -243,7 +243,7 @@ class mp_rational
 			construct_from_interoperable(x);
 		}
 		/// Destructor.
-		~mp_rational() noexcept
+		~mp_rational()
 		{
 			// NOTE: no checks no the numerator as we might mess it up
 			// with the low-level methods.

@@ -45,6 +45,8 @@
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
+// TODO type traits chacks.
+//#include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
