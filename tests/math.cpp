@@ -239,22 +239,23 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 {
 	BOOST_CHECK(math::pow(2.,2.) == std::pow(2.,2.));
 	BOOST_CHECK(math::pow(2.f,2.) == std::pow(2.f,2.));
-	BOOST_CHECK(math::pow(2.,2.f) == std::pow(2,2.f));
+	BOOST_CHECK(math::pow(2.,2.f) == std::pow(2.,2.f));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2.)),double>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.f)),float>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2.f)),double>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.)),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2)),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.L)),long double>::value));
 	BOOST_CHECK(math::pow(2.,2) == std::pow(2.,2));
 	BOOST_CHECK(math::pow(2.f,2) == std::pow(2.f,2));
+	BOOST_CHECK(math::pow(2ll,char(8)) == std::pow(2.,8.));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2)),double>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2)),double>::value));
-	BOOST_CHECK(math::pow(2.,integer(2)) == std::pow(2.,2));
-	BOOST_CHECK((std::is_same<decltype(math::pow(2.,integer(2))),double>::value));
-	if (boost::integer_traits<long long>::const_max > boost::integer_traits<int>::const_max) {
-		BOOST_CHECK_THROW(math::pow(2.,static_cast<long long>(boost::integer_traits<int>::const_max)+1),std::bad_cast);
-	}
-	BOOST_CHECK_THROW(math::pow(2.,integer(boost::integer_traits<int>::const_max)+1),std::overflow_error);
+	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,char(2))),double>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow((unsigned long)(4),char(2))),double>::value));
 	BOOST_CHECK((is_exponentiable<double,double>::value));
+	BOOST_CHECK((is_exponentiable<double,unsigned short>::value));
+	BOOST_CHECK((is_exponentiable<char,unsigned short>::value));
 	BOOST_CHECK((is_exponentiable<double &,double>::value));
 	BOOST_CHECK((is_exponentiable<const double,double>::value));
 	BOOST_CHECK((is_exponentiable<double &,double &>::value));
@@ -264,12 +265,6 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 	BOOST_CHECK((is_exponentiable<double,float>::value));
 	BOOST_CHECK((is_exponentiable<double,int>::value));
 	BOOST_CHECK((is_exponentiable<float,char>::value));
-	BOOST_CHECK((is_exponentiable<float,integer>::value));
-	BOOST_CHECK((is_exponentiable<double,integer>::value));
-	BOOST_CHECK((!is_exponentiable<std::string,integer>::value));
-	BOOST_CHECK((!is_exponentiable<std::string,integer &>::value));
-	BOOST_CHECK((!is_exponentiable<std::string &,integer &>::value));
-	BOOST_CHECK((!is_exponentiable<int,integer>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_sin_cos_test)

@@ -735,7 +735,12 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
 	BOOST_CHECK_THROW(piranha::integer(1).pow(piranha::integer(boost::integer_traits<unsigned long>::const_max) * -1 - 1),std::invalid_argument);
 	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),2),100);
+	BOOST_CHECK_EQUAL(piranha::math::pow(2,piranha::integer(10)),1024);
+	BOOST_CHECK_EQUAL(piranha::math::pow(2ull,piranha::integer(10)),1024);
+	BOOST_CHECK((std::is_same<decltype(piranha::math::pow(2ull,piranha::integer(10))),piranha::integer>::value));
+	BOOST_CHECK((std::is_same<decltype(piranha::math::pow(char(2),piranha::integer(10))),piranha::integer>::value));
 	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),-2),0);
+	BOOST_CHECK_EQUAL(piranha::math::pow(char(3),piranha::integer(10)),59049ll);
 	BOOST_CHECK_THROW(piranha::math::pow(piranha::integer(1),piranha::integer(boost::integer_traits<unsigned long>::const_max) * 10),std::invalid_argument);
 	BOOST_CHECK((piranha::is_exponentiable<piranha::integer,piranha::integer>::value));
 	BOOST_CHECK((piranha::is_exponentiable<piranha::integer,int>::value));
@@ -745,9 +750,13 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 	BOOST_CHECK((piranha::is_exponentiable<piranha::integer &,char>::value));
 	BOOST_CHECK((piranha::is_exponentiable<const piranha::integer &,char>::value));
 	BOOST_CHECK((piranha::is_exponentiable<piranha::integer &,char &>::value));
-	BOOST_CHECK((!piranha::is_exponentiable<piranha::integer,float>::value));
-	BOOST_CHECK((!piranha::is_exponentiable<piranha::integer,double>::value));
+	BOOST_CHECK((piranha::is_exponentiable<piranha::integer,float>::value));
+	BOOST_CHECK((piranha::is_exponentiable<piranha::integer,double>::value));
 	BOOST_CHECK((!piranha::is_exponentiable<piranha::integer,std::string>::value));
+	BOOST_CHECK((piranha::is_exponentiable<double,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_exponentiable<float,piranha::integer>::value));
+	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),-2.),std::pow(10.,-2.));
+	BOOST_CHECK_EQUAL(piranha::math::pow(-2.,piranha::integer(10)),std::pow(-2.,10.));
 }
 
 BOOST_AUTO_TEST_CASE(integer_hash_test)

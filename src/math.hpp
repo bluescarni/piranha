@@ -49,33 +49,6 @@
 namespace piranha
 {
 
-namespace detail
-{
-
-// Implementation of exponentiation with floating-point base.
-template <typename T, typename U>
-inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
-	std::is_integral<U>::value>::type * = nullptr) -> decltype(std::pow(x,boost::numeric_cast<int>(n)))
-{
-	return std::pow(x,boost::numeric_cast<int>(n));
-}
-
-template <typename T, typename U>
-inline auto float_pow_impl(const T &x, const U &n, typename std::enable_if<
-	std::is_same<integer,U>::value>::type * = nullptr) -> decltype(std::pow(x,static_cast<int>(n)))
-{
-	return std::pow(x,static_cast<int>(n));
-}
-
-template <typename T, typename U>
-inline auto float_pow_impl(const T &x, const U &y, typename std::enable_if<
-	std::is_floating_point<U>::value>::type * = nullptr) -> decltype(std::pow(x,y))
-{
-	return std::pow(x,y);
-}
-
-}
-
 /// Math namespace.
 /**
  * Namespace for general-purpose mathematical functions.
@@ -299,31 +272,30 @@ template <typename T, typename U, typename Enable = void>
 struct pow_impl
 {};
 
-/// Specialisation of the piranha::math::pow() functor for floating-point bases.
+/// Specialisation of the piranha::math::pow() functor for arithmetic types.
 /**
- * This specialisation is activated when \p T is a floating-point type and \p U is either a floating-point type,
- * an integral type or piranha::integer. The result will be computed via the standard <tt>std::pow()</tt> function.
+ * This specialisation is activated when both arguments are C++ arithmetic types.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
-	(std::is_floating_point<U>::value || std::is_integral<U>::value || std::is_same<U,integer>::value)>::type>
+struct pow_impl<T,U,typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<U>::value>::type>
 {
-	/// Call operator.
+	/// Generic call operator.
 	/**
-	 * The exponentiation will be computed via <tt>std::pow()</tt>. In case \p U2 is an integral type or piranha::integer,
-	 * \p y will be converted to \p int via <tt>boost::numeric_cast()</tt> or <tt>static_cast()</tt>.
+	 * \note
+	 * This operator is enabled only if the expression <tt>std::pow(x,y)</tt> is well-formed.
+	 * 
+	 * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
 	 * 
 	 * @param[in] x base.
-	 * @param[in] y exponent.
+	 * @param[out] y exponent.
 	 * 
-	 * @return \p x to the power of \p y.
-	 * 
-	 * @throws unspecified any exception resulting from numerical conversion failures in <tt>boost::numeric_cast()</tt> or <tt>static_cast()</tt>.
+	 * @return <tt>x**y</tt>.
 	 */
-	auto operator()(const T &x, const U &y) const -> decltype(detail::float_pow_impl(x,y))
+	template <typename T2, typename U2>
+	auto operator()(const T2 &x, const U2 &y) const noexcept -> decltype(std::pow(x,y))
 	{
-		return detail::float_pow_impl(x,y);
-	}
+		return std::pow(x,y);
+	}	
 };
 
 /// Exponentiation.
