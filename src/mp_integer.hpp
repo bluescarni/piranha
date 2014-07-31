@@ -1850,31 +1850,33 @@ class mp_integer
 		{
 			construct_from_interoperable(x);
 		}
-		/// Constructor from string.
+		/// Constructor from C string.
 		/**
 		 * The string must be a sequence of decimal digits, preceded by a minus sign for
 		 * strictly negative numbers. The first digit of a non-zero number must not be zero. A malformed string will throw an \p std::invalid_argument
 		 * exception.
 		 * 
+		 * Note that if the string is not null-terminated, undefined behaviour will occur.
+		 * 
 		 * @param[in] str decimal string representation of the number used to initialise the integer object.
 		 * 
 		 * @throws std::invalid_argument if the string is malformed.
 		 */
-		explicit mp_integer(const std::string &str)
-		{
-			construct_from_string(str.c_str());
-		}
-		/// Constructor from C string.
-		/**
-		 * Equivalent to the constructor from C++ string.
-		 * 
-		 * @param[in] str decimal string representation of the number used to initialise the integer object.
-		 * 
-		 * @see mp_integer(const std::string &)
-		 */
 		explicit mp_integer(const char *str)
 		{
 			construct_from_string(str);
+		}
+		/// Constructor from C++ string.
+		/**
+		 * Equivalent to the constructor from C string.
+		 * 
+		 * @param[in] str decimal string representation of the number used to initialise the integer object.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from C string.
+		 */
+		explicit mp_integer(const std::string &str)
+		{
+			construct_from_string(str.c_str());
 		}
 		/// Defaulted destructor.
 		~mp_integer() = default;
