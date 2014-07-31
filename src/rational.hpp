@@ -184,8 +184,13 @@ class rational
 				integer::validate_string(str,num_size);
 				if (*ptr == '/') {
 					integer::validate_string(ptr + 1u,std::strlen(ptr + 1u));
+					// Check if denominator is zero.
+					integer tmp{ptr + 1u};
+					if (unlikely(tmp.sign() == 0)) {
+						piranha_throw(zero_division_error,"zero denominator");
+					}
 				}
-			} catch (...) {
+			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,"invalid string input for rational type");
 			}
 		}

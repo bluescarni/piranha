@@ -100,6 +100,9 @@ BOOST_AUTO_TEST_CASE(rational_constructors_test)
 	BOOST_CHECK_EQUAL(128,static_cast<int>(rational("-128/-1")));
 	BOOST_CHECK_EQUAL(128,static_cast<int>(rational("256/2")));
 	BOOST_CHECK_EQUAL(-128,static_cast<int>(rational("256/-2")));
+	BOOST_CHECK_THROW(rational{"3/0"},zero_division_error);
+	BOOST_CHECK_THROW(rational{"-3/0"},zero_division_error);
+	BOOST_CHECK_THROW(rational{"0/0"},zero_division_error);
 	// Construction from malformed strings.
 	std::unique_ptr<rational> ptr;
 	for (std::vector<std::string>::const_iterator it = invalid_strings.begin(); it != invalid_strings.end(); ++it) {
