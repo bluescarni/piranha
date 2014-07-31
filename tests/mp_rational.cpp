@@ -263,6 +263,7 @@ struct constructor_tester
 		BOOST_CHECK_THROW(q_type{"03/2"},std::invalid_argument);
 		BOOST_CHECK_THROW(q_type{"3/5/2"},std::invalid_argument);
 		BOOST_CHECK_THROW(q_type{"3/0"},zero_division_error);
+		BOOST_CHECK_THROW(q_type{"0/0"},zero_division_error);
 		BOOST_CHECK_THROW(q_type{"3/-0"},std::invalid_argument);
 		BOOST_CHECK_THROW(q_type{"0/-0"},std::invalid_argument);
 		BOOST_CHECK_THROW(q_type{"-0/-0"},std::invalid_argument);
