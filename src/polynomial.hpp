@@ -1139,8 +1139,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				}
 			}
 			// Prepare the storage for multiplication.
-			std::vector<typename term_type1::cf_type> cf_vector;
-			cf_vector.resize(boost::numeric_cast<decltype(cf_vector.size())>((hmax - hmin) + 1));
+			// NOTE: init everything explicitly to zero, as we make no assumption about the value of a default-cted
+			// coefficient.
+			using cf_vector_type = std::vector<typename term_type1::cf_type>;
+			 cf_vector_type cf_vector(boost::numeric_cast<typename cf_vector_type::size_type>((hmax - hmin) + 1),
+				typename term_type1::cf_type(0));
 			if (n_threads == 1u) {
 				// Single-thread multiplication.
 				const auto it_f = task_list.end();
