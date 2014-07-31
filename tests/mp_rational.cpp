@@ -241,6 +241,43 @@ struct constructor_tester
 		if (std::numeric_limits<double>::has_quiet_NaN) {
 			BOOST_CHECK_THROW(q_type{std::numeric_limits<double>::quiet_NaN()},std::invalid_argument);
 		}
+		// Constructor from string.
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{"0"}),"0");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{"1"}),"1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{"2/-1"}),"-2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{"-4/-2"}),"2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{"-432132131123/-289938282"}),
+			boost::lexical_cast<std::string>(q_type{int_type{"-432132131123"},int_type{"-289938282"}}));
+		BOOST_CHECK_THROW(q_type{"-/-2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"/2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3 /2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/ 2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/2 "},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"+3/2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/+2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3a/2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/2 1"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/2a1"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/02"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"03/2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/5/2"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"3/0"},zero_division_error);
+		BOOST_CHECK_THROW(q_type{"3/-0"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"0/-0"},std::invalid_argument);
+		BOOST_CHECK_THROW(q_type{"-0/-0"},std::invalid_argument);
+		// Random testing.
+		for (int i = 0; i < ntries; ++i) {
+			const int tmp_num = dist(rng), tmp_den = dist(rng);
+			if (tmp_den == 0) {
+				continue;
+			}
+			q_type tmp_q{boost::lexical_cast<std::string>(tmp_num)+"/"+boost::lexical_cast<std::string>(tmp_den)};
+			::mpz_set_si(mpq_numref(&m.m_mpq),static_cast<long>(tmp_num));
+			::mpz_set_si(mpq_denref(&m.m_mpq),static_cast<long>(tmp_den));
+			::mpq_canonicalize(&m.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m),boost::lexical_cast<std::string>(tmp_q));
+		}
 	}
 };
 

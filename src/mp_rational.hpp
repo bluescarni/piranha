@@ -23,6 +23,8 @@
 
 #include <climits>
 #include <cmath>
+#include <cstddef>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -223,7 +225,7 @@ class mp_rational
 		explicit mp_rational(const I0 &n, const I1 &d):m_num(n),m_den(d)
 		{
 			if (unlikely(m_den.sign() == 0)) {
-				piranha_throw(zero_division_error,"zero denominator in rational");
+				piranha_throw(zero_division_error,"zero denominator");
 			}
 			canonicalise();
 		}
@@ -242,6 +244,56 @@ class mp_rational
 		{
 			construct_from_interoperable(x);
 		}
+		/// Constructor from C string.
+		/**
+		 * The string must represent either a valid single piranha::mp_integer, or two valid piranha::mp_integer
+		 * separated by "/". The rational will be put in canonical form by this constructor.
+		 * 
+		 * Note that if the string is not null-terminated, undefined behaviour will occur.
+		 * 
+		 * @param[in] str C string used for construction.
+		 * 
+		 * @throws std::invalid_argument if the string is not formatted correctly.
+		 * @throws piranha::zero_division_error if the denominator, if present, is zero.
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::mp_integer
+		 * or by memory errors in \p std::string.
+		 */
+		explicit mp_rational(const char *str):m_num(),m_den(1)
+		{
+			// String validation.
+			auto ptr = str;
+			std::size_t num_size = 0u;
+			while (*ptr != '\0' && *ptr != '/') {
+				++num_size;
+				++ptr;
+			}
+			try {
+				int_type::validate_string(str,num_size);
+				if (*ptr == '/') {
+					int_type::validate_string(ptr + 1u,std::strlen(ptr + 1u));
+				}
+			} catch (...) {
+				piranha_throw(std::invalid_argument,"invalid string input for rational type");
+			}
+			// String is ok, proceed with construction.
+			m_num = int_type(std::string(str,str + num_size));
+			if (*ptr == '/') {
+				m_den = int_type(std::string(ptr + 1u));
+				if (unlikely(math::is_zero(m_den))) {
+					piranha_throw(zero_division_error,"zero denominator");
+				}
+				canonicalise();
+			}
+		}
+		/// Constructor from C++ string.
+		/**
+		 * Equivalent to the constructor from C string.
+		 * 
+		 * @param[in] str C string used for construction.
+		 * 
+		 * @throws unspecified any exception thrown by the constructor from C string.
+		 */
+		explicit mp_rational(const std::string &str):mp_rational(str.c_str()) {}
 		/// Destructor.
 		~mp_rational()
 		{
