@@ -92,7 +92,6 @@
  * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside piranha::math
  * and hence always include the math:: qualifier).
  * \todo consider replacing uses of iterator facade with inheritance from std::iterator.
- * \todo drop noexcept(true) on constructors once we move to gcc 4.8: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=56191.
  * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.

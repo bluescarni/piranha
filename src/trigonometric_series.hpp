@@ -150,7 +150,7 @@ class trigonometric_series: public Series
 		/// Defaulted move assignment operator.
 		trigonometric_series &operator=(trigonometric_series &&) = default;
 		/// Trivial destructor.
-		~trigonometric_series() noexcept(true)
+		~trigonometric_series()
 		{
 			PIRANHA_TT_CHECK(is_series,trigonometric_series);
 		}

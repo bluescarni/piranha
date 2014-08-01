@@ -274,7 +274,7 @@ class real_trigonometric_kronecker_monomial
 			}
 		}
 		/// Trivial destructor.
-		~real_trigonometric_kronecker_monomial() noexcept(true)
+		~real_trigonometric_kronecker_monomial()
 		{
 			PIRANHA_TT_CHECK(is_key,real_trigonometric_kronecker_monomial);
 		}

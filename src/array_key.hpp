@@ -189,7 +189,7 @@ class array_key
 				std::back_inserter(m_container),[](const U &x) {return value_type(x);});
 		}
 		/// Trivial destructor.
-		~array_key() noexcept
+		~array_key()
 		{
 			PIRANHA_TT_CHECK(is_container_element,Derived);
 			PIRANHA_TT_CHECK(std::is_base_of,array_key,Derived);

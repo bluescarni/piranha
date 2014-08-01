@@ -884,7 +884,7 @@ class series: series_binary_operators, detail::series_tag
 			dispatch_generic_construction(std::forward<T>(x));
 		}
 		/// Trivial destructor.
-		~series() noexcept(true)
+		~series()
 		{
 			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
 			PIRANHA_TT_CHECK(is_container_element,Derived);

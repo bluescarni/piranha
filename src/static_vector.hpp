@@ -219,7 +219,7 @@ class static_vector
 		/**
 		 * Will destroy all elements of the vector.
 		 */
-		~static_vector() noexcept
+		~static_vector()
 		{
 			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);

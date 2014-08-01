@@ -100,7 +100,7 @@ class base_term
 			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
 			>::type * = nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
-		~base_term() noexcept(true);
+		~base_term();
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
@@ -227,7 +227,7 @@ template <typename T>
 const bool is_term<T>::value;
 
 template <typename Cf, typename Key, typename Derived>
-inline base_term<Cf,Key,Derived>::~base_term() noexcept(true)
+inline base_term<Cf,Key,Derived>::~base_term()
 {
 	PIRANHA_TT_CHECK(std::is_base_of,base_term,Derived);
 	PIRANHA_TT_CHECK(is_term,Derived);

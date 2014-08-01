@@ -144,7 +144,7 @@ class t_substitutable_series: public Series
 		/// Defaulted move assignment operator.
 		t_substitutable_series &operator=(t_substitutable_series &&) = default;
 		/// Trivial destructor.
-		~t_substitutable_series() noexcept(true)
+		~t_substitutable_series()
 		{
 			PIRANHA_TT_CHECK(is_series,t_substitutable_series);
 			PIRANHA_TT_CHECK(is_series,Derived);

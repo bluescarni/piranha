@@ -264,7 +264,7 @@ class polynomial:
 		}
 		PIRANHA_FORWARDING_CTOR(polynomial,base)
 		/// Trivial destructor.
-		~polynomial() noexcept(true)
+		~polynomial()
 		{
 			PIRANHA_TT_CHECK(is_cf,polynomial);
 			PIRANHA_TT_CHECK(is_series,polynomial);

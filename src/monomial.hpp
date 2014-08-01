@@ -159,7 +159,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
-		~monomial() noexcept
+		~monomial()
 		{
 			PIRANHA_TT_CHECK(is_key,monomial);
 			PIRANHA_TT_CHECK(key_has_degree,monomial);

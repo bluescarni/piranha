@@ -85,7 +85,7 @@ class thread_barrier
 		/**
 		 * No threads must be waiting on this when the destructor is called, otherwise the program will abort.
 		 */
-		~thread_barrier() noexcept
+		~thread_barrier()
 		{
 			try {
 				std::unique_lock<std::mutex> lock(m_mutex);

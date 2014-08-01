@@ -146,7 +146,7 @@ class univariate_monomial
 			}
 		}
 		/// Trivial destructor.
-		~univariate_monomial() noexcept(true)
+		~univariate_monomial()
 		{
 			PIRANHA_TT_CHECK(is_key,univariate_monomial);
 			PIRANHA_TT_CHECK(key_has_degree,univariate_monomial);

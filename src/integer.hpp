@@ -1081,7 +1081,7 @@ class integer
 		/**
 		 * Will clear the internal \p mpz_t type.
 		 */
-		~integer() noexcept(true);
+		~integer();
 		/// Move assignment operator.
 		/**
 		 * @param[in] other integer to be moved.
@@ -2321,7 +2321,7 @@ struct binomial_impl<T,U,typename std::enable_if<std::is_integral<T>::value && s
 
 // NOTE: this needs to be moved after the specialisations for the math functors as
 // the static type trait check needs to see them.
-inline integer::~integer() noexcept(true)
+inline integer::~integer()
 {
 	PIRANHA_TT_CHECK(is_cf,integer);
 	piranha_assert(m_value->_mp_alloc >= 0);

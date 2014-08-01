@@ -117,7 +117,7 @@ class dynamic_storage
 				throw;
 			}
 		}
-		~dynamic_storage() noexcept
+		~dynamic_storage()
 		{
 			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);

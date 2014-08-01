@@ -776,7 +776,7 @@ class rational
 		/**
 		 * Will clear the internal \p mpq_t type.
 		 */
-		~rational() noexcept(true);
+		~rational();
 		/// Move assignment operator.
 		/**
 		 * @param[in] other rational to be moved.
@@ -1720,7 +1720,7 @@ struct binomial_impl<T,U,typename std::enable_if<
 
 }
 
-inline rational::~rational() noexcept(true)
+inline rational::~rational()
 {
 	PIRANHA_TT_CHECK(is_cf,rational);
 	piranha_assert(mpq_numref(m_value)->_mp_alloc >= 0);

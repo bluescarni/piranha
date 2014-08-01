@@ -106,7 +106,7 @@ class task_queue
 		{
 			m_thread.reset(::new std::thread(runner{this,n}));
 		}
-		~task_queue() noexcept
+		~task_queue()
 		{
 			// NOTE: logging candidate (catch any exception,
 			// log it and abort as there is not much we can do).
@@ -376,7 +376,7 @@ class future_list
 		/**
 		 * Will call wait_all().
 		 */
-		~future_list() noexcept
+		~future_list()
 		{
 			wait_all();
 		}

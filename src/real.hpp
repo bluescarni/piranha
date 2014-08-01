@@ -847,7 +847,7 @@ class real: public detail::real_base<>
 		/**
 		 * Will clear the internal MPFR variable.
 		 */
-		~real() noexcept(true);
+		~real();
 		/// Copy assignment operator.
 		/**
 		 * The assignment operation will deep-copy \p other (i.e., including its precision).
@@ -1901,7 +1901,7 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<std::is_same<T,rea
 
 }
 
-inline real::~real() noexcept(true)
+inline real::~real()
 {
 	PIRANHA_TT_CHECK(is_cf,real);
 	static_assert(default_prec >= MPFR_PREC_MIN && default_prec <= MPFR_PREC_MAX,"Invalid value for default precision.");

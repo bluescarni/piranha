@@ -217,7 +217,7 @@ class kronecker_monomial
 		 */
 		explicit kronecker_monomial(const value_type &n):m_value(n) {}
 		/// Trivial destructor.
-		~kronecker_monomial() noexcept(true)
+		~kronecker_monomial()
 		{
 			PIRANHA_TT_CHECK(is_key,kronecker_monomial);
 			PIRANHA_TT_CHECK(key_has_degree,kronecker_monomial);

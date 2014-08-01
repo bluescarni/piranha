@@ -135,7 +135,7 @@ class symbol_set
 			return *this;
 		}
 		/// Trivial destructor.
-		~symbol_set() noexcept(true)
+		~symbol_set()
 		{
 			// NOTE: here we should replace with bidirectional tt, if we ever implement it.
 			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);

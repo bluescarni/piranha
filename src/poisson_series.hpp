@@ -217,7 +217,7 @@ class poisson_series:
 		poisson_series(poisson_series &&) = default;
 		PIRANHA_FORWARDING_CTOR(poisson_series,base)
 		/// Trivial destructor.
-		~poisson_series() noexcept(true)
+		~poisson_series()
 		{
 			PIRANHA_TT_CHECK(is_series,poisson_series);
 		}

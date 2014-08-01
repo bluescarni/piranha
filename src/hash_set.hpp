@@ -248,7 +248,7 @@ class hash_set
 				}
 				return *this;
 			}
-			~list() noexcept
+			~list()
 			{
 				destroy();
 			}
@@ -638,7 +638,7 @@ class hash_set
 		/**
 		 * No side effects.
 		 */
-		~hash_set() noexcept
+		~hash_set()
 		{
 			piranha_assert(sanity_check());
 			destroy_and_deallocate();

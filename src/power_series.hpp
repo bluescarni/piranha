@@ -179,7 +179,7 @@ class power_series: public Series
 		power_series &operator=(power_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(power_series,base)
 		/// Trivial destructor.
-		~power_series() noexcept(true)
+		~power_series()
 		{
 			PIRANHA_TT_CHECK(is_series,power_series);
 		}
