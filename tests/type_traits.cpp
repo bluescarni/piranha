@@ -1343,6 +1343,38 @@ struct cf06
 	cf06 operator-(const cf06 &) const;
 };
 
+struct cf07
+{
+	cf07();
+	cf07(const int &);
+	cf07(const cf07 &);
+	cf07(cf07 &&) noexcept(false);
+	cf07 &operator=(const cf07 &);
+	cf07 &operator=(cf07 &&) noexcept(true);
+	friend std::ostream &operator<<(std::ostream &, const cf07 &);
+	cf07 operator-() const;
+	bool operator==(const cf07 &) const;
+	bool operator!=(const cf07 &) const;
+	cf07 &operator+=(const cf07 &);
+	cf07 &operator-=(const cf07 &);
+	cf07 operator+(const cf07 &) const;
+	cf07 operator-(const cf07 &) const;
+};
+
+namespace piranha
+{
+
+template <typename T>
+struct enable_noexcept_checks<T,typename std::enable_if<std::is_same<cf07,T>::value>::type>
+{
+	static const bool value = false;
+};
+
+template <typename T>
+const bool enable_noexcept_checks<T,typename std::enable_if<std::is_same<cf07,T>::value>::type>::value;
+
+}
+
 BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
 {
 	BOOST_CHECK(is_cf<int>::value);
@@ -1369,6 +1401,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
 	BOOST_CHECK(!is_cf<cf04>::value);
 	BOOST_CHECK(!is_cf<cf05>::value);
 	BOOST_CHECK(!is_cf<cf06>::value);
+	BOOST_CHECK(is_cf<cf07>::value);
 }
 
 struct term_type1: base_term<double,monomial<int>,term_type1>

@@ -353,6 +353,25 @@ class is_greater_than_comparable: detail::sfinae_types
 template <typename T, typename U>
 const bool is_greater_than_comparable<T,U>::value;
 
+/// Enable \p noexcept checks.
+/**
+ * This type trait, to be specialised with the <tt>std::enable_if</tt> mechanism, enables or disables
+ * \p noexcept checks in the piranha::is_container_element type trait. This type trait should be used
+ * only with legacy pre-C++11 classes that do not support \p noexcept: by specialising this trait to
+ * \p false, the piranha::is_container_element trait will disable \p noexcept checks and it will thus be
+ * possible to use \p noexcept unaware classes as container elements and series coefficients.
+ */
+template <typename T, typename = void>
+struct enable_noexcept_checks
+{
+	/// Default value of the type trait.
+	static const bool value = true;
+};
+
+// Static init.
+template <typename T, typename Enable>
+const bool enable_noexcept_checks<T,Enable>::value;
+
 /// Type trait for well-behaved container elements.
 /**
  * The type trait will be true if all these conditions hold:
@@ -361,6 +380,8 @@ const bool is_greater_than_comparable<T,U>::value;
  * - \p T is copy-constructible,
  * - \p T has nothrow move semantics,
  * - \p T is nothrow-destructible.
+ * 
+ * If the piranha::enable_noexcept_checks trait is \p false for \p T, then the nothrow checks will be discarded.
  */
 template <typename T>
 struct is_container_element
@@ -370,9 +391,10 @@ struct is_container_element
 	/// Value of the type trait.
 	static const bool value = std::is_default_constructible<T>::value &&
 				  std::is_copy_constructible<T>::value &&
+				  (!enable_noexcept_checks<T>::value || (
 				  is_nothrow_destructible<T>::value &&
 				  std::is_nothrow_move_constructible<T>::value &&
-				  std::is_nothrow_move_assignable<T>::value;
+				  std::is_nothrow_move_assignable<T>::value));
 };
 
 template <typename T>
