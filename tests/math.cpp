@@ -248,14 +248,11 @@ BOOST_AUTO_TEST_CASE(math_pow_test)
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2.L)),long double>::value));
 	BOOST_CHECK(math::pow(2.,2) == std::pow(2.,2));
 	BOOST_CHECK(math::pow(2.f,2) == std::pow(2.f,2));
-	BOOST_CHECK(math::pow(2ll,char(8)) == std::pow(2.,8.));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.,2)),double>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,2)),double>::value));
 	BOOST_CHECK((std::is_same<decltype(math::pow(2.f,char(2))),double>::value));
-	BOOST_CHECK((std::is_same<decltype(math::pow((unsigned long)(4),char(2))),double>::value));
 	BOOST_CHECK((is_exponentiable<double,double>::value));
 	BOOST_CHECK((is_exponentiable<double,unsigned short>::value));
-	BOOST_CHECK((is_exponentiable<char,unsigned short>::value));
 	BOOST_CHECK((is_exponentiable<double &,double>::value));
 	BOOST_CHECK((is_exponentiable<const double,double>::value));
 	BOOST_CHECK((is_exponentiable<double &,double &>::value));

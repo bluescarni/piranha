@@ -757,6 +757,15 @@ BOOST_AUTO_TEST_CASE(integer_exponentiation_test)
 	BOOST_CHECK((piranha::is_exponentiable<float,piranha::integer>::value));
 	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(10),-2.),std::pow(10.,-2.));
 	BOOST_CHECK_EQUAL(piranha::math::pow(-2.,piranha::integer(10)),std::pow(-2.,10.));
+	BOOST_CHECK_EQUAL(piranha::math::pow(4,5),piranha::integer(4).pow(5));
+	BOOST_CHECK_EQUAL(piranha::math::pow(4l,5u),piranha::integer(4l).pow(5u));
+	BOOST_CHECK((piranha::is_exponentiable<int,int>::value));
+	BOOST_CHECK((piranha::is_exponentiable<int,signed char>::value));
+	BOOST_CHECK((piranha::is_exponentiable<int,bool>::value));
+	BOOST_CHECK((piranha::is_exponentiable<int,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_exponentiable<double,piranha::integer>::value));
+	BOOST_CHECK((piranha::is_exponentiable<piranha::integer,float>::value));
+	BOOST_CHECK_EQUAL(piranha::math::pow(piranha::integer(4),5.7),std::pow(4,5.7));
 }
 
 BOOST_AUTO_TEST_CASE(integer_hash_test)

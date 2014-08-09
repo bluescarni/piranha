@@ -275,18 +275,19 @@ template <typename T, typename U, typename Enable = void>
 struct pow_impl
 {};
 
-/// Specialisation of the piranha::math::pow() functor for arithmetic types.
+/// Specialisation of the piranha::math::pow() functor for arithmetic and floating-point types.
 /**
- * This specialisation is activated when both arguments are C++ arithmetic types.
+ * This specialisation is activated when both arguments are C++ arithmetic types and at least one argument
+ * is a floating-point type.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<std::is_arithmetic<T>::value && std::is_arithmetic<U>::value>::type>
+struct pow_impl<T,U,typename std::enable_if<
+	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
+	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
+>::type>
 {
-	/// Generic call operator.
+	/// Call operator.
 	/**
-	 * \note
-	 * This operator is enabled only if the expression <tt>std::pow(x,y)</tt> is well-formed.
-	 * 
 	 * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
 	 * 
 	 * @param[in] x base.
@@ -298,7 +299,7 @@ struct pow_impl<T,U,typename std::enable_if<std::is_arithmetic<T>::value && std:
 	auto operator()(const T2 &x, const U2 &y) const noexcept -> decltype(std::pow(x,y))
 	{
 		return std::pow(x,y);
-	}	
+	}
 };
 
 /// Exponentiation.

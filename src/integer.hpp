@@ -1970,19 +1970,25 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::t
 	}
 };
 
-/// Specialisation of the piranha::math::pow() functor for piranha::integer.
+/// Specialisation of the piranha::math::pow() functor for piranha::integer and integral types.
 /**
- * This specialisation is activated when one of the arguments is piranha::integer and the other is either
- * piranha::integer or an interoperable type for piranha::integer.
+ * This specialisation is activated when:
+ * - one of the arguments is piranha::integer and the other is either
+ *   piranha::integer or an interoperable type for piranha::integer,
+ * - both arguments are integral types.
  * 
- * The implementation uses the same schema as the arithmetic operators of piranha::integer. Specifically:
- * - if the non-integer argument is an integral type or piranha::integer, then piranha::integer::pow() is used
+ * The implementation uses a schema similar to the arithmetic operators of piranha::integer. Specifically:
+ * - if the arguments are both piranha::integer, or a piranha::integer and an integral type, then piranha::integer::pow() is used
  *   to compute the result (after any necessary conversion),
+ * - if both arguments are integral types, piranha::integer::pow() is used after the conversion of the base
+ *   to piranha::integer,
  * - otherwise, the piranha::integer argument is converted to the floating-point type and \p std::pow() is
  *   used to compute the result.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<piranha::integer::are_binary_op_types<T,U>::value>::type>
+struct pow_impl<T,U,typename std::enable_if<piranha::integer::are_binary_op_types<T,U>::value ||
+	(std::is_integral<T>::value && std::is_integral<U>::value)
+>::type>
 {
 	/// Call operator, integer--integer overload.
 	/**
@@ -2025,6 +2031,22 @@ struct pow_impl<T,U,typename std::enable_if<piranha::integer::are_binary_op_type
 	integer operator()(const T2 &x, const integer &n) const
 	{
 		return integer(x).pow(n);
+	}
+	/// Call operator, integral--integral overload.
+	/**
+	 * @param[in] x base
+	 * @param[in] y exponent.
+	 * 
+	 * @returns <tt>x**y</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::integer::pow() or by the constructor of piranha::integer
+	 * from integral types.
+	 */
+	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
+		std::is_integral<U2>::value,int>::type = 0>
+	integer operator()(const T2 &x, const U2 &y) const
+	{
+		return integer(x).pow(y);
 	}
 	/// Call operator, floating-point--integer overload.
 	/**
