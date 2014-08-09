@@ -130,6 +130,9 @@ struct negate_impl
 {
 	/// Generic call operator.
 	/**
+	 * \note
+	 * This operator is enabled only if the expression <tt>x = -x</tt> is well-formed.
+	 * 
 	 * The body of the operator is equivalent to:
 	 @code
 	 return x = -x;
@@ -148,7 +151,7 @@ struct negate_impl
 	}
 	/// Call operator specialised for integral types.
 	template <typename U>
-	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const
+	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const noexcept
 	{
 		// NOTE: here we use the explicit static_cast to cope with integral promotions
 		// (e.g., in case of char).
@@ -662,7 +665,7 @@ struct abs_impl<T,typename std::enable_if<(std::is_signed<T>::value && std::is_i
 		 * 
 		 * @return absolute value of \p x.
 		 */
-		auto operator()(const T &x) const -> decltype(impl(x))
+		auto operator()(const T &x) const noexcept -> decltype(impl(x))
 		{
 			return impl(x);
 		}
@@ -1231,6 +1234,8 @@ struct binomial_impl
 /**
  * This specialisation is activated when \p T is a floating-point type and \p U an integral type or piranha::integer.
  */
+// TODO split out the integer part from here, put it into the integer header. Then remove any reference
+// to integer from here (apart maybe in the detail::generic_binomial implementation) and in the tests.
 template <typename T, typename U>
 struct binomial_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
 	(std::is_integral<U>::value || std::is_same<integer,U>::value)
