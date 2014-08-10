@@ -1901,8 +1901,7 @@ class mp_integer
 		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
 		mp_integer &operator=(const T &x)
 		{
-			operator=(mp_integer(x));
-			return *this;
+			return (*this = mp_integer(x));
 		}
 		/// Assignment from C++ string.
 		/**
