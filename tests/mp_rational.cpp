@@ -279,6 +279,24 @@ struct constructor_tester
 			::mpq_canonicalize(&m.m_mpq);
 			BOOST_CHECK_EQUAL(mpq_lexcast(m),boost::lexical_cast<std::string>(tmp_q));
 		}
+		// Generic assignment.
+		q_type q11;
+		q11 = 0;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"0");
+		q11 = 1ull;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"1");
+		q11 = -short(3);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"-3");
+		BOOST_CHECK((std::is_same<decltype(q11 = static_cast<signed char>(-3)),q_type &>::value));
+		q11 = int_type{45};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"45");
+		q11 = 1. / dradix;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),std::string("1/") + boost::lexical_cast<std::string>(dradix));
+		q11 = 1. / -static_cast<int>(dradix);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),std::string("-1/") + boost::lexical_cast<std::string>(dradix));
+		if (std::numeric_limits<float>::has_infinity) {
+			BOOST_CHECK_THROW((q11 = std::numeric_limits<float>::infinity()),std::invalid_argument);
+		}
 	}
 };
 

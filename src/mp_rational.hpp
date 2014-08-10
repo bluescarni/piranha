@@ -305,6 +305,25 @@ class mp_rational
 		mp_rational &operator=(const mp_rational &) = default;
 		/// Defaulted move assignment operator.
 		mp_rational &operator=(mp_rational &&) = default;
+		/// Generic assignment operator.
+		/**
+		 * \note
+		 * This assignment operator is enabled onlt if \p T is an \ref interop "interoperable type".
+		 *
+		 * This operator will construct a temporary piranha::mp_rational from \p x and will then move-assign it
+		 * to \p this.
+		 *
+		 * @param[in] x assignment target.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the generic constructor from interoperable type.
+		 */
+		template <typename T, typename = generic_ctor_enabler<T>>
+		mp_rational &operator=(const T &x)
+		{
+			return (*this = mp_rational(x));
+		}
 		/// Stream operator.
 		/**
 		 * The printing format is as follows:
@@ -351,6 +370,8 @@ class mp_rational
 			// NOTE: here the GCD only involves operations on mp_integers
 			// and thus it never throws. The construction from 1 in the comparisons will
 			// not throw either.
+			// NOTE: there should be no way to set a negative denominator, so no check is performed.
+			// The condition is checked in the dtor.
 			const auto gcd = detail::gcd(m_num,m_den);
 			return (m_num.sign() != 0 && (gcd == 1 || gcd == -1)) ||
 				(m_num.sign() == 0 && m_den == 1);
