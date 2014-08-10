@@ -297,6 +297,31 @@ struct constructor_tester
 		if (std::numeric_limits<float>::has_infinity) {
 			BOOST_CHECK_THROW((q11 = std::numeric_limits<float>::infinity()),std::invalid_argument);
 		}
+		// Assignment from string.
+		q11 = "0";
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"0");
+		q11 = std::string("0");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"0");
+		q11 = "-2";
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"-2");
+		q11 = std::string("-2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"-2");
+		q11 = "-2/-10";
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"1/5");
+		q11 = std::string("-2/-10");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"1/5");
+		q11 = "0/-10";
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"0");
+		q11 = std::string("0/-10");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"0");
+		q11 = std::string("3/4");
+		BOOST_CHECK_THROW((q11 = std::string("1/0")),zero_division_error);
+		BOOST_CHECK_THROW((q11 = std::string("1/-0")),std::invalid_argument);
+		BOOST_CHECK_THROW((q11 = std::string("-0/4")),std::invalid_argument);
+		BOOST_CHECK_THROW((q11 = std::string("0/0")),zero_division_error);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"3/4");
+		BOOST_CHECK((std::is_same<q_type &,decltype(q11 = std::string("1/0"))>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(q11 = "1/0")>::value));
 	}
 };
 

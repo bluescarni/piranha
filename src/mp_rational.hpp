@@ -324,6 +324,36 @@ class mp_rational
 		{
 			return (*this = mp_rational(x));
 		}
+		/// Assignment operator from C string.
+		/**
+		 * This assignment operator will construct a piranha::mp_rational from the string \p str
+		 * and will then move-assign the result to \p this.
+		 *
+		 * @param[in] str C string.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the constructor from string.
+		 */
+		mp_rational &operator=(const char *str)
+		{
+			return (*this = mp_rational(str));
+		}
+		/// Assignment operator from C++ string.
+		/**
+		 * This assignment operator will construct a piranha::mp_rational from the string \p str
+		 * and will then move-assign the result to \p this.
+		 *
+		 * @param[in] str C++ string.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the constructor from string.
+		 */
+		mp_rational &operator=(const std::string &str)
+		{
+			return (*this = str.c_str());
+		}
 		/// Stream operator.
 		/**
 		 * The printing format is as follows:
