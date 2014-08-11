@@ -208,8 +208,14 @@ class mp_rational
 		mp_rational(): m_num(),m_den(1) {}
 		/// Defaulted copy constructor.
 		mp_rational(const mp_rational &) = default;
-		/// Defaulted move constructor.
-		mp_rational(mp_rational &&) = default;
+		/// Move constructor.
+		mp_rational(mp_rational &&other) noexcept : m_num(std::move(other.m_num)),m_den(std::move(other.m_den))
+		{
+			// Fix the denominator of other, as its state depends on the implementation of piranha::mp_integer.
+			// Set it to 1, so other will have a valid canonical state regardless of what happens
+			// to the numerator.
+			other.m_den = 1;
+		}
 		/// Constructor from numerator/denominator pair.
 		/**
 		 * \note
@@ -303,8 +309,18 @@ class mp_rational
 		}
 		/// Defaulted copy assignment operator.
 		mp_rational &operator=(const mp_rational &) = default;
-		/// Defaulted move assignment operator.
-		mp_rational &operator=(mp_rational &&) = default;
+		/// Move assignment operator.
+		mp_rational &operator=(mp_rational &&other) noexcept
+		{
+			if (unlikely(this == &other)) {
+				return *this;
+			}
+			m_num = std::move(other.m_num);
+			m_den = std::move(other.m_den);
+			// See comments in the move ctor.
+			other.m_den = 1;
+			return *this;
+		}
 		/// Generic assignment operator.
 		/**
 		 * \note
