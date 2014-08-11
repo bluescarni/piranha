@@ -322,6 +322,16 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q11),"3/4");
 		BOOST_CHECK((std::is_same<q_type &,decltype(q11 = std::string("1/0"))>::value));
 		BOOST_CHECK((std::is_same<q_type &,decltype(q11 = "1/0")>::value));
+		// Check move semantics.
+		// A largish rational that forces to use GMP integers, at least on some platforms. The move operation
+		// of a GMP int will reset the original value to zero, hence we need to take care of the denominator going to zero.
+		q_type tmp00{"231238129381029380129830980980198109890381238120398190/2312093812093812903809128310298301928309128390128390128390128390183"};
+		q11 = std::move(tmp00);
+		BOOST_CHECK_EQUAL(tmp00.den(),1);
+		BOOST_CHECK(tmp00.is_canonical());
+		auto q12(std::move(q11));
+		BOOST_CHECK_EQUAL(q11.den(),1);
+		BOOST_CHECK(q11.is_canonical());
 	}
 };
 

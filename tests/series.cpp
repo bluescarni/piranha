@@ -1723,10 +1723,14 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 {
 	typedef g_series_type<rational,int> p_type1;
 	typedef std::unordered_map<std::string,rational> dict_type;
+	typedef std::unordered_map<std::string,int> dict_type_int;
+	typedef std::unordered_map<std::string,long> dict_type_long;
 	BOOST_CHECK((is_evaluable<p_type1,rational>::value));
 	BOOST_CHECK((is_evaluable<p_type1,integer>::value));
-	BOOST_CHECK((!is_evaluable<p_type1,int>::value));
-	BOOST_CHECK((!is_evaluable<p_type1,long>::value));
+	BOOST_CHECK((is_evaluable<p_type1,int>::value));
+	BOOST_CHECK((is_evaluable<p_type1,long>::value));
+	BOOST_CHECK((std::is_same<rational,decltype(p_type1{}.evaluate(dict_type_int{}))>::value));
+	BOOST_CHECK((std::is_same<rational,decltype(p_type1{}.evaluate(dict_type_long{}))>::value));
 	BOOST_CHECK_EQUAL(p_type1{}.evaluate(dict_type{}),0);
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_THROW(x.evaluate(dict_type{}),std::invalid_argument);

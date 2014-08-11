@@ -960,7 +960,8 @@ union integer_union
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 /*
- * TOO performance improvements:
+ * TODO more type traits tests, check wrt old integer tests.
+ * TODO performance improvements:
  *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
  *     holder so that we avoid double allocations;
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),

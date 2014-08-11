@@ -2038,3 +2038,18 @@ BOOST_AUTO_TEST_CASE(mp_integer_subs_test)
 {
 	boost::mpl::for_each<size_types>(subs_tester());
 }
+
+struct integrable_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(!is_integrable<int_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_integrable_test)
+{
+	boost::mpl::for_each<size_types>(integrable_tester());
+}

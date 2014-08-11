@@ -99,6 +99,10 @@ const ::mpfr_prec_t real_base<T>::default_prec;
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// TODO:
+// - fix the move semantics if possible (i.e., valid but unspecified state),
+// - add interoperability with long double and long long, avoiding the is_gmp_int stuff ->
+//   look into using the intmax_t overloads from MPFR.
 class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
