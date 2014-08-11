@@ -179,7 +179,7 @@ struct is_evaluable_tester
 			BOOST_CHECK((is_evaluable<p_type,double>::value));
 			BOOST_CHECK((is_evaluable<p_type,float>::value));
 			BOOST_CHECK((is_evaluable<p_type,integer>::value));
-			BOOST_CHECK((!is_evaluable<p_type,int>::value));
+			BOOST_CHECK((is_evaluable<p_type,int>::value));
 		}
 		template <typename Expo>
 		void operator()(const Expo &, typename std::enable_if<is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)

@@ -108,6 +108,9 @@ class integer
 		// Make friends with real and rational.
 		friend class real;
 		friend class rational;
+		// Make friends with pow_impl.
+		template <typename,typename,typename>
+		friend struct math::pow_impl;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>
 		struct is_interop_type
@@ -1967,29 +1970,111 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::t
 	}
 };
 
-/// Specialisation of the piranha::math::pow() functor for piranha::integer.
+/// Specialisation of the piranha::math::pow() functor for piranha::integer and integral types.
 /**
- * This specialisation is activated when \p T is piranha::integer.
- * The result will be computed via piranha::integer::pow().
+ * This specialisation is activated when:
+ * - one of the arguments is piranha::integer and the other is either
+ *   piranha::integer or an interoperable type for piranha::integer,
+ * - both arguments are integral types.
+ * 
+ * The implementation uses a schema similar to the arithmetic operators of piranha::integer. Specifically:
+ * - if the arguments are both piranha::integer, or a piranha::integer and an integral type, then piranha::integer::pow() is used
+ *   to compute the result (after any necessary conversion),
+ * - if both arguments are integral types, piranha::integer::pow() is used after the conversion of the base
+ *   to piranha::integer,
+ * - otherwise, the piranha::integer argument is converted to the floating-point type and \p std::pow() is
+ *   used to compute the result.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<std::is_same<T,integer>::value>::type>
+struct pow_impl<T,U,typename std::enable_if<piranha::integer::are_binary_op_types<T,U>::value ||
+	(std::is_integral<T>::value && std::is_integral<U>::value)
+>::type>
 {
-	/// Call operator.
+	/// Call operator, integer--integer overload.
 	/**
-	 * The exponentiation will be computed via piranha::integer::pow().
+	 * @param[in] b base
+	 * @param[in] e exponent.
 	 * 
-	 * @param[in] n base.
+	 * @returns <tt>b**e</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::integer::pow().
+	 */
+	integer operator()(const integer &b, const integer &e) const
+	{
+		return b.pow(e);
+	}
+	/// Call operator, integer--integral overload.
+	/**
+	 * @param[in] n base
 	 * @param[in] x exponent.
 	 * 
-	 * @return \p n to the power of \p x.
+	 * @returns <tt>n**x</tt>.
 	 * 
-	 * @throws unspecified any exception resulting from piranha::integer::pow().
+	 * @throws unspecified any exception thrown by piranha::integer::pow().
 	 */
-	template <typename T2, typename U2>
-	auto operator()(const T2 &n, const U2 &x) const -> decltype(n.pow(x))
+	template <typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
+	integer operator()(const integer &n, const T2 &x) const
 	{
 		return n.pow(x);
+	}
+	/// Call operator, integral--integer overload.
+	/**
+	 * @param[in] x base
+	 * @param[in] n exponent.
+	 * 
+	 * @returns <tt>x**n</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::integer::pow() or by the constructor of piranha::integer
+	 * from integral types.
+	 */
+	template <typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
+	integer operator()(const T2 &x, const integer &n) const
+	{
+		return integer(x).pow(n);
+	}
+	/// Call operator, integral--integral overload.
+	/**
+	 * @param[in] x base
+	 * @param[in] y exponent.
+	 * 
+	 * @returns <tt>x**y</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::integer::pow() or by the constructor of piranha::integer
+	 * from integral types.
+	 */
+	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
+		std::is_integral<U2>::value,int>::type = 0>
+	integer operator()(const T2 &x, const U2 &y) const
+	{
+		return integer(x).pow(y);
+	}
+	/// Call operator, floating-point--integer overload.
+	/**
+	 * @param[in] x base
+	 * @param[in] n exponent.
+	 * 
+	 * @returns <tt>x**n</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by converting piranha::integer to a floating-point type.
+	 */
+	template <typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	auto operator()(const T2 &x, const integer &n) const -> decltype(std::pow(x,static_cast<T2>(n)))
+	{
+		return std::pow(x,static_cast<T2>(n));
+	}
+	/// Call operator, integer--floating-point overload.
+	/**
+	 * @param[in] n base
+	 * @param[in] x exponent.
+	 * 
+	 * @returns <tt>n**x</tt>.
+	 * 
+	 * @throws unspecified any exception thrown by converting piranha::integer to a floating-point type.
+	 */
+	template <typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	auto operator()(const integer &n, const T2 &x) const -> decltype(std::pow(static_cast<T2>(n),x))
+	{
+		return std::pow(static_cast<T2>(n),x);
 	}
 };
 
