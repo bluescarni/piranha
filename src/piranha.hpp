@@ -126,6 +126,9 @@ namespace piranha
  */
 namespace detail {}
 
+/// Inline namespace for the definition of user-defined literals.
+inline namespace literals {}
+
 }
 
 #include "array_key.hpp"
