@@ -43,6 +43,8 @@ namespace detail
 {
 
 // Greatest common divisor using the euclidean algorithm.
+// NOTE: this can yield negative values, depending on the signs
+// of a and b.
 template <typename T>
 inline T gcd(T a, T b)
 {
@@ -102,6 +104,10 @@ class mp_rational
 		template <typename T>
 		using generic_ctor_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
 			std::is_same<T,int_type>::value>::type;
+		// Enabler for arithmetic operations.
+		template <typename T>
+		using generic_arith_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
+			std::is_same<T,int_type>::value || std::is_same<T,mp_rational>::value>::type;
 		// Generic constructor implementation.
 		template <typename T>
 		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
@@ -181,7 +187,7 @@ class mp_rational
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
 		{
-			// NOTE: there are better ways of doing this. For instance, here we could generate an inf even
+			// NOTE: there are better ways of doing this. For instance, here we might end up generating an inf even
 			// if the result is actually representable. It also would be nice if this routine could short-circuit,
 			// that is, for every rational generated from a float we get back exactly the same float after the cast.
 			// The approach in GMP mpq might work for this, but it's not essential really.
@@ -196,6 +202,24 @@ class mp_rational
 		MpInteger convert_to_impl(typename std::enable_if<std::is_same<MpInteger,int_type>::value>::type * = nullptr) const
 		{
 			return m_num / m_den;
+		}
+		// In-place add.
+		void in_place_add(const mp_rational &other)
+		{
+			m_num *= other.m_den;
+			math::multiply_accumulate(m_num,m_den,other.m_num);
+			m_den *= other.m_den;
+			canonicalise();
+		}
+		void in_place_add(const int_type &other)
+		{
+			math::multiply_accumulate(m_num,m_den,other);
+			canonicalise();
+		}
+		template <typename T>
+		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			in_place_add(int_type(n));
 		}
 	public:
 		/// Default constructor.
@@ -495,10 +519,62 @@ class mp_rational
 			m_den = den;
 		}
 		//@}
+		mp_rational operator+() const
+		{
+			mp_rational retval(*this);
+			return retval;
+		}
+		mp_rational &operator++()
+		{
+			return operator+=(1);
+		}
+		mp_rational operator++(int)
+		{
+			const mp_rational retval(*this);
+			++(*this);
+			return retval;
+		}
+		template <typename T, typename = generic_arith_enabler<T>>
+		mp_rational &operator+=(const T &other)
+		{
+			in_place_add(other);
+			return *this;
+		}
+		void negate()
+		{
+			m_num.negate();
+		}
+		mp_rational operator-() const
+		{
+			mp_rational retval(*this);
+			retval.negate();
+			return retval;
+		}
 	private:
 		int_type	m_num;
 		int_type	m_den;
 };
+
+// using rational = mp_rational<>;
+
+inline namespace literals
+{
+
+/// Literal for arbitrary-precision rationals.
+/**
+ * @param[in] s literal string.
+ * 
+ * @return a piranha::mp_rational constructed from \p s.
+ * 
+ * @throws unspecified any exception thrown by the constructor of
+ * piranha::mp_rational from string.
+ */
+inline mp_rational<> operator "" _q(const char *s)
+{
+	return mp_rational<>(s);
+}
+
+}
 
 }
 

@@ -412,3 +412,80 @@ BOOST_AUTO_TEST_CASE(mp_rational_conversion_test)
 {
 	boost::mpl::for_each<size_types>(conversion_tester());
 }
+
+BOOST_AUTO_TEST_CASE(mp_rational_literal_test)
+{
+	auto q0 = 123_q;
+	BOOST_CHECK((std::is_same<mp_rational<>,decltype(q0)>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"123");
+	q0 = -4_q;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"-4");
+	BOOST_CHECK_THROW((q0 = 123.45_q),std::invalid_argument);
+	// TODO: enable.
+	// auto q1 = 45/56_q;
+}
+
+struct in_place_arith_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		q_type a{1,2};
+		a += q_type{3,5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"11/10");
+		a += q_type{4,-5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"3/10");
+		a += q_type{-4,5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1/2");
+		a += int_type(-5);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-11/2");
+		a += 7;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"3/2");
+		// Random testing.
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		mpq_raii m0, m1;
+		detail::mpz_raii z;
+		for (int i = 0; i < ntries; ++i) {
+			const int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
+			if (b == 0 || d == 0) {
+				continue;
+			}
+			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			if (d > 0) {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(d));
+			} else {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
+			}
+			::mpq_canonicalize(&m1.m_mpq);
+			q_type q0{a,b}, q1{c,d};
+			q0 += q1;
+			::mpq_add(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			::mpz_set_si(&z.m_mpz,e);
+			::mpz_addmul(mpq_numref(&m0.m_mpq),mpq_denref(&m0.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m0.m_mpq);
+			q0 += int_type(e);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			::mpz_set_si(&z.m_mpz,f);
+			::mpz_addmul(mpq_numref(&m0.m_mpq),mpq_denref(&m0.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m0.m_mpq);
+			q0 += f;
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_in_place_arith_test)
+{
+	boost::mpl::for_each<size_types>(in_place_arith_tester());
+}
