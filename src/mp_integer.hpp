@@ -3188,6 +3188,25 @@ struct binomial_impl<T,U,typename std::enable_if<std::is_integral<T>::value>::ty
 
 //using integer = mp_integer<>;
 
+inline namespace literals
+{
+
+/// Literal for arbitrary-precision integers.
+/**
+ * @param[in] s literal string.
+ * 
+ * @return a piranha::mp_integer constructed from \p s.
+ * 
+ * @throws unspecified any exception thrown by the constructor of
+ * piranha::mp_integer from string.
+ */
+inline mp_integer<> operator "" _z(const char *s)
+{
+	return mp_integer<>(s);
+}
+
+}
+
 }
 
 namespace std

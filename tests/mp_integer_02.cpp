@@ -2053,3 +2053,14 @@ BOOST_AUTO_TEST_CASE(mp_integer_integrable_test)
 {
 	boost::mpl::for_each<size_types>(integrable_tester());
 }
+
+BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
+{
+	auto n0 = 12345_z;
+	BOOST_CHECK((std::is_same<mp_integer<>,decltype(n0)>::value));
+	BOOST_CHECK_EQUAL(n0,12345);
+	n0 = -456_z;
+	BOOST_CHECK_EQUAL(n0,-456l);
+	BOOST_CHECK_THROW((n0 = -1234.5_z),std::invalid_argument);
+	BOOST_CHECK_EQUAL(n0,-456l);
+}
