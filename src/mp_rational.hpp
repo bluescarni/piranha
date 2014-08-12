@@ -272,8 +272,6 @@ class mp_rational
 		/**
 		 * This constructor will initialise the rational to zero (that is, the numerator is set to zero, the denominator
 		 * to 1).
-		 * 
-		 * @throws unspecified any exception thrown by the constructor of piranha::mp_integer from \p int.
 		 */
 		mp_rational(): m_num(),m_den(1) {}
 		/// Defaulted copy constructor.

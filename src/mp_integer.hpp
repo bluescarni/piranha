@@ -1123,7 +1123,8 @@ class mp_integer
 		void construct_from_interoperable(bool v)
 		{
 			if (v) {
-				m_int.g_st().set_bit(0);
+				m_int.g_st()._mp_size = 1;
+				m_int.g_st().m_limbs[0u] = 1u;
 			}
 		}
 		static void validate_string(const char *str, const std::size_t &size)
