@@ -422,8 +422,8 @@ class parallel_deleter
 			aligned_pfree(0u,static_cast<void *>(ptr));
 		}
 	private:
-		const std::size_t	m_size;
-		const unsigned		m_n_threads;
+		std::size_t	m_size;
+		unsigned	m_n_threads;
 };
 
 }
@@ -439,8 +439,8 @@ class parallel_deleter
  * destructor is called.
  *
  * \note
- * Due to the special semantics of the parallel deleter, the only valid write operation on the return value (beside destruction) is
- * \p std::unique_ptr::release().
+ * Due to the special semantics of the parallel deleter, the returned smart pointer cannot be reset with another arbitrary pointer
+ * without supplying a new deleter. To replace the managed object while supplying a new deleter as well, move semantics may be used.
  *
  * @param[in] size size of the array.
  * @param[in] n_threads number of threads to use.

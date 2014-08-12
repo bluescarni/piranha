@@ -182,6 +182,16 @@ BOOST_AUTO_TEST_CASE(memory_parallel_init_destroy_test)
 		BOOST_CHECK(ptr3.get() == nullptr);
 		// Just deallocate, no need to destroy ints.
 		aligned_pfree(0u,static_cast<void *>(ptr4));
+		// Check move semantics on the smart pointer.
+		auto ptr_cmp = make_parallel_array<custom_string>(small_alloc_size,i);
+		auto ptr5 = make_parallel_array<custom_string>(small_alloc_size,i);
+		auto ptr6(std::move(ptr5));
+		BOOST_CHECK(std::equal(ptr6.get(),ptr6.get() + small_alloc_size,ptr_cmp.get()));
+		BOOST_CHECK(ptr5.get() == nullptr);
+		auto ptr7 = make_parallel_array<custom_string>(small_alloc_size,i);
+		ptr7 = std::move(ptr6);
+		BOOST_CHECK(ptr6.get() == nullptr);
+		BOOST_CHECK(std::equal(ptr7.get(),ptr7.get() + small_alloc_size,ptr_cmp.get()));
 	}
 }
 
