@@ -99,15 +99,14 @@ class mp_rational
 		// Enabler for ctor from num den pair.
 		template <typename I0, typename I1>
 		using nd_ctor_enabler = typename std::enable_if<(std::is_integral<I0>::value || std::is_same<I0,int_type>::value) &&
-			(std::is_integral<I1>::value || std::is_same<I1,int_type>::value)>::type;
+			(std::is_integral<I1>::value || std::is_same<I1,int_type>::value),int>::type;
 		// Enabler for generic ctor.
 		template <typename T>
 		using generic_ctor_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
-			std::is_same<T,int_type>::value>::type;
-		// Enabler for arithmetic operations.
+			std::is_same<T,int_type>::value,int>::type;
+		// Enabler for in-place arithmetic operations with interop on the left.
 		template <typename T>
-		using generic_arith_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
-			std::is_same<T,int_type>::value || std::is_same<T,mp_rational>::value>::type;
+		using generic_in_place_enabler = typename std::enable_if<!std::is_same<typename std::decay<T>::type,mp_rational>::value,int>::type;
 		// Generic constructor implementation.
 		template <typename T>
 		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
@@ -182,7 +181,7 @@ class mp_rational
 		// Enabler for conversion operator.
 		template <typename T>
 		using cast_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
-			std::is_same<T,int_type>::value>::type;
+			std::is_same<T,int_type>::value,int>::type;
 		// Conversion operator implementation.
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
@@ -190,7 +189,7 @@ class mp_rational
 			// NOTE: there are better ways of doing this. For instance, here we might end up generating an inf even
 			// if the result is actually representable. It also would be nice if this routine could short-circuit,
 			// that is, for every rational generated from a float we get back exactly the same float after the cast.
-			// The approach in GMP mpq might work for this, but it's not essential really.
+			// The approach in GMP mpq might work for this, but it's not essential at the moment.
 			return static_cast<Float>(m_num) / static_cast<Float>(m_den);
 		}
 		template <typename Integral>
@@ -204,22 +203,69 @@ class mp_rational
 			return m_num / m_den;
 		}
 		// In-place add.
-		void in_place_add(const mp_rational &other)
+		mp_rational &in_place_add(const mp_rational &other)
 		{
-			m_num *= other.m_den;
-			math::multiply_accumulate(m_num,m_den,other.m_num);
-			m_den *= other.m_den;
+			// NOTE: all this should never throw because we only operate on mp_integer objects,
+			// no conversions involved, etc.
+			// Special casing, the first to deal when other and this are the same object,
+			// the second when denominators are equal.
+			if (unlikely(&other == this) || m_den == other.m_den) {
+				m_num += other.m_num;
+			} else {
+				m_num *= other.m_den;
+				math::multiply_accumulate(m_num,m_den,other.m_num);
+				m_den *= other.m_den;
+			}
 			canonicalise();
+			return *this;
 		}
-		void in_place_add(const int_type &other)
+		mp_rational &in_place_add(const int_type &other)
 		{
 			math::multiply_accumulate(m_num,m_den,other);
 			canonicalise();
+			return *this;
 		}
 		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		mp_rational &in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
 		{
-			in_place_add(int_type(n));
+			return in_place_add(int_type(n));
+		}
+		template <typename T>
+		mp_rational &in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (*this = static_cast<T>(*this) + x);
+		}
+		// Binary add.
+		template <typename T>
+		static mp_rational binary_plus_impl(const mp_rational &q1, const T &x)
+		{
+			auto retval(q1);
+			retval += x;
+			return retval;
+		}
+		static mp_rational binary_plus(const mp_rational &q1, const mp_rational &q2)
+		{
+			return binary_plus_impl(q1,q2);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_plus(const mp_rational &q1, const T &x)
+		{
+			return binary_plus_impl(q1,x);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_plus(const T &x, const mp_rational &q2)
+		{
+			return binary_plus(q2,x);
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_plus(const mp_rational &q1, const T &x)
+		{
+			return x + static_cast<T>(q1);
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_plus(const T &x, const mp_rational &q2)
+		{
+			return binary_plus(q2,x);
 		}
 	public:
 		/// Default constructor.
@@ -251,7 +297,7 @@ class mp_rational
 		 * @throws piranha::zero_division_error if the denominator is zero.
 		 * @throws unspecified any exception thrown by the invoked constructor of piranha::mp_integer.
 		 */
-		template <typename I0, typename I1, typename = nd_ctor_enabler<I0,I1>>
+		template <typename I0, typename I1, nd_ctor_enabler<I0,I1> = 0>
 		explicit mp_rational(const I0 &n, const I1 &d):m_num(n),m_den(d)
 		{
 			if (unlikely(m_den.sign() == 0)) {
@@ -269,7 +315,7 @@ class mp_rational
 		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
 		 * floating-point value).
 		 */
-		template <typename T, typename = generic_ctor_enabler<T>>
+		template <typename T, generic_ctor_enabler<T> = 0>
 		explicit mp_rational(const T &x)
 		{
 			construct_from_interoperable(x);
@@ -359,7 +405,7 @@ class mp_rational
 		 *
 		 * @throws unspecified any exception thrown by the generic constructor from interoperable type.
 		 */
-		template <typename T, typename = generic_ctor_enabler<T>>
+		template <typename T, generic_ctor_enabler<T> = 0>
 		mp_rational &operator=(const T &x)
 		{
 			return (*this = mp_rational(x));
@@ -470,6 +516,7 @@ class mp_rational
 				m_num.negate();
 				m_den.negate();
 			}
+			// NOTE: this could be a nice place to use the demote() method of mp_integer.
 		}
 		/// Conversion operator.
 		/**
@@ -485,7 +532,7 @@ class mp_rational
 		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
 		 * is insufficient to represent the value of <tt>this</tt>).
 		 */
-		template <typename T, typename = cast_enabler<T>>
+		template <typename T, cast_enabler<T> = 0>
 		explicit operator T() const
 		{
 			return convert_to_impl<T>();
@@ -519,26 +566,85 @@ class mp_rational
 			m_den = den;
 		}
 		//@}
+		/// Identity operator.
+		/**
+		 * @return a copy of \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
 		mp_rational operator+() const
 		{
-			mp_rational retval(*this);
-			return retval;
+			return mp_rational{*this};
 		}
+		/// Pre-increment operator.
+		/**
+		 * @return reference to \p this after the increment.
+		 * 
+		 * @throws unspecified any exception thrown by in-place addition.
+		 */
 		mp_rational &operator++()
 		{
 			return operator+=(1);
 		}
+		/// Post-increment operator.
+		/**
+		 * @return copy of \p this before the increment.
+		 * 
+		 * @throws unspecified any exception thrown by the pre-increment operator or by the copy constructor.
+		 */
 		mp_rational operator++(int)
 		{
 			const mp_rational retval(*this);
 			++(*this);
 			return retval;
 		}
-		template <typename T, typename = generic_arith_enabler<T>>
-		mp_rational &operator+=(const T &other)
+		/// In-place addition.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * 
+		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is added to \p x,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] other argument for the addition.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
+		 * or the generic assignment operator, if used.
+		 */
+		template <typename T>
+		auto operator+=(const T &other) -> decltype(this->in_place_add(other))
 		{
-			in_place_add(other);
-			return *this;
+			return in_place_add(other);
+		}
+		/// Generic in-place addition with piranha::mp_rational.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Add a piranha::mp_rational in-place. This method will first compute <tt>q + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
+		 */
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend auto operator+=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(q + x))
+		{
+			return x = static_cast<T>(q + x);
+		}
+		template <typename T, typename U>
+		friend auto operator+(const T &x, const U &y) -> decltype(mp_rational::binary_plus(x,y))
+		{
+			return mp_rational::binary_plus(x,y);
 		}
 		void negate()
 		{

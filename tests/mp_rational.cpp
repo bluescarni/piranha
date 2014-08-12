@@ -45,8 +45,7 @@
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
-// TODO type traits chacks.
-//#include "../src/type_traits.hpp"
+#include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
@@ -399,7 +398,7 @@ struct conversion_tester
 		BOOST_CHECK_EQUAL(static_cast<long double>(q2),20.l/-5.l);
 		q_type q3(std::numeric_limits<long long>::max());
 		q3._num() += 1;
-		BOOST_CHECK_THROW(static_cast<long long>(q3),std::overflow_error);
+		BOOST_CHECK_THROW((void)static_cast<long long>(q3),std::overflow_error);
 		if (std::numeric_limits<long double>::has_infinity) {
 			q_type q4(std::numeric_limits<long double>::max());
 			q4._num() *= q4._num();
@@ -425,13 +424,27 @@ BOOST_AUTO_TEST_CASE(mp_rational_literal_test)
 	// auto q1 = 45/56_q;
 }
 
-struct in_place_arith_tester
+struct plus_tester
 {
 	template <typename T>
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
 		using int_type = typename q_type::int_type;
+		// Identity operator.
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{3,11}),boost::lexical_cast<std::string>(+q_type{3,11}));
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{-6,4}),boost::lexical_cast<std::string>(+q_type{6,-4}));
+		// Increment operators.
+		q_type q0;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(++q0),"1");
+		q0 = -1;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0++),"-1");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"0");
+		q0 = "3/2";
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(++q0),"5/2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0++),"5/2");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"7/2");
+		// Some simple checks.
 		q_type a{1,2};
 		a += q_type{3,5};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"11/10");
@@ -443,6 +456,42 @@ struct in_place_arith_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-11/2");
 		a += 7;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"3/2");
+		// Check return types.
+		BOOST_CHECK((std::is_same<q_type &,decltype(a += a)>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a += 1)>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a += int_type(1))>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a += 1.)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a + a)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a + 1)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(1ull + a)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a + int_type(1))>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(int_type(1) + a)>::value));
+		BOOST_CHECK((std::is_same<double,decltype(a + 1.)>::value));
+		BOOST_CHECK((std::is_same<long double,decltype(1.l + a)>::value));
+		// Check type trait.
+		BOOST_CHECK(is_addable_in_place<q_type>::value);
+		BOOST_CHECK((is_addable_in_place<q_type,int>::value));
+		BOOST_CHECK((is_addable_in_place<q_type,int_type>::value));
+		BOOST_CHECK((is_addable_in_place<q_type,float>::value));
+		BOOST_CHECK((!is_addable_in_place<q_type,std::string>::value));
+		BOOST_CHECK(is_addable<q_type>::value);
+		BOOST_CHECK((is_addable<q_type,int>::value));
+		BOOST_CHECK((is_addable<q_type,int_type>::value));
+		BOOST_CHECK((is_addable<q_type,float>::value));
+		BOOST_CHECK((!is_addable<q_type,std::string>::value));
+		BOOST_CHECK((is_addable<int,q_type>::value));
+		BOOST_CHECK((is_addable<int_type,q_type>::value));
+		BOOST_CHECK((is_addable<float,q_type>::value));
+		BOOST_CHECK((!is_addable<std::string,q_type>::value));
+		// Check operations with self.
+		a += a.num();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"9/2");
+		a += a;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"9");
+		// Check with same den.
+		a = "3/4";
+		a += q_type{-7,4};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1");
 		// Random testing.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1;
@@ -485,7 +534,7 @@ struct in_place_arith_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(mp_rational_in_place_arith_test)
+BOOST_AUTO_TEST_CASE(mp_rational_arith_test)
 {
-	boost::mpl::for_each<size_types>(in_place_arith_tester());
+	boost::mpl::for_each<size_types>(plus_tester());
 }
