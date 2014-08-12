@@ -455,16 +455,16 @@ class mp_rational
 		void canonicalise() noexcept
 		{
 			// If the top is null, den must be one.
-			if (m_num.sign() == 0) {
+			if (math::is_zero(m_num)) {
 				m_den = 1;
 				return;
 			}
+			// NOTE: here we can avoid the further division by gcd if it is one or -one.
+			// Consider this as a possible optimisation in the future.
 			const int_type gcd = detail::gcd(m_num,m_den);
-			// Num and den are coprime already, no need for further divisions.
-			if (gcd != 1) {
-				m_num /= gcd;
-				m_den /= gcd;
-			}
+			piranha_assert(!math::is_zero(gcd));
+			m_num /= gcd;
+			m_den /= gcd;
 			// Fix mismatch in signs.
 			if (m_den.sign() == -1) {
 				m_num.negate();
