@@ -2038,7 +2038,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
+		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2141,7 +2141,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
+		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2244,7 +2244,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
+		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
 		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
@@ -2373,7 +2373,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @throws unspecified any exception thrown by the generic constructor or by the conversion operator, if used.
+		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 * @throws piranha::zero_division_error if \p T is an integral type and \p x is zero (as established by
 		 * piranha::math::is_zero()).
 		 */
