@@ -286,7 +286,7 @@ struct static_integer
 	}
 	static_integer &operator=(const static_integer &) = default;
 	static_integer &operator=(static_integer &&) = default;
-	void negate()
+	void negate() noexcept
 	{
 		// NOTE: this is 2 at most, no danger in taking the negative.
 		_mp_size = -_mp_size;
