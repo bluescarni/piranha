@@ -511,7 +511,7 @@ struct plus_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1");
 		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
-		mpq_raii m0, m1;
+		mpq_raii m0, m1, m2;
 		detail::mpz_raii z;
 		for (int i = 0; i < ntries; ++i) {
 			int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
@@ -547,6 +547,51 @@ struct plus_tester
 			::mpq_canonicalize(&m0.m_mpq);
 			q0 += f;
 			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			// In-place with integral on the left.
+			if (a < 0) {
+				auto old_a = a;
+				a += q_type{3,2};
+				// +2 because we are in negative territory and conversion from rational
+				// to int truncates towards zero.
+				BOOST_CHECK_EQUAL(old_a + 2,a);
+				int_type an(old_a);
+				an += q_type{3,2};
+				BOOST_CHECK_EQUAL(old_a + 2,an);
+			}
+			// Binary.
+			q0 = q_type{a,b};
+			q1 = q_type{c,d};
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			if (d > 0) {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(d));
+			} else {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
+			}
+			::mpq_canonicalize(&m1.m_mpq);
+			::mpq_add(&m2.m_mpq,&m0.m_mpq,&m1.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 + q1));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q1 + q0));
+			// With int_type.
+			::mpz_set_si(&z.m_mpz,e);
+			::mpq_set(&m2.m_mpq,&m0.m_mpq);
+			::mpz_addmul(mpq_numref(&m2.m_mpq),mpq_denref(&m2.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m2.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 + int_type{e}));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(int_type{e} + q0));
+			// With int.
+			::mpz_set_si(&z.m_mpz,f);
+			::mpq_set(&m2.m_mpq,&m0.m_mpq);
+			::mpz_addmul(mpq_numref(&m2.m_mpq),mpq_denref(&m2.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m2.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 + f));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(f + q0));
 		}
 	}
 };
