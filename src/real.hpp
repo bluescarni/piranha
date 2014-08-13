@@ -102,7 +102,8 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 // TODO:
 // - fix the move semantics if possible (i.e., valid but unspecified state),
 // - add interoperability with long double and long long, avoiding the is_gmp_int stuff ->
-//   look into using the intmax_t overloads from MPFR.
+//   look into using the intmax_t overloads from MPFR,
+// - maybe we can replace the raii str holder with a unique_ptr with custom deleter.
 class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
@@ -768,7 +769,7 @@ class real: public detail::real_base<>
 		/**
 		 * @param[in] other real to be moved.
 		 */
-		real(real &&other) noexcept(true)
+		real(real &&other) noexcept
 		{
 			m_value->_mpfr_prec = other.m_value->_mpfr_prec;
 			m_value->_mpfr_sign = other.m_value->_mpfr_sign;
@@ -882,7 +883,7 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p this.
 		 */
-		real &operator=(real &&other) noexcept(true)
+		real &operator=(real &&other) noexcept
 		{
 			// NOTE: swap() already has the check for this.
 			swap(other);
@@ -988,7 +989,7 @@ class real: public detail::real_base<>
 		 * 
 		 * @param[in] other swap argument.
 		 */
-		void swap(real &other) noexcept(true)
+		void swap(real &other) noexcept
 		{
 			if (this == &other) {
 				return;
@@ -1931,7 +1932,7 @@ namespace std
  * @see piranha::real::swap()
  */
 template <>
-inline void swap(piranha::real &r1, piranha::real &r2) noexcept(true)
+inline void swap(piranha::real &r1, piranha::real &r2) noexcept
 {
 	r1.swap(r2);
 }
