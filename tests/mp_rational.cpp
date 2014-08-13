@@ -456,11 +456,25 @@ struct plus_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-11/2");
 		a += 7;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"3/2");
+		int n = 1;
+		n += a;
+		BOOST_CHECK_EQUAL(n,2);
+		int_type nn(-2);
+		nn += a;
+		BOOST_CHECK_EQUAL(nn,0);
+		double x(-3);
+		if (std::numeric_limits<double>::radix == 2) {
+			x += a;
+			BOOST_CHECK_EQUAL(x,-1.5);
+		}
 		// Check return types.
 		BOOST_CHECK((std::is_same<q_type &,decltype(a += a)>::value));
 		BOOST_CHECK((std::is_same<q_type &,decltype(a += 1)>::value));
 		BOOST_CHECK((std::is_same<q_type &,decltype(a += int_type(1))>::value));
 		BOOST_CHECK((std::is_same<q_type &,decltype(a += 1.)>::value));
+		BOOST_CHECK((std::is_same<int &,decltype(n += a)>::value));
+		BOOST_CHECK((std::is_same<int_type &,decltype(nn += a)>::value));
+		BOOST_CHECK((std::is_same<double &,decltype(x += a)>::value));
 		BOOST_CHECK((std::is_same<q_type,decltype(a + a)>::value));
 		BOOST_CHECK((std::is_same<q_type,decltype(a + 1)>::value));
 		BOOST_CHECK((std::is_same<q_type,decltype(1ull + a)>::value));
@@ -483,6 +497,9 @@ struct plus_tester
 		BOOST_CHECK((is_addable<int_type,q_type>::value));
 		BOOST_CHECK((is_addable<float,q_type>::value));
 		BOOST_CHECK((!is_addable<std::string,q_type>::value));
+		BOOST_CHECK((is_addable_in_place<int,q_type>::value));
+		BOOST_CHECK((is_addable_in_place<int_type,q_type>::value));
+		BOOST_CHECK((is_addable_in_place<double,q_type>::value));
 		// Check operations with self.
 		a += a.num();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"9/2");
@@ -492,12 +509,12 @@ struct plus_tester
 		a = "3/4";
 		a += q_type{-7,4};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-1");
-		// Random testing.
+		// Random testing with integral types.
 		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
 		mpq_raii m0, m1;
 		detail::mpz_raii z;
 		for (int i = 0; i < ntries; ++i) {
-			const int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
+			int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
 			if (b == 0 || d == 0) {
 				continue;
 			}

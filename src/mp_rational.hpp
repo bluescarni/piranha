@@ -567,8 +567,6 @@ class mp_rational
 		/// Identity operator.
 		/**
 		 * @return a copy of \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the copy constructor.
 		 */
 		mp_rational operator+() const
 		{
@@ -588,7 +586,7 @@ class mp_rational
 		/**
 		 * @return copy of \p this before the increment.
 		 * 
-		 * @throws unspecified any exception thrown by the pre-increment operator or by the copy constructor.
+		 * @throws unspecified any exception thrown by the pre-increment operator.
 		 */
 		mp_rational operator++(int)
 		{
@@ -639,15 +637,42 @@ class mp_rational
 		{
 			return x = static_cast<T>(q + x);
 		}
+		/// Generic binary addition involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and added to \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
+		 */
 		template <typename T, typename U>
 		friend auto operator+(const T &x, const U &y) -> decltype(mp_rational::binary_plus(x,y))
 		{
 			return mp_rational::binary_plus(x,y);
 		}
-		void negate()
+		/// Negate in-place.
+		void negate() noexcept
 		{
 			m_num.negate();
 		}
+		/// Negated copy.
+		/**
+		 * @return a negated copy of \p this.
+		 */
 		mp_rational operator-() const
 		{
 			mp_rational retval(*this);
