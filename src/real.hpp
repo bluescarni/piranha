@@ -103,7 +103,8 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 // - fix the move semantics if possible (i.e., valid but unspecified state),
 // - add interoperability with long double and long long, avoiding the is_gmp_int stuff ->
 //   look into using the intmax_t overloads from MPFR,
-// - maybe we can replace the raii str holder with a unique_ptr with custom deleter.
+// - maybe we can replace the raii str holder with a unique_ptr with custom deleter,
+// - fix use of isdigit.
 class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.

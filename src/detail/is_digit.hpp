@@ -29,6 +29,14 @@ namespace piranha
 namespace detail
 {
 
+// NOTE: check this answer:
+// http://stackoverflow.com/questions/13827180/char-ascii-relation
+// """
+// The mapping of integer values for characters does have one guarantee given
+// by the Standard: the values of the decimal digits are continguous.
+// (i.e., '1' - '0' == 1, ... '9' - '0' == 9)
+// """
+// It should be possible to implement this with a binary search.
 inline bool is_digit(char c)
 {
 	const char digits[] = "0123456789";
