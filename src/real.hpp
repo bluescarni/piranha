@@ -53,16 +53,12 @@ namespace detail
 template <typename = int>
 struct real_base
 {
-	/// Default rounding mode.
-	/**
-	 * All operations will use the \p MPFR_RNDN (round to nearest) rounding mode.
-	 */
+	// Default rounding mode.
+	// All operations will use the MPFR_RNDN (round to nearest) rounding mode.
 	static const ::mpfr_rnd_t default_rnd = MPFR_RNDN;
-	/// Default significand precision.
-	/**
-	 * The precision is the number of bits used to represent the significand of a floating-point number.
-	 * This default value is equivalent to the IEEE 754 quadruple-precision binary floating-point format.
-	 */
+	// Default significand precision.
+	// The precision is the number of bits used to represent the significand of a floating-point number.
+	// This default value is equivalent to the IEEE 754 quadruple-precision binary floating-point format.
 	static const ::mpfr_prec_t default_prec = 113;
 };
 

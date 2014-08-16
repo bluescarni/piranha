@@ -119,11 +119,9 @@
 namespace piranha
 {
 
-/// Namespace for implementation details.
-/**
- * Classes and functions defined in this namespace are non-documented implementation details.
- * Users should never employ functionality implemented in this namespace.
- */
+// Namespace for implementation details.
+// Classes and functions defined in this namespace are non-documented implementation details.
+// Users should never employ functionality implemented in this namespace.
 namespace detail {}
 
 /// Inline namespace for the definition of user-defined literals.
