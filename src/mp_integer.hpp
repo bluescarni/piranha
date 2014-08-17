@@ -979,6 +979,7 @@ union integer_union
  * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
  *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
  *   rational.
+ * - check if we can just make a single friend here, in the same way as done in piranha::integer for the pow_impl access.
  */
 template <int NBits = 0>
 class mp_integer
