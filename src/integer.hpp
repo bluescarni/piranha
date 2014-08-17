@@ -53,6 +53,13 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+struct integer_private_access;
+
+}
+
 /// Arbitrary precision integer class.
 /**
  * This class represents integer numbers of arbitrary size (i.e., the size is limited only by the available memory).
@@ -108,9 +115,8 @@ class integer
 		// Make friends with real and rational.
 		friend class real;
 		friend class rational;
-		// Make friends with pow_impl.
-		template <typename,typename,typename>
-		friend struct math::pow_impl;
+		// Access to interop types, used in pow_impl.
+		friend struct detail::integer_private_access;
 		// C++ arithmetic types supported for interaction with integer.
 		template <typename T>
 		struct is_interop_type
@@ -1970,6 +1976,30 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::t
 	}
 };
 
+}
+
+namespace detail
+{
+
+struct integer_private_access
+{
+	template <typename T>
+	using is_interop = integer::is_interop_type<T>;
+};
+
+template <typename T, typename U>
+using integer_pow_enabler = typename std::enable_if<
+	(std::is_same<T,integer>::value && integer_private_access::is_interop<U>::value) ||
+	(std::is_same<U,integer>::value && integer_private_access::is_interop<T>::value) ||
+	(std::is_same<T,integer>::value && std::is_same<U,integer>::value) ||
+	(std::is_integral<T>::value && std::is_integral<U>::value)
+>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::pow() functor for piranha::integer and integral types.
 /**
  * This specialisation is activated when:
@@ -1986,9 +2016,7 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,integer>::value>::t
  *   used to compute the result.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<piranha::integer::are_binary_op_types<T,U>::value ||
-	(std::is_integral<T>::value && std::is_integral<U>::value)
->::type>
+struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 {
 	/// Call operator, integer--integer overload.
 	/**
