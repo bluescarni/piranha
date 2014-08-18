@@ -267,6 +267,75 @@ class mp_rational
 		{
 			return binary_plus(q2,x);
 		}
+		// In-place sub.
+		mp_rational &in_place_sub(const mp_rational &other)
+		{
+			if (unlikely(&other == this) || m_den == other.m_den) {
+				m_num -= other.m_num;
+			} else {
+				m_num *= other.m_den;
+				// Negate temporarily in order to use multiply_accumulate.
+				// NOTE: candidate for multiply_sub if we ever implement it.
+				m_den.negate();
+				math::multiply_accumulate(m_num,m_den,other.m_num);
+				m_den.negate();
+				m_den *= other.m_den;
+			}
+			canonicalise();
+			return *this;
+		}
+		mp_rational &in_place_sub(const int_type &other)
+		{
+			m_den.negate();
+			math::multiply_accumulate(m_num,m_den,other);
+			m_den.negate();
+			canonicalise();
+			return *this;
+		}
+		template <typename T>
+		mp_rational &in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			return in_place_sub(int_type(n));
+		}
+		template <typename T>
+		mp_rational &in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (*this = static_cast<T>(*this) - x);
+		}
+		// Binary sub.
+		template <typename T>
+		static mp_rational binary_minus_impl(const mp_rational &q1, const T &x)
+		{
+			auto retval(q1);
+			retval -= x;
+			return retval;
+		}
+		static mp_rational binary_minus(const mp_rational &q1, const mp_rational &q2)
+		{
+			return binary_minus_impl(q1,q2);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_minus(const mp_rational &q1, const T &x)
+		{
+			return binary_minus_impl(q1,x);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_minus(const T &x, const mp_rational &q2)
+		{
+			auto retval = binary_minus(q2,x);
+			retval.negate();
+			return retval;
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_minus(const mp_rational &q1, const T &x)
+		{
+			return static_cast<T>(q1) - x;
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_minus(const T &x, const mp_rational &q2)
+		{
+			return -binary_minus(q2,x);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -606,7 +675,7 @@ class mp_rational
 		 * - \p f is added to \p x,
 		 * - the result is assigned back to \p this.
 		 * 
-		 * @param[in] other argument for the addition.
+		 * @param[in] x argument for the addition.
 		 * 
 		 * @return reference to \p this.
 		 * 
@@ -614,9 +683,9 @@ class mp_rational
 		 * or the generic assignment operator, if used.
 		 */
 		template <typename T>
-		auto operator+=(const T &other) -> decltype(this->in_place_add(other))
+		auto operator+=(const T &x) -> decltype(this->in_place_add(x))
 		{
-			return in_place_add(other);
+			return in_place_add(x);
 		}
 		/// Generic in-place addition with piranha::mp_rational.
 		/**
@@ -678,6 +747,98 @@ class mp_rational
 			mp_rational retval(*this);
 			retval.negate();
 			return retval;
+		}
+		/// Pre-decrement operator.
+		/**
+		 * @return reference to \p this after the decrement.
+		 * 
+		 * @throws unspecified any exception thrown by in-place subtraction.
+		 */
+		mp_rational &operator--()
+		{
+			return operator-=(1);
+		}
+		/// Post-decrement operator.
+		/**
+		 * @return copy of \p this before the decrement.
+		 * 
+		 * @throws unspecified any exception thrown by the pre-decrement operator.
+		 */
+		mp_rational operator--(int)
+		{
+			const mp_rational retval(*this);
+			--(*this);
+			return retval;
+		}
+		/// In-place subtraction.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * 
+		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p x is subtracted from \p f,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the subtraction.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
+		 * or the generic assignment operator, if used.
+		 */
+		template <typename T>
+		auto operator-=(const T &x) -> decltype(this->in_place_sub(x))
+		{
+			return in_place_sub(x);
+		}
+		/// Generic in-place subtraction with piranha::mp_rational.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Subtract a piranha::mp_rational in-place. This method will first compute <tt>x - q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
+		 */
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend auto operator-=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(x - q))
+		{
+			return x = static_cast<T>(x - q);
+		}
+		/// Generic binary subtraction involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and subtracted from (or to) \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x - y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
+		 */
+		template <typename T, typename U>
+		friend auto operator-(const T &x, const U &y) -> decltype(mp_rational::binary_minus(x,y))
+		{
+			return mp_rational::binary_minus(x,y);
 		}
 	private:
 		int_type	m_num;
