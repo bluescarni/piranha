@@ -960,7 +960,9 @@ union integer_union
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 /*
- * TODO more type traits tests, check wrt old integer tests.
+ * TODO
+ * - more type traits tests, check wrt old integer tests.
+ * - check if we can just make a single friend here, in the same way as done in piranha::integer for the pow_impl access.
  * TODO performance improvements:
  *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
  *     holder so that we avoid double allocations;
@@ -979,7 +981,9 @@ union integer_union
  * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
  *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
  *   rational.
- * - check if we can just make a single friend here, in the same way as done in piranha::integer for the pow_impl access.
+ * - understand the performance implications of implementing the binary operator as += and copy. Might be that creating an
+ *   empty retval and then filling it with mpz_add() or a similar free function is more efficient. See how it is done
+ *   in Arbpp for instance.
  */
 template <int NBits = 0>
 class mp_integer
