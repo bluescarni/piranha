@@ -44,6 +44,7 @@
 #include "../src/config.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"
+#include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/type_traits.hpp"
 
@@ -1019,4 +1020,27 @@ BOOST_AUTO_TEST_CASE(mp_rational_arith_test)
 	boost::mpl::for_each<size_types>(plus_tester());
 	boost::mpl::for_each<size_types>(minus_tester());
 	boost::mpl::for_each<size_types>(mult_tester());
+}
+
+struct is_zero_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		q_type q;
+		BOOST_CHECK(math::is_zero(q));
+		q = 1;
+		BOOST_CHECK(!math::is_zero(q));
+		q = "-3/5";
+		BOOST_CHECK(!math::is_zero(q));
+		q = "1";
+		q -= 1;
+		BOOST_CHECK(math::is_zero(q));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_is_zero_test)
+{
+	boost::mpl::for_each<size_types>(is_zero_tester());
 }

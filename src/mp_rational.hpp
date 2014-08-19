@@ -992,6 +992,45 @@ inline mp_rational<> operator "" _q(const char *s)
 
 }
 
+namespace detail
+{
+
+// Temporary TMP structure to detect mp_rational types.
+// Should be replaced by is_instance_of once (or if) we move
+// from NBits to an integral_constant for selecting limb
+// size in mp_integer.
+template <typename T>
+struct is_mp_rational: std::false_type {};
+
+template <int NBits>
+struct is_mp_rational<mp_rational<NBits>>: std::true_type {};
+
+}
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::is_zero() functor for piranha::mp_rational.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
+ */
+template <typename T>
+struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q piranha::mp_rational to be tested.
+	 * 
+	 * @return \p true if \p q is zero, \p false otherwise.
+	 */
+	bool operator()(const T &q) const noexcept
+	{
+		return is_zero(q.num());
+	}
+};
+
+}
+
 }
 
 #endif
