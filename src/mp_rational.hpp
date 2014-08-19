@@ -336,6 +336,62 @@ class mp_rational
 		{
 			return -binary_minus(q2,x);
 		}
+		// In-place mult.
+		mp_rational &in_place_mult(const mp_rational &other)
+		{
+			m_num *= other.m_num;
+			m_den *= other.m_den;
+			canonicalise();
+			return *this;
+		}
+		mp_rational &in_place_mult(const int_type &other)
+		{
+			m_num *= other;
+			canonicalise();
+			return *this;
+		}
+		template <typename T>
+		mp_rational &in_place_mult(const T &n, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
+		{
+			return in_place_mult(int_type(n));
+		}
+		template <typename T>
+		mp_rational &in_place_mult(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		{
+			return (*this = static_cast<T>(*this) * x);
+		}
+		// Binary mult.
+		template <typename T>
+		static mp_rational binary_mult_impl(const mp_rational &q1, const T &x)
+		{
+			auto retval(q1);
+			retval *= x;
+			return retval;
+		}
+		static mp_rational binary_mult(const mp_rational &q1, const mp_rational &q2)
+		{
+			return binary_mult_impl(q1,q2);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_mult(const mp_rational &q1, const T &x)
+		{
+			return binary_mult_impl(q1,x);
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static mp_rational binary_mult(const T &x, const mp_rational &q2)
+		{
+			return binary_mult(q2,x);
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_mult(const mp_rational &q1, const T &x)
+		{
+			return x * static_cast<T>(q1);
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static T binary_mult(const T &x, const mp_rational &q2)
+		{
+			return binary_mult(q2,x);
+		}
 	public:
 		/// Default constructor.
 		/**
@@ -839,6 +895,76 @@ class mp_rational
 		friend auto operator-(const T &x, const U &y) -> decltype(mp_rational::binary_minus(x,y))
 		{
 			return mp_rational::binary_minus(x,y);
+		}
+		/// In-place multiplication.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * 
+		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
+		 * sequence of operations takes place:
+		 * 
+		 * - \p this is converted to an instance \p f of type \p T via the conversion operator,
+		 * - \p f is multiplied by \p x,
+		 * - the result is assigned back to \p this.
+		 * 
+		 * @param[in] x argument for the multiplication.
+		 * 
+		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the conversion operator, the generic constructor of piranha::mp_integer,
+		 * or the generic assignment operator, if used.
+		 */
+		template <typename T>
+		auto operator*=(const T &x) -> decltype(this->in_place_mult(x))
+		{
+			return in_place_mult(x);
+		}
+		/// Generic binary multiplication involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 * 
+		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
+		 * 
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and multiplied by \p f to generate the return value, which will then be of type \p F.
+		 * 
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 * 
+		 * @return <tt>x * y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by:
+		 * - the corresponding in-place operator,
+		 * - the invoked constructor or the conversion operator, if used.
+		 */
+		template <typename T, typename U>
+		friend auto operator*(const T &x, const U &y) -> decltype(mp_rational::binary_mult(x,y))
+		{
+			return mp_rational::binary_mult(x,y);
+		}
+		/// Generic in-place multiplication with piranha::mp_rational.
+		/**
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Subtract a piranha::mp_rational in-place. This method will first compute <tt>x * q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
+		 * 
+		 * @param[in,out] x first argument.
+		 * @param[in] q second argument.
+		 * 
+		 * @return reference to \p x.
+		 * 
+		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
+		 */
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend auto operator*=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(x * q))
+		{
+			return x = static_cast<T>(x * q);
 		}
 	private:
 		int_type	m_num;

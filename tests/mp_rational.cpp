@@ -829,8 +829,194 @@ struct minus_tester
 	}
 };
 
+struct mult_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		// Some simple checks.
+		q_type a{1,2};
+		a *= q_type{3,5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"3/10");
+		a *= q_type{4,-5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-6/25");
+		a *= q_type{-4,5};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"24/125");
+		a *= int_type(-5);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-24/25");
+		a *= 7;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"-168/25");
+		int n = 2;
+		n *= a;
+		BOOST_CHECK_EQUAL(n,-13);
+		int_type nn(-2);
+		nn *= a;
+		BOOST_CHECK_EQUAL(nn,13);
+		a = "5/2";
+		double x(-3);
+		if (std::numeric_limits<double>::radix == 2) {
+			x *= a;
+			BOOST_CHECK_EQUAL(x,-7.5);
+		}
+		// Check return types.
+		BOOST_CHECK((std::is_same<q_type &,decltype(a *= a)>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a *= 1)>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a *= int_type(1))>::value));
+		BOOST_CHECK((std::is_same<q_type &,decltype(a *= 1.)>::value));
+		BOOST_CHECK((std::is_same<int &,decltype(n *= a)>::value));
+		BOOST_CHECK((std::is_same<int_type &,decltype(nn *= a)>::value));
+		BOOST_CHECK((std::is_same<double &,decltype(x *= a)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a * a)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a * 1)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(1ull * a)>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(a * int_type(1))>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(int_type(1) * a)>::value));
+		BOOST_CHECK((std::is_same<double,decltype(a * 1.)>::value));
+		BOOST_CHECK((std::is_same<long double,decltype(1.l * a)>::value));
+		// Check type trait.
+		BOOST_CHECK(is_multipliable_in_place<q_type>::value);
+		BOOST_CHECK((is_multipliable_in_place<q_type,int>::value));
+		BOOST_CHECK((is_multipliable_in_place<q_type,int_type>::value));
+		BOOST_CHECK((is_multipliable_in_place<q_type,float>::value));
+		BOOST_CHECK((!is_multipliable_in_place<q_type,std::string>::value));
+		BOOST_CHECK(is_multipliable<q_type>::value);
+		BOOST_CHECK((is_multipliable<q_type,int>::value));
+		BOOST_CHECK((is_multipliable<q_type,int_type>::value));
+		BOOST_CHECK((is_multipliable<q_type,float>::value));
+		BOOST_CHECK((!is_multipliable<q_type,std::string>::value));
+		BOOST_CHECK((is_multipliable<int,q_type>::value));
+		BOOST_CHECK((is_multipliable<int_type,q_type>::value));
+		BOOST_CHECK((is_multipliable<float,q_type>::value));
+		BOOST_CHECK((!is_multipliable<std::string,q_type>::value));
+		BOOST_CHECK((is_multipliable_in_place<int,q_type>::value));
+		BOOST_CHECK((is_multipliable_in_place<int_type,q_type>::value));
+		BOOST_CHECK((is_multipliable_in_place<double,q_type>::value));
+		// Check operations with self.
+		a *= a.num();
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"25/2");
+		a *= a;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"625/4");
+		// Check with same den.
+		a = "3/4";
+		a *= q_type{9,4};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"27/16");
+		// Random testing with integral types.
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		mpq_raii m0, m1, m2;
+		detail::mpz_raii z;
+		for (int i = 0; i < ntries; ++i) {
+			int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng), e = dist(rng), f = dist(rng);
+			if (b == 0 || d == 0) {
+				continue;
+			}
+			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			if (d > 0) {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(d));
+			} else {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
+			}
+			::mpq_canonicalize(&m1.m_mpq);
+			q_type q0{a,b}, q1{c,d};
+			q0 *= q1;
+			::mpq_mul(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			::mpz_set_si(&z.m_mpz,e);
+			::mpz_mul(mpq_numref(&m0.m_mpq),mpq_numref(&m0.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m0.m_mpq);
+			q0 *= int_type(e);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			::mpz_set_si(&z.m_mpz,f);
+			::mpz_mul(mpq_numref(&m0.m_mpq),mpq_numref(&m0.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m0.m_mpq);
+			q0 *= f;
+			BOOST_CHECK_EQUAL(mpq_lexcast(m0),boost::lexical_cast<std::string>(q0));
+			// In-place with integral on the left.
+			if (a > 0 && a <= std::numeric_limits<int>::max() / 3) {
+				auto old_a = a;
+				a *= q_type{3,2};
+				BOOST_CHECK_EQUAL((old_a * 3)/2,a);
+				int_type an(old_a);
+				an *= q_type{3,2};
+				BOOST_CHECK_EQUAL((old_a * 3)/2,an);
+			}
+			// Binary.
+			q0 = q_type{a,b};
+			q1 = q_type{c,d};
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			if (d > 0) {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(d));
+			} else {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
+			}
+			::mpq_canonicalize(&m1.m_mpq);
+			::mpq_mul(&m2.m_mpq,&m0.m_mpq,&m1.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 * q1));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q1 * q0));
+			// With int_type.
+			::mpz_set_si(&z.m_mpz,e);
+			::mpq_set(&m2.m_mpq,&m0.m_mpq);
+			::mpz_mul(mpq_numref(&m2.m_mpq),mpq_numref(&m2.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m2.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 * int_type{e}));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(int_type{e} * q0));
+			// With int.
+			::mpz_set_si(&z.m_mpz,f);
+			::mpq_set(&m2.m_mpq,&m0.m_mpq);
+			::mpz_mul(mpq_numref(&m2.m_mpq),mpq_numref(&m2.m_mpq),&z.m_mpz);
+			::mpq_canonicalize(&m2.m_mpq);
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(q0 * f));
+			BOOST_CHECK_EQUAL(mpq_lexcast(m2),boost::lexical_cast<std::string>(f * q0));
+		}
+		// Floats.
+		if (std::numeric_limits<double>::has_infinity) {
+			const auto old_a(a);
+			BOOST_CHECK_THROW((a *= std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),boost::lexical_cast<std::string>(old_a));
+			double x = std::numeric_limits<double>::infinity();
+			x *= a;
+			BOOST_CHECK_EQUAL(x,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(x * a,std::numeric_limits<double>::infinity());
+			BOOST_CHECK_EQUAL(a * x,std::numeric_limits<double>::infinity());
+		}
+		// Random testing.
+		std::uniform_real_distribution<double> ddist(-1.,1.);
+		for (int i = 0; i < ntries; ++i) {
+			// In-place, rational on the left.
+			double x = ddist(rng), y = ddist(rng), x_copy(x);
+			q_type tmp_q{x}, tmp_copy{tmp_q};
+			tmp_q *= y;
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp_q),
+				boost::lexical_cast<std::string>(q_type{static_cast<double>(tmp_copy) * y}));
+			// In-place, float on the left.
+			x *= tmp_copy;
+			BOOST_CHECK_EQUAL(x,x_copy * static_cast<double>(tmp_copy));
+			// Binary.
+			BOOST_CHECK_EQUAL(x * tmp_q,x * static_cast<double>(tmp_q));
+			BOOST_CHECK_EQUAL(tmp_q * x,static_cast<double>(tmp_q) * x);
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_rational_arith_test)
 {
 	boost::mpl::for_each<size_types>(plus_tester());
 	boost::mpl::for_each<size_types>(minus_tester());
+	boost::mpl::for_each<size_types>(mult_tester());
 }
