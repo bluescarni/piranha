@@ -115,6 +115,7 @@
  * \todo review the usage of std::set of strings/symbols for the partial degree/order methods. Need to uniform this once and for all
  * with a good rationale.
  * \todo doxygen: check usage of param[(in,)out], and consider using the \tparam command.
+ * \todo review the use of return statements with const objects, if any.
  */
 namespace piranha
 {
