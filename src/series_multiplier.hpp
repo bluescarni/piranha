@@ -520,21 +520,16 @@ class series_multiplier
 			}
 			// Maxium number of random multiplications before which a duplicate term must be generated.
 			const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
-			// Random number engine and generator. We need something more than vanilla random_shuffle as we
-			// want to have a different engine per thread, in order to avoid potential problems with vanilla shuffle
-			// sharing and syncing a state across threads.
+			// Random number engine.
 			std::mt19937 engine;
-			typedef typename std::iterator_traits<typename std::vector<size_type>::iterator>::difference_type diff_type;
-			typedef std::uniform_int_distribution<diff_type> dist_type;
-			auto rng = [&engine](const diff_type &n) {return dist_type(diff_type(0),n - diff_type(1))(engine);};
 			// Init counter.
 			integer total(0);
 			// Go with the trials.
 			// NOTE: This could be easily parallelised, but not sure if it is worth.
 			for (auto n = 0u; n < ntrials; ++n) {
 				// Randomise.
-				std::random_shuffle(v_idx1.begin(),v_idx1.end(),rng);
-				std::random_shuffle(v_idx2.begin(),v_idx2.end(),rng);
+				std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
+				std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
 				size_type count = 0u;
 				auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
 				while (count < max_M) {
