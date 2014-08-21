@@ -1307,9 +1307,12 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// object to be assignable.
 		struct sparse_bi_extractor
 		{
+			// NOTE: in some setups Boost is apparently unable to deduce the result type
+			// of the functor and needs this typedef in the transform iterator.
+			using result_type = bucket_size_type;
 			explicit sparse_bi_extractor(const return_type *retval) noexcept : m_retval(retval) {}
 			template <typename Term>
-			bucket_size_type operator()(const Term *t) const noexcept
+			result_type operator()(const Term *t) const noexcept
 			{
 				return m_retval->m_container._bucket_from_hash(t->hash());
 			}
