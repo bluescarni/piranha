@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
+#include <boost/lexical_cast.hpp>
 #include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <iostream>
@@ -69,6 +70,9 @@ class custom_string: public std::string
 BOOST_AUTO_TEST_CASE(memory_parallel_array_test)
 {
 	environment env;
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
 	std::cout <<	"Testing int\n"
 			"===========\n";
 	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
