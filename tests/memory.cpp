@@ -27,18 +27,19 @@
 #include <array>
 #include <atomic>
 #include <boost/timer/timer.hpp>
+#include <cstddef>
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <limits>
 #include <new>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
-#include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
