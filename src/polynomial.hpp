@@ -1088,10 +1088,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
 			});
 			// Sort the the new keys.
-			std::sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type1 &p1, const new_key_type1 &p2) {
+			std::stable_sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type1 &p1, const new_key_type1 &p2) {
 				return p1.first < p2.first;
 			});
-			std::sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type2 &p1, const new_key_type2 &p2) {
+			std::stable_sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type2 &p1, const new_key_type2 &p2) {
 				return p1.first < p2.first;
 			});
 			// Store the sizes and compute the block sizes.
@@ -1337,13 +1337,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				return retval.m_container._bucket_from_hash(p1->hash()) <
 					retval.m_container._bucket_from_hash(p2->hash());
 			};
-			std::sort(this->m_v1.begin(),this->m_v1.end(),cmp1);
+			std::stable_sort(this->m_v1.begin(),this->m_v1.end(),cmp1);
 			auto cmp2 = [&retval](term_type2 const *p1,term_type2 const *p2)
 			{
 				return retval.m_container._bucket_from_hash(p1->hash()) <
 					retval.m_container._bucket_from_hash(p2->hash());
 			};
-			std::sort(this->m_v2.begin(),this->m_v2.end(),cmp2);
+			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),cmp2);
 			// Variable used to keep track of total unique insertions in retval.
 			bucket_size_type insertion_count = 0u;
 			// Number of buckets in retval.
@@ -1370,7 +1370,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 							tasks.emplace_back(v1[i],start,end);
 						}
 					}
-					std::sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
+					std::stable_sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
 						return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
 							retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
 					});
@@ -1454,7 +1454,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					}
 				}
 				// Sort the tasks in ascending order for the first write bucket index.
-				std::sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
+				std::stable_sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
 					return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
 						retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
 				});
