@@ -452,7 +452,7 @@ struct static_integer
 		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
 		const dlimb_t hi = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
-		// NOTE: throw before modifying anything here, so that res is not modified.
+		// NOTE: exit before modifying anything here, so that res is not modified.
 		if (unlikely(static_cast<limb_t>(hi >> limb_bits) != 0u)) {
 			return 1;
 		}
