@@ -292,7 +292,7 @@ struct static_integer
 	}
 	static_integer &operator=(const static_integer &) = default;
 	static_integer &operator=(static_integer &&) = default;
-	void negate() noexcept
+	void negate()
 	{
 		// NOTE: this is 2 at most, no danger in taking the negative.
 		_mp_size = -_mp_size;
@@ -447,19 +447,20 @@ struct static_integer
 	}
 	template <typename T = static_integer>
 	void clear_extra_bits(typename std::enable_if<T::limb_bits == T::total_bits>::type * = nullptr) {}
-	static void raw_add(static_integer &res, const static_integer &x, const static_integer &y)
+	static int raw_add(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		piranha_assert(x.abs_size() <= 2 && y.abs_size() <= 2);
 		const dlimb_t lo = static_cast<dlimb_t>(static_cast<dlimb_t>(x.m_limbs[0u]) + y.m_limbs[0u]);
 		const dlimb_t hi = static_cast<dlimb_t>((static_cast<dlimb_t>(x.m_limbs[1u]) + y.m_limbs[1u]) + (lo >> limb_bits));
-		// NOTE: throw before modifying anything here, for exception safety.
+		// NOTE: throw before modifying anything here, so that res is not modified.
 		if (unlikely(static_cast<limb_t>(hi >> limb_bits) != 0u)) {
-			piranha_throw(std::overflow_error,"overflow in raw addition");
+			return 1;
 		}
 		res.m_limbs[0u] = static_cast<limb_t>(lo);
 		res.m_limbs[1u] = static_cast<limb_t>(hi);
 		res._mp_size = res.calculate_n_limbs();
 		res.clear_extra_bits();
+		return 0;
 	}
 	static void raw_sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
@@ -474,7 +475,7 @@ struct static_integer
 		res.clear_extra_bits();
 	}
 	template <bool AddOrSub>
-	static void add_or_sub(static_integer &res, const static_integer &x, const static_integer &y)
+	static int add_or_sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		mpz_size_t asizex = x._mp_size, asizey = static_cast<mpz_size_t>(AddOrSub ? y._mp_size : -y._mp_size);
 		bool signx = true, signy = true;
@@ -488,7 +489,9 @@ struct static_integer
 		}
 		piranha_assert(asizex <= 2 && asizey <= 2);
 		if (signx == signy) {
-			raw_add(res,x,y);
+			if (unlikely(raw_add(res,x,y))) {
+				return 1;
+			}
 			if (!signx) {
 				res.negate();
 			}
@@ -505,14 +508,15 @@ struct static_integer
 				}
 			}
 		}
+		return 0;
 	}
-	static void add(static_integer &res, const static_integer &x, const static_integer &y)
+	static int add(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		add_or_sub<true>(res,x,y);
+		return add_or_sub<true>(res,x,y);
 	}
-	static void sub(static_integer &res, const static_integer &x, const static_integer &y)
+	static int sub(static_integer &res, const static_integer &x, const static_integer &y)
 	{
-		add_or_sub<false>(res,x,y);
+		return add_or_sub<false>(res,x,y);
 	}
 	static void raw_mul(static_integer &res, const static_integer &x, const static_integer &y, const mpz_size_t &asizex,
 		const mpz_size_t &asizey)
@@ -526,14 +530,14 @@ struct static_integer
 		res.clear_extra_bits();
 		piranha_assert(res._mp_size > 0);
 	}
-	static void mul(static_integer &res, const static_integer &x, const static_integer &y)
+	static int mul(static_integer &res, const static_integer &x, const static_integer &y)
 	{
 		mpz_size_t asizex = x._mp_size, asizey = y._mp_size;
 		if (unlikely(asizex == 0 || asizey == 0)) {
 			res._mp_size = 0;
 			res.m_limbs[0u] = 0u;
 			res.m_limbs[1u] = 0u;
-			return;
+			return 0;
 		}
 		bool signx = true, signy = true;
 		if (asizex < 0) {
@@ -545,12 +549,13 @@ struct static_integer
 			signy = false;
 		}
 		if (unlikely(asizex > 1 || asizey > 1)) {
-			piranha_throw(std::overflow_error,"overflow in multiplication");
+			return 1;
 		}
 		raw_mul(res,x,y,asizex,asizey);
 		if (signx != signy) {
 			res.negate();
 		}
+		return 0;
 	}
 	static_integer &operator+=(const static_integer &other)
 	{
@@ -595,7 +600,7 @@ struct static_integer
 		retval *= y;
 		return retval;
 	}
-	void multiply_accumulate(const static_integer &b, const static_integer &c)
+	int multiply_accumulate(const static_integer &b, const static_integer &c)
 	{
 		mpz_size_t asizea = _mp_size, asizeb = b._mp_size, asizec = c._mp_size;
 		bool signa = true, signb = true, signc = true;
@@ -613,10 +618,10 @@ struct static_integer
 		}
 		piranha_assert(asizea <= 2);
 		if (unlikely(asizeb > 1 || asizec > 1)) {
-			piranha_throw(std::overflow_error,"overflow in multadd");
+			return 1;
 		}
 		if (unlikely(asizeb == 0 || asizec == 0)) {
-			return;
+			return 0;
 		}
 		static_integer tmp;
 		raw_mul(tmp,b,c,asizeb,asizec);
@@ -624,7 +629,9 @@ struct static_integer
 		const bool signtmp = (signb == signc);
 		piranha_assert(asizetmp <= 2 && asizetmp > 0);
 		if (signa == signtmp) {
-			raw_add(*this,*this,tmp);
+			if (unlikely(raw_add(*this,*this,tmp))) {
+				return 1;
+			}
 			if (!signa) {
 				negate();
 			}
@@ -641,6 +648,7 @@ struct static_integer
 				}
 			}
 		}
+		return 0;
 	}
 	// Left-shift by one.
 	void lshift1()
@@ -737,7 +745,7 @@ struct static_integer
 			// value of the index param.
 			(limb_t(max_n_size_t - 1u) < std::size_t(std::numeric_limits<std::size_t>::max() / nbits_size_t));
 	};
-	std::size_t hash() const noexcept
+	std::size_t hash() const
 	{
 		static_assert(hash_checks::value,"Overflow error.");
 		// Hash of zero is zero.
@@ -777,7 +785,7 @@ union integer_union
 	public:
 		using s_storage = static_integer<NBits>;
 		using d_storage = mpz_struct_t;
-		static void move_ctor_mpz(mpz_struct_t &to, mpz_struct_t &from) noexcept
+		static void move_ctor_mpz(mpz_struct_t &to, mpz_struct_t &from)
 		{
 			to._mp_alloc = from._mp_alloc;
 			to._mp_size = from._mp_size;
@@ -868,11 +876,11 @@ union integer_union
 			}
 			return *this;
 		}
-		bool is_static() const noexcept
+		bool is_static() const
 		{
 			return m_st._mp_alloc == 0;
 		}
-		static bool fits_in_static(const mpz_struct_t &mpz) noexcept
+		static bool fits_in_static(const mpz_struct_t &mpz)
 		{
 			// NOTE: sizeinbase returns the index of the highest bit *counting from 1* (like a logarithm).
 			return (::mpz_sizeinbase(&mpz,2) <= s_storage::limb_bits * 2u);
@@ -1360,17 +1368,18 @@ class mp_integer
 			bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				// Attempt the static add/sub.
-				try {
-					// NOTE: the static add/sub will try to do the operation, if it fails an overflow error
-					// will be generated. The operation is exception-safe, and m_int.g_st() will be untouched
-					// in case of problems.
-					if (AddOrSub) {
-						m_int.g_st().add(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
-					} else {
-						m_int.g_st().sub(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
-					}
+				// NOTE: the static add/sub will try to do the operation, if it fails 1
+				// will be returned. The operation is safe, and m_int.g_st() will be untouched
+				// in case of problems.
+				int status;
+				if (AddOrSub) {
+					status = m_int.g_st().add(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
+				} else {
+					status = m_int.g_st().sub(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
+				}
+				if (likely(!status)) {
 					return *this;
-				} catch (const std::overflow_error &) {}
+				}
 			}
 			// Promote as needed, we need GMP types on both sides.
 			if (s1) {
@@ -1504,10 +1513,9 @@ class mp_integer
 			bool s1 = is_static(), s2 = other.is_static();
 			if (s1 && s2) {
 				// Attempt the static mul.
-				try {
-					m_int.g_st().mul(m_int.g_st(),m_int.g_st(),other.m_int.g_st());
+				if(likely(!m_int.g_st().mul(m_int.g_st(),m_int.g_st(),other.m_int.g_st()))) {
 					return *this;
-				} catch (const std::overflow_error &) {}
+				}
 			}
 			// Promote as needed, we need GMP types on both sides.
 			if (s1) {
@@ -2008,12 +2016,12 @@ class mp_integer
 		/**
 		 * @return \p true if \p this is currently stored in static storage, \p false otherwise.
 		 */
-		bool is_static() const noexcept
+		bool is_static() const
 		{
 			return m_int.is_static();
 		}
 		/// Negate in-place.
-		void negate() noexcept
+		void negate()
 		{
 			if (is_static()) {
 				m_int.g_st().negate();
@@ -2025,7 +2033,7 @@ class mp_integer
 		/**
 		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>.
 		 */
-		int sign() const noexcept
+		int sign() const
 		{
 			if (is_static()) {
 				if (m_int.g_st()._mp_size > 0) {
@@ -2116,7 +2124,7 @@ class mp_integer
 		/**
 		 * @return copy of \p this.
 		 */
-		mp_integer operator+() const noexcept
+		mp_integer operator+() const
 		{
 			return *this;
 		}
@@ -2126,7 +2134,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this after the increment.
 		 */
-		mp_integer &operator++() noexcept
+		mp_integer &operator++()
 		{
 			return operator+=(1);
 		}
@@ -2136,7 +2144,7 @@ class mp_integer
 		 * 
 		 * @return copy of \p this before the increment.
 		 */
-		mp_integer operator++(int) noexcept
+		mp_integer operator++(int)
 		{
 			const mp_integer retval(*this);
 			++(*this);
@@ -2217,7 +2225,7 @@ class mp_integer
 		/**
 		 * @return copy of \p -this.
 		 */
-		mp_integer operator-() const noexcept
+		mp_integer operator-() const
 		{
 			mp_integer retval(*this);
 			retval.negate();
@@ -2229,7 +2237,7 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		mp_integer &operator--() noexcept
+		mp_integer &operator--()
 		{
 			return operator-=(1);
 		}
@@ -2325,14 +2333,13 @@ class mp_integer
 		 * 
 		 * @return reference to \p this.
 		 */
-		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2) noexcept
+		mp_integer &multiply_accumulate(const mp_integer &n1, const mp_integer &n2)
 		{
 			bool s0 = is_static(), s1 = n1.is_static(), s2 = n2.is_static();
 			if (s0 && s1 && s2) {
-				try {
-					m_int.g_st().multiply_accumulate(n1.m_int.g_st(),n2.m_int.g_st());
+				if (likely(!m_int.g_st().multiply_accumulate(n1.m_int.g_st(),n2.m_int.g_st()))) {
 					return *this;
-				} catch (const std::overflow_error &) {}
+				}
 			}
 			// this will have to be mpz in any case, promote it if needed and re-check the
 			// static flags in case this coincides with n1 and/or n2.
@@ -2704,7 +2711,7 @@ class mp_integer
 		/**
 		 * @return absolute value of \p this.
 		 */
-		mp_integer abs() const noexcept
+		mp_integer abs() const
 		{
 			mp_integer retval(*this);
 			if (retval.is_static()) {
@@ -2735,7 +2742,7 @@ class mp_integer
 		 *
 		 * @return a hash value for \p this.
 		 */
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			// NOTE: in order to check that this method can be called safely we need to make sure that:
 			// - the static hash calculation has no overflows (checked above),
@@ -2945,7 +2952,7 @@ struct multiply_accumulate_impl<T,T,T,typename std::enable_if<detail::is_mp_inte
 	 * 
 	 * @return <tt>x.multiply_accumulate(y,z)</tt>.
 	 */
-	auto operator()(T &x, const T &y, const T &z) const noexcept -> decltype(x.multiply_accumulate(y,z))
+	auto operator()(T &x, const T &y, const T &z) const -> decltype(x.multiply_accumulate(y,z))
 	{
 		return x.multiply_accumulate(y,z);
 	}
@@ -2964,7 +2971,7 @@ struct negate_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::t
 	 * 
 	 * @param[in,out] n piranha::mp_integer to be negated.
 	 */
-	void operator()(T &n) const noexcept
+	void operator()(T &n) const
 	{
 		n.negate();
 	}
@@ -2985,7 +2992,7 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	 * 
 	 * @return \p true if \p n is zero, \p false otherwise.
 	 */
-	bool operator()(const T &n) const noexcept
+	bool operator()(const T &n) const
 	{
 		return n.sign() == 0;
 	}
@@ -3033,7 +3040,7 @@ struct abs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type
 	 * 
 	 * @return absolute value of \p n.
 	 */
-	T operator()(const T &n) const noexcept
+	T operator()(const T &n) const
 	{
 		return n.abs();
 	}
@@ -3100,7 +3107,7 @@ struct partial_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	/**
 	 * @return an instance of piranha::mp_integer constructed from zero.
 	 */
-	T operator()(const T &, const std::string &) const noexcept
+	T operator()(const T &, const std::string &) const
 	{
 		return T{};
 	}
@@ -3120,7 +3127,7 @@ struct evaluate_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>:
 	 * @return copy of \p n.
 	 */
 	template <typename U>
-	T operator()(const T &n, const std::unordered_map<std::string,U> &) const noexcept
+	T operator()(const T &n, const std::unordered_map<std::string,U> &) const
 	{
 		return n;
 	}
@@ -3140,7 +3147,7 @@ struct subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 	 * @return copy of \p n.
 	 */
 	template <typename U>
-	T operator()(const T &n, const std::string &, const U &) const noexcept
+	T operator()(const T &n, const std::string &, const U &) const
 	{
 		return n;
 	}
