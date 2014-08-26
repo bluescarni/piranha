@@ -1230,8 +1230,10 @@ struct read_uint_tester
 			}
 			return retval;
 		});
-		// Boilerplate to convert the input vector and return value to a sequence of bits.
+		// Boilerplate to convert the input vector and return value to a sequence of bits represented
+		// as a vector of chars.
 		std::vector<unsigned char> db_in, db_out;
+		// Input vector -> bit sequence db_in, with ignored bits in input.
 		auto vec_to_bitset = [&db_in,&input_vector](unsigned ibits) {
 			piranha_assert(ibits < static_cast<unsigned>(std::numeric_limits<in_type>::digits));
 			db_in.clear();
@@ -1245,9 +1247,10 @@ struct read_uint_tester
 				db_in.pop_back();
 			}
 		};
-		auto ret_to_bitset = [&db_out](out_type r) {
+		// Return value -> bit sequence db_out, with ignored bits in the output.
+		auto ret_to_bitset = [&db_out](out_type r, unsigned rbits) {
 			db_out.clear();
-			for (unsigned i = 0u; i < static_cast<unsigned>(std::numeric_limits<out_type>::digits); ++i) {
+			for (unsigned i = 0u; i < static_cast<unsigned>(std::numeric_limits<out_type>::digits) - rbits; ++i) {
 				db_out.push_back((r & (out_type(1u) << i)) != 0);
 			}
 			// Erase the top empty bits.
@@ -1255,180 +1258,505 @@ struct read_uint_tester
 				db_out.pop_back();
 			}
 		};
-		// Number of rets that can be read from the vector, ignoring ib bits.
-		auto n_rets = [&input_vector](unsigned ib) -> unsigned {
+		// Number of rets that can be read from the input vector, ignoring ib bits in input and rbits bits in output.
+		auto n_rets = [&input_vector](unsigned ib, unsigned rbits) -> unsigned {
 			const unsigned tmp1 = static_cast<unsigned>(input_vector.size() * (static_cast<unsigned>(std::numeric_limits<in_type>::digits) - ib)),
-				tmp2 = static_cast<unsigned>(std::numeric_limits<out_type>::digits);
+				tmp2 = static_cast<unsigned>(std::numeric_limits<out_type>::digits) - rbits;
 			auto q = tmp1 / tmp2, r = tmp1 % tmp2;
 			return (r == 0u) ? unsigned(q) : unsigned(q + 1u);
 		};
 		// Read the first int with different amount of ignored bits.
 		// NOTE: the first int can alway be read.
+		// 0 - 0 ignore.
 		vec_to_bitset(0u);
 		auto r = detail::read_uint<out_type>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
+		auto out_size = db_out.size();
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 0 - 1 ignore.
+		r = detail::read_uint<out_type,0u,1u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,1u);
+		// The new out size must not be greater than the old one.
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 0 - 2 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,0u,2u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,2u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 0 - 3 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,0u,3u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,3u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 0 - 7 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,0u,7u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,7u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 1 - 0 ignore.
 		vec_to_bitset(1u);
 		r = detail::read_uint<out_type,1u>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 1 - 1 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,1u,1u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,1u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 1 - 2 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,1u,2u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,2u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 1 - 3 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,1u,3u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,3u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 1 - 7 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,1u,7u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,7u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 2 - 0 ignore.
 		vec_to_bitset(2u);
 		r = detail::read_uint<out_type,2u>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 2 - 3 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,2u,3u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,3u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 2 - 4 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,2u,4u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,4u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 2 - 7 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,2u,7u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,7u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 3 - 0 ignore.
 		vec_to_bitset(3u);
 		r = detail::read_uint<out_type,3u>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 3 - 1 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,3u,1u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,1u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 3 - 4 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,3u,4u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,4u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 3 - 7 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,3u,7u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,7u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 5 - 0 ignore.
 		vec_to_bitset(5u);
 		r = detail::read_uint<out_type,5u>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 5 - 2 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,5u,2u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,2u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 5 - 6 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,5u,6u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,6u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 7 - 0 ignore.
 		vec_to_bitset(7u);
 		r = detail::read_uint<out_type,7u>(&input_vector[0u],input_vector.size(),0u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 7 - 1 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,7u,1u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,1u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 7 - 4 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,7u,4u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,4u);
+		BOOST_CHECK(db_out.size() <= out_size);
+		BOOST_CHECK(db_in.size() >= db_out.size());
+		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
+		// 7 - 7 ignore.
+		out_size = db_out.size();
+		r = detail::read_uint<out_type,7u,7u>(&input_vector[0u],input_vector.size(),0u);
+		ret_to_bitset(r,7u);
+		BOOST_CHECK(db_out.size() <= out_size);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),db_in.begin()));
 		// Second int.
 		vec_to_bitset(0u);
 		r = detail::read_uint<out_type,0u>(&input_vector[0u],input_vector.size(),1u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + std::numeric_limits<out_type>::digits));
-		if (n_rets(1u) > 1u) {
+		if (n_rets(1u,0u) > 1u) {
+			// NOTE: if we have here enough rets for 0 ignore in the ret, then we have enough
+			// rets for higher ignore values.
+			// 1 - 0 ignore.
 			vec_to_bitset(1u);
 			r = detail::read_uint<out_type,1u>(&input_vector[0u],input_vector.size(),1u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + std::numeric_limits<out_type>::digits));
+			// 1 - 1 ignore.
+			// NOTE: cannot do the db_out.size() <= out_size check here any more, as now we have some ret preceding
+			// the current one whose size changes too.
+			r = detail::read_uint<out_type,1u,1u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 1)));
+			// 1 - 5 ignore.
+			r = detail::read_uint<out_type,1u,5u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,5u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 5)));
+			// 1 - 7 ignore.
+			r = detail::read_uint<out_type,1u,7u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(3u) > 1u) {
+		if (n_rets(3u,0u) > 1u) {
+			// 3 - 0 ignore.
 			vec_to_bitset(3u);
 			r = detail::read_uint<out_type,3u>(&input_vector[0u],input_vector.size(),1u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + std::numeric_limits<out_type>::digits));
+			// 3 - 2 ignore.
+			r = detail::read_uint<out_type,3u,2u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,2u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 2)));
+			// 3 - 4 ignore.
+			r = detail::read_uint<out_type,3u,4u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,4u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 4)));
 		}
-		if (n_rets(5u) > 1u) {
+		if (n_rets(5u,0u) > 1u) {
+			// 5 - 0 ignore.
 			vec_to_bitset(5u);
 			r = detail::read_uint<out_type,5u>(&input_vector[0u],input_vector.size(),1u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + std::numeric_limits<out_type>::digits));
+			// 5 - 1 ignore.
+			r = detail::read_uint<out_type,5u,1u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 1)));
+			// 5 - 7 ignore.
+			r = detail::read_uint<out_type,5u,7u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(7u) > 1u) {
+		if (n_rets(7u,0u) > 1u) {
+			// 7 - 0 ignore.
 			vec_to_bitset(7u);
 			r = detail::read_uint<out_type,7u>(&input_vector[0u],input_vector.size(),1u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + std::numeric_limits<out_type>::digits));
+			// 7 - 3 ignore.
+			r = detail::read_uint<out_type,7u,3u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,3u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 3)));
+			// 7 - 7 ignore.
+			r = detail::read_uint<out_type,7u,7u>(&input_vector[0u],input_vector.size(),1u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + (std::numeric_limits<out_type>::digits - 7)));
 		}
 		// Third int.
 		vec_to_bitset(0u);
 		r = detail::read_uint<out_type,0u>(&input_vector[0u],input_vector.size(),2u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * std::numeric_limits<out_type>::digits));
-		if (n_rets(1u) > 2u) {
+		if (n_rets(1u,0u) > 2u) {
+			// 1 - 0 ignore.
 			vec_to_bitset(1u);
 			r = detail::read_uint<out_type,1u>(&input_vector[0u],input_vector.size(),2u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * std::numeric_limits<out_type>::digits));
+			// 1 - 1 ignore.
+			r = detail::read_uint<out_type,1u,1u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 1)));
+			// 1 - 7 ignore.
+			r = detail::read_uint<out_type,1u,7u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(3u) > 2u) {
+		if (n_rets(3u,0u) > 2u) {
+			// 3 - 0 ignore.
 			vec_to_bitset(3u);
 			r = detail::read_uint<out_type,3u>(&input_vector[0u],input_vector.size(),2u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * std::numeric_limits<out_type>::digits));
+			// 3 - 2 ignore.
+			r = detail::read_uint<out_type,3u,2u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,2u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 2)));
+			// 3 - 5 ignore.
+			r = detail::read_uint<out_type,3u,5u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,5u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 5)));
 		}
-		if (n_rets(5u) > 2u) {
+		if (n_rets(5u,0u) > 2u) {
+			// 5 - 0 ignore.
 			vec_to_bitset(5u);
 			r = detail::read_uint<out_type,5u>(&input_vector[0u],input_vector.size(),2u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * std::numeric_limits<out_type>::digits));
+			// 5 - 6 ignore.
+			r = detail::read_uint<out_type,5u,6u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,6u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 6)));
+			// 5 - 7 ignore.
+			r = detail::read_uint<out_type,5u,7u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(7u) > 2u) {
+		if (n_rets(7u,0u) > 2u) {
+			// 7 - 0 ignore.
 			vec_to_bitset(7u);
 			r = detail::read_uint<out_type,7u>(&input_vector[0u],input_vector.size(),2u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * std::numeric_limits<out_type>::digits));
+			// 7 - 1 ignore.
+			r = detail::read_uint<out_type,7u,1u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 1)));
+			// 7 - 7 ignore.
+			r = detail::read_uint<out_type,7u,7u>(&input_vector[0u],input_vector.size(),2u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 2 * (std::numeric_limits<out_type>::digits - 7)));
 		}
 		// Fifth int.
 		vec_to_bitset(0u);
 		r = detail::read_uint<out_type,0u>(&input_vector[0u],input_vector.size(),4u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * std::numeric_limits<out_type>::digits));
-		if (n_rets(1u) > 4u) {
+		if (n_rets(1u,0u) > 4u) {
+			// 1 - 0 ignore.
 			vec_to_bitset(1u);
 			r = detail::read_uint<out_type,1u>(&input_vector[0u],input_vector.size(),4u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * std::numeric_limits<out_type>::digits));
+			// 1 - 1 ignore.
+			r = detail::read_uint<out_type,1u,1u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 1)));
+			// 1 - 4 ignore.
+			r = detail::read_uint<out_type,1u,4u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,4u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 4)));
 		}
-		if (n_rets(3u) > 4u) {
+		if (n_rets(3u,0u) > 4u) {
+			// 3 - 0 ignore.
 			vec_to_bitset(3u);
 			r = detail::read_uint<out_type,3u>(&input_vector[0u],input_vector.size(),4u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * std::numeric_limits<out_type>::digits));
+			// 3 - 3 ignore.
+			r = detail::read_uint<out_type,3u,3u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,3u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 3)));
+			// 3 - 5 ignore.
+			r = detail::read_uint<out_type,3u,5u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,5u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 5)));
 		}
-		if (n_rets(5u) > 4u) {
+		if (n_rets(5u,0u) > 4u) {
+			// 5 - 0 ignore.
 			vec_to_bitset(5u);
 			r = detail::read_uint<out_type,5u>(&input_vector[0u],input_vector.size(),4u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * std::numeric_limits<out_type>::digits));
+			// 5 - 1 ignore.
+			r = detail::read_uint<out_type,5u,1u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 1)));
+			// 5 - 7 ignore.
+			r = detail::read_uint<out_type,5u,7u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(7u) > 4u) {
+		if (n_rets(7u,0u) > 4u) {
+			// 7 - 0 ignore.
 			vec_to_bitset(7u);
 			r = detail::read_uint<out_type,7u>(&input_vector[0u],input_vector.size(),4u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * std::numeric_limits<out_type>::digits));
+			// 7 - 2 ignore.
+			r = detail::read_uint<out_type,7u,2u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,2u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 2)));
+			// 7 - 7 ignore.
+			r = detail::read_uint<out_type,7u,7u>(&input_vector[0u],input_vector.size(),4u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 4 * (std::numeric_limits<out_type>::digits - 7)));
 		}
 		// Seventh int.
 		vec_to_bitset(0u);
 		r = detail::read_uint<out_type,0u>(&input_vector[0u],input_vector.size(),6u);
-		ret_to_bitset(r);
+		ret_to_bitset(r,0u);
 		BOOST_CHECK(db_in.size() >= db_out.size());
 		BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * std::numeric_limits<out_type>::digits));
-		if (n_rets(1u) > 6u) {
+		if (n_rets(1u,0u) > 6u) {
+			// 1 - 0 ignore.
 			vec_to_bitset(1u);
 			r = detail::read_uint<out_type,1u>(&input_vector[0u],input_vector.size(),6u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * std::numeric_limits<out_type>::digits));
+			// 1 - 1 ignore.
+			r = detail::read_uint<out_type,1u,1u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 1)));
+			// 1 - 5 ignore.
+			r = detail::read_uint<out_type,1u,5u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,5u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 5)));
 		}
-		if (n_rets(3u) > 6u) {
+		if (n_rets(3u,0u) > 6u) {
+			// 3 - 0 ignore.
 			vec_to_bitset(3u);
 			r = detail::read_uint<out_type,3u>(&input_vector[0u],input_vector.size(),6u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * std::numeric_limits<out_type>::digits));
+			// 3 - 3 ignore.
+			r = detail::read_uint<out_type,3u,3u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,3u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 3)));
+			// 3 - 7 ignore.
+			r = detail::read_uint<out_type,3u,7u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 7)));
 		}
-		if (n_rets(5u) > 6u) {
+		if (n_rets(5u,0u) > 6u) {
+			// 5 - 0 ignore.
 			vec_to_bitset(5u);
 			r = detail::read_uint<out_type,5u>(&input_vector[0u],input_vector.size(),6u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * std::numeric_limits<out_type>::digits));
+			// 5 - 1 ignore.
+			r = detail::read_uint<out_type,5u,1u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,1u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 1)));
+			// 5 - 5 ignore.
+			r = detail::read_uint<out_type,5u,5u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,5u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 5)));
 		}
-		if (n_rets(7u) > 6u) {
+		if (n_rets(7u,0u) > 6u) {
+			// 7 - 0 ignore.
 			vec_to_bitset(7u);
 			r = detail::read_uint<out_type,7u>(&input_vector[0u],input_vector.size(),6u);
-			ret_to_bitset(r);
+			ret_to_bitset(r,0u);
 			BOOST_CHECK(db_in.size() >= db_out.size());
 			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * std::numeric_limits<out_type>::digits));
+			// 7 - 6 ignore.
+			r = detail::read_uint<out_type,7u,6u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,6u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 6)));
+			// 7 - 7 ignore.
+			r = detail::read_uint<out_type,7u,7u>(&input_vector[0u],input_vector.size(),6u);
+			ret_to_bitset(r,7u);
+			BOOST_CHECK(db_in.size() >= db_out.size());
+			BOOST_CHECK(std::equal(db_out.begin(),db_out.end(),&db_in[0u] + 6 * (std::numeric_limits<out_type>::digits - 7)));
 		}
 	}
 };

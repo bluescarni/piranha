@@ -61,11 +61,13 @@ inline UInt clear_top_bits(UInt input, unsigned n)
 	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
 }
 
-// Considering an array of UIn (unsigned ints) of a certain size as a continuous sequence of bits,
-// read the index-th URet (unsigned int) that can be extracted from the sequence of bits.
+// Considering an array of UIn (unsigned integrals) of a certain size as a continuous sequence of bits,
+// read the index-th URet (unsigned integral) that can be extracted from the sequence of bits.
 // The parameter IBits is the number of upper bits of UIn that should be discarded in the computation
-// (i.e., not considered as part of the continuous sequence of bits).
-template <typename URet, unsigned IBits = 0u, typename UIn>
+// (i.e., not considered as part of the continuous sequence of bits). RBits has the same meaning,
+// but for the output value: it's the number of upper bits that are not considered as part of the
+// return type.
+template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn>
 inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 {
 	// We can work only with unsigned integer types.
@@ -76,14 +78,18 @@ inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 	// Bit size of the input type.
 	constexpr unsigned i_bits = static_cast<unsigned>(std::numeric_limits<UIn>::digits);
 	// The ignored bits in the input type cannot be larger than or equal to its bit size.
-	static_assert(IBits < i_bits,"Invalid ignored bits size");
+	static_assert(IBits < i_bits,"Invalid ignored input bits size");
+	// Same for for RBits.
+	static_assert(RBits < r_bits,"Invalid ignored output bits size");
 	// Bits effectively considered in the input type.
 	constexpr unsigned ei_bits = i_bits - IBits;
+	// Bits effectively considered in the output type.
+	constexpr unsigned er_bits = r_bits - RBits;
 	// Index in input array from where we will start reading, and bit index within
 	// that element from which the actual reading will start.
 	// NOTE: we need to protect against multiplication overflows in the upper level routine.
-	std::size_t s_index = static_cast<std::size_t>((r_bits * index) / ei_bits),
-		r_index = static_cast<std::size_t>((r_bits * index) % ei_bits);
+	std::size_t s_index = static_cast<std::size_t>((er_bits * index) / ei_bits),
+		r_index = static_cast<std::size_t>((er_bits * index) % ei_bits);
 	// Check that we are not going to read past the end.
 	piranha_assert(s_index < size);
 	// Check for null.
@@ -92,8 +98,8 @@ inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 	URet retval = 0u;
 	// Bits read so far.
 	unsigned read_bits = 0u;
-	while (s_index < size && read_bits < r_bits) {
-		const unsigned unread_bits = r_bits - read_bits,
+	while (s_index < size && read_bits < er_bits) {
+		const unsigned unread_bits = er_bits - read_bits,
 			// This can be different from ei_bits only on the first iteration.
 			available_bits = static_cast<unsigned>(ei_bits - r_index),
 			bits_to_read = (available_bits > unread_bits) ? unread_bits : available_bits;
@@ -108,7 +114,7 @@ inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 		++s_index;
 		r_index = 0u;
 	}
-	piranha_assert(s_index == size || read_bits == r_bits);
+	piranha_assert(s_index == size || read_bits == er_bits);
 	return retval;
 }
 
