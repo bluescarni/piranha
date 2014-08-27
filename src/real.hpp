@@ -101,6 +101,10 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 //   look into using the intmax_t overloads from MPFR,
 // - maybe we can replace the raii str holder with a unique_ptr with custom deleter,
 // - fix use of isdigit.
+// - should probably review all the precision handling stuff, it's really easy to forget about something :/
+// - here we are using a straight mpfr_t as underlying member, which is an array. Doest it matter? Should we use
+//   the corresponding struct for consistency? Does it matter for performance?
+// - if we overhaul the tests, put random precision values as well.
 class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
@@ -1414,6 +1418,10 @@ class real: public detail::real_base<>
 			//::mpfr_fma(m_value,r1.m_value,r2.m_value,m_value,default_rnd);
 			// NOTE: the tmp var needs to be thread local.
 			static thread_local real tmp;
+			// NOTE: set the same precision as this, which is now the max precision of the 3 operands.
+			// If we do not do this, then tmp has an undeterminate precision. Use the raw MPFR function
+			// in order to avoid the checks in get_prec(), as we know the precision has a sane value.
+			::mpfr_set_prec(tmp.m_value,mpfr_get_prec(m_value));
 			::mpfr_mul(tmp.m_value,r1.m_value,r2.m_value,MPFR_RNDN);
 			::mpfr_add(m_value,m_value,tmp.m_value,MPFR_RNDN);
 			return *this;

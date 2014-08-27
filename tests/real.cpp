@@ -1517,6 +1517,18 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
 	BOOST_CHECK((has_multiply_accumulate<real &, real &, const real &>::value));
 	BOOST_CHECK((!has_multiply_accumulate<const real, real>::value));
 	BOOST_CHECK((!has_multiply_accumulate<const real &, real, real &>::value));
+	// Test for precision bug in mult_add after the thread_local changes.
+	// NOTE: this could actually fail if/when we switch back to the fma() from MPFR,
+	// as in that case there might be a single rounding in the whole operation.
+	real r4{".2",200};
+	r4.multiply_accumulate(real{"-.2",200},real{".2",200});
+	BOOST_CHECK_EQUAL((real{".2",200} + real{"-.2",200} * real{".2",200}),r4);
+	// This will be different because in this case the mult is done with 200 bits,
+	// and only the final add in 500 bits. While for the fma we are doing everything
+	// at 500 bits.
+	r4 = real{".2",500};
+	r4.multiply_accumulate(real{"-.2",200},real{".2",200});
+	BOOST_CHECK((real{".2",500} + real{"-.2",200} * real{".2",200} != r4));
 }
 
 BOOST_AUTO_TEST_CASE(real_sin_cos_test)
