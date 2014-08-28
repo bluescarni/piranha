@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <array>
 #include <boost/functional/hash.hpp>
-#include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <climits>
 #include <cmath>
@@ -159,8 +158,8 @@ struct si_limb_types<64>
 {
 	using limb_t = std::uint_least64_t;
 	using dlimb_t = PIRANHA_UINT128_T;
-	static_assert(static_cast<dlimb_t>(boost::integer_traits<limb_t>::const_max) <=
-		-dlimb_t(1) / boost::integer_traits<limb_t>::const_max,"128-bit integer is too narrow.");
+	static_assert(static_cast<dlimb_t>(std::numeric_limits<limb_t>::max()) <=
+		-dlimb_t(1) / std::numeric_limits<limb_t>::max(),"128-bit integer is too narrow.");
 	static const limb_t limb_bits = 64;
 };
 #endif
@@ -223,7 +222,7 @@ struct mpz_raii
 inline std::ostream &stream_mpz(std::ostream &os, const mpz_struct_t &mpz)
 {
 	const std::size_t size_base10 = ::mpz_sizeinbase(&mpz,10);
-	if (unlikely(size_base10 > boost::integer_traits<std::size_t>::const_max - static_cast<std::size_t>(2))) {
+	if (unlikely(size_base10 > std::numeric_limits<std::size_t>::max() - static_cast<std::size_t>(2))) {
 		piranha_throw(std::invalid_argument,"number of digits is too large");
 	}
 	const auto total_size = size_base10 + 2u;
@@ -247,7 +246,7 @@ struct static_integer
 	static_assert(total_bits >= limb_bits,"Invalid limb_t type.");
 	using limbs_type = std::array<limb_t,std::size_t(2)>;
 	// Check: we need to be able to address all bits in the 2 limbs using limb_t.
-	static_assert(limb_bits < boost::integer_traits<limb_t>::const_max / 2u,"Overflow error.");
+	static_assert(limb_bits < std::numeric_limits<limb_t>::max() / 2u,"Overflow error.");
 	// NOTE: init everything otherwise zero is gonna be represented by undefined values in lo/hi.
 	static_integer():_mp_alloc(0),_mp_size(0),m_limbs() {}
 	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
@@ -343,7 +342,7 @@ struct static_integer
 	void to_mpz(mpz_struct_t &out) const
 	{
 		// mp_bitcnt_t must be able to count all the bits in the static integer.
-		static_assert(limb_bits * 2u < boost::integer_traits< ::mp_bitcnt_t>::const_max,"Overflow error.");
+		static_assert(limb_bits * 2u < std::numeric_limits< ::mp_bitcnt_t>::max(),"Overflow error.");
 		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
 		auto l = m_limbs[0u];
 		for (limb_t i = 0u; i < limb_bits; ++i) {
@@ -1111,7 +1110,7 @@ class mp_integer
 				if (rem != Integer(0)) {
 					::mpz_setbit(&m.m_mpz,bit_idx);
 				}
-				if (unlikely(bit_idx == boost::integer_traits< ::mp_bitcnt_t>::const_max)) {
+				if (unlikely(bit_idx == std::numeric_limits< ::mp_bitcnt_t>::max())) {
 					piranha_throw(std::invalid_argument,"overflow in the construction from integral type");
 				}
 				++bit_idx;
