@@ -18,35 +18,31 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_FATEMAN1_HPP
-#define PIRANHA_FATEMAN1_HPP
+#include "fateman1.hpp"
 
-#include <boost/timer/timer.hpp>
+#define BOOST_TEST_MODULE fateman1_test
+#include <boost/test/unit_test.hpp>
 
-#include "../src/polynomial.hpp"
+#include <boost/lexical_cast.hpp>
+#include <limits>
 
-namespace piranha
+#include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/settings.hpp"
+
+using namespace piranha;
+
+// Fateman's polynomial multiplication test number 1. Calculate:
+// f * (f+1)
+// where f = (1+x+y+z+t)**20
+
+BOOST_AUTO_TEST_CASE(fateman1_test)
 {
-
-template <typename Cf,typename Key>
-inline polynomial<Cf,Key> fateman1(unsigned long long factor = 1u)
-{
-	typedef polynomial<Cf,Key> p_type;
-	p_type x("x"), y("y"), z("z"), t("t");
-	auto f = x + y + z + t + 1;
-	auto tmp(f);
-	for (auto i = 1; i < 20; ++i) {
-		f *= tmp;
+	environment env;
+	using limb_t = typename detail::integer_union<0>::s_storage::limb_t;
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	if (factor > 1u) {
-	    f *= factor;
-	}
-	{
-	boost::timer::auto_cpu_timer t;
-	return f * (f + 1);
-	}
+	BOOST_CHECK_EQUAL((fateman1<mp_integer<>,kronecker_monomial<>>(static_cast<unsigned long long>(std::numeric_limits<limb_t>::max())).size()),135751u);
 }
-
-}
-
-#endif
