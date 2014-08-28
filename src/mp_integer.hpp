@@ -984,14 +984,9 @@ union integer_union
  *     we can use mp_integer directly - this could be a performance improvement;
  *   - avoid going through mpz for print to stream,
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
- *   - in raw_add/sub/div we always operate assuming the static int has 2 limbs, maybe there's performance to be gained
- *     by switch()ing the different cases for the operands sizes,
  *   - actually, it seems like we could use a kind of static counterpart in many cases (comparison, addition, etc.):
  *     just allocate the space in a static array and convert static_int to the GMP format, without actually allocating
- *     any memory;
- *   - it seems like there might be performance to be gained by dropping exceptions for signalling overflow in add and mul;
- *     try to replace with error code and see if it makes a difference. Probably we only want this for add, mul and
- *     multiply_accumulate.
+ *     any memory.
  * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
  *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
  *   rational.
