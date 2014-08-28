@@ -699,7 +699,7 @@ struct static_add_tester
 		c.set_bit(2u * limb_bits - 1u);
 		c.set_bit(0u);
 		auto old_a(a);
-		BOOST_CHECK_THROW(int_type::add(a,c,b),std::overflow_error);
+		BOOST_CHECK(int_type::add(a,c,b));
 		BOOST_CHECK_EQUAL(old_a,a);
 		b = int_type();
 		c = int_type();
@@ -708,7 +708,7 @@ struct static_add_tester
 		c.set_bit(0u);
 		b.negate();
 		c.negate();
-		BOOST_CHECK_THROW(int_type::add(a,c,b),std::overflow_error);
+		BOOST_CHECK(int_type::add(a,c,b));
 		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
 		mpz_raii mc, ma, mb;
@@ -722,14 +722,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if(int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -743,14 +749,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -764,14 +776,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -785,14 +803,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -806,14 +830,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -827,14 +857,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -848,14 +884,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -869,14 +911,20 @@ struct static_add_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::add(c,a,b);
+				if (int_type::add(c,a,b)) {
+					continue;
+				}
 				::mpz_add(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::add(a,a,b);
+				if (int_type::add(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::add(b,a,b);
+				if (int_type::add(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1082,7 +1130,7 @@ struct static_sub_tester
 		c.set_bit(0u);
 		b.negate();
 		auto old_a(a);
-		BOOST_CHECK_THROW(int_type::sub(a,c,b),std::overflow_error);
+		BOOST_CHECK(int_type::sub(a,c,b));
 		BOOST_CHECK_EQUAL(old_a,a);
 		b = int_type();
 		c = int_type();
@@ -1090,7 +1138,7 @@ struct static_sub_tester
 		c.set_bit(2u * limb_bits - 1u);
 		c.set_bit(0u);
 		c.negate();
-		BOOST_CHECK_THROW(int_type::sub(a,b,c),std::overflow_error);
+		BOOST_CHECK(int_type::sub(a,b,c));
 		BOOST_CHECK_EQUAL(old_a,a);
 		// Random testing.
 		mpz_raii mc, ma, mb;
@@ -1104,14 +1152,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1125,14 +1179,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1146,14 +1206,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1167,14 +1233,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1188,14 +1260,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1209,14 +1287,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1230,14 +1314,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1251,14 +1341,20 @@ struct static_sub_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::sub(c,a,b);
+				if (int_type::sub(c,a,b)) {
+					continue;
+				}
 				::mpz_sub(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::sub(a,a,b);
+				if (int_type::sub(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::sub(b,a,b);
+				if (int_type::sub(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1350,12 +1446,12 @@ struct static_mul_tester
 		a = b;
 		c.set_bit(typename int_type::limb_t(2));
 		b.set_bit(limb_bits);
-		BOOST_CHECK_THROW(int_type::mul(a,c,b),std::overflow_error);
-		BOOST_CHECK_THROW(int_type::mul(a,b,c),std::overflow_error);
+		BOOST_CHECK(int_type::mul(a,c,b));
+		BOOST_CHECK(int_type::mul(a,b,c));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		c.set_bit(limb_bits);
-		BOOST_CHECK_THROW(int_type::mul(a,c,b),std::overflow_error);
-		BOOST_CHECK_THROW(int_type::mul(a,b,c),std::overflow_error);
+		BOOST_CHECK(int_type::mul(a,c,b));
+		BOOST_CHECK(int_type::mul(a,b,c));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		// Random testing.
 		std::uniform_int_distribution<short> short_dist(boost::integer_traits<short>::const_min,boost::integer_traits<short>::const_max);
@@ -1368,14 +1464,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1389,14 +1491,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1410,14 +1518,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1431,14 +1545,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1452,14 +1572,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1473,14 +1599,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1494,14 +1626,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1515,14 +1653,20 @@ struct static_mul_tester
 				}
 				::mpz_set_str(&ma.m_mpz,boost::lexical_cast<std::string>(tmp1).c_str(),10);
 				::mpz_set_str(&mb.m_mpz,boost::lexical_cast<std::string>(tmp2).c_str(),10);
-				int_type::mul(c,a,b);
+				if (int_type::mul(c,a,b)) {
+					continue;
+				}
 				::mpz_mul(&mc.m_mpz,&ma.m_mpz,&mb.m_mpz);
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(c),mpz_lexcast(mc));
 				// Try in-place.
-				int_type::mul(a,a,b);
+				if (int_type::mul(a,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),mpz_lexcast(mc));
 				a = old_a;
-				int_type::mul(b,a,b);
+				if (int_type::mul(b,a,b)) {
+					continue;
+				}
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(b),mpz_lexcast(mc));
 			} catch (const std::overflow_error &) {}
 		}
@@ -1680,7 +1824,7 @@ struct static_addmul_tester
 		}
 		a.set_bit(2u * limb_bits - 1u);
 		auto old_a(a);
-		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK(a.multiply_accumulate(b,c));
 		BOOST_CHECK_EQUAL(a,old_a);
 		a = int_type();
 		b = int_type();
@@ -1693,7 +1837,7 @@ struct static_addmul_tester
 		a.set_bit(2u * limb_bits - 1u);
 		a.negate();
 		old_a = a;
-		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
+		BOOST_CHECK(a.multiply_accumulate(b,c));
 		BOOST_CHECK_EQUAL(a,old_a);
 		// Overflow in the mult part.
 		a = int_type();
@@ -1701,12 +1845,12 @@ struct static_addmul_tester
 		c = int_type();
 		b.set_bit(typename int_type::limb_t(2));
 		c.set_bit(limb_bits);
-		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
-		BOOST_CHECK_THROW(a.multiply_accumulate(c,b),std::overflow_error);
+		BOOST_CHECK(a.multiply_accumulate(b,c));
+		BOOST_CHECK(a.multiply_accumulate(c,b));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		b.set_bit(limb_bits);
-		BOOST_CHECK_THROW(a.multiply_accumulate(b,c),std::overflow_error);
-		BOOST_CHECK_THROW(a.multiply_accumulate(c,b),std::overflow_error);
+		BOOST_CHECK(a.multiply_accumulate(b,c));
+		BOOST_CHECK(a.multiply_accumulate(c,b));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"0");
 		// Random tests.
 		std::uniform_int_distribution<int> int_dist(0,1);
@@ -1782,10 +1926,8 @@ struct static_addmul_tester
 			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
 			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
 			int_type cmp;
-			try {
-				cmp = a + b*c;
-				a.multiply_accumulate(b,c);
-			} catch (const std::overflow_error &) {
+			cmp = a + b*c;
+			if (a.multiply_accumulate(b,c)) {
 				continue;
 			}
 			BOOST_CHECK_EQUAL(a,cmp);
@@ -1869,10 +2011,8 @@ struct static_addmul_tester
 			::mpz_set_str(&mc.m_mpz,boost::lexical_cast<std::string>(c).c_str(),10);
 			::mpz_addmul(&ma.m_mpz,&mb.m_mpz,&mc.m_mpz);
 			int_type cmp;
-			try {
-				cmp = a + b*c;
-				a.multiply_accumulate(b,c);
-			} catch (const std::overflow_error &) {
+			cmp = a + b*c;
+			if (a.multiply_accumulate(b,c)) {
 				continue;
 			}
 			BOOST_CHECK_EQUAL(a,cmp);
