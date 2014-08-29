@@ -26,8 +26,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
@@ -43,5 +43,5 @@ BOOST_AUTO_TEST_CASE(gastineau1_test)
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	BOOST_CHECK_EQUAL((gastineau1<integer,kronecker_monomial<>>().size()),1929501u);
+	BOOST_CHECK_EQUAL((gastineau1<mp_integer<>,kronecker_monomial<>>().size()),1929501u);
 }

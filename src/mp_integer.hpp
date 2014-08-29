@@ -46,6 +46,7 @@
 #include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
+#include "type_traits.hpp"
 
 namespace piranha { namespace detail {
 
@@ -212,9 +213,8 @@ struct mpz_raii
 	mpz_raii &operator=(mpz_raii &&) = delete;
 	~mpz_raii()
 	{
-		if (m_mpz._mp_d != nullptr) {
-			::mpz_clear(&m_mpz);
-		}
+		piranha_assert(m_mpz._mp_d != nullptr);
+		::mpz_clear(&m_mpz);
 	}
 	mpz_struct_t m_mpz;
 };
@@ -338,51 +338,10 @@ struct static_integer
 	{
 		return static_cast<mpz_size_t>((_mp_size >= 0) ? _mp_size : -_mp_size);
 	}
-	// Convert static integer to a GMP mpz. The out struct must be initialized to zero.
-	void to_mpz(mpz_struct_t &out) const
-	{
-//		// mp_bitcnt_t must be able to count all the bits in the static integer.
-//		static_assert(limb_bits * 2u < std::numeric_limits< ::mp_bitcnt_t>::max(),"Overflow error.");
-//		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
-//		auto l = m_limbs[0u];
-//		for (limb_t i = 0u; i < limb_bits; ++i) {
-//			if (l % 2u) {
-//				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i));
-//			}
-//			l = static_cast<limb_t>(l >> 1u);
-//		}
-//		l = m_limbs[1u];
-//		for (limb_t i = 0u; i < limb_bits; ++i) {
-//			if (l % 2u) {
-//				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i + limb_bits));
-//			}
-//			l = static_cast<limb_t>(l >> 1u);
-//		}
-//		if (_mp_size < 0) {
-//			// Switch the sign as needed.
-//			::mpz_neg(&out,&out);
-//		}
-		const unsigned asize = static_cast<unsigned>(abs_size());
-		if (::mpz_size(&out) < asize) {
-			::_mpz_realloc(&out,static_cast< ::mp_size_t>(asize));
-		}
-		switch (asize) {
-			case 0u:
-				break;
-			case 1u:
-				out._mp_d[0u] = m_limbs[0u];
-				break;
-			case 2u:
-				out._mp_d[0u] = m_limbs[0u];
-				out._mp_d[1u] = m_limbs[1u];
-
-		}
-		out._mp_size = _mp_size;
-	}
 	// Read-only mpz view class. After creation, this class can be used
 	// as const mpz_t argument in GMP functions, thanks to the implicit conversion
 	// operator.
-	template <typename = static_integer, typename = void>
+	template <typename T = static_integer, typename = void>
 	class static_mpz_view
 	{
 		public:
@@ -396,7 +355,7 @@ struct static_integer
 				max_tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) :
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
-			static_assert(n_gmp_limbs >= 1u,"Invalid number of GMP limbs.");
+			static_assert(max_n_gmp_limbs >= 1u,"Invalid number of GMP limbs.");
 			explicit static_mpz_view(const static_integer &n)
 			{
 				std::size_t asize;
@@ -414,7 +373,7 @@ struct static_integer
 					tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
 					tot_nbits / unsigned(GMP_NUMB_BITS) :
 					tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
-				for (std::size_t  = 0u; i < n_gmp_limbs; ++i) {
+				for (std::size_t i = 0u; i < n_gmp_limbs; ++i) {
 					m_limbs[i] = read_uint< ::mp_limb_t,T::total_bits - T::limb_bits,
 						unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS)>
 						(n.m_limbs.data(),asize,i);
@@ -424,7 +383,10 @@ struct static_integer
 					(std::numeric_limits<mpz_alloc_t>::max()),
 					"Overflow error.");
 				m_mpz._mp_alloc = static_cast<mpz_alloc_t>(n_gmp_limbs);
-				m_mpz._mp_size = sign ? static_cast<mpz_size_t>(n_gmp_limbs) :
+				static_assert(max_n_gmp_limbs <=
+					static_cast<std::make_unsigned<mpz_size_t>::type>(detail::safe_abs_sint<mpz_size_t>::value),
+					"Overflow error.");
+				m_mpz._mp_size = sign ? static_cast<mpz_size_t>(n_gmp_limbs) : -static_cast<mpz_size_t>(n_gmp_limbs);
 				m_mpz._mp_d = m_limbs.data();
 			}
 			// Leave only the move ctor so that this can be returned by a function.
@@ -473,9 +435,8 @@ struct static_integer
 	}
 	friend std::ostream &operator<<(std::ostream &os, const static_integer &si)
 	{
-		mpz_raii m;
-		si.to_mpz(m.m_mpz);
-		return stream_mpz(os,m.m_mpz);
+		auto v = si.get_mpz_view();
+		return stream_mpz(os,*static_cast<const mpz_struct_t *>(v));
 	}
 	bool operator==(const static_integer &other) const
 	{
@@ -1003,14 +964,17 @@ union integer_union
 		void promote()
 		{
 			piranha_assert(is_static());
-			mpz_raii tmp;
-			g_st().to_mpz(tmp.m_mpz);
+			// Construct an mpz from the static.
+			mpz_struct_t tmp_mpz;
+			auto v = g_st().get_mpz_view();
+			::mpz_init_set(&tmp_mpz,v);
 			// Destroy static.
 			g_st().~s_storage();
 			// Construct the dynamic struct.
 			::new (static_cast<void *>(&m_dy)) d_storage;
-			move_ctor_mpz(m_dy,tmp.m_mpz);
-			tmp.m_mpz._mp_d = nullptr;
+			move_ctor_mpz(m_dy,tmp_mpz);
+			// No need to do anything, as move_ctor_mpz() transfers
+			// ownership to m_dy.
 		}
 		// Getters for st and dy.
 		const s_storage &g_st() const
@@ -1407,7 +1371,8 @@ class mp_integer
 			// Extract a GMP mpz to work with.
 			detail::mpz_raii tmp;
 			if (m_int.is_static()) {
-				m_int.g_st().to_mpz(tmp.m_mpz);
+				auto v = m_int.g_st().get_mpz_view();
+				::mpz_set(&tmp.m_mpz,v);
 			} else {
 				::mpz_set(&tmp.m_mpz,&m_int.g_dy());
 			}
@@ -1490,12 +1455,11 @@ class mp_integer
 				s2 = other.is_static();
 			}
 			if (s2) {
-				detail::mpz_raii m;
-				other.m_int.g_st().to_mpz(m.m_mpz);
+				auto v = other.m_int.g_st().get_mpz_view();
 				if (AddOrSub) {
-					::mpz_add(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
+					::mpz_add(&m_int.g_dy(),&m_int.g_dy(),v);
 				} else {
-					::mpz_sub(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
+					::mpz_sub(&m_int.g_dy(),&m_int.g_dy(),v);
 				}
 			} else {
 				if (AddOrSub) {
@@ -1625,9 +1589,8 @@ class mp_integer
 				s2 = other.is_static();
 			}
 			if (s2) {
-				static thread_local detail::mpz_raii m;
-				other.m_int.g_st().to_mpz(m.m_mpz);
-				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
+				auto v = other.m_int.g_st().get_mpz_view();
+				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),v);
 			} else {
 				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
@@ -1689,10 +1652,8 @@ class mp_integer
 				m_int.promote();
 				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			} else if (!s1 && s2) {
-				// Create a promoted copy of other.
-				detail::mpz_raii m;
-				other.m_int.g_st().to_mpz(m.m_mpz);
-				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
+				auto v = other.m_int.g_st().get_mpz_view();
+				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),v);
 			} else {
 				::mpz_tdiv_q(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
@@ -1754,10 +1715,8 @@ class mp_integer
 				m_int.promote();
 				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			} else if (!s1 && s2) {
-				// Create a promoted copy of other.
-				detail::mpz_raii m;
-				other.m_int.g_st().to_mpz(m.m_mpz);
-				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
+				auto v = other.m_int.g_st().get_mpz_view();
+				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),v);
 			} else {
 				::mpz_tdiv_r(&m_int.g_dy(),&m_int.g_dy(),&other.m_int.g_dy());
 			}
@@ -1799,15 +1758,11 @@ class mp_integer
 			if (s1 && s2) {
 				return (n1.m_int.g_st() == n2.m_int.g_st());
 			} else if (s1 && !s2) {
-				// NOTE: clearly, this is highly inefficient and needs to be optimized
-				// in the future.
-				detail::mpz_raii tmp;
-				n1.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) == 0;
+				auto v1 = n1.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(v1,&n2.m_int.g_dy()) == 0;
 			} else if (!s1 && s2) {
-				detail::mpz_raii tmp;
-				n2.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n1.m_int.g_dy()) == 0;
+				auto v2 = n2.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(v2,&n1.m_int.g_dy()) == 0;
 			} else {
 				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) == 0;
 			}
@@ -1838,13 +1793,11 @@ class mp_integer
 			if (s1 && s2) {
 				return (n1.m_int.g_st() < n2.m_int.g_st());
 			} else if (s1 && !s2) {
-				detail::mpz_raii tmp;
-				n1.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) < 0;
+				auto v1 = n1.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(v1,&n2.m_int.g_dy()) < 0;
 			} else if (!s1 && s2) {
-				detail::mpz_raii tmp;
-				n2.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&n1.m_int.g_dy(),&tmp.m_mpz) < 0;
+				auto v2 = n2.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(&n1.m_int.g_dy(),v2) < 0;
 			} else {
 				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) < 0;
 			}
@@ -1875,13 +1828,11 @@ class mp_integer
 			if (s1 && s2) {
 				return (n1.m_int.g_st() <= n2.m_int.g_st());
 			} else if (s1 && !s2) {
-				detail::mpz_raii tmp;
-				n1.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&tmp.m_mpz,&n2.m_int.g_dy()) <= 0;
+				auto v1 = n1.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(v1,&n2.m_int.g_dy()) <= 0;
 			} else if (!s1 && s2) {
-				detail::mpz_raii tmp;
-				n2.m_int.g_st().to_mpz(tmp.m_mpz);
-				return ::mpz_cmp(&n1.m_int.g_dy(),&tmp.m_mpz) <= 0;
+				auto v2 = n2.m_int.g_st().get_mpz_view();
+				return ::mpz_cmp(&n1.m_int.g_dy(),v2) <= 0;
 			} else {
 				return ::mpz_cmp(&n1.m_int.g_dy(),&n2.m_int.g_dy()) <= 0;
 			}
@@ -2457,28 +2408,18 @@ class mp_integer
 			switch (mask) {
 				case 0u:
 				{
-					//static thread_local detail::mpz_raii m1, m2;
-					//n1.m_int.g_st().to_mpz(m1.m_mpz);
-					//n2.m_int.g_st().to_mpz(m2.m_mpz);
-					//::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&m2.m_mpz);
 					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
 					::mpz_addmul(&m_int.g_dy(),v1,v2);
 					break;
 				}
 				case 1u:
 				{
-//					static thread_local detail::mpz_raii m2;
-//					n2.m_int.g_st().to_mpz(m2.m_mpz);
-//					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&m2.m_mpz);
 					auto v2 = n2.m_int.g_st().get_mpz_view();
 					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
 					break;
 				}
 				case 2u:
 				{
-//					static thread_local detail::mpz_raii m1;
-//					n1.m_int.g_st().to_mpz(m1.m_mpz);
-//					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&n2.m_int.g_dy());
 					auto v1 = n1.m_int.g_st().get_mpz_view();
 					::mpz_addmul(&m_int.g_dy(),v1,&n2.m_int.g_dy());
 					break;
