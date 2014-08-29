@@ -2067,3 +2067,15 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 	BOOST_CHECK(is_iterator<iter21 &>::value);
 	BOOST_CHECK(is_iterator<const iter21>::value);
 }
+
+template <typename S>
+using sai = detail::safe_abs_sint<S>;
+
+BOOST_AUTO_TEST_CASE(type_traits_safe_abs_sint_test)
+{
+	BOOST_CHECK(sai<signed char>::value > 1);
+	BOOST_CHECK(sai<short>::value > 1);
+	BOOST_CHECK(sai<int>::value > 1);
+	BOOST_CHECK(sai<long>::value > 1);
+	BOOST_CHECK(sai<long long>::value > 1);
+}
