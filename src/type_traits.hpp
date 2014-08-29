@@ -31,6 +31,7 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <limits>
 #include <ostream>
 #include <tuple>
 #include <type_traits>
@@ -875,7 +876,6 @@ const bool term_is_multipliable<Term>::value;
 namespace detail
 {
 
-// TODO: replace use of boost::integer_traits with numeric_limits.
 template <typename T, typename ... Args>
 struct min_int_impl
 {
@@ -883,8 +883,8 @@ struct min_int_impl
 	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value && std::is_integral<next>::value) ||
 		(std::is_signed<T>::value && std::is_signed<next>::value && std::is_integral<next>::value),"The type trait's arguments must all be (un)signed integers.");
 	using type = typename std::conditional<(
-		boost::integer_traits<T>::const_max < boost::integer_traits<next>::const_max &&
-		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min > boost::integer_traits<next>::const_min)),
+		std::numeric_limits<T>::max() < std::numeric_limits<next>::max() &&
+		(std::is_unsigned<T>::value || std::numeric_limits<T>::min() > std::numeric_limits<next>::min())),
 		T,
 		next
 		>::type;
@@ -904,8 +904,8 @@ struct max_int_impl
 	static_assert((std::is_unsigned<T>::value && std::is_unsigned<next>::value && std::is_integral<next>::value) ||
 		(std::is_signed<T>::value && std::is_signed<next>::value && std::is_integral<next>::value),"The type trait's arguments must all be (un)signed integers.");
 	using type = typename std::conditional<(
-		boost::integer_traits<T>::const_max > boost::integer_traits<next>::const_max &&
-		(std::is_unsigned<T>::value || boost::integer_traits<T>::const_min < boost::integer_traits<next>::const_min)),
+		std::numeric_limits<T>::max() > std::numeric_limits<next>::max() &&
+		(std::is_unsigned<T>::value || std::numeric_limits<T>::min() < std::numeric_limits<next>::min())),
 		T,
 		next
 		>::type;
