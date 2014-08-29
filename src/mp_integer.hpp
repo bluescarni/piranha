@@ -341,27 +341,135 @@ struct static_integer
 	// Convert static integer to a GMP mpz. The out struct must be initialized to zero.
 	void to_mpz(mpz_struct_t &out) const
 	{
-		// mp_bitcnt_t must be able to count all the bits in the static integer.
-		static_assert(limb_bits * 2u < std::numeric_limits< ::mp_bitcnt_t>::max(),"Overflow error.");
-		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
-		auto l = m_limbs[0u];
-		for (limb_t i = 0u; i < limb_bits; ++i) {
-			if (l % 2u) {
-				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i));
+//		// mp_bitcnt_t must be able to count all the bits in the static integer.
+//		static_assert(limb_bits * 2u < std::numeric_limits< ::mp_bitcnt_t>::max(),"Overflow error.");
+//		piranha_assert(out._mp_d != nullptr && mpz_cmp_si(&out,0) == 0);
+//		auto l = m_limbs[0u];
+//		for (limb_t i = 0u; i < limb_bits; ++i) {
+//			if (l % 2u) {
+//				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i));
+//			}
+//			l = static_cast<limb_t>(l >> 1u);
+//		}
+//		l = m_limbs[1u];
+//		for (limb_t i = 0u; i < limb_bits; ++i) {
+//			if (l % 2u) {
+//				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i + limb_bits));
+//			}
+//			l = static_cast<limb_t>(l >> 1u);
+//		}
+//		if (_mp_size < 0) {
+//			// Switch the sign as needed.
+//			::mpz_neg(&out,&out);
+//		}
+		const unsigned asize = static_cast<unsigned>(abs_size());
+		if (::mpz_size(&out) < asize) {
+			::_mpz_realloc(&out,static_cast< ::mp_size_t>(asize));
+		}
+		switch (asize) {
+			case 0u:
+				break;
+			case 1u:
+				out._mp_d[0u] = m_limbs[0u];
+				break;
+			case 2u:
+				out._mp_d[0u] = m_limbs[0u];
+				out._mp_d[1u] = m_limbs[1u];
+
+		}
+		out._mp_size = _mp_size;
+	}
+	// Read-only mpz view class. After creation, this class can be used
+	// as const mpz_t argument in GMP functions, thanks to the implicit conversion
+	// operator.
+	template <typename = static_integer, typename = void>
+	class static_mpz_view
+	{
+		public:
+			// Safe, checked above.
+			static const auto max_tot_nbits = 2u * T::limb_bits;
+			// Check the conversion below.
+			static_assert(max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u <= std::numeric_limits<std::size_t>::max(),
+				"Overflow error.");
+			// Number of GMP limbs to use.
+			static const std::size_t max_n_gmp_limbs = static_cast<std::size_t>(
+				max_tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
+				max_tot_nbits / unsigned(GMP_NUMB_BITS) :
+				max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
+			static_assert(n_gmp_limbs >= 1u,"Invalid number of GMP limbs.");
+			explicit static_mpz_view(const static_integer &n)
+			{
+				std::size_t asize;
+				bool sign;
+				if (n._mp_size < 0) {
+					sign = false;
+					asize = static_cast<std::size_t>(-n._mp_size);
+				} else {
+					sign = true;
+					asize = static_cast<std::size_t>(n._mp_size);
+				}
+				piranha_assert(asize <= 2u);
+				const auto tot_nbits = asize * T::limb_bits;
+				const std::size_t n_gmp_limbs = static_cast<std::size_t>(
+					tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
+					tot_nbits / unsigned(GMP_NUMB_BITS) :
+					tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
+				for (std::size_t  = 0u; i < n_gmp_limbs; ++i) {
+					m_limbs[i] = read_uint< ::mp_limb_t,T::total_bits - T::limb_bits,
+						unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS)>
+						(n.m_limbs.data(),asize,i);
+				}
+				// Final assignment.
+				static_assert(max_n_gmp_limbs <= static_cast<std::make_unsigned<mpz_alloc_t>::type>
+					(std::numeric_limits<mpz_alloc_t>::max()),
+					"Overflow error.");
+				m_mpz._mp_alloc = static_cast<mpz_alloc_t>(n_gmp_limbs);
+				m_mpz._mp_size = sign ? static_cast<mpz_size_t>(n_gmp_limbs) :
+				m_mpz._mp_d = m_limbs.data();
 			}
-			l = static_cast<limb_t>(l >> 1u);
-		}
-		l = m_limbs[1u];
-		for (limb_t i = 0u; i < limb_bits; ++i) {
-			if (l % 2u) {
-				::mpz_setbit(&out,static_cast< ::mp_bitcnt_t>(i + limb_bits));
+			// Leave only the move ctor so that this can be returned by a function.
+			static_mpz_view(const static_mpz_view &) = delete;
+			static_mpz_view(static_mpz_view &&) = default;
+			static_mpz_view &operator=(const static_mpz_view &) = delete;
+			static_mpz_view &operator=(static_mpz_view &&) = delete;
+			operator const mpz_struct_t *() const
+			{
+				return &m_mpz;
 			}
-			l = static_cast<limb_t>(l >> 1u);
-		}
-		if (_mp_size < 0) {
-			// Switch the sign as needed.
-			::mpz_neg(&out,&out);
-		}
+		private:
+			mpz_struct_t					m_mpz;
+			std::array< ::mp_limb_t,max_n_gmp_limbs>	m_limbs;
+	};
+	// NOTE: in order to activate this optimisation, we need to be certain that:
+	// - the limbs type coincide, as we are doing a const_cast between them,
+	// - the number of bits effectively used is identical.
+	template <typename T>
+	class static_mpz_view<T,typename std::enable_if<
+		std::is_same< ::mp_limb_t,typename T::limb_t>::value &&
+		T::limb_bits == unsigned(GMP_NUMB_BITS)
+		>::type>
+	{
+		public:
+			// NOTE: here we put alloc == size, in the case GMP does internal consistency checks.
+			// Secondly, we use the const_cast to cast away the constness from the pointer to the limbs
+			// in n. This is valid as we are never going to use this pointer for writing.
+			explicit static_mpz_view(const static_integer &n):m_mpz{static_cast<mpz_alloc_t>(n._mp_size),
+				n._mp_size,const_cast< ::mp_limb_t *>(n.m_limbs.data())}
+			{}
+			static_mpz_view(const static_mpz_view &) = delete;
+			static_mpz_view(static_mpz_view &&) = default;
+			static_mpz_view &operator=(const static_mpz_view &) = delete;
+			static_mpz_view &operator=(static_mpz_view &&) = delete;
+			operator const mpz_struct_t *() const
+			{
+				return &m_mpz;
+			}
+		private:
+			mpz_struct_t m_mpz;
+	};
+	static_mpz_view<> get_mpz_view() const
+	{
+		return static_mpz_view<>{*this};
 	}
 	friend std::ostream &operator<<(std::ostream &os, const static_integer &si)
 	{
@@ -1517,7 +1625,7 @@ class mp_integer
 				s2 = other.is_static();
 			}
 			if (s2) {
-				detail::mpz_raii m;
+				static thread_local detail::mpz_raii m;
 				other.m_int.g_st().to_mpz(m.m_mpz);
 				::mpz_mul(&m_int.g_dy(),&m_int.g_dy(),&m.m_mpz);
 			} else {
@@ -2349,24 +2457,30 @@ class mp_integer
 			switch (mask) {
 				case 0u:
 				{
-					detail::mpz_raii m1, m2;
-					n1.m_int.g_st().to_mpz(m1.m_mpz);
-					n2.m_int.g_st().to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&m2.m_mpz);
+					//static thread_local detail::mpz_raii m1, m2;
+					//n1.m_int.g_st().to_mpz(m1.m_mpz);
+					//n2.m_int.g_st().to_mpz(m2.m_mpz);
+					//::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&m2.m_mpz);
+					auto v1 = n1.m_int.g_st().get_mpz_view(), v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_addmul(&m_int.g_dy(),v1,v2);
 					break;
 				}
 				case 1u:
 				{
-					detail::mpz_raii m2;
-					n2.m_int.g_st().to_mpz(m2.m_mpz);
-					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&m2.m_mpz);
+//					static thread_local detail::mpz_raii m2;
+//					n2.m_int.g_st().to_mpz(m2.m_mpz);
+//					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),&m2.m_mpz);
+					auto v2 = n2.m_int.g_st().get_mpz_view();
+					::mpz_addmul(&m_int.g_dy(),&n1.m_int.g_dy(),v2);
 					break;
 				}
 				case 2u:
 				{
-					detail::mpz_raii m1;
-					n1.m_int.g_st().to_mpz(m1.m_mpz);
-					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&n2.m_int.g_dy());
+//					static thread_local detail::mpz_raii m1;
+//					n1.m_int.g_st().to_mpz(m1.m_mpz);
+//					::mpz_addmul(&m_int.g_dy(),&m1.m_mpz,&n2.m_int.g_dy());
+					auto v1 = n1.m_int.g_st().get_mpz_view();
+					::mpz_addmul(&m_int.g_dy(),v1,&n2.m_int.g_dy());
 					break;
 				}
 				case 3u:
@@ -2766,7 +2880,8 @@ class mp_integer
 				// NOTE: in case of overflow here, we will underestimate the number of bits
 				// used in the representation of dy.
 				// NOTE: use GMP_NUMB_BITS in case we are operating with a GMP lib built with nails support.
-				tot_nbits  = static_cast<std::size_t>(std::size_t(GMP_NUMB_BITS) * size),
+				// NOTE: GMP_NUMB_BITS is an int constant.
+				tot_nbits  = static_cast<std::size_t>(unsigned(GMP_NUMB_BITS) * size),
 				q = static_cast<std::size_t>(tot_nbits / nbits_size_t),
 				r = static_cast<std::size_t>(tot_nbits % nbits_size_t),
 				n_size_t = static_cast<std::size_t>(q + static_cast<std::size_t>(r != 0u));
