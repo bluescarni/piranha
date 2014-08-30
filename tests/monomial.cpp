@@ -61,7 +61,7 @@ struct constructor_tester
 		void operator()(const U &)
 		{
 			typedef monomial<T,U> monomial_type;
-			PIRANHA_TT_CHECK(is_key,monomial_type);
+			BOOST_CHECK(is_key<monomial_type>::value);
 			monomial_type m0;
 			BOOST_CHECK_NO_THROW(monomial_type tmp = monomial_type());
 			BOOST_CHECK_NO_THROW(monomial_type tmp = monomial_type(monomial_type()));

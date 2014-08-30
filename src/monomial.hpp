@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <initializer_list>
 #include <iostream>
 #include <memory>
 #include <set>
@@ -38,7 +37,6 @@
 #include "detail/degree_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "config.hpp"
-#include "forwarding.hpp"
 #include "integer.hpp"
 #include "rational.hpp"
 #include "math.hpp"
@@ -143,32 +141,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 		};
 	public:
-		/// Defaulted default constructor.
-		monomial() = default;
-		/// Defaulted copy constructor.
-		monomial(const monomial &) = default;
-		/// Defaulted move constructor.
-		monomial(monomial &&) = default;
-		/// Constructor from initializer list.
-		/**
-		 * @param[in] list initializer list.
-		 * 
-		 * @see piranha::array_key's constructor from initializer list.
-		 */
-		template <typename U, typename = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value>::type>
-		explicit monomial(std::initializer_list<U> list):base(list) {}
-		PIRANHA_FORWARDING_CTOR(monomial,base)
-		/// Trivial destructor.
-		~monomial()
-		{
-			PIRANHA_TT_CHECK(is_key,monomial);
-			PIRANHA_TT_CHECK(key_has_degree,monomial);
-			PIRANHA_TT_CHECK(key_has_ldegree,monomial);
-		}
-		/// Defaulted copy assignment operator.
-		monomial &operator=(const monomial &) = default;
-		/// Defaulted move assignment operator.
-		monomial &operator=(monomial &&) = default;
+		/// Inherited constructors.
+		using base::base;
 		/// Compatibility check
 		/**
 		 * A monomial and a set of arguments are compatible if their sizes coincide.

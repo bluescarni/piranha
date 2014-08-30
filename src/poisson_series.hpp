@@ -206,25 +206,8 @@ class poisson_series:
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
 	public:
-		/// Defaulted default constructor.
-		/**
-		 * Will construct a Poisson series with zero terms.
-		 */
-		poisson_series() = default;
-		/// Defaulted copy constructor.
-		poisson_series(const poisson_series &) = default;
-		/// Defaulted move constructor.
-		poisson_series(poisson_series &&) = default;
-		PIRANHA_FORWARDING_CTOR(poisson_series,base)
-		/// Trivial destructor.
-		~poisson_series()
-		{
-			PIRANHA_TT_CHECK(is_series,poisson_series);
-		}
-		/// Defaulted copy assignment operator.
-		poisson_series &operator=(const poisson_series &) = default;
-		/// Defaulted move assignment operator.
-		poisson_series &operator=(poisson_series &&) = default;
+		/// Inherited constructors.
+		using base::base;
 		PIRANHA_FORWARDING_ASSIGNMENT(poisson_series,base)
 		/// Override sine implementation.
 		/**

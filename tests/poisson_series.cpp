@@ -40,6 +40,7 @@
 #include "../src/power_series.hpp"
 #include "../src/rational.hpp"
 #include "../src/real.hpp"
+#include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -80,6 +81,7 @@ struct constructor_tester
 	void operator()(const Cf &)
 	{
 		typedef poisson_series<Cf> p_type;
+		BOOST_CHECK(is_series<p_type>::value);
 		// Default construction.
 		p_type p1;
 		BOOST_CHECK(p1 == 0);
