@@ -116,6 +116,9 @@
  * with a good rationale.
  * \todo doxygen: check usage of param[(in,)out], and consider using the \tparam command.
  * \todo review the use of return statements with const objects, if any.
+ * \todo fix noexcept usage globally.
+ * \todo the series test should probably be split in multiple files as done in mp_integer, it requires too much resources
+ * to compile right now.
  */
 namespace piranha
 {
