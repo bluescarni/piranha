@@ -28,7 +28,6 @@
 #include <vector>
 
 #include "base_term.hpp"
-#include "forwarding.hpp"
 #include "math.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "symbol.hpp"
@@ -104,19 +103,8 @@ class poisson_series_term: public base_term<Cf,real_trigonometric_kronecker_mono
 	public:
 		/// Result type for the multiplication by another term.
 		typedef std::tuple<poisson_series_term,poisson_series_term> multiplication_result_type;
-		/// Defaulted default constructor.
-		poisson_series_term() = default;
-		/// Defaulted copy constructor.
-		poisson_series_term(const poisson_series_term &) = default;
-		/// Defaulted move constructor.
-		poisson_series_term(poisson_series_term &&) = default;
-		PIRANHA_FORWARDING_CTOR(poisson_series_term,base)
-		/// Trivial destructor.
-		~poisson_series_term() = default;
-		/// Defaulted copy assignment operator.
-		poisson_series_term &operator=(const poisson_series_term &) = default;
-		/// Defaulted move assignment operator.
-		poisson_series_term &operator=(poisson_series_term &&) = default;
+		/// Inherited constructors.
+		using base::base;
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce two terms according to the prosthaphaeresis formulas.

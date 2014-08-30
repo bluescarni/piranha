@@ -28,7 +28,6 @@
 
 #include "base_term.hpp"
 #include "detail/series_fwd.hpp"
-#include "forwarding.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
@@ -143,19 +142,8 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 	public:
 		/// Result type for the multiplication by another term.
 		typedef polynomial_term multiplication_result_type;
-		/// Defaulted default constructor.
-		polynomial_term() = default;
-		/// Defaulted copy constructor.
-		polynomial_term(const polynomial_term &) = default;
-		/// Defaulted move constructor.
-		polynomial_term(polynomial_term &&) = default;
-		PIRANHA_FORWARDING_CTOR(polynomial_term,base)
-		/// Trivial destructor.
-		~polynomial_term() = default;
-		/// Defaulted copy assignment operator.
-		polynomial_term &operator=(const polynomial_term &) = default;
-		/// Defaulted move assignment operator.
-		polynomial_term &operator=(polynomial_term &&) = default;
+		/// Inherited constructors.
+		using base::base;
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce a single term whose coefficient is the
