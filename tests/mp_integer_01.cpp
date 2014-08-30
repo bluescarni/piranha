@@ -565,6 +565,56 @@ BOOST_AUTO_TEST_CASE(mp_integer_static_integer_abs_size_test)
 	boost::mpl::for_each<size_types>(static_is_zero_tester());
 }
 
+struct static_mpz_view_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		using mpz_struct_t = detail::mpz_struct_t;
+		const auto limb_bits = int_type::limb_bits;
+		// Random testing.
+		std::uniform_int_distribution<int> dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			mpz_raii m;
+			int_type n;
+			for (typename int_type::limb_t i = 0u; i < 2u * limb_bits; ++i) {
+				if (dist(rng)) {
+					n.set_bit(i);
+					::mpz_setbit(&m.m_mpz,static_cast< ::mp_bitcnt_t>(i));
+				}
+			}
+			if (dist(rng)) {
+				n.negate();
+				::mpz_neg(&m.m_mpz,&m.m_mpz);
+			}
+			auto v = n.get_mpz_view();
+			BOOST_CHECK(::mpz_cmp(v,&m.m_mpz) == 0);
+			auto v_ptr = static_cast<mpz_struct_t const *>(v);
+			// There must always be something allocated, and the size must be less than or equal
+			// to the allocated size.
+			BOOST_CHECK(v_ptr->_mp_alloc > 0 && (
+				v_ptr->_mp_alloc >= v_ptr->_mp_size ||
+				v_ptr->_mp_alloc >= -v_ptr->_mp_size
+			));
+		}
+		// Check with zero.
+		mpz_raii m;
+		int_type n;
+		auto v = n.get_mpz_view();
+		BOOST_CHECK(::mpz_cmp(v,&m.m_mpz) == 0);
+		auto v_ptr = static_cast<mpz_struct_t const *>(v);
+		BOOST_CHECK(v_ptr->_mp_alloc > 0 && (
+			v_ptr->_mp_alloc >= v_ptr->_mp_size ||
+			v_ptr->_mp_alloc >= -v_ptr->_mp_size
+		));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_mpz_view_test)
+{
+	boost::mpl::for_each<size_types>(static_mpz_view_tester());
+}
 
 struct static_add_tester
 {

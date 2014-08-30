@@ -140,7 +140,10 @@ static_assert(sizeof(expected_mpz_struct_t) == sizeof(mpz_struct_t) &&
 	offsetof(mpz_struct_t,_mp_d) == offsetof(expected_mpz_struct_t,_mp_d) &&
 	std::is_same<mpz_alloc_t,decltype(std::declval<mpz_struct_t>()._mp_alloc)>::value &&
 	std::is_same<mpz_size_t,decltype(std::declval<mpz_struct_t>()._mp_size)>::value &&
-	std::is_same< ::mp_limb_t *,decltype(std::declval<mpz_struct_t>()._mp_d)>::value,
+	std::is_same< ::mp_limb_t *,decltype(std::declval<mpz_struct_t>()._mp_d)>::value &&
+	// Sanity check on GMP_LIMB_BITS. We use both GMP_LIMB_BITS and numeric_limits interchangeably,
+	// e.g., when using read_uint.
+	std::numeric_limits< ::mp_limb_t>::digits == unsigned(GMP_LIMB_BITS),
 	"Invalid mpz_t struct layout.");
 
 // Metaprogramming to select the limb/dlimb types.
@@ -373,6 +376,9 @@ struct static_integer
 					tot_nbits % unsigned(GMP_NUMB_BITS) == 0u ?
 					tot_nbits / unsigned(GMP_NUMB_BITS) :
 					tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
+				// Overflow check when using read_uint.
+				static_assert(unsigned(GMP_LIMB_BITS) <= std::numeric_limits<std::size_t>::max() / max_n_gmp_limbs,
+					"Overflow error.");
 				for (std::size_t i = 0u; i < n_gmp_limbs; ++i) {
 					m_limbs[i] = read_uint< ::mp_limb_t,T::total_bits - T::limb_bits,
 						unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS)>
@@ -382,7 +388,8 @@ struct static_integer
 				static_assert(max_n_gmp_limbs <= static_cast<std::make_unsigned<mpz_alloc_t>::type>
 					(std::numeric_limits<mpz_alloc_t>::max()),
 					"Overflow error.");
-				m_mpz._mp_alloc = static_cast<mpz_alloc_t>(n_gmp_limbs);
+				// There should always be some space allocated in a proper mpz struct.
+				m_mpz._mp_alloc = static_cast<mpz_alloc_t>(max_n_gmp_limbs);
 				static_assert(max_n_gmp_limbs <=
 					static_cast<std::make_unsigned<mpz_size_t>::type>(detail::safe_abs_sint<mpz_size_t>::value),
 					"Overflow error.");
@@ -415,7 +422,7 @@ struct static_integer
 			// NOTE: here we put alloc == size, in the case GMP does internal consistency checks.
 			// Secondly, we use the const_cast to cast away the constness from the pointer to the limbs
 			// in n. This is valid as we are never going to use this pointer for writing.
-			explicit static_mpz_view(const static_integer &n):m_mpz{static_cast<mpz_alloc_t>(n._mp_size),
+			explicit static_mpz_view(const static_integer &n):m_mpz{static_cast<mpz_alloc_t>(2),
 				n._mp_size,const_cast< ::mp_limb_t *>(n.m_limbs.data())}
 			{}
 			static_mpz_view(const static_mpz_view &) = delete;
@@ -1049,15 +1056,12 @@ union integer_union
  * - more type traits tests, check wrt old integer tests.
  * - check if we can just make a single friend here, in the same way as done in piranha::integer for the pow_impl access.
  * TODO performance improvements:
- *   - reduce usage of gmp integers in internal implementation, change the semantics of the raii
- *     holder so that we avoid double allocations;
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
  *     we can use mp_integer directly - this could be a performance improvement;
  *   - avoid going through mpz for print to stream,
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
- *   - actually, it seems like we could use a kind of static counterpart in many cases (comparison, addition, etc.):
- *     just allocate the space in a static array and convert static_int to the GMP format, without actually allocating
- *     any memory.
+ *   - optimize common cases for read_uint, that is, avoid always reading bit by bit. This should improve hashing
+ *     performance, amongst other.
  * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
  *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
  *   rational.
