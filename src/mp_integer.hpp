@@ -2058,7 +2058,7 @@ class mp_integer
 		 * can also be retrieved via the <tt>get()</tt> method of the \p mpz_view class.
 		 * The pointee will represent a GMP integer whose value is equal to \p this.
 		 *
-		 * Note that the returned object can only be move-constructed (the other constructors and the assignment operators
+		 * Note that the returned \p mpz_view instance can only be move-constructed (the other constructors and the assignment operators
 		 * are disabled). Additionally, the returned object and the pointer might reference internal data belonging to
 		 * \p this, and they can thus be used safely only during the lifetime of \p this.
 		 * Any modification to \p this will also invalidate the view and the pointer.
