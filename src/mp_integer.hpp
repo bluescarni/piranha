@@ -359,6 +359,7 @@ struct static_integer
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) :
 				max_tot_nbits / unsigned(GMP_NUMB_BITS) + 1u);
 			static_assert(max_n_gmp_limbs >= 1u,"Invalid number of GMP limbs.");
+			static_mpz_view(): m_mpz(),m_limbs() {}
 			explicit static_mpz_view(const static_integer &n)
 			{
 				std::size_t asize;
@@ -383,6 +384,10 @@ struct static_integer
 					m_limbs[i] = read_uint< ::mp_limb_t,T::total_bits - T::limb_bits,
 						unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS)>
 						(n.m_limbs.data(),asize,i);
+				}
+				// Fill in the missing limbs, otherwise we have indeterminate values.
+				for (std::size_t i = n_gmp_limbs; i < max_n_gmp_limbs; ++i) {
+					m_limbs[i] = 0u;
 				}
 				// Final assignment.
 				static_assert(max_n_gmp_limbs <= static_cast<std::make_unsigned<mpz_alloc_t>::type>
@@ -419,8 +424,8 @@ struct static_integer
 		>::type>
 	{
 		public:
-			// NOTE: here we put alloc == size, in the case GMP does internal consistency checks.
-			// Secondly, we use the const_cast to cast away the constness from the pointer to the limbs
+			static_mpz_view(): m_mpz() {}
+			// NOTE: we use the const_cast to cast away the constness from the pointer to the limbs
 			// in n. This is valid as we are never going to use this pointer for writing.
 			explicit static_mpz_view(const static_integer &n):m_mpz{static_cast<mpz_alloc_t>(2),
 				n._mp_size,const_cast< ::mp_limb_t *>(n.m_limbs.data())}

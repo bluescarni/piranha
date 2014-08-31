@@ -597,6 +597,7 @@ struct static_mpz_view_tester
 				v_ptr->_mp_alloc >= v_ptr->_mp_size ||
 				v_ptr->_mp_alloc >= -v_ptr->_mp_size
 			));
+			check_zero_limbs(n,v_ptr);
 		}
 		// Check with zero.
 		mpz_raii m;
@@ -608,6 +609,23 @@ struct static_mpz_view_tester
 			v_ptr->_mp_alloc >= v_ptr->_mp_size ||
 			v_ptr->_mp_alloc >= -v_ptr->_mp_size
 		));
+	}
+	template <typename T, typename V, typename std::enable_if<
+		std::is_same< ::mp_limb_t,typename T::limb_t>::value &&
+		T::limb_bits == unsigned(GMP_NUMB_BITS),
+		int>::type = 0>
+	static void check_zero_limbs(const T &, V) {}
+	template <typename T, typename V, typename std::enable_if<
+		!(std::is_same< ::mp_limb_t,typename T::limb_t>::value &&
+		T::limb_bits == unsigned(GMP_NUMB_BITS)),
+		int>::type = 0>
+	static void check_zero_limbs(const T &, V v_ptr)
+	{
+		const std::size_t size = static_cast<std::size_t>(v_ptr->_mp_size >= 0 ? v_ptr->_mp_size : -v_ptr->_mp_size);
+		const std::size_t alloc = static_cast<std::size_t>(v_ptr->_mp_alloc);
+		for (std::size_t i = size; i < alloc; ++i) {
+			BOOST_CHECK_EQUAL(v_ptr->_mp_d[i],0u);
+		}
 	}
 };
 
