@@ -24,12 +24,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <array>
 #include <atomic>
-#include <boost/timer/timer.hpp>
 #include <cstddef>
 #include <cstdlib>
-#include <iostream>
 #include <iterator>
 #include <limits>
 #include <new>
@@ -195,58 +192,3 @@ BOOST_AUTO_TEST_CASE(memory_parallel_init_destroy_test)
 		BOOST_CHECK(std::equal(ptr7.get(),ptr7.get() + small_alloc_size,ptr_cmp.get()));
 	}
 }
-
-#ifdef NDEBUG
-
-// Size of the parallel arrays to allocate.
-static const std::size_t alloc_size = 20000000ull;
-
-struct array_wrap
-{
-	array_wrap()
-	{
-		m_array[0] = 0;
-	}
-	std::array<int,5> m_array;
-};
-
-BOOST_AUTO_TEST_CASE(memory_parallel_array_perf_test)
-{
-	std::cout <<	"Testing int\n"
-			"===========\n";
-	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
-		std::cout << "n = " << i + 1u << '\n';
-		boost::timer::auto_cpu_timer t;
-		auto ptr1 = make_parallel_array<int>(alloc_size,i + 1u);
-	}
-	std::cout <<	"Testing string\n"
-			"==============\n";
-	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
-		std::cout << "n = " << i + 1u << '\n';
-		boost::timer::auto_cpu_timer t;
-		auto ptr1 = make_parallel_array<custom_string>(alloc_size,i + 1u);
-	}
-	std::cout <<	"Testing integer\n"
-			"===============\n";
-	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
-		std::cout << "n = " << i + 1u << '\n';
-		boost::timer::auto_cpu_timer t;
-		auto ptr1 = make_parallel_array<integer>(alloc_size,i + 1u);
-	}
-	std::cout <<	"Testing mp_integer\n"
-			"==================\n";
-	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
-		std::cout << "n = " << i + 1u << '\n';
-		boost::timer::auto_cpu_timer t;
-		auto ptr1 = make_parallel_array<mp_integer<>>(alloc_size,i + 1u);
-	}
-	std::cout <<	"Testing array wrap\n"
-			"==================\n";
-	for (unsigned i = 0u; i < settings::get_n_threads(); ++i) {
-		std::cout << "n = " << i + 1u << '\n';
-		boost::timer::auto_cpu_timer t;
-		auto ptr1 = make_parallel_array<array_wrap>(alloc_size,i + 1u);
-	}
-}
-
-#endif
