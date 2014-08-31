@@ -609,6 +609,11 @@ struct static_mpz_view_tester
 			v_ptr->_mp_alloc >= v_ptr->_mp_size ||
 			v_ptr->_mp_alloc >= -v_ptr->_mp_size
 		));
+		// TT checks.
+		BOOST_CHECK(!std::is_copy_constructible<decltype(v)>::value);
+		BOOST_CHECK(std::is_move_constructible<decltype(v)>::value);
+		BOOST_CHECK(!std::is_copy_assignable<typename std::add_lvalue_reference<decltype(v)>::type>::value);
+		BOOST_CHECK(!std::is_move_assignable<typename std::add_lvalue_reference<decltype(v)>::type>::value);
 	}
 	template <typename T, typename V, typename std::enable_if<
 		std::is_same< ::mp_limb_t,typename T::limb_t>::value &&

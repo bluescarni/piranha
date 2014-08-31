@@ -2392,3 +2392,49 @@ BOOST_AUTO_TEST_CASE(mp_integer_literal_test)
 	BOOST_CHECK_THROW((n0 = -1234.5_z),std::invalid_argument);
 	BOOST_CHECK_EQUAL(n0,-456l);
 }
+
+struct mpz_view_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n0;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_sgn(static_cast<detail::mpz_struct_t const *>(v0)),0);
+		// TT checks.
+		BOOST_CHECK(!std::is_copy_constructible<decltype(v0)>::value);
+		BOOST_CHECK(std::is_move_constructible<decltype(v0)>::value);
+		BOOST_CHECK(!std::is_copy_assignable<typename std::add_lvalue_reference<decltype(v0)>::type>::value);
+		BOOST_CHECK(!std::is_move_assignable<typename std::add_lvalue_reference<decltype(v0)>::type>::value);
+		}
+		n0 = -1;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_cmp_si(static_cast<detail::mpz_struct_t const *>(v0),long(-1)),0);
+		}
+		n0 = 2;
+		{
+		auto v0 = n0.get_mpz_view();
+		BOOST_CHECK_EQUAL(mpz_cmp_si(static_cast<detail::mpz_struct_t const *>(v0),long(2)),0);
+		}
+		// Random tests.
+		std::uniform_int_distribution<int> ud(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		mpz_raii m;
+		for (int i = 0; i < ntries; ++i) {
+			auto tmp = ud(rng);
+			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
+			int_type n1(tmp);
+			auto v1 = n1.get_mpz_view();
+			BOOST_CHECK_EQUAL(::mpz_cmp(v1,&m.m_mpz),0);
+			BOOST_CHECK_EQUAL(::mpz_cmp(&m.m_mpz,v1),0);
+			BOOST_CHECK_EQUAL(::mpz_cmp(&m.m_mpz,v1.get()),0);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_mpz_view_test)
+{
+	boost::mpl::for_each<size_types>(mpz_view_tester());
+}

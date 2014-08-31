@@ -1910,6 +1910,35 @@ class mp_integer
 				return 1 / pow_impl(-n);
 			}
 		}
+		// mpz view class.
+		class mpz_view
+		{
+				using static_mpz_view = typename detail::integer_union<NBits>::s_storage::template static_mpz_view<>;
+			public:
+				explicit mpz_view(const mp_integer &n):
+					m_static_view(n.is_static() ? n.m_int.g_st().get_mpz_view() : static_mpz_view{}),
+					m_dyn_ptr(n.is_static() ? nullptr : &(n.m_int.g_dy()))
+				{}
+				mpz_view(const mpz_view &) = delete;
+				mpz_view(mpz_view &&) = default;
+				mpz_view &operator=(const mpz_view &) = delete;
+				mpz_view &operator=(mpz_view &&) = delete;
+				operator const detail::mpz_struct_t *() const
+				{
+					return get();
+				}
+				const detail::mpz_struct_t *get() const
+				{
+					if (m_dyn_ptr) {
+						return m_dyn_ptr;
+					} else {
+						return m_static_view;
+					}
+				}
+			private:
+				static_mpz_view			m_static_view;
+				const detail::mpz_struct_t	*m_dyn_ptr;
+		};
 	public:
 		/// Defaulted default constructor.
 		/**
@@ -2020,6 +2049,25 @@ class mp_integer
 		{
 			operator=(mp_integer(str));
 			return *this;
+		}
+		/// Get an \p mpz view of \p this.
+		/**
+		 * This method will return an object of an unspecified type \p mpz_view which is implicitly convertible
+		 * to a const pointer to an \p mpz struct (and which can thus be used as a <tt>const mpz_t</tt>
+		 * parameter in GMP functions). In addition to the implicit conversion operator, the \p mpz struct pointer
+		 * can also be retrieved via the <tt>get()</tt> method of the \p mpz_view class.
+		 * The pointee will represent a GMP integer whose value is equal to \p this.
+		 *
+		 * Note that the returned object can only be move-constructed (the other constructors and the assignment operators
+		 * are disabled). Additionally, the returned object and the pointer might reference internal data belonging to
+		 * \p this, and they can thus be used safely only during the lifetime of \p this.
+		 * Any modification to \p this will also invalidate the view and the pointer.
+		 *
+		 * @return an \p mpz view of \p this.
+		 */
+		mpz_view get_mpz_view() const
+		{
+			return mpz_view(*this);
 		}
 		/// Conversion operator.
 		/**
