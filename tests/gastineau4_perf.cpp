@@ -44,6 +44,5 @@ BOOST_AUTO_TEST_CASE(gastineau4_test)
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	//BOOST_CHECK_EQUAL((gastineau3<integer,kronecker_monomial<>>().size()),144049555ull);
-	std::cout << gastineau4<integer,kronecker_monomial<>>().size() << '\n';
+	BOOST_CHECK_EQUAL((gastineau4<integer,kronecker_monomial<>>().size()),95033335ull);
 }
