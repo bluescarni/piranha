@@ -1078,6 +1078,11 @@ union integer_union
  *   be useful for both rational and complex numbers, maybe we could implement it here as well.
  * - test performance with 1 limb only, compare possibly to flint and try improving if necessary.
  * - in the long run we should consider optimising operations vs hardware integers.
+ * - use the same approach used in mp_rational to get rid of binary_operators type traiting.
+ * - the speed of conversion to floating-point might matter in series evaluation. Consider what happens when evaluating
+ *   cos(x) in which x an mp_integer (passed in from Python, for instance). If we overload cos() to produce a double for int argument,
+ *   then we need to convert x to double and then compute cos(x).
+ * - when converting to/from Python we can speed up operations by trying casting around to hardware integers, if range is enough.
  */
 template <int NBits = 0>
 class mp_integer
