@@ -105,6 +105,11 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 // - here we are using a straight mpfr_t as underlying member, which is an array. Doest it matter? Should we use
 //   the corresponding struct for consistency? Does it matter for performance?
 // - if we overhaul the tests, put random precision values as well.
+// - maybe we should have a setter as well for the global default precision. It would need to be an atomic
+//   variable, and we need perf measures to understand the performance impact of this.
+// - For series evaluation, we need to be careful performance-wise with the possible conversions that might go
+//   on when mixing real with other types. E.g., pow(real,int) when evaluating polynomials. We need to make sure
+//   the conversions are as fast as possible.
 class real: public detail::real_base<>
 {
 		// Type trait for allowed arguments in arithmetic binary operations.
