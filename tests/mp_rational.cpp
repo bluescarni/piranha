@@ -1257,3 +1257,57 @@ BOOST_AUTO_TEST_CASE(mp_rational_is_zero_test)
 {
 	boost::mpl::for_each<size_types>(is_zero_tester());
 }
+
+struct mpq_view_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		q_type q;
+		{
+		auto v = q.get_mpq_view();
+		BOOST_CHECK_EQUAL(mpq_cmp_si(v.get(),0,1u),0);
+		BOOST_CHECK(!std::is_copy_constructible<decltype(v)>::value);
+		BOOST_CHECK(std::is_move_constructible<decltype(v)>::value);
+		BOOST_CHECK(!std::is_copy_assignable<decltype(v) &>::value);
+		BOOST_CHECK(!std::is_move_assignable<decltype(v) &>::value);
+		}
+		q = q_type(4,-3);
+		{
+		auto v = q.get_mpq_view();
+		BOOST_CHECK_EQUAL(mpq_cmp_si(v.get(),-4,3u),0);
+		}
+		q = q_type(4,16);
+		{
+		auto v = q.get_mpq_view();
+		BOOST_CHECK_EQUAL(mpq_cmp_si(v.get(),1,4u),0);
+		}
+		// Random testing.
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		mpq_raii mq;
+		for (int i = 0; i < ntries; ++i) {
+			int a = dist(rng), b = dist(rng);
+			if (b == 0) {
+				continue;
+			}
+			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
+			if (b > 0) {
+				::mpq_set_si(&mq.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&mq.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&mq.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&mq.m_mpq);
+			q_type q{a,b};
+			auto v = q.get_mpq_view();
+			BOOST_CHECK_EQUAL(::mpq_cmp(v,&mq.m_mpq),0);
+			BOOST_CHECK_EQUAL(::mpq_cmp(&mq.m_mpq,v),0);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_mpq_view_test)
+{
+	boost::mpl::for_each<size_types>(mpq_view_tester());
+}

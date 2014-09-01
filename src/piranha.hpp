@@ -119,6 +119,8 @@
  * \todo fix noexcept usage globally.
  * \todo the series test should probably be split in multiple files as done in mp_integer, it requires too much resources
  * to compile right now.
+ * \todo we should probably add a "run under valgrind" option in CMake when in Debug mode. When this is active, we should disable
+ * all uses of long double in the tests as valgrind cannot cope with it.
  */
 namespace piranha
 {

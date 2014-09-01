@@ -459,6 +459,41 @@ class mp_rational
 		{
 			return x / static_cast<T>(q2);
 		}
+		// mpq view class.
+		class mpq_view
+		{
+				using mpq_struct_t = std::remove_extent< ::mpq_t>::type;
+			public:
+				explicit mpq_view(const mp_rational &q):m_n_view(q.num().get_mpz_view()),
+					m_d_view(q.den().get_mpz_view())
+				{
+					// Shallow copy over to m_mpq the data from the views.
+					auto n_ptr = m_n_view.get();
+					auto d_ptr = m_d_view.get();
+					mpq_numref(&m_mpq)->_mp_alloc = n_ptr->_mp_alloc;
+					mpq_numref(&m_mpq)->_mp_size = n_ptr->_mp_size;
+					mpq_numref(&m_mpq)->_mp_d = n_ptr->_mp_d;
+					mpq_denref(&m_mpq)->_mp_alloc = d_ptr->_mp_alloc;
+					mpq_denref(&m_mpq)->_mp_size = d_ptr->_mp_size;
+					mpq_denref(&m_mpq)->_mp_d = d_ptr->_mp_d;
+				}
+				mpq_view(const mpq_view &) = delete;
+				mpq_view(mpq_view &&) = default;
+				mpq_view &operator=(const mpq_view &) = delete;
+				mpq_view &operator=(mpq_view &&) = delete;
+				operator mpq_struct_t const *() const
+				{
+					return get();
+				}
+				mpq_struct_t const *get() const
+				{
+					return &m_mpq;
+				}
+			private:
+				typename int_type::mpz_view	m_n_view;
+				typename int_type::mpz_view	m_d_view;
+				mpq_struct_t			m_mpq;
+		};
 	public:
 		/// Default constructor.
 		/**
@@ -661,6 +696,25 @@ class mp_rational
 		const int_type &den() const noexcept
 		{
 			return m_den;
+		}
+		/// Get an \p mpq view of \p this.
+		/**
+		 * This method will return an object of an unspecified type \p mpq_view which is implicitly convertible
+		 * to a const pointer to an \p mpq struct (and which can thus be used as a <tt>const mpq_t</tt>
+		 * parameter in GMP functions). In addition to the implicit conversion operator, the \p mpq struct pointer
+		 * can also be retrieved via the <tt>get()</tt> method of the \p mpq_view class.
+		 * The pointee will represent a GMP rational whose value is equal to \p this.
+		 *
+		 * Note that the returned \p mpq_view instance can only be move-constructed (the other constructors and the assignment operators
+		 * are disabled). Additionally, the returned object and the pointer might reference internal data belonging to
+		 * \p this, and they can thus be used safely only during the lifetime of \p this.
+		 * Any modification to \p this will also invalidate the view and the pointer.
+		 *
+		 * @return an \p mpq view of \p this.
+		 */
+		mpq_view get_mpq_view() const
+		{
+			return mpq_view{*this};
 		}
 		/// Canonicality check.
 		/**
