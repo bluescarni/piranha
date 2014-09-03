@@ -1311,3 +1311,36 @@ BOOST_AUTO_TEST_CASE(mp_rational_mpq_view_test)
 {
 	boost::mpl::for_each<size_types>(mpq_view_tester());
 }
+
+struct equality_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		// A few simple tests.
+		BOOST_CHECK_EQUAL(q_type{},q_type{0});
+		BOOST_CHECK_EQUAL(q_type{0},q_type{});
+		BOOST_CHECK_EQUAL(q_type{-5},q_type{-5});
+		BOOST_CHECK_EQUAL(q_type(-5,4),q_type(5,-4));
+		BOOST_CHECK_EQUAL(q_type(10,8),q_type(-5,-4));
+		BOOST_CHECK_EQUAL(q_type(10,5),int_type(2));
+		BOOST_CHECK_EQUAL(int_type(2),q_type(10,5));
+		BOOST_CHECK_EQUAL(q_type(10,5),2);
+		BOOST_CHECK_EQUAL(2,q_type(10,5));
+		BOOST_CHECK(q_type(10,8) != q_type(-5,-3));
+		BOOST_CHECK(q_type(10,8) != q_type(-5,4));
+		BOOST_CHECK(q_type(10,8) != q_type(-5,4));
+		BOOST_CHECK(q_type(10,8) != int_type(1));
+		BOOST_CHECK(int_type(1) != q_type(10,8));
+		BOOST_CHECK(q_type(10,8) != int_type(1));
+		BOOST_CHECK(1 != q_type(10,8));
+		BOOST_CHECK(q_type(10,8) != 1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_cmp_test)
+{
+	boost::mpl::for_each<size_types>(equality_tester());
+}

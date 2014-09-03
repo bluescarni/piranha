@@ -459,6 +459,31 @@ class mp_rational
 		{
 			return x / static_cast<T>(q2);
 		}
+		// Equality operator.
+		static bool binary_eq(const mp_rational &q1, const mp_rational &q2)
+		{
+			return q1.num() == q2.num() && q1.den() == q2.den();
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static bool binary_eq(const mp_rational &q, const T &x)
+		{
+			return q.den() == 1 && q.num() == x;
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static bool binary_eq(const T &x, const mp_rational &q)
+		{
+			return binary_eq(q,x);
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_eq(const mp_rational &q, const T &x)
+		{
+			return static_cast<T>(q) == x;
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_eq(const T &x, const mp_rational &q)
+		{
+			return binary_eq(q,x);
+		}
 		// mpq view class.
 		class mpq_view
 		{
@@ -1161,6 +1186,16 @@ class mp_rational
 		friend auto operator/(const T &x, const U &y) -> decltype(mp_rational::binary_div(x,y))
 		{
 			return mp_rational::binary_div(x,y);
+		}
+		template <typename T, typename U>
+		friend auto operator==(const T &x, const U &y) -> decltype(mp_rational::binary_eq(x,y))
+		{
+			return mp_rational::binary_eq(x,y);
+		}
+		template <typename T, typename U>
+		friend auto operator!=(const T &x, const U &y) -> decltype(!mp_rational::binary_eq(x,y))
+		{
+			return !mp_rational::binary_eq(x,y);
 		}
 	private:
 		int_type	m_num;
