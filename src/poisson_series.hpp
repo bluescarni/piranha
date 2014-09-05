@@ -207,7 +207,7 @@ class poisson_series:
 		}
 	public:
 		/// Inherited constructors.
-		using base::base;
+		using base::power_series;
 		PIRANHA_FORWARDING_ASSIGNMENT(poisson_series,base)
 		/// Override sine implementation.
 		/**

@@ -104,7 +104,7 @@ class poisson_series_term: public base_term<Cf,real_trigonometric_kronecker_mono
 		/// Result type for the multiplication by another term.
 		typedef std::tuple<poisson_series_term,poisson_series_term> multiplication_result_type;
 		/// Inherited constructors.
-		using base::base;
+		using base::base_term;
 		/// Term multiplication.
 		/**
 		 * Multiplication of \p this by \p other will produce two terms according to the prosthaphaeresis formulas.
