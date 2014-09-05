@@ -142,7 +142,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		};
 	public:
 		/// Inherited constructors.
-		using base::base;
+		using base::array_key;
 		/// Compatibility check
 		/**
 		 * A monomial and a set of arguments are compatible if their sizes coincide.
