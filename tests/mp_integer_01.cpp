@@ -257,17 +257,18 @@ struct calculate_n_limbs_tester
 	void operator()(const T &)
 	{
 		using int_type = detail::static_integer<T::value>;
+		using mpz_size_t = detail::mpz_size_t;
 		const auto limb_bits = int_type::limb_bits;
 		int_type n;
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),0u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),mpz_size_t(0));
 		n.set_bit(0);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),1u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),mpz_size_t(1));
 		n.set_bit(1);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),1u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),mpz_size_t(1));
 		n.set_bit(limb_bits);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),2u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),mpz_size_t(2));
 		n.set_bit(limb_bits + 1u);
-		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),2u);
+		BOOST_CHECK_EQUAL(n.calculate_n_limbs(),mpz_size_t(2));
 	}
 };
 
@@ -2219,11 +2220,11 @@ struct static_bits_size_tester
 		typedef detail::static_integer<T::value> int_type;
 		const auto limb_bits = int_type::limb_bits;
 		int_type n;
-		BOOST_CHECK_EQUAL(n.bits_size(),0);
+		BOOST_CHECK_EQUAL(n.bits_size(),0u);
 		n.set_bit(0);
-		BOOST_CHECK_EQUAL(n.bits_size(),1);
+		BOOST_CHECK_EQUAL(n.bits_size(),1u);
 		n.set_bit(3);
-		BOOST_CHECK_EQUAL(n.bits_size(),4);
+		BOOST_CHECK_EQUAL(n.bits_size(),4u);
 		n.set_bit(limb_bits);
 		BOOST_CHECK_EQUAL(n.bits_size(),limb_bits + 1u);
 		n.set_bit(limb_bits + 3u);
