@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "../src/base_term.hpp"
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/monomial.hpp"
@@ -159,8 +160,11 @@ BOOST_AUTO_TEST_CASE(type_traits_is_addable_test)
 	BOOST_CHECK((is_addable<std::complex<double>,double>::value));
 	BOOST_CHECK((is_addable<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<trivial,std::complex<double>>::value));
+// The Intel compiler seems to have some nonstandard extensions to the complex class.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK((!is_addable<int,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,int>::value));
+#endif
 	BOOST_CHECK((is_addable<std::string,std::string>::value));
 	BOOST_CHECK((is_addable<std::string,const char *>::value));
 	BOOST_CHECK((is_addable<const char *,std::string>::value));
@@ -214,8 +218,11 @@ BOOST_AUTO_TEST_CASE(type_traits_is_subtractable_test)
 	BOOST_CHECK((is_subtractable<std::complex<double>,double>::value));
 	BOOST_CHECK((is_subtractable<double,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<trivial,std::complex<double>>::value));
+// Same as above.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK((!is_subtractable<int,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,int>::value));
+#endif
 	BOOST_CHECK((!is_subtractable<std::string,std::string>::value));
 	BOOST_CHECK((!is_subtractable<std::string,const char *>::value));
 	BOOST_CHECK((!is_subtractable<const char *,std::string>::value));
@@ -516,9 +523,11 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
 	BOOST_CHECK((is_instance_of<variadic_iio1<>,variadic_iio1>::value));
 	BOOST_CHECK((is_instance_of<variadic_iio1<int>,variadic_iio1>::value));
 	BOOST_CHECK((is_instance_of<variadic_iio1<int,double>,variadic_iio1>::value));
-	// This seems to be a GCC bug.
-	// BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
-	// BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
+	// See the comments in the source.
+#if defined(PIRANHA_COMPILER_IS_GCC) || defined(PIRANHA_COMPILER_IS_INTEL)
+	BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
+	BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
+#endif
 }
 
 struct stream1 {};
@@ -594,7 +603,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
 	BOOST_CHECK(!is_container_element<c_element &>::value);
 	BOOST_CHECK(!is_container_element<c_element const &>::value);
 	BOOST_CHECK(!is_container_element<nc_element1>::value);
+// Missing nothrow detection in the Intel compiler.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK(!is_container_element<nc_element2>::value);
+#endif
 	BOOST_CHECK(is_container_element<c_element2>::value);
 	BOOST_CHECK(!is_container_element<int &>::value);
 	BOOST_CHECK(!is_container_element<int &&>::value);
@@ -765,9 +777,12 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hashable_test)
 	BOOST_CHECK(!is_hashable<unhashable7>::value);
 	BOOST_CHECK(!is_hashable<unhashable8>::value);
 	BOOST_CHECK(!is_hashable<unhashable9>::value);
+// Missing noexcept detect.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK(!is_hashable<unhashable10>::value);
 	BOOST_CHECK(!is_hashable<unhashable11>::value);
 	BOOST_CHECK(!is_hashable<unhashable12>::value);
+#endif
 	BOOST_CHECK(is_hashable<hashable1>::value);
 	BOOST_CHECK(is_hashable<hashable2>::value);
 	BOOST_CHECK(is_hashable<hashable2 &>::value);
@@ -969,7 +984,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 	BOOST_CHECK((!is_hash_function_object<hfo6,int>::value));
 	BOOST_CHECK((is_hash_function_object<hfo7,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo8,int>::value));
+// Missing noexcept.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK((!is_hash_function_object<hfo9,int>::value));
+#endif
 }
 
 struct efo1 {};
@@ -1058,8 +1076,11 @@ BOOST_AUTO_TEST_CASE(type_traits_is_equality_function_object_test)
 	BOOST_CHECK((!is_equality_function_object<efo7 const,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo7 const &,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo7 &,int>::value));
+// Missing noexcept.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK((!is_equality_function_object<efo8,int>::value));
 	BOOST_CHECK((!is_equality_function_object<efo9,int>::value));
+#endif
 	BOOST_CHECK((!is_equality_function_object<efo10,int>::value));
 }
 
@@ -1248,7 +1269,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_key_test)
 	BOOST_CHECK(!is_key<const key02>::value);
 	BOOST_CHECK(!is_key<const key02 &>::value);
 	BOOST_CHECK(!is_key<key03>::value);
+// Missing noexcept.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK(!is_key<key04>::value);
+#endif
 	BOOST_CHECK(!is_key<key05>::value);
 	BOOST_CHECK(!is_key<key06>::value);
 	BOOST_CHECK(!is_key<key07>::value);
@@ -1400,7 +1424,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
 	BOOST_CHECK(!is_cf<cf03>::value);
 	BOOST_CHECK(!is_cf<cf04>::value);
 	BOOST_CHECK(!is_cf<cf05>::value);
+// Missing noexcept.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK(!is_cf<cf06>::value);
+#endif
 	BOOST_CHECK(is_cf<cf07>::value);
 }
 
@@ -1957,9 +1984,13 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
 	BOOST_CHECK(!is_iterator<iter03>::value);
 	BOOST_CHECK(!is_iterator<iter03 &>::value);
 	BOOST_CHECK(!is_iterator<const iter03>::value);
+// The Intel compiler has problems with the destructible
+// type-trait.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK(!is_iterator<iter04>::value);
 	BOOST_CHECK(!is_iterator<iter04 &>::value);
 	BOOST_CHECK(!is_iterator<const iter04>::value);
+#endif
 	BOOST_CHECK(!is_iterator<iter05>::value);
 	BOOST_CHECK(!is_iterator<iter05 &>::value);
 	BOOST_CHECK(!is_iterator<const iter05>::value);

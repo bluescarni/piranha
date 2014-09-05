@@ -393,9 +393,16 @@ struct is_container_element
 	static const bool value = std::is_default_constructible<T>::value &&
 				  std::is_copy_constructible<T>::value &&
 				  (!enable_noexcept_checks<T>::value || (
-				  is_nothrow_destructible<T>::value &&
-				  std::is_nothrow_move_constructible<T>::value &&
-				  std::is_nothrow_move_assignable<T>::value));
+				  is_nothrow_destructible<T>::value
+// The Intel compiler has troubles with the noexcept versions of these two type traits.
+#if defined(PIRANHA_COMPILER_IS_INTEL)
+				  && std::is_move_constructible<T>::value &&
+				  std::is_move_assignable<T>::value
+#else
+				  && std::is_nothrow_move_constructible<T>::value &&
+				  std::is_nothrow_move_assignable<T>::value
+#endif
+				  ));
 };
 
 template <typename T>
@@ -404,12 +411,67 @@ const bool is_container_element<T>::value;
 namespace detail
 {
 
+// Here this is quite tricky. Compiler support for variadic template template is shaky
+// at best across GCC/Clang/Intel. The only one to get it completely right at this time seems
+// GCC 4.9.0. The others:
+// - GCC < 4.9.0 compiles this but it has problems when TT has a certain number of template arguments > 0
+//   and a final variadic pack. E.g.,
+//   class <typename T, typename U, typename ... Args> class TT;
+//   will not be detected. See also:
+//   http://stackoverflow.com/questions/18724698/variadic-template-deduction-in-variadic-template-template?noredirect=1#comment39290689_18724698
+//   The workaround of spelling explicitly N arguments works ok.
+// - Clang behaves like GCC 4.8 *except* that the workaround won't work. Clang does not recognize the
+//   spelled-out N arguments versions below as specialisations of the general case.
+// - The Intel compiler won't work at all unless the workaround is activated.
+
+// This is the base, standard-compliant version.
 template <template <typename ...> class TT>
 struct iio_converter
 {
 	template <typename ... Args>
 	iio_converter(const TT<Args ...> &);
 };
+
+#if (defined(PIRANHA_COMPILER_IS_GCC) && __GNUC__  == 4 && __GNUC_MINOR__ < 9) || \
+	defined(PIRANHA_COMPILER_IS_INTEL)
+
+template <template <typename> class TT>
+struct iio_converter<TT>
+{
+	template <typename T0>
+	iio_converter(const TT<T0> &);
+};
+
+template <template <typename, typename> class TT>
+struct iio_converter<TT>
+{
+	template <typename T0, typename T1>
+	iio_converter(const TT<T0,T1> &);
+};
+
+template <template <typename, typename, typename> class TT>
+struct iio_converter<TT>
+{
+	template <typename T0, typename T1, typename T2>
+	iio_converter(const TT<T0,T1,T2> &);
+};
+
+template <template <typename, typename, typename, typename> class TT>
+struct iio_converter<TT>
+{
+	template <typename T0, typename T1, typename T2, typename T3>
+	iio_converter(const TT<T0,T1,T2,T3> &);
+};
+
+// Let's stop at 5 arguments, add more if needed.
+template <template <typename, typename, typename, typename, typename> class TT>
+struct iio_converter<TT>
+{
+	template <typename T0, typename T1, typename T2, typename T3, typename T4>
+	iio_converter(const TT<T0,T1,T2,T3,T4> &);
+};
+
+#endif
 
 }
 
@@ -423,10 +485,6 @@ struct iio_converter
  is_instance_of<int,std::list>::value == false;
  @endcode
  */
-// WARNING: due to a GCC bug, this will not work if TT has a certain number of template arguments > 0
-// and a final variadic pack. E.g.,
-// class <typename T, typename U, typename ... Args> class TT;
-// will not be detected.
 template <class T, template <typename ...> class TT>
 class is_instance_of
 {
