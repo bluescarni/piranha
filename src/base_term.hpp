@@ -83,22 +83,24 @@ class base_term
 		/**
 		 * @param[in] other term used for construction.
 		 */
-		base_term(base_term &&other) noexcept(true) : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key))
+		base_term(base_term &&other) noexcept : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key))
 		{}
 		/// Constructor from generic coefficient and key.
 		/**
-		 * Will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key. The constructor is
-		 * activated only if coefficient and key are constructible from types \p T and \p U.
+		 * \note
+		 * This constructor is activated only if coefficient and key are constructible from \p T and \p U.
+		 *
+		 * This constructor will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key.
 		 * 
 		 * @param[in] cf argument used for the construction of the coefficient.
 		 * @param[in] key argument used for the construction of the key.
 		 * 
 		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
 		 */
-		template <typename T, typename U>
-		explicit base_term(T &&cf, U &&key, typename std::enable_if<
-			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value
-			>::type * = nullptr):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
+		template <typename T, typename U, typename std::enable_if<
+			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value,
+			int>::type = 0>
+		explicit base_term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
 		~base_term();
 		/// Copy assignment operator.
@@ -123,7 +125,7 @@ class base_term
 		 * 
 		 * @return reference to \p this.
 		 */
-		base_term &operator=(base_term &&other) noexcept(true)
+		base_term &operator=(base_term &&other) noexcept
 		{
 			if (likely(this != &other)) {
 				m_cf = std::move(other.m_cf);
@@ -151,7 +153,7 @@ class base_term
 		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
 		 */
-		std::size_t hash() const noexcept(true)
+		std::size_t hash() const noexcept
 		{
 			return std::hash<key_type>()(m_key);
 		}
@@ -161,7 +163,7 @@ class base_term
 		 * 
 		 * @return the key's <tt>is_compatible()</tt> method's return value.
 		 */
-		bool is_compatible(const symbol_set &args) const noexcept(true)
+		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			// NOTE: if this (and is_ignorable) are made re-implementable at a certain point in derived term classes,
 			// we must take care of asserting noexcept on the corresponding methods in the derived class.
@@ -177,7 +179,7 @@ class base_term
 		 * @return \p true if either the key's <tt>is_ignorable()</tt> method or piranha::math::is_zero() on the coefficient return \p true,
 		 * \p false otherwise.
 		 */
-		bool is_ignorable(const symbol_set &args) const noexcept(true)
+		bool is_ignorable(const symbol_set &args) const noexcept
 		{
 			return (math::is_zero(m_cf) || m_key.is_ignorable(args));
 		}
