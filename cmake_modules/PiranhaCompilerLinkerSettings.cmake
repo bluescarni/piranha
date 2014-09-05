@@ -1,12 +1,18 @@
 INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckTypeSize)
 
+message(STATUS "The C++ compiler ID is: ${CMAKE_CXX_COMPILER_ID}")
+
 # Clang detection:
 # http://stackoverflow.com/questions/10046114/in-cmake-how-can-i-test-if-the-compiler-is-clang
 # http://www.cmake.org/cmake/help/v2.8.10/cmake.html#variable:CMAKE_LANG_COMPILER_ID
 IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	SET(CMAKE_COMPILER_IS_CLANGXX 1)
 ENDIF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+	set(CMAKE_COMPILER_IS_INTELXX 1)
+endif()
 
 macro(PIRANHA_CHECK_ENABLE_CXX_FLAG flag)
 	set(PIRANHA_CHECK_CXX_FLAG)
@@ -55,7 +61,6 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(FATAL_ERROR "Unsupported GCC version, please upgrade your compiler.")
 	ENDIF(NOT GCC_VERSION_CHECK)
 	MESSAGE(STATUS "GCC version is ok.")
-	MESSAGE(STATUS "Enabling c++11 flag.")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 	# Enable libstdc++ pedantic debug mode in debug builds.
 	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
@@ -82,14 +87,28 @@ IF(CMAKE_COMPILER_IS_CLANGXX)
 		MESSAGE(FATAL_ERROR "Unsupported Clang version, please upgrade your compiler.")
 	ENDIF(NOT CLANG_VERSION_CHECK)
 	MESSAGE(STATUS "Clang version is ok.")
-	MESSAGE(STATUS "Enabling c++11 flag.")
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-	#PIRANHA_CHECK_ENABLE_CXX_FLAG(-stdlib=libc++)
+	# This used to be necessary with earlier versions of Clang which
+	# were not completely compatible with GCC's stdlib. Nowadays it seems
+	# unnecessary on most platforms.
+	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-stdlib=libc++)
 	PIRANHA_CHECK_UINT128_T()
 ENDIF(CMAKE_COMPILER_IS_CLANGXX)
 
-# Common configuration for GCC and Clang.
-if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_COMPILER_IS_INTELXX)
+	message(STATUS "Intel compiler detected, checking version.")
+	try_compile(INTEL_VERSION_CHECK ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake_modules/intel_check_version.cpp")
+	if(NOT INTEL_VERSION_CHECK)
+		message(FATAL_ERROR "Unsupported Intel compiler version, please upgrade your compiler.")
+	endif()
+	message(STATUS "Intel compiler version is ok.")
+	# The diagnostic from the Intel compiler can be wrong and a pain in the ass.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -diag-disable 2304,2305,1682,2259,3373")
+	PIRANHA_CHECK_UINT128_T()
+endif()
+
+# Common configuration for GCC, Clang and Intel.
+if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_INTELXX)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wall)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wextra)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnon-virtual-dtor)

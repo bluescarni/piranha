@@ -70,6 +70,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/prepare_for_print.hpp
 	detail/small_vector_fwd.hpp
 	detail/is_digit.hpp
+	detail/config_intel.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers

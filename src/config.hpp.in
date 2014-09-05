@@ -37,6 +37,8 @@
 // Same thing could happen with ICC.
 #if defined(__clang__)
 	#include "detail/config_clang.hpp"
+#elif defined(__INTEL_COMPILER)
+	#include "detail/config_intel.hpp"
 #elif defined(__GNUC__)
 	#include "detail/config_gcc.hpp"
 #else
