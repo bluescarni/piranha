@@ -1187,11 +1187,55 @@ class mp_rational
 		{
 			return mp_rational::binary_div(x,y);
 		}
+		/// Generic equality operator involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 *
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 *
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the comparison operator of piranha::mp_integer,
+		 * - the invoked conversion operator, if used.
+		 */
 		template <typename T, typename U>
 		friend auto operator==(const T &x, const U &y) -> decltype(mp_rational::binary_eq(x,y))
 		{
 			return mp_rational::binary_eq(x,y);
 		}
+		/// Generic inequality operator involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 *
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 *
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the comparison operator of piranha::mp_integer,
+		 * - the invoked conversion operator, if used.
+		 */
 		template <typename T, typename U>
 		friend auto operator!=(const T &x, const U &y) -> decltype(!mp_rational::binary_eq(x,y))
 		{

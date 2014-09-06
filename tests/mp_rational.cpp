@@ -1329,14 +1329,47 @@ struct equality_tester
 		BOOST_CHECK_EQUAL(int_type(2),q_type(10,5));
 		BOOST_CHECK_EQUAL(q_type(10,5),2);
 		BOOST_CHECK_EQUAL(2,q_type(10,5));
+		BOOST_CHECK_EQUAL(q_type(10,5),2u);
+		BOOST_CHECK_EQUAL(2ll,q_type(10,5));
+		const auto radix = std::numeric_limits<double>::radix;
+		BOOST_CHECK_EQUAL(q_type(3,radix),3./radix);
+		BOOST_CHECK_EQUAL(3./radix,q_type(3,radix));
 		BOOST_CHECK(q_type(10,8) != q_type(-5,-3));
 		BOOST_CHECK(q_type(10,8) != q_type(-5,4));
 		BOOST_CHECK(q_type(10,8) != q_type(-5,4));
 		BOOST_CHECK(q_type(10,8) != int_type(1));
 		BOOST_CHECK(int_type(1) != q_type(10,8));
-		BOOST_CHECK(q_type(10,8) != int_type(1));
 		BOOST_CHECK(1 != q_type(10,8));
 		BOOST_CHECK(q_type(10,8) != 1);
+		BOOST_CHECK(char(2) != q_type(10,8));
+		BOOST_CHECK(q_type(10,8) != 2ull);
+		const auto radix_f = std::numeric_limits<float>::radix;
+		BOOST_CHECK(5.f/radix_f != q_type(2,radix_f));
+		BOOST_CHECK(q_type(2,radix_f) != 5.f/radix_f);
+		// Random testing.
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			int a = dist(rng), b = dist(rng);
+			if (b == 0) {
+				continue;
+			}
+			q_type q0{a,b}, q1{a,b};
+			BOOST_CHECK_EQUAL(q0,q1);
+			BOOST_CHECK_EQUAL(q1,q0);
+			q1 += 1;
+			BOOST_CHECK(q0 != q1);
+			BOOST_CHECK(q1 != q0);
+			q0 *= b;
+			BOOST_CHECK_EQUAL(q0,int_type(a));
+			BOOST_CHECK_EQUAL(int_type(a),q0);
+			BOOST_CHECK_EQUAL(q0,a);
+			BOOST_CHECK_EQUAL(a,q0);
+			q0 += q_type{1,2};
+			BOOST_CHECK(q0 != int_type(a));
+			BOOST_CHECK(int_type(a) != q0);
+			BOOST_CHECK(q0 != a);
+			BOOST_CHECK(a != q0);
+		}
 	}
 };
 
