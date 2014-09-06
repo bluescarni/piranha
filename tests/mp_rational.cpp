@@ -1373,7 +1373,76 @@ struct equality_tester
 	}
 };
 
+struct less_than_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		// A few simple tests.
+		BOOST_CHECK(!(q_type{} < q_type{0}));
+		BOOST_CHECK(!(q_type{0} < q_type{}));
+		BOOST_CHECK(q_type{-6} < q_type{-5});
+		BOOST_CHECK(!(q_type{-5} < q_type{-6}));
+		BOOST_CHECK(q_type(1,2) < q_type(3,4));
+		BOOST_CHECK(q_type(1,3) < q_type(1,2));
+		BOOST_CHECK(q_type(1,-2) < q_type(1,3));
+		BOOST_CHECK(int_type() < q_type(1,3));
+		BOOST_CHECK(int_type(4) < q_type(41,10));
+		BOOST_CHECK(q_type(39,-10) < int_type(8));
+		BOOST_CHECK(0 < q_type(1,3));
+		BOOST_CHECK((unsigned short)4 < q_type(41,10));
+		BOOST_CHECK(q_type(39,-10) < 8ll);
+		const auto radix = std::numeric_limits<double>::radix;
+		BOOST_CHECK(q_type(1,radix) < 1.);
+		BOOST_CHECK(1. < q_type(1 + radix,radix));
+		const auto radix_f = std::numeric_limits<float>::radix;
+		BOOST_CHECK(q_type(1,radix_f) < 1.f);
+		BOOST_CHECK(1.f < q_type(radix_f + radix_f,radix_f));
+		// Random testing.
+		mpq_raii m0, m1;
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		for (int i = 0; i < ntries; ++i) {
+			int a = dist(rng), b = dist(rng), c = dist(rng), d = dist(rng);
+			if (b == 0 || d == 0) {
+				continue;
+			}
+			q_type q0{a,b}, q1{c,d};
+			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			if (d > 0) {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(d));
+			} else {
+				::mpq_set_si(&m1.m_mpq,static_cast<long>(c),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
+			}
+			::mpq_canonicalize(&m1.m_mpq);
+			bool cmp = ::mpq_cmp(&m0.m_mpq,&m1.m_mpq) < 0;
+			BOOST_CHECK_EQUAL(cmp,q0 < q1);
+			// Transform the second rational operand into an integral.
+			::mpz_set_ui(mpq_denref(&m1.m_mpq),1u);
+			cmp = ::mpq_cmp(&m0.m_mpq,&m1.m_mpq) < 0;
+			BOOST_CHECK_EQUAL(cmp,q0 < q1.num());
+			cmp = ::mpq_cmp(&m1.m_mpq,&m0.m_mpq) < 0;
+			BOOST_CHECK_EQUAL(cmp,q1.num() < q0);
+			cmp = ::mpq_cmp(&m0.m_mpq,&m1.m_mpq) < 0;
+			// NOTE: the static casts here are ok because num/den are int originally.
+			BOOST_CHECK_EQUAL(cmp,q0 < static_cast<int>(q1.num()));
+			cmp = ::mpq_cmp(&m1.m_mpq,&m0.m_mpq) < 0;
+			BOOST_CHECK_EQUAL(cmp,static_cast<int>(q1.num()) < q0);
+		}
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_rational_cmp_test)
 {
 	boost::mpl::for_each<size_types>(equality_tester());
+	boost::mpl::for_each<size_types>(less_than_tester());
 }
