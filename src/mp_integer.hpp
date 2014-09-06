@@ -1083,6 +1083,7 @@ union integer_union
  *   cos(x) in which x an mp_integer (passed in from Python, for instance). If we overload cos() to produce a double for int argument,
  *   then we need to convert x to double and then compute cos(x).
  * - when converting to/from Python we can speed up operations by trying casting around to hardware integers, if range is enough.
+ * - use a unified shortcut for the possible optimisation when the two limb type coincide (e.g., same_limbs_type = true constexpr).
  */
 template <int NBits = 0>
 class mp_integer
@@ -2906,15 +2907,11 @@ class mp_integer
 			if (unlikely(sign() < 0)) {
 				piranha_throw(std::invalid_argument,"cannot compute the next prime of a negative number");
 			}
-			// NOTE: lots of optimisations here as well, ideally we should use just a single memory allocation,
-			// and demote to static if it fits.
 			mp_integer retval;
 			retval.promote();
-			auto copy(*this);
-			if (copy.is_static()) {
-				copy.promote();
-			}
-			::mpz_nextprime(&retval.m_int.g_dy(),&copy.m_int.g_dy());
+			auto v = get_mpz_view();
+			::mpz_nextprime(&retval.m_int.g_dy(),v);
+			// NOTE: demote opportunity.
 			return retval;
 		}
 		/// Check if \p this is a prime number
@@ -2935,11 +2932,8 @@ class mp_integer
 			if (unlikely(sign() < 0)) {
 				piranha_throw(std::invalid_argument,"cannot run primality tests on a negative number");
 			}
-			auto copy(*this);
-			if (copy.is_static()) {
-				copy.promote();
-			}
-			return ::mpz_probab_prime_p(&copy.m_int.g_dy(),reps);
+			auto v = get_mpz_view();
+			return ::mpz_probab_prime_p(v,reps);
 		}
 		/// Integer square root.
 		/**
@@ -2974,6 +2968,7 @@ class mp_integer
 			if (*this > 100000L || sign() < 0) {
 				piranha_throw(std::invalid_argument,"invalid input for factorial()");
 			}
+			// NOTE: demote opportunity.
 			mp_integer retval;
 			retval.promote();
 			::mpz_fac_ui(&retval.m_int.g_dy(),static_cast<unsigned long>(*this));
@@ -3022,6 +3017,7 @@ class mp_integer
 			if (is_static()) {
 				retval.promote();
 			}
+			// NOTE: demote opportunity.
 			::mpz_bin_ui(&retval.m_int.g_dy(),&retval.m_int.g_dy(),check_choose_k(k));
 			return retval;
 		}
