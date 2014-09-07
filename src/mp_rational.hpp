@@ -21,10 +21,12 @@
 #ifndef PIRANHA_MP_RATIONAL_HPP
 #define PIRANHA_MP_RATIONAL_HPP
 
+#include <boost/functional/hash.hpp>
 #include <climits>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -1446,6 +1448,30 @@ class mp_rational
 			}
 			return retval;
 		}
+		/// Absolute value.
+		/**
+		 * @return absolute value of \p this.
+		 */
+		mp_rational abs() const
+		{
+			mp_rational retval{*this};
+			if (retval.m_num.sign() < 0) {
+				retval.m_num.negate();
+			}
+			return retval;
+		}
+		/// Hash value.
+		/**
+		 * The hash value is calculated by combining the hash values of numerator and denominator.
+		 *
+		 * @return a hash value for this.
+		 */
+		std::size_t hash() const noexcept
+		{
+			std::size_t retval = m_num.hash();
+			boost::hash_combine(retval,m_den.hash());
+			return retval;
+		}
 	private:
 		int_type	m_num;
 		int_type	m_den;
@@ -1510,6 +1536,33 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 };
 
 }
+
+}
+
+namespace std
+{
+
+/// Specialisation of \p std::hash for piranha::mp_rational.
+template <int NBits>
+struct hash<piranha::mp_rational<NBits>>
+{
+	/// Result type.
+	typedef size_t result_type;
+	/// Argument type.
+	typedef piranha::mp_rational<NBits> argument_type;
+	/// Hash operator.
+	/**
+	 * @param[in] q piranha::mp_rational whose hash value will be returned.
+	 *
+	 * @return <tt>q.hash()</tt>.
+	 *
+	 * @see piranha::mp_rational::hash()
+	 */
+	result_type operator()(const argument_type &q) const noexcept
+	{
+		return q.hash();
+	}
+};
 
 }
 

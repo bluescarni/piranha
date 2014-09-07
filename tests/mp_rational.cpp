@@ -25,12 +25,14 @@
 
 #define FUSION_MAX_VECTOR_SIZE 20
 
+#include <boost/functional/hash.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/include/algorithm.hpp>
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cstddef>
+#include <functional>
 #include <gmp.h>
 #include <iostream>
 #include <limits>
@@ -1716,4 +1718,46 @@ struct pow_tester
 BOOST_AUTO_TEST_CASE(mp_rational_pow_test)
 {
 	boost::mpl::for_each<size_types>(pow_tester());
+}
+
+struct abs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		BOOST_CHECK_EQUAL(q_type{}.abs(),q_type(0));
+		BOOST_CHECK_EQUAL(q_type(1,3).abs(),q_type(1,3));
+		BOOST_CHECK_EQUAL(q_type(1,-3).abs(),q_type(1,3));
+		BOOST_CHECK_EQUAL(q_type(-4,-3).abs(),q_type(4,3));
+		BOOST_CHECK_EQUAL(q_type(-4,5).abs(),q_type(4,5));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_abs_test)
+{
+	boost::mpl::for_each<size_types>(abs_tester());
+}
+
+struct hash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		BOOST_CHECK(is_hashable<q_type>::value);
+		BOOST_CHECK_EQUAL(q_type{3}.hash(),std::hash<q_type>()(q_type{3}));
+		BOOST_CHECK(q_type{3}.hash() != std::hash<q_type>()(q_type{3,2}));
+		BOOST_CHECK_EQUAL(q_type(4,5).hash(),std::hash<q_type>()(q_type(-8,-10)));
+		q_type q0{123,-456};
+		std::size_t h = q0.num().hash();
+		boost::hash_combine(h,std::hash<int_type>()(q0.den()));
+		BOOST_CHECK_EQUAL(h,q0.hash());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_hash_test)
+{
+	boost::mpl::for_each<size_types>(hash_tester());
 }
