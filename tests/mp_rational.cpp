@@ -342,6 +342,9 @@ BOOST_AUTO_TEST_CASE(mp_rational_constructor_test)
 {
 	environment env;
 	boost::mpl::for_each<size_types>(constructor_tester());
+	// Test we are not gobbling in mp_ints with different bit widths.
+	BOOST_CHECK((!std::is_constructible<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!std::is_constructible<mp_rational<32>,mp_integer<16>>::value));
 }
 
 struct ll_tester
