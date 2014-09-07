@@ -514,6 +514,31 @@ class mp_rational
 		{
 			return x < static_cast<T>(q);
 		}
+		// Greater-than operator.
+		static bool binary_greater_than(const mp_rational &q1, const mp_rational &q2)
+		{
+			return q1.num() * q2.den() > q2.num() * q1.den();
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static bool binary_greater_than(const mp_rational &q, const T &x)
+		{
+			return q.num() > q.den() * x;
+		}
+		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
+		static bool binary_greater_than(const T &x, const mp_rational &q)
+		{
+			return q.den() * x > q.num();
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_greater_than(const mp_rational &q, const T &x)
+		{
+			return static_cast<T>(q) > x;
+		}
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_greater_than(const T &x, const mp_rational &q)
+		{
+			return x > static_cast<T>(q);
+		}
 		// mpq view class.
 		class mpq_view
 		{
@@ -1262,9 +1287,7 @@ class mp_rational
 		 *
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 *
-		 * @throws unspecified any exception thrown by:
-		 * - the comparison operator of piranha::mp_integer,
-		 * - the invoked conversion operator, if used.
+		 * @throws unspecified any exception thrown by the equality operator.
 		 */
 		template <typename T, typename U>
 		friend auto operator!=(const T &x, const U &y) -> decltype(!mp_rational::binary_eq(x,y))
@@ -1290,13 +1313,90 @@ class mp_rational
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 *
 		 * @throws unspecified any exception thrown by:
-		 * - the comparison operator of piranha::mp_integer,
+		 * - the less-than operator of piranha::mp_integer,
 		 * - the invoked conversion operator, if used.
 		 */
 		template <typename T, typename U>
 		friend auto operator<(const T &x, const U &y) -> decltype(mp_rational::binary_less_than(x,y))
 		{
 			return mp_rational::binary_less_than(x,y);
+		}
+		/// Generic greater-than or equal operator involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 *
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 *
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the less-than operator.
+		 */
+		template <typename T, typename U>
+		friend auto operator>=(const T &x, const U &y) -> decltype(!mp_rational::binary_less_than(x,y))
+		{
+			return !mp_rational::binary_less_than(x,y);
+		}
+		/// Generic greater-than operator involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 *
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 *
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the greater-than operator of piranha::mp_integer,
+		 * - the invoked conversion operator, if used.
+		 */
+		template <typename T, typename U>
+		friend auto operator>(const T &x, const U &y) -> decltype(mp_rational::binary_greater_than(x,y))
+		{
+			return mp_rational::binary_greater_than(x,y);
+		}
+		/// Generic less-than or equal operator involving piranha::mp_rational.
+		/**
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::mp_rational.
+		 *
+		 * If no floating-point types are involved, the exact result of the comparison will be returned.
+		 *
+		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
+		 * and compared to \p f.
+		 *
+		 * @param[in] x first argument
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the greater-than operator.
+		 */
+		template <typename T, typename U>
+		friend auto operator<=(const T &x, const U &y) -> decltype(!mp_rational::binary_greater_than(x,y))
+		{
+			return !mp_rational::binary_greater_than(x,y);
 		}
 	private:
 		int_type	m_num;
