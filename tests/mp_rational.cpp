@@ -1842,3 +1842,26 @@ BOOST_AUTO_TEST_CASE(mp_rational_print_tex_test)
 {
 	boost::mpl::for_each<size_types>(print_tex_tester());
 }
+
+struct sin_cos_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		const auto radix = std::numeric_limits<double>::radix;
+		BOOST_CHECK_EQUAL(math::sin(q_type()),0.);
+		BOOST_CHECK_EQUAL(math::sin(q_type(1,radix)),math::sin(1./radix));
+		BOOST_CHECK_EQUAL(math::sin(q_type(1,-radix)),-math::sin(1./radix));
+		BOOST_CHECK_EQUAL(math::cos(q_type()),1.);
+		BOOST_CHECK_EQUAL(math::cos(q_type(1,radix)),math::cos(1./radix));
+		BOOST_CHECK_EQUAL(math::cos(q_type(1,-radix)),math::cos(1./radix));
+		BOOST_CHECK(has_sine<q_type>::value);
+		BOOST_CHECK(has_cosine<q_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_sin_cos_test)
+{
+	boost::mpl::for_each<size_types>(sin_cos_tester());
+}

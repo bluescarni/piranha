@@ -1707,6 +1707,48 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	}
 };
 
+/// Specialisation of the piranha::math::sin() functor for piranha::mp_rational.
+template <typename T>
+struct sin_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The argument will be converted to \p double and piranha::math::sin()
+	 * will then be used.
+	 *
+	 * @param[in] q argument.
+	 *
+	 * @return sine of \p q.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational to \p double.
+	 */
+	double operator()(const T &q) const
+	{
+		return math::sin(static_cast<double>(q));
+	}
+};
+
+/// Specialisation of the piranha::math::cos() functor for piranha::mp_rational.
+template <typename T>
+struct cos_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * The argument will be converted to \p double and piranha::math::cos()
+	 * will then be used.
+	 *
+	 * @param[in] q argument.
+	 *
+	 * @return cosine of \p q.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational to \p double.
+	 */
+	double operator()(const T &q) const
+	{
+		return math::cos(static_cast<double>(q));
+	}
+};
+
 }
 
 }
