@@ -1653,3 +1653,67 @@ BOOST_AUTO_TEST_CASE(mp_rational_cmp_test)
 	boost::mpl::for_each<size_types>(greater_than_tester());
 	boost::mpl::for_each<size_types>(leq_tester());
 }
+
+struct pow_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		// A few simple tests.
+		BOOST_CHECK_EQUAL(q_type().pow(0),1);
+		BOOST_CHECK_EQUAL(q_type().pow(0u),1);
+		BOOST_CHECK_EQUAL(q_type().pow(int_type()),1);
+		BOOST_CHECK_EQUAL(q_type().pow(1),0);
+		BOOST_CHECK_EQUAL(q_type().pow(2u),0);
+		BOOST_CHECK_EQUAL(q_type().pow(3),0);
+		BOOST_CHECK_EQUAL(q_type().pow(4ull),0);
+		BOOST_CHECK_EQUAL(q_type().pow(int_type(5)),0);
+		BOOST_CHECK_EQUAL(q_type().pow((unsigned char)5),0);
+		BOOST_CHECK_THROW(q_type().pow(-1),zero_division_error);
+		BOOST_CHECK_THROW(q_type().pow(char(-2)),zero_division_error);
+		BOOST_CHECK_THROW(q_type().pow(-3ll),zero_division_error);
+		BOOST_CHECK_THROW(q_type().pow(int_type(-3)),zero_division_error);
+		BOOST_CHECK_EQUAL(q_type(23,45).pow(7),q_type(3404825447ull,373669453125ull));
+		BOOST_CHECK_EQUAL(q_type(-23,45).pow(7),q_type(-3404825447ll,373669453125ull));
+		BOOST_CHECK_EQUAL(q_type(-23,45).pow(-7),q_type(373669453125ull,-3404825447ll));
+		// Random testing.
+		std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max());
+		std::uniform_int_distribution<int> edist(-10,10);
+		mpq_raii m0, m1;
+		for (int i = 0; i < ntries; ++i) {
+			int a = dist(rng), b = dist(rng), exp = edist(rng);
+			// Check the numerator as well as we don't want to run into zero division.
+			if (a == 0 || b == 0) {
+				continue;
+			}
+			q_type q0{a,b};
+			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
+			if (b > 0) {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(b));
+			} else {
+				::mpq_set_si(&m0.m_mpq,static_cast<long>(a),static_cast<unsigned long>(1));
+				::mpz_set_si(mpq_denref(&m0.m_mpq),static_cast<long>(b));
+			}
+			::mpq_canonicalize(&m0.m_mpq);
+			auto q1 = q0.pow(exp);
+			if (exp >= 0) {
+				::mpz_pow_ui(mpq_numref(&m1.m_mpq),mpq_numref(&m0.m_mpq),static_cast<unsigned long>(exp));
+				::mpz_pow_ui(mpq_denref(&m1.m_mpq),mpq_denref(&m0.m_mpq),static_cast<unsigned long>(exp));
+			} else {
+				::mpz_pow_ui(mpq_numref(&m1.m_mpq),mpq_denref(&m0.m_mpq),static_cast<unsigned long>(-exp));
+				::mpz_pow_ui(mpq_denref(&m1.m_mpq),mpq_numref(&m0.m_mpq),static_cast<unsigned long>(-exp));
+				::mpq_canonicalize(&m1.m_mpq);
+			}
+			BOOST_CHECK_EQUAL(mpq_lexcast(m1),boost::lexical_cast<std::string>(q1));
+			auto q2 = q0.pow(int_type(exp));
+			BOOST_CHECK_EQUAL(q1,q2);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_pow_test)
+{
+	boost::mpl::for_each<size_types>(pow_tester());
+}

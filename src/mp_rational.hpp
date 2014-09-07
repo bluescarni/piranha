@@ -29,6 +29,7 @@
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include "config.hpp"
 #include "detail/mp_rational_fwd.hpp"
@@ -574,6 +575,10 @@ class mp_rational
 				typename int_type::mpz_view	m_d_view;
 				mpq_struct_t			m_mpq;
 		};
+		// Pow enabler.
+		template <typename T>
+		using pow_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
+			decltype(std::declval<const int_type &>().pow(std::declval<const T &>()))>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -1397,6 +1402,49 @@ class mp_rational
 		friend auto operator<=(const T &x, const U &y) -> decltype(!mp_rational::binary_greater_than(x,y))
 		{
 			return !mp_rational::binary_greater_than(x,y);
+		}
+		/// Exponentiation.
+		/**
+		 * \note
+		 * This method is enabled only if piranha::mp_integer::pow() can be called with an argument of type \p T.
+		 *
+		 * This method computes \p this raised to the integral power \p exp. Internally, the piranha::mp_integer::pow()
+		 * method of numerator and denominator is used. Negative powers will raise an error if the numerator of \p this
+		 * is zero.
+		 *
+		 * @param[in] exp exponent.
+		 *
+		 * @return <tt>this ** exp</tt>.
+		 *
+		 * @throws piranha::zero_division_error if \p exp is negative and the numerator of \p this is zero.
+		 * @throws unspecified any exception thrown by piranha::mp_integer::pow().
+		 */
+		template <typename T, pow_enabler<T> = 0>
+		mp_rational pow(const T &exp) const
+		{
+			mp_rational retval;
+			if (exp >= T(0)) {
+				// For non-negative exponents, we can just raw-construct
+				// a rational value.
+				// NOTE: in case of exceptions here we are good, the worst that can happen
+				// is that the numerator has some value and den is still 1 from the initialisation.
+				retval.m_num = num().pow(exp);
+				retval.m_den = den().pow(exp);
+			} else {
+				if (unlikely(math::is_zero(num()))) {
+					piranha_throw(zero_division_error,"zero denominator in rational exponentiation");
+				}
+				// For negative exponents, invert.
+				const int_type n_exp = -int_type(exp);
+				// NOTE: exception safe here as well.
+				retval.m_num = den().pow(n_exp);
+				retval.m_den = num().pow(n_exp);
+				if (retval.m_den.sign() < 0) {
+					retval.m_num.negate();
+					retval.m_den.negate();
+				}
+			}
+			return retval;
 		}
 	private:
 		int_type	m_num;
