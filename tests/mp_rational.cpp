@@ -646,10 +646,11 @@ struct minus_tester
 		using int_type = typename q_type::int_type;
 		// Negation.
 		q_type tmp00{0};
+		BOOST_CHECK(has_negate<q_type>::value);
 		tmp00.negate();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp00),"0");
 		tmp00 = std::numeric_limits<unsigned long long>::max();
-		tmp00.negate();
+		math::negate(tmp00);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(tmp00),
 			std::string("-") + boost::lexical_cast<std::string>(std::numeric_limits<unsigned long long>::max()));
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{3,11}),boost::lexical_cast<std::string>(-q_type{3,-11}));
@@ -1815,6 +1816,7 @@ struct print_tex_tester
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
+		BOOST_CHECK(has_print_tex_coefficient<q_type>::value);
 		std::ostringstream ss;
 		print_tex_coefficient(ss,q_type(0));
 		BOOST_CHECK_EQUAL(ss.str(),"0");

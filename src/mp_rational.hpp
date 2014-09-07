@@ -1599,6 +1599,20 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	}
 };
 
+/// Specialisation of the piranha::math::negate() functor for piranha::mp_rational.
+template <typename T>
+struct negate_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in,out] q piranha::mp_rational to be negated.
+	 */
+	void operator()(T &q) const
+	{
+		q.negate();
+	}
+};
+
 ///// Specialisation of the piranha::math::pow() functor for piranha::mp_rational.
 /**
  * This specialisation is activated when one of the arguments is piranha::mp_rational
