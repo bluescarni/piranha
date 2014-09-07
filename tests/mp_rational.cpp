@@ -1870,3 +1870,32 @@ BOOST_AUTO_TEST_CASE(mp_rational_sin_cos_test)
 {
 	boost::mpl::for_each<size_types>(sin_cos_tester());
 }
+
+struct sep_tester
+{
+	template <typename T>
+	using edict = std::unordered_map<std::string,T>;
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		BOOST_CHECK_EQUAL(math::partial(q_type{1},""),0);
+		BOOST_CHECK((std::is_same<q_type,decltype(math::partial(q_type{1},""))>::value));
+		BOOST_CHECK(is_differentiable<q_type>::value);
+		BOOST_CHECK_EQUAL(math::evaluate(q_type{12},edict<int>{{"",1}}),12);
+		BOOST_CHECK_EQUAL(math::evaluate(q_type{10},edict<double>{{"",1.321}}),10);
+		BOOST_CHECK((is_evaluable<q_type,int>::value));
+		BOOST_CHECK((is_evaluable<q_type,double>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::evaluate(q_type{10},edict<double>{{"",1.321}}))>::value));
+		BOOST_CHECK_EQUAL(math::subs(q_type{12},"",1),12);
+		BOOST_CHECK_EQUAL(math::subs(q_type{-122},"",1.56l),-122);
+		BOOST_CHECK((has_subs<q_type,int>::value));
+		BOOST_CHECK((has_subs<q_type,long double>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::subs(q_type{12},"",1))>::value));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_sep_test)
+{
+	boost::mpl::for_each<size_types>(sep_tester());
+}

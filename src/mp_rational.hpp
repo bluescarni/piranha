@@ -30,7 +30,9 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 #include "config.hpp"
@@ -1762,6 +1764,54 @@ struct abs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::typ
 	T operator()(const T &q) const
 	{
 		return q.abs();
+	}
+};
+
+/// Specialisation of the piranha::math::partial() functor for piranha::mp_rational.
+template <typename T>
+struct partial_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @return an instance of piranha::mp_rational constructed from zero.
+	 */
+	T operator()(const T &, const std::string &) const
+	{
+		return T{0};
+	}
+};
+
+/// Specialisation of the piranha::math::evaluate() functor for piranha::mp_rational.
+template <typename T>
+struct evaluate_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q evaluation argument.
+	 *
+	 * @return copy of \p q.
+	 */
+	template <typename U>
+	T operator()(const T &q, const std::unordered_map<std::string,U> &) const
+	{
+		return q;
+	}
+};
+
+/// Specialisation of the piranha::math::subs() functor for piranha::mp_rational.
+template <typename T>
+struct subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q substitution argument.
+	 *
+	 * @return copy of \p q.
+	 */
+	template <typename U>
+	T operator()(const T &q, const std::string &, const U &) const
+	{
+		return q;
 	}
 };
 
