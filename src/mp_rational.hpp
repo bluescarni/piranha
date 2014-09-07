@@ -1749,6 +1749,22 @@ struct cos_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::typ
 	}
 };
 
+/// Specialisation of the piranha::math::abs() functor for piranha::mp_rational.
+template <typename T>
+struct abs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q input parameter.
+	 *
+	 * @return absolute value of \p q.
+	 */
+	T operator()(const T &q) const
+	{
+		return q.abs();
+	}
+};
+
 }
 
 }

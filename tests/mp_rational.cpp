@@ -1779,6 +1779,9 @@ struct abs_tester
 		BOOST_CHECK_EQUAL(q_type(1,-3).abs(),q_type(1,3));
 		BOOST_CHECK_EQUAL(q_type(-4,-3).abs(),q_type(4,3));
 		BOOST_CHECK_EQUAL(q_type(-4,5).abs(),q_type(4,5));
+		BOOST_CHECK_EQUAL(math::abs(q_type(-4,5)),q_type(4,5));
+		BOOST_CHECK_EQUAL(math::abs(q_type(4,-5)),q_type(4,5));
+		BOOST_CHECK_EQUAL(math::abs(q_type(-4,-5)),q_type(4,5));
 	}
 };
 
