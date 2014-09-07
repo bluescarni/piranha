@@ -1014,6 +1014,14 @@ union integer_union
 		d_storage	m_dy;
 };
 
+// Detect type interoperable with mp_integer.
+template <typename T>
+struct is_mp_integer_interoperable_type
+{
+	static const bool value = std::is_floating_point<T>::value ||
+		std::is_integral<T>::value;
+};
+
 }
 
 /// Multiple precision integer class.
@@ -1093,12 +1101,9 @@ class mp_integer
 		friend class debug_access;
 		template <int>
 		friend class mp_rational;
+		// Import the interoperable types detector.
 		template <typename T>
-		struct is_interoperable_type
-		{
-			static const bool value = std::is_floating_point<T>::value ||
-				std::is_integral<T>::value;
-		};
+		using is_interoperable_type = detail::is_mp_integer_interoperable_type<T>;
 		// Types allowed in binary operations involving mp_integer.
 		template <typename T, typename U>
 		struct are_binary_op_types: std::integral_constant<bool,
