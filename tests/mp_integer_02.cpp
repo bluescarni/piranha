@@ -1042,9 +1042,10 @@ struct int_pow_tester
 			typedef mp_integer<U::value> int_type;
 			using int_cast_t = typename std::conditional<std::is_signed<T>::value,long long,unsigned long long>::type;
 			BOOST_CHECK((is_exponentiable<int_type,T>::value));
-			BOOST_CHECK((!is_exponentiable<int_type,float>::value));
-			BOOST_CHECK((!is_exponentiable<int_type,double>::value));
-			BOOST_CHECK((!is_exponentiable<int_type,long double>::value));
+			BOOST_CHECK((is_exponentiable<int_type,float>::value));
+			BOOST_CHECK((is_exponentiable<float,int_type>::value));
+			BOOST_CHECK((is_exponentiable<double,int_type>::value));
+			BOOST_CHECK((is_exponentiable<long double,int_type>::value));
 			int_type n;
 			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(n,T(0)))>::value));
 			BOOST_CHECK_EQUAL(n.pow(T(0)),1);
@@ -1094,6 +1095,39 @@ struct int_pow_tester
 				BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(retval),mpz_lexcast(m_base));
 				BOOST_CHECK_EQUAL(math::pow(int_type(base_int),exp_int),retval);
 			}
+			// Test here the various math::pow() overloads as well.
+			// Integer--integer.
+			BOOST_CHECK((is_exponentiable<int_type,int_type>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(int_type(1),int_type(1)))>::value));
+			BOOST_CHECK_EQUAL(math::pow(int_type(2),int_type(3)),8);
+			// Integer -- integral.
+			BOOST_CHECK((is_exponentiable<int_type,int>::value));
+			BOOST_CHECK((is_exponentiable<int_type,char>::value));
+			BOOST_CHECK((is_exponentiable<int_type,unsigned long>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(int_type(1),1))>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(int_type(1),1ul))>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(int_type(1),(signed char)1))>::value));
+			BOOST_CHECK_EQUAL(math::pow(int_type(2),3),8);
+			// Integer -- floating-point.
+			BOOST_CHECK((is_exponentiable<int_type,double>::value));
+			BOOST_CHECK((std::is_same<double,decltype(math::pow(int_type(1),1.))>::value));
+			BOOST_CHECK_EQUAL(math::pow(int_type(2),3.),math::pow(2.,3.));
+			BOOST_CHECK_EQUAL(math::pow(int_type(2),1./3.),math::pow(2.,1./3.));
+			// Integral -- integer.
+			BOOST_CHECK((is_exponentiable<int,int_type>::value));
+			BOOST_CHECK((is_exponentiable<short,int_type>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(1,int_type(1)))>::value));
+			BOOST_CHECK((std::is_same<int_type,decltype(math::pow(short(1),int_type(1)))>::value));
+			BOOST_CHECK_EQUAL(math::pow(2,int_type(3)),8.);
+			// Floating-point -- integer.
+			BOOST_CHECK((is_exponentiable<float,int_type>::value));
+			BOOST_CHECK((is_exponentiable<double,int_type>::value));
+			BOOST_CHECK((std::is_same<float,decltype(math::pow(1.f,int_type(1)))>::value));
+			BOOST_CHECK((std::is_same<double,decltype(math::pow(1.,int_type(1)))>::value));
+			BOOST_CHECK_EQUAL(math::pow(2.f,int_type(3)),math::pow(2.f,3.f));
+			BOOST_CHECK_EQUAL(math::pow(2.,int_type(3)),math::pow(2.,3.));
+			BOOST_CHECK_EQUAL(math::pow(2.f/5.f,int_type(3)),math::pow(2.f/5.f,3.f));
+			BOOST_CHECK_EQUAL(math::pow(2./7.,int_type(3)),math::pow(2./7.,3.));
 		}
 	};
 	template <typename T>
@@ -1110,9 +1144,9 @@ struct mp_integer_pow_tester
 	{
 		typedef mp_integer<T::value> int_type;
 		BOOST_CHECK((is_exponentiable<int_type,int_type>::value));
-		BOOST_CHECK((!is_exponentiable<int_type,float>::value));
-		BOOST_CHECK((!is_exponentiable<int_type,double>::value));
-		BOOST_CHECK((!is_exponentiable<int_type,long double>::value));
+		BOOST_CHECK((is_exponentiable<float,int_type>::value));
+		BOOST_CHECK((is_exponentiable<double,int_type>::value));
+		BOOST_CHECK((is_exponentiable<long double,int_type>::value));
 		int_type n;
 		BOOST_CHECK((std::is_same<int_type,decltype(math::pow(n,n))>::value));
 		BOOST_CHECK_EQUAL(n.pow(int_type(0)),1);
@@ -1159,6 +1193,16 @@ BOOST_AUTO_TEST_CASE(mp_integer_pow_test)
 {
 	boost::mpl::for_each<size_types>(int_pow_tester());
 	boost::mpl::for_each<size_types>(mp_integer_pow_tester());
+	// Integral--integral pow.
+	BOOST_CHECK_EQUAL(math::pow(4,2),16);
+	BOOST_CHECK_EQUAL(math::pow(-3ll,(unsigned short)3),-27);
+	BOOST_CHECK((std::is_same<mp_integer<>,decltype(math::pow(-3ll,(unsigned short)3))>::value));
+	BOOST_CHECK((is_exponentiable<int,int>::value));
+	BOOST_CHECK((is_exponentiable<int,char>::value));
+	BOOST_CHECK((is_exponentiable<unsigned,long long>::value));
+	BOOST_CHECK((!is_exponentiable<mp_integer<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!is_exponentiable<mp_integer<32>,mp_integer<16>>::value));
+	BOOST_CHECK((!is_exponentiable<mp_integer<>,std::string>::value));
 }
 
 struct abs_tester
