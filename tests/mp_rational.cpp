@@ -1858,6 +1858,8 @@ struct sin_cos_tester
 		BOOST_CHECK_EQUAL(math::cos(q_type(1,-radix)),math::cos(1./radix));
 		BOOST_CHECK(has_sine<q_type>::value);
 		BOOST_CHECK(has_cosine<q_type>::value);
+		BOOST_CHECK((std::is_same<double,decltype(math::cos(q_type()))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::sin(q_type()))>::value));
 	}
 };
 
