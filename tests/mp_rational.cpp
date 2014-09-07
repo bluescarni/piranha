@@ -49,6 +49,7 @@
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/print_tex_coefficient.hpp"
 #include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
@@ -1806,4 +1807,36 @@ struct hash_tester
 BOOST_AUTO_TEST_CASE(mp_rational_hash_test)
 {
 	boost::mpl::for_each<size_types>(hash_tester());
+}
+
+struct print_tex_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		std::ostringstream ss;
+		print_tex_coefficient(ss,q_type(0));
+		BOOST_CHECK_EQUAL(ss.str(),"0");
+		ss.str("");
+		print_tex_coefficient(ss,q_type(-1));
+		BOOST_CHECK_EQUAL(ss.str(),"-1");
+		ss.str("");
+		print_tex_coefficient(ss,q_type(1));
+		BOOST_CHECK_EQUAL(ss.str(),"1");
+		ss.str("");
+		print_tex_coefficient(ss,q_type(1,2));
+		BOOST_CHECK_EQUAL(ss.str(),"\\frac{1}{2}");
+		ss.str("");
+		print_tex_coefficient(ss,q_type(1,-2));
+		BOOST_CHECK_EQUAL(ss.str(),"-\\frac{1}{2}");
+		ss.str("");
+		print_tex_coefficient(ss,q_type(-14,21));
+		BOOST_CHECK_EQUAL(ss.str(),"-\\frac{2}{3}");
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_print_tex_test)
+{
+	boost::mpl::for_each<size_types>(print_tex_tester());
 }

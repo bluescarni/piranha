@@ -38,6 +38,7 @@
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
+#include "print_tex_coefficient.hpp"
 
 namespace piranha
 {
@@ -1545,6 +1546,36 @@ using rational_pow_enabler = typename std::enable_if<
 >::type;
 
 }
+
+/// Specialisation of the piranha::print_tex_coefficient() functor for piranha::mp_rational.
+template <typename T>
+struct print_tex_coefficient_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] os target stream.
+	 * @param[in] cf coefficient to be printed.
+	 *
+	 * @throws unspecified any exception thrown by streaming to \p os.
+	 */
+	void operator()(std::ostream &os, const T &cf) const
+	{
+		if (math::is_zero(cf.num())) {
+			os << "0";
+			return;
+		}
+		if (cf.den() == 1) {
+			os << cf.num();
+			return;
+		}
+		auto num = cf.num();
+		if (num.sign() < 0) {
+			os << "-";
+			num.negate();
+		}
+		os << "\\frac{" << num << "}{" << cf.den() << "}";
+	}
+};
 
 namespace math
 {
