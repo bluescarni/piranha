@@ -31,6 +31,7 @@
 #include <boost/fusion/include/sequence.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <gmp.h>
@@ -1238,6 +1239,17 @@ BOOST_AUTO_TEST_CASE(mp_rational_arith_test)
 	boost::mpl::for_each<size_types>(minus_tester());
 	boost::mpl::for_each<size_types>(mult_tester());
 	boost::mpl::for_each<size_types>(div_tester());
+	// Check with different bits size.
+	BOOST_CHECK((!is_addable_in_place<mp_rational<16>,mp_rational<32>>::value));
+	BOOST_CHECK((!is_addable_in_place<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!is_addable<mp_rational<16>,mp_rational<32>>::value));
+	BOOST_CHECK((!is_addable<mp_rational<32>,mp_rational<16>>::value));
+	BOOST_CHECK((!is_addable<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!is_addable<mp_integer<32>,mp_rational<16>>::value));
+	BOOST_CHECK((!is_subtractable<mp_rational<16>,mp_rational<32>>::value));
+	BOOST_CHECK((!is_subtractable<mp_rational<32>,mp_rational<16>>::value));
+	BOOST_CHECK((!is_subtractable<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!is_subtractable<mp_integer<32>,mp_rational<16>>::value));
 }
 
 struct is_zero_tester
@@ -1712,15 +1724,46 @@ struct pow_tester
 				::mpq_canonicalize(&m1.m_mpq);
 			}
 			BOOST_CHECK_EQUAL(mpq_lexcast(m1),boost::lexical_cast<std::string>(q1));
+			// Test math::pow().
+			BOOST_CHECK_EQUAL(math::pow(q0,exp),q1);
 			auto q2 = q0.pow(int_type(exp));
 			BOOST_CHECK_EQUAL(q1,q2);
+			BOOST_CHECK_EQUAL(math::pow(q0,int_type(exp)),q1);
 		}
+		// Rational-fp.
+		const auto radix = std::numeric_limits<double>::radix;
+		BOOST_CHECK((is_exponentiable<q_type,float>::value));
+		BOOST_CHECK((is_exponentiable<q_type,double>::value));
+		BOOST_CHECK_EQUAL(math::pow(q_type(1,radix),2.),std::pow(1./radix,2.));
+		BOOST_CHECK((std::is_same<float,decltype(math::pow(q_type(1),1.f))>::value));
+		BOOST_CHECK((std::is_same<long double,decltype(math::pow(q_type(1,radix),2.l))>::value));
+		// Rational-rational.
+		BOOST_CHECK_EQUAL(math::pow(q_type(1,radix),q_type(1,radix)),std::pow(1./radix,1./radix));
+		BOOST_CHECK((is_exponentiable<q_type,q_type>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::pow(q_type(1,radix),q_type(1,radix)))>::value));
+		// Fp-rational.
+		BOOST_CHECK((is_exponentiable<float,q_type>::value));
+		BOOST_CHECK((is_exponentiable<double,q_type>::value));
+		BOOST_CHECK((std::is_same<decltype(math::pow(2.,q_type(1,radix))),double>::value));
+		BOOST_CHECK((std::is_same<decltype(math::pow(2.f,q_type(1,radix))),float>::value));
+		BOOST_CHECK_EQUAL(math::pow(2.,q_type(1,radix)),std::pow(2.,1./radix));
+		// Integral-rational.
+		BOOST_CHECK((is_exponentiable<int,q_type>::value));
+		BOOST_CHECK((is_exponentiable<int_type,q_type>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::pow(2,q_type(1,radix)))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::pow(int_type(2),q_type(1,radix)))>::value));
+		BOOST_CHECK_EQUAL(math::pow(2,q_type(1,radix)),std::pow(2.,1./radix));
+		BOOST_CHECK_EQUAL(math::pow(int_type(2),q_type(1,radix)),std::pow(2.,1./radix));
 	}
 };
 
 BOOST_AUTO_TEST_CASE(mp_rational_pow_test)
 {
 	boost::mpl::for_each<size_types>(pow_tester());
+	BOOST_CHECK((!is_exponentiable<mp_rational<16>,mp_rational<32>>::value));
+	BOOST_CHECK((!is_exponentiable<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!is_exponentiable<mp_integer<32>,mp_rational<16>>::value));
+	BOOST_CHECK((!is_exponentiable<mp_integer<32>,std::string>::value));
 }
 
 struct abs_tester

@@ -63,6 +63,28 @@ inline T gcd(T a, T b)
 	}
 }
 
+// Fwd declaration.
+template <typename>
+struct is_mp_rational;
+
+// NOTE: this is a bit complicated: the interoperable types for mp_rational are those from mp_integer
+// plus mp_integer, but not *any* mp_integer, just the one whose bits value matches that of the rational.
+template <typename T, typename Rational, typename = void>
+struct is_mp_rational_interoperable_type
+{
+	static const bool value = is_mp_integer_interoperable_type<T>::value ||
+		std::is_same<T,typename Rational::int_type>::value;
+};
+
+// The second complication is that we need to cope with the fact that we are using this tt in a context
+// in which Rational might not actually be a rational (in the pow_impl specialsiation). In this case we must prevent
+// a hard error to be generated.
+template <typename T, typename Rational>
+struct is_mp_rational_interoperable_type<T,Rational,typename std::enable_if<!is_mp_rational<Rational>::value>::type>
+{
+	static const bool value = false;
+};
+
 }
 
 /// Multiple precision rational class.
@@ -99,14 +121,16 @@ class mp_rational
 		/// The underlying piranha::mp_integer type used to represent numerator and denominator.
 		using int_type = mp_integer<NBits>;
 	private:
+		// Shortcut for interop type detector.
+		template <typename T, typename U = mp_rational>
+		using is_interoperable_type = detail::is_mp_rational_interoperable_type<T,U>;
 		// Enabler for ctor from num den pair.
 		template <typename I0, typename I1>
 		using nd_ctor_enabler = typename std::enable_if<(std::is_integral<I0>::value || std::is_same<I0,int_type>::value) &&
 			(std::is_integral<I1>::value || std::is_same<I1,int_type>::value),int>::type;
 		// Enabler for generic ctor.
 		template <typename T>
-		using generic_ctor_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
-			std::is_same<T,int_type>::value,int>::type;
+		using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
 		// Enabler for in-place arithmetic operations with interop on the left.
 		template <typename T>
 		using generic_in_place_enabler = typename std::enable_if<!std::is_same<typename std::decay<T>::type,mp_rational>::value,int>::type;
@@ -183,8 +207,7 @@ class mp_rational
 		}
 		// Enabler for conversion operator.
 		template <typename T>
-		using cast_enabler = typename std::enable_if<int_type::template is_interoperable_type<T>::value ||
-			std::is_same<T,int_type>::value,int>::type;
+		using cast_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
 		// Conversion operator implementation.
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
@@ -1511,6 +1534,16 @@ struct is_mp_rational: std::false_type {};
 template <int NBits>
 struct is_mp_rational<mp_rational<NBits>>: std::true_type {};
 
+template <typename T, typename U>
+using rational_pow_enabler = typename std::enable_if<
+	(is_mp_rational<T>::value && is_mp_rational_interoperable_type<U,T>::value) ||
+	(is_mp_rational<U>::value && is_mp_rational_interoperable_type<T,U>::value) ||
+	// NOTE: here we are catching two rational arguments with potentially different
+	// bits. BUT this case is not caught in the pow_impl, so we should be ok as long
+	// as we don't allow interoperablity with different bits.
+	(is_mp_rational<T>::value && is_mp_rational<U>::value)
+>::type;
+
 }
 
 namespace math
@@ -1532,6 +1565,100 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	bool operator()(const T &q) const noexcept
 	{
 		return is_zero(q.num());
+	}
+};
+
+///// Specialisation of the piranha::math::pow() functor for piranha::mp_rational.
+/**
+ * This specialisation is activated when one of the arguments is piranha::mp_rational
+ * and the other is either piranha::mp_rational or an interoperable type for piranha::mp_rational.
+ *
+ * The implementation follows these rules:
+ * - if the base is rational and the exponent an integral type or piranha::mp_integer, then
+ *   piranha::mp_rational::pow() is used;
+ * - if the non-rational argument is a floating-point type, then the rational argument is converted
+ *   to that floating-point type and piranha::math::pow() is used;
+ * - if both arguments are rational, they are both converted to \p double and then piranha::math::pow()
+ *   is used;
+ * - if the base is an integral type or piranha::mp_integer and the exponent a rational, then both
+ *   arguments are converted to \p double and piranha::math::pow() is used.
+ */
+template <typename T, typename U>
+struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
+{
+	/// Call operator, rational--integral overload.
+	/**
+	 * @param[in] b base
+	 * @param[in] e exponent.
+	 *
+	 * @returns <tt>b**e</tt>.
+	 *
+	 * @throws unspecified any exception thrown by piranha::rational::pow().
+	 */
+	template <int NBits, typename T2>
+	auto operator()(const mp_rational<NBits> &b, const T2 &e) const -> decltype(b.pow(e))
+	{
+		return b.pow(e);
+	}
+	/// Call operator, rational--floating-point overload.
+	/**
+	 * @param[in] b base
+	 * @param[in] e exponent.
+	 *
+	 * @returns <tt>b**e</tt>.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to a floating-point type.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const mp_rational<NBits> &b, const T2 &e) const
+	{
+		return math::pow(static_cast<T2>(b),e);
+	}
+	/// Call operator, floating-point--rational overload.
+	/**
+	 * @param[in] b base
+	 * @param[in] e exponent.
+	 *
+	 * @returns <tt>b**e</tt>.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to a floating-point type.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const T2 &e, const mp_rational<NBits> &b) const
+	{
+		return math::pow(e,static_cast<T2>(b));
+	}
+	/// Call operator, rational--rational overload.
+	/**
+	 * @param[in] b base
+	 * @param[in] e exponent.
+	 *
+	 * @returns <tt>b**e</tt>.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to \p double.
+	 */
+	template <int NBits>
+	double operator()(const mp_rational<NBits> &b, const mp_rational<NBits> &e) const
+	{
+		return math::pow(static_cast<double>(e),static_cast<double>(b));
+	}
+	/// Call operator, integral--rational overload.
+	/**
+	 * @param[in] b base
+	 * @param[in] e exponent.
+	 *
+	 * @returns <tt>b**e</tt>.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * or piranha::mp_integer to \p double.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value || detail::is_mp_integer<T2>::value,int>::type = 0>
+	double operator()(const T2 &b, const mp_rational<NBits> &e) const
+	{
+		return math::pow(static_cast<double>(b),static_cast<double>(e));
 	}
 };
 
