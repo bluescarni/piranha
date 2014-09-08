@@ -1217,6 +1217,47 @@ inline T generic_binomial(const T &x, const U &k)
 	return retval;
 }
 
+template <typename T>
+inline T fp_binomial(const T &x, const T &y)
+{
+	if (unlikely(!std::isfinite(x) || !std::isfinite(y))) {
+		piranha_throw(std::invalid_argument,"cannot compute binomial coefficient with non-finite floating-point argument(s)");
+	}
+	const bool neg_int_x = std::trunc(x + T(1)) == (x + T(1)) && (x + T(1)) <= T(0),
+		neg_int_y = std::trunc(y + T(1)) == (y + T(1)) && (y + T(1)) <= T(0),
+		neg_int_x_y = std::trunc(x - y + T(1)) == (x - y + T(1)) && (x - y + T(1)) <= T(0);
+	const unsigned mask = unsigned(neg_int_x) + (unsigned(neg_int_y) << 1u) + (unsigned(neg_int_x_y) << 2u);
+	switch (mask) {
+		case 0u:
+			// Case 0 is the non-special one, use the default implementation.
+			return std::tgamma(x + T(1)) / (std::tgamma(y + T(1)) * std::tgamma(x - y + T(1)));
+		// NOTE: case 1 is not possible: x < 0, y > 0 implies x - y < 0 always.
+		case 2u:
+		case 4u:
+			// These are finite numerator with infinite denominator.
+			return T(0.);
+		// NOTE: case 6 is not possible: x > 0, y < 0 implies x - y > 0 always.
+		case 3u:
+		{
+			// 3 and 5 are the cases with 1 inf in num and 1 inf in den. Use the transformation
+			// formula to make them finite.
+			// NOTE: the phase here is really just a sign, but it seems tricky to compute this exactly
+			// due to potential rounding errors. We are attempting to err on the safe side by using pow()
+			// here.
+			const auto phase = std::pow(T(-1),x + T(1)) / std::pow(T(-1),y + T(1));
+			return std::tgamma(-y) / (std::tgamma(-x) * std::tgamma(x - y + T(1))) * phase;
+		}
+		case 5u:
+		{
+			const auto phase = std::pow(T(-1),x - y + T(1)) / std::pow(T(-1),x + T(1));
+			return std::tgamma(-(x - y)) / (std::tgamma(y + T(1)) * std::tgamma(-x)) * phase;
+		}
+	}
+	// Case 7 returns zero -> from inf / (inf * inf) it becomes a / (b * inf) after the transform.
+	// NOTE: put it here so the compiler does not complain about missing return statement.
+	return T(0);
+}
+
 }
 
 namespace math

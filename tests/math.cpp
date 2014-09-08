@@ -469,6 +469,26 @@ BOOST_AUTO_TEST_CASE(math_key_has_t_lorder_test)
 	BOOST_CHECK(!key_has_t_lorder<kronecker_monomial<>>::value);
 }
 
+BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
+{
+	// Case 0.
+	std::cout << detail::fp_binomial(30.5,2.3) << '\n';
+	std::cout << detail::fp_binomial(-30.5,-2.3) << '\n';
+	// Case 2.
+	std::cout << detail::fp_binomial(1.,-5.) << '\n';
+	// Case 3.
+	std::cout << detail::fp_binomial(-3.,-4.) << '\n';
+	std::cout << detail::fp_binomial(-3.,-10.) << '\n';
+	// Case 4.
+	std::cout << detail::fp_binomial(3.,4.) << '\n';
+	// Case 5.
+	std::cout << detail::fp_binomial(-3.,5.) << '\n';
+	// Case 7.
+	std::cout << detail::fp_binomial(-3.,-2.) << '\n';
+	// Other tests.
+	std::cout << detail::fp_binomial(-3.,-123.) << '\n';
+}
+
 BOOST_AUTO_TEST_CASE(math_binomial_test)
 {
 	BOOST_CHECK((std::is_same<double,decltype(math::binomial(0.,0))>::value));
