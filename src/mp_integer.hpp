@@ -3532,7 +3532,7 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::t
  * The result will be the input value unchanged.
  */
 template <typename T>
-struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,mp_integer<>>::value>::type>
+struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
 {
 	/// Call operator.
 	/**

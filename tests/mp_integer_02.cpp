@@ -2531,18 +2531,28 @@ BOOST_AUTO_TEST_CASE(mp_integer_integral_cast_test)
 	BOOST_CHECK(!has_integral_cast<const std::vector<int>>::value);
 }
 
+struct ipow_subs_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK_EQUAL(math::ipow_subs(int_type(-42),"a",mp_integer<>(4),5),int_type(-42));
+		BOOST_CHECK_EQUAL(math::ipow_subs(int_type(42),"a",mp_integer<>(4),5),int_type(42));
+		BOOST_CHECK(has_ipow_subs<int_type>::value);
+		BOOST_CHECK((has_ipow_subs<int_type,int>::value));
+		BOOST_CHECK((has_ipow_subs<int_type,long>::value));
+		BOOST_CHECK((has_ipow_subs<int_type,double>::value));
+		BOOST_CHECK_EQUAL(math::ipow_subs(3,"a",mp_integer<>(4),5),3);
+		BOOST_CHECK_EQUAL(math::ipow_subs(3.,"a",mp_integer<>(4),5),3.);
+		BOOST_CHECK_EQUAL(math::ipow_subs(3.f,"a",mp_integer<>(4),5),3.f);
+		BOOST_CHECK_EQUAL(math::ipow_subs(3.l,"a",mp_integer<>(4),5),3.l);
+		BOOST_CHECK_EQUAL(math::ipow_subs(char(3),"a",mp_integer<>(4),5),char(3));
+		BOOST_CHECK_EQUAL(math::ipow_subs(3ull,"a",mp_integer<>(4),5),3ull);
+	}
+};
+
 BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
 {
-	BOOST_CHECK_EQUAL(math::ipow_subs(mp_integer<>(-42),"a",mp_integer<>(4),5),mp_integer<>(-42));
-	BOOST_CHECK_EQUAL(math::ipow_subs(mp_integer<>(42),"a",mp_integer<>(4),5),mp_integer<>(42));
-	BOOST_CHECK(has_ipow_subs<mp_integer<>>::value);
-	BOOST_CHECK((has_ipow_subs<mp_integer<>,int>::value));
-	BOOST_CHECK((has_ipow_subs<mp_integer<>,long>::value));
-	BOOST_CHECK((has_ipow_subs<mp_integer<>,double>::value));
-	BOOST_CHECK_EQUAL(math::ipow_subs(3,"a",mp_integer<>(4),5),3);
-	BOOST_CHECK_EQUAL(math::ipow_subs(3.,"a",mp_integer<>(4),5),3.);
-	BOOST_CHECK_EQUAL(math::ipow_subs(3.f,"a",mp_integer<>(4),5),3.f);
-	BOOST_CHECK_EQUAL(math::ipow_subs(3.l,"a",mp_integer<>(4),5),3.l);
-	BOOST_CHECK_EQUAL(math::ipow_subs(char(3),"a",mp_integer<>(4),5),char(3));
-	BOOST_CHECK_EQUAL(math::ipow_subs(3ull,"a",mp_integer<>(4),5),3ull);
+	boost::mpl::for_each<size_types>(ipow_subs_tester());
 }
