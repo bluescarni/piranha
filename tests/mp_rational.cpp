@@ -1892,6 +1892,14 @@ struct sep_tester
 		BOOST_CHECK((has_subs<q_type,int>::value));
 		BOOST_CHECK((has_subs<q_type,long double>::value));
 		BOOST_CHECK((std::is_same<q_type,decltype(math::subs(q_type{12},"",1))>::value));
+		BOOST_CHECK_EQUAL(math::ipow_subs(q_type{34},"",23_z,1),34);
+		BOOST_CHECK_EQUAL(math::ipow_subs(q_type(34,45),"",23_z,1.3),q_type(34,45));
+		BOOST_CHECK_EQUAL(math::ipow_subs(q_type(34,45),"",23_z,char(5)),q_type(34,45));
+		BOOST_CHECK_EQUAL(math::ipow_subs(q_type(34,45),"",23_z,5ull),q_type(34,45));
+		BOOST_CHECK((has_ipow_subs<q_type,int>::value));
+		BOOST_CHECK((has_ipow_subs<q_type,double>::value));
+		BOOST_CHECK((has_ipow_subs<q_type,float>::value));
+		BOOST_CHECK((has_ipow_subs<q_type,unsigned short>::value));
 	}
 };
 
