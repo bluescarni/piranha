@@ -2513,17 +2513,24 @@ BOOST_AUTO_TEST_CASE(mp_integer_integral_cast_test)
 	if (std::numeric_limits<long double>::is_iec559 && std::numeric_limits<long double>::radix == 2 &&
 		std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN)
 	{
-		BOOST_CHECK_EQUAL(math::integral_cast(2.),2);
-		BOOST_CHECK_EQUAL(math::integral_cast(-2.),-2);
-		BOOST_CHECK_THROW(math::integral_cast(2.5),std::invalid_argument);
-		BOOST_CHECK_THROW(math::integral_cast(-2.5),std::invalid_argument);
+		BOOST_CHECK_EQUAL(math::integral_cast(2.l),2);
+		BOOST_CHECK_EQUAL(math::integral_cast(-2.l),-2);
+		BOOST_CHECK_THROW(math::integral_cast(2.5l),std::invalid_argument);
+		BOOST_CHECK_THROW(math::integral_cast(-2.5l),std::invalid_argument);
 		BOOST_CHECK_THROW(math::integral_cast(std::numeric_limits<long double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::integral_cast(-std::numeric_limits<long double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::integral_cast(std::numeric_limits<long double>::quiet_NaN()),std::invalid_argument);
 	}
+	BOOST_CHECK_EQUAL(math::integral_cast(-2ll),-2);
+	BOOST_CHECK_EQUAL(math::integral_cast(2ull),2);
+	BOOST_CHECK_EQUAL(math::integral_cast(char(2)),2);
 	BOOST_CHECK_EQUAL(math::integral_cast(mp_integer<>(-23)),-23);
 	BOOST_CHECK(has_integral_cast<float>::value);
 	BOOST_CHECK(has_integral_cast<double>::value);
+	BOOST_CHECK(has_integral_cast<long double>::value);
+	BOOST_CHECK(has_integral_cast<int>::value);
+	BOOST_CHECK(has_integral_cast<long long>::value);
+	BOOST_CHECK(has_integral_cast<unsigned long long>::value);
 	BOOST_CHECK(!has_integral_cast<void *>::value);
 	BOOST_CHECK(!has_integral_cast<std::vector<int>>::value);
 	BOOST_CHECK(!has_integral_cast<std::vector<int> &>::value);
