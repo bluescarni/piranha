@@ -1122,7 +1122,7 @@ class mp_integer
 		// Metaprogramming to establish the return type of binary arithmetic operations involving mp_integers.
 		// Default result type will be mp_integer itself; for consistency with C/C++ when one of the arguments
 		// is a floating point type, we will return a value of the same floating point type.
-		template <typename T, typename U, typename Enable = void>
+		template <typename T, typename U, typename = void>
 		struct deduce_binary_op_result_type
 		{
 			using type = mp_integer;
@@ -3496,6 +3496,77 @@ inline auto integral_cast(const T &x) -> decltype(integral_cast_impl<T>()(x))
 	}
 }
 
+/// Default functor for the implementation of piranha::math::ipow_subs().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
+ * the call operator, and will hence result in a compilation error when used.
+ */
+template <typename T, typename = void>
+struct ipow_subs_impl
+{};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for arithmetic types.
+/**
+ * This specialisation is activated when \p T is a C++ arithmetic type.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x substitution argument.
+	 *
+	 * @return copy of \p x.
+	 */
+	template <typename U>
+	T operator()(const T &x, const std::string &, const mp_integer<> &, const U &) const
+	{
+		return x;
+	}
+};
+
+/// Specialisation of the piranha::math::ipow_subs() functor for piranha::mp_integer.
+/**
+ * This specialisation is activated when \p T is piranha::mp_integer.
+ * The result will be the input value unchanged.
+ */
+template <typename T>
+struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,mp_integer<>>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] n substitution argument.
+	 *
+	 * @return copy of \p n.
+	 */
+	template <typename U>
+	T operator()(const T &n, const std::string &, const mp_integer<> &, const U &) const
+	{
+		return n;
+	}
+};
+
+/// Substitution of integral power.
+/**
+ * Substitute the integral power of a symbolic variable with a generic object.
+ * The actual implementation of this function is in the piranha::math::ipow_subs_impl functor.
+ *
+ * @param[in] x quantity that will be subject to substitution.
+ * @param[in] name name of the symbolic variable that will be substituted.
+ * @param[in] n power of \p name that will be substituted.
+ * @param[in] y object that will substitute the variable.
+ *
+ * @return \p x after substitution  of \p name to the power of \p n with \p y.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
+ */
+template <typename T, typename U>
+inline auto ipow_subs(const T &x, const std::string &name, const mp_integer<> &n, const U &y) -> decltype(ipow_subs_impl<T>()(x,name,n,y))
+{
+	return ipow_subs_impl<T>()(x,name,n,y);
+}
+
 }
 
 /// Type trait to detect piranha::math::integral_cast().
@@ -3516,6 +3587,28 @@ class has_integral_cast: detail::sfinae_types
 
 template <typename T>
 const bool has_integral_cast<T>::value;
+
+/// Type trait to detect the presence of the piranha::math::ipow_subs function.
+/**
+ * The type trait will be \p true if piranha::math::ipow_subs can be successfully called on instances
+ * of type \p T, with an instance of type \p U as substitution argument.
+ */
+template <typename T, typename U = T>
+class has_ipow_subs: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		typedef typename std::decay<U>::type Ud;
+		template <typename T1, typename U1>
+		static auto test(const T1 &t, const U1 &u) -> decltype(math::ipow_subs(t,std::declval<std::string const &>(),
+			std::declval<mp_integer<> const &>(),u),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Td>(),std::declval<Ud>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool has_ipow_subs<T,U>::value;
 
 //using integer = mp_integer<>;
 
