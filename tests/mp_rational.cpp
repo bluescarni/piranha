@@ -1899,3 +1899,16 @@ BOOST_AUTO_TEST_CASE(mp_rational_sep_test)
 {
 	boost::mpl::for_each<size_types>(sep_tester());
 }
+
+BOOST_AUTO_TEST_CASE(mp_rational_integral_cast_test)
+{
+	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>()),0);
+	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>(2)),2);
+	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>(62,-2)),-31);
+	BOOST_CHECK_THROW(math::integral_cast(mp_rational<>(1,-2)),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(mp_rational<>("2/3") * 2),std::invalid_argument);
+	BOOST_CHECK(has_integral_cast<mp_rational<>>::value);
+	BOOST_CHECK(has_integral_cast<mp_rational<> &>::value);
+	BOOST_CHECK(has_integral_cast<mp_rational<> const &>::value);
+	BOOST_CHECK(has_integral_cast<mp_rational<> &&>::value);
+}
