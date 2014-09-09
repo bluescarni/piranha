@@ -22,6 +22,7 @@
 #define PIRANHA_MATH_HPP
 
 #include <algorithm>
+#include <boost/math/constants/constants.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <complex>
@@ -1217,6 +1218,38 @@ inline T generic_binomial(const T &x, const U &k)
 	return retval;
 }
 
+// Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints.
+template <typename T>
+inline T compute_3_gamma(const T &a, const T &b, const T &c)
+{
+	// Here we should never enter with negative ints.
+	piranha_assert(a >= T(0) || std::trunc(a) != a);
+	piranha_assert(b >= T(0) || std::trunc(b) != b);
+	piranha_assert(c >= T(0) || std::trunc(c) != c);
+	const T pi = boost::math::constants::pi<T>();
+	T tmp0(0), tmp1(1);
+	if (a < T(0)) {
+		tmp0 -= std::lgamma(T(1) - a);
+		tmp1 *= pi / std::sin(a * pi);
+	} else {
+		tmp0 += std::lgamma(a);
+	}
+	if (b < T(0)) {
+		tmp0 += std::lgamma(T(1) - b);
+		tmp1 *= std::sin(b * pi) / pi;
+	} else {
+		tmp0 -= std::lgamma(b);
+	}
+	if (c < T(0)) {
+		tmp0 += std::lgamma(T(1) - c);
+		tmp1 *= std::sin(c * pi) / pi;
+	} else {
+		tmp0 -= std::lgamma(c);
+	}
+	return std::exp(tmp0) * tmp1;
+}
+
+// Implementation of the generalised binomial coefficient for floating-point types.
 template <typename T>
 inline T fp_binomial(const T &x, const T &y)
 {
@@ -1230,11 +1263,11 @@ inline T fp_binomial(const T &x, const T &y)
 	switch (mask) {
 		case 0u:
 			// Case 0 is the non-special one, use the default implementation.
-			return std::tgamma(x + T(1)) / (std::tgamma(y + T(1)) * std::tgamma(x - y + T(1)));
+			return compute_3_gamma(x + T(1),y + T(1),x - y + T(1));
 		// NOTE: case 1 is not possible: x < 0, y > 0 implies x - y < 0 always.
 		case 2u:
 		case 4u:
-			// These are finite numerator with infinite denominator.
+			// These are finite numerators with infinite denominators.
 			return T(0.);
 		// NOTE: case 6 is not possible: x > 0, y < 0 implies x - y > 0 always.
 		case 3u:
@@ -1245,12 +1278,12 @@ inline T fp_binomial(const T &x, const T &y)
 			// due to potential rounding errors. We are attempting to err on the safe side by using pow()
 			// here.
 			const auto phase = std::pow(T(-1),x + T(1)) / std::pow(T(-1),y + T(1));
-			return std::tgamma(-y) / (std::tgamma(-x) * std::tgamma(x - y + T(1))) * phase;
+			return compute_3_gamma(-y,-x,x - y + T(1)) * phase;
 		}
 		case 5u:
 		{
 			const auto phase = std::pow(T(-1),x - y + T(1)) / std::pow(T(-1),x + T(1));
-			return std::tgamma(-(x - y)) / (std::tgamma(y + T(1)) * std::tgamma(-x)) * phase;
+			return compute_3_gamma(-(x - y),y + T(1),-x) * phase;
 		}
 	}
 	// Case 7 returns zero -> from inf / (inf * inf) it becomes a / (b * inf) after the transform.

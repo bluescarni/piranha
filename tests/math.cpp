@@ -486,7 +486,19 @@ BOOST_AUTO_TEST_CASE(math_fp_binomial_test)
 	// Case 7.
 	std::cout << detail::fp_binomial(-3.,-2.) << '\n';
 	// Other tests.
-	std::cout << detail::fp_binomial(-3.,-123.) << '\n';
+	std::cout << detail::fp_binomial(-3.,-1234.) << '\n';
+	std::cout << detail::fp_binomial(-3.,-12345.) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-3.1,-123456.1)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-3.5,-123456.5)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-3.5l,-123456.5l)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(0.,0.)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-0.2,-0.3)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(0.,1.)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(1.,0.)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(0.,-1.)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-1.,0.)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-3.1l,-123456.1l)) << '\n';
+	std::cout << boost::lexical_cast<std::string>(detail::fp_binomial(-3.1f,-123456.1f)) << '\n';
 }
 
 BOOST_AUTO_TEST_CASE(math_binomial_test)
