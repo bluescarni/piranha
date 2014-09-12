@@ -2278,6 +2278,16 @@ struct binomial_tester
 		BOOST_CHECK(n.binomial(3) == 10);
 		n = -5;
 		BOOST_CHECK(n.binomial(int_type(4)) == 70);
+		BOOST_CHECK((has_binomial<int_type,int>::value));
+		BOOST_CHECK((has_binomial<int,int_type>::value));
+		BOOST_CHECK((std::is_same<int_type,decltype(math::binomial(int_type{},0))>::value));
+		BOOST_CHECK((std::is_same<decltype(math::binomial(int_type{},0)),int_type>::value));
+		BOOST_CHECK((has_binomial<int_type,double>::value));
+		BOOST_CHECK((has_binomial<double,int_type>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial(int_type{},0.))>::value));
+		BOOST_CHECK((std::is_same<decltype(math::binomial(int_type{},0.)),double>::value));
+		BOOST_CHECK((has_binomial<int_type,int_type>::value));
+		BOOST_CHECK((std::is_same<int_type,decltype(math::binomial(int_type{},int_type{}))>::value));
 		// Random tests.
 		std::uniform_int_distribution<int> ud(-1000,1000);
 		std::uniform_int_distribution<int> promote_dist(0,1);
@@ -2289,12 +2299,23 @@ struct binomial_tester
 				n.promote();
 			}
 			if (tmp2 < 0) {
-				BOOST_CHECK_THROW(n.binomial(tmp2),std::invalid_argument);
+				// NOTE: we cannot check this case with GMP, defer to some tests below.
+				BOOST_CHECK_NO_THROW(n.binomial(tmp2));
 				continue;
 			}
 			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp1));
 			::mpz_bin_ui(&m.m_mpz,&m.m_mpz,static_cast<unsigned long>(tmp2));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.binomial(tmp2)),mpz_lexcast(m));
+			// int -- integral.
+			BOOST_CHECK_EQUAL(math::binomial(n,tmp2),n.binomial(tmp2));
+			// integral -- int.
+			BOOST_CHECK_EQUAL(math::binomial(tmp2,n),int_type(tmp2).binomial(n));
+			// integral -- integral.
+			BOOST_CHECK_EQUAL(math::binomial(tmp2,tmp1),mp_integer<>(tmp2).binomial(tmp1));
+			// int -- double.
+			BOOST_CHECK_EQUAL(math::binomial(n,static_cast<double>(tmp2)),math::binomial(double(n),static_cast<double>(tmp2)));
+			// double -- int.
+			BOOST_CHECK_EQUAL(math::binomial(static_cast<double>(tmp2),n),math::binomial(static_cast<double>(tmp2),double(n)));
 			BOOST_CHECK_EQUAL(n.binomial(tmp2),n.binomial(int_type(tmp2)));
 			BOOST_CHECK_EQUAL(n.binomial(long(tmp2)),n.binomial(int_type(tmp2)));
 			BOOST_CHECK_EQUAL(n.binomial((long long)(tmp2)),n.binomial(int_type(tmp2)));
@@ -2302,6 +2323,14 @@ struct binomial_tester
 			BOOST_CHECK_EQUAL(n.binomial((unsigned long long)(tmp2)),n.binomial(int_type(tmp2)));
 		}
 		BOOST_CHECK_THROW(n.binomial(std::numeric_limits<unsigned long>::max() + int_type(1)),std::invalid_argument);
+		// Negative k.
+		BOOST_CHECK_EQUAL(int_type{-3}.binomial(-4),-3);
+		BOOST_CHECK_EQUAL(int_type{-3}.binomial(-10),-36);
+		BOOST_CHECK_EQUAL(int_type{-3}.binomial(-1),0);
+		BOOST_CHECK_EQUAL(int_type{3}.binomial(-1),0);
+		BOOST_CHECK_EQUAL(int_type{10}.binomial(-1),0);
+		BOOST_CHECK_EQUAL(int_type{-3}.binomial(-3),1);
+		BOOST_CHECK_EQUAL(int_type{-1}.binomial(-1),1);
 	}
 };
 

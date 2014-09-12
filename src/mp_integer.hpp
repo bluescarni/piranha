@@ -1068,7 +1068,6 @@ struct is_mp_integer_interoperable_type
 /*
  * TODO
  * - more type traits tests, check wrt old integer tests.
- * - check if we can just make a single friend here, in the same way as done in piranha::integer for the pow_impl access.
  * TODO performance improvements:
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
  *     we can use mp_integer directly - this could be a performance improvement;
@@ -3014,19 +3013,35 @@ class mp_integer
 		 *
 		 * @return \p this choose \p k.
 		 *
-		 * @throws std::invalid_argument if \p k cannot be converted successfully to <tt>unsigned long</tt>.
+		 * @throws std::invalid_argument if \p k is outside an implementation-defined range.
 		 */
 		template <typename T, typename = typename std::enable_if<std::is_integral<T>::value ||
 			std::is_same<mp_integer,T>::value>::type>
 		mp_integer binomial(const T &k) const
 		{
-			mp_integer retval(*this);
-			if (is_static()) {
-				retval.promote();
+			if (k >= T(0)) {
+				mp_integer retval(*this);
+				if (is_static()) {
+					retval.promote();
+				}
+				// NOTE: demote opportunity.
+				::mpz_bin_ui(&retval.m_int.g_dy(),&retval.m_int.g_dy(),check_choose_k(k));
+				return retval;
+			} else {
+				// This is the case k < 0, handled according to:
+				// http://arxiv.org/abs/1105.3689/
+				if (sign() >= 0) {
+					// n >= 0, k < 0.
+					return mp_integer{0};
+				} else {
+					// n < 0, k < 0.
+					if (k <= *this) {
+						return mp_integer{-1}.pow(*this - k) * (-mp_integer{k} - 1).binomial(*this - k);
+					} else {
+						return mp_integer{0};
+					}
+				}
 			}
-			// NOTE: demote opportunity.
-			::mpz_bin_ui(&retval.m_int.g_dy(),&retval.m_int.g_dy(),check_choose_k(k));
-			return retval;
 		}
 	private:
 		detail::integer_union<NBits> m_int;
@@ -3128,6 +3143,10 @@ using integer_pow_enabler = typename std::enable_if<
 	(is_mp_integer<T>::value && is_mp_integer<U>::value) ||
 	(std::is_integral<T>::value && std::is_integral<U>::value)
 >::type;
+
+// Binomial follows the same rules as pow.
+template <typename T, typename U>
+using integer_binomial_enabler = integer_pow_enabler<T,U>;
 
 }
 
@@ -3367,56 +3386,110 @@ struct subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 
 /// Specialisation of the piranha::math::binomial() functor for piranha::mp_integer.
 /**
- * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ * This specialisation is activated when:
+ * - one of the arguments is piranha::mp_integer and the other is either
+ *   piranha::mp_integer or an interoperable type for piranha::mp_integer,
+ * - both arguments are integral types.
+ *
+ * The implementation follows these rules:
+ * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an integral type, then piranha::mp_integer::binomial() is used
+ *   to compute the result (after any necessary conversion),
+ * - if both arguments are integral types, piranha::mp_integer::binomial() is used after the conversion of the top argument
+ *   to piranha::mp_integer,
+ * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and \p piranha::math::binomial() is
+ *   used to compute the result.
  */
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+struct binomial_impl<T,U,detail::integer_binomial_enabler<T,U>>
 {
-	/// Call operator.
+	/// Call operator, integral--integral overload.
 	/**
-	 * \note
-	 * This call operator is enabled only if \p k can be used as argument to piranha::mp_integer::binomial().
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
 	 *
-	 * @param[in] n top number.
-	 * @param[in] k bottom number.
+	 * @returns \f$ x \choose y \f$.
 	 *
-	 * @return \p n choose \p k.
+	 * @throws unspecified any exception thrown by constructing piranha::mp_integer
+	 * or by piranha::mp_integer::binomial().
+	 */
+	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
+		std::is_integral<U2>::value,int>::type = 0>
+	mp_integer<> operator()(const T2 &x, const U2 &y) const
+	{
+		return mp_integer<>(x).binomial(y);
+	}
+	/// Call operator, piranha::mp_integer overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
 	 *
 	 * @throws unspecified any exception thrown by piranha::mp_integer::binomial().
 	 */
-	template <typename U2>
-	auto operator()(const T &n, const U2 &k) const -> decltype(n.binomial(k))
+	template <int NBits>
+	mp_integer<NBits> operator()(const mp_integer<NBits> &x, const mp_integer<NBits> &y) const
 	{
-		return n.binomial(k);
+		return x.binomial(y);
 	}
-};
-
-/// Specialisation of the piranha::math::binomial() functor for integral types.
-/**
- * This specialisation is enabled if \p T is an integral type.
- */
-template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<std::is_integral<T>::value>::type>
-{
-	/// Call operator.
+	/// Call operator, integer--integral overload.
 	/**
-	 * \note
-	 * This call operator is enabled only if \p k can be used as second argument to piranha::mp_integer::binomial().
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
 	 *
-	 * The input integral value will be converted to piranha::mp_integer<>, and piranha::mp_integer::binomial() will then be
-	 * used to compute the return value.
+	 * @returns \f$ x \choose y \f$.
 	 *
-	 * @param[in] n top number.
-	 * @param[in] k bottom number.
-	 *
-	 * @return \p n choose \p k.
-	 *
-	 * @throws unspecified any exception thrown by constructing piranha::mp_integer from \p n or by piranha::mp_integer::binomial().
+	 * @throws unspecified any exception thrown by piranha::mp_integer::binomial().
 	 */
-	template <typename U1>
-	auto operator()(const T &n, const U1 &k) const -> decltype(mp_integer<>(n).binomial(k))
+	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
+	mp_integer<NBits> operator()(const mp_integer<NBits> &x, const T2 &y) const
 	{
-		return mp_integer<>(n).binomial(k);
+		return x.binomial(y);
+	}
+	/// Call operator, integer--floating-point overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by the conversion operator of piranha::mp_integer
+	 * or by piranha::math::binomial().
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const mp_integer<NBits> &x, const T2 &y) const
+	{
+		return math::binomial(static_cast<T2>(x),y);
+	}
+	/// Call operator, integral--integer overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by constructing piranha::mp_integer
+	 * or by piranha::mp_integer::binomial().
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
+	mp_integer<NBits> operator()(const T2 &x, const mp_integer<NBits> &y) const
+	{
+		return mp_integer<NBits>(x).binomial(y);
+	}
+	/// Call operator, floating-point--integer overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by the conversion operator of piranha::mp_integer
+	 * or by piranha::math::binomial().
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const T2 &x, const mp_integer<NBits> &y) const
+	{
+		return math::binomial(x,static_cast<T2>(y));
 	}
 };
 

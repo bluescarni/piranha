@@ -1324,8 +1324,10 @@ struct binomial_impl<T,U,typename std::enable_if<
 	using result_type = typename std::common_type<T,U>::type;
 	/// Call operator.
 	/**
-	 * The implementation, accepting any real finite value for \p x and \p y, is described in:
-	 * http://arxiv.org/abs/1105.3689/
+	 * The implementation, accepting any real finite value for \p x and \p y, is described in
+	 * http://arxiv.org/abs/1105.3689/. Note that, since the implementation uses floating-point
+	 * arithmetics, the result will - in general - be inexact, even if both \p x and \p y represent
+	 * integral values.
 	 * 
 	 * @param[in] x top argument.
 	 * @param[in] y bottom argument.
