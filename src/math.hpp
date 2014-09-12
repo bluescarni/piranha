@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "detail/base_term_fwd.hpp"
-#include "detail/integer_fwd.hpp"
 #include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
@@ -1197,10 +1196,11 @@ static inline bool generic_binomial_check_k(const T &k, const T &zero,
 	return k < zero;
 }
 
+// Generic binomial implementation using the falling factorial. U must be an integer
+// type, T can be anything that supports basic arithmetics. k must be non-negative.
 template <typename T, typename U>
 inline T generic_binomial(const T &x, const U &k)
 {
-	static_assert(std::is_integral<U>::value || std::is_same<integer,U>::value,"Invalid type.");
 	const U zero(0), one(1);
 	if (generic_binomial_check_k(k,zero)) {
 		piranha_throw(std::invalid_argument,"negative k value in binomial coefficient");
@@ -1253,6 +1253,7 @@ inline T compute_3_gamma(const T &a, const T &b, const T &c)
 template <typename T>
 inline T fp_binomial(const T &x, const T &y)
 {
+	static_assert(std::is_floating_point<T>::value,"Invalid type for fp_binomial.");
 	if (unlikely(!std::isfinite(x) || !std::isfinite(y))) {
 		piranha_throw(std::invalid_argument,"cannot compute binomial coefficient with non-finite floating-point argument(s)");
 	}
@@ -1287,7 +1288,7 @@ inline T fp_binomial(const T &x, const T &y)
 		}
 	}
 	// Case 7 returns zero -> from inf / (inf * inf) it becomes a / (b * inf) after the transform.
-	// NOTE: put it here so the compiler does not complain about missing return statement.
+	// NOTE: put it here so the compiler does not complain about missing return statement in the switch block.
 	return T(0);
 }
 
@@ -1305,30 +1306,37 @@ template <typename T, typename U, typename = void>
 struct binomial_impl
 {};
 
-/// Specialisation of the piranha::math::binomial() functor for floating-point top arguments.
+/// Specialisation of the piranha::math::binomial() functor for floating-point and arithmetic arguments.
 /**
- * This specialisation is activated when \p T is a floating-point type and \p U an integral type or piranha::integer.
+ * This specialisation is activated when both arguments are C++ arithmetic types and at least one argument
+ * is a floating-point type.
  */
-// TODO split out the integer part from here, put it into the integer header. Then remove any reference
-// to integer from here (apart maybe in the detail::generic_binomial implementation) and in the tests.
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<std::is_floating_point<T>::value &&
-	(std::is_integral<U>::value || std::is_same<integer,U>::value)
-	>::type>
+struct binomial_impl<T,U,typename std::enable_if<
+	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
+	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
+>::type>
 {
+	/// Result type for the call operator.
+	/**
+	 * The result type is the widest floating-point type among \p T and \p U.
+	 */ 
+	using result_type = typename std::common_type<T,U>::type;
 	/// Call operator.
 	/**
+	 * The implementation, accepting any real finite value for \p x and \p y, is described in:
+	 * http://arxiv.org/abs/1105.3689/
+	 * 
 	 * @param[in] x top argument.
-	 * @param[in] k bottom argument.
+	 * @param[in] y bottom argument.
 	 * 
-	 * @return \p x choose \p k.
+	 * @return \p x choose \p y.
 	 * 
-	 * @throws std::invalid_argument if \p k is negative.
-	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::integer.
+	 * @throws std::invalid_argument if at least one argument is not finite.
 	 */
-	T operator()(const T &x, const U &k) const
+	result_type operator()(const T &x, const U &y) const
 	{
-		return detail::generic_binomial(x,k);
+		return detail::fp_binomial(static_cast<result_type>(x),static_cast<result_type>(y));
 	}
 };
 
@@ -1336,22 +1344,22 @@ struct binomial_impl<T,U,typename std::enable_if<std::is_floating_point<T>::valu
 /**
  * Will return the generalised binomial coefficient:
  * \f[
- * {x \choose k} = \frac{x^{\underline k}}{k!} = \frac{x(x-1)(x-2)\cdots(x-k+1)}{k(k-1)(k-2)\cdots 1}.
+ * {x \choose y}.
  * \f]
  * 
  * The actual implementation of this function is in the piranha::math::binomial_impl functor.
  * 
  * @param[in] x top number.
- * @param[in] k bottom number.
+ * @param[in] y bottom number.
  * 
- * @return \p x choose \p k.
+ * @return \p x choose \p y.
  * 
  * @throws unspecified any exception thrown by the call operator of piranha::math::binomial_impl.
  */
 template <typename T, typename U>
-inline auto binomial(const T &x, const U &k) -> decltype(binomial_impl<T,U>()(x,k))
+inline auto binomial(const T &x, const U &y) -> decltype(binomial_impl<T,U>()(x,y))
 {
-	return binomial_impl<T,U>()(x,k);
+	return binomial_impl<T,U>()(x,y);
 }
 
 }
