@@ -3173,7 +3173,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 {
 	/// Call operator, integral--integral overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -3189,7 +3189,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	}
 	/// Call operator, piranha::mp_integer overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -3204,7 +3204,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	}
 	/// Call operator, integer--integral overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -3218,7 +3218,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	}
 	/// Call operator, integer--floating-point overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -3232,7 +3232,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	}
 	/// Call operator, integral--integer overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -3246,7 +3246,7 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	}
 	/// Call operator, floating-point--integer overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
