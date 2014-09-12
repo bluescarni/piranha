@@ -1635,7 +1635,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 {
 	/// Call operator, rational--integral overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -1649,7 +1649,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	}
 	/// Call operator, rational--floating-point overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -1664,7 +1664,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	}
 	/// Call operator, floating-point--rational overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -1679,7 +1679,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	}
 	/// Call operator, rational--rational overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
@@ -1694,7 +1694,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	}
 	/// Call operator, integral--rational overload.
 	/**
-	 * @param[in] b base
+	 * @param[in] b base.
 	 * @param[in] e exponent.
 	 *
 	 * @returns <tt>b**e</tt>.
