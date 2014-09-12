@@ -2347,6 +2347,9 @@ BOOST_AUTO_TEST_CASE(mp_integer_binomial_test)
 	BOOST_CHECK_EQUAL(math::binomial(7ll,4),math::binomial(int_type(7),4));
 	BOOST_CHECK((std::is_same<decltype(math::binomial(7ll,4)),int_type>::value));
 	BOOST_CHECK_EQUAL(math::binomial(-7ll,4u),math::binomial(int_type(-7),4));
+	// Different bits sizes.
+	BOOST_CHECK((!has_binomial<mp_integer<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!has_binomial<mp_integer<32>,mp_integer<16>>::value));
 }
 
 struct sin_cos_tester
