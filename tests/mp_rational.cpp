@@ -1920,3 +1920,67 @@ BOOST_AUTO_TEST_CASE(mp_rational_integral_cast_test)
 	BOOST_CHECK(has_integral_cast<mp_rational<> const &>::value);
 	BOOST_CHECK(has_integral_cast<mp_rational<> &&>::value);
 }
+
+struct binomial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using int_type = typename q_type::int_type;
+		// Some checks with integral values on top.
+		BOOST_CHECK_EQUAL(q_type{}.binomial(0),1);
+		BOOST_CHECK_EQUAL(q_type{}.binomial(1),0);
+		BOOST_CHECK_EQUAL(q_type{1}.binomial(1),1ull);
+		BOOST_CHECK_EQUAL(q_type{5}.binomial(3),int_type{10});
+		BOOST_CHECK_EQUAL(q_type{-5}.binomial(4),70);
+		BOOST_CHECK_EQUAL(q_type{-5}.binomial(4),int_type{70});
+		// Negative int on bottom, rational top.
+		BOOST_CHECK_EQUAL(q_type(5,3).binomial(-4),0);
+		BOOST_CHECK_EQUAL(q_type(5,3).binomial(int_type{-1}),0);
+		// Type traits checking.
+		BOOST_CHECK((has_binomial<q_type,int_type>::value));
+		BOOST_CHECK((has_binomial<q_type,int>::value));
+		BOOST_CHECK((has_binomial<q_type,unsigned short>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::binomial(q_type{},4))>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::binomial(q_type{},int_type{4}))>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::binomial(q_type{},char(4)))>::value));
+		BOOST_CHECK((has_binomial<q_type,double>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial(q_type{},4.))>::value));
+		BOOST_CHECK((has_binomial<q_type,q_type>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial(q_type{},q_type{}))>::value));
+		BOOST_CHECK((has_binomial<int,q_type>::value));
+		BOOST_CHECK((has_binomial<int_type,q_type>::value));
+		BOOST_CHECK((has_binomial<long,q_type>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial(4,q_type{}))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial(int_type(4),q_type{}))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(math::binomial((long long)4,q_type{}))>::value));
+		// Some simple checks.
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(2),-q_type(3,32));
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(10),-q_type(1057485,268435456ll));
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(0),1);
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(-1),0);
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(-2),0);
+		BOOST_CHECK_EQUAL(q_type(3,4).binomial(-10ll),0);
+		BOOST_CHECK_EQUAL(q_type(3,-4).binomial(0),1);
+		BOOST_CHECK_EQUAL(q_type(3,-4).binomial(1),-q_type(3,4));
+		BOOST_CHECK_EQUAL(q_type(3,-4).binomial(5),-q_type(4389,8192));
+		BOOST_CHECK_EQUAL(q_type(3,-4).binomial(-1),0);
+		BOOST_CHECK_EQUAL(q_type(3,-4).binomial(-5),0);
+		BOOST_CHECK_EQUAL(math::binomial(1,q_type{3,4}),math::binomial(1.,3./4.));
+		BOOST_CHECK_EQUAL(math::binomial(q_type{2,3},q_type{3,4}),math::binomial(2./3.,3./4.));
+		BOOST_CHECK_EQUAL(math::binomial(1.2,q_type{3,4}),math::binomial(1.2,3./4.));
+		BOOST_CHECK_EQUAL(math::binomial(q_type{3,4},1.2),math::binomial(3./4.,1.2));
+		// NOTE: cannot really do random testing at the moment as the implementation of
+		// generic_binomial is way too slow.
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_binomial_test)
+{
+	boost::mpl::for_each<size_types>(binomial_tester());
+	BOOST_CHECK((!has_binomial<mp_rational<32>,mp_rational<16>>::value));
+	BOOST_CHECK((!has_binomial<mp_rational<16>,mp_rational<32>>::value));
+	BOOST_CHECK((!has_binomial<mp_rational<16>,mp_integer<32>>::value));
+	BOOST_CHECK((!has_binomial<mp_rational<32>,mp_integer<16>>::value));
+}

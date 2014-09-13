@@ -1498,6 +1498,37 @@ class mp_rational
 			boost::hash_combine(retval,m_den.hash());
 			return retval;
 		}
+		/// Binomial coefficient.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is an integral type or piranha::mp_integer.
+		 *
+		 * Will return \p this choose \p n.
+		 *
+		 * @param[in] n bottom argument for the binomial coefficient.
+		 *
+		 * @return \p this choose \p n.
+		 *
+		 * @throws unspecified any exception thrown by piranha::mp_integer::binomial()
+		 * or by arithmetic operations on piranha::mp_rational.
+		 */
+		template <typename T, typename std::enable_if<std::is_integral<T>::value ||
+			std::is_same<T,int_type>::value,int>::type = 0>
+		mp_rational binomial(const T &n) const
+		{
+			if (m_den == 1) {
+				// If this is an integer, offload to mp_integer::binomial().
+				return mp_rational{m_num.binomial(n),1};
+			}
+			if (n < T(0)) {
+				// (rational negative-int) will always give zero.
+				return mp_rational{};
+			}
+			// (rational non-negative-int) uses the generic implementation.
+			// NOTE: this is going to be really slow, it can be improved by orders
+			// of magnitude.
+			return detail::generic_binomial(*this,n);
+		}
 	private:
 		int_type	m_num;
 		int_type	m_den;
@@ -1546,6 +1577,10 @@ using rational_pow_enabler = typename std::enable_if<
 	// as we don't allow interoperablity with different bits.
 	(is_mp_rational<T>::value && is_mp_rational<U>::value)
 >::type;
+
+// Binomial follows the same rules as pow.
+template <typename T, typename U>
+using rational_binomial_enabler = rational_pow_enabler<T,U>;
 
 }
 
@@ -1640,7 +1675,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	 *
 	 * @returns <tt>b**e</tt>.
 	 *
-	 * @throws unspecified any exception thrown by piranha::rational::pow().
+	 * @throws unspecified any exception thrown by piranha::mp_rational::pow().
 	 */
 	template <int NBits, typename T2>
 	auto operator()(const mp_rational<NBits> &b, const T2 &e) const -> decltype(b.pow(e))
@@ -1856,6 +1891,100 @@ struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value
 	T operator()(const T &q, const std::string &, const mp_integer<> &, const U &) const
 	{
 		return q;
+	}
+};
+
+/// Specialisation of the piranha::math::binomial() functor for piranha::mp_rational.
+/**
+ * This specialisation is activated when one of the arguments is piranha::mp_rational and the other is either
+ * piranha::mp_rational or an interoperable type for piranha::mp_rational.
+ *
+ * The implementation follows these rules:
+ * - if the top is rational and the bottom an integral type or piranha::mp_integer, then
+ *   piranha::mp_rational::binomial() is used;
+ * - if the non-rational argument is a floating-point type, then the rational argument is converted
+ *   to that floating-point type and piranha::math::binomial() is used;
+ * - if both arguments are rational, they are both converted to \p double and then piranha::math::binomial()
+ *   is used;
+ * - if the top is an integral type or piranha::mp_integer and the bottom a rational, then both
+ *   arguments are converted to \p double and piranha::math::binomial() is used.
+ */
+template <typename T, typename U>
+struct binomial_impl<T,U,detail::rational_binomial_enabler<T,U>>
+{
+	/// Call operator, rational--integral overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by piranha::mp_rational::binomial().
+	 */
+	template <int NBits, typename T2>
+	auto operator()(const mp_rational<NBits> &x, const T2 &y) const -> decltype(x.binomial(y))
+	{
+		return x.binomial(y);
+	}
+	/// Call operator, rational--floating-point overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to a floating-point type.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const mp_rational<NBits> &x, const T2 &y) const
+	{
+		return math::binomial(static_cast<T2>(x),y);
+	}
+	/// Call operator, floating-point--rational overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to a floating-point type.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
+	T2 operator()(const T2 &x, const mp_rational<NBits> &y) const
+	{
+		return math::binomial(x,static_cast<T2>(y));
+	}
+	/// Call operator, rational--rational overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * to \p double.
+	 */
+	template <int NBits>
+	double operator()(const mp_rational<NBits> &x, const mp_rational<NBits> &y) const
+	{
+		return math::binomial(static_cast<double>(x),static_cast<double>(y));
+	}
+	/// Call operator, integral--rational overload.
+	/**
+	 * @param[in] x top argument.
+	 * @param[in] y bottom argument.
+	 *
+	 * @returns \f$ x \choose y \f$.
+	 *
+	 * @throws unspecified any exception thrown by converting piranha::mp_rational
+	 * or piranha::mp_integer to \p double.
+	 */
+	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value || detail::is_mp_integer<T2>::value,int>::type = 0>
+	double operator()(const T2 &x, const mp_rational<NBits> &y) const
+	{
+		return math::binomial(static_cast<double>(x),static_cast<double>(y));
 	}
 };
 
