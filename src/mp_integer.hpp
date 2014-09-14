@@ -44,6 +44,7 @@
 #include "debug_access.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mp_rational_fwd.hpp"
+#include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -1036,7 +1037,7 @@ struct is_mp_integer_interoperable_type
  * A value of 64 is supported on some platforms. The special
  * default value of 0 is used to automatically select the optimal \p NBits value on the current platform.
  * 
- * \section interop Interoperability with fundamental types
+ * \section interop Interoperability with other types
  * 
  * Full interoperability with all integral and floating-point C++ types is provided.
  * 
@@ -1097,11 +1098,12 @@ struct is_mp_integer_interoperable_type
 template <int NBits = 0>
 class mp_integer
 {
-		// Make friend with debugging class and mp_rational.
+		// Make friend with debugging class, mp_rational and real.
 		template <typename>
 		friend class debug_access;
 		template <int>
 		friend class mp_rational;
+		friend class real;
 		// Import the interoperable types detector.
 		template <typename T>
 		using is_interoperable_type = detail::is_mp_integer_interoperable_type<T>;

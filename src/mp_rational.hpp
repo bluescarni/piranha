@@ -100,7 +100,7 @@ struct is_mp_rational_interoperable_type<T,Rational,typename std::enable_if<!is_
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and denominator
  * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
  * 
- * \section interop Interoperability with fundamental types
+ * \section interop Interoperability with other types
  * 
  * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
  * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
