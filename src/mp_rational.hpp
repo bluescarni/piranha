@@ -136,7 +136,7 @@ class mp_rational
 		using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
 		// Enabler for in-place arithmetic operations with interop on the left.
 		template <typename T>
-		using generic_in_place_enabler = typename std::enable_if<!std::is_same<typename std::decay<T>::type,mp_rational>::value,int>::type;
+		using generic_in_place_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
 		// Generic constructor implementation.
 		template <typename T>
 		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)
@@ -992,7 +992,7 @@ class mp_rational
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
-		friend auto operator+=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(q + x))
+		friend T &operator+=(T &x, const mp_rational &q)
 		{
 			return x = static_cast<T>(q + x);
 		}
@@ -1099,7 +1099,7 @@ class mp_rational
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
-		friend auto operator-=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(x - q))
+		friend T &operator-=(T &x, const mp_rational &q)
 		{
 			return x = static_cast<T>(x - q);
 		}
@@ -1169,7 +1169,7 @@ class mp_rational
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
-		friend auto operator*=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(x * q))
+		friend T &operator*=(T &x, const mp_rational &q)
 		{
 			return x = static_cast<T>(x * q);
 		}
@@ -1243,7 +1243,7 @@ class mp_rational
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_rational to \p T.
 		 */
 		template <typename T, generic_in_place_enabler<T> = 0>
-		friend auto operator/=(T &x, const mp_rational &q) -> decltype(x = static_cast<T>(x / q))
+		friend T &operator/=(T &x, const mp_rational &q)
 		{
 			return x = static_cast<T>(x / q);
 		}
