@@ -22,13 +22,12 @@
 #define PIRANHA_REAL_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -39,9 +38,9 @@
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
-#include "integer.hpp"
 #include "math.hpp"
-#include "rational.hpp"
+#include "mp_integer.hpp"
+#include "mp_rational.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -68,6 +67,14 @@ const ::mpfr_rnd_t real_base<T>::default_rnd;
 template <typename T>
 const ::mpfr_prec_t real_base<T>::default_prec;
 
+// Types interoperable with real.
+template <typename T>
+struct is_real_interoperable_type
+{
+	static const bool value = detail::is_mp_integer_interoperable_type<T>::value ||
+		detail::is_mp_integer<T>::value || detail::is_mp_rational<T>::value;
+};
+
 }
 
 /// Arbitrary precision floating-point class.
@@ -78,9 +85,12 @@ const ::mpfr_prec_t real_base<T>::default_prec;
  * 
  * Unless noted otherwise, this implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all operations.
  * 
- * \section interop Interoperability with fundamental types
+ * \section interop Interoperability with other types
  * 
- * Full interoperability with the same fundamental C++ types as piranha::integer is provided.
+ * This class interoperates with the same types as piranha::mp_integer and piranha::mp_rational,
+ * plus piranha::mp_integer and piranha::mp_rational themselves.
+ * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
+ * of piranha::mp_integer apply.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -96,9 +106,11 @@ const ::mpfr_prec_t real_base<T>::default_prec;
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // TODO:
-// - fix the move semantics if possible (i.e., valid but unspecified state),
-// - add interoperability with long double and long long, avoiding the is_gmp_int stuff ->
-//   look into using the intmax_t overloads from MPFR,
+// - check the swap.
+// - check return types of the operators and check that in-place with real is not supported for const T.
+// - check occurrences of piranha::integer, integer, piranha::rational and rational.
+// - fix the move semantics if possible (i.e., valid but unspecified state), and remove all the stuff for reviving
+//   moved-from objects,
 // - maybe we can replace the raii str holder with a unique_ptr with custom deleter,
 // - fix use of isdigit.
 // - should probably review all the precision handling stuff, it's really easy to forget about something :/
@@ -112,29 +124,19 @@ const ::mpfr_prec_t real_base<T>::default_prec;
 //   the conversions are as fast as possible.
 class real: public detail::real_base<>
 {
-		// Type trait for allowed arguments in arithmetic binary operations.
-		template <typename T, typename U>
-		struct are_binary_op_types: std::integral_constant<bool,
-			(std::is_same<typename std::decay<T>::type,real>::value && integer::is_interop_type<typename std::decay<U>::type>::value) ||
-			(std::is_same<typename std::decay<U>::type,real>::value && integer::is_interop_type<typename std::decay<T>::type>::value) ||
-			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,integer>::value) ||
-			(std::is_same<typename std::decay<U>::type,real>::value && std::is_same<typename std::decay<T>::type,integer>::value) ||
-			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,rational>::value) ||
-			(std::is_same<typename std::decay<U>::type,real>::value && std::is_same<typename std::decay<T>::type,rational>::value) ||
-			(std::is_same<typename std::decay<T>::type,real>::value && std::is_same<typename std::decay<U>::type,real>::value)>
-		{};
-		// RAII struct to manage strings received via ::mpfr_get_str().
-		struct mpfr_str_manager
-		{
-			explicit mpfr_str_manager(char *str):m_str(str) {}
-			~mpfr_str_manager()
-			{
-				if (m_str) {
-					::mpfr_free_str(m_str);
-				}
-			}
-			char *m_str;
-		};
+		// Shortcut for interop type detector.
+		template <typename T>
+		using is_interoperable_type = detail::is_real_interoperable_type<T>;
+		// Enabler for generic ctor.
+		template <typename T>
+		using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
+		// Enabler for conversion operator.
+		template <typename T>
+		using cast_enabler = generic_ctor_enabler<T>;
+		// Enabler for in-place arithmetic operations with interop on the left.
+		template <typename T>
+		using generic_in_place_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,int>::type;
+		// Precision check.
 		static void prec_check(const ::mpfr_prec_t &prec)
 		{
 			if (prec < MPFR_PREC_MIN || prec > MPFR_PREC_MAX) {
@@ -152,34 +154,32 @@ class real: public detail::real_base<>
 				piranha_throw(std::invalid_argument,"invalid string input for real");
 			}
 		}
-		template <typename T>
-		void construct_from_generic(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		void construct_from_generic(const T &x)
 		{
-			::mpfr_set_d(m_value,static_cast<double>(x),default_rnd);
+			::mpfr_set_ld(m_value,static_cast<long double>(x),default_rnd);
 		}
-		template <typename T>
-		void construct_from_generic(const T &si, typename std::enable_if<std::is_signed<T>::value && integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value,int>::type = 0>
+		void construct_from_generic(const T &si)
 		{
-			::mpfr_set_si(m_value,static_cast<long>(si),default_rnd);
+			::mpfr_set_sj(m_value,static_cast<std::intmax_t>(si),default_rnd);
 		}
-		template <typename T>
-		void construct_from_generic(const T &ui, typename std::enable_if<std::is_unsigned<T>::value && integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value,int>::type = 0>
+		void construct_from_generic(const T &ui)
 		{
-			::mpfr_set_ui(m_value,static_cast<unsigned long>(ui),default_rnd);
+			::mpfr_set_uj(m_value,static_cast<std::uintmax_t>(ui),default_rnd);
 		}
-		template <typename T>
-		void construct_from_generic(const T &ll, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		void construct_from_generic(const T &n)
 		{
-			construct_from_generic(integer(ll));
+			auto v = n.get_mpz_view();
+			::mpfr_set_z(m_value,v,default_rnd);
 		}
-		void construct_from_generic(const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		void construct_from_generic(const T &q)
 		{
-			::mpfr_set_z(m_value,n.m_value,default_rnd);
-		}
-		void construct_from_generic(const rational &q)
-		{
-			::mpfr_set_q(m_value,q.m_value,default_rnd);
+			auto v = q.get_mpq_view();
+			::mpfr_set_q(m_value,v,default_rnd);
 		}
 		// Assignment.
 		void assign_from_string(const char *str)
@@ -199,14 +199,16 @@ class real: public detail::real_base<>
 			return (sign() != 0);
 		}
 		template <typename T>
-		typename std::enable_if<std::is_same<T,integer>::value,T>::type convert_to_impl() const
+		typename std::enable_if<detail::is_mp_integer<T>::value,T>::type convert_to_impl() const
 		{
 			if (is_nan() || is_inf()) {
 				piranha_throw(std::overflow_error,"cannot convert non-finite real to an integral value");
 			}
-			integer retval;
+			T retval;
+			retval.promote();
 			// Explicitly request rounding to zero in this case.
-			::mpfr_get_z(retval.m_value,m_value,MPFR_RNDZ);
+			::mpfr_get_z(&retval.m_int.g_dy(),m_value,MPFR_RNDZ);
+			// NOTE: demote candidate.
 			return retval;
 		}
 		template <typename T>
@@ -214,7 +216,7 @@ class real: public detail::real_base<>
 		{
 			// NOTE: of course, this can be optimised by avoiding going through the integer conversion and
 			// using directly the MPFR functions.
-			return static_cast<T>(static_cast<integer>(*this));
+			return static_cast<T>(static_cast<mp_integer<>>(*this));
 		}
 		template <typename T>
 		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
@@ -236,13 +238,18 @@ class real: public detail::real_base<>
 					piranha_throw(std::overflow_error,"cannot convert infinity to floating-point type");
 				}
 			}
+			if (std::is_same<T,long double>::value) {
+				return static_cast<T>(::mpfr_get_ld(m_value,default_rnd));
+			}
 			if (std::is_same<T,double>::value) {
 				return static_cast<T>(::mpfr_get_d(m_value,default_rnd));
 			}
-			return ::mpfr_get_flt(m_value,default_rnd);
+			return static_cast<T>(::mpfr_get_flt(m_value,default_rnd));
 		}
+		// Smart pointer to handle the string output from mpfr.
+		typedef std::unique_ptr<char,void (*)(char *)> smart_mpfr_str;
 		template <typename T>
-		typename std::enable_if<std::is_same<T,rational>::value,T>::type convert_to_impl() const
+		typename std::enable_if<detail::is_mp_rational<T>::value,T>::type convert_to_impl() const
 		{
 			if (is_nan()) {
 				piranha_throw(std::overflow_error,"cannot convert NaN to rational");
@@ -251,19 +258,19 @@ class real: public detail::real_base<>
 				piranha_throw(std::overflow_error,"cannot convert infinity to rational");
 			}
 			if (sign() == 0) {
-				return rational{};
+				return T{};
 			}
 			// Get string representation.
 			::mpfr_exp_t exp(0);
-			mpfr_str_manager m(::mpfr_get_str(nullptr,&exp,10,0,m_value,default_rnd));
-			auto str = m.m_str;
-			if (!str) {
+			char *cptr = ::mpfr_get_str(nullptr,&exp,10,0,m_value,default_rnd);
+			if (!cptr) {
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
 			}
+			smart_mpfr_str str_ptr(cptr,::mpfr_free_str);
 			// Transform into fraction.
 			std::size_t digits = 0u;
-			for (; *str != '\0'; ++str) {
-				if (detail::is_digit(*str)) {
+			for (; *cptr != '\0'; ++cptr) {
+				if (detail::is_digit(*cptr)) {
 					++digits;
 				}
 			}
@@ -273,10 +280,10 @@ class real: public detail::real_base<>
 			// NOTE: here the only exception that can be thrown is when raising to a power
 			// that cannot be represented by unsigned long.
 			try {
-				rational retval(m.m_str);
+				T retval(str_ptr.get());
 				// NOTE: possible optimizations here include going through direct GMP routines.
-				retval *= rational(1,10).pow(digits);
-				retval *= rational(10).pow(exp);
+				retval *= T(1,10).pow(digits);
+				retval *= T(10).pow(exp);
 				return retval;
 			} catch (...) {
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: exponent is too large");
@@ -285,262 +292,221 @@ class real: public detail::real_base<>
 		// In-place addition.
 		// NOTE: all sorts of optimisations, here and in binary add, are possible (e.g., steal from rvalue ref, 
 		// avoid setting precision twice in binary operators, etc.). For the moment we keep it basic.
-		void in_place_add(const real &r)
+		real &in_place_add(const real &r)
 		{
 			if (r.get_prec() > get_prec()) {
 				// Re-init this with the prec of r.
 				*this = real{*this,r.get_prec()};
 			}
 			::mpfr_add(m_value,m_value,r.m_value,default_rnd);
+			return *this;
 		}
-		void in_place_add(const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		real &in_place_add(const T &q)
 		{
-			::mpfr_add_q(m_value,m_value,q.m_value,default_rnd);
+			auto v = q.get_mpq_view();
+			::mpfr_add_q(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		void in_place_add(const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		real &in_place_add(const T &n)
 		{
-			::mpfr_add_z(m_value,m_value,n.m_value,default_rnd);
+			auto v = n.get_mpz_view();
+			::mpfr_add_z(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		template <typename T>
-		void in_place_add(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		// NOTE: possible optimisations here.
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		real &in_place_add(const T &n)
 		{
-			::mpfr_add_si(m_value,m_value,static_cast<long>(si),default_rnd);
+			return in_place_add(mp_integer<>(n));
 		}
-		template <typename T>
-		void in_place_add(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		// NOTE: possible optimisations here as well.
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		real &in_place_add(const T &x)
 		{
-			::mpfr_add_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
-		}
-		template <typename T>
-		void in_place_add(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
-		{
-			in_place_add(integer(n));
-		}
-		template <typename T>
-		void in_place_add(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			if ((radix & (radix - 1u)) == 0u) {
-				::mpfr_add_d(m_value,m_value,static_cast<double>(x),default_rnd);
-			} else {
-				in_place_add(real(x,get_prec()));
-			}
+			// Construct real with the same precision as this, then add.
+			return in_place_add(real{x,get_prec()});
 		}
 		// Binary add.
-		// NOTE: here we need to distinguish between the two cases because we want to avoid the case in which
-		// we are constructing a real with a non-real. In that case we might mess up the precision of the result,
-		// as default_prec would be used during construction and it would not be equal in general to the precision
-		// of the other operand.
-		template <typename T, typename U>
-		static real binary_add(T &&a, U &&b, typename std::enable_if<
-			// NOTE: T == U means they have both to be real.
-			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
-			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
+		static real binary_add(const real &a, const real &b)
 		{
-			real retval(std::forward<T>(a));
-			retval += std::forward<U>(b);
+			real retval{a};
+			retval += b;
 			return retval;
 		}
-		template <typename T, typename U>
-		static real binary_add(T &&a, U &&b, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
+		// Single implementation for all interoperable types.
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_add(const real &a, const T &b)
 		{
-			return binary_add(std::forward<U>(b),std::forward<T>(a));
+			real retval{a};
+			retval += b;
+			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_add(const T &a, const real &b)
+		{
+			return binary_add(b,a);
 		}
 		// In-place subtraction.
-		void in_place_sub(const real &r)
+		real &in_place_sub(const real &r)
 		{
 			if (r.get_prec() > get_prec()) {
 				*this = real{*this,r.get_prec()};
 			}
 			::mpfr_sub(m_value,m_value,r.m_value,default_rnd);
+			return *this;
 		}
-		void in_place_sub(const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		real &in_place_sub(const T &q)
 		{
-			::mpfr_sub_q(m_value,m_value,q.m_value,default_rnd);
+			auto v = q.get_mpq_view();
+			::mpfr_sub_q(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		void in_place_sub(const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		real &in_place_sub(const T &n)
 		{
-			::mpfr_sub_z(m_value,m_value,n.m_value,default_rnd);
+			auto v = n.get_mpz_view();
+			::mpfr_sub_z(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		template <typename T>
-		void in_place_sub(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		real &in_place_sub(const T &n)
 		{
-			::mpfr_sub_si(m_value,m_value,static_cast<long>(si),default_rnd);
+			return in_place_sub(mp_integer<>(n));
 		}
-		template <typename T>
-		void in_place_sub(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		real &in_place_sub(const T &x)
 		{
-			::mpfr_sub_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+			return in_place_sub(real{x,get_prec()});
 		}
-		template <typename T>
-		void in_place_sub(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
+		// Binary sub.
+		static real binary_sub(const real &a, const real &b)
 		{
-			in_place_sub(integer(n));
-		}
-		template <typename T>
-		void in_place_sub(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			if ((radix & (radix - 1u)) == 0u) {
-				::mpfr_sub_d(m_value,m_value,static_cast<double>(x),default_rnd);
-			} else {
-				in_place_sub(real(x,get_prec()));
-			}
-		}
-		// Binary subtraction.
-		template <typename T, typename U>
-		static real binary_sub(T &&a, U &&b, typename std::enable_if<
-			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
-			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
-		{
-			real retval(std::forward<T>(a));
-			retval -= std::forward<U>(b);
+			real retval{a};
+			retval -= b;
 			return retval;
 		}
-		template <typename T, typename U>
-		static real binary_sub(T &&a, U &&b, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_sub(const real &a, const T &b)
 		{
-			real retval(binary_sub(std::forward<U>(b),std::forward<T>(a)));
+			real retval{a};
+			retval -= b;
+			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_sub(const T &a, const real &b)
+		{
+			auto retval = binary_sub(b,a);
 			retval.negate();
 			return retval;
 		}
 		// In-place multiplication.
-		void in_place_mul(const real &r)
+		real &in_place_mul(const real &r)
 		{
 			if (r.get_prec() > get_prec()) {
 				*this = real{*this,r.get_prec()};
 			}
 			::mpfr_mul(m_value,m_value,r.m_value,default_rnd);
+			return *this;
 		}
-		void in_place_mul(const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		real &in_place_mul(const T &q)
 		{
-			::mpfr_mul_q(m_value,m_value,q.m_value,default_rnd);
+			auto v = q.get_mpq_view();
+			::mpfr_mul_q(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		void in_place_mul(const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		real &in_place_mul(const T &n)
 		{
-			::mpfr_mul_z(m_value,m_value,n.m_value,default_rnd);
+			auto v = n.get_mpz_view();
+			::mpfr_mul_z(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		template <typename T>
-		void in_place_mul(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		real &in_place_mul(const T &n)
 		{
-			::mpfr_mul_si(m_value,m_value,static_cast<long>(si),default_rnd);
+			return in_place_mul(mp_integer<>(n));
 		}
-		template <typename T>
-		void in_place_mul(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		real &in_place_mul(const T &x)
 		{
-			::mpfr_mul_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+			return in_place_mul(real{x,get_prec()});
 		}
-		template <typename T>
-		void in_place_mul(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
+		// Binary mul.
+		static real binary_mul(const real &a, const real &b)
 		{
-			in_place_mul(integer(n));
-		}
-		template <typename T>
-		void in_place_mul(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			if ((radix & (radix - 1u)) == 0u) {
-				::mpfr_mul_d(m_value,m_value,static_cast<double>(x),default_rnd);
-			} else {
-				in_place_mul(real(x,get_prec()));
-			}
-		}
-		// Binary multiplication.
-		template <typename T, typename U>
-		static real binary_mul(T &&a, U &&b, typename std::enable_if<
-			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
-			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
-		{
-			real retval(std::forward<T>(a));
-			retval *= std::forward<U>(b);
+			real retval{a};
+			retval *= b;
 			return retval;
 		}
-		template <typename T, typename U>
-		static real binary_mul(T &&a, U &&b, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_mul(const real &a, const T &b)
 		{
-			return binary_mul(std::forward<U>(b),std::forward<T>(a));
+			real retval{a};
+			retval *= b;
+			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_mul(const T &a, const real &b)
+		{
+			return binary_mul(b,a);
 		}
 		// In-place division.
-		void in_place_div(const real &r)
+		real &in_place_div(const real &r)
 		{
 			if (r.get_prec() > get_prec()) {
 				*this = real{*this,r.get_prec()};
 			}
 			::mpfr_div(m_value,m_value,r.m_value,default_rnd);
+			return *this;
 		}
-		void in_place_div(const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		real &in_place_div(const T &q)
 		{
-			::mpfr_div_q(m_value,m_value,q.m_value,default_rnd);
+			auto v = q.get_mpq_view();
+			::mpfr_div_q(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		void in_place_div(const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		real &in_place_div(const T &n)
 		{
-			::mpfr_div_z(m_value,m_value,n.m_value,default_rnd);
+			auto v = n.get_mpz_view();
+			::mpfr_div_z(m_value,m_value,v,default_rnd);
+			return *this;
 		}
-		template <typename T>
-		void in_place_div(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		real &in_place_div(const T &n)
 		{
-			::mpfr_div_si(m_value,m_value,static_cast<long>(si),default_rnd);
+			return in_place_div(mp_integer<>(n));
 		}
-		template <typename T>
-		void in_place_div(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		real &in_place_div(const T &x)
 		{
-			::mpfr_div_ui(m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
+			return in_place_div(real{x,get_prec()});
 		}
-		template <typename T>
-		void in_place_div(const T &n, typename std::enable_if<std::is_integral<T>::value && !integer::is_gmp_int<T>::value>::type * = nullptr)
+		// Binary div.
+		static real binary_div(const real &a, const real &b)
 		{
-			in_place_div(integer(n));
-		}
-		template <typename T>
-		void in_place_div(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			static_assert(std::numeric_limits<T>::radix > 0,"Invalid radix");
-			const unsigned radix = static_cast<unsigned>(std::numeric_limits<T>::radix);
-			if ((radix & (radix - 1u)) == 0u) {
-				::mpfr_div_d(m_value,m_value,static_cast<double>(x),default_rnd);
-			} else {
-				in_place_div(real(x,get_prec()));
-			}
-		}
-		// Binary division.
-		template <typename T, typename U>
-		static real binary_div(T &&a, U &&b, typename std::enable_if<
-			std::is_same<typename std::decay<T>::type,typename std::decay<U>::type>::value ||
-			std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
-		{
-			real retval(std::forward<T>(a));
-			retval /= std::forward<U>(b);
+			real retval{a};
+			retval /= b;
 			return retval;
 		}
-		template <typename T, typename U>
-		static real binary_div(T &&a, U &&b, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,real>::value
-			>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_div(const real &a, const T &b)
 		{
-			// Create retval from a, with same precision as b.
-			real retval(std::forward<T>(a),b.get_prec());
-			retval /= std::forward<U>(b);
+			real retval{a};
+			retval /= b;
+			return retval;
+		}
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static real binary_div(const T &a, const real &b)
+		{
+			// Create with same precision as b.
+			real retval{a,b.get_prec()};
+			retval /= b;
 			return retval;
 		}
 		// Equality.
@@ -548,57 +514,43 @@ class real: public detail::real_base<>
 		{
 			return (::mpfr_equal_p(r1.m_value,r2.m_value) != 0);
 		}
-		static bool binary_equality(const real &r, const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		static bool binary_equality(const real &r, const T &n)
 		{
 			if (r.is_nan()) {
 				return false;
 			}
-			return (::mpfr_cmp_z(r.m_value,n.m_value) == 0);
+			auto v = n.get_mpz_view();
+			return (::mpfr_cmp_z(r.m_value,v) == 0);
 		}
-		static bool binary_equality(const real &r, const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		static bool binary_equality(const real &r, const T &q)
 		{
 			if (r.is_nan()) {
 				return false;
 			}
-			return (::mpfr_cmp_q(r.m_value,q.m_value) == 0);
+			auto v = q.get_mpq_view();
+			return (::mpfr_cmp_q(r.m_value,v) == 0);
 		}
-		template <typename T>
-		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static bool binary_equality(const real &r, const T &n)
 		{
 			if (r.is_nan()) {
 				return false;
 			}
-			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) == 0);
+			return r == mp_integer<>(n);
 		}
-		template <typename T>
-		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_equality(const real &r, const T &x)
 		{
-			if (r.is_nan()) {
+			if (r.is_nan() || std::isnan(x)) {
 				return false;
 			}
-			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) == 0);
-		}
-		template <typename T>
-		static bool binary_equality(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = nullptr)
-		{
-			return binary_equality(r,integer(n));
-		}
-		template <typename T>
-		static bool binary_equality(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			if (r.is_nan() || boost::math::isnan(x)) {
-				return false;
-			}
-			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) == 0);
+			return r == real{x,r.get_prec()};
 		}
 		// NOTE: this is the reverse of above.
-		template <typename T>
-		static bool binary_equality(const T &x, const real &r, typename std::enable_if<
-			std::is_arithmetic<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static bool binary_equality(const T &x, const real &r)
 		{
 			return binary_equality(r,x);
 		}
@@ -607,85 +559,63 @@ class real: public detail::real_base<>
 		{
 			return (::mpfr_less_p(r1.m_value,r2.m_value) != 0);
 		}
-		static bool binary_less_than(const real &r, const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		static bool binary_less_than(const real &r, const T &q)
 		{
-			return (::mpfr_cmp_q(r.m_value,q.m_value) < 0);
+			auto v = q.get_mpq_view();
+			return (::mpfr_cmp_q(r.m_value,v) < 0);
 		}
-		static bool binary_less_than(const real &r, const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		static bool binary_less_than(const real &r, const T &n)
 		{
-			return (::mpfr_cmp_z(r.m_value,n.m_value) < 0);
+			auto v = n.get_mpz_view();
+			return (::mpfr_cmp_z(r.m_value,v) < 0);
 		}
-		template <typename T>
-		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static bool binary_less_than(const real &r, const T &n)
 		{
-			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) < 0);
+			return r < mp_integer<>(n);
 		}
-		template <typename T>
-		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_less_than(const real &r, const T &x)
 		{
-			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) < 0);
-		}
-		template <typename T>
-		static bool binary_less_than(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = nullptr)
-		{
-			return binary_less_than(r,integer(n));
-		}
-		template <typename T>
-		static bool binary_less_than(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) < 0);
+			return r < real{x,r.get_prec()};
 		}
 		// Binary less-than or equal.
 		static bool binary_leq(const real &r1, const real &r2)
 		{
 			return (::mpfr_lessequal_p(r1.m_value,r2.m_value) != 0);
 		}
-		static bool binary_leq(const real &r, const rational &q)
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		static bool binary_leq(const real &r, const T &q)
 		{
-			return (::mpfr_cmp_q(r.m_value,q.m_value) <= 0);
+			auto v = q.get_mpq_view();
+			return (::mpfr_cmp_q(r.m_value,v) <= 0);
 		}
-		static bool binary_leq(const real &r, const integer &n)
+		template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+		static bool binary_leq(const real &r, const T &n)
 		{
-			return (::mpfr_cmp_z(r.m_value,n.m_value) <= 0);
+			auto v = n.get_mpz_view();
+			return (::mpfr_cmp_z(r.m_value,v) <= 0);
 		}
-		template <typename T>
-		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static bool binary_leq(const real &r, const T &n)
 		{
-			return (::mpfr_cmp_si(r.m_value,static_cast<long>(n)) <= 0);
+			return r <= mp_integer<>(n);
 		}
-		template <typename T>
-		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
+		static bool binary_leq(const real &r, const T &x)
 		{
-			return (::mpfr_cmp_ui(r.m_value,static_cast<unsigned long>(n)) <= 0);
-		}
-		template <typename T>
-		static bool binary_leq(const real &r, const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = nullptr)
-		{
-			return binary_leq(r,integer(n));
-		}
-		template <typename T>
-		static bool binary_leq(const real &r, const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
-		{
-			return (::mpfr_cmp_d(r.m_value,static_cast<double>(x)) <= 0);
+			return r <= real{x,r.get_prec()};
 		}
 		// Inverse forms of less-than and leq.
-		template <typename T>
-		static bool binary_less_than(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
-			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static bool binary_less_than(const T &x, const real &r)
 		{
 			return !binary_leq(r,x);
 		}
-		template <typename T>
-		static bool binary_leq(const T &x, const real &r, typename std::enable_if<std::is_arithmetic<T>::value ||
-			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<is_interoperable_type<T>::value,int>::type = 0>
+		static bool binary_leq(const T &x, const real &r)
 		{
 			return !binary_less_than(r,x);
 		}
@@ -697,7 +627,7 @@ class real: public detail::real_base<>
 		template <typename T>
 		static bool check_nan(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr)
 		{
-			return boost::math::isnan(x);
+			return std::isnan(x);
 		}
 		template <typename T>
 		static bool check_nan(const T &, typename std::enable_if<!std::is_floating_point<T>::value>::type * = nullptr)
@@ -708,46 +638,6 @@ class real: public detail::real_base<>
 		static bool is_nan_comparison(const T &a, const U &b)
 		{
 			return (check_nan(a) || check_nan(b));
-		}
-		// Exponentiation.
-		real pow_impl(const real &r) const
-		{
-			real retval{0,get_prec()};
-			::mpfr_pow(retval.m_value,m_value,r.m_value,default_rnd);
-			return retval;
-		}
-		real pow_impl(const integer &n) const
-		{
-			real retval{0,get_prec()};
-			::mpfr_pow_z(retval.m_value,m_value,n.m_value,default_rnd);
-			return retval;
-		}
-		template <typename T>
-		real pow_impl(const T &x, typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr) const
-		{
-			return pow_impl(real{x,get_prec()});
-		}
-		template <typename T>
-		real pow_impl(const T &si, typename std::enable_if<std::is_signed<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr) const
-		{
-			real retval{0,get_prec()};
-			::mpfr_pow_si(retval.m_value,m_value,static_cast<long>(si),default_rnd);
-			return retval;
-		}
-		template <typename T>
-		real pow_impl(const T &ui, typename std::enable_if<std::is_unsigned<T>::value &&
-			integer::is_gmp_int<T>::value>::type * = nullptr) const
-		{
-			real retval{0,get_prec()};
-			::mpfr_pow_ui(retval.m_value,m_value,static_cast<unsigned long>(ui),default_rnd);
-			return retval;
-		}
-		template <typename T>
-		real pow_impl(const T &n, typename std::enable_if<std::is_integral<T>::value &&
-			!integer::is_gmp_int<T>::value>::type * = nullptr) const
-		{
-			return pow_impl(integer(n));
 		}
 	public:
 		/// Default constructor.
@@ -835,8 +725,8 @@ class real: public detail::real_base<>
 		}
 		/// Generic constructor.
 		/**
-		 * The supported types for \p T are the \ref interop "interoperable types", piranha::integer and piranha::rational.
-		 * Use of other types will result in a compile-time error.
+		 * \note
+		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
 		 * 
 		 * @param[in] x object used to construct \p this.
 		 * @param[in] prec desired significand precision.
@@ -844,11 +734,8 @@ class real: public detail::real_base<>
 		 * @throws std::invalid_argument if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
 		 */
-		template <typename T>
-		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec, typename std::enable_if<
-			integer::is_interop_type<T>::value ||
-			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type * = nullptr)
+		template <typename T, typename = generic_ctor_enabler<T>>
+		explicit real(const T &x, const ::mpfr_prec_t &prec = default_prec)
 		{
 			prec_check(prec);
 			::mpfr_init2(m_value,prec);
@@ -909,6 +796,7 @@ class real: public detail::real_base<>
 		{
 			return operator=(str.c_str());
 		}
+		// TODO fix docs below.
 		/// Assignment operator from C string.
 		/**
 		 * The parsing rules are the same as in the constructor from string. The precision of \p this
@@ -935,10 +823,13 @@ class real: public detail::real_base<>
 			}
 			return *this;
 		}
+		// TODO fix docs.
 		/// Generic assignment operator.
 		/**
-		 * The supported types for \p T are the \ref interop "interoperable types", piranha::integer and piranha::rational.
-		 * Use of other types will result in a compile-time error. The precision of \p this
+		 * \note
+		 * This assignment operator is enabled onlt if \p T is an \ref interop "interoperable type".
+		 * 
+		 * The precision of \p this
 		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
 		 * left it in an uninitialised state.
 		 * In that case, \p this will be re-initialised with the default precision.
@@ -947,10 +838,8 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p this.
 		 */
-		template <typename T>
-		typename std::enable_if<integer::is_interop_type<T>::value ||
-			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value,real &>::type operator=(const T &x)
+		template <typename T, typename = generic_ctor_enabler<T>>
+		real &operator=(const T &x)
 		{
 			if (!m_value->_mpfr_d) {
 				piranha_assert(!m_value->_mpfr_prec && !m_value->_mpfr_sign && !m_value->_mpfr_exp);
@@ -963,8 +852,10 @@ class real: public detail::real_base<>
 		}
 		/// Conversion operator.
 		/**
-		 * Extract an instance of type \p T from \p this. The supported types for \p T are the \ref interop "interoperable types", piranha::integer
-		 * and piranha::rational.
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * 
+		 * Extract an instance of type \p T from \p this.
 		 * 
 		 * Conversion to \p bool is always successful, and returns <tt>sign() != 0</tt>.
 		 * Conversion to the other integral types is truncated (i.e., rounded to zero), its success depending on whether or not
@@ -975,16 +866,14 @@ class real: public detail::real_base<>
 		 * corresponding non-finite values will be produced if the floating-point type supports them, otherwise
 		 * an error will be produced.
 		 * 
-		 * Conversion of finite values to piranha::rational will be exact. Conversion of non-finite values will result in runtime
+		 * Conversion of finite values to piranha::mp_rational will be exact. Conversion of non-finite values will result in runtime
 		 * errors.
 		 * 
 		 * @return result of the conversion to target type T.
 		 * 
 		 * @throws std::overflow_error if the conversion fails in one of the ways described above.
 		 */
-		template <typename T, typename = typename std::enable_if<integer::is_interop_type<T>::value ||
-			std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value>::type>
+		template <typename T, typename = cast_enabler<T>>
 			explicit operator T() const
 		{
 			return convert_to_impl<T>();
@@ -1000,10 +889,7 @@ class real: public detail::real_base<>
 			if (this == &other) {
 				return;
 			}
-			std::swap(m_value->_mpfr_d,other.m_value->_mpfr_d);
-			std::swap(m_value->_mpfr_prec,other.m_value->_mpfr_prec);
-			std::swap(m_value->_mpfr_sign,other.m_value->_mpfr_sign);
-			std::swap(m_value->_mpfr_exp,other.m_value->_mpfr_exp);
+			::mpfr_swap(m_value,other.m_value);
 		}
 		/// Sign.
 		/**
@@ -1084,37 +970,31 @@ class real: public detail::real_base<>
 		}
 		/// In-place addition.
 		/**
-		 * Add \p x to the current value of the real object. This template operator is activated only if
-		 * \p T is either real, piranha::rational, piranha::integer or an \ref interop "interoperable type".
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
 		 * 
-		 * If \p T is real, \p x is added in-place to \p this. If the precision \p prec of \p x is greater than the precision of \p this,
+		 * Add \p x to the current value of the real object.
+		 * 
+		 * If the precision \p prec of \p x is greater than the precision of \p this,
 		 * the precision of \p this is changed to \p prec before the operation takes place.
-		 * 
-		 * In-place addition of integral values and piranha::rational objects will use the corresponding MPFR routines.
-		 * 
-		 * If \p T is a floating-point type, the MPFR routine <tt>mpfr_add_d()</tt> is used if the radix of the type is a power
-		 * of 2, otherwise \p x will be converted to a real (using the same precision of \p this) before being added to \p this.
 		 * 
 		 * @param[in] x argument for the addition.
 		 * 
 		 * @return reference to \p this.
 		 * 
-		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Basic-Arithmetic-Functions
+		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
-		typename std::enable_if<
-			integer::is_interop_type<typename std::decay<T>::type>::value ||
-			std::is_same<real,typename std::decay<T>::type>::value ||
-			std::is_same<rational,typename std::decay<T>::type>::value ||
-			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator+=(T &&x)
+		auto operator+=(const T &x) -> decltype(this->in_place_add(x))
 		{
-			in_place_add(std::forward<T>(x));
-			return *this;
+			return in_place_add(x);
 		}
 		/// Generic in-place addition with piranha::real.
 		/**
-		 * Add a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
-		 * or piranha::rational, and \p R is piranha::real.
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Add a piranha::real in-place. 
 		 * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1122,38 +1002,35 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
-		template <typename T, typename R>
-		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value) &&
-			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
-			operator+=(T &x, R &&r)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator+=(T &x, const real &r)
 		{
-			// NOTE: for the supported types, assignment can never throw.
-			x = static_cast<T>(std::forward<R>(r) + x);
-			return x;
+			// NOTE: for the supported types, move assignment can never throw.
+			return x = static_cast<T>(r + x);
 		}
 		/// Generic binary addition involving piranha::real.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * The return type is always real.
+		 * The return type is always piranha::real.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x + y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
-			operator+(T &&x, U &&y)
+		friend auto operator+(const T &x, const U &y) -> decltype(real::binary_add(x,y))
 		{
-			return binary_add(std::forward<T>(x),std::forward<U>(y));
+			return binary_add(x,y);
 		}
 		/// Identity operator.
 		/**
@@ -1187,26 +1064,31 @@ class real: public detail::real_base<>
 		}
 		/// In-place subtraction.
 		/**
-		 * The same rules described in operator+=() apply.
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * 
+		 * Subtract \p x from the current value of the real object.
+		 * 
+		 * If the precision \p prec of \p x is greater than the precision of \p this,
+		 * the precision of \p this is changed to \p prec before the operation takes place.
 		 * 
 		 * @param[in] x argument for the subtraction.
 		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
-		typename std::enable_if<
-			integer::is_interop_type<typename std::decay<T>::type>::value ||
-			std::is_same<real,typename std::decay<T>::type>::value ||
-			std::is_same<rational,typename std::decay<T>::type>::value ||
-			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator-=(T &&x)
+		auto operator-=(const T &x) -> decltype(this->in_place_sub(x))
 		{
-			in_place_sub(std::forward<T>(x));
-			return *this;
+			return in_place_sub(x);
 		}
 		/// Generic in-place subtraction with piranha::real.
 		/**
-		 * Subtract a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
-		 * or piranha::rational, and \p R is piranha::real.
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Subtract a piranha::real in-place. 
 		 * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1214,37 +1096,34 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
-		template <typename T, typename R>
-		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value) &&
-			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
-			operator-=(T &x, R &&r)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator-=(T &x, const real &r)
 		{
-			x = static_cast<T>(x - std::forward<R>(r));
-			return x;
+			return x = static_cast<T>(x - r);
 		}
 		/// Generic binary subtraction involving piranha::real.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * The return type is always real.
+		 * The return type is always piranha::real.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x - y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
-			operator-(T &&x, U &&y)
+		friend auto operator-(const T &x, const U &y) -> decltype(real::binary_sub(x,y))
 		{
-			return binary_sub(std::forward<T>(x),std::forward<U>(y));
+			return binary_sub(x,y);
 		}
 		/// Negated copy.
 		/**
@@ -1280,26 +1159,31 @@ class real: public detail::real_base<>
 		}
 		/// In-place multiplication.
 		/**
-		 * The same rules described in operator+=() apply.
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * 
+		 * Multiply by \p x the current value of the real object.
+		 * 
+		 * If the precision \p prec of \p x is greater than the precision of \p this,
+		 * the precision of \p this is changed to \p prec before the operation takes place.
 		 * 
 		 * @param[in] x argument for the multiplication.
 		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
-		typename std::enable_if<
-			integer::is_interop_type<typename std::decay<T>::type>::value ||
-			std::is_same<real,typename std::decay<T>::type>::value ||
-			std::is_same<rational,typename std::decay<T>::type>::value ||
-			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator*=(T &&x)
+		auto operator*=(const T &x) -> decltype(this->in_place_mul(x))
 		{
-			in_place_mul(std::forward<T>(x));
-			return *this;
+			return in_place_mul(x);
 		}
-		/// Generic in-place multiplication with piranha::real.
+		/// Generic in-place multiplication by piranha::real.
 		/**
-		 * Multiply by a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
-		 * or piranha::rational, and \p R is piranha::real.
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Multiply by a piranha::real in-place. 
 		 * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1307,60 +1191,62 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
-		template <typename T, typename R>
-		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value) &&
-			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
-			operator*=(T &x, R &&r)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator*=(T &x, const real &r)
 		{
-			x = static_cast<T>(x * std::forward<R>(r));
-			return x;
+			return x = static_cast<T>(x * r);
 		}
 		/// Generic binary multiplication involving piranha::real.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * The return type is always real.
+		 * The return type is always piranha::real.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x * y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
-			operator*(T &&x, U &&y)
+		friend auto operator*(const T &x, const U &y) -> decltype(real::binary_mul(x,y))
 		{
-			return binary_mul(std::forward<T>(x),std::forward<U>(y));
+			return binary_mul(x,y);
 		}
 		/// In-place division.
 		/**
-		 * The same rules described in operator+=() apply.
+		 * \note
+		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * 
+		 * Divide by \p x the current value of the real object.
+		 * 
+		 * If the precision \p prec of \p x is greater than the precision of \p this,
+		 * the precision of \p this is changed to \p prec before the operation takes place.
 		 * 
 		 * @param[in] x argument for the division.
 		 * 
 		 * @return reference to \p this.
+		 * 
+		 * @throws unspecified any exception thrown by the contructor of piranha::mp_integer, if invoked.
 		 */
 		template <typename T>
-		typename std::enable_if<
-			integer::is_interop_type<typename std::decay<T>::type>::value ||
-			std::is_same<real,typename std::decay<T>::type>::value ||
-			std::is_same<rational,typename std::decay<T>::type>::value ||
-			std::is_same<integer,typename std::decay<T>::type>::value,real &>::type operator/=(T &&x)
+		auto operator/=(const T &x) -> decltype(this->in_place_div(x))
 		{
-			in_place_div(std::forward<T>(x));
-			return *this;
+			return in_place_div(x);
 		}
-		/// Generic in-place division with piranha::real.
+		/// Generic in-place division by piranha::real.
 		/**
-		 * Divide by a piranha::real in-place. This template operator is activated only if \p T is an \ref interop "interoperable type", piranha::integer
-		 * or piranha::rational, and \p R is piranha::real.
+		 * \note
+		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * 
+		 * Divide by a piranha::real in-place. 
 		 * This method will first compute <tt>x / r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1368,37 +1254,34 @@ class real: public detail::real_base<>
 		 * 
 		 * @return reference to \p x.
 		 * 
-		 * @throws unspecified any exception resulting from casting piranha::real to \p T.
+		 * @throws unspecified any exception resulting from the binary operator or by casting piranha::real to \p T.
 		 */
-		template <typename T, typename R>
-		friend typename std::enable_if<(integer::is_interop_type<T>::value || std::is_same<T,integer>::value ||
-			std::is_same<T,rational>::value) &&
-			std::is_same<typename std::decay<R>::type,real>::value,T &>::type
-			operator/=(T &x, R &&r)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator/=(T &x, const real &r)
 		{
-			x = static_cast<T>(x / std::forward<R>(r));
-			return x;
+			return x = static_cast<T>(x / r);
 		}
 		/// Generic binary division involving piranha::real.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * The return type is always real.
+		 * The return type is always piranha::real.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
 		 * 
 		 * @return <tt>x / y</tt>.
+		 * 
+		 * @throws unspecified any exception thrown by the corresponding in-place operator.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,real>::type
-			operator/(T &&x, U &&y)
+		friend auto operator/(const T &x, const U &y) -> decltype(real::binary_div(x,y))
 		{
-			return binary_div(std::forward<T>(x),std::forward<U>(y));
+			return binary_div(x,y);
 		}
 		/// Combined multiply-add.
 		/**
@@ -1433,13 +1316,13 @@ class real: public detail::real_base<>
 		}
 		/// Generic equality operator involving piranha::real.
 		/**
-		 * This template operator is activated if either:
-		 * 
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type" or piranha::integer or piranha::rational,
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
 		 * - both \p T and \p U are piranha::real.
 		 * 
-		 * Note that in all comparison operators, apart from operator!=(), if any operand is NaN \p false will be returned.
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1447,13 +1330,19 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		friend auto operator==(const T &x, const U &y) -> decltype(real::binary_equality(x,y))
 		{
 			return binary_equality(x,y);
 		}
 		/// Generic inequality operator involving piranha::real.
 		/**
-		 * The implementation is equivalent to the generic equality operator.
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1461,13 +1350,19 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		friend auto operator!=(const T &x, const U &y) -> decltype(!real::binary_equality(x,y))
 		{
 			return !binary_equality(x,y);
 		}
 		/// Generic less-than operator involving piranha::real.
 		/**
-		 * The implementation is equivalent to the generic equality operator.
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1475,7 +1370,7 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x < y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		friend auto operator<(const T &x, const U &y) -> decltype(real::binary_less_than(x,y))
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
@@ -1484,7 +1379,13 @@ class real: public detail::real_base<>
 		}
 		/// Generic less-than or equal operator involving piranha::real.
 		/**
-		 * The implementation is equivalent to the generic equality operator.
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1492,7 +1393,7 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x <= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		friend auto operator<=(const T &x, const U &y) -> decltype(real::binary_leq(x,y))
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
@@ -1501,7 +1402,13 @@ class real: public detail::real_base<>
 		}
 		/// Generic greater-than operator involving piranha::real.
 		/**
-		 * The implementation is equivalent to the generic equality operator.
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1509,16 +1416,22 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		friend auto operator>(const T &x, const U &y) -> decltype(y < x)
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
 			}
-			return (y < x);
+			return y < x;
 		}
 		/// Generic greater-than or equal operator involving piranha::real.
 		/**
-		 * The implementation is equivalent to the generic equality operator.
+		 * \note
+		 * This template operator is enabled only if either:
+		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
+		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - both \p T and \p U are piranha::real.
+		 * 
+		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
 		 * 
 		 * @param[in] x first argument
 		 * @param[in] y second argument.
@@ -1526,21 +1439,16 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		friend auto operator>=(const T &x, const U &y) -> decltype(y <= x)
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
 			}
-			return (y <= x);
+			return y <= x;
 		}
 		/// Exponentiation.
 		/**
-		 * Return <tt>this ** exp</tt>. This template method is activated only if \p T is real, an
-		 * \ref interop "interoperable type" or piranha::integer. Special values are handled as described in the
-		 * MPFR documentation.
-		 * 
-		 * The precision of the result is equal to the precision of \p this. In case \p T is a floating-point type, \p x will
-		 * be converted to a real with the same precision as \p this before the exponentiation takes place.
+		 * The operation is carried out with the maximum precision between \p this and \p exp.
 		 * 
 		 * @param[in] exp exponent.
 		 * 
@@ -1548,12 +1456,14 @@ class real: public detail::real_base<>
 		 * 
 		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Basic-Arithmetic-Functions
 		 */
-		template <typename T>
-		typename std::enable_if<std::is_same<real,T>::value ||
-			integer::is_interop_type<T>::value ||
-			std::is_same<T,integer>::value,real>::type pow(const T &exp) const
+		real pow(const real &exp) const
 		{
-			return pow_impl(exp);
+			real retval{0,get_prec()};
+			if (exp.get_prec() > get_prec()) {
+				retval.set_prec(exp.get_prec());
+			}
+			::mpfr_pow(retval.m_value,m_value,exp.m_value,default_rnd);
+			return retval;
 		}
 		/// Absolute value.
 		/**
@@ -1626,18 +1536,19 @@ class real: public detail::real_base<>
 				return os;
 			}
 			::mpfr_exp_t exp(0);
-			real::mpfr_str_manager m(::mpfr_get_str(nullptr,&exp,10,0,r.m_value,default_rnd));
-			if (!m.m_str) {
-				piranha_throw(std::invalid_argument,"unable to convert real to string");
+			char *cptr = ::mpfr_get_str(nullptr,&exp,10,0,r.m_value,default_rnd);
+			if (!cptr) {
+				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
 			}
+			smart_mpfr_str str(cptr,::mpfr_free_str);
 			// Copy into C++ string.
-			std::string cpp_str(m.m_str);
+			std::string cpp_str(str.get());
 			// Insert the radix point.
 			auto it = std::find_if(cpp_str.begin(),cpp_str.end(),[](char c) {return std::isdigit(c);});
 			if (it != cpp_str.end()) {
 				++it;
 				cpp_str.insert(it,'.');
-				if (exp == boost::integer_traits< ::mpfr_exp_t>::const_min) {
+				if (exp == std::numeric_limits< ::mpfr_exp_t>::min()) {
 					piranha_throw(std::overflow_error,"overflow in conversion of real to string");
 				}
 				--exp;
@@ -1647,24 +1558,6 @@ class real: public detail::real_base<>
 			}
 			os << cpp_str;
 			return os;
-		}
-		/// Overload input stream operator for piranha::real.
-		/**
-		 * Equivalent to extracting a line from the stream and then assigning it to \p r.
-		 * 
-		 * @param[in] is input stream.
-		 * @param[in,out] r real to which the contents of the stream will be assigned.
-		 * 
-		 * @return reference to \p is.
-		 * 
-		 * @throws unspecified any exception thrown by the assignment operator from string of piranha::real.
-		 */
-		friend std::istream &operator>>(std::istream &is, real &r)
-		{
-			std::string tmp_str;
-			std::getline(is,tmp_str);
-			r = tmp_str;
-			return is;
 		}
 	private:
 		::mpfr_t m_value;
@@ -1703,27 +1596,79 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for real pow.
+template <typename T, typename U>
+using real_pow_enabler = typename std::enable_if<
+	(std::is_same<real,T>::value && is_real_interoperable_type<U>::value) ||
+	(std::is_same<real,U>::value && is_real_interoperable_type<T>::value) ||
+	(std::is_same<real,T>::value && std::is_same<real,U>::value)
+>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::pow() functor for piranha::real.
 /**
- * This specialisation is activated when \p T is piranha::real.
- * The result will be computed via piranha::real::pow().
+ * This specialisation is activated when one of the arguments is piranha::real
+ * and the other is either piranha::real or an interoperable type for piranha::real.
+ *
+ * The implementation follows these rules:
+ * - if base and exponent are both piranha::real, then piranha::real::pow() is used;
+ * - otherwise, the non-real argument is converted to piranha::real and then piranha::real::pow()
+ *   is used.
  */
 template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<std::is_same<T,real>::value>::type>
+struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 {
-	/// Call operator.
+	/// Call operator, real--real overload.
 	/**
-	 * The exponentiation will be computed via piranha::real::pow().
-	 * 
 	 * @param[in] r base.
 	 * @param[in] x exponent.
 	 * 
 	 * @return \p r to the power of \p x.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::real::pow().
 	 */
-	template <typename T2, typename U2>
-	auto operator()(const T2 &r, const U2 &x) const -> decltype(r.pow(x))
+	real operator()(const real &r, const real &x) const
 	{
 		return r.pow(x);
+	}
+	/// Call operator, real base overload.
+	/**
+	 * @param[in] r base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p r to the power of \p x.
+	 *
+	 * @throws unspecified any exception thrown by piranha::real::pow() or by
+	 * the invoked piranha::real constructor.
+	 */
+	template <typename T2>
+	real operator()(const real &r, const T2 &x) const
+	{
+		return r.pow(real{x});
+	}
+	/// Call operator, real exponent overload.
+	/**
+	 * @param[in] r base.
+	 * @param[in] x exponent.
+	 * 
+	 * @return \p r to the power of \p x.
+	 * 
+	 * @throws unspecified any exception thrown by piranha::real::pow() or by
+	 * the invoked piranha::real constructor.
+	 */
+	template <typename T2>
+	real operator()(const T2 &r, const real &x) const
+	{
+		return real{r}.pow(x);
 	}
 };
 
@@ -1841,7 +1786,7 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 	 *
 	 * @throws std::invalid_argument if the conversion is not successful.
 	 */
-	integer operator()(const T &x) const
+	mp_integer<> operator()(const T &x) const
 	{
 		if (x.is_nan() || x.is_inf()) {
 			piranha_throw(std::invalid_argument,"invalid real value");
@@ -1849,7 +1794,7 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 		auto x_copy(x);
 		x_copy.truncate();
 		if (x == x_copy) {
-			return integer(x);
+			return mp_integer<>(x);
 		}
 		piranha_throw(std::invalid_argument,"invalid real value");
 	}
@@ -1870,7 +1815,7 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::ty
 	 * @return copy of \p x.
 	 */
 	template <typename U>
-	T operator()(const T &x, const std::string &, const integer &, const U &) const
+	T operator()(const T &x, const std::string &, const mp_integer<> &, const U &) const
 	{
 		return x;
 	}
@@ -1883,7 +1828,7 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::ty
 template <typename T, typename U>
 struct binomial_impl<T,U,typename std::enable_if<
 	std::is_same<real,T>::value &&
-	(std::is_integral<U>::value || std::is_same<integer,U>::value)
+	(std::is_integral<U>::value || std::is_same<mp_integer<>,U>::value)
 	>::type>
 {
 	/// Call operator.
