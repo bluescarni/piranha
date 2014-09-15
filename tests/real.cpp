@@ -1374,6 +1374,11 @@ struct check_binary_equality_integral
 		BOOST_CHECK(!(real{"-nan",4} == T(3)));
 		BOOST_CHECK(real{} != T(1));
 		BOOST_CHECK(T(1) != real{});
+		BOOST_CHECK((is_equality_comparable<real,T>::value));
+		BOOST_CHECK((is_equality_comparable<T,real>::value));
+		BOOST_CHECK((is_equality_comparable<real>::value));
+		BOOST_CHECK((!is_equality_comparable<real,std::string>::value));
+		BOOST_CHECK((std::is_same<bool,decltype(real{} == real{})>::value));
 	}
 };
 
@@ -1405,6 +1410,9 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 	BOOST_CHECK(!(mp_integer<>() == real{"inf"}));
 	BOOST_CHECK(!(real{"-inf"} == mp_integer<>(5)));
 	BOOST_CHECK(real{1} != mp_integer<>());
+	BOOST_CHECK((is_equality_comparable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_equality_comparable<mp_integer<16>,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} == mp_integer<8>{})>::value));
 	// With rational.
 	BOOST_CHECK_EQUAL(mp_rational<>(1),real{1});
 	BOOST_CHECK_EQUAL(real{1},mp_rational<>(1));
@@ -1417,6 +1425,9 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 	BOOST_CHECK(!(mp_rational<>() == real{"inf"}));
 	BOOST_CHECK(!(real{"-inf"} == mp_rational<>(5)));
 	BOOST_CHECK(real{1} != mp_rational<>(3,4));
+	BOOST_CHECK((is_equality_comparable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_equality_comparable<mp_rational<16>,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} == mp_rational<8>{})>::value));
 	// With floating-point types.
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
 		std::numeric_limits<float>::has_quiet_NaN)
@@ -1435,6 +1446,9 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 		BOOST_CHECK(!(std::numeric_limits<float>::quiet_NaN() == real{"-nan"}));
 		BOOST_CHECK(std::numeric_limits<float>::quiet_NaN() != real{"-nan"});
 		BOOST_CHECK(0.5f != real{1});
+		BOOST_CHECK((is_equality_comparable<real,float>::value));
+		BOOST_CHECK((is_equality_comparable<float,real>::value));
+		BOOST_CHECK((std::is_same<bool,decltype(real{} == float{})>::value));
 	}
 	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
 		std::numeric_limits<double>::has_quiet_NaN)
@@ -1454,6 +1468,9 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 		BOOST_CHECK(std::numeric_limits<double>::quiet_NaN() != real{"-nan"});
 		BOOST_CHECK(0.5 != real{1});
 	}
+	BOOST_CHECK((is_equality_comparable<real,long double>::value));
+	BOOST_CHECK((is_equality_comparable<long double,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} == static_cast<long double>(0))>::value));
 	boost::fusion::for_each(integral_values,check_binary_equality_integral());
 }
 
@@ -1487,6 +1504,10 @@ struct check_binary_comparison_integral
 		BOOST_CHECK(!(T(0) > real{"nan"}));
 		BOOST_CHECK(!(real{"nan"} >= T(0)));
 		BOOST_CHECK(!(T(0) >= real{"nan"}));
+		BOOST_CHECK((is_less_than_comparable<real>::value));
+		BOOST_CHECK((is_less_than_comparable<real,T>::value));
+		BOOST_CHECK((is_less_than_comparable<T,real>::value));
+		BOOST_CHECK((std::is_same<bool,decltype(real{-1} < T(0))>::value));
 	}
 };
 
@@ -1511,10 +1532,18 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 	BOOST_CHECK(!(real{"inf"} <= real{"nan"}));
 	BOOST_CHECK(!(real{"nan"} >= real{"inf"}));
 	// Integer and rational.
+	BOOST_CHECK((is_less_than_comparable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_less_than_comparable<mp_integer<>,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} < mp_integer<>{})>::value));
 	BOOST_CHECK(real{4} > mp_integer<>(3));
 	BOOST_CHECK(real{4} >= mp_integer<>(4));
 	BOOST_CHECK(real{4} < mp_integer<>(5));
 	BOOST_CHECK(real{4} <= mp_integer<>(5));
+	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
+	BOOST_CHECK(real{4} > mp_integer<8>(3));
+	BOOST_CHECK(real{4} >= mp_integer<16>(4));
+	BOOST_CHECK(real{4} < mp_integer<32>(5));
+	BOOST_CHECK(real{4} <= mp_integer<8>(5));
 	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
 	BOOST_CHECK(mp_integer<>{4} > real{2});
 	BOOST_CHECK(!(real{"nan"} > mp_integer<>(3)));
@@ -1531,10 +1560,18 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
 	BOOST_CHECK(real{"-inf"} < mp_integer<>(3));
 	BOOST_CHECK(real{"-inf"} <= mp_integer<>(3));
+	BOOST_CHECK((is_less_than_comparable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_less_than_comparable<mp_rational<>,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} < mp_rational<>{})>::value));
 	BOOST_CHECK(real{4} > mp_rational<>(3));
 	BOOST_CHECK(real{4} >= mp_rational<>(4));
 	BOOST_CHECK(real{4} < mp_rational<>(5));
 	BOOST_CHECK(real{4} <= mp_rational<>(5));
+	BOOST_CHECK(real{"inf"} > mp_rational<>(3));
+	BOOST_CHECK(real{4} > mp_rational<16>(3));
+	BOOST_CHECK(real{4} >= mp_rational<8>(4));
+	BOOST_CHECK(real{4} < mp_rational<32>(5));
+	BOOST_CHECK(real{4} <= mp_rational<16>(5));
 	BOOST_CHECK(real{"inf"} > mp_rational<>(3));
 	BOOST_CHECK(mp_rational<>{4} > real{2});
 	BOOST_CHECK(!(real{"nan"} > mp_rational<>(3)));
@@ -1595,6 +1632,9 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 		BOOST_CHECK(!(real{"nan"} <= std::numeric_limits<double>::quiet_NaN()));
 	}
 	boost::fusion::for_each(integral_values,check_binary_comparison_integral());
+	BOOST_CHECK((is_less_than_comparable<real,long double>::value));
+	BOOST_CHECK((is_less_than_comparable<mp_rational<>,long double>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(0.l < mp_rational<>{})>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_stream_test)
