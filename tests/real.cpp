@@ -910,10 +910,14 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") - r2),"nan");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_integer<>(1)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) - r2),"-1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_integer<16>(1)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(1) - r2),"-1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} - mp_integer<>(1)),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) - real{"inf"}),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_rational<>(1,2)),"1.50");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) - r2),"-1.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_rational<16>(1,2)),"1.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<32>(1,2) - r2),"-1.50");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5f - real{1,4}),"-5.00e-1");
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1,4} - .5f),"5.00e-1");
@@ -953,6 +957,7 @@ struct check_in_place_mul_integral
 	{
 		real r{"1.5",4};
 		r *= value;
+		BOOST_CHECK((std::is_same<real &,decltype(r *= value)>::value));
 		BOOST_CHECK_EQUAL(r.get_prec(),::mpfr_prec_t(4));
 		if (value > T(0)) {
 			BOOST_CHECK_EQUAL("6.40e1",boost::lexical_cast<std::string>(r));
@@ -966,6 +971,12 @@ struct check_in_place_mul_integral
 		other *= real("2.5");
 		BOOST_CHECK_EQUAL(T(5),other);
 		BOOST_CHECK_THROW(other *= real("inf"),std::overflow_error);
+		BOOST_CHECK((std::is_same<T &,decltype(other *= real("1.",4))>::value));
+		BOOST_CHECK((is_multipliable_in_place<real,real>::value));
+		BOOST_CHECK((is_multipliable_in_place<real,T>::value));
+		BOOST_CHECK((is_multipliable_in_place<T,real>::value));
+		BOOST_CHECK((!is_multipliable_in_place<const T,real>::value));
+		BOOST_CHECK((!is_multipliable_in_place<real,std::string>::value));
 	}
 };
 
@@ -985,6 +996,13 @@ struct check_binary_mul_integral
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"inf"}),"-inf");
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * value),"-inf");
 		}
+		BOOST_CHECK((std::is_same<real,decltype(real{1} * value)>::value));
+		BOOST_CHECK((std::is_same<real,decltype(value * real{1})>::value));
+		BOOST_CHECK((std::is_same<real,decltype(real{1} * real{1})>::value));
+		BOOST_CHECK((is_multipliable<real,T>::value));
+		BOOST_CHECK((is_multipliable<T,real>::value));
+		BOOST_CHECK((is_multipliable<real,real>::value));
+		BOOST_CHECK((!is_multipliable<real,std::string>::value));
 	}
 };
 
@@ -1004,6 +1022,14 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.50000000000000000000000000000000000");
 	r1 *= mp_integer<>(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00000000000000000000000000000000000");
+	BOOST_CHECK((is_multipliable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_multipliable<real,mp_integer<16>>::value));
+	BOOST_CHECK((is_multipliable<mp_integer<16>,real>::value));
+	BOOST_CHECK((!is_multipliable_in_place<const mp_integer<16>,real>::value));
+	BOOST_CHECK((is_multipliable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_multipliable<real,mp_rational<16>>::value));
+	BOOST_CHECK((is_multipliable<mp_rational<16>,real>::value));
+	BOOST_CHECK((!is_multipliable_in_place<const mp_rational<16>,real>::value));
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q *= real(2);
@@ -1026,6 +1052,11 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 		float x = 4.f;
 		x *= real(".5");
 		BOOST_CHECK_EQUAL(x,2.f);
+		BOOST_CHECK((std::is_same<real &,decltype(r1 *= 2.f)>::value));
+		BOOST_CHECK((is_multipliable_in_place<real,float>::value));
+		BOOST_CHECK((is_multipliable_in_place<float,real>::value));
+		BOOST_CHECK((!is_multipliable_in_place<real,std::string>::value));
+		BOOST_CHECK((std::is_same<float &,decltype(x *= real(".5"))>::value));
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r(1);
@@ -1078,10 +1109,14 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") * r2),"nan");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_integer<>(2)),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(2) * r2),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_integer<16>(2)),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(2) * r2),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * mp_integer<>(1)),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) * real{"inf"}),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_rational<>(1,2)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) * r2),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_rational<16>(1,2)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<32>(1,2) * r2),"1.00");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5f * real{1,4}),"5.00e-1");
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1,4} * .5f),"5.00e-1");
@@ -1112,6 +1147,7 @@ struct check_in_place_div_integral
 	{
 		real r{"63",4};
 		r /= value;
+		BOOST_CHECK((std::is_same<real &,decltype(r /= value)>::value));
 		BOOST_CHECK_EQUAL(r.get_prec(),::mpfr_prec_t(4));
 		if (value > T(0)) {
 			BOOST_CHECK_EQUAL("1.50",boost::lexical_cast<std::string>(r));
@@ -1132,6 +1168,12 @@ struct check_in_place_div_integral
 		r = -1;
 		r /= T(0);
 		BOOST_CHECK_EQUAL("-inf",boost::lexical_cast<std::string>(r));
+		BOOST_CHECK((std::is_same<T &,decltype(other /= real("1.",4))>::value));
+		BOOST_CHECK((is_divisible_in_place<real,real>::value));
+		BOOST_CHECK((is_divisible_in_place<real,T>::value));
+		BOOST_CHECK((is_divisible_in_place<T,real>::value));
+		BOOST_CHECK((!is_divisible_in_place<const T,real>::value));
+		BOOST_CHECK((!is_divisible_in_place<real,std::string>::value));
 	}
 };
 
@@ -1151,6 +1193,13 @@ struct check_binary_div_integral
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(value * real{"inf"}),"-inf");
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * value),"-inf");
 		}
+		BOOST_CHECK((std::is_same<real,decltype(real{1} / value)>::value));
+		BOOST_CHECK((std::is_same<real,decltype(value / real{1})>::value));
+		BOOST_CHECK((std::is_same<real,decltype(real{1} / real{1})>::value));
+		BOOST_CHECK((is_divisible<real,T>::value));
+		BOOST_CHECK((is_divisible<T,real>::value));
+		BOOST_CHECK((is_divisible<real,real>::value));
+		BOOST_CHECK((!is_divisible<real,std::string>::value));
 	}
 };
 
@@ -1186,6 +1235,14 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	r1 /= mp_rational<>();
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"nan");
 	r1 = 12;
+	BOOST_CHECK((is_divisible<real,mp_integer<>>::value));
+	BOOST_CHECK((is_divisible<real,mp_integer<16>>::value));
+	BOOST_CHECK((is_divisible<mp_integer<16>,real>::value));
+	BOOST_CHECK((!is_divisible_in_place<const mp_integer<16>,real>::value));
+	BOOST_CHECK((is_divisible<real,mp_rational<>>::value));
+	BOOST_CHECK((is_divisible<real,mp_rational<16>>::value));
+	BOOST_CHECK((is_divisible<mp_rational<16>,real>::value));
+	BOOST_CHECK((!is_divisible_in_place<const mp_rational<16>,real>::value));
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q /= real(2);
@@ -1216,6 +1273,11 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 		float x = 4.f;
 		x /= real(".5");
 		BOOST_CHECK_EQUAL(x,8.f);
+		BOOST_CHECK((std::is_same<real &,decltype(r1 /= 2.f)>::value));
+		BOOST_CHECK((is_divisible_in_place<real,float>::value));
+		BOOST_CHECK((is_divisible_in_place<float,real>::value));
+		BOOST_CHECK((!is_divisible_in_place<real,std::string>::value));
+		BOOST_CHECK((std::is_same<float &,decltype(x /= real(".5"))>::value));
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r(1);
@@ -1268,11 +1330,14 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") / r2),"nan");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_integer<>(2)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(2) / r2),"1.00");
-
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_integer<16>(2)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(2) / r2),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} / mp_integer<>(1)),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) / real{"inf"}),"0.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_rational<>(1,2)),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) / r2),"2.50e-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_rational<16>(1,2)),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<8>(1,2) / r2),"2.50e-1");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(.5f / real{1,4}),"5.00e-1");
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{1,4} / .5f),"2.00");
