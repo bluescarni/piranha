@@ -1661,22 +1661,6 @@ BOOST_AUTO_TEST_CASE(real_stream_test)
 		BOOST_CHECK_EQUAL(tmp,oss.str());
 	}
 }
-/*
-struct check_pow_integral
-{
-	template <typename T>
-	void operator()(const T &) const
-	{
-		BOOST_CHECK_EQUAL(real{4}.pow(T(2)),16);
-		BOOST_CHECK_EQUAL(real{4}.pow(T(0)),1);
-		BOOST_CHECK_EQUAL(real{-3}.pow(T(1)),-3);
-		if (std::is_signed<T>::value) {
-			BOOST_CHECK_EQUAL(real{"inf"}.pow(T(-1)),0);
-			BOOST_CHECK_EQUAL(real{2}.pow(T(-2)),real{"0.25"});
-		}
-		BOOST_CHECK(real{"-nan"}.pow(T(2)).is_nan());
-	}
-};
 
 BOOST_AUTO_TEST_CASE(real_pow_test)
 {
@@ -1687,51 +1671,24 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK_EQUAL(r1.pow(real{"-inf"}),0);
 	BOOST_CHECK_EQUAL(real{"inf"}.pow(real{"inf"}),real{"inf"});
 	BOOST_CHECK(real{-1}.pow(real{"1.5"}).is_nan());
-	BOOST_CHECK_EQUAL(real{2}.pow(mp_integer<>(2)),4);
-	BOOST_CHECK_EQUAL(real{2}.pow(mp_integer<>()),1);
-	BOOST_CHECK_EQUAL(real{2}.pow(mp_integer<>(-1)),mp_rational<>(1,2));
-	BOOST_CHECK(real{"nan"}.pow(mp_integer<>(1)).is_nan());
-	BOOST_CHECK_EQUAL(real{"inf"}.pow(mp_integer<>(-1)),0);
-	BOOST_CHECK_EQUAL(real{"inf"}.pow(mp_integer<>(-1)),0);
-	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
-		std::numeric_limits<float>::has_quiet_NaN)
-	{
-		BOOST_CHECK_EQUAL(real{2}.pow(2.f),4);
-		BOOST_CHECK_EQUAL(real{4}.pow(.5f),2);
-		BOOST_CHECK_EQUAL(real{2}.pow(-std::numeric_limits<float>::infinity()),0);
-		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<float>::infinity()),1);
-		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<float>::quiet_NaN()),1);
-	}
-	if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
-		std::numeric_limits<double>::has_quiet_NaN)
-	{
-		BOOST_CHECK_EQUAL(real{2}.pow(2.),4);
-		BOOST_CHECK_EQUAL(real{4}.pow(.5),2);
-		BOOST_CHECK_EQUAL(real{2}.pow(-std::numeric_limits<double>::infinity()),0);
-		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<double>::infinity()),1);
-		BOOST_CHECK_EQUAL(real{1}.pow(std::numeric_limits<double>::quiet_NaN()),1);
-	}
-	boost::fusion::for_each(integral_values,check_pow_integral());
+	// Check precision handling.
+	BOOST_CHECK_EQUAL(r1.pow(real(2,5)).get_prec(),5);
+	BOOST_CHECK_EQUAL(real(2,3).pow(r1).get_prec(),4);
 	// Check the math:: function.
-	BOOST_CHECK_EQUAL(math::pow(real{4},real{"0.5"}),real{2});
-	BOOST_CHECK(math::pow(real{-1},real{"1.5"}).is_nan());
-	BOOST_CHECK_EQUAL(real{2}.pow(mp_integer<>(2)),4);
-	BOOST_CHECK_NO_THROW(math::pow(real{2},2.f));
-	BOOST_CHECK_NO_THROW(math::pow(real{2},2.));
-	BOOST_CHECK_EQUAL(real{2}.pow(3),8);
 	BOOST_CHECK((is_exponentiable<real,real>::value));
-	BOOST_CHECK((is_exponentiable<const real,real>::value));
-	BOOST_CHECK((is_exponentiable<real &,real &>::value));
-	BOOST_CHECK((is_exponentiable<real const &,real &>::value));
-	BOOST_CHECK((is_exponentiable<real,mp_integer<>>::value));
 	BOOST_CHECK((is_exponentiable<real,int>::value));
-	BOOST_CHECK((is_exponentiable<real,char>::value));
-	BOOST_CHECK((is_exponentiable<real,double>::value));
-	BOOST_CHECK((!is_exponentiable<real,std::string>::value));
-	BOOST_CHECK((!is_exponentiable<real &,std::string>::value));
-	BOOST_CHECK((!is_exponentiable<real &,std::string &>::value));
+	BOOST_CHECK((is_exponentiable<int,real>::value));
+	BOOST_CHECK((is_exponentiable<real,long double>::value));
+	BOOST_CHECK((is_exponentiable<long double,real>::value));
+	BOOST_CHECK((is_exponentiable<real,mp_integer<16>>::value));
+	BOOST_CHECK((is_exponentiable<mp_integer<8>,real>::value));
+	BOOST_CHECK((is_exponentiable<real,mp_rational<16>>::value));
+	BOOST_CHECK((is_exponentiable<mp_rational<8>,real>::value));
+	BOOST_CHECK_EQUAL(math::pow(real{4},mp_rational<>{1,2}),real{2});
+	BOOST_CHECK_EQUAL(math::pow(2.l,real{4}),16);
+	BOOST_CHECK_EQUAL(math::pow(real{3},mp_rational<>(1,4)),math::pow(real{3},real{mp_rational<>(1,4)}));
 }
-*/
+
 struct no_fma{};
 
 BOOST_AUTO_TEST_CASE(real_fma_test)
