@@ -989,7 +989,7 @@ class real: public detail::real_base<>
 		 * \note
 		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
 		 * 
-		 * Add a piranha::real in-place. 
+		 * Add a piranha::real in-place.
 		 * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1083,7 +1083,7 @@ class real: public detail::real_base<>
 		 * \note
 		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
 		 * 
-		 * Subtract a piranha::real in-place. 
+		 * Subtract a piranha::real in-place.
 		 * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1178,7 +1178,7 @@ class real: public detail::real_base<>
 		 * \note
 		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
 		 * 
-		 * Multiply by a piranha::real in-place. 
+		 * Multiply by a piranha::real in-place.
 		 * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1241,7 +1241,7 @@ class real: public detail::real_base<>
 		 * \note
 		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
 		 * 
-		 * Divide by a piranha::real in-place. 
+		 * Divide by a piranha::real in-place.
 		 * This method will first compute <tt>x / r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
 		 * @param[in,out] x first argument.
@@ -1648,7 +1648,9 @@ struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 	template <typename T2>
 	real operator()(const real &r, const T2 &x) const
 	{
-		return r.pow(real{x});
+		// NOTE: init with the same precision as r in order
+		// to maintain the same precision in the result.
+		return r.pow(real{x,r.get_prec()});
 	}
 	/// Call operator, real exponent overload.
 	/**
@@ -1663,7 +1665,7 @@ struct pow_impl<T,U,detail::real_pow_enabler<T,U>>
 	template <typename T2>
 	real operator()(const T2 &r, const real &x) const
 	{
-		return real{r}.pow(x);
+		return real{r,x.get_prec()}.pow(x);
 	}
 };
 

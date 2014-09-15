@@ -1687,6 +1687,9 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK_EQUAL(math::pow(real{4},mp_rational<>{1,2}),real{2});
 	BOOST_CHECK_EQUAL(math::pow(2.l,real{4}),16);
 	BOOST_CHECK_EQUAL(math::pow(real{3},mp_rational<>(1,4)),math::pow(real{3},real{mp_rational<>(1,4)}));
+	// Check precision handling.
+	BOOST_CHECK_EQUAL(math::pow(real{4,4},4).get_prec(),4);
+	BOOST_CHECK_EQUAL(math::pow(4,real{4,4}).get_prec(),4);
 }
 
 struct no_fma{};
