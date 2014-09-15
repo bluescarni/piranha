@@ -136,7 +136,7 @@ class mp_rational
 		using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
 		// Enabler for in-place arithmetic operations with interop on the left.
 		template <typename T>
-		using generic_in_place_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
+		using generic_in_place_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,int>::type;
 		// Generic constructor implementation.
 		template <typename T>
 		void construct_from_interoperable(const T &x, typename std::enable_if<std::is_integral<T>::value>::type * = nullptr)

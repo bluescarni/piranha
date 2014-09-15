@@ -514,6 +514,9 @@ struct plus_tester
 		BOOST_CHECK((is_addable_in_place<int,q_type>::value));
 		BOOST_CHECK((is_addable_in_place<int_type,q_type>::value));
 		BOOST_CHECK((is_addable_in_place<double,q_type>::value));
+		// Check const fails.
+		BOOST_CHECK((!is_addable_in_place<const double,q_type>::value));
+		BOOST_CHECK((!is_addable_in_place<const int,q_type>::value));
 		// Check operations with self.
 		a += a.num();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"9/2");
@@ -722,6 +725,9 @@ struct minus_tester
 		BOOST_CHECK((is_subtractable_in_place<int,q_type>::value));
 		BOOST_CHECK((is_subtractable_in_place<int_type,q_type>::value));
 		BOOST_CHECK((is_subtractable_in_place<double,q_type>::value));
+		// Check const fails.
+		BOOST_CHECK((!is_subtractable_in_place<const double,q_type>::value));
+		BOOST_CHECK((!is_subtractable_in_place<const int,q_type>::value));
 		// Check operations with self.
 		a -= a.num();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"1/2");
@@ -907,6 +913,8 @@ struct mult_tester
 		BOOST_CHECK((is_multipliable_in_place<int,q_type>::value));
 		BOOST_CHECK((is_multipliable_in_place<int_type,q_type>::value));
 		BOOST_CHECK((is_multipliable_in_place<double,q_type>::value));
+		BOOST_CHECK((!is_multipliable_in_place<const double,q_type>::value));
+		BOOST_CHECK((!is_multipliable_in_place<const int,q_type>::value));
 		// Check operations with self.
 		a *= a.num();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"25/2");
@@ -1101,6 +1109,8 @@ struct div_tester
 		BOOST_CHECK((is_divisible_in_place<int,q_type>::value));
 		BOOST_CHECK((is_divisible_in_place<int_type,q_type>::value));
 		BOOST_CHECK((is_divisible_in_place<double,q_type>::value));
+		BOOST_CHECK((!is_divisible_in_place<const double,q_type>::value));
+		BOOST_CHECK((!is_divisible_in_place<const int,q_type>::value));
 		// Check operations with self.
 		a /= a.num();
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(a),"1/5");
