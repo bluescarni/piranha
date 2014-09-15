@@ -106,16 +106,9 @@ struct is_real_interoperable_type
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // TODO:
-// - check the swap.
-// - check return types of the operators and check that in-place with real is not supported for const T.
-// - check occurrences of piranha::integer, integer, piranha::rational and rational.
 // - fix the move semantics if possible (i.e., valid but unspecified state), and remove all the stuff for reviving
 //   moved-from objects,
-// - maybe we can replace the raii str holder with a unique_ptr with custom deleter,
-// - fix use of isdigit.
 // - should probably review all the precision handling stuff, it's really easy to forget about something :/
-// - here we are using a straight mpfr_t as underlying member, which is an array. Doest it matter? Should we use
-//   the corresponding struct for consistency? Does it matter for performance?
 // - if we overhaul the tests, put random precision values as well.
 // - maybe we should have a setter as well for the global default precision. It would need to be an atomic
 //   variable, and we need perf measures to understand the performance impact of this.
@@ -154,6 +147,8 @@ class real: public detail::real_base<>
 				piranha_throw(std::invalid_argument,"invalid string input for real");
 			}
 		}
+		// The idea here is that we use the largest integral and fp types supported by the MPFR api for construction,
+		// and down-cast as needed.
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		void construct_from_generic(const T &x)
 		{
@@ -263,7 +258,7 @@ class real: public detail::real_base<>
 			// Get string representation.
 			::mpfr_exp_t exp(0);
 			char *cptr = ::mpfr_get_str(nullptr,&exp,10,0,m_value,default_rnd);
-			if (!cptr) {
+			if (unlikely(!cptr)) {
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
 			}
 			smart_mpfr_str str_ptr(cptr,::mpfr_free_str);
@@ -959,7 +954,7 @@ class real: public detail::real_base<>
 		}
 		/// Truncate in-place.
 		/**
-		 * Set \p this to the next representable integer toward zero. If \p this is infinity or NaN, there will be no effect.
+		 * Set \p this to the next representable integer towards zero. If \p this is infinity or NaN, there will be no effect.
 		 */
 		void truncate()
 		{
@@ -1537,14 +1532,14 @@ class real: public detail::real_base<>
 			}
 			::mpfr_exp_t exp(0);
 			char *cptr = ::mpfr_get_str(nullptr,&exp,10,0,r.m_value,default_rnd);
-			if (!cptr) {
+			if (unlikely(!cptr)) {
 				piranha_throw(std::overflow_error,"error in conversion of real to rational: the call to the MPFR function failed");
 			}
 			smart_mpfr_str str(cptr,::mpfr_free_str);
 			// Copy into C++ string.
 			std::string cpp_str(str.get());
 			// Insert the radix point.
-			auto it = std::find_if(cpp_str.begin(),cpp_str.end(),[](char c) {return std::isdigit(c);});
+			auto it = std::find_if(cpp_str.begin(),cpp_str.end(),[](char c) {return detail::is_digit(c);});
 			if (it != cpp_str.end()) {
 				++it;
 				cpp_str.insert(it,'.');
