@@ -210,7 +210,7 @@ class mp_rational
 		}
 		// Enabler for conversion operator.
 		template <typename T>
-		using cast_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
+		using cast_enabler = generic_ctor_enabler<T>;
 		// Conversion operator implementation.
 		template <typename Float>
 		Float convert_to_impl(typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr) const
