@@ -36,6 +36,7 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <vector>
 
 #include "../src/detail/mpfr.hpp"
 #include "../src/environment.hpp"
@@ -117,16 +118,27 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-4.,4}),"-4.00");
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-.5,4}),"-5.00e-1");
 	}
+	if (std::numeric_limits<long double>::is_iec559 && std::numeric_limits<long double>::radix == 2) {
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{0.l,4}),"0.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{4.l,4}),"4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-4.l,4}),"-4.00");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{-.5l,4}),"-5.00e-1");
+	}
 	// Construction from integral types.
 	boost::fusion::for_each(integral_values,check_integral_construction());
 	// Construction from integer and rational.
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(),4}),"0.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(2),4}),"2.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(-10),4}),"-1.00e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<16>(-10),4}),"-1.00e1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(),4}),"0.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(2),4}),"2.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(-10),4}),"-1.00e1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(-1,2),4}),"-5.00e-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<32>(-1,2),4}),"-5.00e-1");
+	// Type trait.
+	BOOST_CHECK((!std::is_constructible<real,std::unordered_map<int,std::string>>::value));
+	BOOST_CHECK((!std::is_constructible<real,std::vector<double>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_sign_test)
@@ -285,6 +297,18 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 		r1 = -.5;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
 	}
+	r1 = real{0.,4};
+	if (std::numeric_limits<long double>::is_iec559 && std::numeric_limits<long double>::radix == 2) {
+		r1 = 0.l;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00");
+		r1 = 4.l;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00");
+		r1 = -.5l;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00e-1");
+		real tmp(std::move(r1));
+		r1 = -.5l;
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+	}
 	// Assignment from integrals.
 	boost::fusion::for_each(integral_values,check_integral_assignment());
 	// Assignment from integer and rational.
@@ -294,12 +318,19 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 	real{std::move(r1)};
 	r1 = mp_integer<>(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00000000000000000000000000000000000");
+	r1 = mp_integer<16>(2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00000000000000000000000000000000000");
 	r1.set_prec(4);
 	r1 = mp_rational<>(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"5.00e-1");
 	real{std::move(r1)};
 	r1 = -mp_rational<>(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+	r1 = -mp_rational<32>(1,2);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
+	// Type traits.
+	BOOST_CHECK((std::is_assignable<real &,int>::value));
+	BOOST_CHECK((!std::is_assignable<real &,std::vector<int>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_is_inf_nan_test)
@@ -371,6 +402,7 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"-1.43111e4"}),-14311);
 	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"1.43119e4"}),14311);
 	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"-1.43119e4"}),-14311);
+	BOOST_CHECK_EQUAL(static_cast<mp_integer<32>>(real{"-1.43119e4"}),-14311);
 	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"inf"}),std::overflow_error);
 	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"-inf"}),std::overflow_error);
 	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"nan"}),std::overflow_error);
@@ -413,6 +445,24 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 		BOOST_CHECK_THROW((void)static_cast<float>(real{"inf"}),std::overflow_error);
 		BOOST_CHECK_THROW((void)static_cast<float>(real{"-inf"}),std::overflow_error);
 	}
+	// FP conversions. Long double.
+	if (std::numeric_limits<long double>::is_iec559 && std::numeric_limits<long double>::radix == 2) {
+		BOOST_CHECK_EQUAL(static_cast<long double>(real{}),0.l);
+		BOOST_CHECK_EQUAL(static_cast<long double>(real{-10.l}),-10.l);
+		BOOST_CHECK_EQUAL(static_cast<long double>(real{0.5l}),.5l);
+	}
+	if (std::numeric_limits<long double>::has_quiet_NaN) {
+		BOOST_CHECK(static_cast<long double>(real{"nan"}) != std::numeric_limits<long double>::quiet_NaN());
+	} else {
+		BOOST_CHECK_THROW((void)static_cast<long double>(real{"nan"}),std::overflow_error);
+	}
+	if (std::numeric_limits<long double>::has_infinity) {
+		BOOST_CHECK_EQUAL(static_cast<long double>(real{"inf"}),std::numeric_limits<long double>::infinity());
+		BOOST_CHECK_EQUAL(static_cast<long double>(real{"-inf"}),-std::numeric_limits<long double>::infinity());
+	} else {
+		BOOST_CHECK_THROW((void)static_cast<long double>(real{"inf"}),std::overflow_error);
+		BOOST_CHECK_THROW((void)static_cast<long double>(real{"-inf"}),std::overflow_error);
+	}
 	// Rational.
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{}),0);
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{1}),1);
@@ -421,9 +471,13 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"-0.5"}),mp_rational<>(-1,2));
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"0.03125"}),mp_rational<>(1,32));
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"-7.59375"}),mp_rational<>(243,-32));
+	BOOST_CHECK_EQUAL(static_cast<mp_rational<16>>(real{"-7.59375"}),mp_rational<16>(243,-32));
 	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"nan"}),std::overflow_error);
 	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"inf"}),std::overflow_error);
 	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"-inf"}),std::overflow_error);
+	// Type traits.
+	BOOST_CHECK((std::is_constructible<float,real>::value));
+	BOOST_CHECK((!std::is_constructible<std::vector<float>,real>::value));
 }
 
 struct check_in_place_add_integral
