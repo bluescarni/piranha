@@ -531,6 +531,9 @@ struct check_binary_add_integral
 		BOOST_CHECK((is_addable<T,real>::value));
 		BOOST_CHECK((is_addable<real,real>::value));
 		BOOST_CHECK((!is_addable<real,std::string>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} + value).get_prec(),4);
+		BOOST_CHECK_EQUAL((value + real{3,4}).get_prec(),4);
 	}
 };
 
@@ -558,6 +561,14 @@ BOOST_AUTO_TEST_CASE(real_addition_test)
 	BOOST_CHECK((is_addable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_addable<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_addable_in_place<const mp_rational<16>,real>::value));
+	// Precision handling.
+	BOOST_CHECK_EQUAL((real{3,4} + mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_integer<>() + real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} + mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_rational<>() + real{3,4}).get_prec(),4);
+	auto r1a = real{3,4};
+	BOOST_CHECK_EQUAL((r1a += mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a += mp_rational<>()).get_prec(),4);
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q += real("-1.5");
@@ -585,6 +596,11 @@ BOOST_AUTO_TEST_CASE(real_addition_test)
 		BOOST_CHECK((is_addable_in_place<float,real>::value));
 		BOOST_CHECK((!is_addable_in_place<real,std::string>::value));
 		BOOST_CHECK((std::is_same<float &,decltype(x += real(".5"))>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} + 0.f).get_prec(),4);
+		BOOST_CHECK_EQUAL((0.f + real{3,4}).get_prec(),4);
+		r1a = real{3,4};
+		BOOST_CHECK_EQUAL((r1a += 0.f).get_prec(),4);
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r;
@@ -788,6 +804,9 @@ struct check_binary_sub_integral
 		BOOST_CHECK((is_subtractable<T,real>::value));
 		BOOST_CHECK((is_subtractable<real,real>::value));
 		BOOST_CHECK((!is_subtractable<real,std::string>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} - value).get_prec(),4);
+		BOOST_CHECK_EQUAL((value - real{3,4}).get_prec(),4);
 	}
 };
 
@@ -819,6 +838,14 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 	BOOST_CHECK((std::is_same<real,decltype(real{} - mp_rational<>{})>::value));
 	BOOST_CHECK((std::is_same<real,decltype(mp_rational<>{} - real{})>::value));
 	BOOST_CHECK((!is_subtractable_in_place<const mp_rational<16>,real>::value));
+	// Precision handling.
+	BOOST_CHECK_EQUAL((real{3,4} - mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_integer<>() - real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} - mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_rational<>() - real{3,4}).get_prec(),4);
+	auto r1a = real{3,4};
+	BOOST_CHECK_EQUAL((r1a -= mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a -= mp_rational<>()).get_prec(),4);
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q -= real("1.5");
@@ -841,6 +868,11 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 		float x = 4.f;
 		x -= real(".5");
 		BOOST_CHECK_EQUAL(x,3.5f);
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} - 0.f).get_prec(),4);
+		BOOST_CHECK_EQUAL((0.f - real{3,4}).get_prec(),4);
+		r1a = real{3,4};
+		BOOST_CHECK_EQUAL((r1a -= 0.f).get_prec(),4);
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r;
@@ -1003,6 +1035,9 @@ struct check_binary_mul_integral
 		BOOST_CHECK((is_multipliable<T,real>::value));
 		BOOST_CHECK((is_multipliable<real,real>::value));
 		BOOST_CHECK((!is_multipliable<real,std::string>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} * value).get_prec(),4);
+		BOOST_CHECK_EQUAL((value * real{3,4}).get_prec(),4);
 	}
 };
 
@@ -1030,6 +1065,14 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 	BOOST_CHECK((is_multipliable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_multipliable<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_multipliable_in_place<const mp_rational<16>,real>::value));
+	// Precision handling.
+	BOOST_CHECK_EQUAL((real{3,4} * mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_integer<>() * real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} * mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_rational<>() * real{3,4}).get_prec(),4);
+	auto r1a = real{3,4};
+	BOOST_CHECK_EQUAL((r1a *= mp_integer<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a *= mp_rational<>()).get_prec(),4);
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q *= real(2);
@@ -1057,6 +1100,11 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 		BOOST_CHECK((is_multipliable_in_place<float,real>::value));
 		BOOST_CHECK((!is_multipliable_in_place<real,std::string>::value));
 		BOOST_CHECK((std::is_same<float &,decltype(x *= real(".5"))>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} * 0.f).get_prec(),4);
+		BOOST_CHECK_EQUAL((0.f * real{3,4}).get_prec(),4);
+		r1a = real{3,4};
+		BOOST_CHECK_EQUAL((r1a *= 0.f).get_prec(),4);
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r(1);
@@ -1200,6 +1248,9 @@ struct check_binary_div_integral
 		BOOST_CHECK((is_divisible<T,real>::value));
 		BOOST_CHECK((is_divisible<real,real>::value));
 		BOOST_CHECK((!is_divisible<real,std::string>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} / value).get_prec(),4);
+		BOOST_CHECK_EQUAL((value / real{3,4}).get_prec(),4);
 	}
 };
 
@@ -1243,6 +1294,14 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	BOOST_CHECK((is_divisible<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_divisible<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_divisible_in_place<const mp_rational<16>,real>::value));
+	// Precision handling.
+	BOOST_CHECK_EQUAL((real{3,4} / mp_integer<>(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_integer<>(1) / real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} / mp_rational<>(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((mp_rational<>(1) / real{3,4}).get_prec(),4);
+	auto r1a = real{3,4};
+	BOOST_CHECK_EQUAL((r1a /= mp_integer<>(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a /= mp_rational<>(1)).get_prec(),4);
 	// Rational and integer on the left.
 	mp_rational<> q(1,2);
 	q /= real(2);
@@ -1278,6 +1337,11 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 		BOOST_CHECK((is_divisible_in_place<float,real>::value));
 		BOOST_CHECK((!is_divisible_in_place<real,std::string>::value));
 		BOOST_CHECK((std::is_same<float &,decltype(x /= real(".5"))>::value));
+		// Precision handling.
+		BOOST_CHECK_EQUAL((real{3,4} / 1.f).get_prec(),4);
+		BOOST_CHECK_EQUAL((1.f / real{3,4}).get_prec(),4);
+		r1a = real{3,4};
+		BOOST_CHECK_EQUAL((r1a /= 1.f).get_prec(),4);
 	}
 	if (std::numeric_limits<float>::has_infinity) {
 		real r(1);
