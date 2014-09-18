@@ -1952,18 +1952,24 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 		// NOTE: at the moment we have nothing to check this against.
 		real tmp = math::binomial(real{x},real{y});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(real{x},mp_rational<>{y});
+		tmp = math::binomial(real{x,real::default_prec + 1},mp_rational<>{y});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(mp_rational<>{x},real{y});
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
+		tmp = math::binomial(mp_rational<>{x},real{y,real::default_prec + 1});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(static_cast<int>(x),real{y});
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
+		tmp = math::binomial(static_cast<int>(x),real{y,real::default_prec + 1});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(real{x},static_cast<int>(y));
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
+		tmp = math::binomial(real{x,real::default_prec + 1},static_cast<int>(y));
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(real{x},y);
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
+		tmp = math::binomial(real{x,real::default_prec + 1},y);
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(x,real{y});
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
+		tmp = math::binomial(x,real{y,real::default_prec + 1});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
 		// Prec handling.
 		tmp = math::binomial(real{x,real::default_prec + 1},real{y});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
