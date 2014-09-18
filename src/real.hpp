@@ -1418,7 +1418,7 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x > y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend auto operator>(const T &x, const U &y) -> decltype(y < x)
+		friend auto operator>(const T &x, const U &y) -> decltype(real::binary_less_than(y,x))
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
@@ -1441,7 +1441,7 @@ class real: public detail::real_base<>
 		 * @return \p true if <tt>x >= y</tt>, \p false otherwise.
 		 */
 		template <typename T, typename U>
-		friend auto operator>=(const T &x, const U &y) -> decltype(y <= x)
+		friend auto operator>=(const T &x, const U &y) -> decltype(real::binary_leq(y,x))
 		{
 			if (is_nan_comparison(x,y)) {
 				return false;
