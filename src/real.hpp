@@ -963,6 +963,16 @@ class real: public detail::real_base<>
 			}
 			::mpfr_trunc(m_value,m_value);
 		}
+		/// Truncated copy.
+		/**
+		 * @return a truncated copy of \p this.
+		 */
+		real truncated() const
+		{
+			real retval{*this};
+			retval.truncate();
+			return retval;
+		}
 		/// In-place addition.
 		/**
 		 * \note
@@ -1460,6 +1470,13 @@ class real: public detail::real_base<>
 			::mpfr_pow(retval.m_value,m_value,exp.m_value,default_rnd);
 			return retval;
 		}
+		real gamma() const
+		{
+			real retval{0,get_prec()};
+			::mpfr_gamma(retval.m_value,m_value,default_rnd);
+			return retval;
+		}
+		real binomial(const real &) const;
 		/// Absolute value.
 		/**
 		 * @return absolute value of \p this.
@@ -1603,6 +1620,10 @@ using real_pow_enabler = typename std::enable_if<
 	(std::is_same<real,U>::value && is_real_interoperable_type<T>::value) ||
 	(std::is_same<real,T>::value && std::is_same<real,U>::value)
 >::type;
+
+// Binomial follows the same rules as pow.
+template <typename T, typename U>
+using real_binomial_enabler = real_pow_enabler<T,U>;
 
 }
 
@@ -1877,6 +1898,50 @@ inline real::~real()
 		piranha_assert(!m_value->_mpfr_sign);
 		piranha_assert(!m_value->_mpfr_exp);
 	}
+}
+
+inline real real::binomial(const real &y) const
+{
+	// TODO: precision handling.
+	if (unlikely(is_nan() || is_inf() || y.is_nan() || y.is_inf())) {
+		piranha_throw(std::invalid_argument,"cannot compute binomial coefficient with non-finite real argument(s)");
+	}
+	const bool neg_int_x = truncated() == (*this) && sign() < 0,
+		neg_int_y = y.truncated() == y && y.sign() < 0,
+		neg_int_x_y = ((*this) - y).truncated() == ((*this) - y) && ((*this) - y).sign() < 0;
+	const unsigned mask = unsigned(neg_int_x) + (unsigned(neg_int_y) << 1u) + (unsigned(neg_int_x_y) << 2u);
+	auto compute_3_gamma = [](const real &a, const real &b, const real &c) {
+		return a.gamma() / (b.gamma() * c.gamma());
+	};
+	switch (mask) {
+		case 0u:
+			// Case 0 is the non-special one, use the default implementation.
+			return compute_3_gamma((*this) + 1,y + 1,(*this) - y + 1);
+		// NOTE: case 1 is not possible: x < 0, y > 0 implies x - y < 0 always.
+		case 2u:
+		case 4u:
+			// These are finite numerators with infinite denominators.
+			return real{0};
+		// NOTE: case 6 is not possible: x > 0, y < 0 implies x - y > 0 always.
+		case 3u:
+		{
+			// 3 and 5 are the cases with 1 inf in num and 1 inf in den. Use the transformation
+			// formula to make them finite.
+			// NOTE: the phase here is really just a sign, but it seems tricky to compute this exactly
+			// due to potential rounding errors. We are attempting to err on the safe side by using pow()
+			// here.
+			const auto phase = math::pow(-1,(*this) + 1) / math::pow(-1,y + 1);
+			return compute_3_gamma(-y,-(*this),(*this) - y + 1) * phase;
+		}
+		case 5u:
+		{
+			const auto phase = math::pow(-1,(*this) - y + 1) / math::pow(-1,(*this) + 1);
+			return compute_3_gamma(-((*this) - y),y + 1,-(*this)) * phase;
+		}
+	}
+	// Case 7 returns zero -> from inf / (inf * inf) it becomes a / (b * inf) after the transform.
+	// NOTE: put it here so the compiler does not complain about missing return statement in the switch block.
+	return real{0};
 }
 
 }

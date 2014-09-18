@@ -1933,6 +1933,14 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 	BOOST_CHECK_EQUAL(math::binomial(real{-34.5},0),1);
 	BOOST_CHECK_THROW(math::binomial(real(3),-2),std::invalid_argument);
 	BOOST_CHECK_THROW(math::binomial(real(0),-2),std::invalid_argument);
+	// Negative k.
+	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-4}),-3);
+	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-10}),-36);
+	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-1}),0);
+	BOOST_CHECK_EQUAL(real{3}.binomial(real{-1}),0);
+	BOOST_CHECK_EQUAL(real{10}.binomial(real{-1}),0);
+	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-3}),1);
+	BOOST_CHECK_EQUAL(real{-1}.binomial(real{-1}),1);
 }
 
 BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
