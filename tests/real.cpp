@@ -31,6 +31,7 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <complex>
+#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -48,6 +49,9 @@
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
 static_assert(piranha::real::default_prec < MPFR_PREC_MAX,
 	"The unit tests for piranha::real assume that the default precision is strictly less-than the maximum MPFR precision.");
+
+static std::mt19937 rng;
+static const int ntries = 1000;
 
 using namespace piranha;
 
@@ -1921,34 +1925,87 @@ BOOST_AUTO_TEST_CASE(real_abs_test)
 
 BOOST_AUTO_TEST_CASE(real_binomial_test)
 {
+	// Type traits and return values.
+	BOOST_CHECK((has_binomial<real,real>::value));
 	BOOST_CHECK((has_binomial<real,int>::value));
 	BOOST_CHECK((has_binomial<real,char>::value));
 	BOOST_CHECK((has_binomial<real,unsigned>::value));
 	BOOST_CHECK((has_binomial<real,long>::value));
 	BOOST_CHECK((!has_binomial<real,std::string>::value));
+	BOOST_CHECK((has_binomial<long,real>::value));
+	BOOST_CHECK((has_binomial<double,real>::value));
+	BOOST_CHECK((has_binomial<mp_rational<>,real>::value));
+	BOOST_CHECK((has_binomial<mp_rational<16>,real>::value));
 	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},2))>::value));
-	BOOST_CHECK_EQUAL(math::binomial(real(-14),12),mp_integer<>("5200300"));
-	BOOST_CHECK_EQUAL(math::binomial(real{"3.5"},2),real{"4.375"});
-	BOOST_CHECK_EQUAL(math::binomial(real{"-3.5"},2),real{"7.875"});
-	BOOST_CHECK(math::abs(math::binomial(real{"-3.5"},5) - real{"-35.191"}) < real{".01"});
-	BOOST_CHECK(math::abs(math::binomial(real{"3.5"},5) - real{"-0.0273"}) < real{".001"});
-	BOOST_CHECK(math::abs(math::binomial(real{".1"},5) - real{"0.0161"}) < real{".001"});
-	BOOST_CHECK(math::abs(math::binomial(-real{".1"},5) - real{"-0.0244"}) < real{".001"});
-	BOOST_CHECK_EQUAL(math::binomial(real{},2),0);
-	BOOST_CHECK_EQUAL(math::binomial(real{},20),0);
-	BOOST_CHECK_EQUAL(math::binomial(real{.1},0),1);
-	BOOST_CHECK_EQUAL(math::binomial(real{-34.5},0),1);
-	BOOST_CHECK_THROW(math::binomial(real(3),-2),std::invalid_argument);
-	BOOST_CHECK_THROW(math::binomial(real(0),-2),std::invalid_argument);
-	// Negative k.
-	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-4}),-3);
-	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-10}),-36);
-	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-1}),0);
-	BOOST_CHECK_EQUAL(real{3}.binomial(real{-1}),0);
-	BOOST_CHECK_EQUAL(real{10}.binomial(real{-1}),0);
-	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-3}),1);
-	BOOST_CHECK_EQUAL(real{-1}.binomial(real{-1}),1);
-std::cout << real{"12345.6"}.binomial(real{"7.89"}) << '\n';
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(2,real{}))>::value));
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(mp_rational<>{},real{}))>::value));
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},mp_integer<>{}))>::value));
+	// Invalid values.
+	BOOST_CHECK_THROW(math::binomial(real{"inf"},4),std::invalid_argument);
+	BOOST_CHECK_THROW(math::binomial(real{"nan"},4),std::invalid_argument);
+	BOOST_CHECK_THROW(math::binomial(4,real{"nan"}),std::invalid_argument);
+	BOOST_CHECK_THROW(math::binomial(4,real{"inf"}),std::invalid_argument);
+	// Some random testing.
+	std::uniform_real_distribution<double> rdist(-100.,100.);
+	for (int i = 0; i < ntries; ++i) {
+		const double x = rdist(rng), y = rdist(rng);
+		// NOTE: at the moment we have nothing to check this against.
+		real tmp = math::binomial(real{x},real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(real{x},mp_rational<>{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(mp_rational<>{x},real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(static_cast<int>(x),real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(real{x},static_cast<int>(y));
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(real{x},y);
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(x,real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		// Prec handling.
+		tmp = math::binomial(real{x,real::default_prec + 1},real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		BOOST_CHECK(tmp.get_prec() == real::default_prec + 1);
+		tmp = math::binomial(real{x},real{y,real::default_prec + 1});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		BOOST_CHECK(tmp.get_prec() == real::default_prec + 1);
+	}
+	std::uniform_int_distribution<int> idist(-100,100);
+	for (int i = 0; i < ntries; ++i) {
+		const int x = idist(rng), y = idist(rng);
+		real tmp = math::binomial(real{x},real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(real{x},y);
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		tmp = math::binomial(x,real{y});
+		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
+		// Check against mp_integer.
+		const auto int_res = math::binomial(x,y);
+		tmp = math::binomial(real{x},real{y});
+		BOOST_CHECK((int_res == 0 || tmp.abs() < 1E30) || ((tmp - int_res) / int_res).abs() < 1E-30);
+	}
+	// No negative integers.
+	// This coincides with mpmath and wolfram alpha (roughly).
+	BOOST_CHECK_EQUAL(math::binomial(real{"12345.6"},real{"7.89"}),real{"5.99111763882803518776029814739451218e27"});
+	// Inf denominator.
+	BOOST_CHECK_EQUAL(math::binomial(real{"12345.6"},real{"-2"}),real{});
+	BOOST_CHECK_EQUAL(math::binomial(real{"1234"},real{"-2"}),real{});
+	BOOST_CHECK_EQUAL(math::binomial(real("12345.6",real::default_prec + 1),real{"-2"}).get_prec(),
+		real::default_prec + 1);
+	BOOST_CHECK_EQUAL(math::binomial(real("1234"),real("-2",real::default_prec + 1)).get_prec(),
+		real::default_prec + 1);
+	// Case 3.
+	BOOST_CHECK_EQUAL(math::binomial(real{"-3"},real{"-5"}),real{"5.99999999999999999999999999999999846"});
+	// Case 5.
+	BOOST_CHECK_EQUAL(math::binomial(real{"-3"},real{"2"}),real{"5.99999999999999999999999999999999846"});
+	// Case 7.
+	BOOST_CHECK_EQUAL(math::binomial(real{"-3"},real{"-2"}),real{});
+	BOOST_CHECK_EQUAL(math::binomial(real("-3",real::default_prec + 1),real{"-2"}).get_prec(),
+		real::default_prec + 1);
+	BOOST_CHECK_EQUAL(math::binomial(real("-3"),real("-2",real::default_prec + 1)).get_prec(),
+		real::default_prec + 1);
 }
 
 BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
