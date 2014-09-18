@@ -1487,6 +1487,16 @@ class real: public detail::real_base<>
 			::mpfr_lgamma(retval.m_value,&sign,m_value,default_rnd);
 			return retval;
 		}
+		/// Exponential.
+		/**
+		 * @return the exponential of \p this.
+		 */
+		real exp() const
+		{
+			real retval{0,get_prec()};
+			::mpfr_exp(retval.m_value,m_value,default_rnd);
+			return retval;
+		}
 		real binomial(const real &) const;
 		/// Absolute value.
 		/**
@@ -1852,27 +1862,61 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::ty
 
 /// Specialisation of the piranha::math::binomial() functor for piranha::real.
 /**
- * This specialisation is enabled if \p T is piranha::real and \p U is an integral type or piranha::integer.
+ * This specialisation is activated when one of the arguments is piranha::real
+ * and the other is either piranha::real or an interoperable type for piranha::real.
+ *
+ * The implementation follows these rules:
+ * - if top and bottom are both piranha::real, then piranha::real::binomial() is used;
+ * - otherwise, the non-real argument is converted to piranha::real and then piranha::real::binomial()
+ *   is used.
  */
 template <typename T, typename U>
-struct binomial_impl<T,U,typename std::enable_if<
-	std::is_same<real,T>::value &&
-	(std::is_integral<U>::value || std::is_same<mp_integer<>,U>::value)
-	>::type>
+struct binomial_impl<T,U,detail::real_binomial_enabler<T,U>>
 {
-	/// Call operator.
+	/// Call operator, real--real overload.
 	/**
-	 * @param[in] x top number.
-	 * @param[in] k bottom number.
-	 * 
-	 * @return \p x choose \p k.
-	 * 
-	 * @throws std::invalid_argument if \p k is negative.
-	 * @throws unspecified any exception resulting from arithmetic operations involving piranha::real.
+	 * @param[in] x top.
+	 * @param[in] y bottom.
+	 *
+	 * @return \p x choose \p y.
+	 *
+	 * @throws unspecified any exception thrown by piranha::real::binomial().
 	 */
-	real operator()(const real &x, const U &k) const
+	real operator()(const real &x, const real &y) const
 	{
-		return detail::generic_binomial(x,k);
+		return x.binomial(y);
+	}
+	/// Call operator, real top overload.
+	/**
+	 * @param[in] x top.
+	 * @param[in] y bottom.
+	 *
+	 * @return \p x choose \p y.
+	 *
+	 * @throws unspecified any exception thrown by piranha::real::binomial() or by the invoked
+	 * piranha::real constructor.
+	 */
+	template <typename T2>
+	real operator()(const real &x, const T2 &y) const
+	{
+		// NOTE: init with the same precision as r in order
+		// to maintain the same precision in the result.
+		return x.binomial(real{y,x.get_prec()});
+	}
+	/// Call operator, real bottom overload.
+	/**
+	 * @param[in] x top.
+	 * @param[in] y bottom.
+	 *
+	 * @return \p x choose \p y.
+	 *
+	 * @throws unspecified any exception thrown by piranha::real::binomial() or by the invoked
+	 * piranha::real constructor.
+	 */
+	template <typename T2>
+	real operator()(const T2 &x, const real &y) const
+	{
+		return real{x,y.get_prec()}.binomial(y);
 	}
 };
 
@@ -1911,29 +1955,75 @@ inline real::~real()
 	}
 }
 
+namespace detail
+{
+
+// Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints.
+inline real real_compute_3_gamma(const real &a, const real &b, const real &c, const ::mpfr_prec_t &prec)
+{
+	// Here we should never enter with negative ints.
+	piranha_assert(a.sign() >= 0 || a.truncated() != a);
+	piranha_assert(b.sign() >= 0 || b.truncated() != b);
+	piranha_assert(c.sign() >= 0 || c.truncated() != c);
+	const real pi = real{0,prec}.pi();
+	real tmp0(0), tmp1(1);
+	if (a.sign() < 0) {
+		tmp0 -= (1 - a).lgamma();
+		tmp1 *= pi / (a * pi).sin();
+	} else {
+		tmp0 += a.lgamma();
+	}
+	if (b.sign() < 0) {
+		tmp0 += (1 - b).lgamma();
+		tmp1 *= (b * pi).sin() / pi;
+	} else {
+		tmp0 -= b.lgamma();
+	}
+	if (c.sign() < 0) {
+		tmp0 += (1 - c).lgamma();
+		tmp1 *= (c * pi).sin() / pi;
+	} else {
+		tmp0 -= c.lgamma();
+	}
+	return tmp0.exp() * tmp1;
+}
+
+}
+
 /// Binomial coefficient.
+/**
+ * This method will return \p this choose \p y. Any combination of real values is supported.
+ * The implementation uses the logarithm of the gamma function, thus the result will not be in
+ * general exact (even if \p this and \p y are integral values).
+ *
+ * The returned value will have the maximum precision between \p this and \p y.
+ *
+ * @param[in] y bottom value.
+ *
+ * @return \p this choose \p y.
+ *
+ * @throws std::invalid_argument if either \p this or \p y is not finite.
+ * @throws unspecified any exception resulting from arithmetic operations on piranha::real.
+ */
 inline real real::binomial(const real &y) const
 {
-	// TODO: precision handling.
 	if (unlikely(is_nan() || is_inf() || y.is_nan() || y.is_inf())) {
 		piranha_throw(std::invalid_argument,"cannot compute binomial coefficient with non-finite real argument(s)");
 	}
+	const ::mpfr_prec_t max_prec = std::max< ::mpfr_prec_t>(get_prec(),y.get_prec());
 	const bool neg_int_x = truncated() == (*this) && sign() < 0,
 		neg_int_y = y.truncated() == y && y.sign() < 0,
 		neg_int_x_y = ((*this) - y).truncated() == ((*this) - y) && ((*this) - y).sign() < 0;
 	const unsigned mask = unsigned(neg_int_x) + (unsigned(neg_int_y) << 1u) + (unsigned(neg_int_x_y) << 2u);
-	auto compute_3_gamma = [](const real &a, const real &b, const real &c) {
-		return a.gamma() / (b.gamma() * c.gamma());
-	};
 	switch (mask) {
 		case 0u:
 			// Case 0 is the non-special one, use the default implementation.
-			return compute_3_gamma((*this) + 1,y + 1,(*this) - y + 1);
+			return detail::real_compute_3_gamma((*this) + 1,y + 1,(*this) - y + 1,max_prec);
 		// NOTE: case 1 is not possible: x < 0, y > 0 implies x - y < 0 always.
 		case 2u:
 		case 4u:
 			// These are finite numerators with infinite denominators.
-			return real{0};
+			return real{0,max_prec};
 		// NOTE: case 6 is not possible: x > 0, y < 0 implies x - y > 0 always.
 		case 3u:
 		{
@@ -1943,17 +2033,17 @@ inline real real::binomial(const real &y) const
 			// due to potential rounding errors. We are attempting to err on the safe side by using pow()
 			// here.
 			const auto phase = math::pow(-1,(*this) + 1) / math::pow(-1,y + 1);
-			return compute_3_gamma(-y,-(*this),(*this) - y + 1) * phase;
+			return detail::real_compute_3_gamma(-y,-(*this),(*this) - y + 1,max_prec) * phase;
 		}
 		case 5u:
 		{
 			const auto phase = math::pow(-1,(*this) - y + 1) / math::pow(-1,(*this) + 1);
-			return compute_3_gamma(-((*this) - y),y + 1,-(*this)) * phase;
+			return detail::real_compute_3_gamma(-((*this) - y),y + 1,-(*this),max_prec) * phase;
 		}
 	}
 	// Case 7 returns zero -> from inf / (inf * inf) it becomes a / (b * inf) after the transform.
 	// NOTE: put it here so the compiler does not complain about missing return statement in the switch block.
-	return real{0};
+	return real{0,max_prec};
 }
 
 }

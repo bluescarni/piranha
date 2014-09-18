@@ -1948,6 +1948,7 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 	BOOST_CHECK_EQUAL(real{10}.binomial(real{-1}),0);
 	BOOST_CHECK_EQUAL(real{-3}.binomial(real{-3}),1);
 	BOOST_CHECK_EQUAL(real{-1}.binomial(real{-1}),1);
+std::cout << real{"12345.6"}.binomial(real{"7.89"}) << '\n';
 }
 
 BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
@@ -2037,4 +2038,13 @@ BOOST_AUTO_TEST_CASE(real_gamma_test)
 	BOOST_CHECK_EQUAL(real("+inf").lgamma(),real{"+inf"});
 	BOOST_CHECK_EQUAL(real(-1).lgamma(),real{"+inf"});
 	BOOST_CHECK_EQUAL(real(3,4).lgamma().get_prec(),4);
+}
+
+BOOST_AUTO_TEST_CASE(real_exp_test)
+{
+	BOOST_CHECK_EQUAL(real(0).exp(),1);
+	BOOST_CHECK_EQUAL(real("inf").exp(),real("+inf"));
+	BOOST_CHECK_EQUAL(real("-inf").exp(),real(0));
+	BOOST_CHECK(real("nan").exp().is_nan());
+	BOOST_CHECK_EQUAL(real(0,4).exp().get_prec(),4);
 }
