@@ -105,10 +105,9 @@ struct is_real_interoperable_type
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-// TODO:
+// NOTES:
 // - fix the move semantics if possible (i.e., valid but unspecified state), and remove all the stuff for reviving
 //   moved-from objects,
-// - should probably review all the precision handling stuff, it's really easy to forget about something :/
 // - if we overhaul the tests, put random precision values as well.
 // - maybe we should have a setter as well for the global default precision. It would need to be an atomic
 //   variable, and we need perf measures to understand the performance impact of this.
@@ -682,8 +681,6 @@ class real: public detail::real_base<>
 		 * 
 		 * @throws std::invalid_argument if the conversion from string fails or if the requested significand precision
 		 * is not within the range allowed by the MPFR library.
-		 * 
-		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Assignment-Functions
 		 */
 		explicit real(const char *str, const ::mpfr_prec_t &prec = default_prec)
 		{
@@ -1458,8 +1455,6 @@ class real: public detail::real_base<>
 		 * @param[in] exp exponent.
 		 * 
 		 * @return <tt>this ** exp</tt>.
-		 * 
-		 * @see http://www.mpfr.org/mpfr-current/mpfr.html#Basic-Arithmetic-Functions
 		 */
 		real pow(const real &exp) const
 		{
@@ -1470,6 +1465,10 @@ class real: public detail::real_base<>
 			::mpfr_pow(retval.m_value,m_value,exp.m_value,default_rnd);
 			return retval;
 		}
+		/// Gamma function.
+		/**
+		 * @return gamma of \p this.
+		 */
 		real gamma() const
 		{
 			real retval{0,get_prec()};
@@ -1900,6 +1899,7 @@ inline real::~real()
 	}
 }
 
+/// Binomial coefficient.
 inline real real::binomial(const real &y) const
 {
 	// TODO: precision handling.

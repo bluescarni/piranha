@@ -1820,21 +1820,28 @@ BOOST_AUTO_TEST_CASE(real_truncate_test)
 	r = "-inf";
 	r.truncate();
 	BOOST_CHECK_EQUAL(r,real{"-inf"});
+	BOOST_CHECK_EQUAL(r.truncated(),r);
 	r = "nan";
 	r.truncate();
 	BOOST_CHECK(r.is_nan());
+	BOOST_CHECK(r.truncated().is_nan());
 	r = "5.4";
 	r.truncate();
 	BOOST_CHECK_EQUAL(r,5);
+	BOOST_CHECK_EQUAL(real{"5.4"}.truncated(),5);
 	r = "-5.4";
 	r.truncate();
 	BOOST_CHECK_EQUAL(r,-5);
+	BOOST_CHECK_EQUAL((-real{"5.4"}).truncated(),-5);
 	r.truncate();
 	BOOST_CHECK_EQUAL(r,-5);
 	r = real{"0.5",4};
 	r.truncate();
 	BOOST_CHECK_EQUAL(r,0);
 	BOOST_CHECK_EQUAL(r.get_prec(),4);
+	r = real{"0.5",4};
+	BOOST_CHECK_EQUAL(r.truncated(),0);
+	BOOST_CHECK_EQUAL(r,real("0.5",4));
 }
 
 BOOST_AUTO_TEST_CASE(real_integral_cast_test)
@@ -2013,4 +2020,14 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 	BOOST_CHECK(has_sine<real &>::value);
 	BOOST_CHECK(has_cosine<real const &>::value);
 	BOOST_CHECK(has_cosine<real &&>::value);
+}
+
+BOOST_AUTO_TEST_CASE(real_gamma_test)
+{
+	BOOST_CHECK_EQUAL(real(1).gamma(),1);
+	BOOST_CHECK_EQUAL(real(4).gamma(),6);
+	BOOST_CHECK_EQUAL(real(5).gamma(),24);
+	BOOST_CHECK(real(-4).gamma().is_nan());
+	BOOST_CHECK_EQUAL(real(1).gamma().get_prec(),real::default_prec);
+	BOOST_CHECK_EQUAL(real(1,4).gamma().get_prec(),4);
 }
