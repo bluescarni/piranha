@@ -1475,6 +1475,18 @@ class real: public detail::real_base<>
 			::mpfr_gamma(retval.m_value,m_value,default_rnd);
 			return retval;
 		}
+		/// Logarithm of the gamma function.
+		/**
+		 * @return logarithm of the absolute value of the gamma of \p this.
+		 */
+		real lgamma() const
+		{
+			real retval{0,get_prec()};
+			// This is the sign of gamma(*this). We don't use this.
+			int sign;
+			::mpfr_lgamma(retval.m_value,&sign,m_value,default_rnd);
+			return retval;
+		}
 		real binomial(const real &) const;
 		/// Absolute value.
 		/**

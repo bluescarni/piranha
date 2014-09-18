@@ -2030,4 +2030,11 @@ BOOST_AUTO_TEST_CASE(real_gamma_test)
 	BOOST_CHECK(real(-4).gamma().is_nan());
 	BOOST_CHECK_EQUAL(real(1).gamma().get_prec(),real::default_prec);
 	BOOST_CHECK_EQUAL(real(1,4).gamma().get_prec(),4);
+	// lgamma.
+	BOOST_CHECK_EQUAL(real(1).lgamma(),0);
+	BOOST_CHECK_EQUAL(real(1).lgamma().get_prec(),real::default_prec);
+	BOOST_CHECK_EQUAL(real(0).lgamma(),real{"+inf"});
+	BOOST_CHECK_EQUAL(real("+inf").lgamma(),real{"+inf"});
+	BOOST_CHECK_EQUAL(real(-1).lgamma(),real{"+inf"});
+	BOOST_CHECK_EQUAL(real(3,4).lgamma().get_prec(),4);
 }
