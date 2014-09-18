@@ -1958,7 +1958,8 @@ inline real::~real()
 namespace detail
 {
 
-// Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints.
+// Compute gamma(a)/(gamma(b) * gamma(c)), assuming a, b and c are not negative ints. The logarithm
+// of the gamma function is used internally.
 inline real real_compute_3_gamma(const real &a, const real &b, const real &c, const ::mpfr_prec_t &prec)
 {
 	// Here we should never enter with negative ints.
@@ -2010,6 +2011,7 @@ inline real real::binomial(const real &y) const
 	if (unlikely(is_nan() || is_inf() || y.is_nan() || y.is_inf())) {
 		piranha_throw(std::invalid_argument,"cannot compute binomial coefficient with non-finite real argument(s)");
 	}
+	// Work with the max precision.
 	const ::mpfr_prec_t max_prec = std::max< ::mpfr_prec_t>(get_prec(),y.get_prec());
 	const bool neg_int_x = truncated() == (*this) && sign() < 0,
 		neg_int_y = y.truncated() == y && y.sign() < 0,
