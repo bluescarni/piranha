@@ -732,7 +732,7 @@ class mp_rational
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This assignment operator is enabled onlt if \p T is an \ref interop "interoperable type".
+		 * This assignment operator is enabled only if \p T is an \ref interop "interoperable type".
 		 *
 		 * This operator will construct a temporary piranha::mp_rational from \p x and will then move-assign it
 		 * to \p this.
