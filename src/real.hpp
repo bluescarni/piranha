@@ -106,8 +106,6 @@ struct is_real_interoperable_type
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTES:
-// - fix the move semantics if possible (i.e., valid but unspecified state), and remove all the stuff for reviving
-//   moved-from objects,
 // - if we overhaul the tests, put random precision values as well.
 // - maybe we should have a setter as well for the global default precision. It would need to be an atomic
 //   variable, and we need perf measures to understand the performance impact of this.
@@ -788,7 +786,6 @@ class real: public detail::real_base<>
 		{
 			return operator=(str.c_str());
 		}
-		// TODO fix docs below.
 		/// Assignment operator from C string.
 		/**
 		 * The parsing rules are the same as in the constructor from string. The precision of \p this
@@ -815,11 +812,10 @@ class real: public detail::real_base<>
 			}
 			return *this;
 		}
-		// TODO fix docs.
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This assignment operator is enabled onlt if \p T is an \ref interop "interoperable type".
+		 * This assignment operator is enabled only if \p T is an \ref interop "interoperable type".
 		 * 
 		 * The precision of \p this
 		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
