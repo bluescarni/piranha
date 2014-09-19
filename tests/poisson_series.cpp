@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>((-p1).cos()),"cos(x)");
 	p1 = 0;
-	BOOST_CHECK_EQUAL(math::sin(-p1),0);
-	BOOST_CHECK_EQUAL(math::cos(p1),1);
+	BOOST_CHECK_THROW(math::sin(-p1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(p1),std::invalid_argument);
 	p1 = p_type1{"x"} - 2 * p_type1{"y"};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x-2*y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p1)),"cos(x-2*y)");
@@ -210,12 +210,20 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	typedef poisson_series<real> p_type3;
 	BOOST_CHECK_EQUAL(math::sin(p_type3{3}),math::sin(real(3)));
 	BOOST_CHECK_EQUAL(math::cos(p_type3{3}),math::cos(real(3)));
-	// TODO: restore these.
-	/*typedef poisson_series<rational> p_type4;
+	typedef poisson_series<double> p_type4;
 	BOOST_CHECK_EQUAL(math::sin(p_type4{0}),0);
-	BOOST_CHECK_EQUAL(math::cos(p_type4{0}),1);
-	BOOST_CHECK_THROW(math::cos(p_type4{1}),std::invalid_argument);
-	BOOST_CHECK_THROW(math::sin(p_type4{1}),std::invalid_argument);*/
+	BOOST_CHECK_EQUAL(math::cos(p_type4{0}),std::cos(0));
+	BOOST_CHECK_EQUAL(math::cos(p_type4{1}),std::cos(1));
+	BOOST_CHECK_EQUAL(math::sin(p_type4{1}),std::sin(1));
+	// Type traits checks.
+	BOOST_CHECK(has_sine<p_type4>::value);
+	BOOST_CHECK(has_cosine<p_type4>::value);
+	BOOST_CHECK(has_sine<p_type3>::value);
+	BOOST_CHECK(has_cosine<p_type3>::value);
+	BOOST_CHECK(has_sine<p_type1>::value);
+	BOOST_CHECK(has_cosine<p_type1>::value);
+	BOOST_CHECK(!has_sine<poisson_series<rational>>::value);
+	BOOST_CHECK(!has_cosine<poisson_series<rational>>::value);
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
