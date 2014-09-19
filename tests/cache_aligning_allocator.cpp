@@ -27,7 +27,7 @@
 #include <type_traits>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/settings.hpp"
 #include "../src/type_traits.hpp"

@@ -33,9 +33,9 @@
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational.hpp"
 #include "../src/series.hpp"
 
 using namespace piranha;

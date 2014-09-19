@@ -4231,3 +4231,24 @@ BOOST_AUTO_TEST_CASE(mp_integer_mul_test)
 	boost::mpl::for_each<size_types>(in_place_float_mul_tester());
 	boost::mpl::for_each<size_types>(binary_mul_tester());
 }
+
+struct stream_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		int_type n(-42);
+		std::stringstream oss;
+		oss << n;
+		BOOST_CHECK_EQUAL(oss.str(),"-42");
+		n = 0;
+		oss >> n;
+		BOOST_CHECK_EQUAL(n,-42);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_stream_test)
+{
+	boost::mpl::for_each<size_types>(stream_tester());
+}

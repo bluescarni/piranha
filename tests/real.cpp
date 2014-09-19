@@ -1728,6 +1728,20 @@ BOOST_AUTO_TEST_CASE(real_stream_test)
 		oss << real(tmp,4);
 		BOOST_CHECK_EQUAL(tmp,oss.str());
 	}
+	{
+		real tmp{0,4};
+		std::stringstream ss;
+		ss << "1.5";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,(real{"1.5",4}));
+	}
+	{
+		real tmp{0,4};
+		std::stringstream ss;
+		ss << "-0.5";
+		ss >> tmp;
+		BOOST_CHECK_EQUAL(tmp,(real{"-.5",4}));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(real_pow_test)

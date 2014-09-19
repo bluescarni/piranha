@@ -43,7 +43,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
 

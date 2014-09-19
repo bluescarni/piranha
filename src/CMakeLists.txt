@@ -9,7 +9,6 @@ SET(HEADERS_LIST
 	exceptions.hpp
 	tracing.hpp
 	base_term.hpp
-	rational.hpp
 	thread_barrier.hpp
 	polynomial.hpp
 	kronecker_monomial.hpp
@@ -34,7 +33,6 @@ SET(HEADERS_LIST
 	univariate_monomial.hpp
 	mp_integer.hpp
 	mp_rational.hpp
-	integer.hpp
 	math.hpp
 	environment.hpp
 	print_tex_coefficient.hpp
@@ -58,11 +56,9 @@ SET(DETAIL_HEADERS_LIST
 	detail/degree_commons.hpp
 	detail/base_term_fwd.hpp
 	detail/km_commons.hpp
-	detail/integer_fwd.hpp
 	detail/mp_rational_fwd.hpp
 	detail/poisson_series_fwd.hpp
 	detail/series_fwd.hpp
-	detail/rational_fwd.hpp
 	detail/polynomial_fwd.hpp
 	detail/config_gcc.hpp
 	detail/symbol_set_fwd.hpp

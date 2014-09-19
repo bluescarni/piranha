@@ -34,11 +34,11 @@
 #include "../src/base_term.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/poisson_series.hpp"
-#include "../src/rational.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol_set.hpp"
 

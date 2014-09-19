@@ -47,7 +47,7 @@
 #include "detail/series_multiplier_fwd.hpp"
 #include "echelon_size.hpp"
 #include "exceptions.hpp"
-#include "integer.hpp"
+#include "mp_integer.hpp"
 #include "runtime_info.hpp"
 #include "settings.hpp"
 #include "thread_pool.hpp"

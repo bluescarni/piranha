@@ -35,7 +35,7 @@
 
 #include "config.hpp"
 #include "exceptions.hpp"
-#include "integer.hpp"
+#include "mp_integer.hpp"
 #include "type_traits.hpp"
 
 namespace piranha

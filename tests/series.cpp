@@ -43,13 +43,13 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
-#include "../src/rational.hpp"
 #include "../src/real.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -1666,9 +1666,9 @@ BOOST_AUTO_TEST_CASE(series_filter_test)
 	BOOST_CHECK_EQUAL(x,(x + 2 * y).filter([](const pair_type &p) {return p.first < 2;}));
 	BOOST_CHECK_EQUAL(x + 2 * y,(x + 2 * y).filter([](const pair_type &p) {return p.second.size();}));
 	BOOST_CHECK_EQUAL(0,(x + 2 * y).filter([](const pair_type &p) {return p.second.size() == 0u;}));
-	BOOST_CHECK_EQUAL(-y,(x - y + 3).filter([](const pair_type &p) {return p.first.sign() < 0;}));
-	BOOST_CHECK_EQUAL(-y - 3,(x - y - 3).filter([](const pair_type &p) {return p.first.sign() < 0;}));
-	BOOST_CHECK_EQUAL(x,(x - y - 3).filter([](const pair_type &p) {return p.first.sign() > 0;}));
+	BOOST_CHECK_EQUAL(-y,(x - y + 3).filter([](const pair_type &p) {return p.first < 0;}));
+	BOOST_CHECK_EQUAL(-y - 3,(x - y - 3).filter([](const pair_type &p) {return p.first < 0;}));
+	BOOST_CHECK_EQUAL(x,(x - y - 3).filter([](const pair_type &p) {return p.first > 0;}));
 }
 
 BOOST_AUTO_TEST_CASE(series_transform_test)
@@ -1743,7 +1743,7 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 	typedef std::unordered_map<std::string,real> dict_type2;
 	BOOST_CHECK((is_evaluable<p_type1,real>::value));
 	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
-		real(1.234) + (2 * real(-5.678)).pow(3));
+		real(1.234) + math::pow(2 * real(-5.678),3));
 	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
 		math::evaluate(x + math::pow(2 * y,3),dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}));
 	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type2{})),real>::value));

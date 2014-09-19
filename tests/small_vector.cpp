@@ -40,8 +40,8 @@
 
 #include "../src/detail/prepare_for_print.hpp"
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
-#include "../src/rational.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 
 // NOTE: in these tests we are assuming a few things:
 // - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,

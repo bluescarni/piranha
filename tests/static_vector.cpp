@@ -38,7 +38,7 @@
 #include <type_traits>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/type_traits.hpp"
 
 // NOTE: here we define a custom string class base on std::string that respects nothrow requirements in hash_set:

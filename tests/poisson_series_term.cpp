@@ -32,10 +32,10 @@
 
 #include "../src/detail/series_fwd.hpp"
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"

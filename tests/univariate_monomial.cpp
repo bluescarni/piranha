@@ -33,8 +33,8 @@
 #include <unordered_set>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"

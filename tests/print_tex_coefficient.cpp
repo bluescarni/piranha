@@ -29,7 +29,7 @@
 #include <type_traits>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/real.hpp"
 
 using namespace piranha;

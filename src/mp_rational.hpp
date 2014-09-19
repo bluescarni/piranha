@@ -800,6 +800,24 @@ class mp_rational
 			}
 			return os;
 		}
+		/// Overload input stream operator for piranha::mp_rational.
+		/**
+		 * Equivalent to extracting a line from the stream and then assigning it to \p q.
+		 *
+		 * @param[in] is input stream.
+		 * @param[in,out] q rational to which the contents of the stream will be assigned.
+		 *
+		 * @return reference to \p is.
+		 *
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::mp_rational.
+		 */
+		friend std::istream &operator>>(std::istream &is, mp_rational &q)
+		{
+			std::string tmp_str;
+			std::getline(is,tmp_str);
+			q = tmp_str;
+			return is;
+		}
 		/// Get const reference to the numerator.
 		const int_type &num() const noexcept
 		{
@@ -1534,7 +1552,8 @@ class mp_rational
 		int_type	m_den;
 };
 
-// using rational = mp_rational<>;
+/// Alias for piranha::mp_rational with default bit size.
+using rational = mp_rational<>;
 
 inline namespace literals
 {

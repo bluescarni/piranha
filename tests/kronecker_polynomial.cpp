@@ -32,11 +32,11 @@
 #include <type_traits>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
-#include "../src/rational.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;

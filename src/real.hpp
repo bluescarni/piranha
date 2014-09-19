@@ -1588,6 +1588,24 @@ class real: public detail::real_base<>
 			os << cpp_str;
 			return os;
 		}
+		/// Overload input stream operator for piranha::real.
+		/**
+		 * Equivalent to extracting a line from the stream and then assigning it to \p r.
+		 *
+		 * @param[in] is input stream.
+		 * @param[in,out] r real to which the contents of the stream will be assigned.
+		 *
+		 * @return reference to \p is.
+		 *
+		 * @throws unspecified any exception thrown by the assignment operator from string of piranha::real.
+		 */
+		friend std::istream &operator>>(std::istream &is, real &r)
+		{
+			std::string tmp_str;
+			std::getline(is,tmp_str);
+			r = tmp_str;
+			return is;
+		}
 	private:
 		::mpfr_t m_value;
 };

@@ -33,7 +33,7 @@
 #include <vector>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/real.hpp"
 #include "../src/runtime_info.hpp"
 #include "../src/thread_management.hpp"

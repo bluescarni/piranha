@@ -33,7 +33,7 @@
 
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
 #include "../src/type_traits.hpp"

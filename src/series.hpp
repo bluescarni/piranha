@@ -49,8 +49,8 @@
 #include "echelon_size.hpp"
 #include "environment.hpp"
 #include "hash_set.hpp"
-#include "integer.hpp"
 #include "math.hpp" // For negate() and math specialisations.
+#include "mp_integer.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 #include "series_multiplier.hpp"

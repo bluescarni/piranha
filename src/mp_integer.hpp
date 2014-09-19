@@ -2122,6 +2122,24 @@ class mp_integer
 				return detail::stream_mpz(os,n.m_int.g_dy());
 			}
 		}
+		/// Overload input stream operator for piranha::mp_integer.
+		/**
+		 * Equivalent to extracting a line from the stream and then assigning it to \p n.
+		 *
+		 * @param[in] is input stream.
+		 * @param[in,out] n integer to which the contents of the stream will be assigned.
+		 *
+		 * @return reference to \p is.
+		 *
+		 * @throws unspecified any exception thrown by the constructor from string of piranha::mp_integer.
+		 */
+		friend std::istream &operator>>(std::istream &is, mp_integer &n)
+		{
+			std::string tmp_str;
+			std::getline(is,tmp_str);
+			n = tmp_str;
+			return is;
+		}
 		/// Promote to dynamic storage.
 		/**
 		 * This method will promote \p this to dynamic storage, if \p this is currently stored in static
@@ -3049,6 +3067,9 @@ class mp_integer
 		detail::integer_union<NBits> m_int;
 };
 
+/// Alias for piranha::mp_integer with default bit size.
+using integer = mp_integer<>;
+
 namespace detail
 {
 
@@ -3684,8 +3705,6 @@ class has_ipow_subs: detail::sfinae_types
 
 template <typename T, typename U>
 const bool has_ipow_subs<T,U>::value;
-
-//using integer = mp_integer<>;
 
 inline namespace literals
 {

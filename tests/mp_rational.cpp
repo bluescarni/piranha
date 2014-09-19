@@ -1994,3 +1994,24 @@ BOOST_AUTO_TEST_CASE(mp_rational_binomial_test)
 	BOOST_CHECK((!has_binomial<mp_rational<16>,mp_integer<32>>::value));
 	BOOST_CHECK((!has_binomial<mp_rational<32>,mp_integer<16>>::value));
 }
+
+struct stream_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		q_type q(42,-5);
+		std::stringstream ss;
+		ss << q;
+		BOOST_CHECK_EQUAL(ss.str(),"-42/5");
+		q = 0;
+		ss >> q;
+		BOOST_CHECK_EQUAL(q,q_type(-42,5));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_stream_test)
+{
+	boost::mpl::for_each<size_types>(stream_tester());
+}

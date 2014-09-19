@@ -32,8 +32,8 @@
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "forwarding.hpp"
-#include "integer.hpp"
 #include "math.hpp"
+#include "mp_integer.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
 #include "series.hpp"
@@ -115,13 +115,17 @@ class poisson_series:
 					// and move on.
 				}
 			}
-			return sin_cos_cf_impl<IsCos>();
+			//return sin_cos_cf_impl<IsCos>();
+			// TODO restore.
+			piranha_throw(std::invalid_argument,"Sine/cosine not implemented.");
 		}
 		template <bool IsCos, typename T>
 		poisson_series sin_cos_impl(const T &, typename std::enable_if<
 			std::is_same<T,std::false_type>::value>::type * = nullptr) const
 		{
-			return sin_cos_cf_impl<IsCos>();
+			// TODO restore.
+			piranha_throw(std::invalid_argument,"Sine/cosine not implemented.");
+			//return sin_cos_cf_impl<IsCos>();
 		}
 		template <bool IsCos>
 		poisson_series sin_cos_cf_impl() const

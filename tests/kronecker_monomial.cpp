@@ -40,11 +40,11 @@
 #include <vector>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/math.hpp"
-#include "../src/rational.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
