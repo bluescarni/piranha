@@ -318,7 +318,9 @@ class poisson_series:
 		 * 
 		 * \todo type requirements.
 		 */
-		template <typename T>
+		// TODO: proper sfinaeing and abstraction for subs methods, including the math:: overloads below.
+		// this needs to be done for poly as well.
+		template <typename T, typename std::enable_if<has_sine<T>::value && has_cosine<T>::value,int>::type = 0>
 		typename subs_type<T>::type subs(const std::string &name, const T &x) const
 		{
 			typedef typename subs_type<T>::type return_type;
@@ -483,7 +485,7 @@ struct subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_se
 		 * @throws unspecified any exception thrown by piranha::poisson_series::subs().
 		 */
 		template <typename T>
-		typename subs_type<T>::type operator()(const Series &s, const std::string &name, const T &x) const
+		auto operator()(const Series &s, const std::string &name, const T &x) const -> decltype(s.subs(name,x))
 		{
 			return s.subs(name,x);
 		}
