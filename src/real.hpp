@@ -208,7 +208,7 @@ class real: public detail::real_base<>
 		{
 			// NOTE: of course, this can be optimised by avoiding going through the integer conversion and
 			// using directly the MPFR functions.
-			return static_cast<T>(static_cast<mp_integer<>>(*this));
+			return static_cast<T>(static_cast<integer>(*this));
 		}
 		template <typename T>
 		typename std::enable_if<std::is_floating_point<T>::value,T>::type convert_to_impl() const
@@ -311,7 +311,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		real &in_place_add(const T &n)
 		{
-			return in_place_add(mp_integer<>(n));
+			return in_place_add(integer(n));
 		}
 		// NOTE: possible optimisations here as well.
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
@@ -366,7 +366,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		real &in_place_sub(const T &n)
 		{
-			return in_place_sub(mp_integer<>(n));
+			return in_place_sub(integer(n));
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		real &in_place_sub(const T &x)
@@ -420,7 +420,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		real &in_place_mul(const T &n)
 		{
-			return in_place_mul(mp_integer<>(n));
+			return in_place_mul(integer(n));
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		real &in_place_mul(const T &x)
@@ -472,7 +472,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		real &in_place_div(const T &n)
 		{
-			return in_place_div(mp_integer<>(n));
+			return in_place_div(integer(n));
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		real &in_place_div(const T &x)
@@ -530,7 +530,7 @@ class real: public detail::real_base<>
 			if (r.is_nan()) {
 				return false;
 			}
-			return r == mp_integer<>(n);
+			return r == integer(n);
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		static bool binary_equality(const real &r, const T &x)
@@ -566,7 +566,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		static bool binary_less_than(const real &r, const T &n)
 		{
-			return r < mp_integer<>(n);
+			return r < integer(n);
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		static bool binary_less_than(const real &r, const T &x)
@@ -593,7 +593,7 @@ class real: public detail::real_base<>
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
 		static bool binary_leq(const real &r, const T &n)
 		{
-			return r <= mp_integer<>(n);
+			return r <= integer(n);
 		}
 		template <typename T, typename std::enable_if<std::is_floating_point<T>::value,int>::type = 0>
 		static bool binary_leq(const real &r, const T &x)
@@ -1839,7 +1839,7 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 	 *
 	 * @throws std::invalid_argument if the conversion is not successful.
 	 */
-	mp_integer<> operator()(const T &x) const
+	integer operator()(const T &x) const
 	{
 		if (x.is_nan() || x.is_inf()) {
 			piranha_throw(std::invalid_argument,"invalid real value");
@@ -1847,7 +1847,7 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>
 		auto x_copy(x);
 		x_copy.truncate();
 		if (x == x_copy) {
-			return mp_integer<>(x);
+			return integer(x);
 		}
 		piranha_throw(std::invalid_argument,"invalid real value");
 	}
@@ -1868,7 +1868,7 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::ty
 	 * @return copy of \p x.
 	 */
 	template <typename U>
-	T operator()(const T &x, const std::string &, const mp_integer<> &, const U &) const
+	T operator()(const T &x, const std::string &, const integer &, const U &) const
 	{
 		return x;
 	}

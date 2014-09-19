@@ -1567,9 +1567,9 @@ inline namespace literals
  * @throws unspecified any exception thrown by the constructor of
  * piranha::mp_rational from string.
  */
-inline mp_rational<> operator "" _q(const char *s)
+inline rational operator "" _q(const char *s)
 {
-	return mp_rational<>(s);
+	return rational(s);
 }
 
 }
@@ -1871,7 +1871,7 @@ struct subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::ty
 
 /// Specialisation of the piranha::math::integral_cast functor for piranha::mp_rational.
 template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,mp_rational<>>::value>::type>
+struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -1883,7 +1883,7 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,mp_rational<>
 	 *
 	 * @throws std::invalid_argument if the call is unsuccessful.
 	 */
-	mp_integer<> operator()(const T &q) const
+	integer operator()(const T &q) const
 	{
 		if (q.den() == 1) {
 			return q.num();
@@ -1907,7 +1907,7 @@ struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value
 	 * @return copy of \p q.
 	 */
 	template <typename U>
-	T operator()(const T &q, const std::string &, const mp_integer<> &, const U &) const
+	T operator()(const T &q, const std::string &, const integer &, const U &) const
 	{
 		return q;
 	}

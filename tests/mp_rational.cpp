@@ -424,13 +424,13 @@ BOOST_AUTO_TEST_CASE(mp_rational_conversion_test)
 BOOST_AUTO_TEST_CASE(mp_rational_literal_test)
 {
 	auto q0 = 123_q;
-	BOOST_CHECK((std::is_same<mp_rational<>,decltype(q0)>::value));
+	BOOST_CHECK((std::is_same<rational,decltype(q0)>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"123");
 	q0 = -4_q;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q0),"-4");
 	BOOST_CHECK_THROW((q0 = 123.45_q),std::invalid_argument);
 	auto q1 = 3/4_q;
-	BOOST_CHECK((std::is_same<mp_rational<>,decltype(q1)>::value));
+	BOOST_CHECK((std::is_same<rational,decltype(q1)>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q1),"3/4");
 	q1 = -4/2_q;
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q1),"-2");
@@ -1920,15 +1920,15 @@ BOOST_AUTO_TEST_CASE(mp_rational_sep_test)
 
 BOOST_AUTO_TEST_CASE(mp_rational_integral_cast_test)
 {
-	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>()),0);
-	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>(2)),2);
-	BOOST_CHECK_EQUAL(math::integral_cast(mp_rational<>(62,-2)),-31);
-	BOOST_CHECK_THROW(math::integral_cast(mp_rational<>(1,-2)),std::invalid_argument);
-	BOOST_CHECK_THROW(math::integral_cast(mp_rational<>("2/3") * 2),std::invalid_argument);
-	BOOST_CHECK(has_integral_cast<mp_rational<>>::value);
-	BOOST_CHECK(has_integral_cast<mp_rational<> &>::value);
-	BOOST_CHECK(has_integral_cast<mp_rational<> const &>::value);
-	BOOST_CHECK(has_integral_cast<mp_rational<> &&>::value);
+	BOOST_CHECK_EQUAL(math::integral_cast(rational()),0);
+	BOOST_CHECK_EQUAL(math::integral_cast(rational(2)),2);
+	BOOST_CHECK_EQUAL(math::integral_cast(rational(62,-2)),-31);
+	BOOST_CHECK_THROW(math::integral_cast(rational(1,-2)),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integral_cast(rational("2/3") * 2),std::invalid_argument);
+	BOOST_CHECK(has_integral_cast<rational>::value);
+	BOOST_CHECK(has_integral_cast<rational &>::value);
+	BOOST_CHECK(has_integral_cast<rational const &>::value);
+	BOOST_CHECK(has_integral_cast<rational &&>::value);
 }
 
 struct binomial_tester

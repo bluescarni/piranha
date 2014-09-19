@@ -3206,9 +3206,9 @@ struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
 	 */
 	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
 		std::is_integral<U2>::value,int>::type = 0>
-	mp_integer<> operator()(const T2 &b, const U2 &e) const
+	integer operator()(const T2 &b, const U2 &e) const
 	{
-		return mp_integer<>(b).pow(e);
+		return integer(b).pow(e);
 	}
 	/// Call operator, piranha::mp_integer overload.
 	/**
@@ -3437,9 +3437,9 @@ struct binomial_impl<T,U,detail::integer_binomial_enabler<T,U>>
 	 */
 	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
 		std::is_integral<U2>::value,int>::type = 0>
-	mp_integer<> operator()(const T2 &x, const U2 &y) const
+	integer operator()(const T2 &x, const U2 &y) const
 	{
-		return mp_integer<>(x).binomial(y);
+		return integer(x).binomial(y);
 	}
 	/// Call operator, piranha::mp_integer overload.
 	/**
@@ -3553,18 +3553,18 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_floating_point<T>::v
 	 *
 	 * @throws std::invalid_argument if the conversion is not successful.
 	 */
-	mp_integer<> operator()(const T &x) const
+	integer operator()(const T &x) const
 	{
 		if (!std::isfinite(x) || std::trunc(x) != x) {
 			piranha_throw(std::invalid_argument,"invalid floating point value");
 		}
-		return mp_integer<>{x};
+		return integer{x};
 	}
 };
 
 /// Specialisation of the piranha::math::integral_cast functor for integral types.
 template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_integral<T>::value || std::is_same<mp_integer<>,T>::value>::type>
+struct integral_cast_impl<T,typename std::enable_if<std::is_integral<T>::value || std::is_same<integer,T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -3574,9 +3574,9 @@ struct integral_cast_impl<T,typename std::enable_if<std::is_integral<T>::value |
 	 *
 	 * @return a piranha::mp_integer constructed from \p x.
 	 */
-	mp_integer<> operator()(const T &x) const
+	integer operator()(const T &x) const
 	{
-		return mp_integer<>{x};
+		return integer{x};
 	}
 };
 
@@ -3597,7 +3597,7 @@ inline auto integral_cast(const T &x) -> decltype(integral_cast_impl<T>()(x))
 {
 	// NOTE: this needs probably to be generalised if we ever implement a generic safe cast.
 	// Also probably we need to assert this in the type trait.
-	static_assert(std::is_same<decltype(integral_cast_impl<T>()(x)),mp_integer<>>::value,
+	static_assert(std::is_same<decltype(integral_cast_impl<T>()(x)),integer>::value,
 		"Invalid return type for integral_cast.");
 	try {
 		return integral_cast_impl<T>()(x);
@@ -3630,7 +3630,7 @@ struct ipow_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::t
 	 * @return copy of \p x.
 	 */
 	template <typename U>
-	T operator()(const T &x, const std::string &, const mp_integer<> &, const U &) const
+	T operator()(const T &x, const std::string &, const integer &, const U &) const
 	{
 		return x;
 	}
@@ -3651,7 +3651,7 @@ struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>
 	 * @return copy of \p n.
 	 */
 	template <typename U>
-	T operator()(const T &n, const std::string &, const mp_integer<> &, const U &) const
+	T operator()(const T &n, const std::string &, const integer &, const U &) const
 	{
 		return n;
 	}
@@ -3672,7 +3672,7 @@ struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
 template <typename T, typename U>
-inline auto ipow_subs(const T &x, const std::string &name, const mp_integer<> &n, const U &y) -> decltype(ipow_subs_impl<T>()(x,name,n,y))
+inline auto ipow_subs(const T &x, const std::string &name, const integer &n, const U &y) -> decltype(ipow_subs_impl<T>()(x,name,n,y))
 {
 	return ipow_subs_impl<T>()(x,name,n,y);
 }
@@ -3710,7 +3710,7 @@ class has_ipow_subs: detail::sfinae_types
 		typedef typename std::decay<U>::type Ud;
 		template <typename T1, typename U1>
 		static auto test(const T1 &t, const U1 &u) -> decltype(math::ipow_subs(t,std::declval<std::string const &>(),
-			std::declval<mp_integer<> const &>(),u),void(),yes());
+			std::declval<integer const &>(),u),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
@@ -3732,9 +3732,9 @@ inline namespace literals
  * @throws unspecified any exception thrown by the constructor of
  * piranha::mp_integer from string.
  */
-inline mp_integer<> operator "" _z(const char *s)
+inline integer operator "" _z(const char *s)
 {
-	return mp_integer<>(s);
+	return integer(s);
 }
 
 }
