@@ -53,9 +53,9 @@
 
 #include "../src/detail/type_in_tuple.hpp"
 #include "../src/exceptions.hpp"
-#include "../src/integer.hpp"
 #include "../src/math.hpp"
-#include "../src/rational.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"

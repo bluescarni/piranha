@@ -38,8 +38,8 @@
 #include "../src/config.hpp"
 #include "../src/detail/mpfr.hpp"
 #include "../src/exceptions.hpp"
-#include "../src/integer.hpp"
-#include "../src/rational.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 
 // NOTE: useful resources for python converters and C API:

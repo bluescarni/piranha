@@ -3516,6 +3516,20 @@ struct binomial_impl<T,U,detail::integer_binomial_enabler<T,U>>
 	}
 };
 
+/// Factorial.
+/**
+ * @param[in] n factorial argument.
+ *
+ * @return the output of piranha::mp_integer::factorial().
+ *
+ * @throws unspecified any exception thrown by piranha::mp_integer::factorial().
+ */
+template <int NBits>
+inline mp_integer<NBits> factorial(const mp_integer<NBits> &n)
+{
+	return n.factorial();
+}
+
 /// Default implementation of the piranha::math::integral_cast functor.
 /**
  * This functor should be specialised using the \p std::enable_if mechanism.

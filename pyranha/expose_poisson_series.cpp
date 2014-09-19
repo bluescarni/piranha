@@ -22,11 +22,11 @@
 
 #include <tuple>
 
-#include "../src/integer.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/rational.hpp"
 #include "../src/real.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_utils.hpp"

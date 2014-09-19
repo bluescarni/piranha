@@ -2249,6 +2249,7 @@ struct factorial_tester
 			::mpz_set_si(&m.m_mpz,static_cast<long>(tmp));
 			::mpz_fac_ui(&m.m_mpz,static_cast<unsigned long>(tmp));
 			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n.factorial()),mpz_lexcast(m));
+			BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::factorial(n)),mpz_lexcast(m));
 		}
 	}
 };

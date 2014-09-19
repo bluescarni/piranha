@@ -37,9 +37,9 @@
 #include <string>
 
 #include "../src/exceptions.hpp"
-#include "../src/integer.hpp"
 #include "../src/kronecker_monomial.hpp"
-#include "../src/rational.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
@@ -170,7 +170,7 @@ BOOST_PYTHON_MODULE(_core)
 	settings_class.def("_get_n_threads",piranha::settings::get_n_threads).staticmethod("_get_n_threads");
 	settings_class.def("_reset_n_threads",piranha::settings::reset_n_threads).staticmethod("_reset_n_threads");
 	// Factorial.
-	bp::def("_factorial",&piranha::math::factorial);
+	bp::def("_factorial",&piranha::math::factorial<0>);
 	// Binomial coefficient.
 	bp::def("_binomial",&binomial_integer);
 	bp::def("_binomial",&binomial_rational);
