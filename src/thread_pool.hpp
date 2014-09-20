@@ -160,7 +160,7 @@ class task_queue
 		std::unique_ptr<std::thread>		m_thread;
 };
 
-static inline std::vector<std::unique_ptr<task_queue>> get_initial_thread_queues()
+inline std::vector<std::unique_ptr<task_queue>> get_initial_thread_queues()
 {
 	std::vector<std::unique_ptr<task_queue>> retval;
 	const unsigned candidate = runtime_info::get_hardware_concurrency(), hc = (candidate > 0u) ? candidate : 1u;

@@ -79,10 +79,6 @@
  * \todo in the rework of the substitution methods with toolboxes, remember to switch the interface of the key's subs to use string
  * instead of symbol for consistency.
  * \todo initializer_list ctors: should they be explicit or not?
- * \todo binomial coefficient: for double/real types it should really be implemented in terms of gamma functions:
- * http://www.boost.org/doc/libs/release/libs/math/doc/sf_and_dist/html/math_toolkit/special/factorials/sf_binomial.html
- * http://mathworld.wolfram.com/GammaFunction.html
- * http://www.mpfr.org/mpfr-current/mpfr.html (implement in terms of gamma functions as indicated by the Wolfram link)
  * \todo review usage of new, we probably want to switch to unqualified new() in order to account for possible overloads
  * to be found via ADL -> note that placement new cannot be overloaded:
  * http://stackoverflow.com/questions/3675059/how-could-i-sensibly-overload-placement-operator-new (and 18.6.1.3 in the standard)
@@ -98,7 +94,7 @@
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
  * the operator overloaded (via decltype SFINAE).
- * \todo in pyranha, we should be able to provide self-descriptivie docstrings for the exposed series, based on the
+ * \todo in pyranha, we should be able to provide self-descriptive docstrings for the exposed series, based on the
  * template enable_if mechanism.
  * \todo consider bringing back the unroller from the vectorization work into the small_vector class.
  * \todo some versions of mingw want __mingw_aligned_malloc instead of _aligned_malloc, fix this with a check in the build system. Or

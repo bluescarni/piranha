@@ -742,7 +742,7 @@ namespace detail
 {
 
 template <typename T>
-static inline auto is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
+inline auto is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
 	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) -> typename std::enable_if<
 	has_is_zero<decltype(math::pbracket(*new_p[0],*new_p[0],p_list,q_list))>::value &&
 	std::is_constructible<decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list)),int>::value &&
@@ -1183,14 +1183,14 @@ namespace detail
 
 // Generic binomial implementation.
 template <typename T>
-static inline bool generic_binomial_check_k(const T &, const T &,
+inline bool generic_binomial_check_k(const T &, const T &,
 	typename std::enable_if<std::is_unsigned<T>::value>::type * = nullptr)
 {
 	return false;
 }
 
 template <typename T>
-static inline bool generic_binomial_check_k(const T &k, const T &zero,
+inline bool generic_binomial_check_k(const T &k, const T &zero,
 	typename std::enable_if<!std::is_unsigned<T>::value>::type * = nullptr)
 {
 	return k < zero;
