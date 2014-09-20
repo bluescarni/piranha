@@ -161,8 +161,10 @@ class poisson_series:
 		{
 			// NOTE: here we cast back to the base class, and then we have to move-construct the output
 			// Poisson series as the math::cos functor will produce an output of the type of the base class.
-			return ((IsCos) ? poisson_series(math::cos(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))) :
-				poisson_series(math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))));
+			if (IsCos) {
+				return poisson_series{math::cos(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))};
+			}
+			return poisson_series{math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))};
 		}
 		template <bool IsCos, typename T, typename std::enable_if<!cf_has_sin_cos<T>::value,int>::type = 0>
 		poisson_series sin_cos_cf_impl() const
