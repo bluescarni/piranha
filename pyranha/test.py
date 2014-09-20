@@ -86,8 +86,6 @@ class basic_test_case(_ut.TestCase):
 		# NOTE: here we are going to assume that Python's float implementation uses C++ doubles and
 		# the corresponding pow() function.
 		self.assertEqual(tp_f(0.1) ** (0.5),0.1**0.5)
-		# Test integer exponentiation of double triggering bad numeric cast.
-		self.assertRaises(OverflowError,lambda : tp_f(1) ** _get_big_int())
 		q1 = tp_q(Fraction(1,6))
 		self.assertEqual(q1 ** 20,Fraction(2,12) ** 20)
 		self.assertEqual(Fraction(1,3) ** 100000,tp_q(Fraction(1,3)) ** 100000)
