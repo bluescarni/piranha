@@ -131,14 +131,14 @@ BOOST_AUTO_TEST_CASE(real_constructors_test)
 	// Construction from integral types.
 	boost::fusion::for_each(integral_values,check_integral_construction());
 	// Construction from integer and rational.
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(),4}),"0.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(2),4}),"2.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<>(-10),4}),"-1.00e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(),4}),"0.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(2),4}),"2.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{integer(-10),4}),"-1.00e1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_integer<16>(-10),4}),"-1.00e1");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(),4}),"0.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(2),4}),"2.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(-10),4}),"-1.00e1");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<>(-1,2),4}),"-5.00e-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(),4}),"0.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(2),4}),"2.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(-10),4}),"-1.00e1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{rational(-1,2),4}),"-5.00e-1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{mp_rational<32>(-1,2),4}),"-5.00e-1");
 	// Type trait.
 	BOOST_CHECK((!std::is_constructible<real,std::unordered_map<int,std::string>>::value));
@@ -317,18 +317,18 @@ BOOST_AUTO_TEST_CASE(real_assignment_test)
 	boost::fusion::for_each(integral_values,check_integral_assignment());
 	// Assignment from integer and rational.
 	r1.set_prec(4);
-	r1 = mp_integer<>(1);
+	r1 = integer(1);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.00");
 	real{std::move(r1)};
-	r1 = mp_integer<>(2);
+	r1 = integer(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00000000000000000000000000000000000");
 	r1 = mp_integer<16>(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.00000000000000000000000000000000000");
 	r1.set_prec(4);
-	r1 = mp_rational<>(1,2);
+	r1 = rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"5.00e-1");
 	real{std::move(r1)};
-	r1 = -mp_rational<>(1,2);
+	r1 = -rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
 	r1 = -mp_rational<32>(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-5.00000000000000000000000000000000000e-1");
@@ -387,9 +387,9 @@ struct check_integral_conversion
 				BOOST_CHECK_EQUAL(static_cast<T>(real{static_cast<double>(value) - 0.5}),value);
 			}
 		}
-		BOOST_CHECK_THROW((void)static_cast<T>(real{mp_integer<>(boost::integer_traits<T>::const_max) * 2}),std::overflow_error);
+		BOOST_CHECK_THROW((void)static_cast<T>(real{integer(boost::integer_traits<T>::const_max) * 2}),std::overflow_error);
 		if (std::is_signed<T>::value) {
-			BOOST_CHECK_THROW((void)static_cast<T>(real{mp_integer<>(boost::integer_traits<T>::const_min) * 2}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(real{integer(boost::integer_traits<T>::const_min) * 2}),std::overflow_error);
 		}
 	}
 };
@@ -401,16 +401,16 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 	BOOST_CHECK(real{"0.5"});
 	BOOST_CHECK(real{1});
 	// Integer conversion.
-	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{}),0);
-	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"1.43111e4"}),14311);
-	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"-1.43111e4"}),-14311);
-	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"1.43119e4"}),14311);
-	BOOST_CHECK_EQUAL(static_cast<mp_integer<>>(real{"-1.43119e4"}),-14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{}),0);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"1.43111e4"}),14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"-1.43111e4"}),-14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"1.43119e4"}),14311);
+	BOOST_CHECK_EQUAL(static_cast<integer>(real{"-1.43119e4"}),-14311);
 	BOOST_CHECK_EQUAL(static_cast<mp_integer<32>>(real{"-1.43119e4"}),-14311);
-	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"inf"}),std::overflow_error);
-	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"-inf"}),std::overflow_error);
-	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"nan"}),std::overflow_error);
-	BOOST_CHECK_THROW((void)static_cast<mp_integer<>>(real{"-nan"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<integer>(real{"inf"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<integer>(real{"-inf"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<integer>(real{"nan"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<integer>(real{"-nan"}),std::overflow_error);
 	// Integral conversions.
 	boost::fusion::for_each(integral_values,check_integral_conversion());
 	// FP conversions. Double.
@@ -468,17 +468,17 @@ BOOST_AUTO_TEST_CASE(real_conversion_test)
 		BOOST_CHECK_THROW((void)static_cast<long double>(real{"-inf"}),std::overflow_error);
 	}
 	// Rational.
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{}),0);
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{1}),1);
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{12}),12);
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{-1234}),-1234);
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"-0.5"}),mp_rational<>(-1,2));
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"0.03125"}),mp_rational<>(1,32));
-	BOOST_CHECK_EQUAL(static_cast<mp_rational<>>(real{"-7.59375"}),mp_rational<>(243,-32));
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{}),0);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{1}),1);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{12}),12);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{-1234}),-1234);
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"-0.5"}),rational(-1,2));
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"0.03125"}),rational(1,32));
+	BOOST_CHECK_EQUAL(static_cast<rational>(real{"-7.59375"}),rational(243,-32));
 	BOOST_CHECK_EQUAL(static_cast<mp_rational<16>>(real{"-7.59375"}),mp_rational<16>(243,-32));
-	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"nan"}),std::overflow_error);
-	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"inf"}),std::overflow_error);
-	BOOST_CHECK_THROW((void)static_cast<mp_rational<>>(real{"-inf"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<rational>(real{"nan"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<rational>(real{"inf"}),std::overflow_error);
+	BOOST_CHECK_THROW((void)static_cast<rational>(real{"-inf"}),std::overflow_error);
 	// Type traits.
 	BOOST_CHECK((std::is_constructible<float,real>::value));
 	BOOST_CHECK((!std::is_constructible<std::vector<float>,real>::value));
@@ -553,32 +553,32 @@ BOOST_AUTO_TEST_CASE(real_addition_test)
 	r1 += real{1};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
-	r1 += mp_rational<>(1,2);
+	r1 += rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"4.50000000000000000000000000000000000");
-	r1 += mp_integer<>(2);
+	r1 += integer(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"6.50000000000000000000000000000000000");
-	BOOST_CHECK((is_addable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_addable<real,integer>::value));
 	BOOST_CHECK((is_addable<real,mp_integer<16>>::value));
 	BOOST_CHECK((is_addable<mp_integer<16>,real>::value));
 	BOOST_CHECK((!is_addable_in_place<const mp_integer<16>,real>::value));
-	BOOST_CHECK((is_addable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_addable<real,rational>::value));
 	BOOST_CHECK((is_addable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_addable<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_addable_in_place<const mp_rational<16>,real>::value));
 	// Precision handling.
-	BOOST_CHECK_EQUAL((real{3,4} + mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_integer<>() + real{3,4}).get_prec(),4);
-	BOOST_CHECK_EQUAL((real{3,4} + mp_rational<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_rational<>() + real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} + integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((integer() + real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} + rational()).get_prec(),4);
+	BOOST_CHECK_EQUAL((rational() + real{3,4}).get_prec(),4);
 	auto r1a = real{3,4};
-	BOOST_CHECK_EQUAL((r1a += mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((r1a += mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a += integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a += rational()).get_prec(),4);
 	// Rational and integer on the left.
-	mp_rational<> q(1,2);
+	rational q(1,2);
 	q += real("-1.5");
 	BOOST_CHECK_EQUAL(-1,q);
 	BOOST_CHECK_THROW(q += real("inf"),std::overflow_error);
-	mp_integer<> n(4);
+	integer n(4);
 	n += real("3",4);
 	BOOST_CHECK_EQUAL(n,7);
 	n += real("1.001");
@@ -697,14 +697,14 @@ BOOST_AUTO_TEST_CASE(real_addition_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + real("inf")),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-inf") + r2),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") + r2),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + mp_integer<>(1)),"3.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) + r2),"3.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + integer(1)),"3.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) + r2),"3.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + mp_integer<16>(1)),"3.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(1) + r2),"3.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} + mp_integer<>(1)),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) + real{"inf"}),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + mp_rational<>(1,2)),"2.50");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) + r2),"2.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} + integer(1)),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) + real{"inf"}),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + rational(1,2)),"2.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(1,2) + r2),"2.50");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 + mp_rational<32>(1,2)),"2.50");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<8>(1,2) + r2),"2.50");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
@@ -826,36 +826,36 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 	r1 -= real{1};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-2.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
-	r1 -= mp_rational<>(1,2);
+	r1 -= rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-2.50000000000000000000000000000000000");
-	r1 -= mp_integer<>(2);
+	r1 -= integer(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-4.50000000000000000000000000000000000");
-	BOOST_CHECK((is_subtractable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_subtractable<real,integer>::value));
 	BOOST_CHECK((is_subtractable<real,mp_integer<16>>::value));
 	BOOST_CHECK((is_subtractable<mp_integer<16>,real>::value));
-	BOOST_CHECK((std::is_same<real,decltype(real{} - mp_integer<>{})>::value));
-	BOOST_CHECK((std::is_same<real,decltype(mp_integer<>{} - real{})>::value));
+	BOOST_CHECK((std::is_same<real,decltype(real{} - integer{})>::value));
+	BOOST_CHECK((std::is_same<real,decltype(integer{} - real{})>::value));
 	BOOST_CHECK((!is_subtractable_in_place<const mp_integer<16>,real>::value));
-	BOOST_CHECK((is_subtractable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_subtractable<real,rational>::value));
 	BOOST_CHECK((is_subtractable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_subtractable<mp_rational<16>,real>::value));
-	BOOST_CHECK((std::is_same<real,decltype(real{} - mp_rational<>{})>::value));
-	BOOST_CHECK((std::is_same<real,decltype(mp_rational<>{} - real{})>::value));
+	BOOST_CHECK((std::is_same<real,decltype(real{} - rational{})>::value));
+	BOOST_CHECK((std::is_same<real,decltype(rational{} - real{})>::value));
 	BOOST_CHECK((!is_subtractable_in_place<const mp_rational<16>,real>::value));
 	// Precision handling.
-	BOOST_CHECK_EQUAL((real{3,4} - mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_integer<>() - real{3,4}).get_prec(),4);
-	BOOST_CHECK_EQUAL((real{3,4} - mp_rational<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_rational<>() - real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} - integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((integer() - real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} - rational()).get_prec(),4);
+	BOOST_CHECK_EQUAL((rational() - real{3,4}).get_prec(),4);
 	auto r1a = real{3,4};
-	BOOST_CHECK_EQUAL((r1a -= mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((r1a -= mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a -= integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a -= rational()).get_prec(),4);
 	// Rational and integer on the left.
-	mp_rational<> q(1,2);
+	rational q(1,2);
 	q -= real("1.5");
 	BOOST_CHECK_EQUAL(-1,q);
 	BOOST_CHECK_THROW(q -= real("inf"),std::overflow_error);
-	mp_integer<> n(4);
+	integer n(4);
 	n -= real("3",4);
 	BOOST_CHECK_EQUAL(n,1);
 	n -= real("1.001");
@@ -944,14 +944,14 @@ BOOST_AUTO_TEST_CASE(real_subtraction_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - real("inf")),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-inf") - r2),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") - r2),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_integer<>(1)),"1.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) - r2),"-1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - integer(1)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) - r2),"-1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_integer<16>(1)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(1) - r2),"-1.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} - mp_integer<>(1)),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) - real{"inf"}),"-inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_rational<>(1,2)),"1.50");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) - r2),"-1.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} - integer(1)),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) - real{"inf"}),"-inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - rational(1,2)),"1.50");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(1,2) - r2),"-1.50");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 - mp_rational<16>(1,2)),"1.50");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<32>(1,2) - r2),"-1.50");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
@@ -1057,32 +1057,32 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 	r1 *= real{"1.5"};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(r1.get_prec(),real::default_prec);
-	r1 *= mp_rational<>(1,2);
+	r1 *= rational(1,2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"1.50000000000000000000000000000000000");
-	r1 *= mp_integer<>(2);
+	r1 *= integer(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"3.00000000000000000000000000000000000");
-	BOOST_CHECK((is_multipliable<real,mp_integer<>>::value));
+	BOOST_CHECK((is_multipliable<real,integer>::value));
 	BOOST_CHECK((is_multipliable<real,mp_integer<16>>::value));
 	BOOST_CHECK((is_multipliable<mp_integer<16>,real>::value));
 	BOOST_CHECK((!is_multipliable_in_place<const mp_integer<16>,real>::value));
-	BOOST_CHECK((is_multipliable<real,mp_rational<>>::value));
+	BOOST_CHECK((is_multipliable<real,rational>::value));
 	BOOST_CHECK((is_multipliable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_multipliable<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_multipliable_in_place<const mp_rational<16>,real>::value));
 	// Precision handling.
-	BOOST_CHECK_EQUAL((real{3,4} * mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_integer<>() * real{3,4}).get_prec(),4);
-	BOOST_CHECK_EQUAL((real{3,4} * mp_rational<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_rational<>() * real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} * integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((integer() * real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} * rational()).get_prec(),4);
+	BOOST_CHECK_EQUAL((rational() * real{3,4}).get_prec(),4);
 	auto r1a = real{3,4};
-	BOOST_CHECK_EQUAL((r1a *= mp_integer<>()).get_prec(),4);
-	BOOST_CHECK_EQUAL((r1a *= mp_rational<>()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a *= integer()).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a *= rational()).get_prec(),4);
 	// Rational and integer on the left.
-	mp_rational<> q(1,2);
+	rational q(1,2);
 	q *= real(2);
 	BOOST_CHECK_EQUAL(1,q);
 	BOOST_CHECK_THROW(q *= real("inf"),std::overflow_error);
-	mp_integer<> n(4);
+	integer n(4);
 	n *= real("3",4);
 	BOOST_CHECK_EQUAL(n,12);
 	n *= real("1.001");
@@ -1159,14 +1159,14 @@ BOOST_AUTO_TEST_CASE(real_multiplication_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * real("inf")),"inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-inf") * r2),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") * r2),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_integer<>(2)),"4.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(2) * r2),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * integer(2)),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(2) * r2),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_integer<16>(2)),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(2) * r2),"4.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * mp_integer<>(1)),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) * real{"inf"}),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_rational<>(1,2)),"1.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) * r2),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} * integer(1)),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) * real{"inf"}),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * rational(1,2)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(1,2) * r2),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 * mp_rational<16>(1,2)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<32>(1,2) * r2),"1.00");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
@@ -1277,44 +1277,44 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	r1 /= real("inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"nan");
 	r1 = "-2.5e-1";
-	r1 /= mp_rational<>(1,-2);
+	r1 /= rational(1,-2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"5.00000000000000000000000000000000000e-1");
-	r1 /= mp_integer<>(2);
+	r1 /= integer(2);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"2.50000000000000000000000000000000000e-1");
-	r1 /= mp_integer<>(0);
+	r1 /= integer(0);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"inf");
 	r1 = -1;
-	r1 /= mp_rational<>();
+	r1 /= rational();
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"-inf");
 	r1 = 0;
-	r1 /= mp_rational<>();
+	r1 /= rational();
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"nan");
 	r1 = 12;
-	BOOST_CHECK((is_divisible<real,mp_integer<>>::value));
+	BOOST_CHECK((is_divisible<real,integer>::value));
 	BOOST_CHECK((is_divisible<real,mp_integer<16>>::value));
 	BOOST_CHECK((is_divisible<mp_integer<16>,real>::value));
 	BOOST_CHECK((!is_divisible_in_place<const mp_integer<16>,real>::value));
-	BOOST_CHECK((is_divisible<real,mp_rational<>>::value));
+	BOOST_CHECK((is_divisible<real,rational>::value));
 	BOOST_CHECK((is_divisible<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_divisible<mp_rational<16>,real>::value));
 	BOOST_CHECK((!is_divisible_in_place<const mp_rational<16>,real>::value));
 	// Precision handling.
-	BOOST_CHECK_EQUAL((real{3,4} / mp_integer<>(1)).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_integer<>(1) / real{3,4}).get_prec(),4);
-	BOOST_CHECK_EQUAL((real{3,4} / mp_rational<>(1)).get_prec(),4);
-	BOOST_CHECK_EQUAL((mp_rational<>(1) / real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} / integer(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((integer(1) / real{3,4}).get_prec(),4);
+	BOOST_CHECK_EQUAL((real{3,4} / rational(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((rational(1) / real{3,4}).get_prec(),4);
 	auto r1a = real{3,4};
-	BOOST_CHECK_EQUAL((r1a /= mp_integer<>(1)).get_prec(),4);
-	BOOST_CHECK_EQUAL((r1a /= mp_rational<>(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a /= integer(1)).get_prec(),4);
+	BOOST_CHECK_EQUAL((r1a /= rational(1)).get_prec(),4);
 	// Rational and integer on the left.
-	mp_rational<> q(1,2);
+	rational q(1,2);
 	q /= real(2);
-	BOOST_CHECK_EQUAL(mp_rational<>(1,4),q);
+	BOOST_CHECK_EQUAL(rational(1,4),q);
 	q /= real("inf");
 	BOOST_CHECK_EQUAL(q,0);
 	BOOST_CHECK_THROW(q /= real{},std::overflow_error);
 	BOOST_CHECK_THROW(q /= real{"nan"},std::overflow_error);
-	mp_integer<> n(4);
+	integer n(4);
 	n /= real(2,4);
 	BOOST_CHECK_EQUAL(n,2);
 	n /= real("1.001");
@@ -1396,14 +1396,14 @@ BOOST_AUTO_TEST_CASE(real_division_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / real("inf",4)),"0.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-inf") / r2),"-inf");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real("-nan") / r2),"nan");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_integer<>(2)),"1.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(2) / r2),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / integer(2)),"1.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(2) / r2),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_integer<16>(2)),"1.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<32>(2) / r2),"1.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} / mp_integer<>(1)),"inf");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_integer<>(1) / real{"inf"}),"0.00000000000000000000000000000000000");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_rational<>(1,2)),"4.00");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<>(1,2) / r2),"2.50e-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(real{"inf"} / integer(1)),"inf");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(integer(1) / real{"inf"}),"0.00000000000000000000000000000000000");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / rational(1,2)),"4.00");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(rational(1,2) / r2),"2.50e-1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2 / mp_rational<16>(1,2)),"4.00");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(mp_rational<8>(1,2) / r2),"2.50e-1");
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2) {
@@ -1469,31 +1469,31 @@ BOOST_AUTO_TEST_CASE(real_equality_test)
 	BOOST_CHECK(real{"nan"} != real{"inf"});
 	BOOST_CHECK(real{0} != real{1});
 	// With integer.
-	BOOST_CHECK_EQUAL(mp_integer<>(1),real{1});
-	BOOST_CHECK_EQUAL((real{0,4}),mp_integer<>(mp_rational<>(1,2)));
-	BOOST_CHECK(!(mp_integer<>() == real{"nan"}));
-	BOOST_CHECK(mp_integer<>() != real{"nan"});
-	BOOST_CHECK(!(real{"-nan"} == mp_integer<>(5)));
-	BOOST_CHECK(real{"-nan"} != mp_integer<>(5));
-	BOOST_CHECK(!(mp_integer<>() == real{"inf"}));
-	BOOST_CHECK(!(real{"-inf"} == mp_integer<>(5)));
-	BOOST_CHECK(real{1} != mp_integer<>());
-	BOOST_CHECK((is_equality_comparable<real,mp_integer<>>::value));
+	BOOST_CHECK_EQUAL(integer(1),real{1});
+	BOOST_CHECK_EQUAL((real{0,4}),integer(rational(1,2)));
+	BOOST_CHECK(!(integer() == real{"nan"}));
+	BOOST_CHECK(integer() != real{"nan"});
+	BOOST_CHECK(!(real{"-nan"} == integer(5)));
+	BOOST_CHECK(real{"-nan"} != integer(5));
+	BOOST_CHECK(!(integer() == real{"inf"}));
+	BOOST_CHECK(!(real{"-inf"} == integer(5)));
+	BOOST_CHECK(real{1} != integer());
+	BOOST_CHECK((is_equality_comparable<real,integer>::value));
 	BOOST_CHECK((is_equality_comparable<mp_integer<16>,real>::value));
 	BOOST_CHECK((std::is_same<bool,decltype(real{} == mp_integer<8>{})>::value));
 	// With rational.
-	BOOST_CHECK_EQUAL(mp_rational<>(1),real{1});
-	BOOST_CHECK_EQUAL(real{1},mp_rational<>(1));
-	BOOST_CHECK_EQUAL(real{"0.5"},mp_rational<>(1,2));
-	BOOST_CHECK_EQUAL(mp_rational<>(1,2),(real{"0.5",4}));
-	BOOST_CHECK(!(mp_rational<>() == real{"nan"}));
-	BOOST_CHECK(mp_rational<>() != real{"nan"});
-	BOOST_CHECK(!(real{"-nan"} == mp_rational<>(5,3)));
-	BOOST_CHECK(real{"-nan"} != mp_rational<>(5,3));
-	BOOST_CHECK(!(mp_rational<>() == real{"inf"}));
-	BOOST_CHECK(!(real{"-inf"} == mp_rational<>(5)));
-	BOOST_CHECK(real{1} != mp_rational<>(3,4));
-	BOOST_CHECK((is_equality_comparable<real,mp_rational<>>::value));
+	BOOST_CHECK_EQUAL(rational(1),real{1});
+	BOOST_CHECK_EQUAL(real{1},rational(1));
+	BOOST_CHECK_EQUAL(real{"0.5"},rational(1,2));
+	BOOST_CHECK_EQUAL(rational(1,2),(real{"0.5",4}));
+	BOOST_CHECK(!(rational() == real{"nan"}));
+	BOOST_CHECK(rational() != real{"nan"});
+	BOOST_CHECK(!(real{"-nan"} == rational(5,3)));
+	BOOST_CHECK(real{"-nan"} != rational(5,3));
+	BOOST_CHECK(!(rational() == real{"inf"}));
+	BOOST_CHECK(!(real{"-inf"} == rational(5)));
+	BOOST_CHECK(real{1} != rational(3,4));
+	BOOST_CHECK((is_equality_comparable<real,rational>::value));
 	BOOST_CHECK((is_equality_comparable<mp_rational<16>,real>::value));
 	BOOST_CHECK((std::is_same<bool,decltype(real{} == mp_rational<8>{})>::value));
 	// With floating-point types.
@@ -1600,62 +1600,62 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 	BOOST_CHECK(!(real{"inf"} <= real{"nan"}));
 	BOOST_CHECK(!(real{"nan"} >= real{"inf"}));
 	// Integer and rational.
-	BOOST_CHECK((is_less_than_comparable<real,mp_integer<>>::value));
-	BOOST_CHECK((is_less_than_comparable<mp_integer<>,real>::value));
-	BOOST_CHECK((std::is_same<bool,decltype(real{} < mp_integer<>{})>::value));
-	BOOST_CHECK(real{4} > mp_integer<>(3));
-	BOOST_CHECK(real{4} >= mp_integer<>(4));
-	BOOST_CHECK(real{4} < mp_integer<>(5));
-	BOOST_CHECK(real{4} <= mp_integer<>(5));
-	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
+	BOOST_CHECK((is_less_than_comparable<real,integer>::value));
+	BOOST_CHECK((is_less_than_comparable<integer,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} < integer{})>::value));
+	BOOST_CHECK(real{4} > integer(3));
+	BOOST_CHECK(real{4} >= integer(4));
+	BOOST_CHECK(real{4} < integer(5));
+	BOOST_CHECK(real{4} <= integer(5));
+	BOOST_CHECK(real{"inf"} > integer(3));
 	BOOST_CHECK(real{4} > mp_integer<8>(3));
 	BOOST_CHECK(real{4} >= mp_integer<16>(4));
 	BOOST_CHECK(real{4} < mp_integer<32>(5));
 	BOOST_CHECK(real{4} <= mp_integer<8>(5));
-	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
-	BOOST_CHECK(mp_integer<>{4} > real{2});
-	BOOST_CHECK(!(real{"nan"} > mp_integer<>(3)));
-	BOOST_CHECK(!(real{"nan"} < mp_integer<>(3)));
-	BOOST_CHECK(!(real{"nan"} >= mp_integer<>(3)));
-	BOOST_CHECK(!(real{"nan"} <= mp_integer<>(3)));
-	BOOST_CHECK(!(mp_integer<>(3) > real{"nan"}));
-	BOOST_CHECK(!(mp_integer<>(3) < real{"nan"}));
-	BOOST_CHECK(!(mp_integer<>(3) >= real{"nan"}));
-	BOOST_CHECK(!(mp_integer<>(3) <= real{"nan"}));
-	BOOST_CHECK(real{4} >= mp_integer<>(3));
-	BOOST_CHECK(real{3} >= mp_integer<>(3));
-	BOOST_CHECK(real{"inf"} >= mp_integer<>(3));
-	BOOST_CHECK(real{"inf"} > mp_integer<>(3));
-	BOOST_CHECK(real{"-inf"} < mp_integer<>(3));
-	BOOST_CHECK(real{"-inf"} <= mp_integer<>(3));
-	BOOST_CHECK((is_less_than_comparable<real,mp_rational<>>::value));
-	BOOST_CHECK((is_less_than_comparable<mp_rational<>,real>::value));
-	BOOST_CHECK((std::is_same<bool,decltype(real{} < mp_rational<>{})>::value));
-	BOOST_CHECK(real{4} > mp_rational<>(3));
-	BOOST_CHECK(real{4} >= mp_rational<>(4));
-	BOOST_CHECK(real{4} < mp_rational<>(5));
-	BOOST_CHECK(real{4} <= mp_rational<>(5));
-	BOOST_CHECK(real{"inf"} > mp_rational<>(3));
+	BOOST_CHECK(real{"inf"} > integer(3));
+	BOOST_CHECK(integer{4} > real{2});
+	BOOST_CHECK(!(real{"nan"} > integer(3)));
+	BOOST_CHECK(!(real{"nan"} < integer(3)));
+	BOOST_CHECK(!(real{"nan"} >= integer(3)));
+	BOOST_CHECK(!(real{"nan"} <= integer(3)));
+	BOOST_CHECK(!(integer(3) > real{"nan"}));
+	BOOST_CHECK(!(integer(3) < real{"nan"}));
+	BOOST_CHECK(!(integer(3) >= real{"nan"}));
+	BOOST_CHECK(!(integer(3) <= real{"nan"}));
+	BOOST_CHECK(real{4} >= integer(3));
+	BOOST_CHECK(real{3} >= integer(3));
+	BOOST_CHECK(real{"inf"} >= integer(3));
+	BOOST_CHECK(real{"inf"} > integer(3));
+	BOOST_CHECK(real{"-inf"} < integer(3));
+	BOOST_CHECK(real{"-inf"} <= integer(3));
+	BOOST_CHECK((is_less_than_comparable<real,rational>::value));
+	BOOST_CHECK((is_less_than_comparable<rational,real>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(real{} < rational{})>::value));
+	BOOST_CHECK(real{4} > rational(3));
+	BOOST_CHECK(real{4} >= rational(4));
+	BOOST_CHECK(real{4} < rational(5));
+	BOOST_CHECK(real{4} <= rational(5));
+	BOOST_CHECK(real{"inf"} > rational(3));
 	BOOST_CHECK(real{4} > mp_rational<16>(3));
 	BOOST_CHECK(real{4} >= mp_rational<8>(4));
 	BOOST_CHECK(real{4} < mp_rational<32>(5));
 	BOOST_CHECK(real{4} <= mp_rational<16>(5));
-	BOOST_CHECK(real{"inf"} > mp_rational<>(3));
-	BOOST_CHECK(mp_rational<>{4} > real{2});
-	BOOST_CHECK(!(real{"nan"} > mp_rational<>(3)));
-	BOOST_CHECK(!(real{"nan"} < mp_rational<>(3)));
-	BOOST_CHECK(!(real{"nan"} >= mp_rational<>(3)));
-	BOOST_CHECK(!(real{"nan"} <= mp_rational<>(3)));
-	BOOST_CHECK(!(mp_rational<>(3) > real{"nan"}));
-	BOOST_CHECK(!(mp_rational<>(3) < real{"nan"}));
-	BOOST_CHECK(!(mp_rational<>(3) >= real{"nan"}));
-	BOOST_CHECK(!(mp_rational<>(3) <= real{"nan"}));
-	BOOST_CHECK(real{4} >= mp_rational<>(3));
-	BOOST_CHECK(real{3} >= mp_rational<>(3));
-	BOOST_CHECK(real{"inf"} >= mp_rational<>(3));
-	BOOST_CHECK(real{"inf"} > mp_rational<>(3));
-	BOOST_CHECK(real{"-inf"} < mp_rational<>(3));
-	BOOST_CHECK(real{"-inf"} <= mp_rational<>(3));
+	BOOST_CHECK(real{"inf"} > rational(3));
+	BOOST_CHECK(rational{4} > real{2});
+	BOOST_CHECK(!(real{"nan"} > rational(3)));
+	BOOST_CHECK(!(real{"nan"} < rational(3)));
+	BOOST_CHECK(!(real{"nan"} >= rational(3)));
+	BOOST_CHECK(!(real{"nan"} <= rational(3)));
+	BOOST_CHECK(!(rational(3) > real{"nan"}));
+	BOOST_CHECK(!(rational(3) < real{"nan"}));
+	BOOST_CHECK(!(rational(3) >= real{"nan"}));
+	BOOST_CHECK(!(rational(3) <= real{"nan"}));
+	BOOST_CHECK(real{4} >= rational(3));
+	BOOST_CHECK(real{3} >= rational(3));
+	BOOST_CHECK(real{"inf"} >= rational(3));
+	BOOST_CHECK(real{"inf"} > rational(3));
+	BOOST_CHECK(real{"-inf"} < rational(3));
+	BOOST_CHECK(real{"-inf"} <= rational(3));
 	// With floating-point types.
 	if (std::numeric_limits<float>::is_iec559 && std::numeric_limits<float>::radix == 2 && std::numeric_limits<float>::has_infinity &&
 		std::numeric_limits<float>::has_quiet_NaN)
@@ -1701,8 +1701,8 @@ BOOST_AUTO_TEST_CASE(real_comparisons_test)
 	}
 	boost::fusion::for_each(integral_values,check_binary_comparison_integral());
 	BOOST_CHECK((is_less_than_comparable<real,long double>::value));
-	BOOST_CHECK((is_less_than_comparable<mp_rational<>,long double>::value));
-	BOOST_CHECK((std::is_same<bool,decltype(0.l < mp_rational<>{})>::value));
+	BOOST_CHECK((is_less_than_comparable<rational,long double>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(0.l < rational{})>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_stream_test)
@@ -1766,9 +1766,9 @@ BOOST_AUTO_TEST_CASE(real_pow_test)
 	BOOST_CHECK((is_exponentiable<mp_integer<8>,real>::value));
 	BOOST_CHECK((is_exponentiable<real,mp_rational<16>>::value));
 	BOOST_CHECK((is_exponentiable<mp_rational<8>,real>::value));
-	BOOST_CHECK_EQUAL(math::pow(real{4},mp_rational<>{1,2}),real{2});
+	BOOST_CHECK_EQUAL(math::pow(real{4},rational{1,2}),real{2});
 	BOOST_CHECK_EQUAL(math::pow(2.l,real{4}),16);
-	BOOST_CHECK_EQUAL(math::pow(real{3},mp_rational<>(1,4)),math::pow(real{3},real{mp_rational<>(1,4)}));
+	BOOST_CHECK_EQUAL(math::pow(real{3},rational(1,4)),math::pow(real{3},real{rational(1,4)}));
 	// Check precision handling.
 	BOOST_CHECK_EQUAL(math::pow(real{4,4},4).get_prec(),4);
 	BOOST_CHECK_EQUAL(math::pow(4,real{4,4}).get_prec(),4);
@@ -1800,7 +1800,7 @@ BOOST_AUTO_TEST_CASE(real_fma_test)
 	math::multiply_accumulate(r3,real{-4},real{2});
 	BOOST_CHECK_EQUAL(r3,-3);
 	BOOST_CHECK((has_multiply_accumulate<real>::value));
-	BOOST_CHECK((has_multiply_accumulate<real,mp_integer<>>::value));
+	BOOST_CHECK((has_multiply_accumulate<real,integer>::value));
 	BOOST_CHECK((!has_multiply_accumulate<real,no_fma>::value));
 	BOOST_CHECK((has_multiply_accumulate<real &, real>::value));
 	BOOST_CHECK((has_multiply_accumulate<real &, real &, const real &>::value));
@@ -1897,7 +1897,7 @@ BOOST_AUTO_TEST_CASE(real_partial_test)
 
 BOOST_AUTO_TEST_CASE(real_evaluate_test)
 {
-	BOOST_CHECK_EQUAL(math::evaluate(real(),std::unordered_map<std::string,mp_integer<>>{}),real());
+	BOOST_CHECK_EQUAL(math::evaluate(real(),std::unordered_map<std::string,integer>{}),real());
 	BOOST_CHECK_EQUAL(math::evaluate(real(2),std::unordered_map<std::string,int>{}),real(2));
 	BOOST_CHECK_EQUAL(math::evaluate(real(-3.5),std::unordered_map<std::string,double>{}),real(-3.5));
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(real(),std::unordered_map<std::string,real>{})),real>::value));
@@ -1918,11 +1918,11 @@ BOOST_AUTO_TEST_CASE(real_subs_test)
 
 BOOST_AUTO_TEST_CASE(real_ipow_subs_test)
 {
-	BOOST_CHECK_EQUAL(math::ipow_subs(real(-42.123),"a",mp_integer<>(4),5),real(-42.123));
-	BOOST_CHECK_EQUAL(math::ipow_subs(real(42.456),"a",mp_integer<>(4),5),real(42.456));
+	BOOST_CHECK_EQUAL(math::ipow_subs(real(-42.123),"a",integer(4),5),real(-42.123));
+	BOOST_CHECK_EQUAL(math::ipow_subs(real(42.456),"a",integer(4),5),real(42.456));
 	BOOST_CHECK(has_ipow_subs<real>::value);
 	BOOST_CHECK((has_ipow_subs<real,double>::value));
-	BOOST_CHECK((has_ipow_subs<real,mp_integer<>>::value));
+	BOOST_CHECK((has_ipow_subs<real,integer>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_abs_test)
@@ -1948,12 +1948,12 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 	BOOST_CHECK((!has_binomial<real,std::string>::value));
 	BOOST_CHECK((has_binomial<long,real>::value));
 	BOOST_CHECK((has_binomial<double,real>::value));
-	BOOST_CHECK((has_binomial<mp_rational<>,real>::value));
+	BOOST_CHECK((has_binomial<rational,real>::value));
 	BOOST_CHECK((has_binomial<mp_rational<16>,real>::value));
 	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},2))>::value));
 	BOOST_CHECK((std::is_same<real,decltype(math::binomial(2,real{}))>::value));
-	BOOST_CHECK((std::is_same<real,decltype(math::binomial(mp_rational<>{},real{}))>::value));
-	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},mp_integer<>{}))>::value));
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(rational{},real{}))>::value));
+	BOOST_CHECK((std::is_same<real,decltype(math::binomial(real{},integer{}))>::value));
 	// Invalid values.
 	BOOST_CHECK_THROW(math::binomial(real{"inf"},4),std::invalid_argument);
 	BOOST_CHECK_THROW(math::binomial(real{"nan"},4),std::invalid_argument);
@@ -1966,10 +1966,10 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 		// NOTE: at the moment we have nothing to check this against.
 		real tmp = math::binomial(real{x},real{y});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
-		tmp = math::binomial(real{x,real::default_prec + 1},mp_rational<>{y});
+		tmp = math::binomial(real{x,real::default_prec + 1},rational{y});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
 		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
-		tmp = math::binomial(mp_rational<>{x},real{y,real::default_prec + 1});
+		tmp = math::binomial(rational{x},real{y,real::default_prec + 1});
 		BOOST_CHECK((!tmp.is_nan() && !tmp.is_inf()));
 		BOOST_CHECK_EQUAL(tmp.get_prec(),real::default_prec + 1);
 		tmp = math::binomial(static_cast<int>(x),real{y,real::default_prec + 1});
@@ -2031,10 +2031,10 @@ BOOST_AUTO_TEST_CASE(real_binomial_test)
 BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
 {
 	BOOST_CHECK(is_equality_comparable<real>::value);
-	BOOST_CHECK((is_equality_comparable<real,mp_rational<>>::value));
-	BOOST_CHECK((is_equality_comparable<real,mp_integer<>>::value));
-	BOOST_CHECK((is_equality_comparable<mp_rational<>,real>::value));
-	BOOST_CHECK((is_equality_comparable<mp_integer<>,real>::value));
+	BOOST_CHECK((is_equality_comparable<real,rational>::value));
+	BOOST_CHECK((is_equality_comparable<real,integer>::value));
+	BOOST_CHECK((is_equality_comparable<rational,real>::value));
+	BOOST_CHECK((is_equality_comparable<integer,real>::value));
 	BOOST_CHECK((is_equality_comparable<double,real>::value));
 	BOOST_CHECK((is_equality_comparable<real,int>::value));
 	BOOST_CHECK((!is_equality_comparable<real,std::string>::value));
@@ -2068,16 +2068,16 @@ BOOST_AUTO_TEST_CASE(real_type_traits_test)
 	BOOST_CHECK(has_transformation_is_canonical<real const>::value);
 	BOOST_CHECK(!has_degree<real>::value);
 	BOOST_CHECK(is_addable<real>::value);
-	BOOST_CHECK((is_addable<real,mp_integer<>>::value));
-	BOOST_CHECK((is_addable<mp_integer<>,real>::value));
+	BOOST_CHECK((is_addable<real,integer>::value));
+	BOOST_CHECK((is_addable<integer,real>::value));
 	BOOST_CHECK((is_addable<double,real>::value));
 	BOOST_CHECK((is_addable<real,double>::value));
 	BOOST_CHECK((!is_addable<real,std::complex<double>>::value));
 	BOOST_CHECK((!is_addable<std::complex<double>,real>::value));
 	BOOST_CHECK(is_subtractable<real>::value);
 	BOOST_CHECK((is_subtractable<double,real>::value));
-	BOOST_CHECK((is_subtractable<real,mp_integer<>>::value));
-	BOOST_CHECK((is_subtractable<mp_integer<>,real>::value));
+	BOOST_CHECK((is_subtractable<real,integer>::value));
+	BOOST_CHECK((is_subtractable<integer,real>::value));
 	BOOST_CHECK((is_subtractable<real,double>::value));
 	BOOST_CHECK((!is_subtractable<real,std::complex<double>>::value));
 	BOOST_CHECK((!is_subtractable<std::complex<double>,real>::value));
