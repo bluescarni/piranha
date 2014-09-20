@@ -851,6 +851,10 @@ class series: series_binary_operators, detail::series_tag
 		series(series &&) = default;
 		/// Generic constructor.
 		/**
+		 * \note
+		 * This constructor is enabled only if the decayed type of \p T is different from piranha::series and
+		 * the algorithm outlined below is supported by the involved types.
+		 *
 		 * The generic construction algorithm works as follows:
 		 * - if \p T is an instance of piranha::series with the same echelon size as the calling type:
 		 *   - if the term type of \p T is the same as that of <tt>this</tt>:
@@ -864,10 +868,7 @@ class series: series_binary_operators, detail::series_tag
 		 *     - an empty arguments set will be used to construct a key;
 		 *     - coefficient and key are used to construct the new term instance;
 		 *   - the new term is inserted into \p this.
-		 * 
-		 * If the type of \p this is \p T, or \p x is an instance of piranha::series with echelon size larger than the calling type,
-		 * or any constructor needed in the algorithm outlined above is not available, this constructor will be disabled.
-		 * 
+		 *
 		 * @param[in] x object to construct from.
 		 * 
 		 * @throws unspecified any exception thrown by:
@@ -877,9 +878,9 @@ class series: series_binary_operators, detail::series_tag
 		 * - insert(),
 		 * - the copy constructor of piranha::series.
 		 */
-		template <typename T>
-		explicit series(T &&x, typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
-			generic_ctor_enabler<T>::value>::type * = nullptr)
+		template <typename T, typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
+			generic_ctor_enabler<T>::value,int>::type = 0>
+		explicit series(T &&x)
 		{
 			dispatch_generic_construction(std::forward<T>(x));
 		}
