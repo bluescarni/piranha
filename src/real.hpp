@@ -1963,9 +1963,16 @@ inline real::~real()
 	if (m_value->_mpfr_d) {
 		::mpfr_clear(m_value);
 	} else {
+// NOTE: the story here is that ICC has a weird behaviour when the thread_local
+// storage. Essentially, the thread-local static variable in the fma() function
+// upon destruction has the _mpfr_d set to zero for some reason but the other members
+// are not zeroed out. This results in the asserts below firing, and probably a memory
+// leak as well as the variable is not cleared. We just disable the asserts for now.
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
 		piranha_assert(!m_value->_mpfr_prec);
 		piranha_assert(!m_value->_mpfr_sign);
 		piranha_assert(!m_value->_mpfr_exp);
+#endif
 	}
 }
 

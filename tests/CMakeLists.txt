@@ -32,14 +32,10 @@ ADD_PIRANHA_TESTCASE(kronecker_monomial)
 # maybe the switch to mp_integer will make them go away. Others seem
 # to involve the decltype() stuff in power_series. Maybe changing the style
 # of those will fix it.
-if(NOT CMAKE_COMPILER_IS_INTELXX)
-	ADD_PIRANHA_TESTCASE(kronecker_polynomial)
-	ADD_PIRANHA_TESTCASE(math)
-endif()
+ADD_PIRANHA_TESTCASE(kronecker_polynomial)
+ADD_PIRANHA_TESTCASE(math)
 ADD_PIRANHA_TESTCASE(memory)
-if(NOT CMAKE_COMPILER_IS_INTELXX)
-	ADD_PIRANHA_TESTCASE(monomial)
-endif()
+ADD_PIRANHA_TESTCASE(monomial)
 ADD_PIRANHA_TESTCASE(mp_integer_01)
 ADD_PIRANHA_TESTCASE(mp_integer_02)
 ADD_PIRANHA_TESTCASE(mp_rational)
