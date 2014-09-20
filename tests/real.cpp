@@ -2125,3 +2125,15 @@ BOOST_AUTO_TEST_CASE(real_exp_test)
 	BOOST_CHECK(real("nan").exp().is_nan());
 	BOOST_CHECK_EQUAL(real(0,4).exp().get_prec(),4);
 }
+
+BOOST_AUTO_TEST_CASE(real_literal_test)
+{
+	BOOST_CHECK((std::is_same<std::decay<decltype(1._r)>::type,real>::value));
+	BOOST_CHECK_EQUAL(1_r,real{1});
+	BOOST_CHECK_EQUAL(1._r,real{1});
+	BOOST_CHECK_EQUAL(1.e1_r,real{10});
+	if (std::numeric_limits<double>::radix == 2) {
+		BOOST_CHECK(1.3_r != real{1.3});
+	}
+	BOOST_CHECK_EQUAL(1.e-1_r,real{"1e-1"});
+}

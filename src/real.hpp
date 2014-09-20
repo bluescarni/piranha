@@ -2069,6 +2069,27 @@ inline real real::binomial(const real &y) const
 	return real{0,max_prec};
 }
 
+inline namespace literals
+{
+
+/// Literal for piranha::real.
+/**
+ * The return value will be constructed with default precision.
+ *
+ * @param[in] s literal string.
+ *
+ * @return a piranha::real constructed from \p s.
+ *
+ * @throws unspecified any exception thrown by the constructor of
+ * piranha::real from string.
+ */
+inline real operator "" _r(const char *s)
+{
+	return real(s);
+}
+
+}
+
 }
 
 namespace std
