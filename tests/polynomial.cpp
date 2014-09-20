@@ -86,9 +86,9 @@ struct mock_cf
 	mock_cf();
 	mock_cf(const int &);
 	mock_cf(const mock_cf &);
-	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf(mock_cf &&) noexcept;
 	mock_cf &operator=(const mock_cf &);
-	mock_cf &operator=(mock_cf &&) noexcept(true);
+	mock_cf &operator=(mock_cf &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
 	mock_cf operator-() const;
 	bool operator==(const mock_cf &) const;

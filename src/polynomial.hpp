@@ -1012,7 +1012,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				m_new_keys1(nk1),m_new_keys2(nk2)
 			{}
 			template <typename Task>
-			bool operator()(const Task &t1, const Task &t2) const noexcept
+			bool operator()(const Task &t1, const Task &t2) const
 			{
 				return m_new_keys1[t1.m_b1.first].first + m_new_keys2[t1.m_b2.first].first <
 					m_new_keys1[t2.m_b1.first].first + m_new_keys2[t2.m_b2.first].first;
@@ -1310,9 +1310,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// NOTE: in some setups Boost is apparently unable to deduce the result type
 			// of the functor and needs this typedef in the transform iterator.
 			using result_type = bucket_size_type;
-			explicit sparse_bi_extractor(const return_type *retval) noexcept : m_retval(retval) {}
+			explicit sparse_bi_extractor(const return_type *retval) : m_retval(retval) {}
 			template <typename Term>
-			result_type operator()(const Term *t) const noexcept
+			result_type operator()(const Term *t) const
 			{
 				return m_retval->m_container._bucket_from_hash(t->hash());
 			}

@@ -230,10 +230,10 @@ struct fake_int
 	fake_int();
 	explicit fake_int(int);
 	fake_int(const fake_int &);
-	fake_int(fake_int &&) noexcept(true);
+	fake_int(fake_int &&) noexcept;
 	fake_int &operator=(const fake_int &);
-	fake_int &operator=(fake_int &&) noexcept(true);
-	~fake_int() noexcept(true);
+	fake_int &operator=(fake_int &&) noexcept;
+	~fake_int();
 	bool operator==(const fake_int &) const;
 	bool operator!=(const fake_int &) const;
 	bool operator<(const fake_int &) const;
@@ -252,7 +252,7 @@ struct hash<fake_int>
 {
 	typedef size_t result_type;
 	typedef fake_int argument_type;
-	result_type operator()(const argument_type &) const noexcept(true);
+	result_type operator()(const argument_type &) const noexcept;
 };
 
 }

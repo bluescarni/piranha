@@ -177,7 +177,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * 
 		 * @return <tt>this->size() == args.size()</tt>.
 		 */
-		bool is_compatible(const symbol_set &args) const noexcept(true)
+		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			return (this->size() == args.size());
 		}
@@ -189,7 +189,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const symbol_set &args) const noexcept(true)
+		bool is_ignorable(const symbol_set &args) const noexcept
 		{
 			(void)args;
 			piranha_assert(is_compatible(args));

@@ -68,7 +68,7 @@ class tuning: private detail::base_tuning<>
 		 *
 		 * @return current value of the \p parallel_memory_set flag.
 		 */
-		static bool get_parallel_memory_set() noexcept
+		static bool get_parallel_memory_set()
 		{
 			return s_parallel_memory_set.load();
 		}
@@ -78,7 +78,7 @@ class tuning: private detail::base_tuning<>
 		 *
 		 * @param[in] flag desired value for the \p parallel_memory_set flag.
 		 */
-		static void set_parallel_memory_set(bool flag) noexcept
+		static void set_parallel_memory_set(bool flag)
 		{
 			s_parallel_memory_set.store(flag);
 		}
@@ -94,7 +94,7 @@ class tuning: private detail::base_tuning<>
 		 * 
 		 * @return the block size used in some series multiplication routines.
 		 */
-		static unsigned get_multiplication_block_size() noexcept
+		static unsigned get_multiplication_block_size()
 		{
 			return s_mult_block_size.load();
 		}

@@ -105,7 +105,7 @@ class thread_barrier
 		 *
 		 * @return \p true for exactly one thread from each batch of waiting threads, \p false otherwise.
 		 */
-		bool wait() noexcept
+		bool wait()
 		{
 			try {
 				std::unique_lock<std::mutex> lock(m_mutex);

@@ -176,14 +176,14 @@ struct key02
 {
 	key02() = default;
 	key02(const key02 &) = default;
-	key02(key02 &&) noexcept(true);
+	key02(key02 &&) noexcept;
 	key02 &operator=(const key02 &) = default;
-	key02 &operator=(key02 &&) noexcept(true);
+	key02 &operator=(key02 &&) noexcept;
 	key02(const symbol_set &);
 	bool operator==(const key02 &) const;
 	bool operator!=(const key02 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key02 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -202,9 +202,9 @@ struct key03: key02
 {
 	key03() = default;
 	key03(const key03 &) = default;
-	key03(key03 &&) noexcept(true);
+	key03(key03 &&) noexcept;
 	key03 &operator=(const key03 &) = default;
-	key03 &operator=(key03 &&) noexcept(true);
+	key03 &operator=(key03 &&) noexcept;
 	key03(const symbol_set &);
 	key03 merge_args(const symbol_set &, const symbol_set &) const;
 	bool operator==(const key03 &) const;
@@ -218,10 +218,10 @@ struct fake_int_01
 	fake_int_01();
 	explicit fake_int_01(int);
 	fake_int_01(const fake_int_01 &);
-	fake_int_01(fake_int_01 &&) noexcept(true);
+	fake_int_01(fake_int_01 &&) noexcept;
 	fake_int_01 &operator=(const fake_int_01 &);
-	fake_int_01 &operator=(fake_int_01 &&) noexcept(true);
-	~fake_int_01() noexcept(true);
+	fake_int_01 &operator=(fake_int_01 &&) noexcept;
+	~fake_int_01();
 	bool operator==(const fake_int_01 &) const;
 	bool operator!=(const fake_int_01 &) const;
 	bool operator<(const fake_int_01 &) const;
@@ -237,10 +237,10 @@ struct fake_int_02
 	fake_int_02();
 	explicit fake_int_02(int);
 	fake_int_02(const fake_int_02 &);
-	fake_int_02(fake_int_02 &&) noexcept(true);
+	fake_int_02(fake_int_02 &&) noexcept;
 	fake_int_02 &operator=(const fake_int_02 &);
-	fake_int_02 &operator=(fake_int_02 &&) noexcept(true);
-	~fake_int_02() noexcept(true);
+	fake_int_02 &operator=(fake_int_02 &&) noexcept;
+	~fake_int_02();
 	bool operator==(const fake_int_02 &) const;
 	bool operator!=(const fake_int_02 &) const;
 	//bool operator<(const fake_int_02 &) const;
@@ -255,9 +255,9 @@ struct key04: key02
 {
 	key04() = default;
 	key04(const key04 &) = default;
-	key04(key04 &&) noexcept(true);
+	key04(key04 &&) noexcept;
 	key04 &operator=(const key04 &) = default;
-	key04 &operator=(key04 &&) noexcept(true);
+	key04 &operator=(key04 &&) noexcept;
 	key04(const symbol_set &);
 	key04 merge_args(const symbol_set &, const symbol_set &) const;
 	bool operator==(const key04 &) const;
@@ -270,9 +270,9 @@ struct key05: key02
 {
 	key05() = default;
 	key05(const key05 &) = default;
-	key05(key05 &&) noexcept(true);
+	key05(key05 &&) noexcept;
 	key05 &operator=(const key05 &) = default;
-	key05 &operator=(key05 &&) noexcept(true);
+	key05 &operator=(key05 &&) noexcept;
 	key05(const symbol_set &);
 	key05 merge_args(const symbol_set &, const symbol_set &) const;
 	bool operator==(const key05 &) const;
@@ -287,25 +287,25 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept(true);
+	std::size_t operator()(const key02 &) const noexcept;
 };
 
 template <>
 struct hash<key03>
 {
-	std::size_t operator()(const key03 &) const noexcept(true);
+	std::size_t operator()(const key03 &) const noexcept;
 };
 
 template <>
 struct hash<key04>
 {
-	std::size_t operator()(const key04 &) const noexcept(true);
+	std::size_t operator()(const key04 &) const noexcept;
 };
 
 template <>
 struct hash<key05>
 {
-	std::size_t operator()(const key05 &) const noexcept(true);
+	std::size_t operator()(const key05 &) const noexcept;
 };
 
 }

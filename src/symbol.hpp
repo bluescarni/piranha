@@ -195,7 +195,7 @@ struct hash<piranha::symbol>
 	 * 
 	 * @return piranha::symbol::hash().
 	 */
-	result_type operator()(const argument_type &s) const noexcept(true)
+	result_type operator()(const argument_type &s) const noexcept
 	{
 		return s.hash();
 	}

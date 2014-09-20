@@ -353,7 +353,7 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * @return compatibility flag for the monomial.
 		 */
-		bool is_compatible(const symbol_set &args) const noexcept(true)
+		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			const auto s = args.size();
 			// No args means the value must also be zero.
@@ -391,7 +391,7 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * @return ignorability flag.
 		 */
-		bool is_ignorable(const symbol_set &) const noexcept(true)
+		bool is_ignorable(const symbol_set &) const noexcept
 		{
 			if (m_value == value_type(0) && !m_flavour) {
 				return true;
@@ -1103,7 +1103,7 @@ struct hash<piranha::real_trigonometric_kronecker_monomial<T>>
 	 * 
 	 * @return hash value of \p a computed via piranha::real_trigonometric_kronecker_monomial::hash().
 	 */
-	result_type operator()(const argument_type &a) const noexcept(true)
+	result_type operator()(const argument_type &a) const noexcept
 	{
 		return a.hash();
 	}

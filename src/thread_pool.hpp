@@ -411,7 +411,7 @@ class future_list
 		/**
 		 * This method will call <tt>wait()</tt> on all the valid futures stored within the object.
 		 */
-		void wait_all() noexcept
+		void wait_all()
 		{
 			for (auto &f: m_list) {
 				if (f.valid()) {

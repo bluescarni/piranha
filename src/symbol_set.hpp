@@ -125,7 +125,7 @@ class symbol_set
 		 * 
 		 * @return reference to \p this.
 		 */
-		symbol_set &operator=(symbol_set &&other) noexcept(true)
+		symbol_set &operator=(symbol_set &&other) noexcept
 		{
 			// NOTE: here the idea is that in principle we want to be able to move-assign self,
 			// and we don't want to rely on std::vector to support this. Hence, the explicit check.

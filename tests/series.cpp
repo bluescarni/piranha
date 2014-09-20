@@ -1329,10 +1329,10 @@ struct fake_int_01
 	fake_int_01();
 	explicit fake_int_01(int);
 	fake_int_01(const fake_int_01 &);
-	fake_int_01(fake_int_01 &&) noexcept(true);
+	fake_int_01(fake_int_01 &&) noexcept;
 	fake_int_01 &operator=(const fake_int_01 &);
-	fake_int_01 &operator=(fake_int_01 &&) noexcept(true);
-	~fake_int_01() noexcept(true);
+	fake_int_01 &operator=(fake_int_01 &&) noexcept;
+	~fake_int_01();
 };
 
 struct fake_int_02
@@ -1340,10 +1340,10 @@ struct fake_int_02
 	fake_int_02();
 	explicit fake_int_02(int);
 	fake_int_02(const fake_int_02 &);
-	fake_int_02(fake_int_02 &&) noexcept(true);
+	fake_int_02(fake_int_02 &&) noexcept;
 	fake_int_02 &operator=(const fake_int_02 &);
-	fake_int_02 &operator=(fake_int_02 &&) noexcept(true);
-	~fake_int_02() noexcept(true);
+	fake_int_02 &operator=(fake_int_02 &&) noexcept;
+	~fake_int_02();
 };
 
 namespace piranha
@@ -1516,9 +1516,9 @@ struct mock_cf
 	mock_cf();
 	mock_cf(const int &);
 	mock_cf(const mock_cf &);
-	mock_cf(mock_cf &&) noexcept(true);
+	mock_cf(mock_cf &&) noexcept;
 	mock_cf &operator=(const mock_cf &);
-	mock_cf &operator=(mock_cf &&) noexcept(true);
+	mock_cf &operator=(mock_cf &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
 	mock_cf operator-() const;
 	bool operator==(const mock_cf &) const;
@@ -1694,14 +1694,14 @@ struct mock_key
 {
 	mock_key() = default;
 	mock_key(const mock_key &) = default;
-	mock_key(mock_key &&) noexcept(true);
+	mock_key(mock_key &&) noexcept;
 	mock_key &operator=(const mock_key &) = default;
-	mock_key &operator=(mock_key &&) noexcept(true);
+	mock_key &operator=(mock_key &&) noexcept;
 	mock_key(const symbol_set &);
 	bool operator==(const mock_key &) const;
 	bool operator!=(const mock_key &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	mock_key merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1714,7 +1714,7 @@ namespace std
 template <>
 struct hash<mock_key>
 {
-	std::size_t operator()(const mock_key &) const noexcept(true);
+	std::size_t operator()(const mock_key &) const noexcept;
 };
 
 }

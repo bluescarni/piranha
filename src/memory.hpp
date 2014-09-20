@@ -336,7 +336,7 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
  * @param[in] n_threads number of threads to use.
  */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
-inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads) noexcept
+inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads)
 {
 	using ranges_vector = std::vector<std::pair<T *,T *>>;
 	using rv_size_type = typename ranges_vector::size_type;
@@ -411,10 +411,10 @@ template <typename T>
 class parallel_deleter
 {
 	public:
-		explicit parallel_deleter(const std::size_t &size, const unsigned &n_threads) noexcept:
+		explicit parallel_deleter(const std::size_t &size, const unsigned &n_threads):
 			m_size(size),m_n_threads(n_threads)
 		{}
-		void operator()(T *ptr) const noexcept
+		void operator()(T *ptr) const
 		{
 			// Parallel destroy and pfree are no-ops with nullptr. All of this
 			// is noexcept.

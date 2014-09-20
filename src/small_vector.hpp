@@ -312,7 +312,7 @@ class dynamic_storage
 			construct(m_ptr + m_size,std::forward<U>(x));
 			++m_size;
 		}
-		void destroy_and_deallocate() noexcept
+		void destroy_and_deallocate()
 		{
 			piranha_assert(consistency_checks());
 			for (size_type i = 0u; i < m_size; ++i) {

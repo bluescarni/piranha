@@ -590,7 +590,7 @@ struct c_element2
 	c_element2() = default;
 	c_element2(const c_element2 &) = default;
 	c_element2(c_element2 &&) = default;
-	c_element2 &operator=(c_element2 &&) noexcept(true);
+	c_element2 &operator=(c_element2 &&) noexcept;
 };
 
 BOOST_AUTO_TEST_CASE(type_traits_is_container_element_test)
@@ -688,68 +688,68 @@ template <>
 struct hash<unhashable8>
 {
 	hash();
-	std::size_t operator()(const unhashable8 &) noexcept(true);
+	std::size_t operator()(const unhashable8 &) noexcept;
 };
 
 template <>
 struct hash<unhashable9>
 {
-	std::size_t operator()(const unhashable9 &) noexcept(true);
+	std::size_t operator()(const unhashable9 &) noexcept;
 };
 
 template <>
 struct hash<unhashable10>
 {
-	std::size_t operator()(const unhashable10 &) const noexcept(true);
+	std::size_t operator()(const unhashable10 &) const noexcept;
 	~hash() noexcept(false) {}
 };
 
 template <>
 struct hash<unhashable11>
 {
-	std::size_t operator()(const unhashable11 &) const noexcept(true);
-	hash() noexcept(true);
+	std::size_t operator()(const unhashable11 &) const noexcept;
+	hash() noexcept;
 	hash(const hash &);
 	hash(hash &&) noexcept(false);
-	hash &operator=(hash &&) noexcept(true);
-	~hash() noexcept(true);
+	hash &operator=(hash &&) noexcept;
+	~hash();
 };
 
 template <>
 struct hash<unhashable12>
 {
-	std::size_t operator()(const unhashable12 &) const noexcept(true);
-	hash() noexcept(true);
+	std::size_t operator()(const unhashable12 &) const noexcept;
+	hash() noexcept;
 	hash(const hash &);
-	hash(hash &&) noexcept(true);
+	hash(hash &&) noexcept;
 	hash &operator=(hash &&) noexcept(false);
-	~hash() noexcept(true);
+	~hash();
 };
 
 template <>
 struct hash<hashable1>
 {
-	std::size_t operator()(const hashable1 &) const noexcept(true);
+	std::size_t operator()(const hashable1 &) const noexcept;
 };
 
 template <>
 struct hash<hashable2>
 {
-	std::size_t operator()(const hashable2 &) const noexcept(true);
+	std::size_t operator()(const hashable2 &) const noexcept;
 };
 
 template <>
 struct hash<hashable3>
 {
-	hash() noexcept(true);
-	std::size_t operator()(const hashable3 &) const noexcept(true);
+	hash() noexcept;
+	std::size_t operator()(const hashable3 &) const noexcept;
 };
 
 template <>
 struct hash<hashable4>
 {
-	std::size_t operator()(const hashable4 &) const noexcept(true);
-	~hash() noexcept(true) {}
+	std::size_t operator()(const hashable4 &) const noexcept;
+	~hash() {}
 };
 
 }
@@ -906,60 +906,60 @@ struct hfo1 {};
 
 struct hfo2
 {
-	hfo2() noexcept(true);
-	std::size_t operator()(int) noexcept(true);
+	hfo2() noexcept;
+	std::size_t operator()(int) noexcept;
 };
 
 struct hfo3
 {
-	hfo3() noexcept(true);
-	std::size_t operator()(int) const noexcept(true);
+	hfo3() noexcept;
+	std::size_t operator()(int) const noexcept;
 };
 
 struct hfo4
 {
-	hfo4() noexcept(true);
-	std::size_t operator()(int) const noexcept(true);
+	hfo4() noexcept;
+	std::size_t operator()(int) const noexcept;
 	~hfo4() noexcept(false);
 };
 
 struct hfo5
 {
-	hfo5() noexcept(true);
+	hfo5() noexcept;
 	std::size_t operator()(int) const;
 };
 
 struct hfo6
 {
-	hfo6() noexcept(true);
+	hfo6() noexcept;
 	hfo6(const hfo6 &) = delete;
-	std::size_t operator()(int) const noexcept(true);
+	std::size_t operator()(int) const noexcept;
 };
 
 struct hfo7
 {
-	hfo7() noexcept(true);
-	std::size_t operator()(int) const noexcept(true);
+	hfo7() noexcept;
+	std::size_t operator()(int) const noexcept;
 	hfo7(const hfo7 &);
-	hfo7(hfo7 &&) noexcept(true);
-	hfo7 &operator=(hfo7 &&) noexcept(true);
+	hfo7(hfo7 &&) noexcept;
+	hfo7 &operator=(hfo7 &&) noexcept;
 };
 
 struct hfo8
 {
-	hfo8() noexcept(true);
-	std::size_t operator()(int) const noexcept(true);
+	hfo8() noexcept;
+	std::size_t operator()(int) const noexcept;
 	hfo8(const hfo7 &);
 	hfo8(hfo8 &&) noexcept(false);
-	hfo8 &operator=(hfo8 &&) noexcept(true);
+	hfo8 &operator=(hfo8 &&) noexcept;
 };
 
 struct hfo9
 {
-	hfo9() noexcept(true);
-	std::size_t operator()(int) const noexcept(true);
+	hfo9() noexcept;
+	std::size_t operator()(int) const noexcept;
 	hfo9(const hfo9 &);
-	hfo9(hfo9 &&) noexcept(true);
+	hfo9(hfo9 &&) noexcept;
 	hfo9 &operator=(hfo9 &&) noexcept(false);
 };
 
@@ -1024,9 +1024,9 @@ struct efo7
 {
 	efo7();
 	efo7(const efo7 &);
-	efo7(efo7 &&) noexcept(true);
+	efo7(efo7 &&) noexcept;
 	efo7 &operator=(const efo7 &);
-	efo7 &operator=(efo7 &&) noexcept(true);
+	efo7 &operator=(efo7 &&) noexcept;
 	bool operator()(int,int) const;
 };
 
@@ -1036,7 +1036,7 @@ struct efo8
 	efo8(const efo8 &);
 	efo8(efo8 &&);
 	efo8 &operator=(const efo8 &);
-	efo8 &operator=(efo8 &&) noexcept(true);
+	efo8 &operator=(efo8 &&) noexcept;
 	bool operator()(int,int) const;
 };
 
@@ -1044,7 +1044,7 @@ struct efo9
 {
 	efo9();
 	efo9(const efo9 &);
-	efo9(efo9 &&) noexcept(true);
+	efo9(efo9 &&) noexcept;
 	efo9 &operator=(const efo9 &);
 	efo9 &operator=(efo9 &&);
 	bool operator()(int,int) const;
@@ -1090,14 +1090,14 @@ struct key02
 {
 	key02() = default;
 	key02(const key02 &) = default;
-	key02(key02 &&) noexcept(true);
+	key02(key02 &&) noexcept;
 	key02 &operator=(const key02 &) = default;
-	key02 &operator=(key02 &&) noexcept(true);
+	key02 &operator=(key02 &&) noexcept;
 	key02(const symbol_set &);
 	bool operator==(const key02 &) const;
 	bool operator!=(const key02 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key02 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1108,14 +1108,14 @@ struct key03
 {
 	key03() = default;
 	key03(const key03 &) = default;
-	key03(key03 &&) noexcept(true);
+	key03(key03 &&) noexcept;
 	key03 &operator=(const key03 &) = default;
-	key03 &operator=(key03 &&) noexcept(true);
+	key03 &operator=(key03 &&) noexcept;
 	key03(const symbol_set &);
 	bool operator==(const key03 &) const;
 	bool operator!=(const key03 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key03 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1128,12 +1128,12 @@ struct key04
 	key04(const key04 &) = default;
 	key04(key04 &&) noexcept(false);
 	key04 &operator=(const key04 &) = default;
-	key04 &operator=(key04 &&) noexcept(true);
+	key04 &operator=(key04 &&) noexcept;
 	key04(const symbol_set &);
 	bool operator==(const key04 &) const;
 	bool operator!=(const key04 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key04 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1144,14 +1144,14 @@ struct key05
 {
 	key05() = default;
 	key05(const key05 &) = default;
-	key05(key05 &&) noexcept(true);
+	key05(key05 &&) noexcept;
 	key05 &operator=(const key05 &) = default;
-	key05 &operator=(key05 &&) noexcept(true);
+	key05 &operator=(key05 &&) noexcept;
 	key05(const symbol_set &);
 	bool operator==(const key05 &) const;
 	bool operator!=(const key05 &) const;
 	bool is_compatible(const symbol_set &) const;
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key05 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1162,13 +1162,13 @@ struct key06
 {
 	key06() = default;
 	key06(const key06 &) = default;
-	key06(key06 &&) noexcept(true);
+	key06(key06 &&) noexcept;
 	key06 &operator=(const key06 &) = default;
-	key06 &operator=(key06 &&) noexcept(true);
+	key06 &operator=(key06 &&) noexcept;
 	key06(const symbol_set &);
 	bool operator==(const key06 &) const;
 	bool operator!=(const key06 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
 	bool is_ignorable(const symbol_set &) const;
 	key06 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
@@ -1180,14 +1180,14 @@ struct key07
 {
 	key07() = default;
 	key07(const key07 &) = default;
-	key07(key07 &&) noexcept(true);
+	key07(key07 &&) noexcept;
 	key07 &operator=(const key07 &) = default;
-	key07 &operator=(key07 &&) noexcept(true);
+	key07 &operator=(key07 &&) noexcept;
 	key07(const symbol_set &);
 	bool operator==(const key07 &) const;
 	bool operator!=(const key07 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key07 merge_args(const symbol_set &, const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
 	void print_tex(std::ostream &, const symbol_set &) const;
@@ -1197,14 +1197,14 @@ struct key08
 {
 	key08() = default;
 	key08(const key08 &) = default;
-	key08(key08 &&) noexcept(true);
+	key08(key08 &&) noexcept;
 	key08 &operator=(const key08 &) = default;
-	key08 &operator=(key08 &&) noexcept(true);
+	key08 &operator=(key08 &&) noexcept;
 	key08(const symbol_set &);
 	bool operator==(const key08 &) const;
 	bool operator!=(const key08 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key08 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -1217,7 +1217,7 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept(true);
+	std::size_t operator()(const key02 &) const noexcept;
 };
 
 template <>
@@ -1226,31 +1226,31 @@ struct hash<key03> {};
 template <>
 struct hash<key04>
 {
-	std::size_t operator()(const key04 &) const noexcept(true);
+	std::size_t operator()(const key04 &) const noexcept;
 };
 
 template <>
 struct hash<key05>
 {
-	std::size_t operator()(const key05 &) const noexcept(true);
+	std::size_t operator()(const key05 &) const noexcept;
 };
 
 template <>
 struct hash<key06>
 {
-	std::size_t operator()(const key06 &) const noexcept(true);
+	std::size_t operator()(const key06 &) const noexcept;
 };
 
 template <>
 struct hash<key07>
 {
-	std::size_t operator()(const key07 &) const noexcept(true);
+	std::size_t operator()(const key07 &) const noexcept;
 };
 
 template <>
 struct hash<key08>
 {
-	std::size_t operator()(const key08 &) const noexcept(true);
+	std::size_t operator()(const key08 &) const noexcept;
 };
 
 }
@@ -1286,9 +1286,9 @@ struct cf02
 	cf02();
 	cf02(const int &);
 	cf02(const cf02 &);
-	cf02(cf02 &&) noexcept(true);
+	cf02(cf02 &&) noexcept;
 	cf02 &operator=(const cf02 &);
-	cf02 &operator=(cf02 &&) noexcept(true);
+	cf02 &operator=(cf02 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf02 &);
 	cf02 operator-() const;
 	bool operator==(const cf02 &) const;
@@ -1304,9 +1304,9 @@ struct cf03
 	cf03();
 	cf03(const int &);
 	cf03(const cf03 &);
-	cf03(cf03 &&) noexcept(true);
+	cf03(cf03 &&) noexcept;
 	cf03 &operator=(const cf03 &);
-	cf03 &operator=(cf03 &&) noexcept(true);
+	cf03 &operator=(cf03 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf03 &);
 	bool operator==(const cf03 &) const;
 	bool operator!=(const cf03 &) const;
@@ -1321,9 +1321,9 @@ struct cf04
 	cf04();
 	cf04(const int &);
 	cf04(const cf04 &);
-	cf04(cf04 &&) noexcept(true);
+	cf04(cf04 &&) noexcept;
 	cf04 &operator=(const cf04 &);
-	cf04 &operator=(cf04 &&) noexcept(true);
+	cf04 &operator=(cf04 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf04 &);
 	cf04 operator-() const;
 	cf04 &operator+=(const cf04 &);
@@ -1336,9 +1336,9 @@ struct cf05
 {
 	cf05();
 	cf05(const cf05 &);
-	cf05(cf05 &&) noexcept(true);
+	cf05(cf05 &&) noexcept;
 	cf05 &operator=(const cf05 &);
-	cf05 &operator=(cf05 &&) noexcept(true);
+	cf05 &operator=(cf05 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf05 &);
 	cf05 operator-() const;
 	bool operator==(const cf05 &) const;
@@ -1356,7 +1356,7 @@ struct cf06
 	cf06(const cf06 &);
 	cf06(cf06 &&) noexcept(false);
 	cf06 &operator=(const cf06 &);
-	cf06 &operator=(cf06 &&) noexcept(true);
+	cf06 &operator=(cf06 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf06 &);
 	cf06 operator-() const;
 	bool operator==(const cf06 &) const;
@@ -1374,7 +1374,7 @@ struct cf07
 	cf07(const cf07 &);
 	cf07(cf07 &&) noexcept(false);
 	cf07 &operator=(const cf07 &);
-	cf07 &operator=(cf07 &&) noexcept(true);
+	cf07 &operator=(cf07 &&) noexcept;
 	friend std::ostream &operator<<(std::ostream &, const cf07 &);
 	cf07 operator-() const;
 	bool operator==(const cf07 &) const;

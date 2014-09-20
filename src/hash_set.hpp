@@ -113,7 +113,7 @@ class hash_set
 		struct node
 		{
 			typedef typename std::aligned_storage<sizeof(T),alignof(T)>::type storage_type;
-			node() noexcept : m_next(nullptr) {}
+			node() : m_next(nullptr) {}
 			// Erase all other ctors/assignments, we do not want to
 			// copy around this object as m_storage is not what it is
 			// (and often could be uninitialized, which would lead to UB if used).
@@ -196,7 +196,7 @@ class hash_set
 			// Static checks on the iterator types.
 			PIRANHA_TT_CHECK(is_forward_iterator,iterator);
 			PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
-			list() noexcept : m_node() {}
+			list() : m_node() {}
 			list(list &&other) noexcept : m_node()
 			{
 				steal_from_rvalue(std::move(other));
@@ -252,7 +252,7 @@ class hash_set
 			{
 				destroy();
 			}
-			void steal_from_rvalue(list &&other) noexcept
+			void steal_from_rvalue(list &&other)
 			{
 				piranha_assert(empty());
 				// Do something only if there is content in the other.
@@ -581,7 +581,7 @@ class hash_set
 		 * 
 		 * @param[in] other table to be moved.
 		 */
-		hash_set(hash_set &&other) noexcept(true) : m_container(other.m_container),m_log2_size(other.m_log2_size),
+		hash_set(hash_set &&other) noexcept : m_container(other.m_container),m_log2_size(other.m_log2_size),
 			m_hasher(std::move(other.m_hasher)),m_key_equal(std::move(other.m_key_equal)),m_n_elements(other.m_n_elements),
 			m_allocator(std::move(other.m_allocator))
 		{
@@ -665,7 +665,7 @@ class hash_set
 		 * 
 		 * @return reference to \p this.
 		 */
-		hash_set &operator=(hash_set &&other) noexcept(true)
+		hash_set &operator=(hash_set &&other) noexcept
 		{
 			if (likely(this != &other)) {
 				destroy_and_deallocate();
@@ -1101,7 +1101,7 @@ class hash_set
 		 * 
 		 * @return hash_set::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
 		 */
-		const_iterator _find(const key_type &k, const size_type &bucket_idx) const noexcept
+		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
 		{
 			// Assert bucket index is correct.
 			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < bucket_count());
@@ -1125,7 +1125,7 @@ class hash_set
 		 * 
 		 * @return index of the destination bucket for an object with hash value \p hash.
 		 */
-		size_type _bucket_from_hash(const std::size_t &hash) const noexcept
+		size_type _bucket_from_hash(const std::size_t &hash) const
 		{
 			piranha_assert(bucket_count());
 			return hash % (size_type(1u) << m_log2_size);
@@ -1139,7 +1139,7 @@ class hash_set
 		 * 
 		 * @return index of the destination bucket for \p k.
 		 */
-		size_type _bucket(const key_type &k) const noexcept
+		size_type _bucket(const key_type &k) const
 		{
 			return _bucket_from_hash(m_hasher(k));
 		}
@@ -1149,7 +1149,7 @@ class hash_set
 		 * 
 		 * @param[in] new_size new table size.
 		 */
-		void _update_size(const size_type &new_size) noexcept
+		void _update_size(const size_type &new_size)
 		{
 			m_n_elements = new_size;
 		}
@@ -1180,7 +1180,7 @@ class hash_set
 		 * @return a const reference to the list of items contained in the bucket positioned
 		 * at index \p idx.
 		 */
-		const list &_get_bucket_list(const size_type &idx) const noexcept
+		const list &_get_bucket_list(const size_type &idx) const
 		{
 			piranha_assert(idx < bucket_count());
 			return m_container[idx];
@@ -1201,7 +1201,7 @@ class hash_set
 		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
 		 * no such element exists.
 		 */
-		local_iterator _erase(const iterator &it) noexcept
+		local_iterator _erase(const iterator &it)
 		{
 			// Verify the iterator is valid.
 			piranha_assert(it.m_set == this);

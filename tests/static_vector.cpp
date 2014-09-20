@@ -49,16 +49,16 @@ class custom_string: public std::string
 		custom_string() = default;
 		custom_string(const custom_string &) = default;
 		// NOTE: strange thing here, move constructor of std::string results in undefined reference?
-		custom_string(custom_string &&other) noexcept(true) : std::string(other) {}
+		custom_string(custom_string &&other) noexcept : std::string(other) {}
 		template <typename... Args>
 		custom_string(Args && ... params) : std::string(std::forward<Args>(params)...) {}
 		custom_string &operator=(const custom_string &) = default;
-		custom_string &operator=(custom_string &&other) noexcept(true)
+		custom_string &operator=(custom_string &&other) noexcept
 		{
 			std::string::operator=(std::move(other));
 			return *this;
 		}
-		~custom_string() noexcept(true) {}
+		~custom_string() {}
 };
 
 namespace std
@@ -333,7 +333,7 @@ struct time_bomb
 	{
 		return m_vector == other.m_vector;
 	}
-	~time_bomb() noexcept {}
+	~time_bomb() {}
 	std::vector<int> m_vector;
 	static unsigned s_counter;
 };

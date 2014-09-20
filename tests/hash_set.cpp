@@ -77,7 +77,7 @@ struct hash<custom_string>
 {
 	typedef size_t result_type;
 	typedef custom_string argument_type;
-	result_type operator()(const argument_type &s) const noexcept(true)
+	result_type operator()(const argument_type &s) const noexcept
 	{
 		return hash<std::string>{}(s);
 	}
@@ -210,8 +210,8 @@ struct random_failure
 			throw std::runtime_error("fail!");
 		}
 	}
-	random_failure(random_failure &&rf) noexcept(true) :m_str(std::move(rf.m_str)) {}
-	~random_failure() noexcept(true) {}
+	random_failure(random_failure &&rf) noexcept :m_str(std::move(rf.m_str)) {}
+	~random_failure() noexcept {}
 	std::size_t hash() const
 	{
 		return static_cast<std::size_t>(boost::lexical_cast<int>(m_str));
@@ -220,7 +220,7 @@ struct random_failure
 	{
 		return m_str == rf.m_str;
 	}
-	random_failure &operator=(random_failure &&other) noexcept(true)
+	random_failure &operator=(random_failure &&other) noexcept
 	{
 		m_str = std::move(other.m_str);
 		return *this;
@@ -235,7 +235,7 @@ struct hash<random_failure>
 {
 	typedef size_t result_type;
 	typedef random_failure argument_type;
-	result_type operator()(const random_failure &rf) const noexcept(true)
+	result_type operator()(const random_failure &rf) const noexcept
 	{
 		return rf.hash();
 	}
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(hash_set_insert_test)
 	const std::size_t critical_size = 193;
 	struct custom_hash
 	{
-		std::size_t operator()(std::size_t i) const noexcept(true)
+		std::size_t operator()(std::size_t i) const noexcept
 		{
 			return i;
 		}

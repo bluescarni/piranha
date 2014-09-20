@@ -819,12 +819,12 @@ class mp_rational
 			return is;
 		}
 		/// Get const reference to the numerator.
-		const int_type &num() const noexcept
+		const int_type &num() const
 		{
 			return m_num;
 		}
 		/// Get const reference to the denominator.
-		const int_type &den() const noexcept
+		const int_type &den() const
 		{
 			return m_den;
 		}
@@ -856,7 +856,7 @@ class mp_rational
 		 * 
 		 * @return \p true if \p this is in canonical form, \p false otherwise.
 		 */
-		bool is_canonical() const noexcept
+		bool is_canonical() const
 		{
 			// NOTE: here the GCD only involves operations on mp_integers
 			// and thus it never throws. The construction from 1 in the comparisons will
@@ -873,7 +873,7 @@ class mp_rational
 		 * 
 		 * @see piranha::mp_rational::is_canonical().
 		 */
-		void canonicalise() noexcept
+		void canonicalise()
 		{
 			// If the top is null, den must be one.
 			if (math::is_zero(m_num)) {
@@ -921,7 +921,7 @@ class mp_rational
 		/**
 		 * @return mutable reference to the numerator.
 		 */
-		int_type &_num() noexcept
+		int_type &_num()
 		{
 			return m_num;
 		}
@@ -1042,7 +1042,7 @@ class mp_rational
 			return mp_rational::binary_plus(x,y);
 		}
 		/// Negate in-place.
-		void negate() noexcept
+		void negate()
 		{
 			m_num.negate();
 		}
@@ -1510,7 +1510,7 @@ class mp_rational
 		 *
 		 * @return a hash value for this.
 		 */
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			std::size_t retval = m_num.hash();
 			boost::hash_combine(retval,m_den.hash());
@@ -1649,7 +1649,7 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	 * 
 	 * @return \p true if \p q is zero, \p false otherwise.
 	 */
-	bool operator()(const T &q) const noexcept
+	bool operator()(const T &q) const
 	{
 		return is_zero(q.num());
 	}

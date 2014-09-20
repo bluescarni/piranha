@@ -212,7 +212,7 @@ class univariate_monomial
 		 * @return \p true if the size of \p args is 1 or if the size of \p args is 0 and piranha::math::is_zero()
 		 * on the exponent returns \p true.
 		 */
-		bool is_compatible(const symbol_set &args) const noexcept(true)
+		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			const auto size = args.size();
 			return (size == 1u || (!size && math::is_zero(m_value)));
@@ -221,7 +221,7 @@ class univariate_monomial
 		/**
 		 * @return \p false (a monomial is never ignorable).
 		 */
-		bool is_ignorable(const symbol_set &) const noexcept(true)
+		bool is_ignorable(const symbol_set &) const noexcept
 		{
 			return false;
 		}
@@ -495,7 +495,7 @@ struct hash<piranha::univariate_monomial<T>>
 	 * 
 	 * @throws unspecified any exception thrown by piranha::univariate_monomial::hash().
 	 */
-	result_type operator()(const argument_type &m) const noexcept(true)
+	result_type operator()(const argument_type &m) const noexcept
 	{
 		return m.hash();
 	}

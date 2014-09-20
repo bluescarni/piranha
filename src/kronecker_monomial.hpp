@@ -257,7 +257,7 @@ class kronecker_monomial
 		 * 
 		 * @return compatibility flag for the monomial.
 		 */
-		bool is_compatible(const symbol_set &args) const noexcept(true)
+		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			// NOTE: the idea here is to avoid unpack()ing for performance reasons: these checks
 			// are already part of unpack(), and that's why unpack() is used instead of is_compatible()
@@ -282,7 +282,7 @@ class kronecker_monomial
 		 * 
 		 * @return \p false.
 		 */
-		bool is_ignorable(const symbol_set &) const noexcept(true)
+		bool is_ignorable(const symbol_set &) const noexcept
 		{
 			return false;
 		}
@@ -856,7 +856,7 @@ struct hash<piranha::kronecker_monomial<T>>
 	 * 
 	 * @return hash value of \p a computed via piranha::kronecker_monomial::hash().
 	 */
-	result_type operator()(const argument_type &a) const noexcept(true)
+	result_type operator()(const argument_type &a) const noexcept
 	{
 		return a.hash();
 	}

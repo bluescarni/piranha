@@ -1228,10 +1228,10 @@ struct fake_int_01
 	fake_int_01();
 	explicit fake_int_01(int);
 	fake_int_01(const fake_int_01 &);
-	fake_int_01(fake_int_01 &&) noexcept(true);
+	fake_int_01(fake_int_01 &&) noexcept;
 	fake_int_01 &operator=(const fake_int_01 &);
-	fake_int_01 &operator=(fake_int_01 &&) noexcept(true);
-	~fake_int_01() noexcept(true);
+	fake_int_01 &operator=(fake_int_01 &&) noexcept;
+	~fake_int_01();
 	fake_int_01 operator+(const fake_int_01 &) const;
 	fake_int_01 operator*(const fake_int_01 &) const;
 	fake_int_01 &operator+=(const fake_int_01 &);
@@ -1249,10 +1249,10 @@ struct fake_int_02
 	fake_int_02();
 	explicit fake_int_02(int);
 	fake_int_02(const fake_int_02 &);
-	fake_int_02(fake_int_02 &&) noexcept(true);
+	fake_int_02(fake_int_02 &&) noexcept;
 	fake_int_02 &operator=(const fake_int_02 &);
-	fake_int_02 &operator=(fake_int_02 &&) noexcept(true);
-	~fake_int_02() noexcept(true);
+	fake_int_02 &operator=(fake_int_02 &&) noexcept;
+	~fake_int_02();
 	fake_int_02 operator+(const fake_int_02 &) const;
 	fake_int_02 operator*(const fake_int_02 &) const;
 	fake_int_02 &operator+=(const fake_int_02 &);

@@ -872,7 +872,7 @@ class real: public detail::real_base<>
 		 * 
 		 * @param[in] other swap argument.
 		 */
-		void swap(real &other) noexcept
+		void swap(real &other)
 		{
 			if (this == &other) {
 				return;

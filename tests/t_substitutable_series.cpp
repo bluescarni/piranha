@@ -51,14 +51,14 @@ struct key02
 {
 	key02() = default;
 	key02(const key02 &) = default;
-	key02(key02 &&) noexcept(true);
+	key02(key02 &&) noexcept;
 	key02 &operator=(const key02 &) = default;
-	key02 &operator=(key02 &&) noexcept(true);
+	key02 &operator=(key02 &&) noexcept;
 	key02(const symbol_set &);
 	bool operator==(const key02 &) const;
 	bool operator!=(const key02 &) const;
-	bool is_compatible(const symbol_set &) const noexcept(true);
-	bool is_ignorable(const symbol_set &) const noexcept(true);
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
 	key02 merge_args(const symbol_set &, const symbol_set &) const;
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
@@ -73,7 +73,7 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept(true);
+	std::size_t operator()(const key02 &) const noexcept;
 };
 
 }

@@ -151,7 +151,7 @@ struct negate_impl
 	}
 	/// Call operator specialised for integral types.
 	template <typename U>
-	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const noexcept
+	U &operator()(U &x, typename std::enable_if<std::is_integral<U>::value>::type * = nullptr) const
 	{
 		// NOTE: here we use the explicit static_cast to cope with integral promotions
 		// (e.g., in case of char).
@@ -296,7 +296,7 @@ struct pow_impl<T,U,typename std::enable_if<
 	 * @return <tt>x**y</tt>.
 	 */
 	template <typename T2, typename U2>
-	auto operator()(const T2 &x, const U2 &y) const noexcept -> decltype(std::pow(x,y))
+	auto operator()(const T2 &x, const U2 &y) const -> decltype(std::pow(x,y))
 	{
 		return std::pow(x,y);
 	}
@@ -666,7 +666,7 @@ struct abs_impl<T,typename std::enable_if<(std::is_signed<T>::value && std::is_i
 		 * 
 		 * @return absolute value of \p x.
 		 */
-		auto operator()(const T &x) const noexcept -> decltype(impl(x))
+		auto operator()(const T &x) const -> decltype(impl(x))
 		{
 			return impl(x);
 		}

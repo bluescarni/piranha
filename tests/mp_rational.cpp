@@ -86,7 +86,7 @@ struct mpq_raii
 	mpq_raii(mpq_raii &&) = delete;
 	mpq_raii &operator=(const mpq_raii &) = delete;
 	mpq_raii &operator=(mpq_raii &&) = delete;
-	~mpq_raii() noexcept
+	~mpq_raii()
 	{
 		if (mpq_numref(&m_mpq)->_mp_d != nullptr) {
 			::mpq_clear(&m_mpq);
