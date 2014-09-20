@@ -28,11 +28,11 @@ ADD_PIRANHA_TESTCASE(hash_set)
 ADD_PIRANHA_TESTCASE(kronecker_array)
 ADD_PIRANHA_TESTCASE(kronecker_monomial)
 # The Intel compiler bombs out on some tests. Need to investigate more.
-# NOTE: some of these seem to be limited to ICEs on integer.hpp,
-# maybe the switch to mp_integer will make them go away. Others seem
-# to involve the decltype() stuff in power_series. Maybe changing the style
-# of those will fix it.
-ADD_PIRANHA_TESTCASE(kronecker_polynomial)
+# NOTE: some of these seem to involve the decltype() stuff in power_series.
+# Maybe changing the style of those will fix it.
+if(NOT CMAKE_COMPILER_IS_INTELXX)
+	ADD_PIRANHA_TESTCASE(kronecker_polynomial)
+endif()
 ADD_PIRANHA_TESTCASE(math)
 ADD_PIRANHA_TESTCASE(memory)
 ADD_PIRANHA_TESTCASE(monomial)
