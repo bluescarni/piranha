@@ -2359,16 +2359,14 @@ struct sin_cos_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK_EQUAL(math::sin(int_type()),0.);
-		BOOST_CHECK_EQUAL(math::sin(int_type(12)),math::sin(12.));
-		BOOST_CHECK_EQUAL(math::sin(int_type(-14)),-math::sin(14.));
-		BOOST_CHECK_EQUAL(math::cos(int_type()),1.);
-		BOOST_CHECK_EQUAL(math::cos(int_type(12)),math::cos(12.));
-		BOOST_CHECK_EQUAL(math::cos(int_type(-14)),math::cos(14.));
+		BOOST_CHECK_EQUAL(math::sin(int_type()),0);
+		BOOST_CHECK_EQUAL(math::cos(int_type()),1);
+		BOOST_CHECK_THROW(math::sin(int_type(1)),std::invalid_argument);
+		BOOST_CHECK_THROW(math::cos(int_type(1)),std::invalid_argument);
+		BOOST_CHECK((std::is_same<int_type,decltype(math::cos(int_type{}))>::value));
+		BOOST_CHECK((std::is_same<int_type,decltype(math::sin(int_type{}))>::value));
 		BOOST_CHECK(has_sine<int_type>::value);
 		BOOST_CHECK(has_cosine<int_type>::value);
-		BOOST_CHECK((std::is_same<double,decltype(math::cos(int_type()))>::value));
-		BOOST_CHECK((std::is_same<double,decltype(math::sin(int_type()))>::value));
 	}
 };
 

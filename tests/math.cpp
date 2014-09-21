@@ -275,6 +275,12 @@ BOOST_AUTO_TEST_CASE(math_sin_cos_test)
 	BOOST_CHECK(math::cos(2.) == std::cos(2.));
 	BOOST_CHECK(math::cos(1.L) == std::cos(1.L));
 	BOOST_CHECK(math::cos(2.L) == std::cos(2.L));
+	BOOST_CHECK_EQUAL(math::sin(0),0);
+	BOOST_CHECK_EQUAL(math::cos(0),1);
+	BOOST_CHECK_THROW(math::sin(1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::cos(1),std::invalid_argument);
+	BOOST_CHECK((std::is_same<unsigned short,decltype(math::sin((unsigned short)0))>::value));
+	BOOST_CHECK((std::is_same<unsigned short,decltype(math::cos((unsigned short)0))>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_partial_test)
@@ -670,14 +676,14 @@ BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
 	BOOST_CHECK(has_cosine<long double &>::value);
 	BOOST_CHECK(has_cosine<double const>::value);
 	BOOST_CHECK(has_cosine<long double &&>::value);
-	BOOST_CHECK(!has_sine<int>::value);
-	BOOST_CHECK(!has_sine<long &>::value);
-	BOOST_CHECK(!has_sine<long long &&>::value);
-	BOOST_CHECK(!has_sine<long long const &>::value);
-	BOOST_CHECK(!has_cosine<int>::value);
-	BOOST_CHECK(!has_cosine<long &>::value);
-	BOOST_CHECK(!has_cosine<long long &&>::value);
-	BOOST_CHECK(!has_cosine<long long const &>::value);
+	BOOST_CHECK(has_sine<int>::value);
+	BOOST_CHECK(has_sine<long &>::value);
+	BOOST_CHECK(has_sine<long long &&>::value);
+	BOOST_CHECK(has_sine<long long const &>::value);
+	BOOST_CHECK(has_cosine<int>::value);
+	BOOST_CHECK(has_cosine<long &>::value);
+	BOOST_CHECK(has_cosine<long long &&>::value);
+	BOOST_CHECK(has_cosine<long long const &>::value);
 	BOOST_CHECK(!has_cosine<std::string>::value);
 	BOOST_CHECK(!has_cosine<void *>::value);
 }

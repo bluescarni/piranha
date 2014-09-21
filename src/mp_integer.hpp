@@ -3311,18 +3311,18 @@ struct sin_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type
 {
 	/// Call operator.
 	/**
-	 * The argument will be converted to \p double and piranha::math::sin()
-	 * will then be used.
-	 *
 	 * @param[in] n argument.
 	 *
 	 * @return sine of \p n.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_integer to \p double.
+	 * @throws std::invalid_argument if the argument is not zero.
 	 */
-	double operator()(const T &n) const
+	T operator()(const T &n) const
 	{
-		return math::sin(static_cast<double>(n));
+		if (is_zero(n)) {
+			return T(0);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the sine of a non-zero integer");
 	}
 };
 
@@ -3335,18 +3335,18 @@ struct cos_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type
 {
 	/// Call operator.
 	/**
-	 * The argument will be converted to \p double and piranha::math::cos()
-	 * will then be used.
-	 *
 	 * @param[in] n argument.
 	 *
 	 * @return cosine of \p n.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_integer to \p double.
+	 * @throws std::invalid_argument if the argument is not zero.
 	 */
-	double operator()(const T &n) const
+	T operator()(const T &n) const
 	{
-		return math::cos(static_cast<double>(n));
+		if (is_zero(n)) {
+			return T(1);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the cosine of a non-zero integer");
 	}
 };
 

@@ -1867,17 +1867,14 @@ struct sin_cos_tester
 	void operator()(const T &)
 	{
 		using q_type = mp_rational<T::value>;
-		const auto radix = std::numeric_limits<double>::radix;
-		BOOST_CHECK_EQUAL(math::sin(q_type()),0.);
-		BOOST_CHECK_EQUAL(math::sin(q_type(1,radix)),math::sin(1./radix));
-		BOOST_CHECK_EQUAL(math::sin(q_type(1,-radix)),-math::sin(1./radix));
-		BOOST_CHECK_EQUAL(math::cos(q_type()),1.);
-		BOOST_CHECK_EQUAL(math::cos(q_type(1,radix)),math::cos(1./radix));
-		BOOST_CHECK_EQUAL(math::cos(q_type(1,-radix)),math::cos(1./radix));
+		BOOST_CHECK_EQUAL(math::sin(q_type()),0);
+		BOOST_CHECK_EQUAL(math::cos(q_type()),1);
+		BOOST_CHECK((std::is_same<q_type,decltype(math::cos(q_type()))>::value));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::sin(q_type()))>::value));
+		BOOST_CHECK_THROW(math::sin(q_type(1)),std::invalid_argument);
+		BOOST_CHECK_THROW(math::cos(q_type(1)),std::invalid_argument);
 		BOOST_CHECK(has_sine<q_type>::value);
 		BOOST_CHECK(has_cosine<q_type>::value);
-		BOOST_CHECK((std::is_same<double,decltype(math::cos(q_type()))>::value));
-		BOOST_CHECK((std::is_same<double,decltype(math::sin(q_type()))>::value));
 	}
 };
 

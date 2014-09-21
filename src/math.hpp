@@ -353,6 +353,30 @@ struct cos_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	}
 };
 
+/// Specialisation of the piranha::math::cos() functor for integral types.
+/**
+ * This specialisation is activated when \p T is an integral type.
+ */
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x argument.
+	 *
+	 * @return cosine of \p x.
+	 *
+	 * @throws std::invalid_argument if the argument is not zero.
+	 */
+	T operator()(const T &x) const
+	{
+		if (x == T(0)) {
+			return T(1);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the cosine of a non-zero integral");
+	}
+};
+
 /// Cosine.
 /**
  * Returns the cosine of \p x. The actual implementation of this function is in the piranha::math::cos_impl functor's
@@ -398,6 +422,30 @@ struct sin_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::typ
 	auto operator()(const T &x) const -> decltype(std::sin(x))
 	{
 		return std::sin(x);
+	}
+};
+
+/// Specialisation of the piranha::math::sin() functor for integral types.
+/**
+ * This specialisation is activated when \p T is an integral type.
+ */
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_integral<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] x argument.
+	 *
+	 * @return sine of \p x.
+	 *
+	 * @throws std::invalid_argument if the argument is not zero.
+	 */
+	T operator()(const T &x) const
+	{
+		if (x == T(0)) {
+			return T(0);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the sine of a non-zero integral");
 	}
 };
 

@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>((-p1).cos()),"cos(x)");
 	p1 = 0;
-	BOOST_CHECK_THROW(math::sin(-p1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::cos(p1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::sin(-p1),0);
+	BOOST_CHECK_EQUAL(math::cos(p1),1);
 	p1 = p_type1{"x"} - 2 * p_type1{"y"};
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x-2*y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p1)),"cos(x-2*y)");
@@ -222,8 +222,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK(has_cosine<p_type3>::value);
 	BOOST_CHECK(has_sine<p_type1>::value);
 	BOOST_CHECK(has_cosine<p_type1>::value);
-	BOOST_CHECK(!has_sine<poisson_series<rational>>::value);
-	BOOST_CHECK(!has_cosine<poisson_series<rational>>::value);
+	BOOST_CHECK(has_sine<poisson_series<rational>>::value);
+	BOOST_CHECK(has_cosine<poisson_series<rational>>::value);
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)
@@ -427,6 +427,13 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	BOOST_CHECK_EQUAL((a * cos(b)).subs("b",rational(0)),a);
 	BOOST_CHECK_EQUAL((a * sin(b)).subs("b",rational(0)),rational(0));
 	BOOST_CHECK((std::is_same<decltype(subs(t,"a",a + b)),p_type2>::value));
+	// This was a bug in the substitution routine.
+	p_type2 c{"c"}, d{"d"};
+	BOOST_CHECK_EQUAL(math::subs(a + math::cos(b) - math::cos(b),"b",c + d),a);
+	// This was a manifestation of the bug in the rational ctor from float.
+	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0_z),-3*math::pow(c,4));
+	// Test substitution with integral after math::sin/cos additional overload.
+	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0),-3*math::pow(c,4));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_print_tex_test)
@@ -561,9 +568,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
 	BOOST_CHECK((is_evaluable<p_type1,rational>::value));
 	BOOST_CHECK((!is_evaluable<p_type1,std::string>::value));
 	BOOST_CHECK((is_evaluable<p_type1,integer>::value));
-	BOOST_CHECK((!is_evaluable<p_type1,int>::value));
-	BOOST_CHECK((!is_evaluable<p_type1,long>::value));
-	BOOST_CHECK((!is_evaluable<p_type1,long long>::value));
+	BOOST_CHECK((is_evaluable<p_type1,int>::value));
+	BOOST_CHECK((is_evaluable<p_type1,long>::value));
+	BOOST_CHECK((is_evaluable<p_type1,long long>::value));
 	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf,short>>,double>::value));
 	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
 }

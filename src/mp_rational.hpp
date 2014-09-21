@@ -1772,18 +1772,18 @@ struct sin_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::typ
 {
 	/// Call operator.
 	/**
-	 * The argument will be converted to \p double and piranha::math::sin()
-	 * will then be used.
-	 *
 	 * @param[in] q argument.
 	 *
 	 * @return sine of \p q.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_rational to \p double.
+	 * @throws std::invalid_argument if the argument is not zero.
 	 */
-	double operator()(const T &q) const
+	T operator()(const T &q) const
 	{
-		return math::sin(static_cast<double>(q));
+		if (is_zero(q)) {
+			return T(0);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the sine of a non-zero rational");
 	}
 };
 
@@ -1793,18 +1793,18 @@ struct cos_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::typ
 {
 	/// Call operator.
 	/**
-	 * The argument will be converted to \p double and piranha::math::cos()
-	 * will then be used.
-	 *
 	 * @param[in] q argument.
 	 *
 	 * @return cosine of \p q.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_rational to \p double.
+	 * @throws std::invalid_argument if the argument is not zero.
 	 */
-	double operator()(const T &q) const
+	T operator()(const T &q) const
 	{
-		return math::cos(static_cast<double>(q));
+		if (is_zero(q)) {
+			return T(1);
+		}
+		piranha_throw(std::invalid_argument,"cannot compute the cosine of a non-zero rational");
 	}
 };
 
