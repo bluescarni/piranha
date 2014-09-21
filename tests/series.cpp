@@ -1758,6 +1758,9 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
 	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,mock_key>,double>::value));
 	BOOST_CHECK((is_evaluable<g_series_type3<double,monomial<int>>,double>::value));
+	// Check the syntax from initializer list with explicit template parameter.
+	BOOST_CHECK_EQUAL(p_type1{}.evaluate<int>({{}}),0);
+	BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo",4.},{"bar",7}}),0);
 }
 
 struct print_tex_tester
