@@ -177,6 +177,9 @@ class mp_rational
 				if (abs_x == Float(0)) {
 					// m_den is 1 already.
 					m_num = i_part;
+					if (x < Float(0)) {
+						m_num.negate();
+					}
 					return;
 				}
 				exp = std::ilogb(abs_x);
@@ -204,7 +207,7 @@ class mp_rational
 			}
 			math::multiply_accumulate(m_num,i_part,m_den);
 			canonicalise();
-			if (std::signbit(x)) {
+			if (x < Float(0)) {
 				m_num.negate();
 			}
 		}

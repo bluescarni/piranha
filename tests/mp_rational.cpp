@@ -225,6 +225,11 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),std::string("1/")+boost::lexical_cast<std::string>(int_type(ldradix).pow(2)));
 		ltmp = 0.;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q_type{ltmp}),"0");
+		// This was a bug: we did not fix the sign when the input was a negative integral value.
+		BOOST_CHECK_EQUAL(q_type{-1.},-1);
+		BOOST_CHECK_EQUAL(q_type{-2.},-2);
+		BOOST_CHECK_EQUAL(q_type{1.},1);
+		BOOST_CHECK_EQUAL(q_type{2.},2);
 		// Random testing.
 		std::uniform_real_distribution<double> ddist(0,std::numeric_limits<double>::max());
 		for (int i = 0; i < ntries / 10; ++i) {
