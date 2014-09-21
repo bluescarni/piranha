@@ -224,7 +224,7 @@ class real: public detail::real_base<>
 				piranha_assert(sign() != 0);
 				if (std::numeric_limits<T>::has_infinity && sign() > 0) {
 					return std::numeric_limits<T>::infinity();
-				} else if (std::numeric_limits<T>::has_infinity && sign() < 0 && std::signbit(std::numeric_limits<T>::lowest()) != 0) {
+				} else if (std::numeric_limits<T>::has_infinity && sign() < 0) {
 					return std::copysign(std::numeric_limits<T>::infinity(),std::numeric_limits<T>::lowest());
 				} else {
 					piranha_throw(std::overflow_error,"cannot convert infinity to floating-point type");

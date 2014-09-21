@@ -1180,13 +1180,13 @@ class mp_integer
 						m_int.g_st().set_bit(static_cast<limb_t>(i));
 					}
 				}
-				if (std::signbit(x)) {
+				if (x < Float(0)) {
 					m_int.g_st().negate();
 				}
 			} else {
 				m_int.promote();
 				::mpz_swap(&m.m_mpz,&m_int.g_dy());
-				if (std::signbit(x)) {
+				if (x < Float(0)) {
 					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 				}
 			}
