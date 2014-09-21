@@ -130,7 +130,9 @@ class poisson_series:
 					for (auto it = lc.begin(); it != lc.end(); ++it) {
 						retval.m_symbol_set.add(it->first);
 						// NOTE: this should probably be a safe_cast, if we ever implement it.
-						// The value type here could be anything, and not guaranteed to be castable.
+						// The value type here could be anything, and not guaranteed to be castable,
+						// even if in the current implementation this is guaranteed to be a signed
+						// int of some kind.
 						v.push_back(static_cast<value_type>(it->second));
 					}
 					// Build term, fix signs and flavour and move-insert it.
