@@ -801,10 +801,13 @@ struct evaluate_tester
 		k1 = k_type({T(1)});
 		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),1);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs),std::cos(1));
-		BOOST_CHECK((std::is_same<double,decltype(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs))>::value));
+		BOOST_CHECK((std::is_same<integer,decltype(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs))>::value));
+		// NOTE: here the return type depends on the integral type considered, char * char for instance gives int as result
+		// according to the standard integral promotions.
+		BOOST_CHECK((std::is_same<T,decltype(k1.evaluate(std::unordered_map<symbol,int>{{symbol("x"),1}},vs))>::value ||
+			std::is_same<int,decltype(k1.evaluate(std::unordered_map<symbol,int>{{symbol("x"),1}},vs))>::value));
 		BOOST_CHECK((std::is_same<real,decltype(k1.evaluate(std::unordered_map<symbol,real>{{symbol("x"),real(1)}},vs))>::value));
-		BOOST_CHECK((std::is_same<double,decltype(k1.evaluate(std::unordered_map<symbol,rational>{{symbol("x"),rational(1)}},vs))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(k1.evaluate(std::unordered_map<symbol,double>{{symbol("x"),1.}},vs))>::value));
 		k1.set_flavour(false);
 		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),0);
 		k1 = k_type({T(2),T(-3)});
@@ -1424,9 +1427,9 @@ struct is_evaluable_tester
 		BOOST_CHECK((key_is_evaluable<k_type,real>::value));
 		BOOST_CHECK((key_is_evaluable<k_type,integer>::value));
 		BOOST_CHECK((key_is_evaluable<k_type,rational>::value));
-		BOOST_CHECK((!key_is_evaluable<k_type,int>::value));
-		BOOST_CHECK((!key_is_evaluable<k_type,long>::value));
-		BOOST_CHECK((!key_is_evaluable<k_type,long long>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,int>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,long>::value));
+		BOOST_CHECK((key_is_evaluable<k_type,long long>::value));
 		BOOST_CHECK((!key_is_evaluable<k_type,std::string>::value));
 		BOOST_CHECK((!key_is_evaluable<k_type,void *>::value));
 	}
