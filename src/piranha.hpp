@@ -136,6 +136,7 @@ inline namespace literals {}
 #include "base_term.hpp"
 #include "cache_aligning_allocator.hpp"
 #include "config.hpp"
+#include "convert_to.hpp"
 #include "debug_access.hpp"
 #include "dynamic_aligning_allocator.hpp"
 #include "echelon_size.hpp"
