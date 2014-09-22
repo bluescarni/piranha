@@ -879,15 +879,6 @@ class real: public detail::real_base<>
 			}
 			::mpfr_swap(m_value,other.m_value);
 		}
-		/// Swap function for piranha::real.
-		/**
-		 * @param[in] r1 first argument.
-		 * @param[in] r2 second argument.
-		 */
-		friend void swap(real &r1, real &r2) noexcept
-		{
-			r1.swap(r2);
-		}
 		/// Sign.
 		/**
 		 * @return 1 if <tt>this > 0</tt>, 0 if <tt>this == 0</tt> and -1 if <tt>this < 0</tt>. If \p this is NaN, zero will be returned.

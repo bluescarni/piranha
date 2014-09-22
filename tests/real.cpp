@@ -185,10 +185,6 @@ BOOST_AUTO_TEST_CASE(real_swap_test)
 	BOOST_CHECK_EQUAL(r2.get_prec(),::mpfr_prec_t(4));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r1),"0.00000000000000000000000000000000000");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(r2),"-1.00");
-	swap(r1,r2);
-	BOOST_CHECK_EQUAL(r2 - 1,r1);
-	swap(r2,r2);
-	BOOST_CHECK_EQUAL(r2,0);
 }
 
 BOOST_AUTO_TEST_CASE(real_negate_test)
