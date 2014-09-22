@@ -39,4 +39,7 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK((!has_convert_to<int,std::string>::value));
 	BOOST_CHECK((has_convert_to<std::string,const char *>::value));
 	BOOST_CHECK((has_convert_to<std::string,char *>::value));
+	BOOST_CHECK((has_convert_to<double,long double>::value));
+	BOOST_CHECK((has_convert_to<long double,double>::value));
+	BOOST_CHECK((has_convert_to<long double,int>::value));
 }

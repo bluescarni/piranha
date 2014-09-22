@@ -36,19 +36,18 @@ struct convert_to_impl
 	/// Call operator.
 	/**
 	 * \note
-	 * This call operator is enabled only if <tt>static_cast<To>(x)</tt>
-	 * is well-formed.
+	 * This call operator is enabled only if \p To is constructible from \p From2.
 	 *
 	 * @param[in] x conversion argument.
 	 *
-	 * @return an instance of type \p To converted from \p x.
+	 * @return an instance of type \p To constructed from \p x.
 	 *
-	 * @throws unspecified any exception resulting from <tt>static_cast<To>(x)</tt>.
+	 * @throws unspecified any exception thrown by the constructor of \p To from \p From2.
 	 */
-	template <typename From2>
-	auto operator()(const From2 &x) const -> decltype(static_cast<To>(x))
+	template <typename From2, typename std::enable_if<std::is_constructible<To,const From2 &>::value,int>::type = 0>
+	To operator()(const From2 &x) const
 	{
-		return static_cast<To>(x);
+		return To(x);
 	}
 };
 
@@ -78,19 +77,28 @@ inline auto convert_to(const From &x) -> decltype(convert_to_impl<typename std::
 
 /// Type trait to detect piranha::convert_to().
 /**
- * The type trait will be \p true if piranha::convert_to() can be called with \p To and \p From
+ * The type trait will be \p true if piranha::convert_to() can be called with the decayed types of \p To and \p From
  * as template arguments, \p false otherwise.
  */
 template <typename To, typename From>
 class has_convert_to: detail::sfinae_types
 {
+		using Tod = typename std::decay<To>::type;
+		using Fromd = typename std::decay<From>::type;
 		template <typename To1, typename From1>
-		static auto test(const To1 &, const From1 &x) -> decltype(convert_to<To1>(x),void(),yes());
+		// NOTE: here we use the impl functor instead of the free function in order to work around what looks like
+		// an Intel bug -- it seems like decltype() is not coping well with a function with explicit template parameter
+		// such as convert_to<To1>(x). This should be equivalent.
+		static auto test(const To1 &, const From1 &x) -> decltype(convert_to_impl<To1,From1>()(x),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<To>(),std::declval<From>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),yes>::value;
 };
+
+// Static init.
+template <typename To, typename From>
+const bool has_convert_to<To,From>::value;
 
 }
 
