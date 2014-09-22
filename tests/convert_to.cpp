@@ -25,10 +25,14 @@
 
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "../src/environment.hpp"
 
 using namespace piranha;
+
+static void test_func() {}
+static auto l1 = [](){};
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {
@@ -36,10 +40,16 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK_EQUAL(convert_to<int>(3.5),3);
 	BOOST_CHECK((std::is_same<int,decltype(convert_to<int>(3.5))>::value));
 	BOOST_CHECK_EQUAL(convert_to<std::string>("asdasd"),"asdasd");
+	BOOST_CHECK_NO_THROW(convert_to<std::function<void()>>(test_func));
+	BOOST_CHECK_NO_THROW(convert_to<std::function<void()>>(l1));
+	BOOST_CHECK_NO_THROW(convert_to<void(*)()>(l1));
 	BOOST_CHECK((!has_convert_to<int,std::string>::value));
 	BOOST_CHECK((has_convert_to<std::string,const char *>::value));
 	BOOST_CHECK((has_convert_to<std::string,char *>::value));
 	BOOST_CHECK((has_convert_to<double,long double>::value));
 	BOOST_CHECK((has_convert_to<long double,double>::value));
 	BOOST_CHECK((has_convert_to<long double,int>::value));
+	BOOST_CHECK((has_convert_to<std::function<void()>,void(*)()>::value));
+	BOOST_CHECK((has_convert_to<std::function<void()>,decltype(l1)>::value));
+	BOOST_CHECK((has_convert_to<void(*)(),decltype(l1)>::value));
 }
