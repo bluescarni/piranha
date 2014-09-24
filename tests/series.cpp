@@ -39,6 +39,7 @@
 #include <utility>
 
 #include "../src/base_term.hpp"
+#include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -305,7 +306,7 @@ struct debug_access<construction_tag>
 			BOOST_CHECK((std::is_constructible<series_type,series_type>::value));
 			BOOST_CHECK((!std::is_constructible<series_type,series_type,int>::value));
 // This should be the same problem as in the explicit integer conversion.
-#if !defined(__clang__)
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
 			BOOST_CHECK((std::is_constructible<series_type2,series_type>::value));
 #endif
 			BOOST_CHECK((std::is_constructible<series_type3,series_type>::value));

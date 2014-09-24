@@ -32,6 +32,7 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -96,7 +97,8 @@ struct constructor_tester
 // for std::is_constructible<double,integer>::value. It seems like the explicit cast operator is not
 // considered by the type trait. We need to check with the latest versions
 // and, if this is still a problem, submit a bugreport.
-#if !defined(__clang__)
+// NOTE: this might be automatically fixed in the future with convert_to().
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
 		p_type p3a{integer(3)};
 		BOOST_CHECK(p3a == p3);
 		BOOST_CHECK(p3 == p3a);
@@ -144,7 +146,7 @@ struct assignment_tester
 		p_type p1;
 		p1 = 1;
 		BOOST_CHECK(p1 == 1);
-#if !defined(__clang__)
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
 		p1 = integer(10);
 		BOOST_CHECK(p1 == integer(10));
 #endif
