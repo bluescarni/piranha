@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "../src/config.hpp"
+#include "../src/convert_to.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -3017,6 +3018,11 @@ BOOST_AUTO_TEST_CASE(mp_integer_ctor_assign_test)
 	boost::mpl::for_each<size_types>(str_ctor_tester());
 	boost::mpl::for_each<size_types>(generic_assignment_tester());
 	boost::mpl::for_each<size_types>(str_assignment_tester());
+	// Some type traits checks.
+	BOOST_CHECK((!std::is_constructible<integer,std::vector<std::string>>::value));
+	BOOST_CHECK((!std::is_constructible<mp_integer<16>,std::vector<std::string>>::value));
+	BOOST_CHECK((!std::is_assignable<integer &,std::vector<std::string>>::value));
+	BOOST_CHECK((!std::is_assignable<mp_integer<32> &,std::vector<std::string>>::value));
 }
 
 struct integral_conversion_tester
@@ -3134,6 +3140,11 @@ BOOST_AUTO_TEST_CASE(mp_integer_conversion_test)
 {
 	boost::mpl::for_each<size_types>(integral_conversion_tester());
 	boost::mpl::for_each<size_types>(float_conversion_tester());
+	// Some type traits checks.
+	BOOST_CHECK((has_convert_to<integer,int>::value));
+	BOOST_CHECK((has_convert_to<int,mp_integer<16>>::value));
+	BOOST_CHECK((!has_convert_to<integer,std::vector<std::string>>::value));
+	BOOST_CHECK((!has_convert_to<std::vector<std::string>,integer>::value));
 }
 
 struct negate_tester

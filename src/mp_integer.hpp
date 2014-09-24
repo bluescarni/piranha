@@ -1107,37 +1107,19 @@ class mp_integer
 		// Import the interoperable types detector.
 		template <typename T>
 		using is_interoperable_type = detail::is_mp_integer_interoperable_type<T>;
-		// Types allowed in binary operations involving mp_integer.
-		template <typename T, typename U>
-		struct are_binary_op_types: std::integral_constant<bool,
-			(std::is_same<T,mp_integer>::value && is_interoperable_type<U>::value) ||
-			(std::is_same<U,mp_integer>::value && is_interoperable_type<T>::value) ||
-			(std::is_same<T,mp_integer>::value && std::is_same<U,mp_integer>::value)>
-		{};
-		// Types that can be used in a binary mod operation.
-		template <typename T, typename U>
-		struct are_mod_types: std::integral_constant<bool,
-			are_binary_op_types<T,U>::value && !std::is_floating_point<T>::value &&
-			!std::is_floating_point<U>::value>
-		{};
-		// Metaprogramming to establish the return type of binary arithmetic operations involving mp_integers.
-		// Default result type will be mp_integer itself; for consistency with C/C++ when one of the arguments
-		// is a floating point type, we will return a value of the same floating point type.
-		template <typename T, typename U, typename = void>
-		struct deduce_binary_op_result_type
-		{
-			using type = mp_integer;
-		};
-		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<T>::value>::type>
-		{
-			using type = T;
-		};
-		template <typename T, typename U>
-		struct deduce_binary_op_result_type<T,U,typename std::enable_if<std::is_floating_point<U>::value>::type>
-		{
-			using type = U;
-		};
+		// Enabler for generic ctor.
+		template <typename T>
+		using generic_ctor_enabler = typename std::enable_if<is_interoperable_type<T>::value,int>::type;
+		// Cast enabler.
+		template <typename T>
+		using cast_enabler = generic_ctor_enabler<T>;
+		// Enabler for in-place arithmetic operations with interop on the left.
+		template <typename T>
+		using generic_in_place_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,int>::type;
+		// Enabler for in-place mod with interop on the left.
+		template <typename T>
+		using generic_in_place_mod_enabler = typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value &&
+			std::is_integral<T>::value,int>::type;
 		template <typename Float>
 		void construct_from_interoperable(const Float &x, typename std::enable_if<std::is_floating_point<Float>::value>::type * = nullptr)
 		{
@@ -1976,7 +1958,7 @@ class mp_integer
 		 * @throws std::invalid_argument if the construction fails (e.g., construction from a non-finite
 		 * floating-point value).
 		 */
-		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
+		template <typename T, generic_ctor_enabler<T> = 0>
 		explicit mp_integer(const T &x)
 		{
 			construct_from_interoperable(x);
@@ -2029,7 +2011,7 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the generic constructor of mp_integer.
 		 */
-		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
+		template <typename T, generic_ctor_enabler<T> = 0>
 		mp_integer &operator=(const T &x)
 		{
 			return (*this = mp_integer(x));
@@ -2097,7 +2079,7 @@ class mp_integer
 		 * @throws std::overflow_error if the conversion fails (e.g., the range of the target integral type
 		 * is insufficient to represent the value of <tt>this</tt>).
 		 */
-		template <typename T, typename = typename std::enable_if<is_interoperable_type<T>::value>::type>
+		template <typename T, cast_enabler<T> = 0>
 		explicit operator T() const
 		{
 			return convert_to_impl<T>();
@@ -2208,8 +2190,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
-		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
-			mp_integer &>::type operator+=(const T &x)
+		auto operator+=(const T &x) -> decltype(this->in_place_add(x))
 		{
 			return in_place_add(x);
 		}
@@ -2227,9 +2208,8 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
-			operator+=(T &x, const mp_integer &n)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator+=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(n + x);
 			return x;
@@ -2257,8 +2237,7 @@ class mp_integer
 		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
-			operator+(const T &x, const U &y)
+		friend auto operator+(const T &x, const U &y) -> decltype(mp_integer::binary_plus(x,y))
 		{
 			return binary_plus(x,y);
 		}
@@ -2311,8 +2290,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
-		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
-			mp_integer &>::type operator-=(const T &x)
+		auto operator-=(const T &x) -> decltype(this->in_place_sub(x))
 		{
 			return in_place_sub(x);
 		}
@@ -2330,9 +2308,8 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
-			operator-=(T &x, const mp_integer &n)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator-=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(x - n);
 			return x;
@@ -2358,8 +2335,7 @@ class mp_integer
 		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
-			operator-(const T &x, const U &y)
+		friend auto operator-(const T &x, const U &y) -> decltype(mp_integer::binary_subtract(x,y))
 		{
 			return binary_subtract(x,y);
 		}
@@ -2414,8 +2390,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the generic constructor, the conversion operator or the generic assignment operator, if used.
 		 */
 		template <typename T>
-		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
-			mp_integer &>::type operator*=(const T &x)
+		auto operator*=(const T &x) -> decltype(this->in_place_mul(x))
 		{
 			return in_place_mul(x);
 		}
@@ -2433,9 +2408,8 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
-			operator*=(T &x, const mp_integer &n)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator*=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(x * n);
 			return x;
@@ -2461,8 +2435,7 @@ class mp_integer
 		 * - the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
-			operator*(const T &x, const U &y)
+		friend auto operator*(const T &x, const U &y) -> decltype(mp_integer::binary_mul(x,y))
 		{
 			return binary_mul(x,y);
 		}
@@ -2540,8 +2513,7 @@ class mp_integer
 		 * piranha::math::is_zero()).
 		 */
 		template <typename T>
-		typename std::enable_if<is_interoperable_type<T>::value || std::is_same<mp_integer,T>::value,
-			mp_integer &>::type operator/=(const T &x)
+		auto operator/=(const T &x) -> decltype(this->in_place_div(x))
 		{
 			if (unlikely(math::is_zero(x))) {
 				piranha_throw(zero_division_error,"division by zero in mp_integer");
@@ -2562,9 +2534,8 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value,T &>::type
-			operator/=(T &x, const mp_integer &n)
+		template <typename T, generic_in_place_enabler<T> = 0>
+		friend T &operator/=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(x / n);
 			return x;
@@ -2591,8 +2562,7 @@ class mp_integer
 		 * @throws piranha::zero_division_error if both operands are of integral type and a division by zero occurs.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,typename deduce_binary_op_result_type<T,U>::type>::type
-			operator/(const T &x, const U &y)
+		friend auto operator/(const T &x, const U &y) -> decltype(mp_integer::binary_div(x,y))
 		{
 			if (unlikely(math::is_zero(y))) {
 				piranha_throw(zero_division_error,"division by zero in mp_integer");
@@ -2615,9 +2585,7 @@ class mp_integer
 		 * @throws piranha::zero_division_error if <tt>n == 0</tt>.
 		 */
 		template <typename T>
-		typename std::enable_if<
-			(std::is_integral<T>::value && is_interoperable_type<T>::value) ||
-			std::is_same<mp_integer,T>::value,mp_integer &>::type operator%=(const T &n)
+		auto operator%=(const T &n) -> decltype(this->in_place_mod(n))
 		{
 			if (unlikely(math::is_zero(n))) {
 				piranha_throw(zero_division_error,"division by zero in mp_integer");
@@ -2639,9 +2607,8 @@ class mp_integer
 		 * 
 		 * @throws unspecified any exception thrown by the binary operator or by casting piranha::mp_integer to \p T.
 		 */
-		template <typename T>
-		friend typename std::enable_if<is_interoperable_type<T>::value && !std::is_const<T>::value && std::is_integral<T>::value,T &>::type
-			operator%=(T &x, const mp_integer &n)
+		template <typename T, generic_in_place_mod_enabler<T> = 0>
+		friend T &operator%=(T &x, const mp_integer &n)
 		{
 			x = static_cast<T>(x % n);
 			return x;
@@ -2665,8 +2632,7 @@ class mp_integer
 		 * @throws piranha::zero_division_error if the second operand is zero.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_mod_types<T,U>::value,mp_integer>::type
-			operator%(const T &x, const U &y)
+		friend auto operator%(const T &x, const U &y) -> decltype(mp_integer::binary_mod(x,y))
 		{
 			if (unlikely(math::is_zero(y))) {
 				piranha_throw(zero_division_error,"division by zero in mp_integer");
@@ -2694,7 +2660,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator==(const T &x, const U &y)
+		friend auto operator==(const T &x, const U &y) -> decltype(mp_integer::binary_equality(x,y))
 		{
 			return binary_equality(x,y);
 		}
@@ -2716,9 +2682,9 @@ class mp_integer
 		 * @throws unspecified any exception thrown by operator==().
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator!=(const T &x, const U &y)
+		friend auto operator!=(const T &x, const U &y) -> decltype(!mp_integer::binary_equality(x,y))
 		{
-			return !(x == y);
+			return !binary_equality(x,y);
 		}
 		/// Generic less-than operator involving piranha::mp_integer.
 		/**
@@ -2741,7 +2707,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<(const T &x, const U &y)
+		friend auto operator<(const T &x, const U &y) -> decltype(mp_integer::binary_less_than(x,y))
 		{
 			return binary_less_than(x,y);
 		}
@@ -2766,7 +2732,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the invoked constructor or the conversion operator, if used.
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator<=(const T &x, const U &y)
+		friend auto operator<=(const T &x, const U &y) -> decltype(mp_integer::binary_leq(x,y))
 		{
 			return binary_leq(x,y);
 		}
@@ -2791,9 +2757,9 @@ class mp_integer
 		 * @throws unspecified any exception thrown by operator<().
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>(const T &x, const U &y)
+		friend auto operator>(const T &x, const U &y) -> decltype(mp_integer::binary_less_than(y,x))
 		{
-			return y < x;
+			return binary_less_than(y,x);
 		}
 		/// Generic greater-than or equal operator involving piranha::mp_integer.
 		/**
@@ -2816,9 +2782,9 @@ class mp_integer
 		 * @throws unspecified any exception thrown by operator<=().
 		 */
 		template <typename T, typename U>
-		friend typename std::enable_if<are_binary_op_types<T,U>::value,bool>::type operator>=(const T &x, const U &y)
+		friend auto operator>=(const T &x, const U &y) -> decltype(mp_integer::binary_leq(y,x))
 		{
-			return y <= x;
+			return binary_leq(y,x);
 		}
 		/// Exponentiation.
 		/**
@@ -2841,7 +2807,7 @@ class mp_integer
 		 * @throws unspecified any exception thrown by the generic constructor, if used.
 		 */
 		template <typename T>
-		typename std::enable_if<std::is_integral<T>::value || std::is_same<T,mp_integer>::value,mp_integer>::type pow(const T &exp) const
+		auto pow(const T &exp) const -> decltype(this->pow_impl(exp))
 		{
 			return pow_impl(exp);
 		}
@@ -3035,8 +3001,8 @@ class mp_integer
 		 *
 		 * @throws std::invalid_argument if \p k is outside an implementation-defined range.
 		 */
-		template <typename T, typename = typename std::enable_if<std::is_integral<T>::value ||
-			std::is_same<mp_integer,T>::value>::type>
+		template <typename T, typename std::enable_if<std::is_integral<T>::value ||
+			std::is_same<mp_integer,T>::value,int>::type = 0>
 		mp_integer binomial(const T &k) const
 		{
 			if (k >= T(0)) {
