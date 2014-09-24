@@ -28,11 +28,19 @@
 #include <utility>
 
 #include "../src/environment.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
+#include "../src/real.hpp"
 
 using namespace piranha;
 
 static void test_func() {}
 static auto l1 = [](){};
+
+struct base {};
+struct derived: base {};
+
+struct base2 {};
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {
@@ -52,4 +60,20 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK((has_convert_to<std::function<void()>,void(*)()>::value));
 	BOOST_CHECK((has_convert_to<std::function<void()>,decltype(l1)>::value));
 	BOOST_CHECK((has_convert_to<void(*)(),decltype(l1)>::value));
+	BOOST_CHECK((has_convert_to<real,rational>::value));
+	BOOST_CHECK((has_convert_to<rational,real>::value));
+	BOOST_CHECK((has_convert_to<integer,real>::value));
+	BOOST_CHECK((has_convert_to<real,real>::value));
+	// NOTE: this used to be problematic with libc++ in an earlier implementation
+	// of convert_to().
+	BOOST_CHECK((has_convert_to<int,integer>::value));
+	BOOST_CHECK_EQUAL(convert_to<int>(45_z),45);
+	// Some pointer conversions.
+	BOOST_CHECK((has_convert_to<derived *,base *>::value));
+	BOOST_CHECK((has_convert_to<base *, derived *>::value));
+	BOOST_CHECK((!has_convert_to<derived *, const base *>::value));
+	BOOST_CHECK((has_convert_to<derived const *, const base *>::value));
+	BOOST_CHECK((has_convert_to<derived const *, base *>::value));
+	BOOST_CHECK((!has_convert_to<base *, base2 *>::value));
+	BOOST_CHECK((!has_convert_to<base2 *, base *>::value));
 }

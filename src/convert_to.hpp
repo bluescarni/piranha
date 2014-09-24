@@ -36,18 +36,19 @@ struct convert_to_impl
 	/// Call operator.
 	/**
 	 * \note
-	 * This call operator is enabled only if \p To is constructible from \p From2.
+	 * This call operator is enabled only if <tt>static_cast<To>(x)</tt> is a well-formed
+	 * expression.
 	 *
 	 * @param[in] x conversion argument.
 	 *
-	 * @return an instance of type \p To constructed from \p x.
+	 * @return an instance of type \p To cast from \p x.
 	 *
-	 * @throws unspecified any exception thrown by the constructor of \p To from \p From2.
+	 * @throws unspecified any exception thrown by casting \p x to \p To.
 	 */
-	template <typename From2, typename std::enable_if<std::is_constructible<To,const From2 &>::value,int>::type = 0>
-	To operator()(const From2 &x) const
+	template <typename From2>
+	auto operator()(const From2 &x) const -> decltype(static_cast<To>(x))
 	{
-		return To(x);
+		return static_cast<To>(x);
 	}
 };
 
