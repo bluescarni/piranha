@@ -524,7 +524,10 @@ BOOST_AUTO_TEST_CASE(type_traits_is_instance_of_test)
 	BOOST_CHECK((is_instance_of<variadic_iio1<int>,variadic_iio1>::value));
 	BOOST_CHECK((is_instance_of<variadic_iio1<int,double>,variadic_iio1>::value));
 	// See the comments in the source.
-#if defined(PIRANHA_COMPILER_IS_GCC) || defined(PIRANHA_COMPILER_IS_INTEL)
+#if (defined(PIRANHA_COMPILER_IS_GCC) && \
+	__GNUC__ > 4 || \
+	(__GNUC__ == 4 && __GNUC_MINOR__ > 8) || \
+	(__GNUC__ == 4 && __GNUC_MINOR__ == 8 && __GNUC_PATCHLEVEL__ >= 3)) || defined(PIRANHA_COMPILER_IS_INTEL)
 	BOOST_CHECK((is_instance_of<variadic_iio2<int>,variadic_iio2>::value));
 	BOOST_CHECK((is_instance_of<variadic_iio2<int,double>,variadic_iio2>::value));
 #endif

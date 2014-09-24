@@ -419,7 +419,8 @@ namespace detail
 //   class <typename T, typename U, typename ... Args> class TT;
 //   will not be detected. See also:
 //   http://stackoverflow.com/questions/18724698/variadic-template-deduction-in-variadic-template-template?noredirect=1#comment39290689_18724698
-//   The workaround of spelling explicitly N arguments works ok.
+//   The workaround of spelling explicitly N arguments works ok for GCC 4.8.3 but apparently not for earlier versions (still compiles,
+//   specialisation is not picked up).
 // - Clang behaves like GCC 4.8 *except* that the workaround won't work. Clang does not recognize the
 //   spelled-out N arguments versions below as specialisations of the general case.
 // - The Intel compiler won't work at all unless the workaround is activated.
