@@ -62,11 +62,6 @@ namespace piranha
  * This class does not have any non-static data members, hence it has trivial move semantics.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo confirm experimentally that boost numeric_cast does not influence performance.
- * \todo for the generation of the deltas instead of multiplying by two, try multiply by (2*delta - 1)/delta,
- * so that the resulting delta has m,M multiplied by two instead. This might improve limits behaviour at higher dimensions.
- * \todo sfinaeing of templated methods.
  */
 template <typename SignedInteger>
 class kronecker_array
@@ -99,6 +94,10 @@ class kronecker_array
 		// function.
 		static const limits_type m_limits;
 		// Determine limits for m-dimensional vectors.
+		// NOTE: when reasoning about this, keep in mind that this is not a completely generic
+		// codification: min/max vectors are negative/positive and symmetric. This makes it easy
+		// to reason about overflows during (de)codification of vectors, representability of the
+		// quantities involved, etc.
 		static limit_type determine_limit(const size_type &m)
 		{
 			piranha_assert(m >= 1u);
@@ -135,14 +134,12 @@ class kronecker_array
 					(void)static_cast<int_type>(h_min);
 					(void)static_cast<int_type>(h_max);
 					// Here it is +1 because h_max - h_min must be strictly less than the maximum value
-					// of int_type - see paper.
+					// of int_type. In the paper, in eq. (7), the Delta_i product appearing in the
+					// decoding of the last component of a vector is equal to (h_max - h_min + 1) so we need
+					// to be able to represent it.
 					(void)static_cast<int_type>(diff + 1);
-					// NOTE: check casting individual elements too of m/M vec. This is because in the paper we assume
-					// m and M representable, but here we do not know really.
-					for (size_type i = 0u; i < M_vec.size(); ++i) {
-						(void)static_cast<int_type>(M_vec[i]);
-						(void)static_cast<int_type>(m_vec[i]);
-					}
+					// NOTE: we do not need to cas the individual elements of m/M vecs, as the representability
+					// of h_min/max ensures the represantability of m/M as well.
 				} catch (const std::overflow_error &) {
 					std::vector<int_type> tmp;
 					// Check if we are at the first iteration.
@@ -235,8 +232,11 @@ class kronecker_array
 		}
 		/// Encode vector.
 		/**
-		 * Encode input vector \p v into an instance of \p SignedInteger. \p Vector must be a type with a vector-like interface.
-		 * Specifically, it must have a <tt>size()</tt> method and overloaded const index operator. If the value type of \p Vector
+		 * \note
+		 * This method can be called only if \p Vector is a type with a vector-like interface.
+		 * Specifically, it must have a <tt>size()</tt> method and overloaded const index operator.
+		 *
+		 * Encode input vector \p v into an instance of \p SignedInteger. If the value type of \p Vector
 		 * is not \p SignedInteger, the values of \p v will be converted to \p SignedInteger using <tt>boost::numeric_cast</tt>.
 		 * A vector of size 0 is always encoded as 0.
 		 * 
@@ -284,9 +284,11 @@ class kronecker_array
 		}
 		/// Decode into vector.
 		/**
-		 * Decode input code \p n into \p retval. \p Vector must be a type with a vector-like interface.
-		 * Specifically, it must have a <tt>size()</tt> method and overloaded mutable index operator.
-		 * If the value type of \p Vector
+		 * \note
+		 * This method can be called only if \p Vector is a type with a vector-like interface.
+		 * Specifically, it must have a <tt>size()</tt> method and overloaded const index operator.
+		 *
+		 * Decode input code \p n into \p retval. If the value type of \p Vector
 		 * is not \p SignedInteger, the components decoded from \p n will be converted to the value type of \p Vector
 		 * using <tt>boost::numeric_cast</tt>.
 		 * 
