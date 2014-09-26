@@ -62,6 +62,13 @@ struct limits_tester
 			BOOST_CHECK(std::get<1u>(l[i]) < 0);
 			BOOST_CHECK(std::get<2u>(l[i]) > 0);
 			BOOST_CHECK(std::get<3u>(l[i]) > 0);
+			if (std::is_same<T,std::make_signed<std::size_t>::type>::value) {
+				std::cout << '[';
+				for (size_type j = 0u; j < std::get<0u>(l[i]).size(); ++j) {
+					std::cout << std::get<0u>(l[i])[j] << ',';
+				}
+				std::cout << "] " << std::get<1u>(l[i]) << ',' << std::get<2u>(l[i]) << ',' << std::get<3u>(l[i]) << '\n';
+			}
 		}
 	}
 };
