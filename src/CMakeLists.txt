@@ -27,6 +27,7 @@ SET(HEADERS_LIST
 	series_multiplier.hpp
 	array_key.hpp
 	symbol.hpp
+	safe_cast.hpp
 	t_substitutable_series.hpp
 	print_coefficient.hpp
 	type_traits.hpp
