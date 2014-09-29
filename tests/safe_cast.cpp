@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/unit_test.hpp>
 
+#include <climits>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -51,8 +52,16 @@ BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 	BOOST_CHECK((!has_safe_cast<foo_nc,foo_nc>::value));
 	BOOST_CHECK((!has_safe_cast<double,int>::value));
 	BOOST_CHECK((has_safe_cast<int,double>::value));
+	BOOST_CHECK((has_safe_cast<char,float>::value));
 	BOOST_CHECK_EQUAL(safe_cast<int>(2.),2);
 	BOOST_CHECK_EQUAL(safe_cast<int>(-2.),-2);
 	BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+	if (CHAR_BIT <= 8) {
+		BOOST_CHECK_THROW(safe_cast<unsigned char>(300.),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull),std::invalid_argument);
+	}
+	BOOST_CHECK_THROW(safe_cast<unsigned char>(-1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(safe_cast<unsigned char>(1),1u);
 }
 
