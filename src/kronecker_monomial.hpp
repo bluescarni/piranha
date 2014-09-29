@@ -22,13 +22,13 @@
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -102,7 +102,7 @@ class kronecker_monomial
 		/// Maximum monomial size.
 		static const size_type max_size = 255u;
 	private:
-		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and sub typedef.
 		template <typename U, typename = void>
 		struct eval_type {};
