@@ -85,6 +85,12 @@ class environment: private detail::base_environment<>
 				std::cout.flush();
 				std::abort();
 			}
+			if (!::mpfr_buildopt_tls_p()) {
+				// NOTE: logging candidate, we probably want to push
+				// this to a warning channel.
+				std::cerr << "The MPFR library was not built thread-safe.\n";
+				std::cerr.flush();
+			}
 			m_inited = true;
 		}
 		/// Deleted copy constructor.
