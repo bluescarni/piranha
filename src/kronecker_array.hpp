@@ -138,15 +138,13 @@ class kronecker_array
 					// decoding of the last component of a vector is equal to (h_max - h_min + 1) so we need
 					// to be able to represent it.
 					(void)static_cast<int_type>(diff + 1);
-					// NOTE: we do not need to cas the individual elements of m/M vecs, as the representability
-					// of h_min/max ensures the represantability of m/M as well.
+					// NOTE: we do not need to cast the individual elements of m/M vecs, as the representability
+					// of h_min/max ensures the representability of m/M as well.
 				} catch (const std::overflow_error &) {
 					std::vector<int_type> tmp;
 					// Check if we are at the first iteration.
 					if (prev_c_vec.size()) {
 						const auto h_min = dot_prod(prev_c_vec,prev_m_vec), h_max = dot_prod(prev_c_vec,prev_M_vec);
-						// NOTE here that the check above on the components is such that here we are sure we can
-						// both cast to int_type and take the negative safely.
 						std::transform(prev_M_vec.begin(),prev_M_vec.end(),std::back_inserter(tmp),[](const integer &n) {
 							return static_cast<int_type>(n);
 						});
