@@ -3643,6 +3643,27 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 
 }
 
+template <typename To, typename From>
+struct safe_cast_impl<To,From,typename std::enable_if<
+	std::is_integral<To>::value && std::is_floating_point<From>::value
+>::type>
+{
+	To operator()(const From &f) const
+	{
+		if (unlikely(!std::isfinite(f))) {
+			piranha_throw(std::invalid_argument,"invalid safe cast from non-finite floating-point to integral");
+		}
+		if (std::trunc(f) != f) {
+			piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
+		}
+		try {
+			return static_cast<To>(integer{f});
+		} catch (...) {
+			piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
+		}
+	}
+};
+
 /// Type trait to detect piranha::math::integral_cast().
 /**
  * The type trait will be \p true if piranha::math::integral_cast() can be used on instances of type \p T,

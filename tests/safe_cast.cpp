@@ -28,6 +28,7 @@
 #include <string>
 
 #include "../src/environment.hpp"
+#include "../src/mp_integer.hpp"
 
 using namespace piranha;
 

@@ -25,10 +25,8 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "config.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
-#include "mp_integer.hpp"
 
 namespace piranha
 {
@@ -58,28 +56,6 @@ struct safe_cast_impl<To,From,typename std::enable_if<
 		}
 	}
 };
-
-template <typename To, typename From>
-struct safe_cast_impl<To,From,typename std::enable_if<
-	std::is_integral<To>::value && std::is_floating_point<From>::value
->::type>
-{
-	To operator()(const From &f) const
-	{
-		if (unlikely(!std::isfinite(f))) {
-			piranha_throw(std::invalid_argument,"invalid safe cast from non-finite floating-point to integral");
-		}
-		if (std::trunc(f) != f) {
-			piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
-		}
-		try {
-			return static_cast<To>(integer{f});
-		} catch (...) {
-			piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
-		}
-	}
-};
-
 
 template <typename To, typename From>
 inline auto safe_cast(const From &x) -> decltype(safe_cast_impl<typename std::decay<To>::type,From>()(x))
