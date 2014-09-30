@@ -98,7 +98,7 @@ class has_convert_to: detail::sfinae_types
 {
 		using Tod = typename std::decay<To>::type;
 		using Fromd = typename std::decay<From>::type;
-		// NOTE: here we can just reuse the logic from the detail enablers. Note that using
+		// NOTE: here we can just reuse the logic from the detail enabler. Note that using
 		// directly the convert_to() function here, as we do elsewhere, will not work on Intel,
 		// due to what looks like a bug when using decltype with an explicit template parameter
 		// in the function.
