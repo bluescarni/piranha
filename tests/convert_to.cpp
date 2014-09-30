@@ -27,6 +27,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -41,6 +42,42 @@ struct base {};
 struct derived: base {};
 
 struct base2 {};
+
+struct conv1;
+struct conv2;
+
+struct conv1
+{
+	operator conv2() const;
+};
+
+struct conv2 {};
+struct conv3 {};
+struct conv4 {};
+
+namespace piranha
+{
+
+// Wrong custom converter.
+template <>
+struct convert_to_impl<conv1,conv2,void>
+{};
+
+// Good custom converter.
+template <>
+struct convert_to_impl<conv1,conv3,void>
+{
+	conv1 operator()(const conv3 &) const;
+};
+
+// Bad custom converter.
+template <>
+struct convert_to_impl<conv1,conv4,void>
+{
+	int operator()(const conv4 &) const;
+};
+
+}
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {
@@ -73,7 +110,17 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK((has_convert_to<base *, derived *>::value));
 	BOOST_CHECK((!has_convert_to<derived *, const base *>::value));
 	BOOST_CHECK((has_convert_to<derived const *, const base *>::value));
+#if !defined(PIRANHA_COMPILER_IS_INTEL)
+	// This looks like an Intel compiler bug. ICC returns this as false:
+	// std::is_same<decltype(static_cast<derived const *>((base *)nullptr)),derived const *>::value
+	// It erases the const from "derived const *" when casting.
 	BOOST_CHECK((has_convert_to<derived const *, base *>::value));
+#endif
 	BOOST_CHECK((!has_convert_to<base *, base2 *>::value));
 	BOOST_CHECK((!has_convert_to<base2 *, base *>::value));
+	// User-defined conversion operator and specialisations.
+	BOOST_CHECK((has_convert_to<conv2,conv1>::value));
+	BOOST_CHECK((!has_convert_to<conv1,conv2>::value));
+	BOOST_CHECK((has_convert_to<conv1,conv3>::value));
+	BOOST_CHECK((!has_convert_to<conv1,conv4>::value));
 }

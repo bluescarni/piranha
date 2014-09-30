@@ -52,6 +52,18 @@ struct convert_to_impl
 	}
 };
 
+namespace detail
+{
+
+// Enabler for the generic conversion function. We need to check that the impl functor is callable
+// and that it returns the proper type.
+template <typename To, typename From>
+using convert_enabler = typename std::enable_if<
+	std::is_same<decltype(convert_to_impl<typename std::decay<To>::type,From>()(std::declval<const From &>())),typename std::decay<To>::type>::value,
+	int>::type;
+
+}
+
 /// Generic conversion function.
 /**
  * This function is meant to convert an instance of type \p From to an instance of the decayed
@@ -61,19 +73,19 @@ struct convert_to_impl
  * call operator. The decayed type of \p To is passed as first template parameter of
  * piranha::convert_to_impl, whereas \p From is passed as-is.
  *
+ * Any specialisation of piranha::convert_to_impl must have a call operator returning
+ * an instance of the decayed type of \p To, otherwise this function will be disabled.
+ *
  * @param[in] x conversion argument.
  *
  * @returns an instance of the decayed type of \p To converted from \p x.
  *
  * @throws unspecified any exception thrown by the call operator of the piranha::convert_to_impl functor.
  */
-template <typename To, typename From>
-inline auto convert_to(const From &x) -> decltype(convert_to_impl<typename std::decay<To>::type,From>()(x))
+template <typename To, typename From, detail::convert_enabler<To,From> = 0>
+inline To convert_to(const From &x)
 {
-	using return_type = typename std::decay<To>::type;
-	static_assert(std::is_same<return_type,decltype(convert_to_impl<return_type,From>()(x))>::value,
-		"Invalid return type for convert_to().");
-	return convert_to_impl<return_type,From>()(x);
+	return convert_to_impl<typename std::decay<To>::type,From>()(x);
 }
 
 /// Type trait to detect piranha::convert_to().
@@ -90,11 +102,11 @@ class has_convert_to: detail::sfinae_types
 		// NOTE: here we use the impl functor instead of the free function in order to work around what looks like
 		// an Intel bug -- it seems like decltype() is not coping well with a function with explicit template parameter
 		// such as convert_to<To1>(x). This should be equivalent.
-		static auto test(const To1 &, const From1 &x) -> decltype(convert_to_impl<To1,From1>()(x),void(),yes());
+		static auto test(const To1 &, const From1 &x) -> decltype(convert_to_impl<To1,From1>()(x));
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),yes>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),Tod>::value;
 };
 
 // Static init.
