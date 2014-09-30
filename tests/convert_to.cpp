@@ -54,6 +54,7 @@ struct conv1
 struct conv2 {};
 struct conv3 {};
 struct conv4 {};
+struct conv5 {};
 
 namespace piranha
 {
@@ -75,6 +76,13 @@ template <>
 struct convert_to_impl<conv1,conv4,void>
 {
 	int operator()(const conv4 &) const;
+};
+
+// Bad custom converter.
+template <>
+struct convert_to_impl<conv1,conv5,void>
+{
+	conv1 operator()(conv5 &) const;
 };
 
 }
@@ -123,4 +131,5 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK((!has_convert_to<conv1,conv2>::value));
 	BOOST_CHECK((has_convert_to<conv1,conv3>::value));
 	BOOST_CHECK((!has_convert_to<conv1,conv4>::value));
+	BOOST_CHECK((!has_convert_to<conv1,conv5>::value));
 }

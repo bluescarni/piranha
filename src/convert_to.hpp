@@ -101,7 +101,8 @@ class has_convert_to: detail::sfinae_types
 		template <typename To1, typename From1>
 		// NOTE: here we use the impl functor instead of the free function in order to work around what looks like
 		// an Intel bug -- it seems like decltype() is not coping well with a function with explicit template parameter
-		// such as convert_to<To1>(x). This should be equivalent.
+		// such as convert_to<To1>(x). This should be equivalent, but we need to add the check for the proper returned
+		// type in the std::is_same below.
 		static auto test(const To1 &, const From1 &x) -> decltype(convert_to_impl<To1,From1>()(x));
 		static no test(...);
 	public:
