@@ -66,14 +66,14 @@ struct safe_cast_impl<To,From,typename std::enable_if<
 {
 	/// Call operator.
 	/**
-	 * The call operator uses \p boost::numeric_cast to perform a safe conversion
+	 * The call operator uses \p boost::numeric_cast() to perform a safe conversion
 	 * between integral types.
 	 *
 	 * @param[in] f conversion argument.
 	 *
 	 * @return a copy of \p f cast safely to \p To.
 	 *
-	 * @throws unspecified any exception thrown by <tt>boost::numeric_cast</tt>.
+	 * @throws unspecified any exception thrown by <tt>boost::numeric_cast()</tt>.
 	 */
 	To operator()(const From &f) const
 	{
@@ -122,7 +122,7 @@ inline To safe_cast(const From &x)
 	} catch (...) {
 		// NOTE: maybe here we could use a more helpful message, with
 		// type demangling and stuff like that.
-		piranha_throw(std::invalid_argument,"safe cast failure");
+		piranha_throw(std::invalid_argument,"unsafe conversion");
 	}
 }
 
