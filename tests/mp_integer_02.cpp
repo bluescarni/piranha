@@ -2607,4 +2607,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_safe_cast_test)
 	BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
 	BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
 	BOOST_CHECK_THROW(safe_cast<int>((1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-1. / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-(1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
 }

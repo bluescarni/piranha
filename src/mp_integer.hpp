@@ -3647,35 +3647,46 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 /// Specialisation of piranha::safe_cast() for floating-point to integral conversions.
 template <typename To, typename From>
 struct safe_cast_impl<To,From,typename std::enable_if<
-	std::is_integral<To>::value && std::is_floating_point<From>::value
+	(std::is_integral<To>::value || std::is_same<To,integer>::value) && std::is_floating_point<From>::value
 >::type>
 {
-	/// Call operator.
-	/**
-	 * The call operator will first construct a piranha::integer from the input
-	 * float, and will then attempt to convert the result to \p To.
-	 *
-	 * If the input float is not finite or does not represent an integral value,
-	 * an error will be raised.
-	 *
-	 * @param[in] f conversion argument.
-	 *
-	 * @return a copy of \p f cast safely to \p To.
-	 *
-	 * @throws std::invalid_argument if \p f is not finite or if \p f does not represent
-	 * an integral value.
-	 * @throws unspecified any exception thrown by the conversion operator of piranha::integer.
-	 */
-	To operator()(const From &f) const
-	{
-		if (unlikely(!std::isfinite(f))) {
-			piranha_throw(std::invalid_argument,"invalid safe cast from non-finite floating-point to integral");
+		/// Call operator.
+		/**
+		 * The call operator will first construct a piranha::integer from the input
+		 * float, and will then attempt to convert the result to \p To.
+		 *
+		 * If the input float is not finite or does not represent an integral value,
+		 * an error will be raised.
+		 *
+		 * @param[in] f conversion argument.
+		 *
+		 * @return a copy of \p f cast safely to \p To.
+		 *
+		 * @throws std::invalid_argument if \p f is not finite or if \p f does not represent
+		 * an integral value.
+		 * @throws unspecified any exception thrown by the conversion operator of piranha::integer.
+		 */
+		To operator()(const From &f) const
+		{
+			if (unlikely(!std::isfinite(f))) {
+				piranha_throw(std::invalid_argument,"invalid safe cast from non-finite floating-point to integral");
+			}
+			if (std::trunc(f) != f) {
+				piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
+			}
+			return impl(f);
 		}
-		if (std::trunc(f) != f) {
-			piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
+	private:
+		template <typename To2 = To, typename std::enable_if<std::is_same<To2,integer>::value,int>::type = 0>
+		static To2 impl(const From &f)
+		{
+			return integer{f};
 		}
-		return static_cast<To>(integer{f});
-	}
+		template <typename To2 = To, typename std::enable_if<!std::is_same<To2,integer>::value,int>::type = 0>
+		static To2 impl(const From &f)
+		{
+			return static_cast<To2>(integer{f});
+		}
 };
 
 /// Type trait to detect piranha::math::integral_cast().
