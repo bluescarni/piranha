@@ -98,16 +98,16 @@ class has_convert_to: detail::sfinae_types
 {
 		using Tod = typename std::decay<To>::type;
 		using Fromd = typename std::decay<From>::type;
-		template <typename To1, typename From1>
-		// NOTE: here we use the impl functor instead of the free function in order to work around what looks like
-		// an Intel bug -- it seems like decltype() is not coping well with a function with explicit template parameter
-		// such as convert_to<To1>(x). This should be equivalent, but we need to add the check for the proper returned
-		// type in the std::is_same below.
-		static auto test(const To1 &, const From1 &x) -> decltype(convert_to_impl<To1,From1>()(x));
+		// NOTE: here we can just reuse the logic from the detail enablers. Note that using
+		// directly the convert_to() function here, as we do elsewhere, will not work on Intel,
+		// due to what looks like a bug when using decltype with an explicit template parameter
+		// in the function.
+		template <typename To1, typename From1, detail::convert_enabler<To1,From1> = 0>
+		static yes test(const To1 &, const From1 &);
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),Tod>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<Tod>(),std::declval<Fromd>())),yes>::value;
 };
 
 // Static init.
