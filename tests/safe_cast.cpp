@@ -24,21 +24,51 @@
 #include <boost/test/unit_test.hpp>
 
 #include <climits>
-#include <limits>
 #include <stdexcept>
 #include <string>
 
 #include "../src/environment.hpp"
-#include "../src/mp_integer.hpp"
-
-using namespace piranha;
 
 struct foo {};
 
+// Struct without copy ctor.
 struct foo_nc
 {
 	foo_nc(const foo_nc &) = delete;
 };
+
+struct conv1 {};
+struct conv2 {};
+struct conv3 {};
+struct conv4 {};
+
+namespace piranha
+{
+
+// Good specialisation.
+template <>
+struct safe_cast_impl<conv2,conv1,void>
+{
+	conv2 operator()(const conv1 &) const;
+};
+
+// Bad specialisation.
+template <>
+struct safe_cast_impl<conv3,conv1,void>
+{
+	int operator()(const conv1 &) const;
+};
+
+// Bad specialisation.
+template <>
+struct safe_cast_impl<conv4,conv1,void>
+{
+	conv4 operator()(conv1 &) const;
+};
+
+}
+
+using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 {
@@ -51,17 +81,18 @@ BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 	BOOST_CHECK((has_safe_cast<foo,foo>::value));
 	BOOST_CHECK((!has_safe_cast<foo_nc,foo_nc>::value));
 	BOOST_CHECK((!has_safe_cast<double,int>::value));
-	BOOST_CHECK((has_safe_cast<int,double>::value));
-	BOOST_CHECK((has_safe_cast<char,float>::value));
-	BOOST_CHECK_EQUAL(safe_cast<int>(2.),2);
-	BOOST_CHECK_EQUAL(safe_cast<int>(-2.),-2);
-	BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
-	BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
-	if (CHAR_BIT <= 8) {
-		BOOST_CHECK_THROW(safe_cast<unsigned char>(300.),std::invalid_argument);
+	// Check with custom specialisations.
+	BOOST_CHECK((has_safe_cast<conv2,conv1>::value));
+	BOOST_CHECK((!has_safe_cast<conv3,conv1>::value));
+	BOOST_CHECK((!has_safe_cast<conv4,conv1>::value));
+	// Some simple tests.
+	BOOST_CHECK_EQUAL(safe_cast<int>(4l),4);
+	BOOST_CHECK_EQUAL(safe_cast<unsigned>(4l),4u);
+	BOOST_CHECK_EQUAL(safe_cast<short>(-4ll),-4);
+	// Out of bounds.
+	BOOST_CHECK_THROW(safe_cast<unsigned>(-1),std::invalid_argument);
+	if (CHAR_BIT == 8) {
+		BOOST_CHECK_THROW(safe_cast<unsigned char>(300),std::invalid_argument);
 		BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull),std::invalid_argument);
 	}
-	BOOST_CHECK_THROW(safe_cast<unsigned char>(-1),std::invalid_argument);
-	BOOST_CHECK_EQUAL(safe_cast<unsigned char>(1),1u);
 }
-

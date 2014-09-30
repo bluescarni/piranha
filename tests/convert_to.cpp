@@ -33,8 +33,6 @@
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 
-using namespace piranha;
-
 static void test_func() {}
 static auto l1 = [](){};
 
@@ -86,6 +84,8 @@ struct convert_to_impl<conv1,conv5,void>
 };
 
 }
+
+using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(convert_to_main_test)
 {

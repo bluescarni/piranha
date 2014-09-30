@@ -48,6 +48,7 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
@@ -2593,4 +2594,17 @@ struct ipow_subs_tester
 BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
 {
 	boost::mpl::for_each<size_types>(ipow_subs_tester());
+}
+
+BOOST_AUTO_TEST_CASE(mp_integer_safe_cast_test)
+{
+	BOOST_CHECK((has_safe_cast<int,double>::value));
+	BOOST_CHECK((has_safe_cast<char,float>::value));
+	BOOST_CHECK((!has_safe_cast<double,int>::value));
+	BOOST_CHECK((!has_safe_cast<float,char>::value));
+	BOOST_CHECK_EQUAL(safe_cast<int>(2.),2);
+	BOOST_CHECK_EQUAL(safe_cast<int>(-2.),-2);
+	BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>((1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
 }
