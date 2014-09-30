@@ -132,4 +132,8 @@ BOOST_AUTO_TEST_CASE(convert_to_main_test)
 	BOOST_CHECK((has_convert_to<conv1,conv3>::value));
 	BOOST_CHECK((!has_convert_to<conv1,conv4>::value));
 	BOOST_CHECK((!has_convert_to<conv1,conv5>::value));
+	// Check with cv qualifiers.
+	BOOST_CHECK((has_convert_to<double &,const long double &>::value));
+	BOOST_CHECK((has_convert_to<const long double,double &&>::value));
+	BOOST_CHECK((has_convert_to<const long double,int &>::value));
 }
