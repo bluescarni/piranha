@@ -48,6 +48,7 @@
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha { namespace detail {
