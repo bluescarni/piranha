@@ -118,6 +118,14 @@
  * all uses of long double in the tests as valgrind cannot cope with it.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in base_term. Should we require it to be
  * noexcept as well and put the requirement in the is_cf type trait?
+ * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where it could
+ * matter (interop mp_integer/rational <--> float) we don't check for math errors, as explained here:
+ * http://en.cppreference.com/w/cpp/numeric/math/math_errhandling
+ * We should probably check for errors when we need things to be exact and safe. These include ilogb, scalb, trunc, etc. Secondly,
+ * we have a bunch of generic fp algorithms that could be easily extended to work with nonstandard fp types such as quadmath
+ * and decimal. We need then to abstract fp standard functions in our own wrappers and abstract away in a separate place our
+ * generic algos scattered around. Then in the wrappers we could add automatic checks for errno (raise exception) and kill two
+ * birds with one stone.
  */
 namespace piranha
 {
