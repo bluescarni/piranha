@@ -3644,13 +3644,20 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 
 }
 
-/// Specialisation of piranha::safe_cast() for floating-point to integral conversions.
+/// Specialisation of piranha::safe_cast() for conversions involving integral and floating-point types.
+/**
+ * This specialisation is enabled in the following cases:
+ * - \p From is a floating-point type and \p To is a C++ integral type or piranha::mp_integer,
+ * - one type is a C++ integral type and the other piranha::mp_integer.
+ */
 template <typename To, typename From>
 struct safe_cast_impl<To,From,typename std::enable_if<
-	(std::is_integral<To>::value || std::is_same<To,integer>::value) && std::is_floating_point<From>::value
+	((std::is_integral<To>::value || detail::is_mp_integer<To>::value) && std::is_floating_point<From>::value) ||
+	(std::is_integral<To>::value && detail::is_mp_integer<From>::value) ||
+	(std::is_integral<From>::value && detail::is_mp_integer<To>::value)
 >::type>
 {
-		/// Call operator.
+		/// Call operator, float to C++ integral overload.
 		/**
 		 * The call operator will first construct a piranha::integer from the input
 		 * float, and will then attempt to convert the result to \p To.
@@ -3666,7 +3673,56 @@ struct safe_cast_impl<To,From,typename std::enable_if<
 		 * an integral value.
 		 * @throws unspecified any exception thrown by the conversion operator of piranha::integer.
 		 */
-		To operator()(const From &f) const
+		template <typename From2, typename To2 = To, typename std::enable_if<
+			std::is_integral<To2>::value && std::is_floating_point<From2>::value,int>::type = 0>
+		To2 operator()(const From2 &f) const
+		{
+			common_float_checks(f);
+			return static_cast<To2>(integer{f});
+		}
+		/// Call operator, float to piranha::mp_integer overload.
+		/**
+		 * The call operator will construct a piranha::mp_integer from the input
+		 * float.
+		 *
+		 * If the input float is not finite or does not represent an integral value,
+		 * an error will be raised.
+		 *
+		 * @param[in] f conversion argument.
+		 *
+		 * @return a copy of \p f cast safely to \p To.
+		 *
+		 * @throws std::invalid_argument if \p f is not finite or if \p f does not represent
+		 * an integral value.
+		 * @throws unspecified any exception thrown by the conversion operator of piranha::mp_integer.
+		 */
+		template <typename From2, typename To2 = To, typename std::enable_if<
+			detail::is_mp_integer<To2>::value && std::is_floating_point<From2>::value,int>::type = 0>
+		To2 operator()(const From2 &f) const
+		{
+			common_float_checks(f);
+			return To2{f};
+		}
+		/// Call operator, integral to piranha::mp_integer and piranha::mp_integer to integral overload.
+		/**
+		 * The call operator will construct an output type from the input type.
+		 *
+		 * @param[in] f conversion argument.
+		 *
+		 * @return a copy of \p f cast safely to \p To.
+		 *
+		 * @throws unspecified any exception thrown by the conversion operator or the constructor
+		 * of piranha::mp_integer.
+		 */
+		template <typename From2, typename To2 = To, typename std::enable_if<
+			(detail::is_mp_integer<To2>::value && std::is_integral<From2>::value) ||
+			(detail::is_mp_integer<From2>::value && std::is_integral<To2>::value),int>::type = 0>
+		To2 operator()(const From2 &f) const
+		{
+			return To2(f);
+		}
+	private:
+		static void common_float_checks(const From &f)
 		{
 			if (unlikely(!std::isfinite(f))) {
 				piranha_throw(std::invalid_argument,"invalid safe cast from non-finite floating-point to integral");
@@ -3674,18 +3730,6 @@ struct safe_cast_impl<To,From,typename std::enable_if<
 			if (std::trunc(f) != f) {
 				piranha_throw(std::invalid_argument,"invalid safe cast from floating-point to integral");
 			}
-			return impl(f);
-		}
-	private:
-		template <typename To2 = To, typename std::enable_if<std::is_same<To2,integer>::value,int>::type = 0>
-		static To2 impl(const From &f)
-		{
-			return integer{f};
-		}
-		template <typename To2 = To, typename std::enable_if<!std::is_same<To2,integer>::value,int>::type = 0>
-		static To2 impl(const From &f)
-		{
-			return static_cast<To2>(integer{f});
 		}
 };
 
