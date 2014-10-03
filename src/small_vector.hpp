@@ -22,10 +22,10 @@
 #define PIRANHA_SMALL_VECTOR_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <cstddef>
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <new>
 #include <stdexcept>
 #include <type_traits>
@@ -78,8 +78,8 @@ class dynamic_storage
 		using const_pointer = value_type const *;
 		// NOTE: this bit of TMP is to avoid checking an always-false condition on reserve() on most platforms, which triggers a compiler
 		// warning on GCC 4.7.
-		static const std::size_t max_alloc_size = boost::integer_traits<std::size_t>::const_max / sizeof(value_type);
-		static const bool need_reserve_check = boost::integer_traits<size_type>::const_max > max_alloc_size;
+		static const std::size_t max_alloc_size = std::numeric_limits<std::size_t>::max() / sizeof(value_type);
+		static const bool need_reserve_check = std::numeric_limits<size_type>::max() > max_alloc_size;
 		static bool reserve_check_size(const size_type &, const std::false_type &)
 		{
 			return false;
@@ -89,7 +89,7 @@ class dynamic_storage
 			return new_capacity > max_alloc_size;
 		}
 	public:
-		static const size_type max_size = boost::integer_traits<size_type>::const_max;
+		static const size_type max_size = std::numeric_limits<size_type>::max();
 		using iterator = pointer;
 		using const_iterator = const_pointer;
 		dynamic_storage() : m_tag(0u),m_size(0u),m_capacity(0u),m_ptr(nullptr) {}
@@ -376,7 +376,7 @@ struct auto_static_size<T,Size,typename std::enable_if<
 	(sizeof(dynamic_storage<T>) > sizeof(static_vector<T,Size>))
 	>::type>
 {
-	static_assert(Size < boost::integer_traits<std::size_t>::const_max,"Overflow error in auto_static_size.");
+	static_assert(Size < std::numeric_limits<std::size_t>::max(),"Overflow error in auto_static_size.");
 	static const std::size_t value = auto_static_size<T,Size + 1u>::value;
 };
 
@@ -550,7 +550,7 @@ class small_vector
 		using size_type = size_type_impl;
 	private:
 		// If the size type can assume values larger than d_storage::max_size, then we need to run a check in resize().
-		static const bool need_resize_check = boost::integer_traits<size_type>::const_max > d_storage::max_size;
+		static const bool need_resize_check = std::numeric_limits<size_type>::max() > d_storage::max_size;
 		static bool resize_check_size(const size_type &, const std::false_type &)
 		{
 			return false;
