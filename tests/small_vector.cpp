@@ -314,6 +314,17 @@ struct constructor_tester
 			BOOST_CHECK(std::equal(v4.begin(),v4.end(),v5.begin()));
 			v_type v6(std::move(v5));
 			BOOST_CHECK(std::equal(v4.begin(),v4.end(),v6.begin()));
+			// Constructor from size and value.
+			v_type v7(0,T(1));
+			BOOST_CHECK_EQUAL(v7.size(),0u);
+			v_type v8(1u,T(42));
+			BOOST_CHECK_EQUAL(v8.size(),1u);
+			BOOST_CHECK_EQUAL((*v8.begin()),T(42));
+			v_type v9(3u,T(42));
+			BOOST_CHECK_EQUAL(v9.size(),3u);
+			BOOST_CHECK_EQUAL((*v9.begin()),T(42));
+			BOOST_CHECK_EQUAL(*(v9.begin() + 1),T(42));
+			BOOST_CHECK_EQUAL(*(v9.begin() + 2),T(42));
 		}
 	};
 	template <typename T>

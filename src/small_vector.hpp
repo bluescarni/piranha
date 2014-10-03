@@ -610,6 +610,21 @@ class small_vector
 				push_back(T(x));
 			}
 		}
+		/// Constructor from size and value.
+		/**
+		 * This constructor will initialise a vector containing \p size copies of \p value.
+		 *
+		 * @param[in] size the desired vector size.
+		 * @param[in] value the value used to initialise all the elements of the vector.
+		 *
+		 * @throws unspecified any exception thrown by push_back().
+		 */
+		explicit small_vector(const size_type &size, const T &value)
+		{
+			for (size_type i = 0u; i < size; ++i) {
+				push_back(value);
+			}
+		}
 		/// Destructor.
 		~small_vector() = default;
 		/// Copy assignment operator.
