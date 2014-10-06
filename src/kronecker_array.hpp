@@ -60,7 +60,7 @@ using ka_type_reqs = std::integral_constant<bool,std::is_integral<T>::value && s
  * 
  * \section type_requirements Type requirements
  * 
- * \p SignedInteger must be a C++ signed integral type with finite bounds.
+ * \p SignedInteger must be a C++ signed integral type.
  * 
  * \section exception_safety Exception safety guarantee
  * 
