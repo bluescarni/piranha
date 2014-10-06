@@ -292,7 +292,7 @@ class kronecker_array
 		/**
 		 * \note
 		 * This method can be called only if \p Vector is a type with a vector-like interface.
-		 * Specifically, it must have a <tt>size()</tt> method and overloaded const index operator.
+		 * Specifically, it must have a <tt>size()</tt> method and overloaded mutable index operator.
 		 *
 		 * Decode input code \p n into \p retval. If the value type of \p Vector
 		 * is not \p SignedInteger, the components decoded from \p n will be converted to the value type of \p Vector
