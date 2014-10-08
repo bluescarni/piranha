@@ -232,6 +232,41 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return std::all_of(this->begin(),this->end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
+		// Machinery to determine the degree type.
+		template <typename U>
+		using add_type = decltype(std::declval<U>() + std::declval<U>());
+		// No type defined in here, will sfinae out.
+		template <typename U, typename = void>
+		struct degree_type_
+		{};
+		template <typename U>
+		struct degree_type_<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		{
+			using type = integer;
+		};
+		template <typename U>
+		struct degree_type_<U,typename std::enable_if<!std::is_integral<U>::value && std::is_constructible<add_type<U>,int>::value &&
+			is_addable_in_place<add_type<U>>::value>::type>
+		{
+			using type = add_type<U>;
+		};
+		// The final alias.
+		template <typename U>
+		using degree_type = typename degree_type_<U>::type;
+
+		template <typename U = T>
+		degree_type<U> degree_(const symbol_set &args) const
+		{
+			// This is a fast check, better always to keep it.
+			if (unlikely(args.size() != this->size())) {
+				piranha_throw(std::invalid_argument,"invalid arguments set");
+			}
+			degree_type<U> retval(0);
+			for (const auto &x: *this) {
+				retval += x;
+			}
+			return retval;
+		}
 		/// Degree.
 		/**
 		 * Degree of the monomial.

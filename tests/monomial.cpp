@@ -330,6 +330,7 @@ struct degree_tester
 			key_type k0;
 			symbol_set v;
 			BOOST_CHECK_EQUAL(k0.degree(v),T(0));
+			BOOST_CHECK_EQUAL(k0.degree_(v),T(0));
 			BOOST_CHECK_EQUAL(k0.ldegree(v),T(0));
 			v.add(symbol("a"));
 			key_type k1(v);
