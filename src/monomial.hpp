@@ -267,6 +267,29 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return retval;
 		}
+		template <typename U = T>
+		degree_type<U> degree_(const symbol_set::positions &p, const symbol_set &args) const
+		{
+			if (unlikely(args.size() != this->size() || (p.size() && p.back() >= this->size()))) {
+				piranha_throw(std::invalid_argument,"invalid arguments set or positions");
+			}
+			auto cit = this->begin();
+			degree_type<U> retval(0);
+			for (const auto &i: p) {
+				retval += cit[i];
+			}
+			return retval;
+		}
+		template <typename U = T>
+		degree_type<U> ldegree_(const symbol_set &args) const
+		{
+			return degree_(args);
+		}
+		template <typename U = T>
+		degree_type<U> ldegree_(const symbol_set::positions &p, const symbol_set &args) const
+		{
+			return degree_(p,args);
+		}
 		/// Degree.
 		/**
 		 * Degree of the monomial.

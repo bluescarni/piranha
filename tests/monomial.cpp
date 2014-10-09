@@ -395,6 +395,90 @@ BOOST_AUTO_TEST_CASE(monomial_degree_test)
 	boost::mpl::for_each<expo_types>(degree_tester());
 }
 
+struct degree__tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef monomial<T,U> key_type;
+			key_type k0;
+			symbol_set v;
+			BOOST_CHECK_EQUAL(k0.degree_(v),T(0));
+			BOOST_CHECK_EQUAL(k0.ldegree_(v),T(0));
+			v.add(symbol("a"));
+			key_type k1(v);
+			BOOST_CHECK_EQUAL(k1.degree_(v),T(0));
+			BOOST_CHECK_EQUAL(k1.ldegree_(v),T(0));
+			k1[0] = T(2);
+			BOOST_CHECK_EQUAL(k1.degree_(v),T(2));
+			BOOST_CHECK_EQUAL(k1.ldegree_(v),T(2));
+			v.add(symbol("b"));
+			key_type k2(v);
+			BOOST_CHECK_EQUAL(k2.degree_(v),T(0));
+			BOOST_CHECK_EQUAL(k2.ldegree_(v),T(0));
+			k2[0] = T(2);
+			k2[1] = T(3);
+			BOOST_CHECK_EQUAL(k2.degree_(v),T(2) + T(3));
+			BOOST_CHECK_THROW(k2.degree_(symbol_set{}),std::invalid_argument);
+			// Partial degree.
+			using positions = symbol_set::positions;
+			auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
+				symbol_set tmp;
+				for (const auto &str: s) {
+					tmp.add(str);
+				}
+				return positions(v,tmp);
+			};
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,std::set<std::string>{}),v) == T(0));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"a"}),v) == T(2));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"A"}),v) == T(0));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"z"}),v) == T(0));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"z","A","a"}),v) == T(2));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"z","A","b"}),v) == T(3));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"B","A","b"}),v) == T(3));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"a","b","z"}),v) == T(3) + T(2));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"a","b","A"}),v) == T(3) + T(2));
+			BOOST_CHECK(k2.degree_(ss_to_pos(v,{"a","b","A","z"}),v) == T(3) + T(2));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,std::set<std::string>{}),v) == T(0));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a"}),v) == T(2));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"A"}),v) == T(0));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"z"}),v) == T(0));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"z","A","a"}),v) == T(2));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"z","A","b"}),v) == T(3));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"B","A","b"}),v) == T(3));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","z"}),v) == T(3) + T(2));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","A"}),v) == T(3) + T(2));
+			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","A","z"}),v) == T(3) + T(2));
+//			v.add(symbol("c"));
+//			key_type k3(v);
+//			k3[0] = T(2);
+//			k3[1] = T(3);
+//			k3[2] = T(4);
+//			BOOST_CHECK(k3.degree_({"a","b","A","z"},v) == T(3) + T(2));
+//			BOOST_CHECK(k3.degree_({"a","c","A","z"},v) == T(4) + T(2));
+//			BOOST_CHECK(k3.degree_({"a","c","b","z"},v) == T(4) + T(2) + T(3));
+//			BOOST_CHECK(k3.degree_({"a","c","b","A"},v) == T(4) + T(2) + T(3));
+//			BOOST_CHECK(k3.degree_({"c","b","A"},v) == T(4) + T(3));
+//			BOOST_CHECK(k3.degree_({"A","B","C"},v) == T(0));
+//			BOOST_CHECK(k3.degree_({"x","y","z"},v) == T(0));
+//			BOOST_CHECK(k3.degree_({"x","y","z","A","B","C","a"},v) == T(2));
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(monomial_degree__test)
+{
+	boost::mpl::for_each<expo_types>(degree__tester());
+}
+
 struct multiply_tester
 {
 	template <typename T>
