@@ -572,6 +572,9 @@ class small_vector
 		// NOTE: here we should replace with bidirectional tt, if we ever implement it.
 		PIRANHA_TT_CHECK(is_forward_iterator,iterator);
 		PIRANHA_TT_CHECK(is_forward_iterator,const_iterator);
+		// Enabler for ctor from init list.
+		template <typename U>
+		using init_list_enabler = typename std::enable_if<std::is_constructible<T,U const &>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -602,7 +605,7 @@ class small_vector
 		 *
 		 * @throws unspecified any exception thrown by push_back().
 		 */
-		template <typename U, typename = typename std::enable_if<std::is_constructible<T,U const &>::value>::type>
+		template <typename U, init_list_enabler<U> = 0>
 		explicit small_vector(std::initializer_list<U> l)
 		{
 			// NOTE: push_back has strong exception safety.
