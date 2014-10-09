@@ -101,8 +101,8 @@ class symbol_set
 				explicit positions(const symbol_set &, const symbol_set &);
 				/// Deleted copy constructor.
 				positions(const positions &) = delete;
-				/// Deleted move constructor.
-				positions(positions &&) = delete;
+				/// Defaulted move constructor.
+				positions(positions &&) = default;
 				/// Deleted copy assignment operator.
 				positions &operator=(const positions &) = delete;
 				/// Deleted move assignment operator.
@@ -122,6 +122,15 @@ class symbol_set
 				const_iterator end() const
 				{
 					return m_values.end();
+				}
+				/// Last element.
+				/**
+				 * @return a const reference to the last element.
+				 */
+				const size_type &back() const
+				{
+					piranha_assert(m_values.size());
+					return m_values.back();
 				}
 				/// Size.
 				/**

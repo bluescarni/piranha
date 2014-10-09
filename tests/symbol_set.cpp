@@ -192,6 +192,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
 	BOOST_CHECK_EQUAL(p.size(),2u);
 	BOOST_CHECK_EQUAL(*p.begin(),0u);
 	BOOST_CHECK_EQUAL(p.begin()[1],2u);
+	BOOST_CHECK_EQUAL(p.back(),2u);
 	}
 	{
 	symbol_set a({symbol("a"),symbol("b"),symbol("c")});
@@ -214,6 +215,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
 	checker(a,b,p);
 	BOOST_CHECK_EQUAL(p.size(),1u);
 	BOOST_CHECK_EQUAL(p.begin()[0],2u);
+	BOOST_CHECK_EQUAL(p.back(),2u);
 	}
 	{
 	// Interleaved with no overlapping.
@@ -233,6 +235,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
 	BOOST_CHECK_EQUAL(p.begin()[0],0u);
 	BOOST_CHECK_EQUAL(p.begin()[1],1u);
 	BOOST_CHECK_EQUAL(p.begin()[2],2u);
+	BOOST_CHECK_EQUAL(p.back(),2u);
 	}
 	// Random testing.
 	std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),std::numeric_limits<int>::max() - 1);
