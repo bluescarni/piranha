@@ -384,7 +384,9 @@ class array_key
 		}
 	protected:
 		// NOTE: the reason for this to be protected is for future implementations of trig monomial based
-		// on this class.
+		// on this class, with which we want to share code.
+		// NOTE: probably though we can change the name of this to merge_args(), move to public and
+		// return a Derived instead.
 		/// Merge arguments.
 		/**
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
