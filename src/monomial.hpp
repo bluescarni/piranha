@@ -53,11 +53,12 @@ namespace piranha
 /**
  * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
  * 
- * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
+ * This class satisfies the piranha::is_key type trait.
  * 
  * \section type_requirements Type requirements
  * 
- * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key.
+ * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
+ * \p T must satisfy the piranha::has_is_zero type trait.
  * 
  * \section exception_safety Exception safety guarantee
  * 
@@ -80,6 +81,7 @@ namespace piranha
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class monomial: public array_key<T,monomial<T,S>,S>
 {
+		PIRANHA_TT_CHECK(has_is_zero,T);
 		using base = array_key<T,monomial<T,S>,S>;
 		// Eval and subs type definition.
 		template <typename U, typename = void>
@@ -142,6 +144,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				x = static_cast<U>(x - y);
 			}
 		};
+		// Enabler for ctor from init list.
+		template <typename U>
+		using init_list_enabler = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value,int>::type;
+		// Enabler for multiplication.
+		template <typename U>
+		using multiply_enabler = decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()));
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
@@ -155,7 +163,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * @see piranha::array_key's constructor from initializer list.
 		 */
-		template <typename U, typename = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value>::type>
+		template <typename U, init_list_enabler<U> = 0>
 		explicit monomial(std::initializer_list<U> list):base(list) {}
 		PIRANHA_FORWARDING_CTOR(monomial,base)
 		/// Trivial destructor.
@@ -234,7 +242,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		// Machinery to determine the degree type.
 		template <typename U>
-		using add_type = decltype(std::declval<U>() + std::declval<U>());
+		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
 		// No type defined in here, will sfinae out.
 		template <typename U, typename = void>
 		struct degree_type_
@@ -371,9 +379,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 *
 		 * @return the return value of piranha::array_key::vector_add().
 		 */
-		template <typename U = monomial>
-		auto multiply(monomial &retval, const monomial &other, const symbol_set &args) const -> decltype(
-			std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))
+		template <typename U = monomial, typename = multiply_enabler<U>>
+		void multiply(monomial &retval, const monomial &other, const symbol_set &args) const
 		{
 			if(unlikely(other.size() != args.size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
