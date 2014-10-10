@@ -575,6 +575,16 @@ class small_vector
 		// Enabler for ctor from init list.
 		template <typename U>
 		using init_list_enabler = typename std::enable_if<std::is_constructible<T,U const &>::value,int>::type;
+		// Enabler for equality operator.
+		template <typename U>
+		using equality_enabler = typename std::enable_if<is_equality_comparable<U>::value,int>::type;
+		// Enabler for hash.
+		template <typename U>
+		using hash_enabler = typename std::enable_if<is_hashable<U>::value,int>::type;
+		// Enabler for the addition.
+		template <typename U>
+		using add_enabler = typename std::enable_if<
+			std::is_assignable<U &,decltype(std::declval<U const &>() + std::declval<U const &>()) &&>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -763,9 +773,7 @@ class small_vector
 		 *
 		 * @throws unspecified any exception thrown by the equality operator of \p T.
 		 */
-		template <typename U = value_type, typename = typename std::enable_if<
-			is_equality_comparable<U>::value
-			>::type>
+		template <typename U = value_type, equality_enabler<U> = 0>
 		bool operator==(const small_vector &other) const
 		{
 			// NOTE: it seems like in C++14 the check on equal sizes is embedded in std::equal
@@ -800,9 +808,7 @@ class small_vector
 		 *
 		 * @throws unspecified any exception thrown by operator==().
 		 */
-		template <typename U = value_type, typename = typename std::enable_if<
-			is_equality_comparable<U>::value
-			>::type>
+		template <typename U = value_type, equality_enabler<U> = 0>
 		bool operator!=(const small_vector &other) const
 		{
 			return !(this->operator==(other));
@@ -814,9 +820,7 @@ class small_vector
 		 *
 		 * @return a hash value for \p this.
 		 */
-		template <typename U = value_type, typename = typename std::enable_if<
-			is_hashable<U>::value
-			>::type>
+		template <typename U = value_type, hash_enabler<U> = 0>
 		std::size_t hash() const noexcept
 		{
 			if (m_union.is_static()) {
@@ -870,8 +874,8 @@ class small_vector
 		/// Vector addition.
 		/**
 		 * \note
-		 * This method is enabled only if \p value_type is addable and assignable, and if the result
-		 * of the addition is convertible to \p value_type.
+		 * This method is enabled only if \p value_type is addable and if the result
+		 * of the addition is move-assignable to \p value_type.
 		 *
 		 * Will compute the element-wise addition of \p this and \p other, storing the result in \p retval.
 		 * In face of exceptions during the addition of two elements, retval will be left in an unspecified
@@ -886,9 +890,7 @@ class small_vector
 		 * - resize(),
 		 * - the addition and assignment operators of \p value_type.
 		 */
-		template <typename U = value_type, typename = typename std::enable_if<
-			std::is_convertible<decltype(std::declval<U const &>() + std::declval<U const &>()),U>::value &&
-			std::is_assignable<value_type &, value_type>::value>::type>
+		template <typename U = value_type, add_enabler<U> = 0>
 		void add(small_vector &retval, const small_vector &other) const
 		{
 			const auto s = size();
@@ -899,17 +901,17 @@ class small_vector
 			std::transform(begin(),end(),other.begin(),retval.begin(),adder<value_type>());
 		}
 	private:
-		// NOTE: need this to silence warnings when operating on short ints: they will get
-		// promoted to int during addition, hence resulting in a warning when casting back down
-		// to short int on return.
 		template <typename U, typename = void>
 		struct adder
 		{
-			U operator()(const U &a, const U &b) const
+			auto operator()(const U &a, const U &b) -> decltype(a + b)
 			{
 				return a + b;
 			}
 		};
+		// NOTE: need this to silence warnings when operating on short ints: they will get
+		// promoted to int during addition, hence resulting in a warning when casting back down
+		// to short int on return.
 		template <typename U>
 		struct adder<U,typename std::enable_if<std::is_integral<U>::value>::type>
 		{
