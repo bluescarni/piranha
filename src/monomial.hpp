@@ -356,29 +356,29 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Multiply monomial.
 		/**
 		 * \note
-		 * This method is enabled only if the underlying call to piranha::array_key::add()
+		 * This method is enabled only if the underlying call to piranha::array_key::vector_add(()
 		 * is well-formed.
 		 *
 		 * Multiplies \p this by \p other and stores the result in \p retval. The exception safety
-		 * guarantee is the same as for piranha::array_key::add().
+		 * guarantee is the same as for piranha::array_key::vector_add().
 		 * 
 		 * @param[out] retval return value.
 		 * @param[in] other argument of multiplication.
 		 * @param[in] args reference set of arguments.
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by piranha::array_key::add().
+		 * @throws unspecified any exception thrown by piranha::array_key::vector_add().
 		 *
-		 * @return the return value of piranha::array_key::add().
+		 * @return the return value of piranha::array_key::vector_add().
 		 */
 		template <typename U = monomial>
 		auto multiply(monomial &retval, const monomial &other, const symbol_set &args) const -> decltype(
-			std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()))
+			std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))
 		{
 			if(unlikely(other.size() != args.size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			this->add(retval,other);
+			this->vector_add(retval,other);
 		}
 		/// Name of the linear argument.
 		/**

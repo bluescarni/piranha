@@ -402,13 +402,13 @@ class debug_access<add_tag>
 			{
 				typedef g_key_type<T,U> key_type;
 				key_type k1, k2, retval;
-				k1.add(retval,k2);
+				k1.vector_add(retval,k2);
 				BOOST_CHECK(!retval.size());
 				k1.resize(1);
 				k2.resize(1);
 				k1[0] = 1;
 				k2[0] = 2;
-				k1.add(retval,k2);
+				k1.vector_add(retval,k2);
 				BOOST_CHECK(retval.size() == 1u);
 				BOOST_CHECK(retval[0] == T(3));
 			}
@@ -542,27 +542,112 @@ BOOST_AUTO_TEST_CASE(array_key_type_traits_test)
 	boost::mpl::for_each<value_types>(tt_tester());
 }
 
-struct iakvt_tester
+// Fake value type
+struct fvt
+{
+	fvt() = default;
+	fvt(int);
+	fvt(const fvt &) = default;
+	fvt(fvt &&) noexcept;
+	fvt &operator=(const fvt &) = default;
+	fvt &operator=(fvt &&) noexcept;
+	bool operator<(const fvt &) const;
+	bool operator==(const fvt &) const;
+	bool operator!=(const fvt &) const;
+};
+
+// Fake value type with addition operation.
+struct fvt2
+{
+	fvt2() = default;
+	fvt2(int);
+	fvt2(const fvt2 &) = default;
+	fvt2(fvt2 &&) noexcept;
+	fvt2 &operator=(const fvt2 &) = default;
+	fvt2 &operator=(fvt2 &&) noexcept;
+	bool operator<(const fvt2 &) const;
+	bool operator==(const fvt2 &) const;
+	bool operator!=(const fvt2 &) const;
+	fvt2 operator+(const fvt2 &) const;
+};
+
+// Fake value type with wrong operation.
+struct foo_t {};
+
+struct fvt3
+{
+	fvt3() = default;
+	fvt3(int);
+	fvt3(const fvt3 &) = default;
+	fvt3(fvt3 &&) noexcept;
+	fvt3 &operator=(const fvt3 &) = default;
+	fvt3 &operator=(fvt3 &&) noexcept;
+	bool operator<(const fvt3 &) const;
+	bool operator==(const fvt3 &) const;
+	bool operator!=(const fvt3 &) const;
+	foo_t operator+(const fvt3 &) const;
+};
+
+namespace std
+{
+
+template <>
+struct hash<fvt>
+{
+	typedef size_t result_type;
+	typedef fvt argument_type;
+	result_type operator()(const argument_type &) const noexcept;
+};
+
+template <>
+struct hash<fvt2>
+{
+	typedef size_t result_type;
+	typedef fvt2 argument_type;
+	result_type operator()(const argument_type &) const noexcept;
+};
+
+template <>
+struct hash<fvt3>
+{
+	typedef size_t result_type;
+	typedef fvt3 argument_type;
+	result_type operator()(const argument_type &) const noexcept;
+};
+
+}
+
+template <typename T>
+using add_type = decltype(std::declval<T const &>().vector_add(std::declval<T &>(),std::declval<T const &>()));
+
+template <typename T, typename = void>
+struct has_add
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct has_add<T,typename std::enable_if<std::is_same<add_type<T>,add_type<T>>::value>::type>
+{
+	static const bool value = true;
+};
+
+struct ae_tester
 {
 	template <typename T>
 	void operator()(const T &)
 	{
-		BOOST_CHECK(is_array_key_value_type<T>::value);
+		typedef g_key_type<fvt,T> key_type;
+		BOOST_CHECK(!has_add<key_type>::value);
+		typedef g_key_type<fvt2,T> key_type2;
+		BOOST_CHECK(has_add<key_type2>::value);
+		typedef g_key_type<fvt3,T> key_type3;
+		BOOST_CHECK(!has_add<key_type3>::value);
 	}
 };
 
-BOOST_AUTO_TEST_CASE(array_key_is_array_key_value_type_test)
+BOOST_AUTO_TEST_CASE(array_key_add_enabler_test)
 {
 
-	boost::mpl::for_each<value_types>(iakvt_tester());
-	BOOST_CHECK(is_array_key_value_type<double>::value);
-	BOOST_CHECK(is_array_key_value_type<long>::value);
-	BOOST_CHECK(is_array_key_value_type<unsigned long>::value);
-	BOOST_CHECK(is_array_key_value_type<short>::value);
-	BOOST_CHECK(is_array_key_value_type<char>::value);
-	// NOTE: same clang issue with subtractability in place.
-	//BOOST_CHECK(!(is_array_key_value_type<int *>::value));
-	BOOST_CHECK(!(is_array_key_value_type<int &>::value));
-	BOOST_CHECK(!(is_array_key_value_type<const int>::value));
-	BOOST_CHECK(!(is_array_key_value_type<const int &>::value));
+	boost::mpl::for_each<size_types>(ae_tester());
 }

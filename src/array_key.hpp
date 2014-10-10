@@ -34,45 +34,13 @@
 #include "debug_access.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
+#include "safe_cast.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
-
-/// Type trait for types suitable for use as values in piranha::array_key.
-/**
- * The requisites for type \p T are the following:
- * - it must satisfy piranha::is_container_element,
- * - it must be constructible from \p int,
- * - references must be assignable from \p T,
- * - it must be equality-comparable and less-than comparable,
- * - it must be addable and subtractable (both in binary and unary form),
- * - it must satisfy piranha::is_ostreamable,
- * - it must satisfy piranha::has_is_zero,
- * - it must satisfy piranha::is_hashable.
- */
-template <typename T>
-class is_array_key_value_type
-{
-	public:
-		// NOTE: these requirements are not all used in the implementation of array_key,
-		// they are here to offer a comfortable base to implement array keys without too much hassle.
-		/// Value of the type trait.
-		static const bool value = is_container_element<T>::value &&
-					  std::is_constructible<T,int>::value &&
-					  std::is_assignable<T &,T>::value &&
-					  is_equality_comparable<T>::value &&
-					  is_less_than_comparable<T>::value &&
-					  is_addable<T>::value && is_addable_in_place<T>::value &&
-					  is_subtractable<T>::value && is_subtractable_in_place<T>::value &&
-					  is_ostreamable<T>::value && has_is_zero<T>::value &&
-					  is_hashable<T>::value;
-};
-
-template <typename T>
-const bool is_array_key_value_type<T>::value;
 
 /// Array key.
 /**
@@ -83,9 +51,13 @@ const bool is_array_key_value_type<T>::value;
  * 
  * \section type_requirements Type requirements
  * 
- * - \p T must satisfy piranha::is_array_key_value_type,
+ * - \p T must satisfy the following requirements:
+ *   - it must be suitable for use in piranha::small_vector as a value type,
+ *   - it must be constructible from \p int,
+ *   - it must be less-than comparable and equality-comparable,
+ *   - it must be hashable,
  * - \p Derived must derive from piranha::array_key of \p T and \p Derived,
- * - \p Derived must satisfy the piranha::is_container_element type trait.
+ * - \p Derived must satisfy the piranha::is_container_element type trait,
  * - \p S must be suitable as second template argument to piranha::small_vector.
  * 
  * \section exception_safety Exception safety guarantee
@@ -97,20 +69,36 @@ const bool is_array_key_value_type<T>::value;
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo think about introducing range-checking in element access not only in debug mode, to make it completely
- * safe to use.
  */
 template <typename T, typename Derived, typename S = std::integral_constant<std::size_t,0u>>
 class array_key
 {
-		PIRANHA_TT_CHECK(is_array_key_value_type,T);
+		// NOTE: the general idea about requirements here is that these are the bare minimum
+		// to make a simple array_key suitable as key in a piranha::series. There are additional
+		// requirements which are optional and checked in the member functions.
+		PIRANHA_TT_CHECK(std::is_constructible,T,int);
+		PIRANHA_TT_CHECK(is_less_than_comparable,T);
+		PIRANHA_TT_CHECK(is_equality_comparable,T);
+		PIRANHA_TT_CHECK(is_hashable,T);
 		template <typename U>
 		friend class debug_access;
 		using container_type = small_vector<T,S>;
+		// Enabler for constructor from init list.
+		template <typename U>
+		using init_list_enabler = typename std::enable_if<std::is_constructible<container_type,
+			std::initializer_list<U>>::value,int>::type;
 	public:
 		/// Value type.
 		using value_type = typename container_type::value_type;
+	private:
+		// Enabler for generic ctor.
+		template <typename U>
+		using generic_ctor_enabler = typename std::enable_if<
+			has_safe_cast<value_type,U>::value,int>::type;
+		// Enabler for addition.
+		template <typename U>
+		using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()));
+	public:
 		/// Iterator type.
 		using iterator = typename container_type::iterator;
 		/// Const iterator type.
@@ -137,8 +125,7 @@ class array_key
 		 * 
 		 * @throws unspecified any exception thrown by the corresponding constructor of piranha::small_vector.
 		 */
-		template <typename U, typename = typename std::enable_if<std::is_constructible<container_type,
-			std::initializer_list<U>>::value>::type>
+		template <typename U, init_list_enabler<U> = 0>
 		explicit array_key(std::initializer_list<U> list) : m_container(list) {}
 		/// Constructor from symbol set.
 		/**
@@ -160,12 +147,11 @@ class array_key
 		/// Constructor from piranha::array_key parametrized on a generic type.
 		/**
 		 * \note
-		 * This constructor is enabled if \p value_type is constructible from \p U.
+		 * This constructor is enabled only if \p U can be cast safely to the value type.
 		 *
 		 * Generic constructor for use in series, when inserting a term of different type.
 		 * The internal container will be initialised with the
-		 * contents of the internal container of \p x (possibly converting the individual contained values through a suitable
-		 * converting constructor,
+		 * contents of the internal container of \p x (possibly converting the individual contained values through piranha::safe_cast(),
 		 * if the values are of different type). If the size of \p x is different from the size of \p args, a runtime error will
 		 * be produced.
 		 * 
@@ -175,18 +161,18 @@ class array_key
 		 * @throws std::invalid_argument if the sizes of \p x and \p args differ.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::small_vector::push_back(),
-		 * - construction of piranha::array_key::value_type from \p U.
+		 * - piranha::safe_cast().
 		 */
-		template <typename U, typename Derived2, typename S2, typename = typename std::enable_if<
-			std::is_constructible<value_type,U const &>::value
-			>::type>
+		template <typename U, typename Derived2, typename S2, generic_ctor_enabler<U> = 0>
 		explicit array_key(const array_key<U,Derived2,S2> &other, const symbol_set &args)
 		{
 			if (unlikely(other.size() != args.size())) {
 				piranha_throw(std::invalid_argument,"inconsistent sizes in generic array_key constructor");
 			}
+			// NOTE: here the requirement is that value_type is move-assignable, which is already
+			// fulfilled by is_container_element.
 			std::transform(other.begin(),other.end(),
-				std::back_inserter(m_container),[](const U &x) {return value_type(x);});
+				std::back_inserter(m_container),[](const U &x) {return safe_cast<value_type>(x);});
 		}
 		/// Trivial destructor.
 		~array_key()
@@ -382,6 +368,25 @@ class array_key
 			}
 			return retval;
 		}
+		/// Vector add.
+		/**
+		 * \note
+		 * This method is enabled only if the call to piranha::small_vector::add()
+		 * is well-formed.
+		 *
+		 * Equivalent to calling piranha::small_vector::add() on the internal containers of \p this
+		 * and of the arguments.
+		 *
+		 * @param[out] retval piranha::array_key that will hold the result of the addition.
+		 * @param[in] other piranha::array_key that will be added to \p this.
+		 *
+		 * @throws unspecified amy exception thrown by piranha::small_vector::add().
+		 */
+		template <typename U = container_type, typename = add_enabler<U>>
+		void vector_add(array_key &retval, const array_key &other) const
+		{
+			m_container.add(retval.m_container,other.m_container);
+		}
 	protected:
 		// NOTE: the reason for this to be protected is for future implementations of trig monomial based
 		// on this class, with which we want to share code.
@@ -436,28 +441,6 @@ class array_key
 			}
 			piranha_assert(retval.size() == new_args.size());
 			return retval;
-		}
-		/// Vector sum.
-		/**
-		 * \note
-		 * This method is enabled only if the call to piranha::small_vector::add()
-		 * is well-formed.
-		 *
-		 * Equivalent to calling piranha::small_vector::add() on the internal containers of \p this
-		 * and of the arguments.
-		 * 
-		 * @param[out] retval piranha::array_key that will hold the result of the addition.
-		 * @param[in] other piranha::array_key that will be added to \p this.
-		 * 
-		 * @throws unspecified amy exception thrown by piranha::small_vector::add().
-		 *
-		 * @return the return value of piranha::small_vector::add().
-		 */
-		template <typename U = container_type>
-		auto add(array_key &retval, const array_key &other) const -> decltype(
-			std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()))
-		{
-			m_container.add(retval.m_container,other.m_container);
 		}
 	private:
 		// Internal container.
