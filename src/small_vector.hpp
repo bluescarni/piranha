@@ -65,7 +65,6 @@ namespace detail
 // http://stackoverflow.com/questions/12332772/why-arent-container-move-assignment-operators-noexcept
 // NOTE: now we do not use the allocator at all, as we cannot guarantee it has a standard layout. Keep the comments
 // above as an historical reference, might come useful in the future :)
-// NOTE: POD optimizations are possible again.
 template <typename T>
 class dynamic_storage
 {
@@ -400,7 +399,6 @@ struct check_integral_constant<std::integral_constant<std::size_t,Size>>
 // http://stackoverflow.com/questions/18564497/writing-into-the-last-byte-of-a-class
 // http://www.informit.com/guides/content.aspx?g=cplusplus&seqNum=556
 // http://en.wikipedia.org/wiki/C%2B%2B11#Unrestricted_unions
-// NOTE: here we could potentially share the m_size member as well in many cases.
 template <typename T, typename S>
 union small_vector_union
 {
@@ -519,10 +517,14 @@ union small_vector_union
  * After a move operation, the container will be empty.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo in the dynamic storage, it look like we can use 16-bit ints for the sizes and not increase the total size too much.
- * This means that we could store up to 65k elements as opposed to the 255 in the current implementation.
  */
+// NOTE: some possible improvements:
+// - the m_size member of dynamic and static could be made a signed integer, the sign establishing the storage type
+//   and drop the m_tag member. This in principle would allow to squeeze some extra space from the static vector
+//   but not sure this is worth it;
+// - POD optimisations in dynamic storage;
+// - in the dynamic storage, it looks like on 64bit we can bump up the size member to 16 bit without changing size,
+//   thus we could sture ~16000 elements. BUT on 32bit this will change the size.
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class small_vector
 {
