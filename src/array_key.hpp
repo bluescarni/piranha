@@ -380,7 +380,7 @@ class array_key
 		 * @param[out] retval piranha::array_key that will hold the result of the addition.
 		 * @param[in] other piranha::array_key that will be added to \p this.
 		 *
-		 * @throws unspecified amy exception thrown by piranha::small_vector::add().
+		 * @throws unspecified any exception thrown by piranha::small_vector::add().
 		 */
 		template <typename U = container_type, typename = add_enabler<U>>
 		void vector_add(array_key &retval, const array_key &other) const
