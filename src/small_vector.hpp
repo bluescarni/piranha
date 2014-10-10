@@ -508,7 +508,6 @@ union small_vector_union
  * \section type_requirements Type requirements
  *
  * - \p T must satisfy piranha::is_container_element;
- * - \p T must satisfy std::is_standard_layout;
  * - \p S must be an \p std::integral_constant of type \p std::size_t.
  *
  * \section exception_safety Exception safety guarantee
@@ -523,13 +522,11 @@ union small_vector_union
  * 
  * \todo in the dynamic storage, it look like we can use 16-bit ints for the sizes and not increase the total size too much.
  * This means that we could store up to 65k elements as opposed to the 255 in the current implementation.
- * \todo the standard_layout constraint on T seems not to be necessary.
  */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class small_vector
 {
 		PIRANHA_TT_CHECK(is_container_element,T);
-		PIRANHA_TT_CHECK(std::is_standard_layout,T);
 		PIRANHA_TT_CHECK(detail::check_integral_constant,S);
 		using u_type = detail::small_vector_union<T,S>;
 		using s_storage = typename u_type::s_storage;
