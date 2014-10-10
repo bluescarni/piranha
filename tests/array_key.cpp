@@ -390,6 +390,7 @@ struct add_tag;
 namespace piranha
 {
 
+// NOTE: the debug access is not actually needed any more.
 template <>
 class debug_access<add_tag>
 {
