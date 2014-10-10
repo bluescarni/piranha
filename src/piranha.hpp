@@ -185,6 +185,5 @@ inline namespace literals {}
 #include "trigonometric_series.hpp"
 #include "tuning.hpp"
 #include "type_traits.hpp"
-#include "univariate_monomial.hpp"
 
 #endif

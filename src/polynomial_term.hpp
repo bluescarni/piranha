@@ -34,7 +34,6 @@
 #include "monomial.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
-#include "univariate_monomial.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -50,12 +49,6 @@ struct polynomial_term_key
 };
 
 template <typename T, typename S>
-struct polynomial_term_key<univariate_monomial<T>,S>
-{
-	typedef univariate_monomial<T> type;
-};
-
-template <typename T, typename S>
 struct polynomial_term_key<kronecker_monomial<T>,S>
 {
 	typedef kronecker_monomial<T> type;
@@ -68,7 +61,6 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  * This class extends piranha::base_term for use in polynomials. The coefficient type \p Cf is generic,
  * the key type is determined as follows:
  * 
- * - if \p Expo is piranha::univariate_monomial of \p T, the key will also be piranha::univariate_monomial of \p T,
  * - if \p Expo is piranha::kronecker_monomial of \p T, the key will also be piranha::kronecker_monomial of \p T,
  * - otherwise, the key will be piranha::monomial of \p Expo and \p S.
  * 
@@ -83,10 +75,6 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  * is a multivariate polynomial term with double-precision coefficient and \p short exponents, up to 5 of which
  * will be stored in static storage.
  @code
- polynomial_term<double,univariate_monomial<int>>
- @endcode
- * is a univariate polynomial term with double-precision coefficient and \p int exponent.
- @code
  polynomial_term<double,kronecker_monomial<>>
  @endcode
  * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
@@ -98,7 +86,7 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
  *   - piranha::has_multiply_accumulate.
  * - \p Expo and \p S must be suitable for use in piranha::monomial, or \p Expo must be an instance of
- *   piranha::univariate_monomial or piranha::kronecker_monomial.
+ *   piranha::kronecker_monomial.
  * 
  * \section exception_safety Exception safety guarantee
  * 

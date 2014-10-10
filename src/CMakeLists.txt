@@ -31,7 +31,6 @@ SET(HEADERS_LIST
 	t_substitutable_series.hpp
 	print_coefficient.hpp
 	type_traits.hpp
-	univariate_monomial.hpp
 	mp_integer.hpp
 	mp_rational.hpp
 	math.hpp

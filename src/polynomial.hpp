@@ -95,10 +95,6 @@ struct polynomial_tag {};
  * is a multivariate polynomial with double-precision coefficients and \p short exponents, up to 5 of which
  * will be stored in static storage.
  @code
- polynomial<double,univariate_monomial<int>>
- @endcode
- * is a univariate polynomial with double-precision coefficients and \p int exponent.
- @code
  polynomial<double,kronecker_monomial<>>
  @endcode
  * is a multivariate polynomial with double-precision coefficients and integral exponents packed into a piranha::kronecker_monomial.

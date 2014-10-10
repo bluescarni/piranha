@@ -47,10 +47,6 @@
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
-#include "../src/univariate_monomial.hpp"
-
-// NOTE: when we specialize for univariate monomials, review the test here and move the unviariate
-// specific ones in separate test.
 
 using namespace piranha;
 
@@ -172,9 +168,8 @@ struct is_evaluable_tester
 	template <typename Cf>
 	struct runner
 	{
-		// NOTE: this is temporary, the enable_if has to be removed once we implement evaluation for the univariate monomial.
 		template <typename Expo>
-		void operator()(const Expo &, typename std::enable_if<!is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
+		void operator()(const Expo &)
 		{
 			typedef polynomial<Cf,Expo> p_type;
 			BOOST_CHECK((is_evaluable<p_type,double>::value));
@@ -182,9 +177,6 @@ struct is_evaluable_tester
 			BOOST_CHECK((is_evaluable<p_type,integer>::value));
 			BOOST_CHECK((is_evaluable<p_type,int>::value));
 		}
-		template <typename Expo>
-		void operator()(const Expo &, typename std::enable_if<is_instance_of<typename polynomial<Cf,Expo>::term_type::key_type,univariate_monomial>::value>::type * = nullptr)
-		{}
 	};
 	template <typename Cf>
 	void operator()(const Cf &)
@@ -237,9 +229,9 @@ BOOST_AUTO_TEST_CASE(polynomial_assignment_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 {
-	typedef polynomial<double,univariate_monomial<int>> p_type1;
-	typedef polynomial<p_type1,univariate_monomial<int>> p_type11;
-	typedef polynomial<p_type11,univariate_monomial<int>> p_type111;
+	typedef polynomial<double,int> p_type1;
+	typedef polynomial<p_type1,int> p_type11;
+	typedef polynomial<p_type11,int> p_type111;
 	p_type1 x("x");
 	p_type11 y("y");
 	p_type111 z("z");
@@ -254,9 +246,9 @@ BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 {
-	typedef polynomial<double,univariate_monomial<int>> p_type1;
-	typedef polynomial<p_type1,univariate_monomial<int>> p_type11;
-	typedef polynomial<p_type11,univariate_monomial<int>> p_type111;
+	typedef polynomial<double,int> p_type1;
+	typedef polynomial<p_type1,int> p_type11;
+	typedef polynomial<p_type11,int> p_type111;
 	BOOST_CHECK(has_degree<p_type1>::value);
 	BOOST_CHECK(has_ldegree<p_type1>::value);
 	BOOST_CHECK(has_degree<p_type11>::value);
