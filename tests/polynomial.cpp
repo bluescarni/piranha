@@ -241,7 +241,6 @@ BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 	BOOST_CHECK((std::is_same<decltype(y+z),p_type111>::value));
 	BOOST_CHECK((std::is_same<decltype(z+x),p_type111>::value));
 	BOOST_CHECK((std::is_same<decltype(x+z),p_type111>::value));
-	BOOST_CHECK_THROW(x + p_type1("y"),std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_degree_test)
