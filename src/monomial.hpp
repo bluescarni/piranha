@@ -42,6 +42,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
+#include "safe_cast.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
@@ -111,23 +112,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				x = static_cast<U>(x + y);
 			}
 		};
-		template <typename U, typename V, typename = void>
-		struct in_place_multiplier
-		{
-			void operator()(U &x, const V &y) const
-			{
-				x *= y;
-			}
-		};
-		template <typename U, typename V>
-		struct in_place_multiplier<U,V,typename std::enable_if<(std::is_integral<U>::value && std::is_integral<V>::value) ||
-			(std::is_integral<U>::value && std::is_floating_point<V>::value)>::type>
-		{
-			void operator()(U &x, const V &y) const
-			{
-				x = static_cast<U>(x * y);
-			}
-		};
 		template <typename U, typename = void>
 		struct in_place_subber
 		{
@@ -150,6 +134,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Enabler for multiplication.
 		template <typename U>
 		using multiply_enabler = decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()));
+		// Enabler for linear argument.
+		template <typename U>
+		using linarg_enabler = typename std::enable_if<has_integral_cast<U>::value,int>::type;
+		// Enabler for pow.
+		template <typename U>
+		using pow_enabler = typename std::enable_if<has_safe_cast<typename base::value_type,
+			decltype(std::declval<const typename base::value_type &>() * std::declval<const U &>())>::value,int>::type;
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
@@ -170,8 +161,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		~monomial()
 		{
 			PIRANHA_TT_CHECK(is_key,monomial);
-			PIRANHA_TT_CHECK(key_has_degree,monomial);
-			PIRANHA_TT_CHECK(key_has_ldegree,monomial);
 		}
 		/// Defaulted copy assignment operator.
 		monomial &operator=(const monomial &) = default;
@@ -401,8 +390,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * 
 		 * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
 		 */
-		template <typename U = typename base::value_type, typename = typename std::enable_if<
-			has_integral_cast<U>::value>::type>
+		template <typename U = typename base::value_type, linarg_enabler<U> = 0>
 		std::string linear_argument(const symbol_set &args) const
 		{
 			if (!is_compatible(args)) {
@@ -435,10 +423,11 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Monomial exponentiation.
 		/**
 		 * \note
-		 * This method is enabled if the exponent type is multipliable in-place by \p U.
+		 * This method is enabled if the exponent type is multipliable by \p U and the result type
+		 * can be cast safely back to the exponent type.
 		 *
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-		 * is computed via in-place multiplication of the exponents by \p x.
+		 * is computed via the multiplication of the exponents by \p x.
 		 * 
 		 * @param[in] x exponent.
 		 * @param[in] args reference set of piranha::symbol.
@@ -449,20 +438,18 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws unspecified any exception thrown by monomial copy construction
 		 * or in-place multiplication of exponents by \p x.
 		 */
-		template <typename U, typename = typename std::enable_if<is_multipliable_in_place<typename base::value_type,U>::value>::type>
+		template <typename U, pow_enabler<U> = 0>
 		monomial pow(const U &x, const symbol_set &args) const
 		{
-			// NOTE: here it might make sense to allow this only if retval[i] * x has the type of
-			// retval[i], in order to avoid int ** rational resulting in nasty surprises.
 			typedef typename base::size_type size_type;
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			monomial retval(*this);
+			// Init with zeroes.
+			monomial retval(args);
 			const size_type size = retval.size();
-			in_place_multiplier<typename base::value_type,U> m;
 			for (decltype(retval.size()) i = 0u; i < size; ++i) {
-				m(retval[i],x);
+				retval[i] = safe_cast<typename base::value_type>((*this)[i] * x);
 			}
 			return retval;
 		}
