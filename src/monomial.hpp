@@ -69,8 +69,8 @@ namespace piranha
  * 
  * Move semantics is equivalent to piranha::array_key's move semantics.
  * 
- * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
- * monomial classes arises.
+ * \todo the linear argument method should not probably be conditionally enabled, as we rely on it for the
+ * polynomial to poisson series stuff. Its requirements should become class requirements.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
