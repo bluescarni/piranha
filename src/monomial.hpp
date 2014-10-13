@@ -71,11 +71,6 @@ namespace piranha
  * 
  * \todo think about introducing a monomial concept that embeds maybe the degreekey concept, if the need to treat generically the various
  * monomial classes arises.
- * \todo think about modifying the arithmetic functors to return integer when operating on integral values, to avoid possible overflows
- * when computing degree and friends. This change could go into detail/degree_commons to propagate it everywhere.
- * \todo consider disabling exponentiation if exponent is an integral or integer and the exponent is floating point or real, or something
- * along these lines. Probably we need that in general (i.e., also for coefficients) in order to avoid surprises when ints interact with
- * floats and are then cast back to int.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -141,6 +136,27 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename U>
 		using pow_enabler = typename std::enable_if<has_safe_cast<typename base::value_type,
 			decltype(std::declval<const typename base::value_type &>() * std::declval<const U &>())>::value,int>::type;
+		// Machinery to determine the degree type.
+		template <typename U>
+		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
+		// No type defined in here, will sfinae out.
+		template <typename U, typename = void>
+		struct degree_type_
+		{};
+		template <typename U>
+		struct degree_type_<U,typename std::enable_if<std::is_integral<U>::value>::type>
+		{
+			using type = integer;
+		};
+		template <typename U>
+		struct degree_type_<U,typename std::enable_if<!std::is_integral<U>::value && std::is_constructible<add_type<U>,int>::value &&
+			is_addable_in_place<add_type<U>,U>::value>::type>
+		{
+			using type = add_type<U>;
+		};
+		// The final alias.
+		template <typename U>
+		using degree_type = typename degree_type_<U>::type;
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
@@ -229,28 +245,23 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return std::all_of(this->begin(),this->end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
-		// Machinery to determine the degree type.
-		template <typename U>
-		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
-		// No type defined in here, will sfinae out.
-		template <typename U, typename = void>
-		struct degree_type_
-		{};
-		template <typename U>
-		struct degree_type_<U,typename std::enable_if<std::is_integral<U>::value>::type>
-		{
-			using type = integer;
-		};
-		template <typename U>
-		struct degree_type_<U,typename std::enable_if<!std::is_integral<U>::value && std::is_constructible<add_type<U>,int>::value &&
-			is_addable_in_place<add_type<U>>::value>::type>
-		{
-			using type = add_type<U>;
-		};
-		// The final alias.
-		template <typename U>
-		using degree_type = typename degree_type_<U>::type;
-
+		/// Monomial degree.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p int
+		 * and monomial::value_type can be added in-place to it.
+		 *
+		 * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
+		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
+		 * is the type resulting from the addition of the exponents.
+		 *
+		 * @param[in] args reference set of piranha::symbol.
+		 *
+		 * @return the degree of the monomial.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
+		 */
 		template <typename U = T>
 		degree_type<U> degree_(const symbol_set &args) const
 		{
@@ -264,6 +275,28 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return retval;
 		}
+		/// Partial monomial degree.
+		/**
+		 * \note
+		 * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p int
+		 * and monomial::value_type can be added in-place to it.
+		 *
+		 * This method will return the partial degree of the monomial, computed via the summation of the exponents of the monomial.
+		 * If \p T is a C++ integral type, then the type of the degree will be piranha::integer. Otherwise, the type of the degree
+		 * is the type resulting from the addition of the exponents.
+		 *
+		 * The \p p argument is used to indicate which exponents are to be taken into account when computing the partial degree.
+		 * Exponents not in \p p will be discarded during the computation of the partial degree.
+		 *
+		 * @param[in] p positions of the symbols to be considered.
+		 * @param[in] args reference set of piranha::symbol.
+		 *
+		 * @return the partial degree of the monomial.
+		 *
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if \p p is
+		 * not compatible with the monomial.
+		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
+		 */
 		template <typename U = T>
 		degree_type<U> degree_(const symbol_set::positions &p, const symbol_set &args) const
 		{
@@ -277,11 +310,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return retval;
 		}
+		/// Monomial low degree (equivalent to the degree).
 		template <typename U = T>
 		degree_type<U> ldegree_(const symbol_set &args) const
 		{
 			return degree_(args);
 		}
+		/// Partial monomial low degree (equivalent to the partial degree).
 		template <typename U = T>
 		degree_type<U> ldegree_(const symbol_set::positions &p, const symbol_set &args) const
 		{

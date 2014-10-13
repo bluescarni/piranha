@@ -406,6 +406,11 @@ struct degree__tester
 			typedef monomial<T,U> key_type;
 			key_type k0;
 			symbol_set v;
+			if (std::is_integral<T>::value || std::is_same<T,integer>::value) {
+				BOOST_CHECK((std::is_same<integer,decltype(k0.degree_(v))>::value));
+			}
+			BOOST_CHECK(key_has_degree<key_type>::value);
+			BOOST_CHECK(key_has_ldegree<key_type>::value);
 			BOOST_CHECK_EQUAL(k0.degree_(v),T(0));
 			BOOST_CHECK_EQUAL(k0.ldegree_(v),T(0));
 			v.add(symbol("a"));
@@ -452,19 +457,19 @@ struct degree__tester
 			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","z"}),v) == T(3) + T(2));
 			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","A"}),v) == T(3) + T(2));
 			BOOST_CHECK(k2.ldegree_(ss_to_pos(v,{"a","b","A","z"}),v) == T(3) + T(2));
-//			v.add(symbol("c"));
-//			key_type k3(v);
-//			k3[0] = T(2);
-//			k3[1] = T(3);
-//			k3[2] = T(4);
-//			BOOST_CHECK(k3.degree_({"a","b","A","z"},v) == T(3) + T(2));
-//			BOOST_CHECK(k3.degree_({"a","c","A","z"},v) == T(4) + T(2));
-//			BOOST_CHECK(k3.degree_({"a","c","b","z"},v) == T(4) + T(2) + T(3));
-//			BOOST_CHECK(k3.degree_({"a","c","b","A"},v) == T(4) + T(2) + T(3));
-//			BOOST_CHECK(k3.degree_({"c","b","A"},v) == T(4) + T(3));
-//			BOOST_CHECK(k3.degree_({"A","B","C"},v) == T(0));
-//			BOOST_CHECK(k3.degree_({"x","y","z"},v) == T(0));
-//			BOOST_CHECK(k3.degree_({"x","y","z","A","B","C","a"},v) == T(2));
+			v.add(symbol("c"));
+			key_type k3(v);
+			k3[0] = T(2);
+			k3[1] = T(3);
+			k3[2] = T(4);
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"a","b","A","z"}),v) == T(3) + T(2));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"a","c","A","z"}),v) == T(4) + T(2));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"a","c","b","z"}),v) == T(4) + T(2) + T(3));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"a","c","b","A"}),v) == T(4) + T(2) + T(3));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"c","b","A"}),v) == T(4) + T(3));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"A","B","C"}),v) == T(0));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"x","y","z"}),v) == T(0));
+			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"x","y","z","A","B","C","a"}),v) == T(2));
 		}
 	};
 	template <typename T>
