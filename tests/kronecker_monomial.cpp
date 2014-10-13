@@ -23,12 +23,12 @@
 #define BOOST_TEST_MODULE kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <initializer_list>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -148,7 +148,7 @@ struct compatibility_tester
 			}
 			BOOST_CHECK(!k1.is_compatible(v2));
 		}
-		k1.set_int(boost::integer_traits<T>::const_max);
+		k1.set_int(std::numeric_limits<T>::max());
 		BOOST_CHECK(!k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
 		k1.set_int(-1);
 		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
@@ -562,9 +562,9 @@ struct pow_tester
 		k1 = k_type{2};
 		k_type k2({4});
 		BOOST_CHECK(k1.pow(2,vs) == k2);
-		BOOST_CHECK_THROW(k1.pow(boost::integer_traits<T>::const_max,vs),std::overflow_error);
+		BOOST_CHECK_THROW(k1.pow(std::numeric_limits<T>::max(),vs),std::invalid_argument);
 		k1 = k_type{1};
-		if (std::get<0u>(limits[1u])[0u] < boost::integer_traits<T>::const_max) {
+		if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
 			BOOST_CHECK_THROW(k1.pow(std::get<0u>(limits[1u])[0u] + T(1),vs),std::invalid_argument);
 		}
 		k1 = k_type{2};

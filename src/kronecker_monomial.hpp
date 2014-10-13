@@ -47,6 +47,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
+#include "safe_cast.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -110,6 +111,10 @@ class kronecker_monomial
 		{
 			using type = e_type<U>;
 		};
+		// Enabler for pow.
+		template <typename U>
+		using pow_enabler = typename std::enable_if<has_safe_cast<T,
+			decltype(std::declval<integer &&>() * std::declval<const U &>())>::value,int>::type;
 	public:
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
@@ -534,11 +539,12 @@ class kronecker_monomial
 		/// Exponentiation.
 		/**
 		 * \note
-		 * This method is enabled only if \p U can be used in piranha::math::integral_cast().
+		 * This method is enabled only if \p U is multipliable by piranha::integer and the result type can be
+		 * safely cast back to \p T.
 		 *
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-		 * is computed via multiplication of the exponents by the output of piranha::math::integral_cast()
-		 * on \p x.
+		 * is computed via the multiplication of the exponents promoted to piranha::integer by \p x. The result will
+		 * be cast back to \p T via piranha::safe_cast().
 		 * 
 		 * @param[in] x exponent.
 		 * @param[in] args reference set of piranha::symbol.
@@ -547,20 +553,16 @@ class kronecker_monomial
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
-		 * - piranha::math::integral_cast(),
-		 * - the cast and binary multiplication operators of piranha::integer,
+		 * - piranha::safe_cast(),
+		 * - the constructor and multiplication operator of piranha::integer,
 		 * - piranha::kronecker_array::encode().
 		 */
-		template <typename U, typename = typename std::enable_if<has_integral_cast<U>::value>::type>
+		template <typename U, pow_enabler<U> = 0>
 		kronecker_monomial pow(const U &x, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			const auto size = args.size();
-			const integer n = math::integral_cast(x);
-			for (typename v_type::size_type i = 0u; i < size; ++i) {
-				// NOTE: here operator* produces an integer, which is safely cast back
-				// to the signed int type.
-				v[i] = static_cast<value_type>(n * v[i]);
+			for (auto &n: v) {
+				n = safe_cast<value_type>(integer(n) * x);
 			}
 			kronecker_monomial retval;
 			retval.m_value = ka::encode(v);
