@@ -470,6 +470,12 @@ struct degree__tester
 			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"A","B","C"}),v) == T(0));
 			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"x","y","z"}),v) == T(0));
 			BOOST_CHECK(k3.degree_(ss_to_pos(v,{"x","y","z","A","B","C","a"}),v) == T(2));
+			// Try partials with bogus positions.
+			symbol_set v2({symbol("a"),symbol("b"),symbol("c"),symbol("d")});
+			BOOST_CHECK_THROW(k3.degree_(ss_to_pos(v2,{"d"}),v),std::invalid_argument);
+			BOOST_CHECK_THROW(k3.ldegree_(ss_to_pos(v2,{"d"}),v),std::invalid_argument);
+			// Wrong symbol set, will not throw because positions are empty.
+			BOOST_CHECK_EQUAL(k3.degree_(ss_to_pos(v2,{"e"}),v),0);
 		}
 	};
 	template <typename T>
