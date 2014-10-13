@@ -637,8 +637,21 @@ struct pow_tester
 			BOOST_CHECK(k1.pow(0,vs) == k_type({T(0),T(0),T(0)}));
 			vs.add("a");
 			BOOST_CHECK_THROW(k1.pow(42,vs),std::invalid_argument);
+			T tmp;
+			check_overflow(k1,tmp);
 		}
 	};
+	template <typename KType, typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+	static void check_overflow(const KType &, const U &)
+	{
+		KType k2({2});
+		symbol_set vs2;
+		vs2.add("x");
+		BOOST_CHECK_THROW(k2.pow(std::numeric_limits<U>::max(),vs2),std::invalid_argument);
+	}
+	template <typename KType, typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+	static void check_overflow(const KType &, const U &)
+	{}
 	template <typename T>
 	void operator()(const T &)
 	{

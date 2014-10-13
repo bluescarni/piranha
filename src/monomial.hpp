@@ -132,10 +132,24 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Enabler for linear argument.
 		template <typename U>
 		using linarg_enabler = typename std::enable_if<has_integral_cast<U>::value,int>::type;
-		// Enabler for pow.
+		// Enabler and machinery for pow.
+		// When the exponent is an integral, promote to integer during exponentiation
+		// for safe operations.
+		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+		static integer get_pow_arg(const U &n)
+		{
+			return integer(n);
+		}
+		// Otherwise, just return the unchanged reference.
+		template <typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+		static const U &get_pow_arg(const U &x)
+		{
+			return x;
+		}
+		using pow_type = typename std::conditional<std::is_integral<T>::value,integer &&,const T &>::type;
 		template <typename U>
 		using pow_enabler = typename std::enable_if<has_safe_cast<typename base::value_type,
-			decltype(std::declval<const typename base::value_type &>() * std::declval<const U &>())>::value,int>::type;
+			decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,int>::type;
 		// Machinery to determine the degree type.
 		template <typename U>
 		using add_type = decltype(std::declval<const U &>() + std::declval<const U &>());
@@ -458,11 +472,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Monomial exponentiation.
 		/**
 		 * \note
-		 * This method is enabled if the exponent type is multipliable by \p U and the result type
-		 * can be cast safely back to the exponent type.
+		 * This method is enabled if the exponent type (or its promoted piranha::integer counterpart)
+		 * is multipliable by \p U and the result type can be cast safely back to the exponent type.
 		 *
 		 * Will return a monomial corresponding to \p this raised to the <tt>x</tt>-th power. The exponentiation
-		 * is computed via the multiplication of the exponents by \p x.
+		 * is computed via the multiplication of the exponents by \p x. If the exponent type is a C++
+		 * integral type, each exponent will be promoted to piranha::integer before the exponentiation
+		 * takes place.
 		 * 
 		 * @param[in] x exponent.
 		 * @param[in] args reference set of piranha::symbol.
@@ -471,7 +487,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * 
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by monomial copy construction
-		 * or in-place multiplication of exponents by \p x.
+		 * or in-place multiplication of exponents by \p x, and by the invoked
+		 * operations on piranha::integer, if any.
 		 */
 		template <typename U, pow_enabler<U> = 0>
 		monomial pow(const U &x, const symbol_set &args) const
@@ -484,7 +501,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			monomial retval(args);
 			const size_type size = retval.size();
 			for (decltype(retval.size()) i = 0u; i < size; ++i) {
-				retval[i] = safe_cast<typename base::value_type>((*this)[i] * x);
+				retval[i] = safe_cast<typename base::value_type>(get_pow_arg((*this)[i]) * x);
 			}
 			return retval;
 		}
