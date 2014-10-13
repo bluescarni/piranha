@@ -245,7 +245,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return std::all_of(this->begin(),this->end(),
 				[](const value_type &element) {return math::is_zero(element);});
 		}
-		/// Monomial degree.
+		/// Degree.
 		/**
 		 * \note
 		 * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p int
@@ -275,7 +275,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return retval;
 		}
-		/// Partial monomial degree.
+		/// Partial degree.
 		/**
 		 * \note
 		 * This method is enabled only if \p T is addable and the type resulting from the addition is constructible from \p int
@@ -310,13 +310,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return retval;
 		}
-		/// Monomial low degree (equivalent to the degree).
+		/// Low degree (equivalent to the degree).
 		template <typename U = T>
 		degree_type<U> ldegree_(const symbol_set &args) const
 		{
 			return degree_(args);
 		}
-		/// Partial monomial low degree (equivalent to the partial degree).
+		/// Partial low degree (equivalent to the partial degree).
 		template <typename U = T>
 		degree_type<U> ldegree_(const symbol_set::positions &p, const symbol_set &args) const
 		{
