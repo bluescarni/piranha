@@ -77,10 +77,6 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo think about having this (and rtkm) return degrees as integer() to solve possible problems of overflowing in conjunction with
- * use in power_series_term (where we add degrees produced by cf and key). Should we do that, see if the safe_adder thingie can go away for good.
- * Note that this will take care of uniforming the output of, e.g., degree() and partial/integrate (which both return integers). Review the code for degree() use after the
- * change has been made to spot possible problems.
  * \todo consider abstracting the km_commons in a class and use it both here and in rtkm.
  * \todo needs sfinaeing.
  */
@@ -323,6 +319,63 @@ class kronecker_monomial
 			}
 			// A kronecker code will be zero if all components are zero.
 			return !m_value;
+		}
+		/// Degree.
+		/**
+		 * @param[in] args reference set of symbols.
+		 *
+		 * @return degree of the monomial.
+		 *
+		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
+		 * operator of piranha::integer.
+		 */
+		integer degree_(const symbol_set &args) const
+		{
+			const auto tmp = unpack(args);
+			// NOTE: this should be guaranteed by the unpack function.
+			piranha_assert(tmp.size() == args.size());
+			integer retval(0);
+			for (const auto &x: tmp) {
+				retval += x;
+			}
+			return retval;
+		}
+		/// Low degree (equivalent to the degree).
+		integer ldegree_(const symbol_set &args) const
+		{
+			return degree_(args);
+		}
+		/// Partial degree.
+		/**
+		 * Partial degree of the monomial: only the symbols at the positions specified by \p p are considered.
+		 *
+		 * @param[in] p positions of the symbols to be considered in the calculation of the degree.
+		 * @param[in] args reference set of piranha::symbol.
+		 *
+		 * @return the summation of the exponents of the monomial at the positions specified by \p p.
+		 *
+		 * @throws std::invalid_argument if \p p is not compatible with \p args.
+		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
+		 * operator of piranha::integer.
+		 */
+		integer degree_(const symbol_set::positions &p, const symbol_set &args) const
+		{
+			const auto tmp = unpack(args);
+			piranha_assert(tmp.size() == args.size());
+			if (unlikely(p.size() && p.back() >= tmp.size())) {
+				piranha_throw(std::invalid_argument,"invalid positions");
+			}
+			auto cit = tmp.begin();
+			integer retval(0);
+			for (const auto &i: p) {
+				retval += cit[i];
+			}
+			return retval;
+		}
+		/// Partial low degree (equivalent to the partial degree).
+		integer ldegree_(const symbol_set::positions &p, const symbol_set &args) const
+		{
+			return degree_(p,args);
 		}
 		/// Degree.
 		/**

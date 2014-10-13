@@ -235,6 +235,71 @@ BOOST_AUTO_TEST_CASE(kronecker_monomial_is_unitary_test)
 	boost::mpl::for_each<int_types>(is_unitary_tester());
 }
 
+struct degree__tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef kronecker_monomial<T> k_type;
+		k_type k1;
+		symbol_set vs1;
+		BOOST_CHECK(k1.degree_(vs1) == 0);
+		BOOST_CHECK(k1.ldegree_(vs1) == 0);
+		k_type k2({0});
+		vs1.add(symbol("a"));
+		BOOST_CHECK(k2.degree_(vs1) == 0);
+		BOOST_CHECK(k2.ldegree_(vs1) == 0);
+		k_type k3({-1});
+		BOOST_CHECK(k3.degree_(vs1) == -1);
+		BOOST_CHECK(k3.ldegree_(vs1) == -1);
+		vs1.add(symbol("b"));
+		k_type k4({0,0});
+		BOOST_CHECK(k4.degree_(vs1) == 0);
+		BOOST_CHECK(k4.ldegree_(vs1) == 0);
+		k_type k5({-1,-1});
+		BOOST_CHECK(k5.degree_(vs1) == -2);
+		using positions = symbol_set::positions;
+		auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
+			symbol_set tmp;
+			for (const auto &str: s) {
+				tmp.add(str);
+			}
+			return positions(v,tmp);
+		};
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"a"}),vs1) == -1);
+		// NOTE: here it seems the compilation error arising when only {} is used (as opposed
+		// to std::set<std::string>{}) is a bug in libc++. See:
+		// http://clang-developers.42468.n3.nabble.com/C-11-error-about-initializing-explicit-constructor-with-td4029849.html
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"a","b"}),vs1) == -2);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"a","c"}),vs1) == -1);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"d","b"}),vs1) == -1);
+		BOOST_CHECK(k5.degree_(ss_to_pos(vs1,{"A","a"}),vs1) == -1);
+		BOOST_CHECK(k5.ldegree_(vs1) == -2);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"a"}),vs1) == -1);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"a","b"}),vs1) == -2);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"a","c"}),vs1) == -1);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"d","b"}),vs1) == -1);
+		BOOST_CHECK(k5.ldegree_(ss_to_pos(vs1,{"A","a"}),vs1) == -1);
+		// Try partials with bogus positions.
+		symbol_set v2({symbol("a"),symbol("b"),symbol("c")});
+		BOOST_CHECK_THROW(k5.degree_(ss_to_pos(v2,{"c"}),vs1),std::invalid_argument);
+		BOOST_CHECK_THROW(k5.ldegree_(ss_to_pos(v2,{"c"}),vs1),std::invalid_argument);
+		// Wrong symbol set, will not throw because positions are empty.
+		BOOST_CHECK_EQUAL(k5.degree_(ss_to_pos(v2,{"d"}),vs1),0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(kronecker_monomial_degree__test)
+{
+	boost::mpl::for_each<int_types>(degree__tester());
+}
+
 struct degree_tester
 {
 	template <typename T>
