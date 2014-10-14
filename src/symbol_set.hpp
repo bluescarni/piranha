@@ -24,7 +24,10 @@
 #include <algorithm>
 #include <initializer_list>
 #include <iterator>
+#include <set>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "config.hpp"
@@ -72,6 +75,10 @@ class symbol_set
 			}
 			return true;
 		}
+		// Enabler for ctor from iterator.
+		template <typename Iterator, typename Symbol>
+		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
+			std::is_constructible<Symbol,decltype(*(std::declval<const Iterator &>()))>::value,int>::type;
 	public:
 		/// Size type.
 		typedef std::vector<symbol>::size_type size_type;
@@ -174,6 +181,31 @@ class symbol_set
 			for (const auto &s: l) {
 				add(s);
 			}
+		}
+		/// Constructor from range.
+		/**
+		 * \note
+		 * This constructor is enabled only if \p Iterator is an input iterator and
+		 * piranha::symbol is constructible from its value type.
+		 *
+		 * The set will be initialised with symbols constructed from the elements of the range.
+		 *
+		 * @throws unspecified any exception thrown by operations on standard containers or by
+		 * the invoked constructor of piranha::symbol.
+		 */
+		// NOTE: the templated Symbol here is apparently necessary to prevent an ICE in the intel
+		// compiler. It should go eventually.
+		template <typename Iterator, typename Symbol = symbol, it_ctor_enabler<Iterator,Symbol> = 0>
+		explicit symbol_set(const Iterator &begin, const Iterator &end)
+		{
+			// NOTE: this is one possible way of doing this, probably a sorted vector
+			// with std::unique will be faster. Also, this can be shared with the ctor
+			// from init list which can be furtherly generalised.
+			std::set<symbol> s_set;
+			for (Iterator it = begin; it != end; ++it) {
+				s_set.emplace(*it);
+			}
+			std::copy(s_set.begin(),s_set.end(),std::back_inserter(m_values));
 		}
 		/// Copy assignment operator.
 		/**

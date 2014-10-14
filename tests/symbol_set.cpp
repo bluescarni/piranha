@@ -26,10 +26,12 @@
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <limits>
+#include <list>
 #include <random>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/symbol.hpp"
@@ -66,6 +68,30 @@ BOOST_AUTO_TEST_CASE(symbol_set_constructor_test)
 	ss4 = std::move(ss4);
 	BOOST_CHECK(ss4 == symbol_set({symbol("c"),symbol("b"),symbol("a")}));
 	BOOST_CHECK(std::is_nothrow_move_constructible<symbol_set>::value);
+	// Constructor from iterators.
+	std::vector<std::string> vs1 = {"a","b","c"};
+	symbol_set ss5(vs1.begin(),vs1.end());
+	BOOST_CHECK_EQUAL(ss5.size(),3u);
+	auto cmp = [](const symbol &s, const std::string &str) {
+		return s.get_name() == str;
+	};
+	BOOST_CHECK(std::equal(ss5.begin(),ss5.end(),vs1.begin(),cmp));
+	std::vector<std::string> vs2 = {"b","c","a","a","b","c"};
+	BOOST_CHECK((std::is_constructible<symbol_set,decltype(vs2.begin()),decltype(vs2.end())>::value));
+	symbol_set ss6(vs2.begin(),vs2.end());
+	BOOST_CHECK_EQUAL(ss6.size(),3u);
+	BOOST_CHECK(std::equal(ss6.begin(),ss6.end(),vs1.begin(),cmp));
+	std::vector<symbol> vs3({symbol("b"),symbol("c"),symbol("a"),symbol("b"),symbol("a")});
+	symbol_set ss7(vs3.begin(),vs3.end());
+	BOOST_CHECK_EQUAL(ss7.size(),3u);
+	BOOST_CHECK(std::equal(ss7.begin(),ss7.end(),vs1.begin(),cmp));
+	std::list<std::string> ls1 = {"a","b","c"};
+	BOOST_CHECK((std::is_constructible<symbol_set,decltype(ls1.begin()),decltype(ls1.end())>::value));
+	symbol_set ss8(ls1.begin(),ls1.end());
+	BOOST_CHECK_EQUAL(ss8.size(),3u);
+	BOOST_CHECK(std::equal(ss8.begin(),ss8.end(),ls1.begin(),cmp));
+	std::vector<int> vint;
+	BOOST_CHECK((!std::is_constructible<symbol_set,decltype(vint.begin()),decltype(vint.end())>::value));
 }
 
 BOOST_AUTO_TEST_CASE(symbol_set_add_test)
