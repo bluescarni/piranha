@@ -39,7 +39,6 @@
 #include <utility>
 
 #include "config.hpp"
-#include "detail/degree_commons.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
@@ -334,7 +333,7 @@ class kronecker_monomial
 		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
 		 * operator of piranha::integer.
 		 */
-		integer degree_(const symbol_set &args) const
+		integer degree(const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			// NOTE: this should be guaranteed by the unpack function.
@@ -346,9 +345,9 @@ class kronecker_monomial
 			return retval;
 		}
 		/// Low degree (equivalent to the degree).
-		integer ldegree_(const symbol_set &args) const
+		integer ldegree(const symbol_set &args) const
 		{
-			return degree_(args);
+			return degree(args);
 		}
 		/// Partial degree.
 		/**
@@ -363,7 +362,7 @@ class kronecker_monomial
 		 * @throws unspecified any exception thrown by unpack() or by the in-place addition
 		 * operator of piranha::integer.
 		 */
-		integer degree_(const symbol_set::positions &p, const symbol_set &args) const
+		integer degree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			const auto tmp = unpack(args);
 			piranha_assert(tmp.size() == args.size());
@@ -378,71 +377,9 @@ class kronecker_monomial
 			return retval;
 		}
 		/// Partial low degree (equivalent to the partial degree).
-		integer ldegree_(const symbol_set::positions &p, const symbol_set &args) const
+		integer ldegree(const symbol_set::positions &p, const symbol_set &args) const
 		{
-			return degree_(p,args);
-		}
-		/// Degree.
-		/**
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return degree of the monomial.
-		 * 
-		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
-		 * @throws unspecified any exception thrown by unpack().
-		 */
-		value_type degree(const symbol_set &args) const
-		{
-			const auto tmp = unpack(args);
-			return detail::monomial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,args);
-		}
-		/// Low degree.
-		/**
-		 * Equivalent to the degree.
-		 * 
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return low degree of the monomial.
-		 * 
-		 * @throws unspecified any exception thrown by degree().
-		 */
-		value_type ldegree(const symbol_set &args) const
-		{
-			return degree(args);
-		}
-		/// Partial degree.
-		/**
-		 * Partial degree of the monomial: only the symbols with names in \p active_args are considered during the computation
-		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
-		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
-		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
-		 * 
-		 * @throws std::overflow_error if the computation of the degree overflows type \p value_type.
-		 * @throws unspecified any exception thrown by unpack().
-		 */
-		value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
-		{
-			const auto tmp = unpack(args);
-			return detail::monomial_partial_degree<value_type>(tmp,detail::km_safe_adder<value_type>,active_args,args);
-		}
-		/// Partial low degree.
-		/**
-		 * Equivalent to the partial degree.
-		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low degree of the monomial.
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the partial low degree.
-		 * 
-		 * @throws unspecified any exception thrown by degree().
-		 */
-		value_type ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
-		{
-			return degree(active_args,args);
+			return degree(p,args);
 		}
 		/// Multiply monomial.
 		/**

@@ -35,7 +35,6 @@
 #include <utility>
 
 #include "array_key.hpp"
-#include "detail/degree_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "config.hpp"
 #include "forwarding.hpp"
@@ -277,7 +276,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
-		degree_type<U> degree_(const symbol_set &args) const
+		degree_type<U> degree(const symbol_set &args) const
 		{
 			// This is a fast check, better always to keep it.
 			if (unlikely(args.size() != this->size())) {
@@ -312,7 +311,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
 		 */
 		template <typename U = T>
-		degree_type<U> degree_(const symbol_set::positions &p, const symbol_set &args) const
+		degree_type<U> degree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			if (unlikely(args.size() != this->size() || (p.size() && p.back() >= this->size()))) {
 				piranha_throw(std::invalid_argument,"invalid arguments set or positions");
@@ -326,78 +325,15 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Low degree (equivalent to the degree).
 		template <typename U = T>
-		degree_type<U> ldegree_(const symbol_set &args) const
-		{
-			return degree_(args);
-		}
-		/// Partial low degree (equivalent to the partial degree).
-		template <typename U = T>
-		degree_type<U> ldegree_(const symbol_set::positions &p, const symbol_set &args) const
-		{
-			return degree_(p,args);
-		}
-		/// Degree.
-		/**
-		 * Degree of the monomial.
-		 * 
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the summation of all the exponents of the monomial, or <tt>value_type(0)</tt> if the size
-		 * of the monomial is zero.
-		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
-		 */
-		typename base::value_type degree(const symbol_set &args) const
-		{
-			return detail::monomial_degree<typename base::value_type>(*this,in_place_adder<typename base::value_type>(),args);
-		}
-		/// Low degree.
-		/**
-		 * Analogous to the degree.
-		 * 
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the output of degree().
-		 * 
-		 * @throws unspecified any exception thrown by degree().
-		 */
-		typename base::value_type ldegree(const symbol_set &args) const
+		degree_type<U> ldegree(const symbol_set &args) const
 		{
 			return degree(args);
 		}
-		/// Partial degree.
-		/**
-		 * Partial degree of the monomial: only the symbols with names in \p active_args are considered during the computation
-		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
-		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the summation of all the exponents of the monomial corresponding to the symbols in
-		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
-		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by the constructor and the addition and assignment operators of \p value_type.
-		 */
-		typename base::value_type degree(const std::set<std::string> &active_args, const symbol_set &args) const
+		/// Partial low degree (equivalent to the partial degree).
+		template <typename U = T>
+		degree_type<U> ldegree(const symbol_set::positions &p, const symbol_set &args) const
 		{
-			return detail::monomial_partial_degree<typename base::value_type>(*this,in_place_adder<typename base::value_type>(),active_args,args);
-		}
-		/// Partial low degree.
-		/**
-		 * Analogous to the partial degree.
-		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial low degree of the monomial.
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the output of degree().
-		 * 
-		 * @throws unspecified any exception thrown by degree().
-		 */
-		typename base::value_type ldegree(const std::set<std::string> &active_args, const symbol_set &args) const
-		{
-			return degree(active_args,args);
+			return degree(p,args);
 		}
 		/// Multiply monomial.
 		/**

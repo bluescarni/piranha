@@ -21,13 +21,11 @@
 #ifndef PIRANHA_POWER_SERIES_HPP
 #define PIRANHA_POWER_SERIES_HPP
 
-#include <functional>
-#include <set>
+#include <algorithm>
 #include <string>
 #include <type_traits>
 #include <utility>
 
-#include "detail/degree_commons.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "series.hpp"
@@ -72,10 +70,10 @@ class power_series: public Series
 		typedef Series base;
 		// Detect power series terms.
 		template <typename T>
-		struct term_score
+		struct ps_term_score
 		{
-			typedef typename T::term_type::cf_type cf_type;
-			typedef typename T::term_type::key_type key_type;
+			typedef typename T::cf_type cf_type;
+			typedef typename T::key_type key_type;
 			static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) +
 						      (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_ldegree<key_type>::value) << 1u);
 		};
@@ -87,84 +85,97 @@ class power_series: public Series
 						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
 						  is_less_than_comparable<T>::value;
 		};
-		// Utilities to compute the degree.
-		// Unspecialised version will not define any member, will SFINAE out.
-		template <typename T, typename = void>
-		struct degree_utils
+		// Degree computation.
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
+		static auto get_degree(const Term &t, const symbol_set &) -> decltype(math::degree(t.m_cf))
 		{
-			static_assert(term_score<T>::value == 0u,"Invalid power series term score.");
-		};
-		// Case 1: only coefficient as degree/ldegree.
+			return math::degree(t.m_cf);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
+		static auto get_degree(const Term &t, const symbol_set &s) ->
+			decltype(t.m_key.degree(s))
+		{
+			return t.m_key.degree(s);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
+		static auto get_degree(const Term &t, const symbol_set &s) -> decltype(math::degree(t.m_cf) +
+			t.m_key.degree(s))
+		{
+			return math::degree(t.m_cf) + t.m_key.degree(s);
+		}
 		template <typename T>
-		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 1u>::type>
-		{
-			// NOTE: this one is just a hack to work around what seems an issue in GCC 4.7 (4.8 and clang compile it just fine).
-			// Remove it in next versions.
-			#define PIRANHA_TMP_RETURN math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
-			template <typename Term, typename ... Args>
-			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
-			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &, const Args & ... args) -> degree_return_type<Term,Args...>
-			{
-				return math::degree(t.m_cf,args...);
-			}
-			#undef PIRANHA_TMP_RETURN
-			#define PIRANHA_TMP_RETURN math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...)
-			template <typename Term, typename ... Args>
-			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
-			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &, const Args & ... args) -> ldegree_return_type<Term,Args...>
-			{
-				return math::ldegree(t.m_cf,args...);
-			}
-			#undef PIRANHA_TMP_RETURN
-		};
-		// Case 2: only key has degree/ldegree.
+		using degree_type_ = decltype(get_degree(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>()));
+		// The final type, with the checks.
 		template <typename T>
-		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 2u>::type>
+		using degree_type = typename std::enable_if<common_type_checks<degree_type_<T>>::value,degree_type_<T>>::type;
+		// Low degree computation.
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
+		static auto get_ldegree(const Term &t, const symbol_set &) -> decltype(math::ldegree(t.m_cf))
 		{
-			#define PIRANHA_TMP_RETURN t.m_key.degree(args...,s)
-			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &s, const Args & ... args) ->
-				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
-			{
-				return PIRANHA_TMP_RETURN;
-			}
-			#undef PIRANHA_TMP_RETURN
-			#define PIRANHA_TMP_RETURN t.m_key.ldegree(args...,s)
-			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &s, const Args & ... args) ->
-				typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type
-			{
-				return PIRANHA_TMP_RETURN;
-			}
-			#undef PIRANHA_TMP_RETURN
-		};
-		// Case 3: cf and key have both degree/ldegree.
+			return math::ldegree(t.m_cf);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
+		static auto get_ldegree(const Term &t, const symbol_set &s) ->
+			decltype(t.m_key.ldegree(s))
+		{
+			return t.m_key.ldegree(s);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
+		static auto get_ldegree(const Term &t, const symbol_set &s) -> decltype(math::ldegree(t.m_cf) +
+			t.m_key.ldegree(s))
+		{
+			return math::ldegree(t.m_cf) + t.m_key.ldegree(s);
+		}
 		template <typename T>
-		struct degree_utils<T,typename std::enable_if<term_score<T>::value == 3u>::type>
+		using ldegree_type_ = decltype(get_ldegree(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>()));
+		template <typename T>
+		using ldegree_type = typename std::enable_if<common_type_checks<ldegree_type_<T>>::value,ldegree_type_<T>>::type;
+		// Partial degree computation.
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
+		static auto get_pdegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &, const symbol_set &) -> decltype(math::degree(t.m_cf,names))
 		{
-			#define PIRANHA_TMP_RETURN math::degree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
-				std::declval<const Term &>().m_key.degree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
-			template <typename Term, typename ... Args>
-			using degree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
-			template <typename Term, typename ... Args>
-			static auto get(const Term &t, const symbol_set &s, const Args & ... args) -> degree_return_type<Term,Args...>
-			{
-				return math::degree(t.m_cf,args...) + t.m_key.degree(args...,s);
-			}
-			#undef PIRANHA_TMP_RETURN
-			#define PIRANHA_TMP_RETURN math::ldegree(std::declval<const Term &>().m_cf,std::declval<Args const &>()...) + \
-				std::declval<const Term &>().m_key.ldegree(std::declval<Args const &>()...,std::declval<const symbol_set &>())
-			template <typename Term, typename ... Args>
-			using ldegree_return_type = typename std::enable_if<common_type_checks<decltype(PIRANHA_TMP_RETURN)>::value,decltype(PIRANHA_TMP_RETURN)>::type;
-			template <typename Term, typename ... Args>
-			static auto lget(const Term &t, const symbol_set &s, const Args & ... args) -> ldegree_return_type<Term,Args...>
-			{
-				return math::ldegree(t.m_cf,args...) + t.m_key.ldegree(args...,s);
-			}
-			#undef PIRANHA_TMP_RETURN
-		};
+			return math::degree(t.m_cf,names);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
+		static auto get_pdegree(const Term &t, const std::vector<std::string> &, const symbol_set::positions &p, const symbol_set &s) ->
+			decltype(t.m_key.degree(p,s))
+		{
+			return t.m_key.degree(p,s);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
+		static auto get_pdegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &p, const symbol_set &s) -> decltype(math::degree(t.m_cf,names) +
+			t.m_key.degree(p,s))
+		{
+			return math::degree(t.m_cf,names) + t.m_key.degree(p,s);
+		}
+		template <typename T>
+		using pdegree_type_ = decltype(get_pdegree(std::declval<const typename T::term_type &>(),std::declval<const std::vector<std::string> &>(),
+			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()));
+		template <typename T>
+		using pdegree_type = typename std::enable_if<common_type_checks<pdegree_type_<T>>::value,pdegree_type_<T>>::type;
+		// Partial low degree computation.
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
+		static auto get_pldegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &, const symbol_set &) -> decltype(math::ldegree(t.m_cf,names))
+		{
+			return math::ldegree(t.m_cf,names);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
+		static auto get_pldegree(const Term &t, const std::vector<std::string> &, const symbol_set::positions &p, const symbol_set &s) ->
+			decltype(t.m_key.ldegree(p,s))
+		{
+			return t.m_key.ldegree(p,s);
+		}
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
+		static auto get_pldegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &p, const symbol_set &s) -> decltype(math::ldegree(t.m_cf,names) +
+			t.m_key.ldegree(p,s))
+		{
+			return math::ldegree(t.m_cf,names) + t.m_key.ldegree(p,s);
+		}
+		template <typename T>
+		using pldegree_type_ = decltype(get_pldegree(std::declval<const typename T::term_type &>(),std::declval<const std::vector<std::string> &>(),
+			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()));
+		template <typename T>
+		using pldegree_type = typename std::enable_if<common_type_checks<pldegree_type_<T>>::value,pldegree_type_<T>>::type;
 	public:
 		/// Defaulted default constructor.
 		power_series() = default;
@@ -183,59 +194,103 @@ class power_series: public Series
 		{
 			PIRANHA_TT_CHECK(is_series,power_series);
 		}
-		/// Total and partial degree.
+		/// Total degree.
 		/**
 		 * \note
 		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
 		 *
 		 * The degree of the series is the maximum degree of its terms. If the series is empty, zero will be returned.
-		 * If the parameter pack has a size of zero, the total degree will be returned. If the parameter pack consists
-		 * of a set of strings, the partial degree (i.e., calculated considering only the variables in the set) will be returned.
-		 * In all other cases, the call is malformed and the method will be disabled.
 		 *
-		 * @param[in] args variadic parameter pack.
-		 *
-		 * @return the total or partial degree of the series.
+		 * @return the total degree of the series.
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the degree of each term,
 		 * - the assignment and less-than operators for the return type.
 		 */
-		template <typename ... Args, typename T = power_series>
-		auto degree(const Args & ... args) const ->
-			decltype(degree_utils<T>::get(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = power_series>
+		degree_type<T> degree() const
 		{
-			auto g = std::bind(degree_utils<T>::template get<typename T::term_type,Args...>,std::placeholders::_1,
-				std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<0>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_degree(t1,this->m_symbol_set) < this->get_degree(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? degree_type<T>(0) : get_degree(*it,this->m_symbol_set);
 		}
-		/// Total and partial low degree.
+		/// Total low degree.
 		/**
 		 * \note
 		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
 		 *
 		 * The low degree of the series is the minimum low degree of its terms. If the series is empty, zero will be returned.
-		 * If the parameter pack has a size of zero, the total low degree will be returned. If the parameter pack consists
-		 * of a set of strings, the partial low degree (i.e., calculated considering only the variables in the set) will be returned.
-		 * In all other cases, the call is malformed and the method will be disabled.
 		 *
-		 * @param[in] args variadic parameter pack.
-		 *
-		 * @return the total or partial low degree of the series.
+		 * @return the total low degree of the series.
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - the construction of return type,
 		 * - the calculation of the low degree of each term,
 		 * - the assignment and less-than operators for the return type.
 		 */
-		template <typename ... Args, typename T = power_series>
-		auto ldegree(const Args & ... args) const ->
-			decltype(degree_utils<T>::lget(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = power_series>
+		ldegree_type<T> ldegree() const
 		{
-			auto g = std::bind(degree_utils<T>::template lget<typename T::term_type,Args...>,std::placeholders::_1,
-				std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<1>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_ldegree(t1,this->m_symbol_set) < this->get_ldegree(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? ldegree_type<T>(0) : get_ldegree(*it,this->m_symbol_set);
+		}
+		/// Partial degree.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * The partial degree of the series is the maximum partial degree of its terms. If the series is empty, zero will be returned.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation of the degree.
+		 *
+		 * @return the partial degree of the series.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type,
+		 * - the calculation of the degree of each term,
+		 * - the assignment and less-than operators for the return type.
+		 */
+		template <typename T = power_series>
+		pdegree_type<T> degree(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_pdegree(t1,names,p,this->m_symbol_set) < this->get_pdegree(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pdegree_type<T>(0) : get_pdegree(*it,names,p,this->m_symbol_set);
+		}
+		/// Partial low degree.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * The partial low degree of the series is the minimum partial low degree of its terms. If the series is empty, zero will be returned.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation of the low degree.
+		 *
+		 * @return the partial low degree of the series.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of return type,
+		 * - the calculation of the low degree of each term,
+		 * - the assignment and less-than operators for the return type.
+		 */
+		template <typename T = power_series>
+		pldegree_type<T> ldegree(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_pldegree(t1,names,p,this->m_symbol_set) < this->get_pldegree(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pldegree_type<T>(0) : get_pldegree(*it,names,p,this->m_symbol_set);
 		}
 };
 
