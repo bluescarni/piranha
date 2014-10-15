@@ -590,10 +590,10 @@ class series_exposer
 			return s.degree();
 		}
 		template <typename S>
-		static auto wrap_partial_degree_set(const S &s, bp::list l) -> decltype(s.degree(std::set<std::string>{}))
+		static auto wrap_partial_degree_set(const S &s, bp::list l) -> decltype(s.degree(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.degree(std::set<std::string>(begin,end));
+			return s.degree(std::vector<std::string>(begin,end));
 		}
 		template <typename S>
 		static auto wrap_ldegree(const S &s) -> decltype(s.ldegree())
@@ -601,10 +601,10 @@ class series_exposer
 			return s.ldegree();
 		}
 		template <typename S>
-		static auto wrap_partial_ldegree_set(const S &s, bp::list l) -> decltype(s.ldegree(std::set<std::string>{}))
+		static auto wrap_partial_ldegree_set(const S &s, bp::list l) -> decltype(s.ldegree(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.ldegree(std::set<std::string>(begin,end));
+			return s.ldegree(std::vector<std::string>(begin,end));
 		}
 		// Trigonometric exposer.
 		template <typename S>
