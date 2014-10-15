@@ -23,10 +23,17 @@
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/fusion/algorithm.hpp>
+#include <boost/fusion/include/algorithm.hpp>
+#include <boost/fusion/include/sequence.hpp>
+#include <boost/fusion/sequence.hpp>
 #include <climits>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
+#include "../src/config.hpp"
 #include "../src/environment.hpp"
 
 struct foo {};
@@ -68,6 +75,13 @@ struct safe_cast_impl<conv4,conv1,void>
 
 }
 
+using size_types = boost::mpl::vector<std::integral_constant<int,0>,std::integral_constant<int,8>,std::integral_constant<int,16>,
+	std::integral_constant<int,32>
+#if defined(PIRANHA_UINT128_T)
+	,std::integral_constant<int,64>
+#endif
+	>;
+
 using namespace piranha;
 
 BOOST_AUTO_TEST_CASE(safe_cast_main_test)
@@ -94,5 +108,66 @@ BOOST_AUTO_TEST_CASE(safe_cast_main_test)
 	if (CHAR_BIT == 8) {
 		BOOST_CHECK_THROW(safe_cast<unsigned char>(300),std::invalid_argument);
 		BOOST_CHECK_THROW(safe_cast<unsigned char>(300ull),std::invalid_argument);
+	}
+}
+
+struct safe_cast_int_float_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		// Check casts between integral types.
+		BOOST_CHECK((has_safe_cast<int_type,int>::value));
+		BOOST_CHECK((has_safe_cast<int_type,unsigned long>::value));
+		BOOST_CHECK((has_safe_cast<char,int_type>::value));
+		BOOST_CHECK((has_safe_cast<long long,int_type>::value));
+		BOOST_CHECK_EQUAL(safe_cast<int_type>(3u),3u);
+		BOOST_CHECK_EQUAL(safe_cast<int_type>(-3l),-3);
+		BOOST_CHECK_EQUAL(safe_cast<unsigned>(int_type(3)),3u);
+		BOOST_CHECK_EQUAL(safe_cast<short>(int_type(-3)),-3);
+		BOOST_CHECK_THROW(safe_cast<int>(int_type{std::numeric_limits<int>::max()} + 1),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int>(int_type{std::numeric_limits<int>::min()} - 1),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<unsigned>(int_type{std::numeric_limits<unsigned>::max()} + 1),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<unsigned>(int_type{-1}),std::invalid_argument);
+		// Float to mp_integer.
+		BOOST_CHECK((has_safe_cast<int_type,float>::value));
+		BOOST_CHECK((has_safe_cast<int_type,double>::value));
+		BOOST_CHECK((!has_safe_cast<float,int_type>::value));
+		BOOST_CHECK((!has_safe_cast<double,int_type>::value));
+		BOOST_CHECK_EQUAL(safe_cast<int_type>(3.),3);
+		BOOST_CHECK_EQUAL(safe_cast<int_type>(-3.f),-3);
+		BOOST_CHECK_THROW(safe_cast<int_type>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int_type>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int_type>((1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int_type>(-1. / std::numeric_limits<double>::radix),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int_type>(-1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int_type>(-(1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
+		if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(safe_cast<int_type>(std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_THROW(safe_cast<int_type>(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(safe_cast_int_float_test)
+{
+	boost::mpl::for_each<size_types>(safe_cast_int_float_tester());
+	// Casts from floating point to C++ ints.
+	BOOST_CHECK((has_safe_cast<int,double>::value));
+	BOOST_CHECK((has_safe_cast<char,float>::value));
+	BOOST_CHECK((!has_safe_cast<double,int>::value));
+	BOOST_CHECK((!has_safe_cast<float,char>::value));
+	BOOST_CHECK_EQUAL(safe_cast<int>(2.),2);
+	BOOST_CHECK_EQUAL(safe_cast<int>(-2.),-2);
+	BOOST_CHECK_THROW(safe_cast<int>(1. / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>((1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-1. / std::numeric_limits<double>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-1.f / std::numeric_limits<float>::radix),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-(1. +  std::numeric_limits<double>::radix) / std::numeric_limits<double>::radix),std::invalid_argument);
+	if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+		BOOST_CHECK_THROW(safe_cast<int>(std::numeric_limits<double>::infinity()),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<long>(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
 }
