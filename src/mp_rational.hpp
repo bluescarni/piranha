@@ -41,6 +41,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "print_tex_coefficient.hpp"
+#include "safe_cast.hpp"
 
 namespace piranha
 {
@@ -2011,6 +2012,70 @@ struct binomial_impl<T,U,detail::rational_binomial_enabler<T,U>>
 };
 
 }
+
+namespace detail
+{
+
+template <typename To, typename From>
+using sc_rat_enabler = typename std::enable_if<
+	(is_mp_rational<To>::value && (std::is_arithmetic<From>::value || is_mp_integer<From>::value)) ||
+	((std::is_integral<To>::value || is_mp_integer<To>::value) && is_mp_rational<From>::value)
+	>::type;
+
+}
+
+/// Specialisation of piranha::safe_cast() for conversions involving piranha::mp_rational.
+/**
+ * This specialisation is enabled in the following cases:
+ * - \p To is a rational type and \p From is either an arithmetic type or piranha::mp_integer,
+ * - \p To is an integral type or piranha::mp_integer, and \p From is piranha::mp_rational.
+ */
+template <typename To, typename From>
+struct safe_cast_impl<To,From,detail::sc_rat_enabler<To,From>>
+{
+	private:
+		template <typename T>
+		using to_enabler = typename std::enable_if<std::is_arithmetic<T>::value || detail::is_mp_integer<T>::value,int>::type;
+		template <typename T>
+		using from_enabler = typename std::enable_if<detail::is_mp_rational<T>::value,int>::type;
+	public:
+		/// Call operator, to-rational overload.
+		/**
+		 * The conversion is performed via piranha::mp_rational's constructor.
+		 *
+		 * @param[in] x input value.
+		 *
+		 * @return a rational constructed from \p x.
+		 *
+		 * @throws unspecified any exception thrown by the invoked constructor.
+		 */
+		template <typename From2, to_enabler<From2> = 0>
+		To operator()(const From2 &x) const
+		{
+			// NOTE: checks for finiteness of an fp value are in the ctor.
+			return To(x);
+		}
+		/// Call operator, from-rational overload.
+		/**
+		 * The conversion, performed via the conversion operator of piranha::mp_rational,
+		 * will fail if the denominator of \p q is not unitary.
+		 *
+		 * @param[in] q input rational.
+		 *
+		 * @return an integral value converted from \p q.
+		 *
+		 * @throws std::invalid_argument if the denominator of \p q is not unitary.
+		 * @throws unspecified any exception thrown by the conversion operator.
+		 */
+		template <typename From2, from_enabler<From2> = 0>
+		To operator()(const From2 &q) const
+		{
+			if (unlikely(q.den() != 1)) {
+				piranha_throw(std::invalid_argument,"non-unitary denominator in rational to integral conversion");
+			}
+			return static_cast<To>(q);
+		}
+};
 
 }
 

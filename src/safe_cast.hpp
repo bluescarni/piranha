@@ -226,9 +226,9 @@ inline To safe_cast(const From &x)
 {
 	try {
 		return safe_cast_impl<typename std::decay<To>::type,From>()(x);
+	} catch (const std::exception &e) {
+		piranha_throw(std::invalid_argument,std::string("unsafe conversion, the full error message is:\n") + e.what() + "\n");
 	} catch (...) {
-		// NOTE: maybe here we could use a more helpful message, with
-		// type demangling and stuff like that.
 		piranha_throw(std::invalid_argument,"unsafe conversion");
 	}
 }

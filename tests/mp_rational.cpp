@@ -50,6 +50,7 @@
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/print_tex_coefficient.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
@@ -2016,4 +2017,55 @@ struct stream_tester
 BOOST_AUTO_TEST_CASE(mp_rational_stream_test)
 {
 	boost::mpl::for_each<size_types>(stream_tester());
+}
+
+struct safe_cast_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		using z_type = mp_integer<T::value>;
+		// From q conversions.
+		BOOST_CHECK((has_safe_cast<int,q_type>::value));
+		BOOST_CHECK((has_safe_cast<unsigned,q_type>::value));
+		BOOST_CHECK((has_safe_cast<z_type,q_type>::value));
+		BOOST_CHECK_EQUAL(safe_cast<int>(q_type{0}),0);
+		BOOST_CHECK_EQUAL(safe_cast<int>(q_type{-4}),-4);
+		BOOST_CHECK_EQUAL(safe_cast<unsigned>(q_type{0}),0u);
+		BOOST_CHECK_EQUAL(safe_cast<unsigned>(q_type{42}),42u);
+		BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{0}/2),0);
+		BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{-42}/2),-21);
+		// Various types of failures.
+		BOOST_CHECK_THROW(safe_cast<int>(q_type{std::numeric_limits<int>::max()} + 1),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int>(q_type{std::numeric_limits<int>::min()} - 1),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<int>(q_type{-4}/3),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{-4}),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{4}/3),std::invalid_argument);
+		BOOST_CHECK_THROW(safe_cast<z_type>(q_type{4}/3),std::invalid_argument);
+		// To q conversions.
+		BOOST_CHECK((has_safe_cast<q_type,int>::value));
+		BOOST_CHECK((has_safe_cast<q_type,unsigned>::value));
+		BOOST_CHECK((has_safe_cast<q_type,z_type>::value));
+		BOOST_CHECK((has_safe_cast<q_type,double>::value));
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(-4),q_type{-4});
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(0),q_type{0});
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(4u),q_type{4});
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(0u),q_type{0u});
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(z_type{4}),q_type{4});
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(z_type{0}),q_type{0});
+		// Floating point.
+		static constexpr auto r = std::numeric_limits<double>::radix;
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(1./r),q_type(1,r));
+		BOOST_CHECK_EQUAL(safe_cast<q_type>(-13./(r*r*r)),q_type(-13,r*r*r));
+		if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+			BOOST_CHECK_THROW(safe_cast<q_type>(std::numeric_limits<double>::infinity()),std::invalid_argument);
+			BOOST_CHECK_THROW(safe_cast<q_type>(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_safe_cast_test)
+{
+	boost::mpl::for_each<size_types>(safe_cast_tester());
 }
