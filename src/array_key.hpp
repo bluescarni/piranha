@@ -96,6 +96,8 @@ class array_key
 		using generic_ctor_enabler = typename std::enable_if<
 			has_safe_cast<value_type,U>::value,int>::type;
 		// Enabler for addition.
+		// NOTE: here it is not difficult to make this an int enabler, like we usually do elsewhere,
+		// but alas the intel compiler chokes on this :/.
 		template <typename U>
 		using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()));
 	public:
