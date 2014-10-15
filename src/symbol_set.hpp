@@ -190,6 +190,9 @@ class symbol_set
 		 *
 		 * The set will be initialised with symbols constructed from the elements of the range.
 		 *
+		 * @param[in] begin begin iterator.
+		 * @param[in] end end iterator.
+		 *
 		 * @throws unspecified any exception thrown by operations on standard containers or by
 		 * the invoked constructor of piranha::symbol.
 		 */
