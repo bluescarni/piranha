@@ -41,6 +41,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
+#include "safe_cast.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -2068,6 +2069,69 @@ inline real real::binomial(const real &y) const
 	// NOTE: put it here so the compiler does not complain about missing return statement in the switch block.
 	return real{0,max_prec};
 }
+
+namespace detail
+{
+
+template <typename To, typename From>
+using sc_real_enabler = typename std::enable_if<
+	(std::is_integral<To>::value || is_mp_integer<To>::value || is_mp_rational<To>::value) &&
+	std::is_same<From,real>::value
+	>::type;
+
+}
+
+/// Specialisation of piranha::safe_cast() for conversions involving piranha::real.
+/**
+ * This specialisation is enabled if \p To is an integral type, piranha::mp_integer or piranha::mp_rational, and \p From is
+ * piranha::real.
+ */
+template <typename To, typename From>
+struct safe_cast_impl<To,From,detail::sc_real_enabler<To,From>>
+{
+	private:
+		template <typename T>
+		using integral_enabler = typename std::enable_if<std::is_integral<T>::value || detail::is_mp_integer<T>::value,int>::type;
+		template <typename T>
+		using rational_enabler = typename std::enable_if<detail::is_mp_rational<T>::value,int>::type;
+	public:
+		/// Call operator, real to integral overload.
+		/**
+		 * The conversion will succeed if \p r is a finite integral value representable by
+		 * the target type.
+		 *
+		 * @param[in] r conversion argument.
+		 *
+		 * @return \p r converted to \p To.
+		 *
+		 * @throws std::invalid_argument if \p r is not a finite integral value.
+		 * @throws unspecified any exception thrown by the conversion operator of piranha::real.
+		 */
+		template <typename T = To, integral_enabler<T> = 0>
+		T operator()(const real &r) const
+		{
+			// NOTE: the finiteness check here is repeated in the cast below, but we need it here in order
+			// to make sure that we can compute the truncated r.
+			if (unlikely(r.is_inf() || r.is_nan() || r.truncated() != r)) {
+				piranha_throw(std::invalid_argument,"the input real does not represent a finite integral value");
+			}
+			return static_cast<T>(r);
+		}
+		/// Call operator, real to rational overload.
+		/**
+		 *
+		 * @param[in] r conversion argument.
+		 *
+		 * @return \p r converted to piranha::mp_rational.
+		 *
+		 * @throws unspecified any exception thrown by the conversion operator of piranha::real.
+		 */
+		template <typename T = To, rational_enabler<T> = 0>
+		T operator()(const real &r) const
+		{
+			return static_cast<T>(r);
+		}
+};
 
 inline namespace literals
 {

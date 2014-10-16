@@ -31,6 +31,7 @@
 #include <boost/fusion/sequence.hpp>
 #include <boost/lexical_cast.hpp>
 #include <complex>
+#include <limits>
 #include <random>
 #include <sstream>
 #include <stdexcept>
@@ -44,6 +45,7 @@
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/type_traits.hpp"
 
 static_assert(MPFR_PREC_MIN <= 4 && MPFR_PREC_MAX >= 4,"The unit tests for piranha::real assume that 4 is a valid value for significand precision.");
@@ -383,9 +385,9 @@ struct check_integral_conversion
 				BOOST_CHECK_EQUAL(static_cast<T>(real{static_cast<double>(value) - 0.5}),value);
 			}
 		}
-		BOOST_CHECK_THROW((void)static_cast<T>(real{integer(boost::integer_traits<T>::const_max) * 2}),std::overflow_error);
+		BOOST_CHECK_THROW((void)static_cast<T>(real{integer(std::numeric_limits<T>::max()) * 2}),std::overflow_error);
 		if (std::is_signed<T>::value) {
-			BOOST_CHECK_THROW((void)static_cast<T>(real{integer(boost::integer_traits<T>::const_min) * 2}),std::overflow_error);
+			BOOST_CHECK_THROW((void)static_cast<T>(real{integer(std::numeric_limits<T>::min()) * 2}),std::overflow_error);
 		}
 	}
 };
@@ -2132,4 +2134,45 @@ BOOST_AUTO_TEST_CASE(real_literal_test)
 		BOOST_CHECK(1.3_r != real{1.3});
 	}
 	BOOST_CHECK_EQUAL(1.e-1_r,real{"1e-1"});
+}
+
+BOOST_AUTO_TEST_CASE(real_safe_cast_test)
+{
+	BOOST_CHECK((has_safe_cast<int,real>::value));
+	BOOST_CHECK((has_safe_cast<unsigned,real>::value));
+	BOOST_CHECK((has_safe_cast<integer,real>::value));
+	BOOST_CHECK((has_safe_cast<rational,real>::value));
+	BOOST_CHECK((!has_safe_cast<double,real>::value));
+	BOOST_CHECK((!has_safe_cast<float,real>::value));
+	BOOST_CHECK((!has_safe_cast<real,int>::value));
+	BOOST_CHECK((!has_safe_cast<real,float>::value));
+	BOOST_CHECK((!has_safe_cast<real,integer>::value));
+	BOOST_CHECK((!has_safe_cast<real,rational>::value));
+	BOOST_CHECK_EQUAL(safe_cast<int>(3_r),3);
+	BOOST_CHECK_EQUAL(safe_cast<int>(-3_r),-3);
+	BOOST_CHECK_EQUAL(safe_cast<unsigned>(4_r),4u);
+	BOOST_CHECK_EQUAL(safe_cast<integer>(4_r),4_z);
+	BOOST_CHECK_EQUAL(safe_cast<integer>(-4_r),-4_z);
+	BOOST_CHECK_EQUAL(safe_cast<rational>(4_r),4_q);
+	BOOST_CHECK_EQUAL(safe_cast<rational>(-4_r),-4_q);
+	BOOST_CHECK_EQUAL(safe_cast<rational>(5_r/2),5_q/2);
+	BOOST_CHECK_EQUAL(safe_cast<rational>(-5_r/2),-5_q/2);
+	// Various types of failures.
+	BOOST_CHECK_THROW(safe_cast<int>(3.1_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(-3.1_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(real{"inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(real{"nan"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::max()} * 2),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::min()} * 2),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<unsigned>(3.1_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<unsigned>(-3_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<unsigned>(real{"inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<unsigned>(real{"nan"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<unsigned>(real{std::numeric_limits<unsigned>::max()} * 2),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<integer>(3.1_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<integer>(-3.1_r),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<integer>(real{"inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<integer>(real{"nan"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<rational>(real{"inf"}),std::invalid_argument);
+	BOOST_CHECK_THROW(safe_cast<rational>(real{"nan"}),std::invalid_argument);
 }
