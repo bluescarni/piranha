@@ -22,13 +22,12 @@
 #define PIRANHA_REAL_TRIGONOMETRIC_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -44,6 +43,7 @@
 #include "kronecker_array.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
+#include "safe_cast.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -111,7 +111,7 @@ class real_trigonometric_kronecker_monomial
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
 	private:
-		static_assert(max_size <= boost::integer_traits<static_vector<int,1u>::size_type>::const_max,"Invalid max size.");
+		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and subs type definition.
 		template <typename U, typename = void>
 		struct eval_type {};
@@ -170,6 +170,13 @@ class real_trigonometric_kronecker_monomial
 			const value_type v[4] = {0,1,0,-1};
 			return v[n % value_type(4)];
 		}
+		// Enabler for ctor from init list.
+		template <typename U>
+		using init_list_enabler = typename std::enable_if<has_safe_cast<value_type,U>::value,int>::type;
+		// Enabler for ctor from iterator.
+		template <typename Iterator>
+		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
+			has_safe_cast<value_type,decltype(*std::declval<const Iterator &>())>::value,int>::type;
 	public:
 		/// Default constructor.
 		/**
@@ -182,8 +189,11 @@ class real_trigonometric_kronecker_monomial
 		real_trigonometric_kronecker_monomial(real_trigonometric_kronecker_monomial &&) = default;
 		/// Constructor from initalizer list.
 		/**
+		 * \note
+		 * This constructor is enabled if \p U is safely convertible to \p T.
+		 *
 		 * The values in the initializer list are intended to represent the multipliers of the monomial:
-		 * they will be converted to type \p T (if \p T and \p U are not the same type),
+		 * they will be safely converted to type \p T (if \p T and \p U are not the same type),
 		 * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
 		 * The flavour will be set to \p true.
 		 * 
@@ -191,41 +201,42 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - \p boost::numeric_cast (in case \p U is not the same as \p T),
+		 * - piranha::safe_cast(),
 		 * - piranha::static_vector::push_back().
 		 */
-		template <typename U>
+		template <typename U, init_list_enabler<U> = 0>
 		explicit real_trigonometric_kronecker_monomial(std::initializer_list<U> list):m_value(0),m_flavour(true)
 		{
 			v_type tmp;
 			for (const auto &x: list) {
-				tmp.push_back(boost::numeric_cast<value_type>(x));
+				tmp.push_back(safe_cast<value_type>(x));
 			}
 			m_value = ka::encode(tmp);
 		}
 		/// Constructor from range.
 		/**
 		 * \note
-		 * This constructor is enabled if \p Iterator is an input iterator.
+		 * This constructor is enabled if \p Iterator is an input iterator whose \p value_type is safely convertible
+		 * to \p T.
 		 *
 		 * Will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
-		 * \p boost::numeric_cast. The flavour will be set to \p true.
+		 * piranha::safe_cast(). The flavour will be set to \p true.
 		 * 
 		 * @param[in] start beginning of the range.
 		 * @param[in] end end of the range.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - \p boost::numeric_cast (in case the value type of \p Iterator is not the same as \p T),
+		 * - piranha::safe_cast(),
 		 * - piranha::static_vector::push_back().
 		 */
-		template <typename Iterator, typename = typename std::enable_if<is_input_iterator<Iterator>::value>::type>
+		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
 		explicit real_trigonometric_kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0),m_flavour(true)
 		{
 			typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
 			v_type tmp;
-			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return boost::numeric_cast<value_type>(v);});
+			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return safe_cast<value_type>(v);});
 			m_value = ka::encode(tmp);
 		}
 		/// Constructor from set of symbols.

@@ -60,6 +60,10 @@ struct constructor_tester
 	{
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
 		typedef kronecker_array<T> ka;
+		BOOST_CHECK((std::is_constructible<k_type,std::initializer_list<int>>::value));
+		BOOST_CHECK((std::is_constructible<k_type,std::initializer_list<integer>>::value));
+		BOOST_CHECK((std::is_constructible<k_type,std::initializer_list<rational>>::value));
+		BOOST_CHECK((std::is_constructible<k_type,std::initializer_list<double>>::value));
 		k_type k1;
 		BOOST_CHECK_EQUAL(k1.get_int(),0);
 		BOOST_CHECK_EQUAL(k1.get_flavour(),true);
@@ -69,6 +73,11 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(v2[0],-1);
 		BOOST_CHECK_EQUAL(v2[1],-1);
 		BOOST_CHECK_EQUAL(k2.get_flavour(),true);
+		k_type k2a({-1_z,-1_z});
+		ka::decode(v2,k2.get_int());
+		BOOST_CHECK_EQUAL(v2[0],-1);
+		BOOST_CHECK_EQUAL(v2[1],-1);
+		BOOST_CHECK_THROW(k_type({-1/3_q,-1_q}),std::invalid_argument);
 		k_type k3;
 		BOOST_CHECK_EQUAL(k3.get_int(),0);
 		BOOST_CHECK_EQUAL(k3.get_flavour(),true);
@@ -107,6 +116,9 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(k9.get_int(),1);
 		BOOST_CHECK(k11.get_flavour());
 		// Constructor from iterators.
+		BOOST_CHECK((std::is_constructible<k_type,int *, int *>::value));
+		BOOST_CHECK((std::is_constructible<k_type,integer *, integer *>::value));
+		BOOST_CHECK((std::is_constructible<k_type,double *, double *>::value));
 		v2 = {};
 		k_type k12(v2.begin(),v2.end());
 		BOOST_CHECK_EQUAL(k12.get_int(),0);
@@ -123,6 +135,14 @@ struct constructor_tester
 		BOOST_CHECK(v.size() == 2u);
 		BOOST_CHECK(v[0u] == 1);
 		BOOST_CHECK(v[1u] == -2);
+		double tmp_d[] = {1.,-1.};
+		k_type k15a(&tmp_d[0],&tmp_d[0] + 2);
+		v = k15a.unpack(symbol_set({symbol("a"),symbol("b")}));
+		BOOST_CHECK(v.size() == 2u);
+		BOOST_CHECK(v[0u] == 1);
+		BOOST_CHECK(v[1u] == -1);
+		tmp_d[0] = -.5;
+		BOOST_CHECK_THROW(k_type(&tmp_d[0],&tmp_d[0] + 1),std::invalid_argument);
 		BOOST_CHECK((std::is_constructible<k_type,T *, T *>::value));
 		// Iterators have to be of homogeneous type.
 		BOOST_CHECK((!std::is_constructible<k_type,T *, T const *>::value));
