@@ -54,7 +54,6 @@ SET(DETAIL_HEADERS_LIST
 	detail/math_tt_fwd.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
-	detail/degree_commons.hpp
 	detail/base_term_fwd.hpp
 	detail/km_commons.hpp
 	detail/mp_rational_fwd.hpp

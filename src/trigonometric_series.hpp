@@ -21,13 +21,12 @@
 #ifndef PIRANHA_TRIGONOMETRIC_SERIES_HPP
 #define PIRANHA_TRIGONOMETRIC_SERIES_HPP
 
-#include <functional>
-#include <set>
+#include <algorithm>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
-#include "detail/degree_commons.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "series.hpp"
@@ -93,50 +92,55 @@ class trigonometric_series: public Series
 						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
 						  std::is_constructible<T,int>::value;
 		};
-		template <typename Term, typename = void>
-		struct t_get {};
-		template <typename Term>
-		struct t_get<Term,typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 4 &&
-			key_trig_score<typename Term::key_type>::value == 0>::type>
-		{
-			// NOTE: the use of the template alias in here is a workaround for what seems a GCC 4.7 (and 4.8?) problem. GCC 4.9
-			// and clang 3.3 seem to deal with this just ok.
-			#define PIRANHA_DECLARE_CF_GETTER(property) \
-			template <typename ... Args> \
-			using return_type_##property = typename std::enable_if<common_type_checks<decltype(math::property(std::declval<typename Term::cf_type const &>(), \
-				std::declval<Args const &>()...))>::value,decltype(math::property(std::declval<typename Term::cf_type const &>(),std::declval<Args const &>()...))>::type; \
-			template <typename ... Args> \
-			static return_type_##property<Args...> property(const Term &t, const symbol_set &, const Args & ... args) \
-			{ \
-				return math::property(t.m_cf,args...); \
-			}
-			PIRANHA_DECLARE_CF_GETTER(t_degree)
-			PIRANHA_DECLARE_CF_GETTER(t_ldegree)
-			PIRANHA_DECLARE_CF_GETTER(t_order)
-			PIRANHA_DECLARE_CF_GETTER(t_lorder)
-			#undef PIRANHA_DECLARE_CF_GETTER
-		};
-		template <typename Term>
-		struct t_get<Term,typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 0 &&
-			key_trig_score<typename Term::key_type>::value == 4>::type>
-		{
-			#define PIRANHA_DECLARE_KEY_GETTER(property) \
-			template <typename ... Args> \
-			using return_type_##property = typename std::enable_if<common_type_checks<decltype(std::declval<typename Term::key_type const &>().property( \
-				std::declval<Args const &>()...,std::declval<symbol_set const &>()))>::value, \
-				decltype(std::declval<typename Term::key_type const &>().property( \
-				std::declval<Args const &>()...,std::declval<symbol_set const &>()))>::type; \
-			template <typename ... Args> \
-			static return_type_##property<Args...> property(const Term &t, const symbol_set &s, const Args & ... args) \
-			{ \
-				return t.m_key.property(args...,s); \
-			}
-			PIRANHA_DECLARE_KEY_GETTER(t_degree)
-			PIRANHA_DECLARE_KEY_GETTER(t_ldegree)
-			PIRANHA_DECLARE_KEY_GETTER(t_order)
-			PIRANHA_DECLARE_KEY_GETTER(t_lorder)
-			#undef PIRANHA_DECLARE_KEY_GETTER
-		};
+		// Total versions.
+		#define PIRANHA_DEFINE_TRIG_PROPERTY_GETTER(property) \
+		template <typename Term, typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 4u && \
+			key_trig_score<typename Term::key_type>::value == 0u,int>::type = 0> \
+		static auto get_t_##property(const Term &t, const symbol_set &) -> decltype(math::t_##property(t.m_cf)) \
+		{ \
+			return math::t_##property(t.m_cf); \
+		} \
+		template <typename Term, typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 0u && \
+			key_trig_score<typename Term::key_type>::value == 4u,int>::type = 0> \
+		static auto get_t_##property(const Term &t, const symbol_set &s) -> decltype(t.m_key.t_##property(s)) \
+		{ \
+			return t.m_key.t_##property(s); \
+		} \
+		template <typename T> \
+		using t_##property##_type_ = decltype(get_t_##property(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>())); \
+		template <typename T> \
+		using t_##property##_type = typename std::enable_if<common_type_checks<t_##property##_type_<T>>::value,t_##property##_type_<T>>::type;
+		PIRANHA_DEFINE_TRIG_PROPERTY_GETTER(degree)
+		PIRANHA_DEFINE_TRIG_PROPERTY_GETTER(ldegree)
+		PIRANHA_DEFINE_TRIG_PROPERTY_GETTER(order)
+		PIRANHA_DEFINE_TRIG_PROPERTY_GETTER(lorder)
+		#undef PIRANHA_DEFINE_TRIG_PROPERTY_GETTER
+		// Partial versions.
+		#define PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(property) \
+		template <typename Term, typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 4u && \
+			key_trig_score<typename Term::key_type>::value == 0u,int>::type = 0> \
+		static auto get_t_##property(const Term &t, const std::vector<std::string> &names, \
+			const symbol_set::positions &, const symbol_set &) -> decltype(math::t_##property(t.m_cf,names)) \
+		{ \
+			return math::t_##property(t.m_cf,names); \
+		} \
+		template <typename Term, typename std::enable_if<cf_trig_score<typename Term::cf_type>::value == 0u && \
+			key_trig_score<typename Term::key_type>::value == 4u,int>::type = 0> \
+		static auto get_t_##property(const Term &t, const std::vector<std::string> &, \
+			const symbol_set::positions &p, const symbol_set &s) -> decltype(t.m_key.t_##property(p,s)) \
+		{ \
+			return t.m_key.t_##property(p,s); \
+		} \
+		template <typename T> \
+		using pt_##property##_type_ = decltype(get_t_##property(std::declval<const typename T::term_type &>(), \
+			std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())); \
+		template <typename T> \
+		using pt_##property##_type = typename std::enable_if<common_type_checks<pt_##property##_type_<T>>::value,pt_##property##_type_<T>>::type;
+		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(degree)
+		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(ldegree)
+		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(order)
+		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(lorder)
+		#undef PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER
 	public:
 		/// Defaulted default constructor.
 		trigonometric_series() = default;
@@ -160,87 +164,156 @@ class trigonometric_series: public Series
 		 * \note
 		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
 		 *
-		 * This method can compute both the total and the partial trigonometric degree (the former is computed when the
-		 * variadic pack is empty, the latter when an <tt>std::set<std::string></tt> is passed as the only argument - in
-		 * all other cases, the method will be disabled).
+		 * @return total trigonometric degree of the series.
 		 *
-		 * @param[in] args variadic argument pack.
-		 * 
-		 * @return trigonometric degree of the series.
-		 * 
 		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
 		 */
-		template <typename ... Args, typename T = Series>
-		auto t_degree(const Args & ... args) const -> decltype(t_get<typename T::term_type>::t_degree(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = trigonometric_series>
+		t_degree_type<T> t_degree() const
 		{
-			// NOTE: according to the documentation, the placeholder will generate a binder in which the corresponding argument will be forwarded
-			// perfectly to the underlying function - so there should be no risk of useless copying.
-			// http://en.cppreference.com/w/cpp/utility/functional/bind
-			auto g = std::bind(t_get<typename Series::term_type>::template t_degree<Args...>,std::placeholders::_1,std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<0>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_t_degree(t1,this->m_symbol_set) < this->get_t_degree(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? t_degree_type<T>(0) : get_t_degree(*it,this->m_symbol_set);
+		}
+		/// Partial trigonometric degree.
+		/**
+		 * \note
+		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation.
+		 *
+		 * @return partial trigonometric degree of the series.
+		 *
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		template <typename T = trigonometric_series>
+		pt_degree_type<T> t_degree(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_t_degree(t1,names,p,this->m_symbol_set) < this->get_t_degree(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pt_degree_type<T>(0) : get_t_degree(*it,names,p,this->m_symbol_set);
 		}
 		/// Trigonometric low degree.
 		/**
 		 * \note
 		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
 		 *
-		 * This method can compute both the total and the partial trigonometric low degree (the former is computed when the
-		 * variadic pack is empty, the latter when an <tt>std::set<std::string></tt> is passed as the only argument - in
-		 * all other cases, the method will be disabled).
+		 * @return total trigonometric low degree of the series.
 		 *
-		 * @param[in] args variadic argument pack.
-		 *
-		 * @return trigonometric low degree of the series.
-		 *
-		 * @throws unspecified any exception resulting from the computation and comparison of the low degree of the individual terms.
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
 		 */
-		template <typename ... Args, typename T = Series>
-		auto t_ldegree(const Args & ... args) const -> decltype(t_get<typename T::term_type>::t_ldegree(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = trigonometric_series>
+		t_ldegree_type<T> t_ldegree() const
 		{
-			auto g = std::bind(t_get<typename Series::term_type>::template t_ldegree<Args...>,std::placeholders::_1,std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<1>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_t_ldegree(t1,this->m_symbol_set) < this->get_t_ldegree(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? t_ldegree_type<T>(0) : get_t_ldegree(*it,this->m_symbol_set);
+		}
+		/// Partial trigonometric low degree.
+		/**
+		 * \note
+		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation.
+		 *
+		 * @return partial trigonometric low degree of the series.
+		 *
+		 * @throws unspecified any exception resulting from the computation and comparison of the degree of the individual terms.
+		 */
+		template <typename T = trigonometric_series>
+		pt_ldegree_type<T> t_ldegree(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_t_ldegree(t1,names,p,this->m_symbol_set) < this->get_t_ldegree(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pt_ldegree_type<T>(0) : get_t_ldegree(*it,names,p,this->m_symbol_set);
 		}
 		/// Trigonometric order.
 		/**
 		 * \note
 		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
 		 *
-		 * This method can compute both the total and the partial trigonometric order (the former is computed when the
-		 * variadic pack is empty, the latter when an <tt>std::set<std::string></tt> is passed as the only argument - in
-		 * all other cases, the method will be disabled).
-		 *
-		 * @param[in] args variadic argument pack.
-		 *
-		 * @return trigonometric order of the series.
+		 * @return total trigonometric order of the series.
 		 *
 		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
 		 */
-		template <typename ... Args, typename T = Series>
-		auto t_order(const Args & ... args) const -> decltype(t_get<typename T::term_type>::t_order(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = trigonometric_series>
+		t_order_type<T> t_order() const
 		{
-			auto g = std::bind(t_get<typename Series::term_type>::template t_order<Args...>,std::placeholders::_1,std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<0>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_t_order(t1,this->m_symbol_set) < this->get_t_order(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? t_order_type<T>(0) : get_t_order(*it,this->m_symbol_set);
+		}
+		/// Partial trigonometric order.
+		/**
+		 * \note
+		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation.
+		 *
+		 * @return partial trigonometric order of the series.
+		 *
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		template <typename T = trigonometric_series>
+		pt_order_type<T> t_order(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_t_order(t1,names,p,this->m_symbol_set) < this->get_t_order(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pt_order_type<T>(0) : get_t_order(*it,names,p,this->m_symbol_set);
 		}
 		/// Trigonometric low order.
 		/**
 		 * \note
 		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
 		 *
-		 * This method can compute both the total and the partial trigonometric low order (the former is computed when the
-		 * variadic pack is empty, the latter when an <tt>std::set<std::string></tt> is passed as the only argument - in
-		 * all other cases, the method will be disabled).
+		 * @return total trigonometric low order of the series.
 		 *
-		 * @param[in] args variadic argument pack.
-		 *
-		 * @return trigonometric low order of the series.
-		 *
-		 * @throws unspecified any exception resulting from the computation and comparison of the low order of the individual terms.
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
 		 */
-		template <typename ... Args, typename T = Series>
-		auto t_lorder(const Args & ... args) const -> decltype(t_get<typename T::term_type>::t_lorder(std::declval<typename T::term_type>(),std::declval<symbol_set>(),args...))
+		template <typename T = trigonometric_series>
+		t_lorder_type<T> t_lorder() const
 		{
-			auto g = std::bind(t_get<typename Series::term_type>::template t_lorder<Args...>,std::placeholders::_1,std::cref(this->m_symbol_set),std::cref(args)...);
-			return detail::generic_series_degree<1>(this->m_container,g);
+			using term_type = typename T::term_type;
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
+				return this->get_t_lorder(t1,this->m_symbol_set) < this->get_t_lorder(t2,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? t_lorder_type<T>(0) : get_t_lorder(*it,this->m_symbol_set);
+		}
+		/// Partial trigonometric low order.
+		/**
+		 * \note
+		 * This method is enabled only if the requirements outlined in piranha::trigonometric_series are satisfied.
+		 *
+		 * @param[in] names names of the variables to be considered in the computation.
+		 *
+		 * @return partial trigonometric low order of the series.
+		 *
+		 * @throws unspecified any exception resulting from the computation and comparison of the order of the individual terms.
+		 */
+		template <typename T = trigonometric_series>
+		pt_lorder_type<T> t_lorder(const std::vector<std::string> &names) const
+		{
+			using term_type = typename T::term_type;
+			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
+				return this->get_t_lorder(t1,names,p,this->m_symbol_set) < this->get_t_lorder(t2,names,p,this->m_symbol_set);
+			});
+			return (it == this->m_container.end()) ? pt_lorder_type<T>(0) : get_t_lorder(*it,names,p,this->m_symbol_set);
 		}
 };
 

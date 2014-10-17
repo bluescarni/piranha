@@ -29,7 +29,6 @@
 #include <cstdarg>
 #include <initializer_list>
 #include <iterator>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -1043,7 +1042,7 @@ inline auto t_degree(const T &x) -> decltype(t_degree_impl<T>()(x))
  * @see piranha::math::t_degree().
  */
 template <typename T>
-inline auto t_degree(const T &x, const std::set<std::string> &names) -> decltype(t_degree_impl<T>()(x,names))
+inline auto t_degree(const T &x, const std::vector<std::string> &names) -> decltype(t_degree_impl<T>()(x,names))
 {
 	return t_degree_impl<T>()(x,names);
 }
@@ -1101,7 +1100,7 @@ inline auto t_ldegree(const T &x) -> decltype(t_ldegree_impl<T>()(x))
  * @see piranha::math::t_ldegree().
  */
 template <typename T>
-inline auto t_ldegree(const T &x, const std::set<std::string> &names) -> decltype(t_ldegree_impl<T>()(x,names))
+inline auto t_ldegree(const T &x, const std::vector<std::string> &names) -> decltype(t_ldegree_impl<T>()(x,names))
 {
 	return t_ldegree_impl<T>()(x,names);
 }
@@ -1160,7 +1159,7 @@ inline auto t_order(const T &x) -> decltype(t_order_impl<T>()(x))
  * @see piranha::math::t_order().
  */
 template <typename T>
-inline auto t_order(const T &x, const std::set<std::string> &names) -> decltype(t_order_impl<T>()(x,names))
+inline auto t_order(const T &x, const std::vector<std::string> &names) -> decltype(t_order_impl<T>()(x,names))
 {
 	return t_order_impl<T>()(x,names);
 }
@@ -1219,7 +1218,7 @@ inline auto t_lorder(const T &x) -> decltype(t_lorder_impl<T>()(x))
  * @see piranha::math::t_lorder().
  */
 template <typename T>
-inline auto t_lorder(const T &x, const std::set<std::string> &names) -> decltype(t_lorder_impl<T>()(x,names))
+inline auto t_lorder(const T &x, const std::vector<std::string> &names) -> decltype(t_lorder_impl<T>()(x,names))
 {
 	return t_lorder_impl<T>()(x,names);
 }
@@ -1560,7 +1559,7 @@ class has_t_degree: detail::sfinae_types
 		static auto test1(const U &u) -> decltype(math::t_degree(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(const U &u) -> decltype(math::t_degree(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_degree(u,std::declval<const std::vector<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1584,7 +1583,7 @@ class has_t_ldegree: detail::sfinae_types
 		static auto test1(const U &u) -> decltype(math::t_ldegree(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(const U &u) -> decltype(math::t_ldegree(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_ldegree(u,std::declval<const std::vector<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1608,7 +1607,7 @@ class has_t_order: detail::sfinae_types
 		static auto test1(const U &u) -> decltype(math::t_order(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(const U &u) -> decltype(math::t_order(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_order(u,std::declval<const std::vector<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1632,7 +1631,7 @@ class has_t_lorder: detail::sfinae_types
 		static auto test1(const U &u) -> decltype(math::t_lorder(u),void(),yes());
 		static no test1(...);
 		template <typename U>
-		static auto test2(const U &u) -> decltype(math::t_lorder(u,std::declval<const std::set<std::string> &>()),void(),yes());
+		static auto test2(const U &u) -> decltype(math::t_lorder(u,std::declval<const std::vector<std::string> &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1706,7 +1705,7 @@ const bool key_has_ldegree<Key>::value;
 /**
  * The type trait has the same meaning as piranha::has_t_degree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_degree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
  * 
  * \p Key must satisfy piranha::is_key.
  */
@@ -1718,7 +1717,7 @@ class key_has_t_degree: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_degree(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1734,7 +1733,7 @@ const bool key_has_t_degree<T>::value;
 /**
  * The type trait has the same meaning as piranha::has_t_ldegree, but it's meant for use with key types.
  * It will test the presence of two <tt>t_ldegree()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
  * 
  * \p Key must satisfy piranha::is_key.
  */
@@ -1746,7 +1745,7 @@ class key_has_t_ldegree: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_ldegree(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1762,7 +1761,7 @@ const bool key_has_t_ldegree<T>::value;
 /**
  * The type trait has the same meaning as piranha::has_t_order, but it's meant for use with key types.
  * It will test the presence of two <tt>t_order()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
  * 
  * \p Key must satisfy piranha::is_key.
  */
@@ -1774,7 +1773,7 @@ class key_has_t_order: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_order(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_order(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_order(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.
@@ -1790,7 +1789,7 @@ const bool key_has_t_order<T>::value;
 /**
  * The type trait has the same meaning as piranha::has_t_lorder, but it's meant for use with key types.
  * It will test the presence of two <tt>t_lorder()</tt> const methods, the first one accepting a const instance of
- * piranha::symbol_set, the second one a const instance of <tt>std::set<std::string></tt> and a const instance of piranha::symbol_set.
+ * piranha::symbol_set, the second one a const instance of piranha::symbol_set::positions and a const instance of piranha::symbol_set.
  * 
  * \p Key must satisfy piranha::is_key.
  */
@@ -1802,7 +1801,7 @@ class key_has_t_lorder: detail::sfinae_types
 		static auto test1(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set &>()),void(),yes());
 		static no test1(...);
 		template <typename T>
-		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<const std::set<std::string> &>(),std::declval<const symbol_set &>()),void(),yes());
+		static auto test2(T const *t) -> decltype(t->t_lorder(std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()),void(),yes());
 		static no test2(...);
 	public:
 		/// Value of the type trait.

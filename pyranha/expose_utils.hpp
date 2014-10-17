@@ -39,7 +39,6 @@
 #include <boost/python/tuple.hpp>
 #include <cstddef>
 #include <limits>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -630,10 +629,10 @@ class series_exposer
 			return s.t_degree();
 		}
 		template <typename S>
-		static auto wrap_partial_t_degree(const S &s, bp::list l) -> decltype(s.t_degree(std::set<std::string>{}))
+		static auto wrap_partial_t_degree(const S &s, bp::list l) -> decltype(s.t_degree(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.t_degree(std::set<std::string>(begin,end));
+			return s.t_degree(std::vector<std::string>(begin,end));
 		}
 		template <typename S>
 		static auto wrap_t_ldegree(const S &s) -> decltype(s.t_ldegree())
@@ -641,10 +640,10 @@ class series_exposer
 			return s.t_ldegree();
 		}
 		template <typename S>
-		static auto wrap_partial_t_ldegree(const S &s, bp::list l) -> decltype(s.t_ldegree(std::set<std::string>{}))
+		static auto wrap_partial_t_ldegree(const S &s, bp::list l) -> decltype(s.t_ldegree(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.t_ldegree(std::set<std::string>(begin,end));
+			return s.t_ldegree(std::vector<std::string>(begin,end));
 		}
 		template <typename S>
 		static auto wrap_t_order(const S &s) -> decltype(s.t_order())
@@ -652,10 +651,10 @@ class series_exposer
 			return s.t_order();
 		}
 		template <typename S>
-		static auto wrap_partial_t_order(const S &s, bp::list l) -> decltype(s.t_order(std::set<std::string>{}))
+		static auto wrap_partial_t_order(const S &s, bp::list l) -> decltype(s.t_order(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.t_order(std::set<std::string>(begin,end));
+			return s.t_order(std::vector<std::string>(begin,end));
 		}
 		template <typename S>
 		static auto wrap_t_lorder(const S &s) -> decltype(s.t_lorder())
@@ -663,10 +662,10 @@ class series_exposer
 			return s.t_lorder();
 		}
 		template <typename S>
-		static auto wrap_partial_t_lorder(const S &s, bp::list l) -> decltype(s.t_lorder(std::set<std::string>{}))
+		static auto wrap_partial_t_lorder(const S &s, bp::list l) -> decltype(s.t_lorder(std::vector<std::string>{}))
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.t_lorder(std::set<std::string>(begin,end));
+			return s.t_lorder(std::vector<std::string>(begin,end));
 		}
 		// Latex representation.
 		template <typename S>

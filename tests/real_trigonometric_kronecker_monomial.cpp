@@ -23,13 +23,13 @@
 #define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
-#include <boost/integer_traits.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <cmath>
 #include <cstddef>
 #include <initializer_list>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -190,7 +190,7 @@ struct compatibility_tester
 			}
 			BOOST_CHECK(!k1.is_compatible(v2));
 		}
-		k1.set_int(boost::integer_traits<T>::const_max);
+		k1.set_int(std::numeric_limits<T>::max());
 		BOOST_CHECK(!k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
 		k1.set_int(1);
 		BOOST_CHECK(k1.is_compatible(symbol_set({symbol("a"),symbol("b")})));
@@ -335,8 +335,20 @@ struct t_degree_tester
 	void operator()(const T &)
 	{
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		using positions = symbol_set::positions;
+		auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
+			symbol_set tmp;
+			for (const auto &str: s) {
+				tmp.add(str);
+			}
+			return positions(v,tmp);
+		};
 		k_type k1;
 		symbol_set vs1;
+		BOOST_CHECK((std::is_same<decltype(k1.t_degree(vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_degree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_ldegree(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
 		BOOST_CHECK(k1.t_degree(vs1) == 0);
 		BOOST_CHECK(k1.t_ldegree(vs1) == 0);
 		k_type k2({0});
@@ -352,23 +364,29 @@ struct t_degree_tester
 		BOOST_CHECK(k4.t_ldegree(vs1) == 0);
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.t_degree(vs1) == -2);
-		BOOST_CHECK(k5.t_degree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.t_degree(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_degree({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_degree({"a","b"},vs1) == -2);
-		BOOST_CHECK(k5.t_degree({"a","c"},vs1) == -1);
-		BOOST_CHECK(k5.t_degree({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_degree({"d","b"},vs1) == -1);
-		BOOST_CHECK(k5.t_degree({"A","a"},vs1) == -1);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"a"}),vs1) == -1);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"a","b"}),vs1) == -2);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"a","c"}),vs1) == -1);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"d","b"}),vs1) == -1);
+		BOOST_CHECK(k5.t_degree(ss_to_pos(vs1,{"A","a"}),vs1) == -1);
 		BOOST_CHECK(k5.t_ldegree(vs1) == -2);
-		BOOST_CHECK(k5.t_ldegree({"a"},vs1) == -1);
-		BOOST_CHECK(k5.t_ldegree(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_ldegree({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_ldegree({"a","b"},vs1) == -2);
-		BOOST_CHECK(k5.t_ldegree({"a","c"},vs1) == -1);
-		BOOST_CHECK(k5.t_ldegree({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_ldegree({"d","b"},vs1) == -1);
-		BOOST_CHECK(k5.t_ldegree({"A","a"},vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"a"}),vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"a","b"}),vs1) == -2);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"a","c"}),vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"d","b"}),vs1) == -1);
+		BOOST_CHECK(k5.t_ldegree(ss_to_pos(vs1,{"A","a"}),vs1) == -1);
+		// Try with bogus positions.
+		symbol_set v2({symbol("a"),symbol("b"),symbol("c"),symbol("d")});
+		BOOST_CHECK_THROW(k5.t_degree(ss_to_pos(v2,{"d"}),vs1),std::invalid_argument);
+		BOOST_CHECK_THROW(k5.t_ldegree(ss_to_pos(v2,{"d"}),vs1),std::invalid_argument);
+		// Wrong symbol set, will not throw because positions are empty.
+		BOOST_CHECK_EQUAL(k5.t_degree(ss_to_pos(v2,{"e"}),vs1),0);
 	}
 };
 
@@ -383,8 +401,20 @@ struct t_order_tester
 	void operator()(const T &)
 	{
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		using positions = symbol_set::positions;
+		auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
+			symbol_set tmp;
+			for (const auto &str: s) {
+				tmp.add(str);
+			}
+			return positions(v,tmp);
+		};
 		k_type k1;
 		symbol_set vs1;
+		BOOST_CHECK((std::is_same<decltype(k1.t_order(vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_order(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
+		BOOST_CHECK((std::is_same<decltype(k1.t_lorder(ss_to_pos(vs1,{"a"}),vs1)),integer>::value));
 		BOOST_CHECK(k1.t_order(vs1) == 0);
 		BOOST_CHECK(k1.t_lorder(vs1) == 0);
 		k_type k2({0});
@@ -400,61 +430,67 @@ struct t_order_tester
 		BOOST_CHECK(k4.t_lorder(vs1) == 0);
 		k_type k5({-1,-1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
 		k5 = k_type({-1,1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
 		k5 = k_type({1,-1});
 		BOOST_CHECK(k5.t_order(vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_order(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_order({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_order({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_order({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_order(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
 		BOOST_CHECK(k5.t_lorder(vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder(std::set<std::string>{},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"f"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"a","b"},vs1) == 2);
-		BOOST_CHECK(k5.t_lorder({"a","c"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"d","c"},vs1) == 0);
-		BOOST_CHECK(k5.t_lorder({"d","b"},vs1) == 1);
-		BOOST_CHECK(k5.t_lorder({"A","a"},vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,std::set<std::string>{}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"f"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","b"}),vs1) == 2);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"a","c"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","c"}),vs1) == 0);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"d","b"}),vs1) == 1);
+		BOOST_CHECK(k5.t_lorder(ss_to_pos(vs1,{"A","a"}),vs1) == 1);
+		// Try with bogus positions.
+		symbol_set v2({symbol("a"),symbol("b"),symbol("c"),symbol("d")});
+		BOOST_CHECK_THROW(k5.t_order(ss_to_pos(v2,{"d"}),vs1),std::invalid_argument);
+		BOOST_CHECK_THROW(k5.t_lorder(ss_to_pos(v2,{"d"}),vs1),std::invalid_argument);
+		// Wrong symbol set, will not throw because positions are empty.
+		BOOST_CHECK_EQUAL(k5.t_order(ss_to_pos(v2,{"e"}),vs1),0);
 	}
 };
 
@@ -764,8 +800,8 @@ struct partial_tester
 		symbol_set vs;
 		k_type k1{T(1)};
 		BOOST_CHECK_THROW(k1.partial(symbol("x"),vs),std::invalid_argument);
-		if (std::get<0u>(limits[1u])[0u] < boost::integer_traits<T>::const_max) {
-			k1.set_int(boost::integer_traits<T>::const_max);
+		if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
+			k1.set_int(std::numeric_limits<T>::max());
 			BOOST_CHECK_THROW(k1.partial(symbol("x"),vs),std::invalid_argument);
 		}
 		vs.add("x");
@@ -1057,8 +1093,8 @@ struct integrate_tester
 		symbol_set vs;
 		k_type k1{T(1)};
 		BOOST_CHECK_THROW(k1.integrate(symbol("x"),vs),std::invalid_argument);
-		if (std::get<0u>(limits[1u])[0u] < boost::integer_traits<T>::const_max) {
-			k1.set_int(boost::integer_traits<T>::const_max);
+		if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
+			k1.set_int(std::numeric_limits<T>::max());
 			BOOST_CHECK_THROW(k1.integrate(symbol("x"),vs),std::invalid_argument);
 		}
 		vs.add("x");

@@ -98,18 +98,6 @@ inline void km_safe_adder(T &a, const T &b)
 	a = static_cast<T>(a + b);
 }
 
-template <typename T>
-inline void km_safe_abs_adder(T &a, const T &b)
-{
-	// NOTE: here it is safe to take abs() because b is coming from a Kronecker array, where the numeric bounds are
-	// symmetric by construction.
-	const T abs_b = math::abs(b);
-	if (unlikely(a > boost::integer_traits<T>::const_max - abs_b)) {
-		piranha_throw(std::overflow_error,"overflow in the addition of two exponents in a Kronecker monomial");
-	}
-	a = static_cast<T>(a + abs_b);
-}
-
 template <typename VType, typename KaType, typename T>
 inline void km_trim_identify(symbol_set &candidates, const symbol_set &args, const T &value)
 {

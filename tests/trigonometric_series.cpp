@@ -25,9 +25,9 @@
 
 #include <cstddef>
 #include <iostream>
-#include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "../src/base_term.hpp"
 #include "../src/environment.hpp"
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + x,{"y","x","y"}),0);
 	BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + cos(x + y),{"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL(math::t_degree(y * cos(x - y) + cos(x + y),{"x"}),1);
-	BOOST_CHECK_EQUAL(math::t_degree(y * sin(x - y) + cos(x + y),std::set<std::string>{}),0);
-	BOOST_CHECK_EQUAL(math::t_degree(p_type1{},std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_degree(y * sin(x - y) + cos(x + y),std::vector<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_degree(p_type1{},std::vector<std::string>{}),0);
 	BOOST_CHECK_EQUAL(math::t_degree(p_type1{},{"x"}),0);
 	BOOST_CHECK_EQUAL(math::t_degree(p_type1{}),0);
 	BOOST_CHECK_EQUAL(math::t_degree(p_type1{2}),0);
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + x),{"y","x","y"}),0);
 	BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + cos(x + y)),{"y","x","y","z"}),0);
 	BOOST_CHECK_EQUAL(math::t_ldegree((y * cos(x - y) + cos(x + y)),{"x"}),1);
-	BOOST_CHECK_EQUAL(math::t_ldegree((y * sin(x - y) + cos(x + y)),std::set<std::string>{}),0);
-	BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{},std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_ldegree((y * sin(x - y) + cos(x + y)),std::vector<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{},std::vector<std::string>{}),0);
 	BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{},{"x"}),0);
 	BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{}),0);
 	BOOST_CHECK_EQUAL(math::t_ldegree(p_type1{2}),0);
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + x),{"y","x","y"}),2);
 	BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + cos(x + y)),{"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL(math::t_order((y * cos(x - y) + cos(x + y)),{"x"}),1);
-	BOOST_CHECK_EQUAL(math::t_order((y * sin(x - y) + cos(x + y)),std::set<std::string>{}),0);
-	BOOST_CHECK_EQUAL(math::t_order(p_type1{},std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_order((y * sin(x - y) + cos(x + y)),std::vector<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_order(p_type1{},std::vector<std::string>{}),0);
 	BOOST_CHECK_EQUAL(math::t_order(p_type1{},{"x"}),0);
 	BOOST_CHECK_EQUAL(math::t_order(p_type1{}),0);
 	BOOST_CHECK_EQUAL(math::t_order(p_type1{2}),0);
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + x),{"y","x","y"}),0);
 	BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + cos(x + y)),{"y","x","y","z"}),2);
 	BOOST_CHECK_EQUAL(math::t_lorder((y * cos(x - y) + cos(x + y)),{"x"}),1);
-	BOOST_CHECK_EQUAL(math::t_lorder((y * sin(x - y) + cos(x + y)),std::set<std::string>{}),0);
-	BOOST_CHECK_EQUAL(math::t_lorder(p_type1{},std::set<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_lorder((y * sin(x - y) + cos(x + y)),std::vector<std::string>{}),0);
+	BOOST_CHECK_EQUAL(math::t_lorder(p_type1{},std::vector<std::string>{}),0);
 	BOOST_CHECK_EQUAL(math::t_lorder(p_type1{},{"x"}),0);
 	BOOST_CHECK_EQUAL(math::t_lorder(p_type1{}),0);
 	BOOST_CHECK_EQUAL(math::t_lorder(p_type1{2}),0);
