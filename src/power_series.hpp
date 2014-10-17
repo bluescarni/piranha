@@ -86,97 +86,58 @@ class power_series: public Series
 						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
 						  is_less_than_comparable<T>::value;
 		};
-		// Degree computation.
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
-		static auto get_degree(const Term &t, const symbol_set &) -> decltype(math::degree(t.m_cf))
-		{
-			return math::degree(t.m_cf);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
-		static auto get_degree(const Term &t, const symbol_set &s) ->
-			decltype(t.m_key.degree(s))
-		{
-			return t.m_key.degree(s);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
-		static auto get_degree(const Term &t, const symbol_set &s) -> decltype(math::degree(t.m_cf) +
-			t.m_key.degree(s))
-		{
-			return math::degree(t.m_cf) + t.m_key.degree(s);
-		}
-		template <typename T>
-		using degree_type_ = decltype(get_degree(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>()));
-		// The final type, with the checks.
-		template <typename T>
-		using degree_type = typename std::enable_if<common_type_checks<degree_type_<T>>::value,degree_type_<T>>::type;
-		// Low degree computation.
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
-		static auto get_ldegree(const Term &t, const symbol_set &) -> decltype(math::ldegree(t.m_cf))
-		{
-			return math::ldegree(t.m_cf);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
-		static auto get_ldegree(const Term &t, const symbol_set &s) ->
-			decltype(t.m_key.ldegree(s))
-		{
-			return t.m_key.ldegree(s);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
-		static auto get_ldegree(const Term &t, const symbol_set &s) -> decltype(math::ldegree(t.m_cf) +
-			t.m_key.ldegree(s))
-		{
-			return math::ldegree(t.m_cf) + t.m_key.ldegree(s);
-		}
-		template <typename T>
-		using ldegree_type_ = decltype(get_ldegree(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>()));
-		template <typename T>
-		using ldegree_type = typename std::enable_if<common_type_checks<ldegree_type_<T>>::value,ldegree_type_<T>>::type;
-		// Partial degree computation.
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
-		static auto get_pdegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &, const symbol_set &) -> decltype(math::degree(t.m_cf,names))
-		{
-			return math::degree(t.m_cf,names);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
-		static auto get_pdegree(const Term &t, const std::vector<std::string> &, const symbol_set::positions &p, const symbol_set &s) ->
-			decltype(t.m_key.degree(p,s))
-		{
-			return t.m_key.degree(p,s);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
-		static auto get_pdegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &p, const symbol_set &s) -> decltype(math::degree(t.m_cf,names) +
-			t.m_key.degree(p,s))
-		{
-			return math::degree(t.m_cf,names) + t.m_key.degree(p,s);
-		}
-		template <typename T>
-		using pdegree_type_ = decltype(get_pdegree(std::declval<const typename T::term_type &>(),std::declval<const std::vector<std::string> &>(),
-			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()));
-		template <typename T>
-		using pdegree_type = typename std::enable_if<common_type_checks<pdegree_type_<T>>::value,pdegree_type_<T>>::type;
-		// Partial low degree computation.
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0>
-		static auto get_pldegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &, const symbol_set &) -> decltype(math::ldegree(t.m_cf,names))
-		{
-			return math::ldegree(t.m_cf,names);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0>
-		static auto get_pldegree(const Term &t, const std::vector<std::string> &, const symbol_set::positions &p, const symbol_set &s) ->
-			decltype(t.m_key.ldegree(p,s))
-		{
-			return t.m_key.ldegree(p,s);
-		}
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0>
-		static auto get_pldegree(const Term &t, const std::vector<std::string> &names, const symbol_set::positions &p, const symbol_set &s) -> decltype(math::ldegree(t.m_cf,names) +
-			t.m_key.ldegree(p,s))
-		{
-			return math::ldegree(t.m_cf,names) + t.m_key.ldegree(p,s);
-		}
-		template <typename T>
-		using pldegree_type_ = decltype(get_pldegree(std::declval<const typename T::term_type &>(),std::declval<const std::vector<std::string> &>(),
-			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()));
-		template <typename T>
-		using pldegree_type = typename std::enable_if<common_type_checks<pldegree_type_<T>>::value,pldegree_type_<T>>::type;
+		// Total (low) degree computation.
+		#define PIRANHA_DEFINE_PS_PROPERTY_GETTER(property) \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
+		static auto get_##property(const Term &t, const symbol_set &) -> decltype(math::property(t.m_cf)) \
+		{ \
+			return math::property(t.m_cf); \
+		} \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
+		static auto get_##property(const Term &t, const symbol_set &s) -> decltype(t.m_key.property(s)) \
+		{ \
+			return t.m_key.property(s); \
+		} \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+		static auto get_##property(const Term &t, const symbol_set &s) -> decltype(math::property(t.m_cf) + t.m_key.property(s)) \
+		{ \
+			return math::property(t.m_cf) + t.m_key.property(s); \
+		} \
+		template <typename T> \
+		using property##_type_ = decltype(get_##property(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>())); \
+		template <typename T> \
+		using property##_type = typename std::enable_if<common_type_checks<property##_type_<T>>::value,property##_type_<T>>::type;
+		PIRANHA_DEFINE_PS_PROPERTY_GETTER(degree)
+		PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
+		#undef PIRANHA_DEFINE_PS_PROPERTY_GETTER
+		// Partial (low) degree computation.
+		#define PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(property) \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
+		static auto get_##property(const Term &t, const std::vector<std::string> &names, \
+			const symbol_set::positions &, const symbol_set &) -> decltype(math::property(t.m_cf,names)) \
+		{ \
+			return math::property(t.m_cf,names); \
+		} \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
+		static auto get_##property(const Term &t, const std::vector<std::string> &, \
+			const symbol_set::positions &p, const symbol_set &s) -> decltype(t.m_key.property(p,s)) \
+		{ \
+			return t.m_key.property(p,s); \
+		} \
+		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+		static auto get_##property(const Term &t, const std::vector<std::string> &names, \
+			const symbol_set::positions &p, const symbol_set &s) -> decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)) \
+		{ \
+			return math::property(t.m_cf,names) + t.m_key.property(p,s); \
+		} \
+		template <typename T> \
+		using p##property##_type_ = decltype(get_##property(std::declval<const typename T::term_type &>(), \
+			std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())); \
+		template <typename T> \
+		using p##property##_type = typename std::enable_if<common_type_checks<p##property##_type_<T>>::value,p##property##_type_<T>>::type;
+		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(degree)
+		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
+		#undef PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER
 	public:
 		/// Defaulted default constructor.
 		power_series() = default;
@@ -263,9 +224,9 @@ class power_series: public Series
 			using term_type = typename T::term_type;
 			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
-				return this->get_pdegree(t1,names,p,this->m_symbol_set) < this->get_pdegree(t2,names,p,this->m_symbol_set);
+				return this->get_degree(t1,names,p,this->m_symbol_set) < this->get_degree(t2,names,p,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? pdegree_type<T>(0) : get_pdegree(*it,names,p,this->m_symbol_set);
+			return (it == this->m_container.end()) ? pdegree_type<T>(0) : get_degree(*it,names,p,this->m_symbol_set);
 		}
 		/// Partial low degree.
 		/**
@@ -289,9 +250,9 @@ class power_series: public Series
 			using term_type = typename T::term_type;
 			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
-				return this->get_pldegree(t1,names,p,this->m_symbol_set) < this->get_pldegree(t2,names,p,this->m_symbol_set);
+				return this->get_ldegree(t1,names,p,this->m_symbol_set) < this->get_ldegree(t2,names,p,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? pldegree_type<T>(0) : get_pldegree(*it,names,p,this->m_symbol_set);
+			return (it == this->m_container.end()) ? pldegree_type<T>(0) : get_ldegree(*it,names,p,this->m_symbol_set);
 		}
 };
 
