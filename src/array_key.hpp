@@ -49,7 +49,7 @@ namespace piranha
  * The template argument \p S is passed down as second argument to piranha::small_vector in the definition
  * of the internal container.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p T must satisfy the following requirements:
  *   - it must be suitable for use in piranha::small_vector as a value type,
@@ -60,11 +60,11 @@ namespace piranha
  * - \p Derived must satisfy the piranha::is_container_element type trait,
  * - \p S must be suitable as second template argument to piranha::small_vector.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
  * 

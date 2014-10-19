@@ -63,15 +63,15 @@ namespace piranha
  * 
  * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * \p T must be suitable for use in piranha::kronecker_array. The default type for \p T is the signed counterpart of \p std::size_t.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
  * 

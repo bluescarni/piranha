@@ -101,18 +101,18 @@ struct is_mp_rational_interoperable_type<T,Rational,typename std::enable_if<!is_
  * Unless otherwise specified, rational numbers are always kept in the usual canonical form in which numerator and denominator
  * are coprime, and the denominator is always positive. Zero is uniquely represented by 0/1.
  * 
- * \section interop Interoperability with other types
+ * ## Interoperability with other types ##
  * 
  * This class interoperates with the same types as piranha::mp_integer, plus piranha::mp_integer itself.
  * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
  * of piranha::mp_integer apply.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
  * the program will terminate.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
  * 
@@ -650,7 +650,7 @@ class mp_rational
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
+		 * This constructor is enabled only if \p T is an interoperable type.
 		 * 
 		 * @param[in] x object used to construct \p this.
 		 * 
@@ -736,7 +736,7 @@ class mp_rational
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This assignment operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This assignment operator is enabled only if \p T is an interoperable type.
 		 *
 		 * This operator will construct a temporary piranha::mp_rational from \p x and will then move-assign it
 		 * to \p this.
@@ -900,7 +900,7 @@ class mp_rational
 		/// Conversion operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is an interoperable type.
 		 *
 		 * The conversion to piranha::mp_integer is computed by dividing the numerator by the denominator.
 		 * The conversion to integral types is computed by casting first to piranha::mp_integer, then to
@@ -978,7 +978,7 @@ class mp_rational
 		/// In-place addition.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
 		 * 
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -1002,7 +1002,7 @@ class mp_rational
 		/// Generic in-place addition with piranha::mp_rational.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Add a piranha::mp_rational in-place. This method will first compute <tt>q + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -1022,8 +1022,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
@@ -1085,7 +1085,7 @@ class mp_rational
 		/// In-place subtraction.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
 		 * 
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -1109,7 +1109,7 @@ class mp_rational
 		/// Generic in-place subtraction with piranha::mp_rational.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Subtract a piranha::mp_rational in-place. This method will first compute <tt>x - q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -1129,8 +1129,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
@@ -1155,7 +1155,7 @@ class mp_rational
 		/// In-place multiplication.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
 		 * 
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -1179,7 +1179,7 @@ class mp_rational
 		/// Generic in-place multiplication with piranha::mp_rational.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Multiply by a piranha::mp_rational in-place. This method will first compute <tt>x * q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -1199,8 +1199,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
@@ -1225,7 +1225,7 @@ class mp_rational
 		/// In-place division.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_rational.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_rational.
 		 * 
 		 * If \p T is not a float, the exact result will be computed. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -1253,7 +1253,7 @@ class mp_rational
 		/// Generic in-place division with piranha::mp_rational.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Divide by a piranha::mp_rational in-place. This method will first compute <tt>x / q</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -1273,8 +1273,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_rational.
@@ -1301,8 +1301,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1328,8 +1328,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1353,8 +1353,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1380,8 +1380,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1405,8 +1405,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -1432,8 +1432,8 @@ class mp_rational
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_rational and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_rational and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_rational and \p U is an interoperable type,
+		 * - \p U is piranha::mp_rational and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_rational.
 		 *
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.

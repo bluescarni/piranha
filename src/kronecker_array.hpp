@@ -58,15 +58,15 @@ using ka_type_reqs = std::integral_constant<bool,std::is_integral<T>::value && s
  * Depending on the bit width and numerical limits of \p SignedInteger, the class will be able to operate on vectors of integers up to a certain
  * dimension and within certain bounds on the vector's components. Such limits can be queried with the get_limits() static method.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * \p SignedInteger must be a C++ signed integral type.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * This class does not have any non-static data members, hence it has trivial move semantics.
  * 

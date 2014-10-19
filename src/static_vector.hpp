@@ -73,16 +73,16 @@ struct static_vector_size_type<Size,static_cast<std::size_t>(std::tuple_size<sta
  * 
  * The interface of this class mimics part of the interface of \p std::vector.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p T must satisfy piranha::is_container_element.
  * - \p MaxSize must be non-null.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * After a move operation, the container will be left in a state equivalent to a default-constructed instance.
  * 

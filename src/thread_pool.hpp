@@ -336,7 +336,7 @@ class thread_pool: private detail::thread_pool_base<>
  * This class is a minimal thin wrapper around an \p std::list of \p std::future objects.
  * The class provides convenience methods to interact with the set of futures in an exception-safe manner.
  *
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  *
  * \p F must be an instance of \p std::future.
  *

@@ -86,19 +86,19 @@ struct is_real_interoperable_type
  * 
  * Unless noted otherwise, this implementation always uses the \p MPFR_RNDN (round to nearest) rounding mode for all operations.
  * 
- * \section interop Interoperability with other types
+ * ## Interoperability with other types ##
  * 
  * This class interoperates with the same types as piranha::mp_integer and piranha::mp_rational,
  * plus piranha::mp_integer and piranha::mp_rational themselves.
  * The same caveats with respect to interoperability with floating-point types mentioned in the documentation
  * of piranha::mp_integer apply.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless noted otherwise, this class provides the strong exception safety guarantee for all operations.
  * In case of memory allocation errors by GMP/MPFR routines, the program will terminate.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and assignable.
  * 
@@ -717,7 +717,7 @@ class real: public detail::real_base<>
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
+		 * This constructor is enabled only if \p T is an interoperable type.
 		 * 
 		 * @param[in] x object used to construct \p this.
 		 * @param[in] prec desired significand precision.
@@ -816,7 +816,7 @@ class real: public detail::real_base<>
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This assignment operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This assignment operator is enabled only if \p T is an interoperable type.
 		 * 
 		 * The precision of \p this
 		 * will not be changed by the assignment operation, unless \p this was the target of a move operation that
@@ -842,7 +842,7 @@ class real: public detail::real_base<>
 		/// Conversion operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is an interoperable type.
 		 * 
 		 * Extract an instance of type \p T from \p this.
 		 * 
@@ -970,7 +970,7 @@ class real: public detail::real_base<>
 		/// In-place addition.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
 		 * 
 		 * Add \p x to the current value of the real object.
 		 * 
@@ -991,7 +991,7 @@ class real: public detail::real_base<>
 		/// Generic in-place addition with piranha::real.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Add a piranha::real in-place.
 		 * This method will first compute <tt>r + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
@@ -1013,8 +1013,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * The return type is always piranha::real.
@@ -1064,7 +1064,7 @@ class real: public detail::real_base<>
 		/// In-place subtraction.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
 		 * 
 		 * Subtract \p x from the current value of the real object.
 		 * 
@@ -1085,7 +1085,7 @@ class real: public detail::real_base<>
 		/// Generic in-place subtraction with piranha::real.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Subtract a piranha::real in-place.
 		 * This method will first compute <tt>x - r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
@@ -1106,8 +1106,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * The return type is always piranha::real.
@@ -1159,7 +1159,7 @@ class real: public detail::real_base<>
 		/// In-place multiplication.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
 		 * 
 		 * Multiply by \p x the current value of the real object.
 		 * 
@@ -1180,7 +1180,7 @@ class real: public detail::real_base<>
 		/// Generic in-place multiplication by piranha::real.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Multiply by a piranha::real in-place.
 		 * This method will first compute <tt>x * r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
@@ -1201,8 +1201,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * The return type is always piranha::real.
@@ -1222,7 +1222,7 @@ class real: public detail::real_base<>
 		/// In-place division.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::real.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::real.
 		 * 
 		 * Divide by \p x the current value of the real object.
 		 * 
@@ -1243,7 +1243,7 @@ class real: public detail::real_base<>
 		/// Generic in-place division by piranha::real.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Divide by a piranha::real in-place.
 		 * This method will first compute <tt>x / r</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
@@ -1264,8 +1264,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * The return type is always piranha::real.
@@ -1317,8 +1317,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
@@ -1337,8 +1337,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
@@ -1357,8 +1357,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
@@ -1380,8 +1380,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
@@ -1403,8 +1403,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.
@@ -1426,8 +1426,8 @@ class real: public detail::real_base<>
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::real and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::real and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::real and \p U is an interoperable type,
+		 * - \p U is piranha::real and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::real.
 		 * 
 		 * Note that in all comparison operators, apart from piranha::real::operator!=(), if any operand is NaN \p false will be returned.

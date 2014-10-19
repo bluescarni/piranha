@@ -45,11 +45,11 @@ namespace piranha
  * This class represents an ordered set of piranha::symbol. The individual piranha::symbol instances
  * can be accessed via iterators or the index operator.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object in a state equivalent to a
  * default-constructed object.

@@ -102,17 +102,17 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
  * 
  * Support for comparison with series and scalar type is also provided.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p Term must satisfy piranha::is_term.
  * - \p Derived must derive from piranha::series of \p Term and \p Derived.
  * - \p Derived must satisfy piranha::is_container_element.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Moved-from series are left in a state equivalent to an empty series.
  * 

@@ -79,7 +79,7 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  @endcode
  * is a multivariate polynomial term with double-precision coefficient and integral exponents packed into a piranha::kronecker_monomial.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p Cf must be suitable for use in piranha::base_term;
  * - \p Cf must satisfy the following type traits:
@@ -88,11 +88,11 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  * - \p Expo and \p S must be suitable for use in piranha::monomial, or \p Expo must be an instance of
  *   piranha::kronecker_monomial.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same guarantee as piranha::base_term.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::base_term's move semantics.
  * 

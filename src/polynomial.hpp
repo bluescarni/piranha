@@ -101,15 +101,15 @@ struct polynomial_tag {};
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * \p Cf, \p Expo and \p S must be suitable for use in piranha::polynomial_term.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same guarantee as piranha::power_series.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::power_series' move semantics.
  * 
@@ -626,11 +626,11 @@ struct kronecker_enabler
  * It will also take advantage of piranha::math::multiply_accumulate() in place of plain coefficient multiplication
  * when possible.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same guarantee as the non-specialised piranha::series_multiplier.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::series_multiplier's move semantics.
  * 

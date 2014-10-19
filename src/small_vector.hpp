@@ -503,16 +503,16 @@ union small_vector_union
  * memory allocation by using internal static storage up to a certain number of stored elements. If \p S is a zero integral constant, this
  * number is calculated automatically (but it will always be at least 1). Otherwise, the limit number is set to \p S::value.
  *
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  *
  * - \p T must satisfy piranha::is_container_element;
  * - \p S must be an \p std::integral_constant of type \p std::size_t.
  *
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  *
  * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
  *
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  *
  * After a move operation, the container will be empty.
  *

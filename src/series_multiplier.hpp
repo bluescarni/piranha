@@ -70,12 +70,12 @@ namespace piranha
  * have been merged (in other words, the two series have identical symbolic arguments sets).
  * Note also that the return type of the multiplication is the piranha::series base type of \p Series1, independently from the rules governing coefficient arithmetics.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p Series1 and \p Series2 must satisfy the piranha::is_series type trait. Additionally, the echelon sizes of
  *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee.
  * 

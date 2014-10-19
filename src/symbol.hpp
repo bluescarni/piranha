@@ -61,11 +61,11 @@ std::set<std::string> base_symbol<T>::m_symbol_list;
  * The methods of this class, unless specified otherwise, are thread-safe: it is possible to create, access and operate on objects of this class
  * concurrently from multiple threads
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move construction and move assignment will not alter the original object.
  * 

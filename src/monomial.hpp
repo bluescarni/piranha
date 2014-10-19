@@ -55,16 +55,16 @@ namespace piranha
  * 
  * This class satisfies the piranha::is_key type trait.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * \p T and \p S must be suitable for use as first and third template arguments in piranha::array_key. Additionally,
  * \p T must satisfy the piranha::has_is_zero type trait.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same exception safety guarantee as piranha::array_key.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::array_key's move semantics.
  * 

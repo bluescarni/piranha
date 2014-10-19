@@ -1037,7 +1037,7 @@ struct is_mp_integer_interoperable_type
  * A value of 64 is supported on some platforms. The special
  * default value of 0 is used to automatically select the optimal \p NBits value on the current platform.
  * 
- * \section interop Interoperability with other types
+ * ## Interoperability with other types ##
  * 
  * Full interoperability with all integral and floating-point C++ types is provided.
  * 
@@ -1047,16 +1047,16 @@ struct is_mp_integer_interoperable_type
  * not be relied upon in case exact results are required (e.g., the conversion of a large integer to a floating-point value
  * might not be exact).
  *
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  *
  * This class provides the strong exception safety guarantee for all operations. In case of memory allocation errors by GMP routines,
  * the program will terminate.
  *
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  *
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
  *
- * \section implementation_details Implementation details
+ * ## Implementation details ##
  *
  * This class uses, for certain routines, the internal interface of GMP integers, which is not guaranteed to be stable
  * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
@@ -1946,7 +1946,7 @@ class mp_integer
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p T is an \ref interop "interoperable type".
+		 * This constructor is enabled only if \p T is an interoperable type.
 		 * 
 		 * Construction from a floating-point type will result in the truncated
 		 * counterpart of the original value.
@@ -1998,7 +1998,7 @@ class mp_integer
 		/// Generic assignment operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is an interoperable type.
 		 * 
 		 * This assignment operator is equivalent to constructing a temporary instance of mp_integer from \p x
 		 * and then move-assigning it to \p this.
@@ -2066,7 +2066,7 @@ class mp_integer
 		/// Conversion operator.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is an interoperable type.
 		 * 
 		 * Conversion to integral types, if possible, will always be exact. Conversion to \p bool produces
 		 * \p true for nonzero values, \p false for zero. Conversion to floating-point types is performed
@@ -2172,7 +2172,7 @@ class mp_integer
 		/// In-place addition.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
 		 * 
 		 * Add \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -2195,7 +2195,7 @@ class mp_integer
 		/// Generic in-place addition with piranha::mp_integer.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Add a piranha::mp_integer in-place. This method will first compute <tt>n + x</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -2216,8 +2216,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the operation will be returned as a piranha::mp_integer.
@@ -2272,7 +2272,7 @@ class mp_integer
 		/// In-place subtraction.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
 		 * 
 		 * Subtract \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -2295,7 +2295,7 @@ class mp_integer
 		/// Generic in-place subtraction with piranha::mp_integer.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Subtract a piranha::mp_integer in-place. This method will first compute <tt>x - n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -2316,8 +2316,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
@@ -2372,7 +2372,7 @@ class mp_integer
 		/// In-place multiplication.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
 		 * 
 		 * Multiply by \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be exact. If \p T is a floating-point type, the following
 		 * sequence of operations takes place:
@@ -2395,7 +2395,7 @@ class mp_integer
 		/// Generic in-place multiplication with piranha::mp_integer.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Multiply by a piranha::mp_integer in-place. This method will first compute <tt>x * n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -2416,8 +2416,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
@@ -2492,7 +2492,7 @@ class mp_integer
 		/// In-place division.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is an \ref interop "interoperable type" or piranha::mp_integer.
+		 * This operator is enabled only if \p T is an interoperable type or piranha::mp_integer.
 		 * 
 		 * Divide by \p x in-place. If \p T is piranha::mp_integer or an integral type, the result will be truncated
 		 * (i.e., rounded towards 0). If \p T is a floating-point type, the following
@@ -2521,7 +2521,7 @@ class mp_integer
 		/// Generic in-place division with piranha::mp_integer.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const interoperable type.
 		 * 
 		 * Divide by a piranha::mp_integer in-place. This method will first compute <tt>x / n</tt>, cast it back to \p T via \p static_cast and finally assign the result to \p x.
 		 * 
@@ -2542,8 +2542,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If one of the arguments is a floating-point value \p f of type \p F, the other argument will be converted to an instance of type \p F
@@ -2570,7 +2570,7 @@ class mp_integer
 		/// In-place modulo operation.
 		/**
 		 * \note
-		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type among the \ref interop "interoperable types".
+		 * This template operator is enabled only if \p T is piranha::mp_integer or an integral type among the interoperable types.
 		 * 
 		 * Sets \p this to <tt>this % n</tt>. This operator behaves in the way specified by the C++ standard (specifically,
 		 * the sign of the remainder will be the sign of the numerator).
@@ -2593,7 +2593,7 @@ class mp_integer
 		/// Generic in-place modulo with piranha::mp_integer.
 		/**
 		 * \note
-		 * This operator is enabled only if \p T is a non-const integral \ref interop "interoperable type".
+		 * This operator is enabled only if \p T is a non-const integral interoperable type.
 		 * 
 		 * Compute the remainder with respect to a piranha::mp_integer in-place. This method will first compute <tt>x % n</tt>,
 		 * cast it back to \p T via \p static_cast and finally assign the result to \p x.
@@ -2615,8 +2615,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an integral \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an integral \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an integral interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an integral interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * @param[in] x first argument
@@ -2641,8 +2641,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -2666,8 +2666,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * This operator is the negation of operator==().
@@ -2688,8 +2688,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -2713,8 +2713,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -2738,8 +2738,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.
@@ -2763,8 +2763,8 @@ class mp_integer
 		/**
 		 * \note
 		 * This template operator is enabled only if either:
-		 * - \p T is piranha::mp_integer and \p U is an \ref interop "interoperable type",
-		 * - \p U is piranha::mp_integer and \p T is an \ref interop "interoperable type",
+		 * - \p T is piranha::mp_integer and \p U is an interoperable type,
+		 * - \p U is piranha::mp_integer and \p T is an interoperable type,
 		 * - both \p T and \p U are piranha::mp_integer.
 		 * 
 		 * If no floating-point types are involved, the exact result of the comparison will be returned.

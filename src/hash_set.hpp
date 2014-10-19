@@ -68,19 +68,19 @@ namespace piranha
  * Note that for performance reasons the implementation employs table sizes that are powers of two. Hence, particular care should be taken
  * that the hash function does not exhibit commensurabilities with powers of 2.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p T must satisfy piranha::is_container_element,
  * - \p Hash must satisfy piranha::is_hash_function_object,
  * - \p Pred must satisfy piranha::is_equality_function_object.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
  * which provide the following guarantee: the table will be either left in the same state as it was before the attempted
  * insertion or it will be emptied.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object equivalent to an empty set whose hasher and
  * equality predicate have been moved-from.

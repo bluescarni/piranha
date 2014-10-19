@@ -38,18 +38,18 @@ namespace piranha
  * Every term must derive from this base class, which is parametrised over a coefficient type \p Cf and a key type
  * \p Key. One mutable coefficient instance and one key instance are the only data members and they can be accessed directly.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p Derived must derive from piranha::base_term of \p Cf, \p Key and \p Derived.
  * - \p Derived must satisfy piranha::is_term.
  * - \p Cf must satisfy piranha::is_cf.
  * - \p Key must satisfy piranha::is_key.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to its data members' move semantics.
  * 

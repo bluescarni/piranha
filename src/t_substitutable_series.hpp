@@ -43,15 +43,15 @@ namespace piranha
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  *
  * \p Series must be an instance of piranha::series, and \p Derived must satisfy the piranha::is_series type trait.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same guarantee as \p Series.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to the move semantics of \p Series.
  * 

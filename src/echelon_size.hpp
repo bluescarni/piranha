@@ -60,7 +60,7 @@ struct echelon_level_impl<Cf,Level,typename std::enable_if<!is_instance_of<Cf,se
  * hence their echelon size is also 1. Poisson series are Fourier series with polynomial coefficients, hence their echelon size is 2: the polynomial
  * coefficients are series whose coefficients are not series.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * \p Term must satisfy piranha::is_term.
  */

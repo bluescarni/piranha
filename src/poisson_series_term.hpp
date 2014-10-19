@@ -53,7 +53,7 @@ namespace piranha
  * \f]
  * where \f$ C \f$ is an arbitrary type parametrised by \p Cf.
  * 
- * \section type_requirements Type requirements
+ * ## Type requirements ##
  * 
  * - \p Cf must be suitable for use in piranha::base_term;
  * - \p Cf must satisfy the following type traits:
@@ -62,11 +62,11 @@ namespace piranha
  *   - piranha::has_multiply_accumulate,
  *   - piranha::is_divisible_in_place by \p int.
  * 
- * \section exception_safety Exception safety guarantee
+ * ## Exception safety guarantee ##
  * 
  * This class provides the same guarantee as piranha::base_term.
  * 
- * \section move_semantics Move semantics
+ * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::base_term's move semantics.
  * 
