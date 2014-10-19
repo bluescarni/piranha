@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Pyranha documentation build configuration file, created by
+# Piranha documentation build configuration file, created by
 # sphinx-quickstart on Sun Nov  6 03:43:00 2011.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -25,7 +25,8 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.mathjax',\
+              'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,8 +41,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Pyranha'
-copyright = u'2013, Francesco Biscani'
+project = u'Piranha'
+copyright = u'2009-2014, Francesco Biscani'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -164,7 +165,7 @@ html_theme = 'sphinxdoc'
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Pyranhadoc'
+htmlhelp_basename = 'Piranhadoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,7 +184,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Pyranha.tex', u'Pyranha Documentation',
+  ('index', 'Piranha.tex', u'Piranha Documentation',
    u'Francesco Biscani', 'manual'),
 ]
 
@@ -213,7 +214,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pyranha', u'Pyranha Documentation',
+    ('index', 'piranha', u'Piranha Documentation',
      [u'Francesco Biscani'], 1)
 ]
 
@@ -227,8 +228,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Pyranha', u'Pyranha Documentation', u'Francesco Biscani',
-   'Pyranha', 'One line description of project.', 'Miscellaneous'),
+  ('index', 'Piranha', u'Piranha Documentation', u'Francesco Biscani',
+   'Piranha', 'One line description of project.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
