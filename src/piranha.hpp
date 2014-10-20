@@ -29,8 +29,6 @@
 
 /// Root piranha namespace.
 /**
- * \todo switch to auto -> decltype declarations of member functions for complicated types (e.g., tuples) when decltype on this
- * becomes available.
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
@@ -50,10 +48,7 @@
  * implementing in-place add separately only when it is really equivalent), and specify this well in the documentation
  * of series multiplier, term's multiply methods, etc. (they should make clear that the return type deduction and operand orders was already determined for them).
  * \todo series multadd to speed-up series multiplication when coefficients are series?
- * \todo start experimenting with parallel sort in multipliers and truncators (e.g., for the rectangular benchmark).
  * \todo forbid interoperability in +-* between series with different keys?
- * \todo interface to query degree should be the same across power series and truncator: should add missing overload in power series to query partial degree of a single symbol,
- * and maybe replace in the high level interface the std::set of string with initializer list, as it seems sometimes {"a","b"} is not picked up as std::set of string.
  * \todo look into perfect forwarding of members, for use in series, hash set (?) http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
@@ -88,7 +83,6 @@
  * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside piranha::math
  * and hence always include the math:: qualifier).
  * \todo consider replacing uses of iterator facade with inheritance from std::iterator.
- * \todo think through once and for all the DLL vs static lib thing, with adequate macro support for visibility/dllexport/import etc.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
@@ -126,6 +120,8 @@
  * and decimal. We need then to abstract fp standard functions in our own wrappers and abstract away in a separate place our
  * generic algos scattered around. Then in the wrappers we could add automatic checks for errno (raise exception) and kill two
  * birds with one stone.
+ * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
+ * need the full definition of the object we might want to reorganise the code.
  */
 namespace piranha
 {
