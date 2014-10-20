@@ -1,4 +1,4 @@
-.. _root:
+.. _pyranha_root:
 
 :mod:`pyranha`
 ==================

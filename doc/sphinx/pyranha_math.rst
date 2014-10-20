@@ -1,4 +1,4 @@
-.. _math:
+.. _pyranha_math:
 
 :mod:`pyranha.math`
 =======================

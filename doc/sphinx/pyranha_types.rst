@@ -1,4 +1,4 @@
-.. _types:
+.. _pyranha_types:
 
 :mod:`pyranha.types`
 =======================

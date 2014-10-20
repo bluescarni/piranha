@@ -1,4 +1,4 @@
-.. _test:
+.. _pyranha_test:
 
 :mod:`pyranha.test`
 =======================

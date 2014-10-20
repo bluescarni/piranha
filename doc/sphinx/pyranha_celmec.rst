@@ -1,4 +1,4 @@
-.. _celmec:
+.. _pyranha_celmec:
 
 :mod:`pyranha.celmec`
 =========================
