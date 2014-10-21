@@ -375,7 +375,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * 
 		 * @throws std::invalid_argument if the monomial is not linear or if the sizes of \p args and \p this differ.
 		 */
-		template <typename U = typename base::value_type, linarg_enabler<U> = 0>
+		template <typename U = T, linarg_enabler<U> = 0>
 		std::string linear_argument(const symbol_set &args) const
 		{
 			if (!is_compatible(args)) {
@@ -459,7 +459,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - monomial and exponent construction,
 		 * - the exponent type's subtraction operator.
 		 */
-		std::pair<typename base::value_type,monomial> partial(const symbol &s, const symbol_set &args) const
+		std::pair<T,monomial> partial(const symbol &s, const symbol_set &args) const
 		{
 			typedef typename base::size_type size_type;
 			typedef typename base::value_type value_type;
@@ -499,7 +499,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - push_back(),
 		 * - the exponent type's addition and assignment operators.
 		 */
-		std::pair<typename base::value_type,monomial> integrate(const symbol &s, const symbol_set &args) const
+		std::pair<T,monomial> integrate(const symbol &s, const symbol_set &args) const
 		{
 			typedef typename base::size_type size_type;
 			typedef typename base::value_type value_type;
