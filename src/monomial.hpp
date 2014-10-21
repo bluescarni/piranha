@@ -82,7 +82,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename U, typename = void>
 		struct eval_type {};
 		template <typename U>
-		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<typename base::value_type const &>()));
+		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<T const &>()));
 		template <typename U>
 		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
 			std::is_constructible<e_type<U>,int>::value>::type>
@@ -147,7 +147,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		using pow_type = typename std::conditional<std::is_integral<T>::value,integer &&,const T &>::type;
 		template <typename U>
-		using pow_enabler = typename std::enable_if<has_safe_cast<typename base::value_type,
+		using pow_enabler = typename std::enable_if<has_safe_cast<T,
 			decltype(std::declval<pow_type>() * std::declval<const U &>())>::value,int>::type;
 		// Machinery to determine the degree type.
 		template <typename U>
@@ -251,12 +251,11 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 */
 		bool is_unitary(const symbol_set &args) const
 		{
-			typedef typename base::value_type value_type;
 			if(unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			return std::all_of(this->begin(),this->end(),
-				[](const value_type &element) {return math::is_zero(element);});
+				[](const T &element) {return math::is_zero(element);});
 		}
 		/// Degree.
 		/**
@@ -437,7 +436,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			monomial retval(args);
 			const size_type size = retval.size();
 			for (decltype(retval.size()) i = 0u; i < size; ++i) {
-				retval[i] = safe_cast<typename base::value_type>(get_pow_arg((*this)[i]) * x);
+				retval[i] = safe_cast<T>(get_pow_arg((*this)[i]) * x);
 			}
 			return retval;
 		}
@@ -462,20 +461,19 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		std::pair<T,monomial> partial(const symbol &s, const symbol_set &args) const
 		{
 			typedef typename base::size_type size_type;
-			typedef typename base::value_type value_type;
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			in_place_subber<value_type> sub;
+			in_place_subber<T> sub;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (args[i] == s && !math::is_zero((*this)[i])) {
 					monomial tmp_m(*this);
-					value_type tmp_v(tmp_m[i]);
-					sub(tmp_m[i],value_type(1));
+					T tmp_v(tmp_m[i]);
+					sub(tmp_m[i],T(1));
 					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
 				}
 			}
-			return std::make_pair(value_type(0),monomial());
+			return std::make_pair(T(0),monomial());
 		}
 		/// Integration.
 		/**
@@ -502,13 +500,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		std::pair<T,monomial> integrate(const symbol &s, const symbol_set &args) const
 		{
 			typedef typename base::size_type size_type;
-			typedef typename base::value_type value_type;
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			monomial retval;
-			value_type expo(0), one(1);
-			in_place_adder<value_type> adder;
+			T expo(0), one(1);
+			in_place_adder<T> adder;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (math::is_zero(expo) && s < args[i]) {
 					// If we went past the position of s in args and still we
@@ -553,8 +550,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			typedef typename base::value_type value_type;
-			const value_type zero(0), one(1);
+			const T zero(0), one(1);
 			bool empty_output = true;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				if ((*this)[i] != zero) {
@@ -589,10 +585,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			typedef typename base::value_type value_type;
 			std::ostringstream oss_num, oss_den, *cur_oss;
-			const value_type zero(0), one(1);
-			value_type cur_value;
+			const T zero(0), one(1);
+			T cur_value;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				cur_value = (*this)[i];
 				if (cur_value != zero) {
