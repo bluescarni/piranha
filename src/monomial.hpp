@@ -452,7 +452,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by \p p.
 		 * The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial itself
 		 * after differentiation. If \p p is empty or if the exponent associated to it is zero,
-		 * the returned pair will be <tt>(0,monomial{})</tt>.
+		 * the returned pair will be <tt>(0,monomial{args})</tt>.
 		 *
 		 * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
 		 * for negative overflow.
@@ -486,7 +486,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			// NOTE: safe to take this->begin() here, as the checks on the positions above ensure
 			// there is a valid position and hence the size must be not zero.
 			if (!p.size() || math::is_zero(this->begin()[*p.begin()])) {
-				return std::make_pair(U(0),monomial());
+				return std::make_pair(U(0),monomial(args));
 			}
 			// Copy of the original monomial.
 			monomial m(*this);

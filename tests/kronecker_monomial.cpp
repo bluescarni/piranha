@@ -551,18 +551,18 @@ struct partial_tester
 		// y is not in the monomial.
 		ret = k1.partial(s_to_pos(vs,symbol("y")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
-		BOOST_CHECK(ret.second == k_type());
+		BOOST_CHECK(ret.second == k_type(vs));
 		// x is in the monomial but it is zero.
 		k1 = k_type({T(0)});
 		ret = k1.partial(s_to_pos(vs,symbol("x")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
-		BOOST_CHECK(ret.second == k_type());
+		BOOST_CHECK(ret.second == k_type(vs));
 		// y in the monomial but zero.
 		vs.add("y");
 		k1 = k_type({T(-1),T(0)});
 		ret = k1.partial(s_to_pos(vs,symbol("y")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
-		BOOST_CHECK(ret.second == k_type());
+		BOOST_CHECK(ret.second == k_type(vs));
 		ret = k1.partial(s_to_pos(vs,symbol("x")),vs);
 		BOOST_CHECK_EQUAL(ret.first,-1);
 		BOOST_CHECK(ret.second == k_type({T(-2),T(0)}));

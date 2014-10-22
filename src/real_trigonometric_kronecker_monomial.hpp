@@ -771,7 +771,7 @@ class real_trigonometric_kronecker_monomial
 		 * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
 		 * differentiation formulas for elementary trigonometric functions.
 		 * If \p p is empty or if the exponent associated to it is zero,
-		 * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
+		 * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{args})</tt>.
 		 *
 		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
@@ -781,7 +781,7 @@ class real_trigonometric_kronecker_monomial
 		 * @throws std::invalid_argument if \p p is incompatible with \p args or it has a size greater than one.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
-		 * - piranha::math::is_zero(),
+		 * - piranha::math::is_zero().
 		 */
 		std::pair<T,real_trigonometric_kronecker_monomial> partial(const symbol_set::positions &p, const symbol_set &args) const
 		{
@@ -796,7 +796,7 @@ class real_trigonometric_kronecker_monomial
 			// NOTE: safe to take v.begin() here, as the checks on the positions above ensure
 			// there is a valid position and hence the size must be not zero.
 			if (!p.size() || math::is_zero(v.begin()[*p.begin()])) {
-				return std::make_pair(T(0),real_trigonometric_kronecker_monomial());
+				return std::make_pair(T(0),real_trigonometric_kronecker_monomial(args));
 			}
 			auto v_b = v.begin();
 			// Original multiplier.
