@@ -532,32 +532,54 @@ struct partial_tester
 	void operator()(const T &)
 	{
 		typedef kronecker_monomial<T> k_type;
+		BOOST_CHECK(key_is_differentiable<k_type>::value);
+		using positions = symbol_set::positions;
+		auto s_to_pos = [](const symbol_set &v, const symbol &s) {
+			symbol_set tmp{s};
+			return positions(v,tmp);
+		};
 		symbol_set vs;
 		k_type k1;
 		k1.set_int(T(1));
-		BOOST_CHECK_THROW(k1.partial(symbol("x"),vs),std::invalid_argument);
+		// An empty symbol set must always be related to a zero encoded value.
+		BOOST_CHECK_THROW(k1.partial(s_to_pos(vs,symbol("x")),vs),std::invalid_argument);
 		vs.add("x");
 		k1 = k_type({T(2)});
-		auto ret = k1.partial(symbol("x"),vs);
+		auto ret = k1.partial(s_to_pos(vs,symbol("x")),vs);
 		BOOST_CHECK_EQUAL(ret.first,2);
 		BOOST_CHECK(ret.second == k_type({T(1)}));
-		ret = k1.partial(symbol("y"),vs);
+		// y is not in the monomial.
+		ret = k1.partial(s_to_pos(vs,symbol("y")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
+		BOOST_CHECK(ret.second == k_type());
+		// x is in the monomial but it is zero.
 		k1 = k_type({T(0)});
-		ret = k1.partial(symbol("x"),vs);
+		ret = k1.partial(s_to_pos(vs,symbol("x")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
+		BOOST_CHECK(ret.second == k_type());
+		// y in the monomial but zero.
 		vs.add("y");
 		k1 = k_type({T(-1),T(0)});
-		ret = k1.partial(symbol("y"),vs);
+		ret = k1.partial(s_to_pos(vs,symbol("y")),vs);
 		BOOST_CHECK_EQUAL(ret.first,0);
-		ret = k1.partial(symbol("x"),vs);
+		BOOST_CHECK(ret.second == k_type());
+		ret = k1.partial(s_to_pos(vs,symbol("x")),vs);
 		BOOST_CHECK_EQUAL(ret.first,-1);
 		BOOST_CHECK(ret.second == k_type({T(-2),T(0)}));
 		// Check limits violation.
 		typedef kronecker_array<T> ka;
 		const auto &limits = ka::get_limits();
 		k1 = k_type{-std::get<0u>(limits[2u])[0u],-std::get<0u>(limits[2u])[0u]};
-		BOOST_CHECK_THROW(ret = k1.partial(symbol("x"),vs),std::invalid_argument);
+		BOOST_CHECK_THROW(ret = k1.partial(s_to_pos(vs,symbol("x")),vs),std::invalid_argument);
+		// Check with bogus positions.
+		symbol_set vs2;
+		vs2.add("x");
+		vs2.add("y");
+		vs2.add("z");
+		// The z variable is in position 2, which is outside the size of the monomial.
+		BOOST_CHECK_THROW(k1.partial(s_to_pos(vs2,symbol("z")),vs),std::invalid_argument);
+		// Derivative wrt multiple variables.
+		BOOST_CHECK_THROW(k1.partial(symbol_set::positions(vs2,symbol_set({symbol("x"),symbol("y")})),vs),std::invalid_argument);
 	}
 };
 

@@ -635,14 +635,6 @@ struct term4: base_term<double,monomial<int>,term4>
 	std::vector<term4> partial(const symbol &, symbol_set &) const;
 };
 
-BOOST_AUTO_TEST_CASE(math_term_is_differentiable_test)
-{
-	BOOST_CHECK(!term_is_differentiable<term1>::value);
-	BOOST_CHECK(term_is_differentiable<term2>::value);
-	BOOST_CHECK(!term_is_differentiable<term3>::value);
-	BOOST_CHECK(!term_is_differentiable<term4>::value);
-}
-
 BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
 {
 	BOOST_CHECK((is_evaluable<int,int>::value));

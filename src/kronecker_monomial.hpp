@@ -61,7 +61,7 @@ namespace piranha
  * The values of the exponents are packed in a signed integer using Kronecker substitution, using the facilities provided
  * by piranha::kronecker_array.
  * 
- * This class satisfies the piranha::is_key, piranha::key_has_degree and piranha::key_has_ldegree type traits.
+ * This class satisfies the piranha::is_key, piranha::key_has_degree, piranha::key_has_ldegree and piranha::key_is_differentiable type traits.
  * 
  * ## Type requirements ##
  * 
@@ -222,6 +222,7 @@ class kronecker_monomial
 			PIRANHA_TT_CHECK(is_key,kronecker_monomial);
 			PIRANHA_TT_CHECK(key_has_degree,kronecker_monomial);
 			PIRANHA_TT_CHECK(key_has_ldegree,kronecker_monomial);
+			PIRANHA_TT_CHECK(key_is_differentiable,kronecker_monomial);
 		}
 		/// Defaulted copy assignment operator.
 		kronecker_monomial &operator=(const kronecker_monomial &) = default;
@@ -586,35 +587,50 @@ class kronecker_monomial
 		}
 		/// Partial derivative.
 		/**
-		 * Will return the partial derivative of \p this with respect to symbol \p s. The result is a pair
-		 * consisting of the exponent associated to \p s before differentiation and the monomial itself
-		 * after differentiation. If \p s is not in \p args or if the exponent associated to it is zero,
-		 * the returned pair will be <tt>(0,monomial{})</tt>.
-		 * 
-		 * @param[in] s symbol with respect to which the differentiation will be calculated.
+		 * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by \p p.
+		 * The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial itself
+		 * after differentiation. If \p p is empty or if the exponent associated to it is zero,
+		 * the returned pair will be <tt>(0,kronecker_monomial{})</tt>.
+		 *
+		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return result of the differentiation.
 		 * 
+		 * @throws std::invalid_argument if the computation of the derivative causes a negative overflow,
+		 * or if \p p is incompatible with \p args or it has a size greater than one.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
-		 * - the cast operator of piranha::integer,
 		 * - piranha::kronecker_array::encode().
 		 */
-		std::pair<integer,kronecker_monomial> partial(const symbol &s, const symbol_set &args) const
+		std::pair<T,kronecker_monomial> partial(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
-				if (args[i] == s && !math::is_zero(v[i])) {
-					integer tmp_n(v[i]);
-					v[i] = static_cast<value_type>(tmp_n - 1);
-					kronecker_monomial tmp_km;
-					tmp_km.m_value = ka::encode(v);
-					return std::make_pair(std::move(tmp_n),std::move(tmp_km));
-				}
+			// Cannot take derivative wrt more than one variable, and the position of that variable
+			// must be compatible with the monomial.
+			if (p.size() > 1u || (p.size() == 1u && p.back() >= args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of symbol_set::positions");
 			}
-			return std::make_pair(integer{0},kronecker_monomial{});
+			// Derivative wrt a variable not in the monomial: position is empty, or refers to a
+			// variable with zero exponent.
+			// NOTE: safe to take v.begin() here, as the checks on the positions above ensure
+			// there is a valid position and hence the size must be not zero.
+			if (!p.size() || math::is_zero(v.begin()[*p.begin()])) {
+				return std::make_pair(T(0),kronecker_monomial());
+			}
+			auto v_b = v.begin();
+			// Original exponent.
+			T n(v_b[*p.begin()]);
+			// Decrement the exponent in the monomial.
+			if (unlikely(n == std::numeric_limits<T>::min())) {
+				piranha_throw(std::invalid_argument,"negative overflow error in the calculation of the "
+					"partial derivative of a monomial");
+			}
+			v_b[*p.begin()] = static_cast<T>(n - T(1));
+			kronecker_monomial tmp_km;
+			tmp_km.m_value = ka::encode(v);
+			return std::make_pair(n,std::move(tmp_km));
 		}
 		/// Integration.
 		/**

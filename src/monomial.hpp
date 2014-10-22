@@ -25,6 +25,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -106,22 +107,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				x = static_cast<U>(x + y);
 			}
 		};
-		template <typename U, typename = void>
-		struct in_place_subber
-		{
-			void operator()(U &x, const U &y) const
-			{
-				x -= y;
-			}
-		};
-		template <typename U>
-		struct in_place_subber<U,typename std::enable_if<std::is_integral<U>::value>::type>
-		{
-			void operator()(U &x, const U &y) const
-			{
-				x = static_cast<U>(x - y);
-			}
-		};
 		// Enabler for ctor from init list.
 		template <typename U>
 		using init_list_enabler = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value,int>::type;
@@ -170,6 +155,24 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// The final alias.
 		template <typename U>
 		using degree_type = typename degree_type_<U>::type;
+		// In-place decrement by one, checked for integral types.
+		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+		static void ip_dec(U &x)
+		{
+			if (unlikely(x == std::numeric_limits<U>::min())) {
+				piranha_throw(std::invalid_argument,"negative overflow error in the calculation of the "
+					"partial derivative of a monomial");
+			}
+			x = static_cast<U>(x - U(1));
+		}
+		template <typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+		static void ip_dec(U &x)
+		{
+			x = x - U(1);
+		}
+		template <typename U>
+		using partial_enabler = typename std::enable_if<std::is_assignable<U &,decltype(
+			std::declval<U &>() - std::declval<U>())>::value,int>::type;
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
@@ -442,38 +445,57 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Partial derivative.
 		/**
-		 * Will return the partial derivative of \p this with respect to symbol \p s. The result is a pair
-		 * consisting of the exponent associated to \p s before differentiation and the monomial itself
-		 * after differentiation. If \p s is not in \p args or if the exponent associated to it is zero,
+		 * \note
+		 * This method is enabled only if the exponent type is subtractable and the result of the operation
+		 * can be assigned back to the exponent type.
+		 *
+		 * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by \p p.
+		 * The result is a pair consisting of the exponent associated to \p p before differentiation and the monomial itself
+		 * after differentiation. If \p p is empty or if the exponent associated to it is zero,
 		 * the returned pair will be <tt>(0,monomial{})</tt>.
+		 *
+		 * If the exponent type is an integral type, then the decrement-by-one operation on the affected exponent is checked
+		 * for negative overflow.
 		 * 
-		 * @param[in] s symbol with respect to which the differentiation will be calculated.
+		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return result of the differentiation.
 		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, if the size of \p p is
+		 * greater than one, if the position specified by \p p is invalid or if the computation on integral exponents
+		 * results in an overflow error.
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::math::is_zero(),
 		 * - monomial and exponent construction,
-		 * - the exponent type's subtraction operator.
+		 * - the exponent type's subtraction operator,
+		 * - piranha::math::is_zero().
 		 */
-		std::pair<T,monomial> partial(const symbol &s, const symbol_set &args) const
+		template <typename U = T, partial_enabler<U> = 0>
+		std::pair<U,monomial> partial(const symbol_set::positions &p, const symbol_set &args) const
 		{
-			typedef typename base::size_type size_type;
 			if (!is_compatible(args)) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
-			in_place_subber<T> sub;
-			for (size_type i = 0u; i < args.size(); ++i) {
-				if (args[i] == s && !math::is_zero((*this)[i])) {
-					monomial tmp_m(*this);
-					T tmp_v(tmp_m[i]);
-					sub(tmp_m[i],T(1));
-					return std::make_pair(std::move(tmp_v),std::move(tmp_m));
-				}
+			// Cannot take derivative wrt more than one variable, and the position of that variable
+			// must be compatible with the monomial.
+			if (p.size() > 1u || (p.size() == 1u && p.back() >= args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of symbol_set::positions");
 			}
-			return std::make_pair(T(0),monomial());
+			// Derivative wrt a variable not in the monomial: position is empty, or refers to a
+			// variable with zero exponent.
+			// NOTE: safe to take this->begin() here, as the checks on the positions above ensure
+			// there is a valid position and hence the size must be not zero.
+			if (!p.size() || math::is_zero(this->begin()[*p.begin()])) {
+				return std::make_pair(U(0),monomial());
+			}
+			// Copy of the original monomial.
+			monomial m(*this);
+			auto m_b = m.begin();
+			// Original exponent.
+			U v(m_b[*p.begin()]);
+			// Decrement the exponent in the monomial.
+			ip_dec(m_b[*p.begin()]);
+			return std::make_pair(std::move(v),std::move(m));
 		}
 		/// Integration.
 		/**

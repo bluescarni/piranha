@@ -71,7 +71,7 @@ namespace piranha
  * Closely related is the concept of trigonometric order, calculated by adding the absolute values of the multipliers.
  * 
  * This class satisfies the piranha::is_key, piranha::key_has_t_degree, piranha::key_has_t_ldegree,
- * piranha::key_has_t_order and piranha::key_has_t_lorder type traits.
+ * piranha::key_has_t_order, piranha::key_has_t_lorder and piranha::key_is_differentiable type traits.
  * 
  * ## Type requirements ##
  * 
@@ -292,6 +292,7 @@ class real_trigonometric_kronecker_monomial
 			PIRANHA_TT_CHECK(key_has_t_ldegree,real_trigonometric_kronecker_monomial);
 			PIRANHA_TT_CHECK(key_has_t_order,real_trigonometric_kronecker_monomial);
 			PIRANHA_TT_CHECK(key_has_t_lorder,real_trigonometric_kronecker_monomial);
+			PIRANHA_TT_CHECK(key_is_differentiable,real_trigonometric_kronecker_monomial);
 		}
 		/// Defaulted copy assignment operator.
 		real_trigonometric_kronecker_monomial &operator=(const real_trigonometric_kronecker_monomial &) = default;
@@ -765,40 +766,52 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Partial derivative.
 		/**
-		 * Will return the partial derivative of \p this with respect to symbol \p s. The result is a pair
-		 * consisting of the multiplier associated to \p s cast to piranha::integer and a copy of the monomial.
+		 * This method will return the partial derivative of \p this with respect to the symbol at the position indicated by \p p.
+		 * The result is a pair consisting of the multiplier associated to \p p and a copy of the monomial.
 		 * The sign of the multiplier and the flavour of the resulting monomial are set according to the standard
 		 * differentiation formulas for elementary trigonometric functions.
-		 * If \p s is not in \p args or if the multiplier associated to it is zero,
+		 * If \p p is empty or if the exponent associated to it is zero,
 		 * the returned pair will be <tt>(0,real_trigonometric_kronecker_monomial{})</tt>.
-		 * 
-		 * @param[in] s symbol with respect to which the differentiation will be calculated.
+		 *
+		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 *
 		 * @return result of the differentiation.
-		 * 
+		 *
+		 * @throws std::invalid_argument if \p p is incompatible with \p args or it has a size greater than one.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
-		 * - monomial construction.
 		 */
-		std::pair<integer,real_trigonometric_kronecker_monomial> partial(const symbol &s, const symbol_set &args) const
+		std::pair<T,real_trigonometric_kronecker_monomial> partial(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			auto v = unpack(args);
-			for (min_int<decltype(args.size()),decltype(v.size())> i = 0u; i < args.size(); ++i) {
-				if (args[i] == s && !math::is_zero(v[i])) {
-					integer tmp_n(v[i]);
-					real_trigonometric_kronecker_monomial tmp_m(*this);
-					// Flip the flavour.
-					tmp_m.set_flavour(!get_flavour());
-					// Flip the sign of the multiplier as needed.
-					if (get_flavour()) {
-						tmp_n.negate();
-					}
-					return std::make_pair(std::move(tmp_n),std::move(tmp_m));
-				}
+			// Cannot take derivative wrt more than one variable, and the position of that variable
+			// must be compatible with the monomial.
+			if (p.size() > 1u || (p.size() == 1u && p.back() >= args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of symbol_set::positions");
 			}
-			return std::make_pair(integer(0),real_trigonometric_kronecker_monomial());
+			// Derivative wrt a variable not in the monomial: position is empty, or refers to a
+			// variable with zero multiplier.
+			// NOTE: safe to take v.begin() here, as the checks on the positions above ensure
+			// there is a valid position and hence the size must be not zero.
+			if (!p.size() || math::is_zero(v.begin()[*p.begin()])) {
+				return std::make_pair(T(0),real_trigonometric_kronecker_monomial());
+			}
+			auto v_b = v.begin();
+			// Original multiplier.
+			T n(v_b[*p.begin()]);
+			// Create a copy of this.
+			real_trigonometric_kronecker_monomial tmp_m(*this);
+			// Flip the flavour.
+			tmp_m.set_flavour(!get_flavour());
+			// Flip the sign of the multiplier as needed.
+			if (get_flavour()) {
+				// NOTE: this is safe, as it is coming out of a k codification which
+				// is symmetric.
+				math::negate(n);
+			}
+			return std::make_pair(std::move(n),std::move(tmp_m));
 		}
 		/// Integration.
 		/**

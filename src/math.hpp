@@ -1433,29 +1433,51 @@ class is_differentiable: detail::sfinae_types
 template <typename T>
 const bool is_differentiable<T>::value;
 
-/// Type trait for differentiable term types.
+namespace detail
+{
+
+// A key is differentiable if the type returned by the partial method
+// is a pair (sometype,key).
+template <typename Key, typename Pair>
+struct is_differential_key_pair
+{
+	static const bool value = false;
+};
+
+template <typename Key, typename PairFirst>
+struct is_differential_key_pair<Key,std::pair<PairFirst,Key>>
+{
+	static const bool value = true;
+};
+
+}
+
+/// Type trait to detect differentiable keys.
 /**
- * A term is differentiable if it is provided with a const <tt>partial()</tt> method accepting a const
- * reference to piranha::symbol and a const reference to piranha::symbol_set as arguments and returning
- * an <tt>std::vector</tt> of \p T as result.
- * 
- * \p T must satisfy piranha::is_term.
+ * This type trait will be \p true if \p Key is a key type providing a const method <tt>partial()</tt> taking a const instance of
+ * piranha::symbol_set::positions and a const instance of piranha::symbol_set as input, and returning an <tt>std::pair</tt> of
+ * any type and \p Key. Otherwise, the type trait will be \p false.
+ * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ *
+ * The decay type of \p Key is considered in this type trait.
  */
 template <typename T>
-class term_is_differentiable: detail::sfinae_types
+class key_is_differentiable: detail::sfinae_types
 {
-		PIRANHA_TT_CHECK(is_term,T);
+		using Td = typename std::decay<T>::type;
+		PIRANHA_TT_CHECK(is_key,Td);
 		template <typename U>
-		static auto test(const U &u) -> decltype(u.partial(std::declval<const symbol &>(),
+		static auto test(const U &u) -> decltype(u.partial(std::declval<const symbol_set::positions &>(),
 			std::declval<const symbol_set &>()));
 		static no test(...);
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),std::vector<T>>::value;
+		static const bool value = detail::is_differential_key_pair<Td,
+			decltype(test(std::declval<Td>()))>::value;
 };
 
 template <typename T>
-const bool term_is_differentiable<T>::value;
+const bool key_is_differentiable<T>::value;
 
 /// Type trait for integrable types.
 /**
