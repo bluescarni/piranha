@@ -259,6 +259,14 @@ struct hash<fake_int>
 
 BOOST_AUTO_TEST_CASE(power_series_test_02)
 {
+	// Check the rational degree.
+	typedef g_series_type<double,rational> stype0;
+	BOOST_CHECK((has_degree<stype0>::value));
+	BOOST_CHECK((has_ldegree<stype0>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype0>())),rational>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype0>())),rational>::value));
+	BOOST_CHECK((std::is_same<decltype(math::degree(std::declval<stype0>(),std::vector<std::string>{})),rational>::value));
+	BOOST_CHECK((std::is_same<decltype(math::ldegree(std::declval<stype0>(),std::vector<std::string>{})),rational>::value));
 	typedef g_series_type<double,int> stype1;
 	BOOST_CHECK((has_degree<stype1>::value));
 	BOOST_CHECK((has_ldegree<stype1>::value));
