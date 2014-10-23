@@ -185,8 +185,8 @@ class polynomial:
 			typedef typename term_type::key_type key_type;
 			// Get the partial degree of the monomial in integral form.
 			integer degree;
+			symbol_set::positions pos(this->m_symbol_set,symbol_set{s});
 			try {
-				symbol_set::positions pos(this->m_symbol_set,symbol_set{symbol(s.get_name())});
 				degree = math::integral_cast(term.m_key.degree(pos,this->m_symbol_set));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
@@ -206,7 +206,7 @@ class polynomial:
 			for (integer i(1); i <= degree; ++i) {
 				// Update coefficient and key.
 				i_cf = cf_type(math::integrate(i_cf,s.get_name()));
-				auto partial_key = tmp_key.partial(s,this->m_symbol_set);
+				auto partial_key = tmp_key.partial(pos,this->m_symbol_set);
 				i_cf *= std::move(partial_key.first);
 				// Account for (-1)**i.
 				math::negate(i_cf);

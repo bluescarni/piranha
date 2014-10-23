@@ -56,8 +56,30 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
 };
 
+// Mock coefficient, not differentiable.
+struct mock_cf
+{
+	mock_cf();
+	mock_cf(const int &);
+	mock_cf(const mock_cf &);
+	mock_cf(mock_cf &&) noexcept;
+	mock_cf &operator=(const mock_cf &);
+	mock_cf &operator=(mock_cf &&) noexcept;
+	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
+	mock_cf operator-() const;
+	bool operator==(const mock_cf &) const;
+	bool operator!=(const mock_cf &) const;
+	mock_cf &operator+=(const mock_cf &);
+	mock_cf &operator-=(const mock_cf &);
+	mock_cf operator+(const mock_cf &) const;
+	mock_cf operator-(const mock_cf &) const;
+	mock_cf &operator*=(const mock_cf &);
+	mock_cf operator*(const mock_cf &) const;
+};
+
 BOOST_AUTO_TEST_CASE(series_partial_test)
 {
+	{
 	typedef g_series_type<rational,int> p_type1;
 	p_type1 x1{"x"};
 	BOOST_CHECK(is_differentiable<p_type1>::value);
@@ -105,6 +127,8 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	p_type1::unregister_all_custom_derivatives();
 	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
 	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
+	}
+	{
 	typedef g_series_type<integer,rational> p_type2;
 	p_type2 x2{"x"};
 	BOOST_CHECK(is_differentiable<p_type2>::value);
@@ -112,4 +136,61 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	// types. The correct type then will be not p_type2 but g_series_type<rational,int>.
 	// This should anyway trigger the second algorithm, the non-optimised one.
 	BOOST_CHECK((std::is_same<decltype(x2.partial("foo")),p_type2>::value));
+	p_type2 x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x,"y"),0);
+	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2),"x"),-8 * x);
+	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2) + y * x,"y"),x);
+	BOOST_CHECK_EQUAL(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),-8);
+	BOOST_CHECK_EQUAL(math::partial(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),"x"),0);
+	BOOST_CHECK_EQUAL(math::partial(-x + 1,"x"),-1);
+	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x).pow(10),"x"),20 * (1 + 2 * x).pow(9));
+	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
+	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
+	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
+	// Custom derivatives.
+	// NOTE: restore these tests once we rework series arithmetics.
+	/*
+	p_type2::register_custom_derivative("x",[](const p_type2 &) {return p_type2{rational(1,314)};});
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,314));
+	p_type2::register_custom_derivative("x",[](const p_type2 &) {return p_type2{rational(1,315)};});
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,315));
+	p_type2::unregister_custom_derivative("x");
+	p_type2::unregister_custom_derivative("x");
+	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);*/
+	// y as implicit function of x: y = x**2.
+	p_type2::register_custom_derivative("x",[x](const p_type2 &p) -> p_type2 {
+		return p.partial("x") + math::partial(p,"y") * 2 * x;
+	});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 2 * x);
+	p_type2::unregister_custom_derivative("y");
+	p_type2::unregister_custom_derivative("x");
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + 2 * y,"y"),2);
+	p_type2::register_custom_derivative("x",[](const p_type2 &p) {return p.partial("x");});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + y * x,"x"),y + 1);
+	p_type2::register_custom_derivative("x",[x](const p_type2 &p) -> p_type2 {
+		return p.partial("x") + math::partial(p,"y") * 2 * x;
+	});
+	p_type2::register_custom_derivative("y",[](const p_type2 &p) -> p_type2 {
+		return 2 * p;
+	});
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 4 * x * (x + y));
+	BOOST_CHECK_EQUAL(math::partial(x + y,"y"),2 * (x + y));
+	p_type2::unregister_all_custom_derivatives();
+	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
+	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
+	}
+	// Check with mock_cf.
+	BOOST_CHECK((!is_differentiable<g_series_type<mock_cf,rational>>::value));
+	{
+	using s0 = g_series_type<double,rational>;
+	using ss0 = g_series_type<s0,rational>;
+	// Series as coefficient.
+	BOOST_CHECK((is_differentiable<ss0>::value));
+	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"},"y"),ss0{"x"});
+	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"},"x"),s0{"y"});
+	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * math::pow(ss0{"x"},5),"x"),5 * s0{"y"} * math::pow(ss0{"x"},4));
+	}
 }

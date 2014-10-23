@@ -401,12 +401,12 @@ class series_exposer
 		{}
 		// Differentiation.
 		template <typename S>
-		static S partial_wrapper(const S &s, const std::string &name)
+		static auto partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
 		{
 			return piranha::math::partial(s,name);
 		}
 		template <typename S>
-		static S partial_member_wrapper(const S &s, const std::string &name)
+		static auto partial_member_wrapper(const S &s, const std::string &name) -> decltype(s.partial(name))
 		{
 			return s.partial(name);
 		}
@@ -425,14 +425,17 @@ class series_exposer
 		static void expose_partial(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_differentiable<S>::value>::type * = nullptr)
 		{
+			// NOTE: we need this below in order to specifiy exactly the address of the templated
+			// static method for unregistering the custom derivatives.
+			using partial_type = decltype(piranha::math::partial(std::declval<const S &>(),std::string{}));
 			series_class.def("partial",partial_member_wrapper<S>);
 			bp::def("_partial",partial_wrapper<S>);
 			// Custom derivatives support.
 			series_class.def("register_custom_derivative",register_custom_derivative<S>).staticmethod("register_custom_derivative");
 			series_class.def("unregister_custom_derivative",
-				S::unregister_custom_derivative).staticmethod("unregister_custom_derivative");
+				S::template unregister_custom_derivative<S,partial_type>).staticmethod("unregister_custom_derivative");
 			series_class.def("unregister_all_custom_derivatives",
-				S::unregister_all_custom_derivatives).staticmethod("unregister_all_custom_derivatives");
+				S::template unregister_all_custom_derivatives<S,partial_type>).staticmethod("unregister_all_custom_derivatives");
 		}
 		template <typename S>
 		static void expose_partial(bp::class_<S> &,
@@ -440,7 +443,8 @@ class series_exposer
 		{}
 		// Poisson bracket.
 		template <typename S>
-		static S pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list)
+		static auto pbracket_wrapper(const S &s1, const S &s2, bp::list p_list, bp::list q_list) ->
+			decltype(piranha::math::pbracket(s1,s2,{},{}))
 		{
 			bp::stl_input_iterator<std::string> begin_p(p_list), end_p;
 			bp::stl_input_iterator<std::string> begin_q(q_list), end_q;

@@ -1574,57 +1574,6 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::cos(p_type3{.5}),double(-42));
 }
 
-BOOST_AUTO_TEST_CASE(series_partial_test)
-{
-	typedef g_series_type<rational,int> p_type1;
-	BOOST_CHECK(is_differentiable<p_type1>::value);
-	p_type1 x{"x"}, y{"y"};
-	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
-	BOOST_CHECK_EQUAL(math::partial(x,"y"),0);
-	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2),"x"),-8 * x);
-	BOOST_CHECK_EQUAL(math::partial(-4 * x.pow(2) + y * x,"y"),x);
-	BOOST_CHECK_EQUAL(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),-8);
-	BOOST_CHECK_EQUAL(math::partial(math::partial(math::partial(-4 * x.pow(2),"x"),"x"),"x"),0);
-	BOOST_CHECK_EQUAL(math::partial(-x + 1,"x"),-1);
-	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x).pow(10),"x"),20 * (1 + 2 * x).pow(9));
-	BOOST_CHECK_EQUAL(math::partial((1 + 2 * x + y).pow(10),"x"),20 * (1 + 2 * x + y).pow(9));
-	BOOST_CHECK_EQUAL(math::partial(x * (1 + 2 * x + y).pow(10),"x"),20 * x * (1 + 2 * x + y).pow(9) + (1 + 2 * x + y).pow(10));
-	BOOST_CHECK(math::partial((1 + 2 * x + y).pow(0),"x").empty());
-	// Custom derivatives.
-	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,314)};});
-	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,314));
-	p_type1::register_custom_derivative("x",[](const p_type1 &) {return p_type1{rational(1,315)};});
-	BOOST_CHECK_EQUAL(math::partial(x,"x"),rational(1,315));
-	p_type1::unregister_custom_derivative("x");
-	p_type1::unregister_custom_derivative("x");
-	BOOST_CHECK_EQUAL(math::partial(x,"x"),1);
-	// y as implicit function of x: y = x**2.
-	p_type1::register_custom_derivative("x",[x](const p_type1 &p) -> p_type1 {
-		return p.partial("x") + math::partial(p,"y") * 2 * x;
-	});
-	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 2 * x);
-	p_type1::unregister_custom_derivative("y");
-	p_type1::unregister_custom_derivative("x");
-	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
-	BOOST_CHECK_EQUAL(math::partial(x + 2 * y,"y"),2);
-	p_type1::register_custom_derivative("x",[](const p_type1 &p) {return p.partial("x");});
-	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
-	BOOST_CHECK_EQUAL(math::partial(x + y * x,"x"),y + 1);
-	p_type1::register_custom_derivative("x",[x](const p_type1 &p) -> p_type1 {
-		return p.partial("x") + math::partial(p,"y") * 2 * x;
-	});
-	p_type1::register_custom_derivative("y",[](const p_type1 &p) -> p_type1 {
-		return 2 * p;
-	});
-	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1 + 4 * x * (x + y));
-	BOOST_CHECK_EQUAL(math::partial(x + y,"y"),2 * (x + y));
-	p_type1::unregister_all_custom_derivatives();
-	BOOST_CHECK_EQUAL(math::partial(x + y,"x"),1);
-	BOOST_CHECK_EQUAL(math::partial(x + 3 * y,"y"),3);
-	typedef g_series_type<mock_cf,int> p_type2;
-	BOOST_CHECK(!is_differentiable<p_type2>::value);
-}
-
 BOOST_AUTO_TEST_CASE(series_iterator_test)
 {
 	typedef g_series_type<rational,int> p_type1;

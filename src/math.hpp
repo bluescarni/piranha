@@ -735,8 +735,45 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
 	return abs_impl<T>()(x);
 }
 
+}
+
+namespace detail
+{
+
+// Type definition and type checking for the output of Poisson brackets.
+template <typename T>
+using pbracket_type_tmp = decltype(math::partial(std::declval<const T &>(),std::string()) *
+	math::partial(std::declval<const T &>(),std::string()));
+
+template <typename T, typename = void>
+struct pbracket_type_ {};
+
+template <typename T>
+struct pbracket_type_<T,typename std::enable_if<
+	std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>() + std::declval<const pbracket_type_tmp<T> &>()),pbracket_type_tmp<T>>::value &&
+	std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>() - std::declval<const pbracket_type_tmp<T> &>()),pbracket_type_tmp<T>>::value &&
+	std::is_constructible<pbracket_type_tmp<T>,int>::value &&
+	std::is_assignable<pbracket_type_tmp<T> &,pbracket_type_tmp<T>>::value
+	>::type>
+{
+	using type = pbracket_type_tmp<T>;
+};
+
+// The final typedef.
+template <typename T>
+using pbracket_type = typename pbracket_type_<T>::type;
+
+}
+
+namespace math
+{
+
 /// Poisson bracket.
 /**
+ * \note
+ * This template function is enabled only if \p T is differentiable and the arithmetic operations needed to compute the brackets
+ * are supported by the types involved in the computation.
+ *
  * The Poisson bracket of \p f and \p g with respect to the list of momenta \p p_list and coordinates \p q_list
  * is defined as:
  * \f[
@@ -757,14 +794,14 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
  * 
  * @throws std::invalid_argument if the sizes of \p p_list and \p q_list differ or if
  * \p p_list or \p q_list contain duplicate entries.
- * @throws unspecified any exception thrown by piranha::math::partial() or by the arithmetic operators
- * of \p f and \p g.
+ * @throws unspecified any exception thrown by piranha::math::partial() or by the invoked arithmetic operators,
+ * constructors and assignment operators.
  */
 template <typename T>
-inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_list,
-	const std::vector<std::string> &q_list) -> decltype(partial(f,q_list[0]) * partial(g,p_list[0]) + partial(f,q_list[0]) * partial(g,p_list[0]))
+inline detail::pbracket_type<T> pbracket(const T &f, const T &g, const std::vector<std::string> &p_list,
+	const std::vector<std::string> &q_list)
 {
-	using return_type = decltype(partial(f,q_list[0]) * partial(g,p_list[0]) + partial(f,q_list[0]) * partial(g,p_list[0]));
+	using return_type = detail::pbracket_type<T>;
 	if (p_list.size() != q_list.size()) {
 		piranha_throw(std::invalid_argument,"the number of coordinates is different from the number of momenta");
 	}
@@ -774,26 +811,49 @@ inline auto pbracket(const T &f, const T &g, const std::vector<std::string> &p_l
 	if (std::unordered_set<std::string>(q_list.begin(),q_list.end()).size() != q_list.size()) {
 		piranha_throw(std::invalid_argument,"the list of coordinates contains duplicate entries");
 	}
-	return_type retval = return_type();
+	return_type retval = return_type(0);
 	for (decltype(p_list.size()) i = 0u; i < p_list.size(); ++i) {
 		// NOTE: could use multadd/sub here, if we implement it for series.
-		retval += partial(f,q_list[i]) * partial(g,p_list[i]);
-		retval -= partial(f,p_list[i]) * partial(g,q_list[i]);
+		retval = retval + partial(f,q_list[i]) * partial(g,p_list[i]);
+		retval = retval - partial(f,p_list[i]) * partial(g,q_list[i]);
 	}
 	return retval;
 }
 
 }
 
+/// Detect piranha::math::pbracket().
+/**
+ * The type trait will be \p true if piranha::math::pbracket() can be used on instances of type \p T,
+ * \p false otherwise.
+ */
+template <typename T>
+class has_pbracket: detail::sfinae_types
+{
+		using v_string = std::vector<std::string>;
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(math::pbracket(x,x,std::declval<v_string const &>(),
+			std::declval<v_string const &>()),void(),yes());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+template <typename T>
+const bool has_pbracket<T>::value;
+
 namespace detail
 {
 
 template <typename T>
-inline auto is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) -> typename std::enable_if<
-	has_is_zero<decltype(math::pbracket(*new_p[0],*new_p[0],p_list,q_list))>::value &&
-	std::is_constructible<decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list)),int>::value &&
-	is_equality_comparable<decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list))>::value,bool>::type
+using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value &&
+	has_is_zero<pbracket_type<T>>::value && std::is_constructible<pbracket_type<T>,int>::value &&
+	is_equality_comparable<pbracket_type<T>>::value,int>::type;
+
+template <typename T>
+inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
 {
 	using p_type = decltype(math::pbracket(*new_q[0],*new_p[0],p_list,q_list));
 	if (p_list.size() != q_list.size()) {
@@ -848,9 +908,6 @@ namespace math
  * The transformation is expressed as two separate collections of objects, \p new_p and \p new_q, representing the new momenta
  * and coordinates as functions of the old momenta \p p_list and \p q_list.
  * 
- * This function requires type \p T to be suitable for use in in piranha::math::pbracket() and piranha::math::is_zero(), and to be constructible
- * from \p int and equality comparable.
- * 
  * @param[in] new_p list of objects representing the new momenta.
  * @param[in] new_q list of objects representing the new coordinates.
  * @param[in] p_list list of names of the old momenta.
@@ -866,10 +923,9 @@ namespace math
  * - piranha::math::is_zero(),
  * - memory errors in standard containers.
  */
-template <typename T>
-inline auto transformation_is_canonical(const std::vector<T> &new_p, const std::vector<T> &new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) ->
-	decltype(detail::is_canonical_impl(std::declval<std::vector<T const *> const &>(),std::declval<std::vector<T const *> const &>(),p_list,q_list))
+template <typename T, detail::is_canonical_enabler<T> = 0>
+inline bool transformation_is_canonical(const std::vector<T> &new_p, const std::vector<T> &new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
 {
 	std::vector<T const *> pv, qv;
 	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
@@ -878,10 +934,9 @@ inline auto transformation_is_canonical(const std::vector<T> &new_p, const std::
 }
 
 /// Check if a transformation is canonical (alternative overload).
-template <typename T>
-inline auto transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
-	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list) ->
-	decltype(detail::is_canonical_impl(std::declval<std::vector<T const *> const &>(),std::declval<std::vector<T const *> const &>(),p_list,q_list))
+template <typename T, detail::is_canonical_enabler<T> = 0>
+inline bool transformation_is_canonical(std::initializer_list<T> new_p, std::initializer_list<T> new_q,
+	const std::vector<std::string> &p_list, const std::vector<std::string> &q_list)
 {
 	std::vector<T const *> pv, qv;
 	std::transform(new_p.begin(),new_p.end(),std::back_inserter(pv),[](const T &p) {return &p;});
@@ -2084,27 +2139,6 @@ class has_cosine: detail::sfinae_types
 
 template <typename T>
 const bool has_cosine<T>::value;
-
-/// Detect piranha::math::pbracket().
-/**
- * The type trait will be \p true if piranha::math::pbracket() can be used on instances of type \p T,
- * \p false otherwise.
- */
-template <typename T>
-class has_pbracket: detail::sfinae_types
-{
-		using v_string = std::vector<std::string>;
-		template <typename T1>
-		static auto test(const T1 &x) -> decltype(math::pbracket(x,x,std::declval<v_string const &>(),
-			std::declval<v_string const &>()),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
-};
-
-template <typename T>
-const bool has_pbracket<T>::value;
 
 /// Detect piranha::math::transformation_is_canonical().
 /**

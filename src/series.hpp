@@ -822,6 +822,116 @@ class series: series_binary_operators, detail::series_tag
 		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),
 			typename term_type::cf_type>::value && has_is_zero<T>::value && has_integral_cast<T>::value && is_multipliable_in_place<U>::value,U
 			>::type;
+		// Metaprogramming bits for partial derivative.
+		template <typename Cf>
+		using cf_diff_type = decltype(math::partial(std::declval<const Cf &>(),std::string()));
+		// NOTE: decltype on a member is the type of that member:
+		// http://thbecker.net/articles/auto_and_decltype/section_06.html
+		template <typename Key>
+		using key_diff_type = decltype(std::declval<const Key &>().partial(std::declval<const symbol_set::positions &>(),
+			std::declval<const symbol_set &>()).first);
+		// Shortcuts to get cf/key from series.
+		template <typename Series>
+		using cf_t = typename Series::term_type::cf_type;
+		template <typename Series>
+		using key_t = typename Series::term_type::key_type;
+		// We have different implementations, depending on whether the computed derivative type is the same as the original one
+		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual schema
+		// of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two specialisations
+		// that implement the logic above.
+		template <typename Series, typename = void>
+		struct partial_type_ {};
+		// NOTE: the enabler conditions below are one the negation of the other, not sure if it is possible to avoid repetition without macro as we need
+		// them explicitly for sfinae.
+		#define PIRANHA_SERIES_PARTIAL_ENABLER (std::is_same<cf_diff_type<cf_t<Series>>,cf_t<Series>>::value && \
+			std::is_same<decltype(std::declval<const cf_t<Series> &>() * std::declval<const key_diff_type<key_t<Series>> &>()),cf_t<Series>>::value)
+		template <typename Series>
+		struct partial_type_<Series,typename std::enable_if<PIRANHA_SERIES_PARTIAL_ENABLER>::type>
+		{
+			using type = Series;
+			// Record the algorithm to be adopted for later use.
+			static const int algo = 0;
+		};
+		// This is the type resulting from the second algorithm.
+		template <typename Series>
+		using partial_type_1 = decltype(std::declval<const cf_diff_type<cf_t<Series>> &>() * std::declval<const Series &>() +
+				std::declval<const cf_t<Series> &>() * std::declval<const key_diff_type<key_t<Series>> &>() * std::declval<const Series &>());
+		// NOTE: in addition to check that we cannot use the optimised algorithm, we must also check that the resulting type
+		// is constructible from int (for the accumulation of retval), that it is addable and that the add type is itself.
+		template <typename Series>
+		struct partial_type_<Series,typename std::enable_if<!PIRANHA_SERIES_PARTIAL_ENABLER &&
+			std::is_constructible<partial_type_1<Series>,int>::value &&
+			std::is_same<decltype(std::declval<const partial_type_1<Series> &>()
+			+ std::declval<const partial_type_1<Series> &>()),partial_type_1<Series>>::value>::type>
+		{
+			using type = partial_type_1<Series>;
+			static const int algo = 1;
+		};
+		#undef PIRANHA_SERIES_PARTIAL_ENABLER
+		// The final typedef.
+		template <typename Series>
+		using partial_type = typename partial_type_<Series>::type;
+		// The implementation of the two partial() algorithms.
+		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 0,int>::type = 0>
+		partial_type<Series> partial_impl(const std::string &name) const
+		{
+			static_assert(std::is_same<Derived,partial_type<Series>>::value,"Invalid type.");
+			// This is the faster algorithm.
+			Derived retval;
+			retval.m_symbol_set = this->m_symbol_set;
+			const auto it_f = this->m_container.end();
+			const symbol_set::positions p(retval.m_symbol_set,symbol_set{symbol(name)});
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// NOTE: here t0 cannot be incompatible as it->m_key is coming from a series
+				// with the same symbol set. Worst that can happen is something going awry
+				// in the derivative of the coefficient. If the derivative becomes zero,
+				// the insertion routine will not insert anything.
+				typename Derived::term_type t0(math::partial(it->m_cf,name),it->m_key);
+				retval.insert(std::move(t0));
+				// Here we are assuming that the partial of the key returns always a compatible key,
+				// otherwise an error will be raised.
+				auto p_key = it->m_key.partial(p,retval.m_symbol_set);
+				typename Derived::term_type t1(it->m_cf * p_key.first,p_key.second);
+				retval.insert(std::move(t1));
+			}
+			return retval;
+		}
+		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1,int>::type = 0>
+		partial_type<Series> partial_impl(const std::string &name) const
+		{
+			using term_type = typename Derived::term_type;
+			using cf_type = typename term_type::cf_type;
+			const auto it_f = this->m_container.end();
+			const symbol_set::positions p(this->m_symbol_set,symbol_set{symbol(name)});
+			partial_type<Series> retval(0);
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// Construct the two pieces of the derivative relating to the key
+				// in the original term.
+				Derived tmp0;
+				tmp0.m_symbol_set = this->m_symbol_set;
+				tmp0.insert(term_type(cf_type(1),it->m_key));
+				auto p_key = it->m_key.partial(p,this->m_symbol_set);
+				Derived tmp1;
+				tmp1.m_symbol_set = this->m_symbol_set;
+				tmp1.insert(term_type(cf_type(1),p_key.second));
+				// Assemble everything into the return value.
+				retval = retval + (math::partial(it->m_cf,name) * tmp0 + it->m_cf * p_key.first * tmp1);
+			}
+			return retval;
+		}
+		// Custom derivatives boilerplate.
+		template <typename Series>
+		using cp_map_type = std::unordered_map<std::string,std::function<partial_type<Series>(const Derived &)>>;
+		// NOTE: here the initialisation of the static variable inside the body of the function
+		// is guaranteed to be thread-safe. It should not matter too much as we always protect the access to it.
+		template <typename Series = Derived>
+		static cp_map_type<Series> &get_cp_map()
+		{
+			static cp_map_type<Series> cp_map;
+			return cp_map;
+		}
+		template <typename F, typename Series>
+		using custom_partial_enabler = typename std::enable_if<std::is_constructible<std::function<partial_type<Series>(const Derived &)>,F>::value,int>::type;
 	public:
 		/// Size type.
 		/**
@@ -1319,124 +1429,40 @@ class series: series_binary_operators, detail::series_tag
 		/// Partial derivative.
 		/**
 		 * \note
-		 * This method is enabled only if the term type satisfies piranha::term_is_differentiable.
-		 * 
-		 * Will return the partial derivative of \p this with respect to the argument called \p name. The method will construct
-		 * the return value series from the output of the term's differentiation method. Note that, contrary to the specialisation
-		 * of piranha::math::partial() for series types, this method will not take into account custom derivatives registered
-		 * via register_custom_derivative().
-		 * 
+		 * This method is enabled only if the coefficient and key are differentiable (i.e., they satisfy the piranha::is_differentiable
+		 * and piranha::key_is_differentiable type traits), and if the arithmetic operations
+		 * needed to compute the partial derivative are supported by all the involved types.
+		 *
+		 * This method will return the partial derivative of \p this with respect to the variable called \p name. The method will construct
+		 * the return value from the output of the differentiation methods of coefficient and key, and via arithmetic and/or term insertion
+		 * operations.
+		 *
+		 * Note that, contrary to the specialisation of piranha::math::partial() for series types, this method will not take into account
+		 * custom derivatives registered via piranha::series::register_custom_derivative().
+		 *
 		 * @param[in] name name of the argument with respect to which the derivative will be calculated.
-		 * 
+		 *
 		 * @return partial derivative of \p this with respect to the symbol named \p name.
-		 * 
-		 * @throws unspecified any exception thrown by the differentiation method of the term type or by insert().
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - the differentiation methods of coefficient and key,
+		 * - term construction and insertion,
+		 * - arithmetic operations on the involved types,
+		 * - construction of the return type.
 		 */
-//		template <typename T = term_type, typename = typename std::enable_if<term_is_differentiable<T>::value>::type>
-//		Derived partial(const std::string &name) const
-//		{
-//			Derived retval;
-//			retval.m_symbol_set = this->m_symbol_set;
-//			const auto it_f = this->m_container.end();
-//			const symbol s(name);
-//			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-//				auto tmp_partial = it->partial(s,this->m_symbol_set);
-//				const auto size = tmp_partial.size();
-//				for (decltype(tmp_partial.size()) i = 0u; i < size; ++i) {
-//					retval.insert(std::move(tmp_partial[i]));
-//				}
-//			}
-//			return retval;
-//		}
-		// Metaprogramming bits for partial derivative.
-		template <typename Cf>
-		using cf_diff_type = decltype(math::partial(std::declval<const Cf &>(),std::string()));
-		// NOTE: decltype on a member is the type of that member:
-		// http://thbecker.net/articles/auto_and_decltype/section_06.html
-		template <typename Key>
-		using key_diff_type = decltype(std::declval<const Key &>().partial(std::declval<const symbol_set::positions &>(),
-			std::declval<const symbol_set &>()).first);
-		// Shortcuts to get cf/key from series.
-		template <typename Series>
-		using cf_t = typename Series::term_type::cf_type;
-		template <typename Series>
-		using key_t = typename Series::term_type::key_type;
-		// We have different implementations, depending on whether the computed derivative type is the same as the original one
-		// (in which case we will use faster term insertions) or not (in which case we resort to series arithmetics). Adopt the usual schema
-		// of providing an unspecialised value that sfinaes out if the enabler condition is malformed, and two specialisations
-		// that implement the logic above.
-		template <typename Series, typename = void>
-		struct partial_type_ {};
-		// NOTE: the enabler conditions below are one the negation of the other, not sure if it is possible to avoid repetition without macro as we need
-		// them explicitly for sfinae.
-		#define PIRANHA_SERIES_PARTIAL_ENABLER (std::is_same<cf_diff_type<cf_t<Series>>,cf_t<Series>>::value && \
-			std::is_same<decltype(std::declval<const cf_t<Series> &>() * std::declval<const key_diff_type<key_t<Series>> &>()),cf_t<Series>>::value)
-		template <typename Series>
-		struct partial_type_<Series,typename std::enable_if<PIRANHA_SERIES_PARTIAL_ENABLER>::type>
-		{
-			using type = Series;
-			// Record the algorithm to be adopted for later use.
-			static const int algo = 0;
-		};
-		template <typename Series>
-		struct partial_type_<Series,typename std::enable_if<!PIRANHA_SERIES_PARTIAL_ENABLER>::type>
-		{
-			using type = decltype(std::declval<const cf_diff_type<cf_t<Series>> &>() * std::declval<const Series &>() +
-				std::declval<const cf_t<Series> &>() * std::declval<const key_diff_type<key_t<Series>> &>() * std::declval<const Series &>());
-			static const int algo = 1;
-		};
-		#undef PIRANHA_SERIES_PARTIAL_ENABLER
-		// The final typedef.
-		template <typename Series>
-		using partial_type = typename partial_type_<Series>::type;
 		template <typename Series = Derived>
 		partial_type<Series> partial(const std::string &name) const
 		{
 			return partial_impl(name);
 		}
-		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 0,int>::type = 0>
-		partial_type<Series> partial_impl(const std::string &name) const
-		{
-			static_assert(std::is_same<Derived,partial_type<Series>>::value,"Invalid type.");
-			// This is the faster algorithm.
-			Derived retval;
-			retval.m_symbol_set = this->m_symbol_set;
-			const auto it_f = this->m_container.end();
-			const symbol_set::positions p(retval.m_symbol_set,symbol_set{symbol(name)});
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				// NOTE: here t0 cannot be incompatible as it->m_key is coming from a series
-				// with the same symbol set. Worst that can happen is something going awry
-				// in the derivative of the coefficient. If the derivative becomes zero,
-				// the insertion routine will not insert anything.
-				typename Derived::term_type t0(math::partial(it->m_cf,name),it->m_key);
-				retval.insert(std::move(t0));
-				// Here we are assuming that the partial of the key returns always a compatible key,
-				// otherwise an error will be raised.
-				auto p_key = it->m_key.partial(p,retval.m_symbol_set);
-				typename Derived::term_type t1(it->m_cf * p_key.first,p_key.second);
-				retval.insert(std::move(t1));
-			}
-			return retval;
-		}
-		template <typename Series = Derived, typename std::enable_if<partial_type_<Series>::algo == 1,int>::type = 0>
-		partial_type<Series> partial_impl(const std::string &) const
-		{
-			return partial_type<Series>();
-		}
-		// Shorthand for the dictionary used for custom derivatives.
-		template <typename Series>
-		using cp_map_type = std::unordered_map<std::string,std::function<partial_type<Series>(const Derived &)>>;
-		// NOTE: here the initialisation of the static variable inside the body of the function
-		// is guaranteed to be thread-safe. It should not matter too much as we always protect the access to it.
-		template <typename Series = Derived>
-		static cp_map_type<Series> &get_cp_map()
-		{
-			static cp_map_type<Series> cp_map;
-			return cp_map;
-		}
 		/// Register custom partial derivative.
 		/**
-		 * Register a copy of \p func associated to the symbol called \p name for use by piranha::math::partial().
+		 * \note
+		 * This method is enabled only if piranha::series::partial() is enabled for \p Derived, and if \p F
+		 * is a type that can be used to construct <tt>std::function<partial_type(const Derived &)</tt>, where
+		 * \p partial_type is the type resulting from the partial derivative of \p Derived.
+		 *
+		 * Register a copy of a callable \p func associated to the symbol called \p name for use by piranha::math::partial().
 		 * \p func will be used to compute the partial derivative of instances of type \p Derived with respect to
 		 * \p name in place of the default partial differentiation algorithm.
 		 * 
@@ -1448,18 +1474,21 @@ class series: series_binary_operators, detail::series_tag
 		 * @throws unspecified any exception thrown by:
 		 * - failure(s) in threading primitives,
 		 * - lookup and insertion operations on \p std::unordered_map,
-		 * - copy-assignment of \p func.
+		 * - construction and move-assignment of \p std::function.
 		 */
-		template <typename F, typename Series>
-		using custom_partial_enabler = typename std::enable_if<std::is_constructible<std::function<partial_type<Series>(const Derived &)>,F>::value,int>::type;
 		template <typename F, typename Series = Derived, custom_partial_enabler<F,Series> = 0>
 		static void register_custom_derivative(const std::string &name, F func)
 		{
+			using p_type = decltype(std::declval<const Derived &>().partial(name));
+			using f_type = std::function<p_type(const Derived &)>;
 			std::lock_guard<std::mutex> lock(cp_mutex);
-			get_cp_map()[name] = func;
+			get_cp_map()[name] = f_type(func);
 		}
 		/// Unregister custom partial derivative.
 		/**
+		 * \note
+		 * This method is enabled only if piranha::series::partial() is enabled for \p Derived.
+		 *
 		 * Unregister the custom partial derivative function associated to the symbol called \p name. If no custom
 		 * partial derivative was previously registered using register_custom_derivative(), calling this function will be a no-op.
 		 * 
@@ -1471,6 +1500,8 @@ class series: series_binary_operators, detail::series_tag
 		 * - failure(s) in threading primitives,
 		 * - lookup and erase operations on \p std::unordered_map.
 		 */
+		// NOTE: the additional template parameter is to disable the method in case the partial
+		// type is malformed.
 		template <typename Series = Derived, typename Partial = partial_type<Series>>
 		static void unregister_custom_derivative(const std::string &name)
 		{
@@ -1482,6 +1513,9 @@ class series: series_binary_operators, detail::series_tag
 		}
 		/// Unregister all custom partial derivatives.
 		/**
+		 * \note
+		 * This method is enabled only if piranha::series::partial() is enabled for \p Derived.
+		 *
 		 * Will unregister all custom derivatives currently registered via register_custom_derivative().
 		 * It is safe to call this method from multiple threads.
 		 * 

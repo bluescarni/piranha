@@ -25,19 +25,16 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
 
-#include "../src/detail/series_fwd.hpp"
+#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
-#include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
-#include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
@@ -166,105 +163,4 @@ struct multiplication_tester
 BOOST_AUTO_TEST_CASE(poisson_series_term_multiplication_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
-}
-
-// Mock coefficient.
-struct mock_cf
-{
-	mock_cf();
-	mock_cf(const int &);
-	mock_cf(const mock_cf &);
-	mock_cf(mock_cf &&) noexcept;
-	mock_cf &operator=(const mock_cf &);
-	mock_cf &operator=(mock_cf &&) noexcept;
-	friend std::ostream &operator<<(std::ostream &, const mock_cf &);
-	mock_cf operator-() const;
-	bool operator==(const mock_cf &) const;
-	bool operator!=(const mock_cf &) const;
-	mock_cf &operator+=(const mock_cf &);
-	mock_cf &operator-=(const mock_cf &);
-	mock_cf operator+(const mock_cf &) const;
-	mock_cf operator-(const mock_cf &) const;
-	mock_cf &operator*=(const mock_cf &);
-	mock_cf operator*(const mock_cf &) const;
-	mock_cf &operator/=(int);
-};
-
-struct partial_tester
-{
-	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
-	{
-		typedef poisson_series_term<Cf> term_type;
-		BOOST_CHECK(term_is_differentiable<term_type>::value);
-		typedef typename term_type::key_type key_type;
-		typedef typename key_type::value_type value_type;
-		symbol_set ed;
-		term_type t1;
-		t1.m_cf = Cf(2);
-		t1.m_key = key_type{value_type(2)};
-		BOOST_CHECK_THROW(t1.partial(symbol("x"),ed),std::invalid_argument);
-		ed.add("x");
-		auto p_res = t1.partial(symbol("x"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),1u);
-		BOOST_CHECK_EQUAL(p_res[0u].m_cf,Cf(2) * integer(-2));
-		BOOST_CHECK(p_res[0u].m_key.get_int() == value_type(2));
-		BOOST_CHECK(p_res[0u].m_key.get_flavour() == false);
-		p_res = t1.partial(symbol("y"),ed);
-		BOOST_CHECK(p_res.empty());
-		t1.m_key = key_type{value_type(0)};
-		p_res = t1.partial(symbol("x"),ed);
-		BOOST_CHECK(p_res.empty());
-		t1.m_key = key_type{value_type(2),value_type(3)};
-		t1.m_key.set_flavour(false);
-		ed.add("y");
-		p_res = t1.partial(symbol("y"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),1u);
-		BOOST_CHECK(p_res[0u].m_cf == Cf(2) * integer(3));
-		BOOST_CHECK((p_res[0u].m_key == key_type{value_type(2),value_type(3)}));
-		t1.m_cf = Cf(0);
-		p_res = t1.partial(symbol("y"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),1u);
-		BOOST_CHECK(p_res[0u].m_cf == Cf(0));
-		BOOST_CHECK((p_res[0u].m_key == key_type{value_type(2),value_type(3)}));
-	}
-	template <typename Cf>
-	void operator()(const Cf &, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value>::type * = nullptr)
-	{
-		typedef poisson_series_term<Cf> term_type;
-		BOOST_CHECK(term_is_differentiable<term_type>::value);
-		typedef typename term_type::key_type key_type;
-		typedef typename key_type::value_type value_type;
-		symbol_set ed;
-		ed.add("x");
-		term_type t1;
-		t1.m_cf = 2 * Cf("x");
-		t1.m_key = key_type{value_type(2)};
-		auto p_res = t1.partial(symbol("x"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),2u);
-		BOOST_CHECK(p_res[0u].m_cf == 2 * Cf(1));
-		BOOST_CHECK(p_res[0u].m_key == t1.m_key);
-		BOOST_CHECK(p_res[1u].m_cf == t1.m_cf * -2);
-		BOOST_CHECK(p_res[1u].m_key.get_flavour() == false);
-		BOOST_CHECK(p_res[1u].m_key.get_int() == 2);
-		t1.m_key.set_flavour(false);
-		p_res = t1.partial(symbol("x"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),2u);
-		BOOST_CHECK(p_res[0u].m_cf == 2 * Cf(1));
-		BOOST_CHECK(p_res[0u].m_key == t1.m_key);
-		BOOST_CHECK(p_res[1u].m_cf == t1.m_cf * 2);
-		BOOST_CHECK(p_res[1u].m_key.get_flavour() == true);
-		BOOST_CHECK(p_res[1u].m_key.get_int() == 2);
-		t1.m_key = key_type{value_type(0)};
-		p_res = t1.partial(symbol("x"),ed);
-		BOOST_CHECK_EQUAL(p_res.size(),1u);
-		BOOST_CHECK(p_res[0u].m_cf == 2 * Cf(1));
-		BOOST_CHECK(p_res[0u].m_key == t1.m_key);
-	}
-};
-
-BOOST_AUTO_TEST_CASE(poisson_series_term_partial_test)
-{
-	boost::mpl::for_each<cf_types>(partial_tester());
-	BOOST_CHECK(!term_is_differentiable<poisson_series_term<mock_cf>>::value);
 }
