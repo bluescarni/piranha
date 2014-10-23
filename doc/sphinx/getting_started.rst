@@ -204,6 +204,7 @@ It should now be possible to compile and run your first C++ Piranha program.
 
    int main()
    {
+     environment env;
      std::cout << rational{4,3} << '\n';
    }
 
@@ -219,7 +220,8 @@ A couple of things to note:
 * we specify via the ``-lmpfr -lgmp`` flags that the executable needs to be linked to the GMP and MPFR libraries (if
   you do not do this, the program will still compile but the final linking will fail due to undefined references);
 * at the present time, all the Boost libraries used within Piranha are header-only and thus no linking to any Boost
-  library is necessary.
+  library is necessary;
+* Piranha itself is header-only, so there is no ``libpiranha`` to link to.
 
 Note that if you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
 the Piranha headers are located via the ``-I`` switch. E.g.,
