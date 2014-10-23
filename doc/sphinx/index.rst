@@ -16,9 +16,10 @@ language, called **Pyranha**, that allows to use the library in an interactive
 way.
 
 Contents:
+=========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
 
    getting_started.rst
    pyranha_reference.rst
