@@ -45,6 +45,7 @@ SET(HEADERS_LIST
 	thread_pool.hpp
 	tuning.hpp
 	convert_to.hpp
+	serialization.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

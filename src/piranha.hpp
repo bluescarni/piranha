@@ -165,6 +165,7 @@ inline namespace literals {}
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "runtime_info.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "series_binary_operators.hpp"
 #include "series_multiplier.hpp"
