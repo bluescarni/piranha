@@ -2176,3 +2176,25 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
 	BOOST_CHECK_THROW(safe_cast<rational>(real{"inf"}),std::invalid_argument);
 	BOOST_CHECK_THROW(safe_cast<rational>(real{"nan"}),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(real_serialization_test)
+{
+	std::uniform_int_distribution< ::mpfr_prec_t> prec_dist(::mpfr_prec_t(10),::mpfr_prec_t(100));
+	std::uniform_real_distribution<double> value_dist(-1.,1.);
+	for (int i = 0; i < ntries; ++i) {
+		// Create a "random" real.
+		real tmp(boost::lexical_cast<std::string>(value_dist(rng)),prec_dist(rng));
+		// Move to the next number to increase the amount of bits actually used.
+		::mpfr_nextabove(tmp.get_mpfr_t());
+		// Write the tmp to an output archive.
+		std::stringstream ss;
+		boost::archive::text_oarchive oa(ss);
+		oa << tmp;
+		// Recover the real from the archive.
+		real tmp_out;
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp_out;
+		BOOST_CHECK_EQUAL(tmp,tmp_out);
+		BOOST_CHECK_EQUAL(tmp.get_prec(),tmp_out.get_prec());
+	}
+}

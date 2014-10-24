@@ -42,6 +42,7 @@
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -101,6 +102,10 @@ struct is_real_interoperable_type
  * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object in a state that is destructible and assignable.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  * 
  * @see http://www.mpfr.org
  * 
@@ -632,6 +637,28 @@ class real: public detail::real_base<>
 		{
 			return (check_nan(a) || check_nan(b));
 		}
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			std::ostringstream oss;
+			oss << *this;
+			auto prec = get_prec();
+			auto s = oss.str();
+			ar & prec;
+			ar & s;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			::mpfr_prec_t prec;
+			ar & prec;
+			std::string s;
+			ar & s;
+			*this = real(s,prec);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Default constructor.
 		/**
@@ -1606,6 +1633,16 @@ class real: public detail::real_base<>
 			std::getline(is,tmp_str);
 			r = tmp_str;
 			return is;
+		}
+		/// Get a mutable reference to the internal <tt>::mpfr_t</tt> instance.
+		std::remove_extent< ::mpfr_t>::type *get_mpfr_t()
+		{
+			return &m_value[0u];
+		}
+		/// Get a const reference to the internal <tt>::mpfr_t</tt> instance.
+		const std::remove_extent< ::mpfr_t>::type *get_mpfr_t() const
+		{
+			return &m_value[0u];
 		}
 	private:
 		::mpfr_t m_value;
