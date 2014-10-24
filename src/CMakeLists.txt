@@ -67,6 +67,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/small_vector_fwd.hpp
 	detail/is_digit.hpp
 	detail/config_intel.hpp
+	detail/type_in_tuple.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers
