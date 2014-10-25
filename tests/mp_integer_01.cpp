@@ -2593,10 +2593,10 @@ struct union_ctor_tester
 		// D vs S.
 		n6.g_st().set_bit(2u);
 		n5 = n6;
-		BOOST_CHECK(!n5.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),2u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),4u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),limb_bits),0);
+		BOOST_CHECK(n5.is_static());
+		BOOST_CHECK_EQUAL(n5.g_st().test_bit(2u),1);
+		BOOST_CHECK_EQUAL(n5.g_st().test_bit(4u),0);
+		BOOST_CHECK_EQUAL(n5.g_st().test_bit(limb_bits),0);
 		// D vs D.
 		n5 = n4;
 		BOOST_CHECK(!n5.is_static());
@@ -2628,19 +2628,25 @@ struct union_ctor_tester
 		// D vs S.
 		n6a.g_st().set_bit(2u);
 		n5a = std::move(n6a);
-		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),2u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),0);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),0);
-		BOOST_CHECK(!n6a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),limb_bits),1);
+		BOOST_CHECK(n5a.is_static());
+		BOOST_CHECK_EQUAL(n5a.g_st().test_bit(2u),1);
+		BOOST_CHECK_EQUAL(n5a.g_st().test_bit(4u),0);
+		BOOST_CHECK_EQUAL(n5a.g_st().test_bit(limb_bits),0);
+		// n6a should be the same, as it was simply copied over.
+		BOOST_CHECK(n6a.is_static());
+		BOOST_CHECK_EQUAL(n6a.g_st().test_bit(2u),1);
+		BOOST_CHECK_EQUAL(n6a.g_st().test_bit(4u),0);
+		BOOST_CHECK_EQUAL(n6a.g_st().test_bit(limb_bits),0);
+		// Now promote both for use in the next tests.
+		n5a.promote();
+		n6a.promote();
 		// D vs D.
 		::mpz_setbit(&n6a.g_dy(),limb_bits + 1u);
 		n5a = std::move(n6a);
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),0);
 		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits + 1u),1);
 		BOOST_CHECK(!n6a.is_static());
 		BOOST_CHECK_EQUAL(::mpz_tstbit(&n6a.g_dy(),2u),1);
@@ -2656,8 +2662,9 @@ struct union_ctor_tester
 		BOOST_CHECK(n5a.is_static());
 		n5a = n7;
 		BOOST_CHECK(!n5a.is_static());
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),1);
-		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),2u),1);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),4u),0);
+		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits),0);
 		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5a.g_dy(),limb_bits + 1u),1);
 		int_type n8;
 		n8.g_st().set_bit(3u);

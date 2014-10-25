@@ -921,10 +921,10 @@ union integer_union
 				::mpz_init_set(&m_dy,&other.g_dy());
 				piranha_assert(m_dy._mp_alloc > 0);
 			} else if (!s1 && s2) {
-				// Create a copy of other and promote it.
-				auto other_copy(other);
-				other_copy.promote();
-				::mpz_set(&g_dy(),&other_copy.g_dy());
+				// Destroy the dynamic this.
+				destroy_dynamic();
+				// Init-copy the static from other.
+				::new (static_cast<void *>(&m_st)) s_storage(other.g_st());
 			} else {
 				::mpz_set(&g_dy(),&other.g_dy());
 			}
@@ -948,10 +948,9 @@ union integer_union
 				other.g_dy().~d_storage();
 				::new (static_cast<void *>(&other.m_st)) s_storage();
 			} else if (!s1 && s2) {
-				// Promote directly other, no need for copy.
-				other.promote();
-				// Swap with the promoted other.
-				::mpz_swap(&g_dy(),&other.g_dy());
+				// Same as copy assignment: destroy and copy-construct.
+				destroy_dynamic();
+				::new (static_cast<void *>(&m_st)) s_storage(other.g_st());
 			} else {
 				// Swap with other.
 				::mpz_swap(&g_dy(),&other.g_dy());
