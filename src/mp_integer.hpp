@@ -1082,9 +1082,11 @@ struct is_mp_integer_interoperable_type
  *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
  *   - optimize common cases for read_uint, that is, avoid always reading bit by bit. This should improve hashing
  *     performance, amongst other.
- * - probably the assignment operator should demote to static if possible; more generally, there could be a benefit in demoting
- *   (subtraction and division for sure, maybe operations that piggyback on GMP routines as well) -> think for instance about
- *   rational.
+ * - consider if and how to implement demoting. It looks it could be useful in certain cases, for instance when we
+ *   rely on GMP routines (we should demote back to static if possible in those cases). For the elementary operations,
+ *   it is less clear: addition, subtraction and division could in principle be considered for demotion. But, OTOH
+ *   GMP never scales back the allocated memeory and, for instance, also the std:: containers do not normally reduce
+ *   their sizes. There might be some lesson in there;
  * - understand the performance implications of implementing the binary operator as += and copy. Might be that creating an
  *   empty retval and then filling it with mpz_add() or a similar free function is more efficient. See how it is done
  *   in Arbpp for instance. This should matter much more for mp_integer and not mp_rational, as there we always

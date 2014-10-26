@@ -86,7 +86,8 @@ namespace piranha
  * equality predicate have been moved-from.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
+ */
+ /* Some TODOs:
  * \todo tests for low-level methods
  * \todo better increase_size with recycling of dynamically-allocated nodes
  * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
