@@ -55,7 +55,11 @@ using integral_types = boost::mpl::vector<char,
 	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,
 	wchar_t,char16_t,char32_t>;
 
-using floating_point_types = boost::mpl::vector<float,double,long double>;
+using floating_point_types = boost::mpl::vector<float,double
+#if !defined(PIRANHA_RUN_ON_VALGRIND)
+	,long double
+#endif
+	>;
 
 static std::mt19937 rng;
 static const int ntries = 1000;
@@ -2541,6 +2545,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_integral_cast_test)
 		BOOST_CHECK_THROW(math::integral_cast(-std::numeric_limits<double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::integral_cast(std::numeric_limits<double>::quiet_NaN()),std::invalid_argument);
 	}
+#if !defined(PIRANHA_RUN_ON_VALGRIND)
 	if (std::numeric_limits<long double>::is_iec559 && std::numeric_limits<long double>::radix == 2 &&
 		std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN)
 	{
@@ -2552,6 +2557,7 @@ BOOST_AUTO_TEST_CASE(mp_integer_integral_cast_test)
 		BOOST_CHECK_THROW(math::integral_cast(-std::numeric_limits<long double>::infinity()),std::invalid_argument);
 		BOOST_CHECK_THROW(math::integral_cast(std::numeric_limits<long double>::quiet_NaN()),std::invalid_argument);
 	}
+#endif
 	BOOST_CHECK_EQUAL(math::integral_cast(-2ll),-2);
 	BOOST_CHECK_EQUAL(math::integral_cast(2ull),2);
 	BOOST_CHECK_EQUAL(math::integral_cast(char(2)),2);
@@ -2584,7 +2590,9 @@ struct ipow_subs_tester
 		BOOST_CHECK_EQUAL(math::ipow_subs(3,"a",integer(4),5),3);
 		BOOST_CHECK_EQUAL(math::ipow_subs(3.,"a",integer(4),5),3.);
 		BOOST_CHECK_EQUAL(math::ipow_subs(3.f,"a",integer(4),5),3.f);
+#if !defined(PIRANHA_RUN_ON_VALGRIND)
 		BOOST_CHECK_EQUAL(math::ipow_subs(3.l,"a",integer(4),5),3.l);
+#endif
 		BOOST_CHECK_EQUAL(math::ipow_subs(char(3),"a",integer(4),5),char(3));
 		BOOST_CHECK_EQUAL(math::ipow_subs(3ull,"a",integer(4),5),3ull);
 	}

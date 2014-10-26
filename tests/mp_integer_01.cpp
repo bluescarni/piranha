@@ -55,7 +55,12 @@ using integral_types = boost::mpl::vector<char,
 	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,
 	wchar_t,char16_t,char32_t>;
 
+// Don't include long double in the tests while running on Valgrind.
+#if defined(PIRANHA_RUN_ON_VALGRIND)
+using floating_point_types = boost::mpl::vector<float,double>;
+#else
 using floating_point_types = boost::mpl::vector<float,double,long double>;
+#endif
 
 static std::mt19937 rng;
 static const int ntries = 1000;
@@ -2769,6 +2774,7 @@ struct float_ctor_tester
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<double>::quiet_NaN()},std::invalid_argument);
 		}
+#if !defined(PIRANHA_RUN_ON_VALGRIND)
 		// Long double.
 		std::uniform_int_distribution<int> exp_dist_ld(0,std::min(get_max_exp(std::numeric_limits<long double>::radix),
 			std::numeric_limits<long double>::max_exponent));
@@ -2787,6 +2793,7 @@ struct float_ctor_tester
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::infinity()},std::invalid_argument);
 			BOOST_CHECK_THROW(int_type{std::numeric_limits<long double>::quiet_NaN()},std::invalid_argument);
 		}
+#endif
 		// Float.
 		std::uniform_int_distribution<int> exp_dist_f(0,std::min(get_max_exp(std::numeric_limits<float>::radix),
 			std::numeric_limits<float>::max_exponent));
@@ -2964,10 +2971,12 @@ struct generic_assignment_tester
 		}
 		n = 3.0L;
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(n),"3");
+#if !defined(PIRANHA_RUN_ON_VALGRIND)
 		if (std::numeric_limits<long double>::has_infinity && std::numeric_limits<long double>::has_quiet_NaN) {
 			BOOST_CHECK_THROW((n = std::numeric_limits<long double>::infinity()),std::invalid_argument);
 			BOOST_CHECK_THROW((n = std::numeric_limits<long double>::quiet_NaN()),std::invalid_argument);
 		}
+#endif
 	}
 };
 

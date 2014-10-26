@@ -1,5 +1,13 @@
 # Add the unit test library.
+# NOTE: probably we should have a check in the build system to determine
+# whether Boost libraries are static or dynamic.
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+
+# Add a special definition for the unit tests when the run-on-Valgrind
+# option is selected.
+if(RUN_ON_VALGRIND AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+	add_definitions(-DPIRANHA_RUN_ON_VALGRIND)
+endif()
 
 MACRO(ADD_PIRANHA_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
