@@ -48,6 +48,7 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
@@ -2601,4 +2602,67 @@ struct ipow_subs_tester
 BOOST_AUTO_TEST_CASE(mp_integer_ipow_subs_test)
 {
 	boost::mpl::for_each<size_types>(ipow_subs_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+			std::numeric_limits<int>::max()), bool_dist(0,1);
+		int_type tmp;
+		for (int i = 0; i < ntries; ++i) {
+			int_type n(int_dist(rng));
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << n;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp;
+			}
+			BOOST_CHECK_EQUAL(tmp,n);
+			BOOST_CHECK_EQUAL(tmp.is_static(),n.is_static());
+			// Randomly promote tmp if possible. The idea is that we later
+			// deserialize a small integer into it, then tmp should also switch
+			// back to being static.
+			if (tmp.is_static() && bool_dist(rng)) {
+				tmp.promote();
+			}
+		}
+		// Deserialize a large integer into "a" first, then deserialize
+		// a small one and check that "a" is static. This is an explicit case
+		// of the procedure explained above.
+		int_type a, b(std::numeric_limits<long long>::max());
+		std::stringstream ss;
+		{
+			boost::archive::text_oarchive oa(ss);
+			oa << b;
+		}
+		{
+			boost::archive::text_iarchive ia(ss);
+			ia >> a;
+		}
+		ss.str("");
+		BOOST_CHECK_EQUAL(a,b);
+		b = 1;
+		{
+			boost::archive::text_oarchive oa(ss);
+			oa << b;
+		}
+		{
+			boost::archive::text_iarchive ia(ss);
+			ia >> a;
+		}
+		BOOST_CHECK_EQUAL(a,1);
+		BOOST_CHECK(a.is_static());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_serialization_test)
+{
+	boost::mpl::for_each<size_types>(serialization_tester());
 }

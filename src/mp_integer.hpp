@@ -33,6 +33,7 @@
 #include <gmp.h>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -48,6 +49,7 @@
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
+#include "serialization.hpp"
 #include "type_traits.hpp"
 
 namespace piranha { namespace detail {
@@ -1061,6 +1063,11 @@ struct is_mp_integer_interoperable_type
  * across different versions. GMP versions 4.x, 5.x and 6.x are explicitly supported by this class.
  *
  * @see http://gmplib.org/manual/Integer-Internals.html
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
+ *
  * @see http://gmplib.org/
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
@@ -1932,6 +1939,24 @@ class mp_integer
 				static_mpz_view			m_static_view;
 				const detail::mpz_struct_t	*m_dyn_ptr;
 		};
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			std::ostringstream oss;
+			oss << *this;
+			auto s = oss.str();
+			ar & s;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			std::string s;
+			ar & s;
+			*this = mp_integer(s);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Defaulted default constructor.
 		/**
