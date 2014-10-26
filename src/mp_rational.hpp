@@ -42,6 +42,7 @@
 #include "mp_integer.hpp"
 #include "print_tex_coefficient.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 
 namespace piranha
 {
@@ -115,6 +116,10 @@ struct is_mp_rational_interoperable_type<T,Rational,typename std::enable_if<!is_
  * ## Move semantics ##
  * 
  * Move construction and move assignment will leave the moved-from object in an unspecified but valid state.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -611,6 +616,29 @@ class mp_rational
 		template <typename T>
 		using pow_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const int_type &>().pow(std::declval<const T &>())),
 			decltype(std::declval<const int_type &>().pow(std::declval<const T &>()))>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// NOTE: here in principle we do not need the split member implementation,
+			// this syntax could be used for both load and save. However, for load
+			// we use an implementation that gives better exception safety: load num/den
+			// into local variables and the move them in. So if something goes wrong in the
+			// deserialization of one of the ints, we do not modify this.
+			ar & m_num;
+			ar & m_den;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			int_type num, den;
+			ar & num;
+			ar & den;
+			m_num = std::move(num);
+			m_den = std::move(den);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Default constructor.
 		/**

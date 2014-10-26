@@ -51,6 +51,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/safe_cast.hpp"
+#include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
 using integral_types = boost::mpl::vector<char,
@@ -2068,4 +2069,39 @@ struct safe_cast_tester
 BOOST_AUTO_TEST_CASE(mp_rational_safe_cast_test)
 {
 	boost::mpl::for_each<size_types>(safe_cast_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+			std::numeric_limits<int>::max());
+		q_type tmp;
+		for (int i = 0; i < ntries; ++i) {
+			auto num(int_dist(rng)), den(int_dist(rng));
+			q_type q{num,den};
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << q;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp;
+			}
+			BOOST_CHECK_EQUAL(tmp,q);
+			// NOTE: we don't check for the static/dynamic character here as the following could happen:
+			// when initing q, a GCD computation is run which could turn num/den into dynamic from static
+			// even if the final result fits into static. Then when deserializing, we would have a static
+			// vs dynamic mismatch.
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
+{
+	boost::mpl::for_each<size_types>(serialization_tester());
 }
