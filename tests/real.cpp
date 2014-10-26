@@ -2188,12 +2188,16 @@ BOOST_AUTO_TEST_CASE(real_serialization_test)
 		::mpfr_nextabove(tmp.get_mpfr_t());
 		// Write the tmp to an output archive.
 		std::stringstream ss;
+		{
 		boost::archive::text_oarchive oa(ss);
 		oa << tmp;
+		}
 		// Recover the real from the archive.
 		real tmp_out;
+		{
 		boost::archive::text_iarchive ia(ss);
 		ia >> tmp_out;
+		}
 		BOOST_CHECK_EQUAL(tmp,tmp_out);
 		BOOST_CHECK_EQUAL(tmp.get_prec(),tmp_out.get_prec());
 	}
