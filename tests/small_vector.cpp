@@ -800,6 +800,8 @@ struct serialization_tester
 			ia >> tmp;
 			}
 			BOOST_CHECK(tmp == v);
+			// Check that the static/dynamic character is the same.
+			BOOST_CHECK_EQUAL(tmp.is_static(),v.is_static());
 		}
 		// Try with integer.
 		using v_type2 = small_vector<integer,T>;
@@ -821,6 +823,7 @@ struct serialization_tester
 			ia >> tmp2;
 			}
 			BOOST_CHECK(tmp2 == v);
+			BOOST_CHECK_EQUAL(tmp2.is_static(),v.is_static());
 		}
 	}
 };
