@@ -1634,12 +1634,12 @@ class real: public detail::real_base<>
 			r = tmp_str;
 			return is;
 		}
-		/// Get a mutable reference to the internal <tt>::mpfr_t</tt> instance.
+		/// Get a mutable reference to the internal <tt>mpfr_t</tt> instance.
 		std::remove_extent< ::mpfr_t>::type *get_mpfr_t()
 		{
 			return &m_value[0u];
 		}
-		/// Get a const reference to the internal <tt>::mpfr_t</tt> instance.
+		/// Get a const reference to the internal <tt>mpfr_t</tt> instance.
 		const std::remove_extent< ::mpfr_t>::type *get_mpfr_t() const
 		{
 			return &m_value[0u];
