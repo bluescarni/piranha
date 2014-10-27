@@ -43,6 +43,7 @@
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
@@ -71,7 +72,11 @@ namespace piranha
  * 
  * \todo the linear argument method should not probably be conditionally enabled, as we rely on it for the
  * polynomial to poisson series stuff. Its requirements should become class requirements.
- * 
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the base class supports it.
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
@@ -173,6 +178,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename U>
 		using partial_enabler = typename std::enable_if<std::is_assignable<U &,decltype(
 			std::declval<U &>() - std::declval<U>())>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive &ar, unsigned int)
+		{
+			ar & boost::serialization::base_object<base>(*this);
+		}
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;
