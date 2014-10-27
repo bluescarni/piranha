@@ -28,12 +28,14 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
 #include "../src/type_traits.hpp"
@@ -651,4 +653,42 @@ BOOST_AUTO_TEST_CASE(array_key_add_enabler_test)
 {
 
 	boost::mpl::for_each<size_types>(ae_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef g_key_type<int,T> key_type;
+		key_type tmp;
+		key_type k0({1,2,3,4,5});
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << k0;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp == k0);
+		ss.str("");
+		key_type k1({1,2,3,4,5,6,7,8,9,10});
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << k1;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp == k1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_key_serialization_test)
+{
+
+	boost::mpl::for_each<size_types>(serialization_tester());
 }

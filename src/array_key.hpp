@@ -35,6 +35,7 @@
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -67,6 +68,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to the move semantics of piranha::small_vector.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the internal piranha::small_vector is serializable.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -443,6 +448,15 @@ class array_key
 			}
 			piranha_assert(retval.size() == new_args.size());
 			return retval;
+		}
+	private:
+		// Serialization support.
+		// NOTE: no need for split save/load, this is just a single-member class.
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive &ar, unsigned int)
+		{
+			ar & m_container;
 		}
 	private:
 		// Internal container.
