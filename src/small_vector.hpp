@@ -36,6 +36,7 @@
 #include "detail/vector_hasher.hpp"
 #include "exceptions.hpp"
 #include "memory.hpp"
+#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "type_traits.hpp"
 
@@ -516,6 +517,10 @@ union small_vector_union
  *
  * After a move operation, the container will be empty.
  *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the value type is serializable.
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 // NOTE: some possible improvements:
@@ -584,6 +589,39 @@ class small_vector
 		template <typename U>
 		using add_enabler = typename std::enable_if<
 			std::is_assignable<U &,decltype(std::declval<U const &>() + std::declval<U const &>()) &&>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// First save the size.
+			const auto s = size();
+			ar & s;
+			// Save the individual elements.
+			const auto it_f = end();
+			for (auto it = begin(); it != it_f; ++it) {
+				ar & (*it);
+			}
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// NOTE: there are faster ways of implementing this, first of all by re-using the storage
+			// with resize(). Here we are forcing a re-allocation instead. Keep this in mind for later
+			// optimisations.
+			// Erase this.
+			*this = small_vector();
+			// Read the size first.
+			size_type s;
+			ar & s;
+			// Read the elements.
+			for (size_type i = 0u; i < s; ++i) {
+				value_type x;
+				ar & x;
+				push_back(std::move(x));
+			}
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Default constructor.
 		/**

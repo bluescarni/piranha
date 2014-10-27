@@ -34,6 +34,8 @@
 #include <iterator>
 #include <memory>
 #include <new>
+#include <random>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -42,6 +44,7 @@
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/serialization.hpp"
 
 // NOTE: in these tests we are assuming a few things:
 // - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,
@@ -49,6 +52,9 @@
 // - we can interoperate safely with the size_type of std::vector.
 // These seem pretty safe in any concievable situation, but just keep it in mind. Note that the implementation
 // does not care about these assumptions, it's just the tests that do.
+
+static const int ntries = 1000;
+static std::mt19937 rng;
 
 using namespace piranha;
 
@@ -763,4 +769,63 @@ struct move_tester
 BOOST_AUTO_TEST_CASE(small_vector_move_test)
 {
 	boost::mpl::for_each<value_types>(move_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using v_type = small_vector<int,T>;
+		using size_type = typename v_type::size_type;
+		std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+			std::numeric_limits<int>::max());
+		std::uniform_int_distribution<size_type> size_dist(0u,10u);
+		v_type tmp;
+		for (int i = 0; i < ntries; ++i) {
+			// Create a vector of random size and with random contents.
+			v_type v;
+			const auto size = size_dist(rng);
+			for (size_type j = 0u; j < size; ++j) {
+				v.push_back(int_dist(rng));
+			}
+			// Serialize it.
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << v;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp;
+			}
+			BOOST_CHECK(tmp == v);
+		}
+		// Try with integer.
+		using v_type2 = small_vector<integer,T>;
+		v_type2 tmp2;
+		for (int i = 0; i < ntries; ++i) {
+			v_type2 v;
+			const auto size = size_dist(rng);
+			for (size_type j = 0u; j < size; ++j) {
+				v.push_back(integer(int_dist(rng)));
+			}
+			// Serialize it.
+			std::stringstream ss;
+			{
+			boost::archive::text_oarchive oa(ss);
+			oa << v;
+			}
+			{
+			boost::archive::text_iarchive ia(ss);
+			ia >> tmp2;
+			}
+			BOOST_CHECK(tmp2 == v);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_serialization_test)
+{
+	boost::mpl::for_each<size_types>(serialization_tester());
 }
