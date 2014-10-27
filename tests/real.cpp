@@ -2202,3 +2202,11 @@ BOOST_AUTO_TEST_CASE(real_serialization_test)
 		BOOST_CHECK_EQUAL(tmp.get_prec(),tmp_out.get_prec());
 	}
 }
+
+BOOST_AUTO_TEST_CASE(real_mpfr_t_get_test)
+{
+	real r0{.2};
+	BOOST_CHECK(r0.get_mpfr_t() != nullptr);
+	const real r1{-1};
+	BOOST_CHECK(r1.get_mpfr_t() != nullptr);
+}
