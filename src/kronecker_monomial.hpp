@@ -47,6 +47,7 @@
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -74,12 +75,17 @@ namespace piranha
  * ## Move semantics ##
  * 
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo consider abstracting the km_commons in a class and use it both here and in rtkm.
- * \todo needs sfinaeing.
  */
+// TODO:
+// - consider abstracting the km_commons in a class and use it both here and in rtkm.
+// - needs sfinaeing.
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial
 {
@@ -114,6 +120,13 @@ class kronecker_monomial
 		template <typename U>
 		using pow_enabler = typename std::enable_if<has_safe_cast<T,
 			decltype(std::declval<integer &&>() * std::declval<const U &>())>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive &ar, unsigned int)
+		{
+			ar & m_value;
+		}
 	public:
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
