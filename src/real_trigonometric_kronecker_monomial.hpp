@@ -43,6 +43,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -84,13 +85,18 @@ namespace piranha
  * ## Move semantics ##
  * 
  * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
- * \todo in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
- * of t_degree around the code to make sure the change has no nasty effects.
- * \todo needs sfinaeing.
  */
+// TODO:
+// - in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
+//   of t_degree around the code to make sure the change has no nasty effects.
+// - needs sfinaeing.
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
@@ -177,6 +183,26 @@ class real_trigonometric_kronecker_monomial
 		template <typename Iterator>
 		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
 			has_safe_cast<value_type,decltype(*std::declval<const Iterator &>())>::value,int>::type;
+		// Serialization support.
+		// NOTE: split for exception safety.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			ar & m_value;
+			ar & m_flavour;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			value_type value;
+			bool flavour;
+			ar & value;
+			ar & flavour;
+			m_value = value;
+			m_flavour = flavour;
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Default constructor.
 		/**
