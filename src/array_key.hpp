@@ -105,6 +105,14 @@ class array_key
 		// but alas the intel compiler chokes on this :/.
 		template <typename U>
 		using add_enabler = decltype(std::declval<U const &>().add(std::declval<U &>(),std::declval<U const &>()));
+		// Serialization support.
+		// NOTE: no need for split save/load, this is just a single-member class.
+		friend class boost::serialization::access;
+		template <typename Archive>
+		void serialize(Archive &ar, unsigned int)
+		{
+			ar & m_container;
+		}
 	public:
 		/// Iterator type.
 		using iterator = typename container_type::iterator;
@@ -448,15 +456,6 @@ class array_key
 			}
 			piranha_assert(retval.size() == new_args.size());
 			return retval;
-		}
-	private:
-		// Serialization support.
-		// NOTE: no need for split save/load, this is just a single-member class.
-		friend class boost::serialization::access;
-		template <typename Archive>
-		void serialize(Archive &ar, unsigned int)
-		{
-			ar & m_container;
 		}
 	private:
 		// Internal container.
