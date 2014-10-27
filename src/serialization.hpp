@@ -26,5 +26,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/serialization/string.hpp>
 
 #endif
