@@ -10,14 +10,14 @@ Piranha requires a recent compiler with robust support for the C++11 standard. T
 compilers are routinely used to develop and test the library:
 
 * `GCC <http://gcc.gnu.org/>`__ 4.8 and later,
-* `Clang <http://clang.llvm.org/>`__ 3.4 (version 3.3 should work as well),
+* `Clang <http://clang.llvm.org/>`__ 3.4 (earlier versions up to 3.1 should work as well),
 * `Intel C++ compiler <https://software.intel.com/en-us/c-compilers>`__ 15 (beta support).
 
 The main platform used for the development of Piranha is 64-bit GNU/Linux. Some level of support
-for OSX, Windows (using MinGW) and BSD flavours exists, but the library is compiled and tested on these
-platforms only occasionally.
+for OSX, Windows (using `MinGW <http://mingw-w64.sourceforge.net/>`__) and BSD flavours exists,
+but the library is compiled and tested on these platforms only occasionally.
 
-The code is designed to be standard-compliant and any portability issue in the source code
+Piranha aims to be standard-compliant and any portability issue in the source code
 should be reported as a bug.
 
 Dependencies
@@ -144,7 +144,7 @@ so, technically, you do not need to actually compile anything to use the library
 step above is still necessary to setup platform-specific functionality in the headers). The building stage
 is however needed when building the Python bindings Pyranha and/or when testing is enabled.
 
-In Unix-like environments, you can build the tests and the Python bindings by running the standard
+In Unix-like environments, you can build the tests and/or the Python bindings by running the standard
 ``make`` tool from the ``build`` directory:
 
 .. code-block:: bash
@@ -186,7 +186,7 @@ After a successful build in ``Debug`` mode, it is good practice to run the test 
     8/45 Test  #8: exceptions ..............................   Passed    0.01 sec
          Start  9: hash_set
     9/45 Test  #9: hash_set ................................   Passed    8.35 sec
-   ...
+   [...]
    42/45 Test #42: tracing .................................   Passed    0.00 sec
          Start 43: trigonometric_series
    43/45 Test #43: trigonometric_series ....................   Passed    0.03 sec
@@ -213,91 +213,8 @@ The final step is the installation of Piranha on the system. In Unix-like enviro
 
 command will copy the Piranha C++ headers into ``PREFIX/include/piranha``, and the Pyranha module (if built) in an auto-detected subdirectory
 of ``PREFIX`` where Python modules can be found by the Python interpreter (e.g., something like ``PREFIX/lib/python2.7/site-packages`` in a
-typical Python 2.7 installation).
+typical Python 2.7 installation on GNU/Linux).
 
 If you do not have write permissions in ``/usr/local``, it is possible to change the ``PREFIX`` in the configuration phase. It is
 advisable to set the ``PREFIX`` to a subdirectory in the user's home directory (e.g., ``/home/username/.local``).
 The ``PREFIX`` can be set via the ``CMAKE_INSTALL_PREFIX`` CMake variable.
-
-Hello Piranha!
---------------
-
-It should now be possible to compile and run your first C++ Piranha program:
-
-.. code-block:: c++
-   :linenos:
-
-   #include <iostream>
-
-   // Include the global Piranha header.
-   #include "piranha/piranha.hpp"
-
-   // Import the Piranha namespace.
-   using namespace piranha;
-
-   int main()
-   {
-     // Setup of the Piranha environment.
-     environment env;
-     // This statement will print "4/3" to screen.
-     std::cout << rational{4,3} << '\n';
-   }
-
-This program will just print to screen the rational number :math:`\frac{4}{3}`, represented
-in Piranha by a class called (unsurprisingly) ``rational``.
-In Unix-like environments, you can compile this simple program with GCC via the command:
-
-.. code-block:: bash
-
-   $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp
-
-A couple of things to note:
-
-* we pass the ``-std=c++11`` flag to specify that we want to use the C++11 version of the C++ standard for the compilation.
-  Piranha is written in C++11, and this flag is necessary as long as GCC does not default to C++11 mode;
-* we specify via the ``-lmpfr -lgmp`` flags that the executable needs to be linked to the GMP and MPFR libraries (if
-  you do not do this, the program will still compile but the final linking will fail due to undefined references);
-* at the present time, all the Boost libraries used within Piranha are header-only and thus no linking to any Boost
-  library is necessary;
-* Piranha itself is header-only, so there is no ``libpiranha`` to link to.
-
-Note that if you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
-the Piranha headers are located via the ``-I`` switch. E.g.,
-
-.. code-block:: bash
-
-   $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp
-
-If the GMP and/or MPFR libraries are not installed in a standard path, you can use the ``-L`` switch to tell GCC
-where to look for them:
-
-.. code-block:: bash
-
-   $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
-
-On the Python side, in order to check that the installation of the Pyranha module was successful it will be enough to
-attempt importing it from a Python session:
-
->>> import pyranha
-
-If this command produces no error messages, then the installation of Pyranha was successful. You can run the Pyranha
-test suite with the following commands:
-
-.. code-block:: python
-
-   >>> import pyranha.test
-   >>> pyranha.test.run_test_suite()
-   runTest (pyranha.test.basic_test_case) ... ok
-   runTest (pyranha.test.mpmath_test_case) ... ok
-   runTest (pyranha.test.math_test_case) ... ok
-   runTest (pyranha.test.polynomial_test_case) ... ok
-   runTest (pyranha.test.poisson_series_test_case) ... ok
-   
-   ----------------------------------------------------------------------
-   Ran 5 tests in 1.348s
-   
-   OK
-
-Note that if you specified a non-standard ``PREFIX`` during the configuration phase, you might need to set the ``PYTHONPATH``
-environment variable in order for the Python interpreter to locate Pyranha. More information is available
-`here <https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH>`__ .

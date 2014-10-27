@@ -15,14 +15,12 @@ and performance. Piranha includes a set of bindings for the Python programming
 language, called **Pyranha**, that allows to use the library in an interactive
 way.
 
-Contents:
-=========
-
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    getting_started.rst
-   pyranha_reference.rst
+   tutorial.rst
+   reference.rst
 
 Indices and tables
 ==================

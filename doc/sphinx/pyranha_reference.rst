@@ -1,7 +1,7 @@
 .. _pyranha_reference:
 
-Pyranha reference
-=================
+Python reference
+================
 
 .. toctree::
    :maxdepth: 2
