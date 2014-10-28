@@ -193,6 +193,7 @@ class symbol: private detail::base_symbol<>
 			*this = symbol(std::move(s));
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+	private:
 		std::string const		*m_ptr;
 };
 
