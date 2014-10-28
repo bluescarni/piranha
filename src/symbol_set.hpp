@@ -34,6 +34,7 @@
 #include "detail/symbol_set_fwd.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
+#include "serialization.hpp"
 #include "symbol.hpp"
 #include "type_traits.hpp"
 
@@ -53,6 +54,10 @@ namespace piranha
  * 
  * Move construction and move assignment will leave the moved-from object in a state equivalent to a
  * default-constructed object.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -79,6 +84,39 @@ class symbol_set
 		template <typename Iterator, typename Symbol>
 		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
 			std::is_constructible<Symbol,decltype(*(std::declval<const Iterator &>()))>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			const auto size = m_values.size();
+			ar & size;
+			for (const auto &s: m_values) {
+				// Store the names.
+				ar & s.get_name();
+			}
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// A new, empty set.
+			symbol_set ss;
+			// First recover the size.
+			std::vector<symbol>::size_type size;
+			ar & size;
+			// Restore using strings.
+			// NOTE: this is the slowest and safest way of doing it, even in face
+			// of bogus input from the archive (e.g., out-of-order symbols, duplicate names,
+			// etc.). This can certainly be optimised in the future.
+			std::string name;
+			for (decltype(size) i = 0u; i < size; ++i) {
+				ar & name;
+				ss.add(symbol(name));
+			}
+			// Move in the new set.
+			*this = std::move(ss);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Size type.
 		typedef std::vector<symbol>::size_type size_type;

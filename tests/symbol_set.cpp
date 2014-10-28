@@ -28,12 +28,14 @@
 #include <limits>
 #include <list>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
 
 #include "../src/environment.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 
 static std::mt19937 rng;
@@ -332,5 +334,34 @@ BOOST_AUTO_TEST_CASE(symbol_set_positions_test)
 		positions p(a,b);
 		checker(a,b,p);
 		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
+{
+	std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::max());
+	std::uniform_int_distribution<symbol_set::size_type> size_dist(0u,10u);
+	symbol_set tmp;
+	for (int i = 0; i < ntries; ++i) {
+		// Create a randomly-size random symbol set.
+		const auto size = size_dist(rng);
+		symbol_set ss;
+		for (symbol_set::size_type i = 0u; i < size; ++i) {
+			try {
+				ss.add(symbol(boost::lexical_cast<std::string>(int_dist(rng))));
+			} catch (...) {}
+		}
+		std::stringstream stream;
+		{
+		boost::archive::text_oarchive oa(stream);
+		oa << ss;
+		}
+		{
+		boost::archive::text_iarchive ia(stream);
+		ia >> tmp;
+		}
+		BOOST_CHECK_EQUAL(tmp.size(),ss.size());
+		BOOST_CHECK(tmp == ss);
 	}
 }
