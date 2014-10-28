@@ -33,9 +33,11 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <map>
 #include <new>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -44,6 +46,7 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/serialization.hpp"
 #include "../src/thread_pool.hpp"
 #include "../src/type_traits.hpp"
 
@@ -591,5 +594,65 @@ BOOST_AUTO_TEST_CASE(hash_set_mt_test)
 		bcount = size_dist(rng);
 		h.rehash(bcount,thread_dist(rng));
 		BOOST_CHECK(h.bucket_count() >= bcount);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(hash_set_serialization_test)
+{
+	{
+	// Serialize and deserialize hash sets of ints built randomly.
+	// Check that the objects have the same size and that every element
+	// of one set is also in the other one.
+	hash_set<int> tmp;
+	std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::max());
+	std::uniform_int_distribution<unsigned> size_dist(0u,10u);
+	for (int i = 0; i < ntries; ++i) {
+		hash_set<int> h;
+		const auto size = size_dist(rng);
+		for (auto j = 0u; j < size; ++j) {
+			h.insert(int_dist(rng));
+		}
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << h;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp.size() == h.size());
+		for (const auto &n: h) {
+			BOOST_CHECK(tmp.find(n) != tmp.end());
+		}
+	}
+	}
+	{
+	// Same with integer.
+	hash_set<integer> tmp;
+	std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::max());
+	std::uniform_int_distribution<unsigned> size_dist(0u,10u);
+	for (int i = 0; i < ntries; ++i) {
+		hash_set<integer> h;
+		const auto size = size_dist(rng);
+		for (auto j = 0u; j < size; ++j) {
+			h.insert(integer(int_dist(rng)));
+		}
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << h;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp.size() == h.size());
+		for (const auto &n: h) {
+			BOOST_CHECK(tmp.find(n) != tmp.end());
+		}
+	}
 	}
 }

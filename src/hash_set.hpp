@@ -43,6 +43,7 @@
 #include "debug_access.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
+#include "serialization.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
 
@@ -84,6 +85,11 @@ namespace piranha
  * 
  * Move construction and move assignment will leave the moved-from object equivalent to an empty set whose hasher and
  * equality predicate have been moved-from.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
+ * are not serialised and they are recreated from scratch upon deserialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -480,6 +486,42 @@ class hash_set
 				piranha_assert(!m_log2_size && !m_n_elements);
 			}
 		}
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// Save the number of elements first.
+			ar & m_n_elements;
+			// Save the elements one by one.
+			const auto it_f = end();
+			for (auto it = begin(); it != it_f; ++it) {
+				ar & (*it);
+			}
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// Erase this and work on an empty one. In case of exceptions,
+			// we should have an hash set in unspecified but consistent state.
+			// We could also enforce strong exception safety by working on a temporary
+			// set and then swapping that in, but that would need more memory - and we
+			// care about memory for very large series.
+			*this = hash_set();
+			// Recover the number of elements.
+			size_type n_elements;
+			ar & n_elements;
+			// Recover the elements one by one.
+			for (size_type i = 0u; i < n_elements; ++i) {
+				key_type k;
+				ar & k;
+				const auto ret_ins = insert(std::move(k));
+				// Check that there was no duplicate.
+				(void)ret_ins;
+				piranha_assert(ret_ins.second);
+			}
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Iterator type.
 		/**
