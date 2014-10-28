@@ -27,5 +27,24 @@
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+// Serialization todo:
+// - provide alternative overloads of the serialization methods
+//   when working with binary archives. This should lead to improved performance
+//   at the expense of portability;
+// - think about potentially "malicious" archives being loaded. We have some classes that
+//   rely on their members to satisfy certain conditions. Examples:
+//   - the rational numerator and denominator being coprimes,
+//   - the integer stored in a kronecker monomial to be inside certain bounds
+//     (even with a single variable, not all values are allowed due to the prime
+//     number restrictions -> but maybe this does not really matter, all this is checked
+//     whenever the integral value is unpacked),
+//   - elements in a symbol_set being ordered (this should be already ensured in the current code)
+//   - possibly more...
+//   Right now the general policy is to just restore class members whatever their value is.
+//   We need to decide ultimately if we want to have a layer of safety in the serialization methods
+//   or not. It comes at a price in terms of complexity and performance. A possible middle way would
+//   be to enable the safety checks in the text archives but disable them in the binary ones,
+//   for performance. The safety layer could be checked by crafting bad text archives and storing
+//   them as strings from the tests.
 
 #endif
