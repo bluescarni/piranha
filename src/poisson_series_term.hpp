@@ -27,6 +27,7 @@
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
+#include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -64,6 +65,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::base_term's move semantics.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the base class supports it.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -75,6 +80,7 @@ class poisson_series_term: public base_term<Cf,real_trigonometric_kronecker_mono
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
 		PIRANHA_TT_CHECK(is_divisible_in_place,Cf,int);
 		typedef base_term<Cf,real_trigonometric_kronecker_monomial<>,poisson_series_term<Cf>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Result type for the multiplication by another term.
 		typedef std::tuple<poisson_series_term,poisson_series_term> multiplication_result_type;

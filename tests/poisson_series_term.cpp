@@ -25,6 +25,8 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <initializer_list>
+#include <sstream>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -35,6 +37,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
@@ -163,4 +166,33 @@ struct multiplication_tester
 BOOST_AUTO_TEST_CASE(poisson_series_term_multiplication_test)
 {
 	boost::mpl::for_each<cf_types>(multiplication_tester());
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_term_serialization_test)
+{
+	typedef poisson_series_term<rational> term_type;
+	term_type tmp, t(-1/4_q,std::initializer_list<int>{1,2,3});
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << t;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK(tmp.m_cf == t.m_cf);
+	BOOST_CHECK(tmp.m_key == t.m_key);
+	ss.str("");
+	term_type t2(1,std::initializer_list<int>{3,2,1});
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << t2;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK(tmp.m_cf == t2.m_cf);
+	BOOST_CHECK(tmp.m_key == t2.m_key);
 }
