@@ -50,6 +50,7 @@ template <typename T, typename ... Args>
 class g_key_type: public array_key<T,g_key_type<T,Args...>,Args...>
 {
 		using base = array_key<T,g_key_type<T,Args...>,Args...>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_key_type() = default;
 		g_key_type(const g_key_type &) = default;
