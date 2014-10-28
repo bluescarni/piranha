@@ -30,7 +30,7 @@ OPTION(USE_TCMALLOC "Enable use of TCMalloc in release builds." OFF)
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
-option(RUN_ON_VALGRIND "Configure option to run Piranha on Valgrind." OFF)
+option(RUN_ON_VALGRIND "Configure Piranha to be run on Valgrind." OFF)
 # Make it an advanced option, not really interesting for non-developers.
 mark_as_advanced(RUN_ON_VALGRIND)
 
