@@ -25,7 +25,9 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <initializer_list>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <type_traits>
 
@@ -34,6 +36,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
@@ -159,4 +162,33 @@ BOOST_AUTO_TEST_CASE(polynomial_term_size_print)
 	std::cout << "Size 0 char : " << sizeof(polynomial_term<double,signed char,std::integral_constant<std::size_t,0u>>) << '\n';
 	polynomial_term<double,signed char,std::integral_constant<std::size_t,30u>> t4;
 	std::cout << "Size 30 char: " << sizeof(polynomial_term<double,signed char,std::integral_constant<std::size_t,30u>>) << '\n';
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_term_serialization_test)
+{
+	typedef polynomial_term<integer,int> term_type;
+	term_type tmp, t(-1,std::initializer_list<int>{1,2,3});
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << t;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK(tmp.m_cf == t.m_cf);
+	BOOST_CHECK(tmp.m_key == t.m_key);
+	ss.str("");
+	term_type t2(1,std::initializer_list<int>{3,2,1});
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << t2;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK(tmp.m_cf == t2.m_cf);
+	BOOST_CHECK(tmp.m_key == t2.m_key);
 }

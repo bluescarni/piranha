@@ -29,6 +29,7 @@
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
 #include "monomial.hpp"
+#include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -92,6 +93,10 @@ struct polynomial_term_key<kronecker_monomial<T>,S>
  * 
  * Move semantics is equivalent to piranha::base_term's move semantics.
  * 
+ * ## Serialization ##
+ *
+ * This class supports serialization if the base class supports it.
+ *
  * @author Francesco Biscani (bluescarni@gmail.com)
  *
  * \todo sfinaeing or something analogous for the multiplication method, once we sort out series multiplication.
@@ -103,6 +108,7 @@ class polynomial_term: public base_term<Cf,typename detail::polynomial_term_key<
 		PIRANHA_TT_CHECK(is_multipliable_in_place,Cf);
 		PIRANHA_TT_CHECK(has_multiply_accumulate,Cf);
 		using base = base_term<Cf,typename detail::polynomial_term_key<Expo,S>::type,polynomial_term<Cf,Expo,S>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Result type for the multiplication by another term.
 		typedef polynomial_term multiplication_result_type;
