@@ -40,6 +40,7 @@
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 
 static const int ntries = 1000;
@@ -55,6 +56,7 @@ template <typename Cf, typename Key>
 class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 {
 		typedef base_term<Cf,Key,g_term_type> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_term_type() = default;
 		g_term_type(const g_term_type &) = default;
@@ -163,6 +165,20 @@ BOOST_AUTO_TEST_CASE(base_term_hash_test)
 	boost::mpl::for_each<cf_types>(hash_tester());
 }
 
+template <typename Cf, typename Key>
+class tmp_term_type: public base_term<Cf,Key,tmp_term_type<Cf,Key>>
+{
+		using base = base_term<Cf,Key,tmp_term_type<Cf,Key>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
+		tmp_term_type() = default;
+		tmp_term_type(const tmp_term_type &) = default;
+		tmp_term_type(tmp_term_type &&) = default;
+		tmp_term_type &operator=(const tmp_term_type &) = default;
+		tmp_term_type &operator=(tmp_term_type &&) = default;
+		explicit tmp_term_type(const Cf &, const Key &) {}
+};
+
 struct compatibility_tester
 {
 	template <typename Cf>
@@ -171,16 +187,7 @@ struct compatibility_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			class term_type: public base_term<Cf,Key,term_type>
-			{
-				public:
-					term_type() = default;
-					term_type(const term_type &) = default;
-					term_type(term_type &&) = default;
-					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&) = default;
-					explicit term_type(const Cf &, const Key &) {}
-			};
+			using term_type = tmp_term_type<Cf,Key>;
 			typedef typename Key::value_type value_type;
 			symbol_set args;
 			term_type t1;
@@ -211,16 +218,7 @@ struct ignorability_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			class term_type: public base_term<Cf,Key,term_type>
-			{
-				public:
-					term_type() = default;
-					term_type(const term_type &) = default;
-					term_type(term_type &&) = default;
-					term_type &operator=(const term_type &) = default;
-					term_type &operator=(term_type &&) = default;
-					explicit term_type(const Cf &, const Key &) {}
-			};
+			using term_type = tmp_term_type<Cf,Key>;
 			symbol_set args;
 			term_type t1;
 			BOOST_CHECK_EQUAL(t1.is_ignorable(args),(t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf)));
@@ -246,6 +244,8 @@ BOOST_AUTO_TEST_CASE(base_term_ignorability_test)
 template <typename Cf, typename Key>
 class term_type: public base_term<Cf,Key,term_type<Cf,Key>>
 {
+		using base = base_term<Cf,Key,term_type<Cf,Key>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		term_type() = default;
 		term_type(const term_type &) = default;
@@ -255,6 +255,8 @@ class term_type: public base_term<Cf,Key,term_type<Cf,Key>>
 		explicit term_type(const Cf &, const Key &) {}
 };
 
+// Not really needed to add the serialization methods here, these are only tested
+// for the type traits.
 template <typename Cf, typename Key>
 class term_type_invalid1: public base_term<Cf,Key,term_type_invalid1<Cf,Key>>
 {

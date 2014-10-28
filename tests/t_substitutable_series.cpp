@@ -40,6 +40,7 @@
 #include "../src/polynomial.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
@@ -82,6 +83,7 @@ template <typename Cf, typename Key>
 class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 {
 		typedef base_term<Cf,Key,g_term_type> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_term_type() = default;
 		g_term_type(const g_term_type &) = default;

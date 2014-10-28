@@ -52,6 +52,7 @@
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -128,6 +129,7 @@ template <typename Cf, typename Key>
 class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 {
 		typedef base_term<Cf,Key,g_term_type> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_term_type() = default;
 		g_term_type(const g_term_type &) = default;
