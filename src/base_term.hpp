@@ -27,6 +27,7 @@
 
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"
+#include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -52,6 +53,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to its data members' move semantics.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the coefficient and key types support it.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
@@ -62,6 +67,32 @@ class base_term
 {
 		PIRANHA_TT_CHECK(is_cf,Cf);
 		PIRANHA_TT_CHECK(is_key,Key);
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			ar & m_cf;
+			ar & m_key;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// NOTE: the requirement on def-constructability here is implied
+			// by is_cf and is_key.
+			Cf cf;
+			Key key;
+			ar & cf;
+			ar & key;
+			m_cf = std::move(cf);
+			m_key = std::move(key);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Enabler for the generic binary ctor.
+		template <typename T, typename U>
+		using binary_ctor_enabler = typename std::enable_if<
+			std::is_constructible<Cf,T &&>::value && std::is_constructible<Key,U &&>::value,
+			int>::type;
 	public:
 		/// Alias for coefficient type.
 		typedef Cf cf_type;
@@ -97,9 +128,7 @@ class base_term
 		 * 
 		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
 		 */
-		template <typename T, typename U, typename std::enable_if<
-			std::is_constructible<Cf,T>::value && std::is_constructible<Key,U>::value,
-			int>::type = 0>
+		template <typename T, typename U, binary_ctor_enabler<T,U> = 0>
 		explicit base_term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
 		~base_term();
