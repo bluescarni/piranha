@@ -179,12 +179,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using partial_enabler = typename std::enable_if<std::is_assignable<U &,decltype(
 			std::declval<U &>() - std::declval<U>())>::value,int>::type;
 		// Serialization support.
-		friend class boost::serialization::access;
-		template <typename Archive>
-		void serialize(Archive &ar, unsigned int)
-		{
-			ar & boost::serialization::base_object<base>(*this);
-		}
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		monomial() = default;

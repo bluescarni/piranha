@@ -47,4 +47,13 @@
 //   for performance. The safety layer could be checked by crafting bad text archives and storing
 //   them as strings from the tests.
 
+// Macro for trivial serialization through base class.
+#define PIRANHA_SERIALIZE_THROUGH_BASE(base) \
+friend class boost::serialization::access; \
+template <typename Archive> \
+void serialize(Archive &ar, unsigned int) \
+{ \
+	ar & boost::serialization::base_object<base>(*this); \
+}
+
 #endif
