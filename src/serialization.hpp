@@ -38,7 +38,7 @@
 //     (even with a single variable, not all values are allowed due to the prime
 //     number restrictions -> but maybe this does not really matter, all this is checked
 //     whenever the integral value is unpacked),
-//   - elements in a symbol_set being ordered (this should be already ensured in the current code)
+//   - elements in a symbol_set being ordered (done)
 //   - possibly more...
 //   Right now the general policy is to just restore class members whatever their value is.
 //   We need to decide ultimately if we want to have a layer of safety in the serialization methods

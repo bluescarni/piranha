@@ -364,4 +364,13 @@ BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
 		BOOST_CHECK_EQUAL(tmp.size(),ss.size());
 		BOOST_CHECK(tmp == ss);
 	}
+	// Try with a "bad" archive, containing twice the symbol "b".
+	const std::string bad_ar = "22 serialization::archive 10 0 0 3 1 a 1 b 1 b";
+	std::stringstream stream;
+	stream.str(bad_ar);
+	boost::archive::text_iarchive ia(stream);
+	const symbol_set old_tmp(tmp);
+	BOOST_CHECK_THROW(ia >> tmp,std::invalid_argument);
+	// Check that the original symbol_set is not affected.
+	BOOST_CHECK(old_tmp == tmp);
 }
