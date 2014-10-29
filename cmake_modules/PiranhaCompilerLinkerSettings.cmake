@@ -127,4 +127,8 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	# This is useful when the compiler decides the template backtrace is too verbose.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-backtrace-limit=0)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
+	# In the serialization work, we started hitting the template recursive instantiation
+	# limit on clang. This limit is supposed to be at least 1024 in C++11, but for some reason
+	# clang sets this to 256, and gcc to 900.
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-depth=1024)
 endif()
