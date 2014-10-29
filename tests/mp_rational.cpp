@@ -2107,21 +2107,28 @@ BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 	// Tests for bad archives.
 	auto tmp = 1/3_q;
 	std::stringstream ss;
+	{
 	const std::string ba0 = "22 serialization::archive 10 0 0 0 0 1 3 1 0";
 	ss.str(ba0);
 	boost::archive::text_iarchive ia0(ss);
 	BOOST_CHECK_THROW(ia0 >> tmp,zero_division_error);
 	BOOST_CHECK_EQUAL(tmp,1/3_q);
+	}
+	{
 	const std::string ba1 = "22 serialization::archive 10 0 0 0 0 1 3 1 3";
 	ss.str(ba1);
 	boost::archive::text_iarchive ia1(ss);
 	ia1 >> tmp;
 	BOOST_CHECK_EQUAL(tmp,1);
+	}
+	{
 	const std::string ba2 = "22 serialization::archive 10 0 0 0 0 1 3 2 -3";
 	ss.str(ba2);
 	boost::archive::text_iarchive ia2(ss);
 	ia2 >> tmp;
 	BOOST_CHECK_EQUAL(tmp,-1);
+	}
+	{
 	const std::string ba3 = "22 serialization::archive 10 0 0 0 0 1 0 2 -3";
 	ss.str(ba3);
 	boost::archive::text_iarchive ia3(ss);
@@ -2129,4 +2136,5 @@ BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 	BOOST_CHECK_EQUAL(tmp,0);
 	BOOST_CHECK_EQUAL(tmp.den(),1);
 	BOOST_CHECK_EQUAL(tmp.num(),0);
+	}
 }
