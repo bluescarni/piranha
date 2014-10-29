@@ -35,7 +35,7 @@
 //   rely on their members to satisfy certain conditions. Examples:
 //   - the rational numerator and denominator being coprimes (done),
 //   - elements in a symbol_set being ordered (done)
-//   - series symbol set inconsistent with contained terms,
+//   - series symbol set inconsistent with contained terms (done),
 //   - possibly more...
 //   Right now the general policy is to just restore class members whatever their value is.
 //   We need to decide ultimately if we want to have a layer of safety in the serialization methods
