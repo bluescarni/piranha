@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_failures_test)
 BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
 {
 	using stype = poisson_series<polynomial<rational,short>>;
-	stype x("x"), y("y"), z = x + y, tmp;
+	stype x("x"), y("y"), z = y + math::cos(x + y), tmp;
 	std::stringstream ss;
 	{
 	boost::archive::text_oarchive oa(ss);
