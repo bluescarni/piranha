@@ -2122,4 +2122,11 @@ BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 	boost::archive::text_iarchive ia2(ss);
 	ia2 >> tmp;
 	BOOST_CHECK_EQUAL(tmp,-1);
+	const std::string ba3 = "22 serialization::archive 10 0 0 0 0 1 0 2 -3";
+	ss.str(ba3);
+	boost::archive::text_iarchive ia3(ss);
+	ia3 >> tmp;
+	BOOST_CHECK_EQUAL(tmp,0);
+	BOOST_CHECK_EQUAL(tmp.den(),1);
+	BOOST_CHECK_EQUAL(tmp.num(),0);
 }
