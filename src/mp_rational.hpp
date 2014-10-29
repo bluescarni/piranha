@@ -635,8 +635,10 @@ class mp_rational
 			int_type num, den;
 			ar & num;
 			ar & den;
-			m_num = std::move(num);
-			m_den = std::move(den);
+			// This ensures that if we load from a bad archive with non-coprime
+			// num and den or negative den, or... we get anyway a canonicalised
+			// rational or an error.
+			*this = mp_rational{num,den};
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:

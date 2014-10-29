@@ -33,12 +33,9 @@
 //   at the expense of portability;
 // - think about potentially "malicious" archives being loaded. We have some classes that
 //   rely on their members to satisfy certain conditions. Examples:
-//   - the rational numerator and denominator being coprimes,
-//   - the integer stored in a kronecker monomial to be inside certain bounds
-//     (even with a single variable, not all values are allowed due to the prime
-//     number restrictions -> but maybe this does not really matter, all this is checked
-//     whenever the integral value is unpacked),
+//   - the rational numerator and denominator being coprimes (done),
 //   - elements in a symbol_set being ordered (done)
+//   - series symbol set inconsistent with contained terms,
 //   - possibly more...
 //   Right now the general policy is to just restore class members whatever their value is.
 //   We need to decide ultimately if we want to have a layer of safety in the serialization methods
