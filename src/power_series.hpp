@@ -65,7 +65,7 @@ namespace piranha
  *
  * ## Serialization ##
  *
- * This class supports serialization \p Series does.
+ * This class supports serialization if \p Series does.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
