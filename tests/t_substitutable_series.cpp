@@ -25,6 +25,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -198,4 +199,20 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK((!has_t_subs<p_type2,double,int>::value));
 	BOOST_CHECK((!key_has_t_subs<key02,int,int>::value));
 	BOOST_CHECK((!has_t_subs<g_series_type<double,key02>,double,double>::value));
+}
+
+BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
+{
+	using stype = poisson_series<polynomial<rational,short>>;
+	stype x("x"), y("y"), z = x + y, tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }

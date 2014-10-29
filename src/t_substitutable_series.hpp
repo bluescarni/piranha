@@ -27,6 +27,7 @@
 
 #include "forwarding.hpp"
 #include "math.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -54,6 +55,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if \p Series does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -131,6 +136,7 @@ class t_substitutable_series: public Series
 				std::declval<cf_t_subs_type>()) type;
 		};
 #endif
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		t_substitutable_series() = default;
