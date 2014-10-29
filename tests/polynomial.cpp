@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <limits>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -680,4 +681,20 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(2),y),x.pow(-7) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-2),y),x.pow(-1) * y.pow(3) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
+{
+	typedef polynomial<integer,long> stype;
+	stype x("x"), y("y"), z = x + y, tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }

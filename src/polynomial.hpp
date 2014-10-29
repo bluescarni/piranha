@@ -56,6 +56,7 @@
 #include "mp_integer.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
 #include "symbol.hpp"
@@ -226,6 +227,7 @@ class polynomial:
 		template <typename T, typename Series>
 		using pow_ret_type = decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()),void(),
 			std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()));
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		/**

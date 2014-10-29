@@ -41,6 +41,7 @@
 #include "../src/polynomial.hpp"
 #include "../src/power_series.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 
@@ -577,4 +578,20 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
 	BOOST_CHECK((is_evaluable<p_type1,long long>::value));
 	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf,short>>,double>::value));
 	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)
+{
+	typedef poisson_series<polynomial<rational,short>> stype;
+	stype x("x"), y("y"), z = x + math::cos(x + y), tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }

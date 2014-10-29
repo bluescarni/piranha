@@ -36,6 +36,7 @@
 #include "mp_integer.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
@@ -249,6 +250,7 @@ class poisson_series:
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		/**
