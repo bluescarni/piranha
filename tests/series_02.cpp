@@ -255,4 +255,15 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 	BOOST_CHECK_EQUAL(tmp,math::pow(x,2)/2 + math::pow(x,2)/3);
 	BOOST_CHECK_EQUAL(tmp.size(),1u);
 	}
+	{
+	// This is equivalent to:
+	// math::pow(x,2)/2 + math::pow(x,2)/3
+	// with the numerators of the fractions replaced by zero.
+	std::stringstream ss;
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 0 1 2 0 0 0 0 0 0 2 2 0 1 0 1 3 2 2 0";
+	ss.str(ba);
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	BOOST_CHECK_EQUAL(tmp.size(),0u);
+	}
 }
