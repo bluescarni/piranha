@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -320,4 +321,20 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
 	// This does not have a degree type because fake_int cannot be added to integer.
 	BOOST_CHECK((!has_degree<stype6>::value));
 	BOOST_CHECK((!has_ldegree<stype6>::value));
+}
+
+BOOST_AUTO_TEST_CASE(power_series_serialization_test)
+{
+	typedef g_series_type<polynomial<rational,rational>,rational> stype;
+	stype x("x"), y("y"), z = x + y, tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }

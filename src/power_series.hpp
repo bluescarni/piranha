@@ -29,6 +29,7 @@
 
 #include "forwarding.hpp"
 #include "math.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -61,6 +62,10 @@ namespace piranha
  * ## Move semantics ##
  *
  * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization \p Series does.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -138,6 +143,7 @@ class power_series: public Series
 		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(degree)
 		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
 		#undef PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		power_series() = default;
