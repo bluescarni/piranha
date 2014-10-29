@@ -66,6 +66,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::power_series's move semantics.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the underlying term type does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
