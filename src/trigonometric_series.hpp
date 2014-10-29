@@ -29,6 +29,7 @@
 
 #include "forwarding.hpp"
 #include "math.hpp"
+#include "serialization.hpp"
 #include "series.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -63,6 +64,10 @@ namespace piranha
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if \p Series does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -141,6 +146,7 @@ class trigonometric_series: public Series
 		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(order)
 		PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER(lorder)
 		#undef PIRANHA_DEFINE_PARTIAL_TRIG_PROPERTY_GETTER
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
 		trigonometric_series() = default;

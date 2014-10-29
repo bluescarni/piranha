@@ -25,6 +25,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -362,4 +363,20 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_failures_test)
 	BOOST_CHECK((!has_t_lorder<g_series_type<double,key03>>::value));
 	BOOST_CHECK((has_t_lorder<g_series_type<double,key04>>::value));
 	BOOST_CHECK((!has_t_lorder<g_series_type<double,key05>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
+{
+	using stype = poisson_series<polynomial<rational,short>>;
+	stype x("x"), y("y"), z = x + y, tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }
