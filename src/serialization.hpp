@@ -43,6 +43,13 @@
 //   be to enable the safety checks in the text archives but disable them in the binary ones,
 //   for performance. The safety layer could be checked by crafting bad text archives and storing
 //   them as strings from the tests.
+// - Should probably test the exception safety of the serialization routines. Some examples:
+//   - serialization of small vector leaves the object in a consistent state if the deserialization
+//     of an element fails;
+//   - deserialization of a term leaves cf/key in the original state in case of errors;
+//   - more...
+//   At the moment the routines are coded to provide at least the basic exception safety, but
+//   we should test this explicitly eventually.
 
 // Macro for trivial serialization through base class.
 #define PIRANHA_SERIALIZE_THROUGH_BASE(base) \
