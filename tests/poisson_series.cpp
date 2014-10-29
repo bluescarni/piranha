@@ -594,4 +594,17 @@ BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)
 	ia >> tmp;
 	}
 	BOOST_CHECK_EQUAL(z,tmp);
+	// Test a bad archive.
+	// Construct a rtkm with negative first argument, and extract the internal int in string form.
+	const auto bad_n = boost::lexical_cast<std::string>(real_trigonometric_kronecker_monomial<>{-1,20}.get_int());
+	// This corresponds to a series with single term whose key is the "bad" monomial constructed above.
+	const std::string bad_str =
+		std::string("22 serialization::archive 10 0 0 0 0 0 0 0 0 0 0 0 0 2 1 x 1 y 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 ")
+		+ bad_n
+		+ " 1";
+	ss.str(bad_str);
+	{
+	boost::archive::text_iarchive ia(ss);
+	BOOST_CHECK_THROW(ia >> tmp,std::invalid_argument);
+	}
 }
