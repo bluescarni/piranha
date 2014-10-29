@@ -232,4 +232,27 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 		}
 		BOOST_CHECK_EQUAL(tmp,p);
 	}
+	// Test bad archives.
+	std::stringstream ss;
+	{
+	// This originally corresponded to:
+	// math::pow(x,2)/2 + math::pow(y,2)/3
+	// An extra exponent was added to the only term of math::pow(y,2)/3.
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 3 0 2 0";
+	ss.str(ba);
+	boost::archive::text_iarchive ia(ss);
+	BOOST_CHECK_THROW(ia >> tmp,std::invalid_argument);
+	}
+	{
+	// This is equivalent to:
+	// math::pow(x,2)/2 + math::pow(x,2)/3
+	// (y replaced with x wrt the original example).
+	std::stringstream ss;
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 2 2 0";
+	ss.str(ba);
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	BOOST_CHECK_EQUAL(tmp,math::pow(x,2)/2 + math::pow(x,2)/3);
+	BOOST_CHECK_EQUAL(tmp.size(),1u);
+	}
 }
