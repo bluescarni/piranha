@@ -23,6 +23,8 @@
 #define BOOST_TEST_MODULE series_02_test
 #include <boost/test/unit_test.hpp>
 
+#include <random>
+#include <sstream>
 #include <type_traits>
 
 #include "../src/environment.hpp"
@@ -31,14 +33,19 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial_term.hpp"
+#include "../src/serialization.hpp"
+
+static const int ntries = 1000;
+static std::mt19937 rng;
 
 using namespace piranha;
 
 template <typename Cf, typename Expo>
 class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>
 {
-	public:
 		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -192,5 +199,37 @@ BOOST_AUTO_TEST_CASE(series_partial_test)
 	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"},"y"),ss0{"x"});
 	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * ss0{"x"},"x"),s0{"y"});
 	BOOST_CHECK_EQUAL(math::partial(s0{"y"} * math::pow(ss0{"x"},5),"x"),5 * s0{"y"} * math::pow(ss0{"x"},4));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(series_serialization_test)
+{
+	// Serialization test done with a randomly-generated series.
+	typedef g_series_type<rational,int> p_type1;
+	auto x = p_type1{"x"}, y = p_type1{"y"}, z = p_type1{"z"};
+	std::uniform_int_distribution<int> int_dist(0,5);
+	std::uniform_int_distribution<unsigned> size_dist(0u,10u);
+	p_type1 tmp;
+	for (int i = 0; i < ntries; ++i) {
+		p_type1 p;
+		const unsigned size = size_dist(rng);
+		for (unsigned j = 0u; j < size; ++j) {
+			p += math::pow(x,int_dist(rng)) * math::pow(y,int_dist(rng)) * math::pow(z,int_dist(rng));
+		}
+		p *= int_dist(rng);
+		const auto div = int_dist(rng);
+		if (div) {
+			p /= div;
+		}
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << p;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK_EQUAL(tmp,p);
 	}
 }

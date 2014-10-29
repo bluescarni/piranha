@@ -39,6 +39,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/power_series.hpp"
+#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/tracing.hpp"
@@ -49,8 +50,9 @@ template <typename Cf, typename Expo>
 class polynomial:
 	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>
 {
-	public:
 		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		polynomial() = default;
 		polynomial(const polynomial &) = default;
 		polynomial(polynomial &&) = default;

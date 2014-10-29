@@ -53,6 +53,7 @@
 #include "mp_integer.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "serialization.hpp"
 #include "series_multiplier.hpp"
 #include "series_binary_operators.hpp"
 #include "settings.hpp"
@@ -115,9 +116,14 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
  * ## Move semantics ##
  * 
  * Moved-from series are left in a state equivalent to an empty series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if its term type does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
+ */
+ /* TODO:
  * \todo cast operator, to series and non-series types.
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  * \todo review the handling of incompatible terms: it seems like in some places we are considering the possibility that operations on
@@ -932,6 +938,42 @@ class series: series_binary_operators, detail::series_tag
 		}
 		template <typename F, typename Series>
 		using custom_partial_enabler = typename std::enable_if<std::is_constructible<std::function<partial_type<Series>(const Derived &)>,F>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// Serialize the symbol set.
+			ar & m_symbol_set;
+			// Serialize the size.
+			const auto s = size();
+			ar & s;
+			// Serialize all the terms one by one.
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				ar & (*it);
+			}
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// Erase this.
+			*this = series();
+			// Recover the symbol set.
+			symbol_set ss;
+			ar & ss;
+			m_symbol_set = std::move(ss);
+			// Recover the size.
+			size_type s;
+			ar & s;
+			// Re-insert all the terms.
+			for (size_type i = 0u; i < s; ++i) {
+				term_type t;
+				ar & t;
+				insert(std::move(t));
+			}
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Size type.
 		/**

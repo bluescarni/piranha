@@ -44,6 +44,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -58,6 +59,7 @@ class polynomial_alt:
 	public series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>>
 {
 		typedef series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		polynomial_alt() = default;
 		polynomial_alt(const polynomial_alt &) = default;

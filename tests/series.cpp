@@ -68,6 +68,7 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 {
 	public:
 		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -99,6 +100,7 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 {
 	public:
 		typedef series<polynomial_term<Cf,Expo>,g_series_type2<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type2() = default;
 		g_series_type2(const g_series_type2 &) = default;
 		g_series_type2(g_series_type2 &&) = default;
@@ -142,8 +144,9 @@ class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 template <typename Cf, typename Key>
 class g_series_type3: public series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>>
 {
-	public:
 		typedef series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		g_series_type3() = default;
 		g_series_type3(const g_series_type3 &) = default;
 		g_series_type3(g_series_type3 &&) = default;

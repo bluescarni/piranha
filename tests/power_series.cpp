@@ -42,6 +42,7 @@
 #include "../src/polynomial.hpp"
 #include "../src/polynomial_term.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 
@@ -53,8 +54,9 @@ typedef boost::mpl::vector<int,integer> expo_types;
 template <typename Cf, typename Expo>
 class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>
 {
-	public:
 		typedef power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -67,8 +69,9 @@ class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_serie
 template <typename Cf>
 class g_series_type2: public power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>>
 {
-	public:
 		typedef power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		g_series_type2() = default;
 		g_series_type2(const g_series_type2 &) = default;
 		g_series_type2(g_series_type2 &&) = default;

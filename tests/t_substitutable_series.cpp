@@ -96,8 +96,9 @@ class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
 template <typename Cf, typename Key>
 class g_series_type: public t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>>
 {
-	public:
 		typedef t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
