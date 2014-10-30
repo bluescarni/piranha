@@ -56,6 +56,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
+#include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
 #include "type_system.hpp"
@@ -100,6 +101,35 @@ namespace pyranha
 {
 
 namespace bp = boost::python;
+
+// Pickle support for series.
+template <typename Series>
+struct series_pickle_suite : bp::pickle_suite
+{
+	static bp::tuple getinitargs(const Series &)
+	{
+		return bp::make_tuple();
+	}
+	static bp::tuple getstate(const Series &s)
+	{
+		std::stringstream ss;
+		boost::archive::text_oarchive oa(ss);
+		oa << s;
+		return bp::make_tuple(ss.str());
+	}
+	static void setstate(Series &s, bp::tuple state)
+	{
+		if (bp::len(state) != 1) {
+			::PyErr_SetString(PyExc_ValueError,"the 'state' tuple must have exactly one element");
+			bp::throw_error_already_set();
+		}
+		std::string st = bp::extract<std::string>(state[0]);
+		std::stringstream ss;
+		ss.str(st);
+		boost::archive::text_iarchive ia(ss);
+		ia >> s;
+	}
+};
 
 // Counter of exposed types, used for naming said types.
 extern std::size_t exposed_types_counter;
@@ -761,6 +791,8 @@ class series_exposer
 				series_class.def("_latex_",wrap_latex<s_type>);
 				// Arguments set.
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
+				// Pickle support.
+				series_class.def_pickle(series_pickle_suite<s_type>());
 			}
 		};
 	public:
