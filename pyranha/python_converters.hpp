@@ -73,7 +73,6 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 	bp::handle<> unicode_str(unicode_str_obj);
 	const char *s = ::PyBytes_AsString(unicode_str.get());
 	if (!s) {
-		::PyErr_Clear();
 		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
 	}
 #endif
@@ -173,9 +172,6 @@ struct real_converter
 				bp::object mpf = mpmath.attr("mpf");
 				return bp::incref(mpf(str).ptr());
 			} catch (...) {
-				// NOTE: here it seems like in case of import errors, Boost.Python both throws and
-				// sets the Python exception. Clear it and just throw pure C++.
-				::PyErr_Clear();
 				piranha_throw(std::runtime_error,"could not convert real number to mpf object - please check the installation of mpmath");
 			}
 		}
@@ -189,9 +185,7 @@ struct real_converter
 			if (::PyObject_IsInstance(obj_ptr,c_obj.ptr())) {
 				return true;
 			}
-		} catch (...) {
-			::PyErr_Clear();
-		}
+		} catch (...) {}
 		return false;
 	}
 	static void *convertible(::PyObject *obj_ptr)
@@ -231,7 +225,6 @@ struct real_converter
 		bp::handle<> unicode_str(unicode_str_obj);
 		const char *s = ::PyBytes_AsString(unicode_str.get());
 		if (!s) {
-			::PyErr_Clear();
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
 		}
 #endif

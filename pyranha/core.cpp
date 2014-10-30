@@ -118,7 +118,6 @@ BOOST_PYTHON_MODULE(_core)
 	// NOTE: the nested namespace is created if not there, otherwise it will be returned.
 	::PyObject *types_module_ptr = ::PyImport_AddModule(types_module_name.c_str());
 	if (!types_module_ptr) {
-		::PyErr_Clear();
 		::PyErr_SetString(PyExc_RuntimeError,"error while creating the 'types' submodule");
 		bp::throw_error_already_set();
 	}

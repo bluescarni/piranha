@@ -116,7 +116,6 @@ inline bp::class_<T> expose_class()
 	++exposed_types_counter;
 	auto ptr = ::PyObject_Type(class_inst().ptr());
 	if (!ptr) {
-		::PyErr_Clear();
 		::PyErr_SetString(PyExc_RuntimeError,"cannot extract the Python type of an instantiated class");
 		bp::throw_error_already_set();
 	}
@@ -498,7 +497,6 @@ class series_exposer
 				bp::object call_method = func.attr("__call__");
 				(void)call_method;
 			} catch (...) {
-				::PyErr_Clear();
 				::PyErr_SetString(PyExc_TypeError,"object is not callable");
 				bp::throw_error_already_set();
 			}
