@@ -80,14 +80,6 @@ static inline void cleanup_type_system()
 	pyranha::et_map.clear();
 }
 
-namespace pyranha
-{
-
-// Name the template template classes of interest.
-DECLARE_TT_NAMER(piranha::kronecker_monomial,"kronecker_monomial")
-
-}
-
 BOOST_PYTHON_MODULE(_core)
 {
 	// NOTE: this is a single big lock to avoid registering types/conversions multiple times and prevent contention
@@ -141,7 +133,7 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_type_generator<piranha::integer>("integer");
 	pyranha::expose_type_generator<piranha::rational>("rational");
 	pyranha::expose_type_generator<piranha::real>("real");
-	pyranha::expose_generic_type_generator<piranha::kronecker_monomial>();
+	pyranha::expose_type_generator<piranha::k_monomial>("k_monomial");
 	// Arithmetic converters.
 	pyranha::integer_converter i_c;
 	pyranha::rational_converter ra_c;

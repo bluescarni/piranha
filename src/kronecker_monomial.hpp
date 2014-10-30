@@ -858,6 +858,9 @@ class kronecker_monomial
 		value_type m_value;
 };
 
+/// Alias for piranha::kronecker_monomial with default type.
+using k_monomial = kronecker_monomial<>;
+
 }
 
 namespace std

@@ -33,8 +33,7 @@ double = _t.double
 long_double = _t.long_double
 
 try:
-	# NOTE: just a stub at the moment, to show that this works as expected with sphinx.
-	#:
+	#: This generator represents the 128-bit floating-point type from GCC's ``libquadmath``.
 	float128 = _t.float128
 except AttributeError:
 	pass
@@ -56,8 +55,9 @@ rational = _t.rational
 #: This generator represents the multiprecision floating-point type provided by the piranha C++ library.
 real = _t.real
 
-#:
-kronecker_monomial = _t.kronecker_monomial
+#: This generator represents the Kronecker monomial type (that is, a monomial "compressed" into a single
+#: signed integral value).
+k_monomial = _t.k_monomial
 
 #:
 polynomial = _t.polynomial
