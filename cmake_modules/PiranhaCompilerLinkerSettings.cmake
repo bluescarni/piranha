@@ -115,6 +115,10 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnoexcept)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wlogical-op)
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wconversion)
+	# In the serialization work, we started hitting the template recursive instantiation
+	# limit on clang. This limit is supposed to be at least 1024 in C++11, but for some reason
+	# clang sets this to 256, and gcc to 900.
+	PIRANHA_CHECK_ENABLE_CXX_FLAG(-ftemplate-depth=1024)
 	# NOTE: this can be useful, but at the moment it triggers lots of warnings in type traits.
 	# Keep it in mind for the next time we touch type traits.
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wold-style-cast)
@@ -127,8 +131,4 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	# This is useful when the compiler decides the template backtrace is too verbose.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-backtrace-limit=0)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
-	# In the serialization work, we started hitting the template recursive instantiation
-	# limit on clang. This limit is supposed to be at least 1024 in C++11, but for some reason
-	# clang sets this to 256, and gcc to 900.
-	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-depth=1024)
 endif()
