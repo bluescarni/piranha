@@ -28,10 +28,10 @@ from __future__ import absolute_import as _ai
 __all__ = ['celmec', 'math', 'test', 'settings', 'types']
 
 import threading as _thr
-from ._common import _cpp_type_catcher, _monkey_patch_series, _cleanup
+from ._common import _cpp_type_catcher, _monkey_patching, _cleanup
 
-# Monkey patching for series.
-_monkey_patch_series()
+# Run the monkey patching.
+_monkey_patching()
 
 class _settings(object):
 	# Main lock for protecting reads/writes from multiple threads.

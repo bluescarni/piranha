@@ -146,10 +146,11 @@ def _replace_gtg_call():
 		return _orig_gtg_call(self,l_args)
 	_core._generic_type_generator.__call__ = _gtg_call_wrapper
 
-def _monkey_patch_series():
+def _monkey_patching():
 	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
 	# Keep this in mind in case problem arises.
-	# NOTE: probably we should put a mutex here against concurrent loads from multiple threads.
+	# NOTE: it seems like concurrent import is not an issue:
+	# http://stackoverflow.com/questions/12389526/import-inside-of-a-python-thread
 	_register_wrappers()
 	_replace_gtg_call()
 
