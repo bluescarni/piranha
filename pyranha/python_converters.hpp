@@ -58,6 +58,10 @@ template <typename T>
 inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_python_stage1_data *data, const std::string &name)
 {
 	piranha_assert(obj_ptr);
+	// NOTE: here we use str because for int and rational the string representations in Python
+	// match the input format for the corresponding C++ objects. This is not true in general
+	// for the repr() representations (e.g., in Python 2.x a trailing "L" is added to the repr() representation
+	// for long integers).
 	::PyObject *str_obj = ::PyObject_Str(obj_ptr);
 	if (!str_obj) {
 		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
@@ -205,6 +209,8 @@ struct real_converter
 		bp::object obj(obj_handle);
 		const ::mpfr_prec_t prec = boost::numeric_cast< ::mpfr_prec_t>(
 			static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
+		// NOTE: here we use repr instead of str because the repr seems to give the most accurate representation
+		// in base 10 for the object.
 		::PyObject *str_obj = ::PyObject_Repr(obj.ptr());
 		if (!str_obj) {
 			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
