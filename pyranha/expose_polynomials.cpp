@@ -42,6 +42,7 @@ void expose_polynomials()
 	struct poly_desc
 	{
 		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
+			std::tuple<long double,signed char>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
 			std::tuple<piranha::integer,signed char>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
 			std::tuple<piranha::rational,signed char>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
 			std::tuple<piranha::real,signed char>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;

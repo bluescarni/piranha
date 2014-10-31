@@ -55,12 +55,6 @@ namespace bp = boost::python;
 static std::mutex global_mutex;
 static bool inited = false;
 
-// Used for debugging on Python side.
-inline piranha::integer get_big_int()
-{
-	return piranha::integer(boost::integer_traits<int>::const_max) + 1;
-}
-
 static inline auto binomial_integer(const piranha::integer &n, const piranha::integer &k) -> decltype(piranha::math::binomial(n,k))
 {
 	if (piranha::math::abs(n) > 10000 || piranha::math::abs(k) > 10000) {
@@ -145,8 +139,6 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::positive_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::negative_overflow>();
 	pyranha::generic_translate<&PyExc_OverflowError,boost::numeric::bad_numeric_cast>();
-	// Debug functions.
-	bp::def("_get_big_int",&get_big_int);
 	// Series list.
 	bp::def("_get_series_list",pyranha::get_series_list);
 	// Expose polynomials.

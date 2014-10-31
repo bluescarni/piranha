@@ -36,7 +36,6 @@ class basic_test_case(_ut.TestCase):
 	def runTest(self):
 		from fractions import Fraction
 		from copy import copy, deepcopy
-		from ._core import _get_big_int
 		# Use polynomial for testing.
 		from .types import polynomial, integer, rational, short, double
 		# Arithmetic with int and Fraction, len, str and comparisons.
@@ -221,6 +220,87 @@ class poisson_series_test_case(_ut.TestCase):
 		except ImportError:
 			pass
 
+class converters_test_case(_ut.TestCase):
+	"""Test case for the automatic conversion to/from Python from/to C++.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(converters_test_case)
+
+	"""
+	def runTest(self):
+		import sys
+		from .types import polynomial, short, integer, rational, real
+		from fractions import Fraction as F
+		# Context for the temporary monkey-patching of type t to return bogus
+		# string bad_str for representation via str.
+		class patch_str(object):
+			def __init__(self,t,bad_str):
+				self.t = t
+				self.bad_str = bad_str
+			def __enter__(self):
+				self.old_str = self.t.__str__
+				self.t.__str__ = lambda s: self.bad_str
+			def __exit__(self, type, value, traceback):
+				self.t.__str__ = self.old_str
+		# Same for repr.
+		class patch_repr(object):
+			def __init__(self,t,bad_repr):
+				self.t = t
+				self.bad_repr = bad_repr
+			def __enter__(self):
+				self.old_repr = self.t.__repr__
+				self.t.__repr__ = lambda s: self.bad_repr
+			def __exit__(self, type, value, traceback):
+				self.t.__repr__ = self.old_repr
+		# Start with plain integers.
+		pt = polynomial(integer,short)()
+		# Use small integers to make it work both on Python 2 and Python 3.
+		self.assertEqual(int,type(pt(4).list[0][0]))
+		self.assertEqual(pt(4).list[0][0],4)
+		self.assertEqual(int,type(pt("x").evaluate({"x":5})))
+		self.assertEqual(pt("x").evaluate({"x":5}),5)
+		# Specific for Python 2.
+		if sys.version_info[0] == 2:
+			self.assertEqual(int,type(pt(sys.maxint).list[0][0]))
+			self.assertEqual(pt(sys.maxint).list[0][0],sys.maxint)
+			self.assertEqual(long,type((pt(sys.maxint) + 1).list[0][0]))
+			self.assertEqual((pt(sys.maxint) + 1).list[0][0],sys.maxint+1)
+			self.assertEqual(int,type(pt("x").evaluate({"x":sys.maxint})))
+			self.assertEqual(pt("x").evaluate({"x":sys.maxint}),sys.maxint)
+			self.assertEqual(long,type(pt("x").evaluate({"x":sys.maxint + 1})))
+			self.assertEqual(pt("x").evaluate({"x":sys.maxint + 1}),sys.maxint + 1)
+		# Now rationals.
+		pt = polynomial(rational,short)()
+		self.assertEqual(F,type((pt(4)/3).list[0][0]))
+		self.assertEqual((pt(4)/3).list[0][0],F(4,3))
+		self.assertEqual(F,type(pt("x").evaluate({"x":F(5/6)})))
+		self.assertEqual(pt("x").evaluate({"x":F(5/6)}),F(5/6))
+		# NOTE: if we don't go any more through str for the conversion, these types
+		# of tests can go away.
+		with patch_str(F,"boo"):
+			self.assertRaises(ValueError,lambda: pt(F(5,6)))
+		with patch_str(F,"5/0"):
+			self.assertRaises(ZeroDivisionError,lambda: pt(F(5,6)))
+		# Reals, if possible.
+		try:
+			from mpmath import mpf
+		except ImportError:
+			return
+		pt = polynomial(real,short)()
+		self.assertEqual(mpf,type(pt(4).list[0][0]))
+		self.assertEqual(pt(4).list[0][0],mpf(4))
+		self.assertEqual(mpf,type(pt("x").evaluate({"x":mpf(5)})))
+		self.assertEqual(pt("x").evaluate({"x":mpf(5)}),mpf(5))
+		# Test various types of bad repr.
+		with patch_repr(mpf,"foo"):
+			self.assertRaises(RuntimeError,lambda: pt(mpf(5)))
+		with patch_repr(mpf,"'1.23445"):
+			self.assertRaises(RuntimeError,lambda: pt(mpf(5)))
+		with patch_repr(mpf,"'foobar'"):
+			self.assertRaises(ValueError,lambda: pt(mpf(5)))
+
 def run_test_suite():
 	"""Run the full test suite.
 	
@@ -230,6 +310,7 @@ def run_test_suite():
 	suite.addTest(math_test_case())
 	suite.addTest(polynomial_test_case())
 	suite.addTest(poisson_series_test_case())
+	suite.addTest(converters_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest
