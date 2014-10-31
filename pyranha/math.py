@@ -179,8 +179,8 @@ def integrate(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from .types import polynomial, rational, kronecker_monomial
-	>>> pt = polynomial(rational,kronecker_monomial())()
+	>>> from .types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
 	>>> x,y = pt('x'), pt('y')
 	>>> integrate(x + 2*x*y,'x') == x**2/2 + x**2*y
 	True
@@ -295,8 +295,8 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from .types import polynomial, rational, kronecker_monomial
-	>>> pt = polynomial(rational,kronecker_monomial())()
+	>>> from .types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
 	>>> L,G,H,l,g,h = [pt(_) for _ in 'LGHlgh']
 	>>> transformation_is_canonical([-l],[L],['L'],['l'])
 	True

@@ -190,8 +190,8 @@ struct real_converter
 	}
 	static void *convertible(::PyObject *obj_ptr)
 	{
-		// Not convertible if nullptr, or obj_ptr is not an instance of any of the supported classes.
-		if (!obj_ptr || (!is_instance_of(obj_ptr,"mpmath","mpf") && !is_instance_of(obj_ptr,"sympy","Float"))) {
+		// Not convertible if nullptr, or obj_ptr is not an instance of mpf.
+		if (!obj_ptr || !is_instance_of(obj_ptr,"mpmath","mpf")) {
 			return nullptr;
 		}
 		return obj_ptr;
@@ -203,11 +203,6 @@ struct real_converter
 		// NOTE: here the handle is from borrowed because we are not responsible for the generation of obj_ptr.
 		bp::handle<> obj_handle(bp::borrowed(obj_ptr));
 		bp::object obj(obj_handle);
-		// NOTE: sympy Float seems to be a wrapper around an instance of mpmath mpf,
-		// accessbile via the num attribute.
-		if (is_instance_of(obj_ptr,"sympy","Float")) {
-			obj = obj.attr("num");
-		}
 		const ::mpfr_prec_t prec = boost::numeric_cast< ::mpfr_prec_t>(
 			static_cast<long>(bp::extract<long>(obj.attr("context").attr("prec"))));
 		::PyObject *str_obj = ::PyObject_Repr(obj.ptr());
