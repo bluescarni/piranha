@@ -27,7 +27,8 @@ def _cpp_type_catcher(func,*args):
 	try:
 		return func(*args)
 	except TypeError:
-		raise TypeError('invalid argument type(s)')
+		raise TypeError('invalid argument type(s) for the C++ function \'{0}\': {1}'\
+			.format(func.__name__,[type(_).__name__ for _ in args]))
 
 # Function to be run at module unload to clear registered custom derivatives.
 # The rationale is that custom derivatives will contain Python objects, and we
