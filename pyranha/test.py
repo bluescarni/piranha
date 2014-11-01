@@ -310,7 +310,7 @@ class converters_test_case(_ut.TestCase):
 			self.assertRaises(ZeroDivisionError,lambda: pt(F(5,6)))
 		# Reals, if possible.
 		try:
-			from mpmath import mpf
+			from mpmath import mpf, mp, workdps, binomial as bin, fabs
 		except ImportError:
 			return
 		pt = polynomial(real,short)()
@@ -325,7 +325,27 @@ class converters_test_case(_ut.TestCase):
 			self.assertRaises(RuntimeError,lambda: pt(mpf(5)))
 		with patch_repr(mpf,"'foobar'"):
 			self.assertRaises(ValueError,lambda: pt(mpf(5)))
-		# TODO: check precision handling.
+		# Check the handling of the precision.
+		from .math import binomial
+		# Original number of decimal digits.
+		orig_dps = mp.dps
+		tmp = binomial(mpf(5.1),mpf(3.2))
+		self.assertEqual(tmp.context.dps,orig_dps)
+		with workdps(100):
+			# Check that the precision is maintained on output
+			# and that the values computed with our implementation and
+			# mpmath are close.
+			tmp = binomial(mpf(5.1),mpf(3.2))
+			self.assertEqual(tmp.context.dps,100)
+			self.assert_(fabs(tmp - bin(mpf(5.1),mpf(3.2))) < mpf('5e-100'))
+		# This will create a coefficient with dps equal to the current value.
+		tmp = 3*pt('x')
+		self.assertEqual(tmp.evaluate({'x':mpf(1)}).context.dps,orig_dps)
+		self.assertEqual(tmp.list[0][0].context.dps,orig_dps)
+		with workdps(100):
+			# When we extract the coefficient with increased temporary precision, we get
+			# an object with increased precision.
+			self.assertEqual(tmp.list[0][0].context.dps,100)
 
 def run_test_suite():
 	"""Run the full test suite.
