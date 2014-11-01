@@ -100,7 +100,7 @@ def sin(arg):
 def binomial(x,y):
 	"""Binomial coefficient.
 	
-	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient,
+	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient :math:`{x \choose y}`,
 	supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types
 	as input.
 	
