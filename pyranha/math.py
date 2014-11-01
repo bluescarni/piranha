@@ -97,44 +97,38 @@ def sin(arg):
 	from ._core import _sin
 	return _cpp_type_catcher(_sin,arg)
 
-def binomial(x,k):
+def binomial(x,y):
 	"""Binomial coefficient.
 	
 	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient,
-	supporting integers and rationals as first argument, and integers as second argument.
+	supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types
+	as input.
 	
 	:param x: top argument for the binomial coefficient
-	:type x: *int* or *Fraction*
-	:param k: bottom argument for the binomial coefficient
-	:type k: *int*
-	:returns: *x* choose *k*
-	:raises: :exc:`TypeError` if the types of *x* and/or *k* are not supported
-	:raises: :exc:`ValueError` if the absolute value of input values is too large
+	:type x: *int*, *float*, *Fraction*, *mpf*
+	:param y: bottom argument for the binomial coefficient
+	:type y: *int*, *float*, *Fraction*, *mpf*
+	:returns: *x* choose *y*
+	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
 	:raises: any exception raised by the invoked low-level function
 	
 	>>> binomial(3,2)
 	3
 	>>> binomial(-6,2)
 	21
-	>>> from fractions import Fraction
-	>>> binomial(Fraction(-4,5),2)
+	>>> from fractions import Fraction as F
+	>>> binomial(F(-4,5),2)
 	Fraction(18, 25)
-	>>> binomial(1.3,2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> binomial(10,2.4) # doctest: +ELLIPSIS
+	70.3995282...
+	>>> binomial("hello world",2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
-	>>> binomial(10,2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
-	Traceback (most recent call last):
-	   ...
-	TypeError: invalid argument type(s)
-	>>> binomial(10001,2) # doctest: +IGNORE_EXCEPTION_DETAIL
-	Traceback (most recent call last):
-	   ...
-	ValueError: input value is too large
 	
 	"""
 	from ._core import _binomial
-	return _cpp_type_catcher(_binomial,x,k)
+	return _cpp_type_catcher(_binomial,x,y)
 
 def partial(arg,name):
 	"""Partial derivative.

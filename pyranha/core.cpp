@@ -55,19 +55,6 @@ namespace bp = boost::python;
 static std::mutex global_mutex;
 static bool inited = false;
 
-static inline auto binomial_integer(const piranha::integer &n, const piranha::integer &k) -> decltype(piranha::math::binomial(n,k))
-{
-	if (piranha::math::abs(n) > 10000 || piranha::math::abs(k) > 10000) {
-		piranha_throw(std::invalid_argument,"input value is too large");
-	}
-	return piranha::math::binomial(n,k);
-}
-
-static inline auto binomial_rational(const piranha::rational &q, const piranha::integer &k) -> decltype(piranha::math::binomial(q,k))
-{
-	return piranha::math::binomial(q,k);
-}
-
 // Cleanup function to be called on module unload.
 static inline void cleanup_type_system()
 {
@@ -155,8 +142,25 @@ BOOST_PYTHON_MODULE(_core)
 	// Factorial.
 	bp::def("_factorial",&piranha::math::factorial<0>);
 	// Binomial coefficient.
-	bp::def("_binomial",&binomial_integer);
-	bp::def("_binomial",&binomial_rational);
+#define PYRANHA_EXPOSE_BINOMIAL(top,bot) \
+bp::def("_binomial",&piranha::math::binomial<top,bot>)
+	PYRANHA_EXPOSE_BINOMIAL(double,double);
+	PYRANHA_EXPOSE_BINOMIAL(double,piranha::integer);
+	PYRANHA_EXPOSE_BINOMIAL(double,piranha::rational);
+	PYRANHA_EXPOSE_BINOMIAL(double,piranha::real);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::integer,double);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::integer,piranha::integer);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::integer,piranha::rational);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::integer,piranha::real);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::rational,double);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::rational,piranha::integer);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::rational,piranha::rational);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::rational,piranha::real);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::real,double);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::real,piranha::integer);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::real,piranha::rational);
+	PYRANHA_EXPOSE_BINOMIAL(piranha::real,piranha::real);
+#undef PYRANHA_EXPOSE_BINOMIAL
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
 }

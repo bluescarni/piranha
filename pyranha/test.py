@@ -176,6 +176,31 @@ class math_test_case(_ut.TestCase):
 				self.assertEqual(mpsin(mpf("-2.456")),psin(pt(mpf("-2.456"))))
 		except ImportError:
 			pass
+		self.binomialTest()
+	def binomialTest(self):
+		from fractions import Fraction as F
+		from .math import binomial
+		# Check the return types of binomial.
+		self.assertEqual(type(binomial(5,4)),int)
+		self.assertEqual(type(binomial(5,4.)),float)
+		self.assertEqual(type(binomial(5,F(4))),float)
+		self.assertEqual(type(binomial(5.,4)),float)
+		self.assertEqual(type(binomial(5.,4.)),float)
+		self.assertEqual(type(binomial(5.,F(4))),float)
+		self.assertEqual(type(binomial(F(5),4)),F)
+		self.assertEqual(type(binomial(F(5),4.)),float)
+		self.assertEqual(type(binomial(F(5),F(4))),float)
+		try:
+			from mpmath import mpf
+		except ImportError:
+			return
+		self.assertEqual(type(binomial(mpf(5),mpf(4))),mpf)
+		self.assertEqual(type(binomial(5,mpf(4))),mpf)
+		self.assertEqual(type(binomial(5.,mpf(4))),mpf)
+		self.assertEqual(type(binomial(F(5),mpf(4))),mpf)
+		self.assertEqual(type(binomial(mpf(5),4)),mpf)
+		self.assertEqual(type(binomial(mpf(5),4.)),mpf)
+		self.assertEqual(type(binomial(mpf(5),F(4))),mpf)
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
