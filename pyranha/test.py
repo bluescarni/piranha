@@ -275,8 +275,8 @@ class converters_test_case(_ut.TestCase):
 		pt = polynomial(rational,short)()
 		self.assertEqual(F,type((pt(4)/3).list[0][0]))
 		self.assertEqual((pt(4)/3).list[0][0],F(4,3))
-		self.assertEqual(F,type(pt("x").evaluate({"x":F(5/6)})))
-		self.assertEqual(pt("x").evaluate({"x":F(5/6)}),F(5/6))
+		self.assertEqual(F,type(pt("x").evaluate({"x":F(5,6)})))
+		self.assertEqual(pt("x").evaluate({"x":F(5,6)}),F(5,6))
 		# NOTE: if we don't go any more through str for the conversion, these types
 		# of tests can go away.
 		with patch_str(F,"boo"):
@@ -300,6 +300,7 @@ class converters_test_case(_ut.TestCase):
 			self.assertRaises(RuntimeError,lambda: pt(mpf(5)))
 		with patch_repr(mpf,"'foobar'"):
 			self.assertRaises(ValueError,lambda: pt(mpf(5)))
+		# TODO: check precision handling.
 
 def run_test_suite():
 	"""Run the full test suite.
