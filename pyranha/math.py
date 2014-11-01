@@ -30,70 +30,66 @@ from ._common import _cpp_type_catcher
 def cos(arg):
 	"""Cosine.
 	
-	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
-	the function from the builtin :mod:`math` module will be used. If the argument is an :mod:`mpmath`
-	float, the corresponding multiprecision function, if available, will be used. Otherwise, the argument is assumed
-	to be a series type and a function from the piranha C++ library is used.
+	The supported types are *int*, *float*, *Fraction*, *mpf* and any series type that supports
+	the operation.
 	
 	:param arg: cosine argument
+	:type arg: *int*, *float*, *Fraction*, *mpf*, or a supported series type.
 	:returns: cosine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 	
+	>>> cos(0)
+	1
+	>>> cos(2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: cannot compute the cosine of a non-zero integer
+	>>> cos(2.) # doctest: +ELLIPSIS
+	-0.4161468...
 	>>> from .types import poisson_series, polynomial, rational, short
 	>>> t = poisson_series(polynomial(rational,short))()
 	>>> cos(2 * t('x'))
 	cos(2*x)
-	>>> cos('y') # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> cos('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
 	
 	"""
-	if isinstance(arg,float) or isinstance(arg,int):
-		import math
-		return math.cos(arg)
-	try:
-		from mpmath import mpf, cos
-		if isinstance(arg,mpf):
-			return cos(arg)
-	except ImportError:
-		pass
 	from ._core import _cos
 	return _cpp_type_catcher(_cos,arg)
 
 def sin(arg):
 	"""Sine.
 	
-	This function is a wrapper around a lower level function. If the argument is a standard *float* or *int*,
-	the function from the builtin :mod:`math` module will be used. If the argument is an :mod:`mpmath`
-	float, the corresponding multiprecision function, if available, will be used. Otherwise, the argument is assumed
-	to be a series type and a function from the piranha C++ library is used.
-	
-	:param arg: sine argument
-	:returns: sine of *arg*
+	The supported types are *int*, *float*, *Fraction*, *mpf* and any series type that supports
+	the operation.
+
+	:param arg: ine argument
+	:type arg: *int*, *float*, *Fraction*, *mpf*, or a supported series type.
+	:returns: ine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
-	
+
+	>>> sin(0)
+	0
+	>>> sin(2) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: cannot compute the cosine of a non-zero integer
+	>>> sin(2.) # doctest: +ELLIPSIS
+	0.9092974...
 	>>> from .types import poisson_series, polynomial, rational, short
 	>>> t = poisson_series(polynomial(rational,short))()
 	>>> sin(2 * t('x'))
 	sin(2*x)
-	>>> sin('y') # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> sin('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
 	
 	"""
-	if isinstance(arg,float) or isinstance(arg,int):
-		import math
-		return math.sin(arg)
-	try:
-		from mpmath import mpf, sin
-		if isinstance(arg,mpf):
-			return sin(arg)
-	except ImportError:
-		pass
 	from ._core import _sin
 	return _cpp_type_catcher(_sin,arg)
 

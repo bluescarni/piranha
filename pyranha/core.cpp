@@ -161,6 +161,15 @@ bp::def("_binomial",&piranha::math::binomial<top,bot>)
 	PYRANHA_EXPOSE_BINOMIAL(piranha::real,piranha::rational);
 	PYRANHA_EXPOSE_BINOMIAL(piranha::real,piranha::real);
 #undef PYRANHA_EXPOSE_BINOMIAL
+	// Sine and cosine.
+#define PYRANHA_EXPOSE_SIN_COS(arg) \
+bp::def("_sin",&piranha::math::sin<arg>); \
+bp::def("_cos",&piranha::math::cos<arg>)
+	PYRANHA_EXPOSE_SIN_COS(double);
+	PYRANHA_EXPOSE_SIN_COS(piranha::integer);
+	PYRANHA_EXPOSE_SIN_COS(piranha::rational);
+	PYRANHA_EXPOSE_SIN_COS(piranha::real);
+#undef PYRANHA_EXPOSE_SIN_COS
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
 }

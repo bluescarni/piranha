@@ -146,15 +146,19 @@ class math_test_case(_ut.TestCase):
 		import math
 		from .math import cos as pcos, sin as psin
 		from .types import polynomial, k_monomial, double, real
-		self.assertEqual(math.cos(3),pcos(3))
+		# NOTE: according to
+		# https://docs.python.org/3/library/math.html
+		# the CPython math functions are wrappers around the corresponding
+		# C functions. The results should thus be the same.
+		self.assertEqual(math.cos(3.),pcos(3.))
 		self.assertEqual(math.cos(3.1234),pcos(3.1234))
-		self.assertEqual(math.sin(3),psin(3))
+		self.assertEqual(math.sin(3.),psin(3.))
 		self.assertEqual(math.sin(3.1234),psin(3.1234))
 		pt = polynomial(double,k_monomial)()
 		self.assertEqual(math.cos(3),pcos(pt(3)))
-		self.assertEqual(math.cos(-2.456),pcos(pt(2.456)))
+		self.assertEqual(math.cos(2.456),pcos(pt(2.456)))
 		self.assertEqual(math.sin(3),psin(pt(3)))
-		self.assertEqual(math.sin(-2.456),-psin(pt(2.456)))
+		self.assertEqual(math.sin(-2.456),psin(pt(-2.456)))
 		self.assertRaises(TypeError,lambda : pcos(""))
 		self.assertRaises(TypeError,lambda : psin(""))
 		try:
@@ -177,6 +181,7 @@ class math_test_case(_ut.TestCase):
 		except ImportError:
 			pass
 		self.binomialTest()
+		self.sincosTest()
 	def binomialTest(self):
 		from fractions import Fraction as F
 		from .math import binomial
@@ -201,6 +206,22 @@ class math_test_case(_ut.TestCase):
 		self.assertEqual(type(binomial(mpf(5),4)),mpf)
 		self.assertEqual(type(binomial(mpf(5),4.)),mpf)
 		self.assertEqual(type(binomial(mpf(5),F(4))),mpf)
+	def sincosTest(self):
+		from fractions import Fraction as F
+		from .math import sin, cos
+		# Check the return types.
+		self.assertEqual(type(cos(0)),int)
+		self.assertEqual(type(sin(0)),int)
+		self.assertEqual(type(cos(F(0))),F)
+		self.assertEqual(type(sin(F(0))),F)
+		self.assertEqual(type(cos(1.)),float)
+		self.assertEqual(type(sin(1.)),float)
+		try:
+			from mpmath import mpf
+		except ImportError:
+			return
+		self.assertEqual(type(cos(mpf(1))),mpf)
+		self.assertEqual(type(sin(mpf(1))),mpf)
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
