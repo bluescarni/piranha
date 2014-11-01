@@ -135,10 +135,9 @@ struct rational_converter
 	{
 		static ::PyObject *convert(const piranha::rational &q)
 		{
-			const std::string str = boost::lexical_cast<std::string>(q);
 			bp::object frac_module = bp::import("fractions");
 			bp::object frac_class = frac_module.attr("Fraction");
-			return bp::incref(frac_class(str).ptr());
+			return bp::incref(frac_class(q.num(),q.den()).ptr());
 		}
 	};
 	static void *convertible(::PyObject *obj_ptr)
