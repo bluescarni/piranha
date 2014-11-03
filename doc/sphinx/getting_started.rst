@@ -217,4 +217,35 @@ typical Python 2.7 installation on GNU/Linux).
 
 If you do not have write permissions in ``/usr/local``, it is possible to change the ``PREFIX`` in the configuration phase. It is
 advisable to set the ``PREFIX`` to a subdirectory in the user's home directory (e.g., ``/home/username/.local``).
-The ``PREFIX`` can be set via the ``CMAKE_INSTALL_PREFIX`` CMake variable.
+The ``PREFIX`` can be set via the ``CMAKE_INSTALL_PREFIX`` CMake variable during the
+:ref:`configuration process <getting_started_configuration>`.
+
+On the Python side, in order to check that the installation of the Pyranha module was successful it will be enough to
+attempt importing it from a Python session:
+
+>>> import pyranha
+
+If this command produces no error messages, then the installation of Pyranha was successful. You can run the Pyranha
+test suite with the following commands:
+
+.. code-block:: python
+
+   >>> import pyranha.test
+   >>> pyranha.test.run_test_suite()
+   runTest (pyranha.test.basic_test_case) ... ok
+   runTest (pyranha.test.mpmath_test_case) ... ok
+   runTest (pyranha.test.math_test_case) ... ok
+   runTest (pyranha.test.polynomial_test_case) ... ok
+   runTest (pyranha.test.poisson_series_test_case) ... ok
+   runTest (pyranha.test.converters_test_case) ... ok
+   runTest (pyranha.test.serialization_test_case) ... ok
+   
+   ----------------------------------------------------------------------
+   Ran 7 tests in 2.905s
+   
+   OK
+
+Note that if you specified a non-standard ``PREFIX`` during the configuration phase, you might need to set the ``PYTHONPATH``
+environment variable in order for the Python interpreter to locate Pyranha. More information is available
+`here <https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH>`__ .
+
