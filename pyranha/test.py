@@ -368,6 +368,55 @@ class converters_test_case(_ut.TestCase):
 			# an object with increased precision.
 			self.assertEqual(tmp.list[0][0].context.dps,100)
 
+class serialization_test_case(_ut.TestCase):
+	"""Test case for the serialization of series.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(serialization_test_case)
+
+	"""
+	def runTest(self):
+		import pickle, random
+		from .types import polynomial, short, rational, poisson_series
+		from .math import sin, cos
+		# Set the seed for deterministic output.
+		random.seed(0)
+		rand = lambda: random.randint(-10,10)
+		# Start with some random polynomial tests.
+		pt = polynomial(rational,short)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		for _ in range(0,100):
+			res = pt(0)
+			for _ in range(0,20):
+				tmp = x**rand() * y**rand() * z**rand()
+				tmp *= rand()
+				n = rand()
+				if n:
+					tmp /= n
+				res += tmp
+			str_rep = pickle.dumps(res)
+			self.assertEqual(res,pickle.loads(str_rep))
+		# Poisson series.
+		pt = poisson_series(polynomial(rational,short))()
+		x,y,z,a,b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
+		for _ in range(0,100):
+			res = pt(0)
+			for _ in range(0,20):
+				tmp = x**rand() * y**rand() * z**rand()
+				tmp *= rand()
+				n = rand()
+				if n:
+					tmp /= n
+				if (n > 0):
+					tmp *= cos(a*rand() + b*rand())
+				else:
+					tmp *= sin(a*rand() + b*rand())
+				res += tmp
+			str_rep = pickle.dumps(res)
+			self.assertEqual(res,pickle.loads(str_rep))
+
 def run_test_suite():
 	"""Run the full test suite.
 	
@@ -378,6 +427,7 @@ def run_test_suite():
 	suite.addTest(polynomial_test_case())
 	suite.addTest(poisson_series_test_case())
 	suite.addTest(converters_test_case())
+	suite.addTest(serialization_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest
