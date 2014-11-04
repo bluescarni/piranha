@@ -1278,7 +1278,111 @@ inline auto t_lorder(const T &x, const std::vector<std::string> &names) -> declt
 	return t_lorder_impl<T>()(x,names);
 }
 
+/// Implementation of the piranha::math::truncate_degree() functor.
+/**
+ * The default implementation does not define any call operator.
+ */
+template <typename T, typename U, typename = void>
+struct truncate_degree_impl {};
+
 }
+
+namespace detail
+{
+
+// Enablers for the degree truncation methods.
+template <typename T, typename U>
+using truncate_degree_enabler = typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T,U>()(std::declval<const T &>(),
+	std::declval<const U &>())),T>::value,int>::type;
+
+template <typename T, typename U>
+using truncate_pdegree_enabler = typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T,U>()(std::declval<const T &>(),
+	std::declval<const U &>(),std::declval<const std::vector<std::string> &>())),T>::value,int>::type;
+
+}
+
+namespace math
+{
+
+/// Truncation based on the total degree.
+/**
+ * This method is used to eliminate from the input argument \p x all the parts
+ * whose total degree is greater than \p max_degree.
+ *
+ * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
+ *
+ * The body of this function is equivalent to:
+@code
+return truncate_degree_impl<T,U>()(x,max_degree);
+@endcode
+ * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
+ * this function will be disabled.
+ *
+ * @param[in] x object which will be subject to truncation.
+ * @param[in] max_degree maximum allowed total degree in the output.
+ *
+ * @return the truncated counterpart of \p x.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::truncate_degree_impl.
+ */
+template <typename T, typename U, detail::truncate_degree_enabler<T,U> = 0>
+inline T truncate_degree(const T &x, const U &max_degree)
+{
+	return truncate_degree_impl<T,U>()(x,max_degree);
+}
+
+/// Truncation based on the partial degree.
+/**
+ * This method is used to eliminate from the input argument \p x all the parts
+ * whose partial degree is greater than \p max_degree.
+ *
+ * The actual implementation of this function is in the piranha::math::truncate_degree_impl functor.
+ *
+ * The body of this function is equivalent to:
+@code
+return truncate_degree_impl<T,U>()(x,max_degree,names);
+@endcode
+ * The call operator of piranha::math::truncate_degree_impl is required to return type \p T, otherwise
+ * this function will be disabled.
+ *
+ * @param[in] x object which will be subject to truncation.
+ * @param[in] max_degree maximum allowed partial degree in the output.
+ * @param[in] names names of the variables that will be considered in the computation of the partial degree.
+ *
+ * @return the truncated counterpart of \p x.
+ *
+ * @throws unspecified any exception thrown by the call operator of piranha::math::truncate_degree_impl.
+ */
+template <typename T, typename U, detail::truncate_pdegree_enabler<T,U> = 0>
+inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std::string> &names)
+{
+	return truncate_degree_impl<T,U>()(x,max_degree,names);
+}
+
+}
+
+/// Type trait to detect if types can be used in piranha::math::truncate_degree().
+/**
+ * The type trait will be true if instances of types \p T and \p U can be used as arguments of piranha::math::truncate_degree()
+ * (both in the binary and ternary version of the function).
+ */
+template <typename T, typename U>
+class has_truncate_degree: detail::sfinae_types
+{
+		template <typename T1, typename U1>
+		static auto test1(const T1 &t, const U1 &u) -> decltype(math::truncate_degree(t,u),void(),yes());
+		static no test1(...);
+		template <typename T1, typename U1>
+		static auto test2(const T1 &t, const U1 &u) -> decltype(math::truncate_degree(t,u,std::declval<const std::vector<std::string> &>()),void(),yes());
+		static no test2(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test1(std::declval<T>(),std::declval<U>())),yes>::value &&
+					  std::is_same<decltype(test2(std::declval<T>(),std::declval<U>())),yes>::value;
+};
+
+template <typename T, typename U>
+const bool has_truncate_degree<T,U>::value;
 
 namespace detail
 {

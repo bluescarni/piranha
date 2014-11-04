@@ -628,3 +628,53 @@ BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)
 	BOOST_CHECK(!has_cosine<std::string>::value);
 	BOOST_CHECK(!has_cosine<void *>::value);
 }
+
+namespace piranha { namespace math {
+
+// A few fake specialisations to test the degree truncation type traits.
+
+// double-double, correct one.
+template <>
+struct truncate_degree_impl<double,double,void>
+{
+	double operator()(const double &, const double &) const;
+	double operator()(const double &, const double &, const std::vector<std::string> &) const;
+};
+
+// double-float, missing one of the two overloads.
+template <>
+struct truncate_degree_impl<double,float,void>
+{
+	double operator()(const double &, const float &) const;
+};
+
+// float-double, wrong return type.
+template <>
+struct truncate_degree_impl<float,double,void>
+{
+	double operator()(const float &, const double &) const;
+	double operator()(const float &, const double &, const std::vector<std::string> &) const;
+};
+
+}}
+
+BOOST_AUTO_TEST_CASE(math_has_truncate_degree_test)
+{
+	BOOST_CHECK((!has_truncate_degree<float,float>::value));
+	BOOST_CHECK((!has_truncate_degree<float &,float>::value));
+	BOOST_CHECK((!has_truncate_degree<float &,const float &>::value));
+	BOOST_CHECK((!has_truncate_degree<int &&,const float &>::value));
+	BOOST_CHECK((!has_truncate_degree<int &&,long double>::value));
+	BOOST_CHECK((!has_truncate_degree<std::string,long double>::value));
+	BOOST_CHECK((!has_truncate_degree<std::string,std::vector<int>>::value));
+	BOOST_CHECK((has_truncate_degree<double,double>::value));
+	BOOST_CHECK((has_truncate_degree<const double,double>::value));
+	BOOST_CHECK((has_truncate_degree<double &&,double>::value));
+	BOOST_CHECK((has_truncate_degree<double &&,double const &>::value));
+	BOOST_CHECK((!has_truncate_degree<double,float>::value));
+	BOOST_CHECK((!has_truncate_degree<const double,float &>::value));
+	BOOST_CHECK((!has_truncate_degree<double &&,float &>::value));
+	BOOST_CHECK((!has_truncate_degree<float,double>::value));
+	BOOST_CHECK((!has_truncate_degree<const float,double &>::value));
+	BOOST_CHECK((!has_truncate_degree<float &&,double &>::value));
+}
