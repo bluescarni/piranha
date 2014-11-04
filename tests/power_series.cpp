@@ -338,3 +338,48 @@ BOOST_AUTO_TEST_CASE(power_series_serialization_test)
 	}
 	BOOST_CHECK_EQUAL(z,tmp);
 }
+
+BOOST_AUTO_TEST_CASE(power_series_truncation_test)
+{
+	// A test with polynomial, degree only in the key.
+	{
+	typedef polynomial<double,rational> stype0;
+	BOOST_CHECK((has_truncate_degree<stype0,int>::value));
+	BOOST_CHECK((has_truncate_degree<stype0,rational>::value));
+	BOOST_CHECK((has_truncate_degree<stype0,integer>::value));
+	BOOST_CHECK((!has_truncate_degree<stype0,std::string>::value));
+	stype0 x{"x"}, y{"y"}, z{"z"};
+	stype0 s0;
+	BOOST_CHECK((std::is_same<stype0,decltype(s0.truncate_degree(5))>::value));
+	BOOST_CHECK_EQUAL(s0.truncate_degree(5),s0);
+	s0 = x.pow(rational(10,3));
+	BOOST_CHECK_EQUAL(s0.truncate_degree(5),s0);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(3/2_q),0);
+	// x**5*y+1/2*z**-5*x*y+x*y*z/4
+	s0 = x.pow(5) * y + z.pow(-5)/2 * x * y + x*y*z/4;
+	BOOST_CHECK_EQUAL(s0.truncate_degree(3),z.pow(-5)/2 * x * y + x*y*z/4);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,-1),z.pow(-5)/2 * x * y);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x"}),z.pow(-5)/2 * x * y + x*y*z/4);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"x","y"}),z.pow(-5)/2 * x * y + x*y*z/4);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"y","x","y"}),z.pow(-5)/2 * x * y + x*y*z/4);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"z","x"}),s0);
+	}
+	{
+	// Poisson series, degree only in the coefficient.
+	typedef poisson_series<polynomial<rational,rational>> st;
+	BOOST_CHECK((has_truncate_degree<st,int>::value));
+	BOOST_CHECK((has_truncate_degree<st,rational>::value));
+	BOOST_CHECK((has_truncate_degree<st,integer>::value));
+	BOOST_CHECK((!has_truncate_degree<st,std::string>::value));
+	st x("x"), y("y"), z("z"), a("a"), b("b");
+	// (x + y**2/4 + 3*x*y*z/7) * cos(a) + (x*y+y*z/3+3*z**2*x/8) * sin(a+b)
+	st s0 = (x + y*y/4 + 3*z*x*y/7) * math::cos(a) + (x*y + z*y/3 + 3*z*z*x/8) * math::sin(a + b);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(2),(x + y*y/4) * math::cos(a) + (x*y + z*y/3) * math::sin(a + b));
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1l),x * math::cos(a));
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,-1ll),0);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1l,{"x"}),(x + y*y/4 + 3*z*x*y/7) * math::cos(a) + (x*y + z*y/3 + 3*z*z*x/8) * math::sin(a + b));
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,char(0),{"x"}),y*y/4 * math::cos(a) + z*y/3 * math::sin(a + b));
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,char(1),{"y","x"}),x * math::cos(a) + (z*y/3 + 3*z*z*x/8) * math::sin(a + b));
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,integer(1),{"z"}),(x + y*y/4 + 3*z*x*y/7) * math::cos(a) + (x*y + z*y/3) * math::sin(a + b));
+	}
+}
