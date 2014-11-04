@@ -46,7 +46,9 @@ namespace piranha
  * 
  * ## Type requirements ##
  *
- * \p Series must be an instance of piranha::series, and \p Derived must satisfy the piranha::is_series type trait.
+ * - \p Series must be an instance of piranha::series,
+ * - \p Derived must satisfy the piranha::is_series type trait, and derive
+ *    from t_substitutable_series of \p Series and \p Derived.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -154,6 +156,7 @@ class t_substitutable_series: public Series
 		{
 			PIRANHA_TT_CHECK(is_series,t_substitutable_series);
 			PIRANHA_TT_CHECK(is_series,Derived);
+			PIRANHA_TT_CHECK(std::is_base_of,t_substitutable_series,Derived);
 		}
 		PIRANHA_FORWARDING_ASSIGNMENT(t_substitutable_series,base)
 		/// Trigonometric substitution.
