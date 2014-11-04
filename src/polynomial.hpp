@@ -190,7 +190,7 @@ class polynomial:
 			typedef typename term_type::key_type key_type;
 			// Get the partial degree of the monomial in integral form.
 			integer degree;
-			symbol_set::positions pos(this->m_symbol_set,symbol_set{s});
+			const symbol_set::positions pos(this->m_symbol_set,symbol_set{s});
 			try {
 				degree = math::integral_cast(term.m_key.degree(pos,this->m_symbol_set));
 			} catch (const std::invalid_argument &) {

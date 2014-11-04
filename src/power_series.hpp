@@ -230,7 +230,7 @@ class power_series: public Series
 		pdegree_type<T> degree(const std::vector<std::string> &names) const
 		{
 			using term_type = typename T::term_type;
-			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			const symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
 				return this->get_degree(t1,names,p,this->m_symbol_set) < this->get_degree(t2,names,p,this->m_symbol_set);
 			});
@@ -256,7 +256,7 @@ class power_series: public Series
 		pldegree_type<T> ldegree(const std::vector<std::string> &names) const
 		{
 			using term_type = typename T::term_type;
-			symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
+			const symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
 				return this->get_ldegree(t1,names,p,this->m_symbol_set) < this->get_ldegree(t2,names,p,this->m_symbol_set);
 			});
