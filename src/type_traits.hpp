@@ -1208,6 +1208,17 @@ struct safe_abs_sint
 template <typename T>
 const T safe_abs_sint<T>::value;
 
+// A simple true type-trait that can be used inside enable_if with T a decltype() expression
+// subject to SFINAE. It is similar to the proposed void_t type (in C++14, maybe?)
+template <typename T>
+struct true_tt
+{
+	static const bool value = true;
+};
+
+template <typename T>
+const bool true_tt<T>::value;
+
 }
 
 }
