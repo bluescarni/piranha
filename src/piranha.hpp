@@ -122,6 +122,8 @@
  * birds with one stone.
  * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
  * need the full definition of the object we might want to reorganise the code.
+ * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting brackets
+ * e.g. when printing rational exponents with non-unitary denominator.
  */
 namespace piranha
 {
