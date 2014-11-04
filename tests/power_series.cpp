@@ -53,9 +53,9 @@ typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
 template <typename Cf, typename Expo>
-class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>
+class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>
 {
-		typedef power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>> base;
+		typedef power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -68,9 +68,9 @@ class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_serie
 };
 
 template <typename Cf>
-class g_series_type2: public power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>>
+class g_series_type2: public power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>,g_series_type2<Cf>>
 {
-		typedef power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>> base;
+		typedef power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>,g_series_type2<Cf>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type2() = default;

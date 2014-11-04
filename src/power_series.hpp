@@ -53,7 +53,8 @@ namespace piranha
  *
  * ## Type requirements ##
  *
- * \p Series must satisfy the piranha::is_series type trait.
+ * - \p Series must satisfy the piranha::is_series type trait,
+ * - \p Derived must derive from power_series of \p Series and \p Derived.
  *
  * ## Exception safety guarantee ##
  *
@@ -69,7 +70,7 @@ namespace piranha
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-template <typename Series>
+template <typename Series, typename Derived>
 class power_series: public Series
 {
 		PIRANHA_TT_CHECK(is_series,Series);
@@ -161,6 +162,7 @@ class power_series: public Series
 		~power_series()
 		{
 			PIRANHA_TT_CHECK(is_series,power_series);
+			PIRANHA_TT_CHECK(std::is_base_of,power_series,Derived);
 		}
 		/// Total degree.
 		/**

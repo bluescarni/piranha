@@ -48,9 +48,9 @@ using namespace piranha;
 
 template <typename Cf, typename Expo>
 class polynomial:
-	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>>
+	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>
 {
-		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>> base;
+		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		polynomial() = default;

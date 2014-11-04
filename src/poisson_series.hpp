@@ -75,9 +75,9 @@ namespace piranha
  */
 template <typename Cf>
 class poisson_series:
-	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>>
+	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
 {
-		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>> base;
+		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>> base;
 		// TMP for enabling sin and cos overrides.
 		// Detect if T's coefficient is a polynomial whose coefficient has integral cast.
 		template <typename T, typename = void>

@@ -126,7 +126,7 @@ struct polynomial_tag {};
 template <typename Cf, typename Expo, typename S = std::integral_constant<std::size_t,0u>>
 class polynomial:
 	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
-	polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>>,detail::polynomial_tag
+	polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>,polynomial<Cf,Expo,S>>,detail::polynomial_tag
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -135,7 +135,7 @@ class polynomial:
 		template <typename T>
 		friend class poisson_series;
 		using base = power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
-			polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>>;
+			polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>,polynomial<Cf,Expo,S>>;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
