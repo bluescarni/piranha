@@ -342,6 +342,46 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 def truncate_degree(arg,max_degree,names = None):
 	"""Degree-based truncation.
 
+	This function will eliminate from *arg* parts whose degree is greater than *max_degree*. The truncation
+	operates on series types both by eliminating entire terms and by truncating recursively the coefficients,
+	if possible.
+
+	If *names* is ``None``, then the total degree is considered for the truncation. Otherwise, *names* must be
+	a list of strings enumerating the variables to be considered for the computation of the degree.
+
+	:param arg: argument for the truncation
+	:type arg: a series type
+	:param max_degree: maximum degree that will be kept in *arg*
+	:type max_degree: a type comparable to the type representing the degree of *arg*
+	:param names: list of the names of the variables to be considered in the computation of the degree
+	:type names: ``None`` or a list of strings
+	:returns: the truncated counterpart of *arg*
+	:raises: :exc:`TypeError` if *names* is neither ``None`` nor a list of strings
+	:raises: any exception raised by the invoked low-level function
+
+	>>> from .types import polynomial, rational, k_monomial, poisson_series
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y,z = pt('x'), pt('y'), pt('z')
+	>>> truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP
+	x*y+z
+	>>> truncate_degree(x**2*y+x*y+z,0,['x'])
+	z
+	>>> pt = poisson_series(polynomial(rational,k_monomial))()
+	>>> x,y,z,a,b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
+	>>> truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),3) # doctest: +SKIP
+	(x+x*y+x**2*z)*cos(a+b)+(-y*z+y)*sin(2*a+b)
+	>>> truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,['x','y']) # doctest: +SKIP
+	x*cos(a+b)+(-y*z+y)*sin(2*a+b)
+	>>> truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,'x') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: the optional 'names' argument must be a list of strings
+	>>> truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,['x',1]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: the optional 'names' argument must be a list of strings
+
+
 	"""
 	from ._core import _truncate_degree
 	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
