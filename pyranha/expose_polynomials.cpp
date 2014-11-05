@@ -50,11 +50,13 @@ void expose_polynomials()
 		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
 		using eval_types = interop_types;
 		using subs_types = interop_types;
+		using degree_truncation_types = std::tuple<long,piranha::integer,piranha::rational>;
 		// Need to refer to these to silence a warning in GCC.
-		interop_types	it;
-		pow_types	pt;
-		eval_types	et;
-		subs_types	st;
+		interop_types		it;
+		pow_types		pt;
+		eval_types		et;
+		subs_types		st;
+		degree_truncation_types	dtt;
 	};
 	pyranha::series_exposer<piranha::polynomial,poly_desc> poly_exposer;
 }

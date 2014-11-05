@@ -169,6 +169,8 @@ class series_exposer
 		PIRANHA_DECLARE_HAS_TYPEDEF(eval_types);
 		// Detect the presence of substitution types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(subs_types);
+		// Detect the presence of degree truncation types.
+		PIRANHA_DECLARE_HAS_TYPEDEF(degree_truncation_types);
 		// for_each tuple algorithm.
 		template <typename Tuple, typename Op, std::size_t Idx = 0u>
 		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
@@ -601,8 +603,14 @@ class series_exposer
 		static void expose_sin_cos(typename std::enable_if<!piranha::has_sine<S>::value || !piranha::has_cosine<S>::value>::type * = nullptr)
 		{}
 		// Power series exposer.
+		template <typename S>
+		static void expose_power_series(bp::class_<S> &series_class)
+		{
+			expose_degree(series_class);
+			expose_degree_truncation(series_class);
+		}
 		template <typename T>
-		static void expose_power_series(bp::class_<T> &series_class,
+		static void expose_degree(bp::class_<T> &series_class,
 			typename std::enable_if<piranha::has_degree<T>::value && piranha::has_ldegree<T>::value>::type * = nullptr)
 		{
 			// NOTE: probably we should make these piranha::math:: wrappers. Same for the trig ones.
@@ -612,7 +620,7 @@ class series_exposer
 			series_class.def("ldegree",wrap_partial_ldegree_set<T>);
 		}
 		template <typename T>
-		static void expose_power_series(bp::class_<T> &,
+		static void expose_degree(bp::class_<T> &,
 			typename std::enable_if<!piranha::has_degree<T>::value || !piranha::has_ldegree<T>::value>::type * = nullptr)
 		{}
 		// degree() wrappers.
@@ -637,6 +645,46 @@ class series_exposer
 		{
 			bp::stl_input_iterator<std::string> begin(l), end;
 			return s.ldegree(std::vector<std::string>(begin,end));
+		}
+		// Truncation.
+		template <typename S, typename T = Descriptor, typename std::enable_if<!has_typedef_degree_truncation_types<T>::value,int>::type = 0>
+		static void expose_degree_truncation(bp::class_<S> &)
+		{}
+		template <typename S>
+		struct truncate_degree_exposer
+		{
+			truncate_degree_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
+			bp::class_<S> &m_series_class;
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
+			{
+				// Expose both as member function and free function.
+				m_series_class.def("truncate_degree",truncate_degree_wrapper<S,T>);
+				bp::def("_truncate_degree",truncate_degree_wrapper<S,T>);
+				m_series_class.def("truncate_degree",truncate_pdegree_wrapper<S,T>);
+				bp::def("_truncate_degree",truncate_pdegree_wrapper<S,T>);
+			}
+			template <typename T>
+			void operator()(const T &, typename std::enable_if<!piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
+			{}
+		};
+		template <typename S, typename T>
+		static S truncate_degree_wrapper(const S &s, const T &x)
+		{
+			return s.truncate_degree(x);
+		}
+		template <typename S, typename T>
+		static S truncate_pdegree_wrapper(const S &s, const T &x, bp::list l)
+		{
+			bp::stl_input_iterator<std::string> begin(l), end;
+			return s.truncate_degree(x,std::vector<std::string>(begin,end));
+		}
+		template <typename S, typename T = Descriptor, typename std::enable_if<has_typedef_degree_truncation_types<T>::value,int>::type = 0>
+		static void expose_degree_truncation(bp::class_<S> &series_class)
+		{
+			using dt_types = typename Descriptor::degree_truncation_types;
+			dt_types dt;
+			tuple_for_each(dt,truncate_degree_exposer<S>(series_class));
 		}
 		// Trigonometric exposer.
 		template <typename S>

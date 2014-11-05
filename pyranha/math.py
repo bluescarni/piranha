@@ -337,3 +337,15 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	except:
 		raise TypeError("cannot construct instance of input type")
 	return _cpp_type_catcher(_transformation_is_canonical,new_p,new_q,p_list,q_list,types_set[0]())
+
+def truncate_degree(arg,max_degree,names = None):
+	"""Degree-based truncation.
+
+	"""
+	from ._core import _truncate_degree
+	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
+		raise TypeError("the optional 'names' argument must be a list of strings")
+	if names is None:
+		return _cpp_type_catcher(_truncate_degree,arg,max_degree)
+	else:
+		return _cpp_type_catcher(_truncate_degree,arg,max_degree,names)

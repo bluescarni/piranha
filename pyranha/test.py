@@ -417,6 +417,38 @@ class serialization_test_case(_ut.TestCase):
 			str_rep = pickle.dumps(res)
 			self.assertEqual(res,pickle.loads(str_rep))
 
+class truncate_degree_test_case(_ut.TestCase):
+	"""Test case for the degree-based truncation of series.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(truncate_degree_test_case)
+
+	"""
+	def runTest(self):
+		from fractions import Fraction as F
+		from .math import truncate_degree, cos, sin
+		from .types import polynomial, short, rational, poisson_series
+		pt = polynomial(rational,short)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		s = x**5*y+F(1,2)*z**-5*x*y+x*y*z/4
+		self.assertEqual(s.truncate_degree(3),z**-5/2 * x * y + x*y*z/4)
+		self.assertEqual(truncate_degree(s,3),z**-5/2 * x * y + x*y*z/4)
+		self.assertEqual(s.truncate_degree(2,["x"]),z**-5/2 * x * y + x*y*z/4)
+		self.assertEqual(truncate_degree(s,2,["x"]),z**-5/2 * x * y + x*y*z/4)
+		self.assertRaises(TypeError,lambda: truncate_degree(s,2,["x",1]))
+		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
+		pt = poisson_series(polynomial(rational,short))()
+		x,y,z,a,b = pt("x"), pt("y"), pt("z"), pt("a"), pt("b")
+		s = (x + y**2/4 + 3*x*y*z/7) * cos(a) + (x*y+y*z/3+3*z**2*x/8) * sin(a+b)
+		self.assertEqual(s.truncate_degree(2),(x + y*y/4) * cos(a) + (x*y + z*y/3) * sin(a + b))
+		self.assertEqual(truncate_degree(s,2),(x + y*y/4) * cos(a) + (x*y + z*y/3) * sin(a + b))
+		self.assertEqual(s.truncate_degree(1,["y","x"]),x * cos(a) + (z*y/3 + 3*z*z*x/8) * sin(a + b))
+		self.assertEqual(truncate_degree(s,1,["y","x"]),x * cos(a) + (z*y/3 + 3*z*z*x/8) * sin(a + b))
+		self.assertRaises(TypeError,lambda: truncate_degree(s,2,["x",1]))
+		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
+
 def run_test_suite():
 	"""Run the full test suite.
 	
@@ -428,6 +460,7 @@ def run_test_suite():
 	suite.addTest(poisson_series_test_case())
 	suite.addTest(converters_test_case())
 	suite.addTest(serialization_test_case())
+	suite.addTest(truncate_degree_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
 	# Run the doctests.
 	import doctest

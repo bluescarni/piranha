@@ -51,10 +51,12 @@ void expose_poisson_series()
 		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
 		using eval_types = std::tuple<double,piranha::real,piranha::rational>;
 		using subs_types = eval_types;
-		interop_types	it;
-		pow_types	pt;
-		eval_types	et;
-		subs_types	st;
+		using degree_truncation_types = std::tuple<long,piranha::integer,piranha::rational>;
+		interop_types		it;
+		pow_types		pt;
+		eval_types		et;
+		subs_types		st;
+		degree_truncation_types	dtt;
 	};
 	series_exposer<piranha::poisson_series,ps_desc> ps_exposer;
 }
