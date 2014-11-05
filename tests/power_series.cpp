@@ -405,4 +405,50 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
 	}
+	{
+	// Recursive poly, integers and rational exponent mixed, same example as above.
+	typedef polynomial<rational,integer> st0;
+	typedef polynomial<st0,rational> st1;
+	BOOST_CHECK((has_truncate_degree<st1,int>::value));
+	BOOST_CHECK((has_truncate_degree<st1,rational>::value));
+	BOOST_CHECK((has_truncate_degree<st1,integer>::value));
+	BOOST_CHECK((!has_truncate_degree<st1,std::string>::value));
+	// (x*y+x**2+x+1/4)*z + (x+y**2+x**2*y)*z**2 + 3
+	st0 x{"x"}, y{"y"};
+	st1 z{"z"};
+	auto s0 = (x*y+x*x+x+1_q/4)*z+(x+y*y+x*x*y)*z*z + 3;
+	BOOST_CHECK_EQUAL(s0.truncate_degree(1),1/4_q*z + 3);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(0),3);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(2),(x+1_q/4)*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,-3),0);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3_q),(x*y+x*x+x+1_q/4)*z + x*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x"}),(x*y+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1ll,{"x","y"}),(x+1_q/4)*z+x*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x","z"}),1_q/4*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	}
+	{
+	// Recursive poly, integers and rational exponent mixed, same example as above but switched.
+	typedef polynomial<rational,rational> st0;
+	typedef polynomial<st0,integer> st1;
+	BOOST_CHECK((has_truncate_degree<st1,int>::value));
+	BOOST_CHECK((has_truncate_degree<st1,rational>::value));
+	BOOST_CHECK((has_truncate_degree<st1,integer>::value));
+	BOOST_CHECK((!has_truncate_degree<st1,std::string>::value));
+	// (x*y+x**2+x+1/4)*z + (x+y**2+x**2*y)*z**2 + 3
+	st0 x{"x"}, y{"y"};
+	st1 z{"z"};
+	auto s0 = (x*y+x*x+x+1_q/4)*z+(x+y*y+x*x*y)*z*z + 3;
+	BOOST_CHECK_EQUAL(s0.truncate_degree(1),1/4_q*z + 3);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(0),3);
+	BOOST_CHECK_EQUAL(s0.truncate_degree(2),(x+1_q/4)*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,-3),0);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3_q),(x*y+x*x+x+1_q/4)*z + x*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x"}),(x*y+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1ll,{"x","y"}),(x+1_q/4)*z+x*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x","z"}),1_q/4*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	}
 }
