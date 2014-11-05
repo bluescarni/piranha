@@ -66,9 +66,9 @@ def sin(arg):
 	The supported types are *int*, *float*, *Fraction*, *mpf* and any series type that supports
 	the operation.
 
-	:param arg: ine argument
+	:param arg: sine argument
 	:type arg: *int*, *float*, *Fraction*, *mpf*, or a supported series type.
-	:returns: ine of *arg*
+	:returns: sine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
 
