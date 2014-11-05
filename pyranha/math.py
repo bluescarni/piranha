@@ -281,7 +281,7 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	:type p_list: list of strings
 	:param q_list: list of coordinates names
 	:type q_list: list of strings
-	:returns: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise.
+	:returns: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise
 	:raises: :exc:`ValueError` if the size of all input lists is not the same
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
