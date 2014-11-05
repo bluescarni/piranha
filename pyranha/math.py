@@ -26,6 +26,7 @@ from ._common import _cpp_type_catcher
 
 # NOTE: some ideas to improve the extensibility of these functions:
 # http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user
+# Note that now we are adopting an approach of just deferring everything to C++.
 
 def cos(arg):
 	"""Cosine.
