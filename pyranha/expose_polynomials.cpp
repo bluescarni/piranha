@@ -50,7 +50,8 @@ void expose_polynomials()
 		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
 		using eval_types = interop_types;
 		using subs_types = interop_types;
-		using degree_truncation_types = std::tuple<long,piranha::integer,piranha::rational>;
+		// For now, we have only degrees computed as integers.
+		using degree_truncation_types = std::tuple<piranha::integer>;
 		// Need to refer to these to silence a warning in GCC.
 		interop_types		it;
 		pow_types		pt;
