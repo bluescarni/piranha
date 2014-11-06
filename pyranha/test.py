@@ -449,6 +449,36 @@ class truncate_degree_test_case(_ut.TestCase):
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,["x",1]))
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
 
+class doctests_test_case(_ut.TestCase):
+	"""Test case that will run all the doctests.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(doctests_test_case)
+
+	"""
+	def runTest(self):
+		import doctest
+		import pyranha
+		from . import celmec, math, test
+		doctest.testmod(pyranha)
+		doctest.testmod(celmec)
+		doctest.testmod(math)
+		doctest.testmod(test)
+
+class tutorial_test_case(_ut.TestCase):
+	"""Test case that will check the tutorial files.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
+
+	"""
+	def runTest(self):
+		from . import tutorial
+
 def run_test_suite():
 	"""Run the full test suite.
 	
@@ -461,12 +491,22 @@ def run_test_suite():
 	suite.addTest(converters_test_case())
 	suite.addTest(serialization_test_case())
 	suite.addTest(truncate_degree_test_case())
+	suite.addTest(doctests_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
-	# Run the doctests.
-	import doctest
-	import pyranha
-	from . import celmec, math, test
-	doctest.testmod(pyranha)
-	doctest.testmod(celmec)
-	doctest.testmod(math)
-	doctest.testmod(test)
+	suite = _ut.TestLoader().loadTestsFromTestCase(tutorial_test_case)
+	# Context for the suppression of output while running the tutorials. Inspired by:
+	# http://stackoverflow.com/questions/8522689/how-to-temporary-hide-stdout-or-stderr-while-running-a-unittest-in-python
+	# This will temporarily replace sys.stdout with the null device.
+	class suppress_stdout(object):
+		def __init__(self):
+			pass
+		def __enter__(self):
+			import sys, os
+			self._stdout = sys.stdout
+			null = open(os.devnull,'wb')
+			sys.stdout = null
+		def __exit__(self, type, value, traceback):
+			import sys
+			sys.stdout = self._stdout
+	with suppress_stdout():
+		_ut.TextTestRunner(verbosity=2).run(suite)

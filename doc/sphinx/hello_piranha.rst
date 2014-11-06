@@ -9,6 +9,8 @@ Your first Piranha program
 After following the :ref:`installation instructions <getting_started>`,
 you should be able to compile and run your first C++ Piranha program:
 
+.. _hello_piranha_cpp:
+
 .. literalinclude:: ../../tutorial/hello_piranha.cpp
    :language: c++
    :linenos:
@@ -53,3 +55,43 @@ where to look for them:
 .. code-block:: bash
 
    $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
+
+After a successful compilation, the executable ``a.out`` can be run:
+
+.. code-block:: bash
+
+   $ ./a.out
+   4/3
+
+The ``environment`` class
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As you can see from the :ref:`C++ code <hello_piranha_cpp>`, before starting to use the library we create
+an ``environment`` object called ``env``. The constructor of this object will setup the Piranha runtime environment,
+performing the registration of cleanup functions to be automatically called when the program finishes, checking
+that the required libraries were configured correctly, etc.
+
+The creation of an ``environment`` object is not mandatory strictly speaking, but it is strongly encouraged and might
+become mandatory in the future.
+
+Your first Pyranha program
+--------------------------
+
+The Python counterpart of the :ref:`C++ code <hello_piranha_cpp>` is:
+
+.. literalinclude:: ../../pyranha/tutorial/hello_piranha.py
+   :language: python
+   :linenos:
+
+Two important differencese with respect to the C++ code should be evident.
+
+First of all, in Python we do not need to create any ``environment`` object: importing the :py:mod:`pyranha` module will automatically
+take care of creating the environment object for us.
+
+Secondly, in Python we do not use the ``rational`` class from Piranha, but we use the standard :py:class:`Fraction` class from
+:py:mod:`fractions` module. Indeed, Pyranha includes code to convert automatically the numerical types implemented in C++ to corresponding
+types in Python. This means that, for instance, Piranha functions that in C++ return ``rational`` will return
+:py:class:`Fraction` in Python, and C++ functions accepting ``rational`` as parameter will accept :py:class:`Fraction` as parameter
+when called from Python.
+
+The fundamental numerical types implemented in Piranha and their Python counterparts are the subjects of the next tutorial TODO.
