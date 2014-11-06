@@ -29,9 +29,9 @@ Piranha has a few mandatory dependencies:
 * the `GNU GMP <http://www.gmplib.org>`__ multiprecision library (the `MPIR <http://mpir.org/>`__ fork should work as well),
 * the `GNU MPFR <http://www.mpfr.org>`__ multiprecision floating-point library.
 
-The optional Python bindings, Pyranha, need the `Python <http://www.python.org/>`__ programming language (both Python
-2.x and 3.x are supported). `CMake <http://www.cmake.org/>`__ is the build system used by Piranha and
-must also be installed.
+The optional Python bindings, Pyranha, need the `Python <http://www.python.org/>`__ programming language (Python
+2.6 and later versions, including Python 3.x, are supported). `CMake <http://www.cmake.org/>`__ is the build system
+used by Piranha and must also be installed.
 
 These dependencies should be installed on your system before attempting to compile Piranha. On GNU/Linux
 and BSD flavours, the best way to proceed is to install them via the distribution's package manager

@@ -2,7 +2,8 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 SET(PYRANHA_INSTALL_PATH ${PYTHON_MODULES_PATH}/pyranha)
 
-ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptions.hpp type_system.hpp expose_utils.hpp expose_utils.cpp
+ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptions.hpp python_includes.hpp
+	type_system.hpp expose_utils.hpp expose_utils.cpp
 	expose_polynomials.hpp expose_polynomials.cpp
 	expose_poisson_series.hpp expose_poisson_series.cpp
 	__init__.py _common.py celmec.py math.py test.py types.py
