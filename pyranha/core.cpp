@@ -136,6 +136,7 @@ BOOST_PYTHON_MODULE(_core)
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");
 	settings_class.def("_set_max_term_output",piranha::settings::set_max_term_output).staticmethod("_set_max_term_output");
+	settings_class.def("_reset_max_term_output",piranha::settings::reset_max_term_output).staticmethod("_reset_max_term_output");
 	settings_class.def("_set_n_threads",piranha::settings::set_n_threads).staticmethod("_set_n_threads");
 	settings_class.def("_get_n_threads",piranha::settings::get_n_threads).staticmethod("_get_n_threads");
 	settings_class.def("_reset_n_threads",piranha::settings::reset_n_threads).staticmethod("_reset_n_threads");
