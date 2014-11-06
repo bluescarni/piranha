@@ -17,7 +17,7 @@ you should be able to compile and run your first C++ Piranha program:
    // Include the global Piranha header.
    #include "piranha/piranha.hpp"
 
-   // Import the Piranha namespace.
+   // Import the names from the Piranha namespace.
    using namespace piranha;
 
    int main()
@@ -28,9 +28,11 @@ you should be able to compile and run your first C++ Piranha program:
      std::cout << rational{4,3} << '\n';
    }
 
-.. note:: The code snippets shown in the tutorial are imported verbatim from the Piranha
+.. note:: The C++ code snippets shown in the tutorial are imported verbatim from the Piranha
    source tree. You should take care of adjusting the include path of the ``piranha.hpp`` header
    to the correct location on your system before attempting to compile the C++ code samples.
+   On Unix systems, if you installed Piranha in a standard ``PREFIX``, the correct way
+   of including the Piranha header is ``#include <piranha/piranha.hpp>``.
 
 This program will just print to screen the rational number :math:`\frac{4}{3}`, represented
 in Piranha by a class called (unsurprisingly) ``rational``.
