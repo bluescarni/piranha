@@ -5,8 +5,5 @@
 
 Math module.
 
-Reference
----------
-
 .. automodule:: pyranha.math
    :members:

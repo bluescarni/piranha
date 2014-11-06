@@ -5,8 +5,5 @@
 
 Celestial mechanics module.
 
-Reference
----------
-
 .. automodule:: pyranha.celmec
    :members:

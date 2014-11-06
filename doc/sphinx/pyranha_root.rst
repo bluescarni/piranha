@@ -5,9 +5,6 @@
 
 Root pyranha module.
 
-Reference
----------
-
 .. py:module:: pyranha
 
 .. data:: pyranha.settings

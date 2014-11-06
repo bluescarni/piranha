@@ -5,8 +5,5 @@
 
 Test module.
 
-Reference
----------
-
 .. automodule:: pyranha.test
    :members:

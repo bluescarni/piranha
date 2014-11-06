@@ -5,8 +5,5 @@
 
 Types module.
 
-Reference
----------
-
 .. automodule:: pyranha.types
    :members:

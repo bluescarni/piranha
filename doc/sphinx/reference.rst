@@ -4,6 +4,6 @@ Complete reference
 ==================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    pyranha_reference.rst
