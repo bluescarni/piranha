@@ -661,6 +661,7 @@ class series_exposer
 				// Expose both as member function and free function.
 				m_series_class.def("truncate_degree",truncate_degree_wrapper<S,T>);
 				bp::def("_truncate_degree",truncate_degree_wrapper<S,T>);
+				// The partial version.
 				m_series_class.def("truncate_degree",truncate_pdegree_wrapper<S,T>);
 				bp::def("_truncate_degree",truncate_pdegree_wrapper<S,T>);
 			}
