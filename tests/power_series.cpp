@@ -363,6 +363,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"x","y"}),z.pow(-5)/2 * x * y + x*y*z/4);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"y","x","y"}),z.pow(-5)/2 * x * y + x*y*z/4);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,5,{"z","x"}),s0);
+	// Test with non-existing variable.
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0,{"a","b"}),s0);
 	}
 	{
 	// Poisson series, degree only in the coefficient.
@@ -381,6 +383,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,char(0),{"x"}),y*y/4 * math::cos(a) + z*y/3 * math::sin(a + b));
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,char(1),{"y","x"}),x * math::cos(a) + (z*y/3 + 3*z*z*x/8) * math::sin(a + b));
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,integer(1),{"z"}),(x + y*y/4 + 3*z*x*y/7) * math::cos(a) + (x*y + z*y/3) * math::sin(a + b));
+	// Test with non-existing variable.
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0,{"foo","bar"}),s0);
 	}
 	{
 	// Recursive poly.
@@ -404,6 +408,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x","z"}),1_q/4*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	// Test with non-existing variable.
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0,{"foo","bar"}),s0);
 	}
 	{
 	// Recursive poly, integers and rational exponent mixed, same example as above.
@@ -427,6 +433,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x","z"}),1_q/4*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	// Test with non-existing variable.
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0_q,{"foo","bar"}),s0);
 	}
 	{
 	// Recursive poly, integers and rational exponent mixed, same example as above but switched.
@@ -450,5 +458,7 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,1,{"x","z"}),1_q/4*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,2,{"x","z"}),(x*y+x+1_q/4)*z + y*y*z*z + 3);
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,3,{"x","z"}),(x*y+x*x+x+1_q/4)*z+(x+y*y)*z*z + 3);
+	// Test with non-existing variable.
+	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0_z,{"foo","bar"}),s0);
 	}
 }
