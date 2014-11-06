@@ -71,7 +71,7 @@ an ``environment`` object called ``env``. The constructor of this object will se
 performing the registration of cleanup functions to be automatically called when the program finishes, checking
 that the required libraries were configured correctly, etc.
 
-The creation of an ``environment`` object is not mandatory strictly speaking, but it is strongly encouraged and might
+The creation of an ``environment`` object is not mandatory strictly speaking, but it is strongly encouraged and it might
 become mandatory in the future.
 
 Your first Pyranha program
