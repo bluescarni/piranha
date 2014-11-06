@@ -91,7 +91,7 @@ take care of creating the environment object for us.
 Secondly, in Python we do not use the ``rational`` class from Piranha, but we use the standard :py:class:`Fraction` class from
 :py:mod:`fractions` module. Indeed, Pyranha includes code to convert automatically the numerical types implemented in C++ to corresponding
 types in Python. This means that, for instance, Piranha functions that in C++ return ``rational`` will return
-:py:class:`Fraction` in Python, and C++ functions accepting ``rational`` as parameter will accept :py:class:`Fraction` as parameter
+:py:class:`Fraction` in Python, and C++ functions accepting a ``rational`` parameter will accept :py:class:`Fraction` parameter
 when called from Python.
 
 The fundamental numerical types implemented in Piranha and their Python counterparts are the subjects of the next tutorial TODO.
