@@ -1,0 +1,9 @@
+include_directories("${CMAKE_SOURCE_DIR}/src")
+
+MACRO(ADD_PIRANHA_TUTORIAL arg1)
+	ADD_EXECUTABLE(${arg1} ${arg1}.cpp)
+	TARGET_LINK_LIBRARIES(${arg1} ${MANDATORY_LIBRARIES})
+	ADD_TEST(${arg1} ${arg1})
+ENDMACRO()
+
+ADD_PIRANHA_TUTORIAL(hello_piranha)

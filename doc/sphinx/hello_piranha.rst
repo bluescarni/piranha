@@ -9,24 +9,9 @@ Your first Piranha program
 After following the :ref:`installation instructions <getting_started>`,
 you should be able to compile and run your first C++ Piranha program:
 
-.. code-block:: c++
+.. literalinclude:: ../../tutorial/hello_piranha.cpp
+   :language: c++
    :linenos:
-
-   #include <iostream>
-
-   // Include the global Piranha header.
-   #include "piranha/piranha.hpp"
-
-   // Import the names from the Piranha namespace.
-   using namespace piranha;
-
-   int main()
-   {
-     // Setup of the Piranha environment.
-     environment env;
-     // This statement will print "4/3" to screen.
-     std::cout << rational{4,3} << '\n';
-   }
 
 .. note:: The C++ code snippets shown in the tutorial are imported verbatim from the Piranha
    source tree. You should take care of adjusting the include path of the ``piranha.hpp`` header

@@ -21,6 +21,9 @@ OPTION(BUILD_MAIN "Build 'main.cpp'." OFF)
 # Build option: enable test set.
 OPTION(BUILD_TESTS "Build test set." ON)
 
+# Build option: build the C++ tutorial.
+OPTION(BUILD_TUTORIAL "Build the C++ tutorial." OFF)
+
 # Build option: build the Python bindings.
 OPTION(BUILD_PYRANHA "Build Pyranha, the Python bindings for Piranha." OFF)
 
@@ -140,6 +143,10 @@ ENDIF(BUILD_MAIN)
 IF(BUILD_TESTS)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/tests")
 ENDIF(BUILD_TESTS)
+
+if(BUILD_TUTORIAL)
+	add_subdirectory("${CMAKE_SOURCE_DIR}/tutorial")
+endif()
 
 IF(BUILD_PYRANHA)
 	ADD_SUBDIRECTORY("${CMAKE_SOURCE_DIR}/pyranha")
