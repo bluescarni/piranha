@@ -5,7 +5,8 @@ print(42)
 print(int("42"))
 print(int(42.123))
 
-# Arbitrarily large ints are supported.
+# Arbitrarily large ints are supported directly,
+# no need to go through a string conversion.
 print(12345678987654321234567898765432)
 
 # Interoperability with float.
