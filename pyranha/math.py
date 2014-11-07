@@ -31,11 +31,11 @@ from ._common import _cpp_type_catcher
 def cos(arg):
 	"""Cosine.
 	
-	The supported types are *int*, *float*, *Fraction*, *mpf* and any series type that supports
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
 	the operation.
 	
 	:param arg: cosine argument
-	:type arg: *int*, *float*, *Fraction*, *mpf*, or a supported series type.
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
 	:returns: cosine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
@@ -64,11 +64,11 @@ def cos(arg):
 def sin(arg):
 	"""Sine.
 	
-	The supported types are *int*, *float*, *Fraction*, *mpf* and any series type that supports
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
 	the operation.
 
 	:param arg: sine argument
-	:type arg: *int*, *float*, *Fraction*, *mpf*, or a supported series type.
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
 	:returns: sine of *arg*
 	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
 		low-level function
@@ -102,9 +102,9 @@ def binomial(x,y):
 	as input.
 	
 	:param x: top argument for the binomial coefficient
-	:type x: *int*, *float*, *Fraction*, *mpf*
+	:type x: ``int``, ``float``, ``Fraction``, ``mpf``
 	:param y: bottom argument for the binomial coefficient
-	:type y: *int*, *float*, *Fraction*, *mpf*
+	:type y: ``int``, ``float``, ``Fraction``, ``mpf``
 	:returns: *x* choose *y*
 	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported
 	:raises: any exception raised by the invoked low-level function
@@ -191,12 +191,12 @@ def integrate(arg,name):
 def factorial(n):
 	"""Factorial.
 	
-	Will compute the factorial of *n*, which must be a non-negative instance of *int*.
+	Will compute the factorial of *n*, which must be a non-negative instance of ``int``.
 	
 	:param n: argument for the factorial
-	:type n: *int*
+	:type n: ``int``
 	:returns: factorial of *n*
-	:raises: :exc:`TypeError` if *n* is not an *int*
+	:raises: :exc:`TypeError` if *n* is not an ``int``
 	:raises: :exc:`ValueError` if *n* is negative or too large
 	
 	>>> factorial(0)
