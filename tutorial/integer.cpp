@@ -24,8 +24,8 @@ int main()
 	std::cout << (integer{85} / 2) << '\n';
 	std::cout << (integer{42} == 42) << '\n';
 
-	// Exponentiation provided by the math::pow() function.
-	std::cout << (math::pow(integer{42},2) / 42) << '\n';
+	// Exponentiation is provided by the math::pow() function.
+	std::cout << math::pow(integer{42},2) << '\n';
 
 	// Conversion to a C++ integral type can fail.
 	try {

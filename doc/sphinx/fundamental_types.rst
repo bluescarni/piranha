@@ -41,7 +41,19 @@ The following C++ code illustrates some features of the ``integer`` type:
    :language: c++
    :linenos:
 
-Line 38 highlights a couple of handy C++11 features. The snippet ``42_z`` is a *user-defined literal*. That is,
-it is equivalent to constructing an ``integer`` object with the string ``"42"``. The constructed temporary object
+On line 28, we can see how the ``math::pow()`` function can be invoked in order to compute the exponentiation of
+an ``integer``. C++ lacks a dedicated exponentiation operator and thus the functionality is provided by a function
+instead. The ``math::pow()`` function is part of Piranha's mathematical library, and different implementations
+of the exponentiation operation are used depending on the types of base and exponent.
+
+Line 38 highlights a couple of handy C++11 features. The snippet ``42_z`` is a *user-defined literal*: it results
+in the construction of an ``integer`` object via the string ``"42"``. The constructed temporary object
 is then assigned to a variable ``n`` in the statement ``auto n = 42_z``. The type of ``n`` is automatically
 deduced via the keyword ``auto`` from the right-hand side of the assignment, thus ``n`` is an ``integer`` object.
+This is arguably the C++ syntax that most closely matches Python's syntax.
+
+On the Python side, things look simpler:
+
+.. literalinclude:: ../../pyranha/tutorial/integer.py
+   :language: python
+   :linenos:

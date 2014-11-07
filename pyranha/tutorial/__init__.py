@@ -19,3 +19,4 @@
 
 # Execute all the tutorials.
 import hello_piranha
+import integer
