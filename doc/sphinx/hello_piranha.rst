@@ -94,4 +94,5 @@ types in Python. This means that, for instance, Piranha functions that in C++ re
 :py:class:`Fraction` in Python, and C++ functions accepting a ``rational`` parameter will accept :py:class:`Fraction` parameter
 when called from Python.
 
-The fundamental numerical types implemented in Piranha and their Python counterparts are the subjects of the next tutorial TODO.
+The fundamental numerical types implemented in Piranha and their Python counterparts are the subject of the
+:ref:`next tutorial chapter <fundamental_types>`.

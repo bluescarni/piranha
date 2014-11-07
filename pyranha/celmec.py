@@ -17,8 +17,6 @@
 # Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-""".. moduleauthor:: Francesco Biscani <bluescarni@gmail.com>"""
-
 from __future__ import absolute_import as _ai
 
 def orbitalR(angles):
