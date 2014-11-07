@@ -57,7 +57,7 @@ class settings(object):
 		"""Set the maximum number of series terms to print.
 
 		:param n: number of series terms to print
-		:type n: *int*
+		:type n: ``int``
 		:raises: any exception raised by the invoked low-level function
 
 		>>> settings.set_max_term_output(10)
@@ -111,7 +111,7 @@ class settings(object):
 		"""Set the number of threads that can be used by Piranha.
 
 		:param n: desired number of threads
-		:type n: *int*
+		:type n: ``int``
 		:raises: any exception raised by the invoked low-level function
 
 		>>> settings.set_n_threads(2)
@@ -160,8 +160,6 @@ class settings(object):
 
 		By default, the TeX representation of series is enabled.
 
-		:raises: any exception raised by the invoked low-level function
-
 		>>> settings.get_latex_repr()
 		True
 		>>> from .types import polynomial, rational, k_monomial
@@ -176,7 +174,36 @@ class settings(object):
 		with settings.__lock:
 			return hasattr(s_type,'_repr_latex_')
 	@staticmethod
-	def set_latex_repr(self,flag):
+	def set_latex_repr(flag):
+		r"""Set the availability of the ``_repr_latex_()`` method in series.
+
+		If *flag* is ``True``, the ``_repr_latex_()`` method of series types will be enabled. Otherwise,
+		the method will be disabled. See the documentation for :py:meth:`pyranha.settings.get_latex_repr` for a
+		description of how the method is used.
+
+		:param flag: availability flag for the ``_repr_latex_()`` method
+		:type flag: ``bool``
+		:raises: :exc:`TypeError` if *flag* is not a ``bool``
+
+		>>> settings.set_latex_repr(False)
+		>>> settings.get_latex_repr()
+		False
+		>>> from .types import polynomial, rational, k_monomial
+		>>> pt = polynomial(rational,k_monomial)()
+		>>> x = pt('x')
+		>>> (x**2/2)._repr_latex_() # doctest: +IGNORE_EXCEPTION_DETAIL
+		Traceback (most recent call last):
+		  ...
+		AttributeError: object has no attribute '_latex_repr_'
+		>>> settings.set_latex_repr(True)
+		>>> (x**2/2)._repr_latex_()
+		'\\[ \\frac{1}{2}{x}^{2} \\]'
+		>>> settings.set_latex_repr("hello") # doctest: +IGNORE_EXCEPTION_DETAIL
+		Traceback (most recent call last):
+		  ...
+		TypeError: the 'flag' parameter must be a bool
+
+		"""
 		from . import _core
 		from ._core import _get_series_list as gsl
 		from ._common import _register_repr_latex
