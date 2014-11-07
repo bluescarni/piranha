@@ -26,8 +26,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
