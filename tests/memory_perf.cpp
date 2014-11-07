@@ -32,7 +32,6 @@
 #include <utility>
 
 #include "../src/environment.hpp"
-#include "../src/integer.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/settings.hpp"
 
