@@ -37,4 +37,7 @@ int main()
 	// The "_z" suffix can be used to create integer literals.
 	auto n = 42_z;
 	std::cout << (n == 42) << '\n';
+
+	// Calculate (42 choose 21) via the math::binomial() function.
+	std::cout << math::binomial(42_z,21_z) << '\n';
 }

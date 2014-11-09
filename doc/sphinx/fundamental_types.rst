@@ -41,10 +41,13 @@ The following C++ code illustrates some features of the ``integer`` type:
    :language: c++
    :linenos:
 
+In the first lines, a few possible ways of constructing ``integer`` objects are shown, including a constructor
+from string that allows to initialise an ``integer`` with arbitrarily large values. In the following lines,
+some examples of arithmetics with basic C++ types are illustrated.
+
 On line 28, we can see how the ``math::pow()`` function can be invoked in order to compute the exponentiation of
 an ``integer``. C++ lacks a dedicated exponentiation operator and thus the functionality is provided by a function
-instead. The ``math::pow()`` function is part of Piranha's mathematical library, and different implementations
-of the exponentiation operation are used depending on the types of base and exponent.
+instead. The ``math::pow()`` function is part of Piranha's mathematical library.
 
 Line 38 highlights a couple of handy C++11 features. The snippet ``42_z`` is a *user-defined literal*: it results
 in the construction of an ``integer`` object via the string ``"42"``. The constructed temporary object
@@ -52,8 +55,32 @@ is then assigned to a variable ``n`` in the statement ``auto n = 42_z``. The typ
 deduced via the keyword ``auto`` from the right-hand side of the assignment, thus ``n`` is an ``integer`` object.
 This is arguably the C++ syntax that most closely matches Python's syntax.
 
-On the Python side, things look simpler:
+On line 42, we use the ``math::binomial()`` function from the math library to compute the binomial coefficient
+:math:`{42 \choose 21}`, passing the two arguments as ``integer`` objects created via the user-defined literal ``_z``.
+
+As expected, on the Python side things look simpler:
+
+.. _integer_py:
 
 .. literalinclude:: ../../pyranha/tutorial/integer.py
    :language: python
    :linenos:
+
+Python indeed provides multiprecision integers as basic types. Some notable differences exist between Python 2.x and
+Python 3.x in this regard:
+
+* Python 2.x has two different integral types, ``int`` and ``long``, representing small and large integers
+  respectively. Python 3.x instead has a single integral type named ``int``. Piranha is able to deal with both
+  cases;
+* in Python 2.x, integer division is truncated and returns an integral; in Python 3.x, integral division is a true division
+  returning a ``float``.
+
+In the first lines of the :ref:`Python code <integer_py>`, a few ways of constructing an integral object are shown.
+Contrary to C++, big integers can be constructed directly without passing through a string constructor. Additionally,
+Python has a dedicated exponentiation operator called ``**``, thus it is not necessary to resort to a separate
+function for this operation.
+
+On the last line, we see the first real example of using a Piranha function from Python. The :py:func:`pyranha.math.binomial`
+function will take Python integers as arguments, convert them to C++ ``integer`` objects and pass them to the C++ function
+``math::binomial()``. The output value of the C++ function will then be converted back to a Python integer and returned
+by the :py:func:`pyranha.math.binomial` function.
