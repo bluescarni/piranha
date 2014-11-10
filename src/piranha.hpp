@@ -124,6 +124,8 @@
  * need the full definition of the object we might want to reorganise the code.
  * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting brackets
  * e.g. when printing rational exponents with non-unitary denominator.
+ * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the base
+ * is not unitary.
  */
 namespace piranha
 {

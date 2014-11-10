@@ -505,14 +505,14 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Partial trigonometric degree.
 		/**
-		 * Partial trigonometric degree of the monomial: only the symbols with names in \p active_args are considered during the computation
-		 * of the degree. Symbols in \p active_args not appearing in \p args are not considered.
+		 * Partial trigonometric degree of the monomial. The \p p argument is used to indicate which multipliers are to be taken into account when
+		 * computing the partial degree. Multipliers not in \p p will be discarded during the computation of the partial degree.
 		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial degree of the monomial.
+		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the summation of all the multipliers of the monomial corresponding to the symbols in
-		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
+		 * @return the summation of all the multipliers of the monomial corresponding to the symbols at the positions in
+		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
 		 * 
 		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
 		 * of piranha::integer.
@@ -573,14 +573,14 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Partial trigonometric order.
 		/**
-		 * Partial trigonometric order of the monomial: only the symbols with names in \p active_args are considered during the computation
-		 * of the order. Symbols in \p active_args not appearing in \p args are not considered.
+		 * Partial trigonometric order of the monomial. The \p p argument is used to indicate which multipliers are to be taken into account when
+		 * computing the partial order. Multipliers not in \p p will be discarded during the computation of the partial order.
 		 * 
-		 * @param[in] active_args names of the symbols that will be considered in the computation of the partial order of the monomial.
+		 * @param[in] p positions of the symbols to be considered.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols in
-		 * \p active_args, or <tt>value_type(0)</tt> if no symbols in \p active_args appear in \p args.
+		 * @return the summation of the absolute values of all the multipliers of the monomial corresponding to the symbols at the positions in
+		 * \p p, or <tt>value_type(0)</tt> if no symbols in \p p appear in \p args.
 		 * 
 		 * @throws unspecified any exception thrown by unpack() or by the in-place addition operator
 		 * of piranha::integer.
