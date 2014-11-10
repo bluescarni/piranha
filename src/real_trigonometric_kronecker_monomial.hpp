@@ -117,6 +117,8 @@ class real_trigonometric_kronecker_monomial
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
 	private:
+		// Doxygen gets terribly confused by the following.
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and subs type definition.
 		template <typename U, typename = void>
@@ -203,6 +205,7 @@ class real_trigonometric_kronecker_monomial
 			m_flavour = flavour;
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
 	public:
 		/// Default constructor.
 		/**
