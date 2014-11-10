@@ -82,5 +82,5 @@ function for this operation.
 
 On the last line, we see the first real example of using a Piranha function from Python. The :py:func:`pyranha.math.binomial`
 function will take Python integers as arguments, convert them to C++ ``integer`` objects and pass them to the C++ function
-``math::binomial()``. The output value of the C++ function will then be converted back to a Python integer and returned
-by the :py:func:`pyranha.math.binomial` function.
+``math::binomial()``. The output value of the C++ function will be converted back to a Python integer which will then
+be returned by the :py:func:`pyranha.math.binomial` function.
