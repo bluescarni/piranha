@@ -88,5 +88,24 @@ be returned by the :py:func:`pyranha.math.binomial` function.
 The ``rational`` type
 ---------------------
 
-A second fundamental type provided by Piranha is the ``rational`` class, which consists of a pair of ``integer`` objects
-representing the numerator and denominator of a rational number.
+A second fundamental type provided by Piranha is the ``rational`` class, which represents arbitrary-precision
+rational numbers as ``integer`` numerator-denominator pairs. The ``rational`` type in Piranha extends smoothly
+the standard C++ numerical hierarchy, and it obeys the following basic rules:
+
+* a ``rational`` object is always kept in the usual canonical form consisting of coprime numerator and denominator, with
+  the denominator always strictly positive. Zero is always represented as ``0/1``;
+* a ``rational`` object can be converted to/from all the basic C++ numerical types and ``integer`` (the conversion to an integral
+  type computes the truncated division of numerator and denominator);
+* in mixed-mode operations, the rank of ``rational`` is higher than that of ``integer`` but lower than that of floating-point
+  types.
+
+The following C++ code showcases a few features of the ``rational`` class:
+
+The ``real`` type
+-----------------
+
+Potential pitfalls
+------------------
+
+TLDR
+----
