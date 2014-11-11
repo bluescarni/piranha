@@ -1903,29 +1903,6 @@ struct subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::ty
 	}
 };
 
-/// Specialisation of the piranha::math::integral_cast functor for piranha::mp_rational.
-template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,rational>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * The call will be successful if the denominator of \p x is unitary.
-	 *
-	 * @param[in] q cast argument.
-	 *
-	 * @return result of the cast operation.
-	 *
-	 * @throws std::invalid_argument if the call is unsuccessful.
-	 */
-	integer operator()(const T &q) const
-	{
-		if (q.den() == 1) {
-			return q.num();
-		}
-		piranha_throw(std::invalid_argument,"invalid rational");
-	}
-};
-
 /// Specialisation of the piranha::math::ipow_subs() functor for piranha::mp_rational.
 /**
  * This specialisation is activated when \p T is piranha::mp_rational.

@@ -53,6 +53,7 @@
 #include "mp_integer.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series_multiplier.hpp"
 #include "series_binary_operators.hpp"
@@ -669,7 +670,7 @@ class series: series_binary_operators, detail::series_tag
 		{
 			integer n;
 			try {
-				n = math::integral_cast(x);
+				n = safe_cast<integer>(x);
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-integral value");
 			}
@@ -826,7 +827,7 @@ class series: series_binary_operators, detail::series_tag
 		// Typedef for pow().
 		template <typename T, typename U>
 		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),
-			typename term_type::cf_type>::value && has_is_zero<T>::value && has_integral_cast<T>::value && is_multipliable_in_place<U>::value,U
+			typename term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value && is_multipliable_in_place<U>::value,U
 			>::type;
 		// Metaprogramming bits for partial derivative.
 		template <typename Cf>
@@ -1388,7 +1389,7 @@ class series: series_binary_operators, detail::series_tag
 		 * \note
 		 * This method is enabled only if:
 		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
-		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::math::integral_cast(),
+		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::safe_cast() to piranha::integer,
 		 * - \p Derived is multipliable in place.
 		 *
 		 * Return \p this raised to the <tt>x</tt>-th power.
@@ -1413,7 +1414,7 @@ class series: series_binary_operators, detail::series_tag
 		 * - insert(),
 		 * - is_single_coefficient(),
 		 * - apply_cf_functor(),
-		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::math::integral_cast(),
+		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
 		 * - series multiplication.
 		 */
 		template <typename T, typename U = Derived>

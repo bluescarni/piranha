@@ -3520,82 +3520,6 @@ inline mp_integer<NBits> factorial(const mp_integer<NBits> &n)
 	return n.factorial();
 }
 
-/// Default implementation of the piranha::math::integral_cast functor.
-/**
- * This functor should be specialised using the \p std::enable_if mechanism.
- * Default implementation will not define any call operator.
- */
-template <typename T, typename = void>
-struct integral_cast_impl
-{};
-
-/// Specialisation of the piranha::math::integral_cast functor for floating-point types.
-template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_floating_point<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * The call will be successful if \p x is finite and representing an integer value.
-	 *
-	 * @param[in] x cast argument.
-	 *
-	 * @return result of the cast operation.
-	 *
-	 * @throws std::invalid_argument if the conversion is not successful.
-	 */
-	integer operator()(const T &x) const
-	{
-		if (!std::isfinite(x) || std::trunc(x) != x) {
-			piranha_throw(std::invalid_argument,"invalid floating point value");
-		}
-		return integer{x};
-	}
-};
-
-/// Specialisation of the piranha::math::integral_cast functor for integral types.
-template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_integral<T>::value || std::is_same<integer,T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * The call will always be successful and will return a piranha::mp_integer constructed from \p x.
-	 *
-	 * @param[in] x cast argument.
-	 *
-	 * @return a piranha::mp_integer constructed from \p x.
-	 */
-	integer operator()(const T &x) const
-	{
-		return integer{x};
-	}
-};
-
-/// Integral cast.
-/**
- * Will cast input value to piranha::mp_integer if the conversion is exact.
- * The actual implementation of this function is in the piranha::math::integral_cast_impl functor's call operator.
- * Any exception thrown by the implementation will be ignored and recast as a \p std::invalid_argument.
- *
- * @param[in] x cast argument.
- *
- * @return \p x cast to piranha::mp_integer if the conversion is exact.
- *
- * @throws std::invalid_argument if the call operator of piranha::math::integral_cast_impl throws any exception.
- */
-template <typename T>
-inline auto integral_cast(const T &x) -> decltype(integral_cast_impl<T>()(x))
-{
-	// NOTE: this needs probably to be generalised if we ever implement a generic safe cast.
-	// Also probably we need to assert this in the type trait.
-	static_assert(std::is_same<decltype(integral_cast_impl<T>()(x)),integer>::value,
-		"Invalid return type for integral_cast.");
-	try {
-		return integral_cast_impl<T>()(x);
-	} catch (...) {
-		piranha_throw(std::invalid_argument,"integral_cast failure");
-	}
-}
-
 /// Default functor for the implementation of piranha::math::ipow_subs().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -3668,25 +3592,6 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
 }
 
 }
-
-/// Type trait to detect piranha::math::integral_cast().
-/**
- * The type trait will be \p true if piranha::math::integral_cast() can be used on instances of type \p T,
- * \p false otherwise.
- */
-template <typename T>
-class has_integral_cast: detail::sfinae_types
-{
-		template <typename T1>
-		static auto test(const T1 &x) -> decltype(math::integral_cast(x),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
-};
-
-template <typename T>
-const bool has_integral_cast<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::ipow_subs function.
 /**

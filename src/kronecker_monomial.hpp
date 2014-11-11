@@ -469,7 +469,7 @@ class kronecker_monomial
 			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				integer tmp;
 				try {
-					tmp = math::integral_cast(v[i]);
+					tmp = safe_cast<integer>(v[i]);
 				} catch (const std::invalid_argument &) {
 					piranha_throw(std::invalid_argument,"exponent is not an integer");
 				}
@@ -790,13 +790,13 @@ class kronecker_monomial
 		 * - unpack(),
 		 * - construction and assignment of the return value,
 		 * - construction of piranha::rational,
-		 * - piranha::integral_cast(),
+		 * - piranha::safe_cast(),
 		 * - piranha::math::pow(),
 		 * - piranha::static_vector::push_back(),
 		 * - the in-place subtraction operator of the exponent type,
 		 * - piranha::kronecker_array::encode().
 		 * 
-		 * \todo require constructability from int, exponentiability, subtractability, integral_cast.
+		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
@@ -808,7 +808,7 @@ class kronecker_monomial
 			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				new_v.push_back(v[i]);
 				if (args[i] == s) {
-					const rational tmp(math::integral_cast(v[i]),n);
+					const rational tmp(safe_cast<integer>(v[i]),n);
 					if (tmp >= 1) {
 						const auto tmp_t = static_cast<integer>(tmp);
 						retval_s = math::pow(x,tmp_t);

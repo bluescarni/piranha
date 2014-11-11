@@ -1863,34 +1863,6 @@ struct subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
 	}
 };
 
-/// Specialisation of the piranha::math::integral_cast functor for piranha::real.
-template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * The call will be successful if \p x is finite and if it does not change after truncation.
-	 * 
-	 * @param[in] x cast argument.
-	 * 
-	 * @return result of the cast operation.
-	 *
-	 * @throws std::invalid_argument if the conversion is not successful.
-	 */
-	integer operator()(const T &x) const
-	{
-		if (x.is_nan() || x.is_inf()) {
-			piranha_throw(std::invalid_argument,"invalid real value");
-		}
-		auto x_copy(x);
-		x_copy.truncate();
-		if (x == x_copy) {
-			return integer(x);
-		}
-		piranha_throw(std::invalid_argument,"invalid real value");
-	}
-};
-
 /// Specialisation of the piranha::math::ipow_subs() functor for piranha::real.
 /**
  * This specialisation is activated when \p T is piranha::real.

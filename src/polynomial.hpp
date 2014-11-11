@@ -56,6 +56,7 @@
 #include "mp_integer.hpp"
 #include "polynomial_term.hpp"
 #include "power_series.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
@@ -152,7 +153,7 @@ class polynomial:
 				for (auto it = this->m_container.begin(); it != this->m_container.end(); ++it) {
 					const std::string lin_arg = it->m_key.linear_argument(this->m_symbol_set);
 					piranha_assert(retval.find(lin_arg) == retval.end());
-					retval[lin_arg] = math::integral_cast(it->m_cf);
+					retval[lin_arg] = safe_cast<integer>(it->m_cf);
 				}
 				return retval;
 			} catch (const std::invalid_argument &) {
@@ -192,7 +193,7 @@ class polynomial:
 			integer degree;
 			const symbol_set::positions pos(this->m_symbol_set,symbol_set{s});
 			try {
-				degree = math::integral_cast(term.m_key.degree(pos,this->m_symbol_set));
+				degree = safe_cast<integer>(term.m_key.degree(pos,this->m_symbol_set));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
 					"unable to perform polynomial integration: cannot extract the integral form of an exponent");
@@ -457,7 +458,7 @@ class polynomial:
 		 * @throws std::invalid_argument if the integration procedure fails.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol construction,
-		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::math::integral_cast() and
+		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
 		 *   piranha::math::negate(),
 		 * - piranha::symbol_set::add() and assignment operator,
 		 * - term construction,
@@ -466,7 +467,7 @@ class polynomial:
 		 * - insert(),
 		 * - series arithmetics.
 		 * 
-		 * \todo requirements on dividability by degree type, integral_cast, etc.
+		 * \todo requirements on dividability by degree type, safe_cast, etc.
 		 */
 		polynomial integrate(const std::string &name) const
 		{

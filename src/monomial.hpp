@@ -120,7 +120,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using multiply_enabler = decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()));
 		// Enabler for linear argument.
 		template <typename U>
-		using linarg_enabler = typename std::enable_if<has_integral_cast<U>::value,int>::type;
+		using linarg_enabler = typename std::enable_if<has_safe_cast<integer,U>::value,int>::type;
 		// Enabler and machinery for pow.
 		// When the exponent is an integral, promote to integer during exponentiation
 		// for safe operations.
@@ -373,7 +373,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/// Name of the linear argument.
 		/**
 		 * \note
-		 * This method is enabled only if the exponent type supports piranha::math::integral_cast().
+		 * This method is enabled only if the exponent type supports piranha::safe_cast() to piranha::integer.
 		 *
 		 * If the monomial is linear in a variable (i.e., all exponents are zero apart from a single unitary
 		 * exponent), the name of the variable will be returned. Otherwise, an error will be raised.
@@ -396,7 +396,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			for (size_type i = 0u; i < size; ++i) {
 				integer tmp;
 				try {
-					tmp = math::integral_cast((*this)[i]);
+					tmp = safe_cast<integer>((*this)[i]);
 				} catch (const std::invalid_argument &) {
 					piranha_throw(std::invalid_argument,"exponent is not an integer");
 				}
@@ -729,7 +729,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * monomial is unchanged and the substitution yields 1).
 		 * 
 		 * In order for the substitution to be successful, the exponent type must be convertible to piranha::integer
-		 * via piranha::math::integral_cast(). The method will substitute also \p s to powers higher than \p n in absolute value.
+		 * via piranha::safe_cast(). The method will substitute also \p s to powers higher than \p n in absolute value.
 		 * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
 		 * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
 		 * 
@@ -747,12 +747,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of the return value,
 		 * - construction of piranha::rational,
-		 * - piranha::integral_cast(),
+		 * - piranha::safe_cast(),
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back(),
 		 * - the in-place subtraction operator of the exponent type.
 		 * 
-		 * \todo require constructability from int, exponentiability, subtractability, integral_cast.
+		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
 		std::pair<typename eval_type<U>::type,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
@@ -766,7 +766,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				retval_key.push_back((*this)[i]);
 				if (args[i] == s) {
-					const rational tmp(math::integral_cast((*this)[i]),n);
+					const rational tmp(safe_cast<integer>((*this)[i]),n);
 					if (tmp >= 1) {
 						const auto tmp_t = static_cast<integer>(tmp);
 						retval_s = math::pow(x,tmp_t);

@@ -52,6 +52,7 @@
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"
+#include "../src/safe_cast.hpp"
 #include "../src/serialization.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
@@ -1371,24 +1372,26 @@ struct is_zero_impl<T,typename std::enable_if<std::is_same<T,fake_int_01>::value
 };
 
 template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,fake_int_01>::value>::type>
-{
-	integer operator()(const T &) const;
-};
-
-template <typename T>
 struct is_zero_impl<T,typename std::enable_if<std::is_same<T,fake_int_02>::value>::type>
 {
 	bool operator()(const T &) const;
 };
 
+}
+
 template <typename T>
-struct integral_cast_impl<T,typename std::enable_if<std::is_same<T,fake_int_02>::value>::type>
+struct safe_cast_impl<integer,T,typename std::enable_if<std::is_same<T,fake_int_01>::value>::type>
 {
 	integer operator()(const T &) const;
 };
 
-}}
+template <typename T>
+struct safe_cast_impl<integer,T,typename std::enable_if<std::is_same<T,fake_int_02>::value>::type>
+{
+	integer operator()(const T &) const;
+};
+
+}
 
 struct pow_tester
 {
@@ -1446,7 +1449,7 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	// Check division by zero error.
 	typedef g_series_type<rational,int> p_type2;
 	BOOST_CHECK_THROW(math::pow(p_type2{},-1),zero_division_error);
-	// Check the integral_cast mechanism.
+	// Check the safe_cast mechanism.
 	typedef g_series_type<real,int> p_type3;
 	auto p = p_type3{"x"} + 1;
 	BOOST_CHECK_EQUAL(p.pow(3),p.pow(real{3}));

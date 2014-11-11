@@ -36,6 +36,7 @@
 #include "mp_integer.hpp"
 #include "poisson_series_term.hpp"
 #include "power_series.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "symbol.hpp"
@@ -88,7 +89,7 @@ class poisson_series:
 		template <typename T>
 		struct cf_poly_has_icast<T,typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
 		{
-			static const bool value = has_integral_cast<typename T::term_type::cf_type::term_type::cf_type>::value;
+			static const bool value = has_safe_cast<integer,typename T::term_type::cf_type::term_type::cf_type>::value;
 		};
 		// Detect if T's coefficient has suitable sin/cos implementations.
 		template <typename T, typename = void>
@@ -221,7 +222,7 @@ class poisson_series:
 			typedef typename term_type::cf_type cf_type;
 			integer degree;
 			try {
-				degree = math::integral_cast(math::degree(term.m_cf,{s.get_name()}));
+				degree = safe_cast<integer>(math::degree(term.m_cf,{s.get_name()}));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
 					"unable to perform Poisson series integration: cannot extract the integral form of a polynomial degree");
@@ -281,7 +282,7 @@ class poisson_series:
 		 * \note
 		 * This template method is enabled only if either:
 		 * - the coefficient type is a piranha::polynomial whose coefficient type supports
-		 *   piranha::math::integral_cast, or
+		 *   piranha::safe_cast(), or
 		 * - the coefficient type has a math::sin() implementation whose return type is the coefficient type.
 		 *
 		 * This method will override the default math::sin() implementation in case the coefficient type is an instance of
@@ -298,7 +299,7 @@ class poisson_series:
 		 *   piranha::series::apply_cf_functor(),
 		 * - memory allocation errors in standard containers,
 		 * - the <tt>linear_argument()</tt> method of the key type,
-		 * - piranha::math::integral_cast(), piranha::math::sin(),
+		 * - piranha::safe_cast(), piranha::math::sin(),
 		 * - the cast operator of piranha::integer,
 		 * - the constructors of coefficient, key and term types.
 		 */
@@ -312,7 +313,7 @@ class poisson_series:
 		 * \note
 		 * This template method is enabled only if either:
 		 * - the coefficient type is a piranha::polynomial whose coefficient type supports
-		 *   piranha::math::integral_cast, or
+		 *   piranha::safe_cast() to piranha::integer, or
 		 * - the coefficient type has a math::cos() implementation whose return type is the coefficient type.
 		 *
 		 * The procedure is the same as explained in sin().
@@ -439,7 +440,7 @@ class poisson_series:
 		 * @throws std::invalid_argument if the integration procedure fails.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol construction,
-		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::math::integral_cast() and
+		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
 		 *   piranha::math::negate(),
 		 * - the assignment operator of piranha::symbol_set,
 		 * - term construction,
@@ -449,7 +450,7 @@ class poisson_series:
 		 * - piranha::polynomial::degree(),
 		 * - series arithmetics.
 		 * 
-		 * \todo requirements on dividability by multiplier type (or integer), integral_cast, etc.
+		 * \todo requirements on dividability by multiplier type (or integer), safe_cast, etc.
 		 */
 		poisson_series integrate(const std::string &name) const
 		{
