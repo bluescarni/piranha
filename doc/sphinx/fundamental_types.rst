@@ -84,3 +84,9 @@ On the last line, we see the first real example of using a Piranha function from
 function will take Python integers as arguments, convert them to C++ ``integer`` objects and pass them to the C++ function
 ``math::binomial()``. The output value of the C++ function will be converted back to a Python integer which will then
 be returned by the :py:func:`pyranha.math.binomial` function.
+
+The ``rational`` type
+---------------------
+
+A second fundamental type provided by Piranha is the ``rational`` class, which consists of a pair of ``integer`` objects
+representing the numerator and denominator of a rational number.

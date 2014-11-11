@@ -104,7 +104,7 @@
  * sure they behave consistently wrt locale settings.
  * \todo review the usage of std::set of strings/symbols for the partial degree/order methods. Need to uniform this once and for all
  * with a good rationale.
- * \todo doxygen: check usage of param[(in,)out], and consider using the \tparam command.
+ * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo the series test should probably be split in multiple files as done in mp_integer, it requires too much resources
  * to compile right now.
@@ -126,6 +126,8 @@
  * e.g. when printing rational exponents with non-unitary denominator.
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the base
  * is not unitary.
+ * \todo think about providing default implementations of cos/sin/pow/... that use ADL.
+ * \todo http://keepachangelog.com/CHANGELOG.md
  */
 namespace piranha
 {
