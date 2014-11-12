@@ -22,7 +22,6 @@
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -104,6 +103,7 @@ class kronecker_monomial
 		/// Maximum monomial size.
 		static const size_type max_size = 255u;
 	private:
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and sub typedef.
 		template <typename U, typename = void>
@@ -127,6 +127,14 @@ class kronecker_monomial
 		{
 			ar & m_value;
 		}
+		// Enabler for ctor from init list.
+		template <typename U>
+		using init_list_enabler = typename std::enable_if<has_safe_cast<value_type,U>::value,int>::type;
+		// Enabler for ctor from iterator.
+		template <typename Iterator>
+		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
+			has_safe_cast<value_type,decltype(*std::declval<Iterator &>())>::value,int>::type;
+#endif
 	public:
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
@@ -141,6 +149,9 @@ class kronecker_monomial
 		kronecker_monomial(kronecker_monomial &&) = default;
 		/// Constructor from initalizer list.
 		/**
+		 * \note
+		 * This constructor is enabled only if \p U can be cast safely to \p T.
+		 *
 		 * The values in the initializer list are intended to represent the exponents of the monomial:
 		 * they will be converted to type \p T (if \p T and \p U are not the same type),
 		 * encoded using piranha::kronecker_array::encode() and the result assigned to the internal integer instance.
@@ -149,41 +160,42 @@ class kronecker_monomial
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - \p boost::numeric_cast (in case \p U is not the same as \p T),
+		 * - piranha::safe_cast() (in case \p U is not the same as \p T),
 		 * - piranha::static_vector::push_back().
 		 */
-		template <typename U>
+		template <typename U, init_list_enabler<U> = 0>
 		explicit kronecker_monomial(std::initializer_list<U> list):m_value(0)
 		{
 			v_type tmp;
 			for (const auto &x: list) {
-				tmp.push_back(boost::numeric_cast<value_type>(x));
+				tmp.push_back(safe_cast<value_type>(x));
 			}
 			m_value = ka::encode(tmp);
 		}
 		/// Constructor from range.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p Iterator is an input iterator.
+		 * This constructor is enabled only if \p Iterator is an input iterator whose value type
+		 * is convertible to \p T.
 		 *
 		 * Will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
-		 * \p boost::numeric_cast.
+		 * piranha::safe_cast().
 		 * 
 		 * @param[in] start beginning of the range.
 		 * @param[in] end end of the range.
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
-		 * - \p boost::numeric_cast (in case the value type of \p Iterator is not the same as \p T),
+		 * - piranha::safe_cast() (in case the value type of \p Iterator is not the same as \p T),
 		 * - piranha::static_vector::push_back().
 		 */
-		template <typename Iterator, typename = typename std::enable_if<is_input_iterator<Iterator>::value>::type>
+		template <typename Iterator, it_ctor_enabler<Iterator> = 0>
 		explicit kronecker_monomial(const Iterator &start, const Iterator &end):m_value(0)
 		{
 			typedef typename std::iterator_traits<Iterator>::value_type it_v_type;
 			v_type tmp;
-			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return boost::numeric_cast<value_type>(v);});
+			std::transform(start,end,std::back_inserter(tmp),[](const it_v_type &v) {return safe_cast<value_type>(v);});
 			m_value = ka::encode(tmp);
 		}
 		/// Constructor from set of symbols.
