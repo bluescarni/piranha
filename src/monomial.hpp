@@ -86,15 +86,17 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using base = array_key<T,monomial<T,S>,S>;
 		// Eval and subs type definition.
 		template <typename U, typename = void>
-		struct eval_type {};
+		struct eval_type_ {};
 		template <typename U>
 		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<T const &>()));
 		template <typename U>
-		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
+		struct eval_type_<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
 			std::is_constructible<e_type<U>,int>::value>::type>
 		{
 			using type = e_type<U>;
 		};
+		template <typename U>
+		using eval_type = typename eval_type_<U>::type;
 		// Functors to shut off conversion warnings.
 		template <typename U, typename = void>
 		struct in_place_adder
@@ -640,9 +642,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/**
 		 * \note
 		 * This method is available only if \p U satisfies the following requirements:
-		 * - it can be used in piranha::math::pow() with the monomial exponents as powers,
-		 * - it is constructible from \p int,
-		 * - it is multipliable in place.
+		 * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+		 * - \p eval_type is constructible from \p int,
+		 * - \p eval_type is multipliable in place.
 		 * 
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
 		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
@@ -661,9 +663,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 */
 		template <typename U>
-		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type return_type;
+			using return_type = eval_type<U>;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
@@ -703,9 +705,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
-		std::pair<typename eval_type<U>::type,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::pair<eval_type<U>,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type s_type;
+			using s_type = eval_type<U>;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
@@ -755,9 +757,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
-		std::pair<typename eval_type<U>::type,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		std::pair<eval_type<U>,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type s_type;
+			using s_type = eval_type<U>;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
