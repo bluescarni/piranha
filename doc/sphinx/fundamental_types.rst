@@ -26,11 +26,12 @@ wrapper.
 
 ``integer`` behaves much like a standard C++ integral type:
 
-* it can be constructed from all the fundamental C++ types (construction from floating-point types
-  results in the truncation of the original value),
-* it can be converted to all the the fundamental C++ types (if the conversion to a C++ integral
-  type overflows the target type, an error is thrown),
-* the division operator performs truncated division,
+* a default-constructed ``integer`` object is initialised to zero;
+* an ``integer`` object can be constructed from all the fundamental C++ types (construction from floating-point
+  types results in the truncation of the original value);
+* an ``integer`` object can be converted to all the the fundamental C++ types (if the conversion to a C++ integral
+  type overflows the target type, an error is thrown);
+* the division operator performs truncated division;
 * in mixed-mode operations, the rank of ``integer`` is higher than any other C++ integral type but still
   lower than floating-point types (e.g., ``integer + long`` results in an ``integer``, ``integer + float``
   results in a ``float``).
@@ -92,6 +93,7 @@ A second fundamental type provided by Piranha is the ``rational`` class, which r
 rational numbers as ``integer`` numerator-denominator pairs. The ``rational`` type in Piranha extends smoothly
 the standard C++ numerical hierarchy, and it obeys the following basic rules:
 
+* a default-constructed ``rational`` object is initialised to zero;
 * a ``rational`` object is always kept in the usual canonical form consisting of coprime numerator and denominator, with
   the denominator always strictly positive. Zero is always represented as ``0/1``;
 * a ``rational`` object can be converted to/from all the basic C++ numerical types and ``integer`` (the conversion to an integral
