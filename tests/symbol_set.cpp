@@ -385,3 +385,17 @@ BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
 	BOOST_CHECK((tmp == symbol_set{symbol("a"),symbol("b"),symbol("c")}));
 	}
 }
+
+BOOST_AUTO_TEST_CASE(symbol_set_index_of_tests)
+{
+	symbol_set a({symbol("b"),symbol("c"),symbol("f"),symbol("i")});
+	BOOST_CHECK_EQUAL(a.index_of(symbol("b")),0u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("c")),1u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("d")),4u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("e")),4u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("f")),2u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("a")),4u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("h")),4u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("i")),3u);
+	BOOST_CHECK_EQUAL(a.index_of(symbol("j")),4u);
+}

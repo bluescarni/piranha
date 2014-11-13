@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
@@ -444,6 +445,35 @@ class symbol_set
 		bool operator!=(const symbol_set &other) const
 		{
 			return !(*this == other);
+		}
+		/// Index of symbol.
+		/**
+		 * This method will return the index in the set of the input symbol \p s. If \p s is not in the set,
+		 * the size of the set is returned.
+		 *
+		 * @param[in] s piranha::symbol whose index will be computed.
+		 *
+		 * @return the index of \p s in the set.
+		 *
+		 * @throws std::overflow_error if the size of the set is larger than an implementation-defined value.
+		 */
+		size_type index_of(const symbol &s) const
+		{
+			// Need to check for potential overflows here.
+			using diff_type = std::iterator_traits<const_iterator>::difference_type;
+			using udiff_type = std::make_unsigned<diff_type>::type;
+			// This is not an exact check, it is conservative by 1 unit in order to simplify the logic.
+			if (unlikely(m_values.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
+				piranha_throw(std::overflow_error,"potential overflow in the computaion of the "
+					"index of a symbol");
+			}
+			const auto it = std::lower_bound(m_values.begin(),m_values.end(),s);
+			if (it != m_values.end() && *it == s) {
+				auto retval = it - m_values.begin();
+				piranha_assert(retval >= diff_type(0));
+				return static_cast<size_type>(retval);
+			}
+			return m_values.size();
 		}
 	private:
 		bool run_destruction_checks() const
