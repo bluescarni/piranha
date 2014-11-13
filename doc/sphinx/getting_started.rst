@@ -26,7 +26,7 @@ Dependencies
 Piranha has a few mandatory dependencies:
 
 * the `Boost <http://www.boost.org/>`__ C++ libraries,
-* the `GNU GMP <http://www.gmplib.org>`__ multiprecision library (the `MPIR <http://mpir.org/>`__ fork should work as well),
+* the `GMP <http://www.gmplib.org>`__ multiprecision library (the `MPIR <http://mpir.org/>`__ fork should work as well),
 * the `GNU MPFR <http://www.mpfr.org>`__ multiprecision floating-point library.
 
 The optional Python bindings, Pyranha, need the `Python <http://www.python.org/>`__ programming language (Python

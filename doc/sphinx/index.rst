@@ -11,9 +11,9 @@ multivariate polynomials and other closely-related symbolic objects
 (such as Poisson series).
 
 Piranha is written in modern C++, with emphasis on portability, correctness
-and performance. Piranha includes a set of bindings for the Python programming
-language, called **Pyranha**, that allows to use the library in an interactive
-way.
+and performance. Piranha also includes a set of optional bindings for the
+Python programming language, called **Pyranha**, that allow to use the
+library in an interactive way.
 
 .. toctree::
    :maxdepth: 2
