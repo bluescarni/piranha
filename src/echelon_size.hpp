@@ -67,8 +67,10 @@ struct echelon_level_impl<Cf,Level,typename std::enable_if<!is_instance_of<Cf,se
 template <typename Term>
 class echelon_size
 {
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 		PIRANHA_TT_CHECK(is_term,Term);
 		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+#endif
 	public:
 		/// Value of echelon size.
 		static const std::size_t value = detail::echelon_level_impl<typename Term::cf_type>::value + static_cast<std::size_t>(1);

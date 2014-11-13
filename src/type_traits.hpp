@@ -1189,6 +1189,7 @@ const bool is_forward_iterator<T>::value;
 namespace detail
 {
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
 template <typename T>
 constexpr T safe_abs_sint_impl(T cur_p = T(1), T cur_n = T(-1))
 {
@@ -1207,6 +1208,7 @@ struct safe_abs_sint
 
 template <typename T>
 const T safe_abs_sint<T>::value;
+#endif
 
 // A simple true type-trait that can be used inside enable_if with T a decltype() expression
 // subject to SFINAE. It is similar to the proposed void_t type (in C++14, maybe?).
