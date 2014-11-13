@@ -126,8 +126,13 @@
  * e.g. when printing rational exponents with non-unitary denominator.
  * \todo probably we should change the pow() implementation for integer to error out if the power is negative and the base
  * is not unitary.
- * \todo think about providing default implementations of cos/sin/pow/... that use ADL.
+ * \todo think about providing default implementations of cos/sin/pow/... that use ADL -> we actually already use ADL in expr.
+ * sfinae when using operators such as +,-,<<, etc.
  * \todo http://keepachangelog.com/CHANGELOG.md
+ * \todo in pyranha, it would be nice to have a reverse lookup from the name of the exposed types to their representation
+ * in the type system. Plus, maybe when printing the series they should have a header displaying their name in the type
+ * system and maybe the list of arguments.
+ * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough hint?
  */
 namespace piranha
 {

@@ -475,7 +475,7 @@ class tutorial_test_case(_ut.TestCase):
 
 	"""
 	def runTest(self):
-		from . import tutorial
+		from . import _tutorial
 
 def run_test_suite():
 	"""Run the full test suite.
