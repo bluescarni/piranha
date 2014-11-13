@@ -28,6 +28,7 @@
 #include <set>
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -41,6 +42,22 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+// Requirements for types that can be used in positions_map.
+template <typename T>
+struct is_pmappable
+{
+	static const bool value = std::is_copy_constructible<T>::value && std::is_move_constructible<T>::value &&
+		std::is_move_assignable<T>::value && std::is_destructible<T>::value;
+};
+
+template <typename T>
+const bool is_pmappable<T>::value;
+
+}
 
 /// Symbol set.
 /**
@@ -137,13 +154,13 @@ class symbol_set
 		class positions
 		{
 			public:
-				/// Const iterator.
-				using const_iterator = std::vector<size_type>::const_iterator;
 				/// Value type.
 				/**
 				 * The positions are represented using the size type of piranha::symbol_set.
 				 */
 				using value_type = size_type;
+				/// Const iterator.
+				using const_iterator = std::vector<value_type>::const_iterator;
 				explicit positions(const symbol_set &, const symbol_set &);
 				/// Deleted copy constructor.
 				positions(const positions &) = delete;
@@ -173,7 +190,7 @@ class symbol_set
 				/**
 				 * @return a const reference to the last element.
 				 */
-				const size_type &back() const
+				const value_type &back() const
 				{
 					piranha_assert(m_values.size());
 					return m_values.back();
@@ -182,12 +199,86 @@ class symbol_set
 				/**
 				 * @return the size of the internal vector.
 				 */
-				std::vector<size_type>::size_type size() const
+				std::vector<value_type>::size_type size() const
 				{
 					return m_values.size();
 				}
 			private:
-				std::vector<size_type> m_values;
+				std::vector<value_type> m_values;
+		};
+		/// Positions map class.
+		/**
+		 * This class is similar to piranha::symbol_set::positions. In addition to storing the positions
+		 * of the symbols from a map \p b with respect to a reference piranha::symbol_set \p a, it will also store
+		 * the instances of \p T that were originally mapped to the symbols in \p b.
+		 *
+		 * For instance, if \p T is \p int, \p a contains the symbols <tt>[B,C,D,E]</tt> and \p b is the map
+		 * <tt>[(A,10),(B,20),(D,30),(F,40)]</tt>, then an instance of this class constructed passing
+		 * \p a and \p b as parameters will contain the vector <tt>[(0,20),(2,30)]</tt>. The internal vector
+		 * is guaranteed to be sorted according to the position of the symbols.
+		 *
+		 * ## Type requirements ##
+		 *
+		 * \p T must be destructible, copy-constructible, move-constructible and move-assignable.
+		 */
+		template <typename T>
+		class positions_map
+		{
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+				PIRANHA_TT_CHECK(detail::is_pmappable,T);
+#endif
+			public:
+				/// Value type.
+				/**
+				 * The stored value type is the <tt>(position,T)</tt> pair.
+				 */
+				using value_type = std::pair<size_type,T>;
+				/// Const iterator.
+				using const_iterator = typename std::vector<value_type>::const_iterator;
+				explicit positions_map(const symbol_set &, const std::unordered_map<symbol,T> &);
+				/// Deleted copy constructor.
+				positions_map(const positions_map &) = delete;
+				/// Defaulted move constructor.
+				positions_map(positions_map &&) = default;
+				/// Deleted copy assignment operator.
+				positions_map &operator=(const positions_map &) = delete;
+				/// Deleted move assignment operator.
+				positions_map &operator=(positions_map &&) = delete;
+				/// Begin iterator.
+				/**
+				 * @return an iterator to the begin of the internal vector.
+				 */
+				const_iterator begin() const
+				{
+					return m_pairs.begin();
+				}
+				/// End iterator.
+				/**
+				 * @return an iterator to the end of the internal vector.
+				 */
+				const_iterator end() const
+				{
+					return m_pairs.end();
+				}
+				/// Size.
+				/**
+				 * @return the size of the internal vector.
+				 */
+				typename std::vector<value_type>::size_type size() const
+				{
+					return m_pairs.size();
+				}
+				/// Last element.
+				/**
+				 * @return a const reference to the last element.
+				 */
+				const value_type &back() const
+				{
+					piranha_assert(m_pairs.size());
+					return m_pairs.back();
+				}
+			private:
+				std::vector<value_type> m_pairs;
 		};
 		/// Const iterator.
 		typedef std::vector<symbol>::const_iterator const_iterator;
@@ -515,6 +606,31 @@ inline symbol_set::positions::positions(const symbol_set &a, const symbol_set &b
 			++ib;
 		}
 	}
+}
+
+/// Constructor from map and set.
+/**
+ * The internal vector of pairs will contain the positions in \p a of the mapped values
+ * of \p map appearing in the set \p a, and the mapped values themselves.
+ *
+ * @param[in] a reference set.
+ * @param[in] map input map.
+ *
+ * @throws unspecified any exception thrown by memory errors in standard containers, by
+ * the copy constructor of \p T, or by <tt>std::sort()</tt>.
+ */
+template <typename T>
+inline symbol_set::positions_map<T>::positions_map(const symbol_set &a, const std::unordered_map<symbol,T> &map)
+{
+	for (const auto &p: map) {
+		const auto idx = a.index_of(p.first);
+		if (idx != a.size()) {
+			m_pairs.push_back(std::make_pair(idx,p.second));
+		}
+	}
+	std::sort(m_pairs.begin(),m_pairs.end(),[](const value_type &p1, const value_type &p2) {
+		return p1.first < p2.first;
+	});
 }
 
 }

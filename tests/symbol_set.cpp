@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "../src/environment.hpp"
@@ -386,7 +387,7 @@ BOOST_AUTO_TEST_CASE(symbol_set_serialization_test)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(symbol_set_index_of_tests)
+BOOST_AUTO_TEST_CASE(symbol_set_index_of_test)
 {
 	symbol_set a({symbol("b"),symbol("c"),symbol("f"),symbol("i")});
 	BOOST_CHECK_EQUAL(a.index_of(symbol("b")),0u);
@@ -398,4 +399,63 @@ BOOST_AUTO_TEST_CASE(symbol_set_index_of_tests)
 	BOOST_CHECK_EQUAL(a.index_of(symbol("h")),4u);
 	BOOST_CHECK_EQUAL(a.index_of(symbol("i")),3u);
 	BOOST_CHECK_EQUAL(a.index_of(symbol("j")),4u);
+}
+
+class pmap1_t {};
+
+class pmap2_t
+{
+	public:
+		pmap2_t(const pmap2_t &) = delete;
+};
+
+class pmap3_t
+{
+	public:
+		pmap3_t(pmap3_t &&) = delete;
+};
+
+class pmap4_t
+{
+	public:
+		pmap4_t &operator=(pmap4_t &&) = delete;
+};
+
+class pmap5_t
+{
+	public:
+		~pmap5_t() = delete;
+};
+
+
+BOOST_AUTO_TEST_CASE(symbol_set_positions_map_test)
+{
+	using pmap = symbol_set::positions_map<int>;
+	BOOST_CHECK(!std::is_copy_constructible<pmap>::value);
+	BOOST_CHECK(std::is_move_constructible<pmap>::value);
+	BOOST_CHECK(!std::is_move_assignable<pmap>::value);
+	BOOST_CHECK(!std::is_copy_assignable<pmap>::value);
+	symbol_set a({symbol("b"),symbol("c"),symbol("f"),symbol("i")});
+	using umap = std::unordered_map<symbol,int>;
+	umap map{{symbol{"a"},4},{symbol{"b"},-5},{symbol{"e"},6},
+		{symbol{"z"},4},{symbol{"h"},-1},{symbol{"c"},3},{symbol{"d"},-20}};
+	pmap pm1(a,map);
+	BOOST_CHECK_EQUAL(pm1.size(),2u);
+	std::vector<pmap::value_type> cmp1{{0u,-5},{1u,3}};
+	BOOST_CHECK(std::equal(pm1.begin(),pm1.end(),cmp1.begin()));
+	BOOST_CHECK((pm1.back() == pmap::value_type{1u,3}));
+	pmap pm2(a,umap{});
+	BOOST_CHECK_EQUAL(pm2.size(),0u);
+	BOOST_CHECK(pm2.begin() == pm2.end());
+	pmap pm3(a,umap{{symbol{"l"},4},{symbol{"i"},-5}});
+	BOOST_CHECK_EQUAL(pm3.size(),1u);
+	std::vector<pmap::value_type> cmp3{{3u,-5}};
+	BOOST_CHECK(std::equal(pm3.begin(),pm3.end(),cmp3.begin()));
+	BOOST_CHECK((pm3.back() == pmap::value_type{3u,-5}));
+	// pmappable type trait.
+	BOOST_CHECK(detail::is_pmappable<pmap1_t>::value);
+	BOOST_CHECK(!detail::is_pmappable<pmap2_t>::value);
+	BOOST_CHECK(!detail::is_pmappable<pmap3_t>::value);
+	BOOST_CHECK(!detail::is_pmappable<pmap4_t>::value);
+	BOOST_CHECK(!detail::is_pmappable<pmap5_t>::value);
 }
