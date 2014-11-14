@@ -679,7 +679,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			return_type retval(1);
 			auto it = pmap.begin();
 			for (size_type i = 0u; i < this->size(); ++i, ++it) {
-				piranha_assert(it != pmap.end());
+				piranha_assert(it != pmap.end() && it->first == i);
 				retval *= math::pow(it->second,(*this)[i]);
 			}
 			piranha_assert(it == pmap.end());
