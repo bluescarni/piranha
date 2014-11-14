@@ -31,7 +31,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -131,7 +130,8 @@ class real_trigonometric_kronecker_monomial
 		struct eval_type_<U,typename std::enable_if<is_addable_in_place<e_type<U>>::value &&
 			std::is_constructible<e_type<U>,int>::value &&
 			std::is_same<decltype(math::cos(std::declval<e_type<U>>())),decltype(math::sin(std::declval<e_type<U>>()))>::value &&
-			std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),int>::value
+			std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),int>::value &&
+			detail::is_pmappable<U>::value
 			>::type>
 		{
 			using type = decltype(math::cos(std::declval<e_type<U>>()));
@@ -910,7 +910,7 @@ class real_trigonometric_kronecker_monomial
 		 *   involved in the computation.
 		 */
 		template <typename U>
-		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const symbol_set::positions_map &pmap, const symbol_set &args) const
 		{
 			using return_type = eval_type<U>;
 			auto v = unpack(args);
@@ -921,23 +921,21 @@ class real_trigonometric_kronecker_monomial
 					return return_type(0);
 				}
 			}
-			typedef decltype(std::declval<U const &>() * std::declval<value_type const &>()) tmp_type;
+			using tmp_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
 			tmp_type tmp(0);
-			const auto it_f = dict.end();
-			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-				const auto it = dict.find(args[i]);
-				if (it == it_f) {
-					piranha_throw(std::invalid_argument,
-						std::string("cannot evaluate monomial: symbol \'") + args[i].get_name() +
-						"\' does not appear in dictionary");
-				}
+			auto it = pmap.begin();
+			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i, ++it) {
+				piranha_assert(it != pmap.end() && it->first == i);
+				// NOTE: here it might make sense to use multiply_accumulate. There might be a perf gain
+				// for things like real. Maybe fast FMA on Haswell too. Remember to adapt the type requirements
+				// in case we implement this.
 				tmp += it->second * v[i];
 			}
+			piranha_assert(it == pmap.end());
 			if (get_flavour()) {
 				return math::cos(tmp);
-			} else {
-				return math::sin(tmp);
 			}
+			return math::sin(tmp);
 		}
 		/// Substitution.
 		/**
