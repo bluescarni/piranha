@@ -144,6 +144,10 @@ inline bp::class_<T> expose_class()
 	}
 	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
 	++exposed_types_counter;
+	// NOTE: class_ inherits from bp::object, here the "call operator" of a class type will construct an instance
+	// of that object. We then get the Python type out of that. It seems like another possible way of achieving
+	// this is directly through the class' attributes:
+	// http://stackoverflow.com/questions/17968091/boostpythonclass-programatically-obtaining-the-class-name
 	auto ptr = ::PyObject_Type(class_inst().ptr());
 	if (!ptr) {
 		::PyErr_SetString(PyExc_RuntimeError,"cannot extract the Python type of an instantiated class");
