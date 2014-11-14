@@ -107,15 +107,18 @@ class kronecker_monomial
 		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and sub typedef.
 		template <typename U, typename = void>
-		struct eval_type {};
+		struct eval_type_ {};
 		template <typename U>
 		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<value_type const &>()));
 		template <typename U>
-		struct eval_type<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
-			std::is_constructible<e_type<U>,int>::value>::type>
+		struct eval_type_<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
+			std::is_constructible<e_type<U>,int>::value && detail::is_pmappable<U>::value>::type>
 		{
 			using type = e_type<U>;
 		};
+		// The final typedef.
+		template <typename U>
+		using eval_type = typename eval_type_<U>::type;
 		// Enabler for pow.
 		template <typename U>
 		using pow_enabler = typename std::enable_if<has_safe_cast<T,
@@ -734,9 +737,9 @@ class kronecker_monomial
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 */
 		template <typename U>
-		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type return_type;
+			using return_type = eval_type<U>;
 			auto v = unpack(args);
 			return_type retval(1);
 			const auto it_f = dict.end();
@@ -771,9 +774,9 @@ class kronecker_monomial
 		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
-		std::pair<typename eval_type<U>::type,kronecker_monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::pair<eval_type<U>,kronecker_monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type s_type;
+			using s_type = eval_type<U>;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
@@ -811,9 +814,9 @@ class kronecker_monomial
 		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
-		std::pair<typename eval_type<U>::type,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		std::pair<eval_type<U>,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type s_type;
+			using s_type = eval_type<U>;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
