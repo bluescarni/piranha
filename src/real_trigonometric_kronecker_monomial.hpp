@@ -97,6 +97,8 @@ namespace piranha
 // - in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
 //   of t_degree around the code to make sure the change has no nasty effects.
 // - needs sfinaeing.
+// - it might make sense, for canonicalisation and is_compatible(), to provide a method in kronecker_array to get only
+//   the first element of the array. This should be quite fast, and it will provide enough information for the canon/compatibility.
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
@@ -122,11 +124,11 @@ class real_trigonometric_kronecker_monomial
 		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and subs type definition.
 		template <typename U, typename = void>
-		struct eval_type {};
+		struct eval_type_ {};
 		template <typename U>
 		using e_type = decltype(std::declval<U const &>() * std::declval<value_type const &>());
 		template <typename U>
-		struct eval_type<U,typename std::enable_if<is_addable_in_place<e_type<U>>::value &&
+		struct eval_type_<U,typename std::enable_if<is_addable_in_place<e_type<U>>::value &&
 			std::is_constructible<e_type<U>,int>::value &&
 			std::is_same<decltype(math::cos(std::declval<e_type<U>>())),decltype(math::sin(std::declval<e_type<U>>()))>::value &&
 			std::is_constructible<decltype(math::cos(std::declval<e_type<U>>())),int>::value
@@ -134,10 +136,13 @@ class real_trigonometric_kronecker_monomial
 		{
 			using type = decltype(math::cos(std::declval<e_type<U>>()));
 		};
+		// Final typedef for the eval type.
+		template <typename U>
+		using eval_type = typename eval_type_<U>::type;
 		template <typename U>
 		struct subs_type
 		{
-			typedef std::pair<typename eval_type<U>::type,real_trigonometric_kronecker_monomial> pair_type;
+			typedef std::pair<eval_type<U>,real_trigonometric_kronecker_monomial> pair_type;
 			typedef std::pair<pair_type,pair_type> type;
 		};
 		#define PIRANHA_TMP_TYPE decltype((std::declval<value_type const &>() * math::binomial(std::declval<value_type const &>(),std::declval<value_type const &>())) * \
@@ -905,9 +910,9 @@ class real_trigonometric_kronecker_monomial
 		 *   involved in the computation.
 		 */
 		template <typename U>
-		typename eval_type<U>::type evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type return_type;
+			using return_type = eval_type<U>;
 			auto v = unpack(args);
 			if (args.size() == 0u) {
 				if (get_flavour()) {
@@ -976,7 +981,7 @@ class real_trigonometric_kronecker_monomial
 		template <typename U>
 		typename subs_type<U>::type subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			typedef typename eval_type<U>::type s_type;
+			using s_type = eval_type<U>;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s_cos(1), retval_s_sin(0);
