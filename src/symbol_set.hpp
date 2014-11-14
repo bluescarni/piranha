@@ -631,6 +631,10 @@ inline symbol_set::positions_map<T>::positions_map(const symbol_set &a, const st
 	std::sort(m_pairs.begin(),m_pairs.end(),[](const value_type &p1, const value_type &p2) {
 		return p1.first < p2.first;
 	});
+	// Check that there are no duplicate positions.
+	piranha_assert(std::unique(m_pairs.begin(),m_pairs.end(),[](const value_type &p1, const value_type &p2) {
+		return p1.first == p2.first;
+	}) == m_pairs.end());
 }
 
 }
