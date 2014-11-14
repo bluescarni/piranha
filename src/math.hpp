@@ -2183,7 +2183,7 @@ const bool is_evaluable<T,U>::value;
 /// Type trait to detect evaluable keys.
 /**
  * This type trait will be \p true if \p Key is a key type providing a const method <tt>evaluate()</tt> taking a const instance of
- * <tt>std::unordered_map<piranha::symbol,T></tt> and a const instance of piranha::symbol_set as input, \p false otherwise.
+ * piranha::symbol_set::positions_map of \p T and a const instance of piranha::symbol_set as input, \p false otherwise.
  * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
  *
  * The decay type of \p Key is considered in this type trait.
@@ -2194,13 +2194,13 @@ class key_is_evaluable: detail::sfinae_types
 		typedef typename std::decay<Key>::type Keyd;
 		PIRANHA_TT_CHECK(is_key,Keyd);
 		template <typename Key1, typename T1>
-		static auto test(const Key1 &k, const std::unordered_map<symbol,T1> &dict) ->
-			decltype(k.evaluate(dict,std::declval<const symbol_set &>()),void(),yes());
+		static auto test(const Key1 &k, const symbol_set::positions_map<T1> &pmap) ->
+			decltype(k.evaluate(pmap,std::declval<const symbol_set &>()),void(),yes());
 		static no test(...);
 	public:
 		/// Value of the type trait.
 		static const bool value = std::is_same<decltype(test(std::declval<Keyd>(),
-			std::declval<std::unordered_map<symbol,T>>())),yes>::value;
+			std::declval<symbol_set::positions_map<T>>())),yes>::value;
 };
 
 template <typename Key, typename T>

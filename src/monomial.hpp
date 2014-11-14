@@ -32,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 
 #include "array_key.hpp"
@@ -91,7 +90,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		using e_type = decltype(math::pow(std::declval<U const &>(),std::declval<T const &>()));
 		template <typename U>
 		struct eval_type_<U,typename std::enable_if<is_multipliable_in_place<e_type<U>>::value &&
-			std::is_constructible<e_type<U>,int>::value>::type>
+			std::is_constructible<e_type<U>,int>::value && detail::is_pmappable<U>::value>::type>
 		{
 			using type = e_type<U>;
 		};
@@ -642,44 +641,48 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		/**
 		 * \note
 		 * This method is available only if \p U satisfies the following requirements:
+		 * - it can be used in piranha::symbol_set::positions_map,
 		 * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
 		 * - \p eval_type is constructible from \p int,
 		 * - \p eval_type is multipliable in place.
-		 * 
+		 *
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
-		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
-		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned.
-		 * 
-		 * @param[in] dict dictionary that will be used for substitution.
+		 * by \p pmap as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
+		 * returned. If \p args is not compatible with \p this and \p pmap, or the positions in \p pmap do not reference
+		 * only and all the exponents in the monomial, an error will be thrown.
+		 *
+		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
-		 * 
-		 * @return the result of evaluating \p this with the values provided in \p dict.
-		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if
-		 * a symbol in \p args is not found in \p dict.
+		 *
+		 * @return the result of evaluating \p this with the values provided in \p pmap.
+		 *
+		 * @throws std::invalid_argument if there exist an incompatibility between \p this,
+		 * \p args or \p pmap.
 		 * @throws unspecified any exception thrown by:
 		 * - construction of the return type,
-		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 */
 		template <typename U>
-		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
 		{
 			using return_type = eval_type<U>;
+			using size_type = typename base::size_type;
+			// NOTE: the positions map must have the same number of elements as this, and it must
+			// be made of consecutive positions [0,size - 1].
+			if (unlikely(pmap.size() != this->size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
+				piranha_throw(std::invalid_argument,"invalid positions map for evaluation");
+			}
+			// Args must be compatible with this.
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			return_type retval(1);
-			const auto it_f = dict.end();
-			for (typename base::size_type i = 0u; i < this->size(); ++i) {
-				const auto it = dict.find(args[i]);
-				if (it == it_f) {
-					piranha_throw(std::invalid_argument,
-						std::string("cannot evaluate monomial: symbol \'") + args[i].get_name() +
-						"\' does not appear in dictionary");
-				}
+			auto it = pmap.begin();
+			for (size_type i = 0u; i < this->size(); ++i, ++it) {
+				piranha_assert(it != pmap.end());
 				retval *= math::pow(it->second,(*this)[i]);
 			}
+			piranha_assert(it == pmap.end());
 			return retval;
 		}
 		/// Substitution.
