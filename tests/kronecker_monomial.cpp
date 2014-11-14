@@ -594,34 +594,46 @@ struct evaluate_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef kronecker_monomial<T> k_type;
-		typedef std::unordered_map<symbol,integer> dict_type;
+		using k_type = kronecker_monomial<T>;
+		using dict_type1 = std::unordered_map<symbol,integer>;
+		using pmap_type1 = symbol_set::positions_map<integer>;
 		BOOST_CHECK((key_is_evaluable<k_type,integer>::value));
 		symbol_set vs;
 		k_type k1;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(1));
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),integer(1));
 		vs.add("x");
-		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),std::invalid_argument);
 		k1 = k_type({T(1)});
-		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs),1);
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),std::invalid_argument);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(1)}}),vs),1);
+		// pmap with invalid position, 1, where the monomial has only 1 element.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"}},dict_type1{{symbol{"b"},integer(4)}}),vs),std::invalid_argument);
 		k1 = k_type({T(2)});
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)}},vs),9);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),9);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(3)}}),vs),9);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(3)},{symbol("y"),integer(4)}}),vs),9);
 		k1 = k_type({T(2),T(3)});
 		vs.add("y");
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(3)},{symbol("y"),integer(4)}},vs),576);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("y"),integer(4)},{symbol("x"),integer(3)}},vs),576);
-		typedef std::unordered_map<symbol,double> dict_type2;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}},vs),math::pow(3.2,2) * math::pow(-4.3,3));
-		typedef std::unordered_map<symbol,rational> dict_type3;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(3)},{symbol("y"),integer(4)}}),vs),576);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("y"),integer(4)},{symbol("x"),integer(3)}}),vs),576);
+		// pmap has correctly 2 elements, but they refer to indices 0 and 2.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"},symbol{"c"}},
+			dict_type1{{symbol{"a"},integer(4)},{symbol{"c"},integer(4)}}),vs),std::invalid_argument);
+		// Same with indices 1 and 2.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"},symbol{"c"}},
+			dict_type1{{symbol{"b"},integer(4)},{symbol{"c"},integer(4)}}),vs),std::invalid_argument);
+		using dict_type2 = std::unordered_map<symbol,double>;
+		using pmap_type2 = symbol_set::positions_map<double>;
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs,dict_type2{{symbol("y"),-4.3},{symbol("x"),3.2}}),vs),math::pow(3.2,2) * math::pow(-4.3,3));
+		using dict_type3 = std::unordered_map<symbol,rational>;
+		using pmap_type3 = symbol_set::positions_map<rational>;
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type3(vs,dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}}),vs),
 			math::pow(rational(4,-3),2) * math::pow(rational(-1,-2),3));
 		k1 = k_type({T(-2),T(-3)});
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type3(vs,dict_type3{{symbol("y"),rational(1,2)},{symbol("x"),rational(-4,3)}}),vs),
 			math::pow(rational(4,-3),-2) * math::pow(rational(-1,-2),-3));
-		typedef std::unordered_map<symbol,real> dict_type4;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+		using dict_type4 = std::unordered_map<symbol,real>;
+		using pmap_type4 = symbol_set::positions_map<real>;
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type4(vs,dict_type4{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}}),vs),
 			math::pow(real(5.678),-2) * math::pow(real(1.234),-3));
 	}
 };

@@ -34,7 +34,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 
 #include "config.hpp"
@@ -716,42 +715,44 @@ class kronecker_monomial
 		/**
 		 * \note
 		 * This method is available only if \p U satisfies the following requirements:
-		 * - it can be used in piranha::math::pow() with the monomial exponents as powers,
-		 * - it is constructible from \p int,
-		 * - it is multipliable in place.
+		 * - it can be used in piranha::symbol_set::positions_map,
+		 * - it can be used in piranha::math::pow() with the monomial exponents as powers, yielding a type \p eval_type,
+		 * - \p eval_type is constructible from \p int,
+		 * - \p eval_type is multipliable in place.
 		 * 
 		 * The return value will be built by iteratively applying piranha::math::pow() using the values provided
-		 * by \p dict as bases and the values in the monomial as exponents. If a symbol in \p args is not found
-		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned.
+		 * by \p pmap as bases and the values in the monomial as exponents. If the size of the monomial is zero, 1 will be
+		 * returned. If the positions in \p pmap do not reference
+		 * only and all the exponents in the monomial, an error will be thrown.
 		 * 
-		 * @param[in] dict dictionary that will be used for substitution.
+		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the result of evaluating \p this with the values provided in \p dict.
+		 * @return the result of evaluating \p this with the values provided in \p pmap.
 		 * 
-		 * @throws std::invalid_argument if a symbol in \p args is not found in \p dict.
+		 * @throws std::invalid_argument if \p pmap is not compatible with \p args.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction of the return type,
-		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::pow() or the in-place multiplication operator of the return type.
 		 */
 		template <typename U>
-		eval_type<U> evaluate(const std::unordered_map<symbol,U> &dict, const symbol_set &args) const
+		eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
 		{
 			using return_type = eval_type<U>;
+			using size_type = typename v_type::size_type;
+			// NOTE: here we can check the pmap size only against args.
+			if (unlikely(pmap.size() != args.size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
+				piranha_throw(std::invalid_argument,"invalid positions map for evaluation");
+			}
 			auto v = unpack(args);
 			return_type retval(1);
-			const auto it_f = dict.end();
-			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
-				const auto it = dict.find(args[i]);
-				if (it == it_f) {
-					piranha_throw(std::invalid_argument,
-						std::string("cannot evaluate monomial: symbol \'") + args[i].get_name() +
-						"\' does not appear in dictionary");
-				}
+			auto it = pmap.begin();
+			for (min_int<size_type,decltype(args.size())> i = 0u; i < args.size(); ++i, ++it) {
+				piranha_assert(it != pmap.end() && it->first == i);
 				retval *= math::pow(it->second,v[i]);
 			}
+			piranha_assert(it == pmap.end());
 			return retval;
 		}
 		/// Substitution.
