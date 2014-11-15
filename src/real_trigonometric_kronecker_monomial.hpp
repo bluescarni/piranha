@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -889,30 +890,34 @@ class real_trigonometric_kronecker_monomial
 		/**
 		 * \note
 		 * This template method is activated only if \p U supports the mathematical operations needed to compute
-		 * the return type.
+		 * the return type, and if it is suitable for use in piranha::symbol_set::positions_map.
 		 *
 		 * The return value will be built by applying piranha::math::cos() or piranha::math:sin()
-		 * to the linear combination of the values in \p dict with the multipliers. If a symbol in \p args is not found
-		 * in \p dict, an error will be raised. If the size of the monomial is zero, 1 will be returned
-		 * if the monomial is a cosine, 0 otherwise.
+		 * to the linear combination of the values in \p pmap with the multipliers.
+		 * If the size of the monomial is zero, 1 will be returned if the monomial is a cosine, 0 otherwise.
+		 * If the positions in \p pmap do not reference
+		 * only and all the multipliers in the monomial, an error will be thrown.
 		 * 
-		 * @param[in] dict dictionary that will be used for substitution.
+		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
-		 * @return the result of evaluating \p this with the values provided in \p dict.
+		 * @return the result of evaluating \p this with the values provided in \p pmap.
 		 * 
-		 * @throws std::invalid_argument if a symbol in \p args is not found in \p dict.
+		 * @throws std::invalid_argument if \p pmap is not compatible with \p args.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - construction of the return type,
-		 * - lookup operations in \p std::unordered_map,
 		 * - piranha::math::cos(), piranha::math::sin(), or the in-place addition and binary multiplication operators of the types
 		 *   involved in the computation.
 		 */
 		template <typename U>
-		eval_type<U> evaluate(const symbol_set::positions_map &pmap, const symbol_set &args) const
+		eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
 		{
 			using return_type = eval_type<U>;
+			if (unlikely(pmap.size() != args.size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
+				piranha_throw(std::invalid_argument,"invalid positions map for evaluation");
+			}
+			// Run the unpack before the checks below in order to check the suitability of args.
 			auto v = unpack(args);
 			if (args.size() == 0u) {
 				if (get_flavour()) {

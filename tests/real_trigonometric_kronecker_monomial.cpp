@@ -863,51 +863,66 @@ struct evaluate_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef real_trigonometric_kronecker_monomial<T> k_type;
-		typedef std::unordered_map<symbol,integer> dict_type;
+		using k_type = real_trigonometric_kronecker_monomial<T>;
+		using dict_type1 = std::unordered_map<symbol,integer>;
+		using pmap_type1 = symbol_set::positions_map<integer>;
 		symbol_set vs;
 		k_type k1;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(1));
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),integer(1));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{},vs),integer(0));
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),integer(0));
 		k1.set_flavour(true);
 		vs.add("x");
-		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),std::invalid_argument);
 		k1 = k_type({T(1)});
-		BOOST_CHECK_THROW(k1.evaluate(dict_type{},vs),std::invalid_argument);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),1);
-		BOOST_CHECK((std::is_same<integer,decltype(k1.evaluate(dict_type{{symbol("x"),integer(1)}},vs))>::value));
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),std::invalid_argument);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(0)}}),vs),1);
+		// pmap with invalid position, 1, where the monomial has only 1 element.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"}},dict_type1{{symbol{"b"},integer(4)}}),vs),std::invalid_argument);
+		BOOST_CHECK((std::is_same<integer,decltype(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(1)}}),vs))>::value));
 		// NOTE: here the return type depends on the integral type considered, char * char for instance gives int as result
 		// according to the standard integral promotions.
-		BOOST_CHECK((std::is_same<T,decltype(k1.evaluate(std::unordered_map<symbol,int>{{symbol("x"),1}},vs))>::value ||
-			std::is_same<int,decltype(k1.evaluate(std::unordered_map<symbol,int>{{symbol("x"),1}},vs))>::value));
-		BOOST_CHECK((std::is_same<real,decltype(k1.evaluate(std::unordered_map<symbol,real>{{symbol("x"),real(1)}},vs))>::value));
-		BOOST_CHECK((std::is_same<double,decltype(k1.evaluate(std::unordered_map<symbol,double>{{symbol("x"),1.}},vs))>::value));
+		BOOST_CHECK((std::is_same<T,decltype(k1.evaluate(symbol_set::positions_map<int>(vs,std::unordered_map<symbol,int>{{symbol("x"),1}}),vs))>::value ||
+			std::is_same<int,decltype(k1.evaluate(symbol_set::positions_map<int>(vs,std::unordered_map<symbol,int>{{symbol("x"),1}}),vs))>::value));
+		BOOST_CHECK((std::is_same<real,decltype(k1.evaluate(symbol_set::positions_map<real>(vs,std::unordered_map<symbol,real>{{symbol("x"),real(1)}}),vs))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(k1.evaluate(symbol_set::positions_map<double>(vs,std::unordered_map<symbol,double>{{symbol("x"),1.}}),vs))>::value));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type{{symbol("x"),integer(0)}},vs),0);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{{symbol("x"),integer(0)}}),vs),0);
 		k1 = k_type({T(2),T(-3)});
 		vs.add("y");
-		typedef std::unordered_map<symbol,real> dict_type2;
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}},vs),math::cos((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
+		// pmap has correctly 2 elements, but they refer to indices 0 and 2.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"},symbol{"c"}},
+			dict_type1{{symbol{"a"},integer(4)},{symbol{"c"},integer(4)}}),vs),std::invalid_argument);
+		// Same with indices 1 and 2.
+		BOOST_CHECK_THROW(k1.evaluate(pmap_type1(symbol_set{symbol{"a"},symbol{"b"},symbol{"c"}},
+			dict_type1{{symbol{"b"},integer(4)},{symbol{"c"},integer(4)}}),vs),std::invalid_argument);
+		using dict_type2 = std::unordered_map<symbol,real>;
+		using pmap_type2 = symbol_set::positions_map<real>;
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs,dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}}),vs),math::cos((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}},vs),math::sin((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs,dict_type2{{symbol("y"),real(-4.3)},{symbol("x"),real(3.2)}}),vs),math::sin((0. + (real(3.2) * 2)) + (real(-4.3) * -3)));
 		k1 = k_type({T(-2),T(-3)});
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs,dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}}),vs),
 			math::cos((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}},vs),
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type2(vs,dict_type2{{symbol("y"),real(1.234)},{symbol("x"),real(5.678)}}),vs),
 			math::sin((real() + (real(5.678) * -2)) + (real(1.234) * -3)));
-		typedef std::unordered_map<symbol,rational> dict_type3;
+		using dict_type3 = std::unordered_map<symbol,rational>;
+		using pmap_type3 = symbol_set::positions_map<rational>;
 		k1 = k_type({T(3),T(-2)});
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}},vs),1);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type3(vs,dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}}),vs),1);
 		k1.set_flavour(false);
-		BOOST_CHECK_EQUAL(k1.evaluate(dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}},vs),0);
+		BOOST_CHECK_EQUAL(k1.evaluate(pmap_type3(vs,dict_type3{{symbol("y"),rational(2,2)},{symbol("x"),rational(2,3)}}),vs),0);
 	}
 };
 
 BOOST_AUTO_TEST_CASE(rtkm_evaluate_test)
 {
 	boost::mpl::for_each<int_types>(evaluate_tester());
+	BOOST_CHECK((!key_is_evaluable<real_trigonometric_kronecker_monomial<>,std::vector<int>>::value));
+	BOOST_CHECK((!key_is_evaluable<real_trigonometric_kronecker_monomial<>,char *>::value));
+	BOOST_CHECK((!key_is_evaluable<real_trigonometric_kronecker_monomial<>,std::string>::value));
+	BOOST_CHECK((!key_is_evaluable<real_trigonometric_kronecker_monomial<>,void *>::value));
 }
 
 struct subs_tester
