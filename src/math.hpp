@@ -582,7 +582,7 @@ struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value || s
  * 
  * @throws unspecified any exception thrown by the call operator of piranha::math::evaluate_impl.
  */
-template <typename T, typename U>
+template <typename U, typename T>
 inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) -> decltype(evaluate_impl<T>()(x,dict))
 {
 	return evaluate_impl<T>()(x,dict);

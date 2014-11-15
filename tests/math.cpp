@@ -310,6 +310,8 @@ BOOST_AUTO_TEST_CASE(math_evaluate_test)
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5.,std::unordered_map<std::string,short>{})),double>::value));
 	BOOST_CHECK_EQUAL(math::evaluate(5ul,std::unordered_map<std::string,double>{}),5ul);
 	BOOST_CHECK((std::is_same<decltype(math::evaluate(5ul,std::unordered_map<std::string,short>{})),unsigned long>::value));
+	// Test the syntax with explicit template parameter.
+	BOOST_CHECK_EQUAL(math::evaluate<double>(5,{{"foo",5}}),5);
 }
 
 BOOST_AUTO_TEST_CASE(math_subs_test)
