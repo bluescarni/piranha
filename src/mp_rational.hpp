@@ -1869,23 +1869,6 @@ struct partial_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	}
 };
 
-/// Specialisation of the piranha::math::evaluate() functor for piranha::mp_rational.
-template <typename T>
-struct evaluate_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] q evaluation argument.
-	 *
-	 * @return copy of \p q.
-	 */
-	template <typename U>
-	T operator()(const T &q, const std::unordered_map<std::string,U> &) const
-	{
-		return q;
-	}
-};
-
 /// Specialisation of the piranha::math::subs() functor for piranha::mp_rational.
 template <typename T>
 struct subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>

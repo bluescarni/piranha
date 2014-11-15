@@ -539,33 +539,31 @@ inline auto integrate(const T &x, const std::string &str) -> decltype(integrate_
 
 /// Default functor for the implementation of piranha::math::evaluate().
 /**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
+ * This functor should be specialised via the \p std::enable_if mechanism.
  */
 template <typename T, typename Enable = void>
 struct evaluate_impl
-{};
-
-/// Specialisation of the piranha::math::evaluate() functor for (complex) arithmetic types.
-/**
- * This specialisation is activated when \p T is a C++ arithmetic type, or \p std::complex of a floating-point type.
- * The result will be the input value unchanged.
- */
-template <typename T>
-struct evaluate_impl<T,typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<T,std::complex<float>>::value ||
-	std::is_same<T,std::complex<double>>::value || std::is_same<T,std::complex<long double>>::value>::type>
 {
-	/// Call operator.
-	/**
-	 * @param[in] x evaluation argument.
-	 * 
-	 * @return copy of \p x.
-	 */
-	template <typename U>
-	T operator()(const T &x, const std::unordered_map<std::string,U> &) const
-	{
-		return x;
-	}
+	private:
+		template <typename U>
+		using enabler = typename std::enable_if<std::is_copy_constructible<U>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if \p U is copy-constructible.
+		 *
+		 * The default behaviour is to return the input value \p x unchanged.
+		 *
+		 * @param[in] x evaluation argument.
+		 *
+		 * @return copy of \p x.
+		 */
+		template <typename U, typename V, enabler<U> = 0>
+		U operator()(const U &x, const std::unordered_map<std::string,V> &) const
+		{
+			return x;
+		}
 };
 
 /// Evaluation.

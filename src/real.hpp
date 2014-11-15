@@ -1829,23 +1829,6 @@ struct partial_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type
 	}
 };
 
-/// Specialisation of the piranha::math::evaluate() functor for piranha::real.
-template <typename T>
-struct evaluate_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] x evaluation argument.
-	 * 
-	 * @return copy of \p x.
-	 */
-	template <typename U>
-	T operator()(const T &x, const std::unordered_map<std::string,U> &) const
-	{
-		return x;
-	}
-};
-
 /// Specialisation of the piranha::math::subs() functor for piranha::real.
 template <typename T>
 struct subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>

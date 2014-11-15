@@ -586,6 +586,12 @@ BOOST_AUTO_TEST_CASE(math_canonical_test)
 	BOOST_CHECK(!has_transformation_is_canonical<std::string const &>::value);
 }
 
+// Non-evaluable, missing copy-ctor.
+struct fake_ne
+{
+	fake_ne(const fake_ne &) = delete;
+};
+
 BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
 {
 	BOOST_CHECK((is_evaluable<int,int>::value));
@@ -595,10 +601,14 @@ BOOST_AUTO_TEST_CASE(math_is_evaluable_test)
 	BOOST_CHECK((is_evaluable<double,int>::value));
 	BOOST_CHECK((is_evaluable<double &,int>::value));
 	BOOST_CHECK((is_evaluable<double &&,int>::value));
-	BOOST_CHECK((!is_evaluable<std::string,int>::value));
-	BOOST_CHECK((!is_evaluable<std::set<int>,int>::value));
-	BOOST_CHECK((!is_evaluable<std::string &,int>::value));
-	BOOST_CHECK((!is_evaluable<std::set<int> &&,int>::value));
+	BOOST_CHECK((is_evaluable<std::string,int>::value));
+	BOOST_CHECK((is_evaluable<std::set<int>,int>::value));
+	BOOST_CHECK((is_evaluable<std::string &,int>::value));
+	BOOST_CHECK((is_evaluable<std::set<int> &&,int>::value));
+	BOOST_CHECK((!is_evaluable<fake_ne,int>::value));
+	BOOST_CHECK((!is_evaluable<fake_ne &,int>::value));
+	BOOST_CHECK((!is_evaluable<fake_ne const &,int>::value));
+	BOOST_CHECK((!is_evaluable<fake_ne &&,int>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_has_sine_cosine_test)

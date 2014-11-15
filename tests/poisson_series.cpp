@@ -576,8 +576,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
 	BOOST_CHECK((is_evaluable<p_type1,int>::value));
 	BOOST_CHECK((is_evaluable<p_type1,long>::value));
 	BOOST_CHECK((is_evaluable<p_type1,long long>::value));
-	BOOST_CHECK((!is_evaluable<poisson_series<polynomial<mock_cf,short>>,double>::value));
-	BOOST_CHECK((!is_evaluable<poisson_series<mock_cf>,double>::value));
+	BOOST_CHECK((is_evaluable<poisson_series<polynomial<mock_cf,short>>,double>::value));
+	BOOST_CHECK((is_evaluable<poisson_series<mock_cf>,double>::value));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)

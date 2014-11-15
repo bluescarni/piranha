@@ -372,10 +372,12 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 		math::evaluate(x + math::pow(2 * y,3),dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}));
 	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})),double>::value));
 	BOOST_CHECK((!is_evaluable<g_series_type3<double,mock_key>,double>::value));
-	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
+	BOOST_CHECK((is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
 	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,mock_key>,double>::value));
 	BOOST_CHECK((is_evaluable<g_series_type3<double,monomial<int>>,double>::value));
 	// Check the syntax from initializer list with explicit template parameter.
 	BOOST_CHECK_EQUAL(p_type1{}.evaluate<int>({{"foo",4.}}),0);
 	BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo",4.},{"bar",7}}),0);
+	BOOST_CHECK_EQUAL(math::evaluate<int>(p_type1{},{{"foo",4.}}),0);
+	BOOST_CHECK_EQUAL(math::evaluate<double>(p_type1{},{{"foo",4.},{"bar",7}}),0);
 }

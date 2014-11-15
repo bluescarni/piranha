@@ -191,7 +191,7 @@ struct is_evaluable_tester
 BOOST_AUTO_TEST_CASE(polynomial_is_evaluable_test)
 {
 	boost::mpl::for_each<cf_types>(is_evaluable_tester());
-	BOOST_CHECK((!is_evaluable<polynomial<mock_cf,int>,double>::value));
+	BOOST_CHECK((is_evaluable<polynomial<mock_cf,int>,double>::value));
 }
 
 struct assignment_tester
