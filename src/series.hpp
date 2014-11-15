@@ -692,20 +692,23 @@ class series: series_binary_operators, detail::series_tag
 		// NOTE: here we need the Series template because otherwise, in case of missing eval on key or coefficient, the decltype
 		// will fail as series is not a template parameter.
 		template <typename Series, typename U, typename = void>
-		struct eval_type {};
+		struct eval_type_ {};
 		template <typename Series, typename U>
 		using e_type = decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>()) *
-			std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),
+			std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),
 			std::declval<const symbol_set &>()));
 		template <typename Series, typename U>
-		struct eval_type<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
+		struct eval_type_<Series,U,typename std::enable_if<has_multiply_accumulate<e_type<Series,U>,
 			decltype(math::evaluate(std::declval<typename Series::term_type::cf_type const &>(),std::declval<std::unordered_map<std::string,U> const &>())),
-			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const std::unordered_map<symbol,U> &>(),std::declval<const symbol_set &>()))>::value &&
+			decltype(std::declval<const typename Series::term_type::key_type &>().evaluate(std::declval<const symbol_set::positions_map<U> &>(),std::declval<const symbol_set &>()))>::value &&
 			std::is_constructible<e_type<Series,U>,int>::value
 			>::type>
 		{
 			using type = e_type<Series,U>;
 		};
+		// Final typedef.
+		template <typename Series, typename U>
+		using eval_type = typename eval_type_<Series,U>::type;
 		// Print utilities.
 		template <bool TexMode, typename Iterator>
 		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
@@ -1712,21 +1715,24 @@ class series: series_binary_operators, detail::series_tag
 		 * - piranha::math::multiply_accumulate().
 		 */
 		template <typename T, typename Series = series>
-		typename eval_type<Series,T>::type evaluate(const std::unordered_map<std::string,T> &dict) const
+		eval_type<Series,T> evaluate(const std::unordered_map<std::string,T> &dict) const
 		{
 			// NOTE: possible improvement: if the evaluation type is less-than comparable,
 			// build a vector of evaluated terms, sort it and accumulate (to minimise accuracy loss
 			// with fp types and maybe improve performance - e.g., for integers).
-			typedef typename eval_type<Series,T>::type return_type;
+			using return_type = eval_type<Series,T>;
 			// Transform the string dict into symbol dict for use in keys.
 			std::unordered_map<symbol,T> s_dict;
 			for (auto it = dict.begin(); it != dict.end(); ++it) {
 				s_dict[symbol(it->first)] = it->second;
 			}
+			// Convert to positions map.
+			symbol_set::positions_map<T> pmap(this->m_symbol_set,s_dict);
+			// Init return value and accumulate it.
 			return_type retval = return_type(0);
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(s_dict,m_symbol_set));
+				math::multiply_accumulate(retval,math::evaluate(it->m_cf,dict),it->m_key.evaluate(pmap,m_symbol_set));
 			}
 			return retval;
 		}

@@ -27,7 +27,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
-#include <functional>
 #include <initializer_list>
 #include <limits>
 #include <sstream>
@@ -35,10 +34,8 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 
-#include "../src/base_term.hpp"
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
@@ -126,35 +123,6 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 		{
 			return g_series_type2(-42);
 		}
-};
-
-template <typename Cf, typename Key>
-class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
-{
-		typedef base_term<Cf,Key,g_term_type> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_term_type() = default;
-		g_term_type(const g_term_type &) = default;
-		g_term_type(g_term_type &&) = default;
-		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_term_type,base)
-};
-
-template <typename Cf, typename Key>
-class g_series_type3: public series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>>
-{
-		typedef series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_series_type3() = default;
-		g_series_type3(const g_series_type3 &) = default;
-		g_series_type3(g_series_type3 &&) = default;
-		g_series_type3 &operator=(const g_series_type3 &) = default;
-		g_series_type3 &operator=(g_series_type3 &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_series_type3,base)
-		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type3,base)
 };
 
 struct construction_tag {};
@@ -1646,79 +1614,6 @@ BOOST_AUTO_TEST_CASE(series_transform_test)
 	BOOST_CHECK_EQUAL(y2.transform([](const pair_type2 &p) {
 		return std::make_pair(p.first.filter([](const pair_type &q) {return q.first < 2;}),p.second);
 	}),p_type2{"y"} * x + p_type2{"x"});
-}
-
-struct mock_key
-{
-	mock_key() = default;
-	mock_key(const mock_key &) = default;
-	mock_key(mock_key &&) noexcept;
-	mock_key &operator=(const mock_key &) = default;
-	mock_key &operator=(mock_key &&) noexcept;
-	mock_key(const symbol_set &);
-	bool operator==(const mock_key &) const;
-	bool operator!=(const mock_key &) const;
-	bool is_compatible(const symbol_set &) const noexcept;
-	bool is_ignorable(const symbol_set &) const noexcept;
-	mock_key merge_args(const symbol_set &, const symbol_set &) const;
-	bool is_unitary(const symbol_set &) const;
-	void print(std::ostream &, const symbol_set &) const;
-	void print_tex(std::ostream &, const symbol_set &) const;
-};
-
-namespace std
-{
-
-template <>
-struct hash<mock_key>
-{
-	std::size_t operator()(const mock_key &) const noexcept;
-};
-
-}
-
-BOOST_AUTO_TEST_CASE(series_evaluate_test)
-{
-	typedef g_series_type<rational,int> p_type1;
-	typedef std::unordered_map<std::string,rational> dict_type;
-	typedef std::unordered_map<std::string,int> dict_type_int;
-	typedef std::unordered_map<std::string,long> dict_type_long;
-	BOOST_CHECK((is_evaluable<p_type1,rational>::value));
-	BOOST_CHECK((is_evaluable<p_type1,integer>::value));
-	BOOST_CHECK((is_evaluable<p_type1,int>::value));
-	BOOST_CHECK((is_evaluable<p_type1,long>::value));
-	BOOST_CHECK((std::is_same<rational,decltype(p_type1{}.evaluate(dict_type_int{}))>::value));
-	BOOST_CHECK((std::is_same<rational,decltype(p_type1{}.evaluate(dict_type_long{}))>::value));
-	BOOST_CHECK_EQUAL(p_type1{}.evaluate(dict_type{}),0);
-	p_type1 x{"x"}, y{"y"};
-	BOOST_CHECK_THROW(x.evaluate(dict_type{}),std::invalid_argument);
-	BOOST_CHECK_EQUAL(x.evaluate(dict_type{{"x",rational(1)}}),1);
-	BOOST_CHECK_THROW((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)}}),std::invalid_argument);
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)},{"y",rational(2,3)}}),rational(1) + (2 * rational(2,3)).pow(3));
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type{{"x",rational(1)},{"y",rational(2,3)}}),
-		math::evaluate(x + (2 * y).pow(3),dict_type{{"x",rational(1)},{"y",rational(2,3)}}));
-	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type{})),rational>::value));
-	typedef std::unordered_map<std::string,real> dict_type2;
-	BOOST_CHECK((is_evaluable<p_type1,real>::value));
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
-		real(1.234) + math::pow(2 * real(-5.678),3));
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}),
-		math::evaluate(x + math::pow(2 * y,3),dict_type2{{"x",real(1.234)},{"y",real(-5.678)},{"z",real()}}));
-	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type2{})),real>::value));
-	typedef std::unordered_map<std::string,double> dict_type3;
-	BOOST_CHECK((is_evaluable<p_type1,double>::value));
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}),
-		1.234 + math::pow(2 * -5.678,3));
-	BOOST_CHECK_EQUAL((x + (2 * y).pow(3)).evaluate(dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}),
-		math::evaluate(x + math::pow(2 * y,3),dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}));
-	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})),double>::value));
-	BOOST_CHECK((!is_evaluable<g_series_type3<double,mock_key>,double>::value));
-	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
-	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,mock_key>,double>::value));
-	BOOST_CHECK((is_evaluable<g_series_type3<double,monomial<int>>,double>::value));
-	// Check the syntax from initializer list with explicit template parameter.
-	BOOST_CHECK_EQUAL(p_type1{}.evaluate<int>({{}}),0);
-	BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo",4.},{"bar",7}}),0);
 }
 
 struct print_tex_tester
