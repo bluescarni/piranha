@@ -40,9 +40,8 @@ def _cleanup_custom_derivatives():
 			s_type.unregister_all_custom_derivatives()
 	print('Custom derivatives cleanup completed.')
 
-# Wrapper for the evaluate() method. Will first check input dict,
-# and then try to invoke the underlying C++ exposed method.
-def _evaluate_wrapper(self,d):
+# Helper to check that d is a dictionary suitable for use in evaluation.
+def _check_eval_dict(d):
 	# Type checks.
 	if not isinstance(d,dict):
 		raise TypeError('evaluation dictionary must be a dict object')
@@ -53,6 +52,12 @@ def _evaluate_wrapper(self,d):
 	t_set = set([type(d[k]) for k in d])
 	if not len(t_set) == 1:
 		raise TypeError('all values in the evaluation dictionary must be of the same type')
+
+# Wrapper for the evaluate() method. Will first check input dict,
+# and then try to invoke the underlying C++ exposed method.
+def _evaluate_wrapper(self,d):
+	# Check input dict.
+	_check_eval_dict(d)
 	return _cpp_type_catcher(self._evaluate,d,d[list(d.keys())[0]])
 
 # Register the evaluate wrappers.

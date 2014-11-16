@@ -381,7 +381,6 @@ def truncate_degree(arg,max_degree,names = None):
 	   ...
 	TypeError: the optional 'names' argument must be a list of strings
 
-
 	"""
 	from ._core import _truncate_degree
 	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
@@ -390,3 +389,61 @@ def truncate_degree(arg,max_degree,names = None):
 		return _cpp_type_catcher(_truncate_degree,arg,max_degree)
 	else:
 		return _cpp_type_catcher(_truncate_degree,arg,max_degree,names)
+
+def evaluate(arg,eval_dict):
+	"""Evaluation.
+
+	This function will evaluate *arg* according to the evaluation dictionary *eval_dict*. Evaluation
+	is the replacement of all symbolic quantities with numerical values.
+
+	*eval_dict* must be a dictionary of ``(name,value)`` pairs, where the ``name`` is a string referring to the symbol
+	to be replaced and ``value`` is the value with which ``name`` will be replaced. All values must be of the same type,
+	and this type needs to support the operations needed to compute the evaluation.
+
+	:param arg: argument for the evaluation
+	:type arg: a series type
+	:param eval_dict: evaluation dictionary
+	:type eval_dict: a dictionary mapping strings to values, with all values of the same type
+	:returns: the evaluation of *arg* according to *eval_dict*
+	:raises: :exc:`TypeError` if *eval_dict* does not satisfy the requirements outlined above
+	:raises: :exc:`ValueError` if *eval_dict* is empty
+	:raises: any exception raised by the invoked low-level function
+
+	>>> from .types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y,z = pt('x'), pt('y'), pt('z')
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3,'z':5})
+	Fraction(9, 4)
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3.1,'y':-3.2,'z':5.3}) # doctest: +ELLIPSIS
+	3.64799999...
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3.1,'y':-3.2,'z':5}) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: all values in the evaluation dictionary must be of the same type
+	>>> evaluate(x*y+4*(y/4)**2*z,{}) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: evaluation dictionary cannot be empty
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3,5:5}) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: all keys in the evaluation dictionary must be string objects
+	>>> evaluate(x*y+4*(y/4)**2*z,[1,2,3]) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: evaluation dictionary must be a dict object
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3}) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: invalid positions map for evaluation
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':'a','y':'b', 'z':'c'}) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._common import _check_eval_dict
+	from ._core import _evaluate
+	# Check input dict.
+	_check_eval_dict(eval_dict)
+	return _cpp_type_catcher(_evaluate,arg,eval_dict,eval_dict[list(eval_dict.keys())[0]])

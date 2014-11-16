@@ -180,6 +180,7 @@ class math_test_case(_ut.TestCase):
 			pass
 		self.binomialTest()
 		self.sincosTest()
+		self.evaluateTest()
 	def binomialTest(self):
 		from fractions import Fraction as F
 		from .math import binomial
@@ -220,6 +221,42 @@ class math_test_case(_ut.TestCase):
 			return
 		self.assertEqual(type(cos(mpf(1))),mpf)
 		self.assertEqual(type(sin(mpf(1))),mpf)
+	def evaluateTest(self):
+		from fractions import Fraction as F
+		from .math import evaluate
+		from .types import polynomial, k_monomial, double, integer, real, rational
+		pt = polynomial(double,k_monomial)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		self.assertEqual(evaluate(3*x*y,{'x':4,'y':5}),3.*(4.*5.))
+		self.assertEqual(type(evaluate(3*x*y,{'x':4,'y':5})),float)
+		self.assertEqual(evaluate(x**2*y**3/5,{'x':4,'y':5}),(4.**2*5.**3)/5)
+		pt = polynomial(rational,k_monomial)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		self.assertEqual(evaluate(3*x*y,{'x':F(4),'y':F(5)}),3*(F(4)*F(5)))
+		self.assertEqual(type(evaluate(3*x*y,{'x':F(4),'y':F(5)})),F)
+		self.assertEqual(evaluate(x**2*y**3/5,{'x':F(4),'y':F(5)}),(F(4)**2*F(5)**3)/5)
+		pt = polynomial(integer,k_monomial)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		self.assertEqual(evaluate(3*x*y,{'x':4,'y':5}),3*(4*5))
+		self.assertEqual(type(evaluate(3*x*y,{'x':4,'y':5})),int)
+		# Integer division truncates.
+		self.assertEqual(evaluate(x**2*y**3/5,{'x':2,'y':1}),0)
+		# Check errors.
+		self.assertRaises(ValueError,lambda : evaluate(pt(0),{}))
+		self.assertRaises(TypeError,lambda : evaluate(x**2*y**3/5,{'x':2.,'y':1}))
+		self.assertRaises(TypeError,lambda : evaluate(x**2*y**3/5,{2:2,'y':1}))
+		self.assertRaises(TypeError,lambda : evaluate(x**2*y**3/5,[1,2]))
+		# A missing symbol, thrown from C++.
+		self.assertRaises(ValueError,lambda : evaluate(3*x*y,{'x':4,'z':5}))
+		try:
+			from mpmath import mpf
+		except ImportError:
+			return
+		pt = polynomial(double,k_monomial)()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		self.assertEqual(evaluate(3*x*y,{'x':mpf(4),'y':mpf(5)}),mpf(3.)*(4.*5.))
+		self.assertEqual(type(evaluate(3*x*y,{'x':mpf(4),'y':mpf(5)})),mpf)
+		self.assertEqual(evaluate(x**2*y**3/5,{'x':mpf(4),'y':mpf(5)}),(mpf(4)**2*5.**3)/5)
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
