@@ -42,16 +42,16 @@ void expose_poisson_series()
 	struct ps_desc
 	{
 		using params = std::tuple<std::tuple<double>,std::tuple<piranha::rational>,std::tuple<piranha::real>,
-			std::tuple<piranha::polynomial<double,signed char>>,std::tuple<piranha::polynomial<double,short>>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>>,
-			std::tuple<piranha::polynomial<piranha::rational,signed char>>,std::tuple<piranha::polynomial<piranha::rational,short>>,
+			std::tuple<piranha::polynomial<double,piranha::rational>>,std::tuple<piranha::polynomial<double,short>>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>>,
+			std::tuple<piranha::polynomial<piranha::rational,piranha::rational>>,std::tuple<piranha::polynomial<piranha::rational,short>>,
 			std::tuple<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>>,
-			std::tuple<piranha::polynomial<piranha::real,signed char>>,std::tuple<piranha::polynomial<piranha::real,short>>,
+			std::tuple<piranha::polynomial<piranha::real,piranha::rational>>,std::tuple<piranha::polynomial<piranha::real,short>>,
 			std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>>>;
 		using interop_types = std::tuple<double,piranha::rational,piranha::integer,piranha::real>;
-		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
+		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
 		using eval_types = std::tuple<double,piranha::real,piranha::rational>;
 		using subs_types = eval_types;
-		using degree_truncation_types = std::tuple<piranha::integer>;
+		using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
 		interop_types		it;
 		pow_types		pt;
 		eval_types		et;

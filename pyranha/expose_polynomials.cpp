@@ -41,17 +41,17 @@ void expose_polynomials()
 	// Descriptor for polynomial exposition.
 	struct poly_desc
 	{
-		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
-			std::tuple<long double,signed char>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::integer,signed char>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::rational,signed char>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::real,signed char>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
+		using params = std::tuple<std::tuple<double,piranha::rational>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
+			std::tuple<long double,piranha::rational>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::integer,piranha::rational>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::rational,piranha::rational>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::real,piranha::rational>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
 		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
+		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
 		using eval_types = interop_types;
 		using subs_types = interop_types;
 		// For now, we have only degrees computed as integers.
-		using degree_truncation_types = std::tuple<piranha::integer>;
+		using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
 		// Need to refer to these to silence a warning in GCC.
 		interop_types		it;
 		pow_types		pt;
