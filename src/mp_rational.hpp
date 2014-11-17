@@ -1713,10 +1713,11 @@ struct negate_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::
  *   piranha::mp_rational::pow() is used;
  * - if the non-rational argument is a floating-point type, then the rational argument is converted
  *   to that floating-point type and piranha::math::pow() is used;
- * - if both arguments are rational, they are both converted to \p double and then piranha::math::pow()
- *   is used;
- * - if the base is an integral type or piranha::mp_integer and the exponent a rational, then both
- *   arguments are converted to \p double and piranha::math::pow() is used.
+ * - if both arguments are rational the result will be rational and the success of the operation depends
+ *   on the values of the operands;
+ * - if the base is an integral type or piranha::mp_integer and the exponent a rational, the result is computed
+ *   via the integral--integer specialisation of piranha::math::pow() and the the success of the operation depends
+ *   on the values of the operands.
  */
 template <typename T, typename U>
 struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
@@ -1772,13 +1773,33 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	 *
 	 * @returns <tt>b**e</tt>.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_rational
-	 * to \p double.
+	 * @throws std::invalid_argument if the result cannot be computed.
+	 * @throws unspecified any exception thrown by piranha::mp_rational::pow().
 	 */
 	template <int NBits>
-	double operator()(const mp_rational<NBits> &b, const mp_rational<NBits> &e) const
+	mp_rational<NBits> operator()(const mp_rational<NBits> &b, const mp_rational<NBits> &e) const
 	{
-		return math::pow(static_cast<double>(e),static_cast<double>(b));
+		// Special casing.
+		if (b == 1) {
+			return b;
+		}
+		if (is_zero(b)) {
+			const auto sign = e.num().sign();
+			if (sign > 0) {
+				// 0**q = 1
+				return mp_rational<NBits>(0);
+			}
+			if (sign == 0) {
+				// 0**0 = 1
+				return mp_rational<NBits>(1);
+			}
+			// 0**-q -> division by zero.
+			piranha_throw(zero_division_error,"unable to raise zero to a negative power");
+		}
+		if (e.den() != 1) {
+			piranha_throw(std::invalid_argument,"unable to raise rational to a rational power whose denominator is not 1");
+		}
+		return b.pow(e.num());
 	}
 	/// Call operator, integral--rational overload.
 	/**
@@ -1787,13 +1808,30 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	 *
 	 * @returns <tt>b**e</tt>.
 	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_rational
-	 * or piranha::mp_integer to \p double.
+	 * @throws std::invalid_argument if the result cannot be computed.
+	 * @throws unspecified any exception thrown by piranha::math::pow() with integral base and piranha::mp_integer exponent.
 	 */
 	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value || detail::is_mp_integer<T2>::value,int>::type = 0>
-	double operator()(const T2 &b, const mp_rational<NBits> &e) const
+	auto operator()(const T2 &b, const mp_rational<NBits> &e) const -> decltype(math::pow(b,e.num()))
 	{
-		return math::pow(static_cast<double>(b),static_cast<double>(e));
+		using ret_type = decltype(math::pow(b,e.num()));
+		if (b == T2(1)) {
+			return ret_type(b);
+		}
+		if (is_zero(b)) {
+			const auto sign = e.num().sign();
+			if (sign > 0) {
+				return ret_type(0);
+			}
+			if (sign == 0) {
+				return ret_type(1);
+			}
+			piranha_throw(zero_division_error,"unable to raise zero to a negative power");
+		}
+		if (e.den() != 1) {
+			piranha_throw(std::invalid_argument,"unable to raise an integral to a rational power whose denominator is not 1");
+		}
+		return math::pow(b,e.num());
 	}
 };
 

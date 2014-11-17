@@ -1757,9 +1757,17 @@ struct pow_tester
 		BOOST_CHECK((std::is_same<float,decltype(math::pow(q_type(1),1.f))>::value));
 		BOOST_CHECK((std::is_same<long double,decltype(math::pow(q_type(1,radix),2.l))>::value));
 		// Rational-rational.
-		BOOST_CHECK_EQUAL(math::pow(q_type(1,radix),q_type(1,radix)),std::pow(1./radix,1./radix));
 		BOOST_CHECK((is_exponentiable<q_type,q_type>::value));
-		BOOST_CHECK((std::is_same<double,decltype(math::pow(q_type(1,radix),q_type(1,radix)))>::value));
+		BOOST_CHECK_THROW(math::pow(q_type(1,radix),q_type(1,radix)),std::invalid_argument);
+		BOOST_CHECK_EQUAL(math::pow(q_type(2,3),q_type(2)),q_type(4,9));
+		BOOST_CHECK_EQUAL(math::pow(q_type(2,3),q_type(-2)),q_type(9,4));
+		BOOST_CHECK((std::is_same<q_type,decltype(math::pow(q_type(1,radix),q_type(1,radix)))>::value));
+		// Special cases.
+		BOOST_CHECK_EQUAL(math::pow(q_type(1),q_type(2,3)),1);
+		BOOST_CHECK_EQUAL(math::pow(q_type(1),q_type(-2,3)),1);
+		BOOST_CHECK_EQUAL(math::pow(q_type(0),q_type(2,3)),0);
+		BOOST_CHECK_EQUAL(math::pow(q_type(0),q_type(0)),1);
+		BOOST_CHECK_THROW(math::pow(q_type(0),q_type(-2,3)),zero_division_error);
 		// Fp-rational.
 		BOOST_CHECK((is_exponentiable<float,q_type>::value));
 		BOOST_CHECK((is_exponentiable<double,q_type>::value));
@@ -1769,10 +1777,23 @@ struct pow_tester
 		// Integral-rational.
 		BOOST_CHECK((is_exponentiable<int,q_type>::value));
 		BOOST_CHECK((is_exponentiable<int_type,q_type>::value));
-		BOOST_CHECK((std::is_same<double,decltype(math::pow(2,q_type(1,radix)))>::value));
-		BOOST_CHECK((std::is_same<double,decltype(math::pow(int_type(2),q_type(1,radix)))>::value));
-		BOOST_CHECK_EQUAL(math::pow(2,q_type(1,radix)),std::pow(2.,1./radix));
-		BOOST_CHECK_EQUAL(math::pow(int_type(2),q_type(1,radix)),std::pow(2.,1./radix));
+		BOOST_CHECK((std::is_same<int_type,decltype(math::pow(2,q_type(1,radix)))>::value));
+		BOOST_CHECK((std::is_same<int_type,decltype(math::pow(int_type(2),q_type(1,radix)))>::value));
+		BOOST_CHECK_THROW(math::pow(2,q_type(1,radix)),std::invalid_argument);
+		BOOST_CHECK_THROW(math::pow(int_type(2),q_type(1,radix)),std::invalid_argument);
+		BOOST_CHECK_EQUAL(math::pow(2,q_type(2)),4);
+		BOOST_CHECK_EQUAL(math::pow(int_type(3),q_type(2)),9);
+		// Special cases.
+		BOOST_CHECK_EQUAL(math::pow(1,q_type(2,3)),1);
+		BOOST_CHECK_EQUAL(math::pow(int_type(1),q_type(2,3)),1);
+		BOOST_CHECK_EQUAL(math::pow(1,q_type(2,-3)),1);
+		BOOST_CHECK_EQUAL(math::pow(int_type(1),q_type(-2,3)),1);
+		BOOST_CHECK_EQUAL(math::pow(0,q_type(2,3)),0);
+		BOOST_CHECK_EQUAL(math::pow(int_type(0),q_type(2,3)),0);
+		BOOST_CHECK_EQUAL(math::pow(0,q_type(0)),1);
+		BOOST_CHECK_EQUAL(math::pow(int_type(0),q_type(0,3)),1);
+		BOOST_CHECK_THROW(math::pow(0,q_type(-1,3)),zero_division_error);
+		BOOST_CHECK_THROW(math::pow(int_type(0),q_type(-1,3)),zero_division_error);
 	}
 };
 
