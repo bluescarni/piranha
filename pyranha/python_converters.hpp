@@ -195,6 +195,7 @@ struct real_converter
 		} catch (...) {
 			// Clear the Python global error status. We don't want some other function to check it later
 			// and find it set by the failure in the block above.
+			// NOTE: this can always be called, even if no error actually occurred.
 			::PyErr_Clear();
 		}
 		return false;
