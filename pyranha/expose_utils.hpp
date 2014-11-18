@@ -40,7 +40,6 @@
 #include <cstddef>
 #include <limits>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -51,7 +50,6 @@
 #include <vector>
 
 #include "../src/detail/type_in_tuple.hpp"
-#include "../src/exceptions.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -140,7 +138,10 @@ inline bp::class_<T> expose_class()
 {
 	const auto t_idx = std::type_index(typeid(T));
 	if (et_map.find(t_idx) != et_map.end()) {
-		piranha_throw(std::runtime_error,std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed");
+		// NOTE: it is ok here and elsewhere to use c_str(), as PyErr_SetString will convert the second argument to a Python
+		// string object.
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("the C++ type '") + demangled_type_name(t_idx) + "' has already been exposed").c_str());
+		bp::throw_error_already_set();
 	}
 	bp::class_<T> class_inst((std::string("_exposed_type_")+boost::lexical_cast<std::string>(exposed_types_counter)).c_str(),bp::init<>());
 	++exposed_types_counter;
@@ -546,6 +547,8 @@ class series_exposer
 				bp::object call_method = func.attr("__call__");
 				(void)call_method;
 			} catch (...) {
+				// NOTE: it seems like it is ok to overwrite the global error status of Python here,
+				// after it has already been set by Boost.Python via the exception thrown above.
 				::PyErr_SetString(PyExc_TypeError,"object is not callable");
 				bp::throw_error_already_set();
 			}

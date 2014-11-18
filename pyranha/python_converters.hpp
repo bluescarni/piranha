@@ -32,12 +32,10 @@
 #include <boost/python/import.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/type_id.hpp>
-#include <stdexcept>
 #include <string>
 
 #include "../src/config.hpp"
 #include "../src/detail/mpfr.hpp"
-#include "../src/exceptions.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
@@ -64,7 +62,8 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 	// for long integers).
 	::PyObject *str_obj = ::PyObject_Str(obj_ptr);
 	if (!str_obj) {
-		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("unable to extract string representation of ") + name).c_str());
+		bp::throw_error_already_set();
 	}
 	bp::handle<> str_rep(str_obj);
 #if PY_MAJOR_VERSION < 3
@@ -72,12 +71,14 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 #else
 	::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"ascii","strict");
 	if (!unicode_str_obj) {
-		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("unable to extract string representation of ") + name).c_str());
+		bp::throw_error_already_set();
 	}
 	bp::handle<> unicode_str(unicode_str_obj);
 	const char *s = ::PyBytes_AsString(unicode_str.get());
 	if (!s) {
-		piranha_throw(std::runtime_error,std::string("unable to extract string representation of ") + name);
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("unable to extract string representation of ") + name).c_str());
+		bp::throw_error_already_set();
 	}
 #endif
 	void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
@@ -175,7 +176,10 @@ struct real_converter
 				bp::object mpf = mpmath.attr("mpf");
 				return bp::incref(mpf(str).ptr());
 			} catch (...) {
-				piranha_throw(std::runtime_error,"could not convert real number to mpf object - please check the installation of mpmath");
+				::PyErr_SetString(PyExc_RuntimeError,"could not convert real number to mpf object - please check the installation of mpmath");
+				bp::throw_error_already_set();
+				// A fake return value that will never be returned, to make a GCC warning go away.
+				return nullptr;
 			}
 		}
 	};
@@ -188,7 +192,11 @@ struct real_converter
 			if (::PyObject_IsInstance(obj_ptr,c_obj.ptr())) {
 				return true;
 			}
-		} catch (...) {}
+		} catch (...) {
+			// Clear the Python global error status. We don't want some other function to check it later
+			// and find it set by the failure in the block above.
+			::PyErr_Clear();
+		}
 		return false;
 	}
 	static void *convertible(::PyObject *obj_ptr)
@@ -212,7 +220,8 @@ struct real_converter
 		// in base 10 for the object.
 		::PyObject *str_obj = ::PyObject_Repr(obj.ptr());
 		if (!str_obj) {
-			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
+			::PyErr_SetString(PyExc_RuntimeError,"unable to extract string representation of real");
+			bp::throw_error_already_set();
 		}
 		bp::handle<> str_rep(str_obj);
 #if PY_MAJOR_VERSION < 3
@@ -220,12 +229,14 @@ struct real_converter
 #else
 		::PyObject *unicode_str_obj = ::PyUnicode_AsEncodedString(str_rep.get(),"ascii","strict");
 		if (!unicode_str_obj) {
-			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
+			::PyErr_SetString(PyExc_RuntimeError,"unable to extract string representation of real");
+			bp::throw_error_already_set();
 		}
 		bp::handle<> unicode_str(unicode_str_obj);
 		const char *s = ::PyBytes_AsString(unicode_str.get());
 		if (!s) {
-			piranha_throw(std::runtime_error,std::string("unable to extract string representation of real"));
+			::PyErr_SetString(PyExc_RuntimeError,"unable to extract string representation of real");
+			bp::throw_error_already_set();
 		}
 #endif
 		// NOTE: the search for "'" is due to the string format of mpmath.mpf objects.
@@ -233,7 +244,8 @@ struct real_converter
 			++s;
 		}
 		if (*s == '\0') {
-			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
+			::PyErr_SetString(PyExc_RuntimeError,"invalid string input converting to real");
+			bp::throw_error_already_set();
 		}
 		++s;
 		auto start = s;
@@ -241,7 +253,8 @@ struct real_converter
 			++s;
 		}
 		if (*s == '\0') {
-			piranha_throw(std::runtime_error,std::string("invalid string input converting to real"));
+			::PyErr_SetString(PyExc_RuntimeError,"invalid string input converting to real");
+			bp::throw_error_already_set();
 		}
 		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<piranha::real> *>(data)->storage.bytes;
 		::new (storage) piranha::real(std::string(start,s),prec);

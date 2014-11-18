@@ -30,7 +30,6 @@
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
 #include <cstddef>
-#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -40,8 +39,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include "../src/exceptions.hpp"
 
 namespace pyranha
 {
@@ -121,7 +118,8 @@ inline void expose_type_generator(const std::string &name)
 {
 	// We do not want to have duplicate instances on the Python side.
 	if (tg_names.find(name) != tg_names.end()) {
-		piranha_throw(std::runtime_error,std::string("a type generator called '") + name + "' has already been instantiated");
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("a type generator called '") + name + "' has already been instantiated").c_str());
+		bp::throw_error_already_set();
 	}
 	tg_names.insert(name);
 	type_generator tg(std::type_index(typeid(T)));
@@ -163,8 +161,9 @@ inline void expose_generic_type_generator()
 	// NOTE: the new key in gtg_map, if needed, will be created by the first call
 	// to gtg_map[name].
 	if (gtg_map[name].find(v_t_idx) != gtg_map[name].end()) {
-		piranha_throw(std::runtime_error,std::string("the generic type generator '") + name +
-			std::string("' has already been instantiated with the type pack ") + v_t_idx_to_str(v_t_idx));
+		::PyErr_SetString(PyExc_RuntimeError,(std::string("the generic type generator '") + name +
+			std::string("' has already been instantiated with the type pack ") + v_t_idx_to_str(v_t_idx)).c_str());
+		bp::throw_error_already_set();
 	}
 	gtg_map[name].emplace(std::make_pair(v_t_idx,std::type_index(typeid(TT<Args...>))));
 }
