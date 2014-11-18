@@ -57,8 +57,8 @@ real = _t.real
 #: signed integral value).
 k_monomial = _t.k_monomial
 
-#:
+#: Generic type generator for polynomials.
 polynomial = _t.polynomial
 
-#:
+#: Generic type generator for Poisson series.
 poisson_series = _t.poisson_series
