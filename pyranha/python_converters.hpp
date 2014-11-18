@@ -167,7 +167,7 @@ struct real_converter
 	}
 	struct to_python
 	{
-		static PyObject *convert(const piranha::real &r)
+		static ::PyObject *convert(const piranha::real &r)
 		{
 			bp::object str(boost::lexical_cast<std::string>(r));
 			try {
