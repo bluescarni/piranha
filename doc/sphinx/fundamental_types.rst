@@ -103,6 +103,22 @@ the standard C++ numerical hierarchy, and it obeys the following basic rules:
 
 The following C++ code showcases a few features of the ``rational`` class:
 
+.. literalinclude:: ../../tutorial/rational.cpp
+   :language: c++
+   :linenos:
+
+In the first code block, a few ways of constructing a ``rational`` are shown. In addition to the constructors from interoperable
+types, a ``rational`` can also be constructed from an integral numerator-denominator pair. The string representation for a ``rational``
+consists, intuitively, of the representation of numerator and denominator, separated by a ``/`` sign. The denominator can be
+omitted if it is unitary.
+
+In the second code block, some examples of arithmetic and logical operations involving ``rational`` and interoperable types are
+displayed.
+
+On lines 33-34, we use the ``math::pow()`` function to compute integral powers of a rational. ``math::pow()`` is able to accept
+many different combinations of argument types. In this specific case, with a ``rational`` base and an integral exponent, the result
+will be exact and its type will be ``rational``.
+
 The ``real`` type
 -----------------
 
