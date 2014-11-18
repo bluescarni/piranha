@@ -19,7 +19,7 @@ ENDMACRO(ADD_PIRANHA_TESTCASE)
 
 MACRO(ADD_PIRANHA_PERFORMANCE_TESTCASE arg1)
 	IF(CMAKE_BUILD_TYPE STREQUAL "Release")
-		ADD_EXECUTABLE("${arg1}_perf" "${arg1}_perf.cpp")
+		ADD_EXECUTABLE("${arg1}_perf" "${arg1}_perf.cpp" "fateman1.hpp" "fateman2.hpp" "gastineau1.hpp" "gastineau2.hpp" "gastineau3.hpp" "gastineau4.hpp" "pearce1.hpp" "pearce2.hpp")
 		TARGET_LINK_LIBRARIES("${arg1}_perf" ${MANDATORY_LIBRARIES} ${Boost_CHRONO_LIBRARY} ${Boost_TIMER_LIBRARY} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 		ADD_TEST("${arg1}_perf" "${arg1}_perf")
 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
