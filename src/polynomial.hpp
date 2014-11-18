@@ -22,7 +22,6 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
-#include <boost/integer_traits.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
@@ -925,7 +924,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// This check is done here to avoid controlling the number of elements of the output series
 			// at every iteration of the functor.
 			const auto max_size = integer(size1) * size2;
-			if (unlikely(max_size > boost::integer_traits<bucket_size_type>::const_max)) {
+			if (unlikely(max_size > std::numeric_limits<bucket_size_type>::max())) {
 				piranha_throw(std::overflow_error,"possible overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
@@ -1625,7 +1624,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				const auto it = container._find(tmp,bucket_idx);
 				if (it == container.end()) {
 					// NOTE: the check here is done outside.
-					piranha_assert(container.size() < boost::integer_traits<bucket_size_type>::const_max);
+					piranha_assert(container.size() < std::numeric_limits<bucket_size_type>::max());
 					// Term is new. Handle the case in which we need to rehash because of load factor.
 					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / static_cast<double>(container.bucket_count()) >
 						container.max_load_factor()))

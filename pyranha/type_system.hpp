@@ -23,13 +23,13 @@
 
 #include "python_includes.hpp"
 
-#include <boost/integer_traits.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/handle.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/object.hpp>
 #include <boost/python/scope.hpp>
 #include <cstddef>
+#include <limits>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -132,7 +132,7 @@ struct vargs_to_v_t_idx
 {
 	void operator()(std::vector<std::type_index> &v_t_idx) const
 	{
-		static_assert(Idx < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+		static_assert(Idx < std::numeric_limits<std::size_t>::max(),"Overflow error.");
 		v_t_idx.push_back(std::type_index(typeid(typename std::tuple_element<Idx,Tuple>::type)));
 		vargs_to_v_t_idx<Tuple,static_cast<std::size_t>(Idx + 1u)>()(v_t_idx);
 	}

@@ -21,8 +21,8 @@
 #ifndef PIRANHA_DYNAMIC_ALIGNING_ALLOCATOR_HPP
 #define PIRANHA_DYNAMIC_ALIGNING_ALLOCATOR_HPP
 
-#include <boost/integer_traits.hpp>
 #include <cstddef>
+#include <limits>
 #include <new>
 #include <type_traits>
 
@@ -95,9 +95,9 @@ class dynamic_aligning_allocator
 		 * @return the maximum number of objects of type \p value_type that can be allocated by a single call to
 		 * allocate().
 		 */
-		size_type max_size() const
+		constexpr size_type max_size() const
 		{
-			return boost::integer_traits<size_type>::const_max / sizeof(value_type);
+			return std::numeric_limits<size_type>::max() / sizeof(value_type);
 		}
 		/// Allocation function.
 		/**

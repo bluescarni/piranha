@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <array>
-#include <boost/integer_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <cstddef>
 #include <functional>
@@ -899,7 +898,7 @@ class hash_set
 				// Item already present, exit.
 				return std::make_pair(it,false);
 			}
-			if (unlikely(m_n_elements == boost::integer_traits<size_type>::const_max)) {
+			if (unlikely(m_n_elements == std::numeric_limits<size_type>::max())) {
 				piranha_throw(std::overflow_error,"maximum number of elements reached");
 			}
 			// Item is new. Handle the case in which we need to rehash because of load factor.

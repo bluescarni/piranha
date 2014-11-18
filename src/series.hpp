@@ -23,15 +23,15 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
-#include <boost/integer_traits.hpp>
 #include <boost/iterator/indirect_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
-#include <boost/math/special_functions/trunc.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -242,7 +242,7 @@ class series: series_binary_operators, detail::series_tag
 				}
 			};
 			if (it == m_container.end()) {
-				if (unlikely(m_container.size() == boost::integer_traits<size_type>::const_max)) {
+				if (unlikely(m_container.size() == std::numeric_limits<size_type>::max())) {
 					piranha_throw(std::overflow_error,"maximum number of elements reached");
 				}
 				// Term is new. Handle the case in which we need to rehash because of load factor.
@@ -332,7 +332,7 @@ class series: series_binary_operators, detail::series_tag
 		{
 			piranha_assert(!swap);
 			// Do not do anything in case of overflows.
-			if (unlikely(c1.size() > boost::integer_traits<size_type>::const_max - c2.size())) {
+			if (unlikely(c1.size() > std::numeric_limits<size_type>::max() - c2.size())) {
 				return;
 			}
 			// This is the maximum number of terms in the return value.
@@ -341,7 +341,7 @@ class series: series_binary_operators, detail::series_tag
 			size_type max_n_buckets;
 			try {
 				piranha_assert(c1.max_load_factor() > 0);
-				max_n_buckets = boost::numeric_cast<size_type>(boost::math::trunc(static_cast<double>(max_size) / c1.max_load_factor()));
+				max_n_buckets = boost::numeric_cast<size_type>(std::trunc(static_cast<double>(max_size) / c1.max_load_factor()));
 			} catch (...) {
 				// Ignore any error on conversions.
 				return;

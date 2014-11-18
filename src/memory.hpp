@@ -47,8 +47,8 @@
 #define PIRANHA_HAVE_MEMORY_ALIGNMENT_PRIMITIVES
 #include <malloc.h>
 #else // malloc + std::align.
-#include <boost/integer_traits.hpp>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #endif
 
@@ -63,7 +63,7 @@ namespace detail
 #if 0
 inline void *cpp_aligned_alloc(const std::size_t &alignment, const std::size_t &size)
 {
-	if (unlikely(alignment == 0u || size > boost::integer_traits<std::size_t>::const_max - alignment)) {
+	if (unlikely(alignment == 0u || size > std::numeric_limits<std::size_t>::max() - alignment)) {
 		piranha_throw(std::bad_alloc,);
 	}
 	// This is the actual allocated size.
@@ -89,7 +89,7 @@ inline void *cpp_aligned_alloc(const std::size_t &alignment, const std::size_t &
 	piranha_assert(delta <= alignment);
 	piranha_assert(delta > 0u);
 	// The delta needs to be representable by unsigned char for storage.
-	if (unlikely(delta > boost::integer_traits<unsigned char>::const_max)) {
+	if (unlikely(delta > std::numeric_limits<unsigned char>::max())) {
 		// NOTE: need to use original pointer, as u_ptr might have been changed by std::align.
 		std::free(orig_u_ptr);
 		piranha_throw(std::bad_alloc,);

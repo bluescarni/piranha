@@ -23,12 +23,12 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
-#include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <future>
 #include <iterator>
+#include <limits>
 #include <list>
 #include <mutex>
 #include <new> // For bad_alloc.
@@ -329,7 +329,7 @@ class series_multiplier
 				template <typename Tuple, std::size_t N = 0u, typename Enable2 = void>
 				struct inserter
 				{
-					static_assert(N < boost::integer_traits<std::size_t>::const_max,
+					static_assert(N < std::numeric_limits<std::size_t>::max(),
 							"Overflow error.");
 					static void run(const default_functor &f, Tuple &t)
 					{
@@ -429,7 +429,7 @@ class series_multiplier
 		{
 			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
 			// NOTE: hard-coded block size of 256.
-			static_assert(boost::integer_traits<size_type>::const_max >= 256u, "Invalid size type.");
+			static_assert(std::numeric_limits<size_type>::max() >= 256u, "Invalid size type.");
 			const size_type size1 = f.m_s1, size2 = f.m_s2, bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
 			// Start and end of last (possibly irregular) blocks.
 			const size_type i_ir_start = nblocks1 * bsize1, i_ir_end = size1;
@@ -549,8 +549,8 @@ class series_multiplier
 					f(*it1,*it2);
 					f.insert();
 					// Check for unlikely overflow when increasing count.
-					if (unlikely(result_size(f.m_tmp) > boost::integer_traits<size_type>::const_max ||
-						count > boost::integer_traits<size_type>::const_max - result_size(f.m_tmp)))
+					if (unlikely(result_size(f.m_tmp) > std::numeric_limits<size_type>::max() ||
+						count > std::numeric_limits<size_type>::max() - result_size(f.m_tmp)))
 					{
 						piranha_throw(std::overflow_error,"overflow error");
 					}
@@ -690,7 +690,7 @@ class series_multiplier
 									// Term is new.
 									retval.m_container._unique_insert(std::move(*term_it),bucket_idx);
 									// Update term count.
-									piranha_assert(count_plus < boost::integer_traits<size_type>::const_max);
+									piranha_assert(count_plus < std::numeric_limits<size_type>::max());
 									++count_plus;
 								} else {
 									// Assert the existing term is not ignorable and it is compatible.
@@ -700,7 +700,7 @@ class series_multiplier
 										if (unlikely(!it->is_compatible(retval.m_symbol_set) || it->is_ignorable(retval.m_symbol_set))) {
 											retval.m_container._erase(it);
 											// After term is erased, update count.
-											piranha_assert(count_minus < boost::integer_traits<size_type>::const_max);
+											piranha_assert(count_minus < std::numeric_limits<size_type>::max());
 											++count_minus;
 										}
 									};

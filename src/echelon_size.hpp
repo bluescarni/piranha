@@ -21,8 +21,8 @@
 #ifndef PIRANHA_ECHELON_SIZE_HPP
 #define PIRANHA_ECHELON_SIZE_HPP
 
-#include <boost/integer_traits.hpp>
 #include <cstddef>
+#include <limits>
 #include <type_traits>
 
 #include "detail/base_term_fwd.hpp"
@@ -38,7 +38,7 @@ namespace detail
 template <typename CfSeries, std::size_t Level = 0, typename Enable = void>
 struct echelon_level_impl
 {
-	static_assert(Level < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+	static_assert(Level < std::numeric_limits<std::size_t>::max(),"Overflow error.");
 	static const std::size_t value = echelon_level_impl<typename CfSeries::term_type::cf_type,Level + static_cast<std::size_t>(1)>::value;
 };
 
@@ -69,7 +69,7 @@ class echelon_size
 {
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
 		PIRANHA_TT_CHECK(is_term,Term);
-		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < boost::integer_traits<std::size_t>::const_max,"Overflow error.");
+		static_assert(detail::echelon_level_impl<typename Term::cf_type>::value < std::numeric_limits<std::size_t>::max(),"Overflow error.");
 #endif
 	public:
 		/// Value of echelon size.

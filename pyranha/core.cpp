@@ -20,7 +20,6 @@
 
 #include "python_includes.hpp"
 
-#include <boost/integer_traits.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/def.hpp>
