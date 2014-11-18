@@ -22,8 +22,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/timer/timer.hpp>
+#include <iostream>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "pearce1.hpp"
 
 using namespace piranha;
