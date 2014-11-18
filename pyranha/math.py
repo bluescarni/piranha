@@ -414,8 +414,8 @@ def evaluate(arg,eval_dict):
 	>>> x,y,z = pt('x'), pt('y'), pt('z')
 	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3,'y':-3,'z':5})
 	Fraction(9, 4)
-	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3.1,'y':-3.2,'z':5.3}) # doctest: +ELLIPSIS
-	3.64799999...
+	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3.01,'y':-3.32,'z':5.34}) # doctest: +ELLIPSIS
+	4.7217...
 	>>> evaluate(x*y+4*(y/4)**2*z,{'x':3.1,'y':-3.2,'z':5}) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...

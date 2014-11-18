@@ -201,6 +201,9 @@ After a successful build in ``Debug`` mode, it is good practice to run the test 
 
 A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be reported as a bug.
 
+.. note:: Some of the performance tests will create extremely large series. It is advisable, at least initially, to run each performance test separately
+   while monitoring the memory usage in order to avoid heavy thrashing.
+
 Installation
 ^^^^^^^^^^^^
 

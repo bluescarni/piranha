@@ -19,7 +19,7 @@
 
 from __future__ import absolute_import as _ai
 
-#: List of Pyranha modules.
+#: List of Pyranha submodules.
 __all__ = ['celmec', 'math', 'test', 'types']
 
 import threading as _thr
