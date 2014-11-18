@@ -43,6 +43,7 @@
 #include "../src/real.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "bp_object.hpp"
 #include "exceptions.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
@@ -115,7 +116,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_type_generator<piranha::rational>("rational");
 	pyranha::expose_type_generator<piranha::real>("real");
 	pyranha::expose_type_generator<piranha::k_monomial>("k_monomial");
+	pyranha::expose_type_generator<pyranha::bp_object>("object");
 	// Arithmetic converters.
+	pyranha::bp_object_converter bpo_c;
 	pyranha::integer_converter i_c;
 	pyranha::rational_converter ra_c;
 	pyranha::real_converter re_c;
@@ -173,4 +176,5 @@ bp::def("_cos",&piranha::math::cos<arg>)
 #undef PYRANHA_EXPOSE_SIN_COS
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
+
 }

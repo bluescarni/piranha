@@ -27,6 +27,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
+#include "bp_object.hpp"
 #include "expose_polynomials.hpp"
 #include "expose_utils.hpp"
 #include "type_system.hpp"
@@ -38,28 +39,42 @@ DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
 
 void expose_polynomials()
 {
-	// Descriptor for polynomial exposition.
-	struct poly_desc
+//	// Descriptor for polynomial exposition.
+//	struct poly_desc
+//	{
+//		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
+//			std::tuple<long double,signed char>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
+//			std::tuple<piranha::integer,signed char>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+//			std::tuple<piranha::rational,signed char>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+//			std::tuple<piranha::real,signed char>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
+//		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+//		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
+//		using eval_types = interop_types;
+//		using subs_types = interop_types;
+//		// For now, we have only degrees computed as integers.
+//		using degree_truncation_types = std::tuple<piranha::integer>;
+//		// Need to refer to these to silence a warning in GCC.
+//		interop_types		it;
+//		pow_types		pt;
+//		eval_types		et;
+//		subs_types		st;
+//		degree_truncation_types	dtt;
+//	};
+//	series_exposer<piranha::polynomial,poly_desc> poly_exposer;
+	struct poly_desc2
 	{
-		using params = std::tuple<std::tuple<double,signed char>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
-			std::tuple<long double,signed char>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::integer,signed char>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::rational,signed char>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::real,signed char>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
-		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-		using pow_types = std::tuple<double,piranha::integer,piranha::real>;
-		using eval_types = interop_types;
-		using subs_types = interop_types;
-		// For now, we have only degrees computed as integers.
-		using degree_truncation_types = std::tuple<piranha::integer>;
-		// Need to refer to these to silence a warning in GCC.
-		interop_types		it;
-		pow_types		pt;
-		eval_types		et;
-		subs_types		st;
-		degree_truncation_types	dtt;
+		using params = std::tuple<std::tuple<bp_object,piranha::kronecker_monomial<>>>;
+		using interop_types = std::tuple<bp_object>;
+		interop_types it;
 	};
-	pyranha::series_exposer<piranha::polynomial,poly_desc> poly_exposer;
+	series_exposer<piranha::polynomial,poly_desc2> poly_exposer2;
+	struct poly_desc3
+	{
+		using params = std::tuple<std::tuple<piranha::integer,piranha::kronecker_monomial<>>>;
+		using interop_types = std::tuple<piranha::integer>;
+		interop_types it;
+	};
+	series_exposer<piranha::polynomial,poly_desc3> poly_exposer3;
 }
 
 }

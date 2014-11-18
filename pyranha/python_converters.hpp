@@ -41,6 +41,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
+#include "bp_object.hpp"
 
 // NOTE: useful resources for python converters and C API:
 // - http://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters
@@ -172,7 +173,7 @@ struct real_converter
 			bp::object str(boost::lexical_cast<std::string>(r));
 			try {
 				bp::object mpmath = bp::import("mpmath");
-				bp::object mpf = mpmath.attr("mpf");
+				bp::object mpf = mpmath.attr("mpff");
 				return bp::incref(mpf(str).ptr());
 			} catch (...) {
 				piranha_throw(std::runtime_error,"could not convert real number to mpf object - please check the installation of mpmath");
@@ -245,6 +246,37 @@ struct real_converter
 		}
 		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<piranha::real> *>(data)->storage.bytes;
 		::new (storage) piranha::real(std::string(start,s),prec);
+		data->convertible = storage;
+	}
+};
+
+struct bp_object_converter
+{
+	bp_object_converter()
+	{
+		bp::to_python_converter<bp_object,to_python>();
+		bp::converter::registry::push_back(&convertible,&construct,bp::type_id<bp_object>());
+	}
+	struct to_python
+	{
+		static ::PyObject *convert(const bp_object &o)
+		{
+			return o.ptr();
+		}
+	};
+	static void *convertible(::PyObject *obj_ptr)
+	{
+		return obj_ptr;
+	}
+	static void construct(::PyObject *obj_ptr, bp::converter::rvalue_from_python_stage1_data *data)
+	{
+		// NOTE: here we cannot construct directly from string, as we need to query the precision.
+		piranha_assert(obj_ptr);
+		// NOTE: here the handle is from borrowed because we are not responsible for the generation of obj_ptr.
+		bp::handle<> obj_handle(bp::borrowed(obj_ptr));
+		bp::object obj(obj_handle);
+		void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<bp_object> *>(data)->storage.bytes;
+		::new (storage) bp_object(obj);
 		data->convertible = storage;
 	}
 };

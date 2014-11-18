@@ -437,11 +437,11 @@ class series_exposer
 			return piranha::math::integrate(s,name);
 		}
 		template <typename S>
-		static void expose_integrate(bp::class_<S> &series_class,
+		static void expose_integrate(bp::class_<S> &/*series_class*/,
 			typename std::enable_if<piranha::is_integrable<S>::value>::type * = nullptr)
 		{
-			series_class.def("integrate",&S::integrate);
-			bp::def("_integrate",integrate_wrapper<S>);
+			//series_class.def("integrate",&S::integrate);
+			//bp::def("_integrate",integrate_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &,
@@ -798,8 +798,6 @@ class series_exposer
 				auto series_class = expose_class<s_type>();
 				// Add the _is_series tag.
 				series_class.attr("_is_series") = true;
-				// Constructor from string, if available.
-				expose_ctor<const std::string &>(series_class);
 				// Copy constructor.
 				series_class.def(bp::init<const s_type &>());
 				// Shallow and deep copy.
@@ -859,6 +857,8 @@ class series_exposer
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 				// Pickle support.
 				series_class.def_pickle(series_pickle_suite<s_type>());
+				// Constructor from string, if available.
+				expose_ctor<const std::string &>(series_class);
 			}
 		};
 	public:

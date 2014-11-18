@@ -61,4 +61,6 @@ k_monomial = _t.k_monomial
 polynomial = _t.polynomial
 
 #:
-poisson_series = _t.poisson_series
+#poisson_series = _t.poisson_series
+
+object = _t.object
