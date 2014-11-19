@@ -212,7 +212,9 @@ struct real_converter
 	{
 		// NOTE: here we cannot construct directly from string, as we need to query the precision.
 		piranha_assert(obj_ptr);
-		// NOTE: here the handle is from borrowed because we are not responsible for the generation of obj_ptr.
+		// NOTE: here the handle is from borrowed because we are not responsible for the generation of obj_ptr:
+		// borrowed will increase the refcount of obj_ptr, so that, when obj is destroyed, the refcount
+		// for obj_ptr goes back to the original value instead of decreasing by 1.
 		bp::handle<> obj_handle(bp::borrowed(obj_ptr));
 		bp::object obj(obj_handle);
 		const ::mpfr_prec_t prec = boost::numeric_cast< ::mpfr_prec_t>(
