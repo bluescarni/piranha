@@ -39,8 +39,8 @@ A couple of things to note:
   library is necessary;
 * Piranha itself is header-only, so there is no ``-lpiranha`` to link to.
 
-.. note:: The development version of Piranha adds serialization capabilities, and requires the corresponding
-   Boost library to be linked in with ``-lboost_serialization`` if such capablities are used.
+.. note:: The development version of Piranha adds serialization capabilities, and requires the Boost Serialization
+   library to be linked in with ``-lboost_serialization`` if such capablities are used.
 
 If you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
 the Piranha headers are located via the ``-I`` switch. E.g.,

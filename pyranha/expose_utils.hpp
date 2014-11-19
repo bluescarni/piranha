@@ -38,6 +38,7 @@
 #include <boost/python/stl_iterator.hpp>
 #include <boost/python/tuple.hpp>
 #include <cstddef>
+#include <fstream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -787,6 +788,30 @@ class series_exposer
 			}
 			return retval;
 		}
+		// C++ text serialization: support for writing to / reading from Boost.Serialization text archives
+		// stored in files from Python.
+		template <typename S>
+		static void cpp_save_text(const S &s, const std::string &filename)
+		{
+			std::ofstream fs(filename);
+			boost::archive::text_oarchive oa(fs);
+			oa << s;
+		}
+		template <typename S>
+		static S cpp_load_text(const std::string &filename)
+		{
+			S retval;
+			std::ifstream fs(filename);
+			boost::archive::text_iarchive ia(fs);
+			ia >> retval;
+			return retval;
+		}
+		template <typename S>
+		static void expose_cpp_text_serialization(bp::class_<S> &series_class)
+		{
+			series_class.def("cpp_save_text",cpp_save_text<S>).staticmethod("cpp_save_text");
+			series_class.def("cpp_load_text",cpp_load_text<S>).staticmethod("cpp_load_text");
+		}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -862,6 +887,8 @@ class series_exposer
 				series_class.add_property("symbol_set",symbol_set_wrapper<s_type>);
 				// Pickle support.
 				series_class.def_pickle(series_pickle_suite<s_type>());
+				// Serialization to/from C++ text archives.
+				expose_cpp_text_serialization(series_class);
 			}
 		};
 	public:

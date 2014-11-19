@@ -20,7 +20,7 @@ The ``integer`` type
 
 Piranha's ``integer`` type is used to represent signed integers of arbitrary size (that is, the range
 of the type is limited only by the available memory). The type is based on the ``mpz_t`` type from the
-`GMP library <http://www.gmplib.org/>`__. As an extra optimisation, for small numbers ``integer`` avoids
+`GMP library <http://www.gmplib.org/>`__. As an optimisation, for small numbers ``integer`` avoids
 using dynamic memory allocation and can thus have better performance than a straightforward ``mpz_t``
 wrapper.
 

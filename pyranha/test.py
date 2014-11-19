@@ -413,7 +413,7 @@ class serialization_test_case(_ut.TestCase):
 
 	"""
 	def runTest(self):
-		import pickle, random
+		import pickle, random, tempfile, os
 		from .types import polynomial, short, rational, poisson_series
 		from .math import sin, cos
 		# Set the seed for deterministic output.
@@ -433,6 +433,15 @@ class serialization_test_case(_ut.TestCase):
 				res += tmp
 			str_rep = pickle.dumps(res)
 			self.assertEqual(res,pickle.loads(str_rep))
+			# Check the cpp text serialization as well.
+			f = tempfile.NamedTemporaryFile(delete=False)
+			f.close()
+			try:
+				pt.cpp_save_text(res,f.name)
+				self.assertEqual(pt.cpp_load_text(f.name),res)
+			finally:
+				# Remove the temp file in any case.
+				os.remove(f.name)
 		# Poisson series.
 		pt = poisson_series(polynomial(rational,short))()
 		x,y,z,a,b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
@@ -451,6 +460,14 @@ class serialization_test_case(_ut.TestCase):
 				res += tmp
 			str_rep = pickle.dumps(res)
 			self.assertEqual(res,pickle.loads(str_rep))
+			# cpp serialization.
+			f = tempfile.NamedTemporaryFile(delete=False)
+			f.close()
+			try:
+				pt.cpp_save_text(res,f.name)
+				self.assertEqual(pt.cpp_load_text(f.name),res)
+			finally:
+				os.remove(f.name)
 
 class truncate_degree_test_case(_ut.TestCase):
 	"""Test case for the degree-based truncation of series.
