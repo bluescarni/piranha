@@ -102,7 +102,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
  * piranha::series_multiplier (whose behaviour can be specialised to provide fast multiplication capabilities).
  * Division by scalar types is also supported.
  * 
- * Support for comparison with series and scalar type is also provided.
+ * Support for comparison with series and scalar types is also provided.
  * 
  * ## Type requirements ##
  * 
