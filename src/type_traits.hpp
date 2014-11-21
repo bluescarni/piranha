@@ -831,8 +831,8 @@ const bool is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type
 template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT> \
 class has_typedef_##type_name: piranha::detail::sfinae_types \
 { \
-		template <typename T> \
-		static auto test(const T &) -> decltype(std::declval<typename T::type_name>(),void(),yes()); \
+		template <typename T_> \
+		static auto test(const T_ &) -> decltype(std::declval<typename T_::type_name>(),void(),yes()); \
 		static no test(...); \
 	public: \
 		static const bool value = std::is_same<yes,decltype(test(std::declval<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>()))>::value; \
