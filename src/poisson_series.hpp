@@ -74,6 +74,9 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// TODO:
+// - make this more general, make the key type selectable;
+// - once the above is done, remeber to fix the rebind alias.
 template <typename Cf>
 class poisson_series:
 	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
@@ -257,6 +260,9 @@ class poisson_series:
 		}
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		/// Series rebind alias.
+		template <typename Cf2>
+		using rebind = poisson_series<Cf2>;
 		/// Defaulted default constructor.
 		/**
 		 * Will construct a Poisson series with zero terms.

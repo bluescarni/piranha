@@ -698,3 +698,14 @@ BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
 	}
 	BOOST_CHECK_EQUAL(z,tmp);
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_rebind_test)
+{
+	typedef polynomial<integer,long> stype;
+	BOOST_CHECK((series_is_rebindable<stype,double>::value));
+	BOOST_CHECK((series_is_rebindable<stype,rational>::value));
+	BOOST_CHECK((series_is_rebindable<stype,float>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,float>,polynomial<float,long>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,rational>,polynomial<rational,long>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,long double>,polynomial<long double,long>>::value));
+}

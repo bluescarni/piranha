@@ -608,3 +608,14 @@ BOOST_AUTO_TEST_CASE(poisson_series_serialization_test)
 	BOOST_CHECK_THROW(ia >> tmp,std::invalid_argument);
 	}
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
+{
+	typedef poisson_series<polynomial<integer,long>> stype;
+	BOOST_CHECK((series_is_rebindable<stype,double>::value));
+	BOOST_CHECK((series_is_rebindable<stype,rational>::value));
+	BOOST_CHECK((series_is_rebindable<stype,float>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<float,long>>,poisson_series<polynomial<float,long>>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<rational,long>>,poisson_series<polynomial<rational,long>>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<long double,long>>,poisson_series<polynomial<long double,long>>>::value));
+}

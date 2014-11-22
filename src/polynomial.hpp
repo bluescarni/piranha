@@ -119,9 +119,12 @@ struct polynomial_tag {};
  * This class supports serialization if the underlying term type does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
- * This is useful to simplify the notation, and needs not to be done for lower level methods in keys.
+ */
+/* TODO:
+ * - here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
+ *   This is useful to simplify the notation, and needs not to be done for lower level methods in keys;
+ * - change the way the key is selected;
+ * - once the above is done, remember to fix the rebind alias.
  */
 template <typename Cf, typename Expo, typename S = std::integral_constant<std::size_t,0u>>
 class polynomial:
@@ -233,6 +236,9 @@ class polynomial:
 			std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()));
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		/// Series rebind alias.
+		template <typename Cf2>
+		using rebind = polynomial<Cf2,Expo,S>;
 		/// Defaulted default constructor.
 		/**
 		 * Will construct a polynomial with zero terms.
