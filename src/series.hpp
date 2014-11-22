@@ -2227,6 +2227,48 @@ class is_series
 template <typename T>
 const bool is_series<T>::value;
 
+/// Check if a series can be rebound.
+/**
+ * \note
+ * This class requires \p T to satisfy piranha::is_series and \p Cf to satisfy piranha::is_cf.
+ *
+ * Rebinding a series type \p T means to change its coefficient type to \p Cf. The ability of a series
+ * to be rebound is signalled by the presence of a <tt>rebind</tt> template alias defined within the series class.
+ *
+ * A series is considered rebindable if all the following conditions hold:
+ * - there exists a template alias <tt>rebind</tt> in the series type \p T,
+ * - <tt>T::rebind<Cf></tt> is a series types,
+ * - the coefficient type of <tt>T::rebind<Cf></tt> is \p Cf.
+ *
+ * The decayed types of \p T and \p Cf are considered in this type trait.
+ */
+template <typename T, typename Cf>
+class series_is_rebindable: detail::sfinae_types
+{
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+		using Td = typename std::decay<T>::type;
+		using Cfd = typename std::decay<Cf>::type;
+		static_assert(is_series<Td>::value,"This type trait can only be used on series types.");
+		static_assert(is_cf<Cfd>::value,"This type trait requires Cf to be a coefficient type.");
+		template <typename T1>
+		using rebound_type = typename T1::template rebind<Cfd>;
+		template <typename T1, typename std::enable_if<is_series<rebound_type<T1>>::value &&
+			std::is_same<typename rebound_type<T1>::term_type::cf_type,Cfd>::value,int>::type = 0>
+		static rebound_type<T1> test(const T1 &);
+		static no test(...);
+#endif
+	public:
+		/// Value of the type trait.
+		static const bool value = !std::is_same<no,decltype(test(std::declval<Td>()))>::value;
+};
+
+/// Rebind series.
+/**
+ * Utility alias to rebind series \p T to coefficient \p Cf. See piranha::series_is_rebindable for an explanation.
+ */
+template <typename T, typename Cf>
+using series_rebind = typename std::decay<T>::type::template rebind<typename std::decay<Cf>::type>;
+
 }
 
 #endif

@@ -55,6 +55,8 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		template <typename Cf2>
+		using rebind = g_series_type<Cf2,Expo>;
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -92,6 +94,8 @@ class g_series_type3: public series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>>
 		typedef series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		template <typename Cf2>
+		using rebind = g_series_type3<Cf2,Key>;
 		g_series_type3() = default;
 		g_series_type3(const g_series_type3 &) = default;
 		g_series_type3(g_series_type3 &&) = default;
@@ -380,4 +384,75 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 	BOOST_CHECK_EQUAL(p_type1{}.evaluate<double>({{"foo",4.},{"bar",7}}),0);
 	BOOST_CHECK_EQUAL(math::evaluate<int>(p_type1{},{{"foo",4.}}),0);
 	BOOST_CHECK_EQUAL(math::evaluate<double>(p_type1{},{{"foo",4.},{"bar",7}}),0);
+}
+
+template <typename Expo>
+class g_series_type_nr: public series<polynomial_term<float,Expo>,g_series_type_nr<Expo>>
+{
+		typedef series<polynomial_term<float,Expo>,g_series_type_nr<Expo>> base;
+	public:
+		g_series_type_nr() = default;
+		g_series_type_nr(const g_series_type_nr &) = default;
+		g_series_type_nr(g_series_type_nr &&) = default;
+		g_series_type_nr &operator=(const g_series_type_nr &) = default;
+		g_series_type_nr &operator=(g_series_type_nr &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type_nr,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type_nr,base)
+};
+
+template <typename Expo>
+class g_series_type_nr2: public series<polynomial_term<float,Expo>,g_series_type_nr2<Expo>>
+{
+		typedef series<polynomial_term<float,Expo>,g_series_type_nr2<Expo>> base;
+	public:
+		template <typename Expo2>
+		using rebind = g_series_type_nr2<Expo2>;
+		g_series_type_nr2() = default;
+		g_series_type_nr2(const g_series_type_nr2 &) = default;
+		g_series_type_nr2(g_series_type_nr2 &&) = default;
+		g_series_type_nr2 &operator=(const g_series_type_nr2 &) = default;
+		g_series_type_nr2 &operator=(g_series_type_nr2 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type_nr2,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type_nr2,base)
+};
+
+template <typename Expo>
+class g_series_type_nr3: public series<polynomial_term<float,Expo>,g_series_type_nr3<Expo>>
+{
+		typedef series<polynomial_term<float,Expo>,g_series_type_nr3<Expo>> base;
+	public:
+		template <typename Expo2>
+		using rebind = void;
+		g_series_type_nr3() = default;
+		g_series_type_nr3(const g_series_type_nr3 &) = default;
+		g_series_type_nr3(g_series_type_nr3 &&) = default;
+		g_series_type_nr3 &operator=(const g_series_type_nr3 &) = default;
+		g_series_type_nr3 &operator=(g_series_type_nr3 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type_nr3,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type_nr3,base)
+};
+
+BOOST_AUTO_TEST_CASE(series_series_is_rebindable_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK((series_is_rebindable<p_type1,int>::value));
+	BOOST_CHECK((std::is_same<series_rebind<p_type1,int>,g_series_type<int,int>>::value));
+	BOOST_CHECK((series_is_rebindable<p_type1,rational>::value));
+	BOOST_CHECK((std::is_same<series_rebind<p_type1,rational>,p_type1>::value));
+	BOOST_CHECK((std::is_same<series_rebind<p_type1 &,rational const>,p_type1>::value));
+	BOOST_CHECK((series_is_rebindable<p_type1,p_type1>::value));
+	BOOST_CHECK((series_is_rebindable<p_type1 &,p_type1>::value));
+	BOOST_CHECK((series_is_rebindable<p_type1 &,const p_type1>::value));
+	BOOST_CHECK((std::is_same<series_rebind<p_type1,p_type1>,g_series_type<p_type1,int>>::value));
+	typedef g_series_type_nr<int> p_type_nr;
+	BOOST_CHECK((!series_is_rebindable<p_type_nr,unsigned>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type_nr,integer>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type_nr &,unsigned const>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type_nr &&,const integer &>::value));
+	typedef g_series_type_nr2<int> p_type_nr2;
+	BOOST_CHECK((!series_is_rebindable<p_type_nr2,unsigned>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type_nr2,integer>::value));
+	typedef g_series_type_nr3<int> p_type_nr3;
+	BOOST_CHECK((!series_is_rebindable<p_type_nr3,unsigned>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type_nr3,integer>::value));
 }
