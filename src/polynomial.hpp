@@ -46,7 +46,6 @@
 #include "debug_access.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
-#include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "kronecker_array.hpp"
