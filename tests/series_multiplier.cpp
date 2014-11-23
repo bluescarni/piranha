@@ -31,7 +31,6 @@
 #include <type_traits>
 
 #include "../src/debug_access.hpp"
-#include "../src/echelon_size.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
