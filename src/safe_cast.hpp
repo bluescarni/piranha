@@ -206,11 +206,11 @@ using safe_cast_enabler = typename std::enable_if<
  * an error will be raised.
  *
  * The actual implementation of this function is in the piranha::safe_cast_impl functor's
- * call operator. The decayed type of \p To is passed as first template parameter of
+ * call operator. The decay type of \p To is passed as first template parameter of
  * piranha::safe_cast_impl, whereas \p From is passed as-is.
  *
  * Any specialisation of piranha::safe_cast_impl must have a call operator returning
- * an instance of the decayed type of \p To, otherwise this function will be disabled.
+ * an instance of the decay type of \p To, otherwise this function will be disabled.
  *
  * Any exception thrown by the implementation will be caught and an \p std::invalid_argument exception
  * will be raised instead.
@@ -235,7 +235,7 @@ inline To safe_cast(const From &x)
 
 /// Type trait to detect piranha::safe_cast().
 /**
- * The type trait will be \p true if piranha::safe_cast() can be called with the decayed types of \p To and \p From
+ * The type trait will be \p true if piranha::safe_cast() can be called with the decay types of \p To and \p From
  * as template arguments, \p false otherwise.
  */
 template <typename To, typename From>

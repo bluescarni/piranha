@@ -66,19 +66,19 @@ using convert_enabler = typename std::enable_if<
 
 /// Generic conversion function.
 /**
- * This function is meant to convert an instance of type \p From to an instance of the decayed
+ * This function is meant to convert an instance of type \p From to an instance of the decay
  * type of \p To. It is intended to be a user-extensible replacement for \p static_cast.
  *
  * The actual implementation of this function is in the piranha::convert_to_impl functor's
- * call operator. The decayed type of \p To is passed as first template parameter of
+ * call operator. The decay type of \p To is passed as first template parameter of
  * piranha::convert_to_impl, whereas \p From is passed as-is.
  *
  * Any specialisation of piranha::convert_to_impl must have a call operator returning
- * an instance of the decayed type of \p To, otherwise this function will be disabled.
+ * an instance of the decay type of \p To, otherwise this function will be disabled.
  *
  * @param[in] x conversion argument.
  *
- * @returns an instance of the decayed type of \p To converted from \p x.
+ * @returns an instance of the decay type of \p To converted from \p x.
  *
  * @throws unspecified any exception thrown by the call operator of the piranha::convert_to_impl functor.
  */
@@ -90,7 +90,7 @@ inline To convert_to(const From &x)
 
 /// Type trait to detect piranha::convert_to().
 /**
- * The type trait will be \p true if piranha::convert_to() can be called with the decayed types of \p To and \p From
+ * The type trait will be \p true if piranha::convert_to() can be called with the decay types of \p To and \p From
  * as template arguments, \p false otherwise.
  */
 template <typename To, typename From>

@@ -1070,7 +1070,7 @@ struct is_iterator_impl<T,typename std::enable_if</*std::is_same<typename std::i
 
 /// Iterator type trait.
 /**
- * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an iterator (as defined by the C++ standard),
+ * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of an iterator (as defined by the C++ standard),
  * \p false otherwise.
  */
 template <typename T>
@@ -1135,7 +1135,7 @@ struct is_input_iterator_impl<T,typename std::enable_if<is_iterator_impl<T>::val
 
 /// Input iterator type trait.
 /**
- * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of an input iterator (as defined by the C++ standard),
+ * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of an input iterator (as defined by the C++ standard),
  * \p false otherwise.
  */
 template <typename T>
@@ -1173,7 +1173,7 @@ struct is_forward_iterator_impl<T,typename std::enable_if<is_input_iterator_impl
 
 /// Forward iterator type trait.
 /**
- * This type trait will be \p true if the decayed type of \p T satisfies the compile-time requirements of a forward iterator (as defined by the C++ standard),
+ * This type trait will be \p true if the decay type of \p T satisfies the compile-time requirements of a forward iterator (as defined by the C++ standard),
  * \p false otherwise.
  */
 template <typename T>

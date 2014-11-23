@@ -1008,7 +1008,7 @@ class series: series_binary_operators, detail::series_tag
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if the decayed type of \p T is different from piranha::series and
+		 * This constructor is enabled only if the decay type of \p T is different from piranha::series and
 		 * the algorithm outlined below is supported by the involved types.
 		 *
 		 * The generic construction algorithm works as follows:
@@ -2240,7 +2240,7 @@ const bool is_series<T>::value;
  * - <tt>T::rebind<Cf></tt> is a series types,
  * - the coefficient type of <tt>T::rebind<Cf></tt> is \p Cf.
  *
- * The decayed types of \p T and \p Cf are considered in this type trait.
+ * The decay types of \p T and \p Cf are considered in this type trait.
  */
 template <typename T, typename Cf>
 class series_is_rebindable: detail::sfinae_types
