@@ -279,6 +279,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = S1;
+	static const unsigned value = 0u;
 };
 
 // Case 1:
@@ -291,6 +292,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = S1;
+	static const unsigned value = 1u;
 };
 
 // Case 2:
@@ -303,6 +305,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = S2;
+	static const unsigned value = 2u;
 };
 
 // Case 3:
@@ -317,6 +320,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = series_rebind<S1,bso_cf_op_t<S1,S2>>;
+	static const unsigned value = 3u;
 };
 
 // Case 4:
@@ -329,6 +333,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = S1;
+	static const unsigned value = 4u;
 };
 
 // Case 5:
@@ -343,6 +348,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = series_rebind<S1,bsom_cf_op_t<S1,S2>>;
+	static const unsigned value = 5u;
 };
 
 // Case 6 (symmetric of 4):
@@ -355,6 +361,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = S2;
+	static const unsigned value = 6u;
 };
 
 // Case 7 (symmetric of 5):
@@ -369,9 +376,62 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 	>::type>
 {
 	using type = series_rebind<S2,bsom_cf_op_t<S2,S1>>;
+	static const unsigned value = 7u;
 };
 
 }
+
+class series_operators
+{
+		// A couple of handy aliases.
+		template <typename T, typename U>
+		using bso_type = detail::binary_series_op_return_type<T,U>;
+		template <typename T, typename U>
+		using series_common_type = typename bso_type<T,U>::type;
+		// Case 0.
+		// NOTE: this case has not special algorithmic requirements, the base is_container_element
+		// requirements already cover everything.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_add(const T &x, const U &y)
+		{
+			constexpr bool Sign = true;
+			// This is the same as T and U.
+			using ret_type = series_common_type<T,U>;
+			static_assert(std::is_same<T,ret_type>::value,"Invalid type.");
+			static_assert(std::is_same<U,ret_type>::value,"Invalid type.");
+			// This is always possible to do, a series is always copy-constructible.
+			ret_type retval(x);
+			if (likely(x.m_symbol_set == y.m_symbol_set)) {
+				retval.template merge_terms<Sign>(y);
+			} else {
+				// Let's deal with the first series.
+				auto merge = x.m_symbol_set.merge(y.m_symbol_set);
+				if (merge != x.m_symbol_set) {
+					// This is a move assignment, always possible.
+					retval = x.merge_args(merge);
+				}
+				// Second series.
+				if (merge != y.m_symbol_set) {
+					// Another move assignment, always possible.
+					auto y_copy = y.merge_args(merge);
+					retval.template merge_terms<Sign>(std::move(y_copy));
+				} else {
+					retval.template merge_terms<Sign>(y);
+				}
+			}
+			return retval;
+		}
+		template <typename T, typename U>
+		using binary_add_enabler = typename std::enable_if<detail::true_tt<
+			decltype(dispatch_binary_add(std::declval<const T &>(),std::declval<const U &>()))
+			>::value,int>::type;
+	public:
+		template <typename T, typename U, binary_add_enabler<T,U> = 0>
+		friend series_common_type<T,U> binary_add(const T &x, const U &y)
+		{
+			return dispatch_binary_add(x,y);
+		}
+};
 
 /// Series class.
 /**
@@ -412,7 +472,7 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
  * it cannot become incompatible any more if it is already in series).
  */
 template <typename Term, typename Derived>
-class series: series_binary_operators, detail::series_tag
+class series: series_binary_operators, detail::series_tag, series_operators
 {
 		PIRANHA_TT_CHECK(is_term,Term);
 	public:
@@ -430,6 +490,8 @@ class series: series_binary_operators, detail::series_tag
 		friend class series_multiplier;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
+		// Make friend with the operators class.
+		friend class series_operators;
 		// Partial need access to the custom derivatives.
 		template <typename, typename>
 		friend struct math::partial_impl;

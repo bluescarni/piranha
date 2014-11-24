@@ -526,3 +526,10 @@ BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
 	// Same coefficients, amibguity in series type.
 	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr<int>,g_series_type<float,int>>>::value));
 }
+
+BOOST_AUTO_TEST_CASE(series_binary_add_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK((std::is_same<p_type1,decltype(binary_add(p_type1{},p_type1{}))>::value));
+	BOOST_CHECK(binary_add(p_type1{},p_type1{}).empty());
+}
