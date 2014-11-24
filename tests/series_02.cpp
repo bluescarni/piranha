@@ -109,7 +109,7 @@ class g_series_type3: public series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>>
 struct mock_cf
 {
 	mock_cf();
-	mock_cf(const int &);
+	explicit mock_cf(const int &);
 	mock_cf(const mock_cf &);
 	mock_cf(mock_cf &&) noexcept;
 	mock_cf &operator=(const mock_cf &);
@@ -376,7 +376,8 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 		math::evaluate(x + math::pow(2 * y,3),dict_type3{{"x",1.234},{"y",-5.678},{"z",0.0001}}));
 	BOOST_CHECK((std::is_same<decltype(p_type1{}.evaluate(dict_type3{})),double>::value));
 	BOOST_CHECK((!is_evaluable<g_series_type3<double,mock_key>,double>::value));
-	BOOST_CHECK((is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
+	// NOTE: this used to be true before we changed the ctor from int of mock_cf to explicit.
+	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,monomial<int>>,double>::value));
 	BOOST_CHECK((!is_evaluable<g_series_type3<mock_cf,mock_key>,double>::value));
 	BOOST_CHECK((is_evaluable<g_series_type3<double,monomial<int>>,double>::value));
 	// Check the syntax from initializer list with explicit template parameter.
@@ -401,9 +402,9 @@ class g_series_type_nr: public series<polynomial_term<float,Expo>,g_series_type_
 };
 
 template <typename Expo>
-class g_series_type_nr2: public series<polynomial_term<float,Expo>,g_series_type_nr2<Expo>>
+class g_series_type_nr2: public series<polynomial_term<short,Expo>,g_series_type_nr2<Expo>>
 {
-		typedef series<polynomial_term<float,Expo>,g_series_type_nr2<Expo>> base;
+		typedef series<polynomial_term<short,Expo>,g_series_type_nr2<Expo>> base;
 	public:
 		template <typename Expo2>
 		using rebind = g_series_type_nr2<Expo2>;
@@ -455,4 +456,70 @@ BOOST_AUTO_TEST_CASE(series_series_is_rebindable_test)
 	typedef g_series_type_nr3<int> p_type_nr3;
 	BOOST_CHECK((!series_is_rebindable<p_type_nr3,unsigned>::value));
 	BOOST_CHECK((!series_is_rebindable<p_type_nr3,integer>::value));
+}
+
+BOOST_AUTO_TEST_CASE(series_series_recursion_index_test)
+{
+	BOOST_CHECK_EQUAL(series_recursion_index<int>::value,0u);
+	BOOST_CHECK_EQUAL(series_recursion_index<double>::value,0u);
+	BOOST_CHECK_EQUAL(series_recursion_index<float>::value,0u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<rational,int>>::value),1u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<float,int>>::value),1u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<double,int>>::value),1u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<double,int>,int>>::value),2u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<double,int>,long>>::value),2u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<g_series_type<double,int>,int>,long>>::value),3u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<g_series_type<rational,int>,int>,long>>::value),3u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<g_series_type<rational,int>,int>,long> &>::value),3u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<g_series_type<rational,int>,int>,long> const>::value),3u);
+	BOOST_CHECK_EQUAL((series_recursion_index<g_series_type<g_series_type<g_series_type<rational,int>,int>,long> const &>::value),3u);
+}
+
+PIRANHA_DECLARE_HAS_TYPEDEF(type);
+
+BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
+{
+	// Check missing type in case both operands are not series.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<int,int>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<int,double>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<float,double>>::value));
+	// Case 0.
+	// NOTE: this cannot fail in any way as we require coefficients to be multipliable in is_cf.
+	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK((std::is_same<p_type1,binary_series_op_return_type<p_type1,p_type1>::type>::value));
+	// Case 1 and 2.
+	typedef g_series_type<double,int> p_type2;
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<p_type2,p_type1>::type>::value));
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<p_type1,p_type2>::type>::value));
+	// mock_cf supports only multiplication vs mock_cf.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<double,int>,g_series_type<mock_cf,int>>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<mock_cf,int>,g_series_type<double,int>>>::value));
+	// Case 3.
+	typedef g_series_type<short,int> p_type3;
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,binary_series_op_return_type<p_type3,p_type3>::type>::value));
+	typedef g_series_type<char,int> p_type4;
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,binary_series_op_return_type<p_type3,p_type4>::type>::value));
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,binary_series_op_return_type<p_type4,p_type3>::type>::value));
+	// Wrong rebind implementations.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr2<int>,g_series_type<char,int>>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<char,int>,g_series_type_nr2<int>>>::value));
+	// Case 4 and 6.
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<p_type2,int>::type>::value));
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<int,p_type2>::type>::value));
+	// mock_cf does not support multiplication with int.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<mock_cf,int>,int>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<int,g_series_type<mock_cf,int>>>::value));
+	// Case 5 and 7.
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<p_type3,double>::type>::value));
+	BOOST_CHECK((std::is_same<p_type2,binary_series_op_return_type<double,p_type3>::type>::value));
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,binary_series_op_return_type<p_type4,short>::type>::value));
+	BOOST_CHECK((std::is_same<g_series_type<int,int>,binary_series_op_return_type<short,p_type4>::type>::value));
+	// These need rebinding, but rebind is not supported.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr<int>,double>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<double,g_series_type_nr<int>>>::value));
+	// Wrong implementation of rebind.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr2<char>,g_series_type<char,char>>>::value));
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type<char,char>,g_series_type_nr2<char>>>::value));
+	// Same coefficients, amibguity in series type.
+	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr<int>,g_series_type<float,int>>>::value));
 }

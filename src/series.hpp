@@ -27,6 +27,7 @@
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <iostream>
@@ -2262,12 +2263,239 @@ class series_is_rebindable: detail::sfinae_types
 		static const bool value = !std::is_same<no,decltype(test(std::declval<Td>()))>::value;
 };
 
+template <typename T, typename Cf>
+const bool series_is_rebindable<T,Cf>::value;
+
+namespace detail
+{
+
+// Use the usual trick to disable the type altogether if the series
+// does not satisfy the is_rebindable type trait.
+template <typename T, typename Cf, typename = void>
+struct series_rebind_
+{};
+
+// The real typedef.
+template <typename T, typename Cf>
+struct series_rebind_<T,Cf,typename std::enable_if<series_is_rebindable<T,Cf>::value>::type>
+{
+	using Td = typename std::decay<T>::type;
+	using Cfd = typename std::decay<Cf>::type;
+	using type = typename Td::template rebind<Cfd>;
+};
+
+}
+
 /// Rebind series.
 /**
  * Utility alias to rebind series \p T to coefficient \p Cf. See piranha::series_is_rebindable for an explanation.
+ * In addition to being a shortcut to the \p rebind alias in \p T (if present), the implementation will
+ * also check that \p T and \p Cf satisfy the piranha::series_is_rebindable type traits.
  */
 template <typename T, typename Cf>
-using series_rebind = typename std::decay<T>::type::template rebind<typename std::decay<Cf>::type>;
+using series_rebind = typename detail::series_rebind_<T,Cf>::type;
+
+/// Series recursion index.
+/**
+ * The recursion index measures how many times the coefficient of a series types is itself a series type.
+ * The algorithm works as follows:
+ * - if \p T is not a series type, the recursion index is 0,
+ * - else, the recursion index of \p T is the recursion index of its coefficient type plus one.
+ *
+ * The decay type of \p T is considered in this type trait.
+ */
+template <typename T, typename = void>
+class series_recursion_index
+{
+	public:
+		/// Value of the recursion index.
+		static const std::size_t value = 0u;
+};
+
+template <typename T, typename Enable>
+const std::size_t series_recursion_index<T,Enable>::value;
+
+template <typename T>
+class series_recursion_index<T,typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type>
+{
+		using cf_type = typename std::decay<T>::type::term_type::cf_type;
+		static_assert(series_recursion_index<cf_type>::value < std::numeric_limits<std::size_t>::max(),
+			"Overflow error.");
+	public:
+		static const std::size_t value = is_series<cf_type>::value ? series_recursion_index<cf_type>::value + 1u : 1u;
+};
+
+template <typename T>
+const std::size_t series_recursion_index<T,typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type>::value;
+
+// Some notes on this machinery:
+// - we use multiplication to determine the return type, but this will hold for add/sub and division as well. Maybe
+//   we should assert this somewhere;
+// - this is only for determining the type of the result, but it does not guarantee that we can actually compute it;
+//   for add/sub we need the terms to be insertable, for mult we need the series multiplier and for div we need divisibility.
+//   In general we should separate the algorithmic requirements from the determination of the type. Note that we still use
+//   operator* to determine the return type, but that's inevitable;
+// - the 2-level type definition, first from a type in a struct, then via a template alias, is due to the fact that
+//   we need the aliases to SFINAE-out in the metaprogramming below if the input types are not appropriate. Otherwise,
+//   the instantiations happening during substitution can lead to hard errors.
+
+// Alias for getting the cf type from a series, SFINAE friendly.
+template <typename S, typename = void>
+struct bso_cf_t_ {};
+
+template <typename S>
+struct bso_cf_t_<S,typename std::enable_if<is_series<S>::value>::type>
+{
+	using type = typename S::term_type::cf_type;
+};
+
+template <typename S>
+using bso_cf_t = typename bso_cf_t_<S>::type;
+
+// Coefficient type in a binary arithmetic operation between two series with the same recursion index. SFINAE friendly.
+template <typename S1, typename S2, typename = void>
+struct bso_cf_op_t_
+{};
+
+template <typename S1, typename S2>
+struct bso_cf_op_t_<S1,S2,typename std::enable_if<
+	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
+	is_multipliable<bso_cf_t<S1>,bso_cf_t<S2>>::value
+	>::type>
+{
+	using type = decltype(std::declval<const bso_cf_t<S1> &>() * std::declval<const bso_cf_t<S2> &>());
+};
+
+template <typename S1, typename S2>
+using bso_cf_op_t = typename bso_cf_op_t_<S1,S2>::type;
+
+// Coefficient type in a mixed binary arithmetic operation in which the first operand has recursion index
+// greater than the second. SFINAE friendly.
+template <typename S, typename T, typename = void>
+struct bsom_cf_op_t_ {};
+
+template <typename S, typename T>
+struct bsom_cf_op_t_<S,T,typename std::enable_if<(series_recursion_index<S>::value > series_recursion_index<T>::value) &&
+	is_multipliable<bso_cf_t<S>,T>::value>::type>
+{
+	using type = decltype(std::declval<const bso_cf_t<S> &>() * std::declval<const T &>());
+};
+
+template <typename S, typename T>
+using bsom_cf_op_t = typename bsom_cf_op_t_<S,T>::type;
+
+// Default case is empty for SFINAE.
+template <typename S1, typename S2, typename = void>
+struct binary_series_op_return_type
+{};
+
+// Case 0:
+// a. both are series with same recursion index,
+// b. the coefficients are the same and their multiplication results in the same coefficient,
+// c. the two series types are equal.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	// NOTE: in all these checks, every access to S1 and S2 should not incur in hard errors:
+	// - the series recursion index works on all types safely,
+	// - the various _t aliases are SFINAE friendly - if S1 or S2 are not series with the appropriate characteristics,
+	//   or the coefficients are not multipliable, etc., there should be a soft error.
+	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value &&
+	/*c*/ std::is_same<S1,S2>::value
+	>::type>
+{
+	using type = S1;
+};
+
+// Case 1:
+// a. both are series with same recursion index,
+// b. the coefficients are not the same and their multiplication results in the first coefficient.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
+	>::type>
+{
+	using type = S1;
+};
+
+// Case 2:
+// a. both are series with same recursion index,
+// b. the coefficients are not the same and their multiplication results in the second coefficient.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
+	>::type>
+{
+	using type = S2;
+};
+
+// Case 3:
+// a. both are series with same recursion index,
+// b. the coefficient multiplication results in something else than first or second cf,
+// c. both series are rebindable to the new coefficient, yielding the same series.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
+	/*b*/ !std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value &&
+	/*c*/ std::is_same<series_rebind<S1,bso_cf_op_t<S1,S2>>,series_rebind<S2,bso_cf_op_t<S1,S2>>>::value
+	>::type>
+{
+	using type = series_rebind<S1,bso_cf_op_t<S1,S2>>;
+};
+
+// Case 4:
+// a. the first operand has recursion index greater than the second operand,
+// b. the multiplication of the coefficient of S1 by S2 results in the coefficient of S1.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ (series_recursion_index<S1>::value > series_recursion_index<S2>::value) &&
+	/*b*/ std::is_same<bsom_cf_op_t<S1,S2>,bso_cf_t<S1>>::value
+	>::type>
+{
+	using type = S1;
+};
+
+// Case 5:
+// a. the first operand has recursion index greater than the second operand,
+// b. the multiplication of the coefficient of S1 by S2 results in a type T different from the coefficient of S1,
+// c. S1 is rebindable to T.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ (series_recursion_index<S1>::value > series_recursion_index<S2>::value) &&
+	/*b*/ !std::is_same<bsom_cf_op_t<S1,S2>,bso_cf_t<S1>>::value &&
+	/*c*/ series_is_rebindable<S1,bsom_cf_op_t<S1,S2>>::value
+	>::type>
+{
+	using type = series_rebind<S1,bsom_cf_op_t<S1,S2>>;
+};
+
+// Case 6 (symmetric of 4):
+// a. the second operand has recursion index greater than the first operand,
+// b. the multiplication of the coefficient of S2 by S1 results in the coefficient of S2.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ (series_recursion_index<S2>::value > series_recursion_index<S1>::value) &&
+	/*b*/ std::is_same<bsom_cf_op_t<S2,S1>,bso_cf_t<S2>>::value
+	>::type>
+{
+	using type = S2;
+};
+
+// Case 7 (symmetric of 5):
+// a. the second operand has recursion index greater than the first operand,
+// b. the multiplication of the coefficient of S2 by S1 results in a type T different from the coefficient of S2,
+// c. S2 is rebindable to T.
+template <typename S1, typename S2>
+struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+	/*a*/ (series_recursion_index<S2>::value > series_recursion_index<S1>::value) &&
+	/*b*/ !std::is_same<bsom_cf_op_t<S2,S1>,bso_cf_t<S2>>::value &&
+	/*c*/ series_is_rebindable<S2,bsom_cf_op_t<S2,S1>>::value
+	>::type>
+{
+	using type = series_rebind<S2,bsom_cf_op_t<S2,S1>>;
+};
 
 }
 
