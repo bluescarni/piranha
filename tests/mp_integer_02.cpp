@@ -2611,3 +2611,60 @@ BOOST_AUTO_TEST_CASE(mp_integer_serialization_test)
 {
 	boost::mpl::for_each<size_types>(serialization_tester());
 }
+
+struct static_is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef detail::static_integer<T::value> int_type;
+		const auto limb_bits = int_type::limb_bits;
+		int_type n1;
+		BOOST_CHECK(!n1.is_unitary());
+		int_type n2(-1);
+		BOOST_CHECK(!n2.is_unitary());
+		int_type n3(1);
+		BOOST_CHECK(n3.is_unitary());
+		n3.set_bit(limb_bits);
+		BOOST_CHECK(!n3.is_unitary());
+		int_type n4(1);
+		BOOST_CHECK(n4.is_unitary());
+		n4 *= int_type(-1);
+		BOOST_CHECK(!n4.is_unitary());
+		n4 *= int_type(-1);
+		BOOST_CHECK(n4.is_unitary());
+		n4 *= int_type(0);
+		BOOST_CHECK(!n4.is_unitary());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_static_integer_is_unitary_test)
+{
+	boost::mpl::for_each<size_types>(static_is_unitary_tester());
+}
+
+struct is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK(has_is_unitary<int_type>::value);
+		std::uniform_int_distribution<int> int_dist(-10,10), bool_dist(0,1);
+		for (int i = 0; i < ntries; ++i) {
+			int tmp_int = int_dist(rng);
+			int_type tmp(tmp_int);
+			// Randomly promote.
+			if (tmp.is_static() && bool_dist(rng)) {
+				tmp.promote();
+			}
+			BOOST_CHECK_EQUAL(tmp_int == 1,tmp.is_unitary());
+			BOOST_CHECK_EQUAL(tmp_int == 1,math::is_unitary(tmp));
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_is_unitary_test)
+{
+	boost::mpl::for_each<size_types>(is_unitary_tester());
+}

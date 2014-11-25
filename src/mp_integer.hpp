@@ -547,6 +547,10 @@ struct static_integer
 	{
 		return _mp_size == 0;
 	}
+	bool is_unitary() const
+	{
+		return _mp_size == 1 && m_limbs[0u] == 1u;
+	}
 	// Compare absolute values of two integers whose sizes are the same in absolute value.
 	static int compare(const static_integer &a, const static_integer &b, const mpz_size_t &size)
 	{
@@ -3129,6 +3133,17 @@ class mp_integer
 				}
 			}
 		}
+		/// Unitary check
+		/**
+		 * @return \p true if \p this is equal to 1, \p false otherwise.
+		 */
+		bool is_unitary() const
+		{
+			if (is_static()) {
+				return m_int.g_st().is_unitary();
+			}
+			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
@@ -3214,6 +3229,27 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	bool operator()(const T &n) const
 	{
 		return n.sign() == 0;
+	}
+};
+
+/// Specialisation of the piranha::math::is_unitary() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct is_unitary_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * Will use internally piranha::mp_integer::is_unitary().
+	 *
+	 * @param[in] n piranha::mp_integer to be tested.
+	 *
+	 * @return \p true if \p n is equal to 1, \p false otherwise.
+	 */
+	bool operator()(const T &n) const
+	{
+		return n.is_unitary();
 	}
 };
 
