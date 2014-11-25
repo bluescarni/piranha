@@ -71,6 +71,8 @@ struct is_zero_impl
 	 * @param[in] x argument to be tested.
 	 * 
 	 * @return \p true if \p x is zero, \p false otherwise.
+	 *
+	 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U.
 	 */
 	template <typename U>
 	bool operator()(const U &x, typename std::enable_if<std::is_constructible<U,int>::value &&
@@ -117,6 +119,57 @@ template <typename T>
 inline auto is_zero(const T &x) -> decltype(is_zero_impl<T>()(x))
 {
 	return is_zero_impl<T>()(x);
+}
+
+/// Default functor for the implementation of piranha::math::is_unitary().
+/**
+ * This functor should be specialised via the \p std::enable_if mechanism. The default implementation defines a call
+ * operator which is enabled only if the argument type is constructible from the C++ \p int type and \p T is equality comparable.
+ */
+template <typename T, typename = void>
+struct is_unitary_impl
+{
+	private:
+		template <typename U>
+		using enabler = typename std::enable_if<std::is_constructible<U,int>::value &&
+			is_equality_comparable<U>::value,int>::type;
+	public:
+		/// Call operator.
+		/**
+		 * \note
+		 * This template method is enabled only if \p U can be constructed from \p int and \p U is
+		 * equality comparable.
+		 *
+		 * The operator will compare \p x to an instance of \p U constructed from the literal 1.
+		 *
+		 * @param[in] x argument to be tested.
+		 *
+		 * @return \p true if \p x is equal to 1, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the construction or comparison of instances of type \p U.
+		 */
+		template <typename U, enabler<U> = 0>
+		bool operator()(const U &x) const
+		{
+			return x == U(1);
+		}
+};
+
+/// Unitary test.
+/**
+ * Test if value is equal to 1. The actual implementation of this function is in the piranha::math::is_unitary_impl functor's
+ * call operator.
+ *
+ * @param[in] x value to be tested.
+ *
+ * @return \p true if value is equal to 1, \p false otherwise.
+ *
+ * @throws unspecified any exception thrown by the call operator of the piranha::math::is_unitary_impl functor.
+ */
+template <typename T>
+inline auto is_unitary(const T &x) -> decltype(is_unitary_impl<T>()(x))
+{
+	return is_unitary_impl<T>()(x);
 }
 
 /// Default functor for the implementation of piranha::math::negate().
@@ -2012,9 +2065,9 @@ class has_binomial: detail::sfinae_types
 template <typename T, typename U>
 const bool has_binomial<T,U>::value;
 
-/// Type trait to detect the presence of the piranha::math::is_zero function.
+/// Type trait to detect the presence of the piranha::math::is_zero() function.
 /**
- * The type trait will be \p true if piranha::math::is_zero can be successfully called on instances of \p T, returning
+ * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T, returning
  * an instance of a type implicitly convertible \p bool.
  */
 template <typename T>
@@ -2032,6 +2085,26 @@ class has_is_zero: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool has_is_zero<T>::value;
+
+/// Type trait to detect the presence of the piranha::math::is_unitary() function.
+/**
+ * The type trait will be \p true if piranha::math::is_unitary() can be successfully called on instances of \p T, returning
+ * an instance of a type implicitly convertible \p bool.
+ */
+template <typename T>
+class has_is_unitary: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		template <typename T1>
+		static auto test(const T1 &t) -> decltype(math::is_unitary(t));
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_convertible<decltype(test(std::declval<Td>())),bool>::value;
+};
+
+template <typename T>
+const bool has_is_unitary<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::negate function.
 /**
