@@ -2996,7 +2996,7 @@ class mp_integer
 		 *
 		 * @return next prime.
 		 *
-		 * @throws std::invalid_argument if the sign of this is negative.
+		 * @throws std::invalid_argument if the sign of \p this is negative.
 		 */
 		mp_integer nextprime() const
 		{
@@ -3018,7 +3018,7 @@ class mp_integer
 		 *
 		 * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
 		 *
-		 * @throws std::invalid_argument if \p reps is less than one or if this is negative.
+		 * @throws std::invalid_argument if \p reps is less than one or if \p this is negative.
 		 */
 		int probab_prime_p(int reps = 25) const
 		{
