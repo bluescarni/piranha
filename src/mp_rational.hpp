@@ -245,22 +245,35 @@ class mp_rational
 		{
 			// NOTE: all this should never throw because we only operate on mp_integer objects,
 			// no conversions involved, etc.
-			// Special casing, the first to deal when other and this are the same object,
-			// the second when denominators are equal.
-			if (unlikely(&other == this) || m_den == other.m_den) {
+			if (m_den.is_unitary() && other.m_den.is_unitary()) {
+				// Both are integers, we can just add without canonicalising.
+				// NOTE: this is safe is this and other are the same thing.
 				m_num += other.m_num;
+			} else if (m_den == other.m_den) {
+				// Denominators are the same, add numerators and canonicalise.
+				// NOTE: safe if this and other coincide.
+				m_num += other.m_num;
+				canonicalise();
 			} else {
+				// The general case.
+				// NOTE: here dens are different (cannot coincide), and thus
+				// this and other must be separate objects.
 				m_num *= other.m_den;
 				math::multiply_accumulate(m_num,m_den,other.m_num);
 				m_den *= other.m_den;
+				canonicalise();
 			}
-			canonicalise();
 			return *this;
 		}
 		mp_rational &in_place_add(const int_type &other)
 		{
-			math::multiply_accumulate(m_num,m_den,other);
-			canonicalise();
+			if (m_den.is_unitary()) {
+				// If den is unitary, no need to multiply or canonicalise.
+				m_num += other;
+			} else {
+				math::multiply_accumulate(m_num,m_den,other);
+				canonicalise();
+			}
 			return *this;
 		}
 		template <typename T>
@@ -308,8 +321,11 @@ class mp_rational
 		// In-place sub.
 		mp_rational &in_place_sub(const mp_rational &other)
 		{
-			if (unlikely(&other == this) || m_den == other.m_den) {
+			if (m_den.is_unitary() && other.m_den.is_unitary()) {
 				m_num -= other.m_num;
+			} else if (m_den == other.m_den) {
+				m_num -= other.m_num;
+				canonicalise();
 			} else {
 				m_num *= other.m_den;
 				// Negate temporarily in order to use multiply_accumulate.
@@ -318,16 +334,20 @@ class mp_rational
 				math::multiply_accumulate(m_num,m_den,other.m_num);
 				m_den.negate();
 				m_den *= other.m_den;
+				canonicalise();
 			}
-			canonicalise();
 			return *this;
 		}
 		mp_rational &in_place_sub(const int_type &other)
 		{
-			m_den.negate();
-			math::multiply_accumulate(m_num,m_den,other);
-			m_den.negate();
-			canonicalise();
+			if (m_den.is_unitary()) {
+				m_num -= other;
+			} else {
+				m_den.negate();
+				math::multiply_accumulate(m_num,m_den,other);
+				m_den.negate();
+				canonicalise();
+			}
 			return *this;
 		}
 		template <typename T>
@@ -377,16 +397,22 @@ class mp_rational
 		// In-place mult.
 		mp_rational &in_place_mult(const mp_rational &other)
 		{
-			// NOTE: no issue here if this and other are the same object.
-			m_num *= other.m_num;
-			m_den *= other.m_den;
-			canonicalise();
+			if (m_den.is_unitary() && other.m_den.is_unitary()) {
+				m_num *= other.m_num;
+			} else {
+				// NOTE: no issue here if this and other are the same object.
+				m_num *= other.m_num;
+				m_den *= other.m_den;
+				canonicalise();
+			}
 			return *this;
 		}
 		mp_rational &in_place_mult(const int_type &other)
 		{
 			m_num *= other;
-			canonicalise();
+			if (!m_den.is_unitary()) {
+				canonicalise();
+			}
 			return *this;
 		}
 		template <typename T>
@@ -505,7 +531,7 @@ class mp_rational
 		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
 		static bool binary_eq(const mp_rational &q, const T &x)
 		{
-			return q.den() == 1 && q.num() == x;
+			return q.den().is_unitary() && q.num() == x;
 		}
 		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
 		static bool binary_eq(const T &x, const mp_rational &q)
@@ -827,7 +853,7 @@ class mp_rational
 		 */
 		friend std::ostream &operator<<(std::ostream &os, const mp_rational &q)
 		{
-			if (q.m_den == 1) {
+			if (q.m_den.is_unitary()) {
 				os << q.m_num;
 			} else {
 				os << q.m_num << '/' << q.m_den;
@@ -1568,7 +1594,7 @@ class mp_rational
 			std::is_same<T,int_type>::value,int>::type = 0>
 		mp_rational binomial(const T &n) const
 		{
-			if (m_den == 1) {
+			if (m_den.is_unitary()) {
 				// If this is an integer, offload to mp_integer::binomial().
 				return mp_rational{m_num.binomial(n),1};
 			}
@@ -1654,7 +1680,7 @@ struct print_tex_coefficient_impl<T,typename std::enable_if<detail::is_mp_ration
 			os << "0";
 			return;
 		}
-		if (cf.den() == 1) {
+		if (cf.den().is_unitary()) {
 			os << cf.num();
 			return;
 		}
@@ -1686,6 +1712,25 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	bool operator()(const T &q) const
 	{
 		return is_zero(q.num());
+	}
+};
+
+/// Specialisation of the piranha::math::is_unitary() functor for piranha::mp_rational.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_rational.
+ */
+template <typename T>
+struct is_unitary_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * @param[in] q piranha::mp_rational to be tested.
+	 *
+	 * @return \p true if \p q is equal to one, \p false otherwise.
+	 */
+	bool operator()(const T &q) const
+	{
+		return is_unitary(q.num()) && is_unitary(q.den());
 	}
 };
 
@@ -1780,7 +1825,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	mp_rational<NBits> operator()(const mp_rational<NBits> &b, const mp_rational<NBits> &e) const
 	{
 		// Special casing.
-		if (b == 1) {
+		if (is_unitary(b)) {
 			return b;
 		}
 		if (is_zero(b)) {
@@ -1796,7 +1841,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 			// 0**-q -> division by zero.
 			piranha_throw(zero_division_error,"unable to raise zero to a negative power");
 		}
-		if (e.den() != 1) {
+		if (!e.den().is_unitary()) {
 			piranha_throw(std::invalid_argument,"unable to raise rational to a rational power whose denominator is not 1");
 		}
 		return b.pow(e.num());
@@ -1815,7 +1860,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 	auto operator()(const T2 &b, const mp_rational<NBits> &e) const -> decltype(math::pow(b,e.num()))
 	{
 		using ret_type = decltype(math::pow(b,e.num()));
-		if (b == T2(1)) {
+		if (is_unitary(b)) {
 			return ret_type(b);
 		}
 		if (is_zero(b)) {
@@ -1828,7 +1873,7 @@ struct pow_impl<T,U,detail::rational_pow_enabler<T,U>>
 			}
 			piranha_throw(zero_division_error,"unable to raise zero to a negative power");
 		}
-		if (e.den() != 1) {
+		if (!e.den().is_unitary()) {
 			piranha_throw(std::invalid_argument,"unable to raise an integral to a rational power whose denominator is not 1");
 		}
 		return math::pow(b,e.num());
@@ -2098,7 +2143,7 @@ struct safe_cast_impl<To,From,detail::sc_rat_enabler<To,From>>
 		template <typename From2, from_enabler<From2> = 0>
 		To operator()(const From2 &q) const
 		{
-			if (unlikely(q.den() != 1)) {
+			if (unlikely(!q.den().is_unitary())) {
 				piranha_throw(std::invalid_argument,"non-unitary denominator in rational to integral conversion");
 			}
 			return static_cast<To>(q);
