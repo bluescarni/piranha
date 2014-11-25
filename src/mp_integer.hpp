@@ -65,13 +65,23 @@ inline UInt clear_top_bits(UInt input, unsigned n)
 	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
 }
 
+// Determine if the condition for using the optimised version
+// of read_uint holds.
+template <typename URet, unsigned IBits, unsigned RBits, typename UIn>
+struct read_uint_opt
+{
+	static const bool value = IBits == 0u && RBits == 0u &&
+		std::is_same<URet,UIn>::value;
+};
+
 // Considering an array of UIn (unsigned integrals) of a certain size as a continuous sequence of bits,
 // read the index-th URet (unsigned integral) that can be extracted from the sequence of bits.
 // The parameter IBits is the number of upper bits of UIn that should be discarded in the computation
 // (i.e., not considered as part of the continuous sequence of bits). RBits has the same meaning,
 // but for the output value: it's the number of upper bits that are not considered as part of the
 // return type.
-template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn>
+template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn,
+	typename std::enable_if<!read_uint_opt<URet,IBits,RBits,UIn>::value,int>::type = 0>
 inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 {
 	// We can work only with unsigned integer types.
@@ -120,6 +130,24 @@ inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 	}
 	piranha_assert(s_index == size || read_bits == er_bits);
 	return retval;
+}
+
+// This is an optimised version of the above, kicking in when:
+// - we do not ignore any bit in input or output,
+// - in and out types are the same.
+// In this case, we can read directly the value from the pointer.
+template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn,
+	typename std::enable_if<read_uint_opt<URet,IBits,RBits,UIn>::value,int>::type = 0>
+inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
+{
+	// We can work only with unsigned integer types.
+	static_assert(std::is_integral<UIn>::value && std::is_unsigned<UIn>::value,"Invalid type.");
+	static_assert(std::is_integral<URet>::value && std::is_unsigned<URet>::value,"Invalid type.");
+	// Check that we are not going to read past the end.
+	piranha_assert(index < size);
+	// Check for null.
+	piranha_assert(ptr != nullptr);
+	return ptr[index];
 }
 
 // mpz_t is an array of some struct.
@@ -1131,9 +1159,7 @@ struct is_mp_integer_interoperable_type
  * TODO performance improvements:
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
  *     we can use mp_integer directly - this could be a performance improvement;
- *   - avoid going through mpz for print to stream,
- *   - optimize common cases for read_uint, that is, avoid always reading bit by bit. This should improve hashing
- *     performance, amongst other.
+ *   - avoid going through mpz for print to stream.
  * - consider if and how to implement demoting. It looks it could be useful in certain cases, for instance when we
  *   rely on GMP routines (we should demote back to static if possible in those cases). For the elementary operations,
  *   it is less clear: addition, subtraction and division could in principle be considered for demotion. But, OTOH
