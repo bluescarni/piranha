@@ -140,6 +140,7 @@ template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn,
 	typename std::enable_if<read_uint_opt<URet,IBits,RBits,UIn>::value,int>::type = 0>
 inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 {
+	(void)size;
 	// We can work only with unsigned integer types.
 	static_assert(std::is_integral<UIn>::value && std::is_unsigned<UIn>::value,"Invalid type.");
 	static_assert(std::is_integral<URet>::value && std::is_unsigned<URet>::value,"Invalid type.");
