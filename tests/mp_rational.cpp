@@ -1489,6 +1489,11 @@ struct less_than_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} < q_type{c,1}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} < q_type{c,5}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} < q_type{c,2}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} < q_type{c,10}),int_type{a} < int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1557,6 +1562,11 @@ struct geq_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} >= q_type{c,1}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} >= q_type{c,5}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} >= q_type{c,2}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} >= q_type{c,10}),int_type{a} >= int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1625,6 +1635,11 @@ struct greater_than_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} > q_type{c,1}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} > q_type{c,5}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} > q_type{c,2}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} > q_type{c,10}),int_type{a} > int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1693,6 +1708,11 @@ struct leq_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} <= q_type{c,1}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} <= q_type{c,5}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} <= q_type{c,2}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} <= q_type{c,10}),int_type{a} <= int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {

@@ -556,6 +556,9 @@ class mp_rational
 			// other tricks. If this ever becomes a bottleneck, we probably need to do
 			// something similar (actually we could just use the view and piggy-back
 			// on mpq_cmp()...).
+			if (q1.m_den == q2.m_den) {
+				return q1.m_num < q2.m_num;
+			}
 			return q1.num() * q2.den() < q2.num() * q1.den();
 		}
 		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
@@ -581,6 +584,9 @@ class mp_rational
 		// Greater-than operator.
 		static bool binary_greater_than(const mp_rational &q1, const mp_rational &q2)
 		{
+			if (q1.m_den == q2.m_den) {
+				return q1.m_num > q2.m_num;
+			}
 			return q1.num() * q2.den() > q2.num() * q1.den();
 		}
 		template <typename T, typename std::enable_if<std::is_integral<T>::value || std::is_same<T,int_type>::value,int>::type = 0>
