@@ -385,51 +385,68 @@ class series_operators
 {
 		// A couple of handy aliases.
 		template <typename T, typename U>
-		using bso_type = detail::binary_series_op_return_type<T,U>;
+		using bso_type = detail::binary_series_op_return_type<typename std::decay<T>::type,
+			typename std::decay<U>::type>;
 		template <typename T, typename U>
 		using series_common_type = typename bso_type<T,U>::type;
 		// Case 0.
-		// NOTE: this case has not special algorithmic requirements, the base is_container_element
-		// requirements already cover everything.
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_add(const T &x, const U &y)
+		template <bool Sign, typename T, typename U>
+		static series_common_type<T,U> binary_add_impl0(T &&x, U &&y)
 		{
-			constexpr bool Sign = true;
 			// This is the same as T and U.
 			using ret_type = series_common_type<T,U>;
-			static_assert(std::is_same<T,ret_type>::value,"Invalid type.");
-			static_assert(std::is_same<U,ret_type>::value,"Invalid type.");
-			// This is always possible to do, a series is always copy-constructible.
-			ret_type retval(x);
+			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
+			static_assert(std::is_same<typename std::decay<U>::type,ret_type>::value,"Invalid type.");
+			// This is always possible to do, a series is always copy/move-constructible.
+			ret_type retval(std::forward<T>(x));
 			if (likely(x.m_symbol_set == y.m_symbol_set)) {
-				retval.template merge_terms<Sign>(y);
+				retval.template merge_terms<Sign>(std::forward<U>(y));
 			} else {
-				// Let's deal with the first series.
+				// Let's fix the args of the first series, if needed.
 				auto merge = x.m_symbol_set.merge(y.m_symbol_set);
 				if (merge != x.m_symbol_set) {
 					// This is a move assignment, always possible.
-					retval = x.merge_args(merge);
+					retval = x.merge_arguments(merge);
 				}
-				// Second series.
+				// Fix the args of the second series.
 				if (merge != y.m_symbol_set) {
 					// Another move assignment, always possible.
-					auto y_copy = y.merge_args(merge);
+					auto y_copy = y.merge_arguments(merge);
 					retval.template merge_terms<Sign>(std::move(y_copy));
 				} else {
-					retval.template merge_terms<Sign>(y);
+					retval.template merge_terms<Sign>(std::forward<U>(y));
 				}
 			}
 			return retval;
 		}
-		template <typename T, typename U>
-		using binary_add_enabler = typename std::enable_if<detail::true_tt<
-			decltype(dispatch_binary_add(std::declval<const T &>(),std::declval<const U &>()))
-			>::value,int>::type;
-	public:
-		template <typename T, typename U, binary_add_enabler<T,U> = 0>
-		friend series_common_type<T,U> binary_add(const T &x, const U &y)
+		// NOTE: this case has not special algorithmic requirements, the base is_container_element
+		// requirements already cover everything.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
 		{
-			return dispatch_binary_add(x,y);
+			// Two-layers implementation, to optimise the case in which one series is much bigger than the other.
+			if (x.size() > y.size()) {
+				return binary_add_impl0<true>(std::forward<T>(x),std::forward<U>(y));
+			} else {
+				return binary_add_impl0<true>(std::forward<U>(y),std::forward<T>(x));
+			}
+		}
+		// NOTE: in the enabler we use the version of binary_add with const references. The idea
+		// here is that any overload other than the const references one is an optimisation detail
+		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
+		// Note that the const reference overload will always work, regardless of the cv qualifications
+		// of the input types.
+		template <typename T, typename U>
+		using binary_add_type = typename std::enable_if<detail::true_tt<
+			decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()))
+			>::value,
+		series_common_type<T,U>>::type;
+	public:
+		template <typename T, typename U>
+		friend binary_add_type<T,U> binary_add(T &&x, U &&y)
+		{
+			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
 		}
 };
 
@@ -1131,6 +1148,23 @@ class series: series_binary_operators, detail::series_tag, series_operators
 			series retval;
 			retval.m_symbol_set = new_ss;
 			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
+				cf_type new_cf(it->m_cf);
+				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
+				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
+			}
+			return retval;
+		}
+		// Merge arguments using new_ss as new symbol set.
+		Derived merge_arguments(const symbol_set &new_ss) const
+		{
+			piranha_assert(new_ss.size() > m_symbol_set.size());
+			piranha_assert(std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end()));
+			using cf_type = typename term_type::cf_type;
+			using key_type = typename term_type::key_type;
+			Derived retval;
+			retval.m_symbol_set = new_ss;
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
 				cf_type new_cf(it->m_cf);
 				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
 				retval.insert(term_type(std::move(new_cf),std::move(new_key)));

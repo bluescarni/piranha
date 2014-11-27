@@ -532,4 +532,6 @@ BOOST_AUTO_TEST_CASE(series_binary_add_test)
 	typedef g_series_type<rational,int> p_type1;
 	BOOST_CHECK((std::is_same<p_type1,decltype(binary_add(p_type1{},p_type1{}))>::value));
 	BOOST_CHECK(binary_add(p_type1{},p_type1{}).empty());
+	// Compilation failure.
+	//BOOST_CHECK(binary_add(p_type1{},0).empty());
 }
