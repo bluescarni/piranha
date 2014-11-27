@@ -65,13 +65,23 @@ inline UInt clear_top_bits(UInt input, unsigned n)
 	return static_cast<UInt>(static_cast<UInt>(input << n) >> n);
 }
 
+// Determine if the condition for using the optimised version
+// of read_uint holds.
+template <typename URet, unsigned IBits, unsigned RBits, typename UIn>
+struct read_uint_opt
+{
+	static const bool value = IBits == 0u && RBits == 0u &&
+		std::is_same<URet,UIn>::value;
+};
+
 // Considering an array of UIn (unsigned integrals) of a certain size as a continuous sequence of bits,
 // read the index-th URet (unsigned integral) that can be extracted from the sequence of bits.
 // The parameter IBits is the number of upper bits of UIn that should be discarded in the computation
 // (i.e., not considered as part of the continuous sequence of bits). RBits has the same meaning,
 // but for the output value: it's the number of upper bits that are not considered as part of the
 // return type.
-template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn>
+template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn,
+	typename std::enable_if<!read_uint_opt<URet,IBits,RBits,UIn>::value,int>::type = 0>
 inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 {
 	// We can work only with unsigned integer types.
@@ -120,6 +130,25 @@ inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
 	}
 	piranha_assert(s_index == size || read_bits == er_bits);
 	return retval;
+}
+
+// This is an optimised version of the above, kicking in when:
+// - we do not ignore any bit in input or output,
+// - in and out types are the same.
+// In this case, we can read directly the value from the pointer.
+template <typename URet, unsigned IBits = 0u, unsigned RBits = 0u, typename UIn,
+	typename std::enable_if<read_uint_opt<URet,IBits,RBits,UIn>::value,int>::type = 0>
+inline URet read_uint(const UIn *ptr, std::size_t size, std::size_t index)
+{
+	(void)size;
+	// We can work only with unsigned integer types.
+	static_assert(std::is_integral<UIn>::value && std::is_unsigned<UIn>::value,"Invalid type.");
+	static_assert(std::is_integral<URet>::value && std::is_unsigned<URet>::value,"Invalid type.");
+	// Check that we are not going to read past the end.
+	piranha_assert(index < size);
+	// Check for null.
+	piranha_assert(ptr != nullptr);
+	return ptr[index];
 }
 
 // mpz_t is an array of some struct.
@@ -256,17 +285,65 @@ struct static_integer
 	static_assert(limb_bits < std::numeric_limits<limb_t>::max() / 2u,"Overflow error.");
 	// NOTE: init everything otherwise zero is gonna be represented by undefined values in lo/hi.
 	static_integer():_mp_alloc(0),_mp_size(0),m_limbs() {}
-	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
-	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_limbs()
+	template <typename T, typename std::enable_if<std::is_signed<T>::value && std::is_integral<T>::value,int>::type = 0>
+	bool attempt_direct_construction(T n)
 	{
-		// NOTE: in order to improve performance, we could attempt a boost::numeric_cast to the limb type
-		// and use the result directly into the first limb. How to deal with negative values?
-		// NOTE: this should be a separate function to be called from the constructor from int of mp_integer. If
-		// it throws, go through the construction via mpz but in case it works we could save quite a bit of time.
+		try {
+			if (n >= T(0)) {
+				// We can attempt conversion of a non-negative signed directly into limb_t.
+				m_limbs[0u] = boost::numeric_cast<limb_t>(n);
+			} else if (n >= -safe_abs_sint<T>::value) {
+				// Conversion of a negative signed whose value can be safely negated.
+				m_limbs[0u] = boost::numeric_cast<limb_t>(-n);
+			} else {
+				// We cannot convert safely n to a limb_t in this case.
+				return false;
+			}
+			if (n > T(0)) {
+				// Strictly positive value, size is 1.
+				_mp_size = mpz_size_t(1);
+			}
+			if (n < T(0)) {
+				// Strictly negative value, size is -1.
+				_mp_size = mpz_size_t(-1);
+			}
+			// NOTE: if n is zero, size has been inited to zero already.
+			return true;
+		} catch (...) {
+			return false;
+		}
+	}
+	template <typename T, typename std::enable_if<std::is_unsigned<T>::value && std::is_integral<T>::value,int>::type = 0>
+	bool attempt_direct_construction(T n)
+	{
+		try {
+			// For unsigned, directly attempt a cast to the limb type.
+			m_limbs[0u] = boost::numeric_cast<limb_t>(n);
+			// With an unsigned input, the size can be either 0 or 1.
+			if (n) {
+				_mp_size = mpz_size_t(1);
+			}
+			return true;
+		} catch (...) {
+			return false;
+		}
+	}
+	template <typename Integer>
+	void construct_from_integral(Integer n)
+	{
+		// Don't do anything if n is zero or is the direct construction
+		// into the first limb succeeds.
+		if (!n || likely(attempt_direct_construction(n))) {
+			return;
+		}
 		const auto orig_n = n;
 		limb_t bit_idx = 0;
 		while (n != Integer(0)) {
 			if (bit_idx == limb_bits * 2u) {
+				// Clear out before throwing, as this is used in mp_integer as well.
+				_mp_size = 0;
+				m_limbs[0u] = 0u;
+				m_limbs[1u] = 0u;
 				piranha_throw(std::overflow_error,"insufficient bit width");
 			}
 			// NOTE: in C++11 division will round to zero always (for negative numbers as well).
@@ -280,6 +357,11 @@ struct static_integer
 			++bit_idx;
 		}
 		fix_sign_ctor(orig_n);
+	}
+	template <typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
+	explicit static_integer(Integer n):_mp_alloc(0),_mp_size(0),m_limbs()
+	{
+		construct_from_integral(n);
 	}
 	template <typename T>
 	void fix_sign_ctor(T, typename std::enable_if<std::is_unsigned<T>::value>::type * = nullptr) {}
@@ -465,6 +547,10 @@ struct static_integer
 	bool is_zero() const
 	{
 		return _mp_size == 0;
+	}
+	bool is_unitary() const
+	{
+		return _mp_size == 1 && m_limbs[0u] == 1u;
 	}
 	// Compare absolute values of two integers whose sizes are the same in absolute value.
 	static int compare(const static_integer &a, const static_integer &b, const mpz_size_t &size)
@@ -1078,10 +1164,7 @@ struct is_mp_integer_interoperable_type
  * TODO performance improvements:
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
  *     we can use mp_integer directly - this could be a performance improvement;
- *   - avoid going through mpz for print to stream,
- *   - when cting from C++ ints, attempt a numeric_cast to limb_type for very fast conversion in static integer,
- *   - optimize common cases for read_uint, that is, avoid always reading bit by bit. This should improve hashing
- *     performance, amongst other.
+ *   - avoid going through mpz for print to stream.
  * - consider if and how to implement demoting. It looks it could be useful in certain cases, for instance when we
  *   rely on GMP routines (we should demote back to static if possible in those cases). For the elementary operations,
  *   it is less clear: addition, subtraction and division could in principle be considered for demotion. But, OTOH
@@ -1182,9 +1265,19 @@ class mp_integer
 		template <typename Integer>
 		void construct_from_interoperable(const Integer &n_orig, typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr)
 		{
-			if (n_orig == Integer(0)) {
+			// Try to use the static algorithm first.
+			try {
+				m_int.g_st().construct_from_integral(n_orig);
 				return;
+			} catch (const std::overflow_error &) {
+				// Check that everything was cleaned properly, in case the exception was triggered,
+				// and continue.
+				piranha_assert(m_int.g_st()._mp_alloc == 0);
+				piranha_assert(m_int.g_st()._mp_size == 0);
+				piranha_assert(m_int.g_st().m_limbs[0u] == 0u);
+				piranha_assert(m_int.g_st().m_limbs[1u] == 0u);
 			}
+			// Go through a temp mpz for the construction.
 			Integer n = n_orig;
 			detail::mpz_raii m;
 			::mp_bitcnt_t bit_idx = 0;
@@ -1199,25 +1292,13 @@ class mp_integer
 				++bit_idx;
 				n = div;
 			}
-			if (m_int.fits_in_static(m.m_mpz)) {
-				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
-				const auto size2 = ::mpz_sizeinbase(&m.m_mpz,2);
-				for (::mp_bitcnt_t i = 0u; i < size2; ++i) {
-					if (::mpz_tstbit(&m.m_mpz,i)) {
-						m_int.g_st().set_bit(static_cast<limb_t>(i));
-					}
-				}
-				// NOTE: keep the == here, so we prevent warnings from the compiler when cting from unsigned types.
-				// It is inconsequential as n == 0 is already handled on top.
-				if (n_orig <= Integer(0)) {
-					m_int.g_st().negate();
-				}
-			} else {
-				m_int.promote();
-				::mpz_swap(&m.m_mpz,&m_int.g_dy());
-				if (n_orig <= Integer(0)) {
-					::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
-				}
+			// Promote the current static to dynamic storage.
+			m_int.promote();
+			// Swap in the temp mpz.
+			::mpz_swap(&m.m_mpz,&m_int.g_dy());
+			// Fix the sign as needed.
+			if (n_orig <= Integer(0)) {
+				::mpz_neg(&m_int.g_dy(),&m_int.g_dy());
 			}
 		}
 		// Special casing for bool.
@@ -2916,7 +2997,7 @@ class mp_integer
 		 *
 		 * @return next prime.
 		 *
-		 * @throws std::invalid_argument if the sign of this is negative.
+		 * @throws std::invalid_argument if the sign of \p this is negative.
 		 */
 		mp_integer nextprime() const
 		{
@@ -2938,7 +3019,7 @@ class mp_integer
 		 *
 		 * @return 2 if \p this is definitely a prime, 1 if \p this is probably prime, 0 if \p this is definitely composite.
 		 *
-		 * @throws std::invalid_argument if \p reps is less than one or if this is negative.
+		 * @throws std::invalid_argument if \p reps is less than one or if \p this is negative.
 		 */
 		int probab_prime_p(int reps = 25) const
 		{
@@ -3053,6 +3134,17 @@ class mp_integer
 				}
 			}
 		}
+		/// Unitary check
+		/**
+		 * @return \p true if \p this is equal to 1, \p false otherwise.
+		 */
+		bool is_unitary() const
+		{
+			if (is_static()) {
+				return m_int.g_st().is_unitary();
+			}
+			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
+		}
 	private:
 		detail::integer_union<NBits> m_int;
 };
@@ -3138,6 +3230,27 @@ struct is_zero_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	bool operator()(const T &n) const
 	{
 		return n.sign() == 0;
+	}
+};
+
+/// Specialisation of the piranha::math::is_unitary() functor for piranha::mp_integer.
+/**
+ * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
+ */
+template <typename T>
+struct is_unitary_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
+{
+	/// Call operator.
+	/**
+	 * Will use internally piranha::mp_integer::is_unitary().
+	 *
+	 * @param[in] n piranha::mp_integer to be tested.
+	 *
+	 * @return \p true if \p n is equal to 1, \p false otherwise.
+	 */
+	bool operator()(const T &n) const
+	{
+		return n.is_unitary();
 	}
 };
 

@@ -2603,6 +2603,8 @@ struct union_ctor_tester
 		BOOST_CHECK_EQUAL(n5.g_st().test_bit(4u),0);
 		BOOST_CHECK_EQUAL(n5.g_st().test_bit(limb_bits),0);
 		// D vs D.
+		BOOST_CHECK(n5.is_static());
+		n5.promote();
 		n5 = n4;
 		BOOST_CHECK(!n5.is_static());
 		BOOST_CHECK_EQUAL(::mpz_tstbit(&n5.g_dy(),2u),0);

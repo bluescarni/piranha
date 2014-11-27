@@ -195,6 +195,9 @@ struct constructor_tester
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q6),boost::lexical_cast<std::string>(q_type(q5)));
 		q6 = std::move(q5);
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q6),boost::lexical_cast<std::string>(q_type(q4)));
+		// Move assignment to self.
+		q6 = std::move(q6);
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q6),boost::lexical_cast<std::string>(q_type(q4)));
 		// Construction from interoperable types.
 		q_type q7{7};
 		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(q7),"7");
@@ -557,6 +560,19 @@ struct plus_tester
 				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
 			}
 			::mpq_canonicalize(&m1.m_mpq);
+			// Check first with unitary dens.
+			q_type qa{a}, qc{c};
+			qa += qc;
+			BOOST_CHECK_EQUAL(qa,int_type{a} + int_type{c});
+			qa += qa;
+			BOOST_CHECK_EQUAL(qa,2 * (int_type{a} + int_type{c}));
+			qa += qa.num();
+			BOOST_CHECK_EQUAL(qa,4 * (int_type{a} + int_type{c}));
+			BOOST_CHECK_EQUAL(qa.den(),1);
+			qa += qa.den();
+			BOOST_CHECK_EQUAL(qa,4 * (int_type{a} + int_type{c}) + 1);
+			BOOST_CHECK_EQUAL(qa.den(),1);
+			// Now with generic dens.
 			q_type q0{a,b}, q1{c,d};
 			q0 += q1;
 			::mpq_add(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);
@@ -583,6 +599,7 @@ struct plus_tester
 				BOOST_CHECK_EQUAL(old_a + 2,an);
 			}
 			// Binary.
+			BOOST_CHECK_EQUAL(q_type{a} + q_type{c},int_type{a} + int_type{c});
 			q0 = q_type{a,b};
 			q1 = q_type{c,d};
 			if (b > 0) {
@@ -768,6 +785,19 @@ struct minus_tester
 				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
 			}
 			::mpq_canonicalize(&m1.m_mpq);
+			// Check first with unitary dens.
+			q_type qa{a}, qc{c};
+			qa -= qc;
+			BOOST_CHECK_EQUAL(qa,int_type{a} - int_type{c});
+			qa -= qa;
+			qa += 2;
+			BOOST_CHECK_EQUAL(qa,2);
+			qa -= qa.num();
+			BOOST_CHECK_EQUAL(qa,0);
+			BOOST_CHECK_EQUAL(qa.den(),1);
+			qa -= qa.den();
+			BOOST_CHECK_EQUAL(qa,-1);
+			BOOST_CHECK_EQUAL(qa.den(),1);
 			q_type q0{a,b}, q1{c,d};
 			q0 -= q1;
 			::mpq_sub(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);
@@ -792,6 +822,7 @@ struct minus_tester
 				BOOST_CHECK_EQUAL(old_a - 2,an);
 			}
 			// Binary.
+			BOOST_CHECK_EQUAL(q_type{a} - q_type{c},int_type{a} - int_type{c});
 			q0 = q_type{a,b};
 			q1 = q_type{c,d};
 			if (b > 0) {
@@ -955,6 +986,19 @@ struct mult_tester
 				::mpz_set_si(mpq_denref(&m1.m_mpq),static_cast<long>(d));
 			}
 			::mpq_canonicalize(&m1.m_mpq);
+			// Check first with unitary dens.
+			q_type qa{a}, qc{c};
+			qa *= qc;
+			auto tmp_z = int_type{a} * int_type{c};
+			BOOST_CHECK_EQUAL(qa,tmp_z);
+			qa *= qa;
+			BOOST_CHECK_EQUAL(qa,tmp_z * tmp_z);
+			qa *= qa.num();
+			BOOST_CHECK_EQUAL(qa,tmp_z * tmp_z * tmp_z * tmp_z);
+			BOOST_CHECK_EQUAL(qa.den(),1);
+			qa *= qa.den();
+			BOOST_CHECK_EQUAL(qa,tmp_z * tmp_z * tmp_z * tmp_z);
+			BOOST_CHECK_EQUAL(qa.den(),1);
 			q_type q0{a,b}, q1{c,d};
 			q0 *= q1;
 			::mpq_mul(&m0.m_mpq,&m0.m_mpq,&m1.m_mpq);
@@ -979,6 +1023,7 @@ struct mult_tester
 				BOOST_CHECK_EQUAL((old_a * 3)/2,an);
 			}
 			// Binary.
+			BOOST_CHECK_EQUAL(q_type{a} * q_type{c},int_type{a} * int_type{c});
 			q0 = q_type{a,b};
 			q1 = q_type{c,d};
 			if (b > 0) {
@@ -1444,6 +1489,11 @@ struct less_than_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} < q_type{c,1}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} < q_type{c,5}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} < q_type{c,2}),int_type{a} < int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} < q_type{c,10}),int_type{a} < int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1512,6 +1562,11 @@ struct geq_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} >= q_type{c,1}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} >= q_type{c,5}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} >= q_type{c,2}),int_type{a} >= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} >= q_type{c,10}),int_type{a} >= int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1580,6 +1635,11 @@ struct greater_than_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} > q_type{c,1}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} > q_type{c,5}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} > q_type{c,2}),int_type{a} > int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} > q_type{c,10}),int_type{a} > int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -1648,6 +1708,11 @@ struct leq_tester
 			if (b == 0 || d == 0) {
 				continue;
 			}
+			// Some checks with equal dens.
+			BOOST_CHECK_EQUAL((q_type{a,1} <= q_type{c,1}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,5} <= q_type{c,5}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,2} <= q_type{c,2}),int_type{a} <= int_type{c});
+			BOOST_CHECK_EQUAL((q_type{a,10} <= q_type{c,10}),int_type{a} <= int_type{c});
 			q_type q0{a,b}, q1{c,d};
 			// The mpq set function only works with unsigned type at the denom. Bypass using mpz directly.
 			if (b > 0) {
@@ -2145,4 +2210,27 @@ BOOST_AUTO_TEST_CASE(mp_rational_serialization_test)
 	BOOST_CHECK_EQUAL(tmp.den(),1);
 	BOOST_CHECK_EQUAL(tmp.num(),0);
 	}
+}
+
+struct is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using q_type = mp_rational<T::value>;
+		BOOST_CHECK(!math::is_unitary(q_type{}));
+		BOOST_CHECK(!math::is_unitary(q_type{-1}));
+		BOOST_CHECK(!math::is_unitary(q_type{-1,5}));
+		BOOST_CHECK(!math::is_unitary(q_type{1,5}));
+		BOOST_CHECK(!math::is_unitary(q_type{5,-5}));
+		BOOST_CHECK(math::is_unitary(q_type{1}));
+		BOOST_CHECK(math::is_unitary(q_type{-1,-1}));
+		BOOST_CHECK(math::is_unitary(q_type{-5,-5}));
+		BOOST_CHECK(math::is_unitary(q_type{5,5}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_rational_is_unitary_test)
+{
+	boost::mpl::for_each<size_types>(is_unitary_tester());
 }
