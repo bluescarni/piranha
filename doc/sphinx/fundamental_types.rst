@@ -119,6 +119,27 @@ On lines 33-34, we use the ``math::pow()`` function to compute integral powers o
 many different combinations of argument types. In this specific case, with a ``rational`` base and an integral exponent, the result
 will be exact and its type will be ``rational``.
 
+In the fourth code block, a couple of examples of conversion from ``rational`` are shown. Conversion to C++ integral types can fail
+in case of overflow, whereas conversion to ``integer`` will never fail.
+
+In the fifth code block, a few usages of the user-defined literal ``_q`` are displayed. ``_q`` can be appended to an integer literal
+to signal that a ``rational`` object is to be constructed using that literal. This can be combined with the division operator
+to yield a user-friendly syntax to initialise rational objects, as shown on line 51:
+
+.. code-block:: c++
+
+   r = 42/13_q;
+
+This line is effectively parsed by the compiler as:
+
+.. code-block:: c++
+
+   r = 42/rational{"13"};
+
+In the last code block, we can see another invocation of the ``math::binomial()`` function. This time the top argument is a ``rational``,
+wheras the bottom argument is an ``integer``. The specialisation of the binomial function for these two types will yield the exact
+result as a ``rational``.
+
 The ``real`` type
 -----------------
 
