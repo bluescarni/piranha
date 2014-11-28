@@ -213,50 +213,30 @@ namespace detail
 //   we need the aliases to SFINAE-out in the metaprogramming below if the input types are not appropriate. Otherwise,
 //   the instantiations happening during substitution can lead to hard errors.
 
-// Alias for getting the cf type from a series, SFINAE friendly.
-template <typename S, typename = void>
-struct bso_cf_t_ {};
-
+// Alias for getting the cf type from a series. Will generate a type error if S is not a series.
+// NOTE: the recursion index != 0 and is_series checks are an extra safe guard to really assert we are
+// operating on series. Without the checks, in theory classes with internal term_type and similar typedefs
+// could trigger no errors.
 template <typename S>
-struct bso_cf_t_<S,typename std::enable_if<is_series<S>::value>::type>
-{
-	using type = typename S::term_type::cf_type;
-};
+using bso_cf_t = typename std::enable_if<is_series<S>::value,typename S::term_type::cf_type>::type;
 
-template <typename S>
-using bso_cf_t = typename bso_cf_t_<S>::type;
-
-// Coefficient type in a binary arithmetic operation between two series with the same recursion index. SFINAE friendly.
-template <typename S1, typename S2, typename = void>
-struct bso_cf_op_t_
-{};
-
+// Coefficient type in a binary arithmetic operation between two series with the same recursion index.
+// Will generate a type error if S1 or S2 are not series with same recursion index or if their coefficients
+// cannot be multiplied.
 template <typename S1, typename S2>
-struct bso_cf_op_t_<S1,S2,typename std::enable_if<
-	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
-	is_multipliable<bso_cf_t<S1>,bso_cf_t<S2>>::value
-	>::type>
-{
-	using type = decltype(std::declval<const bso_cf_t<S1> &>() * std::declval<const bso_cf_t<S2> &>());
-};
-
-template <typename S1, typename S2>
-using bso_cf_op_t = typename bso_cf_op_t_<S1,S2>::type;
+using bso_cf_op_t = typename std::enable_if<
+	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u,
+	decltype(std::declval<const bso_cf_t<S1> &>() * std::declval<const bso_cf_t<S2> &>())
+>::type;
 
 // Coefficient type in a mixed binary arithmetic operation in which the first operand has recursion index
-// greater than the second. SFINAE friendly.
-template <typename S, typename T, typename = void>
-struct bsom_cf_op_t_ {};
-
+// greater than the second. Will generate a type error if S does not have a rec. index > T, or if the coefficient
+// of S is not multipliable by T.
 template <typename S, typename T>
-struct bsom_cf_op_t_<S,T,typename std::enable_if<(series_recursion_index<S>::value > series_recursion_index<T>::value) &&
-	is_multipliable<bso_cf_t<S>,T>::value>::type>
-{
-	using type = decltype(std::declval<const bso_cf_t<S> &>() * std::declval<const T &>());
-};
-
-template <typename S, typename T>
-using bsom_cf_op_t = typename bsom_cf_op_t_<S,T>::type;
+using bsom_cf_op_t = typename std::enable_if<
+	(series_recursion_index<S>::value > series_recursion_index<T>::value),
+	decltype(std::declval<const bso_cf_t<S> &>() * std::declval<const T &>())
+>::type;
 
 // Default case is empty for SFINAE.
 template <typename S1, typename S2, typename = void>
@@ -431,17 +411,14 @@ class series_operators
 				return binary_add_impl0<true>(std::forward<U>(y),std::forward<T>(x));
 			}
 		}
-		// NOTE: in the enabler we use the version of binary_add with const references. The idea
+		// NOTE: here we use the version of binary_add with const references. The idea
 		// here is that any overload other than the const references one is an optimisation detail
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
 		// Note that the const reference overload will always work, regardless of the cv qualifications
 		// of the input types.
 		template <typename T, typename U>
-		using binary_add_type = typename std::enable_if<detail::true_tt<
-			decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()))
-			>::value,
-		series_common_type<T,U>>::type;
+		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> binary_add(T &&x, U &&y)
