@@ -102,14 +102,10 @@
  * \todo review the usage of the static keyword for functions: we are header-only now, it's probably not needed (esp. static inline).
  * \todo review all usages of lexical_cast and stringstreams, probably we need either to replace them altogether or at least to make
  * sure they behave consistently wrt locale settings.
- * \todo review the usage of std::set of strings/symbols for the partial degree/order methods. Need to uniform this once and for all
- * with a good rationale.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
  * \todo the series test should probably be split in multiple files as done in mp_integer, it requires too much resources
  * to compile right now.
- * \todo we should probably add a "run under valgrind" option in CMake when in Debug mode. When this is active, we should disable
- * all uses of long double in the tests as valgrind cannot cope with it.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in base_term. Should we require it to be
  * noexcept as well and put the requirement in the is_cf type trait?
  * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where it could
