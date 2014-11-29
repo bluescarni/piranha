@@ -140,20 +140,13 @@ const bool series_is_rebindable<T,Cf>::value;
 namespace detail
 {
 
-// Use the usual trick to disable the type altogether if the series
-// does not satisfy the is_rebindable type trait.
-template <typename T, typename Cf, typename = void>
-struct series_rebind_
-{};
-
-// The real typedef.
+// Implementation of the series_rebind alias, with SFINAE to soft-disable it in case
+// the series is not rebindable.
 template <typename T, typename Cf>
-struct series_rebind_<T,Cf,typename std::enable_if<series_is_rebindable<T,Cf>::value>::type>
-{
-	using Td = typename std::decay<T>::type;
-	using Cfd = typename std::decay<Cf>::type;
-	using type = typename Td::template rebind<Cfd>;
-};
+using series_rebind_ = typename std::enable_if<
+	series_is_rebindable<T,Cf>::value,
+	typename std::decay<T>::type::template rebind<typename std::decay<Cf>::type>
+>::type;
 
 }
 
@@ -164,7 +157,7 @@ struct series_rebind_<T,Cf,typename std::enable_if<series_is_rebindable<T,Cf>::v
  * also check that \p T and \p Cf satisfy the piranha::series_is_rebindable type traits.
  */
 template <typename T, typename Cf>
-using series_rebind = typename detail::series_rebind_<T,Cf>::type;
+using series_rebind = detail::series_rebind_<T,Cf>;
 
 /// Series recursion index.
 /**
