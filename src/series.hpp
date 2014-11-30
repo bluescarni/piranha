@@ -198,10 +198,9 @@ namespace detail
 // Some notes on this machinery:
 // - we use multiplication to determine the return type, but this will hold for add/sub and division as well. Maybe
 //   we should assert this somewhere;
-// - this is only for determining the type of the result, but it does not guarantee that we can actually compute it;
-//   for add/sub we need the terms to be insertable, for mult we need the series multiplier and for div we need divisibility.
+// - this is only for determining the type of the result, but it does not guarantee that we can actually compute it.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still use
-//   operator* to determine the return type, but that's inevitable.
+//   operator+ to determine the return type, but that's inevitable.
 
 // Alias for getting the cf type from a series. Will generate a type error if S is not a series.
 // NOTE: the recursion index != 0 and is_series checks are an extra safe guard to really assert we are
