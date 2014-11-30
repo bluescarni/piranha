@@ -196,7 +196,7 @@ namespace detail
 {
 
 // Some notes on this machinery:
-// - we use multiplication to determine the return type, but this will hold for add/sub and division as well. Maybe
+// - we use addition to determine the return type, but this will hold for other operations as well. Maybe
 //   we should assert this somewhere;
 // - this is only for determining the type of the result, but it does not guarantee that we can actually compute it.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still use
@@ -211,7 +211,7 @@ using bso_cf_t = typename std::enable_if<is_series<S>::value,typename S::term_ty
 
 // Coefficient type in a binary arithmetic operation between two series with the same recursion index.
 // Will generate a type error if S1 or S2 are not series with same recursion index or if their coefficients
-// cannot be multiplied.
+// cannot be added.
 template <typename S1, typename S2>
 using bso_cf_op_t = typename std::enable_if<
 	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u,
@@ -220,7 +220,7 @@ using bso_cf_op_t = typename std::enable_if<
 
 // Coefficient type in a mixed binary arithmetic operation in which the first operand has recursion index
 // greater than the second. Will generate a type error if S does not have a rec. index > T, or if the coefficient
-// of S is not multipliable by T.
+// of S cannot be added to T.
 template <typename S, typename T>
 using bsom_cf_op_t = typename std::enable_if<
 	(series_recursion_index<S>::value > series_recursion_index<T>::value),
