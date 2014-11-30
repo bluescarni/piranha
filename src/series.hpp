@@ -201,10 +201,7 @@ namespace detail
 // - this is only for determining the type of the result, but it does not guarantee that we can actually compute it;
 //   for add/sub we need the terms to be insertable, for mult we need the series multiplier and for div we need divisibility.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still use
-//   operator* to determine the return type, but that's inevitable;
-// - the 2-level type definition, first from a type in a struct, then via a template alias, is due to the fact that
-//   we need the aliases to SFINAE-out in the metaprogramming below if the input types are not appropriate. Otherwise,
-//   the instantiations happening during substitution can lead to hard errors.
+//   operator* to determine the return type, but that's inevitable.
 
 // Alias for getting the cf type from a series. Will generate a type error if S is not a series.
 // NOTE: the recursion index != 0 and is_series checks are an extra safe guard to really assert we are
@@ -219,7 +216,7 @@ using bso_cf_t = typename std::enable_if<is_series<S>::value,typename S::term_ty
 template <typename S1, typename S2>
 using bso_cf_op_t = typename std::enable_if<
 	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u,
-	decltype(std::declval<const bso_cf_t<S1> &>() * std::declval<const bso_cf_t<S2> &>())
+	decltype(std::declval<const bso_cf_t<S1> &>() + std::declval<const bso_cf_t<S2> &>())
 >::type;
 
 // Coefficient type in a mixed binary arithmetic operation in which the first operand has recursion index
@@ -228,7 +225,7 @@ using bso_cf_op_t = typename std::enable_if<
 template <typename S, typename T>
 using bsom_cf_op_t = typename std::enable_if<
 	(series_recursion_index<S>::value > series_recursion_index<T>::value),
-	decltype(std::declval<const bso_cf_t<S> &>() * std::declval<const T &>())
+	decltype(std::declval<const bso_cf_t<S> &>() + std::declval<const T &>())
 >::type;
 
 // Default case is empty for SFINAE.
@@ -447,8 +444,8 @@ class series_operators
 		// NOTE: here we use the version of binary_add with const references. The idea
 		// here is that any overload other than the const references one is an optimisation detail
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
-		// Note that the const reference overload will always work, regardless of the cv qualifications
-		// of the input types.
+		// The consequence is that if, for instance, only a move constructor is available, the operator
+		// wil anyway be disabled even if technically we could still perform the computation.
 		template <typename T, typename U>
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
