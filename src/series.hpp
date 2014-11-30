@@ -358,9 +358,10 @@ class series_operators
 			typename std::decay<U>::type>;
 		template <typename T, typename U>
 		using series_common_type = typename bso_type<T,U>::type;
-		// Case 0.
+		// Main implementation function for add/sub: all the possible cases end up here eventually, after
+		// any necessary conversion.
 		template <bool Sign, typename T, typename U>
-		static series_common_type<T,U> binary_add_impl0(T &&x, U &&y)
+		static series_common_type<T,U> binary_add_impl(T &&x, U &&y)
 		{
 			// This is the same as T and U.
 			using ret_type = series_common_type<T,U>;
@@ -395,9 +396,9 @@ class series_operators
 		{
 			// Two-layers implementation, to optimise the case in which one series is much bigger than the other.
 			if (x.size() > y.size()) {
-				return binary_add_impl0<true>(std::forward<T>(x),std::forward<U>(y));
+				return binary_add_impl<true>(std::forward<T>(x),std::forward<U>(y));
 			} else {
-				return binary_add_impl0<true>(std::forward<U>(y),std::forward<T>(x));
+				return binary_add_impl<true>(std::forward<U>(y),std::forward<T>(x));
 			}
 		}
 		// NOTE: this covers two cases:
@@ -461,6 +462,64 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		// Subtraction.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		{
+			if (x.size() > y.size()) {
+				return binary_add_impl<false>(std::forward<T>(x),std::forward<U>(y));
+			} else {
+				auto retval = binary_add_impl<false>(std::forward<U>(y),std::forward<T>(x));
+				retval.negate();
+				return retval;
+			}
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		{
+			typename std::decay<T>::type y1(std::forward<U>(y));
+			return dispatch_binary_sub(std::forward<T>(x),std::move(y1));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		static auto dispatch_binary_sub(T &&x, U &&y) -> decltype(dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x)))
+		{
+			auto retval = dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x));
+			retval.negate();
+			return retval;
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		{
+			series_common_type<T,U> x1(std::forward<T>(x));
+			series_common_type<T,U> y1(std::forward<U>(y));
+			return dispatch_binary_sub(std::move(x1),std::move(y1));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		static auto dispatch_binary_sub(T &&x, U &&y) -> decltype(dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x)))
+		{
+			auto retval = dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x));
+			retval.negate();
+			return retval;
+		}
+		template <typename T, typename U>
+		using binary_sub_type = decltype(dispatch_binary_sub(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U, typename std::enable_if<
+			!std::is_const<T>::value && std::is_assignable<T &,binary_sub_type<T,U>>::value,
+			int>::type = 0>
+		static T &dispatch_in_place_sub(T &x, U &&y)
+		{
+			x = dispatch_binary_sub(std::move(x),std::forward<U>(y));
+			return x;
+		}
+		template <typename T, typename U>
+		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> binary_add(T &&x, U &&y)
@@ -471,6 +530,16 @@ class series_operators
 		friend in_place_add_type<T,U> in_place_add(T &x, U &&y)
 		{
 			return dispatch_in_place_add(x,std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend binary_sub_type<T,U> binary_sub(T &&x, U &&y)
+		{
+			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend in_place_sub_type<T,U> in_place_sub(T &x, U &&y)
+		{
+			return dispatch_in_place_sub(x,std::forward<U>(y));
 		}
 };
 
