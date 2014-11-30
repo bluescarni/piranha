@@ -392,8 +392,8 @@ class series_operators
 			}
 			return retval;
 		}
-		// NOTE: this case has not special algorithmic requirements, the base is_container_element
-		// requirements already cover everything.
+		// NOTE: this case has no special algorithmic requirements, the base requirements for cf and series types
+		// already cover everything (including the needeed series constructors and cf arithmetic operators).
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
 		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
 		{
@@ -404,6 +404,46 @@ class series_operators
 				return binary_add_impl0<true>(std::forward<U>(y),std::forward<T>(x));
 			}
 		}
+		// NOTE: this covers two cases:
+		// - equal recursion, first series wins,
+		// - first higher recursion, coefficient of first series wins,
+		// In both cases we need to construct a T from y.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+			// In order for the implementation to work, we need to be able to build T from U.
+			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
+		{
+			typename std::decay<T>::type y1(std::forward<U>(y));
+			return dispatch_binary_add(std::forward<T>(x),std::move(y1));
+		}
+		// Symmetric of 1.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		static auto dispatch_binary_add(T &&x, U &&y) -> decltype(dispatch_binary_add(std::forward<U>(y),std::forward<T>(x)))
+		{
+			return dispatch_binary_add(std::forward<U>(y),std::forward<T>(x));
+		}
+		// Two cases:
+		// - equal series recursion, 3rd coefficient type generated,
+		// - first higher recursion, coefficient result is different from first series.
+		// In both cases we need to promote both operands to a 3rd type.
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
+			// In order for the implementation to work, we need to be able to build the common type from T and U.
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
+		{
+			series_common_type<T,U> x1(std::forward<T>(x));
+			series_common_type<T,U> y1(std::forward<U>(y));
+			return dispatch_binary_add(std::move(x1),std::move(y1));
+		}
+		// 6 and 7 are symmetric cases of 4 and 5. Just reverse the operands.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		static auto dispatch_binary_add(T &&x, U &&y) -> decltype(dispatch_binary_add(std::forward<U>(y),std::forward<T>(x)))
+		{
+			return dispatch_binary_add(std::forward<U>(y),std::forward<T>(x));
+		}
 		// NOTE: here we use the version of binary_add with const references. The idea
 		// here is that any overload other than the const references one is an optimisation detail
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
@@ -412,11 +452,29 @@ class series_operators
 		template <typename T, typename U>
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		// In-place add. Default implementation is to do simply x = x + y, if possible.
+		template <typename T, typename U, typename std::enable_if<
+			!std::is_const<T>::value && std::is_assignable<T &,binary_add_type<T,U>>::value,
+			int>::type = 0>
+		static T &dispatch_in_place_add(T &x, U &&y)
+		{
+			// NOTE: we can move x here, as it is going to be re-assigned anyway.
+			x = dispatch_binary_add(std::move(x),std::forward<U>(y));
+			return x;
+		}
+		template <typename T, typename U>
+		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> binary_add(T &&x, U &&y)
 		{
 			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend in_place_add_type<T,U> in_place_add(T &x, U &&y)
+		{
+			return dispatch_in_place_add(x,std::forward<U>(y));
 		}
 };
 
