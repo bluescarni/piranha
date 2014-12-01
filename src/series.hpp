@@ -522,22 +522,22 @@ class series_operators
 			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
-		friend binary_add_type<T,U> binary_add(T &&x, U &&y)
+		friend binary_add_type<T,U> operator+(T &&x, U &&y)
 		{
 			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
 		}
 		template <typename T, typename U>
-		friend in_place_add_type<T,U> in_place_add(T &x, U &&y)
+		friend in_place_add_type<T,U> operator+=(T &x, U &&y)
 		{
 			return dispatch_in_place_add(x,std::forward<U>(y));
 		}
 		template <typename T, typename U>
-		friend binary_sub_type<T,U> binary_sub(T &&x, U &&y)
+		friend binary_sub_type<T,U> operator-(T &&x, U &&y)
 		{
 			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y));
 		}
 		template <typename T, typename U>
-		friend in_place_sub_type<T,U> in_place_sub(T &x, U &&y)
+		friend in_place_sub_type<T,U> operator-=(T &x, U &&y)
 		{
 			return dispatch_in_place_sub(x,std::forward<U>(y));
 		}
@@ -1686,12 +1686,12 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		 * - the constructors of \p term_type, coefficient and key types,
 		 * - piranha::symbol_set::merge().
 		 */
-		template <typename T>
-		Derived &operator+=(T &&other)
-		{
-			dispatch_in_place_add<true>(std::forward<T>(other));
-			return *static_cast<Derived *>(this);
-		}
+//		template <typename T>
+//		Derived &operator+=(T &&other)
+//		{
+//			dispatch_in_place_add<true>(std::forward<T>(other));
+//			return *static_cast<Derived *>(this);
+//		}
 		/// Identity operator.
 		/**
 		 * @return copy of \p this, cast to \p Derived.
@@ -1712,12 +1712,12 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		 * 
 		 * @throws unspecified any exception thrown by operator+=().
 		 */
-		template <typename T>
-		Derived &operator-=(T &&other)
-		{
-			dispatch_in_place_add<false>(std::forward<T>(other));
-			return *static_cast<Derived *>(this);
-		}
+//		template <typename T>
+//		Derived &operator-=(T &&other)
+//		{
+//			dispatch_in_place_add<false>(std::forward<T>(other));
+//			return *static_cast<Derived *>(this);
+//		}
 		/// Negation operator.
 		/**
 		 * @return a copy of \p this on which negate() has been called.

@@ -466,11 +466,11 @@ class series_binary_operators
 		 * - copy-construction of return value type,
 		 * - piranha::series::operator+=().
 		 */
-		template <typename T, typename U>
-		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator+(T &&s1, U &&s2)
-		{
-			return dispatch_binary_add<true>(std::forward<T>(s1),std::forward<U>(s2));
-		}
+//		template <typename T, typename U>
+//		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator+(T &&s1, U &&s2)
+//		{
+//			return dispatch_binary_add<true>(std::forward<T>(s1),std::forward<U>(s2));
+//		}
 		/// Binary subtraction involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series. The algorithm proceeds in the same
@@ -486,11 +486,11 @@ class series_binary_operators
 		 * - piranha::series::operator-=(),
 		 * - piranha::series::negate().
 		 */
-		template <typename T, typename U>
-		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator-(T &&s1, U &&s2)
-		{
-			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
-		}
+//		template <typename T, typename U>
+//		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator-(T &&s1, U &&s2)
+//		{
+//			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
+//		}
 		/// Binary multiplication involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
