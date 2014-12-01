@@ -367,22 +367,22 @@ class series_operators
 			using ret_type = series_common_type<T,U>;
 			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
 			static_assert(std::is_same<typename std::decay<U>::type,ret_type>::value,"Invalid type.");
-			// This is always possible to do, a series is always copy/move-constructible.
+			// Init the return value from the first operand.
+			// NOTE: this is always possible to do, a series is always copy/move-constructible.
 			ret_type retval(std::forward<T>(x));
-			if (likely(x.m_symbol_set == y.m_symbol_set)) {
+			// NOTE: we do not use x any more, as it might have been moved.
+			if (likely(retval.m_symbol_set == y.m_symbol_set)) {
 				retval.template merge_terms<Sign>(std::forward<U>(y));
 			} else {
 				// Let's fix the args of the first series, if needed.
-				auto merge = x.m_symbol_set.merge(y.m_symbol_set);
-				if (merge != x.m_symbol_set) {
+				auto merge = retval.m_symbol_set.merge(y.m_symbol_set);
+				if (merge != retval.m_symbol_set) {
 					// This is a move assignment, always possible.
-					retval = x.merge_arguments(merge);
+					retval = retval.merge_arguments(merge);
 				}
 				// Fix the args of the second series.
 				if (merge != y.m_symbol_set) {
-					// Another move assignment, always possible.
-					auto y_copy = y.merge_arguments(merge);
-					retval.template merge_terms<Sign>(std::move(y_copy));
+					retval.template merge_terms<Sign>(y.merge_arguments(merge));
 				} else {
 					retval.template merge_terms<Sign>(std::forward<U>(y));
 				}
@@ -1702,7 +1702,7 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		{
 			return Derived(*static_cast<Derived const *>(this));
 		}
-		/// In-place addition.
+		/// In-place subtraction.
 		/**
 		 * Analogous to operator+=(), apart from a change in sign.
 		 * 
