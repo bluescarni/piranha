@@ -53,8 +53,12 @@
 
 using integral_types = boost::mpl::vector<char,
 	signed char,short,int,long,long long,
-	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,
-	wchar_t,char16_t,char32_t>;
+	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long
+// See comments in mp_integer_01.cpp.
+#if !defined(PIRANHA_COMPILER_IS_CLANG)
+	,wchar_t,char16_t,char32_t
+#endif
+>;
 
 using floating_point_types = boost::mpl::vector<float,double
 #if !defined(PIRANHA_RUN_ON_VALGRIND)

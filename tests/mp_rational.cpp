@@ -54,13 +54,6 @@
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 
-using integral_types = boost::mpl::vector<char,
-	signed char,short,int,long,long long,
-	unsigned char,unsigned short,unsigned,unsigned long,unsigned long long,
-	wchar_t,char16_t,char32_t>;
-
-using floating_point_types = boost::mpl::vector<float,double,long double>;
-
 static std::mt19937 rng;
 static const int ntries = 1000;
 
