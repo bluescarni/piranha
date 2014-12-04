@@ -580,6 +580,10 @@ class series_operators
  * coefficients could make the term incompatible, but this is not the case as in base_term only the key matters for compatibility. Propagating
  * this through the code would solve the issue of what to do if a term becomes incompatible during multiplication/merging/insertion etc. (now
  * it cannot become incompatible any more if it is already in series).
+ * TODO new operators:
+ * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
+ * - review and beautify the generic ctor and assignment operator;
+ * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag, series_operators

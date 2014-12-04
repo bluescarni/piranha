@@ -644,10 +644,76 @@ class debug_access<arithmetics_add_tag>
 				typedef g_series_type<Cf,Expo> p_type1;
 				typedef g_series_type2<Cf,Expo> p_type2;
 				typedef g_series_type<int,Expo> p_type3;
+				// Some type checks - these are not addable as they result in an ambiguity
+				// between two series with same coefficient but different series types.
 				BOOST_CHECK((!is_addable<p_type1,p_type2>::value));
 				BOOST_CHECK((!is_addable<p_type2,p_type1>::value));
 				BOOST_CHECK((!is_addable_in_place<p_type1,p_type2>::value));
 				BOOST_CHECK((!is_addable_in_place<p_type2,p_type1>::value));
+				// Various subcases of case 0.
+				p_type1 x{"x"}, y{"y"};
+				// No need to merge args.
+				auto tmp = x + x;
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1.));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Try with moves on both sides.
+				tmp = p_type1{x} + x;
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1.));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				tmp = x + p_type1{x};
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1.));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Now with merging.
+				tmp = x + y;
+				BOOST_CHECK_EQUAL(tmp.size(),2u);
+				auto it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				++it;
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+				// With moves.
+				tmp = p_type1{x} + y;
+				BOOST_CHECK_EQUAL(tmp.size(),2u);
+				it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				++it;
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+				tmp = x + p_type1{y};
+				BOOST_CHECK_EQUAL(tmp.size(),2u);
+				it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				++it;
+				BOOST_CHECK(it->m_cf == Cf(1));
+				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+				// Test the swapping of operands when one series is larger than the other.
+				tmp = (x + y) + x;
+				BOOST_CHECK_EQUAL(tmp.size(),2u);
+				it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_key.size() == 2u);
+				++it;
+				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+				tmp = x +(y + x);
+				BOOST_CHECK_EQUAL(tmp.size(),2u);
+				it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_key.size() == 2u);
+				++it;
+				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+#if 0
 				// In-place addition.
 				p_type1 p1;
 				p1 += 1;
@@ -700,6 +766,7 @@ class debug_access<arithmetics_add_tag>
 				++it;
 				BOOST_CHECK(it->m_cf.m_symbol_set.size() == 0u || it->m_cf.m_symbol_set.size() == 1u);
 				BOOST_CHECK(it->m_cf.size() == 1u || it->m_cf.size() == 2u);*/
+#endif
 			}
 		};
 		template <typename Cf>
