@@ -20,7 +20,7 @@
 
 #include "../src/series.hpp"
 
-#define BOOST_TEST_MODULE series_test
+#define BOOST_TEST_MODULE series_01_test
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>

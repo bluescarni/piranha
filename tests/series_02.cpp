@@ -569,78 +569,6 @@ BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
 	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<g_series_type_nr<int>,g_series_type<float,int>>>::value));
 }
 
-BOOST_AUTO_TEST_CASE(series_binary_add_test)
-{
-	typedef g_series_type<rational,int> p_type1;
-	typedef g_series_type<int,rational> p_type2;
-	typedef g_series_type<short,rational> p_type3;
-	typedef g_series_type<char,rational> p_type4;
-	// First let's check the output type.
-	// Case 0.
-	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + p_type1{})>::value));
-	// Case 1.
-	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + p_type2{})>::value));
-	// Case 2.
-	BOOST_CHECK((std::is_same<p_type1,decltype(p_type2{} + p_type1{})>::value));
-	// Case 3, symmetric.
-	BOOST_CHECK((std::is_same<p_type2,decltype(p_type3{} + p_type4{})>::value));
-	BOOST_CHECK((std::is_same<p_type2,decltype(p_type4{} + p_type3{})>::value));
-	// Case 4.
-	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + 0)>::value));
-	// Case 5.
-	BOOST_CHECK((std::is_same<p_type2,decltype(p_type3{} + 0)>::value));
-	// Case 6.
-	BOOST_CHECK((std::is_same<p_type1,decltype(0 + p_type1{})>::value));
-	// Case 7.
-	BOOST_CHECK((std::is_same<p_type2,decltype(0 + p_type3{})>::value));
-	// Check non-addable series.
-	typedef g_series_type2<rational,int> p_type5;
-	BOOST_CHECK((!is_addable<p_type1,p_type5>::value));
-	BOOST_CHECK((!is_addable<p_type5,p_type1>::value));
-	// Check coefficient series.
-	typedef g_series_type<p_type1,int> p_type11;
-	typedef g_series_type<p_type2,rational> p_type22;
-	typedef g_series_type<p_type1,rational> p_type21;
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type1{} + p_type11{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} + p_type1{})>::value));
-	BOOST_CHECK((std::is_same<p_type21,decltype(p_type1{} + p_type22{})>::value));
-	BOOST_CHECK((std::is_same<p_type21,decltype(p_type22{} + p_type1{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} + p_type22{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type22{} + p_type11{})>::value));
-	// Functional tests.
-	// Case 0.
-	BOOST_CHECK((p_type1{} + p_type1{}).empty());
-	//
-	BOOST_CHECK((p_type1{} + 0).empty());
-}
-
-BOOST_AUTO_TEST_CASE(series_in_place_add_test)
-{
-	typedef g_series_type<rational,int> p_type1;
-	typedef g_series_type<int,rational> p_type2;
-	typedef g_series_type<short,rational> p_type3;
-	typedef g_series_type<char,rational> p_type4;
-	// Type checks.
-	// Case 0.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += p_type1{})>::value));
-	// Case 1.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += p_type2{})>::value));
-	// Case 2.
-	BOOST_CHECK((std::is_same<p_type2 &,decltype(std::declval<p_type2 &>() += p_type1{})>::value));
-	// Case 3, symmetric.
-	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() += p_type4{})>::value));
-	BOOST_CHECK((std::is_same<p_type4 &,decltype(std::declval<p_type4 &>() += p_type3{})>::value));
-	// Case 4.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += 0)>::value));
-	// Case 5.
-	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() += 0)>::value));
-	// Cases 6 and 7 do not make sense at the moment.
-	// TODO: check the assertion above with is_addable_in_place trait.
-	p_type1 x{"x"}, y{"y"};
-	x += y;
-	BOOST_CHECK_EQUAL(x,p_type1{"x"} + y);
-}
-
 BOOST_AUTO_TEST_CASE(series_binary_sub_test)
 {
 	typedef g_series_type<rational,int> p_type1;
@@ -786,5 +714,65 @@ typedef debug_access<arithmetics_add_tag> arithmetics_add_tester;
 
 BOOST_AUTO_TEST_CASE(series_arithmetics_add_test)
 {
+	// Functional testing.
 	boost::mpl::for_each<cf_types>(arithmetics_add_tester());
+	// Type testing for binary addition.
+	typedef g_series_type<rational,int> p_type1;
+	typedef g_series_type<int,rational> p_type2;
+	typedef g_series_type<short,rational> p_type3;
+	typedef g_series_type<char,rational> p_type4;
+	// First let's check the output type.
+	// Case 0.
+	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + p_type1{})>::value));
+	// Case 1.
+	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + p_type2{})>::value));
+	// Case 2.
+	BOOST_CHECK((std::is_same<p_type1,decltype(p_type2{} + p_type1{})>::value));
+	// Case 3, symmetric.
+	BOOST_CHECK((std::is_same<p_type2,decltype(p_type3{} + p_type4{})>::value));
+	BOOST_CHECK((std::is_same<p_type2,decltype(p_type4{} + p_type3{})>::value));
+	// Case 4.
+	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} + 0)>::value));
+	// Case 5.
+	BOOST_CHECK((std::is_same<p_type2,decltype(p_type3{} + 0)>::value));
+	// Case 6.
+	BOOST_CHECK((std::is_same<p_type1,decltype(0 + p_type1{})>::value));
+	// Case 7.
+	BOOST_CHECK((std::is_same<p_type2,decltype(0 + p_type3{})>::value));
+	// Check non-addable series.
+	typedef g_series_type2<rational,int> p_type5;
+	BOOST_CHECK((!is_addable<p_type1,p_type5>::value));
+	BOOST_CHECK((!is_addable<p_type5,p_type1>::value));
+	// Check coefficient series.
+	typedef g_series_type<p_type1,int> p_type11;
+	typedef g_series_type<p_type2,rational> p_type22;
+	typedef g_series_type<p_type1,rational> p_type21;
+	BOOST_CHECK((std::is_same<p_type11,decltype(p_type1{} + p_type11{})>::value));
+	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} + p_type1{})>::value));
+	BOOST_CHECK((std::is_same<p_type21,decltype(p_type1{} + p_type22{})>::value));
+	BOOST_CHECK((std::is_same<p_type21,decltype(p_type22{} + p_type1{})>::value));
+	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} + p_type22{})>::value));
+	BOOST_CHECK((std::is_same<p_type11,decltype(p_type22{} + p_type11{})>::value));
+	// Type testing for in-place addition.
+	// Case 0.
+	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += p_type1{})>::value));
+	// Case 1.
+	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += p_type2{})>::value));
+	// Case 2.
+	BOOST_CHECK((std::is_same<p_type2 &,decltype(std::declval<p_type2 &>() += p_type1{})>::value));
+	// Case 3, symmetric.
+	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() += p_type4{})>::value));
+	BOOST_CHECK((std::is_same<p_type4 &,decltype(std::declval<p_type4 &>() += p_type3{})>::value));
+	// Case 4.
+	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() += 0)>::value));
+	// Case 5.
+	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() += 0)>::value));
+	// Cases 6 and 7 do not make sense at the moment.
+	BOOST_CHECK((!is_addable_in_place<int,p_type3>::value));
+	BOOST_CHECK((!is_addable_in_place<p_type1,p_type11>::value));
+	// Checks for coefficient series.
+	p_type11 tmp;
+	BOOST_CHECK((std::is_same<p_type11 &,decltype(tmp += p_type1{})>::value));
+	p_type22 tmp2;
+	BOOST_CHECK((std::is_same<p_type22 &,decltype(tmp2 += p_type1{})>::value));
 }
