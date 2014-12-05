@@ -557,7 +557,7 @@ class series_operators
  * 
  * - \p Term must satisfy piranha::is_term.
  * - \p Derived must derive from piranha::series of \p Term and \p Derived.
- * - \p Derived must satisfy piranha::is_container_element.
+ * - \p Derived must satisfy piranha::is_series.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -584,6 +584,7 @@ class series_operators
  * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
  * - review and beautify the generic ctor and assignment operator;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
+ * - remove the arithmetic tests from series_01, check the headers as usual.
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag, series_operators
@@ -1492,7 +1493,7 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		~series()
 		{
 			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
-			PIRANHA_TT_CHECK(is_container_element,Derived);
+			PIRANHA_TT_CHECK(is_series,Derived);
 			// Static checks on the iterator types.
 			PIRANHA_TT_CHECK(is_input_iterator,const_iterator);
 			piranha_assert(destruction_checks());
