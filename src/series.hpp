@@ -445,7 +445,7 @@ class series_operators
 		// here is that any overload other than the const references one is an optimisation detail
 		// and that for the operator to be enabled the "canonical" form of addition operator must be available.
 		// The consequence is that if, for instance, only a move constructor is available, the operator
-		// wil anyway be disabled even if technically we could still perform the computation.
+		// will anyway be disabled even if technically we could still perform the computation.
 		template <typename T, typename U>
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
