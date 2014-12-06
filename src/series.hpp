@@ -585,7 +585,7 @@ class series_operators
  * - review and beautify the generic ctor and assignment operator;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - remove the arithmetic tests from series_01, check the headers as usual.
- * - add some tests for the values of the coefficients in sub/add.
+ * - test with mock_cfs that are not addable to scalars.
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag, series_operators
