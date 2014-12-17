@@ -1636,45 +1636,6 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		{
 			insert<true>(std::forward<T>(term));
 		}
-		/// In-place addition.
-		/**
-		 * The addition algorithm proceeds as follows:
-		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
-		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
-		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
-		 *     (a copy of \p other might be created if it requires modifications);
-		 *   - all terms in \p other (or its copy) will be merged into \p this using piranha::insert();
-		 * - else:
-		 *   - a \p Term instance will be constructed as follows:
-		 *     - \p other will be forwarded to construct the coefficient;
-		 *     - the arguments set of \p this will be used to construct the key;
-		 *   - the term will be inserted into \p this using insert().
-		 * 
-		 * If \p other is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
-		 * 
-		 * The exception safety guarantee for this method is the basic one.
-		 * 
-		 * Please note that in-place addition for series works slightly differently from addition for native C++ types: the coefficients of the terms
-		 * to be inserted into the series are, if necessary, first converted to the coefficient type of \p term_type and then added in-place
-		 * to exsisting coefficients. This behaviour
-		 * is different from the standard mechanism of type promotions for arithmetic C++ types.
-		 * 
-		 * @param[in] other object to be added to the series.
-		 * 
-		 * @return reference to \p this, cast to type \p Derived.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - insert(),
-		 * - the <tt>merge_args()</tt> method of the key type,
-		 * - the constructors of \p term_type, coefficient and key types,
-		 * - piranha::symbol_set::merge().
-		 */
-//		template <typename T>
-//		Derived &operator+=(T &&other)
-//		{
-//			dispatch_in_place_add<true>(std::forward<T>(other));
-//			return *static_cast<Derived *>(this);
-//		}
 		/// Identity operator.
 		/**
 		 * @return copy of \p this, cast to \p Derived.
@@ -1685,22 +1646,6 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		{
 			return Derived(*static_cast<Derived const *>(this));
 		}
-		/// In-place subtraction.
-		/**
-		 * Analogous to operator+=(), apart from a change in sign.
-		 * 
-		 * @param[in] other object to be subtracted from the series.
-		 * 
-		 * @return reference to \p this, cast to type \p Derived.
-		 * 
-		 * @throws unspecified any exception thrown by operator+=().
-		 */
-//		template <typename T>
-//		Derived &operator-=(T &&other)
-//		{
-//			dispatch_in_place_add<false>(std::forward<T>(other));
-//			return *static_cast<Derived *>(this);
-//		}
 		/// Negation operator.
 		/**
 		 * @return a copy of \p this on which negate() has been called.

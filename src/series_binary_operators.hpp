@@ -438,59 +438,6 @@ class series_binary_operators
 			return series_equality(s1,s2);
 		}
 	public:
-		/// Binary addition involving piranha::series.
-		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::series.
-		 * The binary addition algorithm proceeds as follows:
-		 * - if operands are series with same echelon size, the return type is determined by the coefficient types
-		 *   \p c1 and \p c2 of \p T and \p U respectively:
-		 *   - the return type is \p T if \p c1 and \p c2 are the same type or <tt>decltype(c1 + c2)</tt> is \p c1,
-		 *     it is \p c2 if <tt>decltype(c1 + c2)</tt> is \p c2. If \p c1 and \p c2 are different types and <tt>decltype(c1 + c2)</tt>
-		 *     is neither \p c1 or \p c2, a compile-time error will be produced;
-		 *   - the return value is built from either \p s1 or \p s2 (depending on its type);
-		 * - else:
-		 *   - the return type is the type of the series operand with largest echelon size;
-		 *   - the return value is built from the series operand with largest echelon size;
-		 * - piranha::series::operator+=() is called on the return value;
-		 * - the return value is returned.
-		 * 
-		 * Note that the return type is determined solely by the coefficient types, and that the rules determining the return type and
-		 * the implementation of the operator might differ from those of built-in C++ types.
-		 * 
-		 * @param[in] s1 first operand.
-		 * @param[in] s2 second operand.
-		 * 
-		 * @return <tt>s1 + s2</tt>.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - copy-construction of return value type,
-		 * - piranha::series::operator+=().
-		 */
-//		template <typename T, typename U>
-//		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator+(T &&s1, U &&s2)
-//		{
-//			return dispatch_binary_add<true>(std::forward<T>(s1),std::forward<U>(s2));
-//		}
-		/// Binary subtraction involving piranha::series.
-		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::series. The algorithm proceeds in the same
-		 * way as operator+(), with a change in sign and possibly a call to piranha::series::negate().
-		 * 
-		 * @param[in] s1 first operand.
-		 * @param[in] s2 second operand.
-		 * 
-		 * @return <tt>s1 - s2</tt>.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - copy-construction of return value type,
-		 * - piranha::series::operator-=(),
-		 * - piranha::series::negate().
-		 */
-//		template <typename T, typename U>
-//		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator-(T &&s1, U &&s2)
-//		{
-//			return dispatch_binary_add<false>(std::forward<T>(s1),std::forward<U>(s2));
-//		}
 		/// Binary multiplication involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.
