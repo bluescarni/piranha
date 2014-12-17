@@ -676,7 +676,8 @@ class series_operators
  * - remove the arithmetic tests from series_01, check the headers as usual.
  * - test with mock_cfs that are not addable to scalars,
  * - use only merge_arguments, phase out merge_args,
- * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go.
+ * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go.,
+ * - echelon size must go too.
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag, series_operators
