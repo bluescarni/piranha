@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/any.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
 #include <future>
@@ -45,10 +44,10 @@
 #include "config.hpp"
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
-#include "echelon_size.hpp"
 #include "exceptions.hpp"
 #include "mp_integer.hpp"
 #include "runtime_info.hpp"
+#include "safe_cast.hpp"
 #include "settings.hpp"
 #include "thread_pool.hpp"
 #include "tracing.hpp"
@@ -59,21 +58,19 @@ namespace piranha
 
 /// Default series multiplier.
 /**
- * This class is used by the multiplication operators involving two series operands with the same echelon size. The class works as follows:
+ * This class is used by the multiplication operators involving two series operands. The class works as follows:
  * 
- * - an instance of series multiplier is created using two series (possibly of different types) as construction arguments;
- * - when operator()() is called, an instance of the piranha::series type from which \p Series1 derives is returned, representing
+ * - an instance of series multiplier is created using two series as construction arguments;
+ * - when operator()() is called, an instance of \p Series is returned, representing
  *   the result of the multiplication of the two series used for construction.
  * 
  * Any specialisation of this class must respect the protocol described above (i.e., construction from series
  * instances and operator()() to compute the result). Note that this class is guaranteed to be used after the symbolic arguments of the series used for construction
  * have been merged (in other words, the two series have identical symbolic arguments sets).
- * Note also that the return type of the multiplication is the piranha::series base type of \p Series1, independently from the rules governing coefficient arithmetics.
  * 
  * ## Type requirements ##
  * 
- * - \p Series1 and \p Series2 must satisfy the piranha::is_series type trait. Additionally, the echelon sizes of
- *   \p Series1 and \p Series2 must be the same, otherwise a compile-time assertion will fail.
+ * \p Series must satisfy the piranha::is_series type trait.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -82,7 +79,6 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  * \todo series multiplier concept?
- * \todo mention this must be specialised using enable_if.
  * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
  * means via template specialisation to customise the behaviour for different types of coefficients -> probably the easiest thing is to benchmark
  * the thread overhead in the simplest case (e.g., polynomial with double precision cf and univariate) and use that as heuristic. Might not be optimal
@@ -94,38 +90,10 @@ namespace piranha
  * to kick in when doing the full computation in order to avoid some branching in the insertion routines. The code though is already quite complex,
  * so better be very sure it is worth before embarking in this.
  */
-template <typename Series1, typename Series2, typename Enable = void>
+template <typename Series, typename Enable = void>
 class series_multiplier
 {
-		PIRANHA_TT_CHECK(is_series,Series1);
-		PIRANHA_TT_CHECK(is_series,Series2);
-		static_assert(echelon_size<typename Series1::term_type>::value == echelon_size<typename Series2::term_type>::value,
-			"Mismatch in echelon sizes.");
-	protected:
-		/// Alias for term type of \p Series1.
-		typedef typename Series1::term_type term_type1;
-		/// Alias for term type of \p Series2.
-		typedef typename Series2::term_type term_type2;
-		/// Type of the result of the multiplication.
-		/**
-		 * Return type is the base piranha::series type of \p Series1.
-		 */
-		typedef series<term_type1,Series1> return_type;
-	private:
-		static_assert(std::is_same<return_type,decltype(std::declval<Series1>().multiply_by_series(std::declval<Series1>()))>::value,
-			"Invalid return_type.");
-		// Swap operands if series types are the same and first series is shorter than the second,
-		// as the first series is used to split work among threads in mt mode.
-		template <typename T>
-		void swap_operands(const T &s1, const T &s2)
-		{
-			if (s1.size() < s2.size()) {
-				std::swap(m_s1,m_s2);
-			}
-		}
-		template <typename T, typename U>
-		void swap_operands(const T &, const U &)
-		{}
+		PIRANHA_TT_CHECK(is_series,Series);
 	public:
 		/// Constructor.
 		/**
@@ -135,9 +103,12 @@ class series_multiplier
 		 * @throws std::invalid_argument if the symbol sets of \p s1 and \p s2 differ.
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers.
 		 */
-		explicit series_multiplier(const Series1 &s1, const Series2 &s2) : m_s1(&s1),m_s2(&s2)
+		explicit series_multiplier(const Series &s1, const Series &s2) : m_s1(&s1),m_s2(&s2)
 		{
-			swap_operands(s1,s2);
+			using term_type = typename Series::term_type;
+			if (s1.size() < s2.size()) {
+				std::swap(m_s1,m_s2);
+			}
 			if (unlikely(m_s1->m_symbol_set != m_s2->m_symbol_set)) {
 				piranha_throw(std::invalid_argument,"incompatible arguments sets");
 			}
@@ -148,9 +119,9 @@ class series_multiplier
 			m_v2.reserve(m_s2->size());
 			// Fill in the vectors of pointers.
 			std::back_insert_iterator<decltype(m_v1)> bii1(m_v1);
-			std::transform(m_s1->m_container.begin(),m_s1->m_container.end(),bii1,[](const term_type1 &t) {return &t;});
+			std::transform(m_s1->m_container.begin(),m_s1->m_container.end(),bii1,[](const term_type &t) {return &t;});
 			std::back_insert_iterator<decltype(m_v2)> bii2(m_v2);
-			std::transform(m_s2->m_container.begin(),m_s2->m_container.end(),bii2,[](const term_type2 &t) {return &t;});
+			std::transform(m_s2->m_container.begin(),m_s2->m_container.end(),bii2,[](const term_type &t) {return &t;});
 		}
 		/// Deleted copy constructor.
 		series_multiplier(const series_multiplier &) = delete;
@@ -168,7 +139,7 @@ class series_multiplier
 		 * 
 		 * @throws unspecified any exception thrown by execute().
 		 */
-		return_type operator()() const
+		Series operator()() const
 		{
 			return execute<default_functor>();
 		}
@@ -177,7 +148,7 @@ class series_multiplier
 		/**
 		 * The multiplication algorithm proceeds as follows:
 		 * 
-		 * - if one of the two series is empty, a default-constructed instance of \p return_type is returned;
+		 * - if one of the two series is empty, a default-constructed instance of \p Series is returned;
 		 * - a heuristic determines whether to enable multi-threaded mode or not;
 		 * - in single-threaded mode:
 		 *   - an instance of \p Functor is created and used to compute the return value via term-by-term multiplications and
@@ -195,27 +166,28 @@ class series_multiplier
 		 * @throws std::overflow_error in case of overflowing arithmetic operations on integral types.
 		 * @throws unspecified any exception thrown by:
 		 * - memory allocation errors in standard containers,
-		 * - \p boost::numeric_cast (in case of out-of-range convertions from one integral type to another),
+		 * - piranha::safe_cast(),
 		 * - the public methods of \p Functor,
 		 * - errors in threading primitives,
 		 * - piranha::series::insert().
 		 */
 		template <typename Functor>
-		return_type execute() const
+		Series execute() const
 		{
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_s1->empty() || m_s2->empty())) {
-				return return_type{};
+				// NOTE: requirement is ok, a series must be def-ctible.
+				return Series{};
 			}
 			// This is the size type that will be used throughout the calculations.
-			typedef decltype(m_v1.size()) size_type;
-			const size_type size1 = m_v1.size(), size2 = boost::numeric_cast<size_type>(m_v2.size());
+			using size_type = decltype(m_v1.size());
+			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
 			// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
 			// machine around 2012.
 			// NOTE: tuning parameter.
-			size_type n_threads = boost::numeric_cast<size_type>(thread_pool::use_threads(
+			size_type n_threads = safe_cast<size_type>(thread_pool::use_threads(
 				integer(size1) * size2,integer(500000L)
 			));
 			piranha_assert(n_threads);
@@ -226,7 +198,7 @@ class series_multiplier
 			}
 			piranha_assert(n_threads >= 1u);
 			if (likely(n_threads == 1u)) {
-				return_type retval;
+				Series retval;
 				retval.m_symbol_set = m_s1->m_symbol_set;
 				Functor f(&m_v1[0u],size1,&m_v2[0u],size2,retval);
 				const auto tmp = rehasher(f);
@@ -237,13 +209,14 @@ class series_multiplier
 				return retval;
 			} else {
 				// Build the return values and the multiplication functors.
-				std::list<return_type,cache_aligning_allocator<return_type>> retval_list;
+				std::list<Series,cache_aligning_allocator<Series>> retval_list;
 				std::list<Functor,cache_aligning_allocator<Functor>> functor_list;
 				const auto block_size = size1 / n_threads;
 				for (size_type i = 0u; i < n_threads; ++i) {
 					// Last thread needs a different size from block_size.
 					const size_type s1 = (i == n_threads - 1u) ? (size1 - i * block_size) : block_size;
-					retval_list.push_back(return_type{});
+					// NOTE: ok, series must be def-ctible.
+					retval_list.emplace_back();
 					retval_list.back().m_symbol_set = m_s1->m_symbol_set;
 					functor_list.push_back(Functor(&m_v1[0u] + i * block_size,s1,&m_v2[0u],size2,retval_list.back()));
 				}
@@ -268,7 +241,7 @@ class series_multiplier
 					f_list.wait_all();
 					throw;
 				}
-				return_type retval;
+				Series retval;
 				retval.m_symbol_set = m_s1->m_symbol_set;
 				auto final_estimate = estimate_final_series_size(Functor(&m_v1[0u],size1,&m_v2[0u],size2,retval));
 				// We want to make sure that final_estimate contains at least 1 element, so that we can use faster low-level
@@ -277,7 +250,7 @@ class series_multiplier
 					final_estimate = 1u;
 				}
 				// Try to see if a series already has enough buckets.
-				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const return_type &r) {
+				auto it = std::find_if(retval_list.begin(),retval_list.end(),[&final_estimate](const Series &r) {
 					return static_cast<double>(r.m_container.bucket_count()) * r.m_container.max_load_factor() >= final_estimate;
 				});
 				if (it != retval_list.end()) {
@@ -286,12 +259,12 @@ class series_multiplier
 				} else {
 					// Otherwise, just rehash to the desired value, corrected for max load factor.
 					retval.m_container.rehash(
-						boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(final_estimate) / retval.m_container.max_load_factor()))
+						safe_cast<typename Series::size_type>(std::ceil(static_cast<double>(final_estimate) / retval.m_container.max_load_factor()))
 					);
 				}
 				// Cleanup functor that will erase all elements in retval_list.
 				auto cleanup = [&retval_list]() {
-					std::for_each(retval_list.begin(),retval_list.end(),[](return_type &r) {r.m_container.clear();});
+					std::for_each(retval_list.begin(),retval_list.end(),[](Series &r) {r.m_container.clear();});
 				};
 				try {
 					final_merge(retval,retval_list,n_threads);
@@ -319,11 +292,13 @@ class series_multiplier
 		class default_functor
 		{
 			public:
+				/// Alias for the term type of \p Series.
+				using term_type = typename Series::term_type;
 				/// Alias for the size type.
 				/**
 				 * This unsigned type will be used to represent sizes throughout the calculations.
 				 */
-				typedef typename std::vector<term_type1 const *>::size_type size_type;
+				using size_type = typename std::vector<term_type const *>::size_type;
 			private:
 				// Functor for the insertion of the terms.
 				template <typename Tuple, std::size_t N = 0u, typename Enable2 = void>
@@ -348,7 +323,7 @@ class series_multiplier
 				{
 					inserter<std::tuple<Args...>>::run(*this,mult_res);
 				}
-				void insert_impl(typename Series1::term_type &mult_res) const
+				void insert_impl(typename Series::term_type &mult_res) const
 				{
 					m_retval.insert(mult_res);
 				}
@@ -366,8 +341,8 @@ class series_multiplier
 				 * @param[in] s2 size of the second array of pointers.
 				 * @param[in] retval series into which the result of the multiplication will be accumulated.
 				 */
-				explicit default_functor(term_type1 const **ptr1, const size_type &s1,
-					term_type2 const **ptr2, const size_type &s2, return_type &retval):
+				explicit default_functor(term_type const **ptr1, const size_type &s1,
+					term_type const **ptr2, const size_type &s2, Series &retval):
 					m_ptr1(ptr1),m_s1(s1),m_ptr2(ptr2),m_s2(s2),m_retval(retval)
 				{}
 				/// Term multiplication.
@@ -396,20 +371,20 @@ class series_multiplier
 					insert_impl(m_tmp);
 				}
 				/// Pointer to the first array of pointers.
-				term_type1 const **					m_ptr1;
+				term_type const **					m_ptr1;
 				/// Size of the first array of pointers.
 				const size_type						m_s1;
 				/// Pointer to the second array of pointers.
-				term_type2 const **					m_ptr2;
+				term_type const **					m_ptr2;
 				/// Size of the second array of pointers.
 				const size_type						m_s2;
 				/// Reference to the return series object used during construction.
-				return_type						&m_retval;
+				Series							&m_retval;
 				/// Object holding the result of term-by-term multiplications.
 				/**
 				 * The type of this object is either \p term_type1 or a tuple of \p term_type1.
 				 */
-				mutable typename term_type1::multiplication_result_type	m_tmp;
+				mutable typename term_type::multiplication_result_type	m_tmp;
 		};
 		/// Block-by-block multiplication.
 		/**
@@ -490,9 +465,9 @@ class series_multiplier
 		 * - the public interface of \p Functor.
 		 */
 		template <typename Functor>
-		static typename Series1::size_type estimate_final_series_size(const Functor &f)
+		static typename Series::size_type estimate_final_series_size(const Functor &f)
 		{
-			typedef typename Series1::size_type bucket_size_type;
+			typedef typename Series::size_type bucket_size_type;
 			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
 			const size_type size1 = f.m_s1, size2 = f.m_s2;
 			// If one of the two series is empty, just return 0.
@@ -594,7 +569,7 @@ class series_multiplier
 		 * 
 		 * @throws unspecified any exception thrown by tracing::trace().
 		 */
-		static void trace_estimates(const typename Series1::size_type &real_size, const typename Series1::size_type &estimate)
+		static void trace_estimates(const typename Series::size_type &real_size, const typename Series::size_type &estimate)
 		{
 			if (unlikely(!real_size)) {
 				return;
@@ -629,15 +604,15 @@ class series_multiplier
 		}
 	private:
 		template <typename RetvalList, typename Size>
-		static void final_merge(return_type &retval, RetvalList &retval_list, const Size &n_threads)
+		static void final_merge(Series &retval, RetvalList &retval_list, const Size &n_threads)
 		{
 			piranha_assert(n_threads > 1u);
 			piranha_assert(retval.m_container.bucket_count());
-			typedef typename std::vector<std::pair<typename Series1::size_type,decltype(retval.m_container._m_begin())>> container_type;
+			typedef typename std::vector<std::pair<typename Series::size_type,decltype(retval.m_container._m_begin())>> container_type;
 			typedef typename container_type::size_type size_type;
 			// First, let's fill a vector assigning each term of each element in retval_list to a bucket in retval.
 			const size_type size = static_cast<size_type>(
-				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const return_type &r) {return n + r.size();}));
+				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const Series &r) {return n + r.size();}));
 			container_type idx(size);
 			future_list<std::future<void>> f_list1;
 			size_type i = 0u;
@@ -671,11 +646,11 @@ class series_multiplier
 			if (unlikely(new_sizes.capacity() != n_threads)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			const typename Series1::size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
+			const typename Series::size_type bucket_count = retval.m_container.bucket_count(), block_size = bucket_count / n_threads;
 			try {
 				for (Size n = 0u; n < n_threads; ++n) {
 					// These are the bucket indices allowed to the current thread.
-					const typename Series1::size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
+					const typename Series::size_type start = n * block_size, end = (n == n_threads - 1u) ? bucket_count : (n + 1u) * block_size;
 					auto f = [start,end,&size,&retval,&idx,&m,&new_sizes]() {
 						size_type count_plus = 0u, count_minus = 0u;
 						for (size_type i = 0u; i < size; ++i) {
@@ -737,14 +712,14 @@ class series_multiplier
 			// Take care of rehashing, if needed.
 			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
 				retval.m_container.rehash(
-					boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(retval.size()) / retval.m_container.max_load_factor()))
+					safe_cast<typename Series::size_type>(std::ceil(static_cast<double>(retval.size()) / retval.m_container.max_load_factor()))
 				);
 			}
 		}
 		// Functor tasked to prepare return value(s) with estimated bucket sizes (if
 		// it is worth to perform such analysis).
 		template <typename Functor>
-		static std::pair<bool,typename Series1::size_type> rehasher(const Functor &f)
+		static std::pair<bool,typename Series::size_type> rehasher(const Functor &f)
 		{
 			const auto s1 = f.m_s1, s2 = f.m_s2;
 			auto &r = f.m_retval;
@@ -755,14 +730,14 @@ class series_multiplier
 				// up retval just to be sure, and proceed.
 				try {
 					auto size = estimate_final_series_size(f);
-					r.m_container.rehash(boost::numeric_cast<decltype(size)>(std::ceil(static_cast<double>(size) / r.m_container.max_load_factor())));
+					r.m_container.rehash(safe_cast<decltype(size)>(std::ceil(static_cast<double>(size) / r.m_container.max_load_factor())));
 					return std::make_pair(true,size);
 				} catch (...) {
 					r.m_container.clear();
-					return std::make_pair(false,typename Series1::size_type(0u));
+					return std::make_pair(false,typename Series::size_type(0u));
 				}
 			}
-			return std::make_pair(false,typename Series1::size_type(0u));
+			return std::make_pair(false,typename Series::size_type(0u));
 		}
 		// Size of the result of term multiplication.
 		template <typename T>
@@ -777,13 +752,13 @@ class series_multiplier
 		}
 	protected:
 		/// Const pointer to the first series operand.
-		Series1 const				*m_s1;
+		Series const						*m_s1;
 		/// Const pointer to the second series operand.
-		Series2 const				*m_s2;
+		Series const						*m_s2;
 		/// Vector of const pointers to the terms in the first series.
-		mutable std::vector<term_type1 const *>	m_v1;
+		mutable std::vector<typename Series::term_type const *>	m_v1;
 		/// Vector of const pointers to the terms in the second series.
-		mutable std::vector<term_type2 const *>	m_v2;
+		mutable std::vector<typename Series::term_type const *>	m_v2;
 };
 
 }

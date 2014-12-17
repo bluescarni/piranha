@@ -438,34 +438,6 @@ class series_binary_operators
 			return series_equality(s1,s2);
 		}
 	public:
-		/// Binary multiplication involving piranha::series.
-		/**
-		 * This template operator is activated iff at least one operand is an instance of piranha::series.
-		 * The binary multiplication algorithm proceeds as follows:
-		 * - if both operands are series with same echelon size:
-		 *   - the return type is determined in the same way as for the binary addition operator;
-		 *   - the same sequence of operations described in piranha::series::operator*=()
-		 *     is performed;
-		 * - else:
-		 *   - the return type is the type of the series operand with largest echelon size;
-		 *   - the return value is built from the series operand with largest echelon size;
-		 *   - piranha::series::operator*=() is called on the return value with the other operand as argument;
-		 * - the return value is returned.
-		 * 
-		 * @param[in] s1 first operand.
-		 * @param[in] s2 second operand.
-		 * 
-		 * @return <tt>s1 * s2</tt>.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - copy-construction of return value type,
-		 * - piranha::series::operator*=().
-		 */
-		template <typename T, typename U>
-		friend typename std::enable_if<are_series_operands<T,U>::value,typename result_type<T,U>::type>::type operator*(T &&s1, U &&s2)
-		{
-			return dispatch_binary_multiply(std::forward<T>(s1),std::forward<U>(s2));
-		}
 		/// Binary division involving piranha::series.
 		/**
 		 * This template operator is activated only if \p T is an instance of piranha::series and \p U is not.

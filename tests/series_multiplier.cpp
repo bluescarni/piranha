@@ -87,7 +87,7 @@ struct debug_access<operator_tag>
 		p_type1 p1("x"), p2("x");
 		p1.m_container.begin()->m_cf *= 2;
 		p2.m_container.begin()->m_cf *= 3;
-		series_multiplier<p_type1,p_type1> sm1(p1,p2);
+		series_multiplier<p_type1> sm1(p1,p2);
 		auto retval = sm1();
 		BOOST_CHECK(retval.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key.size() == 1u);
@@ -95,7 +95,9 @@ struct debug_access<operator_tag>
 		BOOST_CHECK(retval.m_container.begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
 		p_type2 p3("x");
 		p3.m_container.begin()->m_cf *= 4;
-		series_multiplier<p_type1,p_type2> sm2(p1,p3);
+		p_type2 p4("x");
+		p4.m_container.begin()->m_cf *= 2;
+		series_multiplier<p_type2> sm2(p4,p3);
 		retval = sm2();
 		BOOST_CHECK(retval.size() == 1u);
 		BOOST_CHECK(retval.m_container.begin()->m_key.size() == 1u);

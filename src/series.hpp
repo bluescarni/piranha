@@ -520,6 +520,85 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		// Multiplication.
+		template <typename T, typename U>
+		static series_common_type<T,U> binary_mul_impl(T &&x, U &&y)
+		{
+			return series_multiplier<series_common_type<T,U>>(std::forward<T>(x),std::forward<U>(y))();
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		{
+			using ret_type = series_common_type<T,U>;
+			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
+			static_assert(std::is_same<typename std::decay<U>::type,ret_type>::value,"Invalid type.");
+			if (likely(x.m_symbol_set == y.m_symbol_set)) {
+				return binary_mul_impl(std::forward<T>(x),std::forward<U>(y));
+			} else {
+				auto merge = x.m_symbol_set.merge(y.m_symbol_set);
+				// Couple of paranoia checks.
+				piranha_assert(merge == y.m_symbol_set.merge(x.m_symbol_set));
+				piranha_assert(merge == y.m_symbol_set.merge(merge));
+				const bool need_copy_x = (merge != x.m_symbol_set), need_copy_y = (merge != y.m_symbol_set);
+				piranha_assert(need_copy_x || need_copy_y);
+				if (need_copy_x) {
+					ret_type x_copy(x.merge_arguments(merge));
+					if (need_copy_y) {
+						ret_type y_copy(y.merge_arguments(merge));
+						return binary_mul_impl(std::move(x_copy),std::move(y_copy));
+					}
+					return binary_mul_impl(std::move(x_copy),std::forward<U>(y));
+				} else {
+					piranha_assert(need_copy_y);
+					ret_type y_copy(y.merge_arguments(merge));
+					return binary_mul_impl(std::forward<T>(x),std::move(y_copy));
+				}
+			}
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		{
+			typename std::decay<T>::type y1(std::forward<U>(y));
+			return dispatch_binary_mul(std::forward<T>(x),std::move(y1));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		static auto dispatch_binary_mul(T &&x, U &&y) -> decltype(dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x)))
+		{
+			return dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x));
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+			int>::type = 0>
+		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		{
+			series_common_type<T,U> x1(std::forward<T>(x));
+			series_common_type<T,U> y1(std::forward<U>(y));
+			return dispatch_binary_mul(std::move(x1),std::move(y1));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		static auto dispatch_binary_mul(T &&x, U &&y) -> decltype(dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x)))
+		{
+			return dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x));
+		}
+		// TODO: in the definitions of the mul types, we need to check that a series_multiplier is defined for the operands.
+		// Need to investigate where it is best to put this check.
+		template <typename T, typename U>
+		using binary_mul_type = decltype(dispatch_binary_mul(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U, typename std::enable_if<
+			!std::is_const<T>::value && std::is_assignable<T &,binary_mul_type<T,U>>::value,
+			int>::type = 0>
+		static T &dispatch_in_place_mul(T &x, U &&y)
+		{
+			x = dispatch_binary_mul(std::move(x),std::forward<U>(y));
+			return x;
+		}
+		template <typename T, typename U>
+		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> operator+(T &&x, U &&y)
@@ -540,6 +619,16 @@ class series_operators
 		friend in_place_sub_type<T,U> operator-=(T &x, U &&y)
 		{
 			return dispatch_in_place_sub(x,std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend binary_mul_type<T,U> operator*(T &&x, U &&y)
+		{
+			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend in_place_mul_type<T,U> operator*=(T &x, U &&y)
+		{
+			return dispatch_in_place_mul(x,std::forward<U>(y));
 		}
 };
 
@@ -586,7 +675,8 @@ class series_operators
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - remove the arithmetic tests from series_01, check the headers as usual.
  * - test with mock_cfs that are not addable to scalars,
- * - use only merge_arguments, phase out merge_args.
+ * - use only merge_arguments, phase out merge_args,
+ * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go.
  */
 template <typename Term, typename Derived>
 class series: series_binary_operators, detail::series_tag, series_operators
@@ -603,7 +693,7 @@ class series: series_binary_operators, detail::series_tag, series_operators
 		template <typename>
 		friend class debug_access;
 		// Make friend with series multiplier class.
-		template <typename, typename, typename>
+		template <typename, typename>
 		friend class series_multiplier;
 		// Make friend with series binary operators class.
 		friend class series_binary_operators;
@@ -1685,43 +1775,6 @@ class series: series_binary_operators, detail::series_tag, series_operators
 				m_container.clear();
 				throw;
 			}
-		}
-		/// In-place multiplication.
-		/**
-		 * The multiplication algorithm proceeds as follows:
-		 * - if \p other is an instance of piranha::series with the same echelon size as <tt>this</tt>:
-		 *   - if the symbol sets of \p this and \p other differ, they are merged using piranha::symbol_set::merge(),
-		 *     and \p this and \p other are modified as necessary to be compatible with the merged set
-		 *     (a copy of \p other might be created if it requires modifications);
-		 *   - an instance of piranha::series_multiplier of \p Derived and \p T is created, its function call operator invoked,
-		 *     and the result assigned back to \p this using piranha::series::operator=();
-		 * - else:
-		 *   - the coefficients of all terms of the series are multiplied in-place by \p other. If a
-		 *     term is rendered ignorable or incompatible by the multiplication (e.g., multiplication by zero), it will be erased from the series.
-		 * 
-		 * If \p other is an instance of piranha::series with echelon size larger than the calling type, a compile-time error will be produced.
-		 * 
-		 * If any exception is thrown when multiplying by a non-series type, \p this will be left in a valid but unspecified state.
-		 * 
-		 * @param[in] other object by which the series will be multiplied.
-		 * 
-		 * @return reference to \p this, cast to type \p Derived.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the multiplication operators of the coefficient type(s),
-		 * - piranha::hash_set::erase(),
-		 * - the constructor and function call operator of piranha::series_multiplier,
-		 * - memory allocation errors in standard containers,
-		 * - insert(),
-		 * - the <tt>merge_args()</tt> method of the key type,
-		 * - the constructors of \p term_type, coefficient and key types,
-		 * - piranha::symbol_set::merge().
-		 */
-		template <typename T>
-		Derived &operator*=(T &&other)
-		{
-			dispatch_multiply(std::forward<T>(other));
-			return *static_cast<Derived *>(this);
 		}
 		/// In-place division.
 		/**
