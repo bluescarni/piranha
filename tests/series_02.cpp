@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(series_series_recursion_index_test)
 PIRANHA_DECLARE_HAS_TYPEDEF(type);
 
 template <typename T, typename U>
-using binary_series_op_return_type = detail::binary_series_op_return_type<T,U>;
+using binary_series_op_return_type = detail::binary_series_op_return_type<T,U,0>;
 
 BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
 {

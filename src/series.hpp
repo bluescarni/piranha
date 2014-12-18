@@ -196,8 +196,6 @@ namespace detail
 {
 
 // Some notes on this machinery:
-// - we use addition to determine the return type, but this will hold for other operations as well. Maybe
-//   we should assert this somewhere;
 // - this is only for determining the type of the result, but it does not guarantee that we can actually compute it.
 //   In general we should separate the algorithmic requirements from the determination of the type. Note that we still use
 //   operator+ to determine the return type, but that's inevitable.
@@ -209,22 +207,56 @@ namespace detail
 template <typename S>
 using bso_cf_t = typename std::enable_if<is_series<S>::value,typename S::term_type::cf_type>::type;
 
+// Result of a generic arithmetic binary operation:
+// - 0 for addition,
+// - 1 for subtraction,
+// - 2 for multiplication,
+// - 3 for division.
+// No type is defined if the operation is not supported by the involved types.
+template <typename, typename, int, typename = void>
+struct op_result
+{};
+
+template <typename T, typename U>
+struct op_result<T,U,0,typename std::enable_if<is_addable<T,U>::value>::type>
+{
+	using type = decltype(std::declval<const T &>() + std::declval<const U &>());
+};
+
+template <typename T, typename U>
+struct op_result<T,U,1,typename std::enable_if<is_subtractable<T,U>::value>::type>
+{
+	using type = decltype(std::declval<const T &>() - std::declval<const U &>());
+};
+
+template <typename T, typename U>
+struct op_result<T,U,2,typename std::enable_if<is_multipliable<T,U>::value>::type>
+{
+	using type = decltype(std::declval<const T &>() * std::declval<const U &>());
+};
+
+template <typename T, typename U>
+struct op_result<T,U,3,typename std::enable_if<is_divisible<T,U>::value>::type>
+{
+	using type = decltype(std::declval<const T &>() / std::declval<const U &>());
+};
+
 // Coefficient type in a binary arithmetic operation between two series with the same recursion index.
 // Will generate a type error if S1 or S2 are not series with same recursion index or if their coefficients
-// cannot be added.
-template <typename S1, typename S2>
+// do not support the operation.
+template <typename S1, typename S2, int N>
 using bso_cf_op_t = typename std::enable_if<
 	series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u,
-	decltype(std::declval<const bso_cf_t<S1> &>() + std::declval<const bso_cf_t<S2> &>())
+	typename op_result<bso_cf_t<S1>,bso_cf_t<S2>,N>::type
 >::type;
 
 // Coefficient type in a mixed binary arithmetic operation in which the first operand has recursion index
 // greater than the second. Will generate a type error if S does not have a rec. index > T, or if the coefficient
-// of S cannot be added to T.
-template <typename S, typename T>
+// of S cannot be opped to T.
+template <typename S, typename T, int N>
 using bsom_cf_op_t = typename std::enable_if<
 	(series_recursion_index<S>::value > series_recursion_index<T>::value),
-	decltype(std::declval<const bso_cf_t<S> &>() + std::declval<const T &>())
+	typename op_result<bso_cf_t<S>,T,N>::type
 >::type;
 
 // Default case is empty for SFINAE.
@@ -234,16 +266,16 @@ struct binary_series_op_return_type
 
 // Case 0:
 // a. both are series with same recursion index,
-// b. the coefficients are the same and their multiplication results in the same coefficient,
+// b. the coefficients are the same and the op results in the same coefficient,
 // c. the two series types are equal.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	// NOTE: in all these checks, every access to S1 and S2 should not incur in hard errors:
 	// - the series recursion index works on all types safely,
 	// - the various _t aliases are SFINAE friendly - if S1 or S2 are not series with the appropriate characteristics,
-	//   or the coefficients are not multipliable, etc., there should be a soft error.
+	//   or the coefficients are not oppable, etc., there should be a soft error.
 	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
-	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value &&
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S1>>::value && std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S2>>::value &&
 	/*c*/ std::is_same<S1,S2>::value
 	>::type>
 {
@@ -253,11 +285,11 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 
 // Case 1:
 // a. both are series with same recursion index,
-// b. the coefficients are not the same and their multiplication results in the first coefficient.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+// b. the coefficients are not the same and the op results in the first coefficient.
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
-	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
 	>::type>
 {
 	using type = S1;
@@ -266,11 +298,11 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 
 // Case 2:
 // a. both are series with same recursion index,
-// b. the coefficients are not the same and their multiplication results in the second coefficient.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+// b. the coefficients are not the same and the op results in the second coefficient.
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
-	/*b*/ std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
+	/*b*/ std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S2>>::value && !std::is_same<bso_cf_t<S1>,bso_cf_t<S2>>::value
 	>::type>
 {
 	using type = S2;
@@ -279,26 +311,26 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 
 // Case 3:
 // a. both are series with same recursion index,
-// b. the coefficient multiplication results in something else than first or second cf,
+// b. the coefficient op results in something else than first or second cf,
 // c. both series are rebindable to the new coefficient, yielding the same series.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ series_recursion_index<S1>::value == series_recursion_index<S2>::value && series_recursion_index<S1>::value != 0u &&
-	/*b*/ !std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_op_t<S1,S2>,bso_cf_t<S2>>::value &&
-	/*c*/ std::is_same<series_rebind<S1,bso_cf_op_t<S1,S2>>,series_rebind<S2,bso_cf_op_t<S1,S2>>>::value
+	/*b*/ !std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S1>>::value && !std::is_same<bso_cf_op_t<S1,S2,N>,bso_cf_t<S2>>::value &&
+	/*c*/ std::is_same<series_rebind<S1,bso_cf_op_t<S1,S2,N>>,series_rebind<S2,bso_cf_op_t<S1,S2,N>>>::value
 	>::type>
 {
-	using type = series_rebind<S1,bso_cf_op_t<S1,S2>>;
+	using type = series_rebind<S1,bso_cf_op_t<S1,S2,N>>;
 	static const unsigned value = 3u;
 };
 
 // Case 4:
 // a. the first operand has recursion index greater than the second operand,
-// b. the multiplication of the coefficient of S1 by S2 results in the coefficient of S1.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+// b. the op of the coefficient of S1 by S2 results in the coefficient of S1.
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ (series_recursion_index<S1>::value > series_recursion_index<S2>::value) &&
-	/*b*/ std::is_same<bsom_cf_op_t<S1,S2>,bso_cf_t<S1>>::value
+	/*b*/ std::is_same<bsom_cf_op_t<S1,S2,N>,bso_cf_t<S1>>::value
 	>::type>
 {
 	using type = S1;
@@ -307,26 +339,26 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 
 // Case 5:
 // a. the first operand has recursion index greater than the second operand,
-// b. the multiplication of the coefficient of S1 by S2 results in a type T different from the coefficient of S1,
+// b. the op of the coefficient of S1 by S2 results in a type T different from the coefficient of S1,
 // c. S1 is rebindable to T.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ (series_recursion_index<S1>::value > series_recursion_index<S2>::value) &&
-	/*b*/ !std::is_same<bsom_cf_op_t<S1,S2>,bso_cf_t<S1>>::value &&
-	/*c*/ series_is_rebindable<S1,bsom_cf_op_t<S1,S2>>::value
+	/*b*/ !std::is_same<bsom_cf_op_t<S1,S2,N>,bso_cf_t<S1>>::value &&
+	/*c*/ series_is_rebindable<S1,bsom_cf_op_t<S1,S2,N>>::value
 	>::type>
 {
-	using type = series_rebind<S1,bsom_cf_op_t<S1,S2>>;
+	using type = series_rebind<S1,bsom_cf_op_t<S1,S2,N>>;
 	static const unsigned value = 5u;
 };
 
 // Case 6 (symmetric of 4):
 // a. the second operand has recursion index greater than the first operand,
-// b. the multiplication of the coefficient of S2 by S1 results in the coefficient of S2.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+// b. the op of the coefficient of S2 by S1 results in the coefficient of S2.
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ (series_recursion_index<S2>::value > series_recursion_index<S1>::value) &&
-	/*b*/ std::is_same<bsom_cf_op_t<S2,S1>,bso_cf_t<S2>>::value
+	/*b*/ std::is_same<bsom_cf_op_t<S2,S1,N>,bso_cf_t<S2>>::value
 	>::type>
 {
 	using type = S2;
@@ -335,16 +367,16 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 
 // Case 7 (symmetric of 5):
 // a. the second operand has recursion index greater than the first operand,
-// b. the multiplication of the coefficient of S2 by S1 results in a type T different from the coefficient of S2,
+// b. the op of the coefficient of S2 by S1 results in a type T different from the coefficient of S2,
 // c. S2 is rebindable to T.
-template <typename S1, typename S2>
-struct binary_series_op_return_type<S1,S2,typename std::enable_if<
+template <typename S1, typename S2, int N>
+struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 	/*a*/ (series_recursion_index<S2>::value > series_recursion_index<S1>::value) &&
-	/*b*/ !std::is_same<bsom_cf_op_t<S2,S1>,bso_cf_t<S2>>::value &&
-	/*c*/ series_is_rebindable<S2,bsom_cf_op_t<S2,S1>>::value
+	/*b*/ !std::is_same<bsom_cf_op_t<S2,S1,N>,bso_cf_t<S2>>::value &&
+	/*c*/ series_is_rebindable<S2,bsom_cf_op_t<S2,S1,N>>::value
 	>::type>
 {
-	using type = series_rebind<S2,bsom_cf_op_t<S2,S1>>;
+	using type = series_rebind<S2,bsom_cf_op_t<S2,S1,N>>;
 	static const unsigned value = 7u;
 };
 
@@ -353,18 +385,21 @@ struct binary_series_op_return_type<S1,S2,typename std::enable_if<
 class series_operators
 {
 		// A couple of handy aliases.
-		template <typename T, typename U>
+		// NOTE: we need both bso_type and common_type because bso gives access to the ::value
+		// member to decide on the implementation, common_type is handy because it's shorter
+		// than using ::type on the bso.
+		template <typename T, typename U, int N>
 		using bso_type = detail::binary_series_op_return_type<typename std::decay<T>::type,
-			typename std::decay<U>::type>;
-		template <typename T, typename U>
-		using series_common_type = typename bso_type<T,U>::type;
+			typename std::decay<U>::type,N>;
+		template <typename T, typename U, int N>
+		using series_common_type = typename bso_type<T,U,N>::type;
 		// Main implementation function for add/sub: all the possible cases end up here eventually, after
 		// any necessary conversion.
 		template <bool Sign, typename T, typename U>
-		static series_common_type<T,U> binary_add_impl(T &&x, U &&y)
+		static series_common_type<T,U,0> binary_add_impl(T &&x, U &&y)
 		{
 			// This is the same as T and U.
-			using ret_type = series_common_type<T,U>;
+			using ret_type = series_common_type<T,U,0>;
 			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
 			static_assert(std::is_same<typename std::decay<U>::type,ret_type>::value,"Invalid type.");
 			// Init the return value from the first operand.
@@ -391,31 +426,30 @@ class series_operators
 		}
 		// NOTE: this case has no special algorithmic requirements, the base requirements for cf and series types
 		// already cover everything (including the needeed series constructors and cf arithmetic operators).
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 0u,int>::type = 0>
+		static series_common_type<T,U,0> dispatch_binary_add(T &&x, U &&y)
 		{
 			// Two-layers implementation, to optimise the case in which one series is much bigger than the other.
-			if (x.size() > y.size()) {
+			if (x.size() >= y.size()) {
 				return binary_add_impl<true>(std::forward<T>(x),std::forward<U>(y));
-			} else {
-				return binary_add_impl<true>(std::forward<U>(y),std::forward<T>(x));
 			}
+			return binary_add_impl<true>(std::forward<U>(y),std::forward<T>(x));
 		}
 		// NOTE: this covers two cases:
 		// - equal recursion, first series wins,
 		// - first higher recursion, coefficient of first series wins,
 		// In both cases we need to construct a T from y.
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,0>::value == 1u || bso_type<T,U,0>::value == 4u) &&
 			// In order for the implementation to work, we need to be able to build T from U.
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
+		static series_common_type<T,U,0> dispatch_binary_add(T &&x, U &&y)
 		{
 			typename std::decay<T>::type y1(std::forward<U>(y));
 			return dispatch_binary_add(std::forward<T>(x),std::move(y1));
 		}
 		// Symmetric of 1.
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 2u,int>::type = 0>
 		static auto dispatch_binary_add(T &&x, U &&y) -> decltype(dispatch_binary_add(std::forward<U>(y),std::forward<T>(x)))
 		{
 			return dispatch_binary_add(std::forward<U>(y),std::forward<T>(x));
@@ -424,19 +458,19 @@ class series_operators
 		// - equal series recursion, 3rd coefficient type generated,
 		// - first higher recursion, coefficient result is different from first series.
 		// In both cases we need to promote both operands to a 3rd type.
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,0>::value == 3u || bso_type<T,U,0>::value == 5u) &&
 			// In order for the implementation to work, we need to be able to build the common type from T and U.
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+			std::is_constructible<series_common_type<T,U,0>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U,0>,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_add(T &&x, U &&y)
+		static series_common_type<T,U,0> dispatch_binary_add(T &&x, U &&y)
 		{
-			series_common_type<T,U> x1(std::forward<T>(x));
-			series_common_type<T,U> y1(std::forward<U>(y));
+			series_common_type<T,U,0> x1(std::forward<T>(x));
+			series_common_type<T,U,0> y1(std::forward<U>(y));
 			return dispatch_binary_add(std::move(x1),std::move(y1));
 		}
 		// 6 and 7 are symmetric cases of 4 and 5. Just reverse the operands.
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 6u || bso_type<T,U,0>::value == 7u,int>::type = 0>
 		static auto dispatch_binary_add(T &&x, U &&y) -> decltype(dispatch_binary_add(std::forward<U>(y),std::forward<T>(x)))
 		{
 			return dispatch_binary_add(std::forward<U>(y),std::forward<T>(x));
@@ -463,8 +497,8 @@ class series_operators
 		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
 		// Subtraction.
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 0u,int>::type = 0>
+		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
 		{
 			if (x.size() > y.size()) {
 				return binary_add_impl<false>(std::forward<T>(x),std::forward<U>(y));
@@ -474,32 +508,32 @@ class series_operators
 				return retval;
 			}
 		}
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,1>::value == 1u || bso_type<T,U,1>::value == 4u) &&
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
 		{
 			typename std::decay<T>::type y1(std::forward<U>(y));
 			return dispatch_binary_sub(std::forward<T>(x),std::move(y1));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 2u,int>::type = 0>
 		static auto dispatch_binary_sub(T &&x, U &&y) -> decltype(dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x)))
 		{
 			auto retval = dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x));
 			retval.negate();
 			return retval;
 		}
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,1>::value == 3u || bso_type<T,U,1>::value == 5u) &&
+			std::is_constructible<series_common_type<T,U,1>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U,1>,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_sub(T &&x, U &&y)
+		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
 		{
-			series_common_type<T,U> x1(std::forward<T>(x));
-			series_common_type<T,U> y1(std::forward<U>(y));
+			series_common_type<T,U,1> x1(std::forward<T>(x));
+			series_common_type<T,U,1> y1(std::forward<U>(y));
 			return dispatch_binary_sub(std::move(x1),std::move(y1));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 6u || bso_type<T,U,1>::value == 7u,int>::type = 0>
 		static auto dispatch_binary_sub(T &&x, U &&y) -> decltype(dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x)))
 		{
 			auto retval = dispatch_binary_sub(std::forward<U>(y),std::forward<T>(x));
@@ -522,14 +556,14 @@ class series_operators
 			std::declval<const typename std::decay<U>::type &>()));
 		// Multiplication.
 		template <typename T, typename U>
-		static series_common_type<T,U> binary_mul_impl(T &&x, U &&y)
+		static series_common_type<T,U,2> binary_mul_impl(T &&x, U &&y)
 		{
-			return series_multiplier<series_common_type<T,U>>(std::forward<T>(x),std::forward<U>(y))();
+			return series_multiplier<series_common_type<T,U,2>>(std::forward<T>(x),std::forward<U>(y))();
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 0u,int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,2>::value == 0u,int>::type = 0>
+		static series_common_type<T,U,2> dispatch_binary_mul(T &&x, U &&y)
 		{
-			using ret_type = series_common_type<T,U>;
+			using ret_type = series_common_type<T,U,2>;
 			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
 			static_assert(std::is_same<typename std::decay<U>::type,ret_type>::value,"Invalid type.");
 			if (likely(x.m_symbol_set == y.m_symbol_set)) {
@@ -555,30 +589,30 @@ class series_operators
 				}
 			}
 		}
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 1u || bso_type<T,U>::value == 4u) &&
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,2>::value == 1u || bso_type<T,U,2>::value == 4u) &&
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		static series_common_type<T,U,2> dispatch_binary_mul(T &&x, U &&y)
 		{
 			typename std::decay<T>::type y1(std::forward<U>(y));
 			return dispatch_binary_mul(std::forward<T>(x),std::move(y1));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 2u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,2>::value == 2u,int>::type = 0>
 		static auto dispatch_binary_mul(T &&x, U &&y) -> decltype(dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x)))
 		{
 			return dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x));
 		}
-		template <typename T, typename U, typename std::enable_if<(bso_type<T,U>::value == 3u || bso_type<T,U>::value == 5u) &&
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<T>::type &>::value &&
-			std::is_constructible<series_common_type<T,U>,const typename std::decay<U>::type &>::value,
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,2>::value == 3u || bso_type<T,U,2>::value == 5u) &&
+			std::is_constructible<series_common_type<T,U,2>,const typename std::decay<T>::type &>::value &&
+			std::is_constructible<series_common_type<T,U,2>,const typename std::decay<U>::type &>::value,
 			int>::type = 0>
-		static series_common_type<T,U> dispatch_binary_mul(T &&x, U &&y)
+		static series_common_type<T,U,2> dispatch_binary_mul(T &&x, U &&y)
 		{
-			series_common_type<T,U> x1(std::forward<T>(x));
-			series_common_type<T,U> y1(std::forward<U>(y));
+			series_common_type<T,U,2> x1(std::forward<T>(x));
+			series_common_type<T,U,2> y1(std::forward<U>(y));
 			return dispatch_binary_mul(std::move(x1),std::move(y1));
 		}
-		template <typename T, typename U, typename std::enable_if<bso_type<T,U>::value == 6u || bso_type<T,U>::value == 7u,int>::type = 0>
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,2>::value == 6u || bso_type<T,U,2>::value == 7u,int>::type = 0>
 		static auto dispatch_binary_mul(T &&x, U &&y) -> decltype(dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x)))
 		{
 			return dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x));
