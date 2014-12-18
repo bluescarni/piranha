@@ -672,6 +672,8 @@ class series_operators
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
+ * \todo the output of pow() for series needs to be recomputed.
+ * \todo series generic ctor/assignment should use convert_to.
  * TODO new operators:
  * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
  * - review and beautify the generic ctor and assignment operator;
