@@ -438,31 +438,6 @@ class series_binary_operators
 			return series_equality(s1,s2);
 		}
 	public:
-		/// Binary division involving piranha::series.
-		/**
-		 * This template operator is activated only if \p T is an instance of piranha::series and \p U is not.
-		 * The return value, of type \p T, will be constructed from \p s, and will then be divided in-place by \p other.
-		 * 
-		 * @param[in] s series operand.
-		 * @param[in] other division argument.
-		 * 
-		 * @return <tt>s / other</tt>.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - copy-construction of return value type,
-		 * - piranha::series::operator/=().
-		 */
-		template <typename T, typename U>
-		friend typename std::enable_if<
-			std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value &&
-			!std::is_base_of<detail::series_tag,typename std::decay<U>::type>::value,
-			typename std::decay<T>::type>::type operator/(T &&s, U &&other)
-		{
-			typedef typename std::decay<T>::type return_type;
-			return_type retval(std::forward<T>(s));
-			retval /= std::forward<U>(other);
-			return retval;
-		}
 		/// Equality operator involving piranha::series.
 		/**
 		 * This template operator is activated iff at least one operand is an instance of piranha::series.

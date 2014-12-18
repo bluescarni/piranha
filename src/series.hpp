@@ -633,6 +633,65 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		// Division.
+		// NOTE: only two cases are possible at the moment, when we divide a series by an object with lower recursion index.
+		// The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a common
+		// type (true series division is not implemented).
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 4u,int>::type = 0>
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		{
+			using ret_type = series_common_type<T,U,3>;
+			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
+			// Create a copy of x and work on it. This is always possible.
+			ret_type retval(std::forward<T>(x));
+			// NOTE: x is not used any more.
+			const auto it_f = retval.m_container.end();
+			try {
+				for (auto it = retval.m_container.begin(); it != it_f;) {
+					// NOTE: here the original requirement is that cf / y is defined, but we know
+					// that cf / y results in another cf, and we assume always that cf /= y is exactly equivalent
+					// to cf = cf / y. And cf must be move-assignable. So this should be possible.
+					it->m_cf /= y;
+					// NOTE: no need to check for compatibility, as it depends only on the key type and here
+					// we are only acting on the coefficient.
+					if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
+						// Erase will return the next iterator.
+						it = retval.m_container.erase(it);
+					} else {
+						++it;
+					}
+				}
+			} catch (...) {
+				// In case of errors clear out the series.
+				retval.m_container.clear();
+				throw;
+			}
+			return retval;
+		}
+		// NOTE: the trailing decltype() syntax is used here to make sure we can actually call the other overload of the function
+		// in the body. It *should* always be the case.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 5u &&
+			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<T>::type &>::value,int>::type = 0>
+		static auto dispatch_binary_div(T &&x, U &&y) ->
+			decltype(dispatch_binary_div(std::declval<const series_common_type<T,U,3> &>(),std::forward<U>(y)))
+		{
+			series_common_type<T,U,3> x1(std::forward<T>(x));
+			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U, typename std::enable_if<
+			!std::is_const<T>::value && std::is_assignable<T &,binary_div_type<T,U>>::value,
+			int>::type = 0>
+		static T &dispatch_in_place_div(T &x, U &&y)
+		{
+			x = dispatch_binary_div(std::move(x),std::forward<U>(y));
+			return x;
+		}
+		template <typename T, typename U>
+		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> operator+(T &&x, U &&y)
@@ -663,6 +722,16 @@ class series_operators
 		friend in_place_mul_type<T,U> operator*=(T &x, U &&y)
 		{
 			return dispatch_in_place_mul(x,std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend binary_div_type<T,U> operator/(T &&x, U &&y)
+		{
+			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend in_place_div_type<T,U> operator/=(T &x, U &&y)
+		{
+			return dispatch_in_place_div(x,std::forward<U>(y));
 		}
 };
 
@@ -1204,28 +1273,6 @@ class series: series_binary_operators, detail::series_tag, series_operators
 				} else {
 					operator=(multiply_by_series(other));
 				}
-			}
-		}
-		// In-place divide
-		// =================
-		template <typename T>
-		void in_place_divide(T &&x)
-		{
-			const auto it_f = m_container.end();
-			try {
-				for (auto it = m_container.begin(); it != it_f;) {
-					it->m_cf /= x;
-					if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
-						// Erase will return the next iterator.
-						it = m_container.erase(it);
-					} else {
-						++it;
-					}
-				}
-			} catch (...) {
-				// In case of any error, just clear the series out.
-				m_container.clear();
-				throw;
 			}
 		}
 		// Exponentiation.
@@ -1815,29 +1862,6 @@ class series: series_binary_operators, detail::series_tag, series_operators
 				m_container.clear();
 				throw;
 			}
-		}
-		/// In-place division.
-		/**
-		 * This template operator is activated only if \p T is not an instance of piranha::series.
-		 * The coefficients of all terms of the series are divided in-place by \p other. If a
-		 * term is rendered ignorable or incompatible by the division (e.g., division by infinity), it will be erased from the series.
-		 * 
-		 * If any exception is thrown, \p this will be left in a valid but unspecified state.
-		 * 
-		 * @param[in] other object by which the series will be divided.
-		 * 
-		 * @return reference to \p this, cast to type \p Derived.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the division operators of the coefficient type(s),
-		 * - piranha::hash_set::erase().
-		 */
-		template <typename T>
-		typename std::enable_if<
-			!is_instance_of<typename std::decay<T>::type,piranha::series>::value,Derived &>::type operator/=(T &&other)
-		{
-			in_place_divide(std::forward<T>(other));
-			return *static_cast<Derived *>(this);
 		}
 		/** @name Table-querying methods
 		 * Methods to query the properties of the internal container used to store the terms.
