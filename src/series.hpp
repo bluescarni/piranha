@@ -669,6 +669,9 @@ class series_operators
  * coefficients could make the term incompatible, but this is not the case as in base_term only the key matters for compatibility. Propagating
  * this through the code would solve the issue of what to do if a term becomes incompatible during multiplication/merging/insertion etc. (now
  * it cannot become incompatible any more if it is already in series).
+ * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
+ * \todo probably apply_cf_functor can be folded into transform for those few uses.
+ * \todo transform needs sfinaeing.
  * TODO new operators:
  * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
  * - review and beautify the generic ctor and assignment operator;
