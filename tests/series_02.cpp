@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(series_binary_series_op_return_type_test)
 	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<int,double>>::value));
 	BOOST_CHECK((!has_typedef_type<binary_series_op_return_type<float,double>>::value));
 	// Case 0.
-	// NOTE: this cannot fail in any way as we require coefficients to be multipliable in is_cf.
+	// NOTE: this cannot fail in any way as we require coefficients to be addable in is_cf.
 	typedef g_series_type<rational,int> p_type1;
 	BOOST_CHECK((std::is_same<p_type1,binary_series_op_return_type<p_type1,p_type1>::type>::value));
 	// Case 1 and 2.
