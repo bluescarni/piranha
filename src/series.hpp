@@ -228,7 +228,7 @@ using bsom_cf_op_t = typename std::enable_if<
 >::type;
 
 // Default case is empty for SFINAE.
-template <typename S1, typename S2, typename = void>
+template <typename, typename, int, typename = void>
 struct binary_series_op_return_type
 {};
 
