@@ -1624,17 +1624,71 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_mul_test)
 	BOOST_CHECK((std::is_same<p_type22 &,decltype(tmp2 *= p_type1{})>::value));
 }
 
+struct arithmetics_div_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<arithmetics_div_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				typedef g_series_type<Cf,Expo> p_type1;
+				p_type1 x{"x"};
+				// Some tests for case 4.
+				auto tmp = 3 * x / 2;
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				auto it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_cf == Cf(3) / 2);
+				BOOST_CHECK(it->m_key.size() == 1u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Case 5.
+				auto tmp2 = 3 * x / 2.;
+				auto it2 = tmp2.m_container.begin();
+				BOOST_CHECK(it2->m_cf == Cf(3) / 2.);
+				BOOST_CHECK(it2->m_key.size() == 1u);
+				BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+				// In-place.
+				// Case 4.
+				tmp = 3 * x;
+				tmp /= 2;
+				it = tmp.m_container.begin();
+				BOOST_CHECK(it->m_cf == Cf(3) / 2);
+				BOOST_CHECK(it->m_key.size() == 1u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Case 5.
+				tmp2 = 3 * x;
+				tmp2 /= 2.;
+				it2 = tmp2.m_container.begin();
+				BOOST_CHECK(it2->m_cf == Cf(3) / 2.);
+				BOOST_CHECK(it2->m_key.size() == 1u);
+				BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+		}
+};
+}
+
+typedef debug_access<arithmetics_div_tag> arithmetics_div_tester;
+
 BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 {
 	// Functional testing.
-	//boost::mpl::for_each<cf_types>(arithmetics_mul_tester());
+	boost::mpl::for_each<cf_types>(arithmetics_div_tester());
 	// Type testing for binary division.
 	typedef g_series_type<rational,int> p_type1;
+	typedef g_series_type<p_type1,int> p_type11;
 	typedef g_series_type<double,int> p_type1d;
 	typedef g_series_type<float,int> p_type1f;
-	/*typedef g_series_type<int,rational> p_type2;
-	typedef g_series_type<short,rational> p_type3;
-	typedef g_series_type<char,rational> p_type4;*/
 	// First let's check the output type.
 	// Case 4.
 	BOOST_CHECK((std::is_same<p_type1,decltype(p_type1{} / 0)>::value));
@@ -1647,42 +1701,21 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	BOOST_CHECK((!is_divisible<double,p_type1>::value));
 	BOOST_CHECK((!is_divisible<int,p_type1>::value));
 	BOOST_CHECK((!is_divisible<integer,p_type1>::value));
-#if 0
-	// Check non-multipliable series.
-	typedef g_series_type2<rational,int> p_type5;
-	BOOST_CHECK((!is_multipliable<p_type1,p_type5>::value));
-	BOOST_CHECK((!is_multipliable<p_type5,p_type1>::value));
-	// Check coefficient series.
-	typedef g_series_type<p_type1,int> p_type11;
-	typedef g_series_type<p_type2,rational> p_type22;
-	typedef g_series_type<p_type1,rational> p_type21;
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type1{} * p_type11{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} * p_type1{})>::value));
-	BOOST_CHECK((std::is_same<p_type21,decltype(p_type1{} * p_type22{})>::value));
-	BOOST_CHECK((std::is_same<p_type21,decltype(p_type22{} * p_type1{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type11{} * p_type22{})>::value));
-	BOOST_CHECK((std::is_same<p_type11,decltype(p_type22{} * p_type11{})>::value));
 	// Type testing for in-place multiplication.
-	// Case 0.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() *= p_type1{})>::value));
-	// Case 1.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() *= p_type2{})>::value));
-	// Case 2.
-	BOOST_CHECK((std::is_same<p_type2 &,decltype(std::declval<p_type2 &>() *= p_type1{})>::value));
-	// Case 3, symmetric.
-	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() *= p_type4{})>::value));
-	BOOST_CHECK((std::is_same<p_type4 &,decltype(std::declval<p_type4 &>() *= p_type3{})>::value));
 	// Case 4.
-	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() *= 0)>::value));
+	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() /= 0)>::value));
 	// Case 5.
-	BOOST_CHECK((std::is_same<p_type3 &,decltype(std::declval<p_type3 &>() *= 0)>::value));
-	// Cases 6 and 7 do not make sense at the moment.
-	BOOST_CHECK((!is_multipliable_in_place<int,p_type3>::value));
-	BOOST_CHECK((!is_multipliable_in_place<p_type1,p_type11>::value));
-	// Checks for coefficient series.
-	p_type11 tmp;
-	BOOST_CHECK((std::is_same<p_type11 &,decltype(tmp *= p_type1{})>::value));
-	p_type22 tmp2;
-	BOOST_CHECK((std::is_same<p_type22 &,decltype(tmp2 *= p_type1{})>::value));
-#endif
+	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() /= 0.)>::value));
+	// Not divisible in-place.
+	BOOST_CHECK((!is_divisible_in_place<int,p_type1>::value));
+	BOOST_CHECK((!is_divisible_in_place<p_type11,p_type1>::value));
+	// Special cases to test the erasing of terms.
+	using pint = g_series_type<integer,int>;
+	pint x{"x"}, y{"y"};
+	auto tmp = 2 * x + y;
+	tmp /= 2;
+	BOOST_CHECK_EQUAL(tmp,x);
+	tmp = 2 * x + 2 * y;
+	tmp /= 3;
+	BOOST_CHECK(tmp.empty());
 }
