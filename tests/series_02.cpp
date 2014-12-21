@@ -597,10 +597,6 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
-				// Check going to zero.
-				tmp = x - x;
-				BOOST_CHECK(tmp.size() == 0u);
-				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
 				// Try with moves on both sides.
 				tmp = p_type1{x} + x;
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
@@ -969,6 +965,10 @@ class debug_access<arithmetics_sub_tag>
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check going to zero.
+				tmp = x - x;
+				BOOST_CHECK(tmp.size() == 0u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
 				// Try with moves on both sides.
 				tmp = p_type1{x} - x2;
