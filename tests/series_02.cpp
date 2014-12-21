@@ -1719,3 +1719,138 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	tmp /= 3;
 	BOOST_CHECK(tmp.empty());
 }
+
+struct eq_tag {};
+
+namespace piranha
+{
+template <>
+class debug_access<eq_tag>
+{
+	public:
+		template <typename Cf>
+		struct runner
+		{
+			template <typename Expo>
+			void operator()(const Expo &)
+			{
+				typedef g_series_type<Cf,Expo> p_type1;
+				typedef g_series_type2<Cf,Expo> p_type2;
+				typedef g_series_type<int,Expo> p_type3;
+				// Some type checks - these are not comparable as they result in an ambiguity
+				// between two series with same coefficient but different series types.
+				BOOST_CHECK((!is_equality_comparable<p_type1,p_type2>::value));
+				BOOST_CHECK((!is_equality_comparable<p_type2,p_type1>::value));
+				BOOST_CHECK((!is_equality_comparable<p_type1,p_type2>::value));
+				BOOST_CHECK((!is_equality_comparable<p_type2,p_type1>::value));
+				// Various subcases of case 0.
+				p_type1 x{"x"}, y{"y"};
+				BOOST_CHECK_EQUAL(x,x);
+				BOOST_CHECK_EQUAL(y,y);
+				BOOST_CHECK_EQUAL(x,x + y - y);
+				BOOST_CHECK_EQUAL(y,y + x - x);
+				// Arguments merging on both sides.
+				BOOST_CHECK(x != y);
+				// Check with series of different size.
+				BOOST_CHECK(x != y + x);
+				// Arguments merging on the other side.
+				BOOST_CHECK(y + x != y);
+				// Some tests for case 1/4.
+				BOOST_CHECK(x != p_type3{"y"});
+				BOOST_CHECK(y != p_type3{"x"});
+				BOOST_CHECK(x != p_type3{"y"} + p_type3{"x"});
+				BOOST_CHECK(y != p_type3{"x"} + p_type3{"y"});
+				BOOST_CHECK_EQUAL(x,p_type3{"x"});
+				BOOST_CHECK_EQUAL(x,p_type3{"x"} + p_type3{"y"} - p_type3{"y"});
+				BOOST_CHECK(x != 0);
+				BOOST_CHECK(y != 0);
+				BOOST_CHECK_EQUAL(x - x,0);
+				BOOST_CHECK_EQUAL(p_type1{1},1);
+				BOOST_CHECK_EQUAL(p_type1{-1},-1);
+				// Symmetric of above.
+				BOOST_CHECK(p_type3{"y"} != x);
+				BOOST_CHECK(p_type3{"x"} != y);
+				BOOST_CHECK(p_type3{"y"} + p_type3{"x"} != x);
+				BOOST_CHECK(p_type3{"x"} + p_type3{"y"} != y);
+				BOOST_CHECK_EQUAL(p_type3{"x"},x);
+				BOOST_CHECK_EQUAL(p_type3{"x"} + p_type3{"y"} - p_type3{"y"},x);
+				BOOST_CHECK(0 != x);
+				BOOST_CHECK(0 != y);
+				BOOST_CHECK_EQUAL(0,x - x);
+				BOOST_CHECK_EQUAL(1,p_type1{1});
+				BOOST_CHECK_EQUAL(-1,p_type1{-1});
+				// Case 3/5 and symmetric.
+				using p_type4 = g_series_type<g_series_type<int,Expo>,Expo>;
+				using p_type5 = g_series_type<double,Expo>;
+				BOOST_CHECK_EQUAL((p_type4{g_series_type<int,Expo>{"x"}}),p_type5{"x"});
+				BOOST_CHECK_EQUAL(p_type5{"x"},(p_type4{g_series_type<int,Expo>{"x"}}));
+				BOOST_CHECK((p_type4{g_series_type<int,Expo>{"x"}} != p_type5{"y"}));
+				BOOST_CHECK((p_type5{"y"} != p_type4{g_series_type<int,Expo>{"x"}}));
+			}
+		};
+		template <typename Cf>
+		void operator()(const Cf &)
+		{
+			boost::mpl::for_each<expo_types>(runner<Cf>());
+		}
+};
+}
+
+typedef debug_access<eq_tag> eq_tester;
+
+BOOST_AUTO_TEST_CASE(series_eq_test)
+{
+	// Functional testing.
+	boost::mpl::for_each<cf_types>(eq_tester());
+	// Type testing for binary addition.
+	typedef g_series_type<rational,int> p_type1;
+	typedef g_series_type<int,rational> p_type2;
+	typedef g_series_type<short,rational> p_type3;
+	typedef g_series_type<char,rational> p_type4;
+	// First let's check the output type.
+	// Case 0.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} == p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} != p_type1{})>::value));
+	// Case 1.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} == p_type2{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} != p_type2{})>::value));
+	// Case 2.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type2{} == p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type2{} != p_type1{})>::value));
+	// Case 3, symmetric.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type3{} == p_type4{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type3{} != p_type4{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type4{} == p_type3{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type4{} != p_type3{})>::value));
+	// Case 4.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} == 0)>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} != 0)>::value));
+	// Case 5.
+	BOOST_CHECK((std::is_same<bool,decltype(p_type3{} == 0)>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type3{} != 0)>::value));
+	// Case 6.
+	BOOST_CHECK((std::is_same<bool,decltype(0 == p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(0 != p_type1{})>::value));
+	// Case 7.
+	BOOST_CHECK((std::is_same<bool,decltype(0 == p_type3{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(0 != p_type3{})>::value));
+	// Check non-addable series.
+	typedef g_series_type2<rational,int> p_type5;
+	BOOST_CHECK((!is_equality_comparable<p_type1,p_type5>::value));
+	BOOST_CHECK((!is_equality_comparable<p_type5,p_type1>::value));
+	// Check coefficient series.
+	typedef g_series_type<p_type1,int> p_type11;
+	typedef g_series_type<p_type2,rational> p_type22;
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} == p_type11{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} != p_type11{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type11{} == p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type11{} != p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} == p_type22{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type1{} != p_type22{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} == p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} != p_type1{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type11{} == p_type22{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type11{} != p_type22{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} == p_type11{})>::value));
+	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} != p_type11{})>::value));
+}

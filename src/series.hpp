@@ -692,6 +692,73 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		// Equality.
+		// Low-level implementation of equality.
+		template <typename T>
+		static bool equality_impl(const T &x, const T &y)
+		{
+			if (x.size() != y.size()) {
+				return false;
+			}
+			piranha_assert(x.m_symbol_set == y.m_symbol_set);
+			const auto it_f_x = x.m_container.end(), it_f_y = y.m_container.end();
+			for (auto it = x.m_container.begin(); it != it_f_x; ++it) {
+				const auto tmp_it = y.m_container.find(*it);
+				if (tmp_it == it_f_y || tmp_it->m_cf != it->m_cf) {
+					return false;
+				}
+			}
+			return true;
+		}
+		// NOTE: we are using operator+() on the coefficients to determine type conversions.
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 0u,int>::type = 0>
+		static bool dispatch_equality(const T &x, const U &y)
+		{
+			static_assert(std::is_same<T,U>::value,"Invalid types for the equality operator.");
+			// Arguments merging.
+			if (likely(x.m_symbol_set == y.m_symbol_set)) {
+				return equality_impl(x,y);
+			} else {
+				auto merge = x.m_symbol_set.merge(y.m_symbol_set);
+				const bool x_needs_copy = (merge != x.m_symbol_set);
+				const bool y_needs_copy = (merge != y.m_symbol_set);
+				piranha_assert(x_needs_copy || y_needs_copy);
+				return equality_impl(
+					x_needs_copy ? x.merge_arguments(merge) : x,
+					y_needs_copy ? y.merge_arguments(merge) : y
+				);
+			}
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,0>::value == 1u || bso_type<T,U,0>::value == 4u) &&
+			std::is_constructible<T,const U &>::value,
+			int>::type = 0>
+		static bool dispatch_equality(const T &x, const U &y)
+		{
+			return dispatch_equality(x,T(y));
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 2u,int>::type = 0>
+		static auto dispatch_equality(const T &x, const U &y) -> decltype(dispatch_equality(y,x))
+		{
+			return dispatch_equality(y,x);
+		}
+		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,0>::value == 3u || bso_type<T,U,0>::value == 5u) &&
+			std::is_constructible<series_common_type<T,U,0>,const T &>::value &&
+			std::is_constructible<series_common_type<T,U,0>,const U &>::value,
+			int>::type = 0>
+		static bool dispatch_equality(const T &x, const U &y)
+		{
+			series_common_type<T,U,0> x1(x);
+			series_common_type<T,U,0> y1(y);
+			return dispatch_equality(x1,y1);
+		}
+		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 6u || bso_type<T,U,0>::value == 7u,int>::type = 0>
+		static auto dispatch_equality(const T &x, const U &y) -> decltype(dispatch_equality(y,x))
+		{
+			return dispatch_equality(y,x);
+		}
+		template <typename T, typename U>
+		using eq_type = decltype(dispatch_equality(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 	public:
 		template <typename T, typename U>
 		friend binary_add_type<T,U> operator+(T &&x, U &&y)
@@ -732,6 +799,16 @@ class series_operators
 		friend in_place_div_type<T,U> operator/=(T &x, U &&y)
 		{
 			return dispatch_in_place_div(x,std::forward<U>(y));
+		}
+		template <typename T, typename U>
+		friend eq_type<T,U> operator==(const T &x, const U &y)
+		{
+			return dispatch_equality(x,y);
+		}
+		template <typename T, typename U>
+		friend eq_type<T,U> operator!=(const T &x, const U &y)
+		{
+			return !dispatch_equality(x,y);
 		}
 };
 
@@ -784,11 +861,11 @@ class series_operators
  * - remove the arithmetic tests from series_01, check the headers as usual.
  * - test with mock_cfs that are not addable to scalars,
  * - use only merge_arguments, phase out merge_args,
- * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go.,
+ * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go,
  * - echelon size must go too.
  */
 template <typename Term, typename Derived>
-class series: series_binary_operators, detail::series_tag, series_operators
+class series: detail::series_tag, series_operators
 {
 		PIRANHA_TT_CHECK(is_term,Term);
 	public:
