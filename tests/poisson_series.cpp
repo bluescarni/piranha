@@ -323,6 +323,7 @@ struct mock_cf
 	mock_cf &operator*=(const mock_cf &);
 	mock_cf operator*(const mock_cf &) const;
 	mock_cf &operator/=(int);
+	mock_cf operator/(const mock_cf &) const;
 };
 
 BOOST_AUTO_TEST_CASE(poisson_series_partial_test)

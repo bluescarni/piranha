@@ -1110,6 +1110,13 @@ class series: detail::series_tag, series_operators
 			// The other series must alway be cleared, since we moved out the terms.
 			s.m_container.clear();
 		}
+		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
+		template <bool Sign, typename T>
+		void merge_terms(T &&s,
+			typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
+		{
+			merge_terms_impl0<Sign>(std::forward<T>(s));
+		}
 		// Generic construction
 		// ====================
 		// TMP for the generic constructor.
@@ -1328,13 +1335,6 @@ class series: detail::series_tag, series_operators
 			}
 			os << str;
 			return os;
-		}
-		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
-		template <bool Sign, typename T>
-		void merge_terms(T &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
-		{
-			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
 		// Merge arguments using new_ss as new symbol set.
 		series merge_args(const symbol_set &new_ss) const
