@@ -866,8 +866,6 @@ class series_operators
  * - review and beautify the generic ctor and assignment operator;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - test with mock_cfs that are not addable to scalars,
- * - use only merge_arguments, phase out merge_args,
- * - all the previous arithmetic function (multiply_by_series, mixed multiply, in_place add/mul, etc.) must go,
  * - echelon size must go too.
  */
 template <typename Term, typename Derived>
@@ -1335,22 +1333,6 @@ class series: detail::series_tag, series_operators
 			}
 			os << str;
 			return os;
-		}
-		// Merge arguments using new_ss as new symbol set.
-		series merge_args(const symbol_set &new_ss) const
-		{
-			piranha_assert(new_ss.size() > m_symbol_set.size());
-			piranha_assert(std::includes(new_ss.begin(),new_ss.end(),m_symbol_set.begin(),m_symbol_set.end()));
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
-			series retval;
-			retval.m_symbol_set = new_ss;
-			for (auto it = m_container.begin(); it != m_container.end(); ++it) {
-				cf_type new_cf(it->m_cf);
-				key_type new_key(it->m_key.merge_args(m_symbol_set,new_ss));
-				retval.insert(term_type(std::move(new_cf),std::move(new_key)));
-			}
-			return retval;
 		}
 		// Merge arguments using new_ss as new symbol set.
 		Derived merge_arguments(const symbol_set &new_ss) const

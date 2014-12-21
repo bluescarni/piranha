@@ -515,12 +515,12 @@ BOOST_AUTO_TEST_CASE(series_merge_terms_test)
 	boost::mpl::for_each<cf_types>(merge_terms_tester());
 }
 
-struct merge_args_tag {};
+struct merge_arguments_tag {};
 
 namespace piranha
 {
 template <>
-class debug_access<merge_args_tag>
+class debug_access<merge_arguments_tag>
 {
 	public:
 		template <typename Cf>
@@ -537,7 +537,7 @@ class debug_access<merge_args_tag>
 				symbol_set ed1, ed2;
 				s.insert(term_type(Cf(1),key_type()));
 				ed2.add(symbol("x"));
-				auto merge_out = s.merge_args(ed2);
+				auto merge_out = s.merge_arguments(ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(1));
 				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1),key_type{Expo(0)})) != merge_out.m_container.end());
 				auto compat_check = [](const typename series_type::base &series) {
@@ -551,7 +551,7 @@ class debug_access<merge_args_tag>
 				s.insert(term_type(Cf(2),key_type{Expo(2)}));
 				ed1 = ed2;
 				ed2.add(symbol("y"));
-				merge_out = s.merge_args(ed2);
+				merge_out = s.merge_arguments(ed2);
 				BOOST_CHECK_EQUAL(merge_out.size(),unsigned(3));
 				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1),key_type{Expo(0),Expo(0)})) != merge_out.m_container.end());
 				BOOST_CHECK(merge_out.m_container.find(term_type(Cf(1),key_type{Expo(1),Expo(0)})) != merge_out.m_container.end());
@@ -567,11 +567,11 @@ class debug_access<merge_args_tag>
 };
 }
 
-typedef debug_access<merge_args_tag> merge_args_tester;
+typedef debug_access<merge_arguments_tag> merge_arguments_tester;
 
-BOOST_AUTO_TEST_CASE(series_merge_args_test)
+BOOST_AUTO_TEST_CASE(series_merge_arguments_test)
 {
-	boost::mpl::for_each<cf_types>(merge_args_tester());
+	boost::mpl::for_each<cf_types>(merge_arguments_tester());
 }
 
 struct negate_tester
