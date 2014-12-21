@@ -606,33 +606,31 @@ struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::pol
 namespace detail
 {
 
-template <typename Series1, typename Series2>
+template <typename Series>
 struct kronecker_enabler
 {
-	PIRANHA_TT_CHECK(is_series,Series1);
-	PIRANHA_TT_CHECK(is_series,Series2);
-	template <typename Key1, typename Key2>
-	struct are_same_kronecker_monomial
+	PIRANHA_TT_CHECK(is_series,Series);
+	template <typename Key>
+	struct is_kronecker_monomial
 	{
 		static const bool value = false;
 	};
 	template <typename T>
-	struct are_same_kronecker_monomial<kronecker_monomial<T>,kronecker_monomial<T>>
+	struct is_kronecker_monomial<kronecker_monomial<T>>
 	{
 		static const bool value = true;
 	};
-	typedef typename Series1::term_type::key_type key_type1;
-	typedef typename Series2::term_type::key_type key_type2;
-	static const bool value = std::is_base_of<detail::polynomial_tag,Series1>::value &&
-		std::is_base_of<detail::polynomial_tag,Series2>::value && are_same_kronecker_monomial<key_type1,key_type2>::value;
+	using key_type = typename Series::term_type::key_type;
+	static const bool value = std::is_base_of<detail::polynomial_tag,Series>::value &&
+		is_kronecker_monomial<key_type>::value;
 };
 
 }
 
 /// Series multiplier specialisation for polynomials with Kronecker monomials.
 /**
- * This specialisation of piranha::series_multiplier is enabled when both \p Series1 and \p Series2 are instances of
- * piranha::polynomial with monomials represented as piranha::kronecker_monomial of the same type.
+ * This specialisation of piranha::series_multiplier is enabled when \p Series is an instance of
+ * piranha::polynomial with monomials represented as piranha::kronecker_monomial.
  * This multiplier will employ optimized algorithms that take advantage of the properties of Kronecker monomials.
  * It will also take advantage of piranha::math::multiply_accumulate() in place of plain coefficient multiplication
  * when possible.
@@ -644,26 +642,18 @@ struct kronecker_enabler
  * ## Move semantics ##
  * 
  * Move semantics is equivalent to piranha::series_multiplier's move semantics.
- * 
- * \todo optimize task list in single thread and maybe also for small operands -> make it a vector I guess, instead of a set.
  */
-template <typename Series1, typename Series2>
-class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecker_enabler<Series1,Series2>::value>::type>:
-	public series_multiplier<Series1,Series2,int>
+// \todo optimize task list in single thread and maybe also for small operands -> make it a vector I guess, instead of a set.
+template <typename Series>
+class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler<Series>::value>::type>:
+	public series_multiplier<Series,int>
 {
-		PIRANHA_TT_CHECK(is_series,Series1);
-		PIRANHA_TT_CHECK(is_series,Series2);
-		typedef typename Series1::term_type::key_type::value_type value_type;
+		PIRANHA_TT_CHECK(is_series,Series);
+		using value_type = typename Series::term_type::key_type::value_type;
 		typedef kronecker_array<value_type> ka;
 	public:
 		/// Base multiplier type.
-		typedef series_multiplier<Series1,Series2,int> base;
-		/// Alias for term type of \p Series1.
-		typedef typename Series1::term_type term_type1;
-		/// Alias for term type of \p Series2.
-		typedef typename Series2::term_type term_type2;
-		/// Alias for the return type.
-		typedef typename base::return_type return_type;
+		typedef series_multiplier<Series,int> base;
 		/// Constructor.
 		/**
 		 * Will call the base constructor and additionally check that the result of the multiplication will not overflow
@@ -676,7 +666,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 * piranha::kronecker_monomial.
 		 * @throws unspecified any exception thrown by the base constructor.
 		 */
-		explicit series_multiplier(const Series1 &s1, const Series2 &s2):base(s1,s2)
+		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2)
 		{
 			if (unlikely(this->m_s1->empty() || this->m_s2->empty())) {
 				return;
@@ -764,15 +754,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		 * - piranha::thread_pool::enqueue(),
 		 * - piranha::future_list::push_back().
 		 */
-		return_type operator()() const
+		Series operator()() const
 		{
 			return execute();
 		}
 	private:
-		typedef typename std::vector<term_type1 const *>::size_type index_type;
-		typedef typename Series1::size_type bucket_size_type;
+		using term_type = typename Series::term_type;
+		using index_type = typename std::vector<term_type const *>::size_type;
+		using bucket_size_type = typename Series::size_type;
 		// This is a bucket region, i.e., a _closed_ interval [a,b] of bucket indices in a hash set.
-		typedef std::pair<bucket_size_type,bucket_size_type> region_type;
+		using region_type = std::pair<bucket_size_type,bucket_size_type>;
 		// Block-by-block multiplication task.
 		struct task_type
 		{
@@ -789,7 +780,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		};
 		// Create task from indices i in first series, j in second series (semi-open intervals).
 		task_type task_from_indices(const index_type &i_start, const index_type &i_end,
-			const index_type &j_start, const index_type &j_end, const return_type &retval) const
+			const index_type &j_start, const index_type &j_end, const Series &retval) const
 		{
 			const auto &v1 = this->m_v1;
 			const auto &v2 = this->m_v2;
@@ -890,8 +881,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 		// of the result.
 		struct sparse_task_sorter
 		{
-			explicit sparse_task_sorter(const return_type &retval,const std::vector<term_type1 const *> &v1,
-				const std::vector<term_type2 const *> &v2):
+			explicit sparse_task_sorter(const Series &retval,const std::vector<term_type const *> &v1,
+				const std::vector<term_type const *> &v2):
 				m_retval(retval),m_v1(v1),m_v2(v2)
 			{}
 			bool operator()(const task_type &t1, const task_type &t2) const
@@ -915,16 +906,16 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					m_retval.m_container._bucket_from_hash(m_v2[t2.m_b2.first]->hash())) %
 					m_retval.m_container.bucket_count();
 			}
-			const return_type			&m_retval;
-			const std::vector<term_type1 const *>	&m_v1;
-			const std::vector<term_type2 const *>	&m_v2;
+			const Series				&m_retval;
+			const std::vector<term_type const *>	&m_v1;
+			const std::vector<term_type const *>	&m_v2;
 		};
-		return_type execute() const
+		Series execute() const
 		{
-			const index_type size1 = this->m_v1.size(), size2 = boost::numeric_cast<index_type>(this->m_v2.size());
+			const index_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
-				return return_type{};
+				return Series{};
 			}
 			// This check is done here to avoid controlling the number of elements of the output series
 			// at every iteration of the functor.
@@ -933,9 +924,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				piranha_throw(std::overflow_error,"possible overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
-			return_type retval;
+			Series retval;
 			retval.m_symbol_set = this->m_s1->m_symbol_set;
-			typename Series1::size_type estimate;
+			typename Series::size_type estimate;
 			// Use the sparse functor for the estimation.
 			estimate = base::estimate_final_series_size(sparse_functor<>(&this->m_v1[0u],size1,&this->m_v2[0u],size2,retval));
 			// Correct the unlikely case of zero estimate.
@@ -953,7 +944,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval.m_container.rehash(boost::numeric_cast<typename Series1::size_type>(std::ceil(static_cast<double>(estimate) /
+			retval.m_container.rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
 				retval.m_container.max_load_factor())),n_threads_rehash);
 			piranha_assert(retval.m_container.bucket_count());
 			// NOTE: tuning parameter.
@@ -1013,10 +1004,10 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			piranha_assert(region_set_checker(busy_regions));
 		}
 		// Dense task sorter.
-		template <typename NKType1, typename NKType2>
+		template <typename NKType>
 		struct dts_type
 		{
-			explicit dts_type(const std::vector<NKType1> &nk1, const std::vector<NKType2> &nk2):
+			explicit dts_type(const std::vector<NKType> &nk1, const std::vector<NKType> &nk2):
 				m_new_keys1(nk1),m_new_keys2(nk2)
 			{}
 			template <typename Task>
@@ -1025,11 +1016,11 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				return m_new_keys1[t1.m_b1.first].first + m_new_keys2[t1.m_b2.first].first <
 					m_new_keys1[t2.m_b1.first].first + m_new_keys2[t2.m_b2.first].first;
 			}
-			const std::vector<NKType1>	&m_new_keys1;
-			const std::vector<NKType2>	&m_new_keys2;
+			const std::vector<NKType>	&m_new_keys1;
+			const std::vector<NKType>	&m_new_keys2;
 		};
 		// Dense multiplication method.
-		void dense_multiplication(return_type &retval, const unsigned &n_threads) const
+		void dense_multiplication(Series &retval, const unsigned &n_threads) const
 		{
 			// Vectors of minimum / maximum values, cast to hardware int.
 			std::vector<value_type> mins;
@@ -1066,7 +1057,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			const auto hmin = static_cast<value_type>(h_minmax.first);
 			const auto hmax = static_cast<value_type>(h_minmax.second);
 			// Encoding functor.
-			typedef typename term_type1::key_type::v_type unpack_type;
+			typedef typename term_type::key_type::v_type unpack_type;
 			auto encoder = [&c_vec,hmin,&mins](const unpack_type &v) -> value_type {
 				piranha_assert(c_vec.size() == v.size());
 				piranha_assert(c_vec.size() == mins.size());
@@ -1083,23 +1074,21 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			};
 			// Build copies of the input keys repacked according to the new Kronecker substitution. Attach
 			// also a pointer to the term.
-			typedef std::pair<value_type,term_type1 const *> new_key_type1;
-			typedef std::pair<value_type,term_type2 const *> new_key_type2;
-			std::vector<new_key_type1> new_keys1;
-			std::vector<new_key_type2> new_keys2;
+			typedef std::pair<value_type,term_type const *> new_key_type;
+			std::vector<new_key_type> new_keys1, new_keys2;
 			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(new_keys1),
-				[this,encoder](term_type1 const *ptr) {
+				[this,encoder](term_type const *ptr) {
 				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
 			});
 			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(new_keys2),
-				[this,encoder](term_type2 const *ptr) {
+				[this,encoder](term_type const *ptr) {
 				return std::make_pair(encoder(ptr->m_key.unpack(this->m_s1->m_symbol_set)),ptr);
 			});
 			// Sort the the new keys.
-			std::stable_sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type1 &p1, const new_key_type1 &p2) {
+			std::stable_sort(new_keys1.begin(),new_keys1.end(),[](const new_key_type &p1, const new_key_type &p2) {
 				return p1.first < p2.first;
 			});
-			std::stable_sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type2 &p1, const new_key_type2 &p2) {
+			std::stable_sort(new_keys2.begin(),new_keys2.end(),[](const new_key_type &p1, const new_key_type &p2) {
 				return p1.first < p2.first;
 			});
 			// Store the sizes and compute the block sizes.
@@ -1111,8 +1100,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Cast to hardware integers.
 			const auto bsize1 = static_cast<index_type>(bsizes.first), bsize2 = static_cast<index_type>(bsizes.second);
 			// Build the list of tasks.
-			dts_type<new_key_type1,new_key_type2> dense_task_sorter(new_keys1,new_keys2);
-			std::multiset<task_type,dts_type<new_key_type1,new_key_type2>> task_list(dense_task_sorter);
+			dts_type<new_key_type> dense_task_sorter(new_keys1,new_keys2);
+			std::multiset<task_type,dts_type<new_key_type>> task_list(dense_task_sorter);
 			decltype(task_list.insert(std::declval<task_type>())) ins_result;
 			auto dense_task_from_indices = [hmin,hmax,&new_keys1,&new_keys2](const index_type &i_start, const index_type &i_end,
 				const index_type &j_start, const index_type &j_end) -> task_type
@@ -1149,9 +1138,9 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Prepare the storage for multiplication.
 			// NOTE: init everything explicitly to zero, as we make no assumption about the value of a default-cted
 			// coefficient.
-			using cf_vector_type = std::vector<typename term_type1::cf_type>;
-			 cf_vector_type cf_vector(boost::numeric_cast<typename cf_vector_type::size_type>((hmax - hmin) + 1),
-				typename term_type1::cf_type(0));
+			using cf_vector_type = std::vector<typename term_type::cf_type>;
+			cf_vector_type cf_vector(boost::numeric_cast<typename cf_vector_type::size_type>((hmax - hmin) + 1),
+				typename term_type::cf_type(0));
 			if (n_threads == 1u) {
 				// Single-thread multiplication.
 				const auto it_f = task_list.end();
@@ -1300,7 +1289,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				});
 			};
 			const auto cf_size = cf_vector.size();
-			term_type1 tmp_term;
+			term_type tmp_term;
 			for (decltype(cf_vector.size()) i = 0u; i < cf_size; ++i) {
 				if (!math::is_zero(cf_vector[i])) {
 					tmp_term.m_cf = std::move(cf_vector[i]);
@@ -1318,19 +1307,19 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// NOTE: in some setups Boost is apparently unable to deduce the result type
 			// of the functor and needs this typedef in the transform iterator.
 			using result_type = bucket_size_type;
-			explicit sparse_bi_extractor(const return_type *retval) : m_retval(retval) {}
+			explicit sparse_bi_extractor(const Series *retval) : m_retval(retval) {}
 			template <typename Term>
 			result_type operator()(const Term *t) const
 			{
 				return m_retval->m_container._bucket_from_hash(t->hash());
 			}
-			const return_type *m_retval;
+			const Series *m_retval;
 		};
 		template <typename Functor>
-		void sparse_multiplication(return_type &retval,const unsigned &n_threads) const
+		void sparse_multiplication(Series &retval,const unsigned &n_threads) const
 		{
 			// Type representing multiplication tasks.
-			using task_type = std::tuple<term_type1 const *,term_type2 const **,term_type2 const **>;
+			using task_type = std::tuple<term_type const *,term_type const **,term_type const **>;
 			// A couple of handy shortcuts.
 			using diff_type = std::ptrdiff_t;
 			// NOTE: this is always legal as ptrdiff_t is a signed integer.
@@ -1340,18 +1329,13 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Block size. Tasks will be split into chunks with this max size.
 			const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size());
 			// Sort input terms according to bucket positions in retval.
-			auto cmp1 = [&retval](term_type1 const *p1,term_type1 const *p2)
+			auto cmp = [&retval](term_type const *p1, term_type const *p2)
 			{
 				return retval.m_container._bucket_from_hash(p1->hash()) <
 					retval.m_container._bucket_from_hash(p2->hash());
 			};
-			std::stable_sort(this->m_v1.begin(),this->m_v1.end(),cmp1);
-			auto cmp2 = [&retval](term_type2 const *p1,term_type2 const *p2)
-			{
-				return retval.m_container._bucket_from_hash(p1->hash()) <
-					retval.m_container._bucket_from_hash(p2->hash());
-			};
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),cmp2);
+			std::stable_sort(this->m_v1.begin(),this->m_v1.end(),cmp);
+			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),cmp);
 			// Variable used to keep track of total unique insertions in retval.
 			bucket_size_type insertion_count = 0u;
 			// Number of buckets in retval.
@@ -1366,7 +1350,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 					const auto size1 = v1.size();
 					const auto size2 = v2.size();
 					std::vector<task_type> tasks;
-					term_type2 const **start, **end;
+					term_type const **start, **end;
 					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
 						start = &v2[0u];
 						end = &v2[0u] + size2;
@@ -1422,7 +1406,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				// Bucket index extractor.
 				const sparse_bi_extractor bi_ex{&retval};
 				// Start and end of task in v2, to be used in the loop.
-				term_type2 const **start, **end;
+				term_type const **start, **end;
 				// Check the safety of computing "end - start" in the loop.
 				if (unlikely(v2.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
 					piranha_throw(std::overflow_error,"the second operand in a sparse polynomial multiplication is too large");
@@ -1513,7 +1497,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			piranha_assert(std::accumulate(n_mults.begin(),n_mults.end(),integer(0)) == integer(this->m_v1.size()) * this->m_v2.size());
 		}
 		// Sanitize series after completion of sparse multiplication.
-		static void sanitize_series(return_type &retval, const bucket_size_type &insertion_count, unsigned n_threads = 1u)
+		static void sanitize_series(Series &retval, const bucket_size_type &insertion_count, unsigned n_threads = 1u)
 		{
 			// Here we have to do the following things:
 			// - check ignorability of terms,
@@ -1541,7 +1525,7 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 				auto eraser = [b_count,&retval,&m](const bucket_size_type &start, const bucket_size_type &end) {
 					piranha_assert(start < end && end <= b_count);
 					bucket_size_type erase_count = 0u;
-					std::vector<term_type1> term_list;
+					std::vector<term_type> term_list;
 					for (bucket_size_type i = start; i != end; ++i) {
 						term_list.clear();
 						const auto &bl = retval.m_container._get_bucket_list(i);
@@ -1597,8 +1581,8 @@ class series_multiplier<Series1,Series2,typename std::enable_if<detail::kronecke
 			// Fast version of functor.
 			typedef sparse_functor<true> fast_rebind;
 			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
-			explicit sparse_functor(term_type1 const **ptr1, const index_type &s1,
-				term_type2 const **ptr2, const index_type &s2, return_type &retval):
+			explicit sparse_functor(term_type const **ptr1, const index_type &s1,
+				term_type const **ptr2, const index_type &s2, Series &retval):
 				base::default_functor(ptr1,s1,ptr2,s2,retval),
 				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
 			{}

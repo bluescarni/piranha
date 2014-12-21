@@ -319,7 +319,7 @@ struct multiplication_tester
 		auto retval = f * g;
 		BOOST_CHECK_EQUAL(retval.size(),10626u);
 		auto retval_alt = p_type_alt(f) * p_type_alt(g);
-		BOOST_CHECK(retval == retval_alt);
+		BOOST_CHECK(retval == p_type{retval_alt});
 		// Dense case, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
@@ -327,7 +327,7 @@ struct multiplication_tester
 			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
 			BOOST_CHECK_EQUAL(tmp.size(),10626u);
 			BOOST_CHECK(tmp == retval);
-			BOOST_CHECK(tmp == tmp_alt);
+			BOOST_CHECK(tmp == p_type{tmp_alt});
 		}
 		settings::reset_n_threads();
 		// Dense case with cancellations, default setup.
@@ -339,7 +339,7 @@ struct multiplication_tester
 		retval = f * h;
 		retval_alt = p_type_alt(f) * p_type_alt(h);
 		BOOST_CHECK_EQUAL(retval.size(),5786u);
-		BOOST_CHECK(retval == retval_alt);
+		BOOST_CHECK(retval == p_type{retval_alt});
 		// Dense case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
@@ -347,7 +347,7 @@ struct multiplication_tester
 			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
 			BOOST_CHECK_EQUAL(tmp.size(),5786u);
 			BOOST_CHECK(retval == tmp);
-			BOOST_CHECK(tmp_alt == tmp);
+			BOOST_CHECK(tmp_alt == p_type_alt{tmp});
 		}
 		settings::reset_n_threads();
 		// Sparse case, default.
@@ -365,7 +365,7 @@ struct multiplication_tester
 		retval = f * g;
 		BOOST_CHECK_EQUAL(retval.size(),591235u);
 		retval_alt = p_type_alt(f) * p_type_alt(g);
-		BOOST_CHECK(retval == retval_alt);
+		BOOST_CHECK(retval == p_type{retval_alt});
 		// Sparse case, force n threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
@@ -373,14 +373,14 @@ struct multiplication_tester
 			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
 			BOOST_CHECK_EQUAL(tmp.size(),591235u);
 			BOOST_CHECK(retval == tmp);
-			BOOST_CHECK(tmp_alt == tmp);
+			BOOST_CHECK(tmp_alt == p_type_alt{tmp});
 		}
 		settings::reset_n_threads();
 		// Sparse case with cancellations, default.
 		retval = f * h;
 		BOOST_CHECK_EQUAL(retval.size(),591184u);
 		retval_alt = p_type_alt(f) * p_type_alt(h);
-		BOOST_CHECK(retval_alt == retval);
+		BOOST_CHECK(retval_alt == p_type_alt{retval});
 		// Sparse case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
@@ -388,7 +388,7 @@ struct multiplication_tester
 			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
 			BOOST_CHECK_EQUAL(tmp.size(),591184u);
 			BOOST_CHECK(tmp == retval);
-			BOOST_CHECK(tmp == tmp_alt);
+			BOOST_CHECK(tmp == p_type{tmp_alt});
 		}
 	}
 };
