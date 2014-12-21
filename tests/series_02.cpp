@@ -608,6 +608,18 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				tmp = p_type1{x} + p_type1{x};
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Double move of self.
+				tmp = std::move(x) + std::move(x);
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				x = p_type1{"x"};
 				// Now with merging.
 				tmp = x + y;
 				BOOST_CHECK_EQUAL(tmp.size(),2u);
@@ -748,6 +760,12 @@ class debug_access<arithmetics_add_tag>
 				tmp += p_type1{x};
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Move self.
+				tmp += std::move(tmp);
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1) + Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
 				// Now with merging.
@@ -981,6 +999,16 @@ class debug_access<arithmetics_sub_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				tmp = p_type1{x2} - p_type1{x};
+				BOOST_CHECK_EQUAL(tmp.size(),1u);
+				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
+				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Double move of self.
+				tmp = std::move(x) - std::move(x);
+				BOOST_CHECK_EQUAL(tmp.size(),0u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				x = p_type1{"x"};
 				// Now with merging.
 				tmp = x - y;
 				BOOST_CHECK_EQUAL(tmp.size(),2u);
@@ -1144,6 +1172,10 @@ class debug_access<arithmetics_sub_tag>
 				++it;
 				BOOST_CHECK(it->m_cf == Cf(1) || it->m_cf == Cf(-1));
 				BOOST_CHECK(it->m_key.size() == 2u);
+				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
+				// Move self.
+				tmp -= std::move(tmp);
+				BOOST_CHECK_EQUAL(tmp.size(),0u);
 				BOOST_CHECK((tmp.m_symbol_set == symbol_set{symbol{"x"},symbol{"y"}}));
 				// Test the swapping of operands when one series is larger than the other.
 				tmp = x2 - y;

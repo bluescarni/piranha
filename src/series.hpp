@@ -404,6 +404,14 @@ class series_operators
 			// Init the return value from the first operand.
 			// NOTE: this is always possible to do, a series is always copy/move-constructible.
 			ret_type retval(std::forward<T>(x));
+			// NOTE: here we cover the corner case in which x and y are the same object.
+			// This could be problematic in the algorithm below if retval was move-cted from
+			// x, since in such a case y will also be erased. This will happen if one does
+			// std::move(a) + std::move(a)
+			if (unlikely(&x == &y)) {
+				retval.template merge_terms<Sign>(retval);
+				return retval;
+			}
 			// NOTE: we do not use x any more, as it might have been moved.
 			if (likely(retval.m_symbol_set == y.m_symbol_set)) {
 				retval.template merge_terms<Sign>(std::forward<U>(y));
