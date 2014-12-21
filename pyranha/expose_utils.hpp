@@ -466,9 +466,10 @@ class series_exposer
 		template <typename S>
 		static void register_custom_derivative(const std::string &name, bp::object func)
 		{
+			using partial_type = decltype(std::declval<const S &>().partial(std::string()));
 			check_callable(func);
-			S::register_custom_derivative(name,[func](const S &s) -> S {
-				return bp::extract<S>(func(s));
+			S::register_custom_derivative(name,[func](const S &s) -> partial_type {
+				return bp::extract<partial_type>(func(s));
 			});
 		}
 		template <typename S>
