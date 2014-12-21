@@ -176,7 +176,6 @@ inline namespace literals {}
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
-#include "series_binary_operators.hpp"
 #include "series_multiplier.hpp"
 #include "settings.hpp"
 #include "small_vector.hpp"

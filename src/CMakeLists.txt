@@ -16,7 +16,6 @@ SET(HEADERS_LIST
 	hash_set.hpp
 	debug_access.hpp
 	real_trigonometric_kronecker_monomial.hpp
-	series_binary_operators.hpp
 	thread_management.hpp
 	kronecker_array.hpp
 	static_vector.hpp

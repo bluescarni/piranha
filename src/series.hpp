@@ -57,7 +57,6 @@
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series_multiplier.hpp"
-#include "series_binary_operators.hpp"
 #include "settings.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
@@ -881,8 +880,6 @@ class series: detail::series_tag, series_operators
 		// Make friend with series multiplier class.
 		template <typename, typename>
 		friend class series_multiplier;
-		// Make friend with series binary operators class.
-		friend class series_binary_operators;
 		// Make friend with the operators class.
 		friend class series_operators;
 		// Partial need access to the custom derivatives.
