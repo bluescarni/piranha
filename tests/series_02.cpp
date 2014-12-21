@@ -39,6 +39,7 @@
 #include "../src/base_term.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -595,6 +596,10 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
+				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check going to zero.
+				tmp = x - x;
+				BOOST_CHECK(tmp.size() == 0u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
 				// Try with moves on both sides.
 				tmp = p_type1{x} + x;
@@ -1717,6 +1722,10 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	BOOST_CHECK_EQUAL(tmp,x);
 	tmp = 2 * x + 2 * y;
 	tmp /= 3;
+	BOOST_CHECK(tmp.empty());
+	// Check zero division error.
+	tmp = 2 * x + y;
+	BOOST_CHECK_THROW(tmp /= 0,zero_division_error);
 	BOOST_CHECK(tmp.empty());
 }
 
