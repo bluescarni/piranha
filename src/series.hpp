@@ -1149,28 +1149,55 @@ class series: detail::series_tag, series_operators
 		{
 			static const bool value = false;
 		};
-		// Series with same echelon size, same term type.
+		// Series with same echelon size, same term type, move.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
 			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
-			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value
+			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			is_nonconst_rvalue_ref<Series &&>::value
 			>::type * = nullptr)
 		{
 			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
-			m_symbol_set = std::forward<Series>(s).m_symbol_set;
-			m_container = std::forward<Series>(s).m_container;
+			m_symbol_set = std::move(s.m_symbol_set);
+			m_container = std::move(s.m_container);
 		}
-		// Series with same echelon size and different term type.
+		// Series with same echelon size, same term type, copy.
 		template <typename Series>
 		void dispatch_generic_construction(Series &&s,
 			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
 			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
-			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value
+			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			!is_nonconst_rvalue_ref<Series &&>::value
 			>::type * = nullptr)
 		{
-			m_symbol_set = std::forward<Series>(s).m_symbol_set;
+			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
+			m_symbol_set = s.m_symbol_set;
+			m_container = s.m_container;
+		}
+		// Series with same echelon size and different term type, move.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = nullptr)
+		{
+			m_symbol_set = std::move(s.m_symbol_set);
 			merge_terms<true>(std::forward<Series>(s));
+		}
+		// Series with same echelon size and different term type, copy.
+		template <typename Series>
+		void dispatch_generic_construction(Series &&s,
+			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
+			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
+			!is_nonconst_rvalue_ref<Series &&>::value
+			>::type * = nullptr)
+		{
+			m_symbol_set = s.m_symbol_set;
+			merge_terms<true>(s);
 		}
 		// Series with smaller echelon size.
 		template <typename Series>
