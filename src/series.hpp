@@ -899,18 +899,31 @@ class series: detail::series_tag, series_operators
 	private:
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
-		// Overload for completely different term type: forward-convert to term_type and proceed.
-		template <bool Sign, typename T, typename std::enable_if<!std::is_same<typename std::decay<T>::type,term_type>::value,int>::type = 0>
-		void dispatch_insertion(T &&term)
+		// Overload for completely different term type: copy-convert to term_type and proceed.
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,term_type>::value &&
+			!is_nonconst_rvalue_ref<T &&>::value
+			>::type * = nullptr)
 		{
-			using cf_type = typename term_type::cf_type;
-			using key_type = typename term_type::key_type;
-			dispatch_insertion<Sign>(term_type(cf_type(std::forward<T>(term).m_cf),
-				key_type(std::forward<T>(term).m_key,m_symbol_set)));
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(term.m_cf),
+				typename term_type::key_type(term.m_key,m_symbol_set)));
+		}
+		// Overload for completely different term type: move-convert to term_type and proceed.
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			!std::is_same<typename std::decay<T>::type,term_type>::value &&
+			is_nonconst_rvalue_ref<T &&>::value
+			>::type * = nullptr)
+		{
+			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(std::move(term.m_cf)),
+				typename term_type::key_type(std::move(term.m_key),m_symbol_set)));
 		}
 		// Overload for term_type.
-		template <bool Sign, typename T, typename std::enable_if<std::is_same<typename std::decay<T>::type,term_type>::value,int>::type = 0>
-		void dispatch_insertion(T &&term)
+		template <bool Sign, typename T>
+		void dispatch_insertion(T &&term, typename std::enable_if<
+			std::is_same<typename std::decay<T>::type,term_type>::value
+			>::type * = nullptr)
 		{
 			// Debug checks.
 			piranha_assert(empty() || m_container.begin()->is_compatible(m_symbol_set));
@@ -924,18 +937,29 @@ class series: detail::series_tag, series_operators
 			}
 			insertion_impl<Sign>(std::forward<T>(term));
 		}
-		template <bool Sign, typename Iterator, typename T>
-		static void insertion_cf_arithmetics(Iterator &it, T &&term)
+		template <bool Sign, typename Iterator>
+		static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
 		{
 			if (Sign) {
-				it->m_cf += std::forward<T>(term).m_cf;
+				it->m_cf += term.m_cf;
 			} else {
-				it->m_cf -= std::forward<T>(term).m_cf;
+				it->m_cf -= term.m_cf;
+			}
+		}
+		template <bool Sign, typename Iterator>
+		static void insertion_cf_arithmetics(Iterator &it, term_type &&term)
+		{
+			if (Sign) {
+				it->m_cf += std::move(term.m_cf);
+			} else {
+				it->m_cf -= std::move(term.m_cf);
 			}
 		}
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T>
-		void insertion_impl(T &&term)
+		void insertion_impl(T &&term, typename std::enable_if<
+			std::is_same<typename std::decay<T>::type,term_type>::value
+			>::type * = nullptr)
 		{
 			// NOTE: here we are basically going to reconstruct hash_set::insert() with the goal
 			// of optimising things by avoiding one branch.
