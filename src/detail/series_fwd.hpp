@@ -26,8 +26,10 @@ namespace piranha
 
 namespace detail
 {
+
 // Tag structure for series.
 struct series_tag {};
+
 }
 
 // Forward-declaration of series.
