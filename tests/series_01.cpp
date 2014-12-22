@@ -1367,4 +1367,5 @@ BOOST_AUTO_TEST_CASE(series_type_traits_test)
 	boost::mpl::for_each<cf_types>(type_traits_tester());
 	BOOST_CHECK(!is_series<int>::value);
 	BOOST_CHECK(!is_series<double>::value);
+	BOOST_CHECK(!is_series<void>::value);
 }

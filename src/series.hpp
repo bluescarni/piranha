@@ -103,7 +103,7 @@ class is_series
 {
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_base_of<detail::series_tag,T>::value && is_container_element<T>::value;
+		static const bool value = std::is_base_of<detail::series_tag,T>::value;
 };
 
 template <typename T>
