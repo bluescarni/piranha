@@ -49,7 +49,9 @@
  * of series multiplier, term's multiply methods, etc. (they should make clear that the return type deduction and operand orders was already determined for them).
  * \todo series multadd to speed-up series multiplication when coefficients are series?
  * \todo forbid interoperability in +-* between series with different keys?
- * \todo look into perfect forwarding of members, for use in series, hash set (?) http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
+ * \todo look into perfect forwarding of members, for use in series, hash set (?)
+ * http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
+ * update: tried this on the series insertion methods, it seems like GCC does not implement this correctly (while clang does). Check again in the future.
  * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
  * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment -> compile boost in c++11/c++0x mode in gentoo and windows.
@@ -85,6 +87,8 @@
  * \todo consider replacing uses of iterator facade with inheritance from std::iterator.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
+ * update: tried this for a while, it looks like the semantics of inheriting ctors might not be what we need, and the support in compilers
+ * is still brittle. Maybe revisit in the future.
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf. penalty
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does not have
  * the operator overloaded (via decltype SFINAE).
