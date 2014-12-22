@@ -156,7 +156,6 @@ inline namespace literals {}
 #include "convert_to.hpp"
 #include "debug_access.hpp"
 #include "dynamic_aligning_allocator.hpp"
-#include "echelon_size.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"

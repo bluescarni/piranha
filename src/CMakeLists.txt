@@ -12,7 +12,6 @@ SET(HEADERS_LIST
 	thread_barrier.hpp
 	polynomial.hpp
 	kronecker_monomial.hpp
-	echelon_size.hpp
 	hash_set.hpp
 	debug_access.hpp
 	real_trigonometric_kronecker_monomial.hpp

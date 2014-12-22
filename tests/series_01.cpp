@@ -1289,14 +1289,11 @@ struct type_traits_tester
 			BOOST_CHECK(is_series<p_type1>::value);
 			BOOST_CHECK(is_series<p_type11>::value);
 			BOOST_CHECK(!is_series<p_type1 &>::value);
-			BOOST_CHECK(!is_series<const p_type11>::value);
 			BOOST_CHECK(!is_series<p_type11 const &>::value);
 			BOOST_CHECK(is_equality_comparable<p_type1>::value);
 			BOOST_CHECK((is_equality_comparable<p_type1,Cf>::value));
 			BOOST_CHECK((is_equality_comparable<Cf,p_type1>::value));
-			// TODO: fix this and implement more tests once equality operator is made
-			// conditional for series. This includes arithmetic operators.
-			//BOOST_CHECK((!is_equality_comparable<p_type1,std::string>::value));
+			BOOST_CHECK((!is_equality_comparable<p_type1,std::string>::value));
 			BOOST_CHECK(is_equality_comparable<p_type11>::value);
 			BOOST_CHECK((is_equality_comparable<p_type11,p_type1>::value));
 			BOOST_CHECK((is_equality_comparable<p_type1,p_type11>::value));

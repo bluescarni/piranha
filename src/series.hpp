@@ -47,7 +47,6 @@
 #include "debug_access.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
-#include "echelon_size.hpp"
 #include "environment.hpp"
 #include "hash_set.hpp"
 #include "math.hpp" // For negate() and math specialisations.
@@ -1154,15 +1153,15 @@ class series: detail::series_tag, series_operators
 		// NOTE: this logic is a slight repetition of the helper methods below. However, since the enabling
 		// conditions below are already quite complicated and split in lvalue/rvalue,
 		// it might be better to leave this as is.
-		template <typename T, typename = void>
+		template <typename T, typename U, typename = void>
 		struct generic_ctor_enabler
 		{
 			static const bool value = std::is_constructible<typename term_type::cf_type,T>::value;
 		};
-		template <typename T>
-		struct generic_ctor_enabler<T,typename std::enable_if<
+		template <typename T, typename U>
+		struct generic_ctor_enabler<T,U,typename std::enable_if<
 			is_series<typename std::decay<T>::type>::value &&
-			(echelon_size<term_type>::value == echelon_size<typename std::decay<T>::type::term_type>::value)
+			(series_recursion_index<U>::value == series_recursion_index<T>::value)
 			>::type>
 		{
 			typedef typename std::decay<T>::type::term_type other_term_type;
@@ -1174,10 +1173,10 @@ class series: detail::series_tag, series_operators
 				(std::is_constructible<typename term_type::cf_type,other_cf_type>:: value &&
 				std::is_constructible<typename term_type::key_type,other_key_type,symbol_set>:: value);
 		};
-		template <typename T>
-		struct generic_ctor_enabler<T,typename std::enable_if<
+		template <typename T, typename U>
+		struct generic_ctor_enabler<T,U,typename std::enable_if<
 			is_series<typename std::decay<T>::type>::value &&
-			(echelon_size<term_type>::value < echelon_size<typename std::decay<T>::type::term_type>::value)
+			(series_recursion_index<U>::value < series_recursion_index<T>::value)
 			>::type>
 		{
 			static const bool value = false;
@@ -1598,8 +1597,8 @@ class series: detail::series_tag, series_operators
 		 * - insert(),
 		 * - the copy constructor of piranha::series.
 		 */
-		template <typename T, typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
-			generic_ctor_enabler<T>::value,int>::type = 0>
+		template <typename T, typename U = series, typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
+			generic_ctor_enabler<T,U>::value,int>::type = 0>
 		explicit series(T &&x)
 		{
 			dispatch_generic_construction(std::forward<T>(x));
