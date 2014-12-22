@@ -65,13 +65,30 @@ struct frobniz2
 	typedef int const & foo_type;
 };
 
+struct bar2:foo {};
+
+template <typename T>
+struct foo_t
+{
+	typedef int foo_type;
+};
+
+template <typename T>
+struct bar_t: foo_t<T>
+{};
+
 BOOST_AUTO_TEST_CASE(type_traits_has_typedef_test)
 {
 	environment env;
 	BOOST_CHECK(has_typedef_foo_type<foo>::value);
 	BOOST_CHECK(!has_typedef_foo_type<bar>::value);
+	BOOST_CHECK(!has_typedef_foo_type<int>::value);
+	BOOST_CHECK(!has_typedef_foo_type<void>::value);
 	BOOST_CHECK(has_typedef_foo_type<frobniz>::value);
 	BOOST_CHECK(has_typedef_foo_type<frobniz2>::value);
+	BOOST_CHECK(has_typedef_foo_type<bar2>::value);
+	BOOST_CHECK(has_typedef_foo_type<foo_t<int>>::value);
+	BOOST_CHECK(has_typedef_foo_type<bar_t<int>>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_nonconst_rvalue_ref_test)

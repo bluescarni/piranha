@@ -826,16 +826,19 @@ const bool is_key<T,typename std::enable_if<detail::is_key_impl<T>::value>::type
  * struct bar {};
  * \endcode
  * \p has_typedef_foo_type<foo>::value will be true and \p has_typedef_foo_type<bar>::value will be false.
+ *
+ * The decay type of the template argument is considered by the class defined by the macro.
  */
 #define PIRANHA_DECLARE_HAS_TYPEDEF(type_name) \
 template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT> \
 class has_typedef_##type_name: piranha::detail::sfinae_types \
 { \
+		using Td_ = typename std::decay<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>::type; \
 		template <typename T_> \
-		static auto test(const T_ &) -> decltype(std::declval<typename T_::type_name>(),void(),yes()); \
+		static auto test(const T_ *) -> decltype(std::declval<typename T_::type_name>(),void(),yes()); \
 		static no test(...); \
 	public: \
-		static const bool value = std::is_same<yes,decltype(test(std::declval<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>()))>::value; \
+		static const bool value = std::is_same<yes,decltype(test((Td_ *)nullptr))>::value; \
 }
 
 /// Macro for static type trait checks.
