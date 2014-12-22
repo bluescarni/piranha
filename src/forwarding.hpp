@@ -28,6 +28,7 @@
 #define PIRANHA_FORWARDING_HPP
 
 #include <type_traits>
+#include <utility>
 
 /// Constructor-forwarding macro.
 /**

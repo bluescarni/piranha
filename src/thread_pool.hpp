@@ -33,6 +33,7 @@
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "config.hpp"

@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
 
 #include "detail/base_term_fwd.hpp"
 #include "math.hpp"

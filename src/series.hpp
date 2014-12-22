@@ -957,9 +957,7 @@ class series: detail::series_tag, series_operators
 		}
 		// Insert compatible, non-ignorable term.
 		template <bool Sign, typename T>
-		void insertion_impl(T &&term, typename std::enable_if<
-			std::is_same<typename std::decay<T>::type,term_type>::value
-			>::type * = nullptr)
+		void insertion_impl(T &&term)
 		{
 			// NOTE: here we are basically going to reconstruct hash_set::insert() with the goal
 			// of optimising things by avoiding one branch.

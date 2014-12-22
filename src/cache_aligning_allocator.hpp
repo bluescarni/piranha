@@ -23,6 +23,7 @@
 
 #include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
+#include <utility>
 
 #include "dynamic_aligning_allocator.hpp"
 #include "memory.hpp"
