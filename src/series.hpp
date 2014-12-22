@@ -94,9 +94,20 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 
 }
 
-// Fwd declaration of the is_series type trait.
-template <typename>
-class is_series;
+/// Type trait to detect series types.
+/**
+ * This type trait will be true if \p T is an instance of piranha::series and it satisfies piranha::is_container_element.
+ */
+template <typename T>
+class is_series
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_base_of<detail::series_tag,T>::value && is_container_element<T>::value;
+};
+
+template <typename T>
+const bool is_series<T>::value;
 
 /// Check if a series can be rebound.
 /**
@@ -1133,7 +1144,7 @@ class series: detail::series_tag, series_operators
 		// Merge all terms from another series. Works if s is this (in which case a copy is made). Basic exception safety guarantee.
 		template <bool Sign, typename T>
 		void merge_terms(T &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
+			typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type * = nullptr)
 		{
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
@@ -1150,7 +1161,7 @@ class series: detail::series_tag, series_operators
 		};
 		template <typename T>
 		struct generic_ctor_enabler<T,typename std::enable_if<
-			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
+			is_series<typename std::decay<T>::type>::value &&
 			(echelon_size<term_type>::value == echelon_size<typename std::decay<T>::type::term_type>::value)
 			>::type>
 		{
@@ -1165,7 +1176,7 @@ class series: detail::series_tag, series_operators
 		};
 		template <typename T>
 		struct generic_ctor_enabler<T,typename std::enable_if<
-			is_instance_of<typename std::decay<T>::type,piranha::series>::value &&
+			is_series<typename std::decay<T>::type>::value &&
 			(echelon_size<term_type>::value < echelon_size<typename std::decay<T>::type::term_type>::value)
 			>::type>
 		{
@@ -1370,13 +1381,13 @@ class series: detail::series_tag, series_operators
 		}
 		template <typename T>
 		static T trim_cf_impl(const T &s, typename std::enable_if<
-			is_instance_of<T,piranha::series>::value>::type * = nullptr)
+			is_series<T>::value>::type * = nullptr)
 		{
 			return s.trim();
 		}
 		template <typename T>
 		static const T &trim_cf_impl(const T &s, typename std::enable_if<
-			!is_instance_of<T,piranha::series>::value>::type * = nullptr)
+			!is_series<T>::value>::type * = nullptr)
 		{
 			return s;
 		}
@@ -2298,7 +2309,7 @@ std::mutex series<Term,Derived>::cp_mutex;
  */
 template <typename Series>
 struct print_coefficient_impl<Series,typename std::enable_if<
-	is_instance_of<Series,series>::value>::type>
+	is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2328,7 +2339,7 @@ struct print_coefficient_impl<Series,typename std::enable_if<
  */
 template <typename Series>
 struct print_tex_coefficient_impl<Series,typename std::enable_if<
-	is_instance_of<Series,series>::value>::type>
+	is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2360,7 +2371,7 @@ namespace math
  * This specialisation is enabled if \p T is an instance of piranha::series.
  */
 template <typename T>
-struct negate_impl<T,typename std::enable_if<is_instance_of<T,series>::value>::type>
+struct negate_impl<T,typename std::enable_if<is_series<T>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2383,7 +2394,7 @@ struct negate_impl<T,typename std::enable_if<is_instance_of<T,series>::value>::t
  * The result will be computed via the series' <tt>empty()</tt> method.
  */
 template <typename Series>
-struct is_zero_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct is_zero_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2403,7 +2414,7 @@ struct is_zero_impl<Series,typename std::enable_if<is_instance_of<Series,series>
  * The result will be computed via the series' <tt>pow()</tt> method.
  */
 template <typename Series, typename T>
-struct pow_impl<Series,T,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct pow_impl<Series,T,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2515,7 +2526,7 @@ namespace math
  * calculates piranha::math::sin().
  */
 template <typename Series>
-struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct sin_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2551,7 +2562,7 @@ struct sin_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
  * calculates piranha::math::cos().
  */
 template <typename Series>
-struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct cos_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2582,7 +2593,7 @@ struct cos_impl<Series,typename std::enable_if<is_instance_of<Series,series>::va
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
 template <typename Series>
-struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct partial_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
@@ -2628,7 +2639,7 @@ struct partial_impl<Series,typename std::enable_if<is_instance_of<Series,series>
  * This specialisation is activated when \p Series is an instance of piranha::series.
  */
 template <typename Series>
-struct evaluate_impl<Series,typename std::enable_if<is_instance_of<Series,series>::value>::type>
+struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 {
 	/// Call operator.
 	/**
