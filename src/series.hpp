@@ -875,8 +875,7 @@ class series_operators
  * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
  * - review and beautify the generic ctor and assignment operator;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
- * - test with mock_cfs that are not addable to scalars,
- * - echelon size must go too.
+ * - test with mock_cfs that are not addable to scalars.
  */
 template <typename Term, typename Derived>
 class series: detail::series_tag, series_operators
@@ -1160,8 +1159,7 @@ class series: detail::series_tag, series_operators
 		};
 		template <typename T, typename U>
 		struct generic_ctor_enabler<T,U,typename std::enable_if<
-			is_series<typename std::decay<T>::type>::value &&
-			(series_recursion_index<U>::value == series_recursion_index<T>::value)
+			series_recursion_index<T>::value != 0 && series_recursion_index<U>::value == series_recursion_index<T>::value
 			>::type>
 		{
 			typedef typename std::decay<T>::type::term_type other_term_type;
@@ -1175,7 +1173,6 @@ class series: detail::series_tag, series_operators
 		};
 		template <typename T, typename U>
 		struct generic_ctor_enabler<T,U,typename std::enable_if<
-			is_series<typename std::decay<T>::type>::value &&
 			(series_recursion_index<U>::value < series_recursion_index<T>::value)
 			>::type>
 		{
