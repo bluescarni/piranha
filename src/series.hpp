@@ -2661,21 +2661,6 @@ struct evaluate_impl<Series,typename std::enable_if<is_series<Series>::value>::t
 
 }
 
-/// Type trait to detect series types.
-/**
- * This type trait will be true if \p T is an instance of piranha::series and it satisfies piranha::is_container_element.
- */
-template <typename T>
-class is_series
-{
-	public:
-		/// Value of the type trait.
-		static const bool value = is_instance_of<T,series>::value && is_container_element<T>::value;
-};
-
-template <typename T>
-const bool is_series<T>::value;
-
 }
 
 #endif
