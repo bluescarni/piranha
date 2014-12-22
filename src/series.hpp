@@ -1172,74 +1172,50 @@ class series: detail::series_tag, series_operators
 			static const bool value = false;
 		};
 		// Series with same echelon size, same term type, move.
-		template <typename Series>
-		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
-			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+		template <typename Series, typename U = series, typename std::enable_if<
+			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
 			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			is_nonconst_rvalue_ref<Series &&>::value
-			>::type * = nullptr)
+			is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
+		void dispatch_generic_construction(Series &&s)
 		{
 			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
 			m_symbol_set = std::move(s.m_symbol_set);
 			m_container = std::move(s.m_container);
 		}
 		// Series with same echelon size, same term type, copy.
-		template <typename Series>
-		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
-			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+		template <typename Series, typename U = series, typename std::enable_if<
+			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
 			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			!is_nonconst_rvalue_ref<Series &&>::value
-			>::type * = nullptr)
+			!is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
+		void dispatch_generic_construction(Series &&s)
 		{
 			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
 			m_symbol_set = s.m_symbol_set;
 			m_container = s.m_container;
 		}
 		// Series with same echelon size and different term type, move.
-		template <typename Series>
-		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
-			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+		template <typename Series, typename U = series, typename std::enable_if<
+			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
 			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			is_nonconst_rvalue_ref<Series &&>::value
-			>::type * = nullptr)
+			is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
+		void dispatch_generic_construction(Series &&s)
 		{
 			m_symbol_set = std::move(s.m_symbol_set);
 			merge_terms<true>(std::forward<Series>(s));
 		}
 		// Series with same echelon size and different term type, copy.
-		template <typename Series>
-		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
-			echelon_size<term_type>::value == echelon_size<typename std::decay<Series>::type::term_type>::value &&
+		template <typename Series, typename U = series, typename std::enable_if<
+			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
 			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			!is_nonconst_rvalue_ref<Series &&>::value
-			>::type * = nullptr)
+			!is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
+		void dispatch_generic_construction(Series &&s)
 		{
 			m_symbol_set = s.m_symbol_set;
 			merge_terms<true>(s);
 		}
-		// Series with smaller echelon size.
-		template <typename Series>
-		void dispatch_generic_construction(Series &&s,
-			typename std::enable_if<is_instance_of<typename std::decay<Series>::type,piranha::series>::value &&
-			echelon_size<typename std::decay<Series>::type::term_type>::value < echelon_size<term_type>::value
-			>::type * = nullptr)
-		{
-			dispatch_generic_construction_from_cf(std::forward<Series>(s));
-		}
-		// Non-series.
-		template <typename T>
-		void dispatch_generic_construction(T &&x,
-			typename std::enable_if<!is_instance_of<typename std::decay<T>::type,piranha::series>::value>::type * = nullptr)
-		{
-			dispatch_generic_construction_from_cf(std::forward<T>(x));
-		}
-		// Construct as coefficient helper.
-		template <typename T>
-		void dispatch_generic_construction_from_cf(T &&x)
+		// Object with smaller recursion index.
+		template <typename T, typename U = series, typename std::enable_if<(series_recursion_index<U>::value > series_recursion_index<T>::value),int>::type = 0>
+		void dispatch_generic_construction(T &&x)
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
