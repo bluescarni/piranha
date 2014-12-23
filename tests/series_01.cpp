@@ -195,8 +195,6 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s1a.m_container.begin()->m_cf == Cf(1));
 			BOOST_CHECK(s1a.m_container.begin()->m_key.size() == 1u);
 			BOOST_CHECK(s1a.m_container.begin()->m_key[0u] == Expo(1));
-			BOOST_CHECK(other1.empty());
-			BOOST_CHECK(other1.m_symbol_set.size() == 0u);
 			// Series, same term type, copy.
 			g_series_type2<Cf,Expo> other2;
 			other2.m_symbol_set.add("x");
@@ -212,8 +210,6 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(so2a.m_container.begin()->m_cf == Cf(1));
 			BOOST_CHECK(so2a.m_container.begin()->m_key.size() == 1u);
 			BOOST_CHECK(so2a.m_container.begin()->m_key[0u] == Expo(1));
-			BOOST_CHECK(other2.empty());
-			BOOST_CHECK(other2.m_symbol_set.size() == 0u);
 			// Construction from non-series.
 			series_type s1b(1);
 			BOOST_CHECK(s1b.size() == 1u);
@@ -231,6 +227,7 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s4o.m_container.begin()->m_cf.m_container.begin()->m_cf == 1);
 			// Generic assignment.
 			// Series, different term type, copy.
+			other1 = 0;
 			series_type s1c;
 			other1.m_symbol_set.add("x");
 			other1.insert(term_type2(1,key_type{Expo(1)}));
@@ -245,9 +242,8 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(s1c.m_container.begin()->m_cf == Cf(1));
 			BOOST_CHECK(s1c.m_container.begin()->m_key.size() == 1u);
 			BOOST_CHECK(s1c.m_container.begin()->m_key[0u] == Expo(1));
-			BOOST_CHECK(other1.empty());
-			BOOST_CHECK(other1.m_symbol_set.size() == 0u);
 			// Series, same term type, copy.
+			other2 = 0;
 			other2.m_symbol_set.add("x");
 			other2.insert(term_type(1,key_type{Expo(1)}));
 			series_type sp2;
@@ -262,8 +258,6 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(sp2.m_container.begin()->m_cf == Cf(1));
 			BOOST_CHECK(sp2.m_container.begin()->m_key.size() == 1u);
 			BOOST_CHECK(sp2.m_container.begin()->m_key[0u] == Expo(1));
-			BOOST_CHECK(other2.empty());
-			BOOST_CHECK(other2.m_symbol_set.size() == 0u);
 			// Assignment from non series.
 			s1b = 2;
 			BOOST_CHECK(s1b.size() == 1u);

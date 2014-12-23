@@ -44,6 +44,7 @@
 
 #include "base_term.hpp"
 #include "config.hpp"
+#include "convert_to.hpp"
 #include "debug_access.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
@@ -1148,88 +1149,44 @@ class series: detail::series_tag, series_operators
 		}
 		// Generic construction
 		// ====================
-		// TMP for the generic constructor.
-		// NOTE: this logic is a slight repetition of the helper methods below. However, since the enabling
-		// conditions below are already quite complicated and split in lvalue/rvalue,
-		// it might be better to leave this as is.
-		template <typename T, typename U, typename = void>
-		struct generic_ctor_enabler
-		{
-			static const bool value = std::is_constructible<typename term_type::cf_type,T>::value;
-		};
-		template <typename T, typename U>
-		struct generic_ctor_enabler<T,U,typename std::enable_if<
-			series_recursion_index<T>::value != 0 && series_recursion_index<U>::value == series_recursion_index<T>::value
-			>::type>
-		{
-			typedef typename std::decay<T>::type::term_type other_term_type;
-			typedef typename other_term_type::cf_type other_cf_type;
-			typedef typename other_term_type::key_type other_key_type;
-			// NOTE: this essentially is an is_term_insertable check. Keep it in mind if we implement
-			// enable/disable of insertion method in the future.
-			static const bool value = std::is_same<term_type,other_term_type>::value ||
-				(std::is_constructible<typename term_type::cf_type,other_cf_type>:: value &&
-				std::is_constructible<typename term_type::key_type,other_key_type,symbol_set>:: value);
-		};
-		template <typename T, typename U>
-		struct generic_ctor_enabler<T,U,typename std::enable_if<
-			(series_recursion_index<U>::value < series_recursion_index<T>::value)
-			>::type>
-		{
-			static const bool value = false;
-		};
-		// Series with same echelon size, same term type, move.
-		template <typename Series, typename U = series, typename std::enable_if<
-			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
-			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
-		void dispatch_generic_construction(Series &&s)
-		{
-			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
-			m_symbol_set = std::move(s.m_symbol_set);
-			m_container = std::move(s.m_container);
-		}
-		// Series with same echelon size, same term type, copy.
-		template <typename Series, typename U = series, typename std::enable_if<
-			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
-			std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			!is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
-		void dispatch_generic_construction(Series &&s)
-		{
-			static_assert(!std::is_same<series,typename std::decay<Series>::type>::value,"Invalid series type for generic construction.");
-			m_symbol_set = s.m_symbol_set;
-			m_container = s.m_container;
-		}
-		// Series with same echelon size and different term type, move.
-		template <typename Series, typename U = series, typename std::enable_if<
-			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
-			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
-		void dispatch_generic_construction(Series &&s)
-		{
-			m_symbol_set = std::move(s.m_symbol_set);
-			merge_terms<true>(std::forward<Series>(s));
-		}
-		// Series with same echelon size and different term type, copy.
-		template <typename Series, typename U = series, typename std::enable_if<
-			series_recursion_index<U>::value == series_recursion_index<Series>::value &&
-			!std::is_same<term_type,typename std::decay<Series>::type::term_type>::value &&
-			!is_nonconst_rvalue_ref<Series &&>::value,int>::type = 0>
-		void dispatch_generic_construction(Series &&s)
-		{
-			m_symbol_set = s.m_symbol_set;
-			merge_terms<true>(s);
-		}
-		// Object with smaller recursion index.
-		template <typename T, typename U = series, typename std::enable_if<(series_recursion_index<U>::value > series_recursion_index<T>::value),int>::type = 0>
-		void dispatch_generic_construction(T &&x)
+		template <typename T, typename U = series, typename std::enable_if<
+			(series_recursion_index<T>::value < series_recursion_index<U>::value) &&
+			has_convert_to<typename U::term_type::cf_type,T>::value,
+			int>::type = 0>
+		void dispatch_generic_constructor(const T &x)
 		{
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
-			cf_type cf(std::forward<T>(x));
+			cf_type cf(convert_to<cf_type>(x));
 			key_type key(m_symbol_set);
 			insert(term_type(std::move(cf),std::move(key)));
 		}
+		template <typename T, typename U = series, typename std::enable_if<
+			series_recursion_index<T>::value != 0u &&
+			(series_recursion_index<T>::value == series_recursion_index<U>::value) &&
+			has_convert_to<typename U::term_type::cf_type,typename T::term_type::cf_type>::value &&
+			std::is_constructible<typename U::term_type::key_type,const typename T::term_type::key_type &,const symbol_set &>::value,
+			int>::type = 0>
+		void dispatch_generic_constructor(const T &s)
+		{
+			typedef typename term_type::cf_type cf_type;
+			typedef typename term_type::key_type key_type;
+			m_symbol_set = s.m_symbol_set;
+			const auto it_f = s.m_container.end();
+			try {
+				for (auto it = s.m_container.begin(); it != it_f; ++it) {
+					insert<true>(term_type(convert_to<cf_type>(it->m_cf),key_type(it->m_key,m_symbol_set)));
+				}
+			} catch (...) {
+				// In case of any insertion error, zero out this series.
+				m_container.clear();
+				throw;
+			}
+		}
+		template <typename T, typename U>
+		using generic_ctor_enabler = typename std::enable_if<detail::true_tt<
+			decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value &&
+			!std::is_same<U,T>::value,int>::type;
 		// Exponentiation.
 		template <typename T>
 		Derived pow_impl(const T &x) const
@@ -1568,37 +1525,33 @@ class series: detail::series_tag, series_operators
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if the decay type of \p T is different from piranha::series and
+		 * This constructor is enabled only if \p T is different from piranha::series and
 		 * the algorithm outlined below is supported by the involved types.
 		 *
 		 * The generic construction algorithm works as follows:
-		 * - if \p T is an instance of piranha::series with the same echelon size as the calling type:
-		 *   - if the term type of \p T is the same as that of <tt>this</tt>:
-		 *     - the internal terms container and symbol set of \p x are forwarded to construct \p this;
-		 *   - else:
-		 *     - the symbol set of \p x is forwarded to construct the symbol set of this and all terms from \p x are inserted into \p this
-		 *       (after conversion to \p term_type via binary constructor from coefficient and key);
-		 * - else:
+		 * - if \p T is a series with the same series recursion index as \p this, then
+		 *   the symbol set of \p x is copied into \p this and all terms from \p x are inserted into \p this
+		 *   (after conversion to \p term_type via binary construction from coefficient and key);
+		 * - else, if the recursion index of \p T is less than the recursion index of \p this:
 		 *   - \p x is used to construct a new term as follows:
-		 *     - \p x is forwarded to construct a coefficient;
+		 *     - \p x is used to construct a coefficient via piranha::convert_to;
 		 *     - an empty arguments set will be used to construct a key;
 		 *     - coefficient and key are used to construct the new term instance;
-		 *   - the new term is inserted into \p this.
+		 *   - the new term is inserted into \p this;
+		 * - otherwise, the constructor is disabled.
 		 *
 		 * @param[in] x object to construct from.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - the copy assignment operators of piranha::symbol_set and piranha::hash_set,
+		 * - the copy assignment operator of piranha::symbol_set,
 		 * - the construction of a coefficient from \p x or of a key from piranha::symbol_set,
 		 * - the construction of a term from a coefficient-key pair,
-		 * - insert(),
-		 * - the copy constructor of piranha::series.
+		 * - insert().
 		 */
-		template <typename T, typename U = series, typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
-			generic_ctor_enabler<T,U>::value,int>::type = 0>
-		explicit series(T &&x)
+		template <typename T, typename U = series, generic_ctor_enabler<T,U> = 0>
+		explicit series(const T &x)
 		{
-			dispatch_generic_construction(std::forward<T>(x));
+			dispatch_generic_constructor(x);
 		}
 		/// Trivial destructor.
 		~series()
