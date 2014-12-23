@@ -451,11 +451,7 @@ class series_operators
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,0>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,0> dispatch_binary_add(T &&x, U &&y)
 		{
-			// Two-layers implementation, to optimise the case in which one series is much bigger than the other.
-			if (x.size() >= y.size()) {
-				return binary_add_impl<true>(std::forward<T>(x),std::forward<U>(y));
-			}
-			return binary_add_impl<true>(std::forward<U>(y),std::forward<T>(x));
+			return binary_add_impl<true>(std::forward<T>(x),std::forward<U>(y));
 		}
 		// NOTE: this covers two cases:
 		// - equal recursion, first series wins,
@@ -522,12 +518,7 @@ class series_operators
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
 		{
-			if (x.size() >= y.size()) {
-				return binary_add_impl<false>(std::forward<T>(x),std::forward<U>(y));
-			}
-			auto retval = binary_add_impl<false>(std::forward<U>(y),std::forward<T>(x));
-			retval.negate();
-			return retval;
+			return binary_add_impl<false>(std::forward<T>(x),std::forward<U>(y));
 		}
 		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,1>::value == 1u || bso_type<T,U,1>::value == 4u) &&
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
@@ -870,7 +861,6 @@ class series_operators
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
  * TODO new operators:
- * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - test with mock_cfs that are not addable to scalars.
  */
 template <typename Term, typename Derived>
