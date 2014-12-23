@@ -96,7 +96,7 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 
 /// Type trait to detect series types.
 /**
- * This type trait will be true if \p T is an instance of piranha::series and it satisfies piranha::is_container_element.
+ * This type trait will be true if \p T is an instance of piranha::series.
  */
 template <typename T>
 class is_series
