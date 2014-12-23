@@ -343,11 +343,6 @@ class debug_access<insertion_tag>
 				s.insert(term_type(Cf(-2),key_type{Expo(2)}));
 				s.insert(term_type(Cf(-1),key_type{Expo(2)}));
 				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
-				// Insertion of different term type.
-				typedef polynomial_term<float,Expo> other_term_type;
-				s.insert(other_term_type(float(1),key_type{Expo(1)}));
-				BOOST_CHECK_EQUAL(s.size(),unsigned(1));
-				BOOST_CHECK_EQUAL(s.m_container.begin()->m_cf,float(1) + float(1));
 			}
 		};
 		template <typename Cf>
@@ -467,31 +462,6 @@ class debug_access<merge_terms_tag>
 				BOOST_CHECK(it->m_cf == value_type(1) + value_type(1) + value_type(1) + value_type(1) ||
 					it->m_cf == value_type(2) + value_type(2) + value_type(2) + value_type(2) ||
 					it->m_cf == value_type(3) + value_type(3) + value_type(3) + value_type(3));
-				// Merge with different series type.
-				s1.m_container.clear();
-				s1.insert(term_type(Cf(1),key_type{Expo(1)}));
-				typedef polynomial_term<long,Expo> term_type2;
-				typedef typename term_type2::key_type key_type2;
-				typedef g_series_type<long,Expo> series_type2;
-				symbol_set ed2;
-				ed2.add(symbol("x"));
-				series_type2 s4;
-				s4.m_symbol_set = ed2;
-				s4.insert(term_type2(long(1),key_type2{Expo(1)}));
-				s1.template merge_terms<true>(s4);
-				BOOST_CHECK_EQUAL(s1.size(), unsigned(1));
-				it = s1.m_container.begin();
-				value_type tmp(1);
-				tmp += long(1);
-				BOOST_CHECK(it->m_cf == tmp);
-				s4.m_container.clear();
-				s4.insert(term_type2(long(1),key_type2{Expo(2)}));
-				s1.template merge_terms<true>(s4);
-				it = s1.m_container.begin();
-				BOOST_CHECK_EQUAL(s1.size(), unsigned(2));
-				BOOST_CHECK(it->m_cf == tmp || it->m_cf == long(1));
-				++it;
-				BOOST_CHECK(it->m_cf == tmp || it->m_cf == long(1));
 			}
 		};
 		template <typename Cf>

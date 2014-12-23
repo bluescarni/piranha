@@ -866,15 +866,10 @@ class series_operators
  /* TODO:
  * \todo cast operator, to series and non-series types.
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
- * \todo review the handling of incompatible terms: it seems like in some places we are considering the possibility that operations on
- * coefficients could make the term incompatible, but this is not the case as in base_term only the key matters for compatibility. Propagating
- * this through the code would solve the issue of what to do if a term becomes incompatible during multiplication/merging/insertion etc. (now
- * it cannot become incompatible any more if it is already in series).
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
  * TODO new operators:
- * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - test with mock_cfs that are not addable to scalars.
  */
@@ -909,28 +904,8 @@ class series: detail::series_tag, series_operators
 	private:
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
-		// Overload for completely different term type: copy-convert to term_type and proceed.
 		template <bool Sign, typename T>
-		void dispatch_insertion(T &&term, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,term_type>::value &&
-			!is_nonconst_rvalue_ref<T &&>::value
-			>::type * = nullptr)
-		{
-			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(term.m_cf),
-				typename term_type::key_type(term.m_key,m_symbol_set)));
-		}
-		// Overload for completely different term type: move-convert to term_type and proceed.
-		template <bool Sign, typename T>
-		void dispatch_insertion(T &&term, typename std::enable_if<
-			!std::is_same<typename std::decay<T>::type,term_type>::value &&
-			is_nonconst_rvalue_ref<T &&>::value
-			>::type * = nullptr)
-		{
-			dispatch_insertion<Sign>(term_type(typename term_type::cf_type(std::move(term.m_cf)),
-				typename term_type::key_type(std::move(term.m_key),m_symbol_set)));
-		}
-		// Overload for term_type.
-		template <bool Sign, typename T>
+		// Insertion.
 		void dispatch_insertion(T &&term, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,term_type>::value
 			>::type * = nullptr)
@@ -947,6 +922,7 @@ class series: detail::series_tag, series_operators
 			}
 			insertion_impl<Sign>(std::forward<T>(term));
 		}
+		// Cf arithmetics when inserting, normal and move variants.
 		template <bool Sign, typename Iterator>
 		static void insertion_cf_arithmetics(Iterator &it, const term_type &term)
 		{
@@ -978,10 +954,10 @@ class series: detail::series_tag, series_operators
 			// Try to locate the element.
 			auto bucket_idx = m_container._bucket(term);
 			const auto it = m_container._find(term,bucket_idx);
-			// Cleanup function that checks ignorability and compatibility of an element in the hash set,
+			// Cleanup function that checks ignorability of an element in the hash set,
 			// and removes it if necessary.
 			auto cleanup = [this](const typename container_type::const_iterator &it) {
-				if (unlikely(!it->is_compatible(this->m_symbol_set) || it->is_ignorable(this->m_symbol_set))) {
+				if (unlikely(it->is_ignorable(this->m_symbol_set))) {
 					this->m_container.erase(it);
 				}
 			};
@@ -1017,7 +993,7 @@ class series: detail::series_tag, series_operators
 				try {
 					// The term exists already, update it.
 					insertion_cf_arithmetics<Sign>(it,std::forward<T>(term));
-					// Check if the term has become ignorable or incompatible after the modification.
+					// Check if the term has become ignorable after the modification.
 					cleanup(it);
 				} catch (...) {
 					cleanup(it);
@@ -1025,36 +1001,27 @@ class series: detail::series_tag, series_operators
 				}
 			}
 		}
+		template <typename T>
+		using insert_enabler = typename std::enable_if<std::is_same<Term,typename std::decay<T>::type>::value,int>::type;
 		// Terms merging
 		// =============
 		// NOTE: ideas to improve the algorithm:
 		// - optimization when merging with self: add each coefficient to itself, instead of copying and merging.
 		// - optimization when merging with series with same bucket size: avoid computing the destination bucket,
 		//   as it will be the same as the original.
-		// Overload in case that T derives from the same type as this (series<Term,Derived>).
 		template <bool Sign, typename T>
-		void merge_terms_impl0(T &&s,
-			typename std::enable_if<std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value>::type * = nullptr)
+		void merge_terms_impl0(T &&s)
 		{
-			// NOTE: here we can take the pointer to series and compare it to this because we know from enable_if that
-			// series is an instance of the type of this.
+			// NOTE: here we can take the pointer to series and compare it to this because we know that
+			// series derives from the type of this.
 			if (unlikely(&s == this)) {
 				// If the two series are the same object, we need to make a copy.
-				// NOTE: we do not forward here, when making the copy, because if T is a non-const
-				// rvalue reference we might actually erase this: with Derived(series), a move
-				// constructor might end up being called.
-				merge_terms_impl1<Sign>(series<Term,Derived>(s));
+				// NOTE: here we are making sure we are doing a real deep copy (as opposed, say, to a move,
+				// which could happen if we used std::forward.).
+				merge_terms_impl1<Sign>(series<Term,Derived>(static_cast<const series<Term,Derived> &>(s)));
 			} else {
 				merge_terms_impl1<Sign>(std::forward<T>(s));
 			}
-		}
-		// Overload in case that T is not an instance of the type of this.
-		template <bool Sign, typename T>
-		void merge_terms_impl0(T &&s,
-			typename std::enable_if<!std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value>::type * = nullptr)
-		{
-			// No worries about same object, just forward.
-			merge_terms_impl1<Sign>(std::forward<T>(s));
 		}
 		// Overload if we cannot move objects from series.
 		template <bool Sign, typename T>
@@ -1123,7 +1090,7 @@ class series: detail::series_tag, series_operators
 					const auto it_f2 = m_container.end();
 					for (auto it = m_container.begin(); it != it_f2;) {
 						math::negate(it->m_cf);
-						if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+						if (unlikely(it->is_ignorable(m_symbol_set))) {
 							// Erase the invalid term.
 							it = m_container.erase(it);
 						} else {
@@ -1145,6 +1112,7 @@ class series: detail::series_tag, series_operators
 		void merge_terms(T &&s,
 			typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type * = nullptr)
 		{
+			static_assert(std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value,"Type error.");
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
 		// Generic construction
@@ -1638,21 +1606,16 @@ class series: detail::series_tag, series_operators
 		{
 			return (empty() || (size() == 1u && m_container.begin()->m_key.is_unitary(m_symbol_set)));
 		}
-		/// Insert generic term.
+		/// Insert term.
 		/**
-		 * This method will insert \p term into the series using internally piranha::hash_set::insert. The method is enabled only
-		 * if \p term derives from piranha::base_term.
+		 * \note
+		 * This method is enabled only if the decay type of \p T is \p Term.
+		 *
+		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
 		 * 
 		 * The insertion algorithm proceeds as follows:
-		 * - if \p term is not of type series::term_type, its coefficient and key are forwarded to construct a series::term_type
-		 *   as follows:
-		 *     - <tt>term</tt>'s coefficient is forwarded to construct a coefficient of type series::term_type::cf_type;
-		 *     - <tt>term</tt>'s key is forwarded, together with the series' piranha::symbol_set,
-		 *       to construct a key of type series::term_type::key_type;
-		 *     - the newly-constructed coefficient and key are used to construct an instance of series::term_type, which will replace \p term as the
-		 *       argument of insertion for the remaining portion of the algorithm;
 		 * - if the term is not compatible for insertion, an \p std::invalid_argument exception is thrown;
-		 * - if the term is ignorable, the method will return;
+		 * - if the term is ignorable, the method will return without performing any insertion;
 		 * - if the term is already in the series, then:
 		 *   - its coefficient is added (if \p Sign is \p true) or subtracted (if \p Sign is \p false)
 		 *     to the existing term's coefficient;
@@ -1671,28 +1634,29 @@ class series: detail::series_tag, series_operators
 		 * @param[in] term term to be inserted.
 		 * 
 		 * @throws unspecified any exception thrown by:
-		 * - the constructors of series::term_type, and of its coefficient and key types,
-		 *   invoked by any necessary conversion;
 		 * - piranha::hash_set::insert(),
 		 * - piranha::hash_set::find(),
 		 * - piranha::hash_set::erase(),
 		 * - piranha::math::negate(), in-place addition/subtraction on coefficient types.
 		 * @throws std::invalid_argument if \p term is incompatible.
 		 */
-		template <bool Sign, typename T>
-		typename std::enable_if<is_instance_of<typename std::decay<T>::type,base_term>::value,void>::type insert(T &&term)
+		template <bool Sign, typename T, insert_enabler<T> = 0>
+		void insert(T &&term)
 		{
 			dispatch_insertion<Sign>(std::forward<T>(term));
 		}
 		/// Insert generic term with <tt>Sign = true</tt>.
 		/**
+		 * \note
+		 * This method is enabled only if the decay type of \p T is \p Term.
+		 *
 		 * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
 		 * 
 		 * @param[in] term term to be inserted.
 		 * 
 		 * @throws unspecified any exception thrown by generic insert().
 		 */
-		template <typename T>
+		template <typename T, insert_enabler<T> = 0>
 		void insert(T &&term)
 		{
 			insert<true>(std::forward<T>(term));
@@ -1736,7 +1700,7 @@ class series: detail::series_tag, series_operators
 				const auto it_f = m_container.end();
 				for (auto it = m_container.begin(); it != it_f;) {
 					math::negate(it->m_cf);
-					if (unlikely(!it->is_compatible(m_symbol_set) || it->is_ignorable(m_symbol_set))) {
+					if (unlikely(it->is_ignorable(m_symbol_set))) {
 						it = m_container.erase(it);
 					} else {
 						++it;

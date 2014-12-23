@@ -672,7 +672,7 @@ class series_multiplier
 									piranha_assert(!it->is_ignorable(retval.m_symbol_set) && it->is_compatible(retval.m_symbol_set));
 									// Cleanup function.
 									auto cleanup = [&]() {
-										if (unlikely(!it->is_compatible(retval.m_symbol_set) || it->is_ignorable(retval.m_symbol_set))) {
+										if (unlikely(it->is_ignorable(retval.m_symbol_set))) {
 											retval.m_container._erase(it);
 											// After term is erased, update count.
 											piranha_assert(count_minus < std::numeric_limits<size_type>::max());
@@ -682,7 +682,7 @@ class series_multiplier
 									try {
 										// The term exists already, update it.
 										retval.template insertion_cf_arithmetics<true>(it,std::move(*term_it));
-										// Check if the term has become ignorable or incompatible after the modification.
+										// Check if the term has become ignorable after the modification.
 										cleanup();
 									} catch (...) {
 										cleanup();
