@@ -518,13 +518,12 @@ class series_operators
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
 		{
-			if (x.size() > y.size()) {
+			if (x.size() >= y.size()) {
 				return binary_add_impl<false>(std::forward<T>(x),std::forward<U>(y));
-			} else {
-				auto retval = binary_add_impl<false>(std::forward<U>(y),std::forward<T>(x));
-				retval.negate();
-				return retval;
 			}
+			auto retval = binary_add_impl<false>(std::forward<U>(y),std::forward<T>(x));
+			retval.negate();
+			return retval;
 		}
 		template <typename T, typename U, typename std::enable_if<(bso_type<T,U,1>::value == 1u || bso_type<T,U,1>::value == 4u) &&
 			std::is_constructible<typename std::decay<T>::type,const typename std::decay<U>::type &>::value,
