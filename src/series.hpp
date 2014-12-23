@@ -1582,9 +1582,10 @@ class series: detail::series_tag, series_operators
 		series &operator=(series &&) = default;
 		/// Generic assignment operator.
 		/**
-		 * This template constructor is enabled only if \p T is different from the type of \p this,
-		 * and \p x can be used to construct piranha::series.
-		 * That is, generic assignment is equivalent to assignment to a piranha::series constructed
+		 * \note
+		 * This operator is enabled only if the generic constructor from \p x is enabled.
+		 *
+		 * Generic assignment is equivalent to assignment to a piranha::series constructed
 		 * via the generic constructor.
 		 * 
 		 * @param[in] x assignment argument.
@@ -1593,12 +1594,10 @@ class series: detail::series_tag, series_operators
 		 * 
 		 * @throws unspecified any exception thrown by the generic constructor.
 		 */
-		template <typename T>
-		typename std::enable_if<!std::is_same<series,typename std::decay<T>::type>::value &&
-			std::is_constructible<series,T>::value,
-			series &>::type operator=(T &&x)
+		template <typename T, typename U = series, generic_ctor_enabler<T,U> = 0>
+		series &operator=(const T &x)
 		{
-			return operator=(series(std::forward<T>(x)));
+			return operator=(series(x));
 		}
 		/// Symbol set getter.
 		/**
