@@ -186,6 +186,8 @@ class series_recursion_index
 		static const std::size_t value = 0u;
 };
 
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+
 template <typename T, typename Enable>
 const std::size_t series_recursion_index<T,Enable>::value;
 
@@ -201,6 +203,8 @@ class series_recursion_index<T,typename std::enable_if<is_series<typename std::d
 
 template <typename T>
 const std::size_t series_recursion_index<T,typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type>::value;
+
+#endif
 
 namespace detail
 {
@@ -869,11 +873,8 @@ class series_operators
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
- * \todo the output of pow() for series needs to be recomputed.
- * \todo series generic ctor/assignment should use convert_to.
  * TODO new operators:
  * - merge terms and insertion should probably now accept only term_type and not generic terms insertions;
- * - review and beautify the generic ctor and assignment operator;
  * - probably the swap-for-merge thing overlaps with the swapping we do already in the new operator+. We need only on of these.
  * - test with mock_cfs that are not addable to scalars.
  */
