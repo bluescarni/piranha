@@ -613,6 +613,14 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check that move erases.
+				auto x_copy(x);
+				tmp = std::move(x) + x_copy;
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = x_copy;
+				tmp = x_copy + std::move(x);
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = x_copy;
 				// A few self move tests.
 				tmp = std::move(x) + std::move(x);
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
@@ -774,6 +782,14 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1) + Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check that a move really happens.
+				tmp = x;
+				tmp += std::move(x);
+				// NOTE: here the symbol set has still size 1 as it does not get moved
+				// (it gets moved only when operands are swapped because of difference
+				// in sizes or because it's a sub operation).
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = p_type1{"x"};
 				// Move self.
 				tmp += std::move(tmp);
 				BOOST_CHECK_EQUAL(tmp.size(),1u);
@@ -1016,6 +1032,14 @@ class debug_access<arithmetics_sub_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check that move erases.
+				auto x_copy(x);
+				tmp = std::move(x) - x_copy;
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = x_copy;
+				tmp = x_copy - std::move(x);
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = x_copy;
 				// Self move tests.
 				tmp = std::move(x) - std::move(x);
 				BOOST_CHECK_EQUAL(tmp.size(),0u);
@@ -1164,6 +1188,11 @@ class debug_access<arithmetics_sub_tag>
 				BOOST_CHECK(tmp.m_container.begin()->m_cf == Cf(1));
 				BOOST_CHECK(tmp.m_container.begin()->m_key.size() == 1u);
 				BOOST_CHECK(tmp.m_symbol_set == symbol_set{symbol{"x"}});
+				// Check that a move really happens.
+				tmp = x;
+				tmp -= std::move(x);
+				BOOST_CHECK_EQUAL(x.size(),0u);
+				x = p_type1{"x"};
 				// Move.
 				tmp = x2;
 				tmp -= p_type1{x};
