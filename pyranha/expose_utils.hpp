@@ -195,25 +195,24 @@ class series_exposer
 			}
 			return retval;
 		}
-		// Handle division specially (allowed only with non-series types).
+		// Expose arithmetics operations with another type, if supported.
 		template <typename S, typename T>
-		static void expose_division(bp::class_<S> &series_class, const T &in,
-			typename std::enable_if<!piranha::is_instance_of<T,piranha::series>::value>::type * = nullptr)
-		{
-			series_class.def(bp::self /= in);
-			series_class.def(bp::self / in);
-		}
-		template <typename S, typename T>
-		static void expose_division(bp::class_<S> &, const T &,
-			typename std::enable_if<piranha::is_instance_of<T,piranha::series>::value>::type * = nullptr)
-		{}
-		// Expose arithmetics operations with another type.
-		// NOTE: this will have to be conditional in the future.
-		template <typename T, typename S>
-		static void expose_arithmetics(bp::class_<S> &series_class)
+		using common_ops_ic = std::integral_constant<bool,
+			piranha::is_addable_in_place<S,T>::value &&
+			piranha::is_addable<S,T>::value &&
+			piranha::is_addable<T,S>::value &&
+			piranha::is_subtractable_in_place<S,T>::value &&
+			piranha::is_subtractable<S,T>::value &&
+			piranha::is_subtractable<T,S>::value &&
+			piranha::is_multipliable_in_place<S,T>::value &&
+			piranha::is_multipliable<S,T>::value &&
+			piranha::is_multipliable<T,S>::value &&
+			piranha::is_equality_comparable<T,S>::value &&
+			piranha::is_equality_comparable<S,T>::value>;
+		template <typename S, typename T, typename std::enable_if<common_ops_ic<S,T>::value,int>::type = 0>
+		static void expose_common_ops(bp::class_<S> &series_class, const T &in)
 		{
 			namespace sn = boost::python::self_ns;
-			T in;
 			series_class.def(sn::operator+=(bp::self,in));
 			series_class.def(sn::operator+(bp::self,in));
 			series_class.def(sn::operator+(in,bp::self));
@@ -227,6 +226,31 @@ class series_exposer
 			series_class.def(sn::operator==(in,bp::self));
 			series_class.def(sn::operator!=(bp::self,in));
 			series_class.def(sn::operator!=(in,bp::self));
+		}
+		template <typename S, typename T, typename std::enable_if<!common_ops_ic<S,T>::value,int>::type = 0>
+		static void expose_common_ops(bp::class_<S> &, const T &)
+		{}
+		// Handle division separately.
+		template <typename S, typename T>
+		using division_ops_ic = std::integral_constant<bool,
+			piranha::is_divisible_in_place<S,T>::value &&
+			piranha::is_divisible<S,T>::value>;
+		template <typename S, typename T, typename std::enable_if<division_ops_ic<S,T>::value,int>::type = 0>
+		static void expose_division(bp::class_<S> &series_class, const T &in)
+		{
+			namespace sn = boost::python::self_ns;
+			series_class.def(sn::operator/=(bp::self,in));
+			series_class.def(sn::operator/(bp::self,in));
+		}
+		template <typename S, typename T, typename std::enable_if<!division_ops_ic<S,T>::value,int>::type = 0>
+		static void expose_division(bp::class_<S> &, const T &)
+		{}
+		// Main wrapper.
+		template <typename T, typename S>
+		static void expose_arithmetics(bp::class_<S> &series_class)
+		{
+			T in;
+			expose_common_ops(series_class,in);
 			expose_division(series_class,in);
 		}
 		// Exponentiation support.
