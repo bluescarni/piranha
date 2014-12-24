@@ -1754,6 +1754,10 @@ class debug_access<arithmetics_div_tag>
 				BOOST_CHECK(it2->m_cf == Cf(3) / 2.);
 				BOOST_CHECK(it2->m_key.size() == 1u);
 				BOOST_CHECK((tmp2.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Test division by zero of empty series.
+				BOOST_CHECK_THROW(p_type1{} / 0,zero_division_error);
+				p_type1 zero;
+				BOOST_CHECK_THROW(zero /= 0,zero_division_error);
 			}
 		};
 		template <typename Cf>

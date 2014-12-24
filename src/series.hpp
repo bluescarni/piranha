@@ -49,6 +49,7 @@
 #include "detail/sfinae_types.hpp"
 #include "detail/series_fwd.hpp"
 #include "environment.hpp"
+#include "exceptions.hpp"
 #include "hash_set.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 #include "mp_integer.hpp"
@@ -652,6 +653,9 @@ class series_operators
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 4u,int>::type = 0>
 		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
 		{
+			if (unlikely(x.size() == 0u) && math::is_zero(y)) {
+				piranha_throw(zero_division_error,"cannot divide empty series by zero");
+			}
 			using ret_type = series_common_type<T,U,3>;
 			static_assert(std::is_same<typename std::decay<T>::type,ret_type>::value,"Invalid type.");
 			// Create a copy of x and work on it. This is always possible.
@@ -691,8 +695,9 @@ class series_operators
 			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
 		}
 		template <typename T, typename U>
-		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()));
+		using binary_div_type = typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value,
+			decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()))>::type;
 		template <typename T, typename U, typename std::enable_if<
 			!std::is_const<T>::value && std::is_assignable<T &,binary_div_type<T,U>>::value,
 			int>::type = 0>
