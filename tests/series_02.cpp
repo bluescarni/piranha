@@ -1787,7 +1787,7 @@ BOOST_AUTO_TEST_CASE(series_arithmetics_div_test)
 	BOOST_CHECK((!is_divisible<double,p_type1>::value));
 	BOOST_CHECK((!is_divisible<int,p_type1>::value));
 	BOOST_CHECK((!is_divisible<integer,p_type1>::value));
-	// Type testing for in-place multiplication.
+	// Type testing for in-place division.
 	// Case 4.
 	BOOST_CHECK((std::is_same<p_type1 &,decltype(std::declval<p_type1 &>() /= 0)>::value));
 	// Case 5.
