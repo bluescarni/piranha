@@ -36,7 +36,6 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
@@ -126,12 +125,9 @@ struct constructor_tester
 			BOOST_CHECK(p3 == 3);
 			BOOST_CHECK(3 == p3);
 			BOOST_CHECK(p3 != p2);
-// NOTE: same problem as in poisson_series.
-#if !defined(PIRANHA_COMPILER_IS_CLANG)
 			p_type p3a{integer(3)};
 			BOOST_CHECK(p3a == p3);
 			BOOST_CHECK(p3 == p3a);
-#endif
 			// Construction from polynomial of different type.
 			typedef polynomial<long,int> p_type1;
 			typedef polynomial<int,short> p_type2;
@@ -206,10 +202,8 @@ struct assignment_tester
 			p_type p1;
 			p1 = 1;
 			BOOST_CHECK(p1 == 1);
-#if !defined(PIRANHA_COMPILER_IS_CLANG)
 			p1 = integer(10);
 			BOOST_CHECK(p1 == integer(10));
-#endif
 			p1 = "x";
 			BOOST_CHECK(p1 == p_type("x"));
 			BOOST_CHECK((std::is_assignable<p_type,Cf>::value));

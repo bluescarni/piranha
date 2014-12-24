@@ -32,7 +32,6 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -94,16 +93,9 @@ struct constructor_tester
 		BOOST_CHECK(p3.size() == 1u);
 		BOOST_CHECK(p3 == 3);
 		BOOST_CHECK(3 == p3);
-// NOTE: one instance of this fails to compile because at the present time clang/libc++ reports false
-// for std::is_constructible<double,integer>::value. It seems like the explicit cast operator is not
-// considered by the type trait. We need to check with the latest versions
-// and, if this is still a problem, submit a bugreport.
-// NOTE: this might be automatically fixed in the future with convert_to().
-#if !defined(PIRANHA_COMPILER_IS_CLANG)
 		p_type p3a{integer(3)};
 		BOOST_CHECK(p3a == p3);
 		BOOST_CHECK(p3 == p3a);
-#endif
 		// Construction from poisson series of different type.
 		typedef poisson_series<polynomial<rational,short>> p_type1;
 		typedef poisson_series<polynomial<integer,short>> p_type2;
@@ -147,10 +139,8 @@ struct assignment_tester
 		p_type p1;
 		p1 = 1;
 		BOOST_CHECK(p1 == 1);
-#if !defined(PIRANHA_COMPILER_IS_CLANG)
 		p1 = integer(10);
 		BOOST_CHECK(p1 == integer(10));
-#endif
 		poly_assignment_test<Cf>();
 	}
 };
