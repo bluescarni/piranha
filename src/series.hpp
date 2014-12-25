@@ -651,8 +651,18 @@ class series_operators
 		// NOTE: only two cases are possible at the moment, when we divide a series by an object with lower recursion index.
 		// The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a common
 		// type (true series division is not implemented).
+		// NOTE: the use of the old syntax for the enable_if with nullptr is because of a likely GCC bug:
+		// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59366
+		// In real.hpp, there are a few uses of operator/= on reals (e.g., in binary_div) *before* the is_zero_impl
+		// specialisation for real is declared. These operators are immediately instantiatied when parsed because they are not
+		// templated. During the overload resolution of operator/=, the operator defined in this class is considered - which
+		// is wrong, as the operators here should be found only via ADL and this class is in no way associated to real. What happens
+		// then is that is_zero_impl is instantiated for a real type before the real specialisation is seen, and GCC errors out.
+		// I *think* the nullptr syntax works because the bso_type enable_if disables the function before has_is_zero is encountered,
+		// or maybe because it does not participate in template deduction.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 4u,int>::type = 0>
-		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y)
+		static series_common_type<T,U,3> dispatch_binary_div(T &&x, U &&y,
+			typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value>::type * = nullptr)
 		{
 			if (unlikely(x.size() == 0u) && math::is_zero(y)) {
 				piranha_throw(zero_division_error,"cannot divide empty series by zero");
@@ -686,7 +696,7 @@ class series_operators
 			return retval;
 		}
 		// NOTE: the trailing decltype() syntax is used here to make sure we can actually call the other overload of the function
-		// in the body. It *should* always be the case.
+		// in the body.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,3>::value == 5u &&
 			std::is_constructible<series_common_type<T,U,3>,const typename std::decay<T>::type &>::value,int>::type = 0>
 		static auto dispatch_binary_div(T &&x, U &&y) ->
@@ -696,9 +706,8 @@ class series_operators
 			return dispatch_binary_div(std::move(x1),std::forward<U>(y));
 		}
 		template <typename T, typename U>
-		using binary_div_type = typename std::enable_if<has_is_zero<typename std::decay<U>::type>::value,
-			decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
-			std::declval<const typename std::decay<U>::type &>()))>::type;
+		using binary_div_type = decltype(dispatch_binary_div(std::declval<const typename std::decay<T>::type &>(),
+			std::declval<const typename std::decay<U>::type &>()));
 		template <typename T, typename U, typename std::enable_if<
 			!std::is_const<T>::value && std::is_assignable<T &,binary_div_type<T,U>>::value,
 			int>::type = 0>
