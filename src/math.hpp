@@ -2105,27 +2105,6 @@ class has_binomial: detail::sfinae_types
 template <typename T, typename U>
 const bool has_binomial<T,U>::value;
 
-/// Type trait to detect the presence of the piranha::math::is_zero() function.
-/**
- * The type trait will be \p true if piranha::math::is_zero() can be successfully called on instances of \p T, returning
- * an instance of a type implicitly convertible \p bool.
- */
-template <typename T>
-class has_is_zero: detail::sfinae_types
-{
-		typedef typename std::decay<T>::type Td;
-		template <typename T1>
-		static auto test(const T1 &t) -> decltype(math::is_zero(t));
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_convertible<decltype(test(std::declval<Td>())),bool>::value;
-};
-
-// Static init.
-template <typename T>
-const bool has_is_zero<T>::value;
-
 /// Type trait to detect the presence of the piranha::math::is_unitary() function.
 /**
  * The type trait will be \p true if piranha::math::is_unitary() can be successfully called on instances of \p T, returning
@@ -2145,25 +2124,6 @@ class has_is_unitary: detail::sfinae_types
 
 template <typename T>
 const bool has_is_unitary<T>::value;
-
-/// Type trait to detect the presence of the piranha::math::negate function.
-/**
- * The type trait will be \p true if piranha::math::negate can be successfully called on instances of \p T
- * stripped of reference qualifiers, \p false otherwise.
- */
-template <typename T>
-class has_negate: detail::sfinae_types
-{
-		template <typename T1>
-		static auto test(T1 &t) -> decltype(math::negate(t),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T &>())),yes>::value;
-};
-
-template <typename T>
-const bool has_negate<T>::value;
 
 /// Type trait to detect the presence of the piranha::math::subs function.
 /**
