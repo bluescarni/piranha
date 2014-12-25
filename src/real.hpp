@@ -38,6 +38,7 @@
 #include "detail/mpfr.hpp"
 #include "detail/real_fwd.hpp"
 #include "exceptions.hpp"
+#include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"

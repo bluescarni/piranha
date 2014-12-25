@@ -48,6 +48,7 @@
 #include "detail/polynomial_fwd.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "is_cf.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"

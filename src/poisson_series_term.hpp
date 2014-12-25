@@ -53,7 +53,6 @@ namespace piranha
  * 
  * - \p Cf must be suitable for use in piranha::base_term;
  * - \p Cf must satisfy the following type traits:
- *   - piranha::is_cf,
  *   - piranha::is_multipliable and piranha::is_multipliable_in_place,
  *   - piranha::has_multiply_accumulate,
  *   - piranha::is_divisible_in_place by \p int.

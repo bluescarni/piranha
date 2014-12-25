@@ -50,7 +50,6 @@ SET(DETAIL_HEADERS_LIST
 	detail/series_multiplier_fwd.hpp
 	detail/mpfr.hpp
 	detail/config_clang.hpp
-	detail/math_tt_fwd.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
 	detail/base_term_fwd.hpp

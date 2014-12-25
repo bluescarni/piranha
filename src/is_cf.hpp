@@ -1,0 +1,62 @@
+/***************************************************************************
+ *   Copyright (C) 2009-2011 by Francesco Biscani                          *
+ *   bluescarni@gmail.com                                                  *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+#ifndef PIRANHA_IS_CF_HPP
+#define PIRANHA_IS_CF_HPP
+
+#include "math.hpp"
+#include "print_coefficient.hpp"
+#include "print_tex_coefficient.hpp"
+#include "type_traits.hpp"
+
+namespace piranha
+{
+
+/// Type trait to detect coefficient types.
+/**
+ * This type trait will be \p true if \p T can be used as a coefficient type, \p false otherwise.
+ * The requisites for \p T are the following:
+ *
+ * - it must satisfy piranha::is_container_element,
+ * - it must satisfy piranha::has_print_coefficient and piranha::has_print_tex_coefficient,
+ * - it must satisfy piranha::has_is_zero and piranha::has_negate,
+ * - it must be equality comparable,
+ * - it must be addable and subtractable (both binary and in-place forms),
+ * - it must be constructible from integer numerals.
+ */
+template <typename T>
+class is_cf
+{
+	public:
+		/// Value of the type trait.
+		static const bool value = is_container_element<T>::value &&
+					  has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value &&
+					  has_is_zero<T>::value && has_negate<T>::value &&
+					  is_equality_comparable<T>::value && is_addable<T>::value &&
+					  is_addable_in_place<T>::value && is_subtractable_in_place<T>::value &&
+					  is_subtractable<T>::value && std::is_constructible<T,int>::value;
+};
+
+template <typename T>
+const bool is_cf<T>::value;
+
+}
+
+#endif

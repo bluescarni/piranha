@@ -27,6 +27,7 @@
 #include <utility>
 
 #include "detail/base_term_fwd.hpp"
+#include "is_cf.hpp"
 #include "math.hpp"
 #include "serialization.hpp"
 #include "symbol_set.hpp"

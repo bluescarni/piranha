@@ -38,7 +38,6 @@
 #include <vector>
 
 #include "detail/base_term_fwd.hpp"
-#include "detail/math_tt_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "symbol.hpp"

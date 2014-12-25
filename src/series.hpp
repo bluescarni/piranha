@@ -51,6 +51,7 @@
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "is_cf.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 #include "mp_integer.hpp"
 #include "print_coefficient.hpp"
