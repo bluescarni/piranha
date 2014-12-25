@@ -41,6 +41,7 @@
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/is_cf.hpp"
 #include "../src/monomial.hpp"
 #include "../src/symbol_set.hpp"
 
