@@ -21,6 +21,8 @@
 #ifndef PIRANHA_IS_CF_HPP
 #define PIRANHA_IS_CF_HPP
 
+#include <type_traits>
+
 #include "math.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
@@ -47,11 +49,11 @@ class is_cf
 	public:
 		/// Value of the type trait.
 		static const bool value = is_container_element<T>::value &&
-					  has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value &&
-					  has_is_zero<T>::value && has_negate<T>::value &&
-					  is_equality_comparable<T>::value && is_addable<T>::value &&
-					  is_addable_in_place<T>::value && is_subtractable_in_place<T>::value &&
-					  is_subtractable<T>::value && std::is_constructible<T,int>::value;
+			has_print_coefficient<T>::value && has_print_tex_coefficient<T>::value &&
+			has_is_zero<T>::value && has_negate<T>::value &&
+			is_equality_comparable<T>::value && is_addable<T>::value &&
+			is_addable_in_place<T>::value && is_subtractable_in_place<T>::value &&
+			is_subtractable<T>::value && std::is_constructible<T,int>::value;
 };
 
 template <typename T>

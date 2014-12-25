@@ -13,6 +13,7 @@ SET(HEADERS_LIST
 	polynomial.hpp
 	kronecker_monomial.hpp
 	hash_set.hpp
+	is_cf.hpp
 	debug_access.hpp
 	real_trigonometric_kronecker_monomial.hpp
 	thread_management.hpp

@@ -159,6 +159,7 @@ inline namespace literals {}
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "is_cf.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
