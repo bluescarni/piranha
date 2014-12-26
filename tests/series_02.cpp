@@ -903,6 +903,10 @@ class debug_access<arithmetics_add_tag>
 				BOOST_CHECK((it4->m_cf == g_series_type<int,Expo>{"y"} || it4->m_cf == 1));
 				BOOST_CHECK(it4->m_key.size() == 1u);
 				BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Check with scalar on the left.
+				BOOST_CHECK((!is_addable_in_place<int,p_type1>::value));
+				BOOST_CHECK((!is_addable_in_place<int,p_type2>::value));
+				BOOST_CHECK((!is_addable_in_place<int,p_type3>::value));
 			}
 		};
 		template <typename Cf>
@@ -1312,6 +1316,10 @@ class debug_access<arithmetics_sub_tag>
 				BOOST_CHECK((it4->m_cf == -g_series_type<int,Expo>{"y"} || it4->m_cf == 1));
 				BOOST_CHECK(it4->m_key.size() == 1u);
 				BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Check with scalar on the left.
+				BOOST_CHECK((!is_subtractable_in_place<int,p_type1>::value));
+				BOOST_CHECK((!is_subtractable_in_place<int,p_type2>::value));
+				BOOST_CHECK((!is_subtractable_in_place<int,p_type3>::value));
 			}
 		};
 		template <typename Cf>
@@ -1633,6 +1641,10 @@ class debug_access<arithmetics_mul_tag>
 				BOOST_CHECK((it4->m_cf == 3 * g_series_type<int,Expo>{"y"}));
 				BOOST_CHECK(it4->m_key.size() == 1u);
 				BOOST_CHECK((tmp4.m_symbol_set == symbol_set{symbol{"x"}}));
+				// Check with scalar on the left.
+				BOOST_CHECK((!is_multipliable_in_place<int,p_type1>::value));
+				BOOST_CHECK((!is_multipliable_in_place<int,p_type2>::value));
+				BOOST_CHECK((!is_multipliable_in_place<int,p_type3>::value));
 			}
 		};
 		template <typename Cf>
@@ -1758,6 +1770,8 @@ class debug_access<arithmetics_div_tag>
 				BOOST_CHECK_THROW(p_type1{} / 0,zero_division_error);
 				p_type1 zero;
 				BOOST_CHECK_THROW(zero /= 0,zero_division_error);
+				// Check with scalar on the left.
+				BOOST_CHECK((!is_divisible_in_place<int,p_type1>::value));
 			}
 		};
 		template <typename Cf>
