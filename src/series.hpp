@@ -398,6 +398,38 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
 
 }
 
+/// Series operators.
+/**
+ * This class contains the arithmetic and comparison operator overloads for piranha::series instances. The operators
+ * are implemented as inline friend functions and they will be found via argument-dependent name lookup when at least
+ * one of the two operands is an instance of piranha::series.
+ *
+ * The operators defined here, similarly to the builtin operators in C++, promote one or both operands to a common
+ * type, if necessary, before actually performing the operation. The promotion rules are dependent on
+ * the recursion indices and coefficient types of the series, and they rely on the series rebinding mechanism to promote a series
+ * as needed (see piranha::series_is_rebindable and piranha::series_recursion_index).
+ *
+ * These are the scenarios handled by the type promotion mechanism:
+ * - the two arguments are of the same series type and the operator on the coefficient type of the series results in the same coefficient type.
+ *   In this case there is no type promotion;
+ * - both series arguments have the same recursion index, different coefficients, and the operator on the coefficient types results in the first
+ *   (resp. second) coefficient type. In this case the result of the operations is the first (resp. second) series type;
+ * - both series arguments have the same recursion index, different coefficients, and the operator on the coefficient types results in something
+ *   other than the first or second coefficient type. In this case both series are promoted to a type resulting from the rebinding of the two
+ *   series to the resulting coefficient type;
+ * - the first (resp. second) argument has recursion index greater than the second (resp. first) one, and the result type of the operator on the coefficient
+ *   type of the first (resp. second) argument and the second (resp. first) argument is the coefficient type of the first (resp. second) argument. In this case,
+ *   the second (resp. first) argument is promoted to the first (resp. second);
+ * - the first (resp. second) argument has recursion index greater than the second (resp. first) one, and the result type of the operator on the coefficient
+ *   type of the first (resp. second) argument and the second (resp. first) argument is somethin other than the coefficient type of the first (resp. second) argument.
+ *   In this case, both arguments are promoted to a type resulting from the rebinding of the first (resp. second) argument to the resulting coefficient type.
+ *
+ * If any necessary conversion is not possible, either because the series are not rebindable or they do not support the needed constructors, the operators
+ * are disabled. The operators are also disabled if any operation needed by the implementation is not supported. In-place arithmetic operators are implemented
+ * as binary operators plus move-assignment. Division is implemented only when the first argument has a recursion index greater than the second argument and
+ * the first argument's coefficient type is divisible by the second argument. The comparison operators will use <tt>operator+()</tt> on the coefficient types
+ * to determine if any type promotion is necessary before performing the comparison.
+ */
 class series_operators
 {
 		// A couple of handy aliases.
@@ -504,6 +536,7 @@ class series_operators
 		using binary_add_type = decltype(dispatch_binary_add(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
 		// In-place add. Default implementation is to do simply x = x + y, if possible.
+		// NOTE: this should also be able to handle int += series, if we ever implement it.
 		template <typename T, typename U, typename std::enable_if<
 			!std::is_const<T>::value && std::is_assignable<T &,binary_add_type<T,U>>::value,
 			int>::type = 0>
@@ -787,51 +820,201 @@ class series_operators
 		using eq_type = decltype(dispatch_equality(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
 	public:
+		/// Binary addition involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return <tt>x + y</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - any invoked series, coefficient or key constructor,
+		 * - construction, assignment and other operations on piranha::symbol_set,
+		 * - piranha::series::insert().
+		 */
 		template <typename T, typename U>
 		friend binary_add_type<T,U> operator+(T &&x, U &&y)
 		{
 			return dispatch_binary_add(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// In-place addition involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by operator+().
+		 */
 		template <typename T, typename U>
 		friend in_place_add_type<T,U> operator+=(T &x, U &&y)
 		{
 			return dispatch_in_place_add(x,std::forward<U>(y));
 		}
+		/// Binary subtraction involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return <tt>x - y</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - any invoked series, coefficient or key constructor,
+		 * - construction, assignment and other operations on piranha::symbol_set,
+		 * - piranha::series::insert(),
+		 * - piranha::series::negate().
+		 */
 		template <typename T, typename U>
 		friend binary_sub_type<T,U> operator-(T &&x, U &&y)
 		{
 			return dispatch_binary_sub(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// In-place subtraction involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by operator-().
+		 */
 		template <typename T, typename U>
 		friend in_place_sub_type<T,U> operator-=(T &x, U &&y)
 		{
 			return dispatch_in_place_sub(x,std::forward<U>(y));
 		}
+		/// Binary multiplication involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return <tt>x * y</tt>.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - any invoked series, coefficient or key constructor,
+		 * - construction, assignment and other operations on piranha::symbol_set,
+		 * - piranha::series::insert(),
+		 * - the call operator of piranha::series_multiplier.
+		 */
 		template <typename T, typename U>
 		friend binary_mul_type<T,U> operator*(T &&x, U &&y)
 		{
 			return dispatch_binary_mul(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// In-place multiplication involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by operator*().
+		 */
 		template <typename T, typename U>
 		friend in_place_mul_type<T,U> operator*=(T &x, U &&y)
 		{
 			return dispatch_in_place_mul(x,std::forward<U>(y));
 		}
+		/// Binary division involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return <tt>x / y</tt>.
+		 *
+		 * @throws piranha::zero_division_error if \p x is and empty series and \p y is zero.
+		 * @throws unspecified any exception thrown by:
+		 * - any invoked series constructor,
+		 * - piranha::math::is_zero(),
+		 * - piranha::hash_set::erase(),
+		 * - the division operator on the coefficient type of the result.
+		 */
 		template <typename T, typename U>
 		friend binary_div_type<T,U> operator/(T &&x, U &&y)
 		{
 			return dispatch_binary_div(std::forward<T>(x),std::forward<U>(y));
 		}
+		/// In-place division involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by operator/().
+		 */
 		template <typename T, typename U>
 		friend in_place_div_type<T,U> operator/=(T &x, U &&y)
 		{
 			return dispatch_in_place_div(x,std::forward<U>(y));
 		}
+		/// Equality operator involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x == y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::hash_set::find(),
+		 * - the comparison operator of the coefficient type,
+		 * - any invoked series, coefficient or key constructor,
+		 * - construction, assignment and other operations on piranha::symbol_set.
+		 */
 		template <typename T, typename U>
 		friend eq_type<T,U> operator==(const T &x, const U &y)
 		{
 			return dispatch_equality(x,y);
 		}
+		/// Inequality operator involving piranha::series.
+		/**
+		 * \note
+		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
+		 * is supported by the arguments.
+		 *
+		 * @param[in] x first argument.
+		 * @param[in] y second argument.
+		 *
+		 * @return \p true if <tt>x != y</tt>, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by operator==().
+		 */
 		template <typename T, typename U>
 		friend eq_type<T,U> operator!=(const T &x, const U &y)
 		{
