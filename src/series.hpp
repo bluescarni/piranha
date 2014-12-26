@@ -549,6 +549,8 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_add_type = decltype(dispatch_in_place_add(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using in_place_add_enabler = typename std::enable_if<detail::true_tt<in_place_add_type<T,U>>::value,int>::type;
 		// Subtraction.
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,1>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,1> dispatch_binary_sub(T &&x, U &&y)
@@ -601,6 +603,8 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_sub_type = decltype(dispatch_in_place_sub(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T,U>>::value,int>::type;
 		// Multiplication.
 		template <typename T, typename U>
 		static series_common_type<T,U,2> binary_mul_impl(T &&x, U &&y)
@@ -680,6 +684,8 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_mul_type = decltype(dispatch_in_place_mul(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T,U>>::value,int>::type;
 		// Division.
 		// NOTE: only two cases are possible at the moment, when we divide a series by an object with lower recursion index.
 		// The implementation of these two cases 4 and 5 is different from the other operations, as we cannot promote to a common
@@ -752,6 +758,8 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_div_type = decltype(dispatch_in_place_div(std::declval<typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using in_place_div_enabler = typename std::enable_if<detail::true_tt<in_place_div_type<T,U>>::value,int>::type;
 		// Equality.
 		// Low-level implementation of equality.
 		template <typename T>
@@ -819,6 +827,8 @@ class series_operators
 		template <typename T, typename U>
 		using eq_type = decltype(dispatch_equality(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using eq_enabler = typename std::enable_if<detail::true_tt<eq_type<T,U>>::value,int>::type;
 	public:
 		/// Binary addition involving piranha::series.
 		/**
@@ -854,8 +864,8 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator+().
 		 */
-		template <typename T, typename U>
-		friend in_place_add_type<T,U> operator+=(T &x, U &&y)
+		template <typename T, typename U, in_place_add_enabler<T,U> = 0>
+		friend T &operator+=(T &x, U &&y)
 		{
 			return dispatch_in_place_add(x,std::forward<U>(y));
 		}
@@ -894,8 +904,8 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator-().
 		 */
-		template <typename T, typename U>
-		friend in_place_sub_type<T,U> operator-=(T &x, U &&y)
+		template <typename T, typename U, in_place_sub_enabler<T,U> = 0>
+		friend T &operator-=(T &x, U &&y)
 		{
 			return dispatch_in_place_sub(x,std::forward<U>(y));
 		}
@@ -934,8 +944,8 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator*().
 		 */
-		template <typename T, typename U>
-		friend in_place_mul_type<T,U> operator*=(T &x, U &&y)
+		template <typename T, typename U, in_place_mul_enabler<T,U> = 0>
+		friend T &operator*=(T &x, U &&y)
 		{
 			return dispatch_in_place_mul(x,std::forward<U>(y));
 		}
@@ -975,8 +985,8 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator/().
 		 */
-		template <typename T, typename U>
-		friend in_place_div_type<T,U> operator/=(T &x, U &&y)
+		template <typename T, typename U, in_place_div_enabler<T,U> = 0>
+		friend T &operator/=(T &x, U &&y)
 		{
 			return dispatch_in_place_div(x,std::forward<U>(y));
 		}
@@ -997,8 +1007,8 @@ class series_operators
 		 * - any invoked series, coefficient or key constructor,
 		 * - construction, assignment and other operations on piranha::symbol_set.
 		 */
-		template <typename T, typename U>
-		friend eq_type<T,U> operator==(const T &x, const U &y)
+		template <typename T, typename U, eq_enabler<T,U> = 0>
+		friend bool operator==(const T &x, const U &y)
 		{
 			return dispatch_equality(x,y);
 		}
@@ -1015,8 +1025,8 @@ class series_operators
 		 *
 		 * @throws unspecified any exception thrown by operator==().
 		 */
-		template <typename T, typename U>
-		friend eq_type<T,U> operator!=(const T &x, const U &y)
+		template <typename T, typename U, eq_enabler<T,U> = 0>
+		friend bool operator!=(const T &x, const U &y)
 		{
 			return !dispatch_equality(x,y);
 		}
