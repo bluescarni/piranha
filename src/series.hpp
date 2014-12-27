@@ -426,7 +426,10 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  *
  * If any necessary conversion is not possible, either because the series are not rebindable or they do not support the needed constructors, the operators
  * are disabled. The operators are also disabled if any operation needed by the implementation is not supported. In-place arithmetic operators are implemented
- * as binary operators plus move-assignment. Division is implemented only when the first argument has a recursion index greater than the second argument and
+ * as binary operators plus move-assignment.
+ *
+ * Addition and subtraction are always available for any series type. Multiplication requires a valid specialisation of piranha::series_multiplier for the
+ * promoted series type. Division is implemented only when the first argument has a recursion index greater than the second argument and
  * the first argument's coefficient type is divisible by the second argument. The comparison operators will use <tt>operator+()</tt> on the coefficient types
  * to determine if any type promotion is necessary before performing the comparison.
  */
@@ -1034,13 +1037,8 @@ class series_operators
 
 /// Series class.
 /**
- * This class provides arithmetic and relational operators overloads for interaction with other series and non-series (scalar) types.
- * Addition and subtraction are implemented directly within this class, both for series and scalar operands. Multiplication of series by
- * scalar types is also implemented in this class, whereas series-by-series multiplication is provided via the external helper class
- * piranha::series_multiplier (whose behaviour can be specialised to provide fast multiplication capabilities).
- * Division by scalar types is also supported.
- * 
- * Support for comparison with series and scalar types is also provided.
+ * This class contains the arithmetic and comparison operator overloads for piranha::series instances
+ * via the parent class piranha::series_operators.
  * 
  * ## Type requirements ##
  * 
