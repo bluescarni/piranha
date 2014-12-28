@@ -152,6 +152,12 @@ def _replace_gtg_call():
 		return _orig_gtg_call(self,l_args)
 	_core._generic_type_generator.__call__ = _gtg_call_wrapper
 
+# Remove hashing from series types.
+def _remove_hash():
+	from ._core import _get_series_list as gsl
+	for s_type in gsl():
+		setattr(s_type,'__hash__',None)
+
 def _monkey_patching():
 	# NOTE: here it is not clear to me if we should protect this with a global flag against multiple reloads.
 	# Keep this in mind in case problem arises.
@@ -159,6 +165,7 @@ def _monkey_patching():
 	# http://stackoverflow.com/questions/12389526/import-inside-of-a-python-thread
 	_register_wrappers()
 	_replace_gtg_call()
+	_remove_hash()
 
 # Cleanup function.
 def _cleanup():
