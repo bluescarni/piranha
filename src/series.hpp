@@ -433,7 +433,7 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  *   have been merged, and the operation will be performed on those series instead;
  * - in-place arithmetic operators are implemented as binary operators plus move-assignment;
  * - addition and subtraction are always available for any series type;
- * - series multiplication requires a valid specialisation of piranha::series_multiplier for the
+ * - series multiplication requires the coefficient types to be multipliable and a valid specialisation of piranha::series_multiplier for the
  *   promoted series type;
  * - division is implemented only when the first argument has a recursion index greater than the second argument and
  *   the first argument's coefficient type is divisible by the second argument;
@@ -1669,6 +1669,9 @@ class series: detail::series_tag, series_operators
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Enabler for is_identical.
+		template <typename T>
+		using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value,int>::type;
 	public:
 		/// Size type.
 		/**
@@ -2407,6 +2410,49 @@ class series: detail::series_tag, series_operators
 				return os;
 			}
 			return print_helper_1<false>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+		}
+		/// Hash value.
+		/**
+		 * The hash value for a series is zero if the series is empty, otherwise it is computed by adding the hash values
+		 * of all terms. This ensures that two identical series in which the terms are stored in different order still produce
+		 * the same hash value.
+		 *
+		 * Note, however, that the arguments of the series are not considered in the hash value and that,
+		 * in general, two series that compare equal according to operator==() will **not** have the same hash value
+		 * (as the equality operator merges the arguments of two series before actually performing the comparison). Instead
+		 * of operator==(), is_identical() should be used for storing series as keys in associative containers.
+		 *
+		 * @return a hash value for the series.
+		 *
+		 * @throws unspecified any exception thrown by computing the hash of a term.
+		 */
+		std::size_t hash() const
+		{
+			std::size_t retval = 0u;
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				retval += it->hash();
+			}
+			return retval;
+		}
+		/// Check for identical series.
+		/**
+		 * \note
+		 * This method is enabled only if \p Derived is equality-comparable.
+		 *
+		 * This method will return \p true if the symbol sets of \p this and \p other are the same,
+		 * and <tt>other == *this</tt>.
+		 *
+		 * @param[in] other argument for the comparison.
+		 *
+		 * @return \p true if \p this and \p other are identical, \p false otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the comparison operator of \p Derived.
+		 */
+		template <typename T = Derived, is_identical_enabler<T> = 0>
+		bool is_identical(const Derived &other) const
+		{
+			return m_symbol_set == other.m_symbol_set && other == *static_cast<Derived const *>(this);
 		}
 	protected:
 		/// Symbol set.

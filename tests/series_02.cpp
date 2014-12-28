@@ -1962,3 +1962,38 @@ BOOST_AUTO_TEST_CASE(series_eq_test)
 	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} == p_type11{})>::value));
 	BOOST_CHECK((std::is_same<bool,decltype(p_type22{} != p_type11{})>::value));
 }
+
+BOOST_AUTO_TEST_CASE(series_hash_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	typedef g_series_type<integer,int> p_type2;
+	BOOST_CHECK_EQUAL(p_type1{}.hash(),0u);
+	BOOST_CHECK_EQUAL(p_type2{}.hash(),0u);
+	// Check that only the key is used to compute the hash.
+	BOOST_CHECK_EQUAL(p_type1{"x"}.hash(),p_type2{"x"}.hash());
+	auto x = p_type1{"x"}, y = p_type1{"y"}, x2 = (x + y) - y;
+	// NOTE: this is not 100% sure as the hash mixing in the monomial could actually lead to identical hashes.
+	// But the probability should be rather low.
+	BOOST_CHECK(x.hash() != x2.hash());
+	// This shows we cannot use standard equality operator in hash tables.
+	BOOST_CHECK_EQUAL(x,x2);
+	// A bit more testing.
+	BOOST_CHECK_EQUAL((x + 2 * y).hash(),(x + y + y).hash());
+	BOOST_CHECK_EQUAL((x + 2 * y - y).hash(),(x + y).hash());
+}
+
+BOOST_AUTO_TEST_CASE(series_is_identical_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK(p_type1{}.is_identical(p_type1{}));
+	auto x = p_type1{"x"}, y = p_type1{"y"}, x2 = (x + y) - y;
+	BOOST_CHECK(x.is_identical(x));
+	BOOST_CHECK(x.is_identical(p_type1{"x"}));
+	BOOST_CHECK(!x.is_identical(y));
+	BOOST_CHECK(!y.is_identical(x));
+	BOOST_CHECK_EQUAL(x2,x);
+	BOOST_CHECK(!x2.is_identical(x));
+	BOOST_CHECK(!x.is_identical(x2));
+	BOOST_CHECK(x.is_identical(x2.trim()));
+	BOOST_CHECK(x2.trim().is_identical(x));
+}
