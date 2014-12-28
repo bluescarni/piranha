@@ -76,9 +76,8 @@ namespace piranha
  * 
  * ## Exception safety guarantee ##
  * 
- * This class provides the strong exception safety guarantee for all operations apart from the insertion methods,
- * which provide the following guarantee: the table will be either left in the same state as it was before the attempted
- * insertion or it will be emptied.
+ * This class provides the strong exception safety guarantee for all operations apart from methods involving insertion,
+ * which provide the basic guarantee (after a failed insertion, the table will be left in an unspecified but valid state).
  * 
  * ## Move semantics ##
  * 
@@ -830,7 +829,7 @@ class hash_set
 		 * 
 		 * @return hash_set::const_iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
 		 * 
-		 * @throws unspecified any exception thrown by _find().
+		 * @throws unspecified any exception thrown by _find() or by _bucket().
 		 */
 		const_iterator find(const key_type &k) const
 		{
@@ -875,7 +874,8 @@ class hash_set
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - hash_set::key_type's copy constructor,
-		 * - _find().
+		 * - _find(),
+		 * - _bucket().
 		 * @throws std::overflow_error if a successful insertion would result in size() exceeding the maximum
 		 * value representable by type piranha::hash_set::size_type.
 		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
@@ -996,8 +996,8 @@ class hash_set
 		 * @param[in] n_threads number of threads to use.
 		 * 
 		 * @throws std::invalid_argument if \p n_threads is zero.
-		 * @throws unspecified any exception thrown by the constructor from number of buckets
-		 * or by _unique_insert().
+		 * @throws unspecified any exception thrown by the constructor from number of buckets,
+		 * _unique_insert() or _bucket().
 		 */
 		void rehash(const size_type &new_size, unsigned n_threads = 1u)
 		{
@@ -1182,6 +1182,8 @@ class hash_set
 		 * @param[in] k input argument.
 		 * 
 		 * @return index of the destination bucket for \p k.
+		 *
+		 * @throws unspecified any exception thrown by the call operator of the hasher.
 		 */
 		size_type _bucket(const key_type &k) const
 		{
