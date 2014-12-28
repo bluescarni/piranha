@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_hash_function_object_test)
 	BOOST_CHECK((is_hash_function_object<hfo3,int>::value));
 	BOOST_CHECK((is_hash_function_object<hfo3,short>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo4,int>::value));
-	BOOST_CHECK((!is_hash_function_object<hfo5,int>::value));
+	BOOST_CHECK((is_hash_function_object<hfo5,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo6,int>::value));
 	BOOST_CHECK((is_hash_function_object<hfo7,int>::value));
 	BOOST_CHECK((!is_hash_function_object<hfo8,int>::value));

@@ -535,30 +535,18 @@ class is_hashable_impl: detail::sfinae_types
 		static const bool value = std::is_same<decltype(test(std::declval<Td>())),std::size_t>::value;
 };
 
-template <typename Hasher, typename Td>
-struct common_hasher_requirements
-{
-	static const bool value = noexcept((*(Hasher const *)nullptr)(std::declval<Td const &>())) &&
-				  std::is_nothrow_default_constructible<Hasher>::value &&
-				  // NOTE: a bit of repetition here.
-				  is_container_element<Hasher>::value;
-};
-
 }
 
 /// Hashable type trait.
 /**
  * This type trait will be \p true if the decay type of \p T is hashable, \p false otherwise.
  *
- * A type \p T is hashable when supplied with a specialisation of \p std::hash which satisfies the following
- * prerequisites:
- * - it defines a noexcept const call operator taking as parameter a const instance of \p T and returning
- *   \p std::size_t,
- * - it is nothrow default constructible and it satisfies piranha::is_container_element.
+ * A type \p T is hashable when supplied with a specialisation of \p std::hash which
+ * satisfies piranha::is_container_element.
  * 
  * Note that depending on the implementation of the default \p std::hash class, using this type trait with
  * a type which does not provide a specialisation for \p std::hash could result in a compilation error
- * (e.g., if the unspecialised \p std::hash includes a false \p static_assert).
+ * (e.g., if the unspecialised \p std::hash includes a \p false \p static_assert).
  */
 template <typename T, typename = void>
 class is_hashable
@@ -574,7 +562,7 @@ class is_hashable<T,typename std::enable_if<detail::is_hashable_impl<T>::value>:
 		typedef typename std::decay<T>::type Td;
 		typedef std::hash<Td> hasher;
 	public:
-		static const bool value = detail::common_hasher_requirements<hasher,Td>::value;
+		static const bool value = is_container_element<hasher>::value;
 };
 
 template <typename T, typename Enable>
@@ -634,8 +622,8 @@ const bool is_function_object<T,ReturnType,Args...>::value;
 /// Type trait to detect hash function objects.
 /**
  * \p T is a hash function object for \p U if the following requirements are met:
- * - \p T is a function object with const noexcept call operator accepting as input const \p U and returning \p std::size_t,
- * - \p T is nothrow default constructible and it satisfies piranha::is_container_element.
+ * - \p T is a function object with const call operator accepting as input const \p U and returning \p std::size_t,
+ * - \p T satisfies piranha::is_container_element.
  * 
  * The decay type of \p U is considered in this type trait.
  */
@@ -653,7 +641,7 @@ class is_hash_function_object<T,U,typename std::enable_if<is_function_object<typ
 {
 		typedef typename std::decay<U>::type Ud;
 	public:
-		static const bool value = detail::common_hasher_requirements<T,Ud>::value;
+		static const bool value = is_container_element<T>::value;
 };
 
 template <typename T, typename U, typename Enable>
@@ -666,7 +654,7 @@ const bool is_hash_function_object<T,U,typename std::enable_if<is_function_objec
 /// Type trait to detect equality function objects.
 /**
  * \p T is an equality function object for \p U if the following requirements are met:
- * - \p T is a function object with const noexcept call operator accepting as input two const \p U and returning \p bool,
+ * - \p T is a function object with const call operator accepting as input two const \p U and returning \p bool,
  * - \p T satisfies piranha::is_container_element.
  * 
  * The decay type of \p U is considered in this type trait.
