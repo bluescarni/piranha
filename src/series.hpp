@@ -421,17 +421,24 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  *   type of the first (resp. second) argument and the second (resp. first) argument is the coefficient type of the first (resp. second) argument. In this case,
  *   the second (resp. first) argument is promoted to the first (resp. second);
  * - the first (resp. second) argument has recursion index greater than the second (resp. first) one, and the result type of the operator on the coefficient
- *   type of the first (resp. second) argument and the second (resp. first) argument is somethin other than the coefficient type of the first (resp. second) argument.
+ *   type of the first (resp. second) argument and the second (resp. first) argument is something other than the coefficient type of the first (resp. second) argument.
  *   In this case, both arguments are promoted to a type resulting from the rebinding of the first (resp. second) argument to the resulting coefficient type.
  *
  * If any necessary conversion is not possible, either because the series are not rebindable or they do not support the needed constructors, the operators
- * are disabled. The operators are also disabled if any operation needed by the implementation is not supported. In-place arithmetic operators are implemented
- * as binary operators plus move-assignment.
+ * are disabled. The operators are also disabled if any operation needed by the implementation is not supported, or if an ambiguity arises in the type
+ * promotion algorithm (e.g., two series with same recursion index, same coefficient type which does not trigger any promotion, and different key types).
  *
- * Addition and subtraction are always available for any series type. Multiplication requires a valid specialisation of piranha::series_multiplier for the
- * promoted series type. Division is implemented only when the first argument has a recursion index greater than the second argument and
- * the first argument's coefficient type is divisible by the second argument. The comparison operators will use <tt>operator+()</tt> on the coefficient types
- * to determine if any type promotion is necessary before performing the comparison.
+ * A few things to note about the operators implemented within this class:
+ * - in case two series arguments have different symbol sets, either one or both series will be copied in a new series in which the symbols
+ *   have been merged, and the operation will be performed on those series instead;
+ * - in-place arithmetic operators are implemented as binary operators plus move-assignment;
+ * - addition and subtraction are always available for any series type;
+ * - series multiplication requires a valid specialisation of piranha::series_multiplier for the
+ *   promoted series type;
+ * - division is implemented only when the first argument has a recursion index greater than the second argument and
+ *   the first argument's coefficient type is divisible by the second argument;
+ * - the comparison operators will use <tt>operator+()</tt> on the coefficient types to determine if any type promotion is necessary
+ *   before performing the comparison.
  */
 class series_operators
 {
@@ -998,6 +1005,9 @@ class series_operators
 		 * \note
 		 * This operator is enabled only if the algorithm outlined in piranha::series_operators
 		 * is supported by the arguments.
+		 *
+		 * Two series are considered equal if they have the same number of terms and all terms in one series
+		 * appear in the other.
 		 *
 		 * @param[in] x first argument.
 		 * @param[in] y second argument.
