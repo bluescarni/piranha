@@ -184,7 +184,7 @@ class base_term
 		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
 		 */
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			return std::hash<key_type>()(m_key);
 		}

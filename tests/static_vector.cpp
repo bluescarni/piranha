@@ -67,7 +67,7 @@ namespace std
 template <>
 struct hash<custom_string>
 {
-	size_t operator()(const custom_string &s) const noexcept
+	size_t operator()(const custom_string &s) const
 	{
 		return hash<std::string>()(s);
 	}

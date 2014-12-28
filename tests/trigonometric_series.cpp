@@ -299,25 +299,25 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept;
+	std::size_t operator()(const key02 &) const;
 };
 
 template <>
 struct hash<key03>
 {
-	std::size_t operator()(const key03 &) const noexcept;
+	std::size_t operator()(const key03 &) const;
 };
 
 template <>
 struct hash<key04>
 {
-	std::size_t operator()(const key04 &) const noexcept;
+	std::size_t operator()(const key04 &) const;
 };
 
 template <>
 struct hash<key05>
 {
-	std::size_t operator()(const key05 &) const noexcept;
+	std::size_t operator()(const key05 &) const;
 };
 
 }

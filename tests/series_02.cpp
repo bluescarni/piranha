@@ -373,7 +373,7 @@ namespace std
 template <>
 struct hash<mock_key>
 {
-	std::size_t operator()(const mock_key &) const noexcept;
+	std::size_t operator()(const mock_key &) const;
 };
 
 }

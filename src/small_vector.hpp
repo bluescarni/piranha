@@ -858,7 +858,7 @@ class small_vector
 		 * @return a hash value for \p this.
 		 */
 		template <typename U = value_type, hash_enabler<U> = 0>
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			if (m_union.is_static()) {
 				return m_union.g_st().hash();

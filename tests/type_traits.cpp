@@ -709,26 +709,26 @@ template <>
 struct hash<unhashable8>
 {
 	hash();
-	std::size_t operator()(const unhashable8 &) noexcept;
+	std::size_t operator()(const unhashable8 &);
 };
 
 template <>
 struct hash<unhashable9>
 {
-	std::size_t operator()(const unhashable9 &) noexcept;
+	std::size_t operator()(const unhashable9 &);
 };
 
 template <>
 struct hash<unhashable10>
 {
-	std::size_t operator()(const unhashable10 &) const noexcept;
+	std::size_t operator()(const unhashable10 &) const;
 	~hash() noexcept(false) {}
 };
 
 template <>
 struct hash<unhashable11>
 {
-	std::size_t operator()(const unhashable11 &) const noexcept;
+	std::size_t operator()(const unhashable11 &) const;
 	hash() noexcept;
 	hash(const hash &);
 	hash(hash &&) noexcept(false);
@@ -739,7 +739,7 @@ struct hash<unhashable11>
 template <>
 struct hash<unhashable12>
 {
-	std::size_t operator()(const unhashable12 &) const noexcept;
+	std::size_t operator()(const unhashable12 &) const;
 	hash() noexcept;
 	hash(const hash &);
 	hash(hash &&) noexcept;
@@ -750,26 +750,26 @@ struct hash<unhashable12>
 template <>
 struct hash<hashable1>
 {
-	std::size_t operator()(const hashable1 &) const noexcept;
+	std::size_t operator()(const hashable1 &) const;
 };
 
 template <>
 struct hash<hashable2>
 {
-	std::size_t operator()(const hashable2 &) const noexcept;
+	std::size_t operator()(const hashable2 &) const;
 };
 
 template <>
 struct hash<hashable3>
 {
 	hash() noexcept;
-	std::size_t operator()(const hashable3 &) const noexcept;
+	std::size_t operator()(const hashable3 &) const;
 };
 
 template <>
 struct hash<hashable4>
 {
-	std::size_t operator()(const hashable4 &) const noexcept;
+	std::size_t operator()(const hashable4 &) const;
 	~hash() {}
 };
 
@@ -928,19 +928,19 @@ struct hfo1 {};
 struct hfo2
 {
 	hfo2() noexcept;
-	std::size_t operator()(int) noexcept;
+	std::size_t operator()(int);
 };
 
 struct hfo3
 {
 	hfo3() noexcept;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 };
 
 struct hfo4
 {
 	hfo4() noexcept;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 	~hfo4() noexcept(false);
 };
 
@@ -954,13 +954,13 @@ struct hfo6
 {
 	hfo6() noexcept;
 	hfo6(const hfo6 &) = delete;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 };
 
 struct hfo7
 {
 	hfo7() noexcept;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 	hfo7(const hfo7 &);
 	hfo7(hfo7 &&) noexcept;
 	hfo7 &operator=(hfo7 &&) noexcept;
@@ -969,7 +969,7 @@ struct hfo7
 struct hfo8
 {
 	hfo8() noexcept;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 	hfo8(const hfo7 &);
 	hfo8(hfo8 &&) noexcept(false);
 	hfo8 &operator=(hfo8 &&) noexcept;
@@ -978,7 +978,7 @@ struct hfo8
 struct hfo9
 {
 	hfo9() noexcept;
-	std::size_t operator()(int) const noexcept;
+	std::size_t operator()(int) const;
 	hfo9(const hfo9 &);
 	hfo9(hfo9 &&) noexcept;
 	hfo9 &operator=(hfo9 &&) noexcept(false);
@@ -1238,7 +1238,7 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept;
+	std::size_t operator()(const key02 &) const;
 };
 
 template <>
@@ -1247,31 +1247,31 @@ struct hash<key03> {};
 template <>
 struct hash<key04>
 {
-	std::size_t operator()(const key04 &) const noexcept;
+	std::size_t operator()(const key04 &) const;
 };
 
 template <>
 struct hash<key05>
 {
-	std::size_t operator()(const key05 &) const noexcept;
+	std::size_t operator()(const key05 &) const;
 };
 
 template <>
 struct hash<key06>
 {
-	std::size_t operator()(const key06 &) const noexcept;
+	std::size_t operator()(const key06 &) const;
 };
 
 template <>
 struct hash<key07>
 {
-	std::size_t operator()(const key07 &) const noexcept;
+	std::size_t operator()(const key07 &) const;
 };
 
 template <>
 struct hash<key08>
 {
-	std::size_t operator()(const key08 &) const noexcept;
+	std::size_t operator()(const key08 &) const;
 };
 
 }

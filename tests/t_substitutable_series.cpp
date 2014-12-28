@@ -75,7 +75,7 @@ namespace std
 template <>
 struct hash<key02>
 {
-	std::size_t operator()(const key02 &) const noexcept;
+	std::size_t operator()(const key02 &) const;
 };
 
 }

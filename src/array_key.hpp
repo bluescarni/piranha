@@ -282,7 +282,7 @@ class array_key
 		/**
 		 * @return hash value of the key, computed via piranha::small_vector::hash().
 		 */
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			return m_container.hash();
 		}
@@ -481,7 +481,7 @@ struct hash<piranha::array_key<T,Derived,S>>
 	 * 
 	 * @return piranha::array_key::hash().
 	 */
-	result_type operator()(const argument_type &a) const noexcept
+	result_type operator()(const argument_type &a) const
 	{
 		return a.hash();
 	}

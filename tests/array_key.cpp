@@ -600,7 +600,7 @@ struct hash<fvt>
 {
 	typedef size_t result_type;
 	typedef fvt argument_type;
-	result_type operator()(const argument_type &) const noexcept;
+	result_type operator()(const argument_type &) const;
 };
 
 template <>
@@ -608,7 +608,7 @@ struct hash<fvt2>
 {
 	typedef size_t result_type;
 	typedef fvt2 argument_type;
-	result_type operator()(const argument_type &) const noexcept;
+	result_type operator()(const argument_type &) const;
 };
 
 template <>
@@ -616,7 +616,7 @@ struct hash<fvt3>
 {
 	typedef size_t result_type;
 	typedef fvt3 argument_type;
-	result_type operator()(const argument_type &) const noexcept;
+	result_type operator()(const argument_type &) const;
 };
 
 }

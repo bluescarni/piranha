@@ -502,7 +502,7 @@ class static_vector
 		template <typename U = T, typename = typename std::enable_if<
 			is_hashable<U>::value
 			>::type>
-		std::size_t hash() const noexcept
+		std::size_t hash() const
 		{
 			return detail::vector_hasher(*this);
 		}

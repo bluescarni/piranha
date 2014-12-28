@@ -75,7 +75,7 @@ namespace detail
 template <typename Term>
 struct term_hasher
 {
-	std::size_t operator()(const Term &term) const noexcept
+	std::size_t operator()(const Term &term) const
 	{
 		return term.hash();
 	}

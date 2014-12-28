@@ -256,7 +256,7 @@ struct hash<fake_int>
 {
 	typedef size_t result_type;
 	typedef fake_int argument_type;
-	result_type operator()(const argument_type &) const noexcept;
+	result_type operator()(const argument_type &) const;
 };
 
 }

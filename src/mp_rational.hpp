@@ -2177,7 +2177,7 @@ struct hash<piranha::mp_rational<NBits>>
 	 *
 	 * @see piranha::mp_rational::hash()
 	 */
-	result_type operator()(const argument_type &q) const noexcept
+	result_type operator()(const argument_type &q) const
 	{
 		return q.hash();
 	}

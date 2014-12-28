@@ -1142,6 +1142,8 @@ class hash_set
 		 * @param[in] bucket_idx index of the destination bucket for \p k.
 		 * 
 		 * @return hash_set::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 *
+		 * @throws unspecified any exception thrown by calling the equality predicate.
 		 */
 		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
 		{

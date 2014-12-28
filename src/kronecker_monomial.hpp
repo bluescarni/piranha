@@ -896,7 +896,7 @@ struct hash<piranha::kronecker_monomial<T>>
 	 * 
 	 * @return hash value of \p a computed via piranha::kronecker_monomial::hash().
 	 */
-	result_type operator()(const argument_type &a) const noexcept
+	result_type operator()(const argument_type &a) const
 	{
 		return a.hash();
 	}

@@ -3748,7 +3748,7 @@ struct hash<piranha::mp_integer<NBits>>
 	 * 
 	 * @see piranha::mp_integer::hash()
 	 */
-	result_type operator()(const argument_type &n) const noexcept
+	result_type operator()(const argument_type &n) const
 	{
 		return n.hash();
 	}
