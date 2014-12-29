@@ -736,8 +736,8 @@ struct is_key_impl: sfinae_types
  *   reference as input and returning \p bool,
  * - it must be provided with const \p print and \p print_tex methods accepting an \p std::ostream reference as first argument
  *   and a const piranha::symbol_set reference as second argument.
- * 
- * \todo requirements on default-constructed key: must it be unitary? --> this one is probably not needed
+ */
+/*
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at
  * polynomial ctors from symbol) -> note that both these two checks have to go in the runtime requirements of key
  * when they get documented.
