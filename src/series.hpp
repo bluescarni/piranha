@@ -2095,7 +2095,7 @@ class series: detail::series_tag, series_operators
 		{
 			using p_type = decltype(std::declval<const Derived &>().partial(name));
 			using f_type = std::function<p_type(const Derived &)>;
-			std::lock_guard<std::mutex> lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
 			get_cp_map()[name] = f_type(func);
 		}
 		/// Unregister custom partial derivative.
@@ -2119,7 +2119,7 @@ class series: detail::series_tag, series_operators
 		template <typename Series = Derived, typename Partial = partial_type<Series>>
 		static void unregister_custom_derivative(const std::string &name)
 		{
-			std::lock_guard<std::mutex> lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
 			auto it = get_cp_map().find(name);
 			if (it != get_cp_map().end()) {
 				get_cp_map().erase(it);
@@ -2138,7 +2138,7 @@ class series: detail::series_tag, series_operators
 		template <typename Series = Derived, typename Partial = partial_type<Series>>
 		static void unregister_all_custom_derivatives()
 		{
-			std::lock_guard<std::mutex> lock(cp_mutex);
+			std::lock_guard<std::mutex> lock(s_cp_mutex);
 			get_cp_map().clear();
 		}
 		/// Begin iterator.
@@ -2458,12 +2458,18 @@ class series: detail::series_tag, series_operators
 		/// Terms container.
 		container_type	m_container;
 	private:
-		static std::mutex	cp_mutex;
+		// Custom derivatives machinery.
+		static std::mutex	s_cp_mutex;
+		// Pow cache machinery;
+		static std::mutex	s_pow_mutex;
+
 };
 
-// Static initialisation.
 template <typename Term, typename Derived>
-std::mutex series<Term,Derived>::cp_mutex;
+std::mutex series<Term,Derived>::s_cp_mutex;
+
+template <typename Term, typename Derived>
+std::mutex series<Term,Derived>::s_pow_mutex;
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
@@ -2782,7 +2788,7 @@ struct partial_impl<Series,typename std::enable_if<is_series<Series>::value>::ty
 		std::function<partial_type(const T &)> func;
 		// Try to locate a custom partial derivative and copy it into func, if found.
 		{
-			std::lock_guard<std::mutex> lock(T::cp_mutex);
+			std::lock_guard<std::mutex> lock(T::s_cp_mutex);
 			auto it = s.get_cp_map().find(name);
 			if (it != s.get_cp_map().end()) {
 				func = it->second;

@@ -259,6 +259,11 @@ class series_exposer
 		{
 			pow_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
 			bp::class_<S> &m_series_class;
+			template <typename T, typename U>
+			static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::math::pow(s,x))
+			{
+				return piranha::math::pow(s,x);
+			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<piranha::is_exponentiable<S,T>::value>::type * = nullptr) const
 			{
@@ -268,11 +273,6 @@ class series_exposer
 			void operator()(const T &, typename std::enable_if<!piranha::is_exponentiable<S,T>::value>::type * = nullptr) const
 			{}
 		};
-		template <typename T, typename U>
-		static auto pow_wrapper(const T &s, const U &x) -> decltype(piranha::math::pow(s,x))
-		{
-			return piranha::math::pow(s,x);
-		}
 		template <typename S, typename T = Descriptor>
 		static void expose_pow(bp::class_<S> &series_class, typename std::enable_if<has_typedef_pow_types<T>::value>::type * = nullptr)
 		{
