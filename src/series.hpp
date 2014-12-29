@@ -1362,6 +1362,11 @@ class series: detail::series_tag, series_operators
 			decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value &&
 			!std::is_same<U,T>::value,int>::type;
 		// Exponentiation.
+		template <typename T, typename U>
+		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename U::term_type::cf_type const &>(),std::declval<T const &>())),
+			typename U::term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value &&
+			std::is_same<decltype(std::declval<const U &>() * std::declval<const U &>()),U>::value,U
+			>::type;
 		template <typename T>
 		Derived pow_impl(const T &x) const
 		{
@@ -1378,7 +1383,7 @@ class series: detail::series_tag, series_operators
 			// exponentiation by squaring - the growth in number of terms seems to be slower.
 			Derived retval(*static_cast<Derived const *>(this));
 			for (integer i(1); i < n; ++i) {
-				retval *= *static_cast<Derived const *>(this);
+				retval = retval * (*static_cast<Derived const *>(this));
 			}
 			return retval;
 		}
@@ -1518,11 +1523,6 @@ class series: detail::series_tag, series_operators
 		{
 			return s;
 		}
-		// Typedef for pow().
-		template <typename T, typename U>
-		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename term_type::cf_type const &>(),std::declval<T const &>())),
-			typename term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value && is_multipliable_in_place<U>::value,U
-			>::type;
 		// Metaprogramming bits for partial derivative.
 		template <typename Cf>
 		using cf_diff_type = decltype(math::partial(std::declval<const Cf &>(),std::string()));
@@ -1963,11 +1963,9 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if:
 		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
 		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::safe_cast() to piranha::integer,
-		 * - \p Derived is multipliable in place.
+		 * - \p Derived is multipliable and the result of the multiplication is \p Derived.
 		 *
-		 * Return \p this raised to the <tt>x</tt>-th power.
-		 * 
-		 * The exponentiation algorithm proceeds as follows:
+		 * Return \p this raised to the <tt>x</tt>-th power. The exponentiation algorithm proceeds as follows:
 		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
 		 *   the coefficient. Otherwise, the algorithm proceeds;
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
