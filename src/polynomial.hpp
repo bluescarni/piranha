@@ -232,8 +232,9 @@ class polynomial:
 		// Template alias for use in pow() overload. Will check via SFINAE that the base pow() method can be called with argument T
 		// and that exponentiation of key type is legal.
 		template <typename T, typename Series>
-		using pow_ret_type = decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()),void(),
-			std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()));
+		using pow_ret_type = typename std::enable_if<
+			detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()))>::value,
+			decltype(std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()))>::type;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Series rebind alias.
