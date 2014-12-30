@@ -910,10 +910,10 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 	BOOST_CHECK((is_exponentiable<p_type1,fake_int_01>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,fake_int_02>::value));
-	// This is not exponentiable because exponentiation of short gives integer,
-	// while multiplication gives int.
+	// This is not exponentiable because exponentiation of integrals gives piranha::integer,
+	// while multiplication returns another integral.
 	BOOST_CHECK((!is_exponentiable<g_series_type<short,int>,int>::value));
-	BOOST_CHECK((!is_exponentiable<g_series_type<int,int>,integer>::value));
+	BOOST_CHECK((!is_exponentiable<g_series_type<int,int>,int>::value));
 	// Some multi-threaded testing.
 	p_type1 ret0, ret1;
 	std::thread t0([&ret0]() {
