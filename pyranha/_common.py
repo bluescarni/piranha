@@ -40,6 +40,15 @@ def _cleanup_custom_derivatives():
 			s_type.unregister_all_custom_derivatives()
 	print('Custom derivatives cleanup completed.')
 
+# NOTE: this is probably not needed at the moment as there is no way Python objects
+# end up in the cache, but it might happen in the future.
+def _cleanup_pow_caches():
+	from ._core import _get_series_list as gsl
+	for s_type in gsl():
+		if hasattr(s_type,'clear_pow_cache'):
+			s_type.clear_pow_cache()
+	print('Pow caches cleanup completed.')
+
 # Helper to check that d is a dictionary suitable for use in evaluation.
 def _check_eval_dict(d):
 	# Type checks.
@@ -170,5 +179,6 @@ def _monkey_patching():
 # Cleanup function.
 def _cleanup():
 	_cleanup_custom_derivatives()
+	_cleanup_pow_caches()
 	_core._cleanup_type_system()
 	print("Pyranha type system cleanup completed.")

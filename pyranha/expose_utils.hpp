@@ -279,6 +279,7 @@ class series_exposer
 			using pow_types = typename Descriptor::pow_types;
 			pow_types pt;
 			tuple_for_each(pt,pow_exposer<S>(series_class));
+			series_class.def("clear_pow_cache",S::template clear_pow_cache<S,0>).staticmethod("clear_pow_cache");
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_pow(bp::class_<S> &, typename std::enable_if<!has_typedef_pow_types<T>::value>::type * = nullptr)

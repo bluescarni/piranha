@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -909,6 +910,35 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 	BOOST_CHECK((is_exponentiable<p_type1,fake_int_01>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,fake_int_02>::value));
+	// This is not exponentiable because exponentiation of short gives integer,
+	// while multiplication gives int.
+	BOOST_CHECK((!is_exponentiable<g_series_type<short,int>,int>::value));
+	BOOST_CHECK((!is_exponentiable<g_series_type<int,int>,integer>::value));
+	// Some multi-threaded testing.
+	p_type1 ret0, ret1;
+	std::thread t0([&ret0]() {
+		p_type1 x{"x"};
+		auto tmp = x.pow(6);
+		// Throw in a cache clear for good measure.
+		p_type1::clear_pow_cache();
+		ret0 = tmp.pow(8);
+		p_type1::clear_pow_cache();
+	});
+	std::thread t1([&ret1]() {
+		p_type1 x{"x"};
+		auto tmp = x.pow(5);
+		p_type1::clear_pow_cache();
+		ret1 = tmp.pow(8);
+		p_type1::clear_pow_cache();
+	});
+	t0.join();
+	t1.join();
+	BOOST_CHECK_EQUAL(ret0,p_type1{"x"}.pow(6).pow(8));
+	BOOST_CHECK_EQUAL(ret1,p_type1{"x"}.pow(5).pow(8));
+	// Clear the caches.
+	p_type1::clear_pow_cache();
+	p_type2::clear_pow_cache();
+	p_type3::clear_pow_cache();
 }
 
 BOOST_AUTO_TEST_CASE(series_is_single_coefficient_test)

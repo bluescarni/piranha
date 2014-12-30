@@ -1365,8 +1365,38 @@ class series: detail::series_tag, series_operators
 		template <typename T, typename U>
 		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename U::term_type::cf_type const &>(),std::declval<T const &>())),
 			typename U::term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value &&
-			std::is_same<decltype(std::declval<const U &>() * std::declval<const U &>()),U>::value,U
+			std::is_same<decltype(std::declval<const U &>() * std::declval<const U &>()),U>::value &&
+			is_equality_comparable<U>::value,U
 			>::type;
+		// Hashing utils for series.
+		struct series_hasher
+		{
+			template <typename T>
+			std::size_t operator()(const T &s) const
+			{
+				return s.hash();
+			}
+		};
+		struct series_equal_to
+		{
+			template <typename T>
+			bool operator()(const T &a, const T &b) const
+			{
+				return a.is_identical(b);
+			}
+		};
+		template <typename Series>
+		using pow_map_type = std::unordered_map<Series,std::vector<Series>,series_hasher,series_equal_to>;
+		// NOTE: here, as in the custom derivative machinery, we need to pass through a static function
+		// to get the cache because Derived is an incomplete type and we cannot thus use a static data member
+		// involving Derived in series. Also, we need the Series template argument to inhibit the instantiation
+		// of the function for series types that do not support exponentiation.
+		template <typename Series = Derived>
+		static pow_map_type<Series> &get_pow_cache()
+		{
+			static pow_map_type<Series> s_pow_cache;
+			return s_pow_cache;
+		}
 		template <typename T>
 		Derived pow_impl(const T &x) const
 		{
@@ -1379,13 +1409,23 @@ class series: detail::series_tag, series_operators
 			if (n.sign() < 0) {
 				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integral value");
 			}
-			// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
-			// exponentiation by squaring - the growth in number of terms seems to be slower.
-			Derived retval(*static_cast<Derived const *>(this));
-			for (integer i(1); i < n; ++i) {
-				retval = retval * (*static_cast<Derived const *>(this));
+			// Lock the cache for the rest of the method.
+			std::lock_guard<std::mutex> lock(s_pow_mutex);
+			auto &v = get_pow_cache()[*static_cast<Derived const *>(this)];
+			using s_type = decltype(v.size());
+			// Init the vector, if needed.
+			if (!v.size()) {
+				Derived retval;
+				retval.insert(term_type(typename term_type::cf_type(1),typename term_type::key_type(symbol_set{})));
+				v.push_back(std::move(retval));
 			}
-			return retval;
+			// Fill in the missing powers.
+			while (v.size() <= n) {
+				// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
+				// exponentiation by squaring - the growth in number of terms seems to be slower.
+				v.push_back(v.back() * (*static_cast<Derived const *>(this)));
+			}
+			return v[static_cast<s_type>(n)];
 		}
 		// Iterator utilities.
 		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
@@ -1963,7 +2003,8 @@ class series: detail::series_tag, series_operators
 		 * This method is enabled only if:
 		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
 		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::safe_cast() to piranha::integer,
-		 * - \p Derived is multipliable and the result of the multiplication is \p Derived.
+		 * - \p Derived is multipliable and the result of the multiplication is \p Derived,
+		 * - \p Derived is equality-comparable.
 		 *
 		 * Return \p this raised to the <tt>x</tt>-th power. The exponentiation algorithm proceeds as follows:
 		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
@@ -1974,6 +2015,9 @@ class series: detail::series_tag, series_operators
 		 * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
 		 * - otherwise, an exception will be raised.
 		 * 
+		 * An internal thread-safe cache of natural powers of series is maintained in order to improve performance during, e.g., substitution operations.
+		 * This cache can be cleared with clear_pow_cache().
+		 *
 		 * @param[in] x exponent.
 		 * 
 		 * @return \p this raised to the power of \p x.
@@ -1986,7 +2030,9 @@ class series: detail::series_tag, series_operators
 		 * - is_single_coefficient(),
 		 * - apply_cf_functor(),
 		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
-		 * - series multiplication.
+		 * - series multiplication,
+		 * - memory errors in standard containers,
+		 * - threading primitives.
 		 */
 		template <typename T, typename U = Derived>
 		pow_ret_type<T,U> pow(const T &x) const
@@ -2003,6 +2049,18 @@ class series: detail::series_tag, series_operators
 				return retval;
 			}
 			return pow_impl(x);
+		}
+		/// Clear the internal cache of natural powers.
+		/**
+		 * This method can be used to clear the cache of natural powers of series maintained by piranha::series::pow().
+		 *
+		 * @throws unspecified any exception thrown by threading primitives.
+		 */
+		template <typename T = Derived, is_identical_enabler<T> = 0>
+		static void clear_pow_cache()
+		{
+			std::lock_guard<std::mutex> lock(s_pow_mutex);
+			get_pow_cache().clear();
 		}
 		/// Apply functor to single-coefficient series.
 		/**
