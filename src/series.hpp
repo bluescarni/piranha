@@ -94,6 +94,21 @@ inline std::pair<typename Term::cf_type,Derived> pair_from_term(const symbol_set
 	return std::make_pair(t.m_cf,std::move(retval));
 }
 
+// Detect the presence of the auto_truncate() method in series.
+template <typename T>
+class has_auto_truncate: detail::sfinae_types
+{
+		typedef typename std::decay<T>::type Td;
+		template <typename T1>
+		static auto test(T1 &t) -> decltype(t.auto_truncate(),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test(std::declval<Td &>())),yes>::value;
+};
+
+template <typename T>
+const bool has_auto_truncate<T>::value;
+
 }
 
 /// Type trait to detect series types.

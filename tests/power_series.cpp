@@ -30,6 +30,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -461,4 +462,61 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	// Test with non-existing variable.
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0_z,{"foo","bar"}),s0);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
+{
+	typedef polynomial<double,rational> stype0;
+	typedef polynomial<rational,int> stype1;
+	// Check the initial setup.
+	auto tup0 = stype0::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
+	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
+	BOOST_CHECK(std::get<2>(tup0).empty());
+	BOOST_CHECK((std::is_same<rational,std::decay<decltype(std::get<1>(tup0))>::type>::value));
+	// With no truncation enabled first.
+	auto x = stype0{"x"};
+	x.auto_truncate();
+	BOOST_CHECK_EQUAL(x,stype0{"x"});
+	// Activate total truncation.
+	x.set_auto_truncate_degree(2);
+	x.auto_truncate();
+	BOOST_CHECK_EQUAL(x,stype0{"x"});
+	x.set_auto_truncate_degree(0);
+	x.auto_truncate();
+	BOOST_CHECK_EQUAL(x,stype0{});
+	tup0 = stype0::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup0),1);
+	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
+	BOOST_CHECK(std::get<2>(tup0).empty());
+	// Check the resetting.
+	stype0::unset_auto_truncate_degree();
+	tup0 = stype0::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
+	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
+	BOOST_CHECK(std::get<2>(tup0).empty());
+	// Revive x and check partial.
+	x = stype0{"x"};
+	stype0::set_auto_truncate_degree(0,{"y"});
+	x.auto_truncate();
+	BOOST_CHECK_EQUAL(x,stype0{"x"});
+	stype0::set_auto_truncate_degree(0,{"x","y"});
+	x.auto_truncate();
+	BOOST_CHECK_EQUAL(x,stype0{});
+	tup0 = stype0::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup0),2);
+	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
+	BOOST_CHECK((std::get<2>(tup0) == std::vector<std::string>{"x","y"}));
+	// Check that for another series type the truncation settings are untouched.
+	auto tup1 = stype1::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup1),0);
+	BOOST_CHECK_EQUAL(std::get<1>(tup1),0);
+	BOOST_CHECK(std::get<2>(tup1).empty());
+	BOOST_CHECK((std::is_same<integer,std::decay<decltype(std::get<1>(tup1))>::type>::value));
+	// Final unset.
+	stype0::unset_auto_truncate_degree();
+	tup0 = stype0::get_auto_truncate_degree();
+	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
+	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
+	BOOST_CHECK(std::get<2>(tup0).empty());
 }
