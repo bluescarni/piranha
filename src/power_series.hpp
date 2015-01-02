@@ -79,6 +79,11 @@ namespace piranha
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+/* TODO:
+ * - the nothrow check on the degree type should probably be made conditional on the general noexcept checks in type_traits,
+ *   in case the degree type is not a C++11 class. These checks should probably actually be abstracted away in piranha-specific
+ *   nothrow_* type traits that disable the nothrow part if requested.
+ */
 template <typename Series, typename Derived>
 class power_series: public Series
 {
