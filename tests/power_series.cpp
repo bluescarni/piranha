@@ -53,10 +53,32 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
-template <typename Cf, typename Expo>
-class g_series_type: public power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>
+template <typename T>
+class null_toolbox: public T
 {
-		typedef power_series<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(T)
+	public:
+		null_toolbox() = default;
+		null_toolbox(const null_toolbox &) = default;
+		null_toolbox(null_toolbox &&) = default;
+		null_toolbox &operator=(const null_toolbox &) = default;
+		null_toolbox &operator=(null_toolbox &&) = default;
+		PIRANHA_FORWARDING_CTOR(null_toolbox,T)
+		PIRANHA_FORWARDING_ASSIGNMENT(null_toolbox,T)
+		static bool at_called;
+		void auto_truncate()
+		{
+			at_called = true;
+		}
+};
+
+template <typename T>
+bool null_toolbox<T>::at_called = false;
+
+template <typename Cf, typename Expo>
+class g_series_type: public power_series<null_toolbox<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>>
+{
+		typedef power_series<null_toolbox<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -519,4 +541,12 @@ BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
 	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
 	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
 	BOOST_CHECK(std::get<2>(tup0).empty());
+	// Check that the auto truncation from the null toolbox is called.
+	using stype2 = g_series_type<rational,rational>;
+	BOOST_CHECK(!stype2::at_called);
+	stype2::set_auto_truncate_degree(-1);
+	auto x2 = stype2{1};
+	x2.auto_truncate();
+	BOOST_CHECK(x2.empty());
+	BOOST_CHECK(stype2::at_called);
 }

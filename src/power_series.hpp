@@ -67,7 +67,7 @@ namespace piranha
  *
  * ## Exception safety guarantee ##
  *
- * This class provides the same guarantee as \p Series.
+ * This class provides the same guarantee as \p Series. The auto-truncation methods offer the basic exception safety guarantee.
  *
  * ## Move semantics ##
  *
@@ -473,9 +473,13 @@ class power_series: public Series
 		{
 			// Init out for exception safety.
 			auto new_degree(safe_cast<degree_type<T>>(max_degree));
+			// Initialisation of function-level statics is thread-safe, no need to lock. We get
+			// a ref here because the initialisation of the static could throw in principle,
+			// and we want the section after the lock to be exception-free.
+			auto &at_dm = get_at_degree_max();
 			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
 			s_at_degree_mode = 1;
-			get_at_degree_max() = std::move(new_degree);
+			at_dm = std::move(new_degree);
 			// This should not throw (a vector of strings, destructors and deallocation should be noexcept).
 			s_at_degree_names.clear();
 		}
@@ -485,10 +489,10 @@ class power_series: public Series
 		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
 		 * and if \p U can be safely cast to the degree type.
 		 *
-		 * Setup the degree-based auto-truncation mechanism to truncate according to the total partial degree.
+		 * Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.
 		 *
 		 * @param[in] max_degree maximum partial degree that will be retained during automatic truncation.
-		 * @param[in] names names of the variables that will be considered during the compuation of the
+		 * @param[in] names names of the variables that will be considered during the computation of the
 		 * partial degree.
 		 *
 		 * @throws unspecified any exception thrown by:
@@ -503,26 +507,68 @@ class power_series: public Series
 			// Copy+move for exception safety.
 			auto new_degree(safe_cast<degree_type<T>>(max_degree));
 			auto new_names(names);
+			auto &at_dm = get_at_degree_max();
 			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
 			s_at_degree_mode = 2;
-			get_at_degree_max() = std::move(new_degree);
+			at_dm = std::move(new_degree);
 			s_at_degree_names = std::move(new_names);
 		}
+		/// Disable degree-based auto-truncation.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * Disable the degree-based auto-truncation mechanism.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - the constructor of the degree type,
+		 * - memory allocation errors in standard containers.
+		 */
 		template <typename T = power_series, at_degree_enabler<T> = 0>
 		static void unset_auto_truncate_degree()
 		{
 			degree_type<T> new_degree(0);
+			auto &at_dm = get_at_degree_max();
 			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
 			s_at_degree_mode = 0;
-			get_at_degree_max() = std::move(new_degree);
+			at_dm = std::move(new_degree);
 			s_at_degree_names.clear();
 		}
+		/// Query the status of the degree-based auto-truncation mechanism.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 * 
+		 * This method will return a tuple of three elements describing the status of the degree-based auto-truncation mechanism.
+		 * The elements of the tuple have the following meaning:
+		 * - truncation mode (0 if disabled, 1 for total-degree truncation and 2 for partial-degree truncation),
+		 * - the maximum degree allowed,
+		 * - the list of names to be considered for partial truncation.
+		 * 
+		 * @throws unspecified any exception thrown by threading primitives or by the involved constructors.
+		 */
 		template <typename T = power_series, at_degree_enabler<T> = 0>
 		static std::tuple<int,degree_type<T>,std::vector<std::string>> get_auto_truncate_degree()
 		{
 			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
 			return std::make_tuple(s_at_degree_mode,get_at_degree_max(),s_at_degree_names);
 		}
+		/// Perform automatic truncation.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * This method will truncate \p this according to the truncation settings from piranha::power_series. Additionally,
+		 * it will also call the <tt>auto_truncate()</tt> method from the parent series type, if it exists.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - construction and/or assignment of the degree type,
+		 * - memory errors in standard containers,
+		 * - truncate_degree(),
+		 * - the <tt>auto_truncate()</tt> method from the parent series type, if it exists.
+		 */
 		template <typename T = power_series, at_degree_enabler<T> = 0>
 		void auto_truncate()
 		{
@@ -536,7 +582,8 @@ class power_series: public Series
 				// Nothing to do if no auto truncation is requested.
 				return;
 			}
-			// Acquire the global vars into local.
+			// Acquire the global vars into local. These are all read operations,
+			// no problems if they throw.
 			max_degree = get_at_degree_max();
 			names = s_at_degree_names;
 			at_degree_mode = s_at_degree_mode;
