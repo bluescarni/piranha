@@ -226,6 +226,9 @@ class series_exposer
 			series_class.def(sn::operator==(in,bp::self));
 			series_class.def(sn::operator!=(bp::self,in));
 			series_class.def(sn::operator!=(in,bp::self));
+			// NOTE: here this method is available if is_identical() is (that is, if the series are comparable), so
+			// put it here - even if logically it belongs to exponentiation.
+			series_class.def("clear_pow_cache",S::template clear_pow_cache<S,0>).staticmethod("clear_pow_cache");
 		}
 		template <typename S, typename T, typename std::enable_if<!common_ops_ic<S,T>::value,int>::type = 0>
 		static void expose_common_ops(bp::class_<S> &, const T &)
@@ -279,7 +282,6 @@ class series_exposer
 			using pow_types = typename Descriptor::pow_types;
 			pow_types pt;
 			tuple_for_each(pt,pow_exposer<S>(series_class));
-			series_class.def("clear_pow_cache",S::template clear_pow_cache<S,0>).staticmethod("clear_pow_cache");
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_pow(bp::class_<S> &, typename std::enable_if<!has_typedef_pow_types<T>::value>::type * = nullptr)
