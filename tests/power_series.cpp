@@ -549,4 +549,14 @@ BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
 	x2.auto_truncate();
 	BOOST_CHECK(x2.empty());
 	BOOST_CHECK(stype2::at_called);
+	// Check the auto truncation when doing multiplications.
+	x = stype0{"x"};
+	x.set_auto_truncate_degree(3);
+	BOOST_CHECK_EQUAL((x + 1).pow(4),6*x*x+1+4*x+4*x*x*x);
+	auto y = stype0{"y"};
+	x.unset_auto_truncate_degree();
+	BOOST_CHECK_EQUAL((y + 1).pow(4),6*y*y+1+4*y+4*y*y*y+y*y*y*y);
+	y.clear_pow_cache();
+	x.set_auto_truncate_degree(3,{"x","y"});
+	BOOST_CHECK_EQUAL((y + 1).pow(4),6*y*y+1+4*y+4*y*y*y);
 }
