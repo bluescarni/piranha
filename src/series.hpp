@@ -449,7 +449,7 @@ struct binary_series_op_return_type<S1,S2,N,typename std::enable_if<
  * - in-place arithmetic operators are implemented as binary operators plus move-assignment;
  * - addition and subtraction are always available for any series type;
  * - series multiplication requires the coefficient types to be multipliable and a valid specialisation of piranha::series_multiplier for the
- *   promoted series type;
+ *   promoted series type. Additionally, the <tt>auto_truncate()</tt> method of the result, if present, will be called before the result is returned;
  * - division is implemented only when the first argument has a recursion index greater than the second argument and
  *   the first argument's coefficient type is divisible by the second argument;
  * - the comparison operators will use <tt>operator+()</tt> on the coefficient types to determine if any type promotion is necessary
@@ -631,10 +631,21 @@ class series_operators
 		template <typename T, typename U>
 		using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T,U>>::value,int>::type;
 		// Multiplication.
+		// Call the auto_truncate() method, if available.
+		template <typename T, typename std::enable_if<detail::has_auto_truncate<T>::value,int>::type = 0>
+		static void do_auto_truncate(T &series)
+		{
+			series.auto_truncate();
+		}
+		template <typename T, typename std::enable_if<!detail::has_auto_truncate<T>::value,int>::type = 0>
+		static void do_auto_truncate(T &)
+		{}
 		template <typename T, typename U>
 		static series_common_type<T,U,2> binary_mul_impl(T &&x, U &&y)
 		{
-			return series_multiplier<series_common_type<T,U,2>>(std::forward<T>(x),std::forward<U>(y))();
+			auto retval = series_multiplier<series_common_type<T,U,2>>(std::forward<T>(x),std::forward<U>(y))();
+			do_auto_truncate(retval);
+			return retval;
 		}
 		template <typename T, typename U, typename std::enable_if<bso_type<T,U,2>::value == 0u,int>::type = 0>
 		static series_common_type<T,U,2> dispatch_binary_mul(T &&x, U &&y)
@@ -949,7 +960,8 @@ class series_operators
 		 * - any invoked series, coefficient or key constructor,
 		 * - construction, assignment and other operations on piranha::symbol_set,
 		 * - piranha::series::insert(),
-		 * - the call operator of piranha::series_multiplier.
+		 * - the call operator of piranha::series_multiplier,
+		 * - the <tt>auto_truncate()</tt> method of the result, if it exists.
 		 */
 		template <typename T, typename U>
 		friend binary_mul_type<T,U> operator*(T &&x, U &&y)
@@ -1091,6 +1103,7 @@ class series_operators
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
+ * \todo probably we can eliminate the need for the term_type typedef, and get the term type from the container as needed.
  * TODO new operators:
  * - test with mock_cfs that are not addable to scalars.
  */
