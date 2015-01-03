@@ -555,7 +555,10 @@ def run_test_suite():
 		def __enter__(self):
 			import sys, os
 			self._stdout = sys.stdout
-			null = open(os.devnull,'wb')
+			# NOTE: originally here it was 'wb', but apparently this will create problems
+			# in Python 3 due to the string changes. With 'wt' it seems to work ok in both Python 2
+			# and 3.
+			null = open(os.devnull,'wt')
 			sys.stdout = null
 		def __exit__(self, type, value, traceback):
 			import sys

@@ -17,6 +17,8 @@
 # Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+from __future__ import absolute_import as _ai
+
 # Execute all the tutorials.
-import hello_piranha
-import integer
+from . import hello_piranha
+from . import integer
