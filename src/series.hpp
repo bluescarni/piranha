@@ -1389,12 +1389,15 @@ class series: detail::series_tag, series_operators
 		using generic_ctor_enabler = typename std::enable_if<detail::true_tt<
 			decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value &&
 			!std::is_same<U,T>::value,int>::type;
+		// Enabler for is_identical.
+		template <typename T>
+		using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value,int>::type;
 		// Exponentiation.
 		template <typename T, typename U>
 		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename U::term_type::cf_type const &>(),std::declval<T const &>())),
 			typename U::term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value &&
 			std::is_same<decltype(std::declval<const U &>() * std::declval<const U &>()),U>::value &&
-			is_equality_comparable<U>::value,U
+			std::is_same<is_identical_enabler<U>,int>::value,U
 			>::type;
 		// Hashing utils for series.
 		struct series_hasher
@@ -1737,9 +1740,6 @@ class series: detail::series_tag, series_operators
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
-		// Enabler for is_identical.
-		template <typename T>
-		using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value,int>::type;
 	public:
 		/// Size type.
 		/**
@@ -2032,7 +2032,7 @@ class series: detail::series_tag, series_operators
 		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
 		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::safe_cast() to piranha::integer,
 		 * - \p Derived is multipliable and the result of the multiplication is \p Derived,
-		 * - \p Derived is equality-comparable.
+		 * - the is_identical() method can be called on \p Derived.
 		 *
 		 * Return \p this raised to the <tt>x</tt>-th power. The exponentiation algorithm proceeds as follows:
 		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
@@ -2060,7 +2060,8 @@ class series: detail::series_tag, series_operators
 		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
 		 * - series multiplication,
 		 * - memory errors in standard containers,
-		 * - threading primitives.
+		 * - threading primitives,
+		 * - hash() or is_identical().
 		 */
 		template <typename T, typename U = Derived>
 		pow_ret_type<T,U> pow(const T &x) const
