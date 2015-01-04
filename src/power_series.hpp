@@ -56,6 +56,10 @@ namespace piranha
  * returned by the degree-querying methods. The truncation methods will recursively truncate the coefficients of the series
  * via the piranha::math::truncate_degree() function.
  *
+ * This class supports the automatic truncation mechanism, via auto_truncate(), used, e.g., by
+ * the multiplication operator in piranha::series_operators. The degree-based automatic truncation can be configured via a set of
+ * thread-safe static methods.
+ *
  * If the requirements outlined above are not satisfied, the degree-querying and the truncation methods will be disabled.
  *
  * This class satisfies the piranha::is_series type trait.
@@ -550,6 +554,8 @@ class power_series: public Series
 		 * - truncation mode (0 if disabled, 1 for total-degree truncation and 2 for partial-degree truncation),
 		 * - the maximum degree allowed,
 		 * - the list of names to be considered for partial truncation.
+		 * 
+		 * @return a tuple representing the status of the degree-based auto-truncation mechanism.
 		 * 
 		 * @throws unspecified any exception thrown by threading primitives or by the involved constructors.
 		 */
