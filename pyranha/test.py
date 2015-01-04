@@ -500,6 +500,29 @@ class truncate_degree_test_case(_ut.TestCase):
 		self.assertEqual(truncate_degree(s,1,["y","x"]),x * cos(a) + (z*y/3 + 3*z*z*x/8) * sin(a + b))
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,["x",1]))
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
+		# Automatic truncation.
+		# Just make sure we do not re-use any previous result.
+		pt = polynomial(rational,short)()
+		x,y = pt('x'), pt('y')
+		pt.clear_pow_cache()
+		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))
+		pt.set_auto_truncate_degree(4)
+		self.assertEqual(pt.get_auto_truncate_degree(),(1,4,[]))
+		self.assertEqual((x*x*x).degree(),3)
+		self.assertEqual(x*x*x*x*x,0)
+		pt.set_auto_truncate_degree(3,['x','y'])
+		self.assertEqual(pt.get_auto_truncate_degree(),(2,3,['x','y']))
+		self.assertEqual(1+12*x*y+4*x+12*x**2*y+6*x**2+4*x**3+4*y**3+6*y**2+4*y+12*x*y**2,(x+y+1)**4)
+		# Check throwing conversion.
+		self.assertRaises(ValueError,lambda: pt.set_auto_truncate_degree(F(4,3),['x','y']))
+		self.assertEqual(pt.get_auto_truncate_degree(),(2,3,['x','y']))
+		# Check multiplication.
+		self.assertEqual((x*x*y).degree(),3)
+		self.assertEqual((x*x*y*y),0)
+		# Reset before finishing.
+		pt.unset_auto_truncate_degree()
+		pt.clear_pow_cache()
+		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))
 
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.
