@@ -559,4 +559,11 @@ BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
 	y.clear_pow_cache();
 	x.set_auto_truncate_degree(3,{"x","y"});
 	BOOST_CHECK_EQUAL((y + 1).pow(4),6*y*y+1+4*y+4*y*y*y);
+	// Test the type trait.
+	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,int>::value));
+	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,integer>::value));
+	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,rational>::value));
+	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,double>::value));
+	BOOST_CHECK((!detail::has_set_auto_truncate_degree<stype0,std::string>::value));
+	BOOST_CHECK((!detail::has_set_auto_truncate_degree<stype0,std::vector<int>>::value));
 }

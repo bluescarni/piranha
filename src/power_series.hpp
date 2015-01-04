@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include "detail/sfinae_types.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "serialization.hpp"
@@ -710,6 +711,25 @@ struct truncate_degree_impl<Series,T,typename std::enable_if<is_instance_of<Seri
 		return s.truncate_degree(max_degree,args...);
 	}
 };
+
+}
+
+namespace detail
+{
+
+template <typename S, typename T>
+class has_set_auto_truncate_degree: sfinae_types
+{
+		// NOTE: if we have total degree auto truncation, we also have partial degree truncation.
+		template <typename S1, typename T1>
+		static auto test(const S1 &, const T1 &t) -> decltype(S1::set_auto_truncate_degree(t),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<yes,decltype(test(std::declval<S>(),std::declval<T>()))>::value;
+};
+
+template <typename S, typename T>
+const bool has_set_auto_truncate_degree<S,T>::value;
 
 }
 
