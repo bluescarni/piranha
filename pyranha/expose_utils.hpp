@@ -54,6 +54,7 @@
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/power_series.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
@@ -618,6 +619,7 @@ class series_exposer
 		{
 			expose_degree(series_class);
 			expose_degree_truncation(series_class);
+			expose_degree_auto_truncation(series_class);
 		}
 		template <typename T>
 		static void expose_degree(bp::class_<T> &series_class,
@@ -657,46 +659,105 @@ class series_exposer
 			return s.ldegree(std::vector<std::string>(begin,end));
 		}
 		// Truncation.
-		template <typename S, typename T = Descriptor, typename std::enable_if<!has_typedef_degree_truncation_types<T>::value,int>::type = 0>
-		static void expose_degree_truncation(bp::class_<S> &)
-		{}
+		template <typename S>
+		static void unset_auto_truncate_degree_wrapper()
+		{
+			S::unset_auto_truncate_degree();
+		}
+		template <typename S>
+		static bp::tuple get_auto_truncate_degree_wrapper()
+		{
+			auto retval = S::get_auto_truncate_degree();
+			bp::list l;
+			for (const auto &s: std::get<2u>(retval)) {
+				l.append(s);
+			}
+			return bp::make_tuple(std::get<0u>(retval),std::get<1u>(retval),l);
+		}
 		template <typename S>
 		struct truncate_degree_exposer
 		{
 			truncate_degree_exposer(bp::class_<S> &series_class):m_series_class(series_class) {}
 			bp::class_<S> &m_series_class;
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
+			static S truncate_degree_wrapper(const S &s, const T &x)
 			{
-				// Expose both as member function and free function.
-				m_series_class.def("truncate_degree",truncate_degree_wrapper<S,T>);
-				bp::def("_truncate_degree",truncate_degree_wrapper<S,T>);
-				// The partial version.
-				m_series_class.def("truncate_degree",truncate_pdegree_wrapper<S,T>);
-				bp::def("_truncate_degree",truncate_pdegree_wrapper<S,T>);
+				return s.truncate_degree(x);
 			}
 			template <typename T>
-			void operator()(const T &, typename std::enable_if<!piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
+			static S truncate_pdegree_wrapper(const S &s, const T &x, bp::list l)
+			{
+				bp::stl_input_iterator<std::string> begin(l), end;
+				return s.truncate_degree(x,std::vector<std::string>(begin,end));
+			}
+			template <typename T>
+			static void set_auto_truncate_degree_wrapper(const T &max_degree)
+			{
+				S::set_auto_truncate_degree(max_degree);
+			}
+			template <typename T>
+			static void set_auto_truncate_pdegree_wrapper(const T &max_degree, bp::list l)
+			{
+				bp::stl_input_iterator<std::string> begin(l), end;
+				S::set_auto_truncate_degree(max_degree,std::vector<std::string>(begin,end));
+			}
+			template <typename T>
+			void expose_truncate_degree(const T &, typename std::enable_if<piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
+			{
+				// Expose both as member function and free function.
+				m_series_class.def("truncate_degree",truncate_degree_wrapper<T>);
+				bp::def("_truncate_degree",truncate_degree_wrapper<T>);
+				// The partial version.
+				m_series_class.def("truncate_degree",truncate_pdegree_wrapper<T>);
+				bp::def("_truncate_degree",truncate_pdegree_wrapper<T>);
+			}
+			template <typename T>
+			void expose_truncate_degree(const T &, typename std::enable_if<!piranha::has_truncate_degree<S,T>::value>::type * = nullptr) const
 			{}
+			template <typename T>
+			void expose_set_auto_truncate_degree(const T &, typename std::enable_if<piranha::detail::has_set_auto_truncate_degree<S,T>::value>::type * = nullptr) const
+			{
+				m_series_class.def("set_auto_truncate_degree",set_auto_truncate_degree_wrapper<T>);
+				m_series_class.def("set_auto_truncate_degree",set_auto_truncate_pdegree_wrapper<T>);
+				set_auto_truncate_degree_exposed() = true;
+			}
+			template <typename T>
+			void expose_set_auto_truncate_degree(const T &, typename std::enable_if<!piranha::detail::has_set_auto_truncate_degree<S,T>::value>::type * = nullptr) const
+			{}
+			static bool &set_auto_truncate_degree_exposed()
+			{
+				static bool retval = false;
+				return retval;
+			}
+			template <typename T>
+			void operator()(const T &x) const
+			{
+				expose_truncate_degree(x);
+				expose_set_auto_truncate_degree(x);
+			}
 		};
-		template <typename S, typename T>
-		static S truncate_degree_wrapper(const S &s, const T &x)
-		{
-			return s.truncate_degree(x);
-		}
-		template <typename S, typename T>
-		static S truncate_pdegree_wrapper(const S &s, const T &x, bp::list l)
-		{
-			bp::stl_input_iterator<std::string> begin(l), end;
-			return s.truncate_degree(x,std::vector<std::string>(begin,end));
-		}
 		template <typename S, typename T = Descriptor, typename std::enable_if<has_typedef_degree_truncation_types<T>::value,int>::type = 0>
 		static void expose_degree_truncation(bp::class_<S> &series_class)
 		{
 			using dt_types = typename Descriptor::degree_truncation_types;
 			dt_types dt;
 			tuple_for_each(dt,truncate_degree_exposer<S>(series_class));
+			if (truncate_degree_exposer<S>::set_auto_truncate_degree_exposed()) {
+				series_class.staticmethod("set_auto_truncate_degree");
+			}
 		}
+		template <typename S, typename T = Descriptor, typename std::enable_if<!has_typedef_degree_truncation_types<T>::value,int>::type = 0>
+		static void expose_degree_truncation(bp::class_<S> &)
+		{}
+		template <typename S, typename std::enable_if<piranha::detail::has_get_auto_truncate_degree<S>::value,int>::type = 0>
+		static void expose_degree_auto_truncation(bp::class_<S> &series_class)
+		{
+			series_class.def("unset_auto_truncate_degree",unset_auto_truncate_degree_wrapper<S>).staticmethod("unset_auto_truncate_degree");
+			series_class.def("get_auto_truncate_degree",get_auto_truncate_degree_wrapper<S>).staticmethod("get_auto_truncate_degree");
+		}
+		template <typename S, typename std::enable_if<!piranha::detail::has_get_auto_truncate_degree<S>::value,int>::type = 0>
+		static void expose_degree_auto_truncation(bp::class_<S> &)
+		{}
 		// Trigonometric exposer.
 		template <typename S>
 		static void expose_trigonometric_series(bp::class_<S> &series_class, typename std::enable_if<
