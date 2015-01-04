@@ -731,6 +731,19 @@ class has_set_auto_truncate_degree: sfinae_types
 template <typename S, typename T>
 const bool has_set_auto_truncate_degree<S,T>::value;
 
+template <typename S>
+class has_get_auto_truncate_degree: sfinae_types
+{
+		template <typename S1>
+		static auto test(const S1 &) -> decltype(S1::get_auto_truncate_degree(),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<yes,decltype(test(std::declval<S>()))>::value;
+};
+
+template <typename S>
+const bool has_get_auto_truncate_degree<S>::value;
+
 }
 
 }
