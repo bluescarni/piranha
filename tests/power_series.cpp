@@ -572,4 +572,7 @@ BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
 	BOOST_CHECK((detail::has_get_auto_truncate_degree<stype0>::value));
 	using ps_type0 = poisson_series<double>;
 	BOOST_CHECK((!detail::has_get_auto_truncate_degree<ps_type0>::value));
+	// Check a failing safe_cast.
+	BOOST_CHECK_NO_THROW(stype1::set_auto_truncate_degree(rational(3),{"x","y"}));
+	BOOST_CHECK_THROW(stype1::set_auto_truncate_degree(rational(3,4),{"x","y"}),std::invalid_argument);
 }
