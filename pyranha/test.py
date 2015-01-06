@@ -519,6 +519,13 @@ class truncate_degree_test_case(_ut.TestCase):
 		# Check multiplication.
 		self.assertEqual((x*x*y).degree(),3)
 		self.assertEqual((x*x*y*y),0)
+		# Test the auto_truncate() method.
+		pt.unset_auto_truncate_degree()
+		pt.clear_pow_cache()
+		x4 = x*x*x*x + x*x*x;
+		pt.set_auto_truncate_degree(3)
+		x4.auto_truncate()
+		self.assertEqual(x4,x*x*x)
 		# Reset before finishing.
 		pt.unset_auto_truncate_degree()
 		pt.clear_pow_cache()

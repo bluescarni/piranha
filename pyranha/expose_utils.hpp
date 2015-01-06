@@ -862,6 +862,20 @@ class series_exposer
 			series_class.def("cpp_save_text",cpp_save_text<S>).staticmethod("cpp_save_text");
 			series_class.def("cpp_load_text",cpp_load_text<S>).staticmethod("cpp_load_text");
 		}
+		// Auto-truncation.
+		template <typename S>
+		static auto auto_truncate_wrapper(S &s) -> decltype(s.auto_truncate())
+		{
+			return s.auto_truncate();
+		}
+		template <typename S, typename std::enable_if<piranha::detail::has_auto_truncate<S>::value,int>::type = 0>
+		static void expose_auto_truncate(bp::class_<S> &series_class)
+		{
+			series_class.def("auto_truncate",auto_truncate_wrapper<S>);
+		}
+		template <typename S, typename std::enable_if<!piranha::detail::has_auto_truncate<S>::value,int>::type = 0>
+		static void expose_auto_truncate(bp::class_<S> &)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -942,6 +956,8 @@ class series_exposer
 				series_class.def_pickle(series_pickle_suite<s_type>());
 				// Serialization to/from C++ text archives.
 				expose_cpp_text_serialization(series_class);
+				// Expose auto_truncate(), if present.
+				expose_auto_truncate(series_class);
 			}
 		};
 	public:
