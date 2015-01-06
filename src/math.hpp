@@ -40,6 +40,7 @@
 #include "detail/base_term_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
+#include "is_key.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"

@@ -39,6 +39,7 @@
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
+#include "is_key.hpp"
 #include "kronecker_array.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
