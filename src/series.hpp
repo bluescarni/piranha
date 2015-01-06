@@ -1082,6 +1082,7 @@ class series_operators
  * - \p Term must satisfy piranha::is_term.
  * - \p Derived must derive from piranha::series of \p Term and \p Derived.
  * - \p Derived must satisfy piranha::is_series.
+ * - \p Derived must satisfy piranha::is_container_element.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -1803,6 +1804,7 @@ class series: detail::series_tag, series_operators
 		{
 			PIRANHA_TT_CHECK(std::is_base_of,series,Derived);
 			PIRANHA_TT_CHECK(is_series,Derived);
+			PIRANHA_TT_CHECK(is_container_element,Derived);
 			// Static checks on the iterator types.
 			PIRANHA_TT_CHECK(is_input_iterator,const_iterator);
 			piranha_assert(destruction_checks());
