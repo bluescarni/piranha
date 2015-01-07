@@ -40,13 +40,6 @@
  * \todo probably we should make overflow-safe all operations on keys that currently are not: multiplication, computation of degree (including in truncators), etc.
  * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication) -> this probably becomes null in case the caching of degree
  * values in the truncators turns out to work ok.
- * \todo think of new way of interoperate between composite types (e.g., complex and series) vs non-composite types. I.e., allow complex<T> + U
- * only if T + U produces T. When going down that route, use and expand the existing arithmetic type traits (is_addable, etc.). Probably it is a good idea
- * in this piece of work to start reworking the generic series constructors, possibly dropping the converting constructors for keys, and move from there.
- * In general it seems possibly useful to remove interaction with different keys from interoperable operators (but keep it for constructors?).
- * Connected to this, we should specify better the semantics of math operations: a +-*= b means exactly a = a +-* b (use optimising behaviour like
- * implementing in-place add separately only when it is really equivalent), and specify this well in the documentation
- * of series multiplier, term's multiply methods, etc. (they should make clear that the return type deduction and operand orders was already determined for them).
  * \todo series multadd to speed-up series multiplication when coefficients are series?
  * \todo forbid interoperability in +-* between series with different keys?
  * \todo look into perfect forwarding of members, for use in series, hash set (?)
@@ -108,8 +101,6 @@
  * sure they behave consistently wrt locale settings.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
- * \todo the series test should probably be split in multiple files as done in mp_integer, it requires too much resources
- * to compile right now.
  * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in base_term. Should we require it to be
  * noexcept as well and put the requirement in the is_cf type trait?
  * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where it could
