@@ -77,6 +77,9 @@ namespace piranha
 // TODO:
 // - make this more general, make the key type selectable;
 // - once the above is done, remeber to fix the rebind alias.
+// - once we have a selectable key type, we must take care that in a few places we assume that the value type
+//   of the key is a C++ integral, but this might not be the case any more (e.g., in the sin/cos implementation
+//   we will need a safe cast).
 template <typename Cf>
 class poisson_series:
 	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
@@ -302,12 +305,13 @@ class poisson_series:
 		 * 
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::series::is_single_coefficient(), piranha::series::insert(),
-		 *   piranha::series::apply_cf_functor(),
+		 * - piranha::symbol_set::add(),
 		 * - memory allocation errors in standard containers,
-		 * - the <tt>linear_argument()</tt> method of the key type,
-		 * - piranha::safe_cast(), piranha::math::sin(),
+		 * - the constructors of coefficient, key and term types,
 		 * - the cast operator of piranha::integer,
-		 * - the constructors of coefficient, key and term types.
+		 * - piranha::math::negate(),
+		 * - piranha::math::sin(),
+		 * - the extraction of a linear combination of integral arguments from the polynomial coefficient.
 		 */
 		template <typename T = poisson_series, sin_cos_enabler<T> = 0>
 		poisson_series sin() const

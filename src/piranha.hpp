@@ -28,7 +28,7 @@
  */
 
 /// Root piranha namespace.
-/**
+/*
  * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly that
  * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and negative+move with different series types.
@@ -127,6 +127,11 @@
  * \todo should the print coefficient operator of real print the precision as well or is the number of digits enough hint?
  * \todo pyranha: in the docstrings probably we should change from relative to absolute imports, for clarity.
  * \todo try to minimise the use of is_instance_of, as it is fragile at the moment.
+ * \todo need to review the requirements on all std object we use as members of classes. We often require them to be noexcept
+ * but they do not need to be by the standard (e.g., hash, equal_to, vector, ...). Note that in all our classes we mark move
+ * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
+ * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do not use
+ * exception guarantees throughout the code.
  */
 namespace piranha
 {
