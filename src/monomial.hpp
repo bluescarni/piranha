@@ -22,6 +22,7 @@
 #define PIRANHA_MONOMIAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
@@ -46,6 +47,7 @@
 #include "serialization.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "term.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -782,6 +784,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				}
 			}
 			return std::make_pair(std::move(retval_s),std::move(retval_key));
+		}
+		static const std::size_t multiply_arity = 1u;
+		template <typename Cf>
+		void multiply(std::array<term<Cf,monomial>,1u> &res, const monomial &other, const symbol_set &args) const
+		{
+
 		}
 };
 

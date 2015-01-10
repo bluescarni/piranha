@@ -8,7 +8,7 @@ SET(HEADERS_LIST
 	settings.hpp
 	exceptions.hpp
 	tracing.hpp
-	base_term.hpp
+	term.hpp
 	thread_barrier.hpp
 	polynomial.hpp
 	kronecker_monomial.hpp
@@ -54,7 +54,6 @@ SET(DETAIL_HEADERS_LIST
 	detail/config_clang.hpp
 	detail/sfinae_types.hpp
 	detail/real_fwd.hpp
-	detail/base_term_fwd.hpp
 	detail/km_commons.hpp
 	detail/mp_rational_fwd.hpp
 	detail/poisson_series_fwd.hpp

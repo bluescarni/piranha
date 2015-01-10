@@ -41,7 +41,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/kronecker_monomial.hpp"

@@ -18,15 +18,14 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PIRANHA_BASE_TERM_HPP
-#define PIRANHA_BASE_TERM_HPP
+#ifndef PIRANHA_TERM_HPP
+#define PIRANHA_TERM_HPP
 
 #include <cstddef>
+#include <functional>
 #include <type_traits>
-#include <unordered_set>
 #include <utility>
 
-#include "detail/base_term_fwd.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
@@ -37,15 +36,13 @@
 namespace piranha
 {
 
-/// Base term class.
+/// Term class.
 /**
- * Every term must derive from this base class, which is parametrised over a coefficient type \p Cf and a key type
+ * This class represents series terms, which are parametrised over a coefficient type \p Cf and a key type
  * \p Key. One mutable coefficient instance and one key instance are the only data members and they can be accessed directly.
  * 
  * ## Type requirements ##
  * 
- * - \p Derived must derive from piranha::base_term of \p Cf, \p Key and \p Derived.
- * - \p Derived must satisfy piranha::is_term.
  * - \p Cf must satisfy piranha::is_cf.
  * - \p Key must satisfy piranha::is_key.
  * 
@@ -62,11 +59,9 @@ namespace piranha
  * This class supports serialization if the coefficient and key types support it.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo test move constructor in inherited term.
  */
-template <typename Cf, typename Key, typename Derived>
-class base_term
+template <typename Cf, typename Key>
+class term
 {
 		PIRANHA_TT_CHECK(is_cf,Cf);
 		PIRANHA_TT_CHECK(is_key,Key);
@@ -107,24 +102,23 @@ class base_term
 		 * 
 		 * @throws unspecified any exception thrown by the default constructors of \p Cf and \p Key.
 		 */
-		base_term():m_cf(),m_key() {}
+		term():m_cf(),m_key() {}
 		/// Default copy constructor.
 		/**
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
-		base_term(const base_term &) = default;
-		/// Trivial move constructor.
+		term(const term &) = default;
+		/// Defaulted move constructor.
 		/**
 		 * @param[in] other term used for construction.
 		 */
-		base_term(base_term &&other) noexcept : m_cf(std::move(other.m_cf)),m_key(std::move(other.m_key))
-		{}
+		term(term &&) = default;
 		/// Constructor from generic coefficient and key.
 		/**
 		 * \note
 		 * This constructor is activated only if coefficient and key are constructible from \p T and \p U.
 		 *
-		 * This constructor will forward perfectly \p cf and \p key to construct base_term::m_cf and base_term::m_key.
+		 * This constructor will forward perfectly \p cf and \p key to construct coefficient and key.
 		 * 
 		 * @param[in] cf argument used for the construction of the coefficient.
 		 * @param[in] key argument used for the construction of the key.
@@ -132,9 +126,12 @@ class base_term
 		 * @throws unspecified any exception thrown by the constructors of \p Cf and \p Key.
 		 */
 		template <typename T, typename U, binary_ctor_enabler<T,U> = 0>
-		explicit base_term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
+		explicit term(T &&cf, U &&key):m_cf(std::forward<T>(cf)),m_key(std::forward<U>(key)) {}
 		/// Trivial destructor.
-		~base_term();
+		~term()
+		{
+			PIRANHA_TT_CHECK(is_container_element,term);
+		}
 		/// Copy assignment operator.
 		/**
 		 * @param[in] other assignment argument.
@@ -143,10 +140,10 @@ class base_term
 		 * 
 		 * @throws unspecified any exception thrown by the copy constructors of \p Cf and \p Key.
 		 */
-		base_term &operator=(const base_term &other)
+		term &operator=(const term &other)
 		{
 			if (likely(this != &other)) {
-				base_term tmp(other);
+				term tmp(other);
 				*this = std::move(tmp);
 			}
 			return *this;
@@ -157,7 +154,7 @@ class base_term
 		 * 
 		 * @return reference to \p this.
 		 */
-		base_term &operator=(base_term &&other) noexcept
+		term &operator=(term &&other) noexcept
 		{
 			if (likely(this != &other)) {
 				m_cf = std::move(other.m_cf);
@@ -175,7 +172,7 @@ class base_term
 		 * 
 		 * @throws unspecified any exception thrown by the equality operators of \p Key.
 		 */
-		bool operator==(const base_term &other) const
+		bool operator==(const term &other) const
 		{
 			return m_key == other.m_key;
 		}
@@ -184,6 +181,8 @@ class base_term
 		 * The term's hash value is given by its key's hash value.
 		 * 
 		 * @return hash value of \p m_key as calculated via a default-constructed instance of \p std::hash.
+		 *
+		 * @throws unspecified any exception thrown by the hash functor of \p Key.
 		 */
 		std::size_t hash() const
 		{
@@ -220,52 +219,6 @@ class base_term
 		/// Key member.
 		Key		m_key;
 };
-
-namespace detail
-{
-
-template <typename T, typename = void>
-struct is_term_impl
-{
-	static const bool value = false;
-};
-
-// NOTE: put the check on container element here in order to preempt trying to access the cf/key typedefs inside references below.
-template <typename T>
-struct is_term_impl<T,typename std::enable_if<is_instance_of<T,base_term>::value && is_container_element<T>::value>::type>
-{
-	typedef typename T::cf_type cf_type;
-	typedef typename T::key_type key_type;
-	static const bool value = std::is_constructible<T,cf_type const &,key_type const &>::value;
-};
-
-}
-
-/// Type trait to detect term types.
-/**
- * This type trait will be true if the decay type of \p T satisfies the following conditions:
- * - it is an instance of piranha::base_term,
- * - it satisfies piranha::is_container_element,
- * - it is constructible from two const references, one to an instance of the coefficient type,
- *   the other to an instance of the key type.
- */
-template <typename T>
-class is_term
-{
-	public:
-		/// Value of the type trait.
-		static const bool value = detail::is_term_impl<T>::value;
-};
-
-template <typename T>
-const bool is_term<T>::value;
-
-template <typename Cf, typename Key, typename Derived>
-inline base_term<Cf,Key,Derived>::~base_term()
-{
-	PIRANHA_TT_CHECK(std::is_base_of,base_term,Derived);
-	PIRANHA_TT_CHECK(is_term,Derived);
-}
 
 }
 

@@ -38,7 +38,6 @@
 #include <utility>
 
 #include "config.hpp"
-#include "detail/base_term_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "detail/symbol_set_fwd.hpp"
 #include "print_coefficient.hpp"
@@ -723,90 +722,6 @@ class has_typedef_##type_name: piranha::detail::sfinae_types \
 
 namespace piranha
 {
-
-namespace detail
-{
-
-// MP to check that all types in a tuple are the same.
-template <std::size_t I, typename Tuple, typename = void>
-struct tih_impl
-{
-	static const bool value = std::is_same<typename std::tuple_element<I,Tuple>::type,
-				  typename std::tuple_element<I + 1u,Tuple>::type>::value &&
-				  tih_impl<I + 1u,Tuple>::value;
-};
-
-template <std::size_t I, typename Tuple>
-struct tih_impl<I,Tuple,typename std::enable_if<I == std::tuple_size<Tuple>::value - 1u>::type>
-{
-	static const bool value = true;
-};
-
-template <typename Tuple>
-struct tuple_is_homogeneous
-{
-	static const bool value = tih_impl<0u,Tuple>::value;
-};
-
-template <>
-struct tuple_is_homogeneous<std::tuple<>>
-{
-	static const bool value = true;
-};
-
-}
-
-/// Type trait for multipliable terms.
-/**
- * In order for this type trait to evaluate to \p true, a term type must satisfy the following conditions:
- * - it must be provided with a \p typedef \p multiplication_result_type which is either \p Term itself or a tuple of types \p Term of nonzero size,
- *   used to represent the result of the multiplication by another term,
- * - it must be provided with a const member function <tt>multiply()</tt> accepting as first parameter a mutable reference
- *   to an instance of type \p multiplication_result_type, as second parameter a const reference to another term instance and
- *   as third parameter a const reference to a piranha::symbol_set.
- *
- * This type trait requires \p Term to satisfy piranha::is_term.
- * \todo: replace the multiplication_result_type detection with the detection of member function signature, something like this:
- * http://stackoverflow.com/questions/19387339/type-deduction-given-member-function-pointer-with-variadic-templates
- */
-template <typename Term>
-class term_is_multipliable: detail::sfinae_types
-{
-		PIRANHA_TT_CHECK(is_term,Term);
-		template <typename U>
-		static auto test(const U &u) -> decltype(u.multiply(std::declval<typename U::multiplication_result_type &>(),
-			std::declval<U const &>(),std::declval<symbol_set const &>()),void(),yes());
-		static no test(...);
-		PIRANHA_DECLARE_HAS_TYPEDEF(multiplication_result_type);
-		template <typename T, typename = void>
-		struct check_result_type
-		{
-			static const bool value = false;
-		};
-		template <typename T>
-		struct check_result_type<T,typename std::enable_if<has_typedef_multiplication_result_type<T>::value>::type>
-		{
-			template <typename U>
-			struct tuple_check
-			{
-				static const bool value = false;
-			};
-			template <typename ... Args>
-			struct tuple_check<std::tuple<Args...>>
-			{
-				static const bool value = sizeof...(Args) > 0u && detail::tuple_is_homogeneous<std::tuple<Args...>>::value;
-			};
-			typedef typename T::multiplication_result_type res_type;
-			static const bool value = std::is_same<res_type,T>::value || tuple_check<res_type>::value;
-		};
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<Term>())),yes>::value &&
-					  check_result_type<Term>::value;
-};
-
-template <typename Term>
-const bool term_is_multipliable<Term>::value;
 
 namespace detail
 {

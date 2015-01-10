@@ -18,29 +18,25 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/base_term.hpp"
+#include "../src/term.hpp"
 
-#define BOOST_TEST_MODULE base_term_test
+#define BOOST_TEST_MODULE term_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <functional>
 #include <limits>
-#include <numeric>
 #include <random>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <type_traits>
-#include <utility>
 
 #include "../src/environment.hpp"
-#include "../src/forwarding.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 
 static const int ntries = 1000;
@@ -52,20 +48,6 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer,rational> cf_types;
 typedef boost::mpl::vector<monomial<int>,monomial<integer>> key_types;
 
-template <typename Cf, typename Key>
-class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
-{
-		typedef base_term<Cf,Key,g_term_type> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_term_type() = default;
-		g_term_type(const g_term_type &) = default;
-		g_term_type(g_term_type &&) = default;
-		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_term_type,base)
-};
-
 struct constructor_tester
 {
 	template <typename Cf>
@@ -74,7 +56,7 @@ struct constructor_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef g_term_type<Cf,Key> term_type;
+			typedef term<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			symbol_set args;
 			args.add("x");
@@ -86,7 +68,7 @@ struct constructor_tester
 			BOOST_CHECK(term_type(Cf(1),Key{value_type(1)}).m_key == Key{value_type(1)});
 			// Constructor from term of different type.
 			typedef long Cf2;
-			typedef g_term_type<Cf2,Key> other_term_type;
+			typedef term<Cf2,Key> other_term_type;
 			other_term_type other(Cf2(1),Key{value_type(1)});
 			BOOST_CHECK_EQUAL(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_cf,Cf(Cf2(1)));
 			BOOST_CHECK(term_type(Cf(other.m_cf),Key(other.m_key,args)).m_key[0] == Key{value_type(1)}[0]);
@@ -106,7 +88,7 @@ struct constructor_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_constructor_test)
+BOOST_AUTO_TEST_CASE(term_constructor_test)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(constructor_tester());
@@ -120,7 +102,7 @@ struct equality_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef g_term_type<Cf,Key> term_type;
+			typedef term<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			BOOST_CHECK(term_type() == term_type());
 			BOOST_CHECK(term_type(Cf(1),Key{value_type(2)}) == term_type(Cf(2),Key{value_type(2)}));
@@ -134,7 +116,7 @@ struct equality_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_equality_test)
+BOOST_AUTO_TEST_CASE(term_equality_test)
 {
 	boost::mpl::for_each<cf_types>(equality_tester());
 }
@@ -147,7 +129,7 @@ struct hash_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef g_term_type<Cf,Key> term_type;
+			typedef term<Cf,Key> term_type;
 			typedef typename Key::value_type value_type;
 			BOOST_CHECK_EQUAL(term_type().hash(),std::hash<Key>()(Key()));
 			BOOST_CHECK_EQUAL(term_type(Cf(2),Key{value_type(1)}).hash(),std::hash<Key>()(Key{value_type(1)}));
@@ -160,24 +142,10 @@ struct hash_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_hash_test)
+BOOST_AUTO_TEST_CASE(term_hash_test)
 {
 	boost::mpl::for_each<cf_types>(hash_tester());
 }
-
-template <typename Cf, typename Key>
-class tmp_term_type: public base_term<Cf,Key,tmp_term_type<Cf,Key>>
-{
-		using base = base_term<Cf,Key,tmp_term_type<Cf,Key>>;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		tmp_term_type() = default;
-		tmp_term_type(const tmp_term_type &) = default;
-		tmp_term_type(tmp_term_type &&) = default;
-		tmp_term_type &operator=(const tmp_term_type &) = default;
-		tmp_term_type &operator=(tmp_term_type &&) = default;
-		explicit tmp_term_type(const Cf &, const Key &) {}
-};
 
 struct compatibility_tester
 {
@@ -187,7 +155,7 @@ struct compatibility_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			using term_type = tmp_term_type<Cf,Key>;
+			using term_type = term<Cf,Key>;
 			typedef typename Key::value_type value_type;
 			symbol_set args;
 			term_type t1;
@@ -205,7 +173,7 @@ struct compatibility_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_compatibility_test)
+BOOST_AUTO_TEST_CASE(term_compatibility_test)
 {
 	boost::mpl::for_each<cf_types>(compatibility_tester());
 }
@@ -218,7 +186,7 @@ struct ignorability_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			using term_type = tmp_term_type<Cf,Key>;
+			using term_type = term<Cf,Key>;
 			symbol_set args;
 			term_type t1;
 			BOOST_CHECK_EQUAL(t1.is_ignorable(args),(t1.m_key.is_ignorable(args) || math::is_zero(t1.m_cf)));
@@ -236,106 +204,9 @@ struct ignorability_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_ignorability_test)
+BOOST_AUTO_TEST_CASE(term_ignorability_test)
 {
 	boost::mpl::for_each<cf_types>(ignorability_tester());
-}
-
-template <typename Cf, typename Key>
-class term_type: public base_term<Cf,Key,term_type<Cf,Key>>
-{
-		using base = base_term<Cf,Key,term_type<Cf,Key>>;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		term_type() = default;
-		term_type(const term_type &) = default;
-		term_type(term_type &&) = default;
-		term_type &operator=(const term_type &) = default;
-		term_type &operator=(term_type &&) = default;
-		explicit term_type(const Cf &, const Key &) {}
-};
-
-// Not really needed to add the serialization methods here, these are only tested
-// for the type traits.
-template <typename Cf, typename Key>
-class term_type_invalid1: public base_term<Cf,Key,term_type_invalid1<Cf,Key>>
-{
-	public:
-		term_type_invalid1() = default;
-		term_type_invalid1(const term_type_invalid1 &) = default;
-		term_type_invalid1(term_type_invalid1 &&) = default;
-		term_type_invalid1 &operator=(const term_type_invalid1 &) = default;
-		term_type_invalid1 &operator=(term_type_invalid1 &&) = default;
-};
-
-template <typename Cf, typename Key>
-class term_type_invalid2: public base_term<Cf,Key,term_type_invalid2<Cf,Key>>
-{
-	public:
-		term_type_invalid2() = delete;
-		term_type_invalid2(const term_type_invalid2 &) = default;
-		term_type_invalid2(term_type_invalid2 &&) = default;
-		term_type_invalid2 &operator=(const term_type_invalid2 &) = default;
-		term_type_invalid2 &operator=(term_type_invalid2 &&) = default;
-		explicit term_type_invalid2(const Cf &, const Key &) {}
-};
-
-template <typename Cf, typename Key>
-class term_type_invalid3
-{
-	public:
-		term_type_invalid3() = default;
-		term_type_invalid3(const term_type_invalid3 &) = default;
-		term_type_invalid3(term_type_invalid3 &&) = default;
-		term_type_invalid3 &operator=(const term_type_invalid3 &) = default;
-		term_type_invalid3 &operator=(term_type_invalid3 &&) = default;
-		explicit term_type_invalid3(const Cf &, const Key &) {}
-};
-
-template <typename Cf, typename Key>
-class term_type_invalid4: public base_term<Cf,Key,term_type_invalid4<Cf,Key>>
-{
-	public:
-		term_type_invalid4() = default;
-		term_type_invalid4(const term_type_invalid4 &) = default;
-		term_type_invalid4(term_type_invalid4 &&) = default;
-		term_type_invalid4 &operator=(const term_type_invalid4 &) = default;
-		term_type_invalid4 &operator=(term_type_invalid4 &&) = default;
-		explicit term_type_invalid4(Cf &, const Key &) {}
-};
-
-struct is_term_tester
-{
-	template <typename Cf>
-	struct runner
-	{
-		template <typename Key>
-		void operator()(const Key &)
-		{
-			BOOST_CHECK((is_term<term_type<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type_invalid1<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type_invalid2<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type_invalid3<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type_invalid4<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type<Cf,Key> &>::value));
-			BOOST_CHECK((!is_term<const term_type<Cf,Key>>::value));
-			BOOST_CHECK((!is_term<term_type<Cf,Key> const &>::value));
-			BOOST_CHECK((!is_term<term_type<Cf,Key> &&>::value));
-			BOOST_CHECK((!is_term<term_type<Cf,Key> *>::value));
-		}
-	};
-	template <typename Cf>
-	void operator()(const Cf &)
-	{
-		boost::mpl::for_each<key_types>(runner<Cf>());
-	}
-};
-
-BOOST_AUTO_TEST_CASE(base_term_is_term_test)
-{
-	boost::mpl::for_each<cf_types>(is_term_tester());
-	BOOST_CHECK(!is_term<int>::value);
-	BOOST_CHECK(!is_term<std::string>::value);
 }
 
 struct serialization_tester
@@ -346,7 +217,7 @@ struct serialization_tester
 		template <typename Key>
 		void operator()(const Key &)
 		{
-			typedef g_term_type<Cf,Key> term_type;
+			typedef term<Cf,Key> term_type;
 			term_type tmp;
 			std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
 				std::numeric_limits<int>::max());
@@ -380,7 +251,7 @@ struct serialization_tester
 	}
 };
 
-BOOST_AUTO_TEST_CASE(base_term_serialization_test)
+BOOST_AUTO_TEST_CASE(term_serialization_test)
 {
 	boost::mpl::for_each<cf_types>(serialization_tester());
 }

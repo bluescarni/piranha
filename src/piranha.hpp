@@ -101,7 +101,7 @@
  * sure they behave consistently wrt locale settings.
  * \todo doxygen: check usage of param[(in,)out], and consider using the tparam command.
  * \todo review the use of return statements with const objects, if any.
- * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in base_term. Should we require it to be
+ * \todo math::is_zero() is used to determine ignorability of a term in a noexcept method in term. Should we require it to be
  * noexcept as well and put the requirement in the is_cf type trait?
  * \todo floating point stuff: there's a few things we can improve here. The first problem is that, in some places where it could
  * matter (interop mp_integer/rational <--> float) we don't check for math errors, as explained here:
@@ -147,7 +147,6 @@ inline namespace literals {}
 }
 
 #include "array_key.hpp"
-#include "base_term.hpp"
 #include "cache_aligning_allocator.hpp"
 #include "config.hpp"
 #include "convert_to.hpp"
@@ -185,6 +184,7 @@ inline namespace literals {}
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
+#include "term.hpp"
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
 #include "thread_pool.hpp"
