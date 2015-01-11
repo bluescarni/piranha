@@ -64,7 +64,7 @@ struct key_is_multipliable_impl<Cf,Key,typename std::enable_if<std::is_same<cons
  * - it has a static member of type \p std::size_t called \p multiply_arity with a value greater than zero,
  * - it has a static function called \p multiply() accepting the following arguments:
  *   - a reference to an \p std::array of piranha::term of \p Cf and \p Key of size \p multiply_arity,
- *   - two const references to piranha::terms of \p Cf and \p Key,
+ *   - two const references to piranha::term of \p Cf and \p Key,
  *   - a const reference to piranha::symbol_set.
  *
  * The decay types of \p Cf and \p Key are considered by this type trait. \p Cf and \p Key must satisfy
