@@ -157,6 +157,7 @@ inline namespace literals {}
 #include "hash_set.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
+#include "key_is_multipliable.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"

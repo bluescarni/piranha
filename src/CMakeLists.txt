@@ -46,6 +46,7 @@ SET(HEADERS_LIST
 	tuning.hpp
 	convert_to.hpp
 	serialization.hpp
+	key_is_multipliable.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

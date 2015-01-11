@@ -39,6 +39,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -471,6 +472,11 @@ struct multiply_tester
 			t2.m_key = key_type{T(3),T(7)};
 			std::array<term_type,1u> res;
 			BOOST_CHECK_THROW(key_type::multiply(res,t1,t2,ed),std::invalid_argument);
+			// Check the type trait.
+			BOOST_CHECK((key_is_multipliable<rational,key_type>::value));
+			BOOST_CHECK((key_is_multipliable<integer,key_type>::value));
+			BOOST_CHECK((key_is_multipliable<double,key_type>::value));
+			BOOST_CHECK((!key_is_multipliable<short,key_type>::value));
 		}
 	};
 	template <typename T>

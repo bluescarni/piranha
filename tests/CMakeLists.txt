@@ -32,6 +32,7 @@ ADD_PIRANHA_TESTCASE(dynamic_aligning_allocator)
 ADD_PIRANHA_TESTCASE(environment)
 ADD_PIRANHA_TESTCASE(exceptions)
 ADD_PIRANHA_TESTCASE(hash_set)
+ADD_PIRANHA_TESTCASE(key_is_multipliable)
 ADD_PIRANHA_TESTCASE(kronecker_array)
 ADD_PIRANHA_TESTCASE(kronecker_monomial)
 # The Intel compiler bombs out on some tests. Need to investigate more.
