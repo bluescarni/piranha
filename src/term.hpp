@@ -109,9 +109,6 @@ class term
 		 */
 		term(const term &) = default;
 		/// Defaulted move constructor.
-		/**
-		 * @param[in] other term used for construction.
-		 */
 		term(term &&) = default;
 		/// Constructor from generic coefficient and key.
 		/**
