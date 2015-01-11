@@ -46,6 +46,7 @@
 #include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/symbol.hpp"
+#include "../src/term.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -424,10 +425,52 @@ struct multiply_tester
 		template <typename U>
 		void operator()(const U &)
 		{
-			typedef monomial<T,U> k_type;
-			symbol_set vs;
-			k_type k1({0}), k2({1}), retval;
-			BOOST_CHECK_THROW(k1.multiply(retval,k2,vs),std::invalid_argument);
+			{
+			// Integer coefficient.
+			using key_type = monomial<T,U>;
+			using term_type = term<integer,key_type>;
+			symbol_set ed;
+			ed.add("x");
+			term_type t1, t2;
+			t1.m_cf = 2;
+			t1.m_key = key_type{T(2)};
+			t2.m_cf = 3;
+			t2.m_key = key_type{T(3)};
+			std::array<term_type,1u> res;
+			key_type::multiply(res,t1,t2,ed);
+			BOOST_CHECK_EQUAL(res[0].m_cf,t1.m_cf * t2.m_cf);
+			BOOST_CHECK_EQUAL(res[0].m_key[0],T(5));
+			}
+			{
+			// Try with rational as well.
+			using key_type = monomial<T,U>;
+			using term_type = term<rational,key_type>;
+			symbol_set ed;
+			ed.add("x");
+			ed.add("y");
+			term_type t1, t2;
+			t1.m_cf = 2/3_q;
+			t1.m_key = key_type{T(2),T(-1)};
+			t2.m_cf = -3;
+			t2.m_key = key_type{T(3),T(7)};
+			std::array<term_type,1u> res;
+			key_type::multiply(res,t1,t2,ed);
+			BOOST_CHECK_EQUAL(res[0].m_cf,-2);
+			BOOST_CHECK_EQUAL(res[0].m_key[0],T(5));
+			BOOST_CHECK_EQUAL(res[0].m_key[1],T(6));
+			}
+			// Check throwing as well.
+			using key_type = monomial<T,U>;
+			using term_type = term<rational,key_type>;
+			symbol_set ed;
+			ed.add("x");
+			term_type t1, t2;
+			t1.m_cf = 2/3_q;
+			t1.m_key = key_type{T(2),T(-1)};
+			t2.m_cf = -3;
+			t2.m_key = key_type{T(3),T(7)};
+			std::array<term_type,1u> res;
+			BOOST_CHECK_THROW(key_type::multiply(res,t1,t2,ed),std::invalid_argument);
 		}
 	};
 	template <typename T>

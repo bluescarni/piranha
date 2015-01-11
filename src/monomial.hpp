@@ -23,12 +23,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <limits>
-#include <memory>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -36,9 +35,12 @@
 #include <utility>
 
 #include "array_key.hpp"
-#include "detail/prepare_for_print.hpp"
 #include "config.hpp"
+#include "detail/prepare_for_print.hpp"
+#include "detail/series_fwd.hpp"
+#include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "is_cf.hpp"
 #include "is_key.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
@@ -66,7 +68,7 @@ namespace piranha
  * 
  * ## Exception safety guarantee ##
  * 
- * This class provides the same exception safety guarantee as piranha::array_key.
+ * Unless noted otherwise, this class provides the same exception safety guarantee as piranha::array_key.
  * 
  * ## Move semantics ##
  * 
@@ -120,9 +122,25 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Enabler for ctor from init list.
 		template <typename U>
 		using init_list_enabler = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value,int>::type;
-		// Enabler for multiplication.
-		template <typename U>
-		using multiply_enabler = decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()));
+		// Multiplication.
+		template <typename Cf, typename U>
+		using multiply_enabler = typename std::enable_if<
+			detail::true_tt<decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))>::value &&
+			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
+		// Overload if the coefficient is a series.
+		template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+		{
+			out_cf = cf1 * cf2;
+		}
+		// Overload if the coefficient is not a series.
+		template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+		{
+			out_cf = cf1;
+			out_cf *= cf2;
+		}
 		// Enabler for linear argument.
 		template <typename U>
 		using linarg_enabler = typename std::enable_if<has_safe_cast<integer,U>::value,int>::type;
@@ -186,6 +204,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Serialization support.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		/// Arity of the multiply() method.
+		static const std::size_t multiply_arity = 1u;
 		/// Defaulted default constructor.
 		monomial() = default;
 		/// Defaulted copy constructor.
@@ -348,32 +368,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		degree_type<U> ldegree(const symbol_set::positions &p, const symbol_set &args) const
 		{
 			return degree(p,args);
-		}
-		/// Multiply monomial.
-		/**
-		 * \note
-		 * This method is enabled only if the underlying call to piranha::array_key::vector_add(()
-		 * is well-formed.
-		 *
-		 * Multiplies \p this by \p other and stores the result in \p retval. The exception safety
-		 * guarantee is the same as for piranha::array_key::vector_add().
-		 * 
-		 * @param[out] retval return value.
-		 * @param[in] other argument of multiplication.
-		 * @param[in] args reference set of arguments.
-		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-		 * @throws unspecified any exception thrown by piranha::array_key::vector_add().
-		 *
-		 * @return the return value of piranha::array_key::vector_add().
-		 */
-		template <typename U = monomial, typename = multiply_enabler<U>>
-		void multiply(monomial &retval, const monomial &other, const symbol_set &args) const
-		{
-			if(unlikely(other.size() != args.size())) {
-				piranha_throw(std::invalid_argument,"invalid size of arguments set");
-			}
-			this->vector_add(retval,other);
 		}
 		/// Name of the linear argument.
 		/**
@@ -785,13 +779,44 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			return std::make_pair(std::move(retval_s),std::move(retval_key));
 		}
-		static const std::size_t multiply_arity = 1u;
-		template <typename Cf>
-		void multiply(std::array<term<Cf,monomial>,1u> &res, const monomial &other, const symbol_set &args) const
+		/// Multiply terms with a monomial key.
+		/**
+		 * \note
+		 * This method is enabled only if the following conditions hold:
+		 * - piranha::array_key::vector_add() is enabled for \p t1,
+		 * - \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
+		 *   of type \p Cf, and it is copy-assignable.
+		 *
+		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
+		 * offers the basic exception safety guarantee.
+		 *
+		 * @param[out] res return value.
+		 * @param[in] t1 first argument.
+		 * @param[in] t2 second argument.
+		 * @param[in] args reference set of arguments.
+		 *
+		 * @throws std::invalid_argument if the size of \p t1 differs from the size of \p args.
+		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by the multiplication
+		 * of the coefficients.
+		 */
+		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
+		static void multiply(std::array<term<Cf,monomial>,multiply_arity> &res, const term<Cf,monomial> &t1,
+			const term<Cf,monomial> &t2, const symbol_set &args)
 		{
-
+			term<Cf,monomial> &t = res[0u];
+			// NOTE: the check on the monomials' size is in vector_add().
+			if(unlikely(t1.m_key.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			// Coefficient.
+			cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
+			// Now deal with the key.
+			t1.m_key.vector_add(t.m_key,t2.m_key);
 		}
 };
+
+template <typename T, typename S>
+const std::size_t monomial<T,S>::multiply_arity;
 
 }
 
