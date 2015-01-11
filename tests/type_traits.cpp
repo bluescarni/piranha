@@ -33,16 +33,12 @@
 #include <list>
 #include <set>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <vector>
 
-#include "../src/base_term.hpp"
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
-#include "../src/forwarding.hpp"
 #include "../src/is_cf.hpp"
-#include "../src/monomial.hpp"
 #include "../src/symbol_set.hpp"
 
 using namespace piranha;
@@ -1450,120 +1446,6 @@ BOOST_AUTO_TEST_CASE(type_traits_is_cf_test)
 	BOOST_CHECK(!is_cf<cf06>::value);
 #endif
 	BOOST_CHECK(is_cf<cf07>::value);
-}
-
-struct term_type1: base_term<double,monomial<int>,term_type1>
-{
-	typedef base_term<double,monomial<int>,term_type1> base;
-	PIRANHA_FORWARDING_CTOR(term_type1,base)
-	term_type1() = default;
-	term_type1(const term_type1 &) = default;
-	term_type1(term_type1 &&) = default;
-	term_type1 &operator=(const term_type1 &) = default;
-	term_type1 &operator=(term_type1 &&) = default;
-};
-
-struct term_type2: base_term<double,monomial<int>,term_type2>
-{
-	typedef base_term<double,monomial<int>,term_type2> base;
-	PIRANHA_FORWARDING_CTOR(term_type2,base)
-	term_type2() = default;
-	term_type2(const term_type2 &) = default;
-	term_type2(term_type2 &&) = default;
-	term_type2 &operator=(const term_type2 &) = default;
-	term_type2 &operator=(term_type2 &&) = default;
-	typedef term_type2 multiplication_result_type;
-	void multiply(term_type2 &, const term_type2 &, const symbol_set &) const;
-};
-
-struct term_type3: base_term<double,monomial<int>,term_type3>
-{
-	typedef base_term<double,monomial<int>,term_type3> base;
-	PIRANHA_FORWARDING_CTOR(term_type3,base)
-	term_type3() = default;
-	term_type3(const term_type3 &) = default;
-	term_type3(term_type3 &&) = default;
-	term_type3 &operator=(const term_type3 &) = default;
-	term_type3 &operator=(term_type3 &&) = default;
-	typedef term_type3 multiplication_result_type;
-	void multiply(term_type3 &, const term_type3 &, const symbol_set &);
-};
-
-struct term_type4: base_term<double,monomial<int>,term_type4>
-{
-	typedef base_term<double,monomial<int>,term_type4> base;
-	PIRANHA_FORWARDING_CTOR(term_type4,base)
-	term_type4() = default;
-	term_type4(const term_type4 &) = default;
-	term_type4(term_type4 &&) = default;
-	term_type4 &operator=(const term_type4 &) = default;
-	term_type4 &operator=(term_type4 &&) = default;
-	typedef std::tuple<term_type4> multiplication_result_type;
-	void multiply(multiplication_result_type &, const term_type4 &, const symbol_set &) const;
-};
-
-struct term_type5: base_term<double,monomial<int>,term_type5>
-{
-	typedef base_term<double,monomial<int>,term_type5> base;
-	PIRANHA_FORWARDING_CTOR(term_type5,base)
-	term_type5() = default;
-	term_type5(const term_type5 &) = default;
-	term_type5(term_type5 &&) = default;
-	term_type5 &operator=(const term_type5 &) = default;
-	term_type5 &operator=(term_type5 &&) = default;
-	typedef std::tuple<> multiplication_result_type;
-	void multiply(multiplication_result_type &, const term_type5 &, const symbol_set &) const;
-};
-
-struct term_type6: base_term<double,monomial<int>,term_type6>
-{
-	typedef base_term<double,monomial<int>,term_type6> base;
-	PIRANHA_FORWARDING_CTOR(term_type6,base)
-	term_type6() = default;
-	term_type6(const term_type6 &) = default;
-	term_type6(term_type6 &&) = default;
-	term_type6 &operator=(const term_type6 &) = default;
-	term_type6 &operator=(term_type6 &&) = default;
-	typedef std::tuple<term_type6,term_type6> multiplication_result_type;
-	void multiply(multiplication_result_type &, const term_type6 &, const symbol_set &) const;
-};
-
-struct term_type7: base_term<double,monomial<int>,term_type7>
-{
-	typedef base_term<double,monomial<int>,term_type7> base;
-	PIRANHA_FORWARDING_CTOR(term_type7,base)
-	term_type7() = default;
-	term_type7(const term_type7 &) = default;
-	term_type7(term_type7 &&) = default;
-	term_type7 &operator=(const term_type7 &) = default;
-	term_type7 &operator=(term_type7 &&) = default;
-	typedef std::tuple<term_type7,int> multiplication_result_type;
-	void multiply(multiplication_result_type &, const term_type7 &, const symbol_set &) const;
-};
-
-struct term_type8: base_term<double,monomial<int>,term_type8>
-{
-	typedef base_term<double,monomial<int>,term_type8> base;
-	PIRANHA_FORWARDING_CTOR(term_type8,base)
-	term_type8() = default;
-	term_type8(const term_type8 &) = default;
-	term_type8(term_type8 &&) = default;
-	term_type8 &operator=(const term_type8 &) = default;
-	term_type8 &operator=(term_type8 &&) = default;
-	typedef std::tuple<term_type8,term_type8> multiplication_result_type;
-	void multiply(multiplication_result_type &, term_type8 &, const symbol_set &) const;
-};
-
-BOOST_AUTO_TEST_CASE(type_traits_term_is_multipliable_test)
-{
-	BOOST_CHECK(!term_is_multipliable<term_type1>::value);
-	BOOST_CHECK(term_is_multipliable<term_type2>::value);
-	BOOST_CHECK(!term_is_multipliable<term_type3>::value);
-	BOOST_CHECK(term_is_multipliable<term_type4>::value);
-	BOOST_CHECK(!term_is_multipliable<term_type5>::value);
-	BOOST_CHECK(term_is_multipliable<term_type6>::value);
-	BOOST_CHECK(!term_is_multipliable<term_type7>::value);
-	BOOST_CHECK(!term_is_multipliable<term_type8>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_min_max_int_test)
