@@ -3,8 +3,6 @@ SET(HEADERS_LIST
 	series.hpp
 	power_series.hpp
 	poisson_series.hpp
-	polynomial_term.hpp
-	poisson_series_term.hpp
 	settings.hpp
 	exceptions.hpp
 	tracing.hpp

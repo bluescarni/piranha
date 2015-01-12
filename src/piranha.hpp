@@ -169,8 +169,6 @@ inline namespace literals {}
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
 #include "poisson_series.hpp"
-#include "poisson_series_term.hpp"
-#include "polynomial_term.hpp"
 #include "polynomial.hpp"
 #include "power_series.hpp"
 #include "print_coefficient.hpp"
