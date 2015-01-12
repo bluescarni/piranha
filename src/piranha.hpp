@@ -132,6 +132,9 @@
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do not use
  * exception guarantees throughout the code.
+ * \todo it seems like serialization of kronecker objects could not be platform-agnostic, even in text mode. This is because
+ * the width of a type on a platform could be different from the original size in the archive, and the codification/decodification
+ * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors.
  */
 namespace piranha
 {
