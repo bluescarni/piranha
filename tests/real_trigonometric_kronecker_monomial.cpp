@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE real_trigonometric_kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <array>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
@@ -34,12 +35,12 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 #include "../src/environment.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -48,6 +49,7 @@
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/term.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -506,120 +508,207 @@ struct multiply_tester
 	template <typename T>
 	void operator()(const T &)
 	{
-		typedef real_trigonometric_kronecker_monomial<T> k_type;
-		typedef kronecker_array<T> ka;
-		k_type k1, k2, result_plus, result_minus;
+		using key_type = real_trigonometric_kronecker_monomial<T>;
+		using ka = kronecker_array<T>;
+		// Check the type trait.
+		BOOST_CHECK((key_is_multipliable<int,key_type>::value));
+		BOOST_CHECK((key_is_multipliable<rational,key_type>::value));
+		BOOST_CHECK((!key_is_multipliable<short,key_type>::value));
+		// Test handling of coefficients.
+		using term_type = term<rational,key_type>;
+		symbol_set ed;
+		ed.add("x");
+		term_type t1, t2;
+		t1.m_cf = 2;
+		t1.m_key = key_type{T(2)};
+		t2.m_cf = 3;
+		t2.m_key = key_type{T(3)};
+		std::array<term_type,2u> retval;
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(5));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(retval[0u].m_key.get_flavour());
+		BOOST_CHECK(retval[1u].m_key.get_flavour());
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(5));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		t2.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(5));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(retval[0u].m_key.get_flavour());
+		BOOST_CHECK(retval[1u].m_key.get_flavour());
+		t1.m_key.set_flavour(true);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(5));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		// Test change in sign for sine result and first multiplier negative.
+		t1.m_key = key_type{T(1)};
+		t2.m_key = key_type{T(-2)};
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(1));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(3));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		t1.m_key = key_type{T(1)};
+		t2.m_key = key_type{T(2)};
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(3));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		t1.m_key = key_type{T(1)};
+		t2.m_key = key_type{T(-2)};
+		t2.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,-(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(1));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(3));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		t1.m_key = key_type{T(1)};
+		t2.m_key = key_type{T(2)};
+		t2.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,ed);
+		BOOST_CHECK_EQUAL(retval[0u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[1u].m_cf,(t1.m_cf * t2.m_cf) / 2);
+		BOOST_CHECK_EQUAL(retval[0u].m_key.get_int(),T(3));
+		BOOST_CHECK_EQUAL(retval[1u].m_key.get_int(),T(1));
+		BOOST_CHECK(!retval[0u].m_key.get_flavour());
+		BOOST_CHECK(!retval[1u].m_key.get_flavour());
+		// Test handling of keys.
 		symbol_set vs1;
-		bool sign_plus = true, sign_minus = true;
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_int() == 0);
-		BOOST_CHECK(result_minus.get_int() == 0);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		BOOST_CHECK(!sign_plus && !sign_minus);
-		k1 = k_type({0});
-		k2 = k_type({0});
+		t1 = term_type{};
+		t2 = term_type{};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_int() == 0);
+		BOOST_CHECK(retval[1u].m_key.get_int() == 0);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		t1 = term_type{1,key_type({0})};
+		t2 = term_type{1,key_type({0})};
 		vs1.add(symbol("a"));
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_int() == 0);
-		BOOST_CHECK(result_minus.get_int() == 0);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		BOOST_CHECK(!sign_plus && !sign_minus);
-		k1 = k_type({1});
-		k2 = k_type({2});
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_int() == 3);
-		BOOST_CHECK(result_minus.get_int() == 1);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		k1 = k_type({1,-1});
-		k2 = k_type({2,0});
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_int() == 0);
+		BOOST_CHECK(retval[1u].m_key.get_int() == 0);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		t1 = term_type{1,key_type({1})};
+		t2 = term_type{1,key_type({2})};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_int() == 3);
+		BOOST_CHECK(retval[1u].m_key.get_int() == 1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
 		vs1.add(symbol("b"));
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
+		t1 = term_type{1,key_type({1,-1})};
+		t2 = term_type{1,key_type({2,0})};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
 		std::vector<int> tmp(2u);
-		ka::decode(tmp,result_plus.get_int());
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
-		ka::decode(tmp,result_minus.get_int());
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 1);
 		BOOST_CHECK(tmp[1u] == 1);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		k1.set_flavour(false);
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_flavour() == false);
-		BOOST_CHECK(result_minus.get_flavour() == false);
-		ka::decode(tmp,result_plus.get_int());
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == false);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == false);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
-		ka::decode(tmp,result_minus.get_int());
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 1);
 		BOOST_CHECK(tmp[1u] == 1);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		k1.set_flavour(true);
-		k2.set_flavour(false);
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_flavour() == false);
-		BOOST_CHECK(result_minus.get_flavour() == false);
-		ka::decode(tmp,result_plus.get_int());
+		t1.m_key.set_flavour(true);
+		t2.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == false);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == false);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
-		ka::decode(tmp,result_minus.get_int());
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 1);
 		BOOST_CHECK(tmp[1u] == 1);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		k1.set_flavour(false);
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		ka::decode(tmp,result_plus.get_int());
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
-		ka::decode(tmp,result_minus.get_int());
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 1);
 		BOOST_CHECK(tmp[1u] == 1);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		k1 = k_type({1,-1});
-		k2 = k_type({-2,-2});
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		ka::decode(tmp,result_plus.get_int());
+		t1 = term_type{1,key_type({1,-1})};
+		t2 = term_type{1,key_type({-2,-2})};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 1);
 		BOOST_CHECK(tmp[1u] == 3);
-		ka::decode(tmp,result_minus.get_int());
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == 1);
-		BOOST_CHECK(sign_plus && !sign_minus);
+		t1.m_key.set_flavour(false);
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == false);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == false);
+		ka::decode(tmp,retval[0u].m_key.get_int());
+		BOOST_CHECK(tmp[0u] == 1);
+		BOOST_CHECK(tmp[1u] == 3);
+		ka::decode(tmp,retval[1u].m_key.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == 1);
 		// Multiplication that produces first multiplier zero, second negative, in the plus.
-		k1 = k_type({1,-1});
-		k2 = k_type({-1,-2});
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(sign_plus && !sign_minus);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		ka::decode(tmp,result_plus.get_int());
+		t1 = term_type{1,key_type({1,-1})};
+		t2 = term_type{1,key_type({-1,-2})};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 0);
-		BOOST_CHECK_EQUAL(tmp[1u],3);
-		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[1u] == 3);
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 2);
-		BOOST_CHECK_EQUAL(tmp[1u],1);
+		BOOST_CHECK(tmp[1u] == 1);
 		// Multiplication that produces first multiplier zero, second negative, in the minus.
-		k1 = k_type({1,-2});
-		k2 = k_type({1,-1});
-		k1.multiply(result_plus,result_minus,k2,sign_plus,sign_minus,vs1);
-		BOOST_CHECK(!sign_plus && sign_minus);
-		BOOST_CHECK(result_plus.get_flavour() == true);
-		BOOST_CHECK(result_minus.get_flavour() == true);
-		ka::decode(tmp,result_plus.get_int());
+		t1 = term_type{1,key_type({1,-2})};
+		t2 = term_type{1,key_type({1,-1})};
+		key_type::multiply(retval,t1,t2,vs1);
+		BOOST_CHECK(retval[0u].m_key.get_flavour() == true);
+		BOOST_CHECK(retval[1u].m_key.get_flavour() == true);
+		ka::decode(tmp,retval[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 2);
-		BOOST_CHECK_EQUAL(tmp[1u],-3);
-		ka::decode(tmp,result_minus.get_int());
+		BOOST_CHECK(tmp[1u] == -3);
+		ka::decode(tmp,retval[1u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 0);
-		BOOST_CHECK_EQUAL(tmp[1u],1);
+		BOOST_CHECK(tmp[1u] == 1);
 	}
 };
 

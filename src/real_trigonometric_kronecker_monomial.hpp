@@ -22,6 +22,7 @@
 #define PIRANHA_REAL_TRIGONOMETRIC_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -39,6 +40,7 @@
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
+#include "is_cf.hpp"
 #include "is_key.hpp"
 #include "kronecker_array.hpp"
 #include "math.hpp"
@@ -48,6 +50,7 @@
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "term.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -109,6 +112,8 @@ class real_trigonometric_kronecker_monomial
 	private:
 		typedef kronecker_array<value_type> ka;
 	public:
+		/// Arity of the multiply() method.
+		static const std::size_t multiply_arity = 2u;
 		/// Size type.
 		/**
 		 * Used to represent the number of variables in the monomial. Equivalent to the size type of
@@ -212,6 +217,11 @@ class real_trigonometric_kronecker_monomial
 			m_flavour = flavour;
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Enabler for multiplication.
+		template <typename Cf>
+		using multiply_enabler = typename std::enable_if<is_cf<Cf>::value &&
+			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+			is_divisible_in_place<Cf,int>::value && std::is_copy_assignable<Cf>::value && has_negate<Cf>::value,int>::type;
 #endif
 	public:
 		/// Default constructor.
@@ -614,37 +624,63 @@ class real_trigonometric_kronecker_monomial
 		{
 			return t_order(p,args);
 		}
-		/// Multiply monomial.
+		/// Multiply terms with a trigonometric monomial.
 		/**
-		 * The two monomials resulting from multiplying \p this by \p other
-		 * are computed by adding and subtracting the multipliers of \p this to the multipliers of \p other
-		 * according to the prosthaphaeresis formulas. After the multiplication, \p retval_plus will contain the monomial resulting
-		 * from the addition of the multipliers, \p retval_minus the monomial resulting from the subtraction of the mulipliers.
-		 * The flavours of the two output monomials will be \p true if the flavours of the operands are equal, \p false otherwise.
-		 * If the first nonzero multiplier of \p retval_plus (resp. \p retval_minus) is negative, then the sign of all multipliers will be
-		 * reversed and the value of \p sign_plus (resp. \p sign_minus) will be set to \p true; otherwise, the value of \p sign_plus (resp. \p sign_minus)
-		 * will be set to \p false.
+		 * \note
+		 * This method is enabled only if the following conditions hold:
+		 * - \p Cf satisfies piranha::is_cf,
+		 * - \p Cf is multipliable, yielding \p Cf as a result, and divisible in-place by \p int,
+		 * - \p Cf is copy-assignable and it satisfies piranha::has_negate.
 		 * 
-		 * @param[out] retval_plus monomial containing the sum of the multipliers of \p this and \p other.
-		 * @param[out] retval_minus monomial containing the difference of the multipliers of \p this and \p other.
-		 * @param[in] other multiplicand.
-		 * @param[out] sign_plus flag to signal a change in the sign of the multipliers in \p retval_plus.
-		 * @param[out] sign_minus flag to signal a change in the sign of the multipliers in \p retval_minus.
+		 * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric key.
+		 * The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
+		 *
+		 * @param[out] res result of the multiplication.
+		 * @param[in] t1 first argument.
+		 * @param[in] t2 second argument.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::kronecker_array::encode(),
 		 * - unpack(),
-		 * - piranha::static_vector::push_back().
+		 * - piranha::static_vector::push_back(),
+		 * - arithmetic operations and copy-assignment on the coefficient type,
+		 * - piranha::math::negate().
 		 */
-		void multiply(real_trigonometric_kronecker_monomial &retval_plus, real_trigonometric_kronecker_monomial &retval_minus,
-			const real_trigonometric_kronecker_monomial &other, bool &sign_plus, bool &sign_minus, const symbol_set &args) const
+		template <typename Cf, multiply_enabler<Cf> = 0>
+		static void multiply(std::array<term<Cf,real_trigonometric_kronecker_monomial>,multiply_arity> &res,
+			const term<Cf,real_trigonometric_kronecker_monomial> &t1, const term<Cf,real_trigonometric_kronecker_monomial> &t2,
+			const symbol_set &args)
 		{
-			sign_plus = false;
-			sign_minus = false;
+			// Coefficients first.
+			// NOTE: first divide by two here and then multiply, at least for series? Would reduce
+			// quadratically the number of coefficient divisions.
+			// Similarly, it might be worth to change the sign as needed before the multiplication.
+			// NOTE: and if we divide everything by two in the end instead? Might be better overall.
+			Cf res_cf(t1.m_cf * t2.m_cf);
+			res_cf /= 2;
+			res[0u].m_cf = res_cf;
+			res[1u].m_cf = std::move(res_cf);
+			const bool f1 = t1.m_key.get_flavour(), f2 = t2.m_key.get_flavour();
+			if (f1 && f2) {
+				// cos, cos: no change.
+			} else if (!f1 && !f2) {
+				// sin, sin: negate the plus.
+				math::negate(res[0u].m_cf);
+			} else if (!f1 && f2) {
+				// sin, cos: no change.
+			} else {
+				// cos, sin: negate the minus.
+				math::negate(res[1u].m_cf);
+			}
+			// Now the keys.
+			auto &retval_plus = res[0u].m_key;
+			auto &retval_minus = res[1u].m_key;
+			// Flags to signal if a sign change in the multipliers was needed as part of the canonicalization.
+			bool sign_plus = false, sign_minus = false;
 			const auto size = args.size();
-			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
+			const auto tmp1 = t1.m_key.unpack(args), tmp2 = t2.m_key.unpack(args);
 			v_type result_plus, result_minus;
 			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				result_plus.push_back(tmp1[i]);
@@ -663,9 +699,16 @@ class real_trigonometric_kronecker_monomial
 			const auto re_plus = ka::encode(result_plus), re_minus = ka::encode(result_minus);
 			retval_plus.m_value = re_plus;
 			retval_minus.m_value = re_minus;
-			const bool f = (get_flavour() == other.get_flavour());
+			const bool f = (t1.m_key.get_flavour() == t2.m_key.get_flavour());
 			retval_plus.m_flavour = f;
 			retval_minus.m_flavour = f;
+			// If multiplier sign was changed and the result is a sine, negate the coefficient.
+			if (sign_plus && !res[0u].m_key.get_flavour()) {
+				math::negate(res[0u].m_cf);
+			}
+			if (sign_minus && !res[1u].m_key.get_flavour()) {
+				math::negate(res[1u].m_cf);
+			}
 		}
 		/// Hash value.
 		/**
@@ -1151,6 +1194,9 @@ class real_trigonometric_kronecker_monomial
 		value_type	m_value;
 		bool		m_flavour;
 };
+
+template <typename T>
+const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 
 }
 
