@@ -1982,3 +1982,19 @@ BOOST_AUTO_TEST_CASE(series_is_identical_test)
 	BOOST_CHECK(x.is_identical(x2.trim()));
 	BOOST_CHECK(x2.trim().is_identical(x));
 }
+
+BOOST_AUTO_TEST_CASE(series_has_series_multiplier_test)
+{
+	typedef g_series_type<rational,int> p_type1;
+	BOOST_CHECK(series_has_multiplier<p_type1>::value);
+	BOOST_CHECK(series_has_multiplier<p_type1 &>::value);
+	BOOST_CHECK(series_has_multiplier<const p_type1 &>::value);
+	typedef g_series_type<short,int> p_type2;
+	BOOST_CHECK(!series_has_multiplier<p_type2>::value);
+	BOOST_CHECK(!series_has_multiplier<p_type2 const>::value);
+	BOOST_CHECK(!series_has_multiplier<p_type2 const &>::value);
+	typedef g_series_type3<double,mock_key> p_type3;
+	BOOST_CHECK(!series_has_multiplier<p_type3>::value);
+	BOOST_CHECK(!series_has_multiplier<p_type3 &>::value);
+	BOOST_CHECK(!series_has_multiplier<p_type3 &&>::value);
+}

@@ -223,6 +223,28 @@ const std::size_t series_recursion_index<T,typename std::enable_if<is_series<typ
 
 #endif
 
+/// Type trait to detect the availability of a series multiplier.
+/**
+ * This type trait will be \p true if a piranha::series_multiplier of \p Series can be constructed and used
+ * (as described in the piranha::series_multiplier documentation), \p false otherwise. The decay type of \p Series,
+ * which must satisfy piranha::is_series, is considered by this type trait.
+ */
+template <typename Series>
+class series_has_multiplier: detail::sfinae_types
+{
+		using Sd = typename std::decay<Series>::type;
+		PIRANHA_TT_CHECK(is_series,Sd);
+		template <typename T>
+		static auto test(const T &s) -> decltype(series_multiplier<T>(s,s)());
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = std::is_same<decltype(test(std::declval<Sd>())),Sd>::value;
+};
+
+template <typename Series>
+const bool series_has_multiplier<Series>::value;
+
 namespace detail
 {
 
