@@ -36,15 +36,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../src/base_term.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/polynomial_term.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
@@ -60,9 +59,9 @@ typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
-class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>
+class g_series_type: public series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>
 {
-		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
+		typedef series<Cf,monomial<Expo>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		template <typename Cf2>
@@ -86,10 +85,10 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 
 // This is essentially the same as above, just a different type.
 template <typename Cf, typename Expo>
-class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,Expo>>
+class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
 {
 	public:
-		typedef series<polynomial_term<Cf,Expo>,g_series_type2<Cf,Expo>> base;
+		typedef series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type2() = default;
 		g_series_type2(const g_series_type2 &) = default;
@@ -118,23 +117,9 @@ class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,E
 };
 
 template <typename Cf, typename Key>
-class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
+class g_series_type3: public series<Cf,Key,g_series_type3<Cf,Key>>
 {
-		typedef base_term<Cf,Key,g_term_type> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_term_type() = default;
-		g_term_type(const g_term_type &) = default;
-		g_term_type(g_term_type &&) = default;
-		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_term_type,base)
-};
-
-template <typename Cf, typename Key>
-class g_series_type3: public series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>>
-{
-		typedef series<g_term_type<Cf,Key>,g_series_type3<Cf,Key>> base;
+		typedef series<Cf,Key,g_series_type3<Cf,Key>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		template <typename Cf2>
@@ -319,7 +304,7 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 	// This originally corresponded to:
 	// math::pow(x,2)/2 + math::pow(y,2)/3
 	// An extra exponent was added to the only term of math::pow(y,2)/3.
-	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 3 0 2 0";
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 3 0 2 0";
 	ss.str(ba);
 	boost::archive::text_iarchive ia(ss);
 	BOOST_CHECK_THROW(ia >> tmp,std::invalid_argument);
@@ -329,7 +314,7 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 	// math::pow(x,2)/2 + math::pow(x,2)/3
 	// (y replaced with x wrt the original example).
 	std::stringstream ss;
-	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 2 2 0";
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 1 1 2 0 0 0 0 0 0 2 2 0 1 1 1 3 2 2 0";
 	ss.str(ba);
 	boost::archive::text_iarchive ia(ss);
 	ia >> tmp;
@@ -341,7 +326,7 @@ BOOST_AUTO_TEST_CASE(series_serialization_test)
 	// math::pow(x,2)/2 + math::pow(x,2)/3
 	// with the numerators of the fractions replaced by zero.
 	std::stringstream ss;
-	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 0 0 1 0 1 2 0 0 0 0 0 0 2 2 0 1 0 1 3 2 2 0";
+	const std::string ba = "22 serialization::archive 10 0 0 0 0 0 0 2 1 x 1 y 2 0 0 0 0 0 0 1 0 1 2 0 0 0 0 0 0 2 2 0 1 0 1 3 2 2 0";
 	ss.str(ba);
 	boost::archive::text_iarchive ia(ss);
 	ia >> tmp;
@@ -426,9 +411,9 @@ BOOST_AUTO_TEST_CASE(series_evaluate_test)
 }
 
 template <typename Expo>
-class g_series_type_nr: public series<polynomial_term<float,Expo>,g_series_type_nr<Expo>>
+class g_series_type_nr: public series<float,monomial<Expo>,g_series_type_nr<Expo>>
 {
-		typedef series<polynomial_term<float,Expo>,g_series_type_nr<Expo>> base;
+		typedef series<float,monomial<Expo>,g_series_type_nr<Expo>> base;
 	public:
 		g_series_type_nr() = default;
 		g_series_type_nr(const g_series_type_nr &) = default;
@@ -440,9 +425,9 @@ class g_series_type_nr: public series<polynomial_term<float,Expo>,g_series_type_
 };
 
 template <typename Expo>
-class g_series_type_nr2: public series<polynomial_term<short,Expo>,g_series_type_nr2<Expo>>
+class g_series_type_nr2: public series<short,monomial<Expo>,g_series_type_nr2<Expo>>
 {
-		typedef series<polynomial_term<short,Expo>,g_series_type_nr2<Expo>> base;
+		typedef series<short,monomial<Expo>,g_series_type_nr2<Expo>> base;
 	public:
 		template <typename Expo2>
 		using rebind = g_series_type_nr2<Expo2>;
@@ -456,9 +441,9 @@ class g_series_type_nr2: public series<polynomial_term<short,Expo>,g_series_type
 };
 
 template <typename Expo>
-class g_series_type_nr3: public series<polynomial_term<float,Expo>,g_series_type_nr3<Expo>>
+class g_series_type_nr3: public series<float,monomial<Expo>,g_series_type_nr3<Expo>>
 {
-		typedef series<polynomial_term<float,Expo>,g_series_type_nr3<Expo>> base;
+		typedef series<float,monomial<Expo>,g_series_type_nr3<Expo>> base;
 	public:
 		template <typename Expo2>
 		using rebind = void;

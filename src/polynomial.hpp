@@ -214,7 +214,7 @@ class polynomial:
 		template <typename T, typename Series>
 		using pow_ret_type = typename std::enable_if<
 			detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()))>::value,
-			decltype(std::declval<series<polynomial_term<Cf,Key>,polynomial<Cf,Key>> const &>().pow(std::declval<const T &>()))>::type;
+			decltype(std::declval<series<Cf,Key,polynomial<Cf,Key>> const &>().pow(std::declval<const T &>()))>::type;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Series rebind alias.
@@ -331,7 +331,7 @@ class polynomial:
 				retval.insert(term_type(std::move(cf),std::move(key)));
 				return retval;
 			}
-			return static_cast<series<polynomial_term<Cf,Key>,polynomial<Cf,Key>> const *>(this)->pow(x);
+			return static_cast<series<Cf,Key,polynomial<Cf,Key>> const *>(this)->pow(x);
 		}
 		/// Substitution.
 		/**

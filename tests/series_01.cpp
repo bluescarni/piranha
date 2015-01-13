@@ -45,7 +45,7 @@
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/polynomial_term.hpp"
+#include "../src/monomial.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
@@ -63,10 +63,10 @@ typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<unsigned,integer> expo_types;
 
 template <typename Cf, typename Expo>
-class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>
+class g_series_type: public series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>
 {
 	public:
-		typedef series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>> base;
+		typedef series<Cf,monomial<Expo>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
@@ -95,10 +95,10 @@ class g_series_type: public series<polynomial_term<Cf,Expo>,g_series_type<Cf,Exp
 };
 
 template <typename Cf, typename Expo>
-class g_series_type2: public series<polynomial_term<Cf,Expo>,g_series_type2<Cf,Expo>>
+class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
 {
 	public:
-		typedef series<polynomial_term<Cf,Expo>,g_series_type2<Cf,Expo>> base;
+		typedef series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type2() = default;
 		g_series_type2(const g_series_type2 &) = default;
@@ -140,7 +140,7 @@ struct debug_access<construction_tag>
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial_term<Cf,Expo> term_type;
+			typedef term<Cf,monomial<Expo>> term_type;
 			typedef typename term_type::key_type key_type;
 			typedef g_series_type<Cf,Expo> series_type;
 			symbol_set ed;
@@ -179,7 +179,7 @@ struct debug_access<construction_tag>
 			BOOST_CHECK(t.empty());
 			BOOST_CHECK_EQUAL(t.get_symbol_set().size(),0u);
 			// Generic construction.
-			typedef polynomial_term<long,Expo> term_type2;
+			typedef term<long,monomial<Expo>> term_type2;
 			typedef g_series_type<long,Expo> series_type2;
 			series_type2 other1;
 			other1.m_symbol_set.add("x");
@@ -314,7 +314,7 @@ class debug_access<insertion_tag>
 			template <typename Expo>
 			void operator()(const Expo &)
 			{
-				typedef polynomial_term<Cf,Expo> term_type;
+				typedef term<Cf,monomial<Expo>> term_type;
 				typedef typename term_type::key_type key_type;
 				typedef g_series_type<Cf,Expo> series_type;
 				symbol_set ed;
@@ -375,7 +375,7 @@ class debug_access<merge_terms_tag>
 			template <typename Expo>
 			void operator()(const Expo &)
 			{
-				typedef polynomial_term<Cf,Expo> term_type;
+				typedef term<Cf,monomial<Expo>> term_type;
 				typedef Cf value_type;
 				typedef typename term_type::key_type key_type;
 				typedef g_series_type<Cf,Expo> series_type;
@@ -494,7 +494,7 @@ class debug_access<merge_arguments_tag>
 			template <typename Expo>
 			void operator()(const Expo &)
 			{
-				typedef polynomial_term<Cf,Expo> term_type;
+				typedef term<Cf,monomial<Expo>> term_type;
 				typedef typename term_type::key_type key_type;
 				typedef g_series_type<Cf,Expo> series_type;
 				series_type s_derived;
@@ -693,7 +693,7 @@ struct stream_tester
 			oss << (p_type11{"x"} - 1);
 			BOOST_CHECK(oss.str() == "x-1" || oss.str() == "-1+x");
 			// Test wih less term output.
-			typedef polynomial<Cf,Expo> poly_type;
+			typedef polynomial<Cf,monomial<Expo>> poly_type;
 			settings::set_max_term_output(3u);
 			oss.str("");
 			oss << p_type11{};
@@ -1175,7 +1175,7 @@ struct print_tex_tester
 			(-p_type11{"x"} * p_type11{"y"}).print_tex(oss);
 			BOOST_CHECK(oss.str() == "-{x}{y}");
 			// Test wih little term output.
-			typedef polynomial<Cf,Expo> poly_type;
+			typedef polynomial<Cf,monomial<Expo>> poly_type;
 			settings::set_max_term_output(1u);
 			oss.str("");
 			(-3 * poly_type{"x"} + 1 + poly_type{"x"} * poly_type{"x"} + poly_type{"x"} * poly_type{"x"} * poly_type{"x"}).print_tex(oss);
