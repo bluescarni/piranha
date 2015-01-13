@@ -86,7 +86,8 @@ struct polynomial_tag {};
  * 
  * ## Type requirements ##
  * 
- * \p Cf must be suitable for use in piranha::term, \p Key must be an instance of either piranha::monomial or piranha::kronecker_monomial.
+ * \p Cf must be suitable for use in piranha::series as first template argument,
+ * \p Key must be an instance of either piranha::monomial or piranha::kronecker_monomial.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -98,7 +99,7 @@ struct polynomial_tag {};
  *
  * ## Serialization ##
  *
- * This class supports serialization if the underlying term type does.
+ * This class supports serialization if the underlying coefficient and key types do.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
