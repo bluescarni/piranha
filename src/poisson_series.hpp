@@ -34,14 +34,15 @@
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
-#include "poisson_series_term.hpp"
 #include "power_series.hpp"
+#include "real_trigonometric_kronecker_monomial.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
+#include "term.hpp"
 #include "trigonometric_series.hpp"
 #include "type_traits.hpp"
 
@@ -50,27 +51,27 @@ namespace piranha
 
 /// Poisson series class.
 /**
- * This class represents multivariate Poisson series as collections of multivariate Poisson series terms
- * (represented by the piranha::poisson_series_term class). The coefficient
- * type \p Cf represents the ring over which the Poisson series is defined.
+ * This class represents multivariate Poisson series as collections of multivariate Poisson series terms,
+ * in which the trigonometric monomials are represented by piranha::rtk_monomial.
+ * \p Cf represents the ring over which the Poisson series is defined.
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
  * ## Type requirements ##
  * 
- * \p Cf must be suitable for use in piranha::poisson_series_term.
+ * \p Cf must be suitable for use in piranha::series as first template argument.
  * 
  * ## Exception safety guarantee ##
- * 
- * This class provides the same guarantee as piranha::power_series.
- * 
+ *
+ * This class provides the same guarantee as the base series type it derives from.
+ *
  * ## Move semantics ##
- * 
- * Move semantics is equivalent to piranha::power_series's move semantics.
+ *
+ * Move semantics is equivalent to the move semantics of the base series type it derives from.
  *
  * ## Serialization ##
  *
- * This class supports serialization if the underlying term type does.
+ * This class supports serialization if the underlying coefficient type does.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
@@ -82,9 +83,9 @@ namespace piranha
 //   we will need a safe cast).
 template <typename Cf>
 class poisson_series:
-	public power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
+	public power_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
 {
-		typedef power_series<t_substitutable_series<trigonometric_series<series<poisson_series_term<Cf>,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>> base;
+		typedef power_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>> base;
 		// TMP for enabling sin and cos overrides.
 		// Detect if T's coefficient is a polynomial whose coefficient has integral cast.
 		template <typename T, typename = void>
@@ -124,7 +125,7 @@ class poisson_series:
 			if (this->is_single_coefficient() && !this->empty()) {
 				try {
 					// Shortcuts.
-					typedef poisson_series_term<Cf> term_type;
+					typedef term<Cf,rtk_monomial> term_type;
 					typedef typename term_type::key_type key_type;
 					typedef typename key_type::value_type value_type;
 					// Try to get the integral combination.
@@ -176,9 +177,9 @@ class poisson_series:
 			// NOTE: here we cast back to the base class, and then we have to move-construct the output
 			// Poisson series as the math::cos functor will produce an output of the type of the base class.
 			if (IsCos) {
-				return poisson_series{math::cos(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))};
+				return poisson_series{math::cos(*static_cast<series<Cf,rtk_monomial,poisson_series<Cf>> const *>(this))};
 			}
-			return poisson_series{math::sin(*static_cast<series<poisson_series_term<Cf>,poisson_series<Cf>> const *>(this))};
+			return poisson_series{math::sin(*static_cast<series<Cf,rtk_monomial,poisson_series<Cf>> const *>(this))};
 		}
 		template <bool IsCos, typename T, typename std::enable_if<!cf_has_sin_cos<T>::value,int>::type = 0>
 		poisson_series sin_cos_cf_impl() const
