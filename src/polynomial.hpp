@@ -79,8 +79,8 @@ struct polynomial_tag {};
 
 /// Polynomial class.
 /**
- * This class represents multivariate polynomials as collections of multivariate polynomial terms. The coefficient
- * type \p Cf represents the ring over which the polynomial is defined, while \p Key represents the monomial type.
+ * This class represents multivariate polynomials as collections of multivariate polynomial terms.
+ * \p Cf represents the ring over which the polynomial is defined, while \p Key represents the monomial type.
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
