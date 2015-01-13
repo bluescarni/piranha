@@ -1446,8 +1446,8 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 					fast_functor_type f(&t1_ptr,1u,start,size,retval);
 					for (index_type i = 0u; i < size; ++i) {
 						f(0u,i);
-						piranha_assert(retval.m_container._bucket_from_hash(f.m_tmp.hash()) >= a &&
-							retval.m_container._bucket_from_hash(f.m_tmp.hash()) < b);
+						piranha_assert(retval.m_container._bucket_from_hash(f.m_tmp[0u].hash()) >= a &&
+							retval.m_container._bucket_from_hash(f.m_tmp[0u].hash()) < b);
 						f.insert();
 					}
 					piranha_assert((n_mults[static_cast<vi_size_type>(idx)] += size,true));
@@ -1572,7 +1572,7 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 			{
 				using int_type = decltype(this->m_ptr1[i]->m_key.get_int());
 				piranha_assert(i < this->m_s1 && j < this->m_s2);
-				this->m_tmp.m_key.set_int(static_cast<int_type>(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int()));
+				this->m_tmp[0u].m_key.set_int(static_cast<int_type>(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int()));
 				m_cached_i = i;
 				m_cached_j = j;
 			}
@@ -1581,7 +1581,7 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 				// NOTE: be very careful: every kind of optimization in here must involve only the key part,
 				// as the coefficient part is still generic.
 				auto &container = this->m_retval.m_container;
-				auto &tmp = this->m_tmp;
+				auto &tmp = this->m_tmp[0u];
 				const auto &cf1 = this->m_ptr1[m_cached_i]->m_cf;
 				const auto &cf2 = this->m_ptr2[m_cached_j]->m_cf;
 				const auto &args = this->m_retval.m_symbol_set;
