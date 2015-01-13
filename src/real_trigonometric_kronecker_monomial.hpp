@@ -1198,6 +1198,9 @@ class real_trigonometric_kronecker_monomial
 template <typename T>
 const std::size_t real_trigonometric_kronecker_monomial<T>::multiply_arity;
 
+/// Alias for piranha::real_trigonometric_kronecker_monomial with default type.
+using rtk_monomial = real_trigonometric_kronecker_monomial<>;
+
 }
 
 namespace std
