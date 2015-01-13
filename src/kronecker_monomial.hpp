@@ -22,6 +22,7 @@
 #define PIRANHA_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
@@ -40,6 +41,7 @@
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
+#include "is_cf.hpp"
 #include "is_key.hpp"
 #include "kronecker_array.hpp"
 #include "math.hpp"
@@ -50,6 +52,7 @@
 #include "static_vector.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "term.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -137,8 +140,14 @@ class kronecker_monomial
 		template <typename Iterator>
 		using it_ctor_enabler = typename std::enable_if<is_input_iterator<Iterator>::value &&
 			has_safe_cast<value_type,decltype(*std::declval<Iterator &>())>::value,int>::type;
+		// Enabler for multiply().
+		template <typename Cf>
+		using multiply_enabler = typename std::enable_if<std::is_same<Cf,decltype(std::declval<const Cf &>() * std::declval<const Cf &>())>::value &&
+			is_cf<Cf>::value,int>::type;
 #endif
 	public:
+		/// Arity of the multiply() method.
+		static const std::size_t multiply_arity = 1u;
 		/// Vector type used for temporary packing/unpacking.
 		typedef static_vector<value_type,max_size> v_type;
 		/// Default constructor.
@@ -410,30 +419,45 @@ class kronecker_monomial
 		{
 			return degree(p,args);
 		}
-		/// Multiply monomial.
+		/// Multiply terms with a Kronecker monomial key.
 		/**
-		 * The resulting monomial is computed by adding the exponents of \p this to the exponents of \p other.
-		 * 
-		 * @param[out] retval result of multiplying \p this by \p other.
-		 * @param[in] other multiplicand.
-		 * @param[in] args reference set of piranha::symbol.
-		 * 
+		 * \note
+		 * This method is enabled only if \p Cf satisfies piranha::is_cf and it is multipliable, yielding a result
+		 * of type \p Cf.
+		 *
+		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
+		 * offers the basic exception safety guarantee.
+		 *
+		 * @param[out] res return value.
+		 * @param[in] t1 first argument.
+		 * @param[in] t2 second argument.
+		 * @param[in] args reference set of arguments.
+		 *
 		 * @throws std::overflow_error if the computation of the result overflows type \p value_type.
 		 * @throws unspecified any exception thrown by:
+		 * - the multiplication of the coefficients,
 		 * - piranha::kronecker_array::encode(),
 		 * - unpack(),
 		 * - piranha::static_vector::push_back().
 		 */
-		void multiply(kronecker_monomial &retval, const kronecker_monomial &other, const symbol_set &args) const
+		template <typename Cf, multiply_enabler<Cf> = 0>
+		static void multiply(std::array<term<Cf,kronecker_monomial>,multiply_arity> &res, const term<Cf,kronecker_monomial> &t1,
+			const term<Cf,kronecker_monomial> &t2, const symbol_set &args)
 		{
+			// NOTE: this method is actually never called as the specialised Kronecker polynomial
+			// multiplier does not use it. It is here for completeness and because the series multiplier
+			// for k polynomial currently inherits from the base multiplier, which needs this.
+			// Coefficient first.
+			res[0u].m_cf = t1.m_cf * t2.m_cf;
+			// Now the key.
 			const auto size = args.size();
-			const auto tmp1 = unpack(args), tmp2 = other.unpack(args);
+			const auto tmp1 = t1.m_key.unpack(args), tmp2 = t2.m_key.unpack(args);
 			v_type result;
 			for (typename v_type::size_type i = 0u; i < size; ++i) {
 				result.push_back(tmp1[i]);
 				detail::km_safe_adder(result[i],tmp2[i]);
 			}
-			retval.m_value = ka::encode(result);
+			res[0u].m_key.m_value = ka::encode(result);
 		}
 		/// Hash value.
 		/**

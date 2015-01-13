@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <array>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
@@ -41,6 +42,8 @@
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/is_key.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -49,6 +52,7 @@
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/term.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -308,25 +312,39 @@ struct multiply_tester
 	{
 		typedef kronecker_monomial<T> k_type;
 		typedef kronecker_array<T> ka;
-		k_type k1, k2, result;
+		using term_type = term<integer,k_type>;
+		BOOST_CHECK((key_is_multipliable<int,k_type>::value));
+		BOOST_CHECK((key_is_multipliable<integer,k_type>::value));
+		BOOST_CHECK((!key_is_multipliable<short,k_type>::value));
+		BOOST_CHECK(is_key<k_type>::value);
+		term_type t1, t2;
+		std::array<term_type,1u> result;
 		symbol_set vs1;
-		k1.multiply(result,k2,vs1);
-		BOOST_CHECK(result.get_int() == 0);
-		k1 = k_type({0});
-		k2 = k_type({0});
+		k_type::multiply(result,t1,t2,vs1);
+		BOOST_CHECK(result[0u].m_cf == 0);
+		BOOST_CHECK(result[0u].m_key.get_int() == 0);
+		t1.m_cf = 2;
+		t2.m_cf = 3;
+		t1.m_key = k_type({0});
+		t2.m_key = k_type({0});
 		vs1.add(symbol("a"));
-		k1.multiply(result,k2,vs1);
-		BOOST_CHECK(result.get_int() == 0);
-		k1 = k_type({1});
-		k2 = k_type({2});
-		k1.multiply(result,k2,vs1);
-		BOOST_CHECK(result.get_int() == 3);
-		k1 = k_type({1,-1});
-		k2 = k_type({2,0});
+		k_type::multiply(result,t1,t2,vs1);
+		BOOST_CHECK(result[0u].m_cf == 6);
+		BOOST_CHECK(result[0u].m_key.get_int() == 0);
+		t1.m_key = k_type({1});
+		t2.m_key = k_type({2});
+		k_type::multiply(result,t1,t2,vs1);
+		BOOST_CHECK(result[0u].m_cf == 6);
+		BOOST_CHECK(result[0u].m_key.get_int() == 3);
+		t1.m_cf = 2;
+		t2.m_cf = -4;
+		t1.m_key = k_type({1,-1});
+		t2.m_key = k_type({2,0});
 		vs1.add(symbol("b"));
-		k1.multiply(result,k2,vs1);
+		k_type::multiply(result,t1,t2,vs1);
+		BOOST_CHECK(result[0u].m_cf == -8);
 		std::vector<int> tmp(2u);
-		ka::decode(tmp,result.get_int());
+		ka::decode(tmp,result[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
 	}
