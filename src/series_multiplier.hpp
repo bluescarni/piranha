@@ -35,7 +35,6 @@
 #include <random>
 #include <stdexcept>
 #include <thread>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -45,6 +44,7 @@
 #include "detail/series_fwd.hpp"
 #include "detail/series_multiplier_fwd.hpp"
 #include "exceptions.hpp"
+#include "key_is_multipliable.hpp"
 #include "mp_integer.hpp"
 #include "runtime_info.hpp"
 #include "safe_cast.hpp"
@@ -77,23 +77,23 @@ namespace piranha
  * This class provides the strong exception safety guarantee.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
- * \todo series multiplier concept?
- * \todo in the heuristic to decide single vs multithread we should take into account if coefficient is series or not, and maybe provide
- * means via template specialisation to customise the behaviour for different types of coefficients -> probably the easiest thing is to benchmark
- * the thread overhead in the simplest case (e.g., polynomial with double precision cf and univariate) and use that as heuristic. Might not be optimal
- * but should avoid excessive overhead practically always (which probably is what we want).
+ */
+/*
+ * \todo we need a user-configurable parameter to determine when to use multiple threads.
  * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
  * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
  * operations during multiplication.
  * \todo possibly we could adopt some of the optimizations adopted, e.g., in the Kronecker multiplier. For instance, have a fast mode for the multiplier
  * to kick in when doing the full computation in order to avoid some branching in the insertion routines. The code though is already quite complex,
  * so better be very sure it is worth before embarking in this.
- */
+*/
 template <typename Series, typename Enable = void>
 class series_multiplier
 {
 		PIRANHA_TT_CHECK(is_series,Series);
+		// Enabler for the call operator.
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type, typename T::term_type::key_type>::value,int>::type;
 	public:
 		/// Constructor.
 		/**
@@ -133,12 +133,16 @@ class series_multiplier
 		series_multiplier &operator=(series_multiplier &&) = delete;
 		/// Compute result of series multiplication.
 		/**
+		 * \note
+		 * This operator is enabled only if the key type of \p Series satisfies piranha::key_is_multipliable.
+		 *
 		 * This method will call execute() using default_functor as multiplication functor.
 		 * 
 		 * @return the result of multiplying the two series.
 		 * 
 		 * @throws unspecified any exception thrown by execute().
 		 */
+		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
 		{
 			return execute<default_functor>();
@@ -285,12 +289,13 @@ class series_multiplier
 		}
 		/// Default multiplication functor.
 		/**
-		 * This multiplication functor uses the <tt>multiply()</tt> method of \p term_type1 to compute the result of
+		 * This multiplication functor uses the <tt>multiply()</tt> method of the key to compute the result of
 		 * term-by-term multiplications, and employs the piranha::series::insert() method to accumulate the terms
 		 * in the return value.
 		 */
 		class default_functor
 		{
+				using mult_res_type = std::array<typename Series::term_type,Series::term_type::key_type::multiply_arity>;
 			public:
 				/// Alias for the term type of \p Series.
 				using term_type = typename Series::term_type;
@@ -299,35 +304,6 @@ class series_multiplier
 				 * This unsigned type will be used to represent sizes throughout the calculations.
 				 */
 				using size_type = typename std::vector<term_type const *>::size_type;
-			private:
-				// Functor for the insertion of the terms.
-				template <typename Tuple, std::size_t N = 0u, typename Enable2 = void>
-				struct inserter
-				{
-					static_assert(N < std::numeric_limits<std::size_t>::max(),
-							"Overflow error.");
-					static void run(const default_functor &f, Tuple &t)
-					{
-						f.m_retval.insert(std::get<N>(t));
-						inserter<Tuple,N + 1u>::run(f,t);
-					}
-				};
-				template <typename Tuple, std::size_t N>
-				struct inserter<Tuple,N,typename std::enable_if<N == std::tuple_size<Tuple>::value>::type>
-				{
-				       static void run(const default_functor &, Tuple &)
-				       {}
-				};
-				template <typename... Args>
-				void insert_impl(std::tuple<Args...> &mult_res) const
-				{
-					inserter<std::tuple<Args...>>::run(*this,mult_res);
-				}
-				void insert_impl(typename Series::term_type &mult_res) const
-				{
-					m_retval.insert(mult_res);
-				}
-			public:
 				/// Constructor.
 				/**
 				 * The functor is constructed from arrays of pointers to the input series terms on which the functor
@@ -353,12 +329,13 @@ class series_multiplier
 				 * @param[in] i index of the first term operand.
 				 * @param[in] j index of the second term operand.
 				 * 
-				 * @throws unspecified any exception thrown by the <tt>multiply()</tt> method of the first term type.
+				 * @throws unspecified any exception thrown by the <tt>multiply()</tt> method of the key type of the series.
 				 */
 				void operator()(const size_type &i, const size_type &j) const
 				{
+					using key_type = typename Series::term_type::key_type;
 					piranha_assert(i < m_s1 && j < m_s2);
-					(m_ptr1[i])->multiply(m_tmp,*(m_ptr2[j]),m_retval.m_symbol_set);
+					key_type::multiply(m_tmp,*(m_ptr1[i]),*(m_ptr2[j]),m_retval.m_symbol_set);
 				}
 				/// Term insertion.
 				/**
@@ -368,23 +345,25 @@ class series_multiplier
 				 */
 				void insert() const
 				{
-					insert_impl(m_tmp);
+					for (std::size_t i = 0u; i < Series::term_type::key_type::multiply_arity; ++i) {
+						m_retval.insert(m_tmp[i]);
+					}
 				}
 				/// Pointer to the first array of pointers.
-				term_type const **					m_ptr1;
+				term_type const **	m_ptr1;
 				/// Size of the first array of pointers.
-				const size_type						m_s1;
+				const size_type		m_s1;
 				/// Pointer to the second array of pointers.
-				term_type const **					m_ptr2;
+				term_type const **	m_ptr2;
 				/// Size of the second array of pointers.
-				const size_type						m_s2;
+				const size_type		m_s2;
 				/// Reference to the return series object used during construction.
-				Series							&m_retval;
+				Series			&m_retval;
 				/// Object holding the result of term-by-term multiplications.
 				/**
-				 * The type of this object is either \p term_type1 or a tuple of \p term_type1.
+				 * This object is an \p std::array of \p term_type.
 				 */
-				mutable typename term_type::multiplication_result_type	m_tmp;
+				mutable mult_res_type	m_tmp;
 		};
 		/// Block-by-block multiplication.
 		/**
@@ -523,17 +502,18 @@ class series_multiplier
 					// Perform multiplication and check if it produces a new term.
 					f(*it1,*it2);
 					f.insert();
+					constexpr std::size_t result_size = Series::term_type::key_type::multiply_arity;
 					// Check for unlikely overflow when increasing count.
-					if (unlikely(result_size(f.m_tmp) > std::numeric_limits<size_type>::max() ||
-						count > std::numeric_limits<size_type>::max() - result_size(f.m_tmp)))
+					if (unlikely(result_size > std::numeric_limits<size_type>::max() ||
+						count > std::numeric_limits<size_type>::max() - result_size))
 					{
 						piranha_throw(std::overflow_error,"overflow error");
 					}
-					if (retval.size() != count + result_size(f.m_tmp)) {
+					if (result_size != count + result_size) {
 						break;
 					}
 					// Increase cycle variables.
-					count += result_size(f.m_tmp);
+					count += result_size;
 					++it1;
 					++it2;
 				}
@@ -738,17 +718,6 @@ class series_multiplier
 				}
 			}
 			return std::make_pair(false,typename Series::size_type(0u));
-		}
-		// Size of the result of term multiplication.
-		template <typename T>
-		static std::size_t result_size(const T &)
-		{
-			return 1;
-		}
-		template <typename... T>
-		static std::size_t result_size(const std::tuple<T...> &)
-		{
-			return std::tuple_size<std::tuple<T...>>::value;
 		}
 	protected:
 		/// Const pointer to the first series operand.

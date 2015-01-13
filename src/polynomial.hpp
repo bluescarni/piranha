@@ -52,8 +52,8 @@
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
+#include "monomial.hpp"
 #include "mp_integer.hpp"
-#include "polynomial_term.hpp"
 #include "power_series.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
@@ -79,40 +79,22 @@ struct polynomial_tag {};
 
 /// Polynomial class.
 /**
- * This class represents multivariate polynomials as collections of multivariate polynomial terms
- * (represented by the piranha::polynomial_term class). The coefficient
- * type \p Cf represents the ring over which the polynomial is defined, while \p Expo and \p S are used
- * to represent the exponent type and representation in the same way as explained in the documentation of
- * piranha::polynomial_term.
- *
- * Examples:
- @code
- polynomial<double,int>
- @endcode
- * is a multivariate polynomial with double-precision coefficients and \p int exponents.
- @code
- polynomial<double,short,std::integral_constant<std::size_t,5>>
- @endcode
- * is a multivariate polynomial with double-precision coefficients and \p short exponents, up to 5 of which
- * will be stored in static storage.
- @code
- polynomial<double,kronecker_monomial<>>
- @endcode
- * is a multivariate polynomial with double-precision coefficients and integral exponents packed into a piranha::kronecker_monomial.
+ * This class represents multivariate polynomials as collections of multivariate polynomial terms. The coefficient
+ * type \p Cf represents the ring over which the polynomial is defined, while \p Key represents the monomial type.
  * 
  * This class satisfies the piranha::is_series type trait.
  * 
  * ## Type requirements ##
  * 
- * \p Cf, \p Expo and \p S must be suitable for use in piranha::polynomial_term.
+ * \p Cf must be suitable for use in piranha::term, \p Key must be an instance of either piranha::monomial or piranha::kronecker_monomial.
  * 
  * ## Exception safety guarantee ##
  * 
- * This class provides the same guarantee as piranha::power_series.
+ * This class provides the same guarantee as the base series type it derives from.
  * 
  * ## Move semantics ##
  * 
- * Move semantics is equivalent to piranha::power_series' move semantics.
+ * Move semantics is equivalent to the move semantics of the base series type it derives from.
  *
  * ## Serialization ##
  *
@@ -123,13 +105,11 @@ struct polynomial_tag {};
 /* TODO:
  * - here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
  *   This is useful to simplify the notation, and needs not to be done for lower level methods in keys;
- * - change the way the key is selected;
- * - once the above is done, remember to fix the rebind alias.
  */
-template <typename Cf, typename Expo, typename S = std::integral_constant<std::size_t,0u>>
+template <typename Cf, typename Key>
 class polynomial:
-	public power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
-	polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>,polynomial<Cf,Expo,S>>,detail::polynomial_tag
+	public power_series<trigonometric_series<t_substitutable_series<series<Cf,Key,
+	polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>,detail::polynomial_tag
 {
 		// Make friend with debug class.
 		template <typename T>
@@ -137,8 +117,8 @@ class polynomial:
 		// Make friend with Poisson series.
 		template <typename T>
 		friend class poisson_series;
-		using base = power_series<trigonometric_series<t_substitutable_series<series<polynomial_term<Cf,Expo,S>,
-			polynomial<Cf,Expo,S>>,polynomial<Cf,Expo,S>>>,polynomial<Cf,Expo,S>>;
+		using base = power_series<trigonometric_series<t_substitutable_series<series<Cf,Key,
+			polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -234,12 +214,12 @@ class polynomial:
 		template <typename T, typename Series>
 		using pow_ret_type = typename std::enable_if<
 			detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()))>::value,
-			decltype(std::declval<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const &>().pow(std::declval<const T &>()))>::type;
+			decltype(std::declval<series<polynomial_term<Cf,Key>,polynomial<Cf,Key>> const &>().pow(std::declval<const T &>()))>::type;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
-		using rebind = polynomial<Cf2,Expo,S>;
+		using rebind = polynomial<Cf2,Key>;
 		/// Defaulted default constructor.
 		/**
 		 * Will construct a polynomial with zero terms.
@@ -351,7 +331,7 @@ class polynomial:
 				retval.insert(term_type(std::move(cf),std::move(key)));
 				return retval;
 			}
-			return static_cast<series<polynomial_term<Cf,Expo,S>,polynomial<Cf,Expo,S>> const *>(this)->pow(x);
+			return static_cast<series<polynomial_term<Cf,Key>,polynomial<Cf,Key>> const *>(this)->pow(x);
 		}
 		/// Substitution.
 		/**

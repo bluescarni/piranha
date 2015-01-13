@@ -42,7 +42,6 @@
 #include <utility>
 #include <vector>
 
-#include "base_term.hpp"
 #include "config.hpp"
 #include "convert_to.hpp"
 #include "debug_access.hpp"
@@ -62,6 +61,7 @@
 #include "settings.hpp"
 #include "symbol_set.hpp"
 #include "symbol.hpp"
+#include "term.hpp"
 #include "tracing.hpp"
 #include "type_traits.hpp"
 
@@ -1079,8 +1079,8 @@ class series_operators
  * 
  * ## Type requirements ##
  * 
- * - \p Term must satisfy piranha::is_term.
- * - \p Derived must derive from piranha::series of \p Term and \p Derived.
+ * - \p Cf and \p Key must be suitable for use in piranha::term.
+ * - \p Derived must derive from piranha::series of \p Cf, \p Key and \p Derived.
  * - \p Derived must satisfy piranha::is_series.
  * - \p Derived must satisfy piranha::is_container_element.
  * 
@@ -1104,20 +1104,18 @@ class series_operators
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
  * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
- * \todo probably we can eliminate the need for the term_type typedef, and get the term type from the container as needed.
  * TODO new operators:
  * - test with mock_cfs that are not addable to scalars.
  */
-template <typename Term, typename Derived>
+template <typename Cf, typename Key, typename Derived>
 class series: detail::series_tag, series_operators
 {
-		PIRANHA_TT_CHECK(is_term,Term);
 	public:
 		/// Alias for term type.
-		typedef Term term_type;
+		typedef term<Cf,Key> term_type;
 	private:
 		// Make friend with all series.
-		template <typename, typename>
+		template <typename, typename, typename>
 		friend class series;
 		// Make friend with debugging class.
 		template <typename>
@@ -1135,7 +1133,7 @@ class series: detail::series_tag, series_operators
 		friend std::pair<typename Term2::cf_type,Derived2> detail::pair_from_term(const symbol_set &, const Term2 &);
 	protected:
 		/// Container type for terms.
-		typedef hash_set<term_type,detail::term_hasher<Term>> container_type;
+		using container_type = hash_set<term_type,detail::term_hasher<term_type>>;
 	private:
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
@@ -1237,7 +1235,7 @@ class series: detail::series_tag, series_operators
 			}
 		}
 		template <typename T>
-		using insert_enabler = typename std::enable_if<std::is_same<Term,typename std::decay<T>::type>::value,int>::type;
+		using insert_enabler = typename std::enable_if<std::is_same<term_type,typename std::decay<T>::type>::value,int>::type;
 		// Terms merging
 		// =============
 		// NOTE: ideas to improve the algorithm:
@@ -1253,7 +1251,7 @@ class series: detail::series_tag, series_operators
 				// If the two series are the same object, we need to make a copy.
 				// NOTE: here we are making sure we are doing a real deep copy (as opposed, say, to a move,
 				// which could happen if we used std::forward.).
-				merge_terms_impl1<Sign>(series<Term,Derived>(static_cast<const series<Term,Derived> &>(s)));
+				merge_terms_impl1<Sign>(series<Cf,Key,Derived>(static_cast<const series<Cf,Key,Derived> &>(s)));
 			} else {
 				merge_terms_impl1<Sign>(std::forward<T>(s));
 			}
@@ -1347,7 +1345,7 @@ class series: detail::series_tag, series_operators
 		void merge_terms(T &&s,
 			typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type * = nullptr)
 		{
-			static_assert(std::is_base_of<series<Term,Derived>,typename std::decay<T>::type>::value,"Type error.");
+			static_assert(std::is_base_of<series<Cf,Key,Derived>,typename std::decay<T>::type>::value,"Type error.");
 			merge_terms_impl0<Sign>(std::forward<T>(s));
 		}
 		// Generic construction
@@ -1596,12 +1594,12 @@ class series: detail::series_tag, series_operators
 			return s;
 		}
 		// Metaprogramming bits for partial derivative.
-		template <typename Cf>
-		using cf_diff_type = decltype(math::partial(std::declval<const Cf &>(),std::string()));
+		template <typename Cf2>
+		using cf_diff_type = decltype(math::partial(std::declval<const Cf2 &>(),std::string()));
 		// NOTE: decltype on a member is the type of that member:
 		// http://thbecker.net/articles/auto_and_decltype/section_06.html
-		template <typename Key>
-		using key_diff_type = decltype(std::declval<const Key &>().partial(std::declval<const symbol_set::positions &>(),
+		template <typename Key2>
+		using key_diff_type = decltype(std::declval<const Key2 &>().partial(std::declval<const symbol_set::positions &>(),
 			std::declval<const symbol_set &>()).first);
 		// Shortcuts to get cf/key from series.
 		template <typename Series>
@@ -1888,7 +1886,7 @@ class series: detail::series_tag, series_operators
 		/// Insert term.
 		/**
 		 * \note
-		 * This method is enabled only if the decay type of \p T is \p Term.
+		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * This method will insert \p term into the series using internally piranha::hash_set::insert.
 		 * 
@@ -1927,7 +1925,7 @@ class series: detail::series_tag, series_operators
 		/// Insert generic term with <tt>Sign = true</tt>.
 		/**
 		 * \note
-		 * This method is enabled only if the decay type of \p T is \p Term.
+		 * This method is enabled only if the decay type of \p T is piranha::series::term_type.
 		 *
 		 * Convenience wrapper for the generic insert() method, with \p Sign set to \p true.
 		 * 
@@ -2554,11 +2552,11 @@ class series: detail::series_tag, series_operators
 
 };
 
-template <typename Term, typename Derived>
-std::mutex series<Term,Derived>::s_cp_mutex;
+template <typename Cf, typename Key, typename Derived>
+std::mutex series<Cf,Key,Derived>::s_cp_mutex;
 
-template <typename Term, typename Derived>
-std::mutex series<Term,Derived>::s_pow_mutex;
+template <typename Cf, typename Key, typename Derived>
+std::mutex series<Cf,Key,Derived>::s_pow_mutex;
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**

@@ -33,7 +33,7 @@ struct series_tag {};
 }
 
 // Forward-declaration of series.
-template <typename, typename>
+template <typename, typename, typename>
 class series;
 
 // Fwd declaration of type trait.

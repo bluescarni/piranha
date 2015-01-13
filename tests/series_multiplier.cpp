@@ -34,9 +34,9 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/polynomial_term.hpp"
 #include "../src/power_series.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
@@ -45,11 +45,11 @@
 
 using namespace piranha;
 
-template <typename Cf, typename Expo>
+template <typename Cf, typename Key>
 class polynomial:
-	public power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>>
+	public power_series<series<Cf,Key,polynomial<Cf,Key>>,polynomial<Cf,Key>>
 {
-		typedef power_series<series<polynomial_term<Cf,Expo>,polynomial<Cf,Expo>>,polynomial<Cf,Expo>> base;
+		typedef power_series<series<Cf,Key,polynomial<Cf,Key>>,polynomial<Cf,Key>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		polynomial() = default;
@@ -57,11 +57,12 @@ class polynomial:
 		polynomial(polynomial &&) = default;
 		explicit polynomial(const char *name):base()
 		{
+			using expo_type = typename Key::value_type;
 			typedef typename base::term_type term_type;
 			// Insert the symbol.
 			this->m_symbol_set.add(name);
 			// Construct and insert the term.
-			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+			this->insert(term_type(Cf(1),typename term_type::key_type{expo_type(1)}));
 		}
 		polynomial &operator=(const polynomial &) = default;
 		polynomial &operator=(polynomial &&) = default;
@@ -69,9 +70,9 @@ class polynomial:
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 };
 
-typedef polynomial<double,int> p_type1;
-typedef polynomial<integer,int> p_type2;
-typedef polynomial<rational,int> p_type3;
+typedef polynomial<double,monomial<int>> p_type1;
+typedef polynomial<integer,monomial<int>> p_type2;
+typedef polynomial<rational,monomial<int>> p_type3;
 
 typedef boost::mpl::vector<p_type1,p_type2,p_type3> p_types;
 
