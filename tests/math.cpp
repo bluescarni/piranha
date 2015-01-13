@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	BOOST_CHECK(has_pbracket<double>::value);
 	BOOST_CHECK(has_pbracket<long double>::value);
 	BOOST_CHECK(!has_pbracket<std::string>::value);
-	typedef polynomial<rational,int> p_type;
+	typedef polynomial<rational,monomial<int>> p_type;
 	BOOST_CHECK(has_pbracket<p_type>::value);
 	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},std::vector<std::string>{},std::vector<std::string>{}),p_type(0));
 	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p"},std::vector<std::string>{}),std::invalid_argument);
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	BOOST_CHECK_THROW(math::pbracket(p_type{},p_type{},{"p","q"},{"q","q"}),std::invalid_argument);
 	BOOST_CHECK_EQUAL(math::pbracket(p_type{},p_type{},{"x","y"},{"a","b"}),p_type(0));
 	// Pendulum Hamiltonian.
-	typedef poisson_series<polynomial<rational,int>> ps_type;
+	typedef poisson_series<polynomial<rational,monomial<int>>> ps_type;
 	BOOST_CHECK(has_pbracket<ps_type>::value);
 	auto m = ps_type{"m"}, p = ps_type{"p"}, l = ps_type{"l"}, g = ps_type{"g"}, th = ps_type{"theta"};
 	auto H_p = p*p * (2*m*l*l).pow(-1) + m*g*l*math::cos(th);
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(math_t_subs_test)
 
 BOOST_AUTO_TEST_CASE(math_canonical_test)
 {
-	typedef polynomial<rational,short> p_type1;
+	typedef polynomial<rational,monomial<short>> p_type1;
 	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"},p_type1{"p"}},{p_type1{"q"}},{"p"},{"q"}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"}},{p_type1{"q"}},{"p","x"},{"q"}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::transformation_is_canonical({p_type1{"p"}},{p_type1{"q"}},{"p","x"},{"q","y"}),std::invalid_argument);
