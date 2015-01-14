@@ -75,6 +75,25 @@ namespace detail
 
 struct polynomial_tag {};
 
+// Type trait to check the key type in polynomial.
+template <typename T>
+struct is_polynomial_key
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct is_polynomial_key<kronecker_monomial<T>>
+{
+	static const bool value = true;
+};
+
+template <typename T, typename U>
+struct is_polynomial_key<monomial<T,U>>
+{
+	static const bool value = true;
+};
+
 }
 
 /// Polynomial class.
@@ -112,6 +131,8 @@ class polynomial:
 	public power_series<trigonometric_series<t_substitutable_series<series<Cf,Key,
 	polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>,detail::polynomial_tag
 {
+		// Check the key.
+		PIRANHA_TT_CHECK(detail::is_polynomial_key,Key);
 		// Make friend with debug class.
 		template <typename T>
 		friend class debug_access;
