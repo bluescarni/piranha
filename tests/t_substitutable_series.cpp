@@ -32,10 +32,10 @@
 #include <utility>
 #include <vector>
 
-#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
@@ -81,23 +81,9 @@ struct hash<key02>
 }
 
 template <typename Cf, typename Key>
-class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
+class g_series_type: public t_substitutable_series<series<Cf,Key,g_series_type<Cf,Key>>,g_series_type<Cf,Key>>
 {
-		typedef base_term<Cf,Key,g_term_type> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_term_type() = default;
-		g_term_type(const g_term_type &) = default;
-		g_term_type(g_term_type &&) = default;
-		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_term_type,base)
-};
-
-template <typename Cf, typename Key>
-class g_series_type: public t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>>
-{
-		typedef t_substitutable_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>,g_series_type<Cf,Key>> base;
+		typedef t_substitutable_series<series<Cf,Key,g_series_type<Cf,Key>>,g_series_type<Cf,Key>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -112,7 +98,7 @@ class g_series_type: public t_substitutable_series<series<g_term_type<Cf,Key>,g_
 BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 {
 	environment env;
-	typedef poisson_series<polynomial<rational,short>> p_type1;
+	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK((has_t_subs<p_type1>::value));
 	BOOST_CHECK((has_t_subs<p_type1,rational>::value));
@@ -169,7 +155,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK_EQUAL(math::sin(-x+p_type1{"2pi"}).t_subs("2pi",1,0),-math::sin(x));
 	BOOST_CHECK_EQUAL(math::t_subs(math::sin(-x+p_type1{"2pi"}),"2pi",1,0),-math::sin(x));
 	// Real and mixed-series subs.
-	typedef poisson_series<polynomial<real,short>> p_type3;
+	typedef poisson_series<polynomial<real,monomial<short>>> p_type3;
 	BOOST_CHECK((std::is_same<decltype(p_type3{"x"}.t_subs("x",c,s)),p_type3>::value));
 	BOOST_CHECK((std::is_same<decltype(math::t_subs(p_type3{"x"},"x",c,s)),p_type3>::value));
 	BOOST_CHECK_EQUAL(p_type3{"x"}.cos().t_subs("x",c,s),c);
@@ -188,7 +174,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK((has_t_subs<p_type3,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type3,double,int>::value));
 	// Trig subs in the coefficient.
-	typedef polynomial<poisson_series<rational>,short> p_type2;
+	typedef polynomial<poisson_series<rational>,monomial<short>> p_type2;
 	BOOST_CHECK_EQUAL(p_type2{}.t_subs("x",1,2),p_type2{});
 	BOOST_CHECK_EQUAL(p_type2{3}.t_subs("x",1,2),p_type2{3});
 	BOOST_CHECK((std::is_same<decltype(p_type2{}.t_subs("x",1,2)),p_type2>::value));
@@ -203,7 +189,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 
 BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
 {
-	using stype = poisson_series<polynomial<rational,short>>;
+	using stype = poisson_series<polynomial<rational,monomial<short>>>;
 	stype x("x"), y("y"), z = x + math::cos(x + y), tmp;
 	std::stringstream ss;
 	{
