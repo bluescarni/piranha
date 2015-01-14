@@ -509,7 +509,7 @@ class series_multiplier
 					{
 						piranha_throw(std::overflow_error,"overflow error");
 					}
-					if (result_size != count + result_size) {
+					if (retval.size() != count + result_size) {
 						break;
 					}
 					// Increase cycle variables.
