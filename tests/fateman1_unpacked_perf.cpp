@@ -26,6 +26,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "../src/environment.hpp"
+#include "../src/monomial.hpp"
 #include "../src/settings.hpp"
 
 using namespace piranha;
@@ -40,5 +41,5 @@ BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	BOOST_CHECK_EQUAL((fateman1<double,signed char>().size()),135751u);
+	BOOST_CHECK_EQUAL((fateman1<double,monomial<signed char>>().size()),135751u);
 }
