@@ -37,13 +37,13 @@
 
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
-#include "../src/poisson_series_term.hpp"
 #include "../src/polynomial.hpp"
-#include "../src/polynomial_term.hpp"
 #include "../src/real.hpp"
+#include "../src/real_trigonometric_kronecker_monomial.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
 #include "../src/type_traits.hpp"
@@ -76,9 +76,9 @@ template <typename T>
 bool null_toolbox<T>::at_called = false;
 
 template <typename Cf, typename Expo>
-class g_series_type: public power_series<null_toolbox<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>>
+class g_series_type: public power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>>
 {
-		typedef power_series<null_toolbox<series<polynomial_term<Cf,Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>> base;
+		typedef power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -91,9 +91,9 @@ class g_series_type: public power_series<null_toolbox<series<polynomial_term<Cf,
 };
 
 template <typename Cf>
-class g_series_type2: public power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>,g_series_type2<Cf>>
+class g_series_type2: public power_series<series<Cf,rtk_monomial,g_series_type2<Cf>>,g_series_type2<Cf>>
 {
-		typedef power_series<series<poisson_series_term<Cf>,g_series_type2<Cf>>,g_series_type2<Cf>> base;
+		typedef power_series<series<Cf,rtk_monomial,g_series_type2<Cf>>,g_series_type2<Cf>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type2() = default;
@@ -113,8 +113,8 @@ struct degree_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial<Cf,Expo> p_type1;
-			typedef polynomial<polynomial<Cf,Expo>,Expo> p_type11;
+			typedef polynomial<Cf,monomial<Expo>> p_type1;
+			typedef polynomial<polynomial<Cf,monomial<Expo>>,monomial<Expo>> p_type11;
 			BOOST_CHECK((std::is_same<integer,decltype(math::degree(p_type1{}))>::value));
 			BOOST_CHECK((std::is_same<integer,decltype(math::degree(p_type1{},std::vector<std::string>{}))>::value));
 			BOOST_CHECK((std::is_same<integer,decltype(math::ldegree(p_type1{}))>::value));
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(power_series_test_02)
 
 BOOST_AUTO_TEST_CASE(power_series_serialization_test)
 {
-	typedef g_series_type<polynomial<rational,rational>,rational> stype;
+	typedef g_series_type<polynomial<rational,monomial<rational>>,rational> stype;
 	stype x("x"), y("y"), z = x + y, tmp;
 	std::stringstream ss;
 	{
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 {
 	// A test with polynomial, degree only in the key.
 	{
-	typedef polynomial<double,rational> stype0;
+	typedef polynomial<double,monomial<rational>> stype0;
 	BOOST_CHECK((has_truncate_degree<stype0,int>::value));
 	BOOST_CHECK((has_truncate_degree<stype0,rational>::value));
 	BOOST_CHECK((has_truncate_degree<stype0,integer>::value));
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	}
 	{
 	// Poisson series, degree only in the coefficient.
-	typedef poisson_series<polynomial<rational,rational>> st;
+	typedef poisson_series<polynomial<rational,monomial<rational>>> st;
 	BOOST_CHECK((has_truncate_degree<st,int>::value));
 	BOOST_CHECK((has_truncate_degree<st,rational>::value));
 	BOOST_CHECK((has_truncate_degree<st,integer>::value));
@@ -411,8 +411,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	}
 	{
 	// Recursive poly.
-	typedef polynomial<rational,rational> st0;
-	typedef polynomial<st0,rational> st1;
+	typedef polynomial<rational,monomial<rational>> st0;
+	typedef polynomial<st0,monomial<rational>> st1;
 	BOOST_CHECK((has_truncate_degree<st1,int>::value));
 	BOOST_CHECK((has_truncate_degree<st1,rational>::value));
 	BOOST_CHECK((has_truncate_degree<st1,integer>::value));
@@ -436,8 +436,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	}
 	{
 	// Recursive poly, integers and rational exponent mixed, same example as above.
-	typedef polynomial<rational,integer> st0;
-	typedef polynomial<st0,rational> st1;
+	typedef polynomial<rational,monomial<integer>> st0;
+	typedef polynomial<st0,monomial<rational>> st1;
 	BOOST_CHECK((has_truncate_degree<st1,int>::value));
 	BOOST_CHECK((has_truncate_degree<st1,rational>::value));
 	BOOST_CHECK((has_truncate_degree<st1,integer>::value));
@@ -461,8 +461,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	}
 	{
 	// Recursive poly, integers and rational exponent mixed, same example as above but switched.
-	typedef polynomial<rational,rational> st0;
-	typedef polynomial<st0,integer> st1;
+	typedef polynomial<rational,monomial<rational>> st0;
+	typedef polynomial<st0,monomial<integer>> st1;
 	BOOST_CHECK((has_truncate_degree<st1,int>::value));
 	BOOST_CHECK((has_truncate_degree<st1,rational>::value));
 	BOOST_CHECK((has_truncate_degree<st1,integer>::value));
@@ -488,8 +488,8 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 
 BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
 {
-	typedef polynomial<double,rational> stype0;
-	typedef polynomial<rational,int> stype1;
+	typedef polynomial<double,monomial<rational>> stype0;
+	typedef polynomial<rational,monomial<int>> stype1;
 	// Check the initial setup.
 	auto tup0 = stype0::get_auto_truncate_degree();
 	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
