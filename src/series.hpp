@@ -726,11 +726,13 @@ class series_operators
 		{
 			return dispatch_binary_mul(std::forward<U>(y),std::forward<T>(x));
 		}
-		// TODO: in the definitions of the mul types, we need to check that a series_multiplier is defined for the operands.
-		// Need to investigate where it is best to put this check.
+		// NOTE: this is the real type from the multiplication, below we put another enable_if to make it conditional
+		// on the presence of a series multiplier.
 		template <typename T, typename U>
-		using binary_mul_type = decltype(dispatch_binary_mul(std::declval<const typename std::decay<T>::type &>(),
+		using binary_mul_type_ = decltype(dispatch_binary_mul(std::declval<const typename std::decay<T>::type &>(),
 			std::declval<const typename std::decay<U>::type &>()));
+		template <typename T, typename U>
+		using binary_mul_type = typename std::enable_if<series_has_multiplier<binary_mul_type_<T,U>>::value,binary_mul_type_<T,U>>::type;
 		template <typename T, typename U, typename std::enable_if<
 			!std::is_const<T>::value && std::is_assignable<T &,binary_mul_type<T,U>>::value,
 			int>::type = 0>

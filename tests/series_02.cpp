@@ -46,6 +46,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
+#include "../src/series_multiplier.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
@@ -1997,4 +1998,45 @@ BOOST_AUTO_TEST_CASE(series_has_series_multiplier_test)
 	BOOST_CHECK(!series_has_multiplier<p_type3>::value);
 	BOOST_CHECK(!series_has_multiplier<p_type3 &>::value);
 	BOOST_CHECK(!series_has_multiplier<p_type3 &&>::value);
+}
+
+// A non-multipliable series, missing a suitable series_multiplier specialisation.
+template <typename Cf, typename Expo>
+class g_series_type_nm: public series<Cf,monomial<Expo>,g_series_type_nm<Cf,Expo>>
+{
+		typedef series<Cf,monomial<Expo>,g_series_type_nm<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
+		template <typename Cf2>
+		using rebind = g_series_type_nm<Cf2,Expo>;
+		g_series_type_nm() = default;
+		g_series_type_nm(const g_series_type_nm &) = default;
+		g_series_type_nm(g_series_type_nm &&) = default;
+		explicit g_series_type_nm(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type_nm &operator=(const g_series_type_nm &) = default;
+		g_series_type_nm &operator=(g_series_type_nm &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type_nm,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type_nm,base)
+};
+
+namespace piranha
+{
+
+template <typename Cf, typename Expo>
+class series_multiplier<g_series_type_nm<Cf,Expo>,void>
+{};
+
+}
+
+BOOST_AUTO_TEST_CASE(series_no_series_multiplier_test)
+{
+	typedef g_series_type_nm<rational,int> p_type1;
+	BOOST_CHECK(!is_multipliable<p_type1>::value);
 }
