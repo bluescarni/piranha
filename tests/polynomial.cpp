@@ -40,9 +40,9 @@
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
-#include "../src/polynomial_term.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
@@ -56,9 +56,9 @@ typedef boost::mpl::vector<int,integer> expo_types;
 
 template <typename Cf, typename Expo>
 class polynomial_alt:
-	public series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>>
+	public series<Cf,monomial<Expo>,polynomial_alt<Cf,Expo>>
 {
-		typedef series<polynomial_term<Cf,Expo>,polynomial_alt<Cf,Expo>> base;
+		typedef series<Cf,monomial<Expo>,polynomial_alt<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		polynomial_alt() = default;
@@ -108,7 +108,7 @@ struct constructor_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial<Cf,Expo> p_type;
+			typedef polynomial<Cf,monomial<Expo>> p_type;
 			// Default construction.
 			p_type p1;
 			BOOST_CHECK(p1 == 0);
@@ -129,8 +129,8 @@ struct constructor_tester
 			BOOST_CHECK(p3a == p3);
 			BOOST_CHECK(p3 == p3a);
 			// Construction from polynomial of different type.
-			typedef polynomial<long,int> p_type1;
-			typedef polynomial<int,short> p_type2;
+			typedef polynomial<long,monomial<int>> p_type1;
+			typedef polynomial<int,monomial<short>> p_type2;
 			p_type1 p4(1);
 			p_type2 p5(p4);
 			BOOST_CHECK(p4 == p5);
@@ -170,7 +170,7 @@ struct is_evaluable_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial<Cf,Expo> p_type;
+			typedef polynomial<Cf,monomial<Expo>> p_type;
 			BOOST_CHECK((is_evaluable<p_type,double>::value));
 			BOOST_CHECK((is_evaluable<p_type,float>::value));
 			BOOST_CHECK((is_evaluable<p_type,integer>::value));
@@ -187,7 +187,7 @@ struct is_evaluable_tester
 BOOST_AUTO_TEST_CASE(polynomial_is_evaluable_test)
 {
 	boost::mpl::for_each<cf_types>(is_evaluable_tester());
-	BOOST_CHECK((is_evaluable<polynomial<mock_cf,int>,double>::value));
+	BOOST_CHECK((is_evaluable<polynomial<mock_cf,monomial<int>>,double>::value));
 }
 
 struct assignment_tester
@@ -198,7 +198,7 @@ struct assignment_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial<Cf,Expo> p_type;
+			typedef polynomial<Cf,monomial<Expo>> p_type;
 			p_type p1;
 			p1 = 1;
 			BOOST_CHECK(p1 == 1);
@@ -226,9 +226,9 @@ BOOST_AUTO_TEST_CASE(polynomial_assignment_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 {
-	typedef polynomial<double,int> p_type1;
-	typedef polynomial<p_type1,int> p_type11;
-	typedef polynomial<p_type11,int> p_type111;
+	typedef polynomial<double,monomial<int>> p_type1;
+	typedef polynomial<p_type1,monomial<int>> p_type11;
+	typedef polynomial<p_type11,monomial<int>> p_type111;
 	p_type1 x("x");
 	p_type11 y("y");
 	p_type111 z("z");
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE(polynomial_recursive_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_degree_test)
 {
-	typedef polynomial<double,int> p_type1;
-	typedef polynomial<p_type1,int> p_type11;
-	typedef polynomial<p_type11,int> p_type111;
+	typedef polynomial<double,monomial<int>> p_type1;
+	typedef polynomial<p_type1,monomial<int>> p_type11;
+	typedef polynomial<p_type11,monomial<int>> p_type111;
 	BOOST_CHECK(has_degree<p_type1>::value);
 	BOOST_CHECK(has_ldegree<p_type1>::value);
 	BOOST_CHECK(has_degree<p_type11>::value);
@@ -300,7 +300,7 @@ struct multiplication_tester
 		{
 			return;
 		}
-		typedef polynomial<Cf,int> p_type;
+		typedef polynomial<Cf,monomial<int>> p_type;
 		typedef polynomial_alt<Cf,int> p_type_alt;
 		p_type x("x"), y("y"), z("z"), t("t"), u("u");
 		// Dense case, default setup.
@@ -410,7 +410,7 @@ class debug_access<integral_combination_tag>
 				if (std::is_floating_point<Cf>::value) {
 					return;
 				}
-				typedef polynomial<Cf,Expo> p_type;
+				typedef polynomial<Cf,monomial<Expo>> p_type;
 				typedef std::map<std::string,integer> map_type;
 				p_type p1;
 				BOOST_CHECK((p1.integral_combination() == map_type{}));
@@ -431,7 +431,7 @@ class debug_access<integral_combination_tag>
 		{
 			boost::mpl::for_each<expo_types>(runner<Cf>());
 			// Tests specific to rational, double and real.
-			typedef polynomial<rational,int> p_type;
+			typedef polynomial<rational,monomial<int>> p_type;
 			typedef std::map<std::string,integer> map_type;
 			p_type p1;
 			p1 = p_type{"x"} * rational(4,2) + p_type{"y"} * 4;
@@ -443,14 +443,14 @@ class debug_access<integral_combination_tag>
 			if (std::numeric_limits<double>::is_iec559 && std::numeric_limits<double>::radix == 2 && std::numeric_limits<double>::has_infinity &&
 				std::numeric_limits<double>::has_quiet_NaN)
 			{
-				typedef polynomial<double,int> p_type2;
+				typedef polynomial<double,monomial<int>> p_type2;
 				p_type2 p2;
 				p2 = p_type2{"x"} * 2. + p_type2{"y"} * 4.;
 				BOOST_CHECK((p2.integral_combination() == map_type{{"x",integer(2)},{"y",integer(4)}}));
 				p2 = p_type2{"x"} * 2.5 + p_type2{"y"} * 4.;
 				BOOST_CHECK_THROW(p2.integral_combination(),std::invalid_argument);
 			}
-			typedef polynomial<real,int> p_type3;
+			typedef polynomial<real,monomial<int>> p_type3;
 			p_type3 p3;
 			p3 = p_type3{"x"} * 2 + p_type3{"y"} * 4;
 			BOOST_CHECK((p3.integral_combination() == map_type{{"x",integer(2)},{"y",integer(4)}}));
@@ -475,7 +475,7 @@ struct pow_tester
 		template <typename Expo>
 		void operator()(const Expo &)
 		{
-			typedef polynomial<Cf,Expo> p_type;
+			typedef polynomial<Cf,monomial<Expo>> p_type;
 			p_type p{"x"};
 			BOOST_CHECK_EQUAL((2 * p).pow(4),p_type{math::pow(Cf(1) * 2,4)} * p * p * p * p);
 			p *= p_type{"y"}.pow(2);
@@ -499,7 +499,7 @@ struct pow_tester
 BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 {
 	boost::mpl::for_each<cf_types>(pow_tester());
-	typedef polynomial<integer,int> p_type1;
+	typedef polynomial<integer,monomial<int>> p_type1;
 	BOOST_CHECK((is_exponentiable<p_type1,integer>::value));
 	BOOST_CHECK((is_exponentiable<const p_type1,integer>::value));
 	BOOST_CHECK((is_exponentiable<p_type1 &,integer>::value));
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,double>::value));
-	typedef polynomial<real,int> p_type2;
+	typedef polynomial<real,monomial<int>> p_type2;
 	BOOST_CHECK((is_exponentiable<p_type2,integer>::value));
 	BOOST_CHECK((is_exponentiable<p_type2,real>::value));
 	BOOST_CHECK((!is_exponentiable<p_type2,std::string>::value));
@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 {
 	using math::partial;
 	using math::pow;
-	typedef polynomial<rational,short> p_type1;
+	typedef polynomial<rational,monomial<short>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(partial(x * y,"x"),y);
 	BOOST_CHECK_EQUAL(partial(x * y,"y"),x);
@@ -526,15 +526,15 @@ BOOST_AUTO_TEST_CASE(polynomial_partial_test)
 	BOOST_CHECK(is_differentiable<p_type1>::value);
 	BOOST_CHECK(has_pbracket<p_type1>::value);
 	BOOST_CHECK(has_transformation_is_canonical<p_type1>::value);
-	BOOST_CHECK((!is_differentiable<polynomial<mock_cf,short>>::value));
-	BOOST_CHECK((!has_pbracket<polynomial<mock_cf,short>>::value));
-	BOOST_CHECK((!has_transformation_is_canonical<polynomial<mock_cf,short>>::value));
+	BOOST_CHECK((!is_differentiable<polynomial<mock_cf,monomial<short>>>::value));
+	BOOST_CHECK((!has_pbracket<polynomial<mock_cf,monomial<short>>>::value));
+	BOOST_CHECK((!has_transformation_is_canonical<polynomial<mock_cf,monomial<short>>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 {
 	{
-	typedef polynomial<rational,short> p_type1;
+	typedef polynomial<rational,monomial<short>> p_type1;
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",integer(1)),1);
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",p_type1{"x"}),p_type1{"x"});
 	p_type1 x{"x"}, y{"y"}, z{"z"};
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 	BOOST_CHECK_EQUAL(((y + 4 * z).pow(5) * x.pow(-1)).subs("x",rational(3)),((y + 4 * z).pow(5)) / 3);
 	}
 	{
-	typedef polynomial<real,int> p_type2;
+	typedef polynomial<real,monomial<int>> p_type2;
 	p_type2 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)),y*y + math::pow(real(1.234),3));
 	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)).subs("y",real(-5.678)),math::pow(real(-5.678),2) +
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(x*x*x + y*y,"x",real(1.234)).subs("y",real(-5.678)),math::pow(real(-5.678),2) +
 		math::pow(real(1.234),3));
 	}
-	typedef polynomial<integer,long> p_type3;
+	typedef polynomial<integer,monomial<long>> p_type3;
 	p_type3 x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y + z*y*x).subs("x",integer(2)).subs("y",integer(-3)).subs("z",integer(4)).subs("k",integer()),
 		integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 {
 	// Simple echelon-1 polynomial.
-	typedef polynomial<rational,short> p_type1;
+	typedef polynomial<rational,monomial<short>> p_type1;
 	BOOST_CHECK(is_integrable<p_type1>::value);
 	BOOST_CHECK(is_integrable<p_type1 &>::value);
 	BOOST_CHECK(is_integrable<const p_type1>::value);
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	BOOST_CHECK_EQUAL(p_type1{4}.integrate("z"),4 * z);
 	BOOST_CHECK_EQUAL((x * y * z).pow(-5).integrate("x"),(y * z).pow(-5) * x.pow(-4) * rational(1,-4));
 	// Polynomial with polynomial coefficient, no variable mixing.
-	typedef polynomial<p_type1,short> p_type11;
+	typedef polynomial<p_type1,monomial<short>> p_type11;
 	BOOST_CHECK(is_integrable<p_type11>::value);
 	BOOST_CHECK(is_integrable<p_type11 &>::value);
 	BOOST_CHECK(is_integrable<const p_type11>::value);
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	BOOST_CHECK_THROW((x*yy.pow(-1)).integrate("y"),std::invalid_argument);
 	BOOST_CHECK_EQUAL((x*yy.pow(-2)).integrate("y"),-x*yy.pow(-1));
 	// Non-integrable coefficient.
-	typedef polynomial<polynomial_alt<rational,int>,int> p_type_alt;
+	typedef polynomial<polynomial_alt<rational,int>,monomial<int>> p_type_alt;
 	p_type_alt n("n"), m("m");
 	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"n"),n*n*m/2 + m*n);
 	BOOST_CHECK_EQUAL(math::integrate(n * m + m,"m"),m*n*m/2 + m*m/2);
@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 {
-	typedef polynomial<rational,int> p_type1;
+	typedef polynomial<rational,monomial<int>> p_type1;
 	BOOST_CHECK(has_ipow_subs<p_type1>::value);
 	BOOST_CHECK((has_ipow_subs<p_type1,integer>::value));
 	{
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 		.subs("x2",x.pow(2)),(1+3*x.pow(2)-5*y.pow(5)).pow(10));
 	}
 	{
-	typedef polynomial<real,int> p_type2;
+	typedef polynomial<real,monomial<int>> p_type2;
 	BOOST_CHECK(has_ipow_subs<p_type2>::value);
 	BOOST_CHECK((has_ipow_subs<p_type2,integer>::value));
 	p_type2 x{"x"}, y{"y"};
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x*x*x + y*y,"x",integer(1),real(1.234)).ipow_subs("y",integer(1),real(-5.678)),math::pow(real(-5.678),2) +
 		math::pow(real(1.234),3));
 	}
-	typedef polynomial<integer,long> p_type3;
+	typedef polynomial<integer,monomial<long>> p_type3;
 	BOOST_CHECK(has_ipow_subs<p_type3>::value);
 	BOOST_CHECK((has_ipow_subs<p_type3,integer>::value));
 	p_type3 x{"x"}, y{"y"}, z{"z"};
@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
 {
-	typedef polynomial<integer,long> stype;
+	typedef polynomial<integer,monomial<long>> stype;
 	stype x("x"), y("y"), z = x + y, tmp;
 	std::stringstream ss;
 	{
@@ -695,11 +695,11 @@ BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
 
 BOOST_AUTO_TEST_CASE(polynomial_rebind_test)
 {
-	typedef polynomial<integer,long> stype;
+	typedef polynomial<integer,monomial<long>> stype;
 	BOOST_CHECK((series_is_rebindable<stype,double>::value));
 	BOOST_CHECK((series_is_rebindable<stype,rational>::value));
 	BOOST_CHECK((series_is_rebindable<stype,float>::value));
-	BOOST_CHECK((std::is_same<series_rebind<stype,float>,polynomial<float,long>>::value));
-	BOOST_CHECK((std::is_same<series_rebind<stype,rational>,polynomial<rational,long>>::value));
-	BOOST_CHECK((std::is_same<series_rebind<stype,long double>,polynomial<long double,long>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,float>,polynomial<float,monomial<long>>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,rational>,polynomial<rational,monomial<long>>>::value));
+	BOOST_CHECK((std::is_same<series_rebind<stype,long double>,polynomial<long double,monomial<long>>>::value));
 }
