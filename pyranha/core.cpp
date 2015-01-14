@@ -42,6 +42,7 @@
 #include "../src/real.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "exceptions.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
@@ -58,6 +59,13 @@ static bool inited = false;
 static inline void cleanup_type_system()
 {
 	pyranha::et_map.clear();
+}
+
+namespace pyranha
+{
+
+DECLARE_TT_NAMER(piranha::monomial,"monomial")
+
 }
 
 BOOST_PYTHON_MODULE(_core)
@@ -114,6 +122,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_type_generator<piranha::rational>("rational");
 	pyranha::expose_type_generator<piranha::real>("real");
 	pyranha::expose_type_generator<piranha::k_monomial>("k_monomial");
+	// The generic type generator for monomial instances.
+	pyranha::expose_generic_type_generator<piranha::monomial,piranha::rational>();
+	pyranha::expose_generic_type_generator<piranha::monomial,short>();
 	// Arithmetic converters.
 	pyranha::integer_converter i_c;
 	pyranha::rational_converter ra_c;

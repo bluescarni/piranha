@@ -35,10 +35,10 @@ class basic_test_case(_ut.TestCase):
 		from fractions import Fraction
 		from copy import copy, deepcopy
 		# Use polynomial for testing.
-		from .types import polynomial, integer, rational, short, double
+		from .types import polynomial, integer, rational, short, double, monomial
 		# Arithmetic with int and Fraction, len, str and comparisons.
 		for s,t in [(integer,int),(rational,Fraction)]:
-			tp = polynomial(s,short)()
+			tp = polynomial(s,monomial(short))()
 			self.assertEqual(tp('x') - tp('x'),t(1) - t(1))
 			self.assertEqual(tp(tp('x')) - tp('x'),t(1) - t(1))
 			self.assertEqual(tp(),t(0))
@@ -72,14 +72,14 @@ class basic_test_case(_ut.TestCase):
 			self.assertTrue(tp(t(1)) == t(1))
 			self.assertTrue(t(1) == tp(t(1)))
 			self.assertTrue(tp('x') ** 3 == tp('x') * tp('x') * tp('x'))
-		tp_int = polynomial(integer,short)()
+		tp_int = polynomial(integer,monomial(short))()
 		self.assertRaises(ValueError,tp_int,float('inf'))
 		self.assertRaises(ZeroDivisionError,lambda : tp_int() ** -1)
-		tp_q = polynomial(rational,short)()
+		tp_q = polynomial(rational,monomial(short))()
 		self.assertRaises(ZeroDivisionError,lambda : tp_q(Fraction(0,1)) ** -1)
 		self.assertEqual(tp_q(Fraction(1,3)) ** -2,9)
 		self.assertRaises(ZeroDivisionError,lambda : tp_int(Fraction(1,3)) ** -2)
-		tp_f = polynomial(double,short)()
+		tp_f = polynomial(double,monomial(short))()
 		# NOTE: here we are going to assume that Python's float implementation uses C++ doubles and
 		# the corresponding pow() function.
 		self.assertEqual(tp_f(0.1) ** (0.5),0.1**0.5)
@@ -120,8 +120,8 @@ class mpmath_test_case(_ut.TestCase):
 			from mpmath import workdps, mpf, pi
 		except ImportError:
 			return
-		from .types import polynomial, real, short
-		pt = polynomial(real,short)()
+		from .types import polynomial, real, short, monomial
+		pt = polynomial(real,monomial(short))()
 		self.assertEqual(pt(mpf("4.5667")),mpf("4.5667"))
 		self.assertEqual(pt(mpf("4.5667")) ** mpf("1.234567"),mpf("4.5667") ** mpf("1.234567"))
 		for n in [11,21,51,101,501]:
@@ -269,14 +269,14 @@ class polynomial_test_case(_ut.TestCase):
 	
 	"""
 	def runTest(self):
-		from .types import polynomial, rational, short, integer, double, real
+		from .types import polynomial, rational, short, integer, double, real, monomial
 		from fractions import Fraction
-		self.assertEqual(type(polynomial(rational,short)()(1).list[0][0]),Fraction)
-		self.assertEqual(type(polynomial(integer,short)()(1).list[0][0]),int)
-		self.assertEqual(type(polynomial(double,short)()(1).list[0][0]),float)
+		self.assertEqual(type(polynomial(rational,monomial(short))()(1).list[0][0]),Fraction)
+		self.assertEqual(type(polynomial(integer,monomial(short))()(1).list[0][0]),int)
+		self.assertEqual(type(polynomial(double,monomial(short))()(1).list[0][0]),float)
 		try:
 			from mpmath import mpf
-			self.assertEqual(type(polynomial(real,short)()(1).list[0][0]),mpf)
+			self.assertEqual(type(polynomial(real,monomial(short))()(1).list[0][0]),mpf)
 		except ImportError:
 			pass
 
@@ -312,7 +312,7 @@ class converters_test_case(_ut.TestCase):
 	"""
 	def runTest(self):
 		import sys
-		from .types import polynomial, short, integer, rational, real
+		from .types import polynomial, short, integer, rational, real, monomial
 		from fractions import Fraction as F
 		# Context for the temporary monkey-patching of type t to return bogus
 		# string bad_str for representation via str.
@@ -336,7 +336,7 @@ class converters_test_case(_ut.TestCase):
 			def __exit__(self, type, value, traceback):
 				self.t.__repr__ = self.old_repr
 		# Start with plain integers.
-		pt = polynomial(integer,short)()
+		pt = polynomial(integer,monomial(short))()
 		# Use small integers to make it work both on Python 2 and Python 3.
 		self.assertEqual(int,type(pt(4).list[0][0]))
 		self.assertEqual(pt(4).list[0][0],4)
@@ -353,7 +353,7 @@ class converters_test_case(_ut.TestCase):
 			self.assertEqual(long,type(pt("x").evaluate({"x":sys.maxint + 1})))
 			self.assertEqual(pt("x").evaluate({"x":sys.maxint + 1}),sys.maxint + 1)
 		# Now rationals.
-		pt = polynomial(rational,short)()
+		pt = polynomial(rational,monomial(short))()
 		self.assertEqual(F,type((pt(4)/3).list[0][0]))
 		self.assertEqual((pt(4)/3).list[0][0],F(4,3))
 		self.assertEqual(F,type(pt("x").evaluate({"x":F(5,6)})))
@@ -369,7 +369,7 @@ class converters_test_case(_ut.TestCase):
 			from mpmath import mpf, mp, workdps, binomial as bin, fabs
 		except ImportError:
 			return
-		pt = polynomial(real,short)()
+		pt = polynomial(real,monomial(short))()
 		self.assertEqual(mpf,type(pt(4).list[0][0]))
 		self.assertEqual(pt(4).list[0][0],mpf(4))
 		self.assertEqual(mpf,type(pt("x").evaluate({"x":mpf(5)})))
@@ -414,13 +414,13 @@ class serialization_test_case(_ut.TestCase):
 	"""
 	def runTest(self):
 		import pickle, random, tempfile, os
-		from .types import polynomial, short, rational, poisson_series
+		from .types import polynomial, short, rational, poisson_series, monomial
 		from .math import sin, cos
 		# Set the seed for deterministic output.
 		random.seed(0)
 		rand = lambda: random.randint(-10,10)
 		# Start with some random polynomial tests.
-		pt = polynomial(rational,short)()
+		pt = polynomial(rational,monomial(short))()
 		x,y,z = pt('x'), pt('y'), pt('z')
 		for _ in range(0,100):
 			res = pt(0)
@@ -443,7 +443,7 @@ class serialization_test_case(_ut.TestCase):
 				# Remove the temp file in any case.
 				os.remove(f.name)
 		# Poisson series.
-		pt = poisson_series(polynomial(rational,short))()
+		pt = poisson_series(polynomial(rational,monomial(short)))()
 		x,y,z,a,b = pt('x'), pt('y'), pt('z'), pt('a'), pt('b')
 		for _ in range(0,100):
 			res = pt(0)
@@ -481,8 +481,8 @@ class truncate_degree_test_case(_ut.TestCase):
 	def runTest(self):
 		from fractions import Fraction as F
 		from .math import truncate_degree, cos, sin
-		from .types import polynomial, short, rational, poisson_series
-		pt = polynomial(rational,short)()
+		from .types import polynomial, short, rational, poisson_series, monomial
+		pt = polynomial(rational,monomial(short))()
 		x,y,z = pt('x'), pt('y'), pt('z')
 		s = x**5*y+F(1,2)*z**-5*x*y+x*y*z/4
 		self.assertEqual(s.truncate_degree(3),z**-5/2 * x * y + x*y*z/4)
@@ -491,7 +491,7 @@ class truncate_degree_test_case(_ut.TestCase):
 		self.assertEqual(truncate_degree(s,2,["x"]),z**-5/2 * x * y + x*y*z/4)
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,["x",1]))
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
-		pt = poisson_series(polynomial(rational,short))()
+		pt = poisson_series(polynomial(rational,monomial(short)))()
 		x,y,z,a,b = pt("x"), pt("y"), pt("z"), pt("a"), pt("b")
 		s = (x + y**2/4 + 3*x*y*z/7) * cos(a) + (x*y+y*z/3+3*z**2*x/8) * sin(a+b)
 		self.assertEqual(s.truncate_degree(2),(x + y*y/4) * cos(a) + (x*y + z*y/3) * sin(a + b))
@@ -502,7 +502,7 @@ class truncate_degree_test_case(_ut.TestCase):
 		self.assertRaises(TypeError,lambda: truncate_degree(s,2,"x"))
 		# Automatic truncation.
 		# Just make sure we do not re-use any previous result.
-		pt = polynomial(rational,short)()
+		pt = polynomial(rational,monomial(short))()
 		x,y = pt('x'), pt('y')
 		pt.clear_pow_cache()
 		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))

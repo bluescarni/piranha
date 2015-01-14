@@ -60,5 +60,8 @@ k_monomial = _t.k_monomial
 #: Generic type generator for polynomials.
 polynomial = _t.polynomial
 
+#: Generic type generator for monomials.
+monomial = _t.monomial
+
 #: Generic type generator for Poisson series.
 poisson_series = _t.poisson_series

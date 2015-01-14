@@ -23,6 +23,7 @@
 #include <tuple>
 
 #include "../src/kronecker_monomial.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
@@ -42,10 +43,10 @@ void expose_poisson_series()
 	struct ps_desc
 	{
 		using params = std::tuple<std::tuple<double>,std::tuple<piranha::rational>,std::tuple<piranha::real>,
-			std::tuple<piranha::polynomial<double,piranha::rational>>,std::tuple<piranha::polynomial<double,short>>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>>,
-			std::tuple<piranha::polynomial<piranha::rational,piranha::rational>>,std::tuple<piranha::polynomial<piranha::rational,short>>,
+			std::tuple<piranha::polynomial<double,piranha::monomial<piranha::rational>>>,std::tuple<piranha::polynomial<double,piranha::monomial<short>>>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>>,
+			std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<piranha::rational>>>,std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<short>>>,
 			std::tuple<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>>,
-			std::tuple<piranha::polynomial<piranha::real,piranha::rational>>,std::tuple<piranha::polynomial<piranha::real,short>>,
+			std::tuple<piranha::polynomial<piranha::real,piranha::monomial<piranha::rational>>>,std::tuple<piranha::polynomial<piranha::real,piranha::monomial<short>>>,
 			std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>>>;
 		using interop_types = std::tuple<double,piranha::rational,piranha::integer,piranha::real>;
 		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;

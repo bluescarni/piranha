@@ -46,8 +46,8 @@ def cos(arg):
 	ValueError: cannot compute the cosine of a non-zero integer
 	>>> cos(2.) # doctest: +ELLIPSIS
 	-0.4161468...
-	>>> from .types import poisson_series, polynomial, rational, short
-	>>> t = poisson_series(polynomial(rational,short))()
+	>>> from .types import poisson_series, polynomial, rational, short, monomial
+	>>> t = poisson_series(polynomial(rational,monomial(short)))()
 	>>> cos(2 * t('x'))
 	cos(2*x)
 	>>> cos('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -79,8 +79,8 @@ def sin(arg):
 	ValueError: cannot compute the cosine of a non-zero integer
 	>>> sin(2.) # doctest: +ELLIPSIS
 	0.9092974...
-	>>> from .types import poisson_series, polynomial, rational, short
-	>>> t = poisson_series(polynomial(rational,short))()
+	>>> from .types import poisson_series, polynomial, rational, short, monomial
+	>>> t = poisson_series(polynomial(rational,monomial(short)))()
 	>>> sin(2 * t('x'))
 	sin(2*x)
 	>>> sin('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
@@ -139,8 +139,8 @@ def partial(arg,name):
 	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked
 		low-level function
 	
-	>>> from .types import polynomial, integer, short
-	>>> pt = polynomial(integer,short)()
+	>>> from .types import polynomial, integer, short, monomial
+	>>> pt = polynomial(integer,monomial(short))()
 	>>> x,y = pt('x'), pt('y')
 	>>> partial(x + 2*x*y,'y')
 	2*x
@@ -239,8 +239,8 @@ def pbracket(f,g,p_list,q_list):
 	:raises: :exc:`TypeError` if the types of the arguments are invalid
 	:raises: any exception raised by the invoked low-level function
 	
-	>>> from .types import polynomial, rational, short
-	>>> pt = polynomial(rational,short)()
+	>>> from .types import polynomial, rational, short, monomial
+	>>> pt = polynomial(rational,monomial(short))()
 	>>> x,v = pt('x'), pt('v')
 	>>> pbracket(x+v,x+v,['v'],['x']) == 0
 	True

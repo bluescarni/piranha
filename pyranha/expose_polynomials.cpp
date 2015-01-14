@@ -23,6 +23,7 @@
 #include <tuple>
 
 #include "../src/kronecker_monomial.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
@@ -41,11 +42,11 @@ void expose_polynomials()
 	// Descriptor for polynomial exposition.
 	struct poly_desc
 	{
-		using params = std::tuple<std::tuple<double,piranha::rational>,std::tuple<double,short>,std::tuple<double,piranha::kronecker_monomial<>>,
-			std::tuple<long double,piranha::rational>,std::tuple<long double,short>,std::tuple<long double,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::integer,piranha::rational>,std::tuple<piranha::integer,short>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::rational,piranha::rational>,std::tuple<piranha::rational,short>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::real,piranha::rational>,std::tuple<piranha::real,short>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
+		using params = std::tuple<std::tuple<double,piranha::monomial<piranha::rational>>,std::tuple<double,piranha::monomial<short>>,std::tuple<double,piranha::kronecker_monomial<>>,
+			std::tuple<long double,piranha::monomial<piranha::rational>>,std::tuple<long double,piranha::monomial<short>>,std::tuple<long double,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,std::tuple<piranha::integer,piranha::monomial<short>>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::rational,piranha::monomial<piranha::rational>>,std::tuple<piranha::rational,piranha::monomial<short>>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+			std::tuple<piranha::real,piranha::monomial<piranha::rational>>,std::tuple<piranha::real,piranha::monomial<short>>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
 		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
 		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
 		using eval_types = interop_types;
