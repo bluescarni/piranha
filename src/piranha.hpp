@@ -135,6 +135,8 @@
  * \todo it seems like serialization of kronecker objects could not be platform-agnostic, even in text mode. This is because
  * the width of a type on a platform could be different from the original size in the archive, and the codification/decodification
  * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors.
+ * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
+ * and be done with them instead.
  */
 namespace piranha
 {
