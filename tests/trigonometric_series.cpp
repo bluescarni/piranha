@@ -30,10 +30,10 @@
 #include <utility>
 #include <vector>
 
-#include "../src/base_term.hpp"
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	environment env;
 	using math::sin;
 	using math::cos;
-	typedef poisson_series<polynomial<rational,short>> p_type1;
+	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	p_type1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(x.t_degree(),0);
 	BOOST_CHECK_EQUAL(cos(3 * x).t_degree(),3);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_degree_order_test)
 	BOOST_CHECK(!has_t_ldegree<poisson_series<p_type1>>::value);
 	BOOST_CHECK(!has_t_order<poisson_series<p_type1>>::value);
 	BOOST_CHECK(!has_t_lorder<poisson_series<p_type1>>::value);
-	typedef polynomial<p_type1,short> p_type2;
+	typedef polynomial<p_type1,monomial<short>> p_type2;
 	BOOST_CHECK(has_t_degree<p_type2>::value);
 	BOOST_CHECK(has_t_ldegree<p_type2>::value);
 	BOOST_CHECK(has_t_order<p_type2>::value);
@@ -323,23 +323,9 @@ struct hash<key05>
 }
 
 template <typename Cf, typename Key>
-class g_term_type: public base_term<Cf,Key,g_term_type<Cf,Key>>
+class g_series_type: public trigonometric_series<series<Cf,Key,g_series_type<Cf,Key>>>
 {
-		typedef base_term<Cf,Key,g_term_type> base;
-		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-	public:
-		g_term_type() = default;
-		g_term_type(const g_term_type &) = default;
-		g_term_type(g_term_type &&) = default;
-		g_term_type &operator=(const g_term_type &) = default;
-		g_term_type &operator=(g_term_type &&) = default;
-		PIRANHA_FORWARDING_CTOR(g_term_type,base)
-};
-
-template <typename Cf, typename Key>
-class g_series_type: public trigonometric_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>>
-{
-		typedef trigonometric_series<series<g_term_type<Cf,Key>,g_series_type<Cf,Key>>> base;
+		typedef trigonometric_series<series<Cf,Key,g_series_type<Cf,Key>>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -367,7 +353,7 @@ BOOST_AUTO_TEST_CASE(trigonometric_series_failures_test)
 
 BOOST_AUTO_TEST_CASE(trigonometric_series_serialization_test)
 {
-	using stype = poisson_series<polynomial<rational,short>>;
+	using stype = poisson_series<polynomial<rational,monomial<short>>>;
 	stype x("x"), y("y"), z = y + math::cos(x + y), tmp;
 	std::stringstream ss;
 	{
