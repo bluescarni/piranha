@@ -13,7 +13,8 @@ types provided by C++ have a finite range).
 On the C++ side Piranha provides a set of additional fundamental numerical types that can interoperate
 with the C++ fundamental types and that can be used with Piranha's generic algorithms and data structures
 (e.g., as coefficient types in a polynomial). On the Python side, Piranha's fundamental types are
-automatically translated to/from corresponding Python types.
+automatically translated to/from corresponding Python types whenever Pyranha's routine and data
+structures are used.
 
 The ``integer`` type
 --------------------
@@ -149,15 +150,12 @@ On the Python side things are again simpler:
    :linenos:
 
 Although Python does not provide a rational type as a builtin, a rational class named ``Fraction`` is available in the standard ``fractions``
-module since Python 2.6. A few simple examples of usage of the ``Fraction`` class are shown in the :ref:`Python code <rational_py>`. ``Fraction``
-instances are automatically converted to/from ``rational`` by Pyranha as needed. For instance, on the last line of the
+module since Python 2.6. A few simple examples of usage of the ``Fraction`` class are shown in the :ref:`Python code <rational_py>`.
+
+``Fraction`` instances are automatically converted to/from ``rational`` by Pyranha as needed. For instance, on the last line of the
 :ref:`Python code <rational_py>` we see another usage of the :py:func:`pyranha.math.binomial` function. This time the arguments, of type
 ``Fraction`` and ``int``, are automatically converted to ``rational`` and ``integer`` before being passed to the ``math::binomial()`` C++ function.
-The ``rational`` result of the C++ function is then converted back to ``Fraction`` and returned:
-
-.. math::
-
-   {\frac{42}{13} \choose 21} = \frac{-19722961328094199840}{3211838877954855105157369}.
+The ``rational`` result of the C++ function is then converted back to ``Fraction`` and returned.
 
 
 The ``real`` type

@@ -158,8 +158,8 @@ jobs:
 
    $ make -j8
 
-.. warning:: Be aware that, at the present time, the compilation of Piranha's unit tests and Python bindings consumes a
-   large amount of memory. Do not run too many jobs in parallel if the amount of memory available on your machine is limited.
+.. warning:: Be aware that, the compilation of Piranha's unit tests and Python bindings consumes a
+   large amount of memory. At least 8GB of RAM are suggested for the compilation of the Python bindings.
 
 After a successful build in ``Debug`` mode, it is good practice to run the test suite:
 
