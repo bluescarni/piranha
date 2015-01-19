@@ -130,7 +130,7 @@ to yield a user-friendly syntax to initialise rational objects, as shown on line
 
    r = 42/13_q;
 
-This line is effectively parsed by the compiler as:
+This line is effectively interpreted by the compiler as:
 
 .. code-block:: c++
 
@@ -139,6 +139,26 @@ This line is effectively parsed by the compiler as:
 In the last code block, we can see another invocation of the ``math::binomial()`` function. This time the top argument is a ``rational``,
 wheras the bottom argument is an ``integer``. The specialisation of the binomial function for these two types will yield the exact
 result as a ``rational``.
+
+On the Python side things are again simpler:
+
+.. _rational_py:
+
+.. literalinclude:: ../../pyranha/tutorial/rational.py
+   :language: python
+   :linenos:
+
+Although Python does not provide a rational type as a builtin, a rational class named ``Fraction`` is available in the standard ``fractions``
+module since Python 2.6. A few simple examples of usage of the ``Fraction`` class are shown in the :ref:`Python code <rational_py>`. ``Fraction``
+instances are automatically converted to/from ``rational`` by Pyranha as needed. For instance, on the last line of the
+:ref:`Python code <rational_py>` we see another usage of the :py:func:`pyranha.math.binomial` function. This time the arguments, of type
+``Fraction`` and ``int``, are automatically converted to ``rational`` and ``integer`` before being passed to the ``math::binomial()`` C++ function.
+The ``rational`` result of the C++ function is then converted back to ``Fraction`` and returned:
+
+.. math::
+
+   {\frac{42}{13} \choose 21} = \frac{-19722961328094199840}{3211838877954855105157369}.
+
 
 The ``real`` type
 -----------------

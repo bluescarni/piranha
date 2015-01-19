@@ -1,7 +1,7 @@
 .. _pyranha_root:
 
 :mod:`pyranha`
-==================
+==============
 
 Root pyranha module.
 
