@@ -22,3 +22,4 @@ from __future__ import absolute_import as _ai
 # Execute all the tutorials.
 from . import hello_piranha
 from . import integer
+from . import rational

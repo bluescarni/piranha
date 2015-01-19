@@ -7,6 +7,7 @@ set(PYRANHA_TUTORIAL_FILES
 	tutorial/__init__.py
 	tutorial/hello_piranha.py
 	tutorial/integer.py
+	tutorial/rational.py
 )
 
 ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptions.hpp python_includes.hpp
