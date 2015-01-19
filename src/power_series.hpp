@@ -572,14 +572,14 @@ class power_series: public Series
 		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
 		 *
 		 * This method will truncate \p this according to the truncation settings from piranha::power_series. Additionally,
-		 * it will also call the <tt>auto_truncate()</tt> method from the parent series type, if it exists.
+		 * it will also call the <tt>%auto_truncate()</tt> method from the parent series type, if it exists.
 		 *
 		 * @throws unspecified any exception thrown by:
 		 * - threading primitives,
 		 * - construction and/or assignment of the degree type,
 		 * - memory errors in standard containers,
 		 * - truncate_degree(),
-		 * - the <tt>auto_truncate()</tt> method from the parent series type, if it exists.
+		 * - the <tt>%auto_truncate()</tt> method from the parent series type, if it exists.
 		 */
 		template <typename T = power_series, at_degree_enabler<T> = 0>
 		void auto_truncate()
