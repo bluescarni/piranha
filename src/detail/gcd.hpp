@@ -21,7 +21,10 @@
 #ifndef PIRANHA_DETAIL_GCD_HPP
 #define PIRANHA_DETAIL_GCD_HPP
 
+#include <type_traits>
+
 #include "../math.hpp"
+#include "../mp_integer.hpp"
 
 namespace piranha
 {
@@ -29,9 +32,21 @@ namespace piranha
 namespace detail
 {
 
+template <typename T, typename std::enable_if<detail::is_mp_integer<T>::value,int>::type = 0>
+inline void gcd_mod(T &a, const T &b)
+{
+	a %= b;
+}
+
+template <typename T, typename std::enable_if<!detail::is_mp_integer<T>::value,int>::type = 0>
+inline void gcd_mod(T &a, const T &b)
+{
+	a = static_cast<T>(a % b);
+}
+
 // Greatest common divisor using the euclidean algorithm.
 // NOTE: this can yield negative values, depending on the signs
-// of a and b.
+// of a and b. Supports C++ integrals and mp_integer.
 template <typename T>
 inline T gcd(T a, T b)
 {
@@ -39,11 +54,15 @@ inline T gcd(T a, T b)
 		if (math::is_zero(a)) {
 			return b;
 		}
-		b %= a;
+		// NOTE: the difference in implementation here is because
+		// we want to prevent compiler warnings when T is a short int,
+		// hence the static cast. For mp_integer, the in-place version
+		// might be faster.
+		gcd_mod(b,a);
 		if (math::is_zero(b)) {
 			return a;
 		}
-		a %= b;
+		gcd_mod(a,b);
 	}
 }
 
