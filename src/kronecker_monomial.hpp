@@ -87,7 +87,10 @@ namespace piranha
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
-// - needs sfinaeing.
+// - needs sfinaeing in sub, integrate, and other methods not generalised yet.
+// - review the use of a max_size for the static vector used in unpacking: it's probably too big.
+//   Also we should probably check how is it used in performance critical parts, i.e., check
+//   if we are not copying around too much data on the stack.
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial
 {
