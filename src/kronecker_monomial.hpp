@@ -83,7 +83,6 @@ namespace piranha
  * This class supports serialization.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
- * 
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
