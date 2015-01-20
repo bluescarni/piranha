@@ -37,22 +37,15 @@
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting floating point to int, but this is not the case (from the doc)
  * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
- * \todo probably we should make overflow-safe all operations on keys that currently are not: multiplication, computation of degree (including in truncators), etc.
- * and then optimize instead in the multipliers (by checking the ranges before performing the multiplication) -> this probably becomes null in case the caching of degree
- * values in the truncators turns out to work ok.
  * \todo series multadd to speed-up series multiplication when coefficients are series?
- * \todo forbid interoperability in +-* between series with different keys?
  * \todo look into perfect forwarding of members, for use in series, hash set (?)
  * http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
  * update: tried this on the series insertion methods, it seems like GCC does not implement this correctly (while clang does). Check again in the future.
- * \todo look into forwarding and delegating constructors when they become available.
  * \todo understand the consequences of not compiling boost libs we link to in c++0x mode. Stuff like this could happen:
  * http://stackoverflow.com/questions/10498887/bug-in-libstdc-regarding-stdlist-assignment -> compile boost in c++11/c++0x mode in gentoo and windows.
  * \todo it seems like default construction of c++ containers might throw :/ We should probably double-check we do not assume any nothrow behaviour in
  * such cases. For instance, if we use an old-style C allocation function and we need to create a container _before_ calling free(), then the behaviour
  * might not be exception-safe.
- * \todo think about the generic binary term constrcutor, especially in conjunction with the generic series interop. Do we want to leave it generic
- * or force it to be strictly from (cf_type,key_type)? In the latter case, we should review its usage.
  * \todo in pyranha, access to static variables should be made thread-safe (first of all in the Python sense,
  * e.g., importing the module from multiple Python threads). In particular, access to the coefficient list (construct on first
  * use with mutex protection instead of at register time? or maybe avoid using static variable and build each time)
