@@ -66,6 +66,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/is_digit.hpp
 	detail/config_intel.hpp
 	detail/type_in_tuple.hpp
+	detail/gcd.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers

@@ -36,6 +36,7 @@
 #include <utility>
 
 #include "config.hpp"
+#include "detail/gcd.hpp"
 #include "detail/mp_rational_fwd.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
@@ -49,24 +50,6 @@ namespace piranha
 
 namespace detail
 {
-
-// Greatest common divisor using the euclidean algorithm.
-// NOTE: this can yield negative values, depending on the signs
-// of a and b.
-template <typename T>
-inline T gcd(T a, T b)
-{
-	while (true) {
-		if (math::is_zero(a)) {
-			return b;
-		}
-		b %= a;
-		if (math::is_zero(b)) {
-			return a;
-		}
-		a %= b;
-	}
-}
 
 // Fwd declaration.
 template <typename>
