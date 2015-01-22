@@ -39,7 +39,9 @@
 
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/key_is_convertible.hpp"
 #include "../src/key_is_multipliable.hpp"
+#include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -1204,4 +1206,22 @@ struct serialization_tester
 BOOST_AUTO_TEST_CASE(monomial_serialization_test)
 {
 	boost::mpl::for_each<size_types>(serialization_tester());
+}
+
+BOOST_AUTO_TEST_CASE(monomial_kic_test)
+{
+	using k_type_00 = monomial<int>;
+	using k_type_01 = monomial<long>;
+	using k_type_02 = monomial<long>;
+	BOOST_CHECK((key_is_convertible<k_type_00,k_type_00>::value));
+	BOOST_CHECK((key_is_convertible<k_type_01,k_type_01>::value));
+	BOOST_CHECK((key_is_convertible<k_type_02,k_type_02>::value));
+	BOOST_CHECK((key_is_convertible<k_type_00,k_type_01>::value));
+	BOOST_CHECK((key_is_convertible<k_type_01,k_type_00>::value));
+	BOOST_CHECK((key_is_convertible<k_type_00,k_type_02>::value));
+	BOOST_CHECK((key_is_convertible<k_type_02,k_type_00>::value));
+	BOOST_CHECK((key_is_convertible<k_type_01,k_type_02>::value));
+	BOOST_CHECK((key_is_convertible<k_type_02,k_type_01>::value));
+	BOOST_CHECK((!key_is_convertible<k_type_00,k_monomial>::value));
+	BOOST_CHECK((!key_is_convertible<k_monomial,k_type_00>::value));
 }

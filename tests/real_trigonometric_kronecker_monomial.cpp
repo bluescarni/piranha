@@ -40,9 +40,11 @@
 #include <vector>
 
 #include "../src/environment.hpp"
+#include "../src/key_is_convertible.hpp"
 #include "../src/key_is_multipliable.hpp"
 #include "../src/kronecker_array.hpp"
 #include "../src/math.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/real.hpp"
@@ -1654,4 +1656,11 @@ struct serialization_tester
 BOOST_AUTO_TEST_CASE(rtkm_serialization_test)
 {
 	boost::mpl::for_each<int_types>(serialization_tester());
+}
+
+BOOST_AUTO_TEST_CASE(rtkm_kic_test)
+{
+	BOOST_CHECK((key_is_convertible<rtk_monomial,rtk_monomial>::value));
+	BOOST_CHECK((!key_is_convertible<rtk_monomial,monomial<int>>::value));
+	BOOST_CHECK((!key_is_convertible<monomial<int>,rtk_monomial>::value));
 }

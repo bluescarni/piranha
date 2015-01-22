@@ -130,6 +130,8 @@
  * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors.
  * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
  * and be done with them instead.
+ * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
+ * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at this.
  */
 namespace piranha
 {
@@ -156,6 +158,7 @@ inline namespace literals {}
 #include "hash_set.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
+#include "key_is_convertible.hpp"
 #include "key_is_multipliable.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"

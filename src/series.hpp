@@ -51,6 +51,7 @@
 #include "exceptions.hpp"
 #include "hash_set.hpp"
 #include "is_cf.hpp"
+#include "key_is_convertible.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 #include "mp_integer.hpp"
 #include "print_coefficient.hpp"
@@ -1386,11 +1387,16 @@ class series: detail::series_tag, series_operators
 			key_type key(m_symbol_set);
 			insert(term_type(std::move(cf),std::move(key)));
 		}
+		// NOTE: here in principle we could have a type U which is not a series but has a term_type typedef defined,
+		// which could incur into a hard error (e.g., via a static_assert in U). Maybe for the future we could think of defining
+		// a term_type_t template alias in the spirit of series_rebind, that goes into SFINAE if the argument is not a series.
+		// Alternatively, the key_is_convertible and other similar typedefs with internal static asserts could be made sfinae-friendly
+		// in a similar way (i.e., don't define the ::value member if the input types are not keys).
 		template <typename T, typename U = series, typename std::enable_if<
 			series_recursion_index<T>::value != 0u &&
 			(series_recursion_index<T>::value == series_recursion_index<U>::value) &&
 			has_convert_to<typename U::term_type::cf_type,typename T::term_type::cf_type>::value &&
-			std::is_constructible<typename U::term_type::key_type,const typename T::term_type::key_type &,const symbol_set &>::value,
+			key_is_convertible<typename U::term_type::key_type,typename T::term_type::key_type>::value,
 			int>::type = 0>
 		void dispatch_generic_constructor(const T &s)
 		{
@@ -1798,8 +1804,10 @@ class series: detail::series_tag, series_operators
 		 *
 		 * The generic construction algorithm works as follows:
 		 * - if \p T is a series with the same series recursion index as \p this, then
-		 *   the symbol set of \p x is copied into \p this and all terms from \p x are inserted into \p this
-		 *   (after conversion to \p term_type via binary construction from coefficient and key);
+		 *   the symbol set of \p x is copied into \p this and all terms from \p x are inserted into \p this.
+		 *   The terms of \p x are converted to \p term_type via the binary constructor of piranha::term,
+		 *   and the keys of \p x are converted to the key type of \p term_type via a converting constructor,
+		 *   if available (see piranha::key_is_convertible);
 		 * - else, if the recursion index of \p T is less than the recursion index of \p this:
 		 *   - \p x is used to construct a new term as follows:
 		 *     - \p x is used to construct a coefficient via piranha::convert_to;
