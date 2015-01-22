@@ -31,8 +31,10 @@
 #include <type_traits>
 #include <vector>
 
+#include "../src/detail/vector_hasher.hpp"
 #include "../src/environment.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -78,6 +80,13 @@ struct ctor_tester
 		// Test clear().
 		d4.clear();
 		BOOST_CHECK_EQUAL(d4.size(),0u);
+		// Constructor from arguments set.
+		symbol_set s;
+		d_type d5(s);
+		BOOST_CHECK_EQUAL(d5.size(),0u);
+		s.add("foo");
+		d_type d6(s);
+		BOOST_CHECK_EQUAL(d6.size(),0u);
 	}
 };
 
@@ -247,10 +256,101 @@ struct hash_tester
 		std::hash<d_type> hasher;
 		BOOST_CHECK_EQUAL(d0.hash(),0u);
 		BOOST_CHECK_EQUAL(d0.hash(),hasher(d0));
+		tmp = {T(1),T(2)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_EQUAL(d0.hash(),detail::vector_hasher(tmp));
+		BOOST_CHECK_EQUAL(d0.hash(),hasher(d0));
+		tmp = {T(2),T(1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_EQUAL(d0.hash(),detail::vector_hasher(tmp) + detail::vector_hasher(std::vector<T>{T(1),T(2)}));
+		BOOST_CHECK_EQUAL(d0.hash(),hasher(d0));
+		// Check that the exponent does not matter.
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_EQUAL(d0.hash(),detail::vector_hasher(tmp) + detail::vector_hasher(std::vector<T>{T(1),T(2)}));
+		BOOST_CHECK_EQUAL(d0.hash(),hasher(d0));
+		tmp = {T(1),T(2)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_EQUAL(d0.hash(),detail::vector_hasher(tmp) + detail::vector_hasher(std::vector<T>{T(2),T(1)}));
+		BOOST_CHECK_EQUAL(d0.hash(),hasher(d0));
+		BOOST_CHECK_EQUAL(d0.size(),2u);
 	}
 };
 
 BOOST_AUTO_TEST_CASE(divisor_hash_test)
 {
 	boost::mpl::for_each<value_types>(hash_tester());
+}
+
+struct tt_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		BOOST_CHECK(is_container_element<d_type>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_tt_test)
+{
+	boost::mpl::for_each<value_types>(tt_tester());
+}
+
+struct ci_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		d_type d0;
+		symbol_set s;
+		BOOST_CHECK(d0.is_compatible(s));
+		BOOST_CHECK(!d0.is_ignorable(s));
+		s.add("foo");
+		s.add("bar");
+		BOOST_CHECK(d0.is_compatible(s));
+		BOOST_CHECK(!d0.is_ignorable(s));
+		std::vector<T> tmp;
+		T exponent(1);
+		tmp = {T(1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(!d0.is_compatible(s));
+		BOOST_CHECK(!d0.is_ignorable(s));
+		symbol_set s2;
+		BOOST_CHECK(!d0.is_compatible(s2));
+		BOOST_CHECK(!d0.is_ignorable(s2));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_ci_test)
+{
+	boost::mpl::for_each<value_types>(ci_tester());
+}
+
+struct is_unitary_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		d_type d0;
+		symbol_set s;
+		BOOST_CHECK(d0.is_unitary(s));
+		s.add("foo");
+		BOOST_CHECK(d0.is_unitary(s));
+		std::vector<T> tmp;
+		T exponent(1);
+		tmp = {T(1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(!d0.is_unitary(s));
+		s.add("bar");
+		BOOST_CHECK_THROW(d0.is_unitary(s),std::invalid_argument);
+		symbol_set s2;
+		BOOST_CHECK_THROW(d0.is_unitary(s2),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_is_unitary_test)
+{
+	boost::mpl::for_each<value_types>(is_unitary_tester());
 }

@@ -37,6 +37,7 @@
 #include "mp_integer.hpp"
 #include "safe_cast.hpp"
 #include "small_vector.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -118,13 +119,17 @@ class divisor
 		void destruction_checks() const
 		{
 			const auto it_f = m_container.end();
-			for (auto it = m_container.begin(); it != it_f; ++it) {
+			auto it = m_container.begin();
+			const typename v_type::size_type v_size = (it == it_f) ? 0u : it->v.size();
+			for (; it != it_f; ++it) {
 				// Check: the exponent must be greater than zero.
 				piranha_assert(it->e > 0);
 				// Check: range.
 				piranha_assert(term_range_check(*it));
 				// Check: canonical.
 				piranha_assert(term_is_canonical(*it));
+				// Check: all vectors have the same size.
+				piranha_assert(it->v.size() == v_size);
 			}
 		}
 		// Insertion machinery.
@@ -187,6 +192,7 @@ class divisor
 		divisor() = default;
 		divisor(const divisor &) = default;
 		divisor(divisor &&) = default;
+		explicit divisor(const symbol_set &) {}
 		~divisor()
 		{
 			piranha_assert((destruction_checks(),true));
@@ -252,6 +258,27 @@ class divisor
 				retval += hasher(*it);
 			}
 			return retval;
+		}
+		bool is_compatible(const symbol_set &args) const noexcept
+		{
+			if (m_container.empty()) {
+				return true;
+			}
+			return m_container.begin()->v.size() == args.size();
+		}
+		bool is_ignorable(const symbol_set &) const noexcept
+		{
+			return false;
+		}
+		bool is_unitary(const symbol_set &args) const
+		{
+			if (m_container.empty()) {
+				return true;
+			}
+			if (unlikely(m_container.begin()->v.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid arguments set");
+			}
+			return false;
 		}
 	private:
 		container_type m_container;
