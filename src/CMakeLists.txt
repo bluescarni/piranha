@@ -45,6 +45,7 @@ SET(HEADERS_LIST
 	convert_to.hpp
 	serialization.hpp
 	key_is_multipliable.hpp
+	divisor.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
