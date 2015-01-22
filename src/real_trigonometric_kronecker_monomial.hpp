@@ -98,11 +98,11 @@ namespace piranha
  * 
  */
 // TODO:
-// - in case we start returning integers for the degrees of monomials, this needs to be changed too -> and review the use
-//   of t_degree around the code to make sure the change has no nasty effects.
 // - needs sfinaeing.
 // - it might make sense, for canonicalisation and is_compatible(), to provide a method in kronecker_array to get only
 //   the first element of the array. This should be quite fast, and it will provide enough information for the canon/compatibility.
+// - related to the above: we can embed the flavour as the first element of the kronecker array - at that point checking
+//   the flavour is just determining if the int value is even or odd.
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
