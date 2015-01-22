@@ -1507,7 +1507,7 @@ class series: detail::series_tag, series_operators
 		using eval_type = typename eval_type_<Series,U>::type;
 		// Print utilities.
 		template <bool TexMode, typename Iterator>
-		static std::ostream &print_helper_1(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
+		static std::ostream &print_helper(std::ostream &os, Iterator start, Iterator end, const symbol_set &args)
 		{
 			piranha_assert(start != end);
 			const auto limit = settings::get_max_term_output();
@@ -2473,7 +2473,7 @@ class series: detail::series_tag, series_operators
 				os << "0";
 				return;
 			}
-			print_helper_1<true>(os,m_container.begin(),m_container.end(),m_symbol_set);
+			print_helper<true>(os,m_container.begin(),m_container.end(),m_symbol_set);
 		}
 		/// Overloaded stream operator for piranha::series.
 		/**
@@ -2518,7 +2518,7 @@ class series: detail::series_tag, series_operators
 				os << "0";
 				return os;
 			}
-			return print_helper_1<false>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
+			return print_helper<false>(os,s.m_container.begin(),s.m_container.end(),s.m_symbol_set);
 		}
 		/// Hash value.
 		/**
