@@ -161,6 +161,26 @@ The ``rational`` result of the C++ function is then converted back to ``Fraction
 The ``real`` type
 -----------------
 
+The third basic numerical type provided by Piranha is called ``real``, and it represents arbitrary-precision floating-point numbers. It consists
+of a thin wrapper around the ``mpfr_t`` type from the `GNU MPFR <http://www.mpfr.org>`__ library. ``real`` is essentially a floating-point type
+whose number of significant digits can be selected at runtime.
+
+The ``real`` type obeys the following basic rules:
+
+* a default-constructed ``real`` object is initialised to zero;
+* the precision (i.e., the number of significant digits) is measured in bits, and it can be set at different values for different instances of
+  ``real``. The default value is 113 bits (IEEE 754 quadruple-precision);
+* a ``real`` object can be converted to/from all the basic C++ numerical types, ``integer`` and ``rational`` (the conversion to an integral
+  type truncates the original value);
+* in mixed-mode operations, the rank of ``real`` is higher than that of ``integer``, ``rational`` and any other numeric C++ type;
+* operations involving multiple ``real`` instances with different precisions will produce a result with the highest precision among the operands.
+
+The following C++ code showcases a few features of the ``real`` class:
+
+.. literalinclude:: ../../tutorial/real_.cpp
+   :language: c++
+   :linenos:
+
 Potential pitfalls
 ------------------
 
