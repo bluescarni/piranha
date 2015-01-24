@@ -1809,7 +1809,7 @@ class series: detail::series_tag, series_operators
 		/// Generic constructor.
 		/**
 		 * \note
-		 * This constructor is enabled only if \p T is different from piranha::series and
+		 * This constructor is enabled only if \p T does not derive from the calling piranha::series instance and
 		 * the algorithm outlined below is supported by the involved types.
 		 *
 		 * The generic construction algorithm works as follows:
