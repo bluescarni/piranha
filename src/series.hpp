@@ -1414,10 +1414,20 @@ class series: detail::series_tag, series_operators
 				throw;
 			}
 		}
+		// NOTE: here we need to make sure that the generic ctor cannot be preferred over the copy constructor,
+		// otherwise we pay a performance penalty. We need to make sure of the following things:
+		// - this must *not* be a copy constructor for series - this will prevent automatically-generated copy constructors
+		//   lower in the class hierarchy to call it;
+		// - if we call explicitly a base() copy constructor lower in the hierarchy, the generic constructor must be excluded
+		//   from the overload set.
+		// Here, U is the calling series object, T the generic object. The is_base_of check makes sure of the above conditions:
+		// - if T is U exactly, then clearly std::is_base_of<U,T>::value is true;
+		// - if T comes from lower in the hierarchy, then clearly std::is_base_of<U,T>::value is true again.
+		// These aspects are tested in series_03.
 		template <typename T, typename U>
 		using generic_ctor_enabler = typename std::enable_if<detail::true_tt<
 			decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value &&
-			!std::is_same<U,T>::value,int>::type;
+			!std::is_base_of<U,T>::value,int>::type;
 		// Enabler for is_identical.
 		template <typename T>
 		using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value,int>::type;
