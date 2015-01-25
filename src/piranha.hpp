@@ -127,11 +127,14 @@
  * exception guarantees throughout the code.
  * \todo it seems like serialization of kronecker objects could not be platform-agnostic, even in text mode. This is because
  * the width of a type on a platform could be different from the original size in the archive, and the codification/decodification
- * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors.
+ * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors. Note that at the moment
+ * we also do not check the range of the deserialized integral values...
  * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
  * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
  * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at this.
+ * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check that this behaviour
+ * is ok in Python, and that the exception from boost serialization is thrown and translated properly.
  */
 namespace piranha
 {
