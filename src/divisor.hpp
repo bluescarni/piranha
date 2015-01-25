@@ -221,7 +221,10 @@ class divisor
 				// NOTE: here we could throw either because the archive is garbage (Boost.Serialization throwing
 				// in this case) or because the loaded terms are invalid. In the second case we must make sure
 				// to destroy the content of new_d before exiting, otherwise the dtor of the divisor will
-				// hit assertion failures in debug mode.
+				// hit assertion failures in debug mode. We need the second clear() in the catch block
+				// because we could be in the situation that the archive contains invaild terms and it is garbage
+				// after a while - in thie case invalid terms coud be living in new_d and the first clear() is never
+				// hit.
 				ar & new_d.m_container;
 				// Run the destruction checks, if they fail throw.
 				if (unlikely(!new_d.destruction_checks())) {
