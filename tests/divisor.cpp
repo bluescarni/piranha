@@ -33,6 +33,8 @@
 
 #include "../src/detail/vector_hasher.hpp"
 #include "../src/environment.hpp"
+#include "../src/key_is_convertible.hpp"
+#include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
@@ -87,6 +89,20 @@ struct ctor_tester
 		s.add("foo");
 		d_type d6(s);
 		BOOST_CHECK_EQUAL(d6.size(),0u);
+		// Converting constructor.
+		d_type d7(d6,s);
+		BOOST_CHECK_EQUAL(d7.size(),0u);
+		d7.insert(tmp.begin(),tmp.end(),e);
+		s.add("bar");
+		d_type d8(d7,s);
+		BOOST_CHECK_EQUAL(d8.size(),1u);
+		s.add("frob");
+		BOOST_CHECK_THROW((d_type{d7,s}),std::invalid_argument);
+		// Check the type trait.
+		// TODO reinstate.
+//		BOOST_CHECK((key_is_convertible<d_type,d_type>::value));
+//		BOOST_CHECK((!key_is_convertible<d_type,monomial<int>>::value));
+//		BOOST_CHECK((!key_is_convertible<monomial<int>,d_type>::value));
 	}
 };
 

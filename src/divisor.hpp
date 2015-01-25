@@ -192,6 +192,13 @@ class divisor
 		divisor() = default;
 		divisor(const divisor &) = default;
 		divisor(divisor &&) = default;
+		explicit divisor(const divisor &other, const symbol_set &args):m_container(other.m_container)
+		{
+			if (unlikely(!is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"the constructed divisor is incompatible with the "
+					"input symbol set");
+			}
+		}
 		explicit divisor(const symbol_set &) {}
 		~divisor()
 		{
