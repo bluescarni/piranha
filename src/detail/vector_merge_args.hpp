@@ -34,7 +34,8 @@ namespace piranha
 namespace detail
 {
 
-// Merge arguments for a vector-like key. Vector must support a minimal std::vector interface.
+// Merge arguments for a vector-like key. Vector must support a minimal std::vector interface,
+// and the value type must be constructible from zero.
 template <typename Vector>
 inline Vector vector_merge_args(const Vector &v, const symbol_set &orig_args, const symbol_set &new_args)
 {

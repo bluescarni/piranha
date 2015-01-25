@@ -1131,6 +1131,7 @@ class series_operators
  * \todo transform needs sfinaeing.
  * TODO new operators:
  * - test with mock_cfs that are not addable to scalars.
+ * - the unary + and - operators should probably follow the type promotion rules for consistency.
  */
 template <typename Cf, typename Key, typename Derived>
 class series: detail::series_tag, series_operators
