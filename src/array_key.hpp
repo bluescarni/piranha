@@ -32,6 +32,7 @@
 
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/vector_merge_args.hpp"
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "safe_cast.hpp"
@@ -428,33 +429,8 @@ class array_key
 		 */
 		array_key base_merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			// NOTE: here and elsewhere (i.e., kronecker keys) the check on new_args.size() <= orig_args.size()
-			// is not redundant with the std::includes check; indeed it actually checks that the new args are
-			// _more_ than the old args (whereas with just the std::includes check identical orig_args and new_args
-			// would be allowed).
-			if (unlikely(m_container.size() != orig_args.size() || new_args.size() <= orig_args.size() ||
-				!std::includes(new_args.begin(),new_args.end(),orig_args.begin(),orig_args.end())))
-			{
-				piranha_throw(std::invalid_argument,"invalid argument(s) for symbol set merging");
-			}
 			array_key retval;
-			piranha_assert(std::is_sorted(orig_args.begin(),orig_args.end()));
-			piranha_assert(std::is_sorted(new_args.begin(),new_args.end()));
-			auto it_new = new_args.begin();
-			for (size_type i = 0u; i < m_container.size(); ++i, ++it_new) {
-				while (*it_new != orig_args[i]) {
-					retval.m_container.push_back(value_type(0));
-					piranha_assert(it_new != new_args.end());
-					++it_new;
-					piranha_assert(it_new != new_args.end());
-				}
-				retval.m_container.push_back(m_container[i]);
-			}
-			// Fill up arguments at the tail of new_args but not in orig_args.
-			for (; it_new != new_args.end(); ++it_new) {
-				retval.m_container.push_back(value_type(0));
-			}
-			piranha_assert(retval.size() == new_args.size());
+			retval.m_container = detail::vector_merge_args(m_container,orig_args,new_args);
 			return retval;
 		}
 	private:
