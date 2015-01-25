@@ -32,6 +32,7 @@
 
 #include "config.hpp"
 #include "detail/gcd.hpp"
+#include "detail/vector_merge_args.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
 #include "mp_integer.hpp"
@@ -339,6 +340,21 @@ class divisor
 				piranha_throw(std::invalid_argument,"invalid arguments set");
 			}
 			return false;
+		}
+		divisor merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+		{
+			divisor retval;
+			const auto it_f = m_container.end();
+			p_type tmp;
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				tmp.v = detail::vector_merge_args(it->v,orig_args,new_args);
+				tmp.e = it->e;
+				auto ret = retval.m_container.insert(std::move(tmp));
+				(void)ret;
+				piranha_assert(ret.first != retval.m_container.end());
+				piranha_assert(ret.second);
+			}
+			return retval;
 		}
 	private:
 		container_type m_container;

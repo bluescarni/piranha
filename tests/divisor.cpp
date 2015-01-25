@@ -31,6 +31,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "../src/detail/vector_hasher.hpp"
@@ -446,4 +447,59 @@ struct serialization_tester
 BOOST_AUTO_TEST_CASE(divisor_serialization_test)
 {
 	boost::mpl::for_each<value_types>(serialization_tester());
+}
+
+struct merge_args_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		symbol_set v1, v2;
+		v2.add(symbol("a"));
+		d_type d;
+		T exponent(1);
+		std::vector<T> tmp;
+		d_type out = d.merge_args(v1,v2);
+		BOOST_CHECK_EQUAL(out.size(),0u);
+		v2.add(symbol("b"));
+		v2.add(symbol("c"));
+		v2.add(symbol("d"));
+		v1.add(symbol("b"));
+		v1.add(symbol("d"));
+		tmp = {T(1),T(2)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		out = d.merge_args(v1,v2);
+		BOOST_CHECK_EQUAL(out.size(),1u);
+		tmp = {T(3),T(-2)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		out = d.merge_args(v1,v2);
+		BOOST_CHECK_EQUAL(out.size(),2u);
+		d.clear();
+		v2.add(symbol("e"));
+		v2.add(symbol("f"));
+		v2.add(symbol("g"));
+		v2.add(symbol("h"));
+		v1.add(symbol("e"));
+		v1.add(symbol("g"));
+		tmp = {T(3),T(-2),T(0),T(1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(1),T(-2),T(0),T(7)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		out = d.merge_args(v1,v2);
+		BOOST_CHECK_EQUAL(out.size(),2u);
+		// Check the throwing conditions.
+		BOOST_CHECK_THROW(d.merge_args(v2,v1),std::invalid_argument);
+		BOOST_CHECK_THROW(d.merge_args(v1,symbol_set{}),std::invalid_argument);
+		v1.add(symbol("z"));
+		BOOST_CHECK_THROW(d.merge_args(v1,v2),std::invalid_argument);
+		// Won't throw if the divisor is empty.
+		d.clear();
+		BOOST_CHECK_NO_THROW(d.merge_args(v1,v2));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_merge_args_test)
+{
+	boost::mpl::for_each<value_types>(merge_args_tester());
 }
