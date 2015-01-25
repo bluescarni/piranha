@@ -136,6 +136,7 @@
  * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check that this behaviour
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test garbage archives
  * also in the existing serialization tests.
+ * \todo std::move() needs the utility header.
  */
 namespace piranha
 {
