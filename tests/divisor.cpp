@@ -25,8 +25,10 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <exception>
 #include <functional>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -36,6 +38,7 @@
 #include "../src/key_is_convertible.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
@@ -369,4 +372,78 @@ struct is_unitary_tester
 BOOST_AUTO_TEST_CASE(divisor_is_unitary_test)
 {
 	boost::mpl::for_each<value_types>(is_unitary_tester());
+}
+
+struct serialization_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		d_type d0, dtmp;
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << d0;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> dtmp;
+		}
+		BOOST_CHECK(dtmp == d0);
+		T exponent(1);
+		std::vector<T> tmp;
+		tmp = {T(1),T(-2),T(3)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		ss.str("");
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << d0;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> dtmp;
+		}
+		BOOST_CHECK(dtmp == d0);
+		tmp = {T(3),T(-5),T(7)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		ss.str("");
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << d0;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> dtmp;
+		}
+		BOOST_CHECK(dtmp == d0);
+		BOOST_CHECK_EQUAL(d0.size(),2u);
+		// The check for malformed archive works only with C++ integral types.
+		if (!std::is_integral<T>::value) {
+			return;
+		}
+		{
+		std::stringstream ss1;
+		ss1.str("22 serialization::archive 10 0 0 0 0 1 0 0 0 0 3 2 -2 2 1");
+		boost::archive::text_iarchive ia(ss1);
+		BOOST_CHECK_THROW(ia >> dtmp,std::invalid_argument);
+		}
+		{
+		std::stringstream ss1;
+		// NOTE: this results in a Boost serialization exception that gets thrown (also?) when
+		// the ia object is destroyed.
+		ss1.str("22 serialization::archive 10 0 0 0 0 1 0 0 0 0 3 2 -2 a 1");
+		BOOST_CHECK_THROW(boost::archive::text_iarchive ia(ss1);ia >> dtmp,std::exception);
+		}
+		{
+		std::stringstream ss1;
+		ss1.str("22 serialization::archive 10 0 0 0 0 1 0 0 0 0 3 1 -2 3 0");
+		BOOST_CHECK_THROW(boost::archive::text_iarchive ia(ss1);ia >> dtmp,std::invalid_argument);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_serialization_test)
+{
+	boost::mpl::for_each<value_types>(serialization_tester());
 }

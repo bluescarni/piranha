@@ -36,6 +36,7 @@
 #include "hash_set.hpp"
 #include "mp_integer.hpp"
 #include "safe_cast.hpp"
+#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
@@ -66,6 +67,15 @@ class divisor
 			bool operator==(const p_type &other) const
 			{
 				return v == other.v;
+			}
+			// Serialization support.
+			template <class Archive>
+			void serialize(Archive &ar, unsigned int)
+			{
+				// NOTE: there's no need here for exception safety, as this is not a public class: we
+				// don't care if during deserialization we end up deserializing only part of the pair.
+				ar & v;
+				ar & e;
 			}
 			// Members.
 			v_type			v;
@@ -116,21 +126,30 @@ class divisor
 		{
 			return true;
 		}
-		void destruction_checks() const
+		bool destruction_checks() const
 		{
 			const auto it_f = m_container.end();
 			auto it = m_container.begin();
 			const typename v_type::size_type v_size = (it == it_f) ? 0u : it->v.size();
 			for (; it != it_f; ++it) {
 				// Check: the exponent must be greater than zero.
-				piranha_assert(it->e > 0);
+				if (it->e <= 0) {
+					return false;
+				}
 				// Check: range.
-				piranha_assert(term_range_check(*it));
+				if (!term_range_check(*it)) {
+					return false;
+				}
 				// Check: canonical.
-				piranha_assert(term_is_canonical(*it));
+				if (!term_is_canonical(*it)) {
+					return false;
+				}
 				// Check: all vectors have the same size.
-				piranha_assert(it->v.size() == v_size);
+				if (it->v.size() != v_size) {
+					return false;
+				}
 			}
+			return true;
 		}
 		// Insertion machinery.
 		template <typename Term>
@@ -187,6 +206,37 @@ class divisor
 		using insert_enabler = typename std::enable_if<is_input_iterator<It>::value &&
 			has_safe_cast<value_type,typename std::iterator_traits<It>::value_type>::value &&
 			has_safe_cast<value_type,Exponent>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			ar & m_container;
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			divisor new_d;
+			try {
+				// NOTE: here we could throw either because the archive is garbage (Boost.Serialization throwing
+				// in this case) or because the loaded terms are invalid. In the second case we must make sure
+				// to destroy the content of new_d before exiting, otherwise the dtor of the divisor will
+				// hit assertion failures in debug mode.
+				ar & new_d.m_container;
+				// Run the destruction checks, if they fail throw.
+				if (unlikely(!new_d.destruction_checks())) {
+					new_d.clear();
+					piranha_throw(std::invalid_argument,"error during the deserialization of a divisor, the loaded data "
+						"is invalid");
+				}
+			} catch (...) {
+				new_d.clear();
+				throw;
+			}
+			// Move in.
+			*this = std::move(new_d);
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		using size_type = typename container_type::size_type;
 		divisor() = default;
@@ -202,7 +252,7 @@ class divisor
 		explicit divisor(const symbol_set &) {}
 		~divisor()
 		{
-			piranha_assert((destruction_checks(),true));
+			piranha_assert(destruction_checks());
 		}
 		divisor &operator=(const divisor &) = default;
 		divisor &operator=(divisor &&) = default;
