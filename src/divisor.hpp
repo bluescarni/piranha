@@ -330,8 +330,8 @@ class divisor
 		 * - the value type of \p It can be safely cast to piranha::divisor::value_type,
 		 * - \p Exponent can be safely cast to piranha::divisor::value_type.
 		 *
-		 * This method will insert a term into the product constituting the divisor. The elements
-		 * in the range <tt>[begin,end)</tt> will be used to construct the \f$ a_{i,j} \f$, while \p e
+		 * This method will construct and insert a term into the divisor. The elements
+		 * in the range <tt>[begin,end)</tt> will be used to construct the \f$ a_{i,j} \f$ of the term, while \p e
 		 * will be used to construct the exponent (after a call to piranha::safe_cast()).
 		 * If no term with the same set of \f$ a_{i,j} \f$ exists, then
 		 * a new term will be inserted; otherwise, \p e will be added to the exponent of the existing term.
