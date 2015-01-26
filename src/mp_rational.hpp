@@ -41,6 +41,7 @@
 #include "exceptions.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
+#include "pow.hpp"
 #include "print_tex_coefficient.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"

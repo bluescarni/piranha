@@ -174,6 +174,7 @@ inline namespace literals {}
 #include "mp_rational.hpp"
 #include "poisson_series.hpp"
 #include "polynomial.hpp"
+#include "pow.hpp"
 #include "power_series.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"

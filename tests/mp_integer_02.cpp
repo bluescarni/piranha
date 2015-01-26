@@ -49,6 +49,7 @@
 #include "../src/exceptions.hpp"
 #include "../src/is_cf.hpp"
 #include "../src/math.hpp"
+#include "../src/pow.hpp"
 #include "../src/serialization.hpp"
 #include "../src/type_traits.hpp"
 

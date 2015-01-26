@@ -54,6 +54,7 @@
 #include "math.hpp"
 #include "monomial.hpp"
 #include "mp_integer.hpp"
+#include "pow.hpp"
 #include "power_series.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"

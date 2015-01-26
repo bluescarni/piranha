@@ -49,6 +49,7 @@
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/pow.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/safe_cast.hpp"
 #include "../src/serialization.hpp"

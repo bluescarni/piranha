@@ -45,6 +45,7 @@
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"

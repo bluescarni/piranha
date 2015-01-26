@@ -3252,138 +3252,6 @@ struct is_unitary_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value
 	}
 };
 
-}
-
-namespace detail
-{
-
-template <typename T, typename U>
-using integer_pow_enabler = typename std::enable_if<
-	(is_mp_integer<T>::value && is_mp_integer_interoperable_type<U>::value) ||
-	(is_mp_integer<U>::value && is_mp_integer_interoperable_type<T>::value) ||
-	// NOTE: here we are catching two arguments with potentially different
-	// bits. BUT this case is not caught in the pow_impl, so we should be ok as long
-	// as we don't allow interoperablity with different bits.
-	(is_mp_integer<T>::value && is_mp_integer<U>::value) ||
-	(std::is_integral<T>::value && std::is_integral<U>::value)
->::type;
-
-// Binomial follows the same rules as pow.
-template <typename T, typename U>
-using integer_binomial_enabler = integer_pow_enabler<T,U>;
-
-}
-
-namespace math
-{
-
-/// Specialisation of the piranha::math::pow() functor for piranha::mp_integer and integral types.
-/**
- * This specialisation is activated when:
- * - one of the arguments is piranha::mp_integer and the other is either
- *   piranha::mp_integer or an interoperable type for piranha::mp_integer,
- * - both arguments are integral types.
- *
- * The implementation follows these rules:
- * - if the arguments are both piranha::mp_integer, or a piranha::mp_integer and an integral type, then piranha::mp_integer::pow() is used
- *   to compute the result (after any necessary conversion),
- * - if both arguments are integral types, piranha::mp_integer::pow() is used after the conversion of the base
- *   to piranha::mp_integer,
- * - otherwise, the piranha::mp_integer argument is converted to the floating-point type and \p piranha::math::pow() is
- *   used to compute the result.
- */
-template <typename T, typename U>
-struct pow_impl<T,U,detail::integer_pow_enabler<T,U>>
-{
-	/// Call operator, integral--integral overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::pow()
-	 * or by the constructor of piranha::mp_integer from integral type.
-	 */
-	template <typename T2, typename U2, typename std::enable_if<std::is_integral<T2>::value &&
-		std::is_integral<U2>::value,int>::type = 0>
-	integer operator()(const T2 &b, const U2 &e) const
-	{
-		return integer(b).pow(e);
-	}
-	/// Call operator, piranha::mp_integer overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::pow()
-	 * or by the constructor of piranha::mp_integer from integral type.
-	 */
-	template <int NBits>
-	mp_integer<NBits> operator()(const mp_integer<NBits> &b, const mp_integer<NBits> &e) const
-	{
-		return b.pow(e);
-	}
-	/// Call operator, integer--integral overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::pow().
-	 */
-	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
-	mp_integer<NBits> operator()(const mp_integer<NBits> &b, const T2 &e) const
-	{
-		return b.pow(e);
-	}
-	/// Call operator, integer--floating-point overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_integer to a floating-point type.
-	 */
-	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
-	T2 operator()(const mp_integer<NBits> &b, const T2 &e) const
-	{
-		return math::pow(static_cast<T2>(b),e);
-	}
-	/// Call operator, integral--integer overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by piranha::mp_integer::pow().
-	 */
-	template <int NBits, typename T2, typename std::enable_if<std::is_integral<T2>::value,int>::type = 0>
-	mp_integer<NBits> operator()(const T2 &b, const mp_integer<NBits> &e) const
-	{
-		return mp_integer<NBits>(b).pow(e);
-	}
-	/// Call operator, floating-point--integer overload.
-	/**
-	 * @param[in] b base.
-	 * @param[in] e exponent.
-	 *
-	 * @returns <tt>b**e</tt>.
-	 *
-	 * @throws unspecified any exception thrown by converting piranha::mp_integer to a floating-point type.
-	 */
-	template <int NBits, typename T2, typename std::enable_if<std::is_floating_point<T2>::value,int>::type = 0>
-	T2 operator()(const T2 &b, const mp_integer<NBits> &e) const
-	{
-		return math::pow(b,static_cast<T2>(e));
-	}
-};
-
 /// Specialisation of the piranha::math::abs() functor for piranha::mp_integer.
 /**
  * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
@@ -3487,6 +3355,28 @@ struct subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::typ
 		return n;
 	}
 };
+
+}
+
+namespace detail
+{
+
+// Binomial follows the same rules as pow. TODO fixme share.
+template <typename T, typename U>
+using integer_binomial_enabler = typename std::enable_if<
+	(is_mp_integer<T>::value && is_mp_integer_interoperable_type<U>::value) ||
+	(is_mp_integer<U>::value && is_mp_integer_interoperable_type<T>::value) ||
+	// NOTE: here we are catching two arguments with potentially different
+	// bits. BUT this case is not caught in the pow_impl, so we should be ok as long
+	// as we don't allow interoperablity with different bits.
+	(is_mp_integer<T>::value && is_mp_integer<U>::value) ||
+	(std::is_integral<T>::value && std::is_integral<U>::value)
+>::type;
+
+}
+
+namespace math
+{
 
 /// Specialisation of the piranha::math::binomial() functor for piranha::mp_integer.
 /**

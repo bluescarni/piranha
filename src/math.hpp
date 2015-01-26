@@ -317,62 +317,6 @@ inline auto multiply_accumulate(T &x, U &&y, V &&z) -> decltype(multiply_accumul
 		typename std::decay<U>::type,typename std::decay<V>::type>()(x,std::forward<U>(y),std::forward<V>(z));
 }
 
-/// Default functor for the implementation of piranha::math::pow().
-/**
- * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
- * the call operator, and will hence result in a compilation error when used.
- */
-template <typename T, typename U, typename Enable = void>
-struct pow_impl
-{};
-
-/// Specialisation of the piranha::math::pow() functor for arithmetic and floating-point types.
-/**
- * This specialisation is activated when both arguments are C++ arithmetic types and at least one argument
- * is a floating-point type.
- */
-template <typename T, typename U>
-struct pow_impl<T,U,typename std::enable_if<
-	std::is_arithmetic<T>::value && std::is_arithmetic<U>::value &&
-	(std::is_floating_point<T>::value || std::is_floating_point<U>::value)
->::type>
-{
-	/// Call operator.
-	/**
-	 * This operator will compute the exponentiation via one of the overloads of <tt>std::pow()</tt>.
-	 * 
-	 * @param[in] x base.
-	 * @param[out] y exponent.
-	 * 
-	 * @return <tt>x**y</tt>.
-	 */
-	template <typename T2, typename U2>
-	auto operator()(const T2 &x, const U2 &y) const -> decltype(std::pow(x,y))
-	{
-		return std::pow(x,y);
-	}
-};
-
-/// Exponentiation.
-/**
- * Return \p x to the power of \p y. The actual implementation of this function is in the piranha::math::pow_impl functor's
- * call operator.
- * 
- * @param[in] x base.
- * @param[in] y exponent.
- * 
- * @return \p x to the power of \p y.
- * 
- * @throws unspecified any exception thrown by the call operator of the piranha::math::pow_impl functor.
- */
-// NOTE: here the use of trailing decltype gives a nice and compact compilation error in case the specialisation of the functor
-// is missing.
-template <typename T, typename U>
-inline auto pow(const T &x, const U &y) -> decltype(pow_impl<T,U>()(x,y))
-{
-	return pow_impl<T,U>()(x,y);
-}
-
 /// Default functor for the implementation of piranha::math::cos().
 /**
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
@@ -1747,28 +1691,6 @@ class is_integrable: detail::sfinae_types
 // Static init.
 template <typename T>
 const bool is_integrable<T>::value;
-
-/// Type trait for exponentiable types.
-/**
- * The type trait will be \p true if piranha::math::pow() can be successfully called with base \p T and
- * exponent \p U.
- * 
- * The call to piranha::math::pow() will be tested with const reference arguments.
- */
-template <typename T, typename U>
-class is_exponentiable: detail::sfinae_types
-{
-		template <typename Base, typename Expo>
-		static auto test(const Base &b, const Expo &e) -> decltype(math::pow(b,e),void(),yes());
-		static no test(...);
-	public:
-		/// Value of the type trait.
-		static const bool value = std::is_same<decltype(test(std::declval<T>(),std::declval<U>())),yes>::value;
-};
-
-// Static init.
-template <typename T, typename U>
-const bool is_exponentiable<T,U>::value;
 
 /// Type trait to detect if type has a degree property.
 /**

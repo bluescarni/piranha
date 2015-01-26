@@ -48,6 +48,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"

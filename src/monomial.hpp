@@ -45,6 +45,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "mp_rational.hpp"
+#include "pow.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "symbol_set.hpp"

@@ -54,6 +54,7 @@
 #include "key_is_convertible.hpp"
 #include "math.hpp" // For negate() and math specialisations.
 #include "mp_integer.hpp"
+#include "pow.hpp"
 #include "print_coefficient.hpp"
 #include "print_tex_coefficient.hpp"
 #include "safe_cast.hpp"

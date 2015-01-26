@@ -43,6 +43,7 @@
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"

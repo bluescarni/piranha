@@ -47,6 +47,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/monomial.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/pow.hpp"
 #include "../src/print_coefficient.hpp"
 #include "../src/print_tex_coefficient.hpp"
 #include "../src/real.hpp"

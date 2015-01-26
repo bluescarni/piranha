@@ -47,6 +47,7 @@ SET(HEADERS_LIST
 	key_is_multipliable.hpp
 	divisor.hpp
 	key_is_convertible.hpp
+	pow.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
