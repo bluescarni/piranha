@@ -30,16 +30,23 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "../src/detail/vector_hasher.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/key_is_convertible.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
+#include "../src/real.hpp"
 #include "../src/serialization.hpp"
+#include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
@@ -631,4 +638,59 @@ struct print_tex_tester
 BOOST_AUTO_TEST_CASE(divisor_print_tex_test)
 {
 	boost::mpl::for_each<value_types>(print_tex_tester());
+}
+
+struct evaluate_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		using pmap_type1 = symbol_set::positions_map<rational>;
+		using dict_type1 = std::unordered_map<symbol,rational>;
+		using pmap_type2 = symbol_set::positions_map<double>;
+		using dict_type2 = std::unordered_map<symbol,double>;
+		using pmap_type3 = symbol_set::positions_map<real>;
+		using dict_type3 = std::unordered_map<symbol,real>;
+		symbol_set v;
+		d_type d;
+		// Test the type trait first.
+		BOOST_CHECK((key_is_evaluable<d_type,rational>::value));
+		BOOST_CHECK((key_is_evaluable<d_type,double>::value));
+		BOOST_CHECK((key_is_evaluable<d_type,long double>::value));
+		BOOST_CHECK((key_is_evaluable<d_type,real>::value));
+		BOOST_CHECK((!key_is_evaluable<d_type,std::string>::value));
+		// Empty divisor.
+		BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v,dict_type1{}),v),1_q);
+		BOOST_CHECK((std::is_same<rational,decltype(d.evaluate(pmap_type1(v,dict_type1{}),v))>::value));
+		BOOST_CHECK((std::is_same<double,decltype(d.evaluate(pmap_type2(v,dict_type2{}),v))>::value));
+		BOOST_CHECK((std::is_same<real,decltype(d.evaluate(pmap_type3(v,dict_type3{}),v))>::value));
+		T exponent(2);
+		std::vector<T> tmp;
+		tmp = {T(1),T(-2)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 3;
+		tmp = {T(2),T(7)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		// Mismatch between map size and number of variables in the divisor.
+		BOOST_CHECK_THROW(d.evaluate(pmap_type1(v,dict_type1{}),v),std::invalid_argument);
+		v.add("x");
+		// Same as above.
+		BOOST_CHECK_THROW(d.evaluate(pmap_type1(v,dict_type1{{symbol("x"),1_q}}),v),std::invalid_argument);
+		v.add("y");
+		// Some numerical checks.
+		BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v,dict_type1{{symbol("x"),-1_q},{symbol("y"),2_q}}),v),1/43200_q);
+		BOOST_CHECK_EQUAL(d.evaluate(pmap_type1(v,dict_type1{{symbol("x"),2/3_q},{symbol("y"),-4/5_q}}),v),-759375_z/303038464_q);
+		BOOST_CHECK_THROW(d.evaluate(pmap_type1(v,dict_type1{{symbol("x"),2_q},{symbol("y"),1_q}}),v),zero_division_error);
+		// Difference between args and number of variables.
+		BOOST_CHECK_THROW(d.evaluate(pmap_type1(v,dict_type1{{symbol("x"),2_q},{symbol("y"),1_q}}),symbol_set{}),std::invalid_argument);
+		// A map with invalid values.
+		BOOST_CHECK_THROW(d.evaluate(pmap_type1(symbol_set{symbol{"x"},symbol{"y"},symbol{"z"}},
+			dict_type1{{symbol("x"),2_q},{symbol("z"),1_q}}),v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_evaluate_test)
+{
+	boost::mpl::for_each<value_types>(evaluate_tester());
 }

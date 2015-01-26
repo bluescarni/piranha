@@ -40,6 +40,7 @@
 #include "hash_set.hpp"
 #include "is_key.hpp"
 #include "mp_integer.hpp"
+#include "pow.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "small_vector.hpp"
@@ -276,6 +277,17 @@ class divisor
 			*this = std::move(new_d);
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Evaluation utilities.
+		// NOTE: here we are not actually requiring that the eval_type has to be destructible, copyable/movable, etc.
+		// We just assume it is a sane type of some kind.
+		template <typename U>
+		using eval_sum_type = decltype(std::declval<const value_type &>() * std::declval<const U &>());
+		template <typename U>
+		using eval_type_ = decltype(math::pow(std::declval<const eval_sum_type<U> &>(),std::declval<const value_type &>()));
+		template <typename U>
+		using eval_type = typename std::enable_if<std::is_constructible<eval_type_<U>,int>::value &&
+			is_divisible_in_place<eval_type_<U>>::value && std::is_constructible<eval_sum_type<U>,int>::value &&
+			is_addable_in_place<eval_sum_type<U>>::value,eval_type_<U>>::type;
 	public:
 		/// Size type.
 		/**
@@ -638,6 +650,39 @@ class divisor
 				}
 			}
 			os << '}';
+		}
+		template <typename U>
+		eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
+		{
+			// Just return 1 if the container is empty.
+			eval_type<U> retval(1);
+			if (m_container.empty()) {
+				return retval;
+			}
+			// NOTE: the positions map must have the same number of elements as this, and it must
+			// be made of consecutive positions [0,size - 1].
+			if (unlikely(pmap.size() != m_container.begin()->v.size() || (pmap.size() && pmap.back().first != pmap.size() - 1u))) {
+				piranha_throw(std::invalid_argument,"invalid positions map for evaluation");
+			}
+			// Args must be compatible with this.
+			if (unlikely(args.size() != m_container.begin()->v.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				eval_sum_type<U> tmp(0);
+				auto map_it = pmap.begin();
+				for (typename v_type::size_type i = 0u; i < it->v.size(); ++i, ++map_it) {
+					piranha_assert(map_it != pmap.end() && map_it->first == i);
+					// NOTE: might use multadd here eventually for performance.
+					tmp += it->v[i] * map_it->second;
+				}
+				piranha_assert(map_it == pmap.end());
+				// NOTE: consider rewriting this in terms of multiplications as a performance
+				// improvement - the eval_type deduction should be changed accordingly.
+				retval /= math::pow(tmp,it->e);
+			}
+			return retval;
 		}
 	private:
 		container_type m_container;
