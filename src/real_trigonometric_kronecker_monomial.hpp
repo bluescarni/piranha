@@ -828,16 +828,16 @@ class real_trigonometric_kronecker_monomial
 					// A positive multiplier, in case previous output exists, must be preceded
 					// by a "+" sign.
 					if (tmp[i] > zero && !empty_output) {
-						os << "+";
+						os << '+';
 					}
 					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
 					if (tmp[i] == m_one) {
-						os << "-";
+						os << '-';
 					} else if (tmp[i] != one) {
 						os << static_cast<long long>(tmp[i]);
 					}
 					// Finally, print name of variable.
-					os << "{" << args[i].get_name() << "}";
+					os << '{' << args[i].get_name() << '}';
 					empty_output = false;
 				}
 			}
