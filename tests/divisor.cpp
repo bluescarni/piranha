@@ -103,10 +103,9 @@ struct ctor_tester
 		s.add("frob");
 		BOOST_CHECK_THROW((d_type{d7,s}),std::invalid_argument);
 		// Check the type trait.
-		// TODO reinstate.
-//		BOOST_CHECK((key_is_convertible<d_type,d_type>::value));
-//		BOOST_CHECK((!key_is_convertible<d_type,monomial<int>>::value));
-//		BOOST_CHECK((!key_is_convertible<monomial<int>,d_type>::value));
+		BOOST_CHECK((key_is_convertible<d_type,d_type>::value));
+		BOOST_CHECK((!key_is_convertible<d_type,monomial<int>>::value));
+		BOOST_CHECK((!key_is_convertible<monomial<int>,d_type>::value));
 	}
 };
 

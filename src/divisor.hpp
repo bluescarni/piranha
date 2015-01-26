@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <stdexcept>
@@ -35,6 +36,7 @@
 #include "detail/vector_merge_args.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "is_key.hpp"
 #include "mp_integer.hpp"
 #include "safe_cast.hpp"
 #include "serialization.hpp"
@@ -314,20 +316,21 @@ class divisor
 		~divisor()
 		{
 			piranha_assert(destruction_checks());
+			PIRANHA_TT_CHECK(is_key,divisor);
 		}
 		/// Defaulted copy assignment operator.
 		divisor &operator=(const divisor &) = default;
 		/// Defaulted move assignment operator.
 		divisor &operator=(divisor &&) = default;
-		/// Constructor from range and exponent.
+		/// Create and insert a term from range and exponent.
 		/**
 		 * \note
-		 * This constructor is enabled only if:
+		 * This method is enabled only if:
 		 * - \p It is an input iterator,
 		 * - the value type of \p It can be safely cast to piranha::divisor::value_type,
 		 * - \p Exponent can be safely cast to piranha::divisor::value_type.
 		 *
-		 * This constructor will insert a term into the product constituting the divisor. The elements
+		 * This method will insert a term into the product constituting the divisor. The elements
 		 * in the range <tt>[begin,end)</tt> will be used to construct the \f$ a_{i,j} \f$, while \p e
 		 * will be used to construct the exponent (after a call to piranha::safe_cast()).
 		 * If no term with the same set of \f$ a_{i,j} \f$ exists, then
@@ -389,7 +392,7 @@ class divisor
 		/// Equality operator.
 		/**
 		 * Two divisors are considered equal if:
-		 * - they have the same size, and
+		 * - they have the same number of terms, and
 		 * - for each term in the first divisor there exist an identical term in the
 		 *   second divisor.
 		 *
@@ -521,6 +524,10 @@ class divisor
 			}
 			return retval;
 		}
+		void print(std::ostream &, const symbol_set &args) const
+		{}
+		void print_tex(std::ostream &, const symbol_set &args) const
+		{}
 	private:
 		container_type m_container;
 };
