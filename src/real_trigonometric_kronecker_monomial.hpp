@@ -784,11 +784,11 @@ class real_trigonometric_kronecker_monomial
 					// A positive multiplier, in case previous output exists, must be preceded
 					// by a "+" sign.
 					if (tmp[i] > zero && !empty_output) {
-						os << "+";
+						os << '+';
 					}
 					// Print the multiplier, unless it's "-1": in that case, just print the minus sign.
 					if (tmp[i] == m_one) {
-						os << "-";
+						os << '-';
 					} else if (tmp[i] != one) {
 						os << detail::prepare_for_print(tmp[i]) << '*';
 					}
