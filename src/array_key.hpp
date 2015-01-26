@@ -411,13 +411,13 @@ class array_key
 		/// Merge arguments.
 		/**
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
-		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container
-		 * after being constructed from the integral constant 0.
+		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the internal container,
+		 * with the corresponding values constructed from the integral constant 0.
 		 * 
 		 * @param[in] orig_args current reference arguments set for \p this.
 		 * @param[in] new_args new arguments set.
 		 * 
-		 * @return piranha::array_key resulting from merging \p new_args into \p this.
+		 * @return a piranha::array_key resulting from merging \p new_args into \p this.
 		 * 
 		 * @throws std::invalid_argument in the following cases:
 		 * - the size of \p this is different from the size of \p orig_args,
