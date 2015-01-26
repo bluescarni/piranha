@@ -38,7 +38,7 @@ namespace piranha
 namespace detail
 {
 
-// Enabler for the binomial overlod involving integral types, the same as pow.
+// Enabler for the binomial overload involving integral types, the same as pow.
 template <typename T, typename U>
 using integer_binomial_enabler = integer_pow_enabler<T,U>;
 
