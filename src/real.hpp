@@ -33,6 +33,7 @@
 #include <string>
 #include <type_traits>
 
+#include "binomial.hpp"
 #include "config.hpp"
 #include "detail/is_digit.hpp"
 #include "detail/mpfr.hpp"

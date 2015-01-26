@@ -44,6 +44,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "../src/binomial.hpp"
 #include "../src/config.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/environment.hpp"

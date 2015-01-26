@@ -152,6 +152,7 @@ inline namespace literals {}
 }
 
 #include "array_key.hpp"
+#include "binomial.hpp"
 #include "cache_aligning_allocator.hpp"
 #include "config.hpp"
 #include "convert_to.hpp"

@@ -40,6 +40,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../src/binomial.hpp"
 #include "../src/detail/mpfr.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"

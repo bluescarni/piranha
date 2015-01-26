@@ -36,6 +36,7 @@
 #include <utility>
 #include <vector>
 
+#include "binomial.hpp"
 #include "config.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"

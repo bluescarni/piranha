@@ -43,6 +43,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../src/binomial.hpp"
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"

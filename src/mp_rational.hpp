@@ -35,6 +35,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "binomial.hpp"
 #include "config.hpp"
 #include "detail/gcd.hpp"
 #include "detail/mp_rational_fwd.hpp"
