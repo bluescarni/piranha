@@ -27,12 +27,14 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
 
 #include "config.hpp"
 #include "detail/gcd.hpp"
+#include "detail/prepare_for_print.hpp"
 #include "detail/vector_merge_args.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
@@ -524,10 +526,117 @@ class divisor
 			}
 			return retval;
 		}
-		void print(std::ostream &, const symbol_set &args) const
-		{}
-		void print_tex(std::ostream &, const symbol_set &args) const
-		{}
+		/// Print to stream.
+		/**
+		 * This method will print to the stream \p os a text representation of \p this.
+		 *
+		 * @param[in] os target stream.
+		 * @param[in] args reference symbol set.
+		 *
+		 * @throws std::invalid_argument if the number of terms of \p this is different from the size of \p args.
+		 * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or characters.
+		 */
+		void print(std::ostream &os, const symbol_set &args) const
+		{
+			// Don't print anything if there are no terms.
+			if (m_container.empty()) {
+				return;
+			}
+			if (unlikely(m_container.begin()->v.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			const auto it_f = m_container.end();
+			bool first_term = true;
+			os << "1/[";
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				// If this is not the first term, print a leading '*' operator.
+				if (first_term) {
+					first_term = false;
+				} else {
+					os << '*';
+				}
+				bool printed_something = false;
+				os << '(';
+				for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+					// If the aij is zero, don't print anything.
+					if (math::is_zero(it->v[i])) {
+						continue;
+					}
+					// A positive aij, in case previous output exists, must be preceded
+					// by a "+" sign.
+					if (it->v[i] > 0 && printed_something) {
+						os << '+';
+					}
+					// Print the aij, unless it's "-1": in that case, just print the minus sign.
+					if (it->v[i] == -1) {
+						os << '-';
+					} else if (it->v[i] != 1) {
+						os << detail::prepare_for_print(it->v[i]) << '*';
+					}
+					// Finally, print name of variable.
+					os << args[i].get_name();
+					printed_something = true;
+				}
+				os << ')';
+				// Print the exponent, if different from one.
+				if (it->e != 1) {
+					os << "**" << detail::prepare_for_print(it->e);
+				}
+			}
+			os << ']';
+		}
+		/// Print to stream in TeX mode.
+		/**
+		 * This method will print to the stream \p os a TeX representation of \p this.
+		 *
+		 * @param[in] os target stream.
+		 * @param[in] args reference symbol set.
+		 *
+		 * @throws std::invalid_argument if the number of terms of \p this is different from the size of \p args.
+		 * @throws unspecified any exception thrown by printing to \p os piranha::divisor::value_type, strings or characters.
+		 */
+		void print_tex(std::ostream &os, const symbol_set &args) const
+		{
+			// Don't print anything if there are no terms.
+			if (m_container.empty()) {
+				return;
+			}
+			if (unlikely(m_container.begin()->v.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			const auto it_f = m_container.end();
+			os << "\\frac{1}{";
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				bool printed_something = false;
+				os << "\\left(";
+				for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+					// If the aij is zero, don't print anything.
+					if (math::is_zero(it->v[i])) {
+						continue;
+					}
+					// A positive aij, in case previous output exists, must be preceded
+					// by a "+" sign.
+					if (it->v[i] > 0 && printed_something) {
+						os << '+';
+					}
+					// Print the aij, unless it's "-1": in that case, just print the minus sign.
+					if (it->v[i] == -1) {
+						os << '-';
+					} else if (it->v[i] != 1) {
+						os << detail::prepare_for_print(it->v[i]);
+					}
+					// Finally, print name of variable.
+					os << args[i].get_name();
+					printed_something = true;
+				}
+				os << "\\right)";
+				// Print the exponent, if different from one.
+				if (it->e != 1) {
+					os << "^{" << detail::prepare_for_print(it->e) << "}";
+				}
+			}
+			os << '}';
+		}
 	private:
 		container_type m_container;
 };

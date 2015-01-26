@@ -502,3 +502,133 @@ BOOST_AUTO_TEST_CASE(divisor_merge_args_test)
 {
 	boost::mpl::for_each<value_types>(merge_args_tester());
 }
+
+struct print_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		symbol_set v;
+		d_type d;
+		std::ostringstream oss;
+		d.print(oss,v);
+		BOOST_CHECK(oss.str().empty());
+		T exponent(1);
+		std::vector<T> tmp;
+		tmp = {T(1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		v.add("x");
+		d.print(oss,v);
+		BOOST_CHECK_EQUAL(oss.str(),"1/[(x)]");
+		exponent = 2;
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print(oss,v);
+		BOOST_CHECK_EQUAL(oss.str(),"1/[(x)**2]");
+		v.add("y");
+		tmp = {T(1),T(-2)};
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 1;
+		tmp = {T(3),T(4)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print(oss,v);
+		BOOST_CHECK(oss.str() == "1/[(x-2*y)**2*(3*x+4*y)]" || oss.str() == "1/[(3*x+4*y)*(x-2*y)**2]");
+		v.add("z");
+		tmp = {T(1),T(0),T(-1)};
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 3;
+		tmp = {T(0),T(4),T(-1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print(oss,v);
+		BOOST_CHECK(oss.str() == "1/[(x-z)*(4*y-z)**3]" || oss.str() == "1/[(4*y-z)**3*(x-z)]");
+		tmp = {T(1),T(0),T(0)};
+		exponent = 1;
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 3;
+		tmp = {T(0),T(4),T(-1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print(oss,v);
+		BOOST_CHECK(oss.str() == "1/[(x)*(4*y-z)**3]" || oss.str() == "1/[(4*y-z)**3*(x)]");
+		// Check throwing.
+		v.add("t");
+		BOOST_CHECK_THROW(d.print(oss,v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_print_test)
+{
+	boost::mpl::for_each<value_types>(print_tester());
+}
+
+struct print_tex_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		symbol_set v;
+		d_type d;
+		std::ostringstream oss;
+		d.print_tex(oss,v);
+		BOOST_CHECK(oss.str().empty());
+		T exponent(1);
+		std::vector<T> tmp;
+		tmp = {T(1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		v.add("x");
+		d.print_tex(oss,v);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{\\left(x\\right)}");
+		exponent = 2;
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print_tex(oss,v);
+		BOOST_CHECK_EQUAL(oss.str(),"\\frac{1}{\\left(x\\right)^{2}}");
+		v.add("y");
+		tmp = {T(1),T(-2)};
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 1;
+		tmp = {T(3),T(4)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print_tex(oss,v);
+		BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x-2y\\right)^{2}\\left(3x+4y\\right)}" || oss.str() == "\\frac{1}{\\left(3x+4y\\right)\\left(x-2y\\right)^{2}}");
+		v.add("z");
+		tmp = {T(1),T(0),T(-1)};
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 3;
+		tmp = {T(0),T(4),T(-1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print_tex(oss,v);
+		BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x-z\\right)\\left(4y-z\\right)^{3}}" || oss.str() == "\\frac{1}{\\left(4y-z\\right)^{3}\\left(x-z\\right)}");
+		tmp = {T(1),T(0),T(0)};
+		exponent = 1;
+		d.clear();
+		oss.str("");
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 3;
+		tmp = {T(0),T(4),T(-1)};
+		d.insert(tmp.begin(),tmp.end(),exponent);
+		d.print_tex(oss,v);
+		BOOST_CHECK(oss.str() == "\\frac{1}{\\left(x\\right)\\left(4y-z\\right)^{3}}" || oss.str() == "\\frac{1}{\\left(4y-z\\right)^{3}\\left(x\\right)}");
+		// Check throwing.
+		v.add("t");
+		BOOST_CHECK_THROW(d.print_tex(oss,v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_print_tex_test)
+{
+	boost::mpl::for_each<value_types>(print_tex_tester());
+}
