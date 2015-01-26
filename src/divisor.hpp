@@ -79,7 +79,7 @@ namespace piranha
  *
  * This class supports serialization.
  */
-template <typename T = short>
+template <typename T>
 class divisor
 {
 		static_assert((std::is_signed<T>::value && std::is_integral<T>::value) || detail::is_mp_integer<T>::value,
@@ -337,6 +337,8 @@ class divisor
 		 * will be used to construct the exponent (after a call to piranha::safe_cast()).
 		 * If no term with the same set of \f$ a_{i,j} \f$ exists, then
 		 * a new term will be inserted; otherwise, \p e will be added to the exponent of the existing term.
+		 *
+		 * This method provides the basic exception safety guarantee.
 		 *
 		 * @param[in] begin start of the range of \f$ a_{i,j} \f$.
 		 * @param[in] end end of the range of \f$ a_{i,j} \f$.
