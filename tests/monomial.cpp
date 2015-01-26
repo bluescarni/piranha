@@ -802,7 +802,7 @@ struct evaluate_tester
 			k_type k1;
 			BOOST_CHECK_EQUAL(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),integer(1));
 			vs.add("x");
-			// This will generate an empty pmap, triggering an error as args has size 0.
+			// This will generate an empty pmap, triggering an error as k1 has size 0.
 			BOOST_CHECK_THROW(k1.evaluate(pmap_type1(vs,dict_type1{}),vs),std::invalid_argument);
 			k1 = k_type({T(1)});
 			// Empty pmap, k1 has non-zero size.
