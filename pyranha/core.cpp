@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "../src/binomial.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/mp_integer.hpp"
