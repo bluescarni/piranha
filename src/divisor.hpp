@@ -45,12 +45,43 @@
 namespace piranha
 {
 
+/// Divisor class.
+/**
+ * This class is used to represent keys of the form
+ * \f[
+ * \prod_j\frac{1}{\left(a_{0,j}x_0+a_{1,j}x_1+\ldots+a_{n,j}x_n\right)^{e_j}},
+ * \f]
+ * where \f$ a_{i,j} \f$ are integers, \f$ x_i \f$ are symbols, and \f$ e_j \f$ are positive integers. The type
+ * of \f$ a_{i,j} \f$ and \f$ e_j \f$ is \p T. The terms of the product are stored in a piranha::hash_set and
+ * they are guaranteed to be in a canonical form defined by the following properties:
+ * - the values of \f$ a_{i,j} \f$ and \f$ e_j \f$ are within an implementation-defined range,
+ * - \f$ e_j \f$ is always strictly positive,
+ * - the first nonzero \f$ a_{i,j} \f$ in each term is positive,
+ * - the \f$ a_{i,j} \f$ in each term have no non-unitary common divisor.
+ *
+ * ## Type requirements ##
+ *
+ * \p T must be either a C++ integral type or piranha::mp_integer.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
+ *
+ * ## Move semantics ##
+ *
+ * Move semantics is equivalent to the move semantics of piranha::hash_set.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization.
+ */
 template <typename T = short>
 class divisor
 {
 		static_assert((std::is_signed<T>::value && std::is_integral<T>::value) || detail::is_mp_integer<T>::value,
 			"The value type must be a signed integer or an mp_integer");
 	public:
+		/// Alias for \p T.
 		using value_type = T;
 	private:
 		using v_type = small_vector<value_type>;
@@ -242,10 +273,31 @@ class divisor
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
+		/// Size type.
+		/**
+		 * It corresponds to the size type of the internal container.
+		 */
 		using size_type = typename container_type::size_type;
+		/// Defaulted default constructor.
+		/**
+		 * This constructor will initialise an empty divisor.
+		 */
 		divisor() = default;
+		/// Defaulted copy constructor.
 		divisor(const divisor &) = default;
+		/// Defaulted move constructor.
 		divisor(divisor &&) = default;
+		/// Converting constructor.
+		/**
+		 * This constructor is used in the generic constructor of piranha::series. It is equivalent
+		 * to a copy constructor with extra checking.
+		 *
+		 * @param[in] other construction argument.
+		 * @param[in] args reference symbol set.
+		 *
+		 * @throws std::invalid_argument if \p other is not compatible with \p args.
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
 		explicit divisor(const divisor &other, const symbol_set &args):m_container(other.m_container)
 		{
 			if (unlikely(!is_compatible(args))) {
@@ -253,13 +305,47 @@ class divisor
 					"input symbol set");
 			}
 		}
+		/// Constructor from piranha::symbol_set.
+		/**
+		 * Equivalent to the default constructor.
+		 */
 		explicit divisor(const symbol_set &) {}
+		/// Trivial destructor.
 		~divisor()
 		{
 			piranha_assert(destruction_checks());
 		}
+		/// Defaulted copy assignment operator.
 		divisor &operator=(const divisor &) = default;
+		/// Defaulted move assignment operator.
 		divisor &operator=(divisor &&) = default;
+		/// Constructor from range and exponent.
+		/**
+		 * \note
+		 * This constructor is enabled only if:
+		 * - \p It is an input iterator,
+		 * - the value type of \p It can be safely cast to piranha::divisor::value_type,
+		 * - \p Exponent can be safely cast to piranha::divisor::value_type.
+		 *
+		 * This constructor will insert a term into the product constituting the divisor. The elements
+		 * in the range <tt>[begin,end)</tt> will be used to construct the \f$ a_{i,j} \f$, while \p e
+		 * will be used to construct the exponent (after a call to piranha::safe_cast()).
+		 * If no term with the same set of \f$ a_{i,j} \f$ exists, then
+		 * a new term will be inserted; otherwise, \p e will be added to the exponent of the existing term.
+		 *
+		 * @param[in] begin start of the range of \f$ a_{i,j} \f$.
+		 * @param[in] end end of the range of \f$ a_{i,j} \f$.
+		 * @param[in] e exponent.
+		 *
+		 * @throws std::invalid_argument if the term to be inserted is not in canonical form.
+		 * @throws std::overflow_error if the insertion results in the container to be resized over
+		 * an implementation-defined limit.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::safe_cast(),
+		 * - manipulations of piranha::small_vector,
+		 * - the public interface of piranha::hash_set,
+		 * - arithmetic operations on the exponent.
+		 */
 		template <typename It, typename Exponent, insert_enabler<It,Exponent> = 0>
 		void insert(It begin, It end, const Exponent &e)
 		{
@@ -284,14 +370,33 @@ class divisor
 			// Perform the insertion.
 			insertion_impl(std::move(term));
 		}
+		/// Size.
+		/**
+		 * @return the size of the internal container - that is, the number of terms in the product.
+		 */
 		size_type size() const
 		{
 			return m_container.size();
 		}
+		/// Clear.
+		/**
+		 * This method will remove all terms from the divisor.
+		 */
 		void clear()
 		{
 			m_container.clear();
 		}
+		/// Equality operator.
+		/**
+		 * Two divisors are considered equal if:
+		 * - they have the same size, and
+		 * - for each term in the first divisor there exist an identical term in the
+		 *   second divisor.
+		 *
+		 * @param[in] other comparison argument.
+		 *
+		 * @return \p true if \p this is equal to \p other, \p false otherwise.
+		 */
 		bool operator==(const divisor &other) const
 		{
 			if (size() != other.size()) {
@@ -306,10 +411,23 @@ class divisor
 			}
 			return true;
 		}
+		/// Inequality operator.
+		/**
+		 * @param[in] other comparison argument.
+		 *
+		 * @return the opposite of operator==().
+		 */
 		bool operator!=(const divisor &other) const
 		{
 			return !((*this) == other);
 		}
+		/// Hash value.
+		/**
+		 * The hash value is computed by combining the hash values of all terms. An empty divisor
+		 * has a hash value of 0. Two equal divisors have the same hash value.
+		 *
+		 * @return a hash value for the divisor.
+		 */
 		std::size_t hash() const
 		{
 			std::size_t retval = 0u;
@@ -320,6 +438,16 @@ class divisor
 			}
 			return retval;
 		}
+		/// Compatibility check.
+		/**
+		 * An empty divisor is considered compatible with any set of symbols. Otherwise, a non-empty
+		 * divisor is compatible if the number of variables in the terms is the same as the number
+		 * of symbols in \p args.
+		 *
+		 * @param[in] args reference symbol set.
+		 *
+		 * @return \p true if \p this is compatible with \p args, \p false otherwise.
+		 */
 		bool is_compatible(const symbol_set &args) const noexcept
 		{
 			if (m_container.empty()) {
@@ -327,10 +455,27 @@ class divisor
 			}
 			return m_container.begin()->v.size() == args.size();
 		}
+		/// Ignorability check.
+		/**
+		 * A divisor is never considered ignorable (an empty divisor is equal to 1).
+		 *
+		 * @return \p false.
+		 */
 		bool is_ignorable(const symbol_set &) const noexcept
 		{
 			return false;
 		}
+		/// Check if divisor is unitary.
+		/**
+		 * Only an empty divisor is considered unitary.
+		 *
+		 * @param[in] args reference symbol set.
+		 *
+		 * @return \p true if \p this is empty, \p false otherwise.
+		 *
+		 * @throws std::invalid_argument if the number of variables in the divisor is different
+		 * from the size of \p args.
+		 */
 		bool is_unitary(const symbol_set &args) const
 		{
 			if (m_container.empty()) {
@@ -341,6 +486,26 @@ class divisor
 			}
 			return false;
 		}
+		/// Merge arguments.
+		/**
+		 * This method will merge the new arguments set \p new_args into \p this, given the current reference arguments set
+		 * \p orig_args. Arguments in \p new_args not appearing in \p orig_args will be inserted in the terms,
+		 * with the corresponding \f$ a_{i,j} \f$ values constructed from the integral constant 0.
+		 *
+		 * @param[in] orig_args current reference arguments set for \p this.
+		 * @param[in] new_args new arguments set.
+		 *
+		 * @return a divisor resulting from merging \p new_args into \p this.
+		 *
+		 * @throws std::invalid_argument in the following cases:
+		 * - the number of variables in the terms of \p this is different from the size of \p orig_args,
+		 * - the size of \p new_args is not greater than the size of \p orig_args,
+		 * - not all elements of \p orig_args are included in \p new_args.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::small_vector::push_back(),
+		 * - the copy assignment of piranha::divisor::value_type,
+		 * - piranha::hash_set::insert().
+		 */
 		divisor merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
 			divisor retval;
