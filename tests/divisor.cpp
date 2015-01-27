@@ -687,6 +687,9 @@ struct evaluate_tester
 		// A map with invalid values.
 		BOOST_CHECK_THROW(d.evaluate(pmap_type1(symbol_set{symbol{"x"},symbol{"y"},symbol{"z"}},
 			dict_type1{{symbol("x"),2_q},{symbol("z"),1_q}}),v),std::invalid_argument);
+		// A simple test with real.
+		BOOST_CHECK_EQUAL(d.evaluate(pmap_type3(v,dict_type3{{symbol("x"),-1.5_r},{symbol("y"),2.5_r}}),v),
+			1/(math::pow(-1.5_r-2.5_r*2,2)*math::pow(-1.5_r*2+7*2.5_r,3)));
 	}
 };
 

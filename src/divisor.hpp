@@ -287,7 +287,7 @@ class divisor
 		template <typename U>
 		using eval_type = typename std::enable_if<std::is_constructible<eval_type_<U>,int>::value &&
 			is_divisible_in_place<eval_type_<U>>::value && std::is_constructible<eval_sum_type<U>,int>::value &&
-			is_addable_in_place<eval_sum_type<U>>::value,eval_type_<U>>::type;
+			is_addable_in_place<eval_sum_type<U>>::value && detail::is_pmappable<U>::value,eval_type_<U>>::type;
 	public:
 		/// Size type.
 		/**
@@ -651,6 +651,27 @@ class divisor
 			}
 			os << '}';
 		}
+		/// Evaluation.
+		/**
+		 * \note
+		 * This method is available only if \p U satisfies the following requirements:
+		 * - it can be used in piranha::symbol_set::positions_map,
+		 * - it support the arithmetic operations necessary to construct the return type.
+		 *
+		 * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the values
+		 * in the input map, additions, divisions and exponentiations via piranha::math::pow().
+		 * If the divisor has no terms, 1 will be returned. If \p args is not compatible with \p this and \p pmap,
+		 * or the positions in \p pmap do not reference only and all the variables in the divisor, an error will be thrown.
+		 *
+		 * @param[in] pmap piranha::symbol_set::positions_map that will be used for substitution.
+		 * @param[in] args reference set of piranha::symbol.
+		 *
+		 * @return the result of evaluating \p this with the values provided in \p pmap.
+		 *
+		 * @throws std::invalid_argument if there exist an incompatibility between \p this,
+		 * \p args or \p pmap.
+		 * @throws unspecified any exception thrown by the construction of the return type.
+		 */
 		template <typename U>
 		eval_type<U> evaluate(const symbol_set::positions_map<U> &pmap, const symbol_set &args) const
 		{
