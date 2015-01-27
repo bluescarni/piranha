@@ -22,6 +22,7 @@
 #define PIRANHA_DIVISOR_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -35,9 +36,11 @@
 #include "config.hpp"
 #include "detail/gcd.hpp"
 #include "detail/prepare_for_print.hpp"
+#include "detail/series_fwd.hpp"
 #include "detail/vector_merge_args.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "is_cf.hpp"
 #include "is_key.hpp"
 #include "mp_integer.hpp"
 #include "pow.hpp"
@@ -45,6 +48,7 @@
 #include "serialization.hpp"
 #include "small_vector.hpp"
 #include "symbol_set.hpp"
+#include "term.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -288,7 +292,27 @@ class divisor
 		using eval_type = typename std::enable_if<std::is_constructible<eval_type_<U>,int>::value &&
 			is_divisible_in_place<eval_type_<U>>::value && std::is_constructible<eval_sum_type<U>,int>::value &&
 			is_addable_in_place<eval_sum_type<U>>::value && detail::is_pmappable<U>::value,eval_type_<U>>::type;
+		// Multiplication utilities.
+		template <typename Cf>
+		using multiply_enabler = typename std::enable_if<
+			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
+		// Overload if the coefficient is a series.
+		template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+		{
+			out_cf = cf1 * cf2;
+		}
+		// Overload if the coefficient is not a series.
+		template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+		{
+			out_cf = cf1;
+			out_cf *= cf2;
+		}
 	public:
+		/// Arity of the multiply() method.
+		static const std::size_t multiply_arity = 1u;
 		/// Size type.
 		/**
 		 * It corresponds to the size type of the internal container.
@@ -705,9 +729,56 @@ class divisor
 			}
 			return retval;
 		}
+		/// Multiply terms with a divisor key.
+		/**
+		 * \note
+		 * This method is enabled only if \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
+		 * of type \p Cf, and it is copy-assignable.
+		 *
+		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
+		 * offers the basic exception safety guarantee.
+		 *
+		 * @param[out] res return value.
+		 * @param[in] t1 first argument.
+		 * @param[in] t2 second argument.
+		 * @param[in] args reference set of arguments.
+		 *
+		 * @throws std::invalid_argument if the key of \p t1 and/or the key of \p t2 are incompatible with \p args.
+		 * @throws std::overflow_error if the multiplication of the keys results in the container of the result key to be resized over
+		 * an implementation-defined limit.
+		 * @throws unspecified any exception thrown by:
+		 * - the multiplication of the coefficients,
+		 * - the public interface of piranha::hash_set,
+		 * - arithmetic operations on the exponent.
+		 */
+		template <typename Cf, multiply_enabler<Cf> = 0>
+		static void multiply(std::array<term<Cf,divisor>,multiply_arity> &res, const term<Cf,divisor> &t1,
+			const term<Cf,divisor> &t2, const symbol_set &args)
+		{
+			term<Cf,divisor> &t = res[0u];
+			if(unlikely(!t1.m_key.is_compatible(args) || !t2.m_key.is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			// Coefficient.
+			cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
+			// Now deal with the key.
+			// Establish the largest and smallest divisor.
+			const divisor &large = (t1.m_key.size() >= t2.m_key.size()) ? t1.m_key : t2.m_key;
+			const divisor &small = (t1.m_key.size() < t2.m_key.size()) ? t1.m_key : t2.m_key;
+			// Assign the large to the result.
+			t.m_key = large;
+			// Run the multiplication.
+			const auto it_f = small.m_container.end();
+			for (auto it = small.m_container.begin(); it != it_f; ++it) {
+				t.m_key.insertion_impl(*it);
+			}
+		}
 	private:
 		container_type m_container;
 };
+
+template <typename T>
+const std::size_t divisor<T>::multiply_arity;
 
 }
 

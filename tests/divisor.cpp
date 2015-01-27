@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE divisor_test
 #include <boost/test/unit_test.hpp>
 
+#include <array>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
 #include <exception>
@@ -40,14 +41,17 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/key_is_convertible.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/polynomial.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
+#include "../src/term.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -702,4 +706,121 @@ struct evaluate_tester
 BOOST_AUTO_TEST_CASE(divisor_evaluate_test)
 {
 	boost::mpl::for_each<value_types>(evaluate_tester());
+}
+
+struct multiply_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		// Test the type trait first.
+		BOOST_CHECK((key_is_multipliable<double,d_type>::value));
+		BOOST_CHECK((key_is_multipliable<integer,d_type>::value));
+		BOOST_CHECK((key_is_multipliable<real,d_type>::value));
+		BOOST_CHECK((key_is_multipliable<rational,d_type>::value));
+		std::array<term<integer,d_type>,1u> res;
+		term<integer,d_type> t1, t2;
+		t1.m_cf = 2;
+		t2.m_cf = -3;
+		symbol_set v;
+		// Try with empty divisors first.
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),0u);
+		// 1 - 0.
+		std::ostringstream ss;
+		T exponent(2);
+		std::vector<T> tmp;
+		tmp = {T(1),T(-2)};
+		v.add("x");
+		v.add("y");
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),1u);
+		res[0u].m_key.print(ss,v);
+		BOOST_CHECK_EQUAL(ss.str(),"1/[(x-2*y)**2]");
+		// 0 - 1.
+		ss.str("");
+		t1.m_key.clear();
+		t2.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),1u);
+		res[0u].m_key.print(ss,v);
+		BOOST_CHECK_EQUAL(ss.str(),"1/[(x-2*y)**2]");
+		// 1 - 1.
+		ss.str("");
+		tmp = {T(4),T(-3)};
+		exponent = 3;
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),2u);
+		res[0u].m_key.print(ss,v);
+		BOOST_CHECK(ss.str() == "1/[(x-2*y)**2*(4*x-3*y)**3]" || ss.str() == "1/[(4*x-3*y)**3*(x-2*y)**2]");
+		// 1 - 1 with simplification.
+		ss.str("");
+		tmp = {T(1),T(-2)};
+		t1.m_key.clear();
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),1u);
+		res[0u].m_key.print(ss,v);
+		BOOST_CHECK_EQUAL(ss.str(),"1/[(x-2*y)**5]");
+		// A 2 - 3 test with simplification.
+		t1.m_key.clear();
+		t2.m_key.clear();
+		// (x - 2y).
+		tmp = {T(1),T(-2)};
+		exponent = 1;
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		// (8x + 3y)**2.
+		tmp = {T(8),T(3)};
+		exponent = 2;
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		// (x + y)**4.
+		tmp = {T(1),T(1)};
+		exponent = 4;
+		t2.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		// (8x + 3y)**3.
+		tmp = {T(8),T(3)};
+		exponent = 3;
+		t2.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		// (x - y)**4.
+		tmp = {T(1),T(-1)};
+		exponent = 4;
+		t2.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res,t1,t2,v);
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res[0u].m_key.size(),4u);
+		// Coefficient series test.
+		std::array<term<polynomial<integer,monomial<int>>,d_type>,1u> res2;
+		term<polynomial<integer,monomial<int>>,d_type> t1a, t2a;
+		ss.str("");
+		t1a.m_cf = -2;
+		t2a.m_cf = 3;
+		tmp = {T(1),T(-2)};
+		exponent = 3;
+		t1a.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = 1;
+		t2a.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(res2,t1a,t2a,v);
+		BOOST_CHECK_EQUAL(res2[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(res2[0u].m_key.size(),1u);
+		res2[0u].m_key.print(ss,v);
+		BOOST_CHECK_EQUAL(ss.str(),"1/[(x-2*y)**4]");
+		// Test incompatible symbol set.
+		v.add("z");
+		BOOST_CHECK_THROW(d_type::multiply(res,t1,t2,v),std::invalid_argument);
+		t1.m_key.clear();
+		BOOST_CHECK_THROW(d_type::multiply(res,t1,t2,v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_multiply_test)
+{
+	boost::mpl::for_each<value_types>(multiply_tester());
 }
