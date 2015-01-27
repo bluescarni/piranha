@@ -164,6 +164,8 @@ struct insert_tester
 		BOOST_CHECK_THROW(d0.insert(tmp.begin(),tmp.end(),exponent),std::invalid_argument);
 		BOOST_CHECK_EQUAL(d0.size(),0u);
 		// Non-coprimes must fail.
+		tmp = {T(8)};
+		BOOST_CHECK_THROW(d0.insert(tmp.begin(),tmp.end(),exponent),std::invalid_argument);
 		tmp = {T(8),T(0),T(-2),T(0),T(6),T(0)};
 		BOOST_CHECK_THROW(d0.insert(tmp.begin(),tmp.end(),exponent),std::invalid_argument);
 		BOOST_CHECK_EQUAL(d0.size(),0u);
@@ -174,6 +176,10 @@ struct insert_tester
 		BOOST_CHECK_THROW(d0.insert(tmp.begin(),tmp.end(),exponent),std::invalid_argument);
 		BOOST_CHECK_EQUAL(d0.size(),0u);
 		// Some successful insertions.
+		tmp = {T(1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_EQUAL(d0.size(),1u);
+		d0.clear();
 		tmp = {T(8),T(-3),T(6)};
 		d0.insert(tmp.begin(),tmp.end(),exponent);
 		tmp = {T(8),T(-3),T(7)};
