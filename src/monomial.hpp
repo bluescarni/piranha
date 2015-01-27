@@ -800,6 +800,8 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws unspecified any exception thrown by piranha::array_key::vector_add(), or by the multiplication
 		 * of the coefficients.
 		 */
+		// NOTE: important, here we are assuming that the element of res is distinct from t1 and t2. Maybe this should
+		// be explicitly stated somewhere, in the runtime requirements of multiplication.
 		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
 		static void multiply(std::array<term<Cf,monomial>,multiply_arity> &res, const term<Cf,monomial> &t1,
 			const term<Cf,monomial> &t2, const symbol_set &args)

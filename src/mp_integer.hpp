@@ -1181,6 +1181,8 @@ struct is_mp_integer_interoperable_type
  *   then we need to convert x to double and then compute cos(x).
  * - when converting to/from Python we can speed up operations by trying casting around to hardware integers, if range is enough.
  * - use a unified shortcut for the possible optimisation when the two limb type coincide (e.g., same_limbs_type = true constexpr).
+ * - the conversion operator to C++ integral types could use the same optimisation as the constructor from integral types (e.g,
+ *   attempt direct conversion if we have only 1 limb).
  */
 template <int NBits = 0>
 class mp_integer
