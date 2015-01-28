@@ -14,6 +14,7 @@ ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptio
 	type_system.hpp expose_utils.hpp expose_utils.cpp
 	expose_polynomials.hpp expose_polynomials.cpp
 	expose_poisson_series.hpp expose_poisson_series.cpp
+	expose_divisor_series.hpp expose_divisor_series.cpp
 	__init__.py _common.py celmec.py math.py test.py types.py
 	${PYRANHA_TUTORIAL_FILES}
 )

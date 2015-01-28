@@ -65,3 +65,9 @@ monomial = _t.monomial
 
 #: Generic type generator for Poisson series.
 poisson_series = _t.poisson_series
+
+#: Generic type generator for divisors.
+divisor = _t.divisor
+
+#: Generic type generator for divisor series.
+divisor_series = _t.divisor_series

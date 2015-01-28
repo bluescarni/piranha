@@ -36,6 +36,7 @@
 #include <string>
 
 #include "../src/binomial.hpp"
+#include "../src/divisor.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -45,6 +46,7 @@
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "exceptions.hpp"
+#include "expose_divisor_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_polynomials.hpp"
 #include "expose_utils.hpp"
@@ -66,6 +68,7 @@ namespace pyranha
 {
 
 DECLARE_TT_NAMER(piranha::monomial,"monomial")
+DECLARE_TT_NAMER(piranha::divisor,"divisor")
 
 }
 
@@ -126,6 +129,8 @@ BOOST_PYTHON_MODULE(_core)
 	// The generic type generator for monomial instances.
 	pyranha::expose_generic_type_generator<piranha::monomial,piranha::rational>();
 	pyranha::expose_generic_type_generator<piranha::monomial,short>();
+	// The generic type generator for divisor instances.
+	pyranha::expose_generic_type_generator<piranha::divisor,short>();
 	// Arithmetic converters.
 	pyranha::integer_converter i_c;
 	pyranha::rational_converter ra_c;
@@ -143,6 +148,8 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_polynomials();
 	// Expose Poisson series.
 	pyranha::expose_poisson_series();
+	// Expose divisor series.
+	pyranha::expose_divisor_series();
 	// Expose the settings class.
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");
