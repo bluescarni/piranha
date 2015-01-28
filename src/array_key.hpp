@@ -339,7 +339,7 @@ class array_key
 		/**
 		 * This method is used in piranha::series::trim(). The input parameter \p candidates
 		 * contains a set of symbols that are candidates for elimination. The method will remove
-		 * from \p candidates those symbols whose elements in \p this are not zero.
+		 * from \p candidates those symbols whose element in \p this is not zero.
 		 * 
 		 * @param[in] candidates set of candidates for elimination.
 		 * @param[in] args reference arguments set.
