@@ -352,6 +352,8 @@ struct mock_key
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
 	void print_tex(std::ostream &, const symbol_set &) const;
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	mock_key trim(const symbol_set &, const symbol_set &) const;
 };
 
 namespace std

@@ -1119,6 +1119,8 @@ struct key02
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
 	void print_tex(std::ostream &, const symbol_set &) const;
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	key02 trim(const symbol_set &, const symbol_set &) const;
 };
 
 struct key03

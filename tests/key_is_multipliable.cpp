@@ -51,6 +51,8 @@ struct mock_key
 	bool is_unitary(const symbol_set &) const;
 	void print(std::ostream &, const symbol_set &) const;
 	void print_tex(std::ostream &, const symbol_set &) const;
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	mock_key trim(const symbol_set &, const symbol_set &) const;
 };
 
 // Mock key with wrong method.
@@ -74,6 +76,8 @@ struct mock_key_00
 	template <typename Cf>
 	static void multiply(std::array<term<Cf,mock_key_00>,1u> &, term<Cf,mock_key_00> &, const term<Cf,mock_key_00> &,
 		const symbol_set &);
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	mock_key_00 trim(const symbol_set &, const symbol_set &) const;
 };
 
 // Good one, depending on coefficient.
@@ -96,6 +100,8 @@ struct mock_key_01
 	void print_tex(std::ostream &, const symbol_set &) const;
 	static void multiply(std::array<term<double,mock_key_01>,4u> &, const term<double,mock_key_01> &, const term<double,mock_key_01> &,
 		const symbol_set &);
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	mock_key_01 trim(const symbol_set &, const symbol_set &) const;
 };
 
 namespace std

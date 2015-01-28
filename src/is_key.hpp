@@ -57,12 +57,20 @@ struct is_key_impl: sfinae_types
 	template <typename U>
 	static auto test5(const U &u) -> decltype(u.print_tex(std::declval<std::ostream &>(),std::declval<symbol_set const &>()),void(),yes());
 	static no test5(...);
+	template <typename U>
+	static auto test6(const U &u) -> decltype(u.trim_identify(std::declval<symbol_set &>(),std::declval<symbol_set const &>()),void(),yes());
+	static no test6(...);
+	template <typename U>
+	static auto test7(const U &u) -> decltype(u.trim(std::declval<symbol_set const &>(),std::declval<symbol_set const &>()));
+	static no test7(...);
 	static const bool value = std::is_same<bool,decltype(test0(std::declval<T>()))>::value &&
 				  std::is_same<bool,decltype(test1(std::declval<T>()))>::value &&
 				  std::is_same<T,decltype(test2(std::declval<T>()))>::value &&
 				  std::is_same<bool,decltype(test3(std::declval<T>()))>::value &&
 				  std::is_same<yes,decltype(test4(std::declval<T>()))>::value &&
-				  std::is_same<yes,decltype(test5(std::declval<T>()))>::value;
+				  std::is_same<yes,decltype(test5(std::declval<T>()))>::value &&
+				  std::is_same<yes,decltype(test6(std::declval<T>()))>::value &&
+				  std::is_same<T,decltype(test7(std::declval<T>()))>::value;
 };
 
 }
@@ -85,7 +93,11 @@ struct is_key_impl: sfinae_types
  * - it must be provided with a const \p is_unitary method accepting a const piranha::symbol_set
  *   reference as input and returning \p bool,
  * - it must be provided with const \p print and \p print_tex methods accepting an \p std::ostream reference as first argument
- *   and a const piranha::symbol_set reference as second argument.
+ *   and a const piranha::symbol_set reference as second argument,
+ * - it must be provided with a const \p trim_identify method accepting a reference to piranha::symbol_set and a const reference
+ *   to piranha::symbol_set,
+ * - it must be provided with a const \p trim method accepting a const reference to piranha::symbol_set and a const reference
+ *   to piranha::symbol_set, and returning \p T.
  */
 /*
  * \todo requirements on vector-of-symbols-constructed key: must it be unitary? (seems like it, look at

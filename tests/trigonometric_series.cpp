@@ -208,6 +208,8 @@ struct key02
 	int t_order(const Args & ...) const;
 	template <typename ... Args>
 	int t_lorder(const Args & ...) const;
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	key02 trim(const symbol_set &, const symbol_set &) const;
 };
 
 struct key03: key02
@@ -223,6 +225,7 @@ struct key03: key02
 	bool operator!=(const key03 &) const;
 	template <typename ... Args>
 	int t_lorder(const Args & ...);
+	key03 trim(const symbol_set &, const symbol_set &) const;
 };
 
 struct fake_int_01
@@ -276,6 +279,7 @@ struct key04: key02
 	bool operator!=(const key04 &) const;
 	template <typename ... Args>
 	fake_int_01 t_lorder(const Args & ...) const;
+	key04 trim(const symbol_set &, const symbol_set &) const;
 };
 
 struct key05: key02
@@ -291,6 +295,7 @@ struct key05: key02
 	bool operator!=(const key05 &) const;
 	template <typename ... Args>
 	fake_int_02 t_lorder(const Args & ...) const;
+	key05 trim(const symbol_set &, const symbol_set &) const;
 };
 
 namespace std
