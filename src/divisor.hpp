@@ -380,7 +380,8 @@ class divisor
 		 * @param[in] end end of the range of \f$ a_{i,j} \f$.
 		 * @param[in] e exponent.
 		 *
-		 * @throws std::invalid_argument if the term to be inserted is not in canonical form.
+		 * @throws std::invalid_argument if the term to be inserted is not in canonical form, or if the insertion
+		 * leads to an overflow in the value of an exponent.
 		 * @throws std::overflow_error if the insertion results in the container to be resized over
 		 * an implementation-defined limit.
 		 * @throws unspecified any exception thrown by:
@@ -743,7 +744,8 @@ class divisor
 		 * @param[in] t2 second argument.
 		 * @param[in] args reference set of arguments.
 		 *
-		 * @throws std::invalid_argument if the key of \p t1 and/or the key of \p t2 are incompatible with \p args.
+		 * @throws std::invalid_argument if the key of \p t1 and/or the key of \p t2 are incompatible with \p args, or if the multiplication
+		 * of the keys results in an exponent exceeding the allowed range.
 		 * @throws std::overflow_error if the multiplication of the keys results in the container of the result key to be resized over
 		 * an implementation-defined limit.
 		 * @throws unspecified any exception thrown by:

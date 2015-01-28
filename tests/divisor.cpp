@@ -817,7 +817,33 @@ struct multiply_tester
 		BOOST_CHECK_THROW(d_type::multiply(res,t1,t2,v),std::invalid_argument);
 		t1.m_key.clear();
 		BOOST_CHECK_THROW(d_type::multiply(res,t1,t2,v),std::invalid_argument);
+		// Exponent range overflow check.
+		range_checks<T>();
 	}
+	template <typename T, typename U = T, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+	static void range_checks()
+	{
+		using d_type = divisor<T>;
+		// Test the type trait first.
+		std::array<term<integer,d_type>,1u> res;
+		term<integer,d_type> t1, t2;
+		t1.m_cf = 2;
+		t2.m_cf = -3;
+		symbol_set v;
+		T exponent(1);
+		std::vector<T> tmp;
+		tmp = {T(1),T(-2)};
+		v.add("x");
+		v.add("y");
+		t1.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		exponent = std::numeric_limits<T>::max();
+		t2.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_THROW(d_type::multiply(res,t1,t2,v),std::invalid_argument);
+		// Basic exception safety.
+		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
+	}
+	template <typename T, typename U = T, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+	static void range_checks() {}
 };
 
 BOOST_AUTO_TEST_CASE(divisor_multiply_test)
