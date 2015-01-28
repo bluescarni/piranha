@@ -850,3 +850,126 @@ BOOST_AUTO_TEST_CASE(divisor_multiply_test)
 {
 	boost::mpl::for_each<value_types>(multiply_tester());
 }
+
+struct trim_identify_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		d_type d0;
+		T exponent(2);
+		std::vector<T> tmp;
+		tmp = {T(1),T(-2)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(-4)};
+		exponent = 1;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		symbol_set v;
+		v.add("x");
+		v.add("y");
+		auto v2 = v;
+		d0.trim_identify(v2,v);
+		BOOST_CHECK_EQUAL(v2.size(),0u);
+		d0.clear();
+		tmp = {T(1),T(0)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(-4)};
+		exponent = 3;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		v2 = v;
+		d0.trim_identify(v2,v);
+		BOOST_CHECK_EQUAL(v2.size(),0u);
+		d0.clear();
+		tmp = {T(1),T(0),T(3)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(0),T(3),T(-4)};
+		exponent = 2;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		v.add("z");
+		v2 = v;
+		d0.trim_identify(v2,v);
+		BOOST_CHECK_EQUAL(v2.size(),0u);
+		d0.clear();
+		tmp = {T(1),T(0),T(3)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(1),T(0),T(-4)};
+		exponent = 1;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		v2 = v;
+		d0.trim_identify(v2,v);
+		BOOST_CHECK((v2 == symbol_set{symbol{"y"}}));
+		// Check throwing condition.
+		v.add("t");
+		BOOST_CHECK_THROW(d0.trim_identify(v2,v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_trim_identify_test)
+{
+	boost::mpl::for_each<value_types>(trim_identify_tester());
+}
+
+struct trim_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		std::ostringstream ss;
+		d_type d0;
+		T exponent(2);
+		std::vector<T> tmp;
+		tmp = {T(1),T(0),T(-1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(0),T(-5)};
+		exponent = 1;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		symbol_set v;
+		v.add("x");
+		v.add("y");
+		v.add("z");
+		symbol_set v2;
+		v2.add("y");
+		auto d1 = d0.trim(v2,v);
+		d1.print(ss,symbol_set{symbol{"x"},symbol{"z"}});
+		BOOST_CHECK_EQUAL(d1.size(),2u);
+		BOOST_CHECK(ss.str() == "1/[(x-z)**2*(3*x-5*z)]" || ss.str() == "1/[(3*x-5*z)*(x-z)**2]");
+		// Check a case that does not trim anything.
+		ss.str("");
+		d0.clear();
+		tmp = {T(1),T(0),T(-1)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(0),T(-5)};
+		exponent = 4;
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		v2 = symbol_set{symbol{"t"}};
+		d1 = d0.trim(v2,v);
+		d1.print(ss,v);
+		BOOST_CHECK_EQUAL(d1.size(),2u);
+		BOOST_CHECK(ss.str() == "1/[(x-z)*(3*x-5*z)**4]" || ss.str() == "1/[(3*x-5*z)**4*(x-z)]");
+		// Check first throwing condition.
+		BOOST_CHECK_THROW(d0.trim(v2,symbol_set{symbol{"x"},symbol{"z"}}),std::invalid_argument);
+		// Check throwing on insert: after trim, the first term is not coprime.
+		v2 = symbol_set{symbol{"y"}};
+		d0.clear();
+		tmp = {T(2),T(1),T(-2)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(0),T(-5)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_THROW(d0.trim(v2,v),std::invalid_argument);
+		// Check throwing on insert: after trim, first nonzero element is negative.
+		v2 = symbol_set{symbol{"x"}};
+		d0.clear();
+		tmp = {T(2),T(-1),T(-2)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = {T(3),T(2),T(-5)};
+		d0.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_THROW(d0.trim(v2,v),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_trim_test)
+{
+	boost::mpl::for_each<value_types>(trim_tester());
+}

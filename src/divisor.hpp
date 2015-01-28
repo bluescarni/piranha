@@ -775,6 +775,68 @@ class divisor
 				t.m_key.insertion_impl(*it);
 			}
 		}
+		/// Identify symbols that can be trimmed.
+		/**
+		 * This method is used in piranha::series::trim(). The input parameter \p candidates
+		 * contains a set of symbols that are candidates for elimination. The method will remove
+		 * from \p candidates those symbols whose \f$ a_{i,j} \f$ in \p this are not all zeroes.
+		 *
+		 * @param[in] candidates set of candidates for elimination.
+		 * @param[in] args reference arguments set.
+		 *
+		 * @throws std::invalid_argument if \p this is not compatible with \p args.
+		 * @throws unspecified any exception thrown by piranha::math::is_zero() or piranha::symbol_set::remove().
+		 */
+		void trim_identify(symbol_set &candidates, const symbol_set &args) const
+		{
+			if (unlikely(!is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"invalid arguments set for trim_identify()");
+			}
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+					if (!math::is_zero(it->v[i]) && std::binary_search(candidates.begin(),candidates.end(),
+						args[static_cast<symbol_set::size_type>(i)]))
+					{
+						candidates.remove(args[static_cast<symbol_set::size_type>(i)]);
+					}
+				}
+			}
+		}
+		/// Trim.
+		/**
+		 * This method will return a copy of \p this with the \f$ a_{i,j} \f$ associated to the symbols
+		 * in \p trim_args removed.
+		 *
+		 * @param[in] trim_args arguments whose \f$ a_{i,j} \f$ will be removed.
+		 * @param[in] orig_args original arguments set.
+		 *
+		 * @return trimmed copy of \p this.
+		 *
+		 * @throws std::invalid_argument if \p this is not compatible with \p orig_args.
+		 * @throws unspecified any exception thrown by piranha::small_vector::push_back()
+		 * or piranha::divisor::insert().
+		 */
+		divisor trim(const symbol_set &trim_args, const symbol_set &orig_args) const
+		{
+			if (unlikely(!is_compatible(orig_args))) {
+				piranha_throw(std::invalid_argument,"invalid arguments set for trim()");
+			}
+			divisor retval;
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				v_type tmp;
+				for (typename v_type::size_type i = 0u; i < it->v.size(); ++i) {
+					if (!std::binary_search(trim_args.begin(),trim_args.end(),
+						orig_args[static_cast<symbol_set::size_type>(i)]))
+					{
+						tmp.push_back(it->v[i]);
+					}
+				}
+				retval.insert(tmp.begin(),tmp.end(),it->e);
+			}
+			return retval;
+		}
 	private:
 		container_type m_container;
 };
