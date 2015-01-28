@@ -29,7 +29,7 @@ int main()
 
 	// Conversion to a C++ integral type can fail.
 	try {
-		static_cast<unsigned char>(-integer{"12345678987654321"});
+		(void)static_cast<unsigned char>(-integer{"12345678987654321"});
 	} catch (const std::overflow_error &) {
 		std::cout << "Overflow!\n";
 	}

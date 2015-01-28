@@ -32,7 +32,7 @@ int main()
 
 	// Conversion to a C++ integral type can fail.
 	try {
-		static_cast<unsigned char>(-real{42.5});
+		(void)static_cast<unsigned char>(-real{42.5});
 	} catch (const std::overflow_error &) {
 		std::cout << "Overflow!\n";
 	}
