@@ -339,7 +339,7 @@ class array_key
 		/**
 		 * This method is used in piranha::series::trim(). The input parameter \p candidates
 		 * contains a set of symbols that are candidates for elimination. The method will remove
-		 * from \p candidates those symbols whose elements in \p this is not zero.
+		 * from \p candidates those symbols whose elements in \p this are not zero.
 		 * 
 		 * @param[in] candidates set of candidates for elimination.
 		 * @param[in] args reference arguments set.
@@ -353,8 +353,10 @@ class array_key
 				piranha_throw(std::invalid_argument,"invalid arguments set for trim_identify()");
 			}
 			for (size_type i = 0u; i < m_container.size(); ++i) {
-				if (!math::is_zero(m_container[i]) && std::binary_search(candidates.begin(),candidates.end(),args[i])) {
-					candidates.remove(args[i]);
+				if (!math::is_zero(m_container[i]) && std::binary_search(candidates.begin(),candidates.end(),
+					args[static_cast<symbol_set::size_type>(i)]))
+				{
+					candidates.remove(args[static_cast<symbol_set::size_type>(i)]);
 				}
 			}
 		}
@@ -368,7 +370,7 @@ class array_key
 		 * 
 		 * @return trimmed copy of \p this.
 		 * 
-		 * @throws std::invalid_argument if the size of \p this differs from the size of \p args.
+		 * @throws std::invalid_argument if the size of \p this differs from the size of \p orig_args.
 		 * @throws unspecified any exception thrown by push_back().
 		 */
 		Derived trim(const symbol_set &trim_args, const symbol_set &orig_args) const
@@ -378,7 +380,9 @@ class array_key
 			}
 			Derived retval;
 			for (size_type i = 0u; i < m_container.size(); ++i) {
-				if (!std::binary_search(trim_args.begin(),trim_args.end(),orig_args[i])) {
+				if (!std::binary_search(trim_args.begin(),trim_args.end(),
+					orig_args[static_cast<symbol_set::size_type>(i)]))
+				{
 					retval.push_back(m_container[i]);
 				}
 			}
