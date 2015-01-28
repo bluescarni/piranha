@@ -55,9 +55,8 @@ struct test_00_tester
 		BOOST_CHECK_EQUAL(math::pow(s0,3),27);
 		BOOST_CHECK_EQUAL(math::cos(s_type{0}),1);
 		BOOST_CHECK_EQUAL(math::sin(s_type{0}),0);
-		using term_type = typename s_type::term_type;
-		using cf_type = typename term_type::cf_type;
-		using key_type = typename term_type::key_type;
+		BOOST_CHECK_EQUAL(math::evaluate<int>(math::pow(s0,3),{{"x",4}}),27);
+		BOOST_CHECK(!is_differentiable<s_type>::value);
 	}
 };
 
