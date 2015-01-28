@@ -49,6 +49,7 @@ SET(HEADERS_LIST
 	key_is_convertible.hpp
 	pow.hpp
 	binomial.hpp
+	divisor_series.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

@@ -158,6 +158,7 @@ inline namespace literals {}
 #include "convert_to.hpp"
 #include "debug_access.hpp"
 #include "divisor.hpp"
+#include "divisor_series.hpp"
 #include "dynamic_aligning_allocator.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
