@@ -131,6 +131,8 @@
  * we also do not check the range of the deserialized integral values...
  * \todo related to the above, we probably want to serialise all vector-like objects in the same way - so that different series
  * types can be deserialized from the same archive (e.g., k_monomial vs monomial).
+ * \todo take a look at this as well: http://www.boost.org/doc/libs/1_48_0/libs/serialization/doc/traits.html#level to cope
+ * with the problem of mutating toolbox inheritance for the future.
  * \todo do the noexcept methods in keys really need to be noexcept? Maybe it is better to offer a weaker exception guarantee
  * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
