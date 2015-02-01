@@ -22,6 +22,7 @@
 #define PIRANHA_POISSON_SERIES_HPP
 
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -29,8 +30,10 @@
 #include <vector>
 
 #include "config.hpp"
+#include "detail/gcd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "divisor_series.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
@@ -48,6 +51,35 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+// Implementation detail to detect a divisor series.
+template <typename T>
+struct is_divisor_series
+{
+	static const bool value = false;
+};
+
+template <typename Cf, typename Key>
+struct is_divisor_series<divisor_series<Cf,Key>>
+{
+	static const bool value = true;
+};
+
+// Detect the presence of the t_integrate method. This needs to go in the future, it is repeated
+// in pyranha.
+template <typename T>
+struct has_t_integrate: detail::sfinae_types
+{
+	template <typename T1>
+	static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
+	static no test(...);
+	static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+}
 
 /// Poisson series class.
 /**
@@ -190,7 +222,7 @@ class poisson_series:
 		}
 		// Subs typedefs.
 		// TODO: fix declval usage. -> remove it everywhere, remove <utility>.
-		template <typename T>
+		template <typename T, typename = poisson_series, typename = void>
 		struct subs_type
 		{
 			typedef typename base::term_type::cf_type cf_type;
@@ -200,7 +232,7 @@ class poisson_series:
 				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first.first
 			) type;
 		};
-		template <typename T>
+		template <typename T, typename = poisson_series, typename = void>
 		struct ipow_subs_type
 		{
 			typedef typename base::term_type::cf_type cf_type;
@@ -262,6 +294,113 @@ class poisson_series:
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
+		// Time integration.
+		// NOTE: this is temporary and should be changed in the future.
+		template <typename T>
+		using t_int_div_k_value = short;
+		template <typename T>
+		using t_int_div_cf_type = decltype((std::declval<const typename T::term_type::cf_type &>() * 1) / std::declval<const t_int_div_k_value<T> &>());
+		template <typename T>
+		using ti_type_ = piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,divisor<t_int_div_k_value<T>>>>;
+		// Overload if cf is not a divisor series already. The result will be a Poisson series with the same key type, in which the coefficient
+		// is a divisor series whose coefficient is calculated from the operations needed in the integration, and the key type is a divisor whose
+		// value type is deduced from the trigonometric key.
+		template <typename T = poisson_series, typename std::enable_if<!detail::is_divisor_series<typename T::term_type::cf_type>::value,int>::type = 0>
+		ti_type_<T> t_integrate_impl() const
+		{
+			using return_type = ti_type_<T>;
+			using term_type = typename base::term_type;
+			using cf_type = typename term_type::cf_type;
+			using key_type = typename term_type::key_type;
+			using k_value_type = typename key_type::value_type;
+			// The divisor type in the return type.
+			using div_type = typename return_type::term_type::cf_type::term_type::key_type;
+			// Initialise the return value. It has the same set of trig arguments as this.
+			return_type retval;
+			retval.set_symbol_set(this->m_symbol_set);
+			// The symbol set for the divisor series - built from the trigonometric arguments.
+			symbol_set div_symbols;
+			for (auto it = retval.get_symbol_set().begin(); it != retval.get_symbol_set().end(); ++it) {
+				div_symbols.add(std::string("\\nu_{") + it->get_name() + "}");
+			}
+			// A temp vector of integers used to normalise the divisors coming
+			// out of the integration operation from the trig keys.
+			std::vector<integer> tmp_int;
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// Clear tmp variables.
+				tmp_int.clear();
+				// Get the vector of trigonometric multipliers.
+				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
+				// Copy it over to the tmp_int as integer values.
+				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
+					[](const k_value_type &n) {return integer(n);});
+				// Determine the common divisor and if a sign flip is needed.
+				integer cd(0);
+				bool need_sign_flip = false, first_nonzero_found = false;
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					cd = detail::gcd(cd,*it2);
+					if (!first_nonzero_found && !math::is_zero(*it2)) {
+						if (*it2 < 0) {
+							need_sign_flip = true;
+						}
+						first_nonzero_found = true;
+					}
+				}
+				if (unlikely(math::is_zero(cd))) {
+					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
+						"attempting a time integration");
+				}
+				// Take the abs of the cd.
+				cd = cd.abs();
+				// Divide the vector by the common divisor, and flip the sign if needed.
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					*it2 /= cd;
+					if (need_sign_flip) {
+						it2->negate();
+					}
+				}
+				// Build first the divisor series - the coefficient of the term to be inserted
+				// into retval.
+				typename return_type::term_type::cf_type div_series;
+				// Set the arguments of the divisor series.
+				div_series.set_symbol_set(div_symbols);
+				// The coefficient of the only term of the divisor series is the original coefficient
+				// multiplied by any sign change from the integration or the change in sign in the divisors,
+				// and divided by the common divisor (cast to the appropriate type)
+				typename return_type::term_type::cf_type::term_type::cf_type div_cf = (it->m_cf *
+					((it->m_key.get_flavour() ? 1 : -1) * (need_sign_flip ? -1 : 1))) /
+					static_cast<typename div_type::value_type>(cd);
+				// Build the divisor.
+				typename div_type::value_type exponent(1);
+				typename return_type::term_type::cf_type::term_type::key_type div_key;
+				div_key.insert(tmp_int.begin(),tmp_int.end(),exponent);
+				// Insert the term into the divisor series.
+				div_series.insert(typename return_type::term_type::cf_type::term_type{std::move(div_cf),std::move(div_key)});
+				// Insert into the return value.
+				auto tmp_key = it->m_key;
+				// Switch the flavour for integration.
+				tmp_key.set_flavour(!tmp_key.get_flavour());
+				retval.insert(typename return_type::term_type{std::move(div_series),std::move(tmp_key)});
+			}
+			return retval;
+		}
+		// Final type definition.
+		template <typename T>
+		using ti_type = decltype(std::declval<const T &>().t_integrate_impl());
+		// Enabler for the integration and substitution methods - these will have to be modified once we generalise subs/ipow_subs.
+		template <typename T>
+		using integrate_enabler = typename std::enable_if<detail::has_t_integrate<T>::value,int>::type;
+		template <typename T, typename U>
+		using subs_enabler = typename std::enable_if<detail::has_t_integrate<U>::value &&
+			has_sine<T>::value && has_cosine<T>::value,int>::type;
+		template <typename T, typename U>
+		using ipow_subs_enabler = typename std::enable_if<detail::has_t_integrate<U>::value,int>::type;
+		template <typename T, typename U>
+		struct subs_type<T,U,typename std::enable_if<!detail::has_t_integrate<U>::value>::type> {};
+		template <typename T, typename U>
+		struct ipow_subs_type<T,U,typename std::enable_if<!detail::has_t_integrate<U>::value>::type> {};
+		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Series rebind alias.
@@ -361,7 +500,7 @@ class poisson_series:
 		 */
 		// TODO: proper sfinaeing and abstraction for subs methods, including the math:: overloads below.
 		// this needs to be done for poly as well.
-		template <typename T, typename std::enable_if<has_sine<T>::value && has_cosine<T>::value,int>::type = 0>
+		template <typename T, typename U = poisson_series, subs_enabler<T,U> = 0>
 		typename subs_type<T>::type subs(const std::string &name, const T &x) const
 		{
 			typedef typename subs_type<T>::type return_type;
@@ -412,7 +551,7 @@ class poisson_series:
 		 * 
 		 * \todo type requirements.
 		 */
-		template <typename T>
+		template <typename T, typename U = poisson_series, ipow_subs_enabler<T,U> = 0>
 		typename ipow_subs_type<T>::type ipow_subs(const std::string &name, const integer &n, const T &x) const
 		{
 			typedef typename ipow_subs_type<T>::type return_type;
@@ -463,6 +602,9 @@ class poisson_series:
 		 * 
 		 * \todo requirements on dividability by multiplier type (or integer), safe_cast, etc.
 		 */
+		// \todo this also needs to be able to deduce the integration type. When that is done, we need to make sure the math::integrate
+		// overload and the exposition in pyranha are correct too (as we did at the time for partial()).
+		template <typename T = poisson_series, integrate_enabler<T> = 0>
 		poisson_series integrate(const std::string &name) const
 		{
 			typedef typename base::term_type term_type;
@@ -492,6 +634,11 @@ class poisson_series:
 				}
 			}
 			return retval;
+		}
+		template <typename T = poisson_series>
+		ti_type<T> t_integrate() const
+		{
+			return t_integrate_impl();
 		}
 };
 
@@ -569,7 +716,8 @@ struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,poiss
 	 * 
 	 * @throws unspecified any exception thrown by piranha::poisson_series::integrate().
 	 */
-	Series operator()(const Series &s, const std::string &name) const
+	template <typename T>
+	auto operator()(const T &s, const std::string &name) -> decltype(s.integrate(name))
 	{
 		return s.integrate(name);
 	}
