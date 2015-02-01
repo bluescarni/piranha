@@ -33,7 +33,10 @@
 #include "detail/gcd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "detail/sfinae_types.hpp"
+#include "divisor.hpp"
 #include "divisor_series.hpp"
+#include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
@@ -295,13 +298,14 @@ class poisson_series:
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
 		// Time integration.
-		// NOTE: this is temporary and should be changed in the future.
+		// Definition of the divisor type. NOTE: this is temporary and should be changed in the future.
 		template <typename T>
-		using t_int_div_k_value = short;
+		using t_int_div_key_type = divisor<short>;
 		template <typename T>
-		using t_int_div_cf_type = decltype((std::declval<const typename T::term_type::cf_type &>() * 1) / std::declval<const t_int_div_k_value<T> &>());
+		using t_int_div_cf_type = decltype((std::declval<const typename T::term_type::cf_type &>() * 1) /
+			std::declval<const typename t_int_div_key_type<T>::value_type &>());
 		template <typename T>
-		using ti_type_ = piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,divisor<t_int_div_k_value<T>>>>;
+		using ti_type_ = piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,t_int_div_key_type<T>>>;
 		// Overload if cf is not a divisor series already. The result will be a Poisson series with the same key type, in which the coefficient
 		// is a divisor series whose coefficient is calculated from the operations needed in the integration, and the key type is a divisor whose
 		// value type is deduced from the trigonometric key.
@@ -309,10 +313,8 @@ class poisson_series:
 		ti_type_<T> t_integrate_impl() const
 		{
 			using return_type = ti_type_<T>;
-			using term_type = typename base::term_type;
-			using cf_type = typename term_type::cf_type;
-			using key_type = typename term_type::key_type;
-			using k_value_type = typename key_type::value_type;
+			// The value type of the trigonometric key.
+			using k_value_type = typename base::term_type::key_type::value_type;
 			// The divisor type in the return type.
 			using div_type = typename return_type::term_type::cf_type::term_type::key_type;
 			// Initialise the return value. It has the same set of trig arguments as this.
@@ -326,9 +328,10 @@ class poisson_series:
 			// A temp vector of integers used to normalise the divisors coming
 			// out of the integration operation from the trig keys.
 			std::vector<integer> tmp_int;
+			// Build the return value.
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				// Clear tmp variables.
+				// Clear the tmp integer vector.
 				tmp_int.clear();
 				// Get the vector of trigonometric multipliers.
 				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
@@ -367,7 +370,7 @@ class poisson_series:
 				div_series.set_symbol_set(div_symbols);
 				// The coefficient of the only term of the divisor series is the original coefficient
 				// multiplied by any sign change from the integration or the change in sign in the divisors,
-				// and divided by the common divisor (cast to the appropriate type)
+				// and divided by the common divisor (cast to the appropriate type).
 				typename return_type::term_type::cf_type::term_type::cf_type div_cf = (it->m_cf *
 					((it->m_key.get_flavour() ? 1 : -1) * (need_sign_flip ? -1 : 1))) /
 					static_cast<typename div_type::value_type>(cd);
@@ -603,7 +606,8 @@ class poisson_series:
 		 * \todo requirements on dividability by multiplier type (or integer), safe_cast, etc.
 		 */
 		// \todo this also needs to be able to deduce the integration type. When that is done, we need to make sure the math::integrate
-		// overload and the exposition in pyranha are correct too (as we did at the time for partial()).
+		// overload and the exposition in pyranha are correct too (as we did at the time for partial()). Test for instance that integration
+		// of a polynomial/ps with integer coefficients and rational exponent generates rational coefficients.
 		template <typename T = poisson_series, integrate_enabler<T> = 0>
 		poisson_series integrate(const std::string &name) const
 		{
