@@ -1888,14 +1888,6 @@ class series: detail::series_tag, series_operators
 		{
 			return operator=(series(x));
 		}
-		/// Symbol set getter.
-		/**
-		 * @return const reference to the piranha::symbol_set associated to the series.
-		 */
-		const symbol_set &get_symbol_set() const
-		{
-			return m_symbol_set;
-		}
 		/// Series size.
 		/**
 		 * @return the number of terms in the series.
@@ -2583,6 +2575,29 @@ class series: detail::series_tag, series_operators
 		{
 			return m_symbol_set == other.m_symbol_set && other == *static_cast<Derived const *>(this);
 		}
+		/// Symbol set getter.
+		/**
+		 * @return const reference to the piranha::symbol_set associated to the series.
+		 */
+		const symbol_set &get_symbol_set() const
+		{
+			return m_symbol_set;
+		}
+		/// Symbol set setter.
+		/**
+		 * @param[in] args piranha::symbol_set that will be associated to the series.
+		 *
+		 * @throws std::invalid_argument if the series is not empty.
+		 * @throws unspecified any exception thrown by the copy assignment operator of piranha::symbol_set.
+		 */
+		void set_symbol_set(const symbol_set &args)
+		{
+			if (unlikely(!empty())) {
+				piranha_throw(std::invalid_argument,"cannot set arguments on a non-empty series");
+			}
+			m_symbol_set = args;
+		}
+
 	protected:
 		/// Symbol set.
 		symbol_set	m_symbol_set;

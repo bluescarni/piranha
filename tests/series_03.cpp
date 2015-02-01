@@ -24,11 +24,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
+#include <stdexcept>
 
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/monomial.hpp"
 #include "../src/serialization.hpp"
+#include "../src/symbol_set.hpp"
 
 using namespace piranha;
 
@@ -175,4 +177,17 @@ BOOST_AUTO_TEST_CASE(series_generic_ctor_forwarding_test)
 	BOOST_CHECK(is_series<st3>::value);
 	st3 s6, s7(s6);
 	s7 = s6;
+}
+
+BOOST_AUTO_TEST_CASE(series_symbol_set_test)
+{
+	using st0 = g_series_type<double,int>;
+	symbol_set ss;
+	ss.add("x");
+	ss.add("y");
+	st0 s;
+	s.set_symbol_set(ss);
+	BOOST_CHECK(ss == s.get_symbol_set());
+	s += 1;
+	BOOST_CHECK_THROW(s.set_symbol_set(ss),std::invalid_argument);
 }
