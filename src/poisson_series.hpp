@@ -38,6 +38,7 @@
 #include "divisor_series.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "power_series.hpp"
@@ -305,7 +306,8 @@ class poisson_series:
 		using t_int_div_cf_type = decltype((std::declval<const typename T::term_type::cf_type &>() * 1) /
 			std::declval<const typename t_int_div_key_type<T>::value_type &>());
 		template <typename T>
-		using ti_type_ = piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,t_int_div_key_type<T>>>;
+		using ti_type_ = typename std::enable_if<is_cf<t_int_div_cf_type<T>>::value,
+			piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,t_int_div_key_type<T>>>>::type;
 		// Overload if cf is not a divisor series already. The result will be a Poisson series with the same key type, in which the coefficient
 		// is a divisor series whose coefficient is calculated from the operations needed in the integration, and the key type is a divisor whose
 		// value type is deduced from the trigonometric key.
@@ -639,6 +641,44 @@ class poisson_series:
 			}
 			return retval;
 		}
+		/// Time integration.
+		/**
+		 * \note
+		 * This method is enabled only if:
+		 * - the calling series is not already an echeloned Poisson series,
+		 * - the operations required by the computation of the time integration are supported by all
+		 *   the involved types.
+		 *
+		 * This is a special type of integration in which the trigonometric arguments are considered as linear functions
+		 * of time, and in which the integration variable is time itself. The result of the operation is a so-called echeloned
+		 * Poisson series, that it, a Poisson series in which the coefficient is a piranha::divisor_series whose coefficient type
+		 * is the original coefficient type of the Poisson series.
+		 *
+		 * For instance, if the original series is
+		 * \f[
+		 * \frac{1}{5}z\cos\left( x - y \right),
+		 * \f]
+		 * the result of the time integration is
+		 * \f[
+		 * \frac{1}{5}{z}\frac{1}{\left(\nu_{x}-\nu_{y}\right)}\sin{\left({x}-{y}\right)},
+		 * \f]
+		 * where \f$ \nu_{x} \f$ and \f$ \nu_{y} \f$ are the frequencies associated to \f$ x \f$ and \f$ y \f$ (that is,
+		 * \f$ x = \nu_{x}t \f$ and \f$ x = \nu_{y}t \f$).
+		 *
+		 * This method will throw an error if any term of the calling series has a unitary key (e.g., in the Poisson series
+		 * \f$ \frac{1}{5}z \f$ the only trigonometric key is \f$ \cos\left( 0 \right) \f$ and would thus result in a division by zero
+		 * during a time integration).
+		 *
+		 * @return the result of the time integration.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory errors in standard containers,
+		 * - the public interfaces of piranha::symbol_set, piranha::mp_integer and piranha::series,
+		 * - piranha::math::is_zero(),
+		 * - the mathematical operations needed to compute the result,
+		 * - piranha::divisor::insert(),
+		 * - construction of the involved types.
+		 */
 		template <typename T = poisson_series>
 		ti_type<T> t_integrate() const
 		{
