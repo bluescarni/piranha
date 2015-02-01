@@ -10,11 +10,31 @@ set(PYRANHA_TUTORIAL_FILES
 	tutorial/rational.py
 )
 
-ADD_LIBRARY(_core SHARED core.cpp type_system.cpp python_converters.hpp exceptions.hpp python_includes.hpp
-	type_system.hpp expose_utils.hpp expose_utils.cpp
-	expose_polynomials.hpp expose_polynomials.cpp
-	expose_poisson_series.hpp expose_poisson_series.cpp
-	expose_divisor_series.hpp expose_divisor_series.cpp
+ADD_LIBRARY(_core SHARED
+	# General.
+	core.cpp
+	type_system.cpp
+	python_converters.hpp
+	exceptions.hpp
+	python_includes.hpp
+	type_system.hpp
+	expose_utils.hpp
+	expose_utils.cpp
+	# Polynomials.
+	expose_polynomials.hpp
+	expose_polynomials.cpp
+	# Poisson series.
+	poisson_series_descriptor.hpp
+	expose_poisson_series.hpp
+	expose_poisson_series_0.cpp
+	expose_poisson_series_1.cpp
+	expose_poisson_series_2.cpp
+	expose_poisson_series_3.cpp
+	expose_poisson_series_4.cpp
+	# Divisor series.
+	expose_divisor_series.hpp
+	expose_divisor_series.cpp
+	# Python files.
 	__init__.py _common.py celmec.py math.py test.py types.py
 	${PYRANHA_TUTORIAL_FILES}
 )

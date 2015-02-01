@@ -147,7 +147,11 @@ BOOST_PYTHON_MODULE(_core)
 	// Expose polynomials.
 	pyranha::expose_polynomials();
 	// Expose Poisson series.
-	pyranha::expose_poisson_series();
+	pyranha::expose_poisson_series_0();
+	pyranha::expose_poisson_series_1();
+	pyranha::expose_poisson_series_2();
+	pyranha::expose_poisson_series_3();
+	pyranha::expose_poisson_series_4();
 	// Expose divisor series.
 	pyranha::expose_divisor_series();
 	// Expose the settings class.

@@ -18,18 +18,18 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PYRANHA_EXPOSE_POISSON_SERIES_HPP
-#define PYRANHA_EXPOSE_POISSON_SERIES_HPP
+#include "python_includes.hpp"
+
+#include "expose_poisson_series.hpp"
+#include "expose_utils.hpp"
+#include "poisson_series_descriptor.hpp"
 
 namespace pyranha
 {
 
-void expose_poisson_series_0();
-void expose_poisson_series_1();
-void expose_poisson_series_2();
-void expose_poisson_series_3();
-void expose_poisson_series_4();
-
+void expose_poisson_series_3()
+{
+	series_exposer<piranha::poisson_series,poisson_series_descriptor,9u,12u> ps_exposer;
 }
 
-#endif
+}

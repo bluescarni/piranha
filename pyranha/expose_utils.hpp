@@ -50,6 +50,7 @@
 #include <utility>
 #include <vector>
 
+#include "../src/detail/sfinae_types.hpp"
 #include "../src/detail/type_in_tuple.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
@@ -128,7 +129,8 @@ inline bp::class_<T> expose_class()
 }
 
 // Generic series exposer.
-template <template <typename ...> class Series, typename Descriptor>
+template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
+	std::size_t End = std::tuple_size<typename Descriptor::params>::value>
 class series_exposer
 {
 		using params = typename Descriptor::params;
@@ -143,15 +145,15 @@ class series_exposer
 		// Detect the presence of degree truncation types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(degree_truncation_types);
 		// for_each tuple algorithm.
-		template <typename Tuple, typename Op, std::size_t Idx = 0u>
-		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<Idx != std::tuple_size<Tuple>::value>::type * = nullptr)
+		template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
+		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<B != E>::type * = nullptr)
 		{
-			op(std::get<Idx>(t));
-			static_assert(Idx != std::numeric_limits<std::size_t>::max(),"Overflow error.");
-			tuple_for_each<Tuple,Op,Idx + std::size_t(1)>(t,op);
+			op(std::get<B>(t));
+			static_assert(B != std::numeric_limits<std::size_t>::max(),"Overflow error.");
+			tuple_for_each<Tuple,Op,static_cast<std::size_t>(B + std::size_t(1)),E>(t,op);
 		}
-		template <typename Tuple, typename Op, std::size_t Idx = 0u>
-		static void tuple_for_each(const Tuple &, const Op &, typename std::enable_if<Idx == std::tuple_size<Tuple>::value>::type * = nullptr)
+		template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
+		static void tuple_for_each(const Tuple &, const Op &, typename std::enable_if<B == E>::type * = nullptr)
 		{}
 		// Expose constructor conditionally.
 		template <typename U, typename T>
@@ -423,16 +425,21 @@ class series_exposer
 		{}
 		// Expose integration conditionally.
 		template <typename S>
-		static S integrate_wrapper(const S &s, const std::string &name)
+		static S integrate_free_wrapper(const S &s, const std::string &name)
 		{
 			return piranha::math::integrate(s,name);
+		}
+		template <typename S>
+		static S integrate_mem_wrapper(const S &s, const std::string &name)
+		{
+			return s.integrate(name);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_integrable<S>::value>::type * = nullptr)
 		{
-			series_class.def("integrate",&S::integrate);
-			bp::def("_integrate",integrate_wrapper<S>);
+			series_class.def("integrate",integrate_mem_wrapper<S>);
+			bp::def("_integrate",integrate_free_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &,
@@ -876,6 +883,28 @@ class series_exposer
 		template <typename S, typename std::enable_if<!piranha::detail::has_auto_truncate<S>::value,int>::type = 0>
 		static void expose_auto_truncate(bp::class_<S> &)
 		{}
+		// t_integrate().
+		template <typename T>
+		struct has_t_integrate: piranha::detail::sfinae_types
+		{
+			template <typename T1>
+			static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
+			static no test(...);
+			static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+		};
+		template <typename S>
+		static auto t_integrate_wrapper(const S &s) -> decltype(s.t_integrate())
+		{
+			return s.t_integrate();
+		}
+		template <typename S, typename std::enable_if<has_t_integrate<S>::value,int>::type = 0>
+		static void expose_t_integrate(bp::class_<S> &series_class)
+		{
+			series_class.def("t_integrate",t_integrate_wrapper<S>);
+		}
+		template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
+		static void expose_t_integrate(bp::class_<S> &)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -958,6 +987,8 @@ class series_exposer
 				expose_cpp_text_serialization(series_class);
 				// Expose auto_truncate(), if present.
 				expose_auto_truncate(series_class);
+				// Expose t_integrate(), if present.
+				expose_t_integrate(series_class);
 			}
 		};
 	public:
@@ -966,7 +997,7 @@ class series_exposer
 			// TODO probably we can avoid instantiating p here, look at the tuple for_each
 			// in vargs_to_v_t_idx.
 			params p;
-			tuple_for_each(p,exposer_op{});
+			tuple_for_each<params,exposer_op,Begin,End>(p,exposer_op{});
 		}
 		series_exposer(const series_exposer &) = delete;
 		series_exposer(series_exposer &&) = delete;
