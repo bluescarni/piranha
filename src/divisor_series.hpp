@@ -24,6 +24,7 @@
 #include "divisor.hpp"
 #include "forwarding.hpp"
 #include "is_cf.hpp"
+#include "power_series.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "type_traits.hpp"
@@ -72,10 +73,10 @@ struct is_divisor_series_key<divisor<T>>
  * This class supports serialization if the underlying coefficient type does.
  */
 template <typename Cf, typename Key>
-class divisor_series: public series<Cf,Key,divisor_series<Cf,Key>>
+class divisor_series: public power_series<series<Cf,Key,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>
 {
 		PIRANHA_TT_CHECK(detail::is_divisor_series_key,Key);
-		using base = series<Cf,Key,divisor_series<Cf,Key>>;
+		using base = power_series<series<Cf,Key,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Series rebind alias.
