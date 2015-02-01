@@ -145,7 +145,11 @@ BOOST_PYTHON_MODULE(_core)
 	// Series list.
 	bp::def("_get_series_list",pyranha::get_series_list);
 	// Expose polynomials.
-	pyranha::expose_polynomials();
+	pyranha::expose_polynomials_0();
+	pyranha::expose_polynomials_1();
+	pyranha::expose_polynomials_2();
+	pyranha::expose_polynomials_3();
+	pyranha::expose_polynomials_4();
 	// Expose Poisson series.
 	pyranha::expose_poisson_series_0();
 	pyranha::expose_poisson_series_1();

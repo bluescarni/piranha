@@ -21,8 +21,13 @@ ADD_LIBRARY(_core SHARED
 	expose_utils.hpp
 	expose_utils.cpp
 	# Polynomials.
+	polynomial_descriptor.hpp
 	expose_polynomials.hpp
-	expose_polynomials.cpp
+	expose_polynomials_0.cpp
+	expose_polynomials_1.cpp
+	expose_polynomials_2.cpp
+	expose_polynomials_3.cpp
+	expose_polynomials_4.cpp
 	# Poisson series.
 	poisson_series_descriptor.hpp
 	expose_poisson_series.hpp

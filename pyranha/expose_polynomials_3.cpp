@@ -18,18 +18,18 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#ifndef PYRANHA_EXPOSE_POLYNOMIALS_HPP
-#define PYRANHA_EXPOSE_POLYNOMIALS_HPP
+#include "python_includes.hpp"
+
+#include "expose_polynomials.hpp"
+#include "expose_utils.hpp"
+#include "polynomial_descriptor.hpp"
 
 namespace pyranha
 {
 
-void expose_polynomials_0();
-void expose_polynomials_1();
-void expose_polynomials_2();
-void expose_polynomials_3();
-void expose_polynomials_4();
-
+void expose_polynomials_3()
+{
+	series_exposer<piranha::polynomial,polynomial_descriptor,9u,12u> poly_exposer;
 }
 
-#endif
+}

@@ -18,6 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef PYRANHA_POLYNOMIAL_DESCRIPTOR_HPP
+#define PYRANHA_POLYNOMIAL_DESCRIPTOR_HPP
+
 #include "python_includes.hpp"
 
 #include <tuple>
@@ -28,8 +31,6 @@
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
-#include "expose_polynomials.hpp"
-#include "expose_utils.hpp"
 #include "type_system.hpp"
 
 namespace pyranha
@@ -37,30 +38,45 @@ namespace pyranha
 
 DECLARE_TT_NAMER(piranha::polynomial,"polynomial")
 
-void expose_polynomials()
+// Descriptor for polynomial exposition.
+struct polynomial_descriptor
 {
-	// Descriptor for polynomial exposition.
-	struct poly_desc
-	{
-		using params = std::tuple<std::tuple<double,piranha::monomial<piranha::rational>>,std::tuple<double,piranha::monomial<short>>,std::tuple<double,piranha::kronecker_monomial<>>,
-			std::tuple<long double,piranha::monomial<piranha::rational>>,std::tuple<long double,piranha::monomial<short>>,std::tuple<long double,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,std::tuple<piranha::integer,piranha::monomial<short>>,std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::rational,piranha::monomial<piranha::rational>>,std::tuple<piranha::rational,piranha::monomial<short>>,std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
-			std::tuple<piranha::real,piranha::monomial<piranha::rational>>,std::tuple<piranha::real,piranha::monomial<short>>,std::tuple<piranha::real,piranha::kronecker_monomial<>>>;
-		using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-		using eval_types = interop_types;
-		using subs_types = interop_types;
-		// For now, we have only degrees computed as integers.
-		using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
-		// Need to refer to these to silence a warning in GCC.
-		interop_types		it;
-		pow_types		pt;
-		eval_types		et;
-		subs_types		st;
-		degree_truncation_types	dtt;
-	};
-	pyranha::series_exposer<piranha::polynomial,poly_desc> poly_exposer;
-}
+	using params = std::tuple<
+		// Double precision.
+		std::tuple<double,piranha::monomial<piranha::rational>>,
+		std::tuple<double,piranha::monomial<short>>,
+		std::tuple<double,piranha::kronecker_monomial<>>,
+		// Long double precision.
+		std::tuple<long double,piranha::monomial<piranha::rational>>,
+		std::tuple<long double,piranha::monomial<short>>,
+		std::tuple<long double,piranha::kronecker_monomial<>>,
+		// Integer.
+		std::tuple<piranha::integer,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::integer,piranha::monomial<short>>,
+		std::tuple<piranha::integer,piranha::kronecker_monomial<>>,
+		// Rational.
+		std::tuple<piranha::rational,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::rational,piranha::monomial<short>>,
+		std::tuple<piranha::rational,piranha::kronecker_monomial<>>,
+		// Real.
+		std::tuple<piranha::real,piranha::monomial<piranha::rational>>,
+		std::tuple<piranha::real,piranha::monomial<short>>,
+		std::tuple<piranha::real,piranha::kronecker_monomial<>>
+	>;
+	using interop_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using eval_types = interop_types;
+	using subs_types = interop_types;
+	// For now, we have only degrees computed as integers or rationals.
+	using degree_truncation_types = std::tuple<piranha::integer,piranha::rational>;
+	// Need to refer to these to silence a warning in GCC.
+	interop_types		it;
+	pow_types		pt;
+	eval_types		et;
+	subs_types		st;
+	degree_truncation_types	dtt;
+};
 
 }
+
+#endif
