@@ -31,7 +31,10 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
+#include <vector>
 
+#include "../src/divisor.hpp"
+#include "../src/divisor_series.hpp"
 #include "../src/environment.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -44,6 +47,7 @@
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
+#include "../src/symbol_set.hpp"
 #include "../src/type_traits.hpp"
 
 using namespace piranha;
@@ -610,4 +614,113 @@ BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
 	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<float,monomial<long>>>,poisson_series<polynomial<float,monomial<long>>>>::value));
 	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<rational,monomial<long>>>,poisson_series<polynomial<rational,monomial<long>>>>::value));
 	BOOST_CHECK((std::is_same<series_rebind<stype,polynomial<long double,monomial<long>>>,poisson_series<polynomial<long double,monomial<long>>>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
+{
+	// Check a few sample integrations by reconstructing manually the expected result via term insertions.
+	using div_type0 = divisor<short>;
+	using ptype0 = polynomial<rational,monomial<short>>;
+	using stype0 = poisson_series<ptype0>;
+	using ktype0 = poisson_series<ptype0>::term_type::key_type;
+	using dtype0 = divisor_series<ptype0,div_type0>;
+	using tstype0 = poisson_series<dtype0>;
+	symbol_set freqs;
+	freqs.add("\\nu_{x}");
+	freqs.add("\\nu_{y}");
+	stype0 x{"x"}, y{"y"}, z{"z"};
+	auto tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate();
+	BOOST_CHECK((std::is_same<decltype(tmp0),tstype0>::value));
+	div_type0 tmp_div;
+	std::vector<short> tmp = {1,1};
+	short exponent = 1;
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	dtype0 d_tmp;
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{-1/5_q * ptype0{"z"},tmp_div});
+	ktype0 tmp_k{1,1};
+	tstype0 tmp_ts;
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	tmp0 = (1/5_q * z * math::cos(x + y)).t_integrate();
+	tmp_div.clear();
+	tmp = {1,1};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{1/5_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{1,1};
+	tmp_k.set_flavour(false);
+	tmp_ts = tstype0{};
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	tmp0 = (1/5_q * z * math::cos(3*x + y)).t_integrate();
+	tmp_div.clear();
+	tmp = {3,1};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{1/5_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{3,1};
+	tmp_k.set_flavour(false);
+	tmp_ts = tstype0{};
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	// Check with a common divisor.
+	tmp0 = (1/5_q * z * math::cos(3*x + 6*y)).t_integrate();
+	tmp_div.clear();
+	tmp = {1,2};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{1/15_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{3,6};
+	tmp_k.set_flavour(false);
+	tmp_ts = tstype0{};
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	// Check with a leading zero.
+	// NOTE: this complication is to produce cos(6y) while avoiding x being trimmed by the linear argument
+	// deduction.
+	tmp0 = (1/5_q * z * (math::cos(x + 6*y) * math::cos(x) - math::cos(2*x + 6*y)/2)).t_integrate();
+	tmp_div.clear();
+	tmp = {0,1};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{1/60_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{0,6};
+	tmp_k.set_flavour(false);
+	tmp_ts = tstype0{};
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	// Test throwing.
+	BOOST_CHECK_THROW(z.t_integrate(),std::invalid_argument);
+	// An example with more terms.
+	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
+	tmp_div.clear();
+	tmp = {1,2};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{1/15_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{3,6};
+	tmp_k.set_flavour(false);
+	tmp_ts = tstype0{};
+	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	tmp_div.clear();
+	tmp = {4,-3};
+	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
+	d_tmp = dtype0{};
+	d_tmp.set_symbol_set(freqs);
+	d_tmp.insert(dtype0::term_type{2/3_q * ptype0{"z"},tmp_div});
+	tmp_k = ktype0{12,-9};
+	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
+	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
 }

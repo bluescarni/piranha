@@ -373,6 +373,8 @@ class poisson_series:
 				// The coefficient of the only term of the divisor series is the original coefficient
 				// multiplied by any sign change from the integration or the change in sign in the divisors,
 				// and divided by the common divisor (cast to the appropriate type).
+				// NOTE: probably the sign flip is never needed, as the canonical form of the trigonometric keys
+				// also enforces a first nonzero multiplier.
 				typename return_type::term_type::cf_type::term_type::cf_type div_cf = (it->m_cf *
 					((it->m_key.get_flavour() ? 1 : -1) * (need_sign_flip ? -1 : 1))) /
 					static_cast<typename div_type::value_type>(cd);
