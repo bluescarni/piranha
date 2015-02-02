@@ -559,7 +559,7 @@ class t_integrate_test_case(_ut.TestCase):
 	"""
 	def runTest(self):
 		from fractions import Fraction as F
-		from .math import cos, sin
+		from .math import sin
 		from .types import polynomial, short, rational, poisson_series, monomial, divisor, divisor_series
 		pt = poisson_series(polynomial(rational,monomial(short)))()
 		x,y,z = pt('x'), pt('y'), pt('z')
