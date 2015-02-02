@@ -20,6 +20,7 @@
 
 #include "python_includes.hpp"
 
+#include "../src/divisor_series.hpp"
 #include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"
 #include "divisor_series_descriptor.hpp"
