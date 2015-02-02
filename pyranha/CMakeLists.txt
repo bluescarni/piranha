@@ -37,8 +37,11 @@ ADD_LIBRARY(_core SHARED
 	expose_poisson_series_3.cpp
 	expose_poisson_series_4.cpp
 	# Divisor series.
+	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp
-	expose_divisor_series.cpp
+	expose_divisor_series_0.cpp
+	expose_divisor_series_1.cpp
+	expose_divisor_series_2.cpp
 	# Python files.
 	__init__.py _common.py celmec.py math.py test.py types.py
 	${PYRANHA_TUTORIAL_FILES}

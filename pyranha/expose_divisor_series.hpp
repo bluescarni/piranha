@@ -24,7 +24,9 @@
 namespace pyranha
 {
 
-void expose_divisor_series();
+void expose_divisor_series_0();
+void expose_divisor_series_1();
+void expose_divisor_series_2();
 
 }
 

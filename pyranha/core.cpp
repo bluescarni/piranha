@@ -157,7 +157,9 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_poisson_series_3();
 	pyranha::expose_poisson_series_4();
 	// Expose divisor series.
-	pyranha::expose_divisor_series();
+	pyranha::expose_divisor_series_0();
+	pyranha::expose_divisor_series_1();
+	pyranha::expose_divisor_series_2();
 	// Expose the settings class.
 	bp::class_<piranha::settings> settings_class("_settings",bp::init<>());
 	settings_class.def("_get_max_term_output",piranha::settings::get_max_term_output).staticmethod("_get_max_term_output");

@@ -37,24 +37,29 @@ namespace pyranha
 
 DECLARE_TT_NAMER(piranha::divisor_series,"divisor_series")
 
-void expose_divisor_series()
+struct divisor_series_descriptor
 {
 	using d_type = piranha::divisor<short>;
-	struct ds_desc
-	{
-		using params = std::tuple<std::tuple<piranha::polynomial<double,piranha::monomial<piranha::rational>>,d_type>,std::tuple<piranha::polynomial<double,piranha::monomial<short>>,d_type>,std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>,d_type>,
-			std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<piranha::rational>>,d_type>,std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<short>>,d_type>,
-			std::tuple<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>,d_type>,
-			std::tuple<piranha::polynomial<piranha::real,piranha::monomial<piranha::rational>>,d_type>,std::tuple<piranha::polynomial<piranha::real,piranha::monomial<short>>,d_type>,
-			std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>,d_type>>;
-		using interop_types = std::tuple<double,piranha::rational,piranha::integer,piranha::real>;
-		using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
-		using eval_types = std::tuple<double,piranha::real,piranha::rational>;
-		interop_types		it;
-		pow_types		pt;
-		eval_types		et;
-	};
-	series_exposer<piranha::divisor_series,ds_desc> ds_exposer;
-}
+	using params = std::tuple<
+		// Poly double.
+		std::tuple<piranha::polynomial<double,piranha::monomial<piranha::rational>>,d_type>,
+		std::tuple<piranha::polynomial<double,piranha::monomial<short>>,d_type>,
+		std::tuple<piranha::polynomial<double,piranha::kronecker_monomial<>>,d_type>,
+		// Poly rational.
+		std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<piranha::rational>>,d_type>,
+		std::tuple<piranha::polynomial<piranha::rational,piranha::monomial<short>>,d_type>,
+		std::tuple<piranha::polynomial<piranha::rational,piranha::kronecker_monomial<>>,d_type>,
+		// Poly real.
+		std::tuple<piranha::polynomial<piranha::real,piranha::monomial<piranha::rational>>,d_type>,
+		std::tuple<piranha::polynomial<piranha::real,piranha::monomial<short>>,d_type>,
+		std::tuple<piranha::polynomial<piranha::real,piranha::kronecker_monomial<>>,d_type>
+	>;
+	using interop_types = std::tuple<double,piranha::rational,piranha::integer,piranha::real>;
+	using pow_types = std::tuple<double,piranha::integer,piranha::real,piranha::rational>;
+	using eval_types = std::tuple<double,piranha::real,piranha::rational>;
+	interop_types		it;
+	pow_types		pt;
+	eval_types		et;
+};
 
 }

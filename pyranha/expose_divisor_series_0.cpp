@@ -20,17 +20,16 @@
 
 #include "python_includes.hpp"
 
-#include "../src/poisson_series.hpp"
-#include "expose_poisson_series.hpp"
+#include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"
-#include "poisson_series_descriptor.hpp"
+#include "divisor_series_descriptor.hpp"
 
 namespace pyranha
 {
 
-void expose_poisson_series_1()
+void expose_divisor_series_0()
 {
-	series_exposer<piranha::poisson_series,poisson_series_descriptor,3u,6u> ps_exposer;
+	series_exposer<piranha::divisor_series,divisor_series_descriptor,0u,3u> ds_exposer;
 }
 
 }

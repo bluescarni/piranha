@@ -20,6 +20,7 @@
 
 #include "python_includes.hpp"
 
+#include "../src/poisson_series.hpp"
 #include "expose_poisson_series.hpp"
 #include "expose_utils.hpp"
 #include "poisson_series_descriptor.hpp"
