@@ -280,6 +280,23 @@ class polynomial_test_case(_ut.TestCase):
 		except ImportError:
 			pass
 
+class divisor_series_test_case(_ut.TestCase):
+	""":mod:`divisor_series` module test case.
+
+	To be used within the :mod:`unittest` framework. Will test the functions implemented in the
+	:mod:`divisor_series` module.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(divisor_series_test_case)
+
+	"""
+	def runTest(self):
+		from .types import divisor_series, rational, short, double, real, divisor, monomial, polynomial
+		from fractions import Fraction
+		self.assertEqual(type(divisor_series(polynomial(rational,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(rational,monomial(short))())
+		self.assertEqual(type(divisor_series(polynomial(double,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(double,monomial(short))())
+		self.assertEqual(type(divisor_series(polynomial(real,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(real,monomial(short))())
+
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
 	
@@ -531,6 +548,26 @@ class truncate_degree_test_case(_ut.TestCase):
 		pt.clear_pow_cache()
 		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))
 
+class t_integrate_test_case(_ut.TestCase):
+	"""Test case for the time integration functionality.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(t_integrate_test_case)
+
+	"""
+	def runTest(self):
+		from fractions import Fraction as F
+		from .math import cos, sin
+		from .types import polynomial, short, rational, poisson_series, monomial, divisor, divisor_series
+		pt = poisson_series(polynomial(rational,monomial(short)))()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		s = F(1,3)*z*sin(4*x-2*y)
+		st = s.t_integrate()
+		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
+		self.assertEqual(str(st),'-1/6*z*1/[(2*\\nu_{x}-\\nu_{y})]*cos(4*x-2*y)')
+
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.
 
@@ -569,9 +606,11 @@ def run_test_suite():
 	suite.addTest(mpmath_test_case())
 	suite.addTest(math_test_case())
 	suite.addTest(polynomial_test_case())
+	suite.addTest(divisor_series_test_case())
 	suite.addTest(poisson_series_test_case())
 	suite.addTest(converters_test_case())
 	suite.addTest(serialization_test_case())
+	suite.addTest(t_integrate_test_case())
 	suite.addTest(truncate_degree_test_case())
 	suite.addTest(doctests_test_case())
 	_ut.TextTestRunner(verbosity=2).run(suite)
