@@ -50,6 +50,7 @@ SET(HEADERS_LIST
 	pow.hpp
 	binomial.hpp
 	divisor_series.hpp
+	substitutable_series.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

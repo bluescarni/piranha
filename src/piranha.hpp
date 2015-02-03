@@ -191,6 +191,7 @@ inline namespace literals {}
 #include "settings.hpp"
 #include "small_vector.hpp"
 #include "static_vector.hpp"
+#include "substitutable_series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
