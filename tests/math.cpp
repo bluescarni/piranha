@@ -32,6 +32,9 @@
 #include <boost/math/special_functions/binomial.hpp>
 #include <cmath>
 #include <complex>
+#include <cstddef>
+#include <functional>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <stdexcept>
@@ -39,6 +42,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "../src/binomial.hpp"
@@ -46,6 +50,7 @@
 #include "../src/forwarding.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
@@ -715,4 +720,45 @@ BOOST_AUTO_TEST_CASE(math_is_unitary_test)
 	BOOST_CHECK(!math::is_unitary(-1.));
 	BOOST_CHECK(!math::is_unitary(2.f));
 	BOOST_CHECK(!math::is_unitary(2.5f));
+}
+
+// Mock key subs method only for certain types.
+struct mock_key
+{
+	mock_key() = default;
+	mock_key(const mock_key &) = default;
+	mock_key(mock_key &&) noexcept;
+	mock_key &operator=(const mock_key &) = default;
+	mock_key &operator=(mock_key &&) noexcept;
+	mock_key(const symbol_set &);
+	bool operator==(const mock_key &) const;
+	bool operator!=(const mock_key &) const;
+	bool is_compatible(const symbol_set &) const noexcept;
+	bool is_ignorable(const symbol_set &) const noexcept;
+	mock_key merge_args(const symbol_set &, const symbol_set &) const;
+	bool is_unitary(const symbol_set &) const;
+	void print(std::ostream &, const symbol_set &) const;
+	void print_tex(std::ostream &, const symbol_set &) const;
+	void trim_identify(symbol_set &, const symbol_set &) const;
+	mock_key trim(const symbol_set &, const symbol_set &) const;
+	std::vector<std::pair<int,mock_key>> subs(const std::string &, int, const symbol_set &) const;
+};
+
+namespace std
+{
+
+template <>
+struct hash<mock_key>
+{
+	std::size_t operator()(const mock_key &) const;
+};
+
+}
+
+BOOST_AUTO_TEST_CASE(math_key_has_subs_test)
+{
+	BOOST_CHECK((key_has_subs<mock_key,int>::value));
+	BOOST_CHECK((!key_has_subs<mock_key,std::string>::value));
+	BOOST_CHECK((!key_has_subs<mock_key,integer>::value));
+	BOOST_CHECK((!key_has_subs<mock_key,rational>::value));
 }

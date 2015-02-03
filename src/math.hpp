@@ -1922,6 +1922,45 @@ class key_has_t_subs: detail::sfinae_types
 template <typename Key, typename T, typename U>
 const bool key_has_t_subs<Key,T,U>::value;
 
+/// Type trait to detect the presence of the substitution method in keys.
+/**
+ * This type trait will be \p true if \p Key provides a const method <tt>subs()</tt> accepting as const parameters a string,
+ * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
+ * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> represents the substitution of a symbol with
+ * an instance of type \p T.
+ *
+ * The decay type of \p Key must satisfy piranha::is_key.
+ */
+template <typename Key, typename T>
+class key_has_subs: detail::sfinae_types
+{
+		typedef typename std::decay<Key>::type Keyd;
+		typedef typename std::decay<T>::type Td;
+		PIRANHA_TT_CHECK(is_key,Keyd);
+		template <typename Key1, typename T1>
+		static auto test(const Key1 &k, const T1 &t) ->
+			decltype(k.subs(std::declval<const std::string &>(),t,std::declval<const symbol_set &>()));
+		static no test(...);
+		template <typename T1>
+		struct check_result_type
+		{
+			static const bool value = false;
+		};
+		template <typename Res>
+		struct check_result_type<std::vector<std::pair<Res,Keyd>>>
+		{
+			static const bool value = true;
+		};
+	public:
+		/// Value of the type trait.
+		static const bool value = check_result_type<decltype(test(std::declval<Keyd>(),
+			std::declval<Td>()))>::value;
+};
+
+// Static init.
+template <typename Key, typename T>
+const bool key_has_subs<Key,T>::value;
+
 /// Type trait to detect the availability of piranha::math::multiply_accumulate.
 /**
  * This type trait will be \p true if piranha::math::multiply_accumulate can be called with arguments of type \p T, \p U and \p V,
