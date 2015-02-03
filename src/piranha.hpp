@@ -125,10 +125,7 @@
  * operations as noexcept so we don't really need to require std members to be noexcept (if they throw an exception - unlikely
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do not use
  * exception guarantees throughout the code.
- * \todo it seems like serialization of kronecker objects could not be platform-agnostic, even in text mode. This is because
- * the width of a type on a platform could be different from the original size in the archive, and the codification/decodification
- * will yield different unpacked values. Needs to be fixed, probably by serialising the unpacked vectors. Note that at the moment
- * we also do not check the range of the deserialized integral values...
+ * \todo At the moment we do not check the range of the deserialized integral values in kronecker keys.
  * \todo related to the above, we probably want to serialise all vector-like objects in the same way - so that different series
  * types can be deserialized from the same archive (e.g., k_monomial vs monomial).
  * \todo take a look at this as well: http://www.boost.org/doc/libs/1_48_0/libs/serialization/doc/traits.html#level to cope

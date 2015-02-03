@@ -68,7 +68,6 @@ template <typename Series, typename Derived>
 class t_substitutable_series: public Series
 {
 		typedef Series base;
-		PIRANHA_TT_CHECK(is_instance_of,base,series);
 		// Detect t_subs term.
 		template <typename Term, typename T, typename U>
 		struct t_subs_term_score
