@@ -709,13 +709,13 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - \p U can be raised to the value type, yielding a type \p subs_type,
 		 * - \p subs_type can be constructed from \p int and it is assignable.
 		 *
-		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is vector containing one pair in which the first
+		 * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is vector containing one pair in which the first
 		 * element is the result of substituting \p s with \p x (i.e., \p x raised to the power of the exponent corresponding
 		 * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
 		 * corresponding to \p s set to zero). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
 		 * monomial is unchanged and the substitution yields 1).
 		 * 
-		 * @param[in] s symbol that will be substituted.
+		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
@@ -729,7 +729,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - piranha::array_key::push_back().
 		 */
 		template <typename U>
-		std::vector<std::pair<subs_type<U>,monomial>> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::vector<std::pair<subs_type<U>,monomial>> subs(const std::string &s, const U &x, const symbol_set &args) const
 		{
 			using s_type = subs_type<U>;
 			std::vector<std::pair<s_type,monomial>> retval;
@@ -739,7 +739,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			s_type retval_s(1);
 			monomial retval_key;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
-				if (args[i] == s) {
+				if (args[i].get_name() == s) {
 					retval_s = math::pow(x,(*this)[i]);
 					retval_key.push_back(T(0));
 				} else {

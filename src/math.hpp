@@ -39,7 +39,6 @@
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "is_key.hpp"
-#include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "type_traits.hpp"
 
@@ -1884,7 +1883,7 @@ const bool has_t_subs<T,U,V>::value;
 
 /// Type trait to detect the presence of the trigonometric substitution method in keys.
 /**
- * This type trait will be \p true if \p Key provides a const method <tt>t_subs()</tt> accepting as const parameters a string,
+ * This type trait will be \p true if the decay type of \p Key provides a const method <tt>t_subs()</tt> accepting as const parameters a string,
  * an instance of \p T, an instance of \p U and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
  * of pairs in which the second type must be \p Key itself. The <tt>t_subs()</tt> represents the substitution of a symbol with its cosine
  * and sine passed as instances of \p T and \p U respectively.
@@ -1924,7 +1923,7 @@ const bool key_has_t_subs<Key,T,U>::value;
 
 /// Type trait to detect the presence of the substitution method in keys.
 /**
- * This type trait will be \p true if \p Key provides a const method <tt>subs()</tt> accepting as const parameters a piranha::symbol,
+ * This type trait will be \p true if the decay type of \p Key provides a const method <tt>subs()</tt> accepting as const parameters a string,
  * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
  * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> represents the substitution of a symbol with
  * an instance of type \p T.
@@ -1939,7 +1938,7 @@ class key_has_subs: detail::sfinae_types
 		PIRANHA_TT_CHECK(is_key,Keyd);
 		template <typename Key1, typename T1>
 		static auto test(const Key1 &k, const T1 &t) ->
-			decltype(k.subs(std::declval<const symbol &>(),t,std::declval<const symbol_set &>()));
+			decltype(k.subs(std::declval<const std::string &>(),t,std::declval<const symbol_set &>()));
 		static no test(...);
 		template <typename T1>
 		struct check_result_type

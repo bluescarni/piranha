@@ -1029,28 +1029,28 @@ struct subs_tester
 		BOOST_CHECK((!key_has_subs<k_type,std::vector<std::string>>::value));
 		symbol_set vs;
 		k_type k1;
-		auto ret = k1.subs(symbol("x"),integer(5),vs);
+		auto ret = k1.subs("x",integer(5),vs);
 		BOOST_CHECK_EQUAL(ret.size(),2u);
 		BOOST_CHECK_EQUAL(ret[0u].first,1);
 		BOOST_CHECK(ret[0u].second == k1);
 		BOOST_CHECK_EQUAL(ret[1u].first,0);
 		BOOST_CHECK((ret[1u].second == k_type(T(0),false)));
 		k1.set_flavour(false);
-		ret = k1.subs(symbol("x"),integer(5),vs);
+		ret = k1.subs("x",integer(5),vs);
 		BOOST_CHECK_EQUAL(ret.size(),2u);
 		BOOST_CHECK_EQUAL(ret[0u].first,0);
 		BOOST_CHECK((ret[0u].second == k_type(T(0),true)));
 		BOOST_CHECK_EQUAL(ret[1u].first,1);
 		BOOST_CHECK((ret[1u].second == k1));
 		k1 = k_type{T(1)};
-		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(5),vs),std::invalid_argument);
+		BOOST_CHECK_THROW(k1.subs("x",integer(5),vs),std::invalid_argument);
 		k1 = k_type(T(1),false);
-		BOOST_CHECK_THROW(k1.subs(symbol("x"),integer(5),vs),std::invalid_argument);
+		BOOST_CHECK_THROW(k1.subs("x",integer(5),vs),std::invalid_argument);
 		// Subs with no sign changes.
 		vs.add("x");
 		vs.add("y");
 		k1 = k_type({T(2),T(3)});
-		auto ret2 = k1.subs(symbol("x"),real(5),vs);
+		auto ret2 = k1.subs("x",real(5),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::cos(real(5) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,-math::sin(real(5) * T(2)));
@@ -1059,7 +1059,7 @@ struct subs_tester
 		tmp.set_flavour(false);
 		BOOST_CHECK((ret2[1u].second == tmp));
 		k1.set_flavour(false);
-		ret2 = k1.subs(symbol("x"),real(5),vs);
+		ret2 = k1.subs("x",real(5),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::sin(real(5) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,math::cos(real(5) * T(2)));
@@ -1067,14 +1067,14 @@ struct subs_tester
 		BOOST_CHECK((ret2[1u].second == tmp));
 		// Subs with no actual sub.
 		k1.set_flavour(true);
-		ret2 = k1.subs(symbol("z"),real(5),vs);
+		ret2 = k1.subs("z",real(5),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,real(1));
 		BOOST_CHECK_EQUAL(ret2[1u].first,real(0));
 		BOOST_CHECK((ret2[0u].second == k1));
 		k1.set_flavour(false);
 		BOOST_CHECK((ret2[1u].second == k1));
-		ret2 = k1.subs(symbol("z"),real(5),vs);
+		ret2 = k1.subs("z",real(5),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,real(0));
 		BOOST_CHECK_EQUAL(ret2[1u].first,real(1));
@@ -1084,14 +1084,14 @@ struct subs_tester
 		BOOST_CHECK((ret2[1u].second == k1));
 		// Subs with sign change.
 		k1 = k_type({T(2),T(-3)});
-		ret2 = k1.subs(symbol("x"),real(6),vs);
+		ret2 = k1.subs("x",real(6),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::cos(real(6) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,math::sin(real(6) * T(2)));
 		BOOST_CHECK((ret2[0u].second == k_type({T(0),T(3)})));
 		BOOST_CHECK((ret2[1u].second == tmp));
 		k1.set_flavour(false);
-		ret2 = k1.subs(symbol("x"),real(6),vs);
+		ret2 = k1.subs("x",real(6),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::sin(real(6) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,-math::cos(real(6) * T(2)));
@@ -1103,7 +1103,7 @@ struct subs_tester
 		// Another with sign change.
 		k1 = k_type({T(2),T(-2),T(1)});
 		vs.add("z");
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::cos(real(7) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,math::sin(real(7) * T(2)));
@@ -1112,7 +1112,7 @@ struct subs_tester
 		tmp.set_flavour(false);
 		BOOST_CHECK((ret2[1u].second == tmp));
 		k1.set_flavour(false);
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::sin(real(7) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,-math::cos(real(7) * T(2)));
@@ -1121,7 +1121,7 @@ struct subs_tester
 		BOOST_CHECK((ret2[0u].second == tmp));
 		// Sign change with leading zero multiplier after substitution.
 		k1 = k_type({T(2),T(0),T(-1)});
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::cos(real(7) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,math::sin(real(7) * T(2)));
@@ -1130,7 +1130,7 @@ struct subs_tester
 		tmp.set_flavour(false);
 		BOOST_CHECK((ret2[1u].second == tmp));
 		k1.set_flavour(false);
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::sin(real(7) * T(2)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,-math::cos(real(7) * T(2)));
@@ -1139,7 +1139,7 @@ struct subs_tester
 		BOOST_CHECK((ret2[0u].second == tmp));
 		// Leading zero and subsequent canonicalisation.
 		k1 = k_type({T(0),T(-1),T(1)});
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::cos(real(7) * T(0)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,math::sin(real(7) * T(0)));
@@ -1148,7 +1148,7 @@ struct subs_tester
 		tmp.set_flavour(false);
 		BOOST_CHECK((ret2[1u].second == tmp));
 		k1.set_flavour(false);
-		ret2 = k1.subs(symbol("x"),real(7),vs);
+		ret2 = k1.subs("x",real(7),vs);
 		BOOST_CHECK_EQUAL(ret2.size(),2u);
 		BOOST_CHECK_EQUAL(ret2[0u].first,math::sin(real(7) * T(0)));
 		BOOST_CHECK_EQUAL(ret2[1u].first,-math::cos(real(7) * T(0)));

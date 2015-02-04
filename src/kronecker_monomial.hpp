@@ -807,7 +807,7 @@ class kronecker_monomial
 		 *
 		 * The algorithm is equivalent to the one implemented in piranha::monomial::subs().
 		 * 
-		 * @param[in] s symbol that will be substituted.
+		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
@@ -821,7 +821,7 @@ class kronecker_monomial
 		 * - piranha::kronecker_array::encode().
 		 */
 		template <typename U>
-		std::vector<std::pair<subs_type<U>,kronecker_monomial>> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::vector<std::pair<subs_type<U>,kronecker_monomial>> subs(const std::string &s, const U &x, const symbol_set &args) const
 		{
 			using s_type = subs_type<U>;
 			std::vector<std::pair<s_type,kronecker_monomial>> retval;
@@ -829,7 +829,7 @@ class kronecker_monomial
 			v_type new_v;
 			s_type retval_s(1);
 			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
-				if (args[i] == s) {
+				if (args[i].get_name() == s) {
 					retval_s = math::pow(x,v[i]);
 					new_v.push_back(value_type(0));
 				} else {

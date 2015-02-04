@@ -1007,7 +1007,7 @@ class real_trigonometric_kronecker_monomial
 		 *   or piranha::math::sin(), yielding a type \p subs_type,
 		 * - \p subs_type is constructible from \p int, assignable and it supports piranha::math::negate().
 		 *
-		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a vector of two pairs
+		 * Substitute the symbol called \p s in the monomial with quantity \p x. The return value is a vector of two pairs
 		 * computed according to the standard angle sum identities. That is, given a monomial of the form
 		 * \f[
 		 * \begin{array}{c}
@@ -1029,7 +1029,7 @@ class real_trigonometric_kronecker_monomial
 		 * \f$ \cos nx \f$ will be initialised to 1 and \f$ \sin nx \f$ to 0. If, after the substitution, the first nonzero multiplier
 		 * in \f$ b \f$ is negative, \f$ b \f$ will be negated and the other signs changed accordingly.
 		 * 
-		 * @param[in] s symbol that will be substituted.
+		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
@@ -1044,7 +1044,7 @@ class real_trigonometric_kronecker_monomial
 		 */
 		template <typename U>
 		std::vector<std::pair<subs_type<U>,real_trigonometric_kronecker_monomial>>
-			subs(const symbol &s, const U &x, const symbol_set &args) const
+			subs(const std::string &s, const U &x, const symbol_set &args) const
 		{
 			using s_type = subs_type<U>;
 			using ret_type = std::vector<std::pair<subs_type<U>,real_trigonometric_kronecker_monomial>>;
@@ -1053,7 +1053,7 @@ class real_trigonometric_kronecker_monomial
 			v_type new_v;
 			s_type retval_s_cos(1), retval_s_sin(0);
 			for (min_int<decltype(args.size()),typename v_type::size_type> i = 0u; i < args.size(); ++i) {
-				if (args[i] == s) {
+				if (args[i].get_name() == s) {
 					retval_s_cos = math::cos(v[i] * x);
 					retval_s_sin = math::sin(v[i] * x);
 					new_v.push_back(value_type(0));
