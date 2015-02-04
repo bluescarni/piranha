@@ -33,6 +33,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "array_key.hpp"
 #include "config.hpp"
@@ -204,6 +205,12 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			std::declval<U &>() - std::declval<U>())>::value,int>::type;
 		// Serialization support.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		// Subs support.
+		template <typename U>
+		using subs_type_ = decltype(math::pow(std::declval<const U &>(),std::declval<const T &>()));
+		template <typename U>
+		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<U>,int>::value &&
+			std::is_assignable<subs_type_<U> &,subs_type_<U>>::value,subs_type_<U>>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -686,10 +693,15 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Substitution.
 		/**
-		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a pair in which the first
+		 * \note
+		 * This method is enabled only if:
+		 * - \p U can be raised to the value type, yielding a type \p subs_type,
+		 * - \p subs_type can be constructed from \p int and it is assignable.
+		 *
+		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is vector containing one pair in which the first
 		 * element is the result of substituting \p s with \p x (i.e., \p x raised to the power of the exponent corresponding
 		 * to \p s), and the second element the monomial after the substitution has been performed (i.e., with the exponent
-		 * corresponding to \p s removed). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
+		 * corresponding to \p s set to zero). If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
 		 * monomial is unchanged and the substitution yields 1).
 		 * 
 		 * @param[in] s symbol that will be substituted.
@@ -701,15 +713,15 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * @throws std::invalid_argument if the sizes of \p args and \p this differ.
 		 * @throws unspecified any exception thrown by:
 		 * - construction and assignment of the return value,
+		 * - construction of an exponent from zero,
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back().
-		 * 
-		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
-		std::pair<eval_type<U>,monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::vector<std::pair<subs_type<U>,monomial>> subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			using s_type = eval_type<U>;
+			using s_type = subs_type<U>;
+			std::vector<std::pair<s_type,monomial>> retval;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
@@ -718,12 +730,14 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				if (args[i] == s) {
 					retval_s = math::pow(x,(*this)[i]);
+					retval_key.push_back(T(0));
 				} else {
 					retval_key.push_back((*this)[i]);
 				}
 			}
-			piranha_assert(retval_key.size() == this->size() || retval_key.size() == this->size() - 1u);
-			return std::make_pair(std::move(retval_s),std::move(retval_key));
+			piranha_assert(retval_key.size() == this->size());
+			retval.push_back(std::make_pair(std::move(retval_s),std::move(retval_key)));
+			return retval;
 		}
 		/// Substitution of integral power.
 		/**
