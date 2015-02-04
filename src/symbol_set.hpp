@@ -589,6 +589,9 @@ class symbol_set
  *
  * @throws unspecified any exception thrown by memory errors in standard containers.
  */
+// NOTE: it might make sense here in the future to have a constructor from a range of strings instead.
+// The rationale would be that like this we would avoid going through string -> symbol conversions
+// when using this class from series.
 inline symbol_set::positions::positions(const symbol_set &a, const symbol_set &b)
 {
 	size_type ia = 0u, ib = 0u;
