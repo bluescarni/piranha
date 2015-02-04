@@ -24,8 +24,35 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../src/environment.hpp"
+#include "../src/forwarding.hpp"
+#include "../src/monomial.hpp"
+#include "../src/serialization.hpp"
+#include "../src/series.hpp"
 
 using namespace piranha;
+
+template <typename Cf, typename Expo>
+class g_series_type: public substitutable_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>
+{
+		using base = substitutable_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
+		g_series_type() = default;
+		g_series_type(const g_series_type &) = default;
+		g_series_type(g_series_type &&) = default;
+		explicit g_series_type(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type &operator=(const g_series_type &) = default;
+		g_series_type &operator=(g_series_type &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
+};
 
 BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 {

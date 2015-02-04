@@ -54,25 +54,33 @@ class substitutable_series: public Series
 		static ret_type_1<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
 		{
 			Derived tmp;
-			tmp.m_symbol_set = s_set;
+			tmp.set_symbol_set(s_set);
 			tmp.insert(Term(typename Term::cf_type(1),t.m_key));
 			return math::subs(t.m_cf,name,x) * tmp;
 		}
 		// Subs only on key.
-//		template <typename T, typename Term>
-//		using ret_type_2 = decltype(math::subs(std::declval<typename Term::cf_type const &>(),std::declval<std::string const &>(), \
-//				std::declval<T const &>()) * std::declval<Derived const &>());
-//		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 2u,int>::type = 0>
-//		static ret_type_2<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
-//		{
-//			auto ksubs = t.m_key.subs(x,name,s_set);
-//
-//
-//			Derived tmp;
-//			tmp.m_symbol_set = s_set;
-//			tmp.insert(Term(typename Term::cf_type(1),t.m_key));
-//			return math::subs(t.m_cf,name,x) * tmp;
-//		}
+		template <typename T, typename Term>
+		using k_subs_type = typename decltype(std::declval<const typename Term::key_type &>().subs(std::declval<const T &>(),
+			std::declval<const std::string &>(),std::declval<const symbol_set &>()))::value_type::first_type;
+		template <typename T, typename Term>
+		using ret_type_2_ = decltype(std::declval<Derived const &>() * std::declval<const k_subs_type<T,Term> &>());
+		template <typename T, typename Term>
+		using ret_type_2 = typename std::enable_if<is_addable_in_place<ret_type_2_<T,Term>>::value,ret_type_2_<T,Term>>::type;
+		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 2u,int>::type = 0>
+		static ret_type_2<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
+		{
+			ret_type_2<T,Term> retval;
+			retval.set_symbol_set(s_set);
+			auto ksubs = t.m_key.subs(x,name,s_set);
+			for (auto &p: ksubs) {
+				Derived tmp;
+				tmp.set_symbol_set(s_set);
+				tmp.insert(Term{t.m_cf,std::move(p.second)});
+				// NOTE: possible use of multadd here in the future.
+				retval += tmp * p.first;
+			}
+			return retval;
+		}
 	public:
 		/// Defaulted default constructor.
 		substitutable_series() = default;
