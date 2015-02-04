@@ -36,6 +36,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "config.hpp"
 #include "detail/km_commons.hpp"
@@ -147,6 +148,12 @@ class kronecker_monomial
 		template <typename Cf>
 		using multiply_enabler = typename std::enable_if<std::is_same<Cf,decltype(std::declval<const Cf &>() * std::declval<const Cf &>())>::value &&
 			is_cf<Cf>::value,int>::type;
+		// Subs utilities.
+		template <typename U>
+		using subs_type_ = decltype(math::pow(std::declval<const U &>(),std::declval<const value_type &>()));
+		template <typename U>
+		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<U>,int>::value &&
+			std::is_assignable<subs_type_<U> &,subs_type_<U>>::value,subs_type_<U>>::type;
 #endif
 	public:
 		/// Arity of the multiply() method.
@@ -785,6 +792,11 @@ class kronecker_monomial
 		}
 		/// Substitution.
 		/**
+		 * \note
+		 * This method is enabled only if:
+		 * - \p U can be raised to the value type, yielding a type \p subs_type,
+		 * - \p subs_type can be constructed from \p int and it is assignable.
+		 *
 		 * The algorithm is equivalent to the one implemented in piranha::monomial::subs().
 		 * 
 		 * @param[in] s symbol that will be substituted.
@@ -799,25 +811,26 @@ class kronecker_monomial
 		 * - piranha::math::pow(),
 		 * - piranha::static_vector::push_back(),
 		 * - piranha::kronecker_array::encode().
-		 * 
-		 * \todo review and check the requirements on type - should be the same as eval.
 		 */
 		template <typename U>
-		std::pair<eval_type<U>,kronecker_monomial> subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::vector<std::pair<subs_type<U>,kronecker_monomial>> subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			using s_type = eval_type<U>;
+			using s_type = subs_type<U>;
+			std::vector<std::pair<s_type,kronecker_monomial>> retval;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
 			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				if (args[i] == s) {
 					retval_s = math::pow(x,v[i]);
+					new_v.push_back(value_type(0));
 				} else {
 					new_v.push_back(v[i]);
 				}
 			}
-			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
-			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
+			piranha_assert(new_v.size() == v.size());
+			retval.push_back(std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v))));
+			return retval;
 		}
 		/// Substitution of integral power.
 		/**
