@@ -1924,7 +1924,7 @@ const bool key_has_t_subs<Key,T,U>::value;
 
 /// Type trait to detect the presence of the substitution method in keys.
 /**
- * This type trait will be \p true if \p Key provides a const method <tt>subs()</tt> accepting as const parameters a string,
+ * This type trait will be \p true if \p Key provides a const method <tt>subs()</tt> accepting as const parameters a piranha::symbol,
  * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
  * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> represents the substitution of a symbol with
  * an instance of type \p T.
@@ -1939,7 +1939,7 @@ class key_has_subs: detail::sfinae_types
 		PIRANHA_TT_CHECK(is_key,Keyd);
 		template <typename Key1, typename T1>
 		static auto test(const Key1 &k, const T1 &t) ->
-			decltype(k.subs(std::declval<const std::string &>(),t,std::declval<const symbol_set &>()));
+			decltype(k.subs(std::declval<const symbol &>(),t,std::declval<const symbol_set &>()));
 		static no test(...);
 		template <typename T1>
 		struct check_result_type

@@ -741,7 +741,7 @@ struct mock_key
 	void print_tex(std::ostream &, const symbol_set &) const;
 	void trim_identify(symbol_set &, const symbol_set &) const;
 	mock_key trim(const symbol_set &, const symbol_set &) const;
-	std::vector<std::pair<int,mock_key>> subs(const std::string &, int, const symbol_set &) const;
+	std::vector<std::pair<int,mock_key>> subs(const symbol &, int, const symbol_set &) const;
 };
 
 namespace std
