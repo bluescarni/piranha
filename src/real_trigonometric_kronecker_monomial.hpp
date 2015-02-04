@@ -152,10 +152,18 @@ class real_trigonometric_kronecker_monomial
 		using subs_cos_type = decltype(math::cos(std::declval<const value_type &>() * std::declval<const U &>()));
 		template <typename U>
 		using subs_sin_type = decltype(math::sin(std::declval<const value_type &>() * std::declval<const U &>()));
+		template <typename U, typename = void>
+		struct subs_type_
+		{};
 		template <typename U>
-		using subs_type = typename std::enable_if<std::is_same<subs_cos_type<U>,subs_sin_type<U>>::value &&
+		struct subs_type_<U,typename std::enable_if<std::is_same<subs_cos_type<U>,subs_sin_type<U>>::value &&
 			std::is_constructible<subs_cos_type<U>,int>::value && std::is_assignable<subs_cos_type<U> &,subs_cos_type<U>>::value &&
-			has_negate<subs_cos_type<U>>::value,subs_cos_type<U>>::type;
+			has_negate<subs_cos_type<U>>::value>::type>
+		{
+			using type = subs_cos_type<U>;
+		};
+		template <typename U>
+		using subs_type = typename subs_type_<U>::type;
 		// Trig subs utils.
 		#define PIRANHA_TMP_TYPE decltype((std::declval<value_type const &>() * math::binomial(std::declval<value_type const &>(),std::declval<value_type const &>())) * \
 			(std::declval<const U &>() * std::declval<const U &>()))

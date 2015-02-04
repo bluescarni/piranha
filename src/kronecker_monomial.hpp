@@ -150,10 +150,18 @@ class kronecker_monomial
 			is_cf<Cf>::value,int>::type;
 		// Subs utilities.
 		template <typename U>
-		using subs_type_ = decltype(math::pow(std::declval<const U &>(),std::declval<const value_type &>()));
+		using subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const value_type &>()));
+		template <typename U, typename = void>
+		struct subs_type_
+		{};
 		template <typename U>
-		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<U>,int>::value &&
-			std::is_assignable<subs_type_<U> &,subs_type_<U>>::value,subs_type_<U>>::type;
+		struct subs_type_<U,typename std::enable_if<std::is_constructible<subs_type__<U>,int>::value &&
+			std::is_assignable<subs_type__<U> &,subs_type__<U>>::value>::type>
+		{
+			using type = subs_type__<U>;
+		};
+		template <typename U>
+		using subs_type = typename subs_type_<U>::type;
 #endif
 	public:
 		/// Arity of the multiply() method.

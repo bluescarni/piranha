@@ -206,11 +206,22 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// Serialization support.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		// Subs support.
+		// NOTE: this can obviously be compressed and implemented more cleanly with a single enable_if, but unfortunately
+		// when this pattern is used both here and in k_monomial, a weird compiler error results with both GCC 4.8 and 4.9.
+		// We need to check with GCC 5 what happens, and in case the problem is still there, it needs to be reported.
 		template <typename U>
-		using subs_type_ = decltype(math::pow(std::declval<const U &>(),std::declval<const T &>()));
+		using subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const T &>()));
+		template <typename U, typename = void>
+		struct subs_type_
+		{};
 		template <typename U>
-		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<U>,int>::value &&
-			std::is_assignable<subs_type_<U> &,subs_type_<U>>::value,subs_type_<U>>::type;
+		struct subs_type_<U,typename std::enable_if<std::is_constructible<subs_type__<U>,int>::value &&
+			std::is_assignable<subs_type__<U> &,subs_type__<U>>::value>::type>
+		{
+			using type = subs_type__<U>;
+		};
+		template <typename U>
+		using subs_type = typename subs_type_<U>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
