@@ -147,12 +147,16 @@ class real_trigonometric_kronecker_monomial
 		// Final typedef for the eval type.
 		template <typename U>
 		using eval_type = typename eval_type_<U>::type;
+		// Substitution utils.
 		template <typename U>
-		struct subs_type
-		{
-			typedef std::pair<eval_type<U>,real_trigonometric_kronecker_monomial> pair_type;
-			typedef std::pair<pair_type,pair_type> type;
-		};
+		using subs_cos_type = decltype(math::cos(std::declval<const value_type &>() * std::declval<const U &>()));
+		template <typename U>
+		using subs_sin_type = decltype(math::sin(std::declval<const value_type &>() * std::declval<const U &>()));
+		template <typename U>
+		using subs_type = typename std::enable_if<std::is_same<subs_cos_type<U>,subs_sin_type<U>>::value &&
+			std::is_constructible<subs_cos_type<U>,int>::value && std::is_assignable<subs_cos_type<U> &,subs_cos_type<U>>::value &&
+			has_negate<subs_cos_type<U>>::value,subs_cos_type<U>>::type;
+		// Trig subs utils.
 		#define PIRANHA_TMP_TYPE decltype((std::declval<value_type const &>() * math::binomial(std::declval<value_type const &>(),std::declval<value_type const &>())) * \
 			(std::declval<const U &>() * std::declval<const U &>()))
 		template <typename U>
@@ -989,7 +993,13 @@ class real_trigonometric_kronecker_monomial
 		}
 		/// Substitution.
 		/**
-		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a pair of pairs
+		 * \note
+		 * This method is enabled only if:
+		 * - the value type can be multiplied by \p U, and the result can be passed to piranha::math::cos()
+		 *   or piranha::math::sin(), yielding a type \p subs_type,
+		 * - \p subs_type is constructible from \p int, assignable and it supports piranha::math::negate().
+		 *
+		 * Substitute the symbol \p s in the monomial with quantity \p x. The return value is a vector of two pairs
 		 * computed according to the standard angle sum identities. That is, given a monomial of the form
 		 * \f[
 		 * \begin{array}{c}
@@ -1002,8 +1012,8 @@ class real_trigonometric_kronecker_monomial
 		 * one of
 		 * \f[
 		 * \begin{array}{c}
-		 * \left(\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right), \tabularnewline
-		 * \left(\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right),
+		 * \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \tabularnewline
+		 * \left[\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right],
 		 * \end{array}
 		 * \f]
 		 * where \f$ \cos b \f$ and \f$ \sin b \f$ are returned as monomials, and \f$ \cos nx \f$ and \f$ \sin nx \f$
@@ -1023,13 +1033,14 @@ class real_trigonometric_kronecker_monomial
 		 * - piranha::math::cos(), piranha::math::sin() and piranha::math::negate(),
 		 * - piranha::static_vector::push_back(),
 		 * - piranha::kronecker_array::encode().
-		 * 
-		 * \todo require constructability from int, sin, cos, negate.
 		 */
 		template <typename U>
-		typename subs_type<U>::type subs(const symbol &s, const U &x, const symbol_set &args) const
+		std::vector<std::pair<subs_type<U>,real_trigonometric_kronecker_monomial>>
+			subs(const symbol &s, const U &x, const symbol_set &args) const
 		{
-			using s_type = eval_type<U>;
+			using s_type = subs_type<U>;
+			using ret_type = std::vector<std::pair<subs_type<U>,real_trigonometric_kronecker_monomial>>;
+			ret_type retval;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s_cos(1), retval_s_sin(0);
@@ -1037,31 +1048,31 @@ class real_trigonometric_kronecker_monomial
 				if (args[i] == s) {
 					retval_s_cos = math::cos(v[i] * x);
 					retval_s_sin = math::sin(v[i] * x);
+					new_v.push_back(value_type(0));
 				} else {
 					new_v.push_back(v[i]);
 				}
 			}
 			const bool sign_changed = canonicalise_impl(new_v);
-			piranha_assert(new_v.size() == v.size() || new_v.size() == v.size() - 1u);
+			piranha_assert(new_v.size() == v.size());
 			const auto new_int = ka::encode(new_v);
 			real_trigonometric_kronecker_monomial cos_key(new_int,true), sin_key(new_int,false);
 			if (get_flavour()) {
-				auto retval = std::make_pair(std::make_pair(std::move(retval_s_cos),std::move(cos_key)),
-					std::make_pair(std::move(retval_s_sin),std::move(sin_key)));
+				retval.push_back(std::make_pair(std::move(retval_s_cos),std::move(cos_key)));
+				retval.push_back(std::make_pair(std::move(retval_s_sin),std::move(sin_key)));
 				// Need to flip the sign on the sin * sin product if sign was not changed.
 				if (!sign_changed) {
-					math::negate(retval.second.first);
+					math::negate(retval[1u].first);
 				}
-				return retval;
 			} else {
-				auto retval = std::make_pair(std::make_pair(std::move(retval_s_sin),std::move(cos_key)),
-					std::make_pair(std::move(retval_s_cos),std::move(sin_key)));
+				retval.push_back(std::make_pair(std::move(retval_s_sin),std::move(cos_key)));
+				retval.push_back(std::make_pair(std::move(retval_s_cos),std::move(sin_key)));
 				// Need to flip the sign on the cos * sin product if sign was changed.
 				if (sign_changed) {
-					math::negate(retval.second.first);
+					math::negate(retval[1u].first);
 				}
-				return retval;
 			}
+			return retval;
 		}
 		/// Trigonometric substitution.
 		/**
