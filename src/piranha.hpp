@@ -143,6 +143,7 @@
  * - they support the needed methods (e.g., subs(), degree(), etc.).
  * This way if we need, e.g., a custom subs() in a particular series type, we can implement the custom method (i.e., without using the toolbox) but still ending
  * up with a correct math::subs() specialisation without having to re-code it for the particular series type.
+ * \todo related to the above, beautification of the enabling conditions for impl functors - in the same fashion as we do for methods and functions.
  */
 namespace piranha
 {
