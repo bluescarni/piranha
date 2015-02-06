@@ -2439,7 +2439,7 @@ struct subs_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK((!has_subs<int_type>::value));
+		BOOST_CHECK((!has_subs<int_type,int_type>::value));
 		BOOST_CHECK((!has_subs<int_type,int>::value));
 	}
 };

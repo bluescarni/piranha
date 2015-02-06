@@ -1886,7 +1886,7 @@ BOOST_AUTO_TEST_CASE(real_evaluate_test)
 
 BOOST_AUTO_TEST_CASE(real_subs_test)
 {
-	BOOST_CHECK(!has_subs<real>::value);
+	BOOST_CHECK((!has_subs<real,real>::value));
 	BOOST_CHECK((!has_subs<real,int>::value));
 	BOOST_CHECK((!has_subs<real,std::string>::value));
 }

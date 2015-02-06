@@ -585,7 +585,7 @@ inline auto evaluate(const T &x, const std::unordered_map<std::string,U> &dict) 
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  */
-template <typename T, typename Enable = void>
+template <typename T, typename U, typename Enable = void>
 struct subs_impl
 {};
 
@@ -603,9 +603,9 @@ struct subs_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
 template <typename T, typename U>
-inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T>()(x,name,y))
+inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(subs_impl<T,U>()(x,name,y))
 {
-	return subs_impl<T>()(x,name,y);
+	return subs_impl<T,U>()(x,name,y);
 }
 
 /// Default functor for the implementation of piranha::math::t_subs().
@@ -1820,7 +1820,7 @@ const bool has_is_unitary<T>::value;
  * The type trait will be \p true if piranha::math::subs can be successfully called on instances
  * of type \p T, with an instance of type \p U as substitution argument.
  */
-template <typename T, typename U = T>
+template <typename T, typename U>
 class has_subs: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;

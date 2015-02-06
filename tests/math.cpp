@@ -321,24 +321,18 @@ BOOST_AUTO_TEST_CASE(math_evaluate_test)
 
 BOOST_AUTO_TEST_CASE(math_subs_test)
 {
-	BOOST_CHECK_EQUAL(math::subs(5,"",6),5);
-	BOOST_CHECK((std::is_same<decltype(math::subs(5,"",6)),int>::value));
-	BOOST_CHECK_EQUAL(math::subs(5.,"",6),5.);
-	BOOST_CHECK((std::is_same<decltype(math::subs(5.,"",6)),double>::value));
-	BOOST_CHECK_EQUAL(math::subs(10ll,"","foo"),10ll);
-	BOOST_CHECK((std::is_same<decltype(math::subs(10ll,"","foo")),long long>::value));
-	BOOST_CHECK(has_subs<double>::value);
-	BOOST_CHECK((has_subs<int,double>::value));
-	BOOST_CHECK((has_subs<int,char>::value));
-	BOOST_CHECK((has_subs<int &,char>::value));
-	BOOST_CHECK((has_subs<int,char &>::value));
-	BOOST_CHECK((has_subs<int &,const char &>::value));
-	BOOST_CHECK(!has_subs<std::string>::value);
+	BOOST_CHECK((!has_subs<double,double>::value));
+	BOOST_CHECK((!has_subs<int,double>::value));
+	BOOST_CHECK((!has_subs<int,char>::value));
+	BOOST_CHECK((!has_subs<int &,char>::value));
+	BOOST_CHECK((!has_subs<int,char &>::value));
+	BOOST_CHECK((!has_subs<int &,const char &>::value));
+	BOOST_CHECK((!has_subs<std::string,std::string>::value));
 	BOOST_CHECK((!has_subs<std::string,int>::value));
 	BOOST_CHECK((!has_subs<std::string &,int>::value));
-	BOOST_CHECK((has_subs<int,std::string>::value));
-	BOOST_CHECK((has_subs<int,std::string &&>::value));
-	BOOST_CHECK((has_subs<const int,std::string &&>::value));
+	BOOST_CHECK((!has_subs<int,std::string>::value));
+	BOOST_CHECK((!has_subs<int,std::string &&>::value));
+	BOOST_CHECK((!has_subs<const int,std::string &&>::value));
 }
 
 BOOST_AUTO_TEST_CASE(math_integrate_test)
