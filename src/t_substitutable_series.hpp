@@ -64,6 +64,12 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+/*
+ * Modernization plan (following the work on subs):
+ * - beautify the return types in the public method,
+ * - replace macroes with template aliases,
+ * - t_subs_impl parametrised also on second type, and remove is_isntance_of.
+ */
 template <typename Series, typename Derived>
 class t_substitutable_series: public Series
 {
