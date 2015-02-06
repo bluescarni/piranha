@@ -68,6 +68,7 @@ namespace piranha
  * Modernization plan (following the work on subs):
  * - beautify the return types in the public method,
  * - replace macroes with template aliases,
+ * - drop the struct in favour of static functions in the implementation if possible,
  * - t_subs_impl parametrised also on second type, and remove is_isntance_of.
  */
 template <typename Series, typename Derived>

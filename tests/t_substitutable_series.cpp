@@ -47,7 +47,7 @@
 
 using namespace piranha;
 
-// NOTE: when series mutliplication SFINAEs out, change the signature of t_subs in key02 to be the correct one
+// NOTE: when series multiplication SFINAEs out, change the signature of t_subs in key02 to be the correct one
 // and check that has_t_subs fails for the series type because g_series is not multipliable by std::string any more.
 
 struct key02
