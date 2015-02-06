@@ -29,13 +29,21 @@
 #include "math.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
+#include "symbol_set.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
 {
 
+namespace detail
+{
+
+struct substitutable_series_tag {};
+
+}
+
 template <typename Series, typename Derived>
-class substitutable_series: public Series
+class substitutable_series: public Series, detail::substitutable_series_tag
 {
 		typedef Series base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
@@ -58,10 +66,10 @@ class substitutable_series: public Series
 			tmp.insert(Term(typename Term::cf_type(1),t.m_key));
 			return math::subs(t.m_cf,name,x) * tmp;
 		}
-		// Subs only on key.
+		// Case 2: subs only on key.
 		template <typename T, typename Term>
-		using k_subs_type = typename decltype(std::declval<const typename Term::key_type &>().subs(std::declval<const T &>(),
-			std::declval<const std::string &>(),std::declval<const symbol_set &>()))::value_type::first_type;
+		using k_subs_type = typename decltype(std::declval<const typename Term::key_type &>().subs(std::declval<const std::string &>(),
+			std::declval<const T &>(),std::declval<const symbol_set &>()))::value_type::first_type;
 		template <typename T, typename Term>
 		using ret_type_2_ = decltype(std::declval<Derived const &>() * std::declval<const k_subs_type<T,Term> &>());
 		template <typename T, typename Term>
@@ -71,7 +79,7 @@ class substitutable_series: public Series
 		{
 			ret_type_2<T,Term> retval;
 			retval.set_symbol_set(s_set);
-			auto ksubs = t.m_key.subs(x,name,s_set);
+			auto ksubs = t.m_key.subs(name,x,s_set);
 			for (auto &p: ksubs) {
 				Derived tmp;
 				tmp.set_symbol_set(s_set);
@@ -81,6 +89,14 @@ class substitutable_series: public Series
 			}
 			return retval;
 		}
+		// Initial definition of the subs type.
+		template <typename T>
+		using subs_type_ = decltype(subs_impl(std::declval<typename Series::term_type const &>(),std::declval<std::string const &>(),
+			std::declval<const T &>(),std::declval<symbol_set const &>()));
+		// Enable conditionally based on the common requirements in the subs() method.
+		template <typename T>
+		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<T>,int>::value && is_addable_in_place<subs_type_<T>>::value,
+			subs_type_<T>>::type;
 	public:
 		/// Defaulted default constructor.
 		substitutable_series() = default;
@@ -101,14 +117,6 @@ class substitutable_series: public Series
 			PIRANHA_TT_CHECK(std::is_base_of,substitutable_series,Derived);
 		}
 		PIRANHA_FORWARDING_ASSIGNMENT(substitutable_series,base)
-		// Initial definition of the subs type.
-		template <typename T>
-		using subs_type_ = decltype(subs_impl(std::declval<typename Series::term_type const &>(),std::declval<std::string const &>(),
-			std::declval<const T &>(),std::declval<symbol_set const &>()));
-		// Enable conditionally based on the common requirements in the subs() method.
-		template <typename T>
-		using subs_type = typename std::enable_if<std::is_constructible<subs_type_<T>,int>::value && is_addable_in_place<subs_type_<T>>::value,
-			subs_type_<T>>::type;
 		template <typename T>
 		subs_type<T> subs(const std::string &name, const T &x) const
 		{
@@ -119,6 +127,32 @@ class substitutable_series: public Series
 			return retval;
 		}
 };
+
+namespace detail
+{
+
+// Enabler for the specialisation of subs functor for subs series.
+template <typename Series, typename T>
+using subs_impl_subs_series_enabler = typename std::enable_if<
+	std::is_base_of<substitutable_series_tag,Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().subs(std::declval<const std::string &>(),std::declval<const T &>()))>::value
+>::type;
+
+}
+
+namespace math
+{
+
+template <typename Series, typename T>
+struct subs_impl<Series,T,detail::subs_impl_subs_series_enabler<Series,T>>
+{
+	auto operator()(const Series &s, const std::string &name, const T &x) const -> decltype(s.subs(name,x))
+	{
+		return s.subs(name,x);
+	}
+};
+
+}
 
 }
 

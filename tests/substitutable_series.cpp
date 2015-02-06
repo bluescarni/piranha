@@ -23,9 +23,15 @@
 #define BOOST_TEST_MODULE substitutable_series_test
 #include <boost/test/unit_test.hpp>
 
+#include <string>
+
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/math.hpp"
 #include "../src/monomial.hpp"
+#include "../src/mp_integer.hpp"
+#include "../src/mp_rational.hpp"
+#include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
 
@@ -37,6 +43,8 @@ class g_series_type: public substitutable_series<series<Cf,monomial<Expo>,g_seri
 		using base = substitutable_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
+		template <typename Cf2>
+		using rebind = g_series_type<Cf2,Expo>;
 		g_series_type() = default;
 		g_series_type(const g_series_type &) = default;
 		g_series_type(g_series_type &&) = default;
@@ -57,4 +65,35 @@ class g_series_type: public substitutable_series<series<Cf,monomial<Expo>,g_seri
 BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 {
 	environment env;
+	// Substitution on key only.
+	using stype0 = g_series_type<rational,int>;
+	// Type trait checks.
+	BOOST_CHECK((has_subs<stype0,int>::value));
+	BOOST_CHECK((has_subs<stype0,double>::value));
+	BOOST_CHECK((has_subs<stype0,integer>::value));
+	BOOST_CHECK((has_subs<stype0,rational>::value));
+	BOOST_CHECK((has_subs<stype0,real>::value));
+	BOOST_CHECK((!has_subs<stype0,std::string>::value));
+	stype0 x{"x"}, y{"y"}, z{"z"};
+	auto tmp = (x + y).subs("x",2);
+	BOOST_CHECK_EQUAL(tmp,y + 2);
+	BOOST_CHECK(tmp.is_identical(math::subs(x+y,"x",2)));
+	BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
+	BOOST_CHECK((std::is_same<decltype(tmp),stype0>::value));
+	auto tmp2 = (x + y).subs("x",2.);
+	BOOST_CHECK_EQUAL(tmp2,y + 2.);
+	BOOST_CHECK(tmp2.is_identical(math::subs(x+y,"x",2.)));
+	BOOST_CHECK((std::is_same<decltype(tmp2),g_series_type<double,int>>::value));
+	auto tmp3 = (3*x + y*y/7).subs("y",2/5_q);
+	BOOST_CHECK(tmp3.is_identical(math::subs(3*x + y*y/7,"y",2/5_q)));
+	BOOST_CHECK((std::is_same<decltype(tmp3),stype0>::value));
+	BOOST_CHECK_EQUAL(tmp3,3*x + 2/5_q * 2/5_q / 7);
+	auto tmp4 = (3*x + y*y/7).subs("y",2.123_r);
+	BOOST_CHECK(tmp4.is_identical(math::subs(3*x + y*y/7,"y",2.123_r)));
+	BOOST_CHECK((std::is_same<decltype(tmp4),g_series_type<real,int>>::value));
+	BOOST_CHECK_EQUAL(tmp4,3*x + math::pow(2.123_r,2) / 7);
+	auto tmp5 = (3*x + y*y/7).subs("y",-2_z);
+	BOOST_CHECK(tmp5.is_identical(math::subs(3*x + y*y/7,"y",-2_z)));
+	BOOST_CHECK((std::is_same<decltype(tmp5),stype0>::value));
+	BOOST_CHECK_EQUAL(tmp5,3*x + math::pow(-2_z,2) / 7_q);
 }
