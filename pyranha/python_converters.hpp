@@ -81,6 +81,9 @@ inline void construct_from_str(::PyObject *obj_ptr, bp::converter::rvalue_from_p
 		bp::throw_error_already_set();
 	}
 #endif
+	// NOTE: the use of reinterpret_cast here comes straight from the sources quoted at the beginning of the file. reinterpret_cast
+	// in general looks rather dangerous and unsafe, and it's not clear to me here if this is an idiomatic way of doing things in Boost.Python
+	// or instead this should be a static_cast to void * or something like that. Maybe a good question for the Boost Python mailing list.
 	void *storage = reinterpret_cast<bp::converter::rvalue_from_python_storage<T> *>(data)->storage.bytes;
 	::new (storage) T(s);
 	data->convertible = storage;
