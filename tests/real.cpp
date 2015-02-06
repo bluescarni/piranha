@@ -1886,15 +1886,9 @@ BOOST_AUTO_TEST_CASE(real_evaluate_test)
 
 BOOST_AUTO_TEST_CASE(real_subs_test)
 {
-	BOOST_CHECK_EQUAL(math::subs(real(),"",4),real());
-	BOOST_CHECK_EQUAL(math::subs(real(2),"foo",5.6),real(2));
-	BOOST_CHECK_EQUAL(math::subs(real(-3.5),"niz","foo"),real(-3.5));
-	BOOST_CHECK((std::is_same<decltype(math::subs(real(-3.5),"niz","foo")),real>::value));
-	BOOST_CHECK(has_subs<real>::value);
-	BOOST_CHECK((has_subs<real,int>::value));
-	BOOST_CHECK((has_subs<real,std::string>::value));
-	BOOST_CHECK((has_subs<real,const double &>::value));
-	BOOST_CHECK((has_subs<real &&,const double &>::value));
+	BOOST_CHECK(!has_subs<real>::value);
+	BOOST_CHECK((!has_subs<real,int>::value));
+	BOOST_CHECK((!has_subs<real,std::string>::value));
 }
 
 BOOST_AUTO_TEST_CASE(real_ipow_subs_test)

@@ -1832,23 +1832,6 @@ struct partial_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type
 	}
 };
 
-/// Specialisation of the piranha::math::subs() functor for piranha::real.
-template <typename T>
-struct subs_impl<T,typename std::enable_if<std::is_same<T,real>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] x substitution argument.
-	 * 
-	 * @return copy of \p x.
-	 */
-	template <typename U>
-	T operator()(const T &x, const std::string &, const U &) const
-	{
-		return x;
-	}
-};
-
 /// Specialisation of the piranha::math::ipow_subs() functor for piranha::real.
 /**
  * This specialisation is activated when \p T is piranha::real.

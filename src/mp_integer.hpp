@@ -3338,26 +3338,6 @@ struct partial_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::
 	}
 };
 
-/// Specialisation of the piranha::math::subs() functor for piranha::mp_integer.
-/**
- * This specialisation is enabled when \p T is an instance of piranha::mp_integer.
- */
-template <typename T>
-struct subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] n substitution argument.
-	 *
-	 * @return copy of \p n.
-	 */
-	template <typename U>
-	T operator()(const T &n, const std::string &, const U &) const
-	{
-		return n;
-	}
-};
-
 /// Factorial.
 /**
  * @param[in] n factorial argument.

@@ -2439,15 +2439,8 @@ struct subs_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK((has_subs<int_type,int_type>::value));
-		BOOST_CHECK((has_subs<int_type,double>::value));
-		BOOST_CHECK((has_subs<int_type,float>::value));
-		int_type n;
-		BOOST_CHECK_EQUAL(math::subs(n,"foo",5),0);
-		n = -6;
-		BOOST_CHECK_EQUAL(math::subs(n,"bar",0),-6);
-		n = 1034;
-		BOOST_CHECK_EQUAL(math::subs(n,"baz","std::string"),1034);
+		BOOST_CHECK((!has_subs<int_type>::value));
+		BOOST_CHECK((!has_subs<int_type,int>::value));
 	}
 };
 
