@@ -138,6 +138,11 @@
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test garbage archives
  * also in the existing serialization tests.
  * \todo std::move() needs the utility header.
+ * \todo as an idea, the series specialisations for the impl functors in the toolboxes might all go in series.hpp, with the following conditions:
+ * - the involved object is/are series,
+ * - they support the needed methods (e.g., subs(), degree(), etc.).
+ * This way if we need, e.g., a custom subs() in a particular series type, we can implement the custom method (i.e., without using the toolbox) but still ending
+ * up with a correct math::subs() specialisation without having to re-code it for the particular series type.
  */
 namespace piranha
 {
