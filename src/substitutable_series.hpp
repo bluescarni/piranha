@@ -73,12 +73,12 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		template <typename T, typename Term>
 		using ret_type_2_ = decltype(std::declval<Derived const &>() * std::declval<const k_subs_type<T,Term> &>());
 		template <typename T, typename Term>
-		using ret_type_2 = typename std::enable_if<is_addable_in_place<ret_type_2_<T,Term>>::value,ret_type_2_<T,Term>>::type;
+		using ret_type_2 = typename std::enable_if<is_addable_in_place<ret_type_2_<T,Term>>::value &&
+			std::is_constructible<ret_type_2_<T,Term>,int>::value,ret_type_2_<T,Term>>::type;
 		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 2u,int>::type = 0>
 		static ret_type_2<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
 		{
-			ret_type_2<T,Term> retval;
-			retval.set_symbol_set(s_set);
+			ret_type_2<T,Term> retval(0);
 			auto ksubs = t.m_key.subs(name,x,s_set);
 			for (auto &p: ksubs) {
 				Derived tmp;
