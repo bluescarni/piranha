@@ -275,23 +275,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			piranha_assert(is_compatible(args));
 			return false;
 		}
-		/// Merge arguments.
-		/**
-		 * Will forward the call to piranha::array_key::base_merge_args().
-		 * 
-		 * @param[in] orig_args original arguments set.
-		 * @param[in] new_args new arguments set.
-		 * 
-		 * @return piranha::monomial with the new arguments merged in.
-		 * 
-		 * @throws unspecified any exception thrown by piranha::array_key::base_merge_args().
-		 */
-		monomial merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
-		{
-			monomial retval;
-			static_cast<base &>(retval) = this->base_merge_args(orig_args,new_args);
-			return retval;
-		}
 		/// Check if monomial is unitary.
 		/**
 		 * A monomial is unitary if, for all its elements, piranha::math::is_zero() returns \p true.

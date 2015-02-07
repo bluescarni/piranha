@@ -257,6 +257,8 @@ struct merge_args_tag;
 namespace piranha
 {
 
+// NOTE: the debug access is not really necessary after moving merge_args from protected
+// to public.
 template <>
 class debug_access<merge_args_tag>
 {
@@ -271,7 +273,8 @@ class debug_access<merge_args_tag>
 				symbol_set v1, v2;
 				v2.add(symbol("a"));
 				key_type k;
-				auto out = k.base_merge_args(v1,v2);
+				auto out = k.merge_args(v1,v2);
+				BOOST_CHECK((std::is_same<decltype(out),key_type>::value));
 				BOOST_CHECK_EQUAL(out.size(),unsigned(1));
 				BOOST_CHECK_EQUAL(out[0],T(0));
 				v2.add(symbol("b"));
@@ -281,7 +284,7 @@ class debug_access<merge_args_tag>
 				v1.add(symbol("d"));
 				k.push_back(T(2));
 				k.push_back(T(4));
-				out = k.base_merge_args(v1,v2);
+				out = k.merge_args(v1,v2);
 				BOOST_CHECK_EQUAL(out.size(),unsigned(4));
 				BOOST_CHECK_EQUAL(out[0],T(0));
 				BOOST_CHECK_EQUAL(out[1],T(2));
@@ -295,7 +298,7 @@ class debug_access<merge_args_tag>
 				v1.add(symbol("g"));
 				k.push_back(T(5));
 				k.push_back(T(7));
-				out = k.base_merge_args(v1,v2);
+				out = k.merge_args(v1,v2);
 				BOOST_CHECK_EQUAL(out.size(),unsigned(8));
 				BOOST_CHECK_EQUAL(out[0],T(0));
 				BOOST_CHECK_EQUAL(out[1],T(2));
@@ -305,10 +308,10 @@ class debug_access<merge_args_tag>
 				BOOST_CHECK_EQUAL(out[5],T(0));
 				BOOST_CHECK_EQUAL(out[6],T(7));
 				BOOST_CHECK_EQUAL(out[7],T(0));
-				BOOST_CHECK_THROW(k.base_merge_args(v2,v1),std::invalid_argument);
-				BOOST_CHECK_THROW(k.base_merge_args(v1,symbol_set{}),std::invalid_argument);
+				BOOST_CHECK_THROW(k.merge_args(v2,v1),std::invalid_argument);
+				BOOST_CHECK_THROW(k.merge_args(v1,symbol_set{}),std::invalid_argument);
 				v1.add(symbol("z"));
-				BOOST_CHECK_THROW(k.base_merge_args(v1,v2),std::invalid_argument);
+				BOOST_CHECK_THROW(k.merge_args(v1,v2),std::invalid_argument);
 			}
 		};
 		template <typename T>

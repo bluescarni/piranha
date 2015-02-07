@@ -407,11 +407,6 @@ class array_key
 		{
 			m_container.add(retval.m_container,other.m_container);
 		}
-	protected:
-		// NOTE: the reason for this to be protected is for future implementations of trig monomial based
-		// on this class, with which we want to share code.
-		// NOTE: probably though we can change the name of this to merge_args(), move to public and
-		// return a Derived instead.
 		/// Merge arguments.
 		/**
 		 * Merge the new arguments set \p new_args into \p this, given the current reference arguments set
@@ -421,7 +416,7 @@ class array_key
 		 * @param[in] orig_args current reference arguments set for \p this.
 		 * @param[in] new_args new arguments set.
 		 * 
-		 * @return a piranha::array_key resulting from merging \p new_args into \p this.
+		 * @return a \p Derived instance resulting from merging \p new_args into \p this.
 		 * 
 		 * @throws std::invalid_argument in the following cases:
 		 * - the size of \p this is different from the size of \p orig_args,
@@ -431,9 +426,9 @@ class array_key
 		 * - piranha::small_vector::push_back(),
 		 * - the construction of instances of type \p value_type from the integral constant 0.
 		 */
-		array_key base_merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
+		Derived merge_args(const symbol_set &orig_args, const symbol_set &new_args) const
 		{
-			array_key retval;
+			Derived retval;
 			retval.m_container = detail::vector_merge_args(m_container,orig_args,new_args);
 			return retval;
 		}
