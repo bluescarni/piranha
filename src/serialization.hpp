@@ -24,9 +24,14 @@
 // Common headers for serialization.
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <boost/config/suffix.hpp>
+#include <boost/mpl/int.hpp>
+#include <boost/mpl/integral_c_tag.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/level.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <boost/serialization/string.hpp>
+
 // Serialization todo:
 // - provide alternative overloads of the serialization methods
 //   when working with binary archives. This should lead to improved performance
@@ -59,5 +64,22 @@ void serialize(Archive &ar, unsigned int) \
 { \
 	ar & boost::serialization::base_object<base>(*this); \
 }
+
+// Macro to customize the serialization levle for a template class. Adapted from:
+// http://www.boost.org/doc/libs/release/libs/serialization/doc/traits.html#tracking
+// The exisiting boost macro only covers concrete classes, not generic classes.
+#define PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(TClass,L) \
+namespace boost { namespace serialization { \
+template <typename ... Args> \
+struct implementation_level_impl<const TClass<Args...>> \
+{ \
+	typedef mpl::integral_c_tag tag; \
+	typedef mpl::int_<L> type; \
+	BOOST_STATIC_CONSTANT( \
+		int, \
+		value = implementation_level_impl::type::value \
+	); \
+}; \
+}}
 
 #endif
