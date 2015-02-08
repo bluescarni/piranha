@@ -715,10 +715,10 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		std::vector<std::pair<subs_type<U>,monomial>> subs(const std::string &s, const U &x, const symbol_set &args) const
 		{
 			using s_type = subs_type<U>;
-			std::vector<std::pair<s_type,monomial>> retval;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
+			std::vector<std::pair<s_type,monomial>> retval;
 			s_type retval_s(1);
 			monomial retval_key;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
