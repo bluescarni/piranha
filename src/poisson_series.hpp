@@ -46,6 +46,7 @@
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
+#include "substitutable_series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
@@ -119,9 +120,11 @@ struct has_t_integrate: detail::sfinae_types
 //   we will need a safe cast).
 template <typename Cf>
 class poisson_series:
-	public power_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>>
+	public power_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
+		poisson_series<Cf>>,poisson_series<Cf>>
 {
-		typedef power_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,poisson_series<Cf>> base;
+		using base = power_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
+			poisson_series<Cf>>,poisson_series<Cf>>;
 		// TMP for enabling sin and cos overrides.
 		// Detect if T's coefficient is a polynomial whose coefficient has integral cast.
 		template <typename T, typename = void>
@@ -226,16 +229,6 @@ class poisson_series:
 		}
 		// Subs typedefs.
 		// TODO: fix declval usage. -> remove it everywhere, remove <utility>.
-		template <typename T, typename = poisson_series, typename = void>
-		struct subs_type
-		{
-			typedef typename base::term_type::cf_type cf_type;
-			typedef typename base::term_type::key_type key_type;
-			typedef decltype(
-				(math::subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<T>()) * std::declval<poisson_series>()) *
-				std::declval<key_type>().subs(std::declval<symbol>(),std::declval<T>(),std::declval<symbol_set>()).first.first
-			) type;
-		};
 		template <typename T, typename = poisson_series, typename = void>
 		struct ipow_subs_type
 		{
@@ -399,12 +392,7 @@ class poisson_series:
 		template <typename T>
 		using integrate_enabler = typename std::enable_if<detail::has_t_integrate<T>::value,int>::type;
 		template <typename T, typename U>
-		using subs_enabler = typename std::enable_if<detail::has_t_integrate<U>::value &&
-			has_sine<T>::value && has_cosine<T>::value,int>::type;
-		template <typename T, typename U>
 		using ipow_subs_enabler = typename std::enable_if<detail::has_t_integrate<U>::value,int>::type;
-		template <typename T, typename U>
-		struct subs_type<T,U,typename std::enable_if<!detail::has_t_integrate<U>::value>::type> {};
 		template <typename T, typename U>
 		struct ipow_subs_type<T,U,typename std::enable_if<!detail::has_t_integrate<U>::value>::type> {};
 		// Serialization.
@@ -483,60 +471,6 @@ class poisson_series:
 		poisson_series cos() const
 		{
 			return sin_cos_impl<true,T>();
-		}
-		/// Substitution.
-		/**
-		 * Substitute the symbolic quantity \p name with the generic value \p x. The result for each term is computed
-		 * via piranha::math::subs() for the coefficients and via the substitution method for the monomials, and
-		 * then assembled into the final return value via multiplications and additions.
-		 * 
-		 * @param[in] name name of the symbolic variable that will be subject to substitution.
-		 * @param[in] x quantity that will be substituted for \p name.
-		 * 
-		 * @return result of the substitution.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - symbol construction,
-		 * - piranha::symbol_set::remove() and assignment operator,
-		 * - piranha::math::subs(),
-		 * - the substitution method of the monomial type,
-		 * - piranha::series::insert(),
-		 * - construction, addition and multiplication of the types involved in the computation.
-		 * 
-		 * \todo type requirements.
-		 */
-		// TODO: proper sfinaeing and abstraction for subs methods, including the math:: overloads below.
-		// this needs to be done for poly as well.
-		template <typename T, typename U = poisson_series, subs_enabler<T,U> = 0>
-		typename subs_type<T>::type subs(const std::string &name, const T &x) const
-		{
-			typedef typename subs_type<T>::type return_type;
-			typedef typename base::term_type term_type;
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
-			// Turn name into symbol.
-			const symbol s(name);
-			// Init return value.
-			return_type retval = return_type();
-			// Remove the symbol from the current symbol set, if present.
-			symbol_set sset(this->m_symbol_set);
-			if (std::binary_search(sset.begin(),sset.end(),s)) {
-				sset.remove(s);
-			}
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				auto cf_sub = math::subs(it->m_cf,name,x);
-				auto key_sub = it->m_key.subs(s,x,this->m_symbol_set);
-				poisson_series tmp_series1;
-				tmp_series1.m_symbol_set = sset;
-				tmp_series1.insert(term_type(cf_type(1),key_type(key_sub.first.second)));
-				poisson_series tmp_series2;
-				tmp_series2.m_symbol_set = sset;
-				tmp_series2.insert(term_type(cf_type(1),key_type(key_sub.second.second)));
-				retval += (cf_sub * tmp_series1) * key_sub.first.first;
-				retval += (cf_sub * tmp_series2) * key_sub.second.first;
-			}
-			return retval;
 		}
 		/// Substitution of integral power.
 		/**
