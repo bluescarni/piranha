@@ -65,7 +65,7 @@ void serialize(Archive &ar, unsigned int) \
 	ar & boost::serialization::base_object<base>(*this); \
 }
 
-// Macro to customize the serialization levle for a template class. Adapted from:
+// Macro to customize the serialization level for a template class. Adapted from:
 // http://www.boost.org/doc/libs/release/libs/serialization/doc/traits.html#tracking
 // The exisiting boost macro only covers concrete classes, not generic classes.
 #define PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(TClass,L) \
