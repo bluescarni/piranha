@@ -56,15 +56,18 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		};
 		// Case 1: subs only on cf.
 		template <typename T, typename Term>
-		using ret_type_1 = decltype(math::subs(std::declval<typename Term::cf_type const &>(),std::declval<std::string const &>(), \
-				std::declval<T const &>()) * std::declval<Derived const &>());
+		using cf_subs_type = decltype(math::subs(std::declval<typename Term::cf_type const &>(),std::declval<std::string const &>(),
+				std::declval<T const &>()));
+		template <typename T, typename Term>
+		using ret_type_1 = decltype(std::declval<const cf_subs_type<T,Term> &>() * std::declval<Derived const &>());
 		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 1u,int>::type = 0>
-		static ret_type_1<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
+		static ret_type_1<T,Term> subs_term_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
 		{
 			Derived tmp;
 			tmp.set_symbol_set(s_set);
 			tmp.insert(Term(typename Term::cf_type(1),t.m_key));
-			return math::subs(t.m_cf,name,x) * tmp;
+			// NOTE: use moves here in case the multiplication can take advantage.
+			return math::subs(t.m_cf,name,x) * std::move(tmp);
 		}
 		// Case 2: subs only on key.
 		template <typename T, typename Term>
@@ -76,7 +79,7 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		using ret_type_2 = typename std::enable_if<is_addable_in_place<ret_type_2_<T,Term>>::value &&
 			std::is_constructible<ret_type_2_<T,Term>,int>::value,ret_type_2_<T,Term>>::type;
 		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 2u,int>::type = 0>
-		static ret_type_2<T,Term> subs_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
+		static ret_type_2<T,Term> subs_term_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
 		{
 			ret_type_2<T,Term> retval(0);
 			auto ksubs = t.m_key.subs(name,x,s_set);
@@ -85,13 +88,33 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 				tmp.set_symbol_set(s_set);
 				tmp.insert(Term{t.m_cf,std::move(p.second)});
 				// NOTE: possible use of multadd here in the future.
-				retval += tmp * p.first;
+				retval += std::move(tmp) * std::move(p.first);
 			}
 			return retval;
 		}
+		// Case 3: subs on cf and key.
+		// NOTE: the checks on type 2 are already present in the alias above.
+		template <typename T, typename Term>
+		using ret_type_3 = decltype(std::declval<const cf_subs_type<T,Term> &>() * std::declval<const ret_type_2<T,Term> &>());
+		template <typename T, typename Term, typename std::enable_if<subs_term_score<Term,T>::value == 3u,int>::type = 0>
+		static ret_type_3<T,Term> subs_term_impl(const Term &t, const std::string &name, const T &x, const symbol_set &s_set)
+		{
+			// Accumulator for the sum below. This is the same type resulting from case 2.
+			ret_type_2<T,Term> acc(0);
+			auto ksubs = t.m_key.subs(name,x,s_set);
+			auto cf_subs = math::subs(t.m_cf,name,x);
+			for (auto &p: ksubs) {
+				Derived tmp;
+				tmp.set_symbol_set(s_set);
+				tmp.insert(Term(typename Term::cf_type(1),std::move(p.second)));
+				// NOTE: multadd chance.
+				acc += std::move(tmp) * std::move(p.first);
+			}
+			return std::move(cf_subs) * std::move(acc);
+		}
 		// Initial definition of the subs type.
 		template <typename T>
-		using subs_type_ = decltype(subs_impl(std::declval<typename Series::term_type const &>(),std::declval<std::string const &>(),
+		using subs_type_ = decltype(subs_term_impl(std::declval<typename Series::term_type const &>(),std::declval<std::string const &>(),
 			std::declval<const T &>(),std::declval<symbol_set const &>()));
 		// Enable conditionally based on the common requirements in the subs() method.
 		template <typename T>
@@ -122,7 +145,7 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		{
 			subs_type<T> retval(0);
 			for (const auto &t: this->m_container) {
-				retval += subs_impl(t,name,x,this->m_symbol_set);
+				retval += subs_term_impl(t,name,x,this->m_symbol_set);
 			}
 			return retval;
 		}
