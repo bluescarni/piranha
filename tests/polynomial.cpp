@@ -536,6 +536,10 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 {
 	{
 	typedef polynomial<rational,monomial<short>> p_type1;
+	BOOST_CHECK((has_subs<p_type1,rational>::value));
+	BOOST_CHECK((has_subs<p_type1,double>::value));
+	BOOST_CHECK((has_subs<p_type1,integer>::value));
+	BOOST_CHECK((!has_subs<p_type1,std::string>::value));
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",integer(1)),1);
 	BOOST_CHECK_EQUAL(p_type1{"x"}.subs("x",p_type1{"x"}),p_type1{"x"});
 	p_type1 x{"x"}, y{"y"}, z{"z"};
@@ -556,6 +560,10 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 	}
 	{
 	typedef polynomial<real,monomial<int>> p_type2;
+	BOOST_CHECK((has_subs<p_type2,rational>::value));
+	BOOST_CHECK((has_subs<p_type2,double>::value));
+	BOOST_CHECK((has_subs<p_type2,integer>::value));
+	BOOST_CHECK((!has_subs<p_type2,std::string>::value));
 	p_type2 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)),y*y + math::pow(real(1.234),3));
 	BOOST_CHECK_EQUAL((x*x*x + y*y).subs("x",real(1.234)).subs("y",real(-5.678)),math::pow(real(-5.678),2) +
@@ -564,6 +572,10 @@ BOOST_AUTO_TEST_CASE(polynomial_subs_test)
 		math::pow(real(1.234),3));
 	}
 	typedef polynomial<integer,monomial<long>> p_type3;
+	BOOST_CHECK((has_subs<p_type3,rational>::value));
+	BOOST_CHECK((has_subs<p_type3,double>::value));
+	BOOST_CHECK((has_subs<p_type3,integer>::value));
+	BOOST_CHECK((!has_subs<p_type3,std::string>::value));
 	p_type3 x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK_EQUAL((x*x*x + y*y + z*y*x).subs("x",integer(2)).subs("y",integer(-3)).subs("z",integer(4)).subs("k",integer()),
 		integer(2).pow(3) + integer(-3).pow(2) + integer(2) * integer(-3) * integer(4));

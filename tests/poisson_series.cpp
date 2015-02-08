@@ -399,6 +399,10 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	using math::pow;
 	using math::subs;
 	typedef poisson_series<polynomial<real,monomial<short>>> p_type1;
+	BOOST_CHECK((has_subs<p_type1,rational>::value));
+	BOOST_CHECK((has_subs<p_type1,double>::value));
+	BOOST_CHECK((has_subs<p_type1,integer>::value));
+	BOOST_CHECK((!has_subs<p_type1,std::string>::value));
 	BOOST_CHECK(p_type1{}.subs("x",integer(4)).empty());
 	p_type1 x{"x"}, y{"y"};
 	auto s = (x + y) * cos(x) + pow(y,3) * sin(x);
@@ -417,6 +421,10 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	s = (x + y) * cos(-2 * x + y) + pow(x,3) * sin(-5 * x + y);
 	BOOST_CHECK_EQUAL(s.subs("x",r),(r + y) * (cos(r * 2) * cos(y) + sin(r * 2) * sin(y)) + pow(r,3) * (-sin(r * 5) * cos(y) + cos(r * 5) * sin(y)));
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type2;
+	BOOST_CHECK((has_subs<p_type2,rational>::value));
+	BOOST_CHECK((has_subs<p_type2,double>::value));
+	BOOST_CHECK((has_subs<p_type2,integer>::value));
+	BOOST_CHECK((!has_subs<p_type2,std::string>::value));
 	p_type2 a{"a"}, b{"b"};
 	auto t = a * cos(a + b) + b * sin(a);
 	BOOST_CHECK_EQUAL(t.subs("a",b),b * cos(b + b) + b * sin(b));
