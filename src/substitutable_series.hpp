@@ -179,4 +179,7 @@ struct subs_impl<Series,T,detail::subs_impl_subs_series_enabler<Series,T>>
 
 }
 
+// Avoid storing version information for the toolbox.
+PIRANHA_TEMPLATE_SERIALIZATION_LEVEL(piranha::substitutable_series,boost::serialization::object_serializable)
+
 #endif
