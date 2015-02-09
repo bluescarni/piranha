@@ -42,6 +42,34 @@ struct substitutable_series_tag {};
 
 }
 
+/// Toolbox for substitutable series.
+/**
+ * This toolbox will conditionally augment a \p Series type by adding a method to subtitute symbols with generic objects.
+ * Such augmentation takes place if the series' coefficient and/or key types expose substitution methods (as established by
+ * the piranha::has_subs and piranha::key_has_subs type traits). If the requirements outlined above are not satisfied, the substitution
+ * method will be disabled.
+ *
+ * This class satisfies the piranha::is_series type trait.
+ *
+ * ## Type requirements ##
+ *
+ * - \p Series must satisfy the piranha::is_series type trait,
+ * - \p Derived must derive from piranha::substitutable_series of \p Series and \p Derived.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * This class provides the same guarantee as \p Series.
+ *
+ * ## Move semantics ##
+ *
+ * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if \p Series does.
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 template <typename Series, typename Derived>
 class substitutable_series: public Series, detail::substitutable_series_tag
 {
@@ -140,6 +168,26 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 			PIRANHA_TT_CHECK(std::is_base_of,substitutable_series,Derived);
 		}
 		PIRANHA_FORWARDING_ASSIGNMENT(substitutable_series,base)
+		/// Substitution.
+		/**
+		 * \note
+		 * This method is enabled only if the coefficient and/or key types support substitution,
+		 * and if the types involved in the substitution support the necessary arithmetic operations
+		 * to compute the result.
+		 *
+		 * This method will return an object resulting from the substitution of the the symbol called \p name
+		 * in \p this with the generic object \p x.
+		 *
+		 * @param[in] name name of the symbol to be substituted.
+		 * @param[in] x object used for the substitution.
+		 *
+		 * @return the result of the substitution.
+		 *
+		 * @throws unspecified any exception resulting from:
+		 * - the substitution routines for the coefficients and/or keys,
+		 * - the computation of the return value,
+		 * - piranha::series::insert().
+		 */
 		template <typename T>
 		subs_type<T> subs(const std::string &name, const T &x) const
 		{
