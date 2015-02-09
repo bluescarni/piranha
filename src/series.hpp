@@ -2547,6 +2547,10 @@ class series: detail::series_tag, series_operators
 		 *
 		 * @throws unspecified any exception thrown by computing the hash of a term.
 		 */
+		// NOTE: hash and is_identical must always be considered together. E.g., two series can be identical even in case
+		// of coefficient series which are not identical - but this does not matter, as is_identical implies strict equivalence
+		// of the keys and hash considers only the keys. If we wanted to consider also the coefficients for hashing, then we need
+		// (probably) to call recursively is_identical on coefficient series.
 		std::size_t hash() const
 		{
 			std::size_t retval = 0u;
