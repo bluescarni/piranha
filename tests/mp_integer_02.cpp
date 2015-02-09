@@ -2527,20 +2527,10 @@ struct ipow_subs_tester
 	void operator()(const T &)
 	{
 		typedef mp_integer<T::value> int_type;
-		BOOST_CHECK_EQUAL(math::ipow_subs(int_type(-42),"a",integer(4),5),int_type(-42));
-		BOOST_CHECK_EQUAL(math::ipow_subs(int_type(42),"a",integer(4),5),int_type(42));
-		BOOST_CHECK(has_ipow_subs<int_type>::value);
-		BOOST_CHECK((has_ipow_subs<int_type,int>::value));
-		BOOST_CHECK((has_ipow_subs<int_type,long>::value));
-		BOOST_CHECK((has_ipow_subs<int_type,double>::value));
-		BOOST_CHECK_EQUAL(math::ipow_subs(3,"a",integer(4),5),3);
-		BOOST_CHECK_EQUAL(math::ipow_subs(3.,"a",integer(4),5),3.);
-		BOOST_CHECK_EQUAL(math::ipow_subs(3.f,"a",integer(4),5),3.f);
-#if !defined(PIRANHA_RUN_ON_VALGRIND)
-		BOOST_CHECK_EQUAL(math::ipow_subs(3.l,"a",integer(4),5),3.l);
-#endif
-		BOOST_CHECK_EQUAL(math::ipow_subs(char(3),"a",integer(4),5),char(3));
-		BOOST_CHECK_EQUAL(math::ipow_subs(3ull,"a",integer(4),5),3ull);
+		BOOST_CHECK((!has_ipow_subs<int_type,int_type>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,int>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,long>::value));
+		BOOST_CHECK((!has_ipow_subs<int_type,double>::value));
 	}
 };
 

@@ -3357,51 +3357,9 @@ inline mp_integer<NBits> factorial(const mp_integer<NBits> &n)
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  */
-template <typename T, typename = void>
+template <typename T, typename U, typename = void>
 struct ipow_subs_impl
 {};
-
-/// Specialisation of the piranha::math::ipow_subs() functor for arithmetic types.
-/**
- * This specialisation is activated when \p T is a C++ arithmetic type.
- * The result will be the input value unchanged.
- */
-template <typename T>
-struct ipow_subs_impl<T,typename std::enable_if<std::is_arithmetic<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] x substitution argument.
-	 *
-	 * @return copy of \p x.
-	 */
-	template <typename U>
-	T operator()(const T &x, const std::string &, const integer &, const U &) const
-	{
-		return x;
-	}
-};
-
-/// Specialisation of the piranha::math::ipow_subs() functor for piranha::mp_integer.
-/**
- * This specialisation is activated when \p T is piranha::mp_integer.
- * The result will be the input value unchanged.
- */
-template <typename T>
-struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] n substitution argument.
-	 *
-	 * @return copy of \p n.
-	 */
-	template <typename U>
-	T operator()(const T &n, const std::string &, const integer &, const U &) const
-	{
-		return n;
-	}
-};
 
 /// Substitution of integral power.
 /**
@@ -3418,9 +3376,46 @@ struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_integer<T>::value>
  * @throws unspecified any exception thrown by the call operator of piranha::math::subs_impl.
  */
 template <typename T, typename U>
-inline auto ipow_subs(const T &x, const std::string &name, const integer &n, const U &y) -> decltype(ipow_subs_impl<T>()(x,name,n,y))
+inline auto ipow_subs(const T &x, const std::string &name, const integer &n, const U &y) -> decltype(ipow_subs_impl<T,U>()(x,name,n,y))
 {
-	return ipow_subs_impl<T>()(x,name,n,y);
+	return ipow_subs_impl<T,U>()(x,name,n,y);
+}
+
+}
+
+namespace detail
+{
+
+// Enabler for the overload below.
+template <typename Int>
+using ipow_subs_int_enabler = typename std::enable_if<std::is_integral<Int>::value,int>::type;
+
+}
+
+namespace math
+{
+
+/// Substitution of integral power (convenience overload).
+/**
+ * \note
+ * This function is enabled only if \p Int is a C++ integral type.
+ *
+ * This function is a convenience wrapper that will call the other piranha::math::ipow_subs() overload, with \p n
+ * converted to a piranha::integer.
+ *
+ * @param[in] x quantity that will be subject to substitution.
+ * @param[in] name name of the symbolic variable that will be substituted.
+ * @param[in] n power of \p name that will be substituted.
+ * @param[in] y object that will substitute the variable.
+ *
+ * @return \p x after substitution  of \p name to the power of \p n with \p y.
+ *
+ * @throws unspecified any exception thrown by the other overload of piranha::math::ipow_subs().
+ */
+template <typename T, typename U, typename Int, detail::ipow_subs_int_enabler<Int> = 0>
+inline auto ipow_subs(const T &x, const std::string &name, const Int &n, const U &y) -> decltype(ipow_subs(x,name,integer(n),y))
+{
+	return ipow_subs(x,name,integer(n),y);
 }
 
 }
@@ -3430,7 +3425,7 @@ inline auto ipow_subs(const T &x, const std::string &name, const integer &n, con
  * The type trait will be \p true if piranha::math::ipow_subs can be successfully called on instances
  * of type \p T, with an instance of type \p U as substitution argument.
  */
-template <typename T, typename U = T>
+template <typename T, typename U>
 class has_ipow_subs: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;

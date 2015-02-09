@@ -456,41 +456,6 @@ class polynomial:
 namespace math
 {
 
-/// Specialisation of the piranha::math::ipow_subs() functor for polynomial types.
-/**
- * This specialisation is activated when \p Series is an instance of piranha::polynomial.
- */
-template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
-{
-	private:
-		// TODO: fix declval usage.
-		template <typename T>
-		struct ipow_subs_type
-		{
-			typedef decltype(std::declval<Series>().ipow_subs(std::declval<std::string>(),std::declval<integer>(),std::declval<T>())) type;
-		};
-	public:
-		/// Call operator.
-		/**
-		 * The implementation will use piranha::polynomial::ipow_subs().
-		 * 
-		 * @param[in] s input polynomial.
-		 * @param[in] name name of the symbolic variable that will be substituted.
-		 * @param[in] n power of \p name that will be substituted.
-		 * @param[in] x object that will replace \p name.
-		 * 
-		 * @return output of piranha::polynomial::ipow_subs().
-		 * 
-		 * @throws unspecified any exception thrown by piranha::polynomial::ipow_subs().
-		 */
-		template <typename T>
-		typename ipow_subs_type<T>::type operator()(const Series &s, const std::string &name, const integer &n, const T &x) const
-		{
-			return s.ipow_subs(name,n,x);
-		}
-};
-
 /// Specialisation of the piranha::math::integrate() functor for polynomial types.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::polynomial.

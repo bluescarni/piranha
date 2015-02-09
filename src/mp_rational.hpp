@@ -1943,27 +1943,6 @@ struct partial_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>:
 	}
 };
 
-/// Specialisation of the piranha::math::ipow_subs() functor for piranha::mp_rational.
-/**
- * This specialisation is activated when \p T is piranha::mp_rational.
- * The result will be the input value unchanged.
- */
-template <typename T>
-struct ipow_subs_impl<T,typename std::enable_if<detail::is_mp_rational<T>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * @param[in] q substitution argument.
-	 *
-	 * @return copy of \p q.
-	 */
-	template <typename U>
-	T operator()(const T &q, const std::string &, const integer &, const U &) const
-	{
-		return q;
-	}
-};
-
 /// Specialisation of the piranha::math::binomial() functor for piranha::mp_rational.
 /**
  * This specialisation is activated when one of the arguments is piranha::mp_rational and the other is either

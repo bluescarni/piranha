@@ -625,33 +625,6 @@ class poisson_series:
 namespace math
 {
 
-/// Specialisation of the piranha::math::ipow_subs() functor for Poisson series.
-/**
- * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
- */
-template <typename Series>
-struct ipow_subs_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
-{
-	/// Call operator.
-	/**
-	 * The implementation will use piranha::poisson_series::ipow_subs().
-	 *
-	 * @param[in] s input Poisson series.
-	 * @param[in] name name of the symbolic variable that will be substituted.
-	 * @param[in] n power of \p name that will be substituted.
-	 * @param[in] x object that will replace \p name.
-	 *
-	 * @return output of piranha::poisson_series::ipow_subs().
-	 *
-	 * @throws unspecified any exception thrown by piranha::poisson_series::ipow_subs().
-	 */
-	template <typename T>
-	auto operator()(const Series &s, const std::string &name, const integer &n, const T &x) const -> decltype(s.ipow_subs(name,n,x))
-	{
-		return s.ipow_subs(name,n,x);
-	}
-};
-
 /// Specialisation of the piranha::math::integrate() functor for Poisson series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::poisson_series.

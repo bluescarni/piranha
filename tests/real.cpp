@@ -1893,9 +1893,7 @@ BOOST_AUTO_TEST_CASE(real_subs_test)
 
 BOOST_AUTO_TEST_CASE(real_ipow_subs_test)
 {
-	BOOST_CHECK_EQUAL(math::ipow_subs(real(-42.123),"a",integer(4),5),real(-42.123));
-	BOOST_CHECK_EQUAL(math::ipow_subs(real(42.456),"a",integer(4),5),real(42.456));
-	BOOST_CHECK(has_ipow_subs<real>::value);
+	BOOST_CHECK((!has_ipow_subs<real,real>::value));
 	BOOST_CHECK((has_ipow_subs<real,double>::value));
 	BOOST_CHECK((has_ipow_subs<real,integer>::value));
 }
