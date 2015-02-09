@@ -162,6 +162,21 @@ class kronecker_monomial
 		};
 		template <typename U>
 		using subs_type = typename subs_type_<U>::type;
+		// ipow subs utilities.
+		template <typename U>
+		using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const integer &>()));
+		template <typename U, typename = void>
+		struct ipow_subs_type_
+		{};
+		template <typename U>
+		struct ipow_subs_type_<U,typename std::enable_if<
+			std::is_constructible<ipow_subs_type__<U>,int>::value && std::is_assignable<ipow_subs_type__<U> &,ipow_subs_type__<U>>::value
+			>::type>
+		{
+			using type = ipow_subs_type__<U>;
+		};
+		template <typename U>
+		using ipow_subs_type = typename ipow_subs_type_<U>::type;
 #endif
 	public:
 		/// Arity of the multiply() method.
@@ -842,9 +857,14 @@ class kronecker_monomial
 		}
 		/// Substitution of integral power.
 		/**
+		 * \note
+		 * This method is enabled only if:
+		 * - \p U can be raised to a piranha::integer power, yielding a type \p subs_type,
+		 * - \p subs_type is constructible from \p int and assignable.
+		 *
 		 * This method works in the same way as piranha::monomial::ipow_subs().
 		 * 
-		 * @param[in] s symbol that will be substituted.
+		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] n power of \p s that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
 		 * @param[in] args reference set of piranha::symbol.
@@ -860,19 +880,17 @@ class kronecker_monomial
 		 * - piranha::static_vector::push_back(),
 		 * - the in-place subtraction operator of the exponent type,
 		 * - piranha::kronecker_array::encode().
-		 * 
-		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
-		std::pair<eval_type<U>,kronecker_monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		std::vector<std::pair<ipow_subs_type<U>,kronecker_monomial>> ipow_subs(const std::string &s, const integer &n, const U &x, const symbol_set &args) const
 		{
-			using s_type = eval_type<U>;
+			using s_type = ipow_subs_type<U>;
 			const auto v = unpack(args);
 			v_type new_v;
 			s_type retval_s(1);
 			for (min_int<typename v_type::size_type,decltype(args.size())> i = 0u; i < args.size(); ++i) {
 				new_v.push_back(v[i]);
-				if (args[i] == s) {
+				if (args[i].get_name() == s) {
 					const rational tmp(safe_cast<integer>(v[i]),n);
 					if (tmp >= 1) {
 						const auto tmp_t = static_cast<integer>(tmp);
@@ -881,7 +899,9 @@ class kronecker_monomial
 					}
 				}
 			}
-			return std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v)));
+			std::vector<std::pair<s_type,kronecker_monomial>> retval;
+			retval.push_back(std::make_pair(std::move(retval_s),kronecker_monomial(ka::encode(new_v))));
+			return retval;
 		}
 		/// Identify symbols that can be trimmed.
 		/**
