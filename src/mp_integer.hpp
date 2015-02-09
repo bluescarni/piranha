@@ -48,6 +48,7 @@
 #include "detail/real_fwd.hpp"
 #include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
+#include "is_key.hpp"
 #include "math.hpp"
 #include "serialization.hpp"
 #include "type_traits.hpp"
@@ -3441,6 +3442,45 @@ class has_ipow_subs: detail::sfinae_types
 
 template <typename T, typename U>
 const bool has_ipow_subs<T,U>::value;
+
+/// Type trait to detect the presence of the integral power substitution method in keys.
+/**
+ * This type trait will be \p true if the decay type of \p Key provides a const method <tt>ipow_subs()</tt> accepting as const parameters a string,
+ * an instance of piranha::integer, an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
+ * of pairs in which the second type must be \p Key itself. The <tt>ipow_subs()</tt> method represents the substitution of the integral power of a symbol with
+ * an instance of type \p T.
+ *
+ * The decay type of \p Key must satisfy piranha::is_key.
+ */
+template <typename Key, typename T>
+class key_has_ipow_subs: detail::sfinae_types
+{
+		typedef typename std::decay<Key>::type Keyd;
+		typedef typename std::decay<T>::type Td;
+		PIRANHA_TT_CHECK(is_key,Keyd);
+		template <typename Key1, typename T1>
+		static auto test(const Key1 &k, const T1 &t) ->
+			decltype(k.ipow_subs(std::declval<const std::string &>(),std::declval<const integer &>(),t,std::declval<const symbol_set &>()));
+		static no test(...);
+		template <typename T1>
+		struct check_result_type
+		{
+			static const bool value = false;
+		};
+		template <typename Res>
+		struct check_result_type<std::vector<std::pair<Res,Keyd>>>
+		{
+			static const bool value = true;
+		};
+	public:
+		/// Value of the type trait.
+		static const bool value = check_result_type<decltype(test(std::declval<Keyd>(),
+			std::declval<Td>()))>::value;
+};
+
+// Static init.
+template <typename Key, typename T>
+const bool key_has_ipow_subs<Key,T>::value;
 
 inline namespace literals
 {
