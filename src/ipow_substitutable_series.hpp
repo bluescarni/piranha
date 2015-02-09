@@ -26,7 +26,6 @@
 #include <utility>
 
 #include "forwarding.hpp"
-#include "math.hpp"
 #include "mp_integer.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
