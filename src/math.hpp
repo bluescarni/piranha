@@ -1904,7 +1904,7 @@ const bool key_has_t_subs<Key,T,U>::value;
 /**
  * This type trait will be \p true if the decay type of \p Key provides a const method <tt>subs()</tt> accepting as const parameters a string,
  * an instance of \p T and an instance of piranha::symbol_set. The return value of the method must be an <tt>std::vector</tt>
- * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> represents the substitution of a symbol with
+ * of pairs in which the second type must be \p Key itself. The <tt>subs()</tt> method represents the substitution of a symbol with
  * an instance of type \p T.
  *
  * The decay type of \p Key must satisfy piranha::is_key.
