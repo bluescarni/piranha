@@ -1077,14 +1077,14 @@ struct ipow_subs_tester
 		void operator()(const U &)
 		{
 			typedef monomial<T,U> k_type;
-			symbol_set vs;
-			k_type k1;
 			// Test the type trait.
 			BOOST_CHECK((key_has_ipow_subs<k_type,integer>::value));
 			BOOST_CHECK((key_has_ipow_subs<k_type,double>::value));
 			BOOST_CHECK((key_has_ipow_subs<k_type,real>::value));
 			BOOST_CHECK((key_has_ipow_subs<k_type,rational>::value));
 			BOOST_CHECK((!key_has_ipow_subs<k_type,std::string>::value));
+			symbol_set vs;
+			k_type k1;
 			auto ret = k1.ipow_subs("x",integer(45),integer(4),vs);
 			BOOST_CHECK_EQUAL(ret.size(),1u);
 			BOOST_CHECK_EQUAL(ret[0u].first,1);
