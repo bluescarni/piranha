@@ -42,6 +42,34 @@ struct ipow_substitutable_series_tag {};
 
 }
 
+/// Toolbox for series suitable for integral power substitution.
+/**
+ * This toolbox will conditionally augment a \p Series type by adding methods to subtitute integral powers of symbols with generic objects.
+ * Such augmentation takes place if the series' coefficient and/or key types expose substitution methods (as established by
+ * the piranha::has_ipow_subs and piranha::key_has_ipow_subs type traits). If the requirements outlined above are not satisfied, the substitution
+ * methods will be disabled.
+ *
+ * This class satisfies the piranha::is_series type trait.
+ *
+ * ## Type requirements ##
+ *
+ * - \p Series must satisfy the piranha::is_series type trait,
+ * - \p Derived must derive from piranha::ipow_substitutable_series of \p Series and \p Derived.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * This class provides the same guarantee as \p Series.
+ *
+ * ## Move semantics ##
+ *
+ * Move semantics is equivalent to the move semantics of \p Series.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if \p Series does.
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
 template <typename Series, typename Derived>
 class ipow_substitutable_series: public Series, detail::ipow_substitutable_series_tag
 {
@@ -143,6 +171,27 @@ class ipow_substitutable_series: public Series, detail::ipow_substitutable_serie
 			PIRANHA_TT_CHECK(std::is_base_of,ipow_substitutable_series,Derived);
 		}
 		PIRANHA_FORWARDING_ASSIGNMENT(ipow_substitutable_series,base)
+		/// Substitution.
+		/**
+		 * \note
+		 * This method is enabled only if the coefficient and/or key types support integral power substitution,
+		 * and if the types involved in the substitution support the necessary arithmetic operations
+		 * to compute the result.
+		 *
+		 * This method will return an object resulting from the substitution of the integral power of the symbol called \p name
+		 * in \p this with the generic object \p x.
+		 *
+		 * @param[in] name name of the symbol to be substituted.
+		 * @param[in] n integral power of the symbol to be substituted.
+		 * @param[in] x object used for the substitution.
+		 *
+		 * @return the result of the substitution.
+		 *
+		 * @throws unspecified any exception resulting from:
+		 * - the substitution routines for the coefficients and/or keys,
+		 * - the computation of the return value,
+		 * - piranha::series::insert().
+		 */
 		template <typename T>
 		ipow_subs_type<T> ipow_subs(const std::string &name, const integer &n, const T &x) const
 		{
@@ -152,6 +201,24 @@ class ipow_substitutable_series: public Series, detail::ipow_substitutable_serie
 			}
 			return retval;
 		}
+		/// Substitution.
+		/**
+		 * \note
+		 * This method is enabled only if the other ipow_subs() overload is enabled, and \p Int
+		 * is a C++ integral type.
+		 *
+		 * This is a convenience method that will call the other ipow_subs() overload after converting
+		 * \p n to piranha::integer.
+		 *
+		 * @param[in] name name of the symbol to be substituted.
+		 * @param[in] n integral power of the symbol to be substituted.
+		 * @param[in] x object used for the substitution.
+		 *
+		 * @return the result of the substitution.
+		 *
+		 * @throws unspecified any exception resulting from calling the other ipow_subs() overload,
+		 * or by constructing a piranha::integer from a C++ integral type.
+		 */
 		template <typename T, typename Int, ipow_subs_int_enabler<Int> = 0>
 		ipow_subs_type<T> ipow_subs(const std::string &name, const Int &n, const T &x) const
 		{
@@ -175,9 +242,27 @@ using ipow_subs_impl_ipow_subs_series_enabler = typename std::enable_if<
 namespace math
 {
 
+/// Specialisation of the piranha::math::ipow_subs_impl functor for instances of piranha::ipow_substitutable_series.
+/**
+ * This specialisation is activated if \p Series is an instance of piranha::ipow_substitutable_series which supports
+ * the substitution methods.
+ */
 template <typename Series, typename T>
 struct ipow_subs_impl<Series,T,detail::ipow_subs_impl_ipow_subs_series_enabler<Series,T>>
 {
+	/// Call operator.
+	/**
+	 * The call operator is equivalent to calling the substitution method on \p s.
+	 *
+	 * @param[in] s target series.
+	 * @param[in] name name of the symbol to be substituted.
+	 * @param[in] n integral power of the symbol to be substituted.
+	 * @param[in] x object used for substitution.
+	 *
+	 * @return the result of the substitution.
+	 *
+	 * @throws unspecified any exception thrown by the series' substitution method.
+	 */
 	auto operator()(const Series &s, const std::string &name, const integer &n, const T &x) const -> decltype(s.ipow_subs(name,n,x))
 	{
 		return s.ipow_subs(name,n,x);
