@@ -51,6 +51,7 @@ SET(HEADERS_LIST
 	binomial.hpp
 	divisor_series.hpp
 	substitutable_series.hpp
+	ipow_substitutable_series.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
