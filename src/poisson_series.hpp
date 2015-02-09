@@ -38,6 +38,7 @@
 #include "divisor_series.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
@@ -120,11 +121,11 @@ struct has_t_integrate: detail::sfinae_types
 //   we will need a safe cast).
 template <typename Cf>
 class poisson_series:
-	public power_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
-		poisson_series<Cf>>,poisson_series<Cf>>
+	public power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
+		poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>
 {
-		using base = power_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
-			poisson_series<Cf>>,poisson_series<Cf>>;
+		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
+			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
 		// TMP for enabling sin and cos overrides.
 		// Detect if T's coefficient is a polynomial whose coefficient has integral cast.
 		template <typename T, typename = void>
@@ -227,17 +228,6 @@ class poisson_series:
 			// with a runtime error when we can exclude this from happening via TMP.
 			piranha_throw(std::invalid_argument,"Poisson series is unsuitable for the calculation of sine/cosine");
 		}
-		// Subs typedefs.
-		// TODO: fix declval usage. -> remove it everywhere, remove <utility>.
-		template <typename T, typename = poisson_series, typename = void>
-		struct ipow_subs_type
-		{
-			typedef typename base::term_type::cf_type cf_type;
-			typedef decltype(
-				math::ipow_subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<integer>(),std::declval<T>()) *
-				std::declval<poisson_series>()
-			) type;
-		};
 		// Implementation details for integration.
 		template <typename T>
 		static auto integrate_cf(const T &cf, const std::string &name,
@@ -388,13 +378,9 @@ class poisson_series:
 		// Final type definition.
 		template <typename T>
 		using ti_type = decltype(std::declval<const T &>().t_integrate_impl());
-		// Enabler for the integration and substitution methods - these will have to be modified once we generalise subs/ipow_subs.
+		// Enabler for the integration method - thhis will have to be modified once we have proper enabling.
 		template <typename T>
 		using integrate_enabler = typename std::enable_if<detail::has_t_integrate<T>::value,int>::type;
-		template <typename T, typename U>
-		using ipow_subs_enabler = typename std::enable_if<detail::has_t_integrate<U>::value,int>::type;
-		template <typename T, typename U>
-		struct ipow_subs_type<T,U,typename std::enable_if<!detail::has_t_integrate<U>::value>::type> {};
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
@@ -471,45 +457,6 @@ class poisson_series:
 		poisson_series cos() const
 		{
 			return sin_cos_impl<true,T>();
-		}
-		/// Substitution of integral power.
-		/**
-		 * This method will substitute occurrences of \p name to the power of \p n with \p x.
-		 * The result for each term is computed by calling piranha::math::ipow_subs() on the coefficients, with
-		 * the final return value assembled via multiplications and additions.
-		 * 
-		 * @param[in] name name of the symbolic variable that will be subject to substitution.
-		 * @param[in] n power of \p name that will be substituted.
-		 * @param[in] x quantity that will be substituted for \p name to the power of \p n.
-		 * 
-		 * @return result of the substitution.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - the assignment operator of piranha::symbol_set,
-		 * - piranha::math::ipow_subs(),
-		 * - piranha::series::insert(),
-		 * - construction, addition and multiplication of the types involved in the computation.
-		 * 
-		 * \todo type requirements.
-		 */
-		template <typename T, typename U = poisson_series, ipow_subs_enabler<T,U> = 0>
-		typename ipow_subs_type<T>::type ipow_subs(const std::string &name, const integer &n, const T &x) const
-		{
-			typedef typename ipow_subs_type<T>::type return_type;
-			typedef typename base::term_type term_type;
-			typedef typename term_type::cf_type cf_type;
-			// Init return value.
-			return_type retval = return_type();
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				auto cf_sub = math::ipow_subs(it->m_cf,name,n,x);
-				poisson_series tmp_series;
-				tmp_series.m_symbol_set = this->m_symbol_set;
-				tmp_series.insert(term_type(cf_type(1),it->m_key));
-				// NOTE: use series multadd if it becomes available.
-				retval += cf_sub * tmp_series;
-			}
-			return retval;
 		}
 		/// Integration.
 		/**

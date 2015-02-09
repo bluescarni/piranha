@@ -48,6 +48,7 @@
 #include "detail/polynomial_fwd.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
@@ -124,14 +125,10 @@ struct is_polynomial_key<monomial<T,U>>
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-/* TODO:
- * - here, in poisson_series and math::ipow_subs, let ipow_subs accept also C++ integers.
- *   This is useful to simplify the notation, and needs not to be done for lower level methods in keys;
- */
 template <typename Cf, typename Key>
 class polynomial:
-	public power_series<trigonometric_series<substitutable_series<t_substitutable_series<series<Cf,Key,
-	polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>,detail::polynomial_tag
+	public power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
+	polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>,detail::polynomial_tag
 {
 		// Check the key.
 		PIRANHA_TT_CHECK(detail::is_polynomial_key,Key);
@@ -141,8 +138,8 @@ class polynomial:
 		// Make friend with Poisson series.
 		template <typename T>
 		friend class poisson_series;
-		using base = power_series<trigonometric_series<substitutable_series<t_substitutable_series<series<Cf,Key,
-			polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
+		using base = power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
+			polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
 		template <typename Str>
 		void construct_from_string(Str &&str)
 		{
@@ -166,18 +163,6 @@ class polynomial:
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
 		}
-		// Subs typedefs.
-		// TODO: fix declval usage.
-		template <typename T>
-		struct ipow_subs_type
-		{
-			typedef typename base::term_type::cf_type cf_type;
-			typedef typename base::term_type::key_type key_type;
-			typedef decltype(
-				(math::ipow_subs(std::declval<cf_type>(),std::declval<std::string>(),std::declval<integer>(),std::declval<T>()) * std::declval<polynomial>()) *
-				std::declval<key_type>().ipow_subs(std::declval<symbol>(),std::declval<integer>(),std::declval<T>(),std::declval<symbol_set>()).first
-			) type;
-		};
 		// Integration with integrable coefficient.
 		polynomial integrate_impl(const symbol &s, const typename base::term_type &term,
 			const std::true_type &) const
@@ -346,50 +331,6 @@ class polynomial:
 				return retval;
 			}
 			return static_cast<series<Cf,Key,polynomial<Cf,Key>> const *>(this)->pow(x);
-		}
-		/// Substitution of integral power.
-		/**
-		 * This method will substitute occurrences of \p name to the power of \p n with \p x.
-		 * The result for each term is computed via piranha::math::ipow_subs() for the coefficients and via the
-		 * corresponding substitution method for the monomials, and then assembled into the final return value via multiplications and additions.
-		 * 
-		 * @param[in] name name of the symbolic variable that will be subject to substitution.
-		 * @param[in] n power of \p name that will be substituted.
-		 * @param[in] x quantity that will be substituted for \p name to the power of \p n.
-		 * 
-		 * @return result of the substitution.
-		 * 
-		 * @throws unspecified any exception thrown by:
-		 * - symbol construction,
-		 * - the assignment operator of piranha::symbol_set,
-		 * - piranha::math::ipow_subs(),
-		 * - the substitution method of the monomial type,
-		 * - piranha::series::insert(),
-		 * - construction, addition and multiplication of the types involved in the computation.
-		 * 
-		 * \todo type requirements.
-		 */
-		template <typename T>
-		typename ipow_subs_type<T>::type ipow_subs(const std::string &name, const integer &n, const T &x) const
-		{
-			typedef typename ipow_subs_type<T>::type return_type;
-			typedef typename base::term_type term_type;
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
-			// Turn name into symbol.
-			const symbol s(name);
-			// Init return value.
-			return_type retval = return_type();
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				auto cf_sub = math::ipow_subs(it->m_cf,name,n,x);
-				auto key_sub = it->m_key.ipow_subs(s,n,x,this->m_symbol_set);
-				polynomial tmp_series;
-				tmp_series.m_symbol_set = this->m_symbol_set;
-				tmp_series.insert(term_type(cf_type(1),key_type(key_sub.second)));
-				retval += (cf_sub * tmp_series) * key_sub.first;
-			}
-			return retval;
 		}
 		/// Integration.
 		/**

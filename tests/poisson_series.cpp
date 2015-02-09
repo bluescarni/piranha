@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 {
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
-	BOOST_CHECK(has_ipow_subs<p_type1>::value);
+	BOOST_CHECK((has_ipow_subs<p_type1,p_type1>::value));
 	BOOST_CHECK((has_ipow_subs<p_type1,integer>::value));
 	BOOST_CHECK((has_ipow_subs<p_type1,typename p_type1::term_type::cf_type>::value));
 	{
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	}
 	{
 	typedef poisson_series<polynomial<real,monomial<short>>> p_type2;
-	BOOST_CHECK(has_ipow_subs<p_type2>::value);
+	BOOST_CHECK((has_ipow_subs<p_type2,p_type2>::value));
 	BOOST_CHECK((has_ipow_subs<p_type2,integer>::value));
 	BOOST_CHECK((has_ipow_subs<p_type2,typename p_type2::term_type::cf_type>::value));
 	p_type2 x{"x"}, y{"y"};
