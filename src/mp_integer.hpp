@@ -3411,7 +3411,8 @@ namespace math
  *
  * @return \p x after substitution  of \p name to the power of \p n with \p y.
  *
- * @throws unspecified any exception thrown by the other overload of piranha::math::ipow_subs().
+ * @throws unspecified any exception thrown by the other overload of piranha::math::ipow_subs() or by the construction
+ * of piranha::integer from an integral value.
  */
 template <typename T, typename U, typename Int, detail::ipow_subs_int_enabler<Int> = 0>
 inline auto ipow_subs(const T &x, const std::string &name, const Int &n, const U &y) -> decltype(ipow_subs(x,name,integer(n),y))

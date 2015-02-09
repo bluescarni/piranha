@@ -214,9 +214,26 @@ using subs_impl_subs_series_enabler = typename std::enable_if<
 namespace math
 {
 
+/// Specialisation of the piranha::math::subs_impl functor for instances of piranha::substitutable_series.
+/**
+ * This specialisation is activated if \p Series is an instance of piranha::substitutable_series which supports
+ * the substitution method.
+ */
 template <typename Series, typename T>
 struct subs_impl<Series,T,detail::subs_impl_subs_series_enabler<Series,T>>
 {
+	/// Call operator.
+	/**
+	 * The call operator is equivalent to calling the substitution method on \p s.
+	 *
+	 * @param[in] s target series.
+	 * @param[in] name name of the symbol to be substituted.
+	 * @param[in] x object used for substitution.
+	 *
+	 * @return the result of the substitution.
+	 *
+	 * @throws unspecified any exception thrown by the series' substitution method.
+	 */
 	auto operator()(const Series &s, const std::string &name, const T &x) const -> decltype(s.subs(name,x))
 	{
 		return s.subs(name,x);
