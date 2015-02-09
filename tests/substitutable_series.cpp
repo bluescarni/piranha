@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK((has_subs<stype0,integer>::value));
 	BOOST_CHECK((has_subs<stype0,rational>::value));
 	BOOST_CHECK((has_subs<stype0,real>::value));
-	{
 	BOOST_CHECK((!has_subs<stype0,std::string>::value));
+	{
 	stype0 x{"x"}, y{"y"}, z{"z"};
 	auto tmp = (x + y).subs("x",2);
 	BOOST_CHECK_EQUAL(tmp,y + 2);
