@@ -175,7 +175,7 @@ class substitutable_series: public Series, detail::substitutable_series_tag
 		 * and if the types involved in the substitution support the necessary arithmetic operations
 		 * to compute the result.
 		 *
-		 * This method will return an object resulting from the substitution of the the symbol called \p name
+		 * This method will return an object resulting from the substitution of the symbol called \p name
 		 * in \p this with the generic object \p x.
 		 *
 		 * @param[in] name name of the symbol to be substituted.
