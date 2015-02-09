@@ -222,6 +222,22 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		};
 		template <typename U>
 		using subs_type = typename subs_type_<U>::type;
+		// ipow subs support.
+		template <typename U>
+		using ipow_subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const integer &>()));
+		template <typename U, typename = void>
+		struct ipow_subs_type_
+		{};
+		template <typename U>
+		struct ipow_subs_type_<U,typename std::enable_if<
+			std::is_constructible<ipow_subs_type__<U>,int>::value && std::is_assignable<ipow_subs_type__<U> &,ipow_subs_type__<U>>::value &&
+			has_safe_cast<integer,typename base::value_type>::value && is_subtractable_in_place<typename base::value_type,integer>::value
+			>::type>
+		{
+			using type = ipow_subs_type__<U>;
+		};
+		template <typename U>
+		using ipow_subs_type = typename ipow_subs_type_<U>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -735,20 +751,23 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Substitution of integral power.
 		/**
-		 * Substitute \p s to the power of \p n with quantity \p x. The return value is a pair in which the first
+		 * \note
+		 * This method is enabled only if:
+		 * - \p U can be raised to a piranha::integer power, yielding a type \p subs_type,
+		 * - \p subs_type is constructible from \p int and assignable,
+		 * - the value type of the monomial can be case safely to piranha::integer and it supports
+		 *   in-place subtraction with piranha::integer.
+		 *
+		 * Substitute the symbol called \p s to the power of \p n with quantity \p x. The return value is a vector containing a single pair in which the first
 		 * element is the result of the substitution, and the second element the monomial after the substitution has been performed.
 		 * If \p s is not in \p args, the return value will be <tt>(1,this)</tt> (i.e., the
 		 * monomial is unchanged and the substitution yields 1).
 		 * 
-		 * In order for the substitution to be successful, the exponent type must be convertible to piranha::integer
-		 * via piranha::safe_cast(). The method will substitute also \p s to powers higher than \p n in absolute value.
+		 * The method will substitute also \p s to powers higher than \p n in absolute value.
 		 * For instance, substitution of <tt>y**2</tt> with \p a in <tt>y**7</tt> will produce <tt>a**3 * y</tt>, and
 		 * substitution of <tt>y**-2</tt> with \p a in <tt>y**-7</tt> will produce <tt>a**3 * y**-1</tt>.
 		 * 
-		 * Note that, contrary to normal substitution, this method will never eliminate an exponent from the monomial, even if the
-		 * exponent becomes zero after substitution.
-		 * 
-		 * @param[in] s symbol that will be substituted.
+		 * @param[in] s name of the symbol that will be substituted.
 		 * @param[in] n power of \p s that will be substituted.
 		 * @param[in] x quantity that will be substituted in place of \p s to the power of \p n.
 		 * @param[in] args reference set of piranha::symbol.
@@ -763,13 +782,11 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * - piranha::math::pow(),
 		 * - piranha::array_key::push_back(),
 		 * - the in-place subtraction operator of the exponent type.
-		 * 
-		 * \todo require constructability from int, exponentiability, subtractability, safe_cast.
 		 */
 		template <typename U>
-		std::pair<eval_type<U>,monomial> ipow_subs(const symbol &s, const integer &n, const U &x, const symbol_set &args) const
+		std::vector<std::pair<ipow_subs_type<U>,monomial>> ipow_subs(const std::string &s, const integer &n, const U &x, const symbol_set &args) const
 		{
-			using s_type = eval_type<U>;
+			using s_type = ipow_subs_type<U>;
 			if (unlikely(args.size() != this->size())) {
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
@@ -777,16 +794,20 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			monomial retval_key;
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				retval_key.push_back((*this)[i]);
-				if (args[i] == s) {
+				if (args[i].get_name() == s) {
 					const rational tmp(safe_cast<integer>((*this)[i]),n);
 					if (tmp >= 1) {
 						const auto tmp_t = static_cast<integer>(tmp);
 						retval_s = math::pow(x,tmp_t);
+						// NOTE: chance for a multsub, or maybe a multadd
+						// after changing the sign of tmp_t?
 						retval_key[i] -= tmp_t * n;
 					}
 				}
 			}
-			return std::make_pair(std::move(retval_s),std::move(retval_key));
+			std::vector<std::pair<s_type,monomial>> retval;
+			retval.push_back(std::make_pair(std::move(retval_s),std::move(retval_key)));
+			return retval;
 		}
 		/// Multiply terms with a monomial key.
 		/**
