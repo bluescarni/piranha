@@ -668,6 +668,10 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL((x.pow(6) + x.pow(2) * y + z).ipow_subs("x",integer(3),p_type1{}),x.pow(2) * y + z);
 	BOOST_CHECK_EQUAL((1+3*x.pow(2)-5*y.pow(5)).pow(10).ipow_subs("x",integer(2),p_type1{"x2"})
 		.subs("x2",x.pow(2)),(1+3*x.pow(2)-5*y.pow(5)).pow(10));
+	// Check with negative powers.
+	BOOST_CHECK_EQUAL(x.pow(-5).ipow_subs("x",-2,5),x.pow(-1) * 25);
+	BOOST_CHECK_EQUAL(x.pow(-5).ipow_subs("y",-2,5),x.pow(-5));
+	BOOST_CHECK_EQUAL((x.pow(-5) * y * z).ipow_subs("x",-4,5),x.pow(-1) * 5 * z * y);
 	}
 	{
 	typedef polynomial<real,monomial<int>> p_type2;
