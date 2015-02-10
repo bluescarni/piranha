@@ -295,15 +295,17 @@ class series_exposer
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{
-				m_series_class.def("_evaluate",evaluate_member_wrapper<S,T>);
-				bp::def("_evaluate",evaluate_func_wrapper<S,T>);
+				m_series_class.def("_evaluate",evaluate_wrapper<S,T>);
+				bp::def("_evaluate",evaluate_wrapper<S,T>);
 			}
 			template <typename T>
 			void operator()(const T &, typename std::enable_if<!piranha::is_evaluable<S,T>::value>::type * = nullptr) const
 			{}
 		};
+		// NOTE: math::evaluate for series is always the evaluate() member function, so we just need one wrapper.
+		// This is true at the moment for other functions, such as the subs ones, integrate, etc.
 		template <typename S, typename T>
-		static auto evaluate_member_wrapper(const S &s, bp::dict dict, const T &)
+		static auto evaluate_wrapper(const S &s, bp::dict dict, const T &)
 			-> decltype(s.evaluate(std::declval<std::unordered_map<std::string,T>>()))
 		{
 			std::unordered_map<std::string,T> cpp_dict;
@@ -312,17 +314,6 @@ class series_exposer
 				cpp_dict[*it] = bp::extract<T>(dict[*it])();
 			}
 			return s.evaluate(cpp_dict);
-		}
-		template <typename S, typename T>
-		static auto evaluate_func_wrapper(const S &s, bp::dict dict, const T &)
-			-> decltype(piranha::math::evaluate(s,std::declval<std::unordered_map<std::string,T>>()))
-		{
-			std::unordered_map<std::string,T> cpp_dict;
-			bp::stl_input_iterator<std::string> it(dict), end;
-			for (; it != end; ++it) {
-				cpp_dict[*it] = bp::extract<T>(dict[*it])();
-			}
-			return piranha::math::evaluate(s,cpp_dict);
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_eval(bp::class_<S> &series_class, typename std::enable_if<has_typedef_eval_types<T>::value>::type * = nullptr)
@@ -343,32 +334,50 @@ class series_exposer
 			template <typename T>
 			void operator()(const T &x) const
 			{
-				// NOTE: we should probably add wrappers that call piranha::math::... functions.
 				impl_subs(x);
 				impl_ipow_subs(x);
 				impl_t_subs(x);
 			}
-			template <typename T>
-			void impl_subs(const T &, typename std::enable_if<piranha::has_subs<S,T>::value>::type * = nullptr) const
+			template <typename T, typename std::enable_if<piranha::has_subs<S,T>::value,int>::type = 0>
+			void impl_subs(const T &) const
 			{
-				m_series_class.def("subs",&S::template subs<T>);
+				m_series_class.def("subs",subs_wrapper<T>);
+				bp::def("_subs",subs_wrapper<T>);
+			}
+			template <typename T, typename std::enable_if<!piranha::has_subs<S,T>::value,int>::type = 0>
+			void impl_subs(const T &) const {}
+			template <typename T, typename std::enable_if<piranha::has_ipow_subs<S,T>::value,int>::type = 0>
+			void impl_ipow_subs(const T &) const
+			{
+				m_series_class.def("ipow_subs",ipow_subs_wrapper<T>);
+				bp::def("_ipow_subs",ipow_subs_wrapper<T>);
+			}
+			template <typename T, typename std::enable_if<!piranha::has_ipow_subs<S,T>::value,int>::type = 0>
+			void impl_ipow_subs(const T &) const {}
+			template <typename T, typename std::enable_if<piranha::has_t_subs<S,T,T>::value,int>::type = 0>
+			void impl_t_subs(const T &) const
+			{
+				m_series_class.def("t_subs",t_subs_wrapper<T>);
+				bp::def("_t_subs",t_subs_wrapper<T>);
+			}
+			template <typename T, typename std::enable_if<!piranha::has_t_subs<S,T,T>::value,int>::type = 0>
+			void impl_t_subs(const T &) const {}
+			// The actual wrappers.
+			template <typename T>
+			static auto subs_wrapper(const S &s, const std::string &name, const T &x) -> decltype(s.subs(name,x))
+			{
+				return s.subs(name,x);
 			}
 			template <typename T>
-			void impl_subs(const T &, typename std::enable_if<!piranha::has_subs<S,T>::value>::type * = nullptr) const {}
-			template <typename T>
-			void impl_ipow_subs(const T &, typename std::enable_if<piranha::has_ipow_subs<S,T>::value>::type * = nullptr) const
+			static auto ipow_subs_wrapper(const S &s, const std::string &name, const piranha::integer &n, const T &x) -> decltype(s.ipow_subs(name,n,x))
 			{
-				m_series_class.def("ipow_subs",&S::template ipow_subs<T>);
+				return s.ipow_subs(name,n,x);
 			}
 			template <typename T>
-			void impl_ipow_subs(const T &, typename std::enable_if<!piranha::has_ipow_subs<S,T>::value>::type * = nullptr) const {}
-			template <typename T>
-			void impl_t_subs(const T &, typename std::enable_if<piranha::has_t_subs<S,T>::value>::type * = nullptr) const
+			static auto t_subs_wrapper(const S &s, const std::string &name, const T &x, const T &y) -> decltype(s.t_subs(name,x,y))
 			{
-				m_series_class.def("t_subs",&S::template t_subs<T,T>);
+				return s.t_subs(name,x,y);
 			}
-			template <typename T>
-			void impl_t_subs(const T &, typename std::enable_if<!piranha::has_t_subs<S,T>::value>::type * = nullptr) const {}
 		};
 		template <typename S, typename T = Descriptor>
 		static void expose_subs(bp::class_<S> &series_class, typename std::enable_if<has_typedef_subs_types<T>::value>::type * = nullptr)
@@ -425,27 +434,23 @@ class series_exposer
 		{}
 		// Expose integration conditionally.
 		template <typename S>
-		static S integrate_free_wrapper(const S &s, const std::string &name)
+		static S integrate_wrapper(const S &s, const std::string &name)
 		{
 			return piranha::math::integrate(s,name);
-		}
-		template <typename S>
-		static S integrate_mem_wrapper(const S &s, const std::string &name)
-		{
-			return s.integrate(name);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &series_class,
 			typename std::enable_if<piranha::is_integrable<S>::value>::type * = nullptr)
 		{
-			series_class.def("integrate",integrate_mem_wrapper<S>);
-			bp::def("_integrate",integrate_free_wrapper<S>);
+			series_class.def("integrate",integrate_wrapper<S>);
+			bp::def("_integrate",integrate_wrapper<S>);
 		}
 		template <typename S>
 		static void expose_integrate(bp::class_<S> &,
 			typename std::enable_if<!piranha::is_integrable<S>::value>::type * = nullptr)
 		{}
 		// Differentiation.
+		// NOTE: here it is important to keep the member/free distinction because of the special semantics of partial.
 		template <typename S>
 		static auto partial_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::partial(s,name))
 		{
@@ -994,7 +999,7 @@ class series_exposer
 	public:
 		series_exposer()
 		{
-			// TODO probably we can avoid instantiating p here, look at the tuple for_each
+			// NOTE: probably we can avoid instantiating p here, look at the tuple for_each
 			// in vargs_to_v_t_idx.
 			params p;
 			tuple_for_each<params,exposer_op,Begin,End>(p,exposer_op{});
