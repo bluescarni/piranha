@@ -25,6 +25,8 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <string>
+#include <type_traits>
 
 #include "../src/divisor.hpp"
 #include "../src/environment.hpp"
@@ -57,6 +59,18 @@ struct test_00_tester
 		BOOST_CHECK_EQUAL(math::sin(s_type{0}),0);
 		BOOST_CHECK_EQUAL(math::evaluate<int>(math::pow(s0,3),{{"x",4}}),27);
 		BOOST_CHECK(!is_differentiable<s_type>::value);
+		if (std::is_base_of<detail::polynomial_tag,T>::value) {
+			BOOST_CHECK((has_subs<s_type,s_type>::value));
+			BOOST_CHECK((has_subs<s_type,int>::value));
+			BOOST_CHECK((has_subs<s_type,integer>::value));
+		}
+		BOOST_CHECK((!has_subs<s_type,std::string>::value));
+		if (std::is_base_of<detail::polynomial_tag,T>::value) {
+			BOOST_CHECK((has_ipow_subs<s_type,s_type>::value));
+			BOOST_CHECK((has_ipow_subs<s_type,int>::value));
+			BOOST_CHECK((has_ipow_subs<s_type,integer>::value));
+		}
+		BOOST_CHECK((!has_ipow_subs<s_type,std::string>::value));
 	}
 };
 
