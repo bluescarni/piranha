@@ -973,3 +973,34 @@ BOOST_AUTO_TEST_CASE(divisor_trim_test)
 {
 	boost::mpl::for_each<value_types>(trim_tester());
 }
+
+struct partial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		BOOST_CHECK(key_is_differentiable<d_type>::value);
+		using positions = symbol_set::positions;
+		auto s_to_pos = [](const symbol_set &v, const symbol &s) {
+			symbol_set tmp{s};
+			return positions(v,tmp);
+		};
+		symbol_set vs;
+		d_type k1;
+		vs.add("x");
+		BOOST_CHECK_THROW(k1.partial(s_to_pos(vs,symbol("x")),vs),std::invalid_argument);
+		T exponent(1);
+		std::vector<T> tmp{T(1)};
+		k1.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_THROW(k1.partial(s_to_pos(vs,symbol("x")),vs),std::invalid_argument);
+		auto ret = k1.partial(s_to_pos(vs,symbol("y")),vs);
+		BOOST_CHECK_EQUAL(ret.first,0);
+		BOOST_CHECK(ret.second == k1);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_partial_test)
+{
+	boost::mpl::for_each<value_types>(partial_tester());
+}

@@ -58,7 +58,8 @@ struct test_00_tester
 		BOOST_CHECK_EQUAL(math::cos(s_type{0}),1);
 		BOOST_CHECK_EQUAL(math::sin(s_type{0}),0);
 		BOOST_CHECK_EQUAL(math::evaluate<int>(math::pow(s0,3),{{"x",4}}),27);
-		BOOST_CHECK(!is_differentiable<s_type>::value);
+		BOOST_CHECK(is_differentiable<s_type>::value);
+		BOOST_CHECK_EQUAL(s_type{1}.partial("x"),0);
 		if (std::is_base_of<detail::polynomial_tag,T>::value) {
 			BOOST_CHECK((has_subs<s_type,s_type>::value));
 			BOOST_CHECK((has_subs<s_type,int>::value));
