@@ -731,4 +731,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	tmp_k = ktype0{12,-9};
 	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
 	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	// Test derivative.
+	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
+	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * tstype0{"z"}.pow(-1));
+	BOOST_CHECK_THROW(tmp0.partial("\\nu_{x}"),std::invalid_argument);
 }
