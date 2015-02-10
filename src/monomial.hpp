@@ -231,7 +231,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename U>
 		struct ipow_subs_type_<U,typename std::enable_if<
 			std::is_constructible<ipow_subs_type__<U>,int>::value && std::is_assignable<ipow_subs_type__<U> &,ipow_subs_type__<U>>::value &&
-			has_safe_cast<integer,typename base::value_type>::value && is_subtractable_in_place<typename base::value_type,integer>::value
+			has_safe_cast<rational,typename base::value_type>::value && is_subtractable_in_place<typename base::value_type,integer>::value
 			>::type>
 		{
 			using type = ipow_subs_type__<U>;
@@ -755,7 +755,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 * This method is enabled only if:
 		 * - \p U can be raised to a piranha::integer power, yielding a type \p subs_type,
 		 * - \p subs_type is constructible from \p int and assignable,
-		 * - the value type of the monomial can be case safely to piranha::integer and it supports
+		 * - the value type of the monomial can be case safely to piranha::rational and it supports
 		 *   in-place subtraction with piranha::integer.
 		 *
 		 * Substitute the symbol called \p s to the power of \p n with quantity \p x. The return value is a vector containing a single pair in which the first
@@ -795,7 +795,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			for (typename base::size_type i = 0u; i < this->size(); ++i) {
 				retval_key.push_back((*this)[i]);
 				if (args[i].get_name() == s) {
-					const rational tmp(safe_cast<integer>((*this)[i]),n);
+					const rational tmp = safe_cast<rational>((*this)[i]) / n;
 					if (tmp >= 1) {
 						const auto tmp_t = static_cast<integer>(tmp);
 						retval_s = math::pow(x,tmp_t);
