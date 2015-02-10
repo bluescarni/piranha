@@ -142,6 +142,8 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK(tmp.is_identical(math::subs(x+y,"x",2)));
 	BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype0>::value));
+	tmp = (x + y).subs("z",2);
+	BOOST_CHECK_EQUAL(tmp,x + y);
 	auto tmp2 = (x + y).subs("x",2.);
 	BOOST_CHECK_EQUAL(tmp2,y + 2.);
 	BOOST_CHECK(tmp2.is_identical(math::subs(x+y,"x",2.)));
@@ -182,6 +184,8 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK(tmp.is_identical(math::subs(x+y,"x",2)));
 	BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype1>::value));
+	tmp = (x + y).subs("z",2);
+	BOOST_CHECK_EQUAL(tmp,x + y);
 	auto tmp2 = (x + y).subs("x",2.);
 	BOOST_CHECK_EQUAL(tmp2,y + 2.);
 	BOOST_CHECK(tmp2.is_identical(math::subs(x+y,"x",2.)));
@@ -221,6 +225,8 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK_EQUAL(tmp,(2 + y)*z);
 	BOOST_CHECK(tmp.is_identical(math::subs((x + y)*z,"x",2)));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype2>::value));
+	tmp = ((x + y)*z).subs("t",2);
+	BOOST_CHECK_EQUAL(tmp,(x + y)*z);
 	auto tmp2 = ((x + y)*z).subs("x",2.);
 	BOOST_CHECK_EQUAL(tmp2,(2. + y)*z);
 	BOOST_CHECK(tmp2.is_identical(math::subs((x + y)*z,"x",2.)));
@@ -241,6 +247,11 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK(tmp6.is_identical(math::subs((3*x + y*y/7)*z,"z",2*t)));
 	BOOST_CHECK((std::is_same<decltype(tmp6),stype2>::value));
 	BOOST_CHECK_EQUAL(tmp6,(3*x + y*y/7)*2*t);
+	}
+	{
+	// Same variable in both levels.
+	stype2 x1{stype0{"x"}}, x2{"x"}, y{stype0{"y"}};
+	BOOST_CHECK_EQUAL((x1*x2*y*4/3_q + 2 * y).subs("x",4),16*y*4/3_q + 2 * y);
 	}
 }
 

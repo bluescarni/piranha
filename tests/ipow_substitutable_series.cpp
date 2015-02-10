@@ -141,6 +141,8 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs(x+y,"x",1,2)));
 	BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype0>::value));
+	tmp = (x + y).ipow_subs("z",2,2);
+	BOOST_CHECK_EQUAL(tmp,x + y);
 	tmp = (x + y).ipow_subs("x",2,2);
 	BOOST_CHECK_EQUAL(tmp,x + y);
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs(x+y,"x",2,2)));
@@ -224,6 +226,8 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs(x+y,"x",1,2)));
 	BOOST_CHECK(tmp.is_identical(y + 2 + x - x));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype1>::value));
+	tmp = (x + y).ipow_subs("z",2,2);
+	BOOST_CHECK_EQUAL(tmp,x + y);
 	tmp = (x + y).ipow_subs("x",2,2);
 	BOOST_CHECK_EQUAL(tmp,x + y);
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs(x+y,"x",2,2)));
@@ -286,6 +290,8 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 	BOOST_CHECK_EQUAL(tmp,(2 + y)*z);
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs((x + y)*z,"x",1,2)));
 	BOOST_CHECK((std::is_same<decltype(tmp),stype2>::value));
+	tmp = ((x + y)*z).ipow_subs("t",2,2);
+	BOOST_CHECK_EQUAL(tmp,(x + y)*z);
 	tmp = ((x + y)*z).ipow_subs("x",2,2);
 	BOOST_CHECK_EQUAL(tmp,(x + y)*z);
 	BOOST_CHECK(tmp.is_identical(math::ipow_subs((x + y)*z,"x",2,2)));
@@ -334,6 +340,12 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 	tmp6 = ((3*x + y*y/7)*z*z*z).ipow_subs("z",2,2*t);
 	BOOST_CHECK(tmp6.is_identical(math::ipow_subs((3*x + y*y/7)*z*z*z,"z",2,2*t)));
 	BOOST_CHECK_EQUAL(tmp6,(3*x + y*y/7)*2*t*z);
+	}
+	{
+	// Same variable in cf and key.
+	stype2 x1{stype0{"x"}}, x2{"x"}, y{stype0{"y"}}, z{"z"}, t{"t"};
+	auto tmp = (x1.pow(3)*x2.pow(2)*y*z*4/3_q + 2*t).ipow_subs("x",2,3);
+	BOOST_CHECK_EQUAL(tmp,x1*3*3*y*z*4/3_q + 2*t);
 	}
 }
 
