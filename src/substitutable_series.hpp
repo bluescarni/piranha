@@ -38,6 +38,7 @@ namespace piranha
 namespace detail
 {
 
+// Tag for the subs toolbox.
 struct substitutable_series_tag {};
 
 }
