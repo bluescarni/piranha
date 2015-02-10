@@ -66,9 +66,6 @@ namespace piranha
  */
 /*
  * Modernization plan (following the work on subs):
- * - beautify the return types in the public method,
- * - replace macroes with template aliases,
- * - drop the struct in favour of static functions in the implementation if possible,
  * - t_subs_impl parametrised also on second type, and remove is_isntance_of.
  */
 template <typename Series, typename Derived>
@@ -144,6 +141,10 @@ class t_substitutable_series: public Series
 				std::declval<cf_t_subs_type>()) type;
 		};
 #endif
+		// Final type definition.
+		template <typename T, typename U>
+		using t_subs_type = decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),std::declval<const std::string &>(),
+			std::declval<const T &>(),std::declval<const U &>(),std::declval<symbol_set const &>()));
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		/// Defaulted default constructor.
@@ -187,11 +188,9 @@ class t_substitutable_series: public Series
 		 * - the substitution methods of coefficient and key.
 		 */
 		template <typename T, typename U>
-		auto t_subs(const std::string &name, const T &c, const U &s) const ->
-			decltype(t_subs_utils<T,U>::subs(std::declval<typename Series::term_type const &>(),name,c,s,std::declval<symbol_set const &>()))
+		t_subs_type<T,U> t_subs(const std::string &name, const T &c, const U &s) const
 		{
-			typedef decltype(this->t_subs(name,c,s)) ret_type;
-			ret_type retval(0);
+			t_subs_type<T,U> retval(0);
 			for (const auto &t: this->m_container) {
 				retval += t_subs_utils<T,U>::subs(t,name,c,s,this->m_symbol_set);
 			}
