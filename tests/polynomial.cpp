@@ -685,6 +685,7 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x*x*x + y*y,"x",integer(1),real(1.234)).ipow_subs("y",integer(1),real(-5.678)),math::pow(real(-5.678),2) +
 		math::pow(real(1.234),3));
 	}
+	{
 	typedef polynomial<integer,monomial<long>> p_type3;
 	BOOST_CHECK((has_ipow_subs<p_type3,p_type3>::value));
 	BOOST_CHECK((has_ipow_subs<p_type3,integer>::value));
@@ -692,6 +693,16 @@ BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(2),y),x.pow(-7) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-2),y),x.pow(-1) * y.pow(3) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
+	}
+	{
+	// Some tests with rational exponents.
+	typedef polynomial<rational,monomial<rational>> p_type4;
+	BOOST_CHECK((has_ipow_subs<p_type4,p_type4>::value));
+	BOOST_CHECK((has_ipow_subs<p_type4,integer>::value));
+	p_type4 x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL(x*y*2*z.pow(7/3_q).ipow_subs("z",2,4),4 * z.pow(1/3_q) * y * 2 * x);
+	BOOST_CHECK_EQUAL(x*y*2*z.pow(-7/3_q).ipow_subs("z",-1,4),16 * z.pow(-1/3_q) * y * 2 * x);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_serialization_test)
