@@ -103,10 +103,10 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	environment env;
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	p_type1 x{"x"}, y{"y"};
-	BOOST_CHECK((has_t_subs<p_type1>::value));
-	BOOST_CHECK((has_t_subs<p_type1,rational>::value));
+	BOOST_CHECK((has_t_subs<p_type1,p_type1,p_type1>::value));
 	BOOST_CHECK((has_t_subs<p_type1,rational,rational>::value));
-	BOOST_CHECK((has_t_subs<p_type1,double>::value));
+	BOOST_CHECK((has_t_subs<p_type1,rational,rational>::value));
+	BOOST_CHECK((has_t_subs<p_type1,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type1,int,double>::value));
 	BOOST_CHECK_EQUAL(p_type1{}.t_subs("a",2,3),0);
 	BOOST_CHECK_EQUAL(math::t_subs(p_type1{},"a",2,3),0);
@@ -171,9 +171,9 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK_EQUAL(math::t_subs(math::pow(math::sin(p_type3{"x"}),7),"x",real(math::pow(real(3),.5))/2,real(.5)),math::pow(real(.5),7));
 	BOOST_CHECK(math::abs(((math::pow(math::sin(p_type3{"x"}),5)*math::pow(math::cos(p_type3{"x"}),5)).t_subs(
 		"x",real(math::pow(real(3),.5))/2,real(.5)) - math::pow(real(.5),5)*math::pow(real(math::pow(real(3),.5))/2,5)).trim().evaluate(std::unordered_map<std::string,real>{})) < 1E-9);
-	BOOST_CHECK(has_t_subs<p_type3>::value);
-	BOOST_CHECK((has_t_subs<p_type3,double>::value));
-	BOOST_CHECK((has_t_subs<p_type3,real>::value));
+	BOOST_CHECK((has_t_subs<p_type3,p_type3,p_type3>::value));
+	BOOST_CHECK((has_t_subs<p_type3,double,double>::value));
+	BOOST_CHECK((has_t_subs<p_type3,real,real>::value));
 	BOOST_CHECK((has_t_subs<p_type3,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type3,double,int>::value));
 	// Trig subs in the coefficient.
@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK_EQUAL(p_type2{3}.t_subs("x",1,2),p_type2{3});
 	BOOST_CHECK((std::is_same<decltype(p_type2{}.t_subs("x",1,2)),p_type2>::value));
 	BOOST_CHECK((std::is_same<decltype(p_type2{}.t_subs("x",rational(1),rational(2))),p_type2>::value));
-	BOOST_CHECK(has_t_subs<p_type2>::value);
-	BOOST_CHECK((has_t_subs<p_type2,double>::value));
+	BOOST_CHECK((has_t_subs<p_type2,p_type2,p_type2>::value));
+	BOOST_CHECK((has_t_subs<p_type2,double,double>::value));
 	BOOST_CHECK((has_t_subs<p_type2,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type2,double,int>::value));
 	BOOST_CHECK((!key_has_t_subs<key02,int,int>::value));

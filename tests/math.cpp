@@ -526,17 +526,17 @@ BOOST_AUTO_TEST_CASE(math_binomial_test)
 
 BOOST_AUTO_TEST_CASE(math_t_subs_test)
 {
-	BOOST_CHECK(!has_t_subs<double>::value);
-	BOOST_CHECK((!has_t_subs<int,double>::value));
-	BOOST_CHECK((!has_t_subs<int,char>::value));
-	BOOST_CHECK((!has_t_subs<int &,char>::value));
-	BOOST_CHECK((!has_t_subs<int,char &>::value));
+	BOOST_CHECK((!has_t_subs<double,double,double>::value));
+	BOOST_CHECK((!has_t_subs<int,double,double>::value));
+	BOOST_CHECK((!has_t_subs<int,char,char>::value));
+	BOOST_CHECK((!has_t_subs<int &,char,char>::value));
+	BOOST_CHECK((!has_t_subs<int,char &,char &>::value));
 	BOOST_CHECK((!has_t_subs<int,char &,short>::value));
-	BOOST_CHECK((!has_t_subs<int &,const char &>::value));
+	BOOST_CHECK((!has_t_subs<int &,const char &,const char &>::value));
 	BOOST_CHECK((!has_t_subs<int &,const char &, const std::string &>::value));
-	BOOST_CHECK(!has_t_subs<std::string>::value);
-	BOOST_CHECK((!has_t_subs<std::string,int>::value));
-	BOOST_CHECK((!has_t_subs<std::string &,int>::value));
+	BOOST_CHECK((!has_t_subs<std::string,std::string,std::string>::value));
+	BOOST_CHECK((!has_t_subs<std::string,int,int>::value));
+	BOOST_CHECK((!has_t_subs<std::string &,int,int>::value));
 	BOOST_CHECK((!has_t_subs<std::string &,int,std::string &&>::value));
 }
 

@@ -2015,10 +2015,10 @@ BOOST_AUTO_TEST_CASE(real_is_equality_comparable_test)
 
 BOOST_AUTO_TEST_CASE(real_t_subs_test)
 {
-	BOOST_CHECK(!has_t_subs<real>::value);
-	BOOST_CHECK((!has_t_subs<real,int>::value));
+	BOOST_CHECK((!has_t_subs<real,real,real>::value));
+	BOOST_CHECK((!has_t_subs<real,int,int>::value));
 	BOOST_CHECK((!has_t_subs<real,int,double>::value));
-	BOOST_CHECK((!has_t_subs<real &,int>::value));
+	BOOST_CHECK((!has_t_subs<real &,int,int>::value));
 	BOOST_CHECK((!has_t_subs<const real &,const int &,double &>::value));
 	BOOST_CHECK((!has_t_subs<std::string,real,double>::value));
 }

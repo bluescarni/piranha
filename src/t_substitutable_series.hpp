@@ -35,6 +35,14 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Tag for the t_subs toolbox.
+struct t_substitutable_series_tag {};
+
+}
+
 /// Toolbox for series that support trigonometric substitution.
 /**
  * This toolbox extends a series class with methods to perform trigonometric substitution (i.e., substitution of cosine
@@ -64,12 +72,8 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-/*
- * Modernization plan (following the work on subs):
- * - t_subs_impl parametrised also on second type, and remove is_isntance_of.
- */
 template <typename Series, typename Derived>
-class t_substitutable_series: public Series
+class t_substitutable_series: public Series, detail::t_substitutable_series_tag
 {
 		typedef Series base;
 		// Detect t_subs term.
@@ -198,34 +202,43 @@ class t_substitutable_series: public Series
 		}
 };
 
+namespace detail
+{
+
+// Enabler for the t_subs_impl specialisation for t_subs_series.
+template <typename Series, typename U, typename V>
+using t_subs_impl_t_subs_series_enabler = typename std::enable_if<
+	std::is_base_of<t_substitutable_series_tag,Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().t_subs(std::declval<const std::string &>(),std::declval<const U &>(),std::declval<const V &>()))>::value
+>::type;
+
+}
+
 namespace math
 {
 
 /// Specialisation of the piranha::math::t_subs() functor for instances of piranha::t_substitutable_series.
 /**
- * This specialisation is activated if \p Series is an instance of piranha::t_substitutable_series.
+ * This specialisation is activated if \p Series is an instance of piranha::t_substitutable_series which supports
+ * the substitution method.
  */
-template <typename Series>
-struct t_subs_impl<Series,typename std::enable_if<is_instance_of<Series,t_substitutable_series>::value>::type>
+template <typename Series, typename U, typename V>
+struct t_subs_impl<Series,U,V,detail::t_subs_impl_t_subs_series_enabler<Series,U,V>>
 {
 	/// Call operator.
 	/**
-	 * \note
-	 * This call operator is available only if \p Series satisfies the requirements outlined in piranha::t_substitutable_series.
+	 * The call operator is equivalent to calling the substitution method on \p s.
 	 *
-	 * Will use piranha::t_substitutable_series::t_subs().
-	 * 
 	 * @param[in] series argument for the substitution.
 	 * @param[in] name name of the symbol that will be subject to substitution.
 	 * @param[in] c cosine of \p name.
 	 * @param[in] s sine of \p name.
-	 * 
-	 * @return the result of the trigonometric substitution.
-	 * 
-	 * @throws unspecified any exception thrown by piranha::t_substitutable_series::t_subs().
+	 *
+	 * @return the result of the substitution.
+	 *
+	 * @throws unspecified any exception thrown by the series' substitution method.
 	 */
-	template <typename T, typename U, typename V>
-	auto operator()(const T &series, const std::string &name, const U &c, const V &s) const ->
+	auto operator()(const Series &series, const std::string &name, const U &c, const V &s) const ->
 		decltype(series.t_subs(name,c,s))
 	{
 		return series.t_subs(name,c,s);

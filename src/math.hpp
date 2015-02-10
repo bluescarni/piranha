@@ -613,7 +613,7 @@ inline auto subs(const T &x, const std::string &name, const U &y) -> decltype(su
  * This functor should be specialised via the \p std::enable_if mechanism. Default implementation will not define
  * the call operator, and will hence result in a compilation error when used.
  */
-template <typename T, typename = void>
+template <typename T, typename U, typename V, typename = void>
 struct t_subs_impl
 {};
 
@@ -632,9 +632,9 @@ struct t_subs_impl
  * @throws unspecified any exception thrown by the call operator of piranha::math::t_subs_impl.
  */
 template <typename T, typename U, typename V>
-inline auto t_subs(const T &x, const std::string &name, const U &c, const V &s) -> decltype(t_subs_impl<T>()(x,name,c,s))
+inline auto t_subs(const T &x, const std::string &name, const U &c, const V &s) -> decltype(t_subs_impl<T,U,V>()(x,name,c,s))
 {
-	return t_subs_impl<T>()(x,name,c,s);
+	return t_subs_impl<T,U,V>()(x,name,c,s);
 }
 
 /// Default functor for the implementation of piranha::math::abs().
@@ -1842,7 +1842,7 @@ const bool has_subs<T,U>::value;
  * The type trait will be \p true if piranha::math::t_subs can be successfully called on instances
  * of type \p T, with instances of type \p U and \p V as substitution arguments.
  */
-template <typename T, typename U = T, typename V = U>
+template <typename T, typename U, typename V>
 class has_t_subs: detail::sfinae_types
 {
 		typedef typename std::decay<T>::type Td;
@@ -1869,7 +1869,7 @@ const bool has_t_subs<T,U,V>::value;
  * 
  * The decay type of \p Key must satisfy piranha::is_key.
  */
-template <typename Key, typename T, typename U = T>
+template <typename Key, typename T, typename U>
 class key_has_t_subs: detail::sfinae_types
 {
 		typedef typename std::decay<Key>::type Keyd;

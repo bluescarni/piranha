@@ -1468,7 +1468,7 @@ struct fake_int_02
 
 BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
 {
-	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int>::value));
+	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int,int>::value));
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,int,int>::value));
 	BOOST_CHECK((key_has_t_subs<real_trigonometric_kronecker_monomial<int>,fake_int_01,fake_int_01>::value));
 	BOOST_CHECK((!key_has_t_subs<real_trigonometric_kronecker_monomial<int>,fake_int_02,fake_int_02>::value));
