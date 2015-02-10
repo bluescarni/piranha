@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -334,4 +335,20 @@ BOOST_AUTO_TEST_CASE(ipow_subs_series_subs_test)
 	BOOST_CHECK(tmp6.is_identical(math::ipow_subs((3*x + y*y/7)*z*z*z,"z",2,2*t)));
 	BOOST_CHECK_EQUAL(tmp6,(3*x + y*y/7)*2*t*z);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(ipow_subs_series_serialization_test)
+{
+	using stype = g_series_type<rational,monomial<int>>;
+	stype x("x"), y("y"), z = (x + 3*y + 1).pow(4), tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }

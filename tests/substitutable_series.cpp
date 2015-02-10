@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <functional>
 #include <iterator>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -241,4 +242,20 @@ BOOST_AUTO_TEST_CASE(subs_series_subs_test)
 	BOOST_CHECK((std::is_same<decltype(tmp6),stype2>::value));
 	BOOST_CHECK_EQUAL(tmp6,(3*x + y*y/7)*2*t);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(subs_series_serialization_test)
+{
+	using stype = g_series_type<rational,monomial<int>>;
+	stype x("x"), y("y"), z = (x + 3*y + 1).pow(4), tmp;
+	std::stringstream ss;
+	{
+	boost::archive::text_oarchive oa(ss);
+	oa << z;
+	}
+	{
+	boost::archive::text_iarchive ia(ss);
+	ia >> tmp;
+	}
+	BOOST_CHECK_EQUAL(z,tmp);
 }
