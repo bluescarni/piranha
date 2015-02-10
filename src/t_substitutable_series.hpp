@@ -91,11 +91,12 @@ class t_substitutable_series: public Series
 		template <typename T, typename U, typename Term>
 		struct t_subs_utils<T,U,Term,typename std::enable_if<t_subs_term_score<Term,T,U>::value == 1u>::type>
 		{
-			#define PIRANHA_TMP_RETURN_TYPE decltype(math::t_subs(std::declval<typename Term1::cf_type const &>(),std::declval<std::string const &>(), \
-				std::declval<T1 const &>(),std::declval<U1 const &>()) * std::declval<Derived const &>())
 			template <typename T1, typename U1, typename Term1>
-			using return_type = typename std::enable_if<std::is_constructible<PIRANHA_TMP_RETURN_TYPE,int>::value &&
-				is_addable_in_place<PIRANHA_TMP_RETURN_TYPE>::value,PIRANHA_TMP_RETURN_TYPE>::type;
+			using return_type_ = decltype(math::t_subs(std::declval<typename Term1::cf_type const &>(),std::declval<std::string const &>(),
+				std::declval<T1 const &>(),std::declval<U1 const &>()) * std::declval<Derived const &>());
+			template <typename T1, typename U1, typename Term1>
+			using return_type = typename std::enable_if<std::is_constructible<return_type_<T1,U1,Term1>,int>::value &&
+				is_addable_in_place<return_type_<T1,U1,Term1>>::value,return_type_<T1,U1,Term1>>::type;
 			template <typename T1, typename U1, typename Term1>
 			static return_type<T1,U1,Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s, const symbol_set &s_set)
 			{
@@ -104,17 +105,17 @@ class t_substitutable_series: public Series
 				tmp.insert(Term1(typename Term1::cf_type(1),t.m_key));
 				return math::t_subs(t.m_cf,name,c,s) * tmp;
 			}
-			#undef PIRANHA_TMP_RETURN_TYPE
 		};
 		// Case 2: t_subs on key only.
 		template <typename T, typename U, typename Term>
 		struct t_subs_utils<T,U,Term,typename std::enable_if<t_subs_term_score<Term,T,U>::value == 2u>::type>
 		{
-			#define PIRANHA_TMP_RETURN_TYPE decltype(std::declval<typename Term1::key_type const &>().t_subs(std::declval<std::string const &>(), \
-				std::declval<T1 const &>(),std::declval<U1 const &>(),std::declval<symbol_set const &>())[0u].first * std::declval<Derived const &>())
 			template <typename T1, typename U1, typename Term1>
-			using return_type = typename std::enable_if<std::is_constructible<PIRANHA_TMP_RETURN_TYPE,int>::value &&
-				is_addable_in_place<PIRANHA_TMP_RETURN_TYPE>::value,PIRANHA_TMP_RETURN_TYPE>::type;
+			using return_type_ = decltype(std::declval<typename Term1::key_type const &>().t_subs(std::declval<std::string const &>(),
+				std::declval<T1 const &>(),std::declval<U1 const &>(),std::declval<symbol_set const &>())[0u].first * std::declval<Derived const &>());
+			template <typename T1, typename U1, typename Term1>
+			using return_type = typename std::enable_if<std::is_constructible<return_type_<T1,U1,Term1>,int>::value &&
+				is_addable_in_place<return_type_<T1,U1,Term1>>::value,return_type_<T1,U1,Term1>>::type;
 			template <typename T1, typename U1, typename Term1>
 			static return_type<T1,U1,Term1> subs(const Term1 &t, const std::string &name, const T1 &c, const U1 &s, const symbol_set &s_set)
 			{
@@ -128,7 +129,6 @@ class t_substitutable_series: public Series
 				}
 				return retval;
 			}
-			#undef PIRANHA_TMP_RETURN_TYPE
 		};
 		// NOTE: we have no way of testing this at the moment, so better leave it out at present time.
 #if 0
