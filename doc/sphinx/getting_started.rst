@@ -10,7 +10,7 @@ Piranha requires a recent compiler with robust support for the C++11 standard. T
 compilers are routinely used to develop and test the library:
 
 * `GCC <http://gcc.gnu.org/>`__ 4.8 and later,
-* `Clang <http://clang.llvm.org/>`__ 3.4 (earlier versions up to 3.1 should work as well),
+* `Clang <http://clang.llvm.org/>`__ 3.5 (earlier versions up to 3.1 should work as well),
 * `Intel C++ compiler <https://software.intel.com/en-us/c-compilers>`__ 15 (beta support).
 
 The main platform used for the development of Piranha is 64-bit GNU/Linux. Some level of support
@@ -158,7 +158,7 @@ jobs:
 
    $ make -j8
 
-.. warning:: Be aware that, the compilation of Piranha's unit tests and Python bindings consumes a
+.. warning:: Be aware that the compilation of Piranha's unit tests and Python bindings consumes a
    large amount of memory. At least 8GB of RAM are suggested for the compilation of the Python bindings.
 
 After a successful build in ``Debug`` mode, it is good practice to run the test suite:
