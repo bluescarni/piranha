@@ -515,3 +515,42 @@ def t_subs(arg,name,x,y):
 	"""
 	from ._core import _t_subs
 	return _cpp_type_catcher(_t_subs,arg,name,x,y)
+
+def ipow_subs(arg,name,n,x):
+	"""Integral power substitution.
+
+	This function will replace, in *arg*, the *n*-th power of the symbol called *name* with
+	the generic object *x*. Internally, the functionality is implemented via a call to
+	a lower-level C++ routine that supports various combinations for the types of *arg* and *x*.
+
+	:param arg: argument for the substitution
+	:type arg: a series type
+	:param name: name of the symbol whose power will be substituted
+	:type name: a string
+	:param n: power of *name* that will be substituted
+	:type n: an integer
+	:param x: the quantity that will be substituted for the power of *name*
+	:type x: any type supported by the low-level C++ routine
+	:returns: *arg* after the substitution of *n*-th power of the symbol called *name* with *x*
+	:raises: :exc:`TypeError` in case the input types are not supported or invalid
+	:raises: any exception raised by the invoked low-level function
+
+	>>> from .types import rational, polynomial, short, monomial
+	>>> pt = polynomial(rational,monomial(short))()
+	>>> x,y,z = pt('x'), pt('y'), pt('z')
+	>>> ipow_subs(x**5*y,'x',2,z)
+	x*y*z**2
+	>>> ipow_subs(x**6*y,'x',2,z**-1)
+	y*z**-3
+	>>> ipow_subs(x**6*y,0,2,z**-1)  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+	>>> ipow_subs(x**6*y,'x',2.1,z**-1)  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _ipow_subs
+	return _cpp_type_catcher(_ipow_subs,arg,name,n,x)
