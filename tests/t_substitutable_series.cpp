@@ -47,9 +47,6 @@
 
 using namespace piranha;
 
-// NOTE: when series multiplication SFINAEs out, change the signature of t_subs in key02 to be the correct one
-// and check that has_t_subs fails for the series type because g_series is not multipliable by std::string any more.
-
 struct key02
 {
 	key02() = default;
@@ -67,7 +64,7 @@ struct key02
 	void print(std::ostream &, const symbol_set &) const;
 	void print_tex(std::ostream &, const symbol_set &) const;
 	template <typename T, typename U>
-	std::vector<std::pair<std::string,int>> t_subs(const std::string &, const T &, const U &, const symbol_set &) const;
+	std::vector<std::pair<std::string,key02>> t_subs(const std::string &, const T &, const U &, const symbol_set &) const;
 	void trim_identify(symbol_set &, const symbol_set &) const;
 	key02 trim(const symbol_set &, const symbol_set &) const;
 };
@@ -186,7 +183,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 	BOOST_CHECK((has_t_subs<p_type2,double,double>::value));
 	BOOST_CHECK((has_t_subs<p_type2,double,double>::value));
 	BOOST_CHECK((!has_t_subs<p_type2,double,int>::value));
-	BOOST_CHECK((!key_has_t_subs<key02,int,int>::value));
+	BOOST_CHECK((key_has_t_subs<key02,int,int>::value));
 	BOOST_CHECK((!has_t_subs<g_series_type<double,key02>,double,double>::value));
 }
 
