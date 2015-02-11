@@ -181,6 +181,7 @@ class math_test_case(_ut.TestCase):
 		self.binomialTest()
 		self.sincosTest()
 		self.evaluateTest()
+		self.subsTest()
 	def binomialTest(self):
 		from fractions import Fraction as F
 		from .math import binomial
@@ -257,6 +258,47 @@ class math_test_case(_ut.TestCase):
 		self.assertEqual(evaluate(3*x*y,{'x':mpf(4),'y':mpf(5)}),mpf(3.)*(4.*5.))
 		self.assertEqual(type(evaluate(3*x*y,{'x':mpf(4),'y':mpf(5)})),mpf)
 		self.assertEqual(evaluate(x**2*y**3/5,{'x':mpf(4),'y':mpf(5)}),(mpf(4)**2*5.**3)/5)
+	def subsTest(self):
+		from fractions import Fraction as F
+		from .math import subs, ipow_subs, t_subs, cos, sin
+		from .types import poisson_series, polynomial, k_monomial, rational, double, real
+		pt = poisson_series(polynomial(rational,k_monomial))()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		# Normal subs().
+		self.assertEqual(subs(z*cos(x+y),'x',0),z*cos(y))
+		# Make sure that substitution with int does not trigger any conversion
+		# to floating point.
+		self.assertEqual(type(subs(z*cos(x+y),'x',0)),pt)
+		# Trigger a floating-point conversion.
+		self.assertEqual(type(subs(z*cos(x+y),'x',0.)),poisson_series(polynomial(double,k_monomial))())
+		try:
+			from mpmath import mpf
+			self.assertEqual(type(subs(z*cos(x+y),'x',mpf(1.23))),poisson_series(polynomial(real,k_monomial))())
+		except ImportError:
+			pass
+		# Trig subs.
+		self.assertEqual(t_subs(z*sin(x+y),'y',0,1),z*cos(x))
+		self.assertEqual(type(t_subs(z*sin(x+y),'y',0,1)),pt)
+		n,m = 2,3
+		c,s = F(n**2-m**2,n**2+m**2), F(n*m,n**2+m**2)
+		self.assertEqual(t_subs(z*sin(x+y),'y',c,s),z*sin(x)*c+z*cos(x)*s)
+		self.assertEqual(type(t_subs(z*sin(x+y),'y',c,s)),pt)
+		self.assertEqual(type(t_subs(z*sin(x+y),'y',0.,1.)),poisson_series(polynomial(double,k_monomial))())
+		try:
+			from mpmath import mpf
+			self.assertEqual(type(t_subs(z*sin(x+y),'y',mpf(0.),mpf(1.))),poisson_series(polynomial(real,k_monomial))())
+		except ImportError:
+			pass
+		# Ipow subs.
+		self.assertEqual(ipow_subs(x**5*y**2*z/5,'x',2,3),9*x*y**2*z/5)
+		self.assertEqual(type(ipow_subs(x**5*y**2*z/5,'x',2,3)),pt)
+		self.assertEqual(ipow_subs(x**6*y**2*z/5,'x',2,3),27*y**2*z/5)
+		self.assertEqual(type(ipow_subs(x**5*y**2*z/5,'x',2,3.)),poisson_series(polynomial(double,k_monomial))())
+		try:
+			from mpmath import mpf
+			self.assertEqual(type(ipow_subs(x**5*y**2*z/5,'x',2,mpf(3.))),poisson_series(polynomial(real,k_monomial))())
+		except ImportError:
+			pass
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
