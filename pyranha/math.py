@@ -116,7 +116,7 @@ def binomial(x,y):
 	Fraction(18, 25)
 	>>> binomial(10,2.4) # doctest: +ELLIPSIS
 	70.3995282...
-	>>> binomial("hello world",2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
+	>>> binomial('hello world',2.4) # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...
 	TypeError: invalid argument type(s)
@@ -213,11 +213,11 @@ def factorial(n):
 	"""
 	from  ._core import _factorial
 	if not isinstance(n,int):
-		raise TypeError("factorial argument must be an integer")
+		raise TypeError('factorial argument must be an integer')
 	try:
 		return _factorial(n)
 	except ValueError:
-		raise ValueError("invalid argument value")
+		raise ValueError('invalid argument value')
 
 def pbracket(f,g,p_list,q_list):
 	"""Poisson bracket.
@@ -325,18 +325,18 @@ def transformation_is_canonical(new_p,new_q,p_list,q_list):
 	"""
 	from ._core import _transformation_is_canonical
 	if not isinstance(new_p,list) or not isinstance(new_q,list):
-		raise TypeError("non-list input type")
+		raise TypeError('non-list input type')
 	if not all([isinstance(_,str) for _ in p_list + q_list]):
-		raise TypeError("p_list and q_list must be lists of strings")
+		raise TypeError('p_list and q_list must be lists of strings')
 	types_set = list(set([type(_) for _ in new_p + new_q]))
 	if len(types_set) == 0:
-		raise ValueError("empty input list(s)")
+		raise ValueError('empty input list(s)')
 	if len(types_set) != 1:
-		raise TypeError("types in input lists are not homogeneous")
+		raise TypeError('types in input lists are not homogeneous')
 	try:
 		inst = types_set[0]()
 	except:
-		raise TypeError("cannot construct instance of input type")
+		raise TypeError('cannot construct instance of input type')
 	return _cpp_type_catcher(_transformation_is_canonical,new_p,new_q,p_list,q_list,types_set[0]())
 
 def truncate_degree(arg,max_degree,names = None):
@@ -384,7 +384,7 @@ def truncate_degree(arg,max_degree,names = None):
 	"""
 	from ._core import _truncate_degree
 	if not names is None and (not isinstance(names,list) or not all([isinstance(_,str) for _ in names])):
-		raise TypeError("the optional 'names' argument must be a list of strings")
+		raise TypeError('the optional \'names\' argument must be a list of strings')
 	if names is None:
 		return _cpp_type_catcher(_truncate_degree,arg,max_degree)
 	else:
@@ -447,3 +447,71 @@ def evaluate(arg,eval_dict):
 	# Check input dict.
 	_check_eval_dict(eval_dict)
 	return _cpp_type_catcher(_evaluate,arg,eval_dict,eval_dict[list(eval_dict.keys())[0]])
+
+def subs(arg,name,x):
+	"""Substitution.
+
+	This function will replace, in *arg*, the symbol called *name* with the generic object *x*.
+	Internally, the functionality is implemented via a call to a lower-level C++ routine that
+	supports various combinations for the types of *arg* and *x*.
+
+	:param arg: argument for the substitution
+	:type arg: a series type
+	:param name: name of the symbol to be substituted
+	:type name: a string
+	:param x: the quantity that will be substituted for *name*
+	:type x: any type supported by the low-level C++ routine
+	:returns: *arg* after the substitution of the symbol called *name* with *x*
+	:raises: :exc:`TypeError` in case the input types are not supported or invalid
+	:raises: any exception raised by the invoked low-level function
+
+	>>> from .types import polynomial, rational, k_monomial
+	>>> pt = polynomial(rational,k_monomial)()
+	>>> x,y = pt('x'), pt('y')
+	>>> subs(x/2+1,'x',3)
+	5/2
+	>>> subs(x/2+1,'x',y*2) == y + 1
+	True
+	>>> subs(x/2+1,3,y*2)  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _subs
+	return _cpp_type_catcher(_subs,arg,name,x)
+
+def t_subs(arg,name,x,y):
+	"""Trigonometric substitution.
+
+	This function will replace, in *arg*, the cosine and sine of the symbol called *name* with
+	the generic objects *x* and *y*. Internally, the functionality is implemented via a call to
+	a lower-level C++ routine that supports various combinations for the types of *arg*, *x* and *y*.
+
+	:param arg: argument for the substitution
+	:type arg: a series type
+	:param name: name of the symbol whose cosine and sine will be substituted
+	:type name: a string
+	:param x: the quantity that will be substituted for the cosine of *name*
+	:type x: any type supported by the low-level C++ routine
+	:param y: the quantity that will be substituted for the sine of *name*
+	:type y: any type supported by the low-level C++ routine
+	:returns: *arg* after the substitution of the cosine and sine of the symbol called *name* with *x* and *y*
+	:raises: :exc:`TypeError` in case the input types are not supported or invalid
+	:raises: any exception raised by the invoked low-level function
+
+	>>> from .types import poisson_series, rational, polynomial, short, monomial
+	>>> pt = poisson_series(polynomial(rational,monomial(short)))()
+	>>> x,y = pt('x'), pt('y')
+	>>> t_subs(cos(x+y),'x',1,0)
+	cos(y)
+	>>> t_subs(sin(2*x+y),'x',0,1)
+	-sin(y)
+	>>> t_subs(sin(2*x+y),0,0,1)  # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _t_subs
+	return _cpp_type_catcher(_t_subs,arg,name,x,y)
