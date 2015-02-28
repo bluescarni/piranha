@@ -98,12 +98,14 @@ namespace piranha
  * @author Francesco Biscani (bluescarni@gmail.com)
  * 
  */
-// TODO:
-// - needs sfinaeing.
+// NOTES:
 // - it might make sense, for canonicalisation and is_compatible(), to provide a method in kronecker_array to get only
 //   the first element of the array. This should be quite fast, and it will provide enough information for the canon/compatibility.
 // - related to the above: we can embed the flavour as the first element of the kronecker array - at that point checking
 //   the flavour is just determining if the int value is even or odd.
+// - need to do some reasoning on the impact of the codification in a specialised fast poisson series multiplier: how do we deal
+//   with the canonical form without going through code/decode? if we require the last multiplier to be always positive (instead
+//   of the first), can we just check/flip the sign of the coded value?
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
