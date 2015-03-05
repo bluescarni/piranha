@@ -109,12 +109,12 @@ endif()
 
 # Common configuration for GCC, Clang and Intel.
 if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_INTELXX)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wall)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wextra)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnon-virtual-dtor)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wnoexcept)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wlogical-op)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wconversion)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wall)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wextra)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wnon-virtual-dtor)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wnoexcept)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wlogical-op)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wconversion)
 	# In the serialization work, we started hitting the template recursive instantiation
 	# limit on clang. This limit is supposed to be at least 1024 in C++11, but for some reason
 	# clang sets this to 256, and gcc to 900.
@@ -124,10 +124,10 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wold-style-cast)
 	# NOTE: disable this for now, as it results in a lot of clutter from Boost.
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wzero-as-null-pointer-constant)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-pedantic-errors)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wdisabled-optimization)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-fvisibility-inlines-hidden)
-	PIRANHA_CHECK_ENABLE_CXX_FLAG(-fvisibility=hidden)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-pedantic-errors)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wdisabled-optimization)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fvisibility-inlines-hidden)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fvisibility=hidden)
 	# This is useful when the compiler decides the template backtrace is too verbose.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-backtrace-limit=0)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
