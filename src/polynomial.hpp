@@ -695,41 +695,6 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 			}
 			return true;
 		}
-		// Have to place this here because if created as a lambda, it will result in a
-		// compiler error in GCC 4.5. In GCC 4.6 there is no such problem.
-		// This will sort tasks according to the initial writing position in the hash table
-		// of the result.
-		struct sparse_task_sorter
-		{
-			explicit sparse_task_sorter(const Series &retval,const std::vector<term_type const *> &v1,
-				const std::vector<term_type const *> &v2):
-				m_retval(retval),m_v1(v1),m_v2(v2)
-			{}
-			bool operator()(const task_type &t1, const task_type &t2) const
-			{
-				piranha_assert(m_retval.m_container.bucket_count());
-				// NOTE: here we are sure there is no overflow as the max size of the hash table is 2 ** (n - 1), hence the highest
-				// possible bucket is 2 ** (n - 1) - 1, so the highest value of the sum will be 2 ** n - 2. But the range of the size type
-				// is [0, 2 ** n - 1], so it is safe.
-				// NOTE: might use faster mod calculation here, but probably not worth it.
-				// NOTE: because tasks cannot contain empty intervals, the start of each interval will be a valid index (i.e., not end())
-				// in the term pointers vectors.
-				piranha_assert(t1.m_b1.first < m_v1.size() && t2.m_b1.first < m_v1.size() &&
-					t1.m_b2.first < m_v2.size() && t2.m_b2.first < m_v2.size() &&
-					t1.m_b1.first < t1.m_b1.second && t1.m_b2.first < t1.m_b2.second &&
-					t2.m_b1.first < t2.m_b1.second && t2.m_b2.first < t2.m_b2.second
-				);
-				return (m_retval.m_container._bucket_from_hash(m_v1[t1.m_b1.first]->hash()) +
-					m_retval.m_container._bucket_from_hash(m_v2[t1.m_b2.first]->hash())) %
-					m_retval.m_container.bucket_count() <
-					(m_retval.m_container._bucket_from_hash(m_v1[t2.m_b1.first]->hash()) +
-					m_retval.m_container._bucket_from_hash(m_v2[t2.m_b2.first]->hash())) %
-					m_retval.m_container.bucket_count();
-			}
-			const Series				&m_retval;
-			const std::vector<term_type const *>	&m_v1;
-			const std::vector<term_type const *>	&m_v2;
-		};
 		Series execute() const
 		{
 			const index_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
