@@ -144,6 +144,15 @@
  * This way if we need, e.g., a custom subs() in a particular series type, we can implement the custom method (i.e., without using the toolbox) but still ending
  * up with a correct math::subs() specialisation without having to re-code it for the particular series type.
  * \todo related to the above, beautification of the enabling conditions for impl functors - in the same fashion as we do for methods and functions.
+ * \todo we probably need a way to handle the excessive growth of ipow caches. Just keep the most recently used entries up to a certain
+ * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items are stored, etc.
+ * \todo consider re-writing the pow() method of series so that it avoids the current limitations (e.g., cannot pow() if coefficient is int
+ * because pow(int) returns integer).
+ * \todo we should really add some perf tests based on the work by alex perminov. Also, based on this, which operations in his use cases could
+ * benefit from parallelisation?
+ * \todo on-the-fly compression of series archives?
+ * \todo the replace_symbol() method for series. Or maybe rename_symbol().
+ * \todo truncation tests based on the email discussion with ondrej.
  */
 namespace piranha
 {
