@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#define BOOST_TEST_MODULE monagan1_test
+#define BOOST_TEST_MODULE monagan2_test
 #include <boost/test/unit_test.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -31,11 +31,12 @@
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(monagan1_test)
+BOOST_AUTO_TEST_CASE(monagan2_test)
 {
 	environment env;
 	if (boost::unit_test::framework::master_test_suite().argc > 1) {
 		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
 	}
-	BOOST_CHECK_EQUAL((monagan1<integer,kronecker_monomial<>>().size()),12341u);
+	BOOST_CHECK_EQUAL((monagan2<integer,kronecker_monomial<>>().size()),12341u);
 }
+

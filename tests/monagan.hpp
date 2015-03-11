@@ -44,6 +44,32 @@ inline polynomial<Cf,Key> monagan1()
 	}
 }
 
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> monagan2()
+{
+	using p_type = polynomial<Cf,Key>;
+	p_type x("x"), y("y"), z("z");
+	auto f2 = (x*x + y*y + z*z + 1).pow(20) + 1;
+	auto g = f2 + 1;
+	{
+	boost::timer::auto_cpu_timer t;
+	return f2 * g;
+	}
+}
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> monagan3()
+{
+	using p_type = polynomial<Cf,Key>;
+	p_type x("x"), y("y"), z("z");
+	auto f3 = (x + y + z + 1).pow(30) + 1;
+	auto g = f3 + 1;
+	{
+	boost::timer::auto_cpu_timer t;
+	return f3 * g;
+	}
+}
+
 }
 
 #endif
