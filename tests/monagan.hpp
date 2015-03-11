@@ -70,6 +70,32 @@ inline polynomial<Cf,Key> monagan3()
 	}
 }
 
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> monagan4()
+{
+	using p_type = polynomial<Cf,Key>;
+	p_type x("x"), y("y"), z("z"), t("t");
+	auto f4 = (x + y + z + t + 1).pow(20) + 1;
+	auto g = f4 + 1;
+	{
+	boost::timer::auto_cpu_timer t;
+	return f4 * g;
+	}
+}
+
+template <typename Cf,typename Key>
+inline polynomial<Cf,Key> monagan5()
+{
+	using p_type = polynomial<Cf,Key>;
+	p_type x("x"), y("y"), u("u"), v("v"), w("w");
+	auto f5 = (1 + u*u + v + w*w + x - y).pow(10) + 1;
+	auto g5 = (1 + u + v*v + w + x*x + y).pow(10) + 1;
+	{
+	boost::timer::auto_cpu_timer t;
+	return f5 * g5;
+	}
+}
+
 }
 
 #endif
