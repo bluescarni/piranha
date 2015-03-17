@@ -1179,7 +1179,8 @@ struct is_mp_integer_interoperable_type
  * - in the long run we should consider optimising operations vs hardware integers.
  * - the speed of conversion to floating-point might matter in series evaluation. Consider what happens when evaluating
  *   cos(x) in which x an mp_integer (passed in from Python, for instance). If we overload cos() to produce a double for int argument,
- *   then we need to convert x to double and then compute cos(x).
+ *   then we need to convert x to double and then compute cos(x). Note that for 1-limb numbers we actually could do directly
+ *   the conversion to double of the limb, this should be quite fast.
  * - when converting to/from Python we can speed up operations by trying casting around to hardware integers, if range is enough.
  * - use a unified shortcut for the possible optimisation when the two limb type coincide (e.g., same_limbs_type = true constexpr).
  * - the conversion operator to C++ integral types could use the same optimisation as the constructor from integral types (e.g,
