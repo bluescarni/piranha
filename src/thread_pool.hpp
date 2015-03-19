@@ -39,7 +39,6 @@
 #include "config.hpp"
 #include "detail/mpfr.hpp"
 #include "exceptions.hpp"
-#include "math.h"
 #include "mp_integer.hpp"
 #include "runtime_info.hpp"
 #include "thread_management.hpp"
@@ -206,6 +205,10 @@ std::mutex thread_pool_base<T>::s_mutex;
 class thread_pool: private detail::thread_pool_base<>
 {
 		using base = detail::thread_pool_base<>;
+		// Enabler for use_threads.
+		template <typename Int>
+		using use_threads_enabler = typename std::enable_if<(std::is_integral<Int>::value && std::is_unsigned<Int>::value) ||
+			std::is_same<Int,integer>::value,int>::type;
 	public:
 		/// Append task
 		/**
@@ -304,15 +307,17 @@ class thread_pool: private detail::thread_pool_base<>
 		 * 
 		 * @return the suggested number of threads to be used, always greater than zero.
 		 * 
-		 * @throws std::invalid_argument if \p min_work_per_thread is zero.
+		 * @throws std::invalid_argument if \p work_size or \p min_work_per_thread are not strictly positive.
 		 * @throws unspecified any exception thrown by threading primitives.
 		 */
-		template <typename Int, typename = typename std::enable_if<(std::is_integral<Int>::value && std::is_unsigned<Int>::value) ||
-			std::is_same<Int,integer>::value>::type>
+		template <typename Int, use_threads_enabler<Int> = 0>
 		static unsigned use_threads(const Int &work_size, const Int &min_work_per_thread)
 		{
-			// Check input param.
-			if (unlikely(math::is_zero(min_work_per_thread))) {
+			// Check input params.
+			if (unlikely(work_size <= Int(0))) {
+				piranha_throw(std::invalid_argument,"invalid value for work size");
+			}
+			if (unlikely(min_work_per_thread <= Int(0))) {
 				piranha_throw(std::invalid_argument,"invalid value for minimum work per thread");
 			}
 			// Don't use threads if we are not in the main thread.

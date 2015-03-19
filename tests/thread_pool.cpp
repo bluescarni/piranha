@@ -258,6 +258,14 @@ BOOST_AUTO_TEST_CASE(thread_pool_use_threads_test)
 	thread_pool::resize(4u);
 	BOOST_CHECK(thread_pool::use_threads(100u,3u) == 4u);
 	BOOST_CHECK_THROW(thread_pool::use_threads(100u,0u),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(0u,100u),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(0u,0u),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(100_z,0_z),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(0_z,100_z),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(0_z,0_z),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(100_z,-1_z),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(-1_z,100_z),std::invalid_argument);
+	BOOST_CHECK_THROW(thread_pool::use_threads(-1_z,-1_z),std::invalid_argument);
 	BOOST_CHECK(thread_pool::use_threads(100u,30u) == 3u);
 	auto f1 = thread_pool::enqueue(0u,[]() {
 		return thread_pool::use_threads(100u,3u);
