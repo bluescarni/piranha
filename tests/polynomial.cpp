@@ -507,7 +507,9 @@ BOOST_AUTO_TEST_CASE(polynomial_pow_test)
 	BOOST_CHECK((is_exponentiable<p_type1 &,integer &>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,std::string>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
-	BOOST_CHECK((!is_exponentiable<p_type1,double>::value));
+	BOOST_CHECK((is_exponentiable<p_type1,double>::value));
+	BOOST_CHECK((std::is_same<decltype(p_type1{"x"}.pow(2.)),polynomial<double,monomial<int>>>::value));
+	BOOST_CHECK_EQUAL((p_type1{"x"}.pow(2.)),(polynomial<double,monomial<int>>{"x"} * polynomial<double,monomial<int>>{"x"}));
 	typedef polynomial<real,monomial<int>> p_type2;
 	BOOST_CHECK((is_exponentiable<p_type2,integer>::value));
 	BOOST_CHECK((is_exponentiable<p_type2,real>::value));

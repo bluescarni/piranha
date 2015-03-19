@@ -67,6 +67,8 @@ template <typename Cf, typename Expo>
 class g_series_type: public series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>
 {
 	public:
+		template <typename Cf2>
+		using rebind = g_series_type<Cf2,Expo>;
 		typedef series<Cf,monomial<Expo>,g_series_type<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type() = default;
@@ -99,6 +101,8 @@ template <typename Cf, typename Expo>
 class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
 {
 	public:
+		template <typename Cf2>
+		using rebind = g_series_type2<Cf2,Expo>;
 		typedef series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>> base;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		g_series_type2() = default;
@@ -911,10 +915,19 @@ BOOST_AUTO_TEST_CASE(series_pow_test)
 	BOOST_CHECK((!is_exponentiable<p_type1 &,std::string &>::value));
 	BOOST_CHECK((is_exponentiable<p_type1,fake_int_01>::value));
 	BOOST_CHECK((!is_exponentiable<p_type1,fake_int_02>::value));
-	// This is not exponentiable because exponentiation of integrals gives piranha::integer,
-	// while multiplication returns another integral.
-	BOOST_CHECK((!is_exponentiable<g_series_type<short,int>,int>::value));
-	BOOST_CHECK((!is_exponentiable<g_series_type<int,int>,int>::value));
+	// These are a couple of checks for the new pow() code, which is now able to deal with
+	// exponentiation creating different types of coefficients.
+	BOOST_CHECK((is_exponentiable<g_series_type<short,int>,int>::value));
+	BOOST_CHECK((is_exponentiable<g_series_type<int,int>,int>::value));
+	BOOST_CHECK((std::is_same<decltype(g_series_type<short,int>{}.pow(3)),g_series_type<integer,int>>::value));
+	BOOST_CHECK((std::is_same<decltype(g_series_type<int,int>{}.pow(3)),g_series_type<integer,int>>::value));
+	BOOST_CHECK_EQUAL((g_series_type<int,int>{"x"}.pow(2)),(g_series_type<integer,int>{"x"} * g_series_type<integer,int>{"x"}));
+	BOOST_CHECK((std::is_same<decltype(g_series_type<int,int>{}.pow(3.)),g_series_type<double,int>>::value));
+	BOOST_CHECK_EQUAL((g_series_type<int,int>{"x"}.pow(2.)),(g_series_type<double,int>{"x"} * g_series_type<integer,int>{"x"}));
+	BOOST_CHECK((std::is_same<decltype(g_series_type<real,int>{}.pow(3.)),g_series_type<real,int>>::value));
+	BOOST_CHECK_EQUAL((g_series_type<real,int>{"x"}.pow(2.)),(g_series_type<real,int>{"x"} * g_series_type<real,int>{"x"}));
+	BOOST_CHECK((std::is_same<decltype(g_series_type<rational,int>{}.pow(3_z)),g_series_type<rational,int>>::value));
+	BOOST_CHECK_EQUAL((g_series_type<rational,int>{"x"}.pow(2_z)),(g_series_type<rational,int>{"x"} * g_series_type<rational,int>{"x"}));
 	// Some multi-threaded testing.
 	p_type1 ret0, ret1;
 	std::thread t0([&ret0]() {

@@ -319,14 +319,15 @@ class polynomial:
 		template <typename T, typename Series = polynomial>
 		pow_ret_type<T,Series> pow(const T &x) const
 		{
-			typedef typename base::term_type term_type;
+			using ret_type = pow_ret_type<T,Series>;
+			typedef typename ret_type::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
 			typedef typename term_type::key_type key_type;
 			if (this->size() == 1u && !this->m_container.begin()->m_key.is_unitary(this->m_symbol_set)) {
 				cf_type cf(math::pow(this->m_container.begin()->m_cf,x));
 				key_type key(this->m_container.begin()->m_key.pow(x,this->m_symbol_set));
-				polynomial retval;
-				retval.m_symbol_set = this->m_symbol_set;
+				ret_type retval;
+				retval.set_symbol_set(this->m_symbol_set);
 				retval.insert(term_type(std::move(cf),std::move(key)));
 				return retval;
 			}

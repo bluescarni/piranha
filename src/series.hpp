@@ -117,6 +117,8 @@ const bool has_auto_truncate<T>::value;
 /**
  * This type trait will be true if \p T is an instance of piranha::series.
  */
+// TODO: runtime requirements:
+// - a def cted series is empty (this is used, e.g., in the series multiplier).
 template <typename T>
 class is_series
 {
@@ -1433,72 +1435,6 @@ class series: detail::series_tag, series_operators
 		// Enabler for is_identical.
 		template <typename T>
 		using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value,int>::type;
-		// Exponentiation.
-		template <typename T, typename U>
-		using pow_ret_type = typename std::enable_if<std::is_same<decltype(math::pow(std::declval<typename U::term_type::cf_type const &>(),std::declval<T const &>())),
-			typename U::term_type::cf_type>::value && has_is_zero<T>::value && has_safe_cast<integer,T>::value &&
-			std::is_same<decltype(std::declval<const U &>() * std::declval<const U &>()),U>::value &&
-			std::is_same<is_identical_enabler<U>,int>::value,U
-			>::type;
-		// Hashing utils for series.
-		struct series_hasher
-		{
-			template <typename T>
-			std::size_t operator()(const T &s) const
-			{
-				return s.hash();
-			}
-		};
-		struct series_equal_to
-		{
-			template <typename T>
-			bool operator()(const T &a, const T &b) const
-			{
-				return a.is_identical(b);
-			}
-		};
-		template <typename Series>
-		using pow_map_type = std::unordered_map<Series,std::vector<Series>,series_hasher,series_equal_to>;
-		// NOTE: here, as in the custom derivative machinery, we need to pass through a static function
-		// to get the cache because Derived is an incomplete type and we cannot thus use a static data member
-		// involving Derived in series. Also, we need the Series template argument to inhibit the instantiation
-		// of the function for series types that do not support exponentiation.
-		template <typename Series = Derived>
-		static pow_map_type<Series> &get_pow_cache()
-		{
-			static pow_map_type<Series> s_pow_cache;
-			return s_pow_cache;
-		}
-		template <typename T>
-		Derived pow_impl(const T &x) const
-		{
-			integer n;
-			try {
-				n = safe_cast<integer>(x);
-			} catch (const std::invalid_argument &) {
-				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-integral value");
-			}
-			if (n.sign() < 0) {
-				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integral value");
-			}
-			// Lock the cache for the rest of the method.
-			std::lock_guard<std::mutex> lock(s_pow_mutex);
-			auto &v = get_pow_cache()[*static_cast<Derived const *>(this)];
-			using s_type = decltype(v.size());
-			// Init the vector, if needed.
-			if (!v.size()) {
-				Derived retval;
-				retval.insert(term_type(typename term_type::cf_type(1),typename term_type::key_type(symbol_set{})));
-				v.push_back(std::move(retval));
-			}
-			// Fill in the missing powers.
-			while (v.size() <= n) {
-				// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
-				// exponentiation by squaring - the growth in number of terms seems to be slower.
-				v.push_back(v.back() * (*static_cast<Derived const *>(this)));
-			}
-			return v[static_cast<s_type>(n)];
-		}
 		// Iterator utilities.
 		typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type,Derived>(const term_type &)>,
 			typename container_type::const_iterator> const_iterator_impl;
@@ -1781,6 +1717,81 @@ class series: detail::series_tag, series_operators
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Exponentiation machinery.
+		// The type resulting from the exponentiation of the coefficient of a series U to the power of T.
+		template <typename T, typename U>
+		using pow_cf_type = decltype(math::pow(std::declval<const typename U::term_type::cf_type &>(),std::declval<const T &>()));
+		// Type resulting from exponentiation via multiplication.
+		template <typename U>
+		using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
+		// Common checks on the exponent.
+		template <typename T>
+		using pow_expo_checks = typename std::enable_if<has_is_zero<T>::value && has_safe_cast<integer,T>::value>::type;
+		// Hashing utils for series.
+		struct series_hasher
+		{
+			template <typename T>
+			std::size_t operator()(const T &s) const
+			{
+				return s.hash();
+			}
+		};
+		struct series_equal_to
+		{
+			template <typename T>
+			bool operator()(const T &a, const T &b) const
+			{
+				return a.is_identical(b);
+			}
+		};
+		template <typename Series>
+		using pow_map_type = std::unordered_map<Series,std::vector<pow_m_type<Series>>,series_hasher,series_equal_to>;
+		// NOTE: here, as in the custom derivative machinery, we need to pass through a static function
+		// to get the cache because Derived is an incomplete type and we cannot thus use a static data member
+		// involving Derived in series. Also, we need the Series template argument to inhibit the instantiation
+		// of the function for series types that do not support exponentiation.
+		template <typename Series = Derived>
+		static pow_map_type<Series> &get_pow_cache()
+		{
+			static pow_map_type<Series> s_pow_cache;
+			return s_pow_cache;
+		}
+		// Empty for sfinae.
+		template <typename T, typename U, typename = void>
+		struct pow_ret_type_ {};
+		// Case 0: the exponentiation of the coefficient does not change its type.
+		template <typename T, typename U>
+		struct pow_ret_type_<T,U,typename std::enable_if<std::is_same<pow_cf_type<T,U>,typename U::term_type::cf_type>::value &&
+			detail::true_tt<pow_expo_checks<T>>::value &&
+			// Check we can construct the return value from the type stored in the cache.
+			std::is_constructible<U,pow_m_type<U>>::value &&
+			// Check that when we multiply the type stored in the cache by *this, we get again
+			// the type stored in the cache.
+			std::is_same<pow_m_type<U>,decltype(std::declval<const pow_m_type<U> &>() * std::declval<const U &>())>::value &&
+			// Check we can use is_identical.
+			std::is_same<is_identical_enabler<U>,int>::value
+			>::type>
+		{
+			using type = U;
+		};
+		// Case 1: the exponentiation of the coefficient does change its type.
+		template <typename T, typename U>
+		struct pow_ret_type_<T,U,typename std::enable_if<!std::is_same<pow_cf_type<T,U>,typename U::term_type::cf_type>::value &&
+			detail::true_tt<pow_expo_checks<T>>::value &&
+			// Check we can construct the return value from the type stored in the cache.
+			std::is_constructible<series_rebind<U,pow_cf_type<T,U>>,pow_m_type<U>>::value &&
+			// Check that when we multiply the type stored in the cache by *this, we get again
+			// the type stored in the cache.
+			std::is_same<pow_m_type<U>,decltype(std::declval<const pow_m_type<U> &>() * std::declval<const U &>())>::value &&
+			// Check we can use is_identical.
+			std::is_same<is_identical_enabler<U>,int>::value
+			>::type>
+		{
+			using type = series_rebind<U,pow_cf_type<T,U>>;
+		};
+		// Final typedef.
+		template <typename T, typename U>
+		using pow_ret_type = typename pow_ret_type_<T,U>::type;
 	public:
 		/// Size type.
 		/**
@@ -2064,21 +2075,19 @@ class series: detail::series_tag, series_operators
 		/// Exponentiation.
 		/**
 		 * \note
-		 * This method is enabled only if:
-		 * - the coefficient type is exponentiable to the power of \p x, and the return type is the coefficient type itself,
-		 * - \p T can be used as argument for piranha::math::is_zero() and piranha::safe_cast() to piranha::integer,
-		 * - \p Derived is multipliable and the result of the multiplication is \p Derived,
-		 * - the is_identical() method can be called on \p Derived.
+		 * This method is enabled only if the algorithm outlined here is supported by the involved types.
 		 *
-		 * Return \p this raised to the <tt>x</tt>-th power. The exponentiation algorithm proceeds as follows:
-		 * - if the series is single-coefficient, a call to apply_cf_functor() is attempted, using a functor that calls piranha::math::pow() on
-		 *   the coefficient. Otherwise, the algorithm proceeds;
+		 * Return \p this raised to the <tt>x</tt>-th power. The type of the result is either the calling series type,
+		 * or the calling series type rebound to the type resulting from the exponentiation of the coefficient of the calling
+		 * type to the power of \p x. The exponentiation algorithm proceeds as follows:
+		 * - if the series is single-coefficient, the result is a single-coefficient series in which the coefficient
+		 *   is the original coefficient (or zero, if the calling series is empty) raised to the power of \p x;
 		 * - if \p x is zero (as established by piranha::math::is_zero()), a series with a single term
-		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to the power of zero
-		 *   is 1 - including empty series);
+		 *   with unitary key and coefficient constructed from the integer numeral "1" is returned (i.e., any series raised to
+		 *   the power of zero is 1 - including empty series);
 		 * - if \p x represents a non-negative integral value, the return value is constructed via repeated multiplications;
 		 * - otherwise, an exception will be raised.
-		 * 
+		 *
 		 * An internal thread-safe cache of natural powers of series is maintained in order to improve performance during, e.g., substitution operations.
 		 * This cache can be cleared with clear_pow_cache().
 		 *
@@ -2102,18 +2111,63 @@ class series: detail::series_tag, series_operators
 		template <typename T, typename U = Derived>
 		pow_ret_type<T,U> pow(const T &x) const
 		{
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
+			// NOTE: there are 3 types involved here:
+			// - Derived,
+			// - the return type (which is Derived or a rebound type from Derived),
+			// - the type of Derived * Derived.
+			using ret_type = pow_ret_type<T,U>;
+			using r_term_type = typename ret_type::term_type;
+			using r_cf_type = typename r_term_type::cf_type;
+			using cf_type = typename term_type::cf_type;
+			using key_type = typename term_type::key_type;
+			using m_type = pow_m_type<Derived>;
+			using m_term_type = typename m_type::term_type;
+			using m_cf_type = typename m_term_type::cf_type;
+			using m_key_type = typename m_term_type::key_type;
+			// Handle the case of single coefficient series.
 			if (is_single_coefficient()) {
-				auto pow_functor = [&x](const cf_type &cf) {return math::pow(cf,x);};
-				return apply_cf_functor(pow_functor);
-			}
-			if (math::is_zero(x)) {
-				Derived retval;
-				retval.insert(term_type(cf_type(1),key_type(symbol_set{})));
+				ret_type retval;
+				if (empty()) {
+					// An empty series is equal to zero.
+					retval.insert(r_term_type(math::pow(cf_type(0),x),key_type(symbol_set{})));
+				} else {
+					retval.insert(r_term_type(math::pow(m_container.begin()->m_cf,x),key_type(symbol_set{})));
+				}
 				return retval;
 			}
-			return pow_impl(x);
+			// Handle the case of zero exponent.
+			if (math::is_zero(x)) {
+				ret_type retval;
+				retval.insert(r_term_type(r_cf_type(1),key_type(symbol_set{})));
+				return retval;
+			}
+			// Exponentiation by repeated multiplications.
+			integer n;
+			try {
+				n = safe_cast<integer>(x);
+			} catch (const std::invalid_argument &) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: non-integral value");
+			}
+			if (n.sign() < 0) {
+				piranha_throw(std::invalid_argument,"invalid argument for series exponentiation: negative integral value");
+			}
+			// Lock the cache for the rest of the method.
+			std::lock_guard<std::mutex> lock(s_pow_mutex);
+			auto &v = get_pow_cache()[*static_cast<Derived const *>(this)];
+			using s_type = decltype(v.size());
+			// Init the vector, if needed.
+			if (!v.size()) {
+				m_type tmp;
+				tmp.insert(m_term_type(m_cf_type(1),m_key_type(symbol_set{})));
+				v.push_back(std::move(tmp));
+			}
+			// Fill in the missing powers.
+			while (v.size() <= n) {
+				// NOTE: for series it seems like it is better to run the dumb algorithm instead of, e.g.,
+				// exponentiation by squaring - the growth in number of terms seems to be slower.
+				v.push_back(v.back() * (*static_cast<Derived const *>(this)));
+			}
+			return ret_type(v[static_cast<s_type>(n)]);
 		}
 		/// Clear the internal cache of natural powers.
 		/**
