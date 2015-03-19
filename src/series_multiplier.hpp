@@ -188,11 +188,8 @@ class series_multiplier
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			piranha_assert(size1 && size2);
 			// Establish the number of threads to use.
-			// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
-			// machine around 2012.
-			// NOTE: tuning parameter.
 			size_type n_threads = safe_cast<size_type>(thread_pool::use_threads(
-				integer(size1) * size2,integer(500000L)
+				integer(size1) * size2,integer(settings::get_min_work_per_thread())
 			));
 			piranha_assert(n_threads);
 			// An additional check on n_threads is that its size is not greater than the size of the first series,

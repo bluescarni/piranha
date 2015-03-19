@@ -61,6 +61,7 @@
 #include "serialization.hpp"
 #include "series.hpp"
 #include "series_multiplier.hpp"
+#include "settings.hpp"
 #include "substitutable_series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
@@ -720,9 +721,8 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 				estimate = 1u;
 			}
 			// Get the number of threads to use.
-			// NOTE: tuning parameter here.
 			const unsigned n_threads = thread_pool::use_threads(
-				integer(size1) * size2,integer(500000L)
+				integer(size1) * size2,integer(settings::get_min_work_per_thread())
 			);
 			// Rehash the retun value's container accordingly. Check the tuning flag to see if we want to use
 			// multiple threads for initing the return value.

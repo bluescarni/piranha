@@ -99,7 +99,7 @@ class settings(object):
 		:raises: any exception raised by the invoked low-level function
 
 		>>> settings.get_n_threads() # doctest: +SKIP
-		16 # This will be a platform-dependent value
+		16 # This will be a platform-dependent value.
 
 		"""
 		from ._core import _settings as _s
@@ -217,6 +217,55 @@ class settings(object):
 				for s_type in gsl():
 					assert(hasattr(s_type,'_repr_latex_'))
 					delattr(s_type,'_repr_latex_')
+	@staticmethod
+	def get_min_work_per_thread():
+		"""Get the minimum work per thread.
+
+		>>> settings.get_min_work_per_thread() # doctest: +SKIP
+		500000 # This will be an implementation-defined value.
+
+		"""
+		from ._core import _settings as _s
+		return _s._get_min_work_per_thread()
+	@staticmethod
+	def set_min_work_per_thread(n):
+		"""Set the minimum work per thread.
+
+		:param n: desired work per thread
+		:type n: ``int``
+		:raises: any exception raised by the invoked low-level function
+
+		>>> settings.set_min_work_per_thread(2)
+		>>> settings.get_min_work_per_thread() # doctest: +SKIP
+		2
+		>>> settings.set_min_work_per_thread(0) # doctest: +IGNORE_EXCEPTION_DETAIL
+		Traceback (most recent call last):
+		  ...
+		ValueError: invalid value
+		>>> settings.set_min_work_per_thread(-1) # doctest: +IGNORE_EXCEPTION_DETAIL
+		Traceback (most recent call last):
+		  ...
+		OverflowError: invalid value
+		>>> settings.reset_min_work_per_thread()
+
+		"""
+		from ._core import _settings as _s
+		return _cpp_type_catcher(_s._set_min_work_per_thread,n)
+	@staticmethod
+	def reset_min_work_per_thread():
+		"""Reset the minimum work per thread.
+
+		>>> n = settings.get_min_work_per_thread()
+		>>> settings.set_min_work_per_thread(10)
+		>>> settings.get_min_work_per_thread() # doctest: +SKIP
+		10
+		>>> settings.reset_min_work_per_thread()
+		>>> settings.get_min_work_per_thread() == n
+		True
+
+		"""
+		from ._core import _settings as _s
+		return _s._reset_min_work_per_thread()
 
 import atexit as _atexit
 _atexit.register(lambda : _cleanup())

@@ -21,10 +21,12 @@
 #ifndef PIRANHA_SETTINGS_HPP
 #define PIRANHA_SETTINGS_HPP
 
+#include <atomic>
 #include <mutex>
 #include <stdexcept>
 
 #include "config.hpp"
+#include "exceptions.hpp"
 #include "runtime_info.hpp"
 #include "thread_pool.hpp"
 
@@ -42,6 +44,10 @@ struct base_settings
 	static unsigned			m_cache_line_size;
 	static unsigned long		m_max_term_output;
 	static const unsigned long	m_default_max_term_output = 20ul;
+	static std::atomic_ullong	s_min_work_per_thread;
+	// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
+	// machine around 2012 for the fastest series multiplication scenario.
+	static const unsigned long long	s_default_min_work_per_thread = 500000ull;
 };
 
 template <typename T>
@@ -58,6 +64,12 @@ unsigned long base_settings<T>::m_max_term_output = base_settings<T>::m_default_
 
 template <typename T>
 const unsigned long base_settings<T>::m_default_max_term_output;
+
+template <typename T>
+const unsigned long long base_settings<T>::s_default_min_work_per_thread;
+
+template <typename T>
+std::atomic_ullong base_settings<T>::s_min_work_per_thread(base_settings<T>::s_default_min_work_per_thread);
 
 }
 
@@ -204,6 +216,35 @@ class settings: private detail::base_settings<>
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			m_max_term_output = m_default_max_term_output;
+		}
+		/// Get the minimum work per thread.
+		/**
+		 * @return the minimum work per thread.
+		 */
+		static unsigned long long get_min_work_per_thread()
+		{
+			return s_min_work_per_thread.load();
+		}
+		/// Set the minimum work per thread.
+		/**
+		 * @param[in] n the minimum work per thread.
+		 *
+		 * @throws std::invalid_argument if \n is zero.
+		 */
+		static void set_min_work_per_thread(unsigned long long n)
+		{
+			if (unlikely(n == 0u)) {
+				piranha_throw(std::invalid_argument,"the minimum work per thread value must be strictly positive");
+			}
+			return s_min_work_per_thread.store(n);
+		}
+		/// Reset the minimum work per thread.
+		/**
+		 * The value will be reset to the default initial value.
+		 */
+		static void reset_min_work_per_thread()
+		{
+			s_min_work_per_thread.store(s_default_min_work_per_thread);
 		}
 };
 

@@ -168,6 +168,9 @@ BOOST_PYTHON_MODULE(_core)
 	settings_class.def("_set_n_threads",piranha::settings::set_n_threads).staticmethod("_set_n_threads");
 	settings_class.def("_get_n_threads",piranha::settings::get_n_threads).staticmethod("_get_n_threads");
 	settings_class.def("_reset_n_threads",piranha::settings::reset_n_threads).staticmethod("_reset_n_threads");
+	settings_class.def("_set_min_work_per_thread",piranha::settings::set_min_work_per_thread).staticmethod("_set_min_work_per_thread");
+	settings_class.def("_get_min_work_per_thread",piranha::settings::get_min_work_per_thread).staticmethod("_get_min_work_per_thread");
+	settings_class.def("_reset_min_work_per_thread",piranha::settings::reset_min_work_per_thread).staticmethod("_reset_min_work_per_thread");
 	// Factorial.
 	bp::def("_factorial",&piranha::math::factorial<0>);
 	// Binomial coefficient.
