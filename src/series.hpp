@@ -115,16 +115,17 @@ const bool has_auto_truncate<T>::value;
 
 /// Type trait to detect series types.
 /**
- * This type trait will be true if \p T is an instance of piranha::series.
+ * This type trait will be true if \p T is an instance of piranha::series which satisfies piranha::is_container_element.
  */
-// TODO: runtime requirements:
-// - a def cted series is empty (this is used, e.g., in the series multiplier).
+// TODO: runtime/other requirements:
+// - a def cted series is empty (this is used, e.g., in the series multiplier);
+// - typedefs in series should not be overridden.
 template <typename T>
 class is_series
 {
 	public:
 		/// Value of the type trait.
-		static const bool value = std::is_base_of<detail::series_tag,T>::value;
+		static const bool value = std::is_base_of<detail::series_tag,T>::value && is_container_element<T>::value;
 };
 
 template <typename T>
@@ -213,17 +214,17 @@ template <typename T, typename Enable>
 const std::size_t series_recursion_index<T,Enable>::value;
 
 template <typename T>
-class series_recursion_index<T,typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type>
+class series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type>
 {
 		using cf_type = typename std::decay<T>::type::term_type::cf_type;
 		static_assert(series_recursion_index<cf_type>::value < std::numeric_limits<std::size_t>::max(),
 			"Overflow error.");
 	public:
-		static const std::size_t value = is_series<cf_type>::value ? series_recursion_index<cf_type>::value + 1u : 1u;
+		static const std::size_t value = std::is_base_of<detail::series_tag,cf_type>::value ? series_recursion_index<cf_type>::value + 1u : 1u;
 };
 
 template <typename T>
-const std::size_t series_recursion_index<T,typename std::enable_if<is_series<typename std::decay<T>::type>::value>::type>::value;
+const std::size_t series_recursion_index<T,typename std::enable_if<std::is_base_of<detail::series_tag,typename std::decay<T>::type>::value>::type>::value;
 
 #endif
 
