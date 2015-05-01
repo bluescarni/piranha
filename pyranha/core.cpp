@@ -156,6 +156,7 @@ BOOST_PYTHON_MODULE(_core)
 	pyranha::expose_poisson_series_2();
 	pyranha::expose_poisson_series_3();
 	pyranha::expose_poisson_series_4();
+	pyranha::expose_poisson_series_5();
 	// Expose divisor series.
 	pyranha::expose_divisor_series_0();
 	pyranha::expose_divisor_series_1();
