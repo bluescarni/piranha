@@ -69,12 +69,17 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 # 	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
 # 		ADD_DEFINITIONS(-D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
 # 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	# Some flags to curb the size of binaries in MinGW: do debug mode with -Os and without actual
-	# debug information, and enable globally the inlining flag for functions.
-	IF(MINGW)
-		SET(CMAKE_CXX_FLAGS_DEBUG "-g0 -Os")
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
-	ENDIF(MINGW)
+	# A problem with MinGW is that we run into a "too many sections" quite often. Recently, MinGW
+	# added a -mbig-obj for the assembler that solves this, but this is available only in recent versions.
+	# Other tentative workarounds include disabling debug information, enabling global inlining, use -Os and others.
+	# For now let's just enable the big object flag.
+	# The -mthreads flag is apparently needed for thread-safe exception handling.
+	if(MINGW)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -Wa,-mbig-obj")
+		#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mthreads -finline-functions -Wa,-mbig-obj")
+		#set(CMAKE_CXX_FLAGS_DEBUG "-g0")
+		#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -finline-functions")
+	endif()
 	PIRANHA_CHECK_UINT128_T()
 	# Color diagnostic available since GCC 4.9.
 	PIRANHA_CHECK_ENABLE_CXX_FLAG(-fdiagnostics-color=auto)
@@ -126,8 +131,8 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-Wzero-as-null-pointer-constant)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-pedantic-errors)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wdisabled-optimization)
-	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fvisibility-inlines-hidden)
-	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fvisibility=hidden)
+	PIRANHA_CHECK_ENABLE_CXX_FLAG(-fvisibility-inlines-hidden)
+	PIRANHA_CHECK_ENABLE_CXX_FLAG(-fvisibility=hidden)
 	# This is useful when the compiler decides the template backtrace is too verbose.
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-ftemplate-backtrace-limit=0)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-fstack-protector-all)
