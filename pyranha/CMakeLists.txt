@@ -36,6 +36,7 @@ ADD_LIBRARY(_core SHARED
 	expose_poisson_series_2.cpp
 	expose_poisson_series_3.cpp
 	expose_poisson_series_4.cpp
+	expose_poisson_series_5.cpp
 	# Divisor series.
 	divisor_series_descriptor.hpp
 	expose_divisor_series.hpp

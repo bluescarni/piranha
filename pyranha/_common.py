@@ -128,6 +128,7 @@ def _repr_png_(self):
 		# Read png and return.
 		png_file = open(join(tempd_name,tex_filename[0:-4] + r'.png'),'rb')
 		retval = png_file.read()
+		png_file.close()
 		return retval
 	finally:
 		# No matter what happens, always remove the temp directory with all the content.

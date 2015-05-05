@@ -28,9 +28,9 @@
 namespace pyranha
 {
 
-void expose_poisson_series_4()
+void expose_poisson_series_5()
 {
-	series_exposer<piranha::poisson_series,poisson_series_descriptor,12u,14u> ps_exposer;
+	series_exposer<piranha::poisson_series,poisson_series_descriptor,14u,15u> ps_exposer;
 }
 
 }
