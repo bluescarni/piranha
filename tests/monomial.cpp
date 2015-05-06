@@ -56,7 +56,7 @@
 
 using namespace piranha;
 
-typedef boost::mpl::vector<signed char,short,int,integer> expo_types;
+typedef boost::mpl::vector<signed char,short,int,integer,rational> expo_types;
 typedef boost::mpl::vector<std::integral_constant<std::size_t,0u>,std::integral_constant<std::size_t,1u>,std::integral_constant<std::size_t,5u>,
 	std::integral_constant<std::size_t,10u>> size_types;
 
@@ -1015,6 +1015,7 @@ struct integrate_tester
 		void operator()(const U &)
 		{
 			typedef monomial<T,U> k_type;
+			BOOST_CHECK(key_is_integrable<k_type>::value);
 			symbol_set vs;
 			k_type k1;
 			auto ret = k1.integrate(symbol("a"),vs);
@@ -1054,8 +1055,27 @@ struct integrate_tester
 			BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument);
 			k1 = k_type{T(2),T(-1)};
 			BOOST_CHECK_THROW(k1.integrate(symbol("d"),vs),std::invalid_argument);
+			// Overflow check.
+			overflow_check(k1);
 		}
 	};
+	template <typename U, typename std::enable_if<std::is_integral<typename U::value_type>::value,int>::type = 0>
+	static void overflow_check(const U &)
+	{
+		using k_type = U;
+		using T = typename k_type::value_type;
+		symbol_set vs;
+		vs.add("a");
+		vs.add("b");
+		k_type k1{T(1),std::numeric_limits<T>::max()};
+		auto ret = k1.integrate(symbol("a"),vs);
+		BOOST_CHECK_EQUAL(ret.first,T(2));
+		BOOST_CHECK((ret.second == k_type{T(2),std::numeric_limits<T>::max()}));
+		BOOST_CHECK_THROW(k1.integrate(symbol("b"),vs),std::invalid_argument)
+	}
+	template <typename U, typename std::enable_if<!std::is_integral<typename U::value_type>::value,int>::type = 0>
+	static void overflow_check(const U &)
+	{}
 	template <typename T>
 	void operator()(const T &)
 	{

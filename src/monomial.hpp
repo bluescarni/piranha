@@ -59,8 +59,12 @@ namespace piranha
 
 /// Monomial class.
 /**
- * This class extends piranha::array_key to define a series key type suitable as monomial in polynomial terms.
- * 
+ * This class extends piranha::array_key to define a series key type representing monomials, that is, objects of the form:
+ * \f[
+ * x_0^{y_0} \cdot x_1^{y_1} \cdot \ldots \cdot x_n^{y_n}.
+ * \f]
+ * The type \p T represents the type of the exponents \f$ y_i \f$, which are stored in a flat array.
+ *
  * This class satisfies the piranha::is_key type trait.
  * 
  * ## Type requirements ##
@@ -104,23 +108,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		};
 		template <typename U>
 		using eval_type = typename eval_type_<U>::type;
-		// Functors to shut off conversion warnings.
-		template <typename U, typename = void>
-		struct in_place_adder
-		{
-			void operator()(U &x, const U &y) const
-			{
-				x += y;
-			}
-		};
-		template <typename U>
-		struct in_place_adder<U,typename std::enable_if<std::is_integral<U>::value>::type>
-		{
-			void operator()(U &x, const U &y) const
-			{
-				x = static_cast<U>(x + y);
-			}
-		};
 		// Enabler for ctor from init list.
 		template <typename U>
 		using init_list_enabler = typename std::enable_if<std::is_constructible<base,std::initializer_list<U>>::value,int>::type;
@@ -185,6 +172,26 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		// The final alias.
 		template <typename U>
 		using degree_type = typename degree_type_<U>::type;
+		// Integrate utils.
+		// In-place increment by one, checked for integral types.
+		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+		static void ip_inc(U &x)
+		{
+			if (unlikely(x == std::numeric_limits<U>::max())) {
+				piranha_throw(std::invalid_argument,"positive overflow error in the calculation of the "
+					"integral of a monomial");
+			}
+			x = static_cast<U>(x + U(1));
+		}
+		template <typename U, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+		static void ip_inc(U &x)
+		{
+			x = x + U(1);
+		}
+		template <typename U>
+		using integrate_enabler = typename std::enable_if<std::is_assignable<U &,decltype(
+			std::declval<U &>() + std::declval<U>())>::value,int>::type;
+		// Partial utils.
 		// In-place decrement by one, checked for integral types.
 		template <typename U, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
 		static void ip_dec(U &x)
@@ -523,27 +530,36 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		}
 		/// Integration.
 		/**
+		 * \note
+		 * This method is enabled only if the exponent type is addable and the result of the operation
+		 * can be assigned back to the exponent type.
+		 *
 		 * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
-		 * consisting of the exponent associated to \p s and the monomial itself
+		 * consisting of the exponent associated to \p s increased by one and the monomial itself
 		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
 		 * set to 1 in the same position \p s would have if it were added to \p args.
 		 * 
 		 * If the exponent corresponding to \p s is -1, an error will be produced.
+		 *
+		 * If the exponent type is an integral type, then the increment-by-one operation on the affected exponent is checked
+		 * for negative overflow.
 		 * 
 		 * @param[in] s symbol with respect to which the integration will be calculated.
 		 * @param[in] args reference set of piranha::symbol.
 		 * 
 		 * @return result of the integration.
 		 * 
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ
-		 * or if the exponent associated to \p s is -1.
+		 * @throws std::invalid_argument if the sizes of \p args and \p this differ,
+		 * if the exponent associated to \p s is -1, or if the computation on integral exponents
+		 * results in an overflow error.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::math::is_zero(),
 		 * - exponent construction,
 		 * - push_back(),
 		 * - the exponent type's addition and assignment operators.
 		 */
-		std::pair<T,monomial> integrate(const symbol &s, const symbol_set &args) const
+		template <typename U = T, integrate_enabler<U> = 0>
+		std::pair<U,monomial> integrate(const symbol &s, const symbol_set &args) const
 		{
 			typedef typename base::size_type size_type;
 			if (!is_compatible(args)) {
@@ -551,7 +567,6 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			}
 			monomial retval;
 			T expo(0), one(1);
-			in_place_adder<T> adder;
 			for (size_type i = 0u; i < args.size(); ++i) {
 				if (math::is_zero(expo) && s < args[i]) {
 					// If we went past the position of s in args and still we
@@ -564,7 +579,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 				if (args[i] == s) {
 					// NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
 					// we are never going to land here as args[i] is at this point never going to be s.
-					adder(retval[i],one);
+					ip_inc(retval[i]);
 					if (math::is_zero(retval[i])) {
 						piranha_throw(std::invalid_argument,"unable to perform monomial integration: negative unitary exponent");
 					}

@@ -1477,9 +1477,34 @@ class is_integrable: detail::sfinae_types
 		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 };
 
-// Static init.
 template <typename T>
 const bool is_integrable<T>::value;
+
+/// Type trait to detect integrable keys.
+/**
+ * This type trait will be \p true if \p Key is a key type providing a const method <tt>integrate()</tt> taking a const instance of
+ * piranha::symbol and a const instance of piranha::symbol_set as input, and returning an <tt>std::pair</tt> of
+ * any type and \p Key. Otherwise, the type trait will be \p false.
+ * If \p Key does not satisfy piranha::is_key, a compilation error will be produced.
+ *
+ * The decay type of \p Key is considered in this type trait.
+ */
+template <typename T>
+class key_is_integrable: detail::sfinae_types
+{
+		using Td = typename std::decay<T>::type;
+		PIRANHA_TT_CHECK(is_key,Td);
+		template <typename U>
+		static auto test(const U &u) -> decltype(u.integrate(std::declval<const symbol &>(),std::declval<const symbol_set &>()));
+		static no test(...);
+	public:
+		/// Value of the type trait.
+		static const bool value = detail::is_differential_key_pair<Td,
+			decltype(test(std::declval<Td>()))>::value;
+};
+
+template <typename T>
+const bool key_is_integrable<T>::value;
 
 /// Type trait to detect if type has a degree property.
 /**
