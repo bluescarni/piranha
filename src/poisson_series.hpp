@@ -263,12 +263,12 @@ class poisson_series:
 			retval.m_symbol_set = this->m_symbol_set;
 			auto key_int = term.m_key.integrate(s,this->m_symbol_set);
 			// NOTE: here we are sure that the variable is contained in the monomial.
-			piranha_assert(key_int.first.sign() != 0);
+			piranha_assert(key_int.first != 0);
 			cf_type p_cf(term.m_cf / key_int.first);
 			retval.insert(term_type(p_cf,key_int.second));
 			for (integer i(1); i <= degree; ++i) {
 				key_int = key_int.second.integrate(s,this->m_symbol_set);
-				piranha_assert(key_int.first.sign() != 0);
+				piranha_assert(key_int.first != 0);
 				p_cf = math::partial(p_cf / key_int.first,s.get_name());
 				// Sign change due to the second portion of integration by part.
 				math::negate(p_cf);
@@ -507,7 +507,7 @@ class poisson_series:
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				// Try to integrate the key first.
 				const auto key_int = it->m_key.integrate(s,this->m_symbol_set);
-				if (key_int.first.sign() == 0) {
+				if (key_int.first == 0) {
 					// The variable does not appear in the monomial, try deferring the integration
 					// to the coefficient.
 					retval.insert(term_type(cf_type(integrate_cf(it->m_cf,name)),it->m_key));

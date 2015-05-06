@@ -1234,6 +1234,7 @@ struct integrate_tester
 	void operator()(const T &)
 	{
 		typedef real_trigonometric_kronecker_monomial<T> k_type;
+		BOOST_CHECK(key_is_integrable<k_type>::value);
 		typedef kronecker_array<T> ka;
 		const auto &limits = ka::get_limits();
 		symbol_set vs;
