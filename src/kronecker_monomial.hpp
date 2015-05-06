@@ -720,7 +720,7 @@ class kronecker_monomial
 		/// Integration.
 		/**
 		 * Will return the antiderivative of \p this with respect to symbol \p s. The result is a pair
-		 * consisting of the exponent associated to \p s and the monomial itself
+		 * consisting of the exponent associated to \p s increased by one and the monomial itself
 		 * after integration. If \p s is not in \p args, the returned monomial will have an extra exponent
 		 * set to 1 in the same position \p s would have if it were added to \p args.
 		 * 
@@ -731,15 +731,14 @@ class kronecker_monomial
 		 * 
 		 * @return result of the integration.
 		 * 
-		 * @throws std::invalid_argument if the exponent associated to \p s is -1.
+		 * @throws std::invalid_argument if the exponent associated to \p s is -1 or if the value of an exponent overflows.
 		 * @throws unspecified any exception thrown by:
 		 * - unpack(),
 		 * - piranha::math::is_zero(),
 		 * - piranha::static_vector::push_back(),
-		 * - the cast operator of piranha::integer,
 		 * - piranha::kronecker_array::encode().
 		 */
-		std::pair<integer,kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
+		std::pair<T,kronecker_monomial> integrate(const symbol &s, const symbol_set &args) const
 		{
 			v_type v = unpack(args), retval;
 			value_type expo(0), one(1);
@@ -755,7 +754,10 @@ class kronecker_monomial
 				if (args[i] == s) {
 					// NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
 					// we are never going to land here as args[i] is at this point never going to be s.
-					retval[i] = static_cast<value_type>(integer(retval[i]) + 1);
+					if (unlikely(retval[i] == std::numeric_limits<value_type>::max())) {
+						piranha_throw(std::invalid_argument,"positive overflow error in the calculation of the integral of a monomial");
+					}
+					retval[i] = static_cast<value_type>(retval[i] + value_type(1));
 					if (math::is_zero(retval[i])) {
 						piranha_throw(std::invalid_argument,"unable to perform monomial integration: negative unitary exponent");
 					}
@@ -767,7 +769,7 @@ class kronecker_monomial
 				retval.push_back(one);
 				expo = one;
 			}
-			return std::make_pair(integer(expo),kronecker_monomial(ka::encode(retval)));
+			return std::make_pair(expo,kronecker_monomial(ka::encode(retval)));
 		}
 		/// Evaluation.
 		/**

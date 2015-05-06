@@ -807,6 +807,7 @@ struct integrate_tester
 	void operator()(const T &)
 	{
 		typedef kronecker_monomial<T> k_type;
+		BOOST_CHECK(key_is_integrable<k_type>::value);
 		symbol_set vs;
 		k_type k1;
 		auto ret = k1.integrate(symbol("a"),vs);
