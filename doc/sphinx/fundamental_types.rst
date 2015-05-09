@@ -169,7 +169,7 @@ The ``real`` type obeys the following basic rules:
 
 * a default-constructed ``real`` object is initialised to zero;
 * the precision (i.e., the number of significant digits) is measured in bits, and it can be set at different values for different instances of
-  ``real``. The default value is 113 bits (IEEE 754 quadruple-precision);
+  ``real``. The default value is 113 bits (similar to IEEE 754 quadruple-precision);
 * a ``real`` object can be converted to/from all the basic C++ numerical types, ``integer`` and ``rational`` (the conversion to an integral
   type truncates the original value);
 * in mixed-mode operations, the rank of ``real`` is higher than that of ``integer``, ``rational`` and any numeric C++ type;
