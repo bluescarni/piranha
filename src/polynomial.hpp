@@ -164,8 +164,76 @@ class polynomial:
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
 		}
+		// Integration utils.
+		// Empty for SFINAE.
+		template <typename T, typename = void>
+		struct integrate_type_
+		{};
+		// The type resulting from the integration of the key of series T.
+		template <typename T>
+		using key_integrate_type = decltype(std::declval<const typename T::term_type::key_type &>().integrate(
+			std::declval<const symbol &>(),std::declval<const symbol_set &>()).first);
+		// Basic integration requirements for series T, to be satisfied both when the coefficient is integrable
+		// and when it is not. ResT is the type of the result of the integration.
+		template <typename T, typename ResT>
+		using basic_integrate_requirements = typename std::enable_if<
+			// Coefficient differentiable, and can call is_zero on the result.
+			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}))>::value &&
+			// The key is integrable.
+			detail::true_tt<key_integrate_type<T>>::value &&
+			// The result needs to be addable in-place.
+			is_addable_in_place<ResT>::value &&
+			// It also needs to be ctible from zero.
+			std::is_constructible<ResT,int>::value
+		>::type;
+		// Non-integrable coefficient.
+		template <typename T>
+		using nic_res_type = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>()) /
+			std::declval<const key_integrate_type<T> &>());
+		template <typename T>
+		struct integrate_type_<T,typename std::enable_if<!is_integrable<typename T::term_type::cf_type>::value &&
+			detail::true_tt<basic_integrate_requirements<T,nic_res_type<T>>>::value>::type>
+		{
+			using type = nic_res_type<T>;
+		};
+		// Integrable coefficient.
+		// The type resulting from the differentiation of the key of series T.
+		template <typename T>
+		using key_partial_type = decltype(std::declval<const typename T::term_type::key_type &>().partial(
+			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()).first);
+		// Type resulting from the integration of the coefficient.
+		template <typename T>
+		using i_cf_type = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),std::string{}));
+		// Type above, multiplied by the type coming out of the derivative of the key.
+		template <typename T>
+		using i_cf_type_p = decltype(std::declval<const i_cf_type<T> &>() * std::declval<const key_partial_type<T> &>());
+		// Final series type.
+		template <typename T>
+		using ic_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
+		template <typename T>
+		struct integrate_type_<T,typename std::enable_if<is_integrable<typename T::term_type::cf_type>::value &&
+			detail::true_tt<basic_integrate_requirements<T,ic_res_type<T>>>::value &&
+			// We need to be able to add the non-integrable type.
+			is_addable_in_place<ic_res_type<T>,nic_res_type<T>>::value &&
+			// We need to be able to compute the partial degree and cast it to integer.
+			has_safe_cast<integer,decltype(std::declval<const typename T::term_type::key_type &>().degree(std::declval<const symbol_set::positions &>(),
+			std::declval<const symbol_set &>()))>::value &&
+			// This is required in the initialisation of the return value.
+			std::is_constructible<i_cf_type_p<T>,i_cf_type<T>>::value &&
+			// We need to be able to assign the integrated coefficient times key partial.
+			std::is_assignable<i_cf_type_p<T> &,i_cf_type_p<T>>::value &&
+			// Needs math::negate().
+			has_negate<i_cf_type_p<T>>::value
+			>::type>
+		{
+			using type = ic_res_type<T>;
+		};
+		// Final typedef.
+		template <typename T>
+		using integrate_type = typename integrate_type_<T>::type;
 		// Integration with integrable coefficient.
-		polynomial integrate_impl(const symbol &s, const typename base::term_type &term,
+		template <typename T = polynomial>
+		integrate_type<T> integrate_impl(const symbol &s, const typename base::term_type &term,
 			const std::true_type &) const
 		{
 			typedef typename base::term_type term_type;
@@ -185,26 +253,32 @@ class polynomial:
 				piranha_throw(std::invalid_argument,
 					"unable to perform polynomial integration: negative integral exponent");
 			}
-			// Initialise retval (this is also the final retval in case the degree of s is zero).
-			polynomial retval;
-			retval.m_symbol_set = this->m_symbol_set;
+			polynomial tmp;
+			tmp.set_symbol_set(this->m_symbol_set);
 			key_type tmp_key = term.m_key;
-			cf_type i_cf(math::integrate(term.m_cf,s.get_name()));
-			retval.insert(term_type(i_cf,tmp_key));
+			tmp.insert(term_type(cf_type(1),tmp_key));
+			i_cf_type_p<T> i_cf(math::integrate(term.m_cf,s.get_name()));
+			integrate_type<T> retval(i_cf * tmp);
 			for (integer i(1); i <= degree; ++i) {
-				// Update coefficient and key.
-				i_cf = cf_type(math::integrate(i_cf,s.get_name()));
+				// Update coefficient and key. These variables are persistent across loop iterations.
 				auto partial_key = tmp_key.partial(pos,this->m_symbol_set);
-				i_cf *= std::move(partial_key.first);
+				i_cf = math::integrate(i_cf,s.get_name()) * std::move(partial_key.first);
 				// Account for (-1)**i.
 				math::negate(i_cf);
+				// Build the other factor from the derivative of the monomial.
+				tmp = polynomial{};
+				tmp.set_symbol_set(this->m_symbol_set);
 				tmp_key = std::move(partial_key.second);
-				retval.insert(term_type(i_cf,tmp_key));
+				// NOTE: don't move tmp_key, as it needs to hold a valid value
+				// for the next loop iteration.
+				tmp.insert(term_type(cf_type(1),tmp_key));
+				retval += i_cf * tmp;
 			}
 			return retval;
 		}
 		// Integration with non-integrable coefficient.
-		polynomial integrate_impl(const symbol &, const typename base::term_type &,
+		template <typename T = polynomial>
+		integrate_type<T> integrate_impl(const symbol &, const typename base::term_type &,
 			const std::false_type &) const
 		{
 			piranha_throw(std::invalid_argument,"unable to perform polynomial integration: coefficient type is not integrable");
@@ -336,6 +410,9 @@ class polynomial:
 		}
 		/// Integration.
 		/**
+		 * \note
+		 * This method is enabled only if the algorithm described below is supported by all the involved types.
+		 *
 		 * This method will attempt to compute the antiderivative of the polynomial term by term. If the term's coefficient does not depend on
 		 * the integration variable, the result will be calculated via the integration of the corresponding monomial.
 		 * Integration with respect to a variable appearing to the power of -1 will fail.
@@ -344,8 +421,6 @@ class polynomial:
 		 * of the coefficient and on the value of the exponent of the integration variable. The integration will
 		 * fail if the exponent is negative or non-integral.
 		 * 
-		 * This method requires the coefficient type to satisfy the piranha::is_differentiable type trait.
-		 * 
 		 * @param[in] name integration variable.
 		 * 
 		 * @return the antiderivative of \p this with respect to \p name.
@@ -353,25 +428,23 @@ class polynomial:
 		 * @throws std::invalid_argument if the integration procedure fails.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::symbol construction,
-		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast() and
-		 *   piranha::math::negate(),
-		 * - piranha::symbol_set::add() and assignment operator,
+		 * - piranha::math::partial(), piranha::math::is_zero(), piranha::math::integrate(), piranha::safe_cast()
+		 *   and piranha::math::negate(),
+		 * - piranha::symbol_set::add(),
 		 * - term construction,
 		 * - coefficient construction, assignment and arithmetics,
 		 * - integration, construction, assignment, differentiation and degree querying methods of the key type,
 		 * - insert(),
 		 * - series arithmetics.
-		 * 
-		 * \todo requirements on dividability by degree type, safe_cast, etc.
 		 */
-		polynomial integrate(const std::string &name) const
+		template <typename T = polynomial>
+		integrate_type<T> integrate(const std::string &name) const
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
-			PIRANHA_TT_CHECK(is_differentiable,cf_type);
 			// Turn name into symbol.
 			const symbol s(name);
-			polynomial retval;
+			integrate_type<T> retval(0);
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
 				// If the derivative of the coefficient is null, we just need to deal with
@@ -383,11 +456,10 @@ class polynomial:
 					if (!std::binary_search(sset.begin(),sset.end(),s)) {
 						sset.add(s);
 					}
-					tmp.m_symbol_set = sset;
+					tmp.set_symbol_set(sset);
 					auto key_int = it->m_key.integrate(s,this->m_symbol_set);
-					tmp.insert(term_type(it->m_cf,std::move(key_int.second)));
-					tmp /= key_int.first;
-					retval += std::move(tmp);
+					tmp.insert(term_type(cf_type(1),std::move(key_int.second)));
+					retval += (tmp * it->m_cf) / key_int.first;
 				} else {
 					retval += integrate_impl(s,*it,std::integral_constant<bool,is_integrable<cf_type>::value>());
 				}
@@ -396,15 +468,27 @@ class polynomial:
 		}
 };
 
+namespace detail
+{
+
+// Enabler for the math::integrate() specialisation: type needs to be a polynomial which supports
+// the integration method.
+template <typename Series>
+using poly_integrate_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().integrate(std::string{}))>::value>::type;
+
+}
+
 namespace math
 {
 
 /// Specialisation of the piranha::math::integrate() functor for polynomial types.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::polynomial.
+ * This specialisation is activated when \p Series is an instance of piranha::polynomial that supports integration
+ * via piranha::polynomial::integrate().
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type>
+struct integrate_impl<Series,detail::poly_integrate_enabler<Series>>
 {
 	/// Call operator.
 	/**
@@ -417,7 +501,7 @@ struct integrate_impl<Series,typename std::enable_if<std::is_base_of<detail::pol
 	 * 
 	 * @throws unspecified any exception thrown by piranha::polynomial::integrate().
 	 */
-	Series operator()(const Series &s, const std::string &name) const
+	auto operator()(const Series &s, const std::string &name) const -> decltype(s.integrate(name))
 	{
 		return s.integrate(name);
 	}

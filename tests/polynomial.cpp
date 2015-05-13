@@ -653,6 +653,17 @@ BOOST_AUTO_TEST_CASE(polynomial_integrate_test)
 	BOOST_CHECK_THROW(math::integrate(p_type_alt{polynomial_alt<rational,int>{"m"}},"m"),std::invalid_argument);
 	BOOST_CHECK_EQUAL(math::integrate(p_type_alt{polynomial_alt<rational,int>{"n"}},"m"),(polynomial_alt<rational,int>{"n"} * m));
 	BOOST_CHECK_EQUAL(math::integrate(p_type_alt{polynomial_alt<rational,int>{"m"}},"n"),(polynomial_alt<rational,int>{"m"} * n));
+	// Check with rational exponents and the new type-deduction logic.
+	using p_type2 = polynomial<integer,monomial<rational>>;
+	using p_type3 = polynomial<int,monomial<rational>>;
+	BOOST_CHECK(is_integrable<p_type2>::value);
+	BOOST_CHECK(is_integrable<p_type3>::value);
+	BOOST_CHECK((std::is_same<decltype(p_type2{}.integrate("x")),polynomial<rational,monomial<rational>>>::value));
+	BOOST_CHECK((std::is_same<decltype(p_type3{}.integrate("x")),polynomial<rational,monomial<rational>>>::value));
+	BOOST_CHECK((std::is_same<decltype(math::integrate(p_type2{},"x")),polynomial<rational,monomial<rational>>>::value));
+	BOOST_CHECK((std::is_same<decltype(math::integrate(p_type3{},"x")),polynomial<rational,monomial<rational>>>::value));
+	BOOST_CHECK_EQUAL(math::integrate(p_type2{"x"}.pow(3/4_q),"x"),4/7_q*p_type2{"x"}.pow(7/4_q));
+	BOOST_CHECK_EQUAL(math::integrate(3*p_type3{"x"}.pow(3/4_q),"x"),12/7_q*p_type3{"x"}.pow(7/4_q));
 }
 
 BOOST_AUTO_TEST_CASE(polynomial_ipow_subs_test)
