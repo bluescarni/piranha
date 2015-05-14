@@ -434,7 +434,7 @@ class series_exposer
 		{}
 		// Expose integration conditionally.
 		template <typename S>
-		static S integrate_wrapper(const S &s, const std::string &name)
+		static auto integrate_wrapper(const S &s, const std::string &name) -> decltype(piranha::math::integrate(s,name))
 		{
 			return piranha::math::integrate(s,name);
 		}
