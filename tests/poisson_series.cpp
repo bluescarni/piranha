@@ -531,6 +531,21 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 	BOOST_CHECK(is_integrable<p_type2 &>::value);
 	BOOST_CHECK(is_integrable<const p_type2>::value);
 	BOOST_CHECK(is_integrable<p_type2 const &>::value);
+	// Check with rational exponents and the new type-deducing logic.
+	using p_type3 = poisson_series<polynomial<rational,monomial<rational>>>;
+	using p_type4 = poisson_series<polynomial<integer,monomial<rational>>>;
+	using p_type5 = poisson_series<polynomial<int,monomial<integer>>>;
+	BOOST_CHECK(is_integrable<p_type3>::value);
+	BOOST_CHECK(is_integrable<p_type4>::value);
+	BOOST_CHECK(is_integrable<p_type5>::value);
+	BOOST_CHECK((std::is_same<decltype(math::integrate(p_type3{},"x")),p_type3>::value));
+	BOOST_CHECK((std::is_same<decltype(math::integrate(p_type4{},"x")),p_type3>::value));
+	BOOST_CHECK((std::is_same<decltype(math::integrate(p_type5{},"x")),
+		poisson_series<polynomial<integer,monomial<integer>>>>::value));
+	BOOST_CHECK_EQUAL(math::integrate(p_type4{"x"}.pow(3/4_q),"x"),4/7_q*p_type3{"x"}.pow(7/4_q));
+	BOOST_CHECK_EQUAL(math::integrate(p_type3{"x"}.pow(8/4_q)*math::cos(p_type3{"x"}),"x"),
+		(p_type3{"x"}*p_type3{"x"}-2)*math::sin(p_type3{"x"})+2*p_type3{"x"}*math::cos(p_type3{"x"}));
+	BOOST_CHECK_THROW(math::integrate(p_type3{"x"}.pow(3/4_q)*math::cos(p_type3{"x"}),"x"),std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)

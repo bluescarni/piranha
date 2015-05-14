@@ -61,6 +61,8 @@ namespace piranha
 namespace detail
 {
 
+struct poisson_series_tag {};
+
 // Implementation detail to detect a divisor series.
 template <typename T>
 struct is_divisor_series
@@ -122,7 +124,7 @@ struct has_t_integrate: detail::sfinae_types
 template <typename Cf>
 class poisson_series:
 	public power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
-		poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>
+		poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>,detail::poisson_series_tag
 {
 		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
@@ -228,20 +230,102 @@ class poisson_series:
 			// with a runtime error when we can exclude this from happening via TMP.
 			piranha_throw(std::invalid_argument,"Poisson series is unsuitable for the calculation of sine/cosine");
 		}
-		// Implementation details for integration.
+		// Integration utils.
+		// The type resulting from the integration of the key of series T.
 		template <typename T>
-		static auto integrate_cf(const T &cf, const std::string &name,
-			typename std::enable_if<is_integrable<T>::value>::type * = nullptr) -> decltype(math::integrate(cf,name))
+		using key_integrate_type = decltype(std::declval<const typename T::term_type::key_type &>().integrate(
+			std::declval<const symbol &>(),std::declval<const symbol_set &>()).first);
+		// Basic integration requirements for series T, to be satisfied both when the coefficient is a polynomial
+		// and when it is not. ResT is the type of the result of the integration.
+		template <typename T, typename ResT>
+		using basic_integrate_requirements = typename std::enable_if<
+			// Coefficient differentiable, and can call is_zero on the result.
+			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}))>::value &&
+			// The result needs to be addable in-place.
+			is_addable_in_place<ResT>::value &&
+			// It also needs to be ctible from zero.
+			std::is_constructible<ResT,int>::value
+		>::type;
+		// Machinery for the integration of the coefficient only.
+		// Type resulting from the integration of the coefficient only.
+		template <typename ResT, typename T>
+		using i_cf_only_type = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),
+			std::string{}) * std::declval<const T &>());
+		// Integration of coefficient only is enabled only if the type above is well defined
+		// and it is the same as the result type.
+		template <typename ResT, typename T, typename = void>
+		struct i_cf_only_enabler
 		{
-			return math::integrate(cf,name);
+			static const bool value = false;
+		};
+		template <typename ResT, typename T>
+		struct i_cf_only_enabler<ResT,T,typename std::enable_if<
+			std::is_same<ResT,i_cf_only_type<ResT,T>>::value>::type>
+		{
+			static const bool value = true;
+		};
+		template <typename ResT, typename It, typename T = poisson_series>
+		void integrate_coefficient_only(ResT &retval, It it, const std::string &name,
+			typename std::enable_if<i_cf_only_enabler<ResT,T>::value>::type * = nullptr) const
+		{
+			using term_type = typename base::term_type;
+			using cf_type = typename term_type::cf_type;
+			poisson_series tmp;
+			tmp.set_symbol_set(this->m_symbol_set);
+			tmp.insert(term_type(cf_type(1),it->m_key));
+			retval += math::integrate(it->m_cf,name) * tmp;
 		}
-		template <typename T>
-		static T integrate_cf(const T &, const std::string &,
-			typename std::enable_if<!is_integrable<T>::value>::type * = nullptr)
+		template <typename ResT, typename It, typename T = poisson_series>
+		void integrate_coefficient_only(ResT &, It, const std::string &,
+			typename std::enable_if<!i_cf_only_enabler<ResT,T>::value>::type * = nullptr) const
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not integrable");
 		}
-		poisson_series integrate_impl(const symbol &s, const typename base::term_type &term,
+		// Empty for SFINAE.
+		template <typename T,typename = void>
+		struct integrate_type_
+		{};
+		// Non-polynomial coefficient.
+		template <typename T>
+		using npc_res_type = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>()) /
+			std::declval<const key_integrate_type<T> &>());
+		template <typename T>
+		struct integrate_type_<T,typename std::enable_if<!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value &&
+			detail::true_tt<basic_integrate_requirements<T,npc_res_type<T>>>::value>::type>
+		{
+			using type = npc_res_type<T>;
+		};
+		// Polynomial coefficient.
+		// Coefficient type divided by the value coming from the integration of the key.
+		template <typename T>
+		using i_cf_type = decltype(std::declval<const typename T::term_type::cf_type &>() / std::declval<const key_integrate_type<T> &>());
+		// Derivative of the type above.
+		template <typename T>
+		using i_cf_type_p = decltype(math::partial(std::declval<const i_cf_type<T> &>(),std::string{}));
+		// The final return type.
+		template <typename T>
+		using pc_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
+		template <typename T>
+		struct integrate_type_<T,typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value &&
+			detail::true_tt<basic_integrate_requirements<T,pc_res_type<T>>>::value &&
+			// We need to be able to add in the npc type.
+			is_addable_in_place<pc_res_type<T>,npc_res_type<T>>::value &&
+			// We need to be able to compute the degree of the polynomials and
+			// convert it safely to integer.
+			has_safe_cast<integer,decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),std::vector<std::string>{}))>::value &&
+			// We need this conversion in the algorithm below.
+			std::is_constructible<i_cf_type_p<T>,i_cf_type<T>>::value &&
+			// This type needs also to be negated.
+			has_negate<i_cf_type_p<T>>::value
+			>::type>
+		{
+			using type = pc_res_type<T>;
+		};
+		// The final typedef.
+		template <typename T>
+		using integrate_type = typename integrate_type_<T>::type;
+		template <typename T = poisson_series>
+		integrate_type<T> integrate_impl(const symbol &s, const typename base::term_type &term,
 			const std::true_type &) const
 		{
 			typedef typename base::term_type term_type;
@@ -251,7 +335,7 @@ class poisson_series:
 				degree = safe_cast<integer>(math::degree(term.m_cf,{s.get_name()}));
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,
-					"unable to perform Poisson series integration: cannot extract the integral form of a polynomial degree");
+					"unable to perform Poisson series integration: cannot convert polynomial degree to an integer");
 			}
 			// If the variable is in both cf and key, and the cf degree is negative, we cannot integrate.
 			if (degree.sign() < 0) {
@@ -259,24 +343,31 @@ class poisson_series:
 					"unable to perform Poisson series integration: polynomial coefficient has negative integral degree");
 			}
 			// Init retval and auxiliary quantities for the iteration.
-			poisson_series retval;
-			retval.m_symbol_set = this->m_symbol_set;
 			auto key_int = term.m_key.integrate(s,this->m_symbol_set);
 			// NOTE: here we are sure that the variable is contained in the monomial.
 			piranha_assert(key_int.first != 0);
-			cf_type p_cf(term.m_cf / key_int.first);
-			retval.insert(term_type(p_cf,key_int.second));
+			poisson_series tmp;
+			tmp.set_symbol_set(this->m_symbol_set);
+			// NOTE: not move for .second, as it is needed in the loop below.
+			tmp.insert(term_type(cf_type(1),key_int.second));
+			i_cf_type_p<T> p_cf(term.m_cf / std::move(key_int.first));
+			integrate_type<T> retval(p_cf * tmp);
 			for (integer i(1); i <= degree; ++i) {
 				key_int = key_int.second.integrate(s,this->m_symbol_set);
 				piranha_assert(key_int.first != 0);
-				p_cf = math::partial(p_cf / key_int.first,s.get_name());
+				p_cf = math::partial(p_cf / std::move(key_int.first),s.get_name());
 				// Sign change due to the second portion of integration by part.
 				math::negate(p_cf);
-				retval.insert(term_type(p_cf,key_int.second));
+				tmp = poisson_series{};
+				tmp.set_symbol_set(this->m_symbol_set);
+				// NOTE: don't move second.
+				tmp.insert(term_type(cf_type(1),key_int.second));
+				retval += p_cf * tmp;
 			}
 			return retval;
 		}
-		poisson_series integrate_impl(const symbol &, const typename base::term_type &,
+		template <typename T = poisson_series>
+		integrate_type<T> integrate_impl(const symbol &, const typename base::term_type &,
 			const std::false_type &) const
 		{
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
@@ -378,9 +469,6 @@ class poisson_series:
 		// Final type definition.
 		template <typename T>
 		using ti_type = decltype(std::declval<const T &>().t_integrate_impl());
-		// Enabler for the integration method - thhis will have to be modified once we have proper enabling.
-		template <typename T>
-		using integrate_enabler = typename std::enable_if<detail::has_t_integrate<T>::value,int>::type;
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
@@ -460,6 +548,9 @@ class poisson_series:
 		}
 		/// Integration.
 		/**
+		 * \note
+		 * This method is enabled only if the algorithm described below is supported by all the involved types.
+		 *
 		 * This method will attempt to compute the antiderivative of the Poisson series term by term using the
 		 * following procedure:
 		 * - if the term's monomial does not depend on the integration variable, the integration will be deferred to the coefficient;
@@ -468,8 +559,6 @@ class poisson_series:
 		 *   - if the coefficient is a polynomial, a strategy of integration by parts is attempted, its success depending on whether
 		 *     the degree of the polynomial is a non-negative integral value;
 		 *   - otherwise, an error will be produced.
-		 * 
-		 * This method requires the coefficient type to be differentiable.
 		 * 
 		 * @param[in] name integration variable.
 		 * 
@@ -487,36 +576,33 @@ class poisson_series:
 		 * - insert(),
 		 * - piranha::polynomial::degree(),
 		 * - series arithmetics.
-		 * 
-		 * \todo requirements on dividability by multiplier type (or integer), safe_cast, etc.
 		 */
-		// \todo this also needs to be able to deduce the integration type. When that is done, we need to make sure the math::integrate
-		// overload and the exposition in pyranha are correct too (as we did at the time for partial()). Test for instance that integration
-		// of a polynomial/ps with integer coefficients and rational exponent generates rational coefficients.
-		template <typename T = poisson_series, integrate_enabler<T> = 0>
-		poisson_series integrate(const std::string &name) const
+		template <typename T = poisson_series>
+		integrate_type<T> integrate(const std::string &name) const
 		{
 			typedef typename base::term_type term_type;
 			typedef typename term_type::cf_type cf_type;
-			PIRANHA_TT_CHECK(is_differentiable,cf_type);
 			// Turn name into symbol.
 			const symbol s(name);
-			poisson_series retval;
-			retval.m_symbol_set = this->m_symbol_set;
+			// Init the return value.
+			integrate_type<T> retval(0);
 			const auto it_f = this->m_container.end();
 			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				// Try to integrate the key first.
-				const auto key_int = it->m_key.integrate(s,this->m_symbol_set);
+				// Integrate the key first.
+				auto key_int = it->m_key.integrate(s,this->m_symbol_set);
+				// If the variable does not appear in the monomial, try deferring the integration
+				// to the coefficient.
 				if (key_int.first == 0) {
-					// The variable does not appear in the monomial, try deferring the integration
-					// to the coefficient.
-					retval.insert(term_type(cf_type(integrate_cf(it->m_cf,name)),it->m_key));
+					integrate_coefficient_only(retval,it,name);
 					continue;
 				}
 				// The variable is in the monomial, let's check if the variable is also in the coefficient.
 				if (math::is_zero(math::partial(it->m_cf,name))) {
 					// No variable in the coefficient, proceed with the integrated key and divide by multiplier.
-					retval.insert(term_type(it->m_cf / key_int.first,std::move(key_int.second)));
+					poisson_series tmp;
+					tmp.set_symbol_set(this->m_symbol_set);
+					tmp.insert(term_type(cf_type(1),std::move(key_int.second)));
+					retval += (std::move(tmp) * it->m_cf) / key_int.first;
 				} else {
 					// With the variable both in the coefficient and the key, we only know how to proceed with polynomials.
 					retval += integrate_impl(s,*it,std::integral_constant<bool,std::is_base_of<detail::polynomial_tag,Cf>::value>());
@@ -569,15 +655,27 @@ class poisson_series:
 		}
 };
 
+namespace detail
+{
+
+// Enabler for the math::integrate() specialisation: type needs to be a Poisson series which supports
+// the integration method.
+template <typename Series>
+using ps_integrate_enabler = typename std::enable_if<std::is_base_of<poisson_series_tag,Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().integrate(std::string{}))>::value>::type;
+
+}
+
 namespace math
 {
 
 /// Specialisation of the piranha::math::integrate() functor for Poisson series.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::poisson_series.
+ * This specialisation is activated when \p Series is an instance of piranha::poisson_series which supports
+ * piranha::poisson_series::integrate().
  */
 template <typename Series>
-struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,poisson_series>::value>::type>
+struct integrate_impl<Series,detail::ps_integrate_enabler<Series>>
 {
 	/// Call operator.
 	/**
@@ -590,8 +688,7 @@ struct integrate_impl<Series,typename std::enable_if<is_instance_of<Series,poiss
 	 * 
 	 * @throws unspecified any exception thrown by piranha::poisson_series::integrate().
 	 */
-	template <typename T>
-	auto operator()(const T &s, const std::string &name) -> decltype(s.integrate(name))
+	auto operator()(const Series &s, const std::string &name) -> decltype(s.integrate(name))
 	{
 		return s.integrate(name);
 	}
