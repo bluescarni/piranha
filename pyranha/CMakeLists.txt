@@ -48,6 +48,15 @@ ADD_LIBRARY(_core SHARED
 	${PYRANHA_TUTORIAL_FILES}
 )
 
+# Initial definition of extra compile flags.
+set(PYRANHA_EXTRA_COMPILE_FLAGS "")
+
+# There is a bug in GCC < 5.1 when compiling poisson_series_1.cpp with debug
+# info enabled to level 2 (the default).
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_COMPILER_IS_GNUCXX)
+	set(PYRANHA_EXTRA_COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS} -g1")
+endif()
+
 # Prefix and suffix setup.
 SET_TARGET_PROPERTIES(_core PROPERTIES PREFIX "")
 IF(PYDEXTENSION)
@@ -63,10 +72,15 @@ ENDIF()
 # http://www.python.org/dev/peps/pep-3123/
 # When using GCC or Clang, we add -fno-strict-aliasing here and when compiling core.cpp to prevent possible problems.
 # Other compilers should probably use similar flags.
-IF(${PYTHON_LIBRARY_VERSION} LESS 30 AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX))
-	MESSAGE(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
-	SET_TARGET_PROPERTIES(_core PROPERTIES COMPILE_FLAGS "-fno-strict-aliasing" LINK_FLAGS "-fno-strict-aliasing")
-ENDIF()
+if(${PYTHON_LIBRARY_VERSION} LESS 30 AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX))
+	message(STATUS "Python < 3 version detected: Pyranha will be compiled with the '-fno-strict-aliasing' flag.")
+	set(PYRANHA_EXTRA_COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS} -fno-strict-aliasing")
+	set_target_properties(_core PROPERTIES LINK_FLAGS "-fno-strict-aliasing")
+endif()
+
+# Setup the extra compile flags.
+message(STATUS "Extra compile flags for pyranha: ${PYRANHA_EXTRA_COMPILE_FLAGS}")
+set_target_properties(_core PROPERTIES COMPILE_FLAGS "${PYRANHA_EXTRA_COMPILE_FLAGS}")
 
 # Module needs to Boost.Python and the Python libs, plus the mandatory libraries.
 TARGET_LINK_LIBRARIES(_core ${MANDATORY_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${PYTHON_LIBRARIES})
