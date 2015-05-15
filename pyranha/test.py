@@ -590,6 +590,31 @@ class truncate_degree_test_case(_ut.TestCase):
 		pt.clear_pow_cache()
 		self.assertEqual(pt.get_auto_truncate_degree(),(0,0,[]))
 
+class integrate_test_case(_ut.TestCase):
+	"""Test case for the integration functionality.
+
+	To be used within the :mod:`unittest` framework.
+
+	>>> import unittest as ut
+	>>> suite = ut.TestLoader().loadTestsFromTestCase(integrate_test_case)
+
+	"""
+	def runTest(self):
+		from fractions import Fraction as F
+		from .math import sin, cos
+		from .types import polynomial, short, rational, poisson_series, monomial, integer
+		pt = poisson_series(polynomial(rational,monomial(short)))()
+		x,y,z = pt('x'), pt('y'), pt('z')
+		s = F(1,3)*z*sin(4*x-2*y)
+		self.assertEqual(s.integrate('y'),F(1,6)*z*cos(4*x-2*y))
+		self.assertEqual(s.integrate('z'),z**2/6*sin(4*x-2*y))
+		pt = polynomial(integer,monomial(rational))()
+		z = pt('z')
+		s = z**F(3,4)
+		self.assertEqual(type(s),pt)
+		self.assertEqual(s.integrate('z'),F(4,7)*z**F(7,4))
+		self.assertEqual(type(s.integrate('z')),polynomial(rational,monomial(rational))())
+
 class t_integrate_test_case(_ut.TestCase):
 	"""Test case for the time integration functionality.
 
@@ -609,6 +634,7 @@ class t_integrate_test_case(_ut.TestCase):
 		st = s.t_integrate()
 		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
 		self.assertEqual(str(st),'-1/6*z*1/[(2*\\nu_{x}-\\nu_{y})]*cos(4*x-2*y)')
+
 
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.
@@ -652,6 +678,7 @@ def run_test_suite():
 	suite.addTest(poisson_series_test_case())
 	suite.addTest(converters_test_case())
 	suite.addTest(serialization_test_case())
+	suite.addTest(integrate_test_case())
 	suite.addTest(t_integrate_test_case())
 	suite.addTest(truncate_degree_test_case())
 	suite.addTest(doctests_test_case())
