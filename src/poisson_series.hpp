@@ -120,7 +120,8 @@ struct has_t_integrate: detail::sfinae_types
 // - once the above is done, remeber to fix the rebind alias.
 // - once we have a selectable key type, we must take care that in a few places we assume that the value type
 //   of the key is a C++ integral, but this might not be the case any more (e.g., in the sin/cos implementation
-//   we will need a safe cast).
+//   we will need a safe cast) -> also in integrate(), there are a few occurrences of this (e.g., == 0 should
+//   become math::is_zero() etc.). Will also need the is_integrable check on the key type.
 template <typename Cf>
 class poisson_series:
 	public power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,

@@ -474,6 +474,15 @@ class divisor
 		 */
 		std::size_t hash() const
 		{
+			// NOTE: here we are using a simple sum to compute the hash of a vector of vectors. Indeed,
+			// we need some add/multiply like operation in order to make sure that two divisors
+			// with the same elements stored in different order hash to the same thing. This seems
+			// to be ok, according to this,
+			// http://stackoverflow.com/questions/18021643/hashing-a-set-of-integers-in-an-order-independent-way,
+			// as the hash of each subvector should be rather good (it comes from boost hash combine).
+			// XOR is also commutative and might be used (see link above).
+			// If problem arises, we can consider muliplying the hash of each subvector by a prime
+			// (similar to Kronecker substitution).
 			std::size_t retval = 0u;
 			p_type_hasher hasher;
 			const auto it_f = m_container.end();
