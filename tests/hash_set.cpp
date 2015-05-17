@@ -96,8 +96,7 @@ static inline hash_set<T> make_hash_set()
 {
 	struct lc_func_type
 	{
-		typedef T result_type;
-		result_type operator()(int n) const
+		T operator()(int n) const
 		{
 			return boost::lexical_cast<T>(n);
 		}
