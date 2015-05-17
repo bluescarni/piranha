@@ -1607,12 +1607,12 @@ class series: detail::series_tag, series_operators
 		using partial_type_1 = decltype(std::declval<const cf_diff_type<cf_t<Series>> &>() * std::declval<const Series &>() +
 				std::declval<const cf_t<Series> &>() * std::declval<const key_diff_type<key_t<Series>> &>() * std::declval<const Series &>());
 		// NOTE: in addition to check that we cannot use the optimised algorithm, we must also check that the resulting type
-		// is constructible from int (for the accumulation of retval), that it is addable and that the add type is itself.
+		// is constructible from int (for the accumulation of retval) and that it is addable in-place.
 		template <typename Series>
 		struct partial_type_<Series,typename std::enable_if<!PIRANHA_SERIES_PARTIAL_ENABLER &&
 			std::is_constructible<partial_type_1<Series>,int>::value &&
-			std::is_same<decltype(std::declval<const partial_type_1<Series> &>()
-			+ std::declval<const partial_type_1<Series> &>()),partial_type_1<Series>>::value>::type>
+			is_addable_in_place<decltype(std::declval<const partial_type_1<Series> &>()
+			+ std::declval<const partial_type_1<Series> &>())>::value>::type>
 		{
 			using type = partial_type_1<Series>;
 			static const int algo = 1;
@@ -1665,7 +1665,7 @@ class series: detail::series_tag, series_operators
 				tmp1.m_symbol_set = this->m_symbol_set;
 				tmp1.insert(term_type(cf_type(1),p_key.second));
 				// Assemble everything into the return value.
-				retval = retval + (math::partial(it->m_cf,name) * tmp0 + it->m_cf * p_key.first * tmp1);
+				retval += math::partial(it->m_cf,name) * tmp0 + it->m_cf * p_key.first * tmp1;
 			}
 			return retval;
 		}
