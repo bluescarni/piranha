@@ -681,7 +681,7 @@ class divisor
 		 * \note
 		 * This method is available only if \p U satisfies the following requirements:
 		 * - it can be used in piranha::symbol_set::positions_map,
-		 * - it support the arithmetic operations necessary to construct the return type.
+		 * - it supports the arithmetic operations necessary to construct the return type.
 		 *
 		 * The return value will be built via multiplications of the \f$ a_{i,j} \f$ by the values
 		 * in the input map, additions, divisions and exponentiations via piranha::math::pow().
