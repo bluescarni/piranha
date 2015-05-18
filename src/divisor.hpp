@@ -84,6 +84,8 @@ namespace piranha
  *
  * This class supports serialization.
  */
+// NOTE: if we ever make this completely generic on T, remember there are some hard-coded assumptions. E.g.,
+// is_zero must be available in split().
 template <typename T>
 class divisor
 {
@@ -871,6 +873,43 @@ class divisor
 				piranha_throw(std::invalid_argument,"unable to compute the derivative with respect to a divisor");
 			}
 			return std::make_pair(0,*this);
+		}
+		/// Split divisor.
+		/**
+		 * This method will split \p this into two parts: the first one will contain the terms of the divisor
+		 * whose \f$ a_{i,j} \f$ values for the only symbol in \p p are not zero, the second one the terms whose
+		 * \f$ a_{i,j} \f$  values for the only symbol in \p p are zero.
+		 *
+		 * @param[in] p a piranha::symbol_set::positions containing exactly one element.
+		 * @param[in] args reference set of piranha::symbol.
+		 *
+		 * @return the original divisor split into two parts.
+		 *
+		 * @throws std::invalid_argument if \p args is not compatible with \p this or \p p, or \p p
+		 * does not contain exactly one element.
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::math::is_zero(),
+		 * - insert().
+		 */
+		std::pair<divisor,divisor> split(const symbol_set::positions &p, const symbol_set &args) const
+		{
+			if (unlikely(!is_compatible(args))) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			if (unlikely(p.size() != 1u || p.back() >= args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of symbol_set::positions");
+			}
+			using s_type = typename v_type::size_type;
+			std::pair<divisor,divisor> retval;
+			const auto it_f = m_container.end();
+			for (auto it = m_container.begin(); it != it_f; ++it) {
+				if (math::is_zero(it->v[static_cast<s_type>(p.back())])) {
+					retval.second.m_container.insert(*it);
+				} else {
+					retval.first.m_container.insert(*it);
+				}
+			}
+			return retval;
 		}
 	private:
 		container_type m_container;

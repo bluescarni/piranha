@@ -1004,3 +1004,73 @@ BOOST_AUTO_TEST_CASE(divisor_partial_test)
 {
 	boost::mpl::for_each<value_types>(partial_tester());
 }
+
+struct split_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using d_type = divisor<T>;
+		using positions = symbol_set::positions;
+		auto s_to_pos = [](const symbol_set &v, const symbol &s) {
+			symbol_set tmp{s};
+			return positions(v,tmp);
+		};
+		symbol_set vs;
+		d_type k1;
+		vs.add("x");
+		auto s1 = k1.split(s_to_pos(vs,symbol("x")),vs);
+		BOOST_CHECK_EQUAL(s1.first.size(),0u);
+		BOOST_CHECK_EQUAL(s1.second.size(),0u);
+		BOOST_CHECK_THROW(k1.split(s_to_pos(vs,symbol("y")),vs),std::invalid_argument);
+		T exponent(1);
+		std::vector<T> tmp{T(1)};
+		k1.insert(tmp.begin(),tmp.end(),exponent);
+		s1 = k1.split(s_to_pos(vs,symbol("x")),vs);
+		BOOST_CHECK_EQUAL(s1.first.size(),1u);
+		BOOST_CHECK_EQUAL(s1.second.size(),0u);
+		BOOST_CHECK(s1.first == k1);
+		k1 = d_type{};
+		tmp = std::vector<T>{T(1),T(0)};
+		k1.insert(tmp.begin(),tmp.end(),exponent);
+		tmp = std::vector<T>{T(0),T(1)};
+		k1.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK_THROW(k1.split(s_to_pos(vs,symbol("y")),vs),std::invalid_argument);
+		vs.add("y");
+		BOOST_CHECK_THROW(k1.split(s_to_pos(vs,symbol("z")),vs),std::invalid_argument);
+		s1 = k1.split(s_to_pos(vs,symbol("x")),vs);
+		BOOST_CHECK_EQUAL(s1.first.size(),1u);
+		BOOST_CHECK_EQUAL(s1.second.size(),1u);
+		auto k2 = d_type{};
+		tmp = std::vector<T>{T(1),T(0)};
+		k2.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(s1.first == k2);
+		k2 = d_type{};
+		tmp = std::vector<T>{T(0),T(1)};
+		k2.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(s1.second == k2);
+		s1 = k1.split(s_to_pos(vs,symbol("y")),vs);
+		BOOST_CHECK_EQUAL(s1.first.size(),1u);
+		BOOST_CHECK_EQUAL(s1.second.size(),1u);
+		k2 = d_type{};
+		tmp = std::vector<T>{T(0),T(1)};
+		k2.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(s1.first == k2);
+		k2 = d_type{};
+		tmp = std::vector<T>{T(1),T(0)};
+		k2.insert(tmp.begin(),tmp.end(),exponent);
+		BOOST_CHECK(s1.second == k2);
+		// Try bogus position referring to another set.
+		symbol_set vs2;
+		vs2.add("x");
+		vs2.add("y");
+		vs2.add("z");
+		positions pos2(vs2,symbol_set{symbol("z")});
+		BOOST_CHECK_THROW(k1.split(pos2,vs),std::invalid_argument);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_split_test)
+{
+	boost::mpl::for_each<value_types>(split_tester());
+}
