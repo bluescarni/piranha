@@ -889,7 +889,7 @@ class divisor
 		 * does not contain exactly one element.
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::math::is_zero(),
-		 * - insert().
+		 * - piranha::hash_set::insert().
 		 */
 		std::pair<divisor,divisor> split(const symbol_set::positions &p, const symbol_set &args) const
 		{
@@ -903,6 +903,7 @@ class divisor
 			std::pair<divisor,divisor> retval;
 			const auto it_f = m_container.end();
 			for (auto it = m_container.begin(); it != it_f; ++it) {
+				// NOTE: static cast is safe here, as we checked for compatibility.
 				if (math::is_zero(it->v[static_cast<s_type>(p.back())])) {
 					retval.second.m_container.insert(*it);
 				} else {
