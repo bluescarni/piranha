@@ -557,7 +557,7 @@ class kronecker_monomial
 			if (n_linear != 1u) {
 				piranha_throw(std::invalid_argument,"monomial is not linear");
 			}
-			return args[candidate].get_name();
+			return args[static_cast<decltype(args.size())>(candidate)].get_name();
 		}
 		/// Exponentiation.
 		/**
