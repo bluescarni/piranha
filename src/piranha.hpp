@@ -142,7 +142,8 @@
  * - the involved object is/are series,
  * - they support the needed methods (e.g., subs(), degree(), etc.).
  * This way if we need, e.g., a custom subs() in a particular series type, we can implement the custom method (i.e., without using the toolbox) but still ending
- * up with a correct math::subs() specialisation without having to re-code it for the particular series type.
+ * up with a correct math::subs() specialisation without having to re-code it for the particular series type. We need to check that we always use
+ * math::* functors instead of member functions in order to avoid picking the base implementation.
  * \todo related to the above, beautification of the enabling conditions for impl functors - in the same fashion as we do for methods and functions.
  * \todo we probably need a way to handle the excessive growth of ipow caches. Just keep the most recently used entries up to a certain
  * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items are stored, etc.
@@ -152,6 +153,8 @@
  * \todo on-the-fly compression of series archives?
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
  * \todo truncation tests based on the email discussion with ondrej.
+ * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
+ * \todo get rid of tracing.
  */
 namespace piranha
 {
