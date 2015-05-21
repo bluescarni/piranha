@@ -76,17 +76,6 @@ struct is_divisor_series<divisor_series<Cf,Key>>
 	static const bool value = true;
 };
 
-// Detect the presence of the t_integrate method. This needs to go in the future, it is repeated
-// in pyranha.
-template <typename T>
-struct has_t_integrate: detail::sfinae_types
-{
-	template <typename T1>
-	static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
-	static no test(...);
-	static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
-};
-
 }
 
 /// Poisson series class.
