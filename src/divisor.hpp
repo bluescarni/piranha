@@ -34,6 +34,7 @@
 #include <utility>
 
 #include "config.hpp"
+#include "detail/divisor_series_fwd.hpp"
 #include "detail/gcd.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "detail/series_fwd.hpp"
@@ -91,6 +92,9 @@ class divisor
 {
 		static_assert((std::is_signed<T>::value && std::is_integral<T>::value) || detail::is_mp_integer<T>::value,
 			"The value type must be a signed integer or an mp_integer");
+		// Make friend with the divisor series.
+		template <typename, typename>
+		friend class divisor_series;
 	public:
 		/// Alias for \p T.
 		using value_type = T;
