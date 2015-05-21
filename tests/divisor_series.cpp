@@ -23,17 +23,22 @@
 #define BOOST_TEST_MODULE divisor_series_test
 #include <boost/test/unit_test.hpp>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <limits>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
 #include "../src/divisor.hpp"
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
 
@@ -48,8 +53,7 @@ struct test_00_tester
 	{
 		using s_type = divisor_series<T,divisor<short>>;
 		s_type s0{3};
-		// Just test some math operations and common functionalities. The class does
-		// not support much.
+		// Just test some math operations and common functionalities.
 		BOOST_CHECK_EQUAL(s0 + s0,6);
 		BOOST_CHECK_EQUAL(s0 * s0,9);
 		BOOST_CHECK_EQUAL(s0 * 4,12);
@@ -79,4 +83,166 @@ BOOST_AUTO_TEST_CASE(divisor_series_test_00)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(test_00_tester());
+}
+
+struct from_polynomial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		// Run these tests only with the types on which we have full control on the printed output and support
+		// division.
+		if (!std::is_same<T,rational>::value && !std::is_base_of<detail::polynomial_tag,T>::value) {
+			return;
+		}
+		using s_type = divisor_series<T,divisor<short>>;
+		{
+		using p_type0 = polynomial<integer,monomial<short>>;
+		p_type0 x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x)),"1/[(x)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z)),"1/[(x+y+z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z-z)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+2*y+3*z)),"1/[(x+2*y+3*z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x+y)),"-1/[(3*x-y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x-y)),"-1/[(3*x+y)]");
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*0),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x-x),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y+z),std::invalid_argument);
+		}
+		{
+		using p_type0 = polynomial<rational,k_monomial>;
+		p_type0 x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x)),"1/[(x)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z)),"1/[(x+y+z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z-z)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+2*y+3*z)),"1/[(x+2*y+3*z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x+y)),"-1/[(3*x-y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x-y)),"-1/[(3*x+y)]");
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*0),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x-x),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y+z),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x/3+y+z),std::invalid_argument);
+		}
+		{
+		using p_type0 = polynomial<rational,monomial<rational>>;
+		p_type0 x{"x"}, y{"y"}, z{"z"};
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x)),"1/[(x)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z)),"1/[(x+y+z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+y+z-z)),"1/[(x+y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(x+2*y+3*z)),"1/[(x+2*y+3*z)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x+y)),"-1/[(3*x-y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+		BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(s_type::from_polynomial(-3*x-y)),"-1/[(3*x+y)]");
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*0),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x-x),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x*y+z),std::invalid_argument);
+		BOOST_CHECK_THROW(s_type::from_polynomial(x/3+y+z),std::invalid_argument);
+		// Out of bounds for short.
+		BOOST_CHECK_THROW(s_type::from_polynomial((std::numeric_limits<short>::max()+1_q)*x+y),std::invalid_argument);
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(divisor_series_from_polynomial_test)
+{
+	boost::mpl::for_each<cf_types>(from_polynomial_tester());
+	using s_type = divisor_series<int,divisor<short>>;
+	using p_type = polynomial<rational,monomial<rational>>;
+	BOOST_CHECK((std::is_same<decltype(s_type::from_polynomial(p_type{})),divisor_series<integer,divisor<short>>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
+{
+	// A couple of general tests to start.
+	using p_type = polynomial<rational,monomial<int>>;
+	using s_type = divisor_series<p_type,divisor<short>>;
+	{
+	BOOST_CHECK_EQUAL(s_type{}.partial("x"),0);
+	s_type s0{3};
+	BOOST_CHECK_EQUAL(s0.partial("x"),0);
+	s_type x{"x"};
+	BOOST_CHECK_EQUAL((x * 3).partial("x"),3);
+	BOOST_CHECK_EQUAL((x * 3).partial("y"),0);
+	using ps_type = poisson_series<p_type>;
+	ps_type a{"a"}, b{"b"}, c{"c"};
+	auto p1 = 3*a*b*math::cos(3*c);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate()),"a*b*1/[(\\nu_{c})]*sin(3*c)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("a")),"b*1/[(\\nu_{c})]*sin(3*c)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("b")),"a*1/[(\\nu_{c})]*sin(3*c)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("c")),"3*a*b*1/[(\\nu_{c})]*cos(3*c)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("\\nu_{c}")),"-a*b*1/[(\\nu_{c})**2]*sin(3*c)");
+	}
+	// Tests using from_polynomial().
+	p_type x{"x"}, y{"y"}, z{"z"};
+	// First with variables only in the divisors.
+	auto s0 = s_type::from_polynomial(x+y-2*z);
+	BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
+	BOOST_CHECK_EQUAL(s0.partial("z"),2*s0*s0);
+	auto s1 = s0 * s0;
+	BOOST_CHECK_EQUAL(s1.partial("x"),-2*s0*s1);
+	BOOST_CHECK_EQUAL(s1.partial("z"),4*s0*s1);
+	auto s2 = s_type::from_polynomial(x-y);
+	auto s3 = s0*s2;
+	BOOST_CHECK_EQUAL(s3.partial("x"),-s0*s0*s2-s0*s2*s2);
+	auto s4 = s_type::from_polynomial(x);
+	auto s5 = s0*s2*s4;
+	BOOST_CHECK_EQUAL(s5.partial("x"),-s0*s0*s2*s4-s0*s2*s2*s4-s0*s2*s4*s4);
+	BOOST_CHECK_EQUAL(s5.partial("z"),2*s0*s0*s2*s4);
+	auto s6 = s0*s0*s2*s4;
+	BOOST_CHECK_EQUAL(s6.partial("x"),-2*s0*s0*s0*s2*s4-s0*s0*s2*s2*s4-s0*s0*s2*s4*s4);
+	// Variables only in the coefficients.
+	auto s7 = s2*s4 * (x*x/5+y-3*z);
+	BOOST_CHECK_EQUAL(s7.partial("z"),s2*s4*-3);
+	auto s8 = s2*s4 * (x*x/5+y-3*z) + z*s2*s4*y;
+	BOOST_CHECK_EQUAL(s8.partial("z"),s2*s4*-3+s2*s4*y);
+	BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)).partial("x"),2*x*s_type::from_polynomial(z));
+	// This excercises the presense of an additional divisor variable with a zero multiplier.
+	BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)+s4-s4).partial("x"),2*x*s_type::from_polynomial(z));
+	// Variables both in the coefficients and in the divisors.
+	auto s9 = x * s2;
+	BOOST_CHECK_EQUAL(s9.partial("x"),s2-x*s2*s2);
+	auto s10 = x*s2*s4;
+	BOOST_CHECK_EQUAL(s10.partial("x"),s2*s4+x*(-s2*s2*s4-s2*s4*s4));
+	auto s11 = s_type::from_polynomial(-3*x-y);
+	auto s12 = s_type::from_polynomial(z);
+	auto s13 = x*s11*s4+x*y*z*s2*s2*s2*s12;
+	BOOST_CHECK_EQUAL(s13.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
+	auto s15 = x*s11*s4+x*y*z*s2*s2*s2*s12+s4*s12;
+	BOOST_CHECK_EQUAL(s15.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12)-s4*s4*s12);
+	// Overflow in an exponent.
+	s_type s14;
+	symbol_set ss;
+	ss.add("x");
+	s14.set_symbol_set(ss);
+	s_type::term_type::key_type k0;
+	std::vector<short> vs;
+	vs.push_back(1);
+	short expo = std::numeric_limits<short>::max();
+	k0.insert(vs.begin(),vs.end(),expo);
+	s14.insert(s_type::term_type(s_type::term_type::cf_type(1),k0));
+	BOOST_CHECK_THROW(s14.partial("x"),std::overflow_error);
+	auto s16 = s_type::from_polynomial(x-4*y);
+	auto s17 = s2*s2*s2*s2*s2*s16*s16*s16*s12;
+	BOOST_CHECK_EQUAL(s17.partial("x"),-5*s2*s2*s2*s2*s2*s2*s16*s16*s16*s12-3*s2*s2*s2*s2*s2*s16*s16*s16*s16*s12);
+	// Excercise the chain rule.
+	auto s18 = x*x*3/4_q*y*z*z;
+	auto s19 = -y*y*x*z*z;
+	auto s20 = y*x*x*4;
+	auto s21 = s18*s17+s19*s2*s11*s12+s20*s16*s2*s3;
+	BOOST_CHECK_EQUAL(s21.partial("x"),s18.partial("x")*s17+s18*s17.partial("x")+s19.partial("x")*s2*s11*s12+s19*(s2*s11*s12).partial("x")
+		+s20.partial("x")*s16*s2*s3+s20*(s16*s2*s3).partial("x"));
+	BOOST_CHECK_EQUAL(s21.partial("y"),s18.partial("y")*s17+s18*s17.partial("y")+s19.partial("y")*s2*s11*s12+s19*(s2*s11*s12).partial("y")
+		+s20.partial("y")*s16*s2*s3+s20*(s16*s2*s3).partial("y"));
+	BOOST_CHECK_EQUAL(s21.partial("z"),s18.partial("z")*s17+s18*s17.partial("z")+s19.partial("z")*s2*s11*s12+s19*(s2*s11*s12).partial("z")
+		+s20.partial("z")*s16*s2*s3+s20*(s16*s2*s3).partial("z"));
+	BOOST_CHECK_EQUAL(s21.partial("v"),0);
+	BOOST_CHECK_EQUAL(s_type{1}.partial("x"),0);
 }
