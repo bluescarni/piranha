@@ -148,6 +148,8 @@ struct constructor_tester
 			BOOST_CHECK((std::is_constructible<p_type,std::string>::value));
 			BOOST_CHECK((std::is_constructible<p_type2,p_type1>::value));
 			BOOST_CHECK((!std::is_constructible<p_type,symbol>::value));
+			// A check on the linarg detector.
+			BOOST_CHECK(detail::key_has_linarg<monomial<Expo>>::value);
 		}
 	};
 	template <typename Cf>

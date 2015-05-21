@@ -86,10 +86,6 @@ namespace piranha
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-/*
- * \todo the linear argument method should not probably be conditionally enabled, as we rely on it for the
- * polynomial to poisson series stuff. Its requirements should become class requirements.
- */
 template <typename T, typename S = std::integral_constant<std::size_t,0u>>
 class monomial: public array_key<T,monomial<T,S>,S>
 {

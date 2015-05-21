@@ -44,8 +44,10 @@
 
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
+#include "detail/sfinae_types.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "ipow_substitutable_series.hpp"
@@ -98,6 +100,16 @@ struct is_polynomial_key<monomial<T,U>>
 	static const bool value = true;
 };
 
+// Implementation detail to check if the monomial key supports the linear_argument() method.
+template <typename Key>
+struct key_has_linarg: detail::sfinae_types
+{
+	template <typename U>
+	static auto test(const U &u) -> decltype(u.linear_argument(std::declval<const symbol_set &>()));
+	static no test(...);
+	static const bool value = std::is_same<std::string,decltype(test(std::declval<Key>()))>::value;
+};
+
 }
 
 /// Polynomial class.
@@ -134,11 +146,15 @@ class polynomial:
 		// Check the key.
 		PIRANHA_TT_CHECK(detail::is_polynomial_key,Key);
 		// Make friend with debug class.
-		template <typename T>
+		template <typename>
 		friend class debug_access;
 		// Make friend with Poisson series.
-		template <typename T>
+		template <typename>
 		friend class poisson_series;
+		// Make friend with divisor series.
+		template <typename, typename>
+		friend class divisor_series;
+		// The base class.
 		using base = power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
 			polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>,polynomial<Cf,Key>>>,polynomial<Cf,Key>>;
 		template <typename Str>
@@ -150,6 +166,7 @@ class polynomial:
 			// Construct and insert the term.
 			this->insert(term_type(Cf(1),typename term_type::key_type{1}));
 		}
+		template <typename T = Key, typename std::enable_if<detail::key_has_linarg<T>::value,int>::type = 0>
 		std::map<std::string,integer> integral_combination() const
 		{
 			try {
@@ -163,6 +180,11 @@ class polynomial:
 			} catch (const std::invalid_argument &) {
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
+		}
+		template <typename T = Key, typename std::enable_if<!detail::key_has_linarg<T>::value,int>::type = 0>
+		std::map<std::string,integer> integral_combination() const
+		{
+			piranha_throw(std::invalid_argument,"the monomial type does not support the extraction of the linear argument");
 		}
 		// Integration utils.
 		// Empty for SFINAE.
