@@ -75,6 +75,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/type_in_tuple.hpp
 	detail/gcd.hpp
 	detail/vector_merge_args.hpp
+	detail/divisor_series_fwd.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers
