@@ -166,7 +166,7 @@ class polynomial:
 			// Construct and insert the term.
 			this->insert(term_type(Cf(1),typename term_type::key_type{1}));
 		}
-		template <typename T = Key, typename std::enable_if<detail::key_has_linarg<T>::value,int>::type = 0>
+		template <typename T = Key, typename std::enable_if<detail::key_has_linarg<T>::value && has_safe_cast<integer,Cf>::value,int>::type = 0>
 		std::map<std::string,integer> integral_combination() const
 		{
 			try {
@@ -181,10 +181,10 @@ class polynomial:
 				piranha_throw(std::invalid_argument,"polynomial is not an integral linear combination");
 			}
 		}
-		template <typename T = Key, typename std::enable_if<!detail::key_has_linarg<T>::value,int>::type = 0>
+		template <typename T = Key, typename std::enable_if<!detail::key_has_linarg<T>::value || !has_safe_cast<integer,Cf>::value,int>::type = 0>
 		std::map<std::string,integer> integral_combination() const
 		{
-			piranha_throw(std::invalid_argument,"the monomial type does not support the extraction of the linear argument");
+			piranha_throw(std::invalid_argument,"the polynomial type does not support the extraction of a linear combination");
 		}
 		// Integration utils.
 		// Empty for SFINAE.

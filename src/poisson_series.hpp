@@ -119,17 +119,6 @@ class poisson_series:
 		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
 		// TMP for enabling sin and cos overrides.
-		// Detect if T's coefficient is a polynomial whose coefficient has integral cast.
-		template <typename T, typename = void>
-		struct cf_poly_has_icast
-		{
-			static const bool value = false;
-		};
-		template <typename T>
-		struct cf_poly_has_icast<T,typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
-		{
-			static const bool value = has_safe_cast<integer,typename T::term_type::cf_type::term_type::cf_type>::value;
-		};
 		// Detect if T's coefficient has suitable sin/cos implementations.
 		template <typename T, typename = void>
 		struct cf_has_sin_cos
@@ -146,11 +135,11 @@ class poisson_series:
 		};
 		template <typename T>
 		using sin_cos_enabler = typename std::enable_if<
-			cf_poly_has_icast<T>::value || cf_has_sin_cos<T>::value,
+			std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value || cf_has_sin_cos<T>::value,
 			int>::type;
 		// Sin/cos overrides implementation.
 		// If cf is a suitable polynomial, attempt the symbolic sin/cos with the integral linear combination.
-		template <bool IsCos, typename T, typename std::enable_if<cf_poly_has_icast<T>::value,int>::type = 0>
+		template <bool IsCos, typename T, typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value,int>::type = 0>
 		poisson_series sin_cos_impl() const
 		{
 			// Do something only if the series is equivalent to a polynomial.
@@ -198,7 +187,7 @@ class poisson_series:
 			return sin_cos_cf_impl<IsCos,T>();
 		}
 		// If cf is not a suitable poly, go for the standard implementation.
-		template <bool IsCos, typename T, typename std::enable_if<!cf_poly_has_icast<T>::value,int>::type = 0>
+		template <bool IsCos, typename T, typename std::enable_if<!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value,int>::type = 0>
 		poisson_series sin_cos_impl() const
 		{
 			return sin_cos_cf_impl<IsCos,T>();
@@ -489,8 +478,7 @@ class poisson_series:
 		/**
 		 * \note
 		 * This template method is enabled only if either:
-		 * - the coefficient type is a piranha::polynomial whose coefficient type supports
-		 *   piranha::safe_cast(), or
+		 * - the coefficient type is a piranha::polynomial, or
 		 * - the coefficient type has a math::sin() implementation whose return type is the coefficient type.
 		 *
 		 * This method will override the default math::sin() implementation in case the coefficient type is an instance of
@@ -519,13 +507,7 @@ class poisson_series:
 		}
 		/// Override cosine implementation.
 		/**
-		 * \note
-		 * This template method is enabled only if either:
-		 * - the coefficient type is a piranha::polynomial whose coefficient type supports
-		 *   piranha::safe_cast() to piranha::integer, or
-		 * - the coefficient type has a math::cos() implementation whose return type is the coefficient type.
-		 *
-		 * The procedure is the same as explained in sin().
+		 * This method operates in the the same way as explained in sin().
 		 * 
 		 * @return cosine of \p this.
 		 * 
