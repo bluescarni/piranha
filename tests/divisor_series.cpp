@@ -291,4 +291,24 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 	}
 	// Test with various exponent types.
 	boost::mpl::for_each<expo_types>(partial_tester());
+	// Test custom derivatives.
+	p_type x{"x"}, y{"y"};
+	s_type::register_custom_derivative("x",[x](const s_type &s) -> s_type {
+		return s.partial("x") + math::partial(s,"y") * 2 * x;
+	});
+	BOOST_CHECK_EQUAL(math::partial(s_type::from_polynomial(x+y),"x"),(-1-2*x)*s_type::from_polynomial(x+y).pow(2));
+	s_type::register_custom_derivative("x",[y](const s_type &s) -> s_type {
+		return s.partial("x") + math::partial(s,"y") * math::pow(y,-1) / 2;
+	});
+	BOOST_CHECK_EQUAL(math::partial(s_type::from_polynomial(x+2*y),"x"),(-1-1*y.pow(-1))*s_type::from_polynomial(x+2*y).pow(2));
+	s_type::register_custom_derivative("x",[y](const s_type &s) -> s_type {
+		return s.partial("x") + math::partial(s,"y") * s_type::from_polynomial(y) / 2;
+	});
+	BOOST_CHECK_EQUAL(math::partial(s_type::from_polynomial(x+y),"x"),-s_type::from_polynomial(x+y).pow(2)
+		-1/2_q*s_type::from_polynomial(x+y).pow(2)*s_type::from_polynomial(y));
+	// Implicit variable dependency both in the poly and in the divisor.
+	s_type::register_custom_derivative("x",[x](const s_type &s) -> s_type {
+		return s.partial("x") + math::partial(s,"y") * 2 * x;
+	});
+	BOOST_CHECK_EQUAL(math::partial(y*s_type::from_polynomial(x+y),"x"),2*x*s_type::from_polynomial(x+y)-y*(2*x+1)*s_type::from_polynomial(x+y).pow(2));
 }
