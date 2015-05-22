@@ -1670,8 +1670,12 @@ class series: detail::series_tag, series_operators
 			return retval;
 		}
 		// Custom derivatives boilerplate.
+		// Partial derivative of a series type, as defined by math::partial(). Note that here we cannot use
+		// partial_type as Derived series might override the partial() method with their own implementation.
 		template <typename Series>
-		using cp_map_type = std::unordered_map<std::string,std::function<partial_type<Series>(const Derived &)>>;
+		using series_p_type = decltype(math::partial(std::declval<const Series &>(),std::string{}));
+		template <typename Series>
+		using cp_map_type = std::unordered_map<std::string,std::function<series_p_type<Series>(const Derived &)>>;
 		// NOTE: here the initialisation of the static variable inside the body of the function
 		// is guaranteed to be thread-safe. It should not matter too much as we always protect the access to it.
 		template <typename Series = Derived>
@@ -1681,7 +1685,7 @@ class series: detail::series_tag, series_operators
 			return cp_map;
 		}
 		template <typename F, typename Series>
-		using custom_partial_enabler = typename std::enable_if<std::is_constructible<std::function<partial_type<Series>(const Derived &)>,F>::value,int>::type;
+		using custom_partial_enabler = typename std::enable_if<std::is_constructible<std::function<series_p_type<Series>(const Derived &)>,F>::value,int>::type;
 		// Serialization support.
 		friend class boost::serialization::access;
 		template <class Archive>
@@ -2271,7 +2275,7 @@ class series: detail::series_tag, series_operators
 		template <typename F, typename Series = Derived, custom_partial_enabler<F,Series> = 0>
 		static void register_custom_derivative(const std::string &name, F func)
 		{
-			using p_type = decltype(std::declval<const Derived &>().partial(name));
+			using p_type = series_p_type<Derived>;
 			using f_type = std::function<p_type(const Derived &)>;
 			std::lock_guard<std::mutex> lock(s_cp_mutex);
 			get_cp_map()[name] = f_type(func);
@@ -2961,12 +2965,28 @@ struct cos_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for the partial() specialisation for series.
+template <typename Series>
+using series_partial_enabler = typename std::enable_if<is_series<Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::partial() functor for series types.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series.
+ * This specialisation is activated when \p Series is an instance of piranha::series with a \p partial() method
+ * with the same signature as piranha::series::partial().
  */
 template <typename Series>
-struct partial_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
+struct partial_impl<Series,detail::series_partial_enabler<Series>>
 {
 	/// Call operator.
 	/**
