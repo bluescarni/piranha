@@ -41,10 +41,12 @@
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/real.hpp"
+#include "../src/type_traits.hpp"
 
 using namespace piranha;
 
-typedef boost::mpl::vector<double,integer,real,rational,polynomial<rational,monomial<int>>> cf_types;
+using cf_types = boost::mpl::vector<double,integer,real,rational,polynomial<rational,monomial<int>>>;
+using expo_types = boost::mpl::vector<short,int,long,integer>;
 
 struct test_00_tester
 {
@@ -147,6 +149,13 @@ struct from_polynomial_tester
 		BOOST_CHECK_THROW(s_type::from_polynomial(x/3+y+z),std::invalid_argument);
 		// Out of bounds for short.
 		BOOST_CHECK_THROW(s_type::from_polynomial((std::numeric_limits<short>::max()+1_q)*x+y),std::invalid_argument);
+		// Check, if appropriate, construction from outside the bounds defined in divisor.
+		if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+			BOOST_CHECK_THROW(s_type::from_polynomial((detail::safe_abs_sint<short>::value+1_q)*x+y),std::invalid_argument);
+		}
+		if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+			BOOST_CHECK_THROW(s_type::from_polynomial((-detail::safe_abs_sint<short>::value-1_q)*x+y),std::invalid_argument);
+		}
 		}
 	}
 };
@@ -158,6 +167,106 @@ BOOST_AUTO_TEST_CASE(divisor_series_from_polynomial_test)
 	using p_type = polynomial<rational,monomial<rational>>;
 	BOOST_CHECK((std::is_same<decltype(s_type::from_polynomial(p_type{})),divisor_series<integer,divisor<short>>>::value));
 }
+
+struct partial_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		using p_type = polynomial<rational,monomial<int>>;
+		using s_type = divisor_series<p_type,divisor<T>>;
+		// Tests using from_polynomial().
+		p_type x{"x"}, y{"y"}, z{"z"};
+		// First with variables only in the divisors.
+		auto s0 = s_type::from_polynomial(x+y-2*z);
+		BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
+		BOOST_CHECK_EQUAL(s0.partial("z"),2*s0*s0);
+		auto s1 = s0 * s0;
+		BOOST_CHECK_EQUAL(s1.partial("x"),-2*s0*s1);
+		BOOST_CHECK_EQUAL(s1.partial("z"),4*s0*s1);
+		auto s2 = s_type::from_polynomial(x-y);
+		auto s3 = s0*s2;
+		BOOST_CHECK_EQUAL(s3.partial("x"),-s0*s0*s2-s0*s2*s2);
+		auto s4 = s_type::from_polynomial(x);
+		auto s5 = s0*s2*s4;
+		BOOST_CHECK_EQUAL(s5.partial("x"),-s0*s0*s2*s4-s0*s2*s2*s4-s0*s2*s4*s4);
+		BOOST_CHECK_EQUAL(s5.partial("z"),2*s0*s0*s2*s4);
+		auto s6 = s0*s0*s2*s4;
+		BOOST_CHECK_EQUAL(s6.partial("x"),-2*s0*s0*s0*s2*s4-s0*s0*s2*s2*s4-s0*s0*s2*s4*s4);
+		// Variables only in the coefficients.
+		auto s7 = s2*s4 * (x*x/5+y-3*z);
+		BOOST_CHECK_EQUAL(s7.partial("z"),s2*s4*-3);
+		auto s8 = s2*s4 * (x*x/5+y-3*z) + z*s2*s4*y;
+		BOOST_CHECK_EQUAL(s8.partial("z"),s2*s4*-3+s2*s4*y);
+		BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)).partial("x"),2*x*s_type::from_polynomial(z));
+		// This excercises the presense of an additional divisor variable with a zero multiplier.
+		BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)+s4-s4).partial("x"),2*x*s_type::from_polynomial(z));
+		// Variables both in the coefficients and in the divisors.
+		auto s9 = x * s2;
+		BOOST_CHECK_EQUAL(s9.partial("x"),s2-x*s2*s2);
+		auto s10 = x*s2*s4;
+		BOOST_CHECK_EQUAL(s10.partial("x"),s2*s4+x*(-s2*s2*s4-s2*s4*s4));
+		auto s11 = s_type::from_polynomial(-3*x-y);
+		auto s12 = s_type::from_polynomial(z);
+		auto s13 = x*s11*s4+x*y*z*s2*s2*s2*s12;
+		BOOST_CHECK_EQUAL(s13.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
+		auto s15 = x*s11*s4+x*y*z*s2*s2*s2*s12+s4*s12;
+		BOOST_CHECK_EQUAL(s15.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12)-s4*s4*s12);
+		// Overflow in an exponent.
+		overflow_check<T>();
+		auto s16 = s_type::from_polynomial(x-4*y);
+		auto s17 = s2*s2*s2*s2*s2*s16*s16*s16*s12;
+		BOOST_CHECK_EQUAL(s17.partial("x"),-5*s2*s2*s2*s2*s2*s2*s16*s16*s16*s12-3*s2*s2*s2*s2*s2*s16*s16*s16*s16*s12);
+		// Excercise the chain rule.
+		auto s18 = x*x*3/4_q*y*z*z;
+		auto s19 = -y*y*x*z*z;
+		auto s20 = y*x*x*4;
+		auto s21 = s18*s17+s19*s2*s11*s12+s20*s16*s2*s3;
+		BOOST_CHECK_EQUAL(s21.partial("x"),s18.partial("x")*s17+s18*s17.partial("x")+s19.partial("x")*s2*s11*s12+s19*(s2*s11*s12).partial("x")
+			+s20.partial("x")*s16*s2*s3+s20*(s16*s2*s3).partial("x"));
+		BOOST_CHECK_EQUAL(s21.partial("y"),s18.partial("y")*s17+s18*s17.partial("y")+s19.partial("y")*s2*s11*s12+s19*(s2*s11*s12).partial("y")
+			+s20.partial("y")*s16*s2*s3+s20*(s16*s2*s3).partial("y"));
+		BOOST_CHECK_EQUAL(s21.partial("z"),s18.partial("z")*s17+s18*s17.partial("z")+s19.partial("z")*s2*s11*s12+s19*(s2*s11*s12).partial("z")
+			+s20.partial("z")*s16*s2*s3+s20*(s16*s2*s3).partial("z"));
+		BOOST_CHECK_EQUAL(s21.partial("v"),0);
+		BOOST_CHECK_EQUAL(s_type{1}.partial("x"),0);
+	}
+	template <typename T, typename U = T, typename std::enable_if<std::is_integral<U>::value,int>::type = 0>
+	static void overflow_check()
+	{
+		using p_type = polynomial<rational,monomial<int>>;
+		using s_type = divisor_series<p_type,divisor<T>>;
+		s_type s14;
+		symbol_set ss;
+		ss.add("x");
+		s14.set_symbol_set(ss);
+		typename s_type::term_type::key_type k0;
+		std::vector<T> vs;
+		vs.push_back(T(1));
+		T expo = std::numeric_limits<T>::max();
+		k0.insert(vs.begin(),vs.end(),expo);
+		s14.insert(typename s_type::term_type(typename s_type::term_type::cf_type(1),k0));
+		BOOST_CHECK_THROW(s14.partial("x"),std::overflow_error);
+		// Skip this overflow test if T is short, as short * short will become int * int and it will
+		// not overflow.
+		if (std::is_same<T,short>::value) {
+			return;
+		}
+		s_type s15;
+		ss.add("y");
+		s15.set_symbol_set(ss);
+		vs[0] = static_cast<T>(std::numeric_limits<T>::max() / T(4));
+		vs.push_back(T(1));
+		expo = static_cast<T>(std::numeric_limits<T>::max() - 1);
+		typename s_type::term_type::key_type k1;
+		k1.insert(vs.begin(),vs.end(),expo);
+		s15.insert(typename s_type::term_type(typename s_type::term_type::cf_type(1),k1));
+		BOOST_CHECK_THROW(s15.partial("x"),std::overflow_error);
+	}
+	template <typename T, typename U = T, typename std::enable_if<!std::is_integral<U>::value,int>::type = 0>
+	static void overflow_check()
+	{}
+};
 
 BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 {
@@ -180,69 +289,6 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("c")),"3*a*b*1/[(\\nu_{c})]*cos(3*c)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate().partial("\\nu_{c}")),"-a*b*1/[(\\nu_{c})**2]*sin(3*c)");
 	}
-	// Tests using from_polynomial().
-	p_type x{"x"}, y{"y"}, z{"z"};
-	// First with variables only in the divisors.
-	auto s0 = s_type::from_polynomial(x+y-2*z);
-	BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
-	BOOST_CHECK_EQUAL(s0.partial("z"),2*s0*s0);
-	auto s1 = s0 * s0;
-	BOOST_CHECK_EQUAL(s1.partial("x"),-2*s0*s1);
-	BOOST_CHECK_EQUAL(s1.partial("z"),4*s0*s1);
-	auto s2 = s_type::from_polynomial(x-y);
-	auto s3 = s0*s2;
-	BOOST_CHECK_EQUAL(s3.partial("x"),-s0*s0*s2-s0*s2*s2);
-	auto s4 = s_type::from_polynomial(x);
-	auto s5 = s0*s2*s4;
-	BOOST_CHECK_EQUAL(s5.partial("x"),-s0*s0*s2*s4-s0*s2*s2*s4-s0*s2*s4*s4);
-	BOOST_CHECK_EQUAL(s5.partial("z"),2*s0*s0*s2*s4);
-	auto s6 = s0*s0*s2*s4;
-	BOOST_CHECK_EQUAL(s6.partial("x"),-2*s0*s0*s0*s2*s4-s0*s0*s2*s2*s4-s0*s0*s2*s4*s4);
-	// Variables only in the coefficients.
-	auto s7 = s2*s4 * (x*x/5+y-3*z);
-	BOOST_CHECK_EQUAL(s7.partial("z"),s2*s4*-3);
-	auto s8 = s2*s4 * (x*x/5+y-3*z) + z*s2*s4*y;
-	BOOST_CHECK_EQUAL(s8.partial("z"),s2*s4*-3+s2*s4*y);
-	BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)).partial("x"),2*x*s_type::from_polynomial(z));
-	// This excercises the presense of an additional divisor variable with a zero multiplier.
-	BOOST_CHECK_EQUAL((x*x*s_type::from_polynomial(z)+s4-s4).partial("x"),2*x*s_type::from_polynomial(z));
-	// Variables both in the coefficients and in the divisors.
-	auto s9 = x * s2;
-	BOOST_CHECK_EQUAL(s9.partial("x"),s2-x*s2*s2);
-	auto s10 = x*s2*s4;
-	BOOST_CHECK_EQUAL(s10.partial("x"),s2*s4+x*(-s2*s2*s4-s2*s4*s4));
-	auto s11 = s_type::from_polynomial(-3*x-y);
-	auto s12 = s_type::from_polynomial(z);
-	auto s13 = x*s11*s4+x*y*z*s2*s2*s2*s12;
-	BOOST_CHECK_EQUAL(s13.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
-	auto s15 = x*s11*s4+x*y*z*s2*s2*s2*s12+s4*s12;
-	BOOST_CHECK_EQUAL(s15.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12)-s4*s4*s12);
-	// Overflow in an exponent.
-	s_type s14;
-	symbol_set ss;
-	ss.add("x");
-	s14.set_symbol_set(ss);
-	s_type::term_type::key_type k0;
-	std::vector<short> vs;
-	vs.push_back(1);
-	short expo = std::numeric_limits<short>::max();
-	k0.insert(vs.begin(),vs.end(),expo);
-	s14.insert(s_type::term_type(s_type::term_type::cf_type(1),k0));
-	BOOST_CHECK_THROW(s14.partial("x"),std::overflow_error);
-	auto s16 = s_type::from_polynomial(x-4*y);
-	auto s17 = s2*s2*s2*s2*s2*s16*s16*s16*s12;
-	BOOST_CHECK_EQUAL(s17.partial("x"),-5*s2*s2*s2*s2*s2*s2*s16*s16*s16*s12-3*s2*s2*s2*s2*s2*s16*s16*s16*s16*s12);
-	// Excercise the chain rule.
-	auto s18 = x*x*3/4_q*y*z*z;
-	auto s19 = -y*y*x*z*z;
-	auto s20 = y*x*x*4;
-	auto s21 = s18*s17+s19*s2*s11*s12+s20*s16*s2*s3;
-	BOOST_CHECK_EQUAL(s21.partial("x"),s18.partial("x")*s17+s18*s17.partial("x")+s19.partial("x")*s2*s11*s12+s19*(s2*s11*s12).partial("x")
-		+s20.partial("x")*s16*s2*s3+s20*(s16*s2*s3).partial("x"));
-	BOOST_CHECK_EQUAL(s21.partial("y"),s18.partial("y")*s17+s18*s17.partial("y")+s19.partial("y")*s2*s11*s12+s19*(s2*s11*s12).partial("y")
-		+s20.partial("y")*s16*s2*s3+s20*(s16*s2*s3).partial("y"));
-	BOOST_CHECK_EQUAL(s21.partial("z"),s18.partial("z")*s17+s18*s17.partial("z")+s19.partial("z")*s2*s11*s12+s19*(s2*s11*s12).partial("z")
-		+s20.partial("z")*s16*s2*s3+s20*(s16*s2*s3).partial("z"));
-	BOOST_CHECK_EQUAL(s21.partial("v"),0);
-	BOOST_CHECK_EQUAL(s_type{1}.partial("x"),0);
+	// Test with various exponent types.
+	boost::mpl::for_each<expo_types>(partial_tester());
 }

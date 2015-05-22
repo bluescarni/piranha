@@ -103,6 +103,124 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		template <typename T, typename U>
 		using fp_type = typename std::enable_if<std::is_base_of<detail::polynomial_tag,T>::value,
 			decltype(std::declval<const U &>() / std::declval<const integer &>())>::type;
+		// Partial utils.
+		// Handle exponent increase in a safe way.
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static void expo_increase(T &e)
+		{
+			if (unlikely(e == std::numeric_limits<T>::max())) {
+				piranha_throw(std::overflow_error,"overflow in the computation of the partial derivative "
+					"of a divisor series");
+			}
+			e = static_cast<T>(e + T(1));
+		}
+		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
+		static void expo_increase(T &e)
+		{
+			++e;
+		}
+		// Safe computation of the integral multiplier.
+		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
+		static auto safe_mult(const T &n, const T &m) -> decltype(n*m)
+		{
+			auto ret(integer(n) * m);
+			ret.negate();
+			return static_cast<decltype(n * m)>(ret);
+		}
+		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
+		static auto safe_mult(const T &n, const T &m) -> decltype(-(n*m))
+		{
+			return -(n*m);
+		}
+		// This is the first stage - the second part of the chain rule for each term.
+		template <typename T>
+		using d_partial_type_0 = decltype(std::declval<const dv_type &>() * std::declval<const dv_type &>() * std::declval<const T &>());
+		template <typename T>
+		using d_partial_type_1 = decltype(std::declval<const T &>() * std::declval<const d_partial_type_0<T> &>());
+		// Requirements on the final type for the first stage.
+		template <typename T>
+		using d_partial_type = typename std::enable_if<std::is_constructible<d_partial_type_1<T>,d_partial_type_0<T>>::value &&
+			std::is_constructible<d_partial_type_1<T>,int>::value &&
+			is_addable_in_place<d_partial_type_1<T>>::value,
+			d_partial_type_1<T>>::type;
+		template <typename T = divisor_series>
+		d_partial_type<T> d_partial_impl(typename T::term_type::key_type &key, const symbol_set::positions &pos) const
+		{
+			using term_type = typename base::term_type;
+			using cf_type = typename term_type::cf_type;
+			using key_type = typename term_type::key_type;
+			piranha_assert(key.size() != 0u);
+			// Construct the first part of the derivative.
+			key_type tmp_div;
+			// Insert all the terms that depend on the variable, apart from the
+			// first one.
+			const auto it_f = key.m_container.end();
+			auto it = key.m_container.begin(), it_b(it);
+			auto first(*it), first_copy(*it);
+			// Size type of the multipliers' vector.
+			using vs_type = decltype(first.v.size());
+			++it;
+			for (; it != it_f; ++it) {
+				tmp_div.m_container.insert(*it);
+			}
+			// Remove the first term from the original key.
+			key.m_container.erase(it_b);
+			// Extract from the first dependent term the aij and the exponent, and multiply+negate them.
+			const auto mult = safe_mult(first.e,first.v[static_cast<vs_type>(pos.back())]);
+			// Increase by one the exponent of the first dep. term.
+			expo_increase(first.e);
+			// Insert the modified first term. Don't move, as we need first below.
+			tmp_div.m_container.insert(first);
+			// Now build the first part of the derivative.
+			divisor_series tmp_ds;
+			tmp_ds.set_symbol_set(this->m_symbol_set);
+			tmp_ds.insert(term_type(cf_type(1),std::move(tmp_div)));
+			// Init the retval.
+			d_partial_type<T> retval(mult * tmp_ds);
+			// Now the second part of the derivative, if appropriate.
+			if (!key.m_container.empty()) {
+				// Build a series with only the first dependent term and unitary coefficient.
+				key_type tmp_div_01;
+				tmp_div_01.m_container.insert(std::move(first_copy));
+				divisor_series tmp_ds_01;
+				tmp_ds_01.set_symbol_set(this->m_symbol_set);
+				tmp_ds_01.insert(term_type(cf_type(1),std::move(tmp_div_01)));
+				// Recurse.
+				retval += tmp_ds_01 * d_partial_impl(key,pos);
+			}
+			return retval;
+		}
+		template <typename T = divisor_series>
+		d_partial_type<T> divisor_partial(const typename T::term_type &term, const symbol_set::positions &pos) const
+		{
+			using term_type = typename base::term_type;
+			// Return zero if the variable is not in the series.
+			if (pos.size() == 0u) {
+				return d_partial_type<T>(0);
+			}
+			// Initial split of the divisor.
+			auto sd = term.m_key.split(pos,this->m_symbol_set);
+			// If the variable is not in the divisor, just return zero.
+			if (sd.first.size() == 0u) {
+				return d_partial_type<T>(0);
+			}
+			// Init the constant part of the derivative: the coefficient and the part of the divisor
+			// which does not depend on the variable.
+			divisor_series tmp_ds;
+			tmp_ds.set_symbol_set(this->m_symbol_set);
+			tmp_ds.insert(term_type(term.m_cf,std::move(sd.second)));
+			// Construct and return the result.
+			return tmp_ds * d_partial_impl(sd.first,pos);
+		}
+		// The final type.
+		template <typename T>
+		using partial_type_ = decltype(
+			math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}) * std::declval<const T &>()
+			+ std::declval<const d_partial_type<T> &>()
+		);
+		template <typename T>
+		using partial_type = typename std::enable_if<std::is_constructible<partial_type_<T>,int>::value &&
+			is_addable_in_place<partial_type_<T>>::value,partial_type_<T>>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -135,7 +253,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		 * coefficient and with the key containing a single divisor built from the input polynomial,
 		 * which must be equivalent to an integral linear combination of symbols with no constant terms.
 		 *
-		 * For example, the input polynomial
+		 * For example, when this method is called from a divisor series with rational coefficients, the input polynomial
 		 * \f[
 		 * x+y
 		 * \f]
@@ -197,6 +315,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 					math::negate(n);
 				}
 				// NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
+				// NOTE: the gcd computation here is safe as we are operating on integers.
 				cd = detail::gcd(cd,n);
 			}
 			// Common denominator could be negative.
@@ -225,109 +344,32 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 			}
 			return retval / cd;
 		}
-		template <typename T>
-		using partial_type_ = decltype(
-			math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}) * std::declval<const T &>()
-			+ std::declval<const dv_type &>() * std::declval<const dv_type &>() * std::declval<const T &>()
-		);
-		template <typename T>
-		using partial_type = typename std::enable_if<std::is_constructible<partial_type_<T>,int>::value &&
-			is_addable_in_place<partial_type_<T>>::value,partial_type_<T>>::type;
-
-		template <typename T>
-		using d_partial_type_ = decltype(std::declval<const dv_type &>() * std::declval<const dv_type &>() * std::declval<const T &>());
-		template <typename T>
-		using d_partial_type = d_partial_type_<T>;
-
-		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
-		static void expo_increase(T &e)
-		{
-			if (unlikely(e == std::numeric_limits<T>::max())) {
-				piranha_throw(std::overflow_error,"overflow in the computation of the partial derivative "
-					"of a divisor series");
-			}
-			e = static_cast<T>(e + T(1));
-		}
-		template <typename T, typename std::enable_if<!std::is_integral<T>::value,int>::type = 0>
-		static void expo_increase(T &e)
-		{
-			++e;
-		}
-
-		template <typename T = divisor_series>
-		d_partial_type<T> d_partial_impl(typename T::term_type::key_type &key, const symbol_set::positions &pos) const
-		{
-			using term_type = typename base::term_type;
-			using cf_type = typename term_type::cf_type;
-			using key_type = typename term_type::key_type;
-			piranha_assert(key.size() != 0u);
-			// Construct the first part of the derivative.
-			key_type tmp_div;
-			// Insert all the terms that depend on the variable, apart from the
-			// first one.
-			const auto it_f = key.m_container.end();
-			auto it = key.m_container.begin(), it_b(it);
-			auto first(*it), first_copy(*it);
-			// Size type of the multipliers' vector.
-			using vs_type = decltype(first.v.size());
-			++it;
-			for (; it != it_f; ++it) {
-				tmp_div.m_container.insert(*it);
-			}
-			// Remove the first term from the original key.
-			key.m_container.erase(it_b);
-			// Extract from the first dependent term the aij and the exponent.
-			auto mult = first.e * first.v[static_cast<vs_type>(pos.back())];
-			// Negate the multiplier to account for the fact that the exponent is really
-			// a negative quantity.
-			math::negate(mult);
-			// Increase by one the exponent of the first dep. term.
-			expo_increase(first.e);
-			// Insert the modified first term. Don't move, as we need first below.
-			tmp_div.m_container.insert(first);
-			// Now build the first part of the derivative.
-			divisor_series tmp_ds;
-			tmp_ds.set_symbol_set(this->m_symbol_set);
-			tmp_ds.insert(term_type(cf_type(1),std::move(tmp_div)));
-			// Init the retval.
-			d_partial_type<T> retval(mult * tmp_ds);
-			// Now the second part of the derivative, if appropriate.
-			if (!key.m_container.empty()) {
-				// Build a series with only the first dependent term and unitary coefficient.
-				key_type tmp_div_01;
-				tmp_div_01.m_container.insert(std::move(first_copy));
-				divisor_series tmp_ds_01;
-				tmp_ds_01.set_symbol_set(this->m_symbol_set);
-				tmp_ds_01.insert(term_type(cf_type(1),std::move(tmp_div_01)));
-				// Recurse.
-				retval += tmp_ds_01 * d_partial_impl(key,pos);
-			}
-			return retval;
-		}
-
-		template <typename T = divisor_series>
-		d_partial_type<T> divisor_partial(const typename T::term_type &term, const symbol_set::positions &pos) const
-		{
-			using term_type = typename base::term_type;
-			// Return zero if the variable is not in the series.
-			if (pos.size() == 0u) {
-				return d_partial_type<T>(0);
-			}
-			// Initial split of the divisor.
-			auto sd = term.m_key.split(pos,this->m_symbol_set);
-			// If the variable is not in the divisor, just return zero.
-			if (sd.first.size() == 0u) {
-				return d_partial_type<T>(0);
-			}
-			// Init the constant part of the derivative: the coefficient and the part of the divisor
-			// which does not depend on the variable.
-			divisor_series tmp_ds;
-			tmp_ds.set_symbol_set(this->m_symbol_set);
-			tmp_ds.insert(term_type(term.m_cf,std::move(sd.second)));
-			// Construct and return the result.
-			return tmp_ds * d_partial_impl(sd.first,pos);
-		}
-
+		/// Partial derivative.
+		/**
+		 * \note
+		 * This method is enabled only if the algorithm described below is supported by all the
+		 * involved types.
+		 *
+		 * This method will compute the partial derivative of \p this with respect to the symbol called \p name.
+		 * The derivative is computed via differentiation of the coefficients and the application of the product
+		 * rule.
+		 *
+		 * @param[in] name name of the variable with respect to which the differentiation will be computed.
+		 *
+		 * @return the partial derivative of \p this with respect to \p name.
+		 *
+		 * @throws std::overflow_error if the manipulation of integral exponents and multipliers in the divisors
+		 * results in an overflow.
+		 * @throws unspecified any exception thrown by:
+		 * - the construction of the return type,
+		 * - the arithmetics operations needed to compute the result,
+		 * - the public interface of piranha::symbol_set,
+		 * - piranha::math::partial(), piranha::math::negate(),
+		 * - construction and insertion of series terms,
+		 * - piranha::series::set_symbol_set(),
+		 * - piranha::divisor::split(),
+		 * - piranha::hash_set::insert().
+		 */
 		template <typename T = divisor_series>
 		partial_type<T> partial(const std::string &name) const
 		{
