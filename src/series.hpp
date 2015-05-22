@@ -1673,7 +1673,7 @@ class series: detail::series_tag, series_operators
 		// Partial derivative of a series type, as defined by math::partial(). Note that here we cannot use
 		// partial_type as Derived series might override the partial() method with their own implementation.
 		template <typename Series>
-		using series_p_type = decltype(math::partial(std::declval<const Series &>(),std::string{}));
+		using series_p_type = decltype(math::partial(std::declval<const Series &>(),std::declval<const std::string &>()));
 		template <typename Series>
 		using cp_map_type = std::unordered_map<std::string,std::function<series_p_type<Series>(const Derived &)>>;
 		// NOTE: here the initialisation of the static variable inside the body of the function

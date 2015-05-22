@@ -215,7 +215,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		// The final type.
 		template <typename T>
 		using partial_type_ = decltype(
-			math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}) * std::declval<const T &>()
+			math::partial(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()) * std::declval<const T &>()
 			+ std::declval<const d_partial_type<T> &>()
 		);
 		template <typename T>

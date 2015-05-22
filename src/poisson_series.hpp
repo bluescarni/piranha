@@ -219,7 +219,7 @@ class poisson_series:
 		template <typename T, typename ResT>
 		using basic_integrate_requirements = typename std::enable_if<
 			// Coefficient differentiable, and can call is_zero on the result.
-			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}))>::value &&
+			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()))>::value &&
 			// The result needs to be addable in-place.
 			is_addable_in_place<ResT>::value &&
 			// It also needs to be ctible from zero.
@@ -229,7 +229,7 @@ class poisson_series:
 		// Type resulting from the integration of the coefficient only.
 		template <typename ResT, typename T>
 		using i_cf_only_type = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),
-			std::string{}) * std::declval<const T &>());
+			std::declval<const std::string &>()) * std::declval<const T &>());
 		// Integration of coefficient only is enabled only if the type above is well defined
 		// and it is the same as the result type.
 		template <typename ResT, typename T, typename = void>
@@ -280,7 +280,7 @@ class poisson_series:
 		using i_cf_type = decltype(std::declval<const typename T::term_type::cf_type &>() / std::declval<const key_integrate_type<T> &>());
 		// Derivative of the type above.
 		template <typename T>
-		using i_cf_type_p = decltype(math::partial(std::declval<const i_cf_type<T> &>(),std::string{}));
+		using i_cf_type_p = decltype(math::partial(std::declval<const i_cf_type<T> &>(),std::declval<const std::string &>()));
 		// The final return type.
 		template <typename T>
 		using pc_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
@@ -635,7 +635,7 @@ namespace detail
 // the integration method.
 template <typename Series>
 using ps_integrate_enabler = typename std::enable_if<std::is_base_of<poisson_series_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::string{}))>::value>::type;
+	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
 
 }
 

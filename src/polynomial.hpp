@@ -200,7 +200,7 @@ class polynomial:
 		template <typename T, typename ResT>
 		using basic_integrate_requirements = typename std::enable_if<
 			// Coefficient differentiable, and can call is_zero on the result.
-			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::string{}))>::value &&
+			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()))>::value &&
 			// The key is integrable.
 			detail::true_tt<key_integrate_type<T>>::value &&
 			// The result needs to be addable in-place.
@@ -225,7 +225,7 @@ class polynomial:
 			std::declval<const symbol_set::positions &>(),std::declval<const symbol_set &>()).first);
 		// Type resulting from the integration of the coefficient.
 		template <typename T>
-		using i_cf_type = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),std::string{}));
+		using i_cf_type = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()));
 		// Type above, multiplied by the type coming out of the derivative of the key.
 		template <typename T>
 		using i_cf_type_p = decltype(std::declval<const i_cf_type<T> &>() * std::declval<const key_partial_type<T> &>());
@@ -497,7 +497,7 @@ namespace detail
 // the integration method.
 template <typename Series>
 using poly_integrate_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::string{}))>::value>::type;
+	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
 
 }
 
