@@ -749,5 +749,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	// Test derivative.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * tstype0{"z"}.pow(-1));
-	BOOST_CHECK_THROW(tmp0.partial("\\nu_{x}"),std::invalid_argument);
+//	auto div1 = tstype0(dtype0::from_polynomial(ptype0{"\\nu_{x}"}+3*ptype0{"\\nu_{y}"}));
+//	auto div2 = tstype0(dtype0::from_polynomial(4*ptype0{"\\nu_{x}"}-3*ptype0{"\\nu_{y}"}));
+//	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*tstype0{"z"}*math::sin(3*tstype0{"x"}+6*tstype0{"y"})*div1*div1
+//		-8/3_q*tstype0{"z"}*div2*div2*math::cos(12*tstype0{"x"}-9*tstype0{"y"}));
 }
