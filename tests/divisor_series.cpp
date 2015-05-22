@@ -180,6 +180,7 @@ struct partial_tester
 		// First with variables only in the divisors.
 		auto s0 = s_type::from_polynomial(x+y-2*z);
 		BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
+		BOOST_CHECK_EQUAL(math::partial(s0,"x"),-s0*s0);
 		BOOST_CHECK_EQUAL(s0.partial("z"),2*s0*s0);
 		auto s1 = s0 * s0;
 		BOOST_CHECK_EQUAL(s1.partial("x"),-2*s0*s1);
@@ -204,12 +205,14 @@ struct partial_tester
 		// Variables both in the coefficients and in the divisors.
 		auto s9 = x * s2;
 		BOOST_CHECK_EQUAL(s9.partial("x"),s2-x*s2*s2);
+		BOOST_CHECK_EQUAL(math::partial(s9,"x"),s2-x*s2*s2);
 		auto s10 = x*s2*s4;
 		BOOST_CHECK_EQUAL(s10.partial("x"),s2*s4+x*(-s2*s2*s4-s2*s4*s4));
 		auto s11 = s_type::from_polynomial(-3*x-y);
 		auto s12 = s_type::from_polynomial(z);
 		auto s13 = x*s11*s4+x*y*z*s2*s2*s2*s12;
 		BOOST_CHECK_EQUAL(s13.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
+		BOOST_CHECK_EQUAL(math::partial(s13,"x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
 		auto s15 = x*s11*s4+x*y*z*s2*s2*s2*s12+s4*s12;
 		BOOST_CHECK_EQUAL(s15.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12)-s4*s4*s12);
 		// Overflow in an exponent.
