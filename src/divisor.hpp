@@ -853,32 +853,6 @@ class divisor
 			}
 			return retval;
 		}
-		/// Partial derivative.
-		/**
-		 * The partial derivative of a divisor is supported only when the derivative is not taken
-		 * with respect to a divisor variable.
-		 *
-		 * @param[in] p position of the symbol with respect to which the differentiation will be calculated.
-		 * @param[in] args reference set of piranha::symbol.
-		 *
-		 * @return an <tt>std::pair</tt> consisting of 0 and \p this.
-		 *
-		 * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if the size of \p p is
-		 * different from zero.
-		 */
-		std::pair<int,divisor> partial(const symbol_set::positions &p, const symbol_set &args) const
-		{
-			if (!is_compatible(args)) {
-				piranha_throw(std::invalid_argument,"invalid size of arguments set");
-			}
-			// We cannot deal with derivatives with respect to divisors yet. This requires a differentiation
-			// protocol different from what we expect from a key, and will probably have to be implemented
-			// directly in divisor series as an ad-hoc method.
-			if (p.size()) {
-				piranha_throw(std::invalid_argument,"unable to compute the derivative with respect to a divisor");
-			}
-			return std::make_pair(0,*this);
-		}
 		/// Split divisor.
 		/**
 		 * This method will split \p this into two parts: the first one will contain the terms of the divisor
