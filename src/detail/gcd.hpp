@@ -47,6 +47,8 @@ inline void gcd_mod(T &a, const T &b)
 // Greatest common divisor using the euclidean algorithm.
 // NOTE: this can yield negative values, depending on the signs
 // of a and b. Supports C++ integrals and mp_integer.
+// NOTE: using this with C++ integrals unchecked on ranges can result in undefined
+// behaviour.
 template <typename T>
 inline T gcd(T a, T b)
 {

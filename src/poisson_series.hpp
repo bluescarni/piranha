@@ -397,6 +397,7 @@ class poisson_series:
 				integer cd(0);
 				bool need_sign_flip = false, first_nonzero_found = false;
 				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					// NOTE: gcd is safe, operating on integers.
 					cd = detail::gcd(cd,*it2);
 					if (!first_nonzero_found && !math::is_zero(*it2)) {
 						if (*it2 < 0) {
