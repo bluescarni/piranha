@@ -64,14 +64,14 @@ namespace piranha
  * where \f$ a_{i,j} \f$ are integers, \f$ x_i \f$ are symbols, and \f$ e_j \f$ are positive integers. The type
  * of \f$ a_{i,j} \f$ and \f$ e_j \f$ is \p T. The terms of the product are stored in a piranha::hash_set and
  * they are guaranteed to be in a canonical form defined by the following properties:
- * - the values of \f$ a_{i,j} \f$ and \f$ e_j \f$ are within an implementation-defined range,
+ * - if \p T is a C++ integral type, the values of \f$ a_{i,j} \f$ and \f$ e_j \f$ are within implementation-defined ranges,
  * - \f$ e_j \f$ is always strictly positive,
  * - the first nonzero \f$ a_{i,j} \f$ in each term is positive,
  * - the \f$ a_{i,j} \f$ in each term have no non-unitary common divisor.
  *
  * ## Type requirements ##
  *
- * \p T must be either a C++ integral type or piranha::mp_integer.
+ * \p T must be either a C++ integral type or an instance of piranha::mp_integer.
  *
  * ## Exception safety guarantee ##
  *
@@ -87,6 +87,7 @@ namespace piranha
  */
 // NOTE: if we ever make this completely generic on T, remember there are some hard-coded assumptions. E.g.,
 // is_zero must be available in split().
+// NOTE: the implementation defined range restriction is needed in order to make the gcd computations safe.
 template <typename T>
 class divisor
 {
