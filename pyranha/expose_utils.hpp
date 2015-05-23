@@ -128,9 +128,29 @@ inline bp::class_<T> expose_class()
 	return class_inst;
 }
 
+// for_each tuple algorithm.
+template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
+static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<B != E>::type * = nullptr)
+{
+	op(std::get<B>(t));
+	static_assert(B != std::numeric_limits<std::size_t>::max(),"Overflow error.");
+	tuple_for_each<Tuple,Op,static_cast<std::size_t>(B + std::size_t(1)),E>(t,op);
+}
+
+template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
+static void tuple_for_each(const Tuple &, const Op &, typename std::enable_if<B == E>::type * = nullptr)
+{}
+
+struct NullHook
+{
+	template <typename T>
+	void operator()(bp::class_<T> &) const
+	{}
+};
+
 // Generic series exposer.
 template <template <typename ...> class Series, typename Descriptor, std::size_t Begin = 0u,
-	std::size_t End = std::tuple_size<typename Descriptor::params>::value>
+	std::size_t End = std::tuple_size<typename Descriptor::params>::value, typename CustomHook = NullHook>
 class series_exposer
 {
 		using params = typename Descriptor::params;
@@ -144,17 +164,6 @@ class series_exposer
 		PIRANHA_DECLARE_HAS_TYPEDEF(subs_types);
 		// Detect the presence of degree truncation types.
 		PIRANHA_DECLARE_HAS_TYPEDEF(degree_truncation_types);
-		// for_each tuple algorithm.
-		template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
-		static void tuple_for_each(const Tuple &t, const Op &op, typename std::enable_if<B != E>::type * = nullptr)
-		{
-			op(std::get<B>(t));
-			static_assert(B != std::numeric_limits<std::size_t>::max(),"Overflow error.");
-			tuple_for_each<Tuple,Op,static_cast<std::size_t>(B + std::size_t(1)),E>(t,op);
-		}
-		template <typename Tuple, typename Op, std::size_t B = 0u, std::size_t E = std::tuple_size<Tuple>::value, typename = void>
-		static void tuple_for_each(const Tuple &, const Op &, typename std::enable_if<B == E>::type * = nullptr)
-		{}
 		// Expose constructor conditionally.
 		template <typename U, typename T>
 		static void expose_ctor(bp::class_<T> &cl,
@@ -994,6 +1003,8 @@ class series_exposer
 				expose_auto_truncate(series_class);
 				// Expose t_integrate(), if present.
 				expose_t_integrate(series_class);
+				// Run the custom hook.
+				CustomHook{}(series_class);
 			}
 		};
 	public:
