@@ -18,6 +18,9 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#ifndef PYRANHA_DIVISOR_SERIES_DESCRIPTOR_HPP
+#define PYRANHA_DIVISOR_SERIES_DESCRIPTOR_HPP
+
 #include "python_includes.hpp"
 
 #include <tuple>
@@ -63,3 +66,5 @@ struct divisor_series_descriptor
 };
 
 }
+
+#endif
