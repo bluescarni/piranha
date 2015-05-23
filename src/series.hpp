@@ -2785,13 +2785,28 @@ struct is_zero_impl<Series,typename std::enable_if<is_series<Series>::value>::ty
 	}
 };
 
+}
+
+namespace detail
+{
+
+// Enabler for the pow() specialisation for series.
+template <typename Series, typename T>
+using pow_series_enabler = typename std::enable_if<is_series<Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().pow(std::declval<const T &>()))>::value>::type;
+
+}
+
+namespace math
+{
+
 /// Specialisation of the piranha::math::pow() functor for piranha::series.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series.
- * The result will be computed via the series' <tt>pow()</tt> method.
+ * This specialisation is activated when \p Series is an instance of piranha::series with
+ * a method with the same signature as piranha::series::pow().
  */
 template <typename Series, typename T>
-struct pow_impl<Series,T,typename std::enable_if<is_series<Series>::value>::type>
+struct pow_impl<Series,T,detail::pow_series_enabler<Series,T>>
 {
 	/// Call operator.
 	/**
