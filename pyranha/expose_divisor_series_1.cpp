@@ -24,13 +24,14 @@
 #include "expose_divisor_series.hpp"
 #include "expose_utils.hpp"
 #include "divisor_series_descriptor.hpp"
+#include "polynomial_descriptor.hpp"
 
 namespace pyranha
 {
 
 void expose_divisor_series_1()
 {
-	series_exposer<piranha::divisor_series,divisor_series_descriptor,3u,6u> ds_exposer;
+	series_exposer<piranha::divisor_series,divisor_series_descriptor,3u,6u,from_polynomial_exposer<polynomial_descriptor>> ds_exposer;
 }
 
 }
