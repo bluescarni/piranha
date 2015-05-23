@@ -338,6 +338,17 @@ class divisor_series_test_case(_ut.TestCase):
 		self.assertEqual(type(divisor_series(polynomial(rational,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(rational,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(double,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(double,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(real,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(real,monomial(short))())
+		# A couple of tests for the from_polynomial() method.
+		pt = polynomial(rational,monomial(rational))()
+		dt = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
+		self.assertEqual(str(dt.from_polynomial(2*pt('x')+4*pt('y'))),"1/2*1/[(x+2*y)]")
+		self.assertEqual(str(dt.from_polynomial(pt('x')+2*pt('y'))),"1/[(x+2*y)]")
+		pc_list = [rational, double, real]
+		for pc in pc_list:
+			for dc in pc_list:
+				pt = polynomial(pc,monomial(rational))()
+				dt = divisor_series(polynomial(dc,monomial(rational)),divisor(short))()
+				self.assert_(hasattr(dt,"from_polynomial"))
 
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
