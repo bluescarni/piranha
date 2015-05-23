@@ -343,6 +343,8 @@ class divisor_series_test_case(_ut.TestCase):
 		dt = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
 		self.assertEqual(str(dt.from_polynomial(2*pt('x')+4*pt('y'))),"1/2*1/[(x+2*y)]")
 		self.assertEqual(str(dt.from_polynomial(pt('x')+2*pt('y'))),"1/[(x+2*y)]")
+		self.assertRaises(ValueError,lambda : dt.from_polynomial(pt('x')+2*pt('y')/3))
+		self.assertRaises(ValueError,lambda : dt.from_polynomial(pt('x')+1))
 		pc_list = [rational, double, real]
 		for pc in pc_list:
 			for dc in pc_list:
