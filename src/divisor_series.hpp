@@ -40,6 +40,7 @@
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "power_series.hpp"
+#include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
 #include "substitutable_series.hpp"
@@ -99,10 +100,6 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 		// Value type of the divisor.
 		using dv_type = typename Key::value_type;
-		// Return type for from_polynomial.
-		template <typename T, typename U>
-		using fp_type = typename std::enable_if<std::is_base_of<detail::polynomial_tag,T>::value,
-			decltype(std::declval<const U &>() / std::declval<const integer &>())>::type;
 		// Partial utils.
 		// Handle exponent increase in a safe way.
 		template <typename T, typename std::enable_if<std::is_integral<T>::value,int>::type = 0>
@@ -221,79 +218,39 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		template <typename T>
 		using partial_type = typename std::enable_if<std::is_constructible<partial_type_<T>,int>::value &&
 			is_addable_in_place<partial_type_<T>>::value,partial_type_<T>>::type;
-	public:
-		/// Series rebind alias.
-		template <typename Cf2>
-		using rebind = divisor_series<Cf2,Key>;
-		/// Defaulted default constructor.
-		divisor_series() = default;
-		/// Defaulted copy constructor.
-		divisor_series(const divisor_series &) = default;
-		/// Defaulted move constructor.
-		divisor_series(divisor_series &&) = default;
-		PIRANHA_FORWARDING_CTOR(divisor_series,base)
-		/// Trivial destructor.
-		~divisor_series()
+		// Pow utils.
+		// The return type will be the same as the base pow method.
+		template <typename T>
+		using pow_type = decltype(std::declval<const base &>().pow(std::declval<const T &>()));
+		// Enabler to test if the negative integer power exponentiation is supported:
+		// - coefficient is a polynomial,
+		// - the pow return type is divisible by integer, yielding a tipe T,
+		// - pow return type is constructible from T.
+		template <typename T, typename U, typename = void>
+		struct neg_int_pow_enabler
 		{
-			PIRANHA_TT_CHECK(is_series,divisor_series);
-			PIRANHA_TT_CHECK(is_cf,divisor_series);
-		}
-		/// Defaulted copy assignment operator.
-		divisor_series &operator=(const divisor_series &) = default;
-		/// Defaulted move assignment operator.
-		divisor_series &operator=(divisor_series &&) = default;
-		PIRANHA_FORWARDING_ASSIGNMENT(divisor_series,base)
-		/// Construct a divisor series from a polynomial.
-		/**
-		 * \note
-		 * This method is enabled only if \p T is an instance of piranha::polynomial
-		 * and the calling piranha::divisor_series type can be divided by integer.
-		 *
-		 * This method will construct a piranha::divisor_series consisting of a single term with unitary
-		 * coefficient and with the key containing a single divisor built from the input polynomial,
-		 * which must be equivalent to an integral linear combination of symbols with no constant terms.
-		 *
-		 * For example, when this method is called from a divisor series with rational coefficients, the input polynomial
-		 * \f[
-		 * x+y
-		 * \f]
-		 * will result in the construction of the divisor series
-		 * \f[
-		 * \frac{1}{x+y}.
-		 * \f]
-		 * The input polynomial
-		 * \f[
-		 * -2x+4y
-		 * \f]
-		 * will result in the construction of the divisor series
-		 * \f[
-		 * -\frac{1}{2}\frac{1}{x-2y}.
-		 * \f]
-		 *
-		 * @param[in] p the input polynomial.
-		 *
-		 * @return a piranha::divisor_series constructed from the input polynomial.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - the extraction of an integral linear combination of symbols from \p p,
-		 * - memory errors in standard containers,
-		 * - the public interface of piranha::symbol_set,
-		 * - piranha::math::is_zero(), piranha::math::negate(),
-		 * - the construction of terms, coefficients and keys,
-		 * - piranha::divisor::insert(),
-		 * - piranha::series::insert(), piranha::series::set_symbol_set(),
-		 * - arithmetics on piranha::divisor_series.
-		 */
-		template <typename T, typename U = divisor_series>
-		static fp_type<T,U> from_polynomial(const T &p)
+			static const bool value = false;
+		};
+		template <typename T, typename U>
+		struct neg_int_pow_enabler<T,U,typename std::enable_if<
+			std::is_base_of<detail::polynomial_tag,typename U::term_type::cf_type>::value &&
+			std::is_constructible<pow_type<T>,decltype(std::declval<const pow_type<T> &>() / std::declval<const integer &>())>::value
+		>::type>
 		{
-			using term_type = typename base::term_type;
+			static const bool value = true;
+		};
+		// Implementation of negative integer power.
+		template <typename T>
+		pow_type<T> neg_int_pow(const integer &n) const
+		{
+			using term_type = typename pow_type<T>::term_type;
 			using cf_type = typename term_type::cf_type;
 			using key_type = typename term_type::key_type;
-			auto lc = p.integral_combination();
-			if (unlikely(lc.empty())) {
-				piranha_throw(std::invalid_argument,"empty polynomial input");
-			}
+			piranha_assert(n.sign() < 0);
+			piranha_assert(this->size() == 1u);
+			auto lc = this->m_container.begin()->m_cf.integral_combination();
+			// NOTE: lc cannot be empty as we are coming in with a non-zero polynomial.
+			piranha_assert(!lc.empty());
 			std::vector<integer> v_int;
 			symbol_set ss;
 			for (auto it = lc.begin(); it != lc.end(); ++it) {
@@ -331,10 +288,10 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 			}
 			// Now build the key.
 			key_type tmp_key;
-			integer exponent(1);
+			integer exponent(-n);
 			tmp_key.insert(v_int.begin(),v_int.end(),exponent);
 			// The return value.
-			divisor_series retval;
+			pow_type<T> retval;
 			retval.set_symbol_set(ss);
 			retval.insert(term_type(cf_type(1),std::move(tmp_key)));
 			// If we negated in the canonicalisation, we need to re-negate
@@ -342,7 +299,110 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 			if (need_negate) {
 				math::negate(cd);
 			}
-			return retval / cd;
+			return pow_type<T>(retval / cd.pow(exponent));
+		}
+		template <typename T, typename U = divisor_series, typename std::enable_if<neg_int_pow_enabler<T,U>::value,int>::type = 0>
+		pow_type<T> pow_impl(const T &x) const
+		{
+			// Check if x is an integral value.
+			integer n;
+			bool x_is_int = false;
+			try {
+				// NOTE: the check for safe_cast is already wrapped into pow_type<T>.
+				n = safe_cast<integer>(x);
+				x_is_int = true;
+			} catch (const std::invalid_argument &) {}
+			// If:
+			// - x is a negative integer,
+			// - the series is single coefficient, not-empty,
+			// then attempt a negative integral exponentiation.
+			if (x_is_int && n.sign() < 0 && this->is_single_coefficient() && this->size() > 0u) {
+				try {
+					return neg_int_pow<T>(n);
+				} catch (const std::invalid_argument &) {}
+			}
+			return static_cast<base const *>(this)->pow(x);
+		}
+		template <typename T, typename U = divisor_series,
+			typename std::enable_if<!neg_int_pow_enabler<T,U>::value,int>::type = 0>
+		pow_type<T> pow_impl(const T &x) const
+		{
+			return static_cast<base const *>(this)->pow(x);
+		}
+	public:
+		/// Series rebind alias.
+		template <typename Cf2>
+		using rebind = divisor_series<Cf2,Key>;
+		/// Defaulted default constructor.
+		divisor_series() = default;
+		/// Defaulted copy constructor.
+		divisor_series(const divisor_series &) = default;
+		/// Defaulted move constructor.
+		divisor_series(divisor_series &&) = default;
+		PIRANHA_FORWARDING_CTOR(divisor_series,base)
+		/// Trivial destructor.
+		~divisor_series()
+		{
+			PIRANHA_TT_CHECK(is_series,divisor_series);
+			PIRANHA_TT_CHECK(is_cf,divisor_series);
+		}
+		/// Defaulted copy assignment operator.
+		divisor_series &operator=(const divisor_series &) = default;
+		/// Defaulted move assignment operator.
+		divisor_series &operator=(divisor_series &&) = default;
+		PIRANHA_FORWARDING_ASSIGNMENT(divisor_series,base)
+		/// Exponentiation.
+		/**
+		 * \note
+		 * This method is enabled only if \p T can be used as an argument to piranha::series::pow().
+		 *
+		 * This method works exactly like piranha::series::pow(), unless:
+		 *
+		 * - the exponent \p x can be safely converted to a negative piranha::integer and
+		 * - the coefficient type is a piranha::polynomial and
+		 * - the calling series is not empty and
+		 * - the calling series satisfies piranha::series::is_single_coefficient() and
+		 * - the return type is divisible by piranha::integer, yielding a type which can be used
+		 *   to construct the return type.
+		 *
+		 * Under these circumstances, this method will attempt to construct a divisor from the polynomial
+		 * coefficient, and, if successful, it will return a piranha::divisor_series consisting of a single term with unitary
+		 * coefficient and with the key containing the divisor built from the polynomial raised to <tt>-x</tt>.
+		 *
+		 * For example, raising to the power of -2 the following divisor series with polynomial coefficients
+		 * \f[
+		 * 2x+4y
+		 * \f]
+		 * will result in the construction of the divisor series
+		 * \f[
+		 * \frac{1}{4}\frac{1}{\left(x+2y\right)^2}.
+		 * \f]
+		 *
+		 * In order for the procedure described above to be successful, the polynomial coefficient must be equivalent
+		 * to an integral linear combination of symbols with no constant term. If this special exponentiation fails,
+		 * a call to piranha::series::pow() will be attempted.
+		 *
+		 * @param[in] x the exponent.
+		 *
+		 * @return \p this raised to the power of \p x.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - piranha::series::pow(),
+		 * - piranha::series::is_single_coefficient(),
+		 * - the extraction of an integral linear combination of symbols from \p p,
+		 * - memory errors in standard containers,
+		 * - the public interface of piranha::symbol_set,
+		 * - piranha::math::is_zero(), piranha::math::negate(),
+		 * - the construction of terms, coefficients and keys,
+		 * - piranha::divisor::insert(),
+		 * - piranha::series::insert(), piranha::series::set_symbol_set(),
+		 * - arithmetics on piranha::divisor_series,
+		 * - piranha::integer::pow().
+		 */
+		template <typename T>
+		pow_type<T> pow(const T &x) const
+		{
+			return pow_impl(x);
 		}
 		/// Partial derivative.
 		/**
