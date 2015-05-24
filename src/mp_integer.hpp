@@ -1185,6 +1185,8 @@ struct is_mp_integer_interoperable_type
  * - use a unified shortcut for the possible optimisation when the two limb type coincide (e.g., same_limbs_type = true constexpr).
  * - the conversion operator to C++ integral types could use the same optimisation as the constructor from integral types (e.g,
  *   attempt direct conversion if we have only 1 limb).
+ * - more in general, for conversions to/from other types we should consider operating directly with limbs instead of bit-by-bit
+ *   for increased performance.
  */
 template <int NBits = 0>
 class mp_integer
