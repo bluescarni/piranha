@@ -338,19 +338,15 @@ class divisor_series_test_case(_ut.TestCase):
 		self.assertEqual(type(divisor_series(polynomial(rational,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(rational,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(double,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(double,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(real,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(real,monomial(short))())
-		# A couple of tests for the from_polynomial() method.
-		pt = polynomial(rational,monomial(rational))()
+		# A couple of tests for the special pow() method.
 		dt = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
-		self.assertEqual(str(dt.from_polynomial(2*pt('x')+4*pt('y'))),"1/2*1/[(x+2*y)]")
-		self.assertEqual(str(dt.from_polynomial(pt('x')+2*pt('y'))),"1/[(x+2*y)]")
-		self.assertRaises(ValueError,lambda : dt.from_polynomial(pt('x')+2*pt('y')/3))
-		self.assertRaises(ValueError,lambda : dt.from_polynomial(pt('x')+1))
-		pc_list = [rational, double, real]
-		for pc in pc_list:
-			for dc in pc_list:
-				pt = polynomial(pc,monomial(rational))()
-				dt = divisor_series(polynomial(dc,monomial(rational)),divisor(short))()
-				self.assert_(hasattr(dt,"from_polynomial"))
+		self.assertEqual(str((2*dt('x')+4*dt('y'))**-1),"1/2*1/[(x+2*y)]")
+		self.assertEqual(str((dt('x')+2*dt('y'))**-1),"1/[(x+2*y)]")
+		self.assertRaises(ValueError,lambda :(dt('x')+2*dt('y')/3)**-1)
+		self.assertRaises(ValueError,lambda : (dt('x')+1)**-1)
+		self.assertEqual(str((dt('x')+2*dt('y'))**-4),"1/[(x+2*y)**4]")
+		self.assertEqual(str((-2*dt('x')+4*dt('y'))**-4),"1/16*1/[(x-2*y)**4]")
+		self.assertEqual(str((-2*dt('x')+4*dt('y'))**-5),"-1/32*1/[(x-2*y)**5]")
 
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
