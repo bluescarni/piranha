@@ -2678,7 +2678,27 @@ class series: detail::series_tag, series_operators
 			}
 			m_symbol_set = args;
 		}
-
+		/** @name Low-level interface
+		 * Low-level methods and types.
+		 */
+		//@{
+		/// Get container reference.
+		/**
+		 * @return a mutable reference to the internal container of terms.
+		 */
+		container_type &_container()
+		{
+			return m_container;
+		}
+		/// Get const container reference.
+		/**
+		 * @return a const reference to the internal container of terms.
+		 */
+		const container_type &_container() const
+		{
+			return m_container;
+		}
+		//@}
 	protected:
 		/// Symbol set.
 		symbol_set	m_symbol_set;
@@ -2849,45 +2869,65 @@ struct pow_impl<Series,T,detail::pow_series_enabler<Series,T>>
 namespace detail
 {
 
-// All this gook can go back into the private impl methods once we switch to GCC 4.8.
+// Detect if series has a const sin() method.
 template <typename T>
 class series_has_sin: sfinae_types
 {
 		template <typename U>
-		static auto test(const U *t) -> decltype(t->sin());
+		static auto test(const U &t) -> decltype(t.sin(),void(),yes());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 };
 
-template <typename T>
-inline T series_sin_call_impl(const T &s, typename std::enable_if<series_has_sin<T>::value>::type * = nullptr)
+template <typename T, typename std::enable_if<is_series<T>::value && series_has_sin<T>::value,int>::type = 0>
+inline auto series_sin_impl(const T &s) -> decltype(s.sin())
 {
 	return s.sin();
 }
 
-// NOTE: this is similar to the approach that we use in trigonometric series. It is one possible way of accomplishing this,
-// but this particular form seems to work ok across a variety of compilers - especially in GCC, the interplay between template
-// aliases, decltype() and sfinae seems to be brittle in early versions. Variations of this are used also in power_series
-// and t_subs series.
-// NOTE: template aliases are dispatched immediately where they are used, after that normal SFINAE rules apply. See, e.g., the usage
-// in this example:
-// http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_active.html#1558
-template <typename T>
-using sin_cf_enabler = typename std::enable_if<!series_has_sin<T>::value &&
-	std::is_same<typename T::term_type::cf_type,decltype(piranha::math::sin(std::declval<typename T::term_type::cf_type>()))>::value>::type;
+template <typename T, typename std::enable_if<is_series<T>::value && !series_has_sin<T>::value &&
+	std::is_same<typename T::term_type::cf_type,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
+inline T series_sin_impl(const T &s)
+{
+	using term_type = typename T::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	if (!s.is_single_coefficient()) {
+		piranha_throw(std::invalid_argument,"cannot compute sin, series is not single-coefficient");
+	}
+	T retval;
+	if (s.empty()) {
+		retval.insert(term_type(math::sin(cf_type(0)),key_type(symbol_set{})));
+	} else {
+		retval.insert(term_type(math::sin(s._container().begin()->m_cf),key_type(symbol_set{})));
+	}
+	return retval;
+}
+
+template <typename T, typename std::enable_if<is_series<T>::value && !series_has_sin<T>::value &&
+	!std::is_same<typename T::term_type::cf_type,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
+// NOTE: here the series_rebind alias already includes the is_rebindable check.
+inline series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))> series_sin_impl(const T &s)
+{
+	using ret_type = series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>;
+	using term_type = typename ret_type::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	if (!s.is_single_coefficient()) {
+		piranha_throw(std::invalid_argument,"cannot compute sin, series is not single-coefficient");
+	}
+	ret_type retval;
+	if (s.empty()) {
+		retval.insert(term_type(math::sin(cf_type(0)),key_type(symbol_set{})));
+	} else {
+		retval.insert(term_type(math::sin(s._container().begin()->m_cf),key_type(symbol_set{})));
+	}
+	return retval;
+}
 
 template <typename T>
-inline T series_sin_call_impl(const T &s, sin_cf_enabler<T> * = nullptr)
-{
-	typedef typename T::term_type::cf_type cf_type;
-	auto f = [](const cf_type &cf) {return piranha::math::sin(cf);};
-	try {
-		return s.apply_cf_functor(f);
-	} catch (const std::invalid_argument &) {
-		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of sine");
-	}
-}
+using series_sin_enabler = typename std::enable_if<true_tt<decltype(series_sin_impl(std::declval<const T &>()))>::value>::type;
 
 template <typename T>
 class series_has_cos: sfinae_types
@@ -2928,15 +2968,13 @@ namespace math
 
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series.
- * If the series type provides a const <tt>Series::sin()</tt> method returning an object of type \p Series,
- * it will be used for the computation of the result.
- * 
- * Otherwise, a call to piranha::series::apply_cf_functor() will be attempted with a functor that
- * calculates piranha::math::sin().
+ * This specialisation is activated when \p Series is an instance of piranha::series and:
+ * - either the series type provides a const <tt>sin()</tt> method, or
+ * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
+ *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
 template <typename Series>
-struct sin_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
+struct sin_impl<Series,detail::series_sin_enabler<Series>>
 {
 	/// Call operator.
 	/**
@@ -2956,9 +2994,9 @@ struct sin_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 	 * - piranha::series::apply_cf_functor().
 	 */
 	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_sin_call_impl(s))
+	auto operator()(const T &s) const -> decltype(detail::series_sin_impl(s))
 	{
-		return detail::series_sin_call_impl(s);
+		return detail::series_sin_impl(s);
 	}
 };
 
