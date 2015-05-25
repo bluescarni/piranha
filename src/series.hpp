@@ -259,7 +259,7 @@ namespace detail
 //   the operators on the coefficients to determine the return type, but that's inevitable.
 
 // Alias for getting the cf type from a series. Will generate a type error if S is not a series.
-// NOTE: the recursion index != 0 and is_series checks are an extra safe guard to really assert we are
+// NOTE: the is_series check is an extra safe guard to really assert we are
 // operating on series. Without the checks, in theory classes with internal term_type and similar typedefs
 // could trigger no errors.
 template <typename S>
