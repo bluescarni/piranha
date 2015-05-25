@@ -483,6 +483,15 @@ BOOST_AUTO_TEST_CASE(series_series_is_rebindable_test)
 	typedef g_series_type_nr3<int> p_type_nr3;
 	BOOST_CHECK((!series_is_rebindable<p_type_nr3,unsigned>::value));
 	BOOST_CHECK((!series_is_rebindable<p_type_nr3,integer>::value));
+	// Check when the requirements on the input types are not satisfied.
+	BOOST_CHECK((!series_is_rebindable<p_type1,std::string>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type1,std::vector<std::string>>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type1,std::vector<std::string> &>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type1,const std::vector<std::string> &>::value));
+	BOOST_CHECK((!series_is_rebindable<p_type1,std::vector<std::string> &&>::value));
+	BOOST_CHECK((!series_is_rebindable<std::string,std::vector<std::string>>::value));
+	BOOST_CHECK((!series_is_rebindable<const std::string &,std::vector<std::string>>::value));
+	BOOST_CHECK((!series_is_rebindable<const std::string &,std::vector<std::string> &&>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_series_recursion_index_test)
@@ -2042,4 +2051,35 @@ BOOST_AUTO_TEST_CASE(series_no_series_multiplier_test)
 {
 	typedef g_series_type_nm<rational,int> p_type1;
 	BOOST_CHECK(!is_multipliable<p_type1>::value);
+}
+
+// Mock coefficient, with weird semantics for operator+(integer): the output is not a coefficient type.
+struct mock_cf2
+{
+	mock_cf2();
+	explicit mock_cf2(const int &);
+	mock_cf2(const mock_cf2 &);
+	mock_cf2(mock_cf2 &&) noexcept;
+	mock_cf2 &operator=(const mock_cf2 &);
+	mock_cf2 &operator=(mock_cf2 &&) noexcept;
+	friend std::ostream &operator<<(std::ostream &, const mock_cf2 &);
+	mock_cf2 operator-() const;
+	bool operator==(const mock_cf2 &) const;
+	bool operator!=(const mock_cf2 &) const;
+	mock_cf2 &operator+=(const mock_cf2 &);
+	mock_cf2 &operator-=(const mock_cf2 &);
+	mock_cf2 operator+(const mock_cf2 &) const;
+	mock_cf2 operator-(const mock_cf2 &) const;
+	mock_cf2 &operator*=(const mock_cf2 &);
+	mock_cf2 operator*(const mock_cf2 &) const;
+	std::string operator+(const integer &) const;
+};
+
+// Check that attempting to rebind to an invalid coefficient disables the operator, rather
+// than resulting in a static assertion firing (as it was the case in the past).
+BOOST_AUTO_TEST_CASE(series_rebind_failure_test)
+{
+	BOOST_CHECK(is_cf<mock_cf2>::value);
+	BOOST_CHECK((!is_addable<g_series_type<integer,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((is_addable<g_series_type<mock_cf2,int>,g_series_type<mock_cf2,int>>::value));
 }

@@ -134,6 +134,8 @@
  * and be done with them instead.
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
  * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at this.
+ * UPDATE: this came up and was solved in series_is_rebindable by replacing the hard assertion errors with simply setting the value
+ * of the type trait to zero. Keep this solution in mind if the problem arises elsewhere.
  * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check that this behaviour
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test garbage archives
  * also in the existing serialization tests.

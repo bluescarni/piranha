@@ -131,11 +131,38 @@ class is_series
 template <typename T>
 const bool is_series<T>::value;
 
+namespace detail
+{
+
+// Implementation of the series_is_rebindable tt.
+template <typename T, typename Cf, typename = void>
+struct series_is_rebindable_impl: detail::sfinae_types
+{
+#if !defined(PIRANHA_DOXYGEN_INVOKED)
+	using Td = typename std::decay<T>::type;
+	using Cfd = typename std::decay<Cf>::type;
+	template <typename T1>
+	using rebound_type = typename T1::template rebind<Cfd>;
+	template <typename T1, typename std::enable_if<is_series<rebound_type<T1>>::value &&
+		std::is_same<typename rebound_type<T1>::term_type::cf_type,Cfd>::value,int>::type = 0>
+	static rebound_type<T1> test(const T1 &);
+	static no test(...);
+#endif
+	// Value of the type trait.
+	static const bool value = !std::is_same<no,decltype(test(std::declval<Td>()))>::value;
+};
+
+template <typename T, typename Cf>
+struct series_is_rebindable_impl<T,Cf,typename std::enable_if<!is_cf<typename std::decay<Cf>::type>::value ||
+	!is_series<typename std::decay<T>::type>::value>::type>
+{
+	static const bool value = false;
+};
+
+}
+
 /// Check if a series can be rebound.
 /**
- * \note
- * This class requires \p T to satisfy piranha::is_series and \p Cf to satisfy piranha::is_cf.
- *
  * Rebinding a series type \p T means to change its coefficient type to \p Cf. The ability of a series
  * to be rebound is signalled by the presence of a <tt>rebind</tt> template alias defined within the series class.
  *
@@ -144,26 +171,18 @@ const bool is_series<T>::value;
  * - <tt>T::rebind<Cf></tt> is a series types,
  * - the coefficient type of <tt>T::rebind<Cf></tt> is \p Cf.
  *
- * The decay types of \p T and \p Cf are considered in this type trait.
+ * The decay types of \p T and \p Cf are considered in this type trait. If \p T is not an instance of piranha::series
+ * or \p Cf does not satisfy piranha::is_cf, then the value of the type trait will be \p false.
  */
+// NOTE: the behaviour when T and Cf do not satisfy the requirements is to allow this type trait
+// to be used an all types. The trait is used in the metaprogramming of generic series arithmetics,
+// and if we ever move the operators outside the series_operators class it is convenient to have this
+// class not fire static asserts when non-series arguments are substituted.
 template <typename T, typename Cf>
-class series_is_rebindable: detail::sfinae_types
+struct series_is_rebindable
 {
-#if !defined(PIRANHA_DOXYGEN_INVOKED)
-		using Td = typename std::decay<T>::type;
-		using Cfd = typename std::decay<Cf>::type;
-		static_assert(is_series<Td>::value,"This type trait can only be used on series types.");
-		static_assert(is_cf<Cfd>::value,"This type trait requires Cf to be a coefficient type.");
-		template <typename T1>
-		using rebound_type = typename T1::template rebind<Cfd>;
-		template <typename T1, typename std::enable_if<is_series<rebound_type<T1>>::value &&
-			std::is_same<typename rebound_type<T1>::term_type::cf_type,Cfd>::value,int>::type = 0>
-		static rebound_type<T1> test(const T1 &);
-		static no test(...);
-#endif
-	public:
-		/// Value of the type trait.
-		static const bool value = !std::is_same<no,decltype(test(std::declval<Td>()))>::value;
+	/// Value of the type trait.
+	static const bool value = detail::series_is_rebindable_impl<T,Cf>::value;
 };
 
 template <typename T, typename Cf>
