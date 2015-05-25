@@ -2073,6 +2073,8 @@ struct mock_cf2
 	mock_cf2 &operator*=(const mock_cf2 &);
 	mock_cf2 operator*(const mock_cf2 &) const;
 	std::string operator+(const integer &) const;
+	std::vector<std::string> operator*(const integer &) const;
+	std::vector<std::string> operator-(const integer &) const;
 };
 
 // Check that attempting to rebind to an invalid coefficient disables the operator, rather
@@ -2081,5 +2083,12 @@ BOOST_AUTO_TEST_CASE(series_rebind_failure_test)
 {
 	BOOST_CHECK(is_cf<mock_cf2>::value);
 	BOOST_CHECK((!is_addable<g_series_type<integer,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((!is_addable<g_series_type<mock_cf2,int>,g_series_type<integer,int>>::value));
 	BOOST_CHECK((is_addable<g_series_type<mock_cf2,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((!is_subtractable<g_series_type<integer,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((!is_subtractable<g_series_type<mock_cf2,int>,g_series_type<integer,int>>::value));
+	BOOST_CHECK((is_subtractable<g_series_type<mock_cf2,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((!is_multipliable<g_series_type<integer,int>,g_series_type<mock_cf2,int>>::value));
+	BOOST_CHECK((!is_multipliable<g_series_type<mock_cf2,int>,g_series_type<integer,int>>::value));
+	BOOST_CHECK((is_multipliable<g_series_type<mock_cf2,int>,g_series_type<mock_cf2,int>>::value));
 }
