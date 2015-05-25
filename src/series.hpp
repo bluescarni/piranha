@@ -2106,7 +2106,6 @@ class series: detail::series_tag, series_operators
 		 * - series, term, coefficient and key construction,
 		 * - insert(),
 		 * - is_single_coefficient(),
-		 * - apply_cf_functor(),
 		 * - piranha::math::pow(), piranha::math::is_zero() and piranha::safe_cast(),
 		 * - series multiplication,
 		 * - memory errors in standard containers,
