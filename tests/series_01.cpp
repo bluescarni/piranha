@@ -1091,7 +1091,8 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,mock_cf2>::value>::type
 
 // NOTE: here:
 // - g_series_type has a wrong sin() overload but a good cos() one, and g_series_type2 have suitable sin/cos members,
-// - g_series_type3 has no members.
+// - g_series_type3 has no members,
+// - g_series_type4 has good members.
 BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
 	typedef g_series_type<double,int> p_type1;
@@ -1135,15 +1136,20 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK((std::is_same<decltype(math::sin(p_type5{})),g_series_type3<mock_cf,int>>::value));
 	BOOST_CHECK((std::is_same<decltype(math::cos(p_type5{})),g_series_type3<mock_cf,int>>::value));
 	// Check that casting a series type to its base type and then calling sin/cos still gets out the original
-	// type.
+	// type. Test with series with and without members.
 	typedef g_series_type3<double,int> p_type6;
+	BOOST_CHECK(has_sine<p_type6>::value);
+	BOOST_CHECK(has_cosine<p_type6>::value);
 	BOOST_CHECK((std::is_same<p_type6,decltype(math::sin(std::declval<const p_type6::base &>()))>::value));
 	BOOST_CHECK((std::is_same<p_type6,decltype(math::cos(std::declval<const p_type6::base &>()))>::value));
 	typedef g_series_type4<double,int> p_type7;
 	BOOST_CHECK(has_sine<p_type7>::value);
 	BOOST_CHECK(has_cosine<p_type7>::value);
 	BOOST_CHECK((std::is_same<p_type7,decltype(math::sin(std::declval<const p_type7::base &>()))>::value));
-	//BOOST_CHECK((std::is_same<p_type7,decltype(math::cos(std::declval<const p_type7::base &>()))>::value));
+	BOOST_CHECK((std::is_same<p_type7,decltype(math::cos(std::declval<const p_type7::base &>()))>::value));
+	// Test also with bad members.
+	BOOST_CHECK((std::is_same<p_type1,decltype(math::sin(std::declval<const p_type1::base &>()))>::value));
+	BOOST_CHECK((std::is_same<p_type1,decltype(math::cos(std::declval<const p_type1::base &>()))>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)
