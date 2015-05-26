@@ -2938,7 +2938,6 @@ inline T series_cos_impl(const T &s)
 
 template <typename T, typename std::enable_if<is_series<T>::value && !series_has_cos<T>::value &&
 	!std::is_same<typename T::term_type::cf_type,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
-// NOTE: here the series_rebind alias already includes the is_rebindable check.
 inline series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))> series_cos_impl(const T &s)
 {
 	using ret_type = series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>;
