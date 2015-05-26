@@ -156,6 +156,8 @@
  * \todo get rid of tracing.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
+ * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer of indirection. This has only cosmetic
+ * value, but might be worth for clarity in the long run.
  */
 namespace piranha
 {
