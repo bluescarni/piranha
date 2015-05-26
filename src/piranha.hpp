@@ -135,7 +135,7 @@
  * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such as key_is_*,
  * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at this.
  * UPDATE: this came up and was solved in series_is_rebindable by replacing the hard assertion errors with simply setting the value
- * of the type trait to zero. Keep this solution in mind if the problem arises elsewhere.
+ * of the type trait to false via a specialisation. Keep this solution in mind if the problem arises elsewhere.
  * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check that this behaviour
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test garbage archives
  * also in the existing serialization tests.
@@ -149,7 +149,6 @@
  * \todo related to the above, beautification of the enabling conditions for impl functors - in the same fashion as we do for methods and functions.
  * \todo we probably need a way to handle the excessive growth of ipow caches. Just keep the most recently used entries up to a certain
  * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items are stored, etc.
- * \todo give the same treatment to sin/cos as to pow(), and get rid of apply_cf_functor.
  * \todo we should really add some perf tests based on the work by alex perminov. Also, based on this, which operations in his use cases could
  * benefit from parallelisation?
  * \todo on-the-fly compression of series archives?
@@ -157,6 +156,8 @@
  * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
  * \todo get rid of tracing.
+ * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
+ * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
  */
 namespace piranha
 {

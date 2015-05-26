@@ -1150,7 +1150,6 @@ class series_operators
  * \todo cast operator, to series and non-series types.
  * \todo cast operator would allow to define in-place operators with fundamental types as first operand.
  * \todo filter and transform can probably take arbitrary functors as input, instead of std::function. Just assert the function object's signature.
- * \todo probably apply_cf_functor can be folded into transform for those few uses.
  * \todo transform needs sfinaeing.
  * TODO new operators:
  * - test with mock_cfs that are not addable to scalars.
@@ -2204,42 +2203,6 @@ class series: detail::series_tag, series_operators
 			std::lock_guard<std::mutex> lock(s_pow_mutex);
 			get_pow_cache().clear();
 		}
-		/// Apply functor to single-coefficient series.
-		/**
-		 * This method can be called successfully only on single-coefficient series.
-		 * 
-		 * If the series is empty, the return value will be a series with single term and unitary key in which the coefficient
-		 * is the result of applying the functor \p f on a coefficient instance constructed from the integral constant "0".
-		 * 
-		 * If the series has a single term with unitary key, the return value will be a series with single term and unitary key in which the coefficient
-		 * is the result of applying the functor \p f to the only coefficient of \p this.
-		 * 
-		 * @param[in] f coefficient functor.
-		 * 
-		 * @return a series constructed via the application of \p f to a coefficient instance as described above.
-		 * 
-		 * @throws std::invalid_argument if the series is not single-coefficient.
-		 * @throws unspecified any exception thrown by:
-		 * - the call operator of \p f,
-		 * - construction of coefficient, key and term instances,
-		 * - insert(),
-		 * - is_single_coefficient().
-		 */
-		Derived apply_cf_functor(std::function<typename term_type::cf_type (const typename term_type::cf_type &)> f) const
-		{
-			if (!is_single_coefficient()) {
-				piranha_throw(std::invalid_argument,"cannot apply functor, series is not single-coefficient");
-			}
-			typedef typename term_type::cf_type cf_type;
-			typedef typename term_type::key_type key_type;
-			Derived retval;
-			if (empty()) {
-				retval.insert(term_type(f(cf_type(0)),key_type(symbol_set{})));
-			} else {
-				retval.insert(term_type(f(m_container.begin()->m_cf),key_type(symbol_set{})));
-			}
-			return retval;
-		}
 		/// Partial derivative.
 		/**
 		 * \note
@@ -2682,15 +2645,15 @@ class series: detail::series_tag, series_operators
 		 * Low-level methods and types.
 		 */
 		//@{
-		/// Get container reference.
+		/// Get a mutable reference to the container of terms.
 		/**
-		 * @return a mutable reference to the internal container of terms.
+		 * @return a reference to the internal container of terms.
 		 */
 		container_type &_container()
 		{
 			return m_container;
 		}
-		/// Get const container reference.
+		/// Get a const reference to the container of terms.
 		/**
 		 * @return a const reference to the internal container of terms.
 		 */
@@ -2880,23 +2843,25 @@ class series_has_sin: sfinae_types
 		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 };
 
+// Three cases for sin() implementation.
+// 1. call the member function, if available.
 template <typename T, typename std::enable_if<is_series<T>::value && series_has_sin<T>::value,int>::type = 0>
 inline auto series_sin_impl(const T &s) -> decltype(s.sin())
 {
 	return s.sin();
 }
 
-template <typename T, typename std::enable_if<is_series<T>::value && !series_has_sin<T>::value &&
-	std::is_same<typename T::term_type::cf_type,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
-inline T series_sin_impl(const T &s)
+// Low-level implementation of sin via coefficient.
+template <typename RetT, typename T>
+inline RetT series_cf_sin_impl(const T &s)
 {
-	using term_type = typename T::term_type;
+	using term_type = typename RetT::term_type;
 	using cf_type = typename term_type::cf_type;
 	using key_type = typename term_type::key_type;
 	if (!s.is_single_coefficient()) {
 		piranha_throw(std::invalid_argument,"cannot compute sin, series is not single-coefficient");
 	}
-	T retval;
+	RetT retval;
 	if (s.empty()) {
 		retval.insert(term_type(math::sin(cf_type(0)),key_type(symbol_set{})));
 	} else {
@@ -2905,61 +2870,83 @@ inline T series_sin_impl(const T &s)
 	return retval;
 }
 
+// 2. member function is not available, coefficient type supports math::sin() with a result equal to
+// the original coefficient type.
+template <typename T, typename std::enable_if<is_series<T>::value && !series_has_sin<T>::value &&
+	std::is_same<typename T::term_type::cf_type,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
+inline T series_sin_impl(const T &s)
+{
+	return series_cf_sin_impl<T>(s);
+}
+
+// 3. member function is not available, coefficient type supports math::sin() with a result different
+// from the original coefficient type and the series can be rebound to this new type.
 template <typename T, typename std::enable_if<is_series<T>::value && !series_has_sin<T>::value &&
 	!std::is_same<typename T::term_type::cf_type,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
 // NOTE: here the series_rebind alias already includes the is_rebindable check.
 inline series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))> series_sin_impl(const T &s)
 {
 	using ret_type = series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>;
-	using term_type = typename ret_type::term_type;
-	using cf_type = typename term_type::cf_type;
-	using key_type = typename term_type::key_type;
-	if (!s.is_single_coefficient()) {
-		piranha_throw(std::invalid_argument,"cannot compute sin, series is not single-coefficient");
-	}
-	ret_type retval;
-	if (s.empty()) {
-		retval.insert(term_type(math::sin(cf_type(0)),key_type(symbol_set{})));
-	} else {
-		retval.insert(term_type(math::sin(s._container().begin()->m_cf),key_type(symbol_set{})));
-	}
-	return retval;
+	return series_cf_sin_impl<ret_type>(s);
 }
 
+// Final enabler condition for the sin implementation.
 template <typename T>
 using series_sin_enabler = typename std::enable_if<true_tt<decltype(series_sin_impl(std::declval<const T &>()))>::value>::type;
 
+// All of the above, but for cos().
 template <typename T>
 class series_has_cos: sfinae_types
 {
 		template <typename U>
-		static auto test(const U *t) -> decltype(t->cos());
+		static auto test(const U &t) -> decltype(t.cos(),void(),yes());
 		static no test(...);
 	public:
-		static const bool value = std::is_same<decltype(test((const T *)nullptr)),T>::value;
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
 };
 
-template <typename T>
-inline T series_cos_call_impl(const T &s, typename std::enable_if<series_has_cos<T>::value>::type * = nullptr)
+template <typename T, typename std::enable_if<is_series<T>::value && series_has_cos<T>::value,int>::type = 0>
+inline auto series_cos_impl(const T &s) -> decltype(s.cos())
 {
 	return s.cos();
 }
 
-template <typename T>
-using cos_cf_enabler = typename std::enable_if<!series_has_cos<T>::value &&
-	std::is_same<typename T::term_type::cf_type,decltype(piranha::math::cos(std::declval<typename T::term_type::cf_type>()))>::value>::type;
+template <typename RetT, typename T>
+inline RetT series_cf_cos_impl(const T &s)
+{
+	using term_type = typename RetT::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	if (!s.is_single_coefficient()) {
+		piranha_throw(std::invalid_argument,"cannot compute cos, series is not single-coefficient");
+	}
+	RetT retval;
+	if (s.empty()) {
+		retval.insert(term_type(math::cos(cf_type(0)),key_type(symbol_set{})));
+	} else {
+		retval.insert(term_type(math::cos(s._container().begin()->m_cf),key_type(symbol_set{})));
+	}
+	return retval;
+}
+
+template <typename T, typename std::enable_if<is_series<T>::value && !series_has_cos<T>::value &&
+	std::is_same<typename T::term_type::cf_type,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
+inline T series_cos_impl(const T &s)
+{
+	return series_cf_cos_impl<T>(s);
+}
+
+template <typename T, typename std::enable_if<is_series<T>::value && !series_has_cos<T>::value &&
+	!std::is_same<typename T::term_type::cf_type,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
+// NOTE: here the series_rebind alias already includes the is_rebindable check.
+inline series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))> series_cos_impl(const T &s)
+{
+	using ret_type = series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>;
+	return series_cf_cos_impl<ret_type>(s);
+}
 
 template <typename T>
-inline T series_cos_call_impl(const T &s, cos_cf_enabler<T> * = nullptr)
-{
-	typedef typename T::term_type::cf_type cf_type;
-	auto f = [](const cf_type &cf) {return piranha::math::cos(cf);};
-	try {
-		return s.apply_cf_functor(f);
-	} catch (const std::invalid_argument &) {
-		piranha_throw(std::invalid_argument,"series is unsuitable for the calculation of cosine");
-	}
-}
+using series_cos_enabler = typename std::enable_if<true_tt<decltype(series_cos_impl(std::declval<const T &>()))>::value>::type;
 
 }
 
@@ -2978,12 +2965,6 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 {
 	/// Call operator.
 	/**
-	 * \note
-	 * This operator is enabled if one of these conditions apply:
-	 * - the input series type has a const <tt>sin()</tt> method, or
-	 * - the coefficient type of the series satisfies piranha::has_sine, returning an instance of the
-	 *   coefficient type as result.
-	 *
 	 * @param[in] s argument.
 	 *
 	 * @return sine of \p s.
@@ -2991,7 +2972,7 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 	 * @throws unspecified any exception thrown by:
 	 * - the <tt>Series::sin()</tt> method,
 	 * - piranha::math::sin(),
-	 * - piranha::series::apply_cf_functor().
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
 	 */
 	template <typename T>
 	auto operator()(const T &s) const -> decltype(detail::series_sin_impl(s))
@@ -3002,24 +2983,14 @@ struct sin_impl<Series,detail::series_sin_enabler<Series>>
 
 /// Specialisation of the piranha::math::cos() functor for piranha::series.
 /**
- * This specialisation is activated when \p Series is an instance of piranha::series.
- * If the series type provides a const <tt>Series::cos()</tt> method returning an object of type \p Series,
- * it will be used for the computation of the result.
- * 
- * Otherwise, a call to piranha::series::apply_cf_functor() will be attempted with a functor that
- * calculates piranha::math::cos().
+ * This specialisation acts in exactly the same way as the corresponding specialisation for
+ * piranha::math::sin().
  */
 template <typename Series>
-struct cos_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
+struct cos_impl<Series,detail::series_cos_enabler<Series>>
 {
 	/// Call operator.
 	/**
-	 * \note
-	 * This operator is enabled if one of these conditions apply:
-	 * - the input series type has a const <tt>cos()</tt> method, or
-	 * - the coefficient type of the series satisfies piranha::has_cosine, returning an instance of the
-	 *   coefficient type as result.
-	 *
 	 * @param[in] s argument.
 	 *
 	 * @return cosine of \p s.
@@ -3027,12 +2998,12 @@ struct cos_impl<Series,typename std::enable_if<is_series<Series>::value>::type>
 	 * @throws unspecified any exception thrown by:
 	 * - the <tt>Series::cos()</tt> method,
 	 * - piranha::math::cos(),
-	 * - piranha::series::apply_cf_functor().
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
 	 */
 	template <typename T>
-	auto operator()(const T &s) const -> decltype(detail::series_cos_call_impl(s))
+	auto operator()(const T &s) const -> decltype(detail::series_cos_impl(s))
 	{
-		return detail::series_cos_call_impl(s);
+		return detail::series_cos_impl(s);
 	}
 };
 

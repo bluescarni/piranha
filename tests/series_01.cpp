@@ -131,6 +131,31 @@ class g_series_type2: public series<Cf,monomial<Expo>,g_series_type2<Cf,Expo>>
 		}
 };
 
+template <typename Cf, typename Expo>
+class g_series_type3: public series<Cf,monomial<Expo>,g_series_type3<Cf,Expo>>
+{
+	public:
+		template <typename Cf2>
+		using rebind = g_series_type3<Cf2,Expo>;
+		typedef series<Cf,monomial<Expo>,g_series_type3<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		g_series_type3() = default;
+		g_series_type3(const g_series_type3 &) = default;
+		g_series_type3(g_series_type3 &&) = default;
+		explicit g_series_type3(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type3 &operator=(const g_series_type3 &) = default;
+		g_series_type3 &operator=(g_series_type3 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type3,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type3,base)
+};
+
 struct construction_tag {};
 
 namespace piranha
@@ -965,15 +990,6 @@ BOOST_AUTO_TEST_CASE(series_is_single_coefficient_test)
 	BOOST_CHECK(!(1 + p_type{"x"}).is_single_coefficient());
 }
 
-BOOST_AUTO_TEST_CASE(series_apply_cf_functor_test)
-{
-	typedef g_series_type<integer,int> p_type;
-	BOOST_CHECK_THROW((1 + p_type{"x"}).apply_cf_functor([](const integer &n) {return n;}),std::invalid_argument);
-	BOOST_CHECK_THROW((p_type{"x"}).apply_cf_functor([](const integer &n) {return n;}),std::invalid_argument);
-	BOOST_CHECK_EQUAL((p_type{}).apply_cf_functor([](const integer &) {return integer(2);}),2);
-	BOOST_CHECK_EQUAL((p_type{3}).apply_cf_functor([](const integer &n) {return -n;}),-3);
-}
-
 // Mock coefficient.
 struct mock_cf
 {
@@ -995,6 +1011,27 @@ struct mock_cf
 	mock_cf operator*(const mock_cf &) const;
 };
 
+// Another mock cf, with valid sin/cos specialisations which change the type.
+struct mock_cf2
+{
+	mock_cf2();
+	mock_cf2(const int &);
+	mock_cf2(const mock_cf2 &);
+	mock_cf2(mock_cf2 &&) noexcept;
+	mock_cf2 &operator=(const mock_cf2 &);
+	mock_cf2 &operator=(mock_cf2 &&) noexcept;
+	friend std::ostream &operator<<(std::ostream &, const mock_cf2 &);
+	mock_cf2 operator-() const;
+	bool operator==(const mock_cf2 &) const;
+	bool operator!=(const mock_cf2 &) const;
+	mock_cf2 &operator+=(const mock_cf2 &);
+	mock_cf2 &operator-=(const mock_cf2 &);
+	mock_cf2 operator+(const mock_cf2 &) const;
+	mock_cf2 operator-(const mock_cf2 &) const;
+	mock_cf2 &operator*=(const mock_cf2 &);
+	mock_cf2 operator*(const mock_cf2 &) const;
+};
+
 namespace piranha { namespace math {
 
 // Provide mock sine/cosine implementation returning unusable return type.
@@ -1010,21 +1047,41 @@ struct cos_impl<T,typename std::enable_if<std::is_same<T,mock_cf>::value>::type>
 	std::string operator()(const T &) const;
 };
 
+// Sin/cos of mock_cf2 will return mock_cf.
+template <typename T>
+struct sin_impl<T,typename std::enable_if<std::is_same<T,mock_cf2>::value>::type>
+{
+	mock_cf operator()(const T &) const;
+};
+
+template <typename T>
+struct cos_impl<T,typename std::enable_if<std::is_same<T,mock_cf2>::value>::type>
+{
+	mock_cf operator()(const T &) const;
+};
+
 }}
 
+// NOTE: here:
+// - g_series_type has a wrong sin() overload but a good cos() one, and g_series_type2 have suitable sin/cos members,
+// - g_series_type3 has no members.
 BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 {
 	typedef g_series_type<double,int> p_type1;
+	// What happens here:
+	// - p_type1 has math::sin() via its coefficient type,
+	// - g_series_type<mock_cf,int> has no sine because math::sin() on mock_cf is wrong,
+	// - math::cos() on p_type1 returns the -42 value from the method.
 	BOOST_CHECK(has_sine<p_type1>::value);
 	BOOST_CHECK(has_cosine<p_type1>::value);
 	BOOST_CHECK((!has_sine<g_series_type<mock_cf,int>>::value));
-	BOOST_CHECK((!has_cosine<g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((has_cosine<g_series_type<mock_cf,int>>::value));
 	BOOST_CHECK_EQUAL(math::sin(p_type1{.5}),math::sin(.5));
-	BOOST_CHECK_EQUAL(math::cos(p_type1{.5}),math::cos(.5));
+	BOOST_CHECK_EQUAL(math::cos(p_type1{.5}),-42);
 	BOOST_CHECK_THROW(math::sin(p_type1{"x"}),std::invalid_argument);
 	BOOST_CHECK_THROW(math::sin(p_type1{"x"} + 1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::cos(p_type1{"x"}),std::invalid_argument);
-	BOOST_CHECK_THROW(math::cos(p_type1{"x"} - 1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::cos(p_type1{"x"}),-42);
+	BOOST_CHECK_EQUAL(math::cos(p_type1{"x"} - 1),-42);
 	typedef g_series_type2<double,int> p_type2;
 	BOOST_CHECK(has_sine<p_type2>::value);
 	BOOST_CHECK(has_cosine<p_type2>::value);
@@ -1035,6 +1092,21 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK(has_cosine<p_type3>::value);
 	BOOST_CHECK_EQUAL(math::sin(p_type3{.5}),double(42));
 	BOOST_CHECK_EQUAL(math::cos(p_type3{.5}),double(-42));
+	typedef g_series_type<mock_cf2,int> p_type4;
+	BOOST_CHECK(has_sine<p_type4>::value);
+	BOOST_CHECK(has_cosine<p_type4>::value);
+	BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})),g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})),int>::value));
+	typedef g_series_type<mock_cf2,int> p_type4;
+	BOOST_CHECK(has_sine<p_type4>::value);
+	BOOST_CHECK(has_cosine<p_type4>::value);
+	BOOST_CHECK((std::is_same<decltype(math::sin(p_type4{})),g_series_type<mock_cf,int>>::value));
+	BOOST_CHECK((std::is_same<decltype(math::cos(p_type4{})),int>::value));
+	typedef g_series_type3<mock_cf2,int> p_type5;
+	BOOST_CHECK(has_sine<p_type5>::value);
+	BOOST_CHECK(has_cosine<p_type5>::value);
+	BOOST_CHECK((std::is_same<decltype(math::sin(p_type5{})),g_series_type3<mock_cf,int>>::value));
+	BOOST_CHECK((std::is_same<decltype(math::cos(p_type5{})),g_series_type3<mock_cf,int>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)
