@@ -76,6 +76,27 @@ struct is_divisor_series<divisor_series<Cf,Key>>
 	static const bool value = true;
 };
 
+// Type trait to check whether a Poisson series can provide a linear combination of arguments
+// for sine/cosine via its outermost polynomial coefficient.
+template <typename T, typename = void>
+struct ps_has_special_sin_cos
+{
+	static const bool value = false;
+};
+
+template <typename T>
+struct ps_has_special_sin_cos<T,typename std::enable_if<series_recursion_index<T>::value == 2u &&
+	std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
+{
+	static const bool value = true;
+};
+
+template <typename T>
+struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 2u)>::type>
+{
+	static const bool value = ps_has_special_sin_cos<typename T::term_type::cf_type>::value;
+};
+
 }
 
 /// Poisson series class.
@@ -519,6 +540,35 @@ class poisson_series:
 		{
 			return sin_cos_impl<true,T>();
 		}
+		/// Sine.
+		/**
+		 * \note
+		 * This template method is enabled only if math::sin() can be called on the class
+		 * from which piranha::poisson_series derived (i.e., only if the default math::sin()
+		 * implementation for series is appropriate).
+		 *
+		 */
+		// Base type coming out of sin() for the base type.
+		template <typename T>
+		using base_sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
+		// Case 0: Poisson series is not suitable for special sin() implementation.
+		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		base_sin_type<T> sin_impl() const
+		{
+			return math::sin(*static_cast<const base *>(this));
+		}
+		// Case 1: Poisson series is suitable for special sin() implementation.
+		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		base_sin_type<T> sin_impl() const
+		{
+			return math::sin(*static_cast<const base *>(this));
+		}
+
+//		template <typename T = poisson_series>
+//		sin_type<T> sin_() const
+//		{
+
+//		}
 		/// Integration.
 		/**
 		 * \note

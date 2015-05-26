@@ -156,6 +156,33 @@ class g_series_type3: public series<Cf,monomial<Expo>,g_series_type3<Cf,Expo>>
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type3,base)
 };
 
+template <typename Cf, typename Expo>
+class g_series_type4: public series<Cf,monomial<Expo>,g_series_type4<Cf,Expo>>
+{
+	public:
+		template <typename Cf2>
+		using rebind = g_series_type4<Cf2,Expo>;
+		typedef series<Cf,monomial<Expo>,g_series_type4<Cf,Expo>> base;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		g_series_type4() = default;
+		g_series_type4(const g_series_type4 &) = default;
+		g_series_type4(g_series_type4 &&) = default;
+		explicit g_series_type4(const char *name):base()
+		{
+			typedef typename base::term_type term_type;
+			// Insert the symbol.
+			this->m_symbol_set.add(name);
+			// Construct and insert the term.
+			this->insert(term_type(Cf(1),typename term_type::key_type{Expo(1)}));
+		}
+		g_series_type4 &operator=(const g_series_type4 &) = default;
+		g_series_type4 &operator=(g_series_type4 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type4,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type4,base)
+		g_series_type4 sin() const;
+		g_series_type4 cos() const;
+};
+
 struct construction_tag {};
 
 namespace piranha
@@ -1107,6 +1134,16 @@ BOOST_AUTO_TEST_CASE(series_sin_cos_test)
 	BOOST_CHECK(has_cosine<p_type5>::value);
 	BOOST_CHECK((std::is_same<decltype(math::sin(p_type5{})),g_series_type3<mock_cf,int>>::value));
 	BOOST_CHECK((std::is_same<decltype(math::cos(p_type5{})),g_series_type3<mock_cf,int>>::value));
+	// Check that casting a series type to its base type and then calling sin/cos still gets out the original
+	// type.
+	typedef g_series_type3<double,int> p_type6;
+	BOOST_CHECK((std::is_same<p_type6,decltype(math::sin(std::declval<const p_type6::base &>()))>::value));
+	BOOST_CHECK((std::is_same<p_type6,decltype(math::cos(std::declval<const p_type6::base &>()))>::value));
+	typedef g_series_type4<double,int> p_type7;
+	BOOST_CHECK(has_sine<p_type7>::value);
+	BOOST_CHECK(has_cosine<p_type7>::value);
+	BOOST_CHECK((std::is_same<p_type7,decltype(math::sin(std::declval<const p_type7::base &>()))>::value));
+	//BOOST_CHECK((std::is_same<p_type7,decltype(math::cos(std::declval<const p_type7::base &>()))>::value));
 }
 
 BOOST_AUTO_TEST_CASE(series_iterator_test)

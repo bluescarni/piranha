@@ -754,3 +754,15 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 //	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*tstype0{"z"}*math::sin(3*tstype0{"x"}+6*tstype0{"y"})*div1*div1
 //		-8/3_q*tstype0{"z"}*div2*div2*math::cos(12*tstype0{"x"}-9*tstype0{"y"}));
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_special_sin_cos_test)
+{
+	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<double>>::value));
+	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<real>>::value));
+	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<polynomial<real,monomial<short>>>>::value));
+	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<polynomial<rational,monomial<short>>>>::value));
+	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<divisor_series<polynomial<real,monomial<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<divisor_series<divisor_series<real,divisor<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<divisor_series<divisor_series<rational,divisor<short>>,divisor<short>>>>::value));
+}

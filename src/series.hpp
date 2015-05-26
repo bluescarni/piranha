@@ -2869,6 +2869,33 @@ inline RetT series_cf_sin_impl(const T &s)
 	}
 	return retval;
 }
+#if 0
+// 2. member function is not available, coefficient type supports math::sin() with a result equal to
+// the original coefficient type.
+// NOTE: note here the importance of passing explicitly series<Cf,Key,Derived> instead of a generic type T.
+// If we cast a series type S to its base B and then pass it to this function (as we do, e.g., in poisson_series to provide
+// a fall back to the default sin() implementation), we lose any information about S. Like this, instead, we can still reach the final
+// type of the series via Derived. This essentially the same thing we are doing in series::pow(), that is, using the final
+// series type - but there it is easier because, as a method, series::pow() has direct access to the Derived type. Here we are relying
+// on the convertibility of a Derived type to its base.
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value && !series_has_sin<Derived>::value &&
+	std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline Derived series_sin_impl(const series<Cf,Key,Derived> &s)
+{
+	return series_cf_sin_impl<Derived>(s);
+}
+
+// 3. member function is not available, coefficient type supports math::sin() with a result different
+// from the original coefficient type and the series can be rebound to this new type.
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value && !series_has_sin<Derived>::value &&
+	!std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+// NOTE: here the series_rebind alias already includes the is_rebindable check.
+inline series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))> series_sin_impl(const series<Cf,Key,Derived> &s)
+{
+	using ret_type = series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
+	return series_cf_sin_impl<ret_type>(s);
+}
+#endif
 
 // 2. member function is not available, coefficient type supports math::sin() with a result equal to
 // the original coefficient type.
@@ -2887,6 +2914,21 @@ template <typename T, typename std::enable_if<is_series<T>::value && !series_has
 inline series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))> series_sin_impl(const T &s)
 {
 	using ret_type = series_rebind<T,decltype(math::sin(std::declval<const typename T::term_type::cf_type &>()))>;
+	return series_cf_sin_impl<ret_type>(s);
+}
+
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
+	std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline Derived series_sin_impl(const series<Cf,Key,Derived> &s)
+{
+	return series_cf_sin_impl<Derived>(s);
+}
+
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
+	!std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))> series_sin_impl(const series<Cf,Key,Derived> &s)
+{
+	using ret_type = series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
 	return series_cf_sin_impl<ret_type>(s);
 }
 
@@ -2929,18 +2971,18 @@ inline RetT series_cf_cos_impl(const T &s)
 	return retval;
 }
 
-template <typename T, typename std::enable_if<is_series<T>::value && !series_has_cos<T>::value &&
-	std::is_same<typename T::term_type::cf_type,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
-inline T series_cos_impl(const T &s)
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value && !series_has_cos<Derived>::value &&
+	std::is_same<typename Derived::term_type::cf_type,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline Derived series_cos_impl(const series<Cf,Key,Derived> &s)
 {
-	return series_cf_cos_impl<T>(s);
+	return series_cf_cos_impl<Derived>(s);
 }
 
-template <typename T, typename std::enable_if<is_series<T>::value && !series_has_cos<T>::value &&
-	!std::is_same<typename T::term_type::cf_type,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>::value,int>::type = 0>
-inline series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))> series_cos_impl(const T &s)
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value && !series_has_cos<Derived>::value &&
+	!std::is_same<typename Derived::term_type::cf_type,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline series_rebind<Derived,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))> series_cos_impl(const series<Cf,Key,Derived> &s)
 {
-	using ret_type = series_rebind<T,decltype(math::cos(std::declval<const typename T::term_type::cf_type &>()))>;
+	using ret_type = series_rebind<Derived,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
 	return series_cf_cos_impl<ret_type>(s);
 }
 
