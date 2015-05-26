@@ -104,6 +104,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_pow_test)
 	BOOST_CHECK_EQUAL(math::pow(null,1),0);
 	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
 	BOOST_CHECK_EQUAL(math::pow(null,0),1);
+	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
@@ -145,6 +147,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_pow_test)
 	BOOST_CHECK_EQUAL(math::pow(null,1),0);
 	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
 	BOOST_CHECK_EQUAL(math::pow(null,0),1);
+	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
@@ -184,6 +188,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_pow_test)
 	BOOST_CHECK_EQUAL(math::pow(null,1),0);
 	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
 	BOOST_CHECK_EQUAL(math::pow(null,0),1);
+	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
@@ -228,6 +234,8 @@ struct partial_tester
 		s_type x{"x"}, y{"y"}, z{"z"};
 		// First with variables only in the divisors.
 		auto s0 = math::pow(x+y-2*z,-1);
+		BOOST_CHECK((std::is_same<s_type,decltype(s0.partial("x"))>::value));
+		BOOST_CHECK((std::is_same<s_type,decltype(math::partial(s0,"x"))>::value));
 		BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
 		BOOST_CHECK_EQUAL(math::partial(s0,"x"),-s0*s0);
 		BOOST_CHECK_EQUAL(s0.partial("z"),2*s0*s0);
