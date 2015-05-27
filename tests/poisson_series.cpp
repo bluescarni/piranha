@@ -223,6 +223,33 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK(has_cosine<p_type1>::value);
 	BOOST_CHECK(has_sine<poisson_series<rational>>::value);
 	BOOST_CHECK(has_cosine<poisson_series<rational>>::value);
+	// Check with eps.
+	using p_type5 = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	BOOST_CHECK(has_sine<p_type5>::value);
+	BOOST_CHECK(has_cosine<p_type5>::value);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type5{"x"})),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type5{"x"}+p_type5{"y"})),"cos(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p_type5{"x"}+p_type5{"y"})),"cos(x-y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type5{"x"})),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type5{"x"}+p_type5{"y"})),"sin(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p_type5{"x"}+p_type5{"y"})),"-sin(x-y)");
+	BOOST_CHECK_EQUAL(math::cos(p_type5{0}),1);
+	BOOST_CHECK_EQUAL(math::sin(p_type5{0}),0);
+	using p_type6 = poisson_series<divisor_series<polynomial<double,monomial<short>>,divisor<short>>>;
+	BOOST_CHECK_EQUAL(math::cos(p_type6{1.23}),std::cos(1.23));
+	BOOST_CHECK_EQUAL(math::sin(p_type6{-4.56}),std::sin(-4.56));
+	// Double divisor.
+	using p_type7 = poisson_series<divisor_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>,divisor<short>>>;
+	BOOST_CHECK(has_sine<p_type7>::value);
+	BOOST_CHECK(has_cosine<p_type7>::value);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type7{"x"})),"cos(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type7{"x"}+p_type7{"y"})),"cos(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p_type7{"x"}+p_type7{"y"})),"cos(x-y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type7{"x"})),"sin(x)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type7{"x"}+p_type7{"y"})),"sin(x+y)");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p_type7{"x"}+p_type7{"y"})),"-sin(x-y)");
+	BOOST_CHECK_EQUAL(math::cos(p_type7{0}),1);
+	BOOST_CHECK_EQUAL(math::sin(p_type7{0}),0);
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_arithmetic_test)

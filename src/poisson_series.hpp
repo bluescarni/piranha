@@ -77,7 +77,7 @@ struct is_divisor_series<divisor_series<Cf,Key>>
 };
 
 // Type trait to check whether a Poisson series can provide a linear combination of arguments
-// for sine/cosine via its outermost polynomial coefficient.
+// for sine/cosine via the first polynomial coefficient encountered in the hierarchy.
 template <typename T, typename = void>
 struct ps_has_special_sin_cos
 {
@@ -85,14 +85,15 @@ struct ps_has_special_sin_cos
 };
 
 template <typename T>
-struct ps_has_special_sin_cos<T,typename std::enable_if<series_recursion_index<T>::value == 2u &&
+struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
 	std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
 {
 	static const bool value = true;
 };
 
 template <typename T>
-struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 2u)>::type>
+struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
+	!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
 {
 	static const bool value = ps_has_special_sin_cos<typename T::term_type::cf_type>::value;
 };
@@ -139,39 +140,65 @@ class poisson_series:
 {
 		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
-		// TMP for enabling sin and cos overrides.
-		// Detect if T's coefficient has suitable sin/cos implementations.
-		template <typename T, typename = void>
-		struct cf_has_sin_cos
-		{
-			static const bool value = false;
-		};
+		// Sin/cos utils.
+		// Type coming out of sin()/cos() for the base type. These will also be the final types.
 		template <typename T>
-		struct cf_has_sin_cos<T,typename std::enable_if<
-			std::is_same<decltype(math::sin(std::declval<typename T::term_type::cf_type>())),typename T::term_type::cf_type>::value &&
-			std::is_same<decltype(math::cos(std::declval<typename T::term_type::cf_type>())),typename T::term_type::cf_type>::value
-			>::type>
-		{
-			static const bool value = true;
-		};
+		using sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
 		template <typename T>
-		using sin_cos_enabler = typename std::enable_if<
-			std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value || cf_has_sin_cos<T>::value,
-			int>::type;
-		// Sin/cos overrides implementation.
-		// If cf is a suitable polynomial, attempt the symbolic sin/cos with the integral linear combination.
-		template <bool IsCos, typename T, typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value,int>::type = 0>
-		poisson_series sin_cos_impl() const
+		using cos_type = decltype(math::cos(std::declval<const typename T::base &>()));
+		// Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via casting.
+		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		sin_type<T> sin_impl() const
+		{
+			return math::sin(*static_cast<const base *>(this));
+		}
+		// Case 1: Poisson series is suitable for special sin() implementation. This can fail at runtime depending on what is
+		// contained in the coefficients. The return type is the same as the base one, as in this routine we only need operations
+		// which are supported by all coefficient types, no need for rebinding or anything like that.
+		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		sin_type<T> sin_impl() const
+		{
+			return special_sin_cos<false,sin_type<T>>(*this);
+		}
+		// Same as above, for cos().
+		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		cos_type<T> cos_impl() const
+		{
+			return math::cos(*static_cast<const base *>(this));
+		}
+		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		cos_type<T> cos_impl() const
+		{
+			return special_sin_cos<true,cos_type<T>>(*this);
+		}
+		// Functions to handle the case in which special sin/cos implementation fails. They will just call the base sin/cos, we need
+		// them with tag dispatching as the implementation below is generic and needs to cope with potentially different sin/cos return
+		// types.
+		template <typename T>
+		static cos_type<T> special_sin_cos_failure(const T &s, const std::true_type &)
+		{
+			return math::cos(static_cast<const typename T::base &>(s));
+		}
+		template <typename T>
+		static sin_type<T> special_sin_cos_failure(const T &s, const std::false_type &)
+		{
+			return math::sin(static_cast<const typename T::base &>(s));
+		}
+		// Special sin/cos implementation when we have reached the first polynomial coefficient in the hierarchy.
+		template <bool IsCos, typename RetT, typename T, typename std::enable_if<std::is_base_of<detail::polynomial_tag,
+			typename T::term_type::cf_type>::value,int>::type = 0>
+		RetT special_sin_cos(const T &s) const
 		{
 			// Do something only if the series is equivalent to a polynomial.
-			if (this->is_single_coefficient() && !this->empty()) {
+			if (s.is_single_coefficient() && !s.empty()) {
 				try {
 					// Shortcuts.
-					typedef term<Cf,rtk_monomial> term_type;
+					typedef typename RetT::term_type term_type;
+					typedef typename term_type::cf_type cf_type;
 					typedef typename term_type::key_type key_type;
 					typedef typename key_type::value_type value_type;
-					// Try to get the integral combination.
-					auto lc = this->m_container.begin()->m_cf.integral_combination();
+					// Try to get the integral combination from the poly coefficient.
+					auto lc = s._container().begin()->m_cf.integral_combination();
 					// Change sign if needed.
 					bool sign_change = false;
 					if (!lc.empty() && lc.begin()->second.sign() < 0) {
@@ -179,22 +206,23 @@ class poisson_series:
 						sign_change = true;
 					}
 					// Return value.
-					poisson_series retval;
+					RetT retval;
 					// Build vector of integral multipliers.
 					std::vector<value_type> v;
 					for (auto it = lc.begin(); it != lc.end(); ++it) {
 						retval.m_symbol_set.add(it->first);
-						// NOTE: this should probably be a safe_cast, if we ever implement it.
+						// NOTE: this should probably be a safe_cast.
 						// The value type here could be anything, and not guaranteed to be castable,
 						// even if in the current implementation this is guaranteed to be a signed
 						// int of some kind.
 						v.push_back(static_cast<value_type>(it->second));
 					}
 					// Build term, fix signs and flavour and move-insert it.
-					term_type term(Cf(1),key_type(v.begin(),v.end()));
+					term_type term(cf_type(1),key_type(v.begin(),v.end()));
 					if (!IsCos) {
 						term.m_key.set_flavour(false);
 						if (sign_change) {
+							// NOTE: negate is supported by any coefficient type.
 							math::negate(term.m_cf);
 						}
 					}
@@ -205,30 +233,18 @@ class poisson_series:
 					// and move on.
 				}
 			}
-			return sin_cos_cf_impl<IsCos,T>();
+			return special_sin_cos_failure(*this,std::integral_constant<bool,IsCos>{});
 		}
-		// If cf is not a suitable poly, go for the standard implementation.
-		template <bool IsCos, typename T, typename std::enable_if<!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value,int>::type = 0>
-		poisson_series sin_cos_impl() const
+		// The coefficient is not a polynomial: recurse to the inner coefficient type, if the current coefficient type
+		// is suitable.
+		template <bool IsCos, typename RetT, typename T, typename std::enable_if<!std::is_base_of<detail::polynomial_tag,
+			typename T::term_type::cf_type>::value,int>::type = 0>
+		RetT special_sin_cos(const T &s) const
 		{
-			return sin_cos_cf_impl<IsCos,T>();
-		}
-		template <bool IsCos, typename T, typename std::enable_if<cf_has_sin_cos<T>::value,int>::type = 0>
-		poisson_series sin_cos_cf_impl() const
-		{
-			// NOTE: here we cast back to the base class, and then we have to move-construct the output
-			// Poisson series as the math::cos functor will produce an output of the type of the base class.
-			if (IsCos) {
-				return poisson_series{math::cos(*static_cast<series<Cf,rtk_monomial,poisson_series<Cf>> const *>(this))};
+			if (s.is_single_coefficient() && !s.empty()) {
+				return special_sin_cos<IsCos,RetT>(s._container().begin()->m_cf);
 			}
-			return poisson_series{math::sin(*static_cast<series<Cf,rtk_monomial,poisson_series<Cf>> const *>(this))};
-		}
-		template <bool IsCos, typename T, typename std::enable_if<!cf_has_sin_cos<T>::value,int>::type = 0>
-		poisson_series sin_cos_cf_impl() const
-		{
-			// TODO: this will need to be reworked eventually when we fix subs(), there's no need to arrive here
-			// with a runtime error when we can exclude this from happening via TMP.
-			piranha_throw(std::invalid_argument,"Poisson series is unsuitable for the calculation of sine/cosine");
+			return special_sin_cos_failure(*this,std::integral_constant<bool,IsCos>{});
 		}
 		// Integration utils.
 		// The type resulting from the integration of the key of series T.
@@ -496,22 +512,34 @@ class poisson_series:
 		/// Defaulted move assignment operator.
 		poisson_series &operator=(poisson_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(poisson_series,base)
-		/// Override sine implementation.
+		/// Sine.
 		/**
 		 * \note
-		 * This template method is enabled only if either:
-		 * - the coefficient type is a piranha::polynomial, or
-		 * - the coefficient type has a math::sin() implementation whose return type is the coefficient type.
+		 * This template method is enabled only if math::sin() can be called on the class
+		 * from which piranha::poisson_series derives (i.e., only if the default math::sin()
+		 * implementation for series is appropriate).
 		 *
-		 * This method will override the default math::sin() implementation in case the coefficient type is an instance of
-		 * piranha::polynomial. If the series is single-coefficient and not empty, and the coefficient represents a linear combination
-		 * of variables with integral coefficients, then the return value will be a Poisson series consisting of a single term with
-		 * coefficient constructed from "1" and trigonometric key containing the linear combination of variables.
-		 * 
-		 * In any other case, the default algorithm to calculate the sine of a series will take place.
-		 * 
-		 * @return sine of \p this.
-		 * 
+		 * In general, this method behaves exactly like the default implementation of piranha::math::sin() for series
+		 * types. If, however, a polynomial appears in the hierarchy of coefficients, then this method
+		 * will attempt to extract an integral linear combination of symbolic arguments and use it to construct
+		 * a Poisson series with a single term, unitary coefficient and the trigonometric key built from the linear
+		 * combination.
+		 *
+		 * For instance, if the calling Poisson series is
+		 * \f[
+		 * -2x + y,
+		 * \f]
+		 * then calling this method will produce the Poisson series
+		 * \f[
+		 * -\sin \left( 2x - y \right).
+		 * \f]
+		 *
+		 * If for any reason it is not possible to extract the linear integral combination from the polynomial part,
+		 * then this method will forward the call to the default implementation of piranha::math::sin() for series
+		 * types.
+		 *
+		 * @return the sine of \p this.
+		 *
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::series::is_single_coefficient(), piranha::series::insert(),
 		 * - piranha::symbol_set::add(),
@@ -522,53 +550,22 @@ class poisson_series:
 		 * - piranha::math::sin(),
 		 * - the extraction of a linear combination of integral arguments from the polynomial coefficient.
 		 */
-		template <typename T = poisson_series, sin_cos_enabler<T> = 0>
-		poisson_series sin() const
+		template <typename T = poisson_series>
+		sin_type<T> sin() const
 		{
-			return sin_cos_impl<false,T>();
+			return sin_impl();
 		}
-		/// Override cosine implementation.
+		/// Cosine.
 		/**
-		 * This method operates in the the same way as explained in sin().
-		 * 
-		 * @return cosine of \p this.
-		 * 
-		 * @throws unspecified any exception thrown by sin().
-		 */
-		template <typename T = poisson_series, sin_cos_enabler<T> = 0>
-		poisson_series cos() const
-		{
-			return sin_cos_impl<true,T>();
-		}
-		/// Sine.
-		/**
-		 * \note
-		 * This template method is enabled only if math::sin() can be called on the class
-		 * from which piranha::poisson_series derived (i.e., only if the default math::sin()
-		 * implementation for series is appropriate).
+		 * This method works in the same way as piranha::poisson_series::sin().
 		 *
+		 * @return the cosine of \p this.
 		 */
-		// Base type coming out of sin() for the base type.
-		template <typename T>
-		using base_sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
-		// Case 0: Poisson series is not suitable for special sin() implementation.
-		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
-		base_sin_type<T> sin_impl() const
+		template <typename T = poisson_series>
+		cos_type<T> cos() const
 		{
-			return math::sin(*static_cast<const base *>(this));
+			return cos_impl();
 		}
-		// Case 1: Poisson series is suitable for special sin() implementation.
-		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
-		base_sin_type<T> sin_impl() const
-		{
-			return math::sin(*static_cast<const base *>(this));
-		}
-
-//		template <typename T = poisson_series>
-//		sin_type<T> sin_() const
-//		{
-
-//		}
 		/// Integration.
 		/**
 		 * \note
