@@ -3017,6 +3017,11 @@ template <typename Series>
 using series_partial_enabler = typename std::enable_if<is_series<Series>::value &&
 	true_tt<decltype(std::declval<const Series &>().partial(std::declval<const std::string &>()))>::value>::type;
 
+// Enabler for the integrate() specialisation: type needs to be a series which supports the integration method.
+template <typename Series>
+using series_integrate_enabler = typename std::enable_if<is_series<Series>::value &&
+	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
+
 }
 
 namespace math
@@ -3066,6 +3071,30 @@ struct partial_impl<Series,detail::series_partial_enabler<Series>>
 			return func(s);
 		}
 		return s.partial(name);
+	}
+};
+
+/// Specialisation of the piranha::math::integrate() functor for series types.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series with a const \p integrate()
+ * method taking a const <tt>std::string</tt> as parameter.
+ */
+template <typename Series>
+struct integrate_impl<Series,detail::series_integrate_enabler<Series>>
+{
+	/// Call operator.
+	/**
+	 * @param[in] s input series.
+	 * @param[in] name name of the argument with respect to which the antiderivative will be calculated.
+	 *
+	 * @return the antiderivative of \p s with respect to \p name.
+	 *
+	 * @throws unspecified any exception thrown by the invoked series method.
+	 */
+	template <typename T>
+	auto operator()(const T &s, const std::string &name) -> decltype(s.integrate(name))
+	{
+		return s.integrate(name);
 	}
 };
 

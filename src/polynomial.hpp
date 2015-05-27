@@ -493,47 +493,6 @@ class polynomial:
 namespace detail
 {
 
-// Enabler for the math::integrate() specialisation: type needs to be a polynomial which supports
-// the integration method.
-template <typename Series>
-using poly_integrate_enabler = typename std::enable_if<std::is_base_of<polynomial_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
-
-}
-
-namespace math
-{
-
-/// Specialisation of the piranha::math::integrate() functor for polynomial types.
-/**
- * This specialisation is activated when \p Series is an instance of piranha::polynomial that supports integration
- * via piranha::polynomial::integrate().
- */
-template <typename Series>
-struct integrate_impl<Series,detail::poly_integrate_enabler<Series>>
-{
-	/// Call operator.
-	/**
-	 * The implementation will use piranha::polynomial::integrate().
-	 * 
-	 * @param[in] s input polynomial.
-	 * @param[in] name integration variable.
-	 * 
-	 * @return antiderivative of \p s with respect to \p name.
-	 * 
-	 * @throws unspecified any exception thrown by piranha::polynomial::integrate().
-	 */
-	auto operator()(const Series &s, const std::string &name) const -> decltype(s.integrate(name))
-	{
-		return s.integrate(name);
-	}
-};
-
-}
-
-namespace detail
-{
-
 template <typename Series>
 struct kronecker_enabler
 {

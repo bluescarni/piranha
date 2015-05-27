@@ -672,47 +672,6 @@ class poisson_series:
 		}
 };
 
-namespace detail
-{
-
-// Enabler for the math::integrate() specialisation: type needs to be a Poisson series which supports
-// the integration method.
-template <typename Series>
-using ps_integrate_enabler = typename std::enable_if<std::is_base_of<poisson_series_tag,Series>::value &&
-	true_tt<decltype(std::declval<const Series &>().integrate(std::declval<const std::string &>()))>::value>::type;
-
-}
-
-namespace math
-{
-
-/// Specialisation of the piranha::math::integrate() functor for Poisson series.
-/**
- * This specialisation is activated when \p Series is an instance of piranha::poisson_series which supports
- * piranha::poisson_series::integrate().
- */
-template <typename Series>
-struct integrate_impl<Series,detail::ps_integrate_enabler<Series>>
-{
-	/// Call operator.
-	/**
-	 * The implementation will use piranha::poisson_series::integrate().
-	 * 
-	 * @param[in] s input Poisson series.
-	 * @param[in] name integration variable.
-	 * 
-	 * @return antiderivative of \p s with respect to \p name.
-	 * 
-	 * @throws unspecified any exception thrown by piranha::poisson_series::integrate().
-	 */
-	auto operator()(const Series &s, const std::string &name) -> decltype(s.integrate(name))
-	{
-		return s.integrate(name);
-	}
-};
-
-}
-
 }
 
 #endif
