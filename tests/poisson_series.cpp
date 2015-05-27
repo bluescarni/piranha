@@ -177,6 +177,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 {
 	typedef poisson_series<polynomial<rational,monomial<short>>> p_type1;
 	p_type1 p1{"x"};
+	BOOST_CHECK((std::is_same<p_type1,decltype(math::sin(p_type1{}))>::value));
+	BOOST_CHECK((std::is_same<p_type1,decltype(math::cos(p_type1{}))>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(-p1)),"-sin(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p1)),"cos(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.sin()),"sin(x)");
@@ -199,6 +201,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::sin(p_type1{"x"} * rational(4,-2))),"-sin(2*x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(-math::cos(p_type1{"x"} * rational(4,2))),"-cos(2*x)");
 	typedef poisson_series<polynomial<real,monomial<short>>> p_type2;
+	BOOST_CHECK((std::is_same<p_type2,decltype(math::sin(p_type2{}))>::value));
+	BOOST_CHECK((std::is_same<p_type2,decltype(math::cos(p_type2{}))>::value));
 	BOOST_CHECK_EQUAL(math::sin(p_type2{3}),math::sin(real(3)));
 	BOOST_CHECK_EQUAL(math::cos(p_type2{3}),math::cos(real(3)));
 	p_type2 p2 = p_type2{"x"} - 2 * p_type2{"y"};
@@ -210,6 +214,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK_EQUAL(math::sin(p_type3{3}),math::sin(real(3)));
 	BOOST_CHECK_EQUAL(math::cos(p_type3{3}),math::cos(real(3)));
 	typedef poisson_series<double> p_type4;
+	BOOST_CHECK((std::is_same<p_type4,decltype(math::sin(p_type4{}))>::value));
+	BOOST_CHECK((std::is_same<p_type4,decltype(math::cos(p_type4{}))>::value));
 	BOOST_CHECK_EQUAL(math::sin(p_type4{0}),0);
 	BOOST_CHECK_EQUAL(math::cos(p_type4{0}),std::cos(0));
 	BOOST_CHECK_EQUAL(math::cos(p_type4{1}),std::cos(1));
@@ -225,6 +231,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	BOOST_CHECK(has_cosine<poisson_series<rational>>::value);
 	// Check with eps.
 	using p_type5 = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	BOOST_CHECK((std::is_same<p_type5,decltype(math::sin(p_type5{}))>::value));
+	BOOST_CHECK((std::is_same<p_type5,decltype(math::cos(p_type5{}))>::value));
 	BOOST_CHECK(has_sine<p_type5>::value);
 	BOOST_CHECK(has_cosine<p_type5>::value);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type5{"x"})),"cos(x)");
@@ -242,6 +250,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_sin_cos_test)
 	using p_type7 = poisson_series<divisor_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>,divisor<short>>>;
 	BOOST_CHECK(has_sine<p_type7>::value);
 	BOOST_CHECK(has_cosine<p_type7>::value);
+	BOOST_CHECK((std::is_same<p_type7,decltype(math::sin(p_type7{}))>::value));
+	BOOST_CHECK((std::is_same<p_type7,decltype(math::cos(p_type7{}))>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type7{"x"})),"cos(x)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(p_type7{"x"}+p_type7{"y"})),"cos(x+y)");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::cos(-p_type7{"x"}+p_type7{"y"})),"cos(x-y)");

@@ -430,16 +430,18 @@ class poisson_series:
 				// Copy it over to the tmp_int as integer values.
 				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
 					[](const k_value_type &n) {return integer(n);});
-				// Determine the common divisor and if a sign flip is needed.
+				// Determine the common divisor.
+				// NOTE: both the divisor and the trigonometric key share the canonical form in which the
+				// first nonzero multiplier is positive, so we don't need to account for sign flips when
+				// constructing a divisor from the trigonometric part. We just need to take care
+				// of the common divisor.
 				integer cd(0);
-				bool need_sign_flip = false, first_nonzero_found = false;
+				bool first_nonzero_found = false;
 				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
 					// NOTE: gcd is safe, operating on integers.
 					cd = detail::gcd(cd,*it2);
 					if (!first_nonzero_found && !math::is_zero(*it2)) {
-						if (*it2 < 0) {
-							need_sign_flip = true;
-						}
+						piranha_assert(*it2 > 0);
 						first_nonzero_found = true;
 					}
 				}
@@ -449,12 +451,9 @@ class poisson_series:
 				}
 				// Take the abs of the cd.
 				cd = cd.abs();
-				// Divide the vector by the common divisor, and flip the sign if needed.
+				// Divide the vector by the common divisor.
 				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
 					*it2 /= cd;
-					if (need_sign_flip) {
-						it2->negate();
-					}
 				}
 				// Build first the divisor series - the coefficient of the term to be inserted
 				// into retval.
@@ -464,10 +463,8 @@ class poisson_series:
 				// The coefficient of the only term of the divisor series is the original coefficient
 				// multiplied by any sign change from the integration or the change in sign in the divisors,
 				// and divided by the common divisor (cast to the appropriate type).
-				// NOTE: probably the sign flip is never needed, as the canonical form of the trigonometric keys
-				// also enforces a first nonzero multiplier.
 				typename return_type::term_type::cf_type::term_type::cf_type div_cf = (it->m_cf *
-					((it->m_key.get_flavour() ? 1 : -1) * (need_sign_flip ? -1 : 1))) /
+					(it->m_key.get_flavour() ? 1 : -1)) /
 					static_cast<typename div_type::value_type>(cd);
 				// Build the divisor.
 				typename div_type::value_type exponent(1);
