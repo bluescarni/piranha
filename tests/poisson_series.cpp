@@ -702,115 +702,47 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	// Check a few sample integrations by reconstructing manually the expected result via term insertions.
 	using div_type0 = divisor<short>;
 	using ptype0 = polynomial<rational,monomial<short>>;
-	using stype0 = poisson_series<ptype0>;
-	using ktype0 = poisson_series<ptype0>::term_type::key_type;
 	using dtype0 = divisor_series<ptype0,div_type0>;
-	using tstype0 = poisson_series<dtype0>;
-	symbol_set freqs;
-	freqs.add("\\nu_{x}");
-	freqs.add("\\nu_{y}");
-	stype0 x{"x"}, y{"y"}, z{"z"};
+	using ts0 = poisson_series<dtype0>;
+	ts0 x{"x"}, y{"y"}, z{"z"};
+	ts0 nu_x{"\\nu_{x}"}, nu_y{"\\nu_{y}"}, nu_z{"\\nu_{z}"};
 	auto tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate();
-	BOOST_CHECK((std::is_same<decltype(tmp0),tstype0>::value));
-	div_type0 tmp_div;
-	std::vector<short> tmp = {1,1};
-	short exponent = 1;
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	dtype0 d_tmp;
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{-1/5_q * ptype0{"z"},tmp_div});
-	ktype0 tmp_k{1,1};
-	tstype0 tmp_ts;
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK((std::is_same<decltype(tmp0),ts0>::value));
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*(nu_x+nu_y).pow(-1));
 	tmp0 = (1/5_q * z * math::cos(x + y)).t_integrate();
-	tmp_div.clear();
-	tmp = {1,1};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{1/5_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{1,1};
-	tmp_k.set_flavour(false);
-	tmp_ts = tstype0{};
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(x + y)*(nu_x+nu_y).pow(-1));
 	tmp0 = (1/5_q * z * math::cos(3*x + y)).t_integrate();
-	tmp_div.clear();
-	tmp = {3,1};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{1/5_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{3,1};
-	tmp_k.set_flavour(false);
-	tmp_ts = tstype0{};
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(3*x + y)*(3*nu_x+nu_y).pow(-1));
 	// Check with a common divisor.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y)).t_integrate();
-	tmp_div.clear();
-	tmp = {1,2};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{1/15_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{3,6};
-	tmp_k.set_flavour(false);
-	tmp_ts = tstype0{};
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK_EQUAL(tmp0,1/15_q*z*math::sin(3*x + 6*y)*(nu_x+2*nu_y).pow(-1));
 	// Check with a leading zero.
 	// NOTE: this complication is to produce cos(6y) while avoiding x being trimmed by the linear argument
 	// deduction.
 	tmp0 = (1/5_q * z * (math::cos(x + 6*y) * math::cos(x) - math::cos(2*x + 6*y)/2)).t_integrate();
-	tmp_div.clear();
-	tmp = {0,1};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{1/60_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{0,6};
-	tmp_k.set_flavour(false);
-	tmp_ts = tstype0{};
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK_EQUAL(tmp0,1/60_q*z*math::sin(6*y)*(nu_y).pow(-1));
 	// Test throwing.
 	BOOST_CHECK_THROW(z.t_integrate(),std::invalid_argument);
 	// An example with more terms.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
-	tmp_div.clear();
-	tmp = {1,2};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{1/15_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{3,6};
-	tmp_k.set_flavour(false);
-	tmp_ts = tstype0{};
-	tmp_ts.set_symbol_set(tmp0.get_symbol_set());
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	tmp_div.clear();
-	tmp = {4,-3};
-	tmp_div.insert(tmp.begin(),tmp.end(),exponent);
-	d_tmp = dtype0{};
-	d_tmp.set_symbol_set(freqs);
-	d_tmp.insert(dtype0::term_type{2/3_q * ptype0{"z"},tmp_div});
-	tmp_k = ktype0{12,-9};
-	tmp_ts.insert(tstype0::term_type{d_tmp,tmp_k});
-	BOOST_CHECK_EQUAL(tmp_ts,tmp0);
+	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * (nu_x+2*nu_y).pow(-1) +
+		2/3_q * z * math::cos(12*x - 9*y) * (4*nu_x-3*nu_y).pow(-1));
 	// Test derivative.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * ptype0{"z"}.pow(-1));
-//	auto div1 = tstype0(dtype0::from_polynomial(ptype0{"\\nu_{x}"}+3*ptype0{"\\nu_{y}"}));
-//	auto div2 = tstype0(dtype0::from_polynomial(4*ptype0{"\\nu_{x}"}-3*ptype0{"\\nu_{y}"}));
-//	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*tstype0{"z"}*math::sin(3*tstype0{"x"}+6*tstype0{"y"})*div1*div1
-//		-8/3_q*tstype0{"z"}*div2*div2*math::cos(12*tstype0{"x"}-9*tstype0{"y"}));
+	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) -
+		8/3_q*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y));
+	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{y}"),-2/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) +
+		2*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y));
+	// Try the custom derivative with respect to the nu_x variable.
+	ts0::register_custom_derivative("\\nu_{x}",[](const ts0 &s) {
+		return s.partial("\\nu_{x}") + s.partial("x") * ts0{"t"};
+	});
+	BOOST_CHECK_EQUAL(math::partial(tmp0,"\\nu_{x}"),-1/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) +
+		3/15_q*z*(nu_x+2*nu_y).pow(-1)*math::cos(3*x+6*y)*ts0{"t"}
+		-8/3_q*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y)
+		-24/3_q * z * math::sin(12*x - 9*y) * (4*nu_x-3*nu_y).pow(-1) * ts0{"t"});
+	ts0::unregister_all_custom_derivatives();
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_special_sin_cos_test)

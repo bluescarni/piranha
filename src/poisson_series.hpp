@@ -31,26 +31,16 @@
 
 #include "config.hpp"
 #include "detail/gcd.hpp"
+#include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
 #include "detail/sfinae_types.hpp"
-#include "divisor.hpp"
-#include "divisor_series.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
 #include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
-
-// NOTE: thre is a bug in GCC < 5 triggered when poisson_series.hpp is included
-// before polynomial.hpp. Force the inclusion here as a work-around.
-#if defined(PIRANHA_COMPILER_IS_GCC)
-#if __GNUC__  < 5
-#include "polynomial.hpp"
-#endif
-#endif
-
 #include "power_series.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "safe_cast.hpp"
@@ -71,19 +61,6 @@ namespace detail
 {
 
 struct poisson_series_tag {};
-
-// Implementation detail to detect a divisor series.
-template <typename T>
-struct is_divisor_series
-{
-	static const bool value = false;
-};
-
-template <typename Cf, typename Key>
-struct is_divisor_series<divisor_series<Cf,Key>>
-{
-	static const bool value = true;
-};
 
 // Type trait to check whether a Poisson series can provide a linear combination of arguments
 // for sine/cosine via the first polynomial coefficient encountered in the hierarchy.
@@ -262,15 +239,25 @@ class poisson_series:
 			std::declval<const symbol &>(),std::declval<const symbol_set &>()).first);
 		// Basic integration requirements for series T, to be satisfied both when the coefficient is a polynomial
 		// and when it is not. ResT is the type of the result of the integration.
+		// NOTE: this used to be a template alias to be used with true_tt in the usual fashion, but there is a pesky bug
+		// in GCC < 5 that results in a segfault of the compiler. This is a workaround.
+		template <typename T, typename ResT, typename = void>
+		struct basic_integrate_requirements
+		{
+			static const bool value = false;
+		};
 		template <typename T, typename ResT>
-		using basic_integrate_requirements = typename std::enable_if<
+		struct basic_integrate_requirements<T,ResT,typename std::enable_if<
 			// Coefficient differentiable, and can call is_zero on the result.
 			has_is_zero<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()))>::value &&
 			// The result needs to be addable in-place.
 			is_addable_in_place<ResT>::value &&
 			// It also needs to be ctible from zero.
 			std::is_constructible<ResT,int>::value
-		>::type;
+		>::type>
+		{
+			static const bool value = true;
+		};
 		// Machinery for the integration of the coefficient only.
 		// Type resulting from the integration of the coefficient only.
 		template <typename ResT, typename T>
@@ -316,7 +303,7 @@ class poisson_series:
 			std::declval<const key_integrate_type<T> &>());
 		template <typename T>
 		struct integrate_type_<T,typename std::enable_if<!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value &&
-			detail::true_tt<basic_integrate_requirements<T,npc_res_type<T>>>::value>::type>
+			basic_integrate_requirements<T,npc_res_type<T>>::value>::type>
 		{
 			using type = npc_res_type<T>;
 		};
@@ -332,7 +319,7 @@ class poisson_series:
 		using pc_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
 		template <typename T>
 		struct integrate_type_<T,typename std::enable_if<std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value &&
-			detail::true_tt<basic_integrate_requirements<T,pc_res_type<T>>>::value &&
+			basic_integrate_requirements<T,pc_res_type<T>>::value &&
 			// We need to be able to add in the npc type.
 			is_addable_in_place<pc_res_type<T>,npc_res_type<T>>::value &&
 			// We need to be able to compute the degree of the polynomials and
@@ -398,100 +385,13 @@ class poisson_series:
 			piranha_throw(std::invalid_argument,"unable to perform Poisson series integration: coefficient type is not a polynomial");
 		}
 		// Time integration.
-		// Definition of the divisor type. NOTE: this is temporary and should be changed in the future.
 		template <typename T>
-		using t_int_div_key_type = divisor<short>;
+		using ti_type_ = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>()) /
+			std::declval<const integer &>());
 		template <typename T>
-		using t_int_div_cf_type = decltype((std::declval<const typename T::term_type::cf_type &>() * 1) /
-			std::declval<const typename t_int_div_key_type<T>::value_type &>());
-		template <typename T>
-		using ti_type_ = typename std::enable_if<is_cf<t_int_div_cf_type<T>>::value,
-			piranha::poisson_series<divisor_series<t_int_div_cf_type<T>,t_int_div_key_type<T>>>>::type;
-		// Overload if cf is not a divisor series already. The result will be a Poisson series with the same key type, in which the coefficient
-		// is a divisor series whose coefficient is calculated from the operations needed in the integration, and the key type is a divisor whose
-		// value type is deduced from the trigonometric key.
-		template <typename T = poisson_series, typename std::enable_if<!detail::is_divisor_series<typename T::term_type::cf_type>::value,int>::type = 0>
-		ti_type_<T> t_integrate_impl() const
-		{
-			using return_type = ti_type_<T>;
-			// The value type of the trigonometric key.
-			using k_value_type = typename base::term_type::key_type::value_type;
-			// The divisor type in the return type.
-			using div_type = typename return_type::term_type::cf_type::term_type::key_type;
-			// Initialise the return value. It has the same set of trig arguments as this.
-			return_type retval;
-			retval.set_symbol_set(this->m_symbol_set);
-			// The symbol set for the divisor series - built from the trigonometric arguments.
-			symbol_set div_symbols;
-			for (auto it = retval.get_symbol_set().begin(); it != retval.get_symbol_set().end(); ++it) {
-				div_symbols.add(std::string("\\nu_{") + it->get_name() + "}");
-			}
-			// A temp vector of integers used to normalise the divisors coming
-			// out of the integration operation from the trig keys.
-			std::vector<integer> tmp_int;
-			// Build the return value.
-			const auto it_f = this->m_container.end();
-			for (auto it = this->m_container.begin(); it != it_f; ++it) {
-				// Clear the tmp integer vector.
-				tmp_int.clear();
-				// Get the vector of trigonometric multipliers.
-				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
-				// Copy it over to the tmp_int as integer values.
-				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
-					[](const k_value_type &n) {return integer(n);});
-				// Determine the common divisor.
-				// NOTE: both the divisor and the trigonometric key share the canonical form in which the
-				// first nonzero multiplier is positive, so we don't need to account for sign flips when
-				// constructing a divisor from the trigonometric part. We just need to take care
-				// of the common divisor.
-				integer cd(0);
-				bool first_nonzero_found = false;
-				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
-					// NOTE: gcd is safe, operating on integers.
-					cd = detail::gcd(cd,*it2);
-					if (!first_nonzero_found && !math::is_zero(*it2)) {
-						piranha_assert(*it2 > 0);
-						first_nonzero_found = true;
-					}
-				}
-				if (unlikely(math::is_zero(cd))) {
-					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
-						"attempting a time integration");
-				}
-				// Take the abs of the cd.
-				cd = cd.abs();
-				// Divide the vector by the common divisor.
-				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
-					*it2 /= cd;
-				}
-				// Build first the divisor series - the coefficient of the term to be inserted
-				// into retval.
-				typename return_type::term_type::cf_type div_series;
-				// Set the arguments of the divisor series.
-				div_series.set_symbol_set(div_symbols);
-				// The coefficient of the only term of the divisor series is the original coefficient
-				// multiplied by any sign change from the integration or the change in sign in the divisors,
-				// and divided by the common divisor (cast to the appropriate type).
-				typename return_type::term_type::cf_type::term_type::cf_type div_cf = (it->m_cf *
-					(it->m_key.get_flavour() ? 1 : -1)) /
-					static_cast<typename div_type::value_type>(cd);
-				// Build the divisor.
-				typename div_type::value_type exponent(1);
-				typename return_type::term_type::cf_type::term_type::key_type div_key;
-				div_key.insert(tmp_int.begin(),tmp_int.end(),exponent);
-				// Insert the term into the divisor series.
-				div_series.insert(typename return_type::term_type::cf_type::term_type{std::move(div_cf),std::move(div_key)});
-				// Insert into the return value.
-				auto tmp_key = it->m_key;
-				// Switch the flavour for integration.
-				tmp_key.set_flavour(!tmp_key.get_flavour());
-				retval.insert(typename return_type::term_type{std::move(div_series),std::move(tmp_key)});
-			}
-			return retval;
-		}
-		// Final type definition.
-		template <typename T>
-		using ti_type = decltype(std::declval<const T &>().t_integrate_impl());
+		using ti_type = typename std::enable_if<std::is_constructible<ti_type_<T>,int>::value &&
+			is_addable_in_place<ti_type_<T>>::value &&
+			std::is_base_of<detail::divisor_series_tag,typename T::term_type::cf_type>::value,ti_type_<T>>::type;
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
@@ -677,7 +577,85 @@ class poisson_series:
 		template <typename T = poisson_series>
 		ti_type<T> t_integrate() const
 		{
-			return t_integrate_impl();
+			using return_type = ti_type<T>;
+			// Calling series types.
+			using term_type = typename base::term_type;
+			// The value type of the trigonometric key.
+			using k_value_type = typename base::term_type::key_type::value_type;
+			// Divisor series types.
+			using d_series_type = typename base::term_type::cf_type;
+			using d_term_type = typename d_series_type::term_type;
+			using d_cf_type = typename d_term_type::cf_type;
+			using d_key_type = typename d_term_type::key_type;
+			// Initialise the return value.
+			return_type retval(0);
+			// The symbol set for the divisor series coming out of the trigonometric arguments.
+			symbol_set div_symbols;
+			for (auto it = this->m_symbol_set.begin(); it != this->m_symbol_set.end(); ++it) {
+				div_symbols.add(std::string("\\nu_{") + it->get_name() + "}");
+			}
+			// A temp vector of integers used to normalise the divisors coming
+			// out of the integration operation from the trig keys.
+			std::vector<integer> tmp_int;
+			// Build the return value.
+			const auto it_f = this->m_container.end();
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				// Clear the tmp integer vector.
+				tmp_int.clear();
+				// Get the vector of trigonometric multipliers.
+				const auto trig_vector = it->m_key.unpack(this->m_symbol_set);
+				// Copy it over to the tmp_int as integer values.
+				std::transform(trig_vector.begin(),trig_vector.end(),std::back_inserter(tmp_int),
+					[](const k_value_type &n) {return integer(n);});
+				// Determine the common divisor.
+				// NOTE: both the divisor and the trigonometric key share the canonical form in which the
+				// first nonzero multiplier is positive, so we don't need to account for sign flips when
+				// constructing a divisor from the trigonometric part. We just need to take care
+				// of the common divisor.
+				integer cd(0);
+				bool first_nonzero_found = false;
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					// NOTE: gcd is safe, operating on integers.
+					cd = detail::gcd(cd,*it2);
+					if (!first_nonzero_found && !math::is_zero(*it2)) {
+						piranha_assert(*it2 > 0);
+						first_nonzero_found = true;
+					}
+				}
+				if (unlikely(math::is_zero(cd))) {
+					piranha_throw(std::invalid_argument,"an invalid trigonometric term was encountered while "
+						"attempting a time integration");
+				}
+				// Take the abs of the cd.
+				cd = cd.abs();
+				// Divide the vector by the common divisor.
+				for (auto it2 = tmp_int.begin(); it2 != tmp_int.end(); ++it2) {
+					*it2 /= cd;
+				}
+				// Build the temporary divisor series from the trigonometric arguments.
+				d_series_type div_series;
+				div_series.set_symbol_set(div_symbols);
+				// Build the divisor key.
+				typename d_key_type::value_type exponent(1);
+				d_key_type div_key;
+				div_key.insert(tmp_int.begin(),tmp_int.end(),exponent);
+				// Finish building the temporary divisor series.
+				div_series.insert(d_term_type(d_cf_type(1),std::move(div_key)));
+				// Temporary Poisson series from the current term, with the trig flavour flipped.
+				poisson_series tmp_ps;
+				tmp_ps.set_symbol_set(this->m_symbol_set);
+				auto tmp_key = it->m_key;
+				tmp_key.set_flavour(!tmp_key.get_flavour());
+				tmp_ps.insert(term_type(it->m_cf,std::move(tmp_key)));
+				// Update the return value.
+				auto tmp = (std::move(tmp_ps) * std::move(div_series)) / cd;
+				// It also needs a negation, if the original trig key is a sine.
+				if (!it->m_key.get_flavour()) {
+					math::negate(tmp);
+				}
+				retval += std::move(tmp);
+			}
+			return retval;
 		}
 };
 

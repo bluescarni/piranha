@@ -53,6 +53,8 @@ namespace piranha
 namespace detail
 {
 
+struct divisor_series_tag {};
+
 // Type trait to check the key type in divisor_series.
 template <typename T>
 struct is_divisor_series_key
@@ -92,7 +94,7 @@ struct is_divisor_series_key<divisor<T>>
  */
 template <typename Cf, typename Key>
 class divisor_series: public power_series<ipow_substitutable_series<substitutable_series<series<Cf,Key,divisor_series<Cf,Key>>,
-	divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>
+	divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,detail::divisor_series_tag
 {
 		PIRANHA_TT_CHECK(detail::is_divisor_series_key,Key);
 		using base = power_series<ipow_substitutable_series<substitutable_series<series<Cf,Key,divisor_series<Cf,Key>>,

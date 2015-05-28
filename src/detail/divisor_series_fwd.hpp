@@ -24,6 +24,14 @@
 namespace piranha
 {
 
+namespace detail
+{
+
+// Divisor series tag.
+struct divisor_series_tag;
+
+}
+
 // Fwd declaration of divisor series.
 template <typename, typename>
 class divisor_series;
