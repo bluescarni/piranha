@@ -42,6 +42,15 @@
 #include "is_cf.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
+
+// NOTE: thre is a bug in GCC < 5 triggered when poisson_series.hpp is included
+// before polynomial.hpp. Force the inclusion here as a work-around.
+#if defined(PIRANHA_COMPILER_IS_GCC)
+#if __GNUC__  < 5
+#include "polynomial.hpp"
+#endif
+#endif
+
 #include "power_series.hpp"
 #include "real_trigonometric_kronecker_monomial.hpp"
 #include "safe_cast.hpp"
