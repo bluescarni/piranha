@@ -329,6 +329,13 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		{
 			return static_cast<base const *>(this)->pow(x);
 		}
+		// Integrate utils.
+		template <typename T>
+		using integrate_type_ = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()) *
+			std::declval<const T &>());
+		template <typename T>
+		using integrate_type = typename std::enable_if<std::is_constructible<integrate_type_<T>,int>::value &&
+			is_addable_in_place<integrate_type_<T>>::value,integrate_type_<T>>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -443,6 +450,56 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 				tmp.set_symbol_set(this->m_symbol_set);
 				tmp.insert(term_type(cf_type(1),it->m_key));
 				retval += math::partial(it->m_cf,name) * tmp + divisor_partial(*it,pos);
+			}
+			return retval;
+		}
+		/// Integration.
+		/**
+		 * \note
+		 * This template method is enabled only if the coefficient type is integrable, and the result of the multiplication
+		 * of an integrated coefficient by a piranha::divisor_series is addable in-place and constructible from \p int.
+		 *
+		 * Integration for divisor series is supported only if the coefficient is integrable and no divisor in the calling
+		 * series depends on the integration variable.
+		 *
+		 * @param[in] name name of the variable with respect to which the integration will be performed.
+		 *
+		 * @return the antiderivative of \p this with respect to \p name.
+		 *
+		 * @throws std::invalid_argument if at least one divisor depends on the integration variable.
+		 * @throws unspecified any exception thrown by:
+		 * - construction of and arithmetics on the return type,
+		 * - the public interface of piranha::symbol and piranha::symbol_set,
+		 * - piranha::series::set_symbol_set(), piranha::series::insert(),
+		 * - construction of the coefficients, keys and terms.
+		 */
+		template <typename T = divisor_series>
+		integrate_type<T> integrate(const std::string &name) const
+		{
+			using term_type = typename base::term_type;
+			using cf_type = typename term_type::cf_type;
+			integrate_type<T> retval(0);
+			const auto it_f = this->m_container.end();
+			// Turn name into symbol position.
+			const symbol_set::positions pos(this->m_symbol_set,symbol_set{symbol(name)});
+			for (auto it = this->m_container.begin(); it != it_f; ++it) {
+				if (pos.size() == 1u) {
+					// If the variable is in the symbol set, then we need to make sure
+					// that each multiplier associated to it is zero. Otherwise, the divisor
+					// depends on the variable and we cannot perform the integration.
+					const auto it2_f = it->m_key.m_container.end();
+					for (auto it2 = it->m_key.m_container.begin(); it2 != it2_f; ++it2) {
+						using size_type = decltype(it2->v.size());
+						piranha_assert(pos.back() < it2->v.size());
+						if (unlikely(it2->v[static_cast<size_type>(pos.back())] != 0)) {
+							piranha_throw(std::invalid_argument,"unable to integrate with respect to divisor variables");
+						}
+					}
+				}
+				divisor_series tmp;
+				tmp.set_symbol_set(this->m_symbol_set);
+				tmp.insert(term_type(cf_type(1),it->m_key));
+				retval += math::integrate(it->m_cf,name) * tmp;
 			}
 			return retval;
 		}

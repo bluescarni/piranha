@@ -372,3 +372,24 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 	});
 	BOOST_CHECK_EQUAL(math::partial(y*math::pow(x+y,-1),"x"),2*x*math::pow(x+y,-1)-y*(2*x+1)*math::pow(x+y,-1).pow(2));
 }
+
+BOOST_AUTO_TEST_CASE(divisor_series_integrate_test)
+{
+	using s_type = divisor_series<polynomial<rational,monomial<short>>,divisor<short>>;
+	s_type x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK((is_integrable<s_type>::value));
+	// A few cases with the variables only in the polynomial part.
+	BOOST_CHECK_EQUAL(x.integrate("x"),x*x/2);
+	BOOST_CHECK_EQUAL(math::integrate(x,"x"),x*x/2);
+	BOOST_CHECK((std::is_same<s_type,decltype(math::integrate(x,"x"))>::value));
+	BOOST_CHECK_EQUAL(math::integrate(x,"y"),x*y);
+	BOOST_CHECK_EQUAL(math::integrate(x+y,"x"),x*y+x*x/2);
+	BOOST_CHECK_EQUAL(math::integrate(x+y,"y"),x*y+y*y/2);
+	BOOST_CHECK_EQUAL(math::integrate(s_type{1},"y"),y);
+	BOOST_CHECK_EQUAL(math::integrate(s_type{1},"x"),x);
+	BOOST_CHECK_EQUAL(math::integrate(s_type{0},"x"),0);
+	// Put variables in the divisors as well.
+	BOOST_CHECK_EQUAL(math::integrate(x+y.pow(-1),"x"),x*x/2+x*y.pow(-1));
+	BOOST_CHECK_THROW(math::integrate(x+y.pow(-1)+x.pow(-1),"x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integrate(x+y.pow(-1)+x.pow(-1)-x.pow(-1),"x"),x*x/2+x*y.pow(-1));
+}

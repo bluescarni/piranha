@@ -2642,7 +2642,7 @@ class series: detail::series_tag, series_operators
 			m_symbol_set = args;
 		}
 		/** @name Low-level interface
-		 * Low-level methods and types.
+		 * Low-level methods.
 		 */
 		//@{
 		/// Get a mutable reference to the container of terms.

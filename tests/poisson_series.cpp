@@ -583,6 +583,27 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 	BOOST_CHECK_EQUAL(math::integrate(p_type3{"x"}.pow(8/4_q)*math::cos(p_type3{"x"}),"x"),
 		(p_type3{"x"}*p_type3{"x"}-2)*math::sin(p_type3{"x"})+2*p_type3{"x"}*math::cos(p_type3{"x"}));
 	BOOST_CHECK_THROW(math::integrate(p_type3{"x"}.pow(3/4_q)*math::cos(p_type3{"x"}),"x"),std::invalid_argument);
+	// Check about eps.
+	using p_type6 = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	BOOST_CHECK(is_integrable<p_type6>::value);
+	p_type6 a{"a"}, b{"b"}, c{"c"};
+	BOOST_CHECK((std::is_same<p_type6,decltype(math::integrate(a,"a"))>::value));
+	BOOST_CHECK_EQUAL(math::integrate(a,"a"),a*a/2);
+	BOOST_CHECK_EQUAL(math::integrate(b,"a"),a*b);
+	BOOST_CHECK_EQUAL(math::integrate(b+a,"a"),a*a/2+a*b);
+	BOOST_CHECK_EQUAL(math::integrate(b.pow(-1)+a,"a"),a*a/2+a*b.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"a"),a*a/2*math::cos(b));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"b"),a*math::sin(b));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"b"),a*math::sin(b));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*c.pow(-1),"b"),a*math::sin(b)*c.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*c.pow(-1),"a"),math::cos(b)*a*a/2*c.pow(-1));
+	// This will fail because we do not know how to integrate with respect to divisors.
+	BOOST_CHECK_THROW(math::integrate(math::cos(b)*a*c.pow(-1),"c"),std::invalid_argument);
+	// This will fail because, at the moment, eps cannot deal with mixed poly/trig variables (though
+	// normal Poisson series can, this is something we need to fix in the future).
+	BOOST_CHECK_THROW(math::integrate(math::cos(a)*a*c.pow(-1),"a"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b-a+a)*(a-c+c)*(c-b+b).pow(-1),"b"),a*math::sin(b)*c.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b+c-c)*(a+b-b)*(c-a+a).pow(-1),"a"),math::cos(b)*a*a/2*c.pow(-1));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
