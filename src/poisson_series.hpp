@@ -646,7 +646,7 @@ class poisson_series:
 		 *
 		 * This is a special type of integration in which the trigonometric arguments are considered as linear functions
 		 * of time, and in which the integration variable is time itself. The result of the operation is a so-called echeloned
-		 * Poisson series, that it, a Poisson series in which the coefficient is a piranha::divisor_series whose coefficient type
+		 * Poisson series, that is, a Poisson series in which the coefficient is a piranha::divisor_series whose coefficient type
 		 * is the original coefficient type of the Poisson series.
 		 *
 		 * For instance, if the original series is
