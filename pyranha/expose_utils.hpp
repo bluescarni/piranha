@@ -415,18 +415,32 @@ class series_exposer
 				expose_arithmetics<T>(m_series_class);
 			}
 		};
-		template <typename InteropTypes, typename S>
+		// Here we have three implementations of this function. The final objective is to enable construction and arithmetics
+		// with respect to the coefficient type, and, recursively, the coefficient type of the coefficient type.
+		// 1. Series2 is a series type whose cf is not among interoperable types.
+		// In this case, we expose the interoperability with the cf, and we try to expose also the interoperability with the coefficient
+		// type of cf, if it is a series type.
+		template <typename InteropTypes, typename Series2, typename S>
 		static void expose_cf_interop(bp::class_<S> &series_class,
-			typename std::enable_if<!piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::detail::type_in_tuple<typename Series2::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
 		{
-			using cf_type = typename S::term_type::cf_type;
+			using cf_type = typename Series2::term_type::cf_type;
 			cf_type cf;
 			interop_exposer<S> ie(series_class);
 			ie(cf);
+			expose_cf_interop<InteropTypes,cf_type>(series_class);
 		}
-		template <typename InteropTypes, typename S>
+		// 2. Series2 is a series type whose cf is among the interoperable types. Try to go deeper in the hierarchy.
+		template <typename InteropTypes, typename Series2, typename S>
+		static void expose_cf_interop(bp::class_<S> &series_class,
+			typename std::enable_if<piranha::detail::type_in_tuple<typename Series2::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+		{
+			expose_cf_interop<InteropTypes,typename Series2::term_type::cf_type>(series_class);
+		}
+		// 3. Series2 is not a series type. This signals the end of the recursion.
+		template <typename InteropTypes, typename Series2, typename S>
 		static void expose_cf_interop(bp::class_<S> &,
-			typename std::enable_if<piranha::detail::type_in_tuple<typename S::term_type::cf_type,InteropTypes>::value>::type * = nullptr)
+			typename std::enable_if<!piranha::is_series<Series2>::value>::type * = nullptr)
 		{}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &series_class, typename std::enable_if<has_typedef_interop_types<T>::value>::type * = nullptr)
@@ -436,7 +450,7 @@ class series_exposer
 			tuple_for_each(it,interop_exposer<S>(series_class));
 			// Interoperate conditionally with coefficient type, if it is not already in the
 			// list of interoperable types.
-			expose_cf_interop<interop_types>(series_class);
+			expose_cf_interop<interop_types,S>(series_class);
 		}
 		template <typename S, typename T = Descriptor>
 		static void expose_interoperable(bp::class_<S> &, typename std::enable_if<!has_typedef_interop_types<T>::value>::type * = nullptr)
