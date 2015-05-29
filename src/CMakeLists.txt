@@ -52,6 +52,7 @@ SET(HEADERS_LIST
 	divisor_series.hpp
 	substitutable_series.hpp
 	ipow_substitutable_series.hpp
+	invert.hpp
 )
 
 SET(DETAIL_HEADERS_LIST

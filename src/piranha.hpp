@@ -184,6 +184,7 @@ inline namespace literals {}
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "invert.hpp"
 #include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
 #include "is_key.hpp"
