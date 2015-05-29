@@ -340,7 +340,8 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 	s_type x{"x"};
 	BOOST_CHECK_EQUAL((x * 3).partial("x"),3);
 	BOOST_CHECK_EQUAL((x * 3).partial("y"),0);
-	using ps_type = poisson_series<p_type>;
+	// Define an EPS.
+	using ps_type = poisson_series<s_type>;
 	ps_type a{"a"}, b{"b"}, c{"c"};
 	auto p1 = 3*a*b*math::cos(3*c);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(p1.t_integrate()),"a*b*1/[(\\nu_{c})]*sin(3*c)");
