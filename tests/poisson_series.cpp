@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../src/detail/polynomial_fwd.hpp"
 #include "../src/divisor.hpp"
 #include "../src/divisor_series.hpp"
 #include "../src/environment.hpp"
@@ -745,14 +746,15 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	ts0::unregister_all_custom_derivatives();
 }
 
-BOOST_AUTO_TEST_CASE(poisson_series_special_sin_cos_test)
+// Test here the poly_in_cf type trait, for convenience.
+BOOST_AUTO_TEST_CASE(poisson_series_poly_in_cf_test)
 {
-	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<double>>::value));
-	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<real>>::value));
-	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<polynomial<real,monomial<short>>>>::value));
-	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<polynomial<rational,monomial<short>>>>::value));
-	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<divisor_series<polynomial<real,monomial<short>>,divisor<short>>>>::value));
-	BOOST_CHECK((detail::ps_has_special_sin_cos<poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>>::value));
-	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<divisor_series<divisor_series<real,divisor<short>>,divisor<short>>>>::value));
-	BOOST_CHECK((!detail::ps_has_special_sin_cos<poisson_series<divisor_series<divisor_series<rational,divisor<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((!detail::poly_in_cf<poisson_series<double>>::value));
+	BOOST_CHECK((!detail::poly_in_cf<poisson_series<real>>::value));
+	BOOST_CHECK((detail::poly_in_cf<poisson_series<polynomial<real,monomial<short>>>>::value));
+	BOOST_CHECK((detail::poly_in_cf<poisson_series<polynomial<rational,monomial<short>>>>::value));
+	BOOST_CHECK((detail::poly_in_cf<poisson_series<divisor_series<polynomial<real,monomial<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((detail::poly_in_cf<poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<real,divisor<short>>,divisor<short>>>>::value));
+	BOOST_CHECK((!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<rational,divisor<short>>,divisor<short>>>>::value));
 }

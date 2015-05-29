@@ -62,28 +62,6 @@ namespace detail
 
 struct poisson_series_tag {};
 
-// Type trait to check whether a Poisson series can provide a linear combination of arguments
-// for sine/cosine via the first polynomial coefficient encountered in the hierarchy.
-template <typename T, typename = void>
-struct ps_has_special_sin_cos
-{
-	static const bool value = false;
-};
-
-template <typename T>
-struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
-	std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
-{
-	static const bool value = true;
-};
-
-template <typename T>
-struct ps_has_special_sin_cos<T,typename std::enable_if<(series_recursion_index<T>::value > 0u) &&
-	!std::is_base_of<detail::polynomial_tag,typename T::term_type::cf_type>::value>::type>
-{
-	static const bool value = ps_has_special_sin_cos<typename T::term_type::cf_type>::value;
-};
-
 }
 
 /// Poisson series class.
@@ -133,7 +111,7 @@ class poisson_series:
 		template <typename T>
 		using cos_type = decltype(math::cos(std::declval<const typename T::base &>()));
 		// Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via casting.
-		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value,int>::type = 0>
 		sin_type<T> sin_impl() const
 		{
 			return math::sin(*static_cast<const base *>(this));
@@ -141,18 +119,18 @@ class poisson_series:
 		// Case 1: Poisson series is suitable for special sin() implementation. This can fail at runtime depending on what is
 		// contained in the coefficients. The return type is the same as the base one, as in this routine we only need operations
 		// which are supported by all coefficient types, no need for rebinding or anything like that.
-		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		template <typename T = poisson_series, typename std::enable_if<detail::poly_in_cf<T>::value,int>::type = 0>
 		sin_type<T> sin_impl() const
 		{
 			return special_sin_cos<false,sin_type<T>>(*this);
 		}
 		// Same as above, for cos().
-		template <typename T = poisson_series, typename std::enable_if<!detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value,int>::type = 0>
 		cos_type<T> cos_impl() const
 		{
 			return math::cos(*static_cast<const base *>(this));
 		}
-		template <typename T = poisson_series, typename std::enable_if<detail::ps_has_special_sin_cos<T>::value,int>::type = 0>
+		template <typename T = poisson_series, typename std::enable_if<detail::poly_in_cf<T>::value,int>::type = 0>
 		cos_type<T> cos_impl() const
 		{
 			return special_sin_cos<true,cos_type<T>>(*this);
