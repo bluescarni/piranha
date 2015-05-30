@@ -312,6 +312,9 @@ class polynomial:
 			detail::true_tt<decltype(std::declval<typename Series::term_type::key_type const &>().pow(std::declval<const T &>(),std::declval<const symbol_set &>()))>::value,
 			decltype(std::declval<series<Cf,Key,polynomial<Cf,Key>> const &>().pow(std::declval<const T &>()))>::type;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+		// Invert utils.
+		template <typename Series>
+		using inverse_type = decltype(std::declval<const Series &>().pow(-1));
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -429,6 +432,17 @@ class polynomial:
 				return retval;
 			}
 			return static_cast<series<Cf,Key,polynomial<Cf,Key>> const *>(this)->pow(x);
+		}
+		/// Inversion.
+		/**
+		 * @return the calling polynomial raised to -1 using piranha::polynomial::pow().
+		 *
+		 * @throws unspecified any exception thrown by piranha::polynomial::pow().
+		 */
+		template <typename Series = polynomial>
+		inverse_type<Series> invert() const
+		{
+			return this->pow(-1);
 		}
 		/// Integration.
 		/**

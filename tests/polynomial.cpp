@@ -38,7 +38,9 @@
 
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/invert.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -745,4 +747,23 @@ BOOST_AUTO_TEST_CASE(polynomial_rebind_test)
 	BOOST_CHECK((std::is_same<series_rebind<stype,float>,polynomial<float,monomial<long>>>::value));
 	BOOST_CHECK((std::is_same<series_rebind<stype,rational>,polynomial<rational,monomial<long>>>::value));
 	BOOST_CHECK((std::is_same<series_rebind<stype,long double>,polynomial<long double,monomial<long>>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_invert_test)
+{
+	using pt0 = polynomial<integer,monomial<long>>;
+	BOOST_CHECK(is_invertible<pt0>::value);
+	BOOST_CHECK((std::is_same<pt0,decltype(math::invert(pt0{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt0{1}),1);
+	BOOST_CHECK_EQUAL(math::invert(pt0{2}),0);
+	BOOST_CHECK_THROW(math::invert(pt0{0}),zero_division_error);
+	BOOST_CHECK_EQUAL(math::invert(pt0{"x"}),math::pow(pt0{"x"},-1));
+	using pt1 = polynomial<rational,monomial<long>>;
+	BOOST_CHECK(is_invertible<pt1>::value);
+	BOOST_CHECK((std::is_same<pt1,decltype(math::invert(pt1{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt1{1}),1);
+	BOOST_CHECK_EQUAL(math::invert(pt1{2}),1/2_q);
+	BOOST_CHECK_EQUAL(math::invert(2*pt1{"y"}),1/2_q*pt1{"y"}.pow(-1));
+	BOOST_CHECK_THROW(math::invert(pt1{0}),zero_division_error);
+	BOOST_CHECK_THROW(math::invert(pt1{"x"}+pt1{"y"}),std::invalid_argument);
 }
