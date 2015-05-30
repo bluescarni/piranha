@@ -50,6 +50,7 @@
 #include "environment.hpp"
 #include "exceptions.hpp"
 #include "hash_set.hpp"
+#include "invert.hpp"
 #include "is_cf.hpp"
 #include "key_is_convertible.hpp"
 #include "math.hpp" // For negate() and math specialisations.
@@ -110,6 +111,27 @@ class has_auto_truncate: detail::sfinae_types
 
 template <typename T>
 const bool has_auto_truncate<T>::value;
+
+// Apply a functor to a single-coefficient series. This is in the spirit of the old apply_cf_functor method,
+// and it is used in some of the math:: overrides below.
+template <typename Functor, typename RetT, typename T>
+inline RetT apply_cf_functor(const T &s)
+{
+	using term_type = typename RetT::term_type;
+	using cf_type = typename term_type::cf_type;
+	using key_type = typename term_type::key_type;
+	if (!s.is_single_coefficient()) {
+		piranha_throw(std::invalid_argument,std::string("cannot compute ") + Functor::name + ", series is not single-coefficient");
+	}
+	RetT retval;
+	Functor f;
+	if (s.empty()) {
+		retval.insert(term_type(f(cf_type(0)),key_type(symbol_set{})));
+	} else {
+		retval.insert(term_type(f(s._container().begin()->m_cf),key_type(symbol_set{})));
+	}
+	return retval;
+}
 
 }
 
@@ -2832,6 +2854,96 @@ struct pow_impl<Series,T,detail::pow_series_enabler<Series,T>>
 namespace detail
 {
 
+// Detect if series has a const invert() method.
+template <typename T>
+class series_has_invert: sfinae_types
+{
+		template <typename U>
+		static auto test(const U &t) -> decltype(t.invert(),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+};
+
+// 1. Inversion via the custom method.
+template <typename T, typename std::enable_if<is_series<T>::value && series_has_invert<T>::value,int>::type = 0>
+inline auto series_invert_impl(const T &s) -> decltype(s.invert())
+{
+	return s.invert();
+}
+
+struct series_cf_invert_functor
+{
+	template <typename T>
+	auto operator()(const T &x) const -> decltype(math::invert(x)) {
+		return math::invert(x);
+	}
+	static constexpr const char *name = "inverse";
+};
+
+// 2. Coefficient type supports math::invert(), with return type equal to coefficient type.
+// NOTE: here we are passing a series<> parameter: this will require a conversion from whatever series type (Derived) to its series<> base,
+// and thus this overload will never conflict with the overload 1., even if the series that we pass in actually has the invert method.
+// This is useful because we can now force the use of this "base" implementation by simply casting a series to its base type.
+// This is used, e.g., in the sin/cos overrides for poisson_series, and it is similar to what it is done for the pow() overrides.
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
+	std::is_same<typename Derived::term_type::cf_type,decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline Derived series_invert_impl(const series<Cf,Key,Derived> &s)
+{
+	return apply_cf_functor<series_cf_invert_functor,Derived>(s);
+}
+
+// 3. coefficient type supports math::invert() with a result different from the original coefficient type and the series can be rebound to this new type.
+template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
+	!std::is_same<typename Derived::term_type::cf_type,decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
+inline series_rebind<Derived,decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))> series_invert_impl(const series<Cf,Key,Derived> &s)
+{
+	using ret_type = series_rebind<Derived,decltype(math::invert(std::declval<const typename Derived::term_type::cf_type &>()))>;
+	return apply_cf_functor<series_cf_invert_functor,ret_type>(s);
+}
+
+// Final enabler condition for the invert implementation.
+template <typename T>
+using series_invert_enabler = typename std::enable_if<true_tt<decltype(series_invert_impl(std::declval<const T &>()))>::value>::type;
+
+}
+
+namespace math
+{
+
+/// Specialisation of the piranha::math::invert() functor for piranha::series.
+/**
+ * This specialisation is activated when \p Series is an instance of piranha::series and:
+ * - either the series type provides a const <tt>%invert()</tt> method, or
+ * - the series' coefficient type \p Cf supports math::invert() yielding a type \p T and either
+ *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
+ */
+template <typename Series>
+struct invert_impl<Series,detail::series_invert_enabler<Series>>
+{
+	/// Call operator.
+	/**
+	 * @param[in] s argument.
+	 *
+	 * @return inverse of \p s.
+	 *
+	 * @throws unspecified any exception thrown by:
+	 * - the <tt>Series::invert()</tt> method,
+	 * - piranha::math::invert(),
+	 * - term, coefficient, and key construction and/or insertion via piranha::series::insert().
+	 */
+	template <typename T>
+	auto operator()(const T &s) const -> decltype(detail::series_invert_impl(s))
+	{
+		return detail::series_invert_impl(s);
+	}
+};
+
+}
+
+namespace detail
+{
+
 // Detect if series has a const sin() method.
 template <typename T>
 class series_has_sin: sfinae_types
@@ -2851,35 +2963,21 @@ inline auto series_sin_impl(const T &s) -> decltype(s.sin())
 	return s.sin();
 }
 
-// Low-level implementation of sin via coefficient.
-template <typename RetT, typename T>
-inline RetT series_cf_sin_impl(const T &s)
+struct series_cf_sin_functor
 {
-	using term_type = typename RetT::term_type;
-	using cf_type = typename term_type::cf_type;
-	using key_type = typename term_type::key_type;
-	if (!s.is_single_coefficient()) {
-		piranha_throw(std::invalid_argument,"cannot compute sin, series is not single-coefficient");
+	template <typename T>
+	auto operator()(const T &x) const -> decltype(math::sin(x)) {
+		return math::sin(x);
 	}
-	RetT retval;
-	if (s.empty()) {
-		retval.insert(term_type(math::sin(cf_type(0)),key_type(symbol_set{})));
-	} else {
-		retval.insert(term_type(math::sin(s._container().begin()->m_cf),key_type(symbol_set{})));
-	}
-	return retval;
-}
+	static constexpr const char *name = "sine";
+};
 
 // 2. coefficient type supports math::sin() with a result equal to the original coefficient type.
-// NOTE: here we are passing a series<> parameter: this will require a conversion from whatever series type (Derived) to its series<> base,
-// and thus this overload will never conflict with the overload 1., even if the series that we pass in actually has sin/cos methods.
-// This is useful because we can now force the use of this "base" implementation of sin/cos by simply casting a series to its base type.
-// This is used, e.g., in the sin/cos overrides for poisson_series, and it is similar to what it is done for the pow() overrides.
 template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
 	std::is_same<typename Derived::term_type::cf_type,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
 inline Derived series_sin_impl(const series<Cf,Key,Derived> &s)
 {
-	return series_cf_sin_impl<Derived>(s);
+	return apply_cf_functor<series_cf_sin_functor,Derived>(s);
 }
 
 // 3. coefficient type supports math::sin() with a result different from the original coefficient type and the series can be rebound to this new type.
@@ -2888,7 +2986,7 @@ template <typename Cf, typename Key, typename Derived, typename std::enable_if<i
 inline series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))> series_sin_impl(const series<Cf,Key,Derived> &s)
 {
 	using ret_type = series_rebind<Derived,decltype(math::sin(std::declval<const typename Derived::term_type::cf_type &>()))>;
-	return series_cf_sin_impl<ret_type>(s);
+	return apply_cf_functor<series_cf_sin_functor,ret_type>(s);
 }
 
 // Final enabler condition for the sin implementation.
@@ -2912,29 +3010,20 @@ inline auto series_cos_impl(const T &s) -> decltype(s.cos())
 	return s.cos();
 }
 
-template <typename RetT, typename T>
-inline RetT series_cf_cos_impl(const T &s)
+struct series_cf_cos_functor
 {
-	using term_type = typename RetT::term_type;
-	using cf_type = typename term_type::cf_type;
-	using key_type = typename term_type::key_type;
-	if (!s.is_single_coefficient()) {
-		piranha_throw(std::invalid_argument,"cannot compute cos, series is not single-coefficient");
+	template <typename T>
+	auto operator()(const T &x) const -> decltype(math::cos(x)) {
+		return math::cos(x);
 	}
-	RetT retval;
-	if (s.empty()) {
-		retval.insert(term_type(math::cos(cf_type(0)),key_type(symbol_set{})));
-	} else {
-		retval.insert(term_type(math::cos(s._container().begin()->m_cf),key_type(symbol_set{})));
-	}
-	return retval;
-}
+	static constexpr const char *name = "cosine";
+};
 
 template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
 	std::is_same<typename Derived::term_type::cf_type,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>::value,int>::type = 0>
 inline Derived series_cos_impl(const series<Cf,Key,Derived> &s)
 {
-	return series_cf_cos_impl<Derived>(s);
+	return apply_cf_functor<series_cf_cos_functor,Derived>(s);
 }
 
 template <typename Cf, typename Key, typename Derived, typename std::enable_if<is_series<Derived>::value &&
@@ -2942,7 +3031,7 @@ template <typename Cf, typename Key, typename Derived, typename std::enable_if<i
 inline series_rebind<Derived,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))> series_cos_impl(const series<Cf,Key,Derived> &s)
 {
 	using ret_type = series_rebind<Derived,decltype(math::cos(std::declval<const typename Derived::term_type::cf_type &>()))>;
-	return series_cf_cos_impl<ret_type>(s);
+	return apply_cf_functor<series_cf_cos_functor,ret_type>(s);
 }
 
 template <typename T>
@@ -2956,7 +3045,7 @@ namespace math
 /// Specialisation of the piranha::math::sin() functor for piranha::series.
 /**
  * This specialisation is activated when \p Series is an instance of piranha::series and:
- * - either the series type provides a const <tt>sin()</tt> method, or
+ * - either the series type provides a const <tt>%sin()</tt> method, or
  * - the series' coefficient type \p Cf supports math::sin() yielding a type \p T and either
  *   \p T is the same as \p Cf, or the series type can be rebound to the type \p T.
  */
