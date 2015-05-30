@@ -35,6 +35,7 @@
 #include "divisor.hpp"
 #include "exceptions.hpp"
 #include "forwarding.hpp"
+#include "invert.hpp"
 #include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
 #include "math.hpp"
@@ -68,6 +69,13 @@ struct is_divisor_series_key<divisor<T>>
 	static const bool value = true;
 };
 
+// See the workaround description below.
+template <typename T>
+struct base_getter
+{
+	using type = typename T::base;
+};
+
 }
 
 /// Divisor series.
@@ -96,6 +104,12 @@ template <typename Cf, typename Key>
 class divisor_series: public power_series<ipow_substitutable_series<substitutable_series<series<Cf,Key,divisor_series<Cf,Key>>,
 	divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,detail::divisor_series_tag
 {
+		// NOTE: this is a workaround for GCC < 5. The enabler condition for the special invert() method is a struct defined
+		// within this class, and it needs to access the "base" private typedef via the inverse_type<> alias. The enabler condition
+		// is not granted access to the private base typedef (erroneously, since it is defined in the scope of this class),
+		// so we use this friend helper in order to reach the base typedef.
+		template <typename>
+		friend struct detail::base_getter;
 		PIRANHA_TT_CHECK(detail::is_divisor_series_key,Key);
 		using base = power_series<ipow_substitutable_series<substitutable_series<series<Cf,Key,divisor_series<Cf,Key>>,
 			divisor_series<Cf,Key>>,divisor_series<Cf,Key>>,divisor_series<Cf,Key>>;
@@ -220,117 +234,6 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		template <typename T>
 		using partial_type = typename std::enable_if<std::is_constructible<partial_type_<T>,int>::value &&
 			is_addable_in_place<partial_type_<T>>::value,partial_type_<T>>::type;
-		// Pow utils.
-		// The return type will be the same as the base pow method.
-		template <typename T>
-		using pow_type = decltype(std::declval<const base &>().pow(std::declval<const T &>()));
-		// Enabler to test if the negative integer power exponentiation is supported:
-		// - coefficient is a polynomial,
-		// - the pow return type is divisible by integer, yielding a tipe T,
-		// - pow return type is constructible from T.
-		template <typename T, typename U, typename = void>
-		struct neg_int_pow_enabler
-		{
-			static const bool value = false;
-		};
-		template <typename T, typename U>
-		struct neg_int_pow_enabler<T,U,typename std::enable_if<
-			std::is_base_of<detail::polynomial_tag,typename U::term_type::cf_type>::value &&
-			std::is_constructible<pow_type<T>,decltype(std::declval<const pow_type<T> &>() / std::declval<const integer &>())>::value
-		>::type>
-		{
-			static const bool value = true;
-		};
-		// Implementation of negative integer power.
-		template <typename T>
-		pow_type<T> neg_int_pow(const integer &n) const
-		{
-			using term_type = typename pow_type<T>::term_type;
-			using cf_type = typename term_type::cf_type;
-			using key_type = typename term_type::key_type;
-			piranha_assert(n.sign() < 0);
-			piranha_assert(this->size() == 1u);
-			auto lc = this->m_container.begin()->m_cf.integral_combination();
-			// NOTE: lc cannot be empty as we are coming in with a non-zero polynomial.
-			piranha_assert(!lc.empty());
-			std::vector<integer> v_int;
-			symbol_set ss;
-			for (auto it = lc.begin(); it != lc.end(); ++it) {
-				ss.add(symbol(it->first));
-				v_int.push_back(it->second);
-			}
-			// We need to canonicalise the term: switch the sign if the first
-			// nonzero element is negative, and divide by the common denom.
-			bool first_nonzero_found = false, need_negate = false;
-			integer cd(0);
-			for (auto &n: v_int) {
-				if (!first_nonzero_found && !math::is_zero(n)) {
-					if (n < 0) {
-						need_negate = true;
-					}
-					first_nonzero_found = true;
-				}
-				if (need_negate) {
-					math::negate(n);
-				}
-				// NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
-				// NOTE: the gcd computation here is safe as we are operating on integers.
-				cd = detail::gcd(cd,n);
-			}
-			// Common denominator could be negative.
-			if (cd.sign() < 0) {
-				math::negate(cd);
-			}
-			// It should never be zero: if all elements in v_int are zero, we would not have been
-			// able to extract the linear combination.
-			piranha_assert(!math::is_zero(cd));
-			// Divide by the cd.
-			for (auto &n: v_int) {
-				n /= cd;
-			}
-			// Now build the key.
-			key_type tmp_key;
-			integer exponent(-n);
-			tmp_key.insert(v_int.begin(),v_int.end(),exponent);
-			// The return value.
-			pow_type<T> retval;
-			retval.set_symbol_set(ss);
-			retval.insert(term_type(cf_type(1),std::move(tmp_key)));
-			// If we negated in the canonicalisation, we need to re-negate
-			// the common divisor before the final division.
-			if (need_negate) {
-				math::negate(cd);
-			}
-			return pow_type<T>(retval / cd.pow(exponent));
-		}
-		template <typename T, typename U = divisor_series, typename std::enable_if<neg_int_pow_enabler<T,U>::value,int>::type = 0>
-		pow_type<T> pow_impl(const T &x) const
-		{
-			// Check if x is an integral value.
-			integer n;
-			bool x_is_int = false;
-			try {
-				// NOTE: the check for safe_cast is already wrapped into pow_type<T>.
-				n = safe_cast<integer>(x);
-				x_is_int = true;
-			} catch (const std::invalid_argument &) {}
-			// If:
-			// - x is a negative integer,
-			// - the series is single coefficient, not-empty,
-			// then attempt a negative integral exponentiation.
-			if (x_is_int && n.sign() < 0 && this->is_single_coefficient() && this->size() > 0u) {
-				try {
-					return neg_int_pow<T>(n);
-				} catch (const std::invalid_argument &) {}
-			}
-			return static_cast<base const *>(this)->pow(x);
-		}
-		template <typename T, typename U = divisor_series,
-			typename std::enable_if<!neg_int_pow_enabler<T,U>::value,int>::type = 0>
-		pow_type<T> pow_impl(const T &x) const
-		{
-			return static_cast<base const *>(this)->pow(x);
-		}
 		// Integrate utils.
 		template <typename T>
 		using integrate_type_ = decltype(math::integrate(std::declval<const typename T::term_type::cf_type &>(),std::declval<const std::string &>()) *
@@ -338,6 +241,118 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		template <typename T>
 		using integrate_type = typename std::enable_if<std::is_constructible<integrate_type_<T>,int>::value &&
 			is_addable_in_place<integrate_type_<T>>::value,integrate_type_<T>>::type;
+		// Invert utils.
+		// Type coming out of invert() for the base type. This will also be the final type.
+		template <typename T>
+		using inverse_type = decltype(math::invert(std::declval<const typename detail::base_getter<T>::type &>()));
+		// Enabler for the special inversion algorithm. We need a polynomial in the coefficient hierarchy
+		// and the inversion type must support the operations needed in the algorithm.
+		template <typename T, typename = void>
+		struct has_special_invert
+		{
+			static constexpr bool value = false;
+		};
+		template <typename T>
+		struct has_special_invert<T,typename std::enable_if<detail::poly_in_cf<T>::value &&
+			std::is_constructible<inverse_type<T>,
+			decltype(std::declval<const inverse_type<T> &>() / std::declval<const integer &>())>::value>::type>
+		{
+			static constexpr bool value = true;
+		};
+		// Case 0: Series is not suitable for special invert() implementation. Just forward to the base one, via casting.
+		template <typename T = divisor_series, typename std::enable_if<!has_special_invert<T>::value,int>::type = 0>
+		inverse_type<T> invert_impl() const
+		{
+			return math::invert(*static_cast<const base *>(this));
+		}
+		// Case 1: Series is suitable for special invert() implementation. This can fail at runtime depending on what is
+		// contained in the coefficients. The return type is the same as the base one.
+		template <typename T = divisor_series, typename std::enable_if<has_special_invert<T>::value,int>::type = 0>
+		inverse_type<T> invert_impl() const
+		{
+			return special_invert<inverse_type<T>>(*this);
+		}
+		// Special invert() implementation when we have reached the first polynomial coefficient in the hierarchy.
+		template <typename RetT, typename T, typename std::enable_if<std::is_base_of<detail::polynomial_tag,
+			typename T::term_type::cf_type>::value,int>::type = 0>
+		RetT special_invert(const T &s) const
+		{
+			if (s.is_single_coefficient() && !s.empty()) {
+				try {
+					using term_type = typename RetT::term_type;
+					using cf_type = typename term_type::cf_type;
+					using key_type = typename term_type::key_type;
+					// Extract the linear combination from the poly coefficient.
+					auto lc = s._container().begin()->m_cf.integral_combination();
+					// NOTE: lc cannot be empty as we are coming in with a non-zero polynomial.
+					piranha_assert(!lc.empty());
+					std::vector<integer> v_int;
+					symbol_set ss;
+					for (auto it = lc.begin(); it != lc.end(); ++it) {
+						ss.add(symbol(it->first));
+						v_int.push_back(it->second);
+					}
+					// We need to canonicalise the term: switch the sign if the first
+					// nonzero element is negative, and divide by the common denom.
+					bool first_nonzero_found = false, need_negate = false;
+					integer cd(0);
+					for (auto &n: v_int) {
+						if (!first_nonzero_found && !math::is_zero(n)) {
+							if (n < 0) {
+								need_negate = true;
+							}
+							first_nonzero_found = true;
+						}
+						if (need_negate) {
+							math::negate(n);
+						}
+						// NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
+						// NOTE: the gcd computation here is safe as we are operating on integers.
+						cd = detail::gcd(cd,n);
+					}
+					// Common denominator could be negative.
+					if (cd.sign() < 0) {
+						math::negate(cd);
+					}
+					// It should never be zero: if all elements in v_int are zero, we would not have been
+					// able to extract the linear combination.
+					piranha_assert(!math::is_zero(cd));
+					// Divide by the cd.
+					for (auto &n: v_int) {
+						n /= cd;
+					}
+					// Now build the key.
+					key_type tmp_key;
+					integer exponent(1);
+					tmp_key.insert(v_int.begin(),v_int.end(),exponent);
+					// The return value.
+					RetT retval;
+					retval.set_symbol_set(ss);
+					retval.insert(term_type(cf_type(1),std::move(tmp_key)));
+					// If we negated in the canonicalisation, we need to re-negate
+					// the common divisor before the final division.
+					if (need_negate) {
+						math::negate(cd);
+					}
+					return RetT(retval / cd.pow(exponent));
+				} catch (const std::invalid_argument &) {
+					// Interpret invalid_argument as a failure in extracting integral combination,
+					// and move on.
+				}
+			}
+			return math::invert(static_cast<const typename T::base &>(s));
+		}
+		// The coefficient is not a polynomial: recurse to the inner coefficient type, if the current coefficient type
+		// is suitable.
+		template <typename RetT, typename T, typename std::enable_if<!std::is_base_of<detail::polynomial_tag,
+			typename T::term_type::cf_type>::value,int>::type = 0>
+		RetT special_invert(const T &s) const
+		{
+			if (s.is_single_coefficient() && !s.empty()) {
+				return special_invert<RetT>(s._container().begin()->m_cf);
+			}
+			return math::invert(static_cast<const typename T::base &>(s));
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -360,43 +375,44 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		/// Defaulted move assignment operator.
 		divisor_series &operator=(divisor_series &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(divisor_series,base)
-		/// Exponentiation.
+		/// Inversion.
 		/**
 		 * \note
-		 * This method is enabled only if \p T can be used as an argument to piranha::series::pow().
+		 * This template method is enabled only if math::invert() can be called on the class
+		 * from which piranha::divisor_series derives (i.e., only if the default math::invert()
+		 * implementation for series is appropriate).
 		 *
-		 * This method works exactly like piranha::series::pow(), unless:
+		 * This method works exactly like the default implementation of piranha::math::invert() for
+		 * series types, unless:
 		 *
-		 * - the exponent \p x can be safely converted to a negative piranha::integer and
-		 * - the coefficient type is a piranha::polynomial and
+		 * - a piranha::polynomial appears in the coefficient hierarchy and
 		 * - the calling series is not empty and
 		 * - the calling series satisfies piranha::series::is_single_coefficient() and
 		 * - the return type is divisible by piranha::integer, yielding a type which can be used
 		 *   to construct the return type.
 		 *
-		 * Under these circumstances, this method will attempt to construct a divisor from the polynomial
-		 * coefficient, and, if successful, it will return a piranha::divisor_series consisting of a single term with unitary
-		 * coefficient and with the key containing the divisor built from the polynomial raised to <tt>-x</tt>.
+		 * Under these circumstances, this method will attempt to construct a divisor from the first polynomial
+		 * coefficient encountered in the hierarchy, and, if successful, it will return a piranha::divisor_series
+		 * consisting of a single term with unitary
+		 * coefficient and with the key containing the divisor built from the polynomial.
 		 *
-		 * For example, raising to the power of -2 the following divisor series with polynomial coefficients
+		 * For example, inverting the following divisor series with polynomial coefficient
 		 * \f[
 		 * 2x+4y
 		 * \f]
 		 * will result in the construction of the divisor series
 		 * \f[
-		 * \frac{1}{4}\frac{1}{\left(x+2y\right)^2}.
+		 * \frac{1}{2}\frac{1}{\left(x+2y\right)}.
 		 * \f]
 		 *
 		 * In order for the procedure described above to be successful, the polynomial coefficient must be equivalent
-		 * to an integral linear combination of symbols with no constant term. If this special exponentiation fails,
-		 * a call to piranha::series::pow() will be attempted.
+		 * to an integral linear combination of symbols with no constant term. If this special inversion fails,
+		 * a call to the default implementation of piranha::math::invert() will be attempted.
 		 *
-		 * @param[in] x the exponent.
-		 *
-		 * @return \p this raised to the power of \p x.
+		 * @return the inverse of \p this.
 		 *
 		 * @throws unspecified any exception thrown by:
-		 * - piranha::series::pow(),
+		 * - the default implementation of piranha::math::invert(),
 		 * - piranha::series::is_single_coefficient(),
 		 * - the extraction of an integral linear combination of symbols from \p p,
 		 * - memory errors in standard containers,
@@ -405,13 +421,12 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 		 * - the construction of terms, coefficients and keys,
 		 * - piranha::divisor::insert(),
 		 * - piranha::series::insert(), piranha::series::set_symbol_set(),
-		 * - arithmetics on piranha::divisor_series,
-		 * - piranha::integer::pow().
+		 * - arithmetics on piranha::divisor_series.
 		 */
-		template <typename T>
-		pow_type<T> pow(const T &x) const
+		template <typename T = divisor_series>
+		inverse_type<T> invert() const
 		{
-			return pow_impl(x);
+			return invert_impl();
 		}
 		/// Partial derivative.
 		/**

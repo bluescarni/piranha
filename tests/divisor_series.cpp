@@ -34,6 +34,7 @@
 #include "../src/divisor.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/invert.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
@@ -41,6 +42,7 @@
 #include "../src/mp_rational.hpp"
 #include "../src/poisson_series.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/pow.hpp"
 #include "../src/real.hpp"
 #include "../src/type_traits.hpp"
 
@@ -88,141 +90,6 @@ BOOST_AUTO_TEST_CASE(divisor_series_test_00)
 	boost::mpl::for_each<cf_types>(test_00_tester());
 }
 
-BOOST_AUTO_TEST_CASE(divisor_series_pow_test)
-{
-	using s_type0 = divisor_series<int,divisor<short>>;
-	BOOST_CHECK_EQUAL(math::pow(s_type0{2},-1),0);
-	BOOST_CHECK_EQUAL(math::pow(s_type0{2},2),4);
-	using s_type1 = divisor_series<rational,divisor<short>>;
-	BOOST_CHECK_EQUAL(math::pow(s_type1{2},-1),1/2_q);
-	BOOST_CHECK_EQUAL(math::pow(s_type1{2/3_q},2),4/9_q);
-	{
-	using s_type = divisor_series<polynomial<rational,monomial<short>>,divisor<short>>;
-	s_type x{"x"}, y{"y"}, z{"z"}, null;
-	BOOST_CHECK_EQUAL(math::pow(x,2),x*x);
-	BOOST_CHECK_EQUAL(math::pow(x,0),1);
-	BOOST_CHECK_EQUAL(math::pow(null,1),0);
-	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(null,0),1);
-	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
-	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-1)),"1/[(x-y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-2)),"1/[(x-y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-10)),"1/[(x-y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-1)),"1/2*1/[(x-2*y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-2)),"1/4*1/[(x-2*y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-11)),"-1/2048*1/[(x-2*y)**11]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-1)),"1/[(x+y+z)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-1)),"1/[(x+y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-2)),"1/[(x+y+z)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-2)),"1/[(x+y)**2]");
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},1.5),math::pow(1/2_q,1.5));
-	BOOST_CHECK_THROW(math::pow(x-1,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-y/2,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-x,-2),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},2),1/4_q);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{0_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},-2),4);
-	// Out of bounds for short.
-	BOOST_CHECK_THROW(math::pow((std::numeric_limits<short>::max()+1_q)*x+y,-1),std::invalid_argument);
-	// Check, if appropriate, construction from outside the bounds defined in divisor.
-	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-		BOOST_CHECK_THROW(math::pow((detail::safe_abs_sint<short>::value+1_q)*x+y,-1),std::invalid_argument);
-	}
-	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-		BOOST_CHECK_THROW(math::pow((-detail::safe_abs_sint<short>::value-1_q)*x+y,-1),std::invalid_argument);
-	}
-	}
-	{
-	using s_type = divisor_series<polynomial<rational,k_monomial>,divisor<short>>;
-	s_type x{"x"}, y{"y"}, z{"z"}, null;
-	BOOST_CHECK_EQUAL(math::pow(x,2),x*x);
-	BOOST_CHECK_EQUAL(math::pow(x,0),1);
-	BOOST_CHECK_EQUAL(math::pow(null,1),0);
-	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(null,0),1);
-	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
-	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-1)),"1/[(x-y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-2)),"1/[(x-y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-10)),"1/[(x-y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-1)),"1/2*1/[(x-2*y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-2)),"1/4*1/[(x-2*y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-11)),"-1/2048*1/[(x-2*y)**11]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-1)),"1/[(x+y+z)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-1)),"1/[(x+y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-2)),"1/[(x+y+z)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-2)),"1/[(x+y)**2]");
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},1.5),math::pow(1/2_q,1.5));
-	BOOST_CHECK_THROW(math::pow(x-1,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-y/2,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-x,-2),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},2),1/4_q);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{0_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},-2),4);
-	BOOST_CHECK_THROW(math::pow((std::numeric_limits<short>::max()+1_q)*x+y,-1),std::invalid_argument);
-	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-		BOOST_CHECK_THROW(math::pow((detail::safe_abs_sint<short>::value+1_q)*x+y,-1),std::invalid_argument);
-	}
-	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-		BOOST_CHECK_THROW(math::pow((-detail::safe_abs_sint<short>::value-1_q)*x+y,-1),std::invalid_argument);
-	}
-	}
-	{
-	using s_type = divisor_series<polynomial<rational,monomial<rational>>,divisor<short>>;
-	s_type x{"x"}, y{"y"}, z{"z"}, null;
-	BOOST_CHECK_EQUAL(math::pow(x,2),x*x);
-	BOOST_CHECK_EQUAL(math::pow(x,0),1);
-	BOOST_CHECK_EQUAL(math::pow(null,1),0);
-	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(null,0),1);
-	BOOST_CHECK((std::is_same<decltype(x.pow(-1)),s_type>::value));
-	BOOST_CHECK((std::is_same<decltype(math::pow(x,-1)),s_type>::value));
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"1/[(x)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-2)),"1/[(x)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-10)),"1/[(x)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-1)),"1/[(x-y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-2)),"1/[(x-y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x-y,-10)),"1/[(x-y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-1)),"1/2*1/[(x-2*y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-2)),"1/4*1/[(x-2*y)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x-4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-10)),"1/1024*1/[(x-2*y)**10]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(-2*x+4*y,-11)),"-1/2048*1/[(x-2*y)**11]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-1)),"1/[(x+y+z)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-1)),"1/[(x+y)]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z,-2)),"1/[(x+y+z)**2]");
-	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x+y+z-z,-2)),"1/[(x+y)**2]");
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},1.5),math::pow(1/2_q,1.5));
-	BOOST_CHECK_THROW(math::pow(x-1,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-y/2,-1),std::invalid_argument);
-	BOOST_CHECK_THROW(math::pow(x-x,-2),zero_division_error);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},2),1/4_q);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{0_q},0),1);
-	BOOST_CHECK_EQUAL(math::pow(s_type{1/2_q},-2),4);
-	BOOST_CHECK_THROW(math::pow((std::numeric_limits<short>::max()+1_q)*x+y,-1),std::invalid_argument);
-	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-		BOOST_CHECK_THROW(math::pow((detail::safe_abs_sint<short>::value+1_q)*x+y,-1),std::invalid_argument);
-	}
-	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-		BOOST_CHECK_THROW(math::pow((-detail::safe_abs_sint<short>::value-1_q)*x+y,-1),std::invalid_argument);
-	}
-	}
-}
-
 struct partial_tester
 {
 	template <typename T>
@@ -230,10 +97,9 @@ struct partial_tester
 	{
 		using p_type = polynomial<rational,monomial<int>>;
 		using s_type = divisor_series<p_type,divisor<T>>;
-		// Tests using the special pow(-1) for polynomial coefficients..
 		s_type x{"x"}, y{"y"}, z{"z"};
 		// First with variables only in the divisors.
-		auto s0 = math::pow(x+y-2*z,-1);
+		auto s0 = math::invert(x+y-2*z);
 		BOOST_CHECK((std::is_same<s_type,decltype(s0.partial("x"))>::value));
 		BOOST_CHECK((std::is_same<s_type,decltype(math::partial(s0,"x"))>::value));
 		BOOST_CHECK_EQUAL(s0.partial("x"),-s0*s0);
@@ -242,10 +108,10 @@ struct partial_tester
 		auto s1 = s0 * s0;
 		BOOST_CHECK_EQUAL(s1.partial("x"),-2*s0*s1);
 		BOOST_CHECK_EQUAL(s1.partial("z"),4*s0*s1);
-		auto s2 = math::pow(x-y,-1);
+		auto s2 = math::invert(x-y);
 		auto s3 = s0*s2;
 		BOOST_CHECK_EQUAL(s3.partial("x"),-s0*s0*s2-s0*s2*s2);
-		auto s4 = math::pow(x,-1);
+		auto s4 = math::invert(x);
 		auto s5 = s0*s2*s4;
 		BOOST_CHECK_EQUAL(s5.partial("x"),-s0*s0*s2*s4-s0*s2*s2*s4-s0*s2*s4*s4);
 		BOOST_CHECK_EQUAL(s5.partial("z"),2*s0*s0*s2*s4);
@@ -256,17 +122,17 @@ struct partial_tester
 		BOOST_CHECK_EQUAL(s7.partial("z"),s2*s4*-3);
 		auto s8 = s2*s4 * (x*x/5+y-3*z) + z*s2*s4*y;
 		BOOST_CHECK_EQUAL(s8.partial("z"),s2*s4*-3+s2*s4*y);
-		BOOST_CHECK_EQUAL((x*x*math::pow(z,-1)).partial("x"),2*x*math::pow(z,-1));
+		BOOST_CHECK_EQUAL((x*x*math::invert(z)).partial("x"),2*x*math::invert(z));
 		// This excercises the presense of an additional divisor variable with a zero multiplier.
-		BOOST_CHECK_EQUAL((x*x*math::pow(z,-1)+s4-s4).partial("x"),2*x*math::pow(z,-1));
+		BOOST_CHECK_EQUAL((x*x*math::invert(z)+s4-s4).partial("x"),2*x*math::invert(z));
 		// Variables both in the coefficients and in the divisors.
 		auto s9 = x * s2;
 		BOOST_CHECK_EQUAL(s9.partial("x"),s2-x*s2*s2);
 		BOOST_CHECK_EQUAL(math::partial(s9,"x"),s2-x*s2*s2);
 		auto s10 = x*s2*s4;
 		BOOST_CHECK_EQUAL(s10.partial("x"),s2*s4+x*(-s2*s2*s4-s2*s4*s4));
-		auto s11 = math::pow(-3*x-y,-1);
-		auto s12 = math::pow(z,-1);
+		auto s11 = math::invert(-3*x-y);
+		auto s12 = math::invert(z);
 		auto s13 = x*s11*s4+x*y*z*s2*s2*s2*s12;
 		BOOST_CHECK_EQUAL(s13.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
 		BOOST_CHECK_EQUAL(math::partial(s13,"x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12));
@@ -274,7 +140,7 @@ struct partial_tester
 		BOOST_CHECK_EQUAL(s15.partial("x"),s11*s4+x*(3*s11*s11*s4-s11*s4*s4)+y*z*s2*s2*s2*s12+x*y*z*(-3*s2*s2*s2*s2*s12)-s4*s4*s12);
 		// Overflow in an exponent.
 		overflow_check<T>();
-		auto s16 = math::pow(x-4*y,-1);
+		auto s16 = math::invert(x-4*y);
 		auto s17 = s2*s2*s2*s2*s2*s16*s16*s16*s12;
 		BOOST_CHECK_EQUAL(s17.partial("x"),-5*s2*s2*s2*s2*s2*s2*s16*s16*s16*s12-3*s2*s2*s2*s2*s2*s16*s16*s16*s16*s12);
 		// Excercise the chain rule.
@@ -357,21 +223,21 @@ BOOST_AUTO_TEST_CASE(divisor_series_partial_test)
 	s_type::register_custom_derivative("x",[x](const s_type &s) -> s_type {
 		return s.partial("x") + math::partial(s,"y") * 2 * x;
 	});
-	BOOST_CHECK_EQUAL(math::partial(math::pow(x+y,-1),"x"),(-1-2*x)*math::pow(x+y,-1).pow(2));
+	BOOST_CHECK_EQUAL(math::partial(math::invert(x+y),"x"),(-1-2*x)*math::invert(x+y).pow(2));
 	s_type::register_custom_derivative("x",[y](const s_type &s) -> s_type {
-		return s.partial("x") + math::partial(s,"y") * math::pow(y,-1) / 2;
+		return s.partial("x") + math::partial(s,"y") * math::invert(y) / 2;
 	});
-	BOOST_CHECK_EQUAL(math::partial(math::pow(x+2*y,-1),"x"),(-1-1*y.pow(-1))*math::pow(x+2*y,-1).pow(2));
+	BOOST_CHECK_EQUAL(math::partial(math::invert(x+2*y),"x"),(-1-1*y.invert())*math::invert(x+2*y).pow(2));
 	s_type::register_custom_derivative("x",[y](const s_type &s) -> s_type {
-		return s.partial("x") + math::partial(s,"y") * math::pow(y,-1) / 2;
+		return s.partial("x") + math::partial(s,"y") * math::invert(y) / 2;
 	});
-	BOOST_CHECK_EQUAL(math::partial(math::pow(x+y,-1),"x"),-math::pow(x+y,-1).pow(2)
-		-1/2_q*math::pow(x+y,-1).pow(2)*math::pow(y,-1));
+	BOOST_CHECK_EQUAL(math::partial(math::invert(x+y),"x"),-math::invert(x+y).pow(2)
+		-1/2_q*math::invert(x+y).pow(2)*math::invert(y));
 	// Implicit variable dependency both in the poly and in the divisor.
 	s_type::register_custom_derivative("x",[x](const s_type &s) -> s_type {
 		return s.partial("x") + math::partial(s,"y") * 2 * x;
 	});
-	BOOST_CHECK_EQUAL(math::partial(y*math::pow(x+y,-1),"x"),2*x*math::pow(x+y,-1)-y*(2*x+1)*math::pow(x+y,-1).pow(2));
+	BOOST_CHECK_EQUAL(math::partial(y*math::invert(x+y),"x"),2*x*math::invert(x+y)-y*(2*x+1)*math::invert(x+y).pow(2));
 }
 
 BOOST_AUTO_TEST_CASE(divisor_series_integrate_test)
@@ -390,7 +256,104 @@ BOOST_AUTO_TEST_CASE(divisor_series_integrate_test)
 	BOOST_CHECK_EQUAL(math::integrate(s_type{1},"x"),x);
 	BOOST_CHECK_EQUAL(math::integrate(s_type{0},"x"),0);
 	// Put variables in the divisors as well.
-	BOOST_CHECK_EQUAL(math::integrate(x+y.pow(-1),"x"),x*x/2+x*y.pow(-1));
-	BOOST_CHECK_THROW(math::integrate(x+y.pow(-1)+x.pow(-1),"x"),std::invalid_argument);
-	BOOST_CHECK_EQUAL(math::integrate(x+y.pow(-1)+x.pow(-1)-x.pow(-1),"x"),x*x/2+x*y.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(x+y.invert(),"x"),x*x/2+x*y.invert());
+	BOOST_CHECK_THROW(math::integrate(x+y.invert()+x.invert(),"x"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integrate(x+y.invert()+x.invert()-x.invert(),"x"),x*x/2+x*y.invert());
+}
+
+BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
+{
+	using s_type0 = divisor_series<int,divisor<short>>;
+	BOOST_CHECK_EQUAL(math::invert(s_type0{2}),0);
+	using s_type1 = divisor_series<rational,divisor<short>>;
+	BOOST_CHECK_EQUAL(math::invert(s_type1{2}),1/2_q);
+	BOOST_CHECK_EQUAL(math::invert(s_type1{2/3_q}),3/2_q);
+	{
+	using s_type = divisor_series<polynomial<rational,monomial<short>>,divisor<short>>;
+	s_type x{"x"}, y{"y"}, z{"z"}, null;
+	BOOST_CHECK(is_invertible<s_type>::value);
+	BOOST_CHECK((std::is_same<s_type,decltype(math::invert(s_type{}))>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)),"1/[(x)]");
+	BOOST_CHECK_EQUAL(math::invert(s_type{2}),1/2_q);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"x**-1");
+	BOOST_CHECK_THROW(math::invert(null),zero_division_error);
+	BOOST_CHECK((std::is_same<decltype(x.invert()),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::invert(x)),s_type>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x-y)),"1/[(x-y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(2*x-4*y)),"1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z)),"1/[(x+y+z)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z-z)),"1/[(x+y)]");
+	BOOST_CHECK_THROW(math::invert(x-1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-y/2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-x),zero_division_error);
+	// Out of bounds for short.
+	BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max()+1_q)*x+y),std::invalid_argument);
+	// Check, if appropriate, construction from outside the bounds defined in divisor.
+	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+		BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value+1_q)*x+y),std::invalid_argument);
+	}
+	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+		BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value-1_q)*x+y),std::invalid_argument);
+	}
+	}
+	{
+	using s_type = divisor_series<polynomial<rational,k_monomial>,divisor<short>>;
+	s_type x{"x"}, y{"y"}, z{"z"}, null;
+	BOOST_CHECK(is_invertible<s_type>::value);
+	BOOST_CHECK((std::is_same<s_type,decltype(math::invert(s_type{}))>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)),"1/[(x)]");
+	return;
+	BOOST_CHECK_EQUAL(math::invert(s_type{2}),1/2_q);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"x**-1");
+	BOOST_CHECK_THROW(math::invert(null),zero_division_error);
+	BOOST_CHECK((std::is_same<decltype(x.invert()),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::invert(x)),s_type>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x-y)),"1/[(x-y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(2*x-4*y)),"1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z)),"1/[(x+y+z)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z-z)),"1/[(x+y)]");
+	BOOST_CHECK_THROW(math::invert(x-1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-y/2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-x),zero_division_error);
+	// Out of bounds for short.
+	BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max()+1_q)*x+y),std::invalid_argument);
+	// Check, if appropriate, construction from outside the bounds defined in divisor.
+	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+		BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value+1_q)*x+y),std::invalid_argument);
+	}
+	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+		BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value-1_q)*x+y),std::invalid_argument);
+	}
+	}
+	{
+	using s_type = divisor_series<polynomial<rational,monomial<rational>>,divisor<short>>;
+	s_type x{"x"}, y{"y"}, z{"z"}, null;
+	BOOST_CHECK(is_invertible<s_type>::value);
+	BOOST_CHECK((std::is_same<s_type,decltype(math::invert(s_type{}))>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)),"1/[(x)]");
+	BOOST_CHECK_EQUAL(math::invert(s_type{2}),1/2_q);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"x**-1");
+	BOOST_CHECK_THROW(math::invert(null),zero_division_error);
+	BOOST_CHECK((std::is_same<decltype(x.invert()),s_type>::value));
+	BOOST_CHECK((std::is_same<decltype(math::invert(x)),s_type>::value));
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x-y)),"1/[(x-y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(2*x-4*y)),"1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z)),"1/[(x+y+z)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x+y+z-z)),"1/[(x+y)]");
+	BOOST_CHECK_THROW(math::invert(x-1),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-y/2),std::invalid_argument);
+	BOOST_CHECK_THROW(math::invert(x-x),zero_division_error);
+	// Out of bounds for short.
+	BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max()+1_q)*x+y),std::invalid_argument);
+	// Check, if appropriate, construction from outside the bounds defined in divisor.
+	if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+		BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value+1_q)*x+y),std::invalid_argument);
+	}
+	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+		BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value-1_q)*x+y),std::invalid_argument);
+	}
+	}
 }

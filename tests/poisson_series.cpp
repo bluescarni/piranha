@@ -590,23 +590,24 @@ BOOST_AUTO_TEST_CASE(poisson_series_integrate_test)
 	using p_type6 = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
 	BOOST_CHECK(is_integrable<p_type6>::value);
 	p_type6 a{"a"}, b{"b"}, c{"c"};
+	using math::invert;
 	BOOST_CHECK((std::is_same<p_type6,decltype(math::integrate(a,"a"))>::value));
 	BOOST_CHECK_EQUAL(math::integrate(a,"a"),a*a/2);
 	BOOST_CHECK_EQUAL(math::integrate(b,"a"),a*b);
 	BOOST_CHECK_EQUAL(math::integrate(b+a,"a"),a*a/2+a*b);
-	BOOST_CHECK_EQUAL(math::integrate(b.pow(-1)+a,"a"),a*a/2+a*b.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(invert(b)+a,"a"),a*a/2+a*invert(b));
 	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"a"),a*a/2*math::cos(b));
 	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"b"),a*math::sin(b));
 	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a,"b"),a*math::sin(b));
-	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*c.pow(-1),"b"),a*math::sin(b)*c.pow(-1));
-	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*c.pow(-1),"a"),math::cos(b)*a*a/2*c.pow(-1));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*invert(c),"b"),a*math::sin(b)*invert(c));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b)*a*invert(c),"a"),math::cos(b)*a*a/2*invert(c));
 	// This will fail because we do not know how to integrate with respect to divisors.
-	BOOST_CHECK_THROW(math::integrate(math::cos(b)*a*c.pow(-1),"c"),std::invalid_argument);
+	BOOST_CHECK_THROW(math::integrate(math::cos(b)*a*invert(c),"c"),std::invalid_argument);
 	// This will fail because, at the moment, eps cannot deal with mixed poly/trig variables (though
 	// normal Poisson series can, this is something we need to fix in the future).
-	BOOST_CHECK_THROW(math::integrate(math::cos(a)*a*c.pow(-1),"a"),std::invalid_argument);
-	BOOST_CHECK_EQUAL(math::integrate(math::cos(b-a+a)*(a-c+c)*(c-b+b).pow(-1),"b"),a*math::sin(b)*c.pow(-1));
-	BOOST_CHECK_EQUAL(math::integrate(math::cos(b+c-c)*(a+b-b)*(c-a+a).pow(-1),"a"),math::cos(b)*a*a/2*c.pow(-1));
+	BOOST_CHECK_THROW(math::integrate(math::cos(a)*a*invert(c),"a"),std::invalid_argument);
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b-a+a)*(a-c+c)*invert(c-b+b),"b"),a*math::sin(b)*invert(c));
+	BOOST_CHECK_EQUAL(math::integrate(math::cos(b+c-c)*(a+b-b)*invert(c-a+a),"a"),math::cos(b)*a*a/2*invert(c));
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
@@ -702,6 +703,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 {
+	using math::invert;
 	// Check a few sample integrations by reconstructing manually the expected result via term insertions.
 	using div_type0 = divisor<short>;
 	using ptype0 = polynomial<rational,monomial<short>>;
@@ -711,40 +713,40 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	ts0 nu_x{"\\nu_{x}"}, nu_y{"\\nu_{y}"}, nu_z{"\\nu_{z}"};
 	auto tmp0 = (1/5_q * z * math::sin(x + y)).t_integrate();
 	BOOST_CHECK((std::is_same<decltype(tmp0),ts0>::value));
-	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*(nu_x+nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,-1/5_q*z*math::cos(x + y)*invert(nu_x+nu_y));
 	tmp0 = (1/5_q * z * math::cos(x + y)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(x + y)*(nu_x+nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(x + y)*invert(nu_x+nu_y));
 	tmp0 = (1/5_q * z * math::cos(3*x + y)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(3*x + y)*(3*nu_x+nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,1/5_q*z*math::sin(3*x + y)*invert((3*nu_x+nu_y)));
 	// Check with a common divisor.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0,1/15_q*z*math::sin(3*x + 6*y)*(nu_x+2*nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,1/15_q*z*math::sin(3*x + 6*y)*invert(nu_x+2*nu_y));
 	// Check with a leading zero.
 	// NOTE: this complication is to produce cos(6y) while avoiding x being trimmed by the linear argument
 	// deduction.
 	tmp0 = (1/5_q * z * (math::cos(x + 6*y) * math::cos(x) - math::cos(2*x + 6*y)/2)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0,1/60_q*z*math::sin(6*y)*(nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,1/60_q*z*math::sin(6*y)*invert(nu_y));
 	// Test throwing.
 	BOOST_CHECK_THROW(z.t_integrate(),std::invalid_argument);
 	// An example with more terms.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * (nu_x+2*nu_y).pow(-1) +
-		2/3_q * z * math::cos(12*x - 9*y) * (4*nu_x-3*nu_y).pow(-1));
+	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * invert(nu_x+2*nu_y) +
+		2/3_q * z * math::cos(12*x - 9*y) * invert(4*nu_x-3*nu_y));
 	// Test derivative.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
-	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * ptype0{"z"}.pow(-1));
-	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) -
-		8/3_q*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y));
-	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{y}"),-2/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) +
-		2*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y));
+	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * invert(ptype0{"z"}));
+	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{x}"),-1/15_q*z*invert(nu_x+2*nu_y).pow(2)*math::sin(3*x+6*y) -
+		8/3_q*z*invert(4*nu_x-3*nu_y).pow(2)*math::cos(12*x-9*y));
+	BOOST_CHECK_EQUAL(tmp0.partial("\\nu_{y}"),-2/15_q*z*invert(nu_x+2*nu_y).pow(2)*math::sin(3*x+6*y) +
+		2*z*invert(4*nu_x-3*nu_y).pow(2)*math::cos(12*x-9*y));
 	// Try the custom derivative with respect to the nu_x variable.
 	ts0::register_custom_derivative("\\nu_{x}",[](const ts0 &s) {
 		return s.partial("\\nu_{x}") + s.partial("x") * ts0{"t"};
 	});
-	BOOST_CHECK_EQUAL(math::partial(tmp0,"\\nu_{x}"),-1/15_q*z*(nu_x+2*nu_y).pow(-2)*math::sin(3*x+6*y) +
-		3/15_q*z*(nu_x+2*nu_y).pow(-1)*math::cos(3*x+6*y)*ts0{"t"}
-		-8/3_q*z*(4*nu_x-3*nu_y).pow(-2)*math::cos(12*x-9*y)
-		-24/3_q * z * math::sin(12*x - 9*y) * (4*nu_x-3*nu_y).pow(-1) * ts0{"t"});
+	BOOST_CHECK_EQUAL(math::partial(tmp0,"\\nu_{x}"),-1/15_q*z*invert(nu_x+2*nu_y).pow(2)*math::sin(3*x+6*y) +
+		3/15_q*z*invert(nu_x+2*nu_y)*math::cos(3*x+6*y)*ts0{"t"}
+		-8/3_q*z*invert(4*nu_x-3*nu_y).pow(2)*math::cos(12*x-9*y)
+		-24/3_q * z * math::sin(12*x - 9*y) * invert(4*nu_x-3*nu_y) * ts0{"t"});
 	ts0::unregister_all_custom_derivatives();
 }
 
@@ -785,4 +787,12 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
 	BOOST_CHECK_EQUAL(math::invert(pt2{.2}),math::pow(.2,-1));
 	BOOST_CHECK_EQUAL(math::invert(2*pt2{"y"}),math::pow(2.,-1)*pt2{"y"}.pow(-1));
 	BOOST_CHECK_THROW(math::invert(pt2{"x"}+pt2{"y"}),std::invalid_argument);
+	// A couple of checks with eps.
+	using pt3 = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	BOOST_CHECK(is_invertible<pt3>::value);
+	BOOST_CHECK((std::is_same<pt3,decltype(math::invert(pt3{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt3{-1/3_q}),-3);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(pt3{"x"})),"1/[(x)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"},-1)),"x**-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"}*3,-3)),"1/27*x**-3");
 }
