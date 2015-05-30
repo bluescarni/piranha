@@ -158,6 +158,12 @@
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
  * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer of indirection. This has only cosmetic
  * value, but might be worth for clarity in the long run.
+ * \todo the pattern of sin/cos in poisson series and invert in divisor_series (that is, recurse until a polynomial coefficient is found) should probably
+ * be applied in the integration routine for poisson series that integrates by part when coefficient has positive degree in the integration variable
+ * and the trig part also depend on the integration variable.
+ * \todo related to the above: we should probably generalise the integral_combination() in polynomial to deal also with recursively-represented polys,
+ * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
+ * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
  */
 namespace piranha
 {

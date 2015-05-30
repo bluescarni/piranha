@@ -340,7 +340,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 					// and move on.
 				}
 			}
-			return math::invert(static_cast<const typename T::base &>(s));
+			return math::invert(*static_cast<const base *>(this));
 		}
 		// The coefficient is not a polynomial: recurse to the inner coefficient type, if the current coefficient type
 		// is suitable.
@@ -351,7 +351,7 @@ class divisor_series: public power_series<ipow_substitutable_series<substitutabl
 			if (s.is_single_coefficient() && !s.empty()) {
 				return special_invert<RetT>(s._container().begin()->m_cf);
 			}
-			return math::invert(static_cast<const typename T::base &>(s));
+			return math::invert(*static_cast<const base *>(this));
 		}
 	public:
 		/// Series rebind alias.

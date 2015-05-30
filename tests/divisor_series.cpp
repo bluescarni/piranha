@@ -303,7 +303,6 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
 	BOOST_CHECK(is_invertible<s_type>::value);
 	BOOST_CHECK((std::is_same<s_type,decltype(math::invert(s_type{}))>::value));
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(x)),"1/[(x)]");
-	return;
 	BOOST_CHECK_EQUAL(math::invert(s_type{2}),1/2_q);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(x,-1)),"x**-1");
 	BOOST_CHECK_THROW(math::invert(null),zero_division_error);
@@ -355,5 +354,19 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
 	if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
 		BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value-1_q)*x+y),std::invalid_argument);
 	}
+	}
+	{
+	// Try with something else between poly and divisor.
+	using s_type = divisor_series<poisson_series<polynomial<rational,monomial<short>>>,divisor<short>>;
+	BOOST_CHECK(is_invertible<s_type>::value);
+	BOOST_CHECK((std::is_same<s_type,decltype(math::invert(s_type{}))>::value));
+	s_type x{"x"}, y{"y"}, null;
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(2*x,-1)),"1/2*x**-1");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(2*x)),"1/2*1/[(x)]");
+	BOOST_CHECK_THROW(math::invert(math::cos(2*x)),std::invalid_argument);
+	BOOST_CHECK_THROW(math::pow(x+y,-1),std::invalid_argument);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-2*x+4*y)),"-1/2*1/[(x-2*y)]");
+	BOOST_CHECK_THROW(math::invert(null),zero_division_error);
+	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
 	}
 }
