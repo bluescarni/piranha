@@ -105,7 +105,7 @@ class poisson_series:
 		using base = power_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<trigonometric_series<series<Cf,rtk_monomial,poisson_series<Cf>>>,poisson_series<Cf>>,
 			poisson_series<Cf>>,poisson_series<Cf>>,poisson_series<Cf>>;
 		// Sin/cos utils.
-		// Type coming out of sin()/cos() for the base type. These will also be the final types.
+		// Types coming out of sin()/cos() for the base type. These will also be the final types.
 		template <typename T>
 		using sin_type = decltype(math::sin(std::declval<const typename T::base &>()));
 		template <typename T>
