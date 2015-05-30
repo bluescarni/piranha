@@ -28,6 +28,7 @@
 
 #include "../src/environment.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/invert.hpp"
 #include "../src/monomial.hpp"
 #include "../src/serialization.hpp"
 #include "../src/symbol_set.hpp"
@@ -190,4 +191,58 @@ BOOST_AUTO_TEST_CASE(series_symbol_set_test)
 	BOOST_CHECK(ss == s.get_symbol_set());
 	s += 1;
 	BOOST_CHECK_THROW(s.set_symbol_set(ss),std::invalid_argument);
+}
+
+// Series type with valid invert() override.
+template <typename Cf, typename Expo>
+class g_series_type5: public series<Cf,monomial<Expo>,g_series_type5<Cf,Expo>>
+{
+		using base = series<Cf,monomial<Expo>,g_series_type5<Cf,Expo>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
+		g_series_type5() = default;
+		g_series_type5(const g_series_type5 &) = default;
+		g_series_type5(g_series_type5 &&) = default;
+		g_series_type5 &operator=(const g_series_type5 &) = default;
+		g_series_type5 &operator=(g_series_type5 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type5,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type5,base)
+		int invert() const
+		{
+			return 42;
+		}
+};
+
+// Series type with invalid invert() override.
+template <typename Cf, typename Expo>
+class g_series_type6: public series<Cf,monomial<Expo>,g_series_type6<Cf,Expo>>
+{
+		using base = series<Cf,monomial<Expo>,g_series_type6<Cf,Expo>>;
+		PIRANHA_SERIALIZE_THROUGH_BASE(base)
+	public:
+		g_series_type6() = default;
+		g_series_type6(const g_series_type6 &) = default;
+		g_series_type6(g_series_type6 &&) = default;
+		g_series_type6 &operator=(const g_series_type6 &) = default;
+		g_series_type6 &operator=(g_series_type6 &&) = default;
+		PIRANHA_FORWARDING_CTOR(g_series_type6,base)
+		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type6,base)
+		int invert();
+};
+
+BOOST_AUTO_TEST_CASE(series_invert_test)
+{
+	using st0 = g_series_type<double,int>;
+	BOOST_CHECK(is_invertible<st0>::value);
+	BOOST_CHECK((std::is_same<decltype(math::invert(st0{1.23})),st0>::value));
+	BOOST_CHECK_EQUAL(math::invert(st0{1.23}),math::invert(1.23));
+	BOOST_CHECK_EQUAL(math::invert(st0{0.}),math::invert(0.));
+	using st1 = g_series_type5<double,int>;
+	BOOST_CHECK(is_invertible<st1>::value);
+	BOOST_CHECK((std::is_same<decltype(math::invert(st1{1})),int>::value));
+	BOOST_CHECK_EQUAL(math::invert(st1{1.23}),42);
+	using st2 = g_series_type6<double,int>;
+	BOOST_CHECK(is_invertible<st2>::value);
+	BOOST_CHECK((std::is_same<decltype(math::invert(st2{1})),st2>::value));
+	BOOST_CHECK_EQUAL(math::invert(st2{1.23}),math::invert(1.23));
 }
