@@ -37,6 +37,8 @@
 #include "../src/divisor.hpp"
 #include "../src/divisor_series.hpp"
 #include "../src/environment.hpp"
+#include "../src/exceptions.hpp"
+#include "../src/invert.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -757,4 +759,30 @@ BOOST_AUTO_TEST_CASE(poisson_series_poly_in_cf_test)
 	BOOST_CHECK((detail::poly_in_cf<poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>>::value));
 	BOOST_CHECK((!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<real,divisor<short>>,divisor<short>>>>::value));
 	BOOST_CHECK((!detail::poly_in_cf<poisson_series<divisor_series<divisor_series<rational,divisor<short>>,divisor<short>>>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
+{
+	using pt0 = poisson_series<polynomial<integer,monomial<long>>>;
+	BOOST_CHECK(is_invertible<pt0>::value);
+	BOOST_CHECK((std::is_same<pt0,decltype(math::invert(pt0{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt0{1}),1);
+	BOOST_CHECK_EQUAL(math::invert(pt0{2}),0);
+	BOOST_CHECK_THROW(math::invert(pt0{0}),zero_division_error);
+	BOOST_CHECK_EQUAL(math::invert(pt0{"x"}),math::pow(pt0{"x"},-1));
+	using pt1 = poisson_series<polynomial<rational,monomial<long>>>;
+	BOOST_CHECK(is_invertible<pt1>::value);
+	BOOST_CHECK((std::is_same<pt1,decltype(math::invert(pt1{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt1{1}),1);
+	BOOST_CHECK_EQUAL(math::invert(pt1{2}),1/2_q);
+	BOOST_CHECK_EQUAL(math::invert(2*pt1{"y"}),1/2_q*pt1{"y"}.pow(-1));
+	BOOST_CHECK_THROW(math::invert(pt1{0}),zero_division_error);
+	BOOST_CHECK_THROW(math::invert(pt1{"x"}+pt1{"y"}),std::invalid_argument);
+	using pt2 = poisson_series<polynomial<double,monomial<long>>>;
+	BOOST_CHECK(is_invertible<pt2>::value);
+	BOOST_CHECK((std::is_same<pt2,decltype(math::invert(pt2{}))>::value));
+	BOOST_CHECK_EQUAL(math::invert(pt2{1}),1);
+	BOOST_CHECK_EQUAL(math::invert(pt2{.2}),math::pow(.2,-1));
+	BOOST_CHECK_EQUAL(math::invert(2*pt2{"y"}),math::pow(2.,-1)*pt2{"y"}.pow(-1));
+	BOOST_CHECK_THROW(math::invert(pt2{"x"}+pt2{"y"}),std::invalid_argument);
 }
