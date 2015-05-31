@@ -1,0 +1,4 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classpiranha_1_1dynamic__aligning__allocator.html" title="Memory allocator with runtime alignment support. " alt="" coords="5,5,177,47"/>
+<area shape="rect" id="node2" href="$classpiranha_1_1cache__aligning__allocator.html" title="Allocator that tries to align memory to the cache line size. " alt="" coords="225,5,384,47"/>
+</map>

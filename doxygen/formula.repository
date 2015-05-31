@@ -1,0 +1,40 @@
+\form#0:\[ {x \choose y}. \]
+\form#1:$ x \choose y $
+\form#2:\[ \prod_j\frac{1}{\left(a_{0,j}x_0+a_{1,j}x_1+\ldots+a_{n,j}x_n\right)^{e_j}}, \]
+\form#3:$ a_{i,j} $
+\form#4:$ x_i $
+\form#5:$ e_j $
+\form#6:\[ 2x+4y \]
+\form#7:\[ \frac{1}{2}\frac{1}{\left(x+2y\right)}. \]
+\form#8:$i$
+\form#9:$h_\textnormal{min}$
+\form#10:$h_\textnormal{max}$
+\form#11:$h_\textnormal{max}-h_\textnormal{min}$
+\form#12:\[ \left\{f,g\right\} = \sum_{i=1}^{N} \left[ \frac{\partial f}{\partial q_{i}} \frac{\partial g}{\partial p_{i}} - \frac{\partial f}{\partial p_{i}} \frac{\partial g}{\partial q_{i}} \right], \]
+\form#13:$ p_i $
+\form#14:$ q_i $
+\form#15:\[ 2\cos\left(3x+y\right) + 3\cos\left(2x-y\right) \]
+\form#16:\[ x_0^{y_0} \cdot x_1^{y_1} \cdot \ldots \cdot x_n^{y_n}. \]
+\form#17:$ y_i $
+\form#18:\[ -2x + y, \]
+\form#19:\[ -\sin \left( 2x - y \right). \]
+\form#20:\[ \frac{1}{5}z\cos\left( x - y \right), \]
+\form#21:\[ \frac{1}{5}{z}\frac{1}{\left(\nu_{x}-\nu_{y}\right)}\sin{\left({x}-{y}\right)}, \]
+\form#22:$ \nu_{x} $
+\form#23:$ \nu_{y} $
+\form#24:$ x $
+\form#25:$ y $
+\form#26:$ x = \nu_{x}t $
+\form#27:$ x = \nu_{y}t $
+\form#28:$ \frac{1}{5}z $
+\form#29:$ \cos\left( 0 \right) $
+\form#30:\[ \begin{array}{c} \sin \tabularnewline \cos \end{array} \left(n_0x_0 + n_1x_1 + \ldots + n_mx_m\right), \]
+\form#31:$ n_i $
+\form#32:\[ \begin{array}{c} \sin \tabularnewline \cos \end{array} \left(na + b\right) \]
+\form#33:$ a $
+\form#34:\[ \begin{array}{c} \left[\left(\sin nx,\cos b \right),\left(\cos nx,\sin b \right)\right], \tabularnewline \left[\left(\cos nx,\cos b \right),\left(-\sin nx,\sin b \right)\right], \end{array} \]
+\form#35:$ \cos b $
+\form#36:$ \sin b $
+\form#37:$ \cos nx $
+\form#38:$ \sin nx $
+\form#39:$ b $
