@@ -1,0 +1,436 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting started &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Tutorial" href="tutorial.html"/>
+        <link rel="prev" title="Welcome to the Piranha documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Piranha
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-from-source">Installation from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building">Building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-piranha-program">Your first Piranha program</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hello_piranha.html#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-pyranha-program">Your first Pyranha program</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#potential-pitfalls">Potential pitfalls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#tldr">TLDR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Complete reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Getting started</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/getting_started.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="supported-platforms">
+<h2>Supported platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
+<p>Piranha requires a recent compiler with robust support for the C++11 standard. The following
+compilers are routinely used to develop and test the library:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://gcc.gnu.org/">GCC</a> 4.8 and later,</li>
+<li><a class="reference external" href="http://clang.llvm.org/">Clang</a> 3.5 (earlier versions up to 3.1 should work as well),</li>
+<li><a class="reference external" href="https://software.intel.com/en-us/c-compilers">Intel C++ compiler</a> 15 (beta support).</li>
+</ul>
+<p>The main platform used for the development of Piranha is 64-bit GNU/Linux. Some level of support
+for OSX, Windows (using <a class="reference external" href="http://mingw-w64.sourceforge.net/">MinGW</a>) and BSD flavours exists,
+but the library is compiled and tested on these platforms only occasionally.</p>
+<p>Piranha aims to be standard-compliant and any portability issue in the source code
+should be reported as a bug.</p>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Piranha has a few mandatory dependencies:</p>
+<ul class="simple">
+<li>the <a class="reference external" href="http://www.boost.org/">Boost</a> C++ libraries,</li>
+<li>the <a class="reference external" href="http://www.gmplib.org">GMP</a> multiprecision library (the <a class="reference external" href="http://mpir.org/">MPIR</a> fork should work as well),</li>
+<li>the <a class="reference external" href="http://www.mpfr.org">GNU MPFR</a> multiprecision floating-point library.</li>
+</ul>
+<p>The optional Python bindings, Pyranha, need the <a class="reference external" href="http://www.python.org/">Python</a> programming language (Python
+2.6 and later versions, including Python 3.x, are supported). <a class="reference external" href="http://www.cmake.org/">CMake</a> is the build system
+used by Piranha and must also be installed.</p>
+<p>These dependencies should be installed on your system before attempting to compile Piranha. On GNU/Linux
+and BSD flavours, the best way to proceed is to install them via the distribution&#8217;s package manager
+(remembering to install also the <code class="docutils literal"><span class="pre">-devel</span></code> counterparts of the packages). If the dependencies are installed
+in non-standard locations (as it can often happen on OSX and Windows), a certain degree of manual tweaking
+of the <a class="reference internal" href="#getting-started-configuration"><span>configuration process</span></a> will probably be required.</p>
+</div>
+<div class="section" id="download">
+<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
+<p>At the present time Piranha is being actively developed and no stable release exists yet. Development
+happens in the <a class="reference external" href="https://github.com/bluescarni/piranha">GitHub repository</a>.
+The <code class="docutils literal"><span class="pre">master</span></code> branch is considered to be the stable version of Piranha,
+whereas the separate <code class="docutils literal"><span class="pre">development</span></code> branch is where active development takes place.</p>
+<p>A snapshot of the <code class="docutils literal"><span class="pre">master</span></code> branch can be downloaded
+<a class="reference external" href="https://github.com/bluescarni/piranha/archive/master.zip">here</a>, or checked out using
+the <a class="reference external" href="http://git-scm.com/">Git</a> version control system. The following Git command will download
+the latest version of the <code class="docutils literal"><span class="pre">master</span></code> branch in a directory called <code class="docutils literal"><span class="pre">piranha</span></code>:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git clone git@github.com:bluescarni/piranha.git piranha
+</pre></div>
+</div>
+<p>You can keep the Piranha source code up-to-date by running periodically the command</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git pull
+</pre></div>
+</div>
+<p>from the <code class="docutils literal"><span class="pre">piranha</span></code> source directory.</p>
+</div>
+<div class="section" id="installation-from-source">
+<h2>Installation from source<a class="headerlink" href="#installation-from-source" title="Permalink to this headline">¶</a></h2>
+<p>The installation of Piranha from source code is split into three main phases:</p>
+<ul class="simple">
+<li>the <em>configuration</em> phase, where the build system probes the host environment, configures the source
+code and sets the appropriate compiler flags,</li>
+<li>the <em>building</em> phase, and</li>
+<li>the <em>installation</em> phase, where the library is installed on the system.</li>
+</ul>
+<p>All three phases are handled, in Piranha, by the <a class="reference external" href="http://www.cmake.org/">CMake</a> build system.
+In this section we will detail the installation process in a Unix-like environment using
+a command-line interface. The process will be conceptually similar in case you are using
+one of the available CMake GUIs (such as <code class="docutils literal"><span class="pre">cmake-gui</span></code> or <code class="docutils literal"><span class="pre">ccmake</span></code>).</p>
+<div class="section" id="configuration">
+<span id="getting-started-configuration"></span><h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>The first step is to create a separate <code class="docutils literal"><span class="pre">build</span></code> directory within the <code class="docutils literal"><span class="pre">piranha</span></code> source tree.
+This directory will contain all the temporary files created during the compilation of the source code.
+If you want to restart the compilation process from scratch, it will be enough to erase the <code class="docutils literal"><span class="pre">build</span></code> directory,
+and repeat the process described here. This is technically called an <em>out-of-source</em> build, as the files
+generated during the build process are separated from the original source files.</p>
+<p>From within the <code class="docutils literal"><span class="pre">build</span></code> directory, run the command</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>cmake ../
+</pre></div>
+</div>
+<p>CMake will look for Piranha&#8217;s dependencies in standard paths, and it will produce an error message if it cannot
+detect them. It is possible to tell explicitly CMake where to find a specific library by passing the information
+on the command line. For instance,</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>cmake ../ -DGMP_LIBRARIES<span class="o">=</span>/custom/location/for/libgmp.so
+</pre></div>
+</div>
+<p>will instruct CMake to use the GMP library at the location <code class="docutils literal"><span class="pre">/custom/location/for/libgmp.so</span></code>. CMake&#8217;s GUIs are handy
+to discover, set and, if necessary, override the internal variables set by CMake during the configuration phase.
+This is particularily useful on platforms such as OSX and Windows.</p>
+<p>Piranha can be built either in <code class="docutils literal"><span class="pre">Debug</span></code> or in <code class="docutils literal"><span class="pre">Release</span></code> mode. In <code class="docutils literal"><span class="pre">Debug</span></code> mode, the code will perform
+extensive self-checking and performance will be greatly reduced with respect to the <code class="docutils literal"><span class="pre">Release</span></code> mode. The build
+mode can be set with the <code class="docutils literal"><span class="pre">CMAKE_BUILD_TYPE</span></code> CMake variable, e.g.,</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>cmake ../ -DCMAKE_BUILD_TYPE<span class="o">=</span>Debug
+</pre></div>
+</div>
+<p>In order to compile Pyranha, the <code class="docutils literal"><span class="pre">BUILD_PYRANHA</span></code> option must be enabled:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>cmake ../ -DBUILD_PYRANHA<span class="o">=</span>ON
+</pre></div>
+</div>
+<p>Another useful CMake option is <code class="docutils literal"><span class="pre">BUILD_TESTS</span></code>: if selected, a suite of tests will be built. In <code class="docutils literal"><span class="pre">Debug</span></code> mode,
+unit tests will be built, in <code class="docutils literal"><span class="pre">Release</span></code> mode performance tests will be built.</p>
+<p>The compiler selected by CMake is chosen according to platform-specific heuristics. If you have only one compiler
+installed on your system, there will be no ambiguity. If, however, you have multiple toolchains installed and want
+to force CMake to pick a specific one, you can set the <code class="docutils literal"><span class="pre">CXX</span></code> environment variable <em>before</em> running CMake. In
+<code class="docutils literal"><span class="pre">bash</span></code>, a possible way of doing this is</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ CXX</span><span class="o">=</span>/path/to/other/compiler/icpc cmake ../
+</pre></div>
+</div>
+<p>This will force CMake to use the Intel C++ compiler <code class="docutils literal"><span class="pre">icpc</span></code> at the location <code class="docutils literal"><span class="pre">/path/to/other/compiler/</span></code>.</p>
+</div>
+<div class="section" id="building">
+<h3>Building<a class="headerlink" href="#building" title="Permalink to this headline">¶</a></h3>
+<p>After the configuration step, Piranha is ready to be built. Piranha is a header-only C++ library,
+so, technically, you do not need to actually compile anything to use the library from C++ (but the configuration
+step above is still necessary to setup platform-specific functionality in the headers). The building stage
+is however needed when building the Python bindings Pyranha and/or when testing is enabled.</p>
+<p>In Unix-like environments, you can build the tests and/or the Python bindings by running the standard
+<code class="docutils literal"><span class="pre">make</span></code> tool from the <code class="docutils literal"><span class="pre">build</span></code> directory:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>make
+</pre></div>
+</div>
+<p>On a multicore machine, it is possible to launch make in parallel to speed up the compilation. An example with 8 parallel
+jobs:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>make -j8
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Be aware that the compilation of Piranha&#8217;s unit tests and Python bindings consumes a
+large amount of memory. At least 8GB of RAM are suggested for the compilation of the Python bindings.</p>
+</div>
+<p>After a successful build in <code class="docutils literal"><span class="pre">Debug</span></code> mode, it is good practice to run the test suite:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>make <span class="nb">test</span>
+Running tests...
+Test project /home/yardbird/repos/piranha/build
+      Start  1: array_key
+ 1/45 Test  <span class="c">#1: array_key ...............................   Passed    0.11 sec</span>
+      Start  2: base_term
+ 2/45 Test  <span class="c">#2: base_term ...............................   Passed    0.03 sec</span>
+      Start  3: cache_aligning_allocator
+ 3/45 Test  <span class="c">#3: cache_aligning_allocator ................   Passed    0.01 sec</span>
+      Start  4: convert_to
+ 4/45 Test  <span class="c">#4: convert_to ..............................   Passed    0.01 sec</span>
+      Start  5: dynamic_aligning_allocator
+ 5/45 Test  <span class="c">#5: dynamic_aligning_allocator ..............   Passed    0.01 sec</span>
+      Start  6: echelon_size
+ 6/45 Test  <span class="c">#6: echelon_size ............................   Passed    0.01 sec</span>
+      Start  7: environment
+ 7/45 Test  <span class="c">#7: environment .............................   Passed    0.01 sec</span>
+      Start  8: exceptions
+ 8/45 Test  <span class="c">#8: exceptions ..............................   Passed    0.01 sec</span>
+      Start  9: hash_set
+ 9/45 Test  <span class="c">#9: hash_set ................................   Passed    8.35 sec</span>
+<span class="o">[</span>...<span class="o">]</span>
+42/45 Test <span class="c">#42: tracing .................................   Passed    0.00 sec</span>
+      Start 43: trigonometric_series
+43/45 Test <span class="c">#43: trigonometric_series ....................   Passed    0.03 sec</span>
+      Start 44: tuning
+44/45 Test <span class="c">#44: tuning ..................................   Passed    0.00 sec</span>
+      Start 45: type_traits
+45/45 Test <span class="c">#45: type_traits .............................   Passed    0.00 sec</span>
+
+100% tests passed, <span class="m">0</span> tests failed out of 45
+
+Total Test <span class="nb">time</span> <span class="o">(</span>real<span class="o">)</span> <span class="o">=</span> 675.26 sec
+</pre></div>
+</div>
+<p>A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be reported as a bug.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some of the performance tests will create extremely large series. It is advisable, at least initially, to run each performance test separately
+while monitoring the memory usage in order to avoid heavy thrashing.</p>
+</div>
+</div>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>The final step is the installation of Piranha on the system. In Unix-like environments, the default installation path (also known as the
+<code class="docutils literal"><span class="pre">PREFIX</span></code>) is <code class="docutils literal"><span class="pre">/usr/local</span></code>. The standard</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>make install
+</pre></div>
+</div>
+<p>command will copy the Piranha C++ headers into <code class="docutils literal"><span class="pre">PREFIX/include/piranha</span></code>, and the Pyranha module (if built) in an auto-detected subdirectory
+of <code class="docutils literal"><span class="pre">PREFIX</span></code> where Python modules can be found by the Python interpreter (e.g., something like <code class="docutils literal"><span class="pre">PREFIX/lib/python2.7/site-packages</span></code> in a
+typical Python 2.7 installation on GNU/Linux).</p>
+<p>If you do not have write permissions in <code class="docutils literal"><span class="pre">/usr/local</span></code>, it is possible to change the <code class="docutils literal"><span class="pre">PREFIX</span></code> in the configuration phase. It is
+advisable to set the <code class="docutils literal"><span class="pre">PREFIX</span></code> to a subdirectory in the user&#8217;s home directory (e.g., <code class="docutils literal"><span class="pre">/home/username/.local</span></code>).
+The <code class="docutils literal"><span class="pre">PREFIX</span></code> can be set via the <code class="docutils literal"><span class="pre">CMAKE_INSTALL_PREFIX</span></code> CMake variable during the
+<a class="reference internal" href="#getting-started-configuration"><span>configuration process</span></a>.</p>
+<p>On the Python side, in order to check that the installation of the Pyranha module was successful it will be enough to
+attempt importing it from a Python session:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pyranha</span>
+</pre></div>
+</div>
+<p>If this command produces no error messages, then the installation of Pyranha was successful. You can run the Pyranha
+test suite with the following commands:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pyranha.test</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pyranha</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">run_test_suite</span><span class="p">()</span>
+<span class="go">runTest (pyranha.test.basic_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.mpmath_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.math_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.polynomial_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.poisson_series_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.converters_test_case) ... ok</span>
+<span class="go">runTest (pyranha.test.serialization_test_case) ... ok</span>
+
+<span class="go">----------------------------------------------------------------------</span>
+<span class="go">Ran 7 tests in 2.905s</span>
+
+<span class="go">OK</span>
+</pre></div>
+</div>
+<p>Note that if you specified a non-standard <code class="docutils literal"><span class="pre">PREFIX</span></code> during the configuration phase, you might need to set the <code class="docutils literal"><span class="pre">PYTHONPATH</span></code>
+environment variable in order for the Python interpreter to locate Pyranha. More information is available
+<a class="reference external" href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH">here</a> .</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to the Piranha documentation!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2014, Francesco Biscani.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

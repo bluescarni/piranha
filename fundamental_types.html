@@ -1,0 +1,758 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Fundamental numerical types in Piranha &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Tutorial" href="tutorial.html"/>
+        <link rel="next" title="Complete reference" href="reference.html"/>
+        <link rel="prev" title="Hello Piranha!" href="hello_piranha.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Piranha
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-from-source">Installation from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#building">Building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-piranha-program">Your first Piranha program</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hello_piranha.html#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-pyranha-program">Your first Pyranha program</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Fundamental numerical types in Piranha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#potential-pitfalls">Potential pitfalls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tldr">TLDR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Complete reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Tutorial</a> &raquo;</li>
+      
+    <li>Fundamental numerical types in Piranha</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/fundamental_types.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="fundamental-numerical-types-in-piranha">
+<span id="fundamental-types"></span><h1>Fundamental numerical types in Piranha<a class="headerlink" href="#fundamental-numerical-types-in-piranha" title="Permalink to this headline">¶</a></h1>
+<p>Any computer algebra system needs to be able to represent fundamental numerical types such as
+integers, rationals, (approximations of) reals, etc. C++ and Python provide basic numerical types
+that can be used with Piranha&#8217;s generic algorithms and data structures. However, especially in
+C++, the numerical types provided by the language - while having the advantage of providing
+very high performance - can be unsuitable for certain applications (e.g., all the standard integral
+types provided by C++ have a finite range).</p>
+<p>On the C++ side Piranha provides a set of additional fundamental numerical types that can interoperate
+with the C++ fundamental types and that can be used with Piranha&#8217;s generic algorithms and data structures
+(e.g., as coefficient types in a polynomial). On the Python side, Piranha&#8217;s fundamental types are
+automatically translated to/from corresponding Python types whenever Pyranha&#8217;s routine and data
+structures are used.</p>
+<div class="section" id="the-integer-type">
+<h2>The <code class="docutils literal"><span class="pre">integer</span></code> type<a class="headerlink" href="#the-integer-type" title="Permalink to this headline">¶</a></h2>
+<p>Piranha&#8217;s <code class="docutils literal"><span class="pre">integer</span></code> type is used to represent signed integers of arbitrary size (that is, the range
+of the type is limited only by the available memory). The type is based on the <code class="docutils literal"><span class="pre">mpz_t</span></code> type from the
+<a class="reference external" href="http://www.gmplib.org/">GMP library</a>. As an optimisation, for small numbers <code class="docutils literal"><span class="pre">integer</span></code> avoids
+using dynamic memory allocation and can thus have better performance than a straightforward <code class="docutils literal"><span class="pre">mpz_t</span></code>
+wrapper.</p>
+<p><code class="docutils literal"><span class="pre">integer</span></code> behaves much like a standard C++ integral type:</p>
+<ul class="simple">
+<li>a default-constructed <code class="docutils literal"><span class="pre">integer</span></code> object is initialised to zero;</li>
+<li>an <code class="docutils literal"><span class="pre">integer</span></code> object can be constructed from all the fundamental C++ types (construction from floating-point
+types results in the truncation of the original value);</li>
+<li>an <code class="docutils literal"><span class="pre">integer</span></code> object can be converted to all the the fundamental C++ types (if the conversion to a C++ integral
+type overflows the target type, an error is thrown);</li>
+<li>the division operator performs truncated division;</li>
+<li>in mixed-mode operations, the rank of <code class="docutils literal"><span class="pre">integer</span></code> is higher than any other C++ integral type but still
+lower than floating-point types (e.g., <code class="docutils literal"><span class="pre">integer</span> <span class="pre">+</span> <span class="pre">long</span></code> results in an <code class="docutils literal"><span class="pre">integer</span></code>, <code class="docutils literal"><span class="pre">integer</span> <span class="pre">+</span> <span class="pre">float</span></code>
+results in a <code class="docutils literal"><span class="pre">float</span></code>).</li>
+</ul>
+<p>The following C++ code illustrates some features of the <code class="docutils literal"><span class="pre">integer</span></code> type:</p>
+<div class="highlight-c++"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
+<span class="cp">#include &lt;stdexcept&gt;</span>
+
+<span class="cp">#include &quot;piranha.hpp&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">piranha</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="n">environment</span> <span class="n">env</span><span class="p">;</span>
+
+	<span class="c1">// Various ways of constructing an integer.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">integer</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">integer</span><span class="p">{</span><span class="s">&quot;42&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">integer</span><span class="p">{</span><span class="mf">42.123</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// You can construct integers of arbitrary size with the string constructor.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">integer</span><span class="p">{</span><span class="s">&quot;12345678987654321234567898765432&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Arithmetics and interoperability with fundamental C++ types.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">integer</span><span class="p">{</span><span class="mi">21</span><span class="p">}</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">1u</span> <span class="o">+</span> <span class="n">integer</span><span class="p">{</span><span class="mi">41</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="n">integer</span><span class="p">{</span><span class="mi">1</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">integer</span><span class="p">{</span><span class="mi">85</span><span class="p">}</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">integer</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Exponentiation is provided by the math::pow() function.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">math</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">integer</span><span class="p">{</span><span class="mi">42</span><span class="p">},</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Conversion to a C++ integral type can fail.</span>
+	<span class="n">try</span> <span class="p">{</span>
+		<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span><span class="p">(</span><span class="o">-</span><span class="n">integer</span><span class="p">{</span><span class="s">&quot;12345678987654321&quot;</span><span class="p">});</span>
+	<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">overflow_error</span> <span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Overflow!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="c1">// The &quot;_z&quot; suffix can be used to create integer literals.</span>
+	<span class="k">auto</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">42</span><span class="n">_z</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Calculate (42 choose 21) via the math::binomial() function.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">math</span><span class="o">::</span><span class="n">binomial</span><span class="p">(</span><span class="mi">42</span><span class="n">_z</span><span class="p">,</span><span class="mi">21</span><span class="n">_z</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>In the first lines, a few possible ways of constructing <code class="docutils literal"><span class="pre">integer</span></code> objects are shown, including a constructor
+from string that allows to initialise an <code class="docutils literal"><span class="pre">integer</span></code> with arbitrarily large values. In the following lines,
+some examples of arithmetics with basic C++ types are illustrated.</p>
+<p>On line 28, we can see how the <code class="docutils literal"><span class="pre">math::pow()</span></code> function can be invoked in order to compute the exponentiation of
+an <code class="docutils literal"><span class="pre">integer</span></code>. C++ lacks a dedicated exponentiation operator and thus the functionality is provided by a function
+instead. The <code class="docutils literal"><span class="pre">math::pow()</span></code> function is part of Piranha&#8217;s mathematical library.</p>
+<p>Line 38 highlights a couple of handy C++11 features. The snippet <code class="docutils literal"><span class="pre">42_z</span></code> is a <em>user-defined literal</em>: it results
+in the construction of an <code class="docutils literal"><span class="pre">integer</span></code> object via the string <code class="docutils literal"><span class="pre">&quot;42&quot;</span></code>. The constructed temporary object
+is then assigned to a variable <code class="docutils literal"><span class="pre">n</span></code> in the statement <code class="docutils literal"><span class="pre">auto</span> <span class="pre">n</span> <span class="pre">=</span> <span class="pre">42_z</span></code>. The type of <code class="docutils literal"><span class="pre">n</span></code> is automatically
+deduced via the keyword <code class="docutils literal"><span class="pre">auto</span></code> from the right-hand side of the assignment, thus <code class="docutils literal"><span class="pre">n</span></code> is an <code class="docutils literal"><span class="pre">integer</span></code> object.
+This is arguably the C++ syntax that most closely matches Python&#8217;s syntax.</p>
+<p>On line 42, we use the <code class="docutils literal"><span class="pre">math::binomial()</span></code> function from the math library to compute the binomial coefficient
+<span class="math">\({42 \choose 21}\)</span>, passing the two arguments as <code class="docutils literal"><span class="pre">integer</span></code> objects created via the user-defined literal <code class="docutils literal"><span class="pre">_z</span></code>.</p>
+<p>As expected, on the Python side things look simpler:</p>
+<div class="highlight-python" id="integer-py"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre></div></td><td class="code"><div class="highlight"><pre><span class="c"># Import the pyranha.math submodule.</span>
+<span class="kn">from</span> <span class="nn">pyranha</span> <span class="kn">import</span> <span class="n">math</span>
+
+<span class="c"># Various ways of constructing an int.</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="s">&quot;42&quot;</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mf">42.123</span><span class="p">))</span>
+
+<span class="c"># Arbitrarily large ints are supported directly,</span>
+<span class="c"># no need to go through a string conversion.</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">12345678987654321234567898765432</span><span class="p">)</span>
+
+<span class="c"># Interoperability with float.</span>
+<span class="k">print</span><span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c"># Truncated division in Python 2.x, floating-point division in Python 3.x.</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">85</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c"># Exponentiation via the &#39;**&#39; operator.</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">42</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c"># Calculate (42 choose 21) using the binomial() function from the math submodule.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">21</span><span class="p">))</span>
+</pre></div>
+</td></tr></table></div>
+<p>Python indeed provides multiprecision integers as basic types. Some notable differences exist between Python 2.x and
+Python 3.x in this regard:</p>
+<ul class="simple">
+<li>Python 2.x has two different integral types, <code class="docutils literal"><span class="pre">int</span></code> and <code class="docutils literal"><span class="pre">long</span></code>, representing small and large integers
+respectively. Python 3.x instead has a single integral type named <code class="docutils literal"><span class="pre">int</span></code>. Piranha is able to deal with both
+cases;</li>
+<li>in Python 2.x, integer division is truncated and returns an integral; in Python 3.x, integral division is a true division
+returning a <code class="docutils literal"><span class="pre">float</span></code>.</li>
+</ul>
+<p>In the first lines of the <a class="reference internal" href="#integer-py"><span>Python code</span></a>, a few ways of constructing an integral object are shown.
+Contrary to C++, big integers can be constructed directly without passing through a string constructor. Additionally,
+Python has a dedicated exponentiation operator called <code class="docutils literal"><span class="pre">**</span></code>, thus it is not necessary to resort to a separate
+function for this operation.</p>
+<p>On the last line, we see the first real example of using a Piranha function from Python. The <a class="reference internal" href="pyranha_math.html#pyranha.math.binomial" title="pyranha.math.binomial"><code class="xref py py-func docutils literal"><span class="pre">pyranha.math.binomial()</span></code></a>
+function will take Python integers as arguments, convert them to C++ <code class="docutils literal"><span class="pre">integer</span></code> objects and pass them to the C++ function
+<code class="docutils literal"><span class="pre">math::binomial()</span></code>. The output value of the C++ function will be converted back to a Python integer which will then
+be returned by the <a class="reference internal" href="pyranha_math.html#pyranha.math.binomial" title="pyranha.math.binomial"><code class="xref py py-func docutils literal"><span class="pre">pyranha.math.binomial()</span></code></a> function.</p>
+</div>
+<div class="section" id="the-rational-type">
+<h2>The <code class="docutils literal"><span class="pre">rational</span></code> type<a class="headerlink" href="#the-rational-type" title="Permalink to this headline">¶</a></h2>
+<p>A second fundamental type provided by Piranha is the <code class="docutils literal"><span class="pre">rational</span></code> class, which represents arbitrary-precision
+rational numbers as <code class="docutils literal"><span class="pre">integer</span></code> numerator-denominator pairs. The <code class="docutils literal"><span class="pre">rational</span></code> type in Piranha extends smoothly
+the standard C++ numerical hierarchy, and it obeys the following basic rules:</p>
+<ul class="simple">
+<li>a default-constructed <code class="docutils literal"><span class="pre">rational</span></code> object is initialised to zero;</li>
+<li>a <code class="docutils literal"><span class="pre">rational</span></code> object is always kept in the usual canonical form consisting of coprime numerator and denominator, with
+the denominator always strictly positive. Zero is always represented as <code class="docutils literal"><span class="pre">0/1</span></code>;</li>
+<li>a <code class="docutils literal"><span class="pre">rational</span></code> object can be converted to/from all the basic C++ numerical types and <code class="docutils literal"><span class="pre">integer</span></code> (the conversion to an integral
+type computes the truncated division of numerator and denominator);</li>
+<li>in mixed-mode operations, the rank of <code class="docutils literal"><span class="pre">rational</span></code> is higher than that of <code class="docutils literal"><span class="pre">integer</span></code> but lower than that of floating-point
+types.</li>
+</ul>
+<p>The following C++ code showcases a few features of the <code class="docutils literal"><span class="pre">rational</span></code> class:</p>
+<div class="highlight-c++"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
+<span class="cp">#include &lt;stdexcept&gt;</span>
+
+<span class="cp">#include &quot;piranha.hpp&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">piranha</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="n">environment</span> <span class="n">env</span><span class="p">;</span>
+
+	<span class="c1">// Various ways of constructing a rational.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="s">&quot;42&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mf">1.5</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">12</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="s">&quot;42/12&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// The integer class can also be used to construct a rational.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="n">_z</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="n">_z</span><span class="p">,</span><span class="mi">12</span><span class="n">_z</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// Mixed integral types in the numerator-denominator constructor can be used.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42ull</span><span class="p">,</span><span class="mi">12</span><span class="n">_z</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Arithmetics and interoperability with fundamental C++ types and integer.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">}</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">1u</span> <span class="o">+</span> <span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="n">rational</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">85</span><span class="p">}</span> <span class="o">/</span> <span class="mi">13</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">84</span><span class="p">,</span><span class="mi">2</span><span class="p">}</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">42</span><span class="n">_z</span> <span class="o">&gt;=</span> <span class="n">rational</span><span class="p">{</span><span class="mi">84</span><span class="p">,</span><span class="mi">3</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Exponentiation is provided by the math::pow() function.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">math</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">},</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">math</span><span class="o">::</span><span class="n">pow</span><span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">},</span><span class="o">-</span><span class="mi">3</span><span class="n">_z</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Conversion to a C++ integral type can fail.</span>
+	<span class="n">try</span> <span class="p">{</span>
+		<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span><span class="p">(</span><span class="o">-</span><span class="n">rational</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">5</span><span class="p">});</span>
+	<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">overflow_error</span> <span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Overflow!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="c1">// Conversion to integer cannot fail, and yields</span>
+	<span class="c1">// the truncated value.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span><span class="p">(</span><span class="n">rational</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// The &quot;_q&quot; suffix can be used to create rational literals.</span>
+	<span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="mi">42</span><span class="n">_q</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// The literal can also be used to initialise a rational from numerator and</span>
+	<span class="c1">// denominator without using any explicit constructor.</span>
+	<span class="n">r</span> <span class="o">=</span> <span class="mi">42</span><span class="o">/</span><span class="mi">13</span><span class="n">_q</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">r</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Calculate (42/13 choose 21) via the math::binomial() function.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">math</span><span class="o">::</span><span class="n">binomial</span><span class="p">(</span><span class="mi">42</span><span class="o">/</span><span class="mi">13</span><span class="n">_q</span><span class="p">,</span><span class="mi">21</span><span class="n">_z</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>In the first code block, a few ways of constructing a <code class="docutils literal"><span class="pre">rational</span></code> are shown. In addition to the constructors from interoperable
+types, a <code class="docutils literal"><span class="pre">rational</span></code> can also be constructed from an integral numerator-denominator pair. The string representation for a <code class="docutils literal"><span class="pre">rational</span></code>
+consists, intuitively, of the representation of numerator and denominator, separated by a <code class="docutils literal"><span class="pre">/</span></code> sign. The denominator can be
+omitted if it is unitary.</p>
+<p>In the second code block, some examples of arithmetic and logical operations involving <code class="docutils literal"><span class="pre">rational</span></code> and interoperable types are
+displayed.</p>
+<p>On lines 33-34, we use the <code class="docutils literal"><span class="pre">math::pow()</span></code> function to compute integral powers of a rational. <code class="docutils literal"><span class="pre">math::pow()</span></code> is able to accept
+many different combinations of argument types. In this specific case, with a <code class="docutils literal"><span class="pre">rational</span></code> base and an integral exponent, the result
+will be exact and its type will be <code class="docutils literal"><span class="pre">rational</span></code>.</p>
+<p>In the fourth code block, a couple of examples of conversion from <code class="docutils literal"><span class="pre">rational</span></code> are shown. Conversion to C++ integral types can fail
+in case of overflow, whereas conversion to <code class="docutils literal"><span class="pre">integer</span></code> will never fail.</p>
+<p>In the fifth code block, a few usages of the user-defined literal <code class="docutils literal"><span class="pre">_q</span></code> are displayed. <code class="docutils literal"><span class="pre">_q</span></code> can be appended to an integer literal
+to signal that a <code class="docutils literal"><span class="pre">rational</span></code> object is to be constructed using that literal. This can be combined with the division operator
+to yield a user-friendly syntax to initialise rational objects, as shown on line 51:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">r</span> <span class="o">=</span> <span class="mi">42</span><span class="o">/</span><span class="mi">13</span><span class="n">_q</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This line is effectively interpreted by the compiler as:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="n">r</span> <span class="o">=</span> <span class="mi">42</span><span class="o">/</span><span class="n">rational</span><span class="p">{</span><span class="s">&quot;13&quot;</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>In the last code block, we can see another invocation of the <code class="docutils literal"><span class="pre">math::binomial()</span></code> function. This time the top argument is a <code class="docutils literal"><span class="pre">rational</span></code>,
+wheras the bottom argument is an <code class="docutils literal"><span class="pre">integer</span></code>. The specialisation of the binomial function for these two types will yield the exact
+result as a <code class="docutils literal"><span class="pre">rational</span></code>.</p>
+<p>On the Python side things are again simpler:</p>
+<div class="highlight-python" id="rational-py"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="c"># Import the pyranha.math submodule.</span>
+<span class="kn">from</span> <span class="nn">pyranha</span> <span class="kn">import</span> <span class="n">math</span>
+<span class="c"># Import the standard Fraction class.</span>
+<span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span> <span class="k">as</span> <span class="n">F</span>
+
+<span class="c"># Various ways of constructing a rational.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="s">&quot;42&quot;</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mf">1.5</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">12</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="s">&quot;42/12&quot;</span><span class="p">))</span>
+
+<span class="c"># Arithmetics and interoperability with float and int.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="mf">43.</span> <span class="o">-</span> <span class="n">F</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">85</span><span class="p">)</span> <span class="o">/</span> <span class="mi">13</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">42</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="mi">42</span> <span class="o">&gt;=</span> <span class="n">F</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="c"># Exponentiation is provided by the standard &#39;**&#39; operator.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">)</span><span class="o">**-</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c"># Conversion to int yields the truncated value.</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+
+<span class="c"># Calculate (42/13 choose 21) via the math::binomial() function.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span><span class="mi">13</span><span class="p">),</span><span class="mi">21</span><span class="p">))</span>
+</pre></div>
+</td></tr></table></div>
+<p>Although Python does not provide a rational type as a builtin, a rational class named <code class="docutils literal"><span class="pre">Fraction</span></code> is available in the standard <code class="docutils literal"><span class="pre">fractions</span></code>
+module since Python 2.6. A few simple examples of usage of the <code class="docutils literal"><span class="pre">Fraction</span></code> class are shown in the <a class="reference internal" href="#rational-py"><span>Python code</span></a>.</p>
+<p><code class="docutils literal"><span class="pre">Fraction</span></code> instances are automatically converted to/from <code class="docutils literal"><span class="pre">rational</span></code> by Pyranha as needed. For instance, on the last line of the
+<a class="reference internal" href="#rational-py"><span>Python code</span></a> we see another usage of the <a class="reference internal" href="pyranha_math.html#pyranha.math.binomial" title="pyranha.math.binomial"><code class="xref py py-func docutils literal"><span class="pre">pyranha.math.binomial()</span></code></a> function. This time the arguments, of type
+<code class="docutils literal"><span class="pre">Fraction</span></code> and <code class="docutils literal"><span class="pre">int</span></code>, are automatically converted to <code class="docutils literal"><span class="pre">rational</span></code> and <code class="docutils literal"><span class="pre">integer</span></code> before being passed to the <code class="docutils literal"><span class="pre">math::binomial()</span></code> C++ function.
+The <code class="docutils literal"><span class="pre">rational</span></code> result of the C++ function is then converted back to <code class="docutils literal"><span class="pre">Fraction</span></code> and returned.</p>
+</div>
+<div class="section" id="the-real-type">
+<h2>The <code class="docutils literal"><span class="pre">real</span></code> type<a class="headerlink" href="#the-real-type" title="Permalink to this headline">¶</a></h2>
+<p>The third basic numerical type provided by Piranha is called <code class="docutils literal"><span class="pre">real</span></code>, and it represents arbitrary-precision floating-point numbers. It consists
+of a thin wrapper around the <code class="docutils literal"><span class="pre">mpfr_t</span></code> type from the <a class="reference external" href="http://www.mpfr.org">GNU MPFR</a> library. <code class="docutils literal"><span class="pre">real</span></code> is essentially a floating-point type
+whose number of significant digits can be selected at runtime.</p>
+<p>The <code class="docutils literal"><span class="pre">real</span></code> type obeys the following basic rules:</p>
+<ul class="simple">
+<li>a default-constructed <code class="docutils literal"><span class="pre">real</span></code> object is initialised to zero;</li>
+<li>the precision (i.e., the number of significant digits) is measured in bits, and it can be set at different values for different instances of
+<code class="docutils literal"><span class="pre">real</span></code>. The default value is 113 bits (similar to IEEE 754 quadruple-precision);</li>
+<li>a <code class="docutils literal"><span class="pre">real</span></code> object can be converted to/from all the basic C++ numerical types, <code class="docutils literal"><span class="pre">integer</span></code> and <code class="docutils literal"><span class="pre">rational</span></code> (the conversion to an integral
+type truncates the original value);</li>
+<li>in mixed-mode operations, the rank of <code class="docutils literal"><span class="pre">real</span></code> is higher than that of <code class="docutils literal"><span class="pre">integer</span></code>, <code class="docutils literal"><span class="pre">rational</span></code> and any numeric C++ type;</li>
+<li>operations involving multiple <code class="docutils literal"><span class="pre">real</span></code> instances with different precisions will produce a result with the highest precision among the operands.</li>
+</ul>
+<p>The following C++ code showcases a few features of the <code class="docutils literal"><span class="pre">real</span></code> class:</p>
+<div class="highlight-c++"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
+<span class="cp">#include &lt;stdexcept&gt;</span>
+
+<span class="cp">#include &quot;piranha.hpp&quot;</span>
+
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">piranha</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="n">environment</span> <span class="n">env</span><span class="p">;</span>
+
+	<span class="c1">// Various ways of constructing a real.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mf">42.3</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;1.2345&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// Construct with a custom precision of 500 bits.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">,</span><span class="mi">500</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mf">42.3</span><span class="p">,</span><span class="mi">500</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;1.2345&quot;</span><span class="p">,</span><span class="mi">500</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// Construct non-finite values.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;inf&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;-inf&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;nan&quot;</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Basic arithmetic operations.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="mf">1.5</span> <span class="o">/</span> <span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="c1">// The precision of the result is the highest precision among the operands.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">/</span> <span class="n">real</span><span class="p">{</span><span class="mf">7.1</span><span class="p">,</span><span class="mi">300</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">real</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">/</span> <span class="n">real</span><span class="p">{</span><span class="mf">7.1</span><span class="p">,</span><span class="mi">300</span><span class="p">}).</span><span class="n">get_prec</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// Conversion to a C++ integral type can fail.</span>
+	<span class="n">try</span> <span class="p">{</span>
+		<span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span><span class="p">(</span><span class="o">-</span><span class="n">real</span><span class="p">{</span><span class="mf">42.5</span><span class="p">});</span>
+	<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">overflow_error</span> <span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Overflow!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+	<span class="p">}</span>
+	<span class="c1">// Conversion to integer cannot fail, and yields</span>
+	<span class="c1">// the truncated value.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span><span class="p">(</span><span class="n">real</span><span class="p">{</span><span class="mf">10.3</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+
+	<span class="c1">// The &quot;_r&quot; suffix can be used to create real literals.</span>
+	<span class="k">auto</span> <span class="n">r</span> <span class="o">=</span> <span class="mf">42.123</span><span class="n">_r</span><span class="p">;</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">r</span> <span class="o">==</span> <span class="n">real</span><span class="p">{</span><span class="s">&quot;42.123&quot;</span><span class="p">})</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="potential-pitfalls">
+<h2>Potential pitfalls<a class="headerlink" href="#potential-pitfalls" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="tldr">
+<h2>TLDR<a class="headerlink" href="#tldr" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="reference.html" class="btn btn-neutral float-right" title="Complete reference" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="hello_piranha.html" class="btn btn-neutral" title="Hello Piranha!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2014, Francesco Biscani.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

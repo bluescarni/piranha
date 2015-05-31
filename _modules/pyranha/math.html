@@ -1,0 +1,809 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyranha.math &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="pyranha" href="../pyranha.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../index.html" class="icon icon-home"> Piranha
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started.html#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../getting_started.html#installation-from-source">Installation from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started.html#building">Building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../getting_started.html#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../hello_piranha.html">Hello Piranha!</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../hello_piranha.html#your-first-piranha-program">Your first Piranha program</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../hello_piranha.html#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../hello_piranha.html#your-first-pyranha-program">Your first Pyranha program</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../fundamental_types.html">Fundamental numerical types in Piranha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../fundamental_types.html#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fundamental_types.html#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fundamental_types.html#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fundamental_types.html#potential-pitfalls">Potential pitfalls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../fundamental_types.html#tldr">TLDR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">Complete reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyranha_reference.html">Python reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+          <li><a href="../pyranha.html">pyranha</a> &raquo;</li>
+      
+    <li>pyranha.math</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyranha.math</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: iso-8859-1 -*-</span>
+<span class="c"># Copyright (C) 2009-2011 by Francesco Biscani</span>
+<span class="c"># bluescarni@gmail.com</span>
+<span class="c">#</span>
+<span class="c"># This program is free software; you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation; either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># This program is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with this program; if not, write to the</span>
+<span class="c"># Free Software Foundation, Inc.,</span>
+<span class="c"># 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</span>
+
+<span class="c"># Use absolute imports to avoid issues with the main math module.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span> <span class="k">as</span> <span class="n">_ai</span>
+
+<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_cpp_type_catcher</span>
+
+<span class="c"># NOTE: some ideas to improve the extensibility of these functions:</span>
+<span class="c"># http://stackoverflow.com/questions/18957424/proper-way-to-make-functions-extensible-by-the-user</span>
+<span class="c"># Note that now we are adopting an approach of just deferring everything to C++.</span>
+
+<div class="viewcode-block" id="cos"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.cos">[docs]</a><span class="k">def</span> <span class="nf">cos</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Cosine.</span>
+<span class="sd">	</span>
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+<span class="sd">	the operation.</span>
+<span class="sd">	</span>
+<span class="sd">	:param arg: cosine argument</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:returns: cosine of *arg*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
+<span class="sd">		low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; cos(0)</span>
+<span class="sd">	1</span>
+<span class="sd">	&gt;&gt;&gt; cos(2) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: cannot compute the cosine of a non-zero integer</span>
+<span class="sd">	&gt;&gt;&gt; cos(2.) # doctest: +ELLIPSIS</span>
+<span class="sd">	-0.4161468...</span>
+<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, polynomial, rational, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">	&gt;&gt;&gt; cos(2 * t(&#39;x&#39;))</span>
+<span class="sd">	cos(2*x)</span>
+<span class="sd">	&gt;&gt;&gt; cos(&#39;hello&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_cos</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_cos</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="sin"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.sin">[docs]</a><span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Sine.</span>
+<span class="sd">	</span>
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+<span class="sd">	the operation.</span>
+
+<span class="sd">	:param arg: sine argument</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:returns: sine of *arg*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
+<span class="sd">		low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; sin(0)</span>
+<span class="sd">	0</span>
+<span class="sd">	&gt;&gt;&gt; sin(2) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: cannot compute the cosine of a non-zero integer</span>
+<span class="sd">	&gt;&gt;&gt; sin(2.) # doctest: +ELLIPSIS</span>
+<span class="sd">	0.9092974...</span>
+<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, polynomial, rational, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; t = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">	&gt;&gt;&gt; sin(2 * t(&#39;x&#39;))</span>
+<span class="sd">	sin(2*x)</span>
+<span class="sd">	&gt;&gt;&gt; sin(&#39;hello&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_sin</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_sin</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.binomial">[docs]</a><span class="k">def</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Binomial coefficient.</span>
+<span class="sd">	</span>
+<span class="sd">	This function is a wrapper around a lower level function. It will calculate the generalised binomial coefficient :math:`{x \choose y}`,</span>
+<span class="sd">	supporting various combinations of integral, rational, floating-point and arbitrary-precision floating-point types</span>
+<span class="sd">	as input.</span>
+<span class="sd">	</span>
+<span class="sd">	:param x: top argument for the binomial coefficient</span>
+<span class="sd">	:type x: ``int``, ``float``, ``Fraction``, ``mpf``</span>
+<span class="sd">	:param y: bottom argument for the binomial coefficient</span>
+<span class="sd">	:type y: ``int``, ``float``, ``Fraction``, ``mpf``</span>
+<span class="sd">	:returns: *x* choose *y*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the types of *x* and/or *y* are not supported</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; binomial(3,2)</span>
+<span class="sd">	3</span>
+<span class="sd">	&gt;&gt;&gt; binomial(-6,2)</span>
+<span class="sd">	21</span>
+<span class="sd">	&gt;&gt;&gt; from fractions import Fraction as F</span>
+<span class="sd">	&gt;&gt;&gt; binomial(F(-4,5),2)</span>
+<span class="sd">	Fraction(18, 25)</span>
+<span class="sd">	&gt;&gt;&gt; binomial(10,2.4) # doctest: +ELLIPSIS</span>
+<span class="sd">	70.3995282...</span>
+<span class="sd">	&gt;&gt;&gt; binomial(&#39;hello world&#39;,2.4) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_binomial</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_binomial</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="partial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.partial">[docs]</a><span class="k">def</span> <span class="nf">partial</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Partial derivative.</span>
+<span class="sd">	</span>
+<span class="sd">	Compute the partial derivative of *arg* with respect to the variable *name*. *arg* must be a series type and</span>
+<span class="sd">	*name* a string.</span>
+<span class="sd">	</span>
+<span class="sd">	:param arg: argument for the partial derivative</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param name: name of the variable with respect to which the derivative will be calculated</span>
+<span class="sd">	:type name: string</span>
+<span class="sd">	:returns: partial derivative of *arg* with respect to *name*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked</span>
+<span class="sd">		low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, integer, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(integer,monomial(short))()</span>
+<span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; partial(x + 2*x*y,&#39;y&#39;)</span>
+<span class="sd">	2*x</span>
+<span class="sd">	&gt;&gt;&gt; partial(x + 2*x*y,1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_partial</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_partial</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="integrate"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.integrate">[docs]</a><span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Integration.</span>
+<span class="sd">	</span>
+<span class="sd">	Compute the antiderivative of *arg* with respect to the variable *name*. *arg* must be a series type and</span>
+<span class="sd">	*name* a string. The success of the operation is not guaranteed, and depends both on the type and value of</span>
+<span class="sd">	*arg*.</span>
+<span class="sd">	</span>
+<span class="sd">	:param arg: argument for the integration</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param name: name of the variable with respect to which the integration will be calculated</span>
+<span class="sd">	:type name: string</span>
+<span class="sd">	:returns: antiderivative of *arg* with respect to *name*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the types of *arg* and/or *name* are not supported, or any other exception raised by the invoked</span>
+<span class="sd">		low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; integrate(x + 2*x*y,&#39;x&#39;) == x**2/2 + x**2*y</span>
+<span class="sd">	True</span>
+<span class="sd">	&gt;&gt;&gt; integrate(x**-1,&#39;x&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: negative unitary exponent</span>
+<span class="sd">	&gt;&gt;&gt; integrate(x**-1,1) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_integrate</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_integrate</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="factorial"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.factorial">[docs]</a><span class="k">def</span> <span class="nf">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Factorial.</span>
+<span class="sd">	</span>
+<span class="sd">	Will compute the factorial of *n*, which must be a non-negative instance of ``int``.</span>
+<span class="sd">	</span>
+<span class="sd">	:param n: argument for the factorial</span>
+<span class="sd">	:type n: ``int``</span>
+<span class="sd">	:returns: factorial of *n*</span>
+<span class="sd">	:raises: :exc:`TypeError` if *n* is not an ``int``</span>
+<span class="sd">	:raises: :exc:`ValueError` if *n* is negative or too large</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; factorial(0)</span>
+<span class="sd">	1</span>
+<span class="sd">	&gt;&gt;&gt; factorial(6)</span>
+<span class="sd">	720</span>
+<span class="sd">	&gt;&gt;&gt; factorial(-1)</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: invalid argument value</span>
+<span class="sd">	&gt;&gt;&gt; factorial(1.5)</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: factorial argument must be an integer</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span>  <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_factorial</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;factorial argument must be an integer&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">_factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+	<span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;invalid argument value&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="pbracket"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.pbracket">[docs]</a><span class="k">def</span> <span class="nf">pbracket</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Poisson bracket.</span>
+<span class="sd">	</span>
+<span class="sd">	Compute the Poisson bracket of *f* and *g* with respect to the momenta with names in *p_list*</span>
+<span class="sd">	and coordinates with names in *q_list*. *f* and *g* must be series of the same type, and</span>
+<span class="sd">	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.</span>
+<span class="sd">	</span>
+<span class="sd">	:param f: first argument</span>
+<span class="sd">	:type f: a series type</span>
+<span class="sd">	:param g: second argument</span>
+<span class="sd">	:type g: a series type</span>
+<span class="sd">	:param p_list: list of momenta names</span>
+<span class="sd">	:type p_list: list of strings</span>
+<span class="sd">	:param q_list: list of coordinates names</span>
+<span class="sd">	:type q_list: list of strings</span>
+<span class="sd">	:returns: Poisson bracket of *f* and *g* with respect to momenta *p_list* and coordinates *q_list*</span>
+<span class="sd">	:raises: :exc:`ValueError` if *p_list* and *q_list* have different sizes or duplicate entries</span>
+<span class="sd">	:raises: :exc:`TypeError` if the types of the arguments are invalid</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
+<span class="sd">	&gt;&gt;&gt; x,v = pt(&#39;x&#39;), pt(&#39;v&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; pbracket(x+v,x+v,[&#39;v&#39;],[&#39;x&#39;]) == 0</span>
+<span class="sd">	True</span>
+<span class="sd">	&gt;&gt;&gt; pbracket(x+v,x+v,[],[&#39;x&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: the number of coordinates is different from the number of momenta</span>
+<span class="sd">	&gt;&gt;&gt; pbracket(x+v,x+v,[&#39;v&#39;,&#39;v&#39;],[&#39;x&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: the list of momenta contains duplicate entries</span>
+<span class="sd">	&gt;&gt;&gt; pbracket(v,x,[&#39;v&#39;],[1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_pbracket</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_pbracket</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="transformation_is_canonical"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.transformation_is_canonical">[docs]</a><span class="k">def</span> <span class="nf">transformation_is_canonical</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="n">new_q</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Test if transformation is canonical.</span>
+<span class="sd">	</span>
+<span class="sd">	This function will check if a transformation of Hamiltonian momenta and coordinates is canonical using the Poisson bracket test.</span>
+<span class="sd">	The transformation is expressed as two separate list of objects, *new_p* and *new_q*, representing the new momenta</span>
+<span class="sd">	and coordinates as functions of the old momenta *p_list* and *q_list*.</span>
+<span class="sd">	</span>
+<span class="sd">	The function requires *new_p* and *new_q* to be lists of series of the same type, and</span>
+<span class="sd">	*p_list* and *q_list* lists of strings with the same size and no duplicate entries.</span>
+<span class="sd">	</span>
+<span class="sd">	:param new_p: list of objects representing the new momenta</span>
+<span class="sd">	:type new_p: list of series instances</span>
+<span class="sd">	:param new_q: list of objects representing the new coordinates</span>
+<span class="sd">	:type new_q: list of series instances</span>
+<span class="sd">	:param p_list: list of momenta names</span>
+<span class="sd">	:type p_list: list of strings</span>
+<span class="sd">	:param q_list: list of coordinates names</span>
+<span class="sd">	:type q_list: list of strings</span>
+<span class="sd">	:returns: ``True`` if the transformation defined by *new_p* and *new_q* is canonical, ``False`` otherwise</span>
+<span class="sd">	:raises: :exc:`ValueError` if the size of all input lists is not the same</span>
+<span class="sd">	:raises: :exc:`TypeError` if the types of the arguments are invalid</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+<span class="sd">	</span>
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; L,G,H,l,g,h = [pt(_) for _ in &#39;LGHlgh&#39;]</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([-l],[L],[&#39;L&#39;],[&#39;l&#39;])</span>
+<span class="sd">	True</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([l],[L],[&#39;L&#39;],[&#39;l&#39;])</span>
+<span class="sd">	False</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H],</span>
+<span class="sd">	... [-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-8*h],[&#39;L&#39;,&#39;G&#39;,&#39;H&#39;],[&#39;l&#39;,&#39;g&#39;,&#39;h&#39;])</span>
+<span class="sd">	True</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([2*L+3*G+2*H,4*L+2*G+3*H,9*L+6*G+7*H],</span>
+<span class="sd">	... [-4*l-g+6*h,-9*l-4*g+15*h,5*l+2*g-7*h],[&#39;L&#39;,&#39;G&#39;,&#39;H&#39;],[&#39;l&#39;,&#39;g&#39;,&#39;h&#39;])</span>
+<span class="sd">	False</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical(L,l,&#39;L&#39;,&#39;l&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: non-list input type</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([L,G],[l],[&#39;L&#39;],[&#39;l&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: the number of coordinates is different from the number of momenta</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([],[],[],[]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: empty input list(s)</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([L,1],[l,g],[&#39;L&#39;,&#39;G&#39;],[&#39;l&#39;,&#39;g&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: types in input lists are not homogeneous</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([L,G],[l,g],[&#39;L&#39;,&#39;G&#39;],[&#39;l&#39;,1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: p_list and q_list must be lists of strings</span>
+<span class="sd">	&gt;&gt;&gt; transformation_is_canonical([&#39;a&#39;],[&#39;b&#39;],[&#39;c&#39;],[&#39;d&#39;]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_transformation_is_canonical</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_p</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_q</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;non-list input type&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">p_list</span> <span class="o">+</span> <span class="n">q_list</span><span class="p">]):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;p_list and q_list must be lists of strings&#39;</span><span class="p">)</span>
+	<span class="n">types_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">_</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">new_p</span> <span class="o">+</span> <span class="n">new_q</span><span class="p">]))</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">types_set</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;empty input list(s)&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">types_set</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;types in input lists are not homogeneous&#39;</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">inst</span> <span class="o">=</span> <span class="n">types_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]()</span>
+	<span class="k">except</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;cannot construct instance of input type&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_transformation_is_canonical</span><span class="p">,</span><span class="n">new_p</span><span class="p">,</span><span class="n">new_q</span><span class="p">,</span><span class="n">p_list</span><span class="p">,</span><span class="n">q_list</span><span class="p">,</span><span class="n">types_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]())</span>
+</div>
+<div class="viewcode-block" id="truncate_degree"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.truncate_degree">[docs]</a><span class="k">def</span> <span class="nf">truncate_degree</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">,</span><span class="n">names</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Degree-based truncation.</span>
+
+<span class="sd">	This function will eliminate from *arg* parts whose degree is greater than *max_degree*. The truncation</span>
+<span class="sd">	operates on series types both by eliminating entire terms and by truncating recursively the coefficients,</span>
+<span class="sd">	if possible.</span>
+
+<span class="sd">	If *names* is ``None``, then the total degree is considered for the truncation. Otherwise, *names* must be</span>
+<span class="sd">	a list of strings enumerating the variables to be considered for the computation of the degree.</span>
+
+<span class="sd">	:param arg: argument for the truncation</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param max_degree: maximum degree that will be kept in *arg*</span>
+<span class="sd">	:type max_degree: a type comparable to the type representing the degree of *arg*</span>
+<span class="sd">	:param names: list of the names of the variables to be considered in the computation of the degree</span>
+<span class="sd">	:type names: ``None`` or a list of strings</span>
+<span class="sd">	:returns: the truncated counterpart of *arg*</span>
+<span class="sd">	:raises: :exc:`TypeError` if *names* is neither ``None`` nor a list of strings</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial, poisson_series</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree(x**2*y+x*y+z,2) # doctest: +SKIP</span>
+<span class="sd">	x*y+z</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree(x**2*y+x*y+z,0,[&#39;x&#39;])</span>
+<span class="sd">	z</span>
+<span class="sd">	&gt;&gt;&gt; pt = poisson_series(polynomial(rational,k_monomial))()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z,a,b = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;), pt(&#39;a&#39;), pt(&#39;b&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),3) # doctest: +SKIP</span>
+<span class="sd">	(x+x*y+x**2*z)*cos(a+b)+(-y*z+y)*sin(2*a+b)</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,[&#39;x&#39;,&#39;y&#39;]) # doctest: +SKIP</span>
+<span class="sd">	x*cos(a+b)+(-y*z+y)*sin(2*a+b)</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,&#39;x&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: the optional &#39;names&#39; argument must be a list of strings</span>
+<span class="sd">	&gt;&gt;&gt; truncate_degree((x+y*x+x**2*z)*cos(a+b)+(y-y*z+x**4)*sin(2*a+b),1,[&#39;x&#39;,1]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: the optional &#39;names&#39; argument must be a list of strings</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_truncate_degree</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])):</span>
+		<span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;the optional </span><span class="se">\&#39;</span><span class="s">names</span><span class="se">\&#39;</span><span class="s"> argument must be a list of strings&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_truncate_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_truncate_degree</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">max_degree</span><span class="p">,</span><span class="n">names</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="evaluate"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.evaluate">[docs]</a><span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">eval_dict</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Evaluation.</span>
+
+<span class="sd">	This function will evaluate *arg* according to the evaluation dictionary *eval_dict*. Evaluation</span>
+<span class="sd">	is the replacement of all symbolic quantities with numerical values.</span>
+
+<span class="sd">	*eval_dict* must be a dictionary of ``(name,value)`` pairs, where the ``name`` is a string referring to the symbol</span>
+<span class="sd">	to be replaced and ``value`` is the value with which ``name`` will be replaced. All values must be of the same type,</span>
+<span class="sd">	and this type needs to support the operations needed to compute the evaluation.</span>
+
+<span class="sd">	:param arg: argument for the evaluation</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param eval_dict: evaluation dictionary</span>
+<span class="sd">	:type eval_dict: a dictionary mapping strings to values, with all values of the same type</span>
+<span class="sd">	:returns: the evaluation of *arg* according to *eval_dict*</span>
+<span class="sd">	:raises: :exc:`TypeError` if *eval_dict* does not satisfy the requirements outlined above</span>
+<span class="sd">	:raises: :exc:`ValueError` if *eval_dict* is empty</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3,&#39;y&#39;:-3,&#39;z&#39;:5})</span>
+<span class="sd">	Fraction(9, 4)</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3.01,&#39;y&#39;:-3.32,&#39;z&#39;:5.34}) # doctest: +ELLIPSIS</span>
+<span class="sd">	4.7217...</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3.1,&#39;y&#39;:-3.2,&#39;z&#39;:5}) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: all values in the evaluation dictionary must be of the same type</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{}) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: evaluation dictionary cannot be empty</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3,&#39;y&#39;:-3,5:5}) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: all keys in the evaluation dictionary must be string objects</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,[1,2,3]) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: evaluation dictionary must be a dict object</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:3,&#39;y&#39;:-3}) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ValueError: invalid positions map for evaluation</span>
+<span class="sd">	&gt;&gt;&gt; evaluate(x*y+4*(y/4)**2*z,{&#39;x&#39;:&#39;a&#39;,&#39;y&#39;:&#39;b&#39;, &#39;z&#39;:&#39;c&#39;}) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._common</span> <span class="kn">import</span> <span class="n">_check_eval_dict</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_evaluate</span>
+	<span class="c"># Check input dict.</span>
+	<span class="n">_check_eval_dict</span><span class="p">(</span><span class="n">eval_dict</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_evaluate</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">eval_dict</span><span class="p">,</span><span class="n">eval_dict</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">eval_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]])</span>
+</div>
+<div class="viewcode-block" id="subs"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.subs">[docs]</a><span class="k">def</span> <span class="nf">subs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Substitution.</span>
+
+<span class="sd">	This function will replace, in *arg*, the symbol called *name* with the generic object *x*.</span>
+<span class="sd">	Internally, the functionality is implemented via a call to a lower-level C++ routine that</span>
+<span class="sd">	supports various combinations for the types of *arg* and *x*.</span>
+
+<span class="sd">	:param arg: argument for the substitution</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param name: name of the symbol to be substituted</span>
+<span class="sd">	:type name: a string</span>
+<span class="sd">	:param x: the quantity that will be substituted for *name*</span>
+<span class="sd">	:type x: any type supported by the low-level C++ routine</span>
+<span class="sd">	:returns: *arg* after the substitution of the symbol called *name* with *x*</span>
+<span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, k_monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,k_monomial)()</span>
+<span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; subs(x/2+1,&#39;x&#39;,3)</span>
+<span class="sd">	5/2</span>
+<span class="sd">	&gt;&gt;&gt; subs(x/2+1,&#39;x&#39;,y*2) == y + 1</span>
+<span class="sd">	True</span>
+<span class="sd">	&gt;&gt;&gt; subs(x/2+1,3,y*2)  # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_subs</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="t_subs"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.t_subs">[docs]</a><span class="k">def</span> <span class="nf">t_subs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Trigonometric substitution.</span>
+
+<span class="sd">	This function will replace, in *arg*, the cosine and sine of the symbol called *name* with</span>
+<span class="sd">	the generic objects *x* and *y*. Internally, the functionality is implemented via a call to</span>
+<span class="sd">	a lower-level C++ routine that supports various combinations for the types of *arg*, *x* and *y*.</span>
+
+<span class="sd">	:param arg: argument for the substitution</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param name: name of the symbol whose cosine and sine will be substituted</span>
+<span class="sd">	:type name: a string</span>
+<span class="sd">	:param x: the quantity that will be substituted for the cosine of *name*</span>
+<span class="sd">	:type x: any type supported by the low-level C++ routine</span>
+<span class="sd">	:param y: the quantity that will be substituted for the sine of *name*</span>
+<span class="sd">	:type y: any type supported by the low-level C++ routine</span>
+<span class="sd">	:returns: *arg* after the substitution of the cosine and sine of the symbol called *name* with *x* and *y*</span>
+<span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from .types import poisson_series, rational, polynomial, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = poisson_series(polynomial(rational,monomial(short)))()</span>
+<span class="sd">	&gt;&gt;&gt; x,y = pt(&#39;x&#39;), pt(&#39;y&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; t_subs(cos(x+y),&#39;x&#39;,1,0)</span>
+<span class="sd">	cos(y)</span>
+<span class="sd">	&gt;&gt;&gt; t_subs(sin(2*x+y),&#39;x&#39;,0,1)</span>
+<span class="sd">	-sin(y)</span>
+<span class="sd">	&gt;&gt;&gt; t_subs(sin(2*x+y),0,0,1)  # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_t_subs</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_t_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ipow_subs"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.ipow_subs">[docs]</a><span class="k">def</span> <span class="nf">ipow_subs</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Integral power substitution.</span>
+
+<span class="sd">	This function will replace, in *arg*, the *n*-th power of the symbol called *name* with</span>
+<span class="sd">	the generic object *x*. Internally, the functionality is implemented via a call to</span>
+<span class="sd">	a lower-level C++ routine that supports various combinations for the types of *arg* and *x*.</span>
+
+<span class="sd">	:param arg: argument for the substitution</span>
+<span class="sd">	:type arg: a series type</span>
+<span class="sd">	:param name: name of the symbol whose power will be substituted</span>
+<span class="sd">	:type name: a string</span>
+<span class="sd">	:param n: power of *name* that will be substituted</span>
+<span class="sd">	:type n: an integer</span>
+<span class="sd">	:param x: the quantity that will be substituted for the power of *name*</span>
+<span class="sd">	:type x: any type supported by the low-level C++ routine</span>
+<span class="sd">	:returns: *arg* after the substitution of *n*-th power of the symbol called *name* with *x*</span>
+<span class="sd">	:raises: :exc:`TypeError` in case the input types are not supported or invalid</span>
+<span class="sd">	:raises: any exception raised by the invoked low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from .types import rational, polynomial, short, monomial</span>
+<span class="sd">	&gt;&gt;&gt; pt = polynomial(rational,monomial(short))()</span>
+<span class="sd">	&gt;&gt;&gt; x,y,z = pt(&#39;x&#39;), pt(&#39;y&#39;), pt(&#39;z&#39;)</span>
+<span class="sd">	&gt;&gt;&gt; ipow_subs(x**5*y,&#39;x&#39;,2,z)</span>
+<span class="sd">	x*y*z**2</span>
+<span class="sd">	&gt;&gt;&gt; ipow_subs(x**6*y,&#39;x&#39;,2,z**-1)</span>
+<span class="sd">	y*z**-3</span>
+<span class="sd">	&gt;&gt;&gt; ipow_subs(x**6*y,0,2,z**-1)  # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+<span class="sd">	&gt;&gt;&gt; ipow_subs(x**6*y,&#39;x&#39;,2.1,z**-1)  # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_ipow_subs</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_ipow_subs</span><span class="p">,</span><span class="n">arg</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="invert"><a class="viewcode-back" href="../../pyranha_math.html#pyranha.math.invert">[docs]</a><span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Inverse.</span>
+
+<span class="sd">	Compute the multiplicative inverse of the argument.</span>
+<span class="sd">	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports</span>
+<span class="sd">	the operation.</span>
+
+<span class="sd">	:param arg: inversion argument</span>
+<span class="sd">	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.</span>
+<span class="sd">	:returns: inverse of *arg*</span>
+<span class="sd">	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked</span>
+<span class="sd">		low-level function</span>
+
+<span class="sd">	&gt;&gt;&gt; from fractions import Fraction as F</span>
+<span class="sd">	&gt;&gt;&gt; invert(F(1,2))</span>
+<span class="sd">	Fraction(2, 1)</span>
+<span class="sd">	&gt;&gt;&gt; invert(1.23) # doctest: +ELLIPSIS</span>
+<span class="sd">	0.8130081...</span>
+<span class="sd">	&gt;&gt;&gt; invert(0) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	ZeroDivisionError: division by zero</span>
+<span class="sd">	&gt;&gt;&gt; from .types import polynomial, rational, short, monomial, divisor, divisor_series</span>
+<span class="sd">	&gt;&gt;&gt; t = polynomial(rational,monomial(short))()</span>
+<span class="sd">	&gt;&gt;&gt; invert(t(&#39;x&#39;))</span>
+<span class="sd">	x**-1</span>
+<span class="sd">	&gt;&gt;&gt; t = divisor_series(polynomial(rational,monomial(short)),divisor(short))()</span>
+<span class="sd">	&gt;&gt;&gt; invert(-2*t(&#39;x&#39;)+8*t(&#39;y&#39;))</span>
+<span class="sd">	-1/2*1/[(x-4*y)]</span>
+<span class="sd">	&gt;&gt;&gt; invert(&#39;hello&#39;) # doctest: +IGNORE_EXCEPTION_DETAIL</span>
+<span class="sd">	Traceback (most recent call last):</span>
+<span class="sd">	   ...</span>
+<span class="sd">	TypeError: invalid argument type(s)</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="kn">from</span> <span class="nn">._core</span> <span class="kn">import</span> <span class="n">_invert</span>
+	<span class="k">return</span> <span class="n">_cpp_type_catcher</span><span class="p">(</span><span class="n">_invert</span><span class="p">,</span><span class="n">arg</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2014, Francesco Biscani.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

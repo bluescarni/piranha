@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyranha &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Python reference" href="pyranha_reference.html"/>
+        <link rel="next" title="pyranha.celmec" href="pyranha_celmec.html"/>
+        <link rel="prev" title="Python reference" href="pyranha_reference.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Piranha
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-from-source">Installation from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#building">Building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hello_piranha.html">Hello Piranha!</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-piranha-program">Your first Piranha program</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="hello_piranha.html#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="hello_piranha.html#your-first-pyranha-program">Your first Pyranha program</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#potential-pitfalls">Potential pitfalls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#tldr">TLDR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reference.html">Complete reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href=""><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="reference.html">Complete reference</a> &raquo;</li>
+      
+          <li><a href="pyranha_reference.html">Python reference</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">pyranha</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pyranha_root.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="pyranha">
+<span id="pyranha-root"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">pyranha</span></code><a class="headerlink" href="#pyranha" title="Permalink to this headline">¶</a></h1>
+<p>Root pyranha module.</p>
+<dl class="data">
+<dt id="pyranha.__all__">
+<code class="descclassname">pyranha.</code><code class="descname">__all__</code><em class="property"> = ['celmec', 'math', 'test', 'types']</em><a class="headerlink" href="#pyranha.__all__" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of Pyranha submodules.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyranha.settings">
+<em class="property">class </em><code class="descclassname">pyranha.</code><code class="descname">settings</code><a class="reference internal" href="_modules/pyranha.html#settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Settings class.</p>
+<p>This class is used to configure global Pyranha settings via static methods.
+The methods are thread-safe.</p>
+<dl class="staticmethod">
+<dt id="pyranha.settings.get_latex_repr">
+<em class="property">static </em><code class="descname">get_latex_repr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_latex_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_latex_repr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if series types have a <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method.</p>
+<p>The <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method, if present, is used by the IPython notebook to display the TeX
+representation of a series via a Javascript library. If a series is very large, it might be preferrable
+to disable the TeX representation in order to improve the performance of the IPython UI. When the TeX
+representation is disabled, IPython will fall back to the PNG-based representation of the series, which
+leverages - if available - a local installation of TeX for increased performance via a static rendering
+of the TeX representation of the series to a PNG bitmap.</p>
+<p>By default, the TeX representation of series is enabled.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
+<span class="go">&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.get_max_term_output">
+<em class="property">static </em><code class="descname">get_max_term_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_max_term_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_max_term_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the maximum number of series terms to print.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the maximum number of series terms to print</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<span class="go">20</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.get_min_work_per_thread">
+<em class="property">static </em><code class="descname">get_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the minimum work per thread.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
+<span class="go">500000 # This will be an implementation-defined value.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.get_n_threads">
+<em class="property">static </em><code class="descname">get_n_threads</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.get_n_threads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.get_n_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of threads that can be used by Piranha.</p>
+<p>The initial value is auto-detected on program startup.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> 
+<span class="go">16 # This will be a platform-dependent value.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.reset_max_term_output">
+<em class="property">static </em><code class="descname">reset_max_term_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.reset_max_term_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.reset_max_term_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the maximum number of series terms to print to the default value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_max_term_output</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<span class="go">20</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.reset_min_work_per_thread">
+<em class="property">static </em><code class="descname">reset_min_work_per_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.reset_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.reset_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the minimum work per thread.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_min_work_per_thread</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> <span class="o">==</span> <span class="n">n</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.reset_n_threads">
+<em class="property">static </em><code class="descname">reset_n_threads</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.reset_n_threads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.reset_n_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the number of threads that can be used by Piranha to the default value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_n_threads</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span> <span class="o">==</span> <span class="n">n</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.set_latex_repr">
+<em class="property">static </em><code class="descname">set_latex_repr</code><span class="sig-paren">(</span><em>flag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_latex_repr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_latex_repr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the availability of the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method in series.</p>
+<p>If <em>flag</em> is <code class="docutils literal"><span class="pre">True</span></code>, the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method of series types will be enabled. Otherwise,
+the method will be disabled. See the documentation for <a class="reference internal" href="#pyranha.settings.get_latex_repr" title="pyranha.settings.get_latex_repr"><code class="xref py py-meth docutils literal"><span class="pre">pyranha.settings.get_latex_repr()</span></code></a> for a
+description of how the method is used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<code class="docutils literal"><span class="pre">bool</span></code>) &#8211; availability flag for the <code class="docutils literal"><span class="pre">_repr_latex_()</span></code> method</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">TypeError</span></code> if <em>flag</em> is not a <code class="docutils literal"><span class="pre">bool</span></code></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_latex_repr</span><span class="p">()</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">rational</span><span class="p">,</span> <span class="n">k_monomial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pt</span> <span class="o">=</span> <span class="n">polynomial</span><span class="p">(</span><span class="n">rational</span><span class="p">,</span><span class="n">k_monomial</span><span class="p">)()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">pt</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">AttributeError</span>: <span class="n">object has no attribute &#39;_latex_repr_&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">_repr_latex_</span><span class="p">()</span>
+<span class="go">&#39;\\[ \\frac{1}{2}{x}^{2} \\]&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_latex_repr</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">the &#39;flag&#39; parameter must be a bool</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.set_max_term_output">
+<em class="property">static </em><code class="descname">set_max_term_output</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_max_term_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_max_term_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the maximum number of series terms to print.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; number of series terms to print</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_max_term_output</span><span class="p">()</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">invalid value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_max_term_output</span><span class="p">(</span><span class="s">&quot;hello&quot;</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">invalid type</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_max_term_output</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.set_min_work_per_thread">
+<em class="property">static </em><code class="descname">set_min_work_per_thread</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_min_work_per_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_min_work_per_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the minimum work per thread.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; desired work per thread</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_min_work_per_thread</span><span class="p">()</span> 
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">invalid value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_min_work_per_thread</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">invalid value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_min_work_per_thread</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyranha.settings.set_n_threads">
+<em class="property">static </em><code class="descname">set_n_threads</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyranha.html#settings.set_n_threads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyranha.settings.set_n_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the number of threads that can be used by Piranha.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n</strong> (<code class="docutils literal"><span class="pre">int</span></code>) &#8211; desired number of threads</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body">any exception raised by the invoked low-level function</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">get_n_threads</span><span class="p">()</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">invalid value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">set_n_threads</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">OverflowError</span>: <span class="n">invalid value</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">settings</span><span class="o">.</span><span class="n">reset_n_threads</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyranha_celmec.html" class="btn btn-neutral float-right" title="pyranha.celmec" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pyranha_reference.html" class="btn btn-neutral" title="Python reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2014, Francesco Biscani.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

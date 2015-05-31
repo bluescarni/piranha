@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Hello Piranha! &mdash; Piranha 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Piranha 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Tutorial" href="tutorial.html"/>
+        <link rel="next" title="Fundamental numerical types in Piranha" href="fundamental_types.html"/>
+        <link rel="prev" title="Tutorial" href="tutorial.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Piranha
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#supported-platforms">Supported platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-from-source">Installation from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#building">Building</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="tutorial.html">Tutorial</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Hello Piranha!</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#your-first-piranha-program">Your first Piranha program</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-environment-class">The <code class="docutils literal"><span class="pre">environment</span></code> class</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#your-first-pyranha-program">Your first Pyranha program</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fundamental_types.html">Fundamental numerical types in Piranha</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-integer-type">The <code class="docutils literal"><span class="pre">integer</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-rational-type">The <code class="docutils literal"><span class="pre">rational</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#the-real-type">The <code class="docutils literal"><span class="pre">real</span></code> type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#potential-pitfalls">Potential pitfalls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fundamental_types.html#tldr">TLDR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Complete reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyranha_reference.html">Python reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_root.html"><code class="docutils literal"><span class="pre">pyranha</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_celmec.html"><code class="docutils literal"><span class="pre">pyranha.celmec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_math.html"><code class="docutils literal"><span class="pre">pyranha.math</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_test.html"><code class="docutils literal"><span class="pre">pyranha.test</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyranha_types.html"><code class="docutils literal"><span class="pre">pyranha.types</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Piranha</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="tutorial.html">Tutorial</a> &raquo;</li>
+      
+    <li>Hello Piranha!</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/hello_piranha.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="hello-piranha">
+<span id="id1"></span><h1>Hello Piranha!<a class="headerlink" href="#hello-piranha" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="your-first-piranha-program">
+<h2>Your first Piranha program<a class="headerlink" href="#your-first-piranha-program" title="Permalink to this headline">¶</a></h2>
+<p>After following the <a class="reference internal" href="getting_started.html#getting-started"><span>installation instructions</span></a>,
+you should be able to compile and run your first C++ Piranha program:</p>
+<div class="highlight-c++" id="hello-piranha-cpp"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="c1">// Include the standard I/O header.</span>
+<span class="cp">#include &lt;iostream&gt;</span>
+
+<span class="c1">// Include the global Piranha header.</span>
+<span class="cp">#include &quot;piranha.hpp&quot;</span>
+
+<span class="c1">// Import the names from the Piranha namespace.</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">piranha</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="c1">// Setup of the Piranha environment.</span>
+	<span class="n">environment</span> <span class="n">env</span><span class="p">;</span>
+	<span class="c1">// Print the rational number 4/3 to screen.</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">rational</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">}</span> <span class="o">&lt;&lt;</span> <span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The C++ code snippets shown in the tutorial are imported verbatim from the Piranha
+source tree. You should take care of adjusting the include path of the <code class="docutils literal"><span class="pre">piranha.hpp</span></code> header
+to the correct location on your system before attempting to compile the C++ code samples.
+On Unix systems, if you installed Piranha in a standard <code class="docutils literal"><span class="pre">PREFIX</span></code>, the correct way
+of including the Piranha header is <code class="docutils literal"><span class="pre">#include</span> <span class="pre">&lt;piranha/piranha.hpp&gt;</span></code>.</p>
+</div>
+<p>This program will just print to screen the rational number <span class="math">\(\frac{4}{3}\)</span>, represented
+in Piranha by a class called (unsurprisingly) <code class="docutils literal"><span class="pre">rational</span></code>.
+In Unix-like environments, you can compile this simple program with GCC via the command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>g++ -std<span class="o">=</span>c++11 hello_piranha.cpp -lmpfr -lgmp
+</pre></div>
+</div>
+<p>A couple of things to note:</p>
+<ul class="simple">
+<li>we pass the <code class="docutils literal"><span class="pre">-std=c++11</span></code> flag to specify that we want to use the C++11 version of the C++ standard for the compilation.
+Piranha is written in C++11, and this flag is necessary as long as GCC does not default to C++11 mode;</li>
+<li>we specify via the <code class="docutils literal"><span class="pre">-lmpfr</span> <span class="pre">-lgmp</span></code> flags that the executable needs to be linked to the GMP and MPFR libraries (if
+you do not do this, the program will still compile but the final linking will fail due to undefined references);</li>
+<li>at the present time, all the Boost libraries used within Piranha are header-only and thus no linking to any Boost
+library is necessary;</li>
+<li>Piranha itself is header-only, so there is no <code class="docutils literal"><span class="pre">-lpiranha</span></code> to link to.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The development version of Piranha adds serialization capabilities, and requires the Boost Serialization
+library to be linked in with <code class="docutils literal"><span class="pre">-lboost_serialization</span></code> if such capablities are used.</p>
+</div>
+<p>If you installed Piranha in a custom <code class="docutils literal"><span class="pre">PREFIX</span></code>, you will need to specify on the command line where
+the Piranha headers are located via the <code class="docutils literal"><span class="pre">-I</span></code> switch. E.g.,</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>g++ -I/home/username/.local/include -std<span class="o">=</span>c++11 hello_piranha.cpp -lmpfr -lgmp
+</pre></div>
+</div>
+<p>If the GMP and/or MPFR libraries are not installed in a standard path, you can use the <code class="docutils literal"><span class="pre">-L</span></code> switch to tell GCC
+where to look for them:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>g++ -std<span class="o">=</span>c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
+</pre></div>
+</div>
+<p>After a successful compilation, the executable <code class="docutils literal"><span class="pre">a.out</span></code> can be run:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>./a.out
+4/3
+</pre></div>
+</div>
+<div class="section" id="the-environment-class">
+<h3>The <code class="docutils literal"><span class="pre">environment</span></code> class<a class="headerlink" href="#the-environment-class" title="Permalink to this headline">¶</a></h3>
+<p>As you can see from the <a class="reference internal" href="#hello-piranha-cpp"><span>C++ code</span></a>, before starting to use the library we create
+an <code class="docutils literal"><span class="pre">environment</span></code> object called <code class="docutils literal"><span class="pre">env</span></code>. The constructor of this object will setup the Piranha runtime environment,
+performing the registration of cleanup functions to be automatically called when the program finishes, checking
+that the required libraries were configured correctly, etc.</p>
+<p>The creation of an <code class="docutils literal"><span class="pre">environment</span></code> object is not mandatory strictly speaking, but it is strongly encouraged and it might
+become mandatory in the future.</p>
+</div>
+</div>
+<div class="section" id="your-first-pyranha-program">
+<h2>Your first Pyranha program<a class="headerlink" href="#your-first-pyranha-program" title="Permalink to this headline">¶</a></h2>
+<p>The Python counterpart of the <a class="reference internal" href="#hello-piranha-cpp"><span>C++ code</span></a> is:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span class="c"># Import the standard Fraction class.</span>
+<span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span>
+<span class="c"># Import the pyranha module.</span>
+<span class="kn">import</span> <span class="nn">pyranha</span>
+
+<span class="c"># Print the rational 4/3 to screen.</span>
+<span class="k">print</span><span class="p">(</span><span class="n">Fraction</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</td></tr></table></div>
+<p>Two important differencese with respect to the C++ code should be evident.</p>
+<p>First of all, in Python we do not need to create any <code class="docutils literal"><span class="pre">environment</span></code> object: importing the <code class="xref py py-mod docutils literal"><span class="pre">pyranha</span></code> module will automatically
+take care of creating the environment object for us.</p>
+<p>Secondly, in Python we do not use the <code class="docutils literal"><span class="pre">rational</span></code> class from Piranha, but we use the standard <code class="xref py py-class docutils literal"><span class="pre">Fraction</span></code> class from
+<code class="xref py py-mod docutils literal"><span class="pre">fractions</span></code> module. Indeed, Pyranha includes code to convert automatically the numerical types implemented in C++ to corresponding
+types in Python. This means that, for instance, Piranha functions that in C++ return <code class="docutils literal"><span class="pre">rational</span></code> will return
+<code class="xref py py-class docutils literal"><span class="pre">Fraction</span></code> in Python, and C++ functions accepting a <code class="docutils literal"><span class="pre">rational</span></code> parameter will accept <code class="xref py py-class docutils literal"><span class="pre">Fraction</span></code> parameter
+when called from Python.</p>
+<p>The fundamental numerical types implemented in Piranha and their Python counterparts are the subject of the
+<a class="reference internal" href="fundamental_types.html#fundamental-types"><span>next tutorial chapter</span></a>.</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="fundamental_types.html" class="btn btn-neutral float-right" title="Fundamental numerical types in Piranha" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="tutorial.html" class="btn btn-neutral" title="Tutorial" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2009-2014, Francesco Biscani.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
