@@ -182,6 +182,7 @@ class math_test_case(_ut.TestCase):
 		self.sincosTest()
 		self.evaluateTest()
 		self.subsTest()
+		self.invertTest()
 	def binomialTest(self):
 		from fractions import Fraction as F
 		from .math import binomial
@@ -299,6 +300,33 @@ class math_test_case(_ut.TestCase):
 			self.assertEqual(type(ipow_subs(x**5*y**2*z/5,'x',2,mpf(3.))),poisson_series(polynomial(real,k_monomial))())
 		except ImportError:
 			pass
+	def invertTest(self):
+		from fractions import Fraction as F
+		from .math import invert
+		self.assertEqual(invert(F(3,4)),F(4,3))
+		self.assertEqual(invert(F(3,-4)),-F(4,3))
+		self.assertEqual(invert(1.234),1.234**-1.)
+		self.assertEqual(invert(-3.456),-3.456**-1.)
+		try:
+			from mpmath import mpf
+			self.assertEqual(type(invert(mpf(1.23))),mpf)
+		except ImportError:
+			pass
+		from .types import polynomial, monomial, rational, short, divisor_series, divisor, poisson_series
+		t = polynomial(rational,monomial(rational))()
+		self.assertEqual(invert(t(F(3,4))),F(4,3))
+		self.assertEqual(type(invert(t(F(3,4)))),t)
+		self.assertEqual(invert(t('x')),t('x')**-1)
+		t = divisor_series(polynomial(rational,monomial(rational)),divisor(short))()
+		self.assertEqual(invert(t(F(3,4))),F(4,3))
+		self.assertEqual(type(invert(t(F(3,4)))),t)
+		self.assertEqual(str(invert(t('x'))),'1/[(x)]')
+		self.assertEqual(str(t('x')**-1),'x**-1')
+		t = poisson_series(divisor_series(polynomial(rational,monomial(rational)),divisor(short)))()
+		self.assertEqual(invert(t(F(3,4))),F(4,3))
+		self.assertEqual(type(invert(t(F(3,4)))),t)
+		self.assertEqual(str(invert(t('x'))),'1/[(x)]')
+		self.assertEqual(str(t('x')**-1),'x**-1')
 
 class polynomial_test_case(_ut.TestCase):
 	""":mod:`polynomial` module test case.
@@ -343,19 +371,16 @@ class divisor_series_test_case(_ut.TestCase):
 	def runTest(self):
 		from .types import divisor_series, rational, short, double, real, divisor, monomial, polynomial
 		from fractions import Fraction
-		from .math import partial, integrate
+		from .math import partial, integrate, invert
 		self.assertEqual(type(divisor_series(polynomial(rational,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(rational,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(double,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(double,monomial(short))())
 		self.assertEqual(type(divisor_series(polynomial(real,monomial(short)),divisor(short))()(1).list[0][0]),polynomial(real,monomial(short))())
-		# A couple of tests for the special pow() method.
+		# A couple of tests for the invert() functionality.
 		dt = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
-		self.assertEqual(str((2*dt('x')+4*dt('y'))**-1),"1/2*1/[(x+2*y)]")
-		self.assertEqual(str((dt('x')+2*dt('y'))**-1),"1/[(x+2*y)]")
-		self.assertRaises(ValueError,lambda : (dt('x')+2*dt('y')/3)**-1)
-		self.assertRaises(ValueError,lambda : (dt('x')+1)**-1)
-		self.assertEqual(str((dt('x')+2*dt('y'))**-4),"1/[(x+2*y)**4]")
-		self.assertEqual(str((-2*dt('x')+4*dt('y'))**-4),"1/16*1/[(x-2*y)**4]")
-		self.assertEqual(str((-2*dt('x')+4*dt('y'))**-5),"-1/32*1/[(x-2*y)**5]")
+		self.assertEqual(str(invert(2*dt('x')+4*dt('y'))),"1/2*1/[(x+2*y)]")
+		self.assertEqual(str(invert(dt('x')+2*dt('y'))),"1/[(x+2*y)]")
+		self.assertRaises(ValueError,lambda : invert(dt('x')+2*dt('y')/3))
+		self.assertRaises(ValueError,lambda : invert(dt('x')+1))
 		# Check about partial().
 		x,y,z = [dt(_) for _ in ['x','y','z']]
 		self.assertEqual(partial(z,'x'),0)
@@ -363,12 +388,12 @@ class divisor_series_test_case(_ut.TestCase):
 		self.assertEqual(partial(x**2,'x'),2*x)
 		# Variables both in the coefficient and in the divisors.
 		self.assertEqual(partial(y*x**-1,'x'),-y*x**-2)
-		self.assertEqual(partial(x*(x-y)**-1,'x'),(x-y)**-1-x*(x-y)**-2)
+		self.assertEqual(partial(x*invert(x-y),'x'),invert(x-y)-x*invert(x-y)**2)
 		# Some integrate() testing.
 		self.assertEqual(integrate(x,'x'),x*x/2)
-		self.assertEqual(integrate(x*y**-1,'x'),x*x/2*y**-1)
-		self.assertEqual(integrate(x*y**-1+z,'x'),z*x+x*x/2*y**-1)
-		self.assertRaises(ValueError,lambda : integrate(x**-1,'x'))
+		self.assertEqual(integrate(x*invert(y),'x'),x*x/2*invert(y))
+		self.assertEqual(integrate(x*invert(y)+z,'x'),z*x+x*x/2*invert(y))
+		self.assertRaises(ValueError,lambda : integrate(invert(x),'x'))
 
 class poisson_series_test_case(_ut.TestCase):
 	""":mod:`poisson_series` module test case.
@@ -383,7 +408,7 @@ class poisson_series_test_case(_ut.TestCase):
 	def runTest(self):
 		from .types import poisson_series, rational, double, real, monomial, short, divisor_series, divisor, polynomial
 		from fractions import Fraction
-		from .math import partial, integrate, sin, cos
+		from .math import partial, integrate, sin, cos, invert
 		self.assertEqual(type(poisson_series(rational)()(1).list[0][0]),Fraction)
 		self.assertEqual(type(poisson_series(double)()(1).list[0][0]),float)
 		try:
@@ -397,18 +422,18 @@ class poisson_series_test_case(_ut.TestCase):
 		self.assertEqual(str(cos(x)),'cos(x)')
 		self.assertEqual(str(sin(x)),'sin(x)')
 		self.assertRaises(ValueError,lambda : sin(x**2))
-		self.assertEqual(str((x-y)**-1),'1/[(x-y)]')
-		self.assertEqual(str((-2*x+4*y)**-2),'1/4*1/[(x-2*y)**2]')
-		self.assertEqual(str((-2*x+4*y)**-3),'-1/8*1/[(x-2*y)**3]')
+		self.assertEqual(str(invert(x-y)),'1/[(x-y)]')
+		self.assertEqual(str(invert(-2*x+4*y)**2),'1/4*1/[(x-2*y)**2]')
+		self.assertEqual(str(invert(-2*x+4*y)**3),'-1/8*1/[(x-2*y)**3]')
 		# Partial.
-		self.assertEqual(partial((x-y)**-1*cos(z),'z'),-(x-y)**-1*sin(z))
-		self.assertEqual(partial(x*(x-y)**-1*cos(x),'x'),(x-y)**-1*cos(x)+x*(-(x-y)**-2*cos(x)-sin(x)*(x-y)**-1))
+		self.assertEqual(partial(invert(x-y)*cos(z),'z'),-invert(x-y)*sin(z))
+		self.assertEqual(partial(x*invert(x-y)*cos(x),'x'),invert(x-y)*cos(x)+x*(-invert(x-y)**2*cos(x)-sin(x)*invert(x-y)))
 		# Integrate.
-		self.assertEqual(integrate((x-y)**-1*cos(z),'z'),(x-y)**-1*sin(z))
-		self.assertEqual(integrate((x-y)**-1*cos(2*z),'z'),(x-y)**-1*sin(2*z)/2)
-		self.assertEqual(integrate(y*(x)**-1*cos(2*z),'y'),y*y/2*(x)**-1*cos(2*z))
-		self.assertRaises(ValueError,lambda : integrate(y*(x)**-1*cos(2*z),'x'))
-		self.assertRaises(ValueError,lambda : integrate(z*(x)**-1*cos(2*z),'z'))
+		self.assertEqual(integrate(invert(x-y)*cos(z),'z'),invert(x-y)*sin(z))
+		self.assertEqual(integrate(invert(x-y)*cos(2*z),'z'),invert(x-y)*sin(2*z)/2)
+		self.assertEqual(integrate(y*invert(x)*cos(2*z),'y'),y*y/2*invert(x)*cos(2*z))
+		self.assertRaises(ValueError,lambda : integrate(y*invert(x)*cos(2*z),'x'))
+		self.assertRaises(ValueError,lambda : integrate(z*invert(x)*cos(2*z),'z'))
 
 class converters_test_case(_ut.TestCase):
 	"""Test case for the automatic conversion to/from Python from/to C++.
@@ -678,13 +703,12 @@ class t_integrate_test_case(_ut.TestCase):
 		from fractions import Fraction as F
 		from .math import sin
 		from .types import polynomial, short, rational, poisson_series, monomial, divisor, divisor_series
-		pt = poisson_series(polynomial(rational,monomial(short)))()
+		pt = poisson_series(divisor_series(polynomial(rational,monomial(short)),divisor(short)))()
 		x,y,z = pt('x'), pt('y'), pt('z')
 		s = F(1,3)*z*sin(4*x-2*y)
 		st = s.t_integrate()
 		self.assertEqual(type(st.list[0][0]),divisor_series(polynomial(rational,monomial(short)),divisor(short))())
 		self.assertEqual(str(st),'-1/6*z*1/[(2*\\nu_{x}-\\nu_{y})]*cos(4*x-2*y)')
-
 
 class doctests_test_case(_ut.TestCase):
 	"""Test case that will run all the doctests.

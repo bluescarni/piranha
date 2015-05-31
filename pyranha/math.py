@@ -554,3 +554,41 @@ def ipow_subs(arg,name,n,x):
 	"""
 	from ._core import _ipow_subs
 	return _cpp_type_catcher(_ipow_subs,arg,name,n,x)
+
+def invert(arg):
+	"""Inverse.
+
+	Compute the multiplicative inverse of the argument.
+	The supported types are ``int``, ``float``, ``Fraction``, ``mpf`` and any series type that supports
+	the operation.
+
+	:param arg: inversion argument
+	:type arg: ``int``, ``float``, ``Fraction``, ``mpf``, or a supported series type.
+	:returns: inverse of *arg*
+	:raises: :exc:`TypeError` if the type of *arg* is not supported, or any other exception raised by the invoked
+		low-level function
+
+	>>> from fractions import Fraction as F
+	>>> invert(F(1,2))
+	Fraction(2, 1)
+	>>> invert(1.23) # doctest: +ELLIPSIS
+	0.8130081...
+	>>> invert(0) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ZeroDivisionError: division by zero
+	>>> from .types import polynomial, rational, short, monomial, divisor, divisor_series
+	>>> t = polynomial(rational,monomial(short))()
+	>>> invert(t('x'))
+	x**-1
+	>>> t = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
+	>>> invert(-2*t('x')+8*t('y'))
+	-1/2*1/[(x-4*y)]
+	>>> invert('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	TypeError: invalid argument type(s)
+
+	"""
+	from ._core import _invert
+	return _cpp_type_catcher(_invert,arg)

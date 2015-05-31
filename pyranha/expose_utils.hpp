@@ -52,9 +52,11 @@
 
 #include "../src/detail/sfinae_types.hpp"
 #include "../src/detail/type_in_tuple.hpp"
+#include "../src/invert.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
+#include "../src/pow.hpp"
 #include "../src/power_series.hpp"
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
@@ -933,6 +935,20 @@ class series_exposer
 		template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
 		static void expose_t_integrate(bp::class_<S> &)
 		{}
+		// invert().
+		template <typename S>
+		static auto invert_wrapper(const S &s) -> decltype(piranha::math::invert(s))
+		{
+			return piranha::math::invert(s);
+		}
+		template <typename S, typename std::enable_if<piranha::is_invertible<S>::value,int>::type = 0>
+		static void expose_invert(bp::class_<S> &)
+		{
+			bp::def("_invert",invert_wrapper<S>);
+		}
+		template <typename S, typename std::enable_if<!piranha::is_invertible<S>::value,int>::type = 0>
+		static void expose_invert(bp::class_<S> &)
+		{}
 		// Main exposer.
 		struct exposer_op
 		{
@@ -1017,6 +1033,8 @@ class series_exposer
 				expose_auto_truncate(series_class);
 				// Expose t_integrate(), if present.
 				expose_t_integrate(series_class);
+				// Expose invert(), if present.
+				expose_invert(series_class);
 				// Run the custom hook.
 				CustomHook{}(series_class);
 			}

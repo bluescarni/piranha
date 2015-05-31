@@ -38,6 +38,7 @@
 #include "../src/binomial.hpp"
 #include "../src/divisor.hpp"
 #include "../src/exceptions.hpp"
+#include "../src/invert.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -203,6 +204,13 @@ bp::def("_cos",&piranha::math::cos<arg>)
 	PYRANHA_EXPOSE_SIN_COS(piranha::rational);
 	PYRANHA_EXPOSE_SIN_COS(piranha::real);
 #undef PYRANHA_EXPOSE_SIN_COS
+#define PYRANHA_EXPOSE_INVERT(arg) \
+bp::def("_invert",&piranha::math::invert<arg>)
+	PYRANHA_EXPOSE_INVERT(double);
+	PYRANHA_EXPOSE_INVERT(piranha::integer);
+	PYRANHA_EXPOSE_INVERT(piranha::rational);
+	PYRANHA_EXPOSE_INVERT(piranha::real);
+#undef PYRANHA_EXPOSE_INVERT
 	// Cleanup function.
 	bp::def("_cleanup_type_system",&cleanup_type_system);
 }
