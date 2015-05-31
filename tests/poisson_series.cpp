@@ -793,6 +793,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
 	BOOST_CHECK((std::is_same<pt3,decltype(math::invert(pt3{}))>::value));
 	BOOST_CHECK_EQUAL(math::invert(pt3{-1/3_q}),-3);
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(pt3{"x"})),"1/[(x)]");
+	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-pt3{"x"}+pt3{"y"})),"-1/[(x-y)]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"},-1)),"x**-1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"}*3,-3)),"1/27*x**-3");
 }
