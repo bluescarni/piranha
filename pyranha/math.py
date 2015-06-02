@@ -584,6 +584,10 @@ def invert(arg):
 	>>> t = divisor_series(polynomial(rational,monomial(short)),divisor(short))()
 	>>> invert(-2*t('x')+8*t('y'))
 	-1/2*1/[(x-4*y)]
+	>>> invert(t('x')+1) # doctest: +IGNORE_EXCEPTION_DETAIL
+	Traceback (most recent call last):
+	   ...
+	ValueError: invalid argument for series exponentiation: negative integral value
 	>>> invert('hello') # doctest: +IGNORE_EXCEPTION_DETAIL
 	Traceback (most recent call last):
 	   ...

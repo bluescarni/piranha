@@ -21,8 +21,48 @@
 #ifndef PYRANHA_EXPOSE_POISSON_SERIES_HPP
 #define PYRANHA_EXPOSE_POISSON_SERIES_HPP
 
+#include <boost/python/class.hpp>
+#include <type_traits>
+#include <utility>
+
+#include "../src/detail/sfinae_types.hpp"
+
 namespace pyranha
 {
+
+namespace bp = boost::python;
+
+// Custom hook for Poisson series.
+struct ps_custom_hook
+{
+	// Detect and enable t_integrate() conditionally.
+	template <typename T>
+	struct has_t_integrate: piranha::detail::sfinae_types
+	{
+		template <typename T1>
+		static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
+		static no test(...);
+		static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
+	};
+	template <typename S>
+	static auto t_integrate_wrapper(const S &s) -> decltype(s.t_integrate())
+	{
+		return s.t_integrate();
+	}
+	template <typename S, typename std::enable_if<has_t_integrate<S>::value,int>::type = 0>
+	static void expose_t_integrate(bp::class_<S> &series_class)
+	{
+		series_class.def("t_integrate",t_integrate_wrapper<S>);
+	}
+	template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
+	static void expose_t_integrate(bp::class_<S> &)
+	{}
+	template <typename T>
+	void operator()(bp::class_<T> &series_class) const
+	{
+		expose_t_integrate(series_class);
+	}
+};
 
 void expose_poisson_series_0();
 void expose_poisson_series_1();

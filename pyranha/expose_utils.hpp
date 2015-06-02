@@ -913,28 +913,6 @@ class series_exposer
 		template <typename S, typename std::enable_if<!piranha::detail::has_auto_truncate<S>::value,int>::type = 0>
 		static void expose_auto_truncate(bp::class_<S> &)
 		{}
-		// t_integrate().
-		template <typename T>
-		struct has_t_integrate: piranha::detail::sfinae_types
-		{
-			template <typename T1>
-			static auto test(const T1 &x) -> decltype(x.t_integrate(),void(),yes());
-			static no test(...);
-			static const bool value = std::is_same<decltype(test(std::declval<T>())),yes>::value;
-		};
-		template <typename S>
-		static auto t_integrate_wrapper(const S &s) -> decltype(s.t_integrate())
-		{
-			return s.t_integrate();
-		}
-		template <typename S, typename std::enable_if<has_t_integrate<S>::value,int>::type = 0>
-		static void expose_t_integrate(bp::class_<S> &series_class)
-		{
-			series_class.def("t_integrate",t_integrate_wrapper<S>);
-		}
-		template <typename S, typename std::enable_if<!has_t_integrate<S>::value,int>::type = 0>
-		static void expose_t_integrate(bp::class_<S> &)
-		{}
 		// invert().
 		template <typename S>
 		static auto invert_wrapper(const S &s) -> decltype(piranha::math::invert(s))
@@ -1031,8 +1009,6 @@ class series_exposer
 				expose_cpp_text_serialization(series_class);
 				// Expose auto_truncate(), if present.
 				expose_auto_truncate(series_class);
-				// Expose t_integrate(), if present.
-				expose_t_integrate(series_class);
 				// Expose invert(), if present.
 				expose_invert(series_class);
 				// Run the custom hook.
