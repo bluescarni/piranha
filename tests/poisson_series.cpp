@@ -484,6 +484,20 @@ BOOST_AUTO_TEST_CASE(poisson_series_subs_test)
 	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0_z),-3*math::pow(c,4));
 	// Test substitution with integral after math::sin/cos additional overload.
 	BOOST_CHECK_EQUAL(math::subs(-3*math::pow(c,4),"J_2",0),-3*math::pow(c,4));
+	{
+	// Test with eps.
+	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	eps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK((has_subs<eps,rational>::value));
+	BOOST_CHECK_EQUAL(math::subs(x,"x",y),y);
+	BOOST_CHECK_EQUAL(math::subs(x,"x",x*y),x*y);
+	BOOST_CHECK_EQUAL(math::subs(x*math::pow(z,-1),"z",x*y),x*math::pow(x*y,-1));
+	BOOST_CHECK_EQUAL(math::subs(x*math::cos(z+y),"z",x-2*y),x*math::cos(x-y));
+	BOOST_CHECK_EQUAL(math::subs(x*math::cos(x+y),"x",2*x),2*x*math::cos(2*x+y));
+	BOOST_CHECK_EQUAL(math::subs(x*math::cos(x+y),"y",2*x),x*math::cos(x+2*x));
+	// No subs on divisors implemented (yet?).
+	BOOST_CHECK_EQUAL(math::subs(x*math::cos(x+y)*math::invert(x),"x",2*x),2*x*math::cos(2*x+y)*math::invert(x));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_print_tex_test)
@@ -796,4 +810,40 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::invert(-pt3{"x"}+pt3{"y"})),"-1/[(x-y)]");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"},-1)),"x**-1");
 	BOOST_CHECK_EQUAL(boost::lexical_cast<std::string>(math::pow(pt3{"x"}*3,-3)),"1/27*x**-3");
+}
+
+BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
+{
+	using ps = poisson_series<polynomial<rational,monomial<short>>>;
+	ps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK((has_truncate_degree<ps,int>::value));
+	BOOST_CHECK_EQUAL(math::truncate_degree(x,1),x);
+	BOOST_CHECK_EQUAL(math::truncate_degree(x,0),0);
+	BOOST_CHECK_EQUAL(math::truncate_degree(y+x*x,1),y);
+	BOOST_CHECK_EQUAL(math::truncate_degree(y+x*x+z.pow(-3),0),z.pow(-3));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0),z.pow(-3)*math::cos(x));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
+	ps::set_auto_truncate_degree(2,{"x","z"});
+	BOOST_CHECK((x*x*z).empty());
+	BOOST_CHECK(!(x*x*math::cos(x)).empty());
+	ps::unset_auto_truncate_degree();
+	{
+	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	eps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK((has_truncate_degree<eps,int>::value));
+	BOOST_CHECK_EQUAL(math::truncate_degree(x,1),x);
+	BOOST_CHECK_EQUAL(math::truncate_degree(x,0),0);
+	BOOST_CHECK_EQUAL(math::truncate_degree(y+x*x,1),y);
+	BOOST_CHECK_EQUAL(math::truncate_degree(y+x*x*math::invert(x),1),y);
+	BOOST_CHECK_EQUAL(math::truncate_degree(y+x*x+z.pow(-3),0),z.pow(-3));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0),z.pow(-3)*math::cos(x));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
+	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
+	eps::set_auto_truncate_degree(2,{"x","z"});
+	BOOST_CHECK((x*x*z).empty());
+	BOOST_CHECK(!(x*x*math::cos(x)).empty());
+	BOOST_CHECK(!(math::invert(x)*x*x*math::cos(x)).empty());
+	eps::unset_auto_truncate_degree();
+	}
 }
