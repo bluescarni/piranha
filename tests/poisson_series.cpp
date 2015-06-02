@@ -337,6 +337,26 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 	typedef poisson_series<rational> p_type2;
 	BOOST_CHECK(!has_degree<p_type2>::value);
 	BOOST_CHECK(!has_ldegree<p_type2>::value);
+	// Try also with eps.
+	{
+	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	using math::degree;
+	using math::ldegree;
+	using math::invert;
+	using math::cos;
+	eps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK(has_degree<eps>::value);
+	BOOST_CHECK(has_ldegree<eps>::value);
+	BOOST_CHECK_EQUAL(degree(x),1);
+	BOOST_CHECK_EQUAL(degree(x*y+z),2);
+	BOOST_CHECK_EQUAL(ldegree(x*y+z),1);
+	// Divisors don't count in the computation of the degree.
+	BOOST_CHECK_EQUAL(degree(invert(x)),0);
+	BOOST_CHECK_EQUAL(degree(invert(x)*x+y*x*z),3);
+	BOOST_CHECK_EQUAL(ldegree(invert(x)),0);
+	BOOST_CHECK_EQUAL(ldegree(invert(x)*x+y*x*z),1);
+	BOOST_CHECK_EQUAL(ldegree((invert(x)*x+y*x*z)*cos(x)+cos(y)),0);
+	}
 }
 
 // Mock coefficient.
@@ -658,6 +678,21 @@ BOOST_AUTO_TEST_CASE(poisson_series_ipow_subs_test)
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) + y + z,"x",integer(-7),z),y + 2*z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(-4),z),(z * x.pow(-3)) * math::cos(x) + y + z);
 	BOOST_CHECK_EQUAL(math::ipow_subs(x.pow(-7) * math::cos(x) + y + z,"x",integer(4),z),x.pow(-7) * math::cos(x) + y + z);
+	// Try also with eps.
+	{
+	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	using math::invert;
+	using math::cos;
+	using math::ipow_subs;
+	eps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK((has_ipow_subs<eps,eps>::value));
+	BOOST_CHECK_EQUAL(ipow_subs(x,"x",1,y),y);
+	BOOST_CHECK_EQUAL(ipow_subs(x*x,"x",1,y),y*y);
+	BOOST_CHECK_EQUAL(ipow_subs(x*x*x,"x",2,y),x*y);
+	BOOST_CHECK_EQUAL(ipow_subs(x*x*x*invert(x),"x",2,y),x*y*invert(x));
+	BOOST_CHECK_EQUAL(ipow_subs(x*x*x*invert(x)*cos(z),"x",3,y),y*cos(z)*invert(x));
+	BOOST_CHECK_EQUAL(ipow_subs(x*x*x*invert(x)*cos(x),"x",3,y),y*cos(x)*invert(x));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(poisson_series_is_evaluable_test)
