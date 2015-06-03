@@ -543,7 +543,7 @@ class poisson_series:
 		 * @throws unspecified any exception thrown by:
 		 * - memory errors in standard containers,
 		 * - the public interfaces of piranha::symbol_set, piranha::mp_integer and piranha::series,
-		 * - piranha::math::is_zero(),
+		 * - piranha::math::is_zero(), piranha::math::negate(),
 		 * - the mathematical operations needed to compute the result,
 		 * - piranha::divisor::insert(),
 		 * - construction of the involved types.
