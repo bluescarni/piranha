@@ -518,16 +518,12 @@ class poisson_series:
 		/**
 		 * \note
 		 * This method is enabled only if:
-		 * - the calling series is not already an echeloned Poisson series,
+		 * - the coefficient type is an instance of piranha::divisor_series, and
 		 * - the operations required by the computation of the time integration are supported by all
 		 *   the involved types.
 		 *
 		 * This is a special type of integration in which the trigonometric arguments are considered as linear functions
-		 * of time, and in which the integration variable is time itself. The result of the operation is a so-called echeloned
-		 * Poisson series, that is, a Poisson series in which the coefficient is a piranha::divisor_series whose coefficient type
-		 * is the original coefficient type of the Poisson series.
-		 *
-		 * For instance, if the original series is
+		 * of time, and in which the integration variable is time itself. For instance, if the input series is
 		 * \f[
 		 * \frac{1}{5}z\cos\left( x - y \right),
 		 * \f]

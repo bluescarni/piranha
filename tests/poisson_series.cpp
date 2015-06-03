@@ -753,7 +753,9 @@ BOOST_AUTO_TEST_CASE(poisson_series_rebind_test)
 BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 {
 	using math::invert;
-	// Check a few sample integrations by reconstructing manually the expected result via term insertions.
+	using math::cos;
+	using math::pow;
+	using math::sin;
 	using div_type0 = divisor<short>;
 	using ptype0 = polynomial<rational,monomial<short>>;
 	using dtype0 = divisor_series<ptype0,div_type0>;
@@ -781,6 +783,14 @@ BOOST_AUTO_TEST_CASE(poisson_series_t_integrate_test)
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0,1/15_q * z * math::sin(3*x + 6*y)  * invert(nu_x+2*nu_y) +
 		2/3_q * z * math::cos(12*x - 9*y) * invert(4*nu_x-3*nu_y));
+	// Test with existing divisors.
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * pow(invert(nu_x+2*nu_y),2));
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * invert(nu_x+nu_y) * invert(nu_x+2*nu_y));
+	tmp0 = 1/5_q * z * cos(3*x + 6*y) * invert(nu_x+2*nu_y) + 1/3_q * z*z * sin(2*x + 6*y) * invert(nu_y);
+	BOOST_CHECK_EQUAL(tmp0.t_integrate(),1/15_q * z * sin(3*x + 6*y) * pow(invert(nu_x+2*nu_y),2) +
+		-1/6_q*z*z*cos(2*x+6*y) * invert(nu_y) * invert(nu_x+3*nu_y));
 	// Test derivative.
 	tmp0 = (1/5_q * z * math::cos(3*x + 6*y) - 2 * z * math::sin(12*x - 9*y)).t_integrate();
 	BOOST_CHECK_EQUAL(tmp0.partial("z"),tmp0 * invert(ptype0{"z"}));
