@@ -164,6 +164,7 @@
  * \todo related to the above: we should probably generalise the integral_combination() in polynomial to deal also with recursively-represented polys,
  * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
+ * \todo disable test building by default, update copyright headers and relicense.
  */
 namespace piranha
 {
