@@ -141,6 +141,10 @@ class hash_set
 			//   placement new.
 			// This page contains some more info about storage reuse:
 			// http://en.cppreference.com/w/cpp/language/lifetime#Storage_reuse
+			// See also this link, regarding static_cast vs reinterpret_cast for this very specific
+			// usage:
+			// http://stackoverflow.com/questions/19300142/static-cast-and-reinterpret-cast-for-stdaligned-storage
+			// Apparently, it is equivalent.
 			const T *ptr() const
 			{
 				piranha_assert(m_next);
