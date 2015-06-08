@@ -165,6 +165,9 @@ class hash_set
 		// except when the list is empty (in that case the m_node member is end()).
 		struct list
 		{
+			// NOTE: re: std::iterator inheritance. It's netiher encouraged not discouraged according to this:
+			// http://stackoverflow.com/questions/6471019/can-should-i-inherit-from-stl-iterator
+			// I think we can just keep on using boost iterator_facade for the time being.
 			template <typename U>
 			class iterator_impl: public boost::iterator_facade<iterator_impl<U>,U,boost::forward_traversal_tag>
 			{

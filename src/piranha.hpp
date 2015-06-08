@@ -68,7 +68,6 @@
  * \todo should we always use piranha when calling functions in order to prevent ADL? -> note that these ADL concerns apply
  * only to unqualified function calls, of which there are not many (e.g., the math type traits are all defined outside piranha::math
  * and hence always include the math:: qualifier).
- * \todo consider replacing uses of iterator facade with inheritance from std::iterator.
  * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting constructors (in other
  * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must stay anyway.
  * update: tried this for a while, it looks like the semantics of inheriting ctors might not be what we need, and the support in compilers
