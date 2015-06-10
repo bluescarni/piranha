@@ -433,6 +433,14 @@ class static_vector
 		{
 			return m_size;
 		}
+		/// Empty test.
+		/**
+		 * @return \p true if the size of the container is zero, \p false otherwise.
+		 */
+		bool empty() const
+		{
+			return m_size == 0u;
+		}
 		/// Resize.
 		/**
 		 * After this operation, the number of elements stored in the container will be \p new_size. If \p new_size is greater than

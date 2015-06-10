@@ -866,6 +866,18 @@ class small_vector
 				return m_union.g_dy().hash();
 			}
 		}
+		/// Empty test.
+		/**
+		 * @return \p true if the size of the container is zero, \p false otherwise.
+		 */
+		bool empty() const
+		{
+			if (m_union.is_static()) {
+				return m_union.g_st().empty();
+			} else {
+				return m_union.g_dy().empty();
+			}
+		}
 		/// Resize.
 		/**
 		 * Resize the vector to \p size. Elements in excess will be destroyed,

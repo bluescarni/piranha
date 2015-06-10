@@ -525,3 +525,32 @@ BOOST_AUTO_TEST_CASE(static_vector_move_semantics_test)
 {
 	boost::mpl::for_each<value_types>(move_tester());
 }
+
+struct empty_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v1;
+			BOOST_CHECK(v1.empty());
+			v1.push_back(T());
+			BOOST_CHECK(!v1.empty());
+			v1.resize(0u);
+			BOOST_CHECK(v1.empty());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_empty_test)
+{
+	boost::mpl::for_each<value_types>(empty_tester());
+}
