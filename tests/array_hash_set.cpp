@@ -31,6 +31,6 @@ using namespace piranha;
 BOOST_AUTO_TEST_CASE(array_hash_set_base_test)
 {
 	environment env;
-	std::cout << sizeof(array_hash_set<int>) << '\n';
-	std::cout << sizeof(hash_set<int>) << '\n';
+	array_hash_set<int> ahs;
+	std::cout << ahs.bucket_count() << '\n';
 }
