@@ -832,3 +832,39 @@ BOOST_AUTO_TEST_CASE(small_vector_serialization_test)
 {
 	boost::mpl::for_each<size_types>(serialization_tester());
 }
+
+struct empty_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			using v_type = small_vector<T,U>;
+			v_type v1;
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(v1.is_static());
+			v1.push_back(T(1));
+			BOOST_CHECK(!v1.empty());
+			BOOST_CHECK(v1.is_static());
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size) + 1,[&n](){return T(n++);});
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(!v1.empty());
+			v1.resize(0u);
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(v1.empty());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_empty_test)
+{
+	boost::mpl::for_each<value_types>(empty_tester());
+}
