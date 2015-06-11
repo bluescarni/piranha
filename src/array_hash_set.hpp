@@ -1101,6 +1101,28 @@ class array_hash_set
 			auto &bucket = ptr()[it.m_idx];
 			return bucket.erase(it.m_it);
 		}
+		/// Force update of the number of elements.
+		/**
+		 * After this call, size() will return \p new_size regardless of the true number of elements in the set.
+		 *
+		 * @param[in] new_size new table size.
+		 */
+		void _update_size(const size_type &new_size)
+		{
+			m_n_elements = new_size;
+		}
+		/// Const reference to list in bucket.
+		/**
+		 * @param[in] idx index of the bucket whose list will be returned.
+		 *
+		 * @return a const reference to the list of items contained in the bucket positioned
+		 * at index \p idx.
+		 */
+		const bucket_type &_get_bucket_list(const size_type &idx) const
+		{
+			piranha_assert(idx < bucket_count());
+			return ptr()[idx];
+		}
 		//@}
 	private:
 		pack_type	m_pack;
