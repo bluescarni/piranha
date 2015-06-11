@@ -281,6 +281,20 @@ class dynamic_storage
 			// In any case, we need to update the size.
 			m_size = new_size;
 		}
+		// Erase element. See the cooresponding code in static_vector.
+		iterator erase(const_iterator it)
+		{
+			piranha_assert(it != end());
+			auto retval = const_cast<iterator>(it);
+			const auto it_f = end() - 1;
+			for (; it != it_f; ++it) {
+				it->~T();
+				::new (static_cast<void *>(const_cast<iterator>(it))) value_type(std::move(*(it + 1)));
+			}
+			it->~T();
+			m_size = static_cast<size_type>(m_size - 1u);
+			return retval;
+		}
 	private:
 		template <typename ... Args>
 		static void construct(pointer p, Args && ... args)
@@ -949,6 +963,27 @@ class small_vector
 			retval.resize(s);
 			std::transform(begin(),end(),other.begin(),retval.begin(),adder<value_type>());
 		}
+		/// Erase element.
+		/**
+		 * This method will erase the element to which \p it points. The return value will be the iterator
+		 * following the erased element (which will be the end iterator if \p it points to the last element
+		 * of the vector).
+		 *
+		 * \p it must be a valid iterator to an element in \p this.
+		 *
+		 * @param[in] it iterator to the element of \p this to be removed.
+		 *
+		 * @return the iterator following the erased element.
+		 */
+		iterator erase(const_iterator it)
+		{
+			if (m_union.is_static()) {
+				return m_union.g_st().erase(it);
+			} else {
+				return m_union.g_dy().erase(it);
+			}
+		}
+
 	private:
 		template <typename U, typename = void>
 		struct adder

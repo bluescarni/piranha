@@ -490,6 +490,44 @@ class static_vector
 				}
 			}
 		}
+		/// Erase element.
+		/**
+		 * This method will erase the element to which \p it points. The return value will be the iterator
+		 * following the erased element (which will be the end iterator if \p it points to the last element
+		 * of the vector).
+		 *
+		 * \p it must be a valid iterator to an element in \p this.
+		 *
+		 * @param[in] it iterator to the element of \p this to be removed.
+		 *
+		 * @return the iterator following the erased element.
+		 */
+		iterator erase(const_iterator it)
+		{
+			// NOTE: on the use of const_cast: the object 'it' points to is *not* const by definition
+			// (it is an element of a vector). So the const casting should be ok. See these links:
+			// http://stackoverflow.com/questions/30770944/is-this-a-valid-usage-of-const-cast
+			// http://en.cppreference.com/w/cpp/language/const_cast
+			// All of this is noexcept.
+			piranha_assert(it != end());
+			// The return value is the original iterator, which will eventually contain the value
+			// following the original 'it'. If 'it' pointed to the last element, then retval
+			// will be the new end().
+			auto retval = const_cast<iterator>(it);
+			const auto it_f = end() - 1;
+			// NOTE: POD optimisation is possible here, but requires pointer diff.
+			for (; it != it_f; ++it) {
+				// Destroy the current element.
+				it->~T();
+				// Move-init the current iterator content with the next element.
+				::new (static_cast<void *>(const_cast<iterator>(it))) value_type(std::move(*(it + 1)));
+			}
+			// Destroy the last element.
+			it->~T();
+			// Update the size.
+			m_size = static_cast<size_type>(m_size - 1u);
+			return retval;
+		}
 		/// Hash value.
 		/**
 		 * \note
