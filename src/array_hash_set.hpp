@@ -24,6 +24,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <memory>
 #include <new>
@@ -304,6 +305,12 @@ class array_hash_set
 				piranha_assert(!m_log2_size && !m_n_elements);
 			}
 		}
+		// Enabler for insert().
+		template <typename U>
+		using insert_enabler = typename std::enable_if<std::is_same<key_type,typename std::decay<U>::type>::value,int>::type;
+		// Enabler for unique insert.
+		template <typename U>
+		using unique_insert_enabler = typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value,int>::type;
 	public:
 		/// Iterator type.
 		/**
@@ -340,7 +347,7 @@ class array_hash_set
 		/**
 		 * Will construct a set whose number of buckets is at least equal to \p n_buckets. If \p n_threads is not 1,
 		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently for the initialisation
-		 * of the table.
+		 * of the set.
 		 *
 		 * @param[in] n_buckets desired number of buckets.
 		 * @param[in] h hasher functor.
@@ -369,7 +376,7 @@ class array_hash_set
 		 * the copy constructor of the stored type, <tt>Hash</tt> or <tt>Pred</tt>.
 		 */
 		array_hash_set(const array_hash_set &other):
-			m_pack(nullptr,other.m_hasher,other.m_key_equal,other.m_allocator),m_log2_size(0u),
+			m_pack(nullptr,other.hash(),other.k_equal(),other.allocator()),m_log2_size(0u),
 			m_n_elements(0u)
 		{
 			// Proceed to actual copy only if other has some content.
@@ -401,6 +408,65 @@ class array_hash_set
 				piranha_assert(!other.m_log2_size && !other.m_n_elements);
 			}
 		}
+		/// Move constructor.
+		/**
+		 * After the move, \p other will have zero buckets and zero elements, and its hasher and equality predicate
+		 * will have been used to move-construct their counterparts in \p this.
+		 *
+		 * @param[in] other set to be moved.
+		 */
+		array_hash_set(array_hash_set &&other) noexcept : m_pack(other.ptr(),std::move(other.hash()),std::move(other.k_equal()),
+			std::move(other.allocator())),m_log2_size(other.m_log2_size),m_n_elements(other.m_n_elements)
+		{
+			// Clear out the other one.
+			other.ptr() = nullptr;
+			other.m_log2_size = 0u;
+			other.m_n_elements = 0u;
+		}
+		/// Constructor from range.
+		/**
+		 * Create a set from a range.
+		 *
+		 * @param[in] begin begin of range.
+		 * @param[in] end end of range.
+		 * @param[in] n_buckets number of initial buckets.
+		 * @param[in] h hash functor.
+		 * @param[in] k key equality predicate.
+		 *
+		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
+		 * @throws unspecified any exception thrown by the copy constructors of <tt>Hash</tt> or <tt>Pred</tt>, or arising from
+		 * calling insert() on the elements of the range.
+		 */
+		template <typename InputIterator>
+		explicit array_hash_set(const InputIterator &begin, const InputIterator &end, const size_type &n_buckets = 0u,
+			const hasher &h = hasher{}, const key_equal &k = key_equal{}):
+			m_pack(nullptr,h,k,allocator_type{}),m_log2_size(0u),m_n_elements(0u)
+		{
+			init_from_n_buckets(n_buckets,1u);
+			for (auto it = begin; it != end; ++it) {
+				insert(*it);
+			}
+		}
+		/// Constructor from initializer list.
+		/**
+		 * Will insert() all the elements of the initializer list, ignoring the return value of the operation.
+		 * Hash functor and equality predicate will be default-constructed.
+		 *
+		 * @param[in] list initializer list of elements to be inserted.
+		 *
+		 * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum.
+		 * @throws unspecified any exception thrown by either insert() or of the default constructor of <tt>Hash</tt> or <tt>Pred</tt>.
+		 */
+		template <typename U>
+		explicit array_hash_set(std::initializer_list<U> list):
+			m_pack(nullptr,hasher{},key_equal{},allocator_type{}),m_log2_size(0u),m_n_elements(0u)
+		{
+			// We do not care here for possible truncation of list.size(), as this is only an optimization.
+			init_from_n_buckets(static_cast<size_type>(list.size()),1u);
+			for (const auto &x: list) {
+				insert(x);
+			}
+		}
 		/// Destructor.
 		/**
 		 * No side effects.
@@ -409,6 +475,54 @@ class array_hash_set
 		{
 			piranha_assert(sanity_check());
 			destroy_and_deallocate();
+		}
+		/// Copy assignment operator.
+		/**
+		 * @param[in] other assignment argument.
+		 *
+		 * @return reference to \p this.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor.
+		 */
+		array_hash_set &operator=(const array_hash_set &other)
+		{
+			if (likely(this != &other)) {
+				array_hash_set tmp(other);
+				*this = std::move(tmp);
+			}
+			return *this;
+		}
+		/// Move assignment operator.
+		/**
+		 * @param[in] other set to be moved into \p this.
+		 *
+		 * @return reference to \p this.
+		 */
+		array_hash_set &operator=(array_hash_set &&other) noexcept
+		{
+			if (likely(this != &other)) {
+				destroy_and_deallocate();
+				m_pack = std::move(other.m_pack);
+				m_log2_size = other.m_log2_size;
+				m_n_elements = other.m_n_elements;
+				// Zero out other.
+				other.ptr() = nullptr;
+				other.m_log2_size = 0u;
+				other.m_n_elements = 0u;
+			}
+			return *this;
+		}
+		/// Remove all elements.
+		/**
+		 * After this call, size() and bucket_count() will both return zero.
+		 */
+		void clear()
+		{
+			destroy_and_deallocate();
+			// Reset the members.
+			ptr() = nullptr;
+			m_log2_size = 0u;
+			m_n_elements = 0u;
 		}
 		/// Load factor.
 		/**
@@ -495,6 +609,164 @@ class array_hash_set
 		{
 			return (ptr()) ? (size_type(1u) << m_log2_size) : size_type(0u);
 		}
+		/// Test for empty set.
+		/**
+		 * @return \p true if size() returns 0, \p false otherwise.
+		 */
+		bool empty() const
+		{
+			return !size();
+		}
+		/// Index of destination bucket.
+		/**
+		 * Index to which \p k would belong, were it to be inserted into the set. The index of the
+		 * destination bucket is the hash value reduced modulo the bucket count.
+		 *
+		 * @param[in] k input argument.
+		 *
+		 * @return index of the destination bucket for \p k.
+		 *
+		 * @throws piranha::zero_division_error if bucket_count() returns zero.
+		 * @throws unspecified any exception thrown by _bucket().
+		 */
+		size_type bucket(const key_type &k) const
+		{
+			if (unlikely(!bucket_count())) {
+				piranha_throw(zero_division_error,"cannot calculate bucket index in an empty set");
+			}
+			return _bucket(k);
+		}
+		/// Find element.
+		/**
+		 * @param[in] k element to be located.
+		 *
+		 * @return array_hash_set::const_iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
+		 *
+		 * @throws unspecified any exception thrown by _find() or by _bucket().
+		 */
+		const_iterator find(const key_type &k) const
+		{
+			if (unlikely(!bucket_count())) {
+				return end();
+			}
+			return _find(k,_bucket(k));
+		}
+		/// Find element.
+		/**
+		 * @param[in] k element to be located.
+		 *
+		 * @return array_hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
+		 *
+		 * @throws unspecified any exception thrown by _find().
+		 */
+		iterator find(const key_type &k)
+		{
+			return static_cast<const array_hash_set *>(this)->find(k);
+		}
+		/// Insert element.
+		/**
+		 * \note
+		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
+		 *
+		 * If no other key equivalent to \p k exists in the set, the insertion is successful and returns the <tt>(it,true)</tt>
+		 * pair - where \p it is the position in the set into which the object has been inserted. Otherwise, the return value
+		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
+		 *
+		 * @param[in] k object that will be inserted into the set.
+		 *
+		 * @return <tt>(array_hash_set::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
+		 * equivalent) and the result of the operation.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - array_hash_set::key_type's copy constructor,
+		 * - _find(),
+		 * - _bucket().
+		 * @throws std::overflow_error if a successful insertion would result in size() exceeding the maximum
+		 * value representable by type piranha::array_hash_set::size_type.
+		 * @throws std::bad_alloc if the operation results in a resize of the set past an implementation-defined
+		 * maximum number of buckets.
+		 */
+		template <typename U, insert_enabler<U> = 0>
+		std::pair<iterator,bool> insert(U &&k)
+		{
+			auto b_count = bucket_count();
+			// Handle the case of a set with no buckets.
+			if (unlikely(!b_count)) {
+				_increase_size();
+				// Update the bucket count.
+				b_count = 1u;
+			}
+			// Try to locate the element.
+			auto bucket_idx = _bucket(k);
+			const auto it = _find(k,bucket_idx);
+			if (it != end()) {
+				// Item already present, exit.
+				return std::make_pair(it,false);
+			}
+			if (unlikely(m_n_elements == std::numeric_limits<size_type>::max())) {
+				piranha_throw(std::overflow_error,"maximum number of elements reached");
+			}
+			// Item is new. Handle the case in which we need to rehash because of load factor.
+			if (unlikely(static_cast<double>(m_n_elements + size_type(1u)) / static_cast<double>(b_count) > max_load_factor())) {
+				_increase_size();
+				// We need a new bucket index in case of a rehash.
+				bucket_idx = _bucket(k);
+			}
+			const auto it_retval = _unique_insert(std::forward<U>(k),bucket_idx);
+			++m_n_elements;
+			return std::make_pair(it_retval,true);
+		}
+		/// Rehash set.
+		/**
+		 * Change the number of buckets in the set to at least \p new_size. No rehash is performed
+		 * if rehashing would lead to exceeding the maximum load factor. If \p n_threads is not 1,
+		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently during
+		 * the rehash operation.
+		 *
+		 * @param[in] new_size new desired number of buckets.
+		 * @param[in] n_threads number of threads to use.
+		 *
+		 * @throws std::invalid_argument if \p n_threads is zero.
+		 * @throws unspecified any exception thrown by the constructor from number of buckets,
+		 * _unique_insert() or _bucket().
+		 */
+		void rehash(const size_type &new_size, unsigned n_threads = 1u)
+		{
+			if (unlikely(!n_threads)) {
+				piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
+			}
+			// If rehash is requested to zero, do something only if there are no items stored in the set.
+			if (!new_size) {
+				if (!size()) {
+					clear();
+				}
+				return;
+			}
+			// Do nothing if rehashing to the new size would lead to exceeding the max load factor.
+			if (static_cast<double>(size()) / static_cast<double>(new_size) > max_load_factor()) {
+				return;
+			}
+			// Create a new set with needed amount of buckets.
+			array_hash_set new_set(new_size,hash(),k_equal(),n_threads);
+			try {
+				const auto it_f = _m_end();
+				for (auto it = _m_begin(); it != it_f; ++it) {
+					const auto new_idx = new_set._bucket(*it);
+					new_set._unique_insert(std::move(*it),new_idx);
+				}
+			} catch (...) {
+				// Clear up both this and the new set upon any kind of error.
+				clear();
+				new_set.clear();
+				throw;
+			}
+			// Retain the number of elements.
+			new_set.m_n_elements = m_n_elements;
+			// Clear the old set.
+			clear();
+			// Assign the new set.
+			*this = std::move(new_set);
+		}
 		/** @name Low-level interface
 		 * Low-level methods and types.
 		 */
@@ -526,6 +798,129 @@ class array_hash_set
 		size_type _bucket(const key_type &k) const
 		{
 			return _bucket_from_hash(hasher()(k));
+		}
+		/// Increase bucket count.
+		/**
+		 * Increase the number of buckets to the next implementation-defined value.
+		 *
+		 * @throws std::bad_alloc if the operation results in a resize of the set past an implementation-defined
+		 * maximum number of buckets.
+		 * @throws unspecified any exception thrown by rehash().
+		 */
+		void _increase_size()
+		{
+			if (unlikely(m_log2_size >= m_n_nonzero_sizes - 1u)) {
+				piranha_throw(std::bad_alloc,);
+			}
+			// We must take care here: if the set has zero buckets,
+			// the next log2_size is 0u. Otherwise increase current log2_size.
+			piranha_assert(ptr() || (!ptr() && !m_log2_size));
+			const auto new_log2_size = (ptr()) ? (m_log2_size + 1u) : 0u;
+			// Rehash to the new size.
+			rehash(size_type(1u) << new_log2_size);
+		}
+		/// Insert unique element.
+		/**
+		 * \note
+		 * This template method is activated only if piranha::array_hash_set::key_type and \p U are the same type, aside from cv qualifications and references.
+		 *
+		 * The parameter \p bucket_idx is the index of the destination bucket for \p k and, for a
+		 * set with a nonzero number of buckets, must be equal to the output
+		 * of bucket() before the insertion.
+		 *
+		 * This method will not check if a key equivalent to \p k already exists in the set, it will not
+		 * update the number of elements present in the set after the insertion, it will not resize
+		 * the set in case the maximum load factor is exceeded, nor it will check
+		 * if the value of \p bucket_idx is correct.
+		 *
+		 * @param[in] k object that will be inserted into the set.
+		 * @param[in] bucket_idx destination bucket for \p k.
+		 *
+		 * @return iterator pointing to the newly-inserted element.
+		 *
+		 * @throws unspecified any exception thrown by the copy constructor of piranha::array_hash_set::key_type or by memory allocation
+		 * errors.
+		 */
+		template <typename U, unique_insert_enabler<U> = 0>
+		iterator _unique_insert(U &&k, const size_type &bucket_idx)
+		{
+			// Assert that key is not present already in the set.
+			piranha_assert(find(std::forward<U>(k)) == end());
+			// Assert bucket index is correct.
+			piranha_assert(bucket_idx == _bucket(k));
+			auto &bucket = ptr()[bucket_idx];
+			bucket.push_back(std::forward<U>(k));
+			// NOTE: here bucket.begin() is fine as we just inserted one element,
+			// same with bucket.size().
+			return iterator(this,bucket_idx,bucket.begin() + (bucket.size() - 1u));
+		}
+		/// Mutable iterator.
+		/**
+		 * This iterator type provides non-const access to the elements of the set. Please note that modifications
+		 * to an existing element of the set might invalidate the relation between the element and its position in the set.
+		 * After such modifications of one or more elements, the only valid operation is array_hash_set::clear() (destruction of the
+		 * set before calling array_hash_set::clear() will lead to assertion failures in debug mode).
+		 */
+		using _m_iterator = iterator_impl<key_type>;
+		/// Mutable begin iterator.
+		/**
+		 * @return array_hash_set::_m_iterator to the beginning of the set.
+		 */
+		_m_iterator _m_begin()
+		{
+			// NOTE: same possible optimisation as in begin().
+			const auto b_count = bucket_count();
+			_m_iterator retval;
+			retval.m_set = this;
+			size_type idx = 0u;
+			for (; idx < b_count; ++idx) {
+				if (!ptr()[idx].empty()) {
+					break;
+				}
+			}
+			retval.m_idx = idx;
+			// If we are not at the end, assign proper iterator.
+			if (idx != b_count) {
+				retval.m_it = ptr()[idx].begin();
+			}
+			return retval;
+		}
+		/// Mutable end iterator.
+		/**
+		 * @return array_hash_set::_m_iterator to the end of the set.
+		 */
+		_m_iterator _m_end()
+		{
+			return _m_iterator(this,bucket_count(),typename bucket_type::iterator{});
+		}
+		/// Find element (low-level).
+		/**
+		 * Locate element in the set. The parameter \p bucket_idx is the index of the destination bucket for \p k and, for
+		 * a set with a nonzero number of buckets, must be equal to the output
+		 * of bucket() before the insertion. This method will not check if the value of \p bucket_idx is correct.
+		 *
+		 * @param[in] k element to be located.
+		 * @param[in] bucket_idx index of the destination bucket for \p k.
+		 *
+		 * @return array_hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
+		 *
+		 * @throws unspecified any exception thrown by calling the equality predicate.
+		 */
+		const_iterator _find(const key_type &k, const size_type &bucket_idx) const
+		{
+			// Assert bucket index is correct.
+			piranha_assert(bucket_idx == _bucket(k) && bucket_idx < bucket_count());
+			const auto &b = ptr()[bucket_idx];
+			const auto it_f = b.end();
+			const_iterator retval(end());
+			for (auto it = b.begin(); it != it_f; ++it) {
+				if (k_equal()(*it,k)) {
+					retval.m_idx = bucket_idx;
+					retval.m_it = it;
+					break;
+				}
+			}
+			return retval;
 		}
 		//@}
 	private:
