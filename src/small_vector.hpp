@@ -983,7 +983,6 @@ class small_vector
 				return m_union.g_dy().erase(it);
 			}
 		}
-
 	private:
 		template <typename U, typename = void>
 		struct adder
