@@ -31,8 +31,10 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
+#include <map>
 #include <new>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -40,6 +42,12 @@
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/mp_integer.hpp"
+#include "../src/serialization.hpp"
+#include "../src/thread_pool.hpp"
+#include "../src/type_traits.hpp"
+
+// Number of tries in random tests.
+static const int ntries = 1000;
 
 using namespace piranha;
 
@@ -289,4 +297,332 @@ BOOST_AUTO_TEST_CASE(array_hash_set_constructors_test)
 	}
 	array_hash_set<random_failure> ht8;
 	BOOST_CHECK_THROW(ht8 = ht7,std::runtime_error);
+}
+
+struct iterator_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h(make_hash_set<T>());
+		unsigned count = 0;
+		for (auto it = h.begin();  it != h.end(); ++it, ++count) {}
+		BOOST_CHECK_EQUAL(h.size(),count);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_iterator_test)
+{
+	boost::mpl::for_each<key_types>(iterator_tester());
+}
+
+struct find_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h(make_hash_set<T>()), h_empty;
+		BOOST_CHECK(h_empty.find(boost::lexical_cast<T>(0)) == h_empty.end());
+		for (int i = 0; i < N; ++i) {
+			auto it = h.find(boost::lexical_cast<T>(i));
+			BOOST_CHECK(it != h.end());
+		}
+		BOOST_CHECK(h.find(boost::lexical_cast<T>(N + 1)) == h.end());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_find_test)
+{
+	boost::mpl::for_each<key_types>(find_tester());
+}
+
+struct insert_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h;
+		for (int i = 0; i < N; ++i) {
+			auto r1 = h.insert(boost::lexical_cast<T>(i));
+			BOOST_CHECK_EQUAL(r1.second,true);
+			auto r2 = h.insert(boost::lexical_cast<T>(i));
+			BOOST_CHECK_EQUAL(r2.second,false);
+			BOOST_CHECK(r2.first == h.find(boost::lexical_cast<T>(i)));
+		}
+		BOOST_CHECK_EQUAL(h.size(),unsigned(N));
+	}
+};
+
+// NOTE: this test had a meaning in a previous implementation of array_hash_set, now it is jut a simple
+// insertion test.
+BOOST_AUTO_TEST_CASE(array_hash_set_insert_test)
+{
+	// Check insert when the resize operation fails on the first try.
+	const std::size_t critical_size = 193;
+	struct custom_hash
+	{
+		std::size_t operator()(std::size_t i) const
+		{
+			return i;
+		}
+	};
+	custom_hash ch;
+	array_hash_set<std::size_t,custom_hash> ht(ch);
+	for (std::size_t i = 0; i < critical_size; ++i) {
+		BOOST_CHECK_EQUAL(ht.insert(i * critical_size).second,true);
+	}
+	// Verify insertion of all items.
+	for (std::size_t i = 0; i < critical_size; ++i) {
+		BOOST_CHECK(ht.find(i * critical_size) != ht.end());
+	}
+	BOOST_CHECK(ht.size() == critical_size);
+	boost::mpl::for_each<key_types>(insert_tester());
+}
+
+struct erase_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h(make_hash_set<T>());
+		for (int i = 0; i < N; ++i) {
+			auto r = h.find(boost::lexical_cast<T>(i));
+			BOOST_CHECK(r != h.end());
+			h.erase(r);
+		}
+		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
+		h = make_hash_set<T>();
+		for (auto it = h.begin(); it != h.end();) {
+			it = h.erase(it);
+		}
+		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_erase_test)
+{
+	boost::mpl::for_each<key_types>(erase_tester());
+}
+
+struct clear_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h(make_hash_set<T>());
+		h.clear();
+		BOOST_CHECK_EQUAL(h.size(),unsigned(0));
+		BOOST_CHECK_EQUAL(h.bucket_count(),unsigned(0));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_clear_test)
+{
+	boost::mpl::for_each<key_types>(clear_tester());
+}
+
+struct load_factor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h;
+		BOOST_CHECK(h.load_factor() == 0.);
+		array_hash_set<T> i(10);
+		BOOST_CHECK_EQUAL(i.load_factor(),0);
+		array_hash_set<T> j(make_hash_set<T>());
+		BOOST_CHECK(j.load_factor() > 0);
+		BOOST_CHECK(j.load_factor() <= 1);
+		BOOST_CHECK(h.max_load_factor() > 0);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_load_factor_test)
+{
+	boost::mpl::for_each<key_types>(load_factor_tester());
+}
+
+struct m_iterators_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h;
+		BOOST_CHECK(h._m_begin() == h._m_end());
+		h.insert(T());
+		BOOST_CHECK(h._m_begin() != h._m_end());
+		*h._m_begin() = boost::lexical_cast<T>("42");
+		BOOST_CHECK(*h._m_begin() == boost::lexical_cast<T>("42"));
+		// Check we can clear and destroy without bad consequences.
+		h.clear();
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_m_iterators_test)
+{
+	boost::mpl::for_each<key_types>(m_iterators_tester());
+}
+
+struct rehash_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h;
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h.rehash(100u);
+		BOOST_CHECK(h.bucket_count() >= 100u);
+		h.rehash(10u);
+		BOOST_CHECK(h.bucket_count() >= 10u);
+		h.rehash(1000u);
+		BOOST_CHECK(h.bucket_count() >= 1000u);
+		h.rehash(0u);
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h = make_hash_set<T>();
+		auto old = h.bucket_count();
+		h.rehash(old * 2u);
+		BOOST_CHECK(h.bucket_count() >= old * 2u);
+		h.rehash(old);
+		BOOST_CHECK(h.bucket_count() >= old);
+		h = make_hash_set<T>();
+		old = h.bucket_count();
+		h.rehash(0u);
+		BOOST_CHECK(old == h.bucket_count());
+		h = array_hash_set<T>(100u);
+		h.rehash(0u);
+		BOOST_CHECK(h.bucket_count() == 0u);
+		h = make_hash_set<T>();
+		old = h.bucket_count();
+		h.rehash(1000u);
+		BOOST_CHECK(h.bucket_count() == old);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_rehash_test)
+{
+	boost::mpl::for_each<key_types>(rehash_tester());
+}
+
+struct evaluate_sparsity_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		array_hash_set<T> h;
+		using size_type = typename array_hash_set<T>::size_type;
+		BOOST_CHECK((h.evaluate_sparsity() == std::map<size_type,size_type>{}));
+		T tmp = T();
+		h.insert(tmp);
+		BOOST_CHECK((h.evaluate_sparsity() == std::map<size_type,size_type>{{1u,1u}}));
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_evaluate_sparsity_test)
+{
+	boost::mpl::for_each<key_types>(evaluate_sparsity_tester());
+}
+
+struct type_traits_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		BOOST_CHECK(is_container_element<array_hash_set<T>>::value);
+		BOOST_CHECK((is_instance_of<array_hash_set<T>,array_hash_set>::value));
+		BOOST_CHECK(!is_equality_comparable<array_hash_set<T>>::value);
+		BOOST_CHECK(!is_addable<array_hash_set<T>>::value);
+		BOOST_CHECK(!is_ostreamable<array_hash_set<T>>::value);
+	}
+};
+
+BOOST_AUTO_TEST_CASE(array_hash_set_type_traits_test)
+{
+	boost::mpl::for_each<key_types>(type_traits_tester());
+}
+
+BOOST_AUTO_TEST_CASE(array_hash_set_mt_test)
+{
+	thread_pool::resize(4u);
+	BOOST_CHECK_THROW(array_hash_set<int>(10000,std::hash<int>(),std::equal_to<int>(),0u),std::invalid_argument);
+	array_hash_set<int> h1(100000,std::hash<int>(),std::equal_to<int>(),1u);
+	array_hash_set<int> h2(100000,std::hash<int>(),std::equal_to<int>(),2u);
+	array_hash_set<int> h3(100000,std::hash<int>(),std::equal_to<int>(),3u);
+	array_hash_set<int> h4(100000,std::hash<int>(),std::equal_to<int>(),4u);
+	// Try with few buckets.
+	array_hash_set<int> h5(1,std::hash<int>(),std::equal_to<int>(),4u);
+	array_hash_set<int> h6(2,std::hash<int>(),std::equal_to<int>(),4u);
+	array_hash_set<int> h7(3,std::hash<int>(),std::equal_to<int>(),4u);
+	array_hash_set<int> h8(4,std::hash<int>(),std::equal_to<int>(),4u);
+	// Random testing.
+	using size_type = array_hash_set<int>::size_type;
+	std::uniform_int_distribution<size_type> size_dist(0u,100000u);
+	std::uniform_int_distribution<unsigned> thread_dist(1u,4u);
+	for (int i = 0; i < ntries; ++i) {
+		auto bcount = size_dist(rng);
+		array_hash_set<int> h(bcount,std::hash<int>(),std::equal_to<int>(),thread_dist(rng));
+		BOOST_CHECK(h.bucket_count() >= bcount);
+		bcount = size_dist(rng);
+		h.rehash(bcount,thread_dist(rng));
+		BOOST_CHECK(h.bucket_count() >= bcount);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(array_hash_set_serialization_test)
+{
+	{
+	// Serialize and deserialize hash sets of ints built randomly.
+	// Check that the objects have the same size and that every element
+	// of one set is also in the other one.
+	array_hash_set<int> tmp;
+	std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::max());
+	std::uniform_int_distribution<unsigned> size_dist(0u,10u);
+	for (int i = 0; i < ntries; ++i) {
+		array_hash_set<int> h;
+		const auto size = size_dist(rng);
+		for (auto j = 0u; j < size; ++j) {
+			h.insert(int_dist(rng));
+		}
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << h;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp.size() == h.size());
+		for (const auto &n: h) {
+			BOOST_CHECK(tmp.find(n) != tmp.end());
+		}
+	}
+	}
+	{
+	// Same with integer.
+	array_hash_set<integer> tmp;
+	std::uniform_int_distribution<int> int_dist(std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::max());
+	std::uniform_int_distribution<unsigned> size_dist(0u,10u);
+	for (int i = 0; i < ntries; ++i) {
+		array_hash_set<integer> h;
+		const auto size = size_dist(rng);
+		for (auto j = 0u; j < size; ++j) {
+			h.insert(integer(int_dist(rng)));
+		}
+		std::stringstream ss;
+		{
+		boost::archive::text_oarchive oa(ss);
+		oa << h;
+		}
+		{
+		boost::archive::text_iarchive ia(ss);
+		ia >> tmp;
+		}
+		BOOST_CHECK(tmp.size() == h.size());
+		for (const auto &n: h) {
+			BOOST_CHECK(tmp.find(n) != tmp.end());
+		}
+	}
+	}
 }

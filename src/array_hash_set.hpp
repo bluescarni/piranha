@@ -26,6 +26,7 @@
 #include <functional>
 #include <initializer_list>
 #include <limits>
+#include <map>
 #include <memory>
 #include <new>
 #include <stdexcept>
@@ -37,6 +38,7 @@
 #include "config.hpp"
 #include "environment.hpp"
 #include "exceptions.hpp"
+#include "serialization.hpp"
 #include "small_vector.hpp"
 #include "thread_pool.hpp"
 #include "type_traits.hpp"
@@ -44,15 +46,64 @@
 namespace piranha
 {
 
-// TODO:
-// - optimisation for the begin() iterator,
-// - check again about the mod implementation,
-// - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
-//   are we still acessing potentially global variables?
-// - in the dtor checks, remember to change the load_factor() logic if we make max
-//   load factor a soft limit (i.e., it could go past the limit while using
-//   the low level interface in poly multiplication).
-
+/// Array hash set.
+/**
+ * Hash set class with interface similar to \p std::unordered_set. The main points of difference with respect to
+ * \p std::unordered_set are the following:
+ *
+ * - the exception safety guarantee is weaker (see below),
+ * - iterators and iterator invalidation: after a rehash operation, all iterators will be invalidated and existing
+ *   references/pointers to the elements will also be invalid; after an insertion/erase operation, all existing iterators, pointers
+ *   and references to the elements in the destination bucket will be invalid.
+ *
+ * The implementation employs a separate chaining strategy consisting of an array of buckets, each one a piranha::small_vector.
+ *
+ * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and multi-threaded contexts,
+ * and, if misused, could lead to data corruption and other unpredictable errors.
+ *
+ * Note that for performance reasons the implementation employs table sizes that are powers of two. Hence, particular care should be taken
+ * that the hash function does not exhibit commensurabilities with powers of 2.
+ *
+ * ## Type requirements ##
+ *
+ * - \p T must satisfy piranha::is_container_element,
+ * - \p Hash must satisfy piranha::is_hash_function_object,
+ * - \p Pred must satisfy piranha::is_equality_function_object.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * This class provides the strong exception safety guarantee for all operations apart from methods involving insertion,
+ * which provide the basic guarantee (after a failed insertion, the table will be left in an unspecified but valid state).
+ *
+ * ## Move semantics ##
+ *
+ * Move construction and move assignment will leave the moved-from object equivalent to an empty set whose hasher and
+ * equality predicate have been moved-from.
+ *
+ * ## Serialization ##
+ *
+ * This class supports serialization if the contained type supports it. Note that the hasher and the comparator
+ * are not serialised and they are recreated from scratch upon deserialization.
+ *
+ * @author Francesco Biscani (bluescarni@gmail.com)
+ */
+ /* Some TODOs:
+ * \todo tests for low-level methods
+ * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
+ * \todo memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
+ * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
+ * \todo: use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
+ * in static_vector for instance.
+ * \todo inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
+ * when iterating over the series with the fat iterator).
+ * - optimisation for the begin() iterator,
+ * - check again about the mod implementation,
+ * - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
+ *   are we still acessing potentially global variables?
+ * - in the dtor checks, remember to change the load_factor() logic if we make max
+ *   load factor a soft limit (i.e., it could go past the limit while using
+ *   the low level interface in poly multiplication).
+ */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class array_hash_set
 {
@@ -311,6 +362,42 @@ class array_hash_set
 		// Enabler for unique insert.
 		template <typename U>
 		using unique_insert_enabler = typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value,int>::type;
+		// Serialization support.
+		friend class boost::serialization::access;
+		template <class Archive>
+		void save(Archive &ar, unsigned int) const
+		{
+			// Save the number of elements first.
+			ar & m_n_elements;
+			// Save the elements one by one.
+			const auto it_f = end();
+			for (auto it = begin(); it != it_f; ++it) {
+				ar & (*it);
+			}
+		}
+		template <class Archive>
+		void load(Archive &ar, unsigned int)
+		{
+			// Erase this and work on an empty one. In case of exceptions,
+			// we should have an hash set in unspecified but consistent state.
+			// We could also enforce strong exception safety by working on a temporary
+			// set and then swapping that in, but that would need more memory - and we
+			// care about memory for very large series.
+			*this = array_hash_set();
+			// Recover the number of elements.
+			size_type n_elements;
+			ar & n_elements;
+			// Recover the elements one by one.
+			for (size_type i = 0u; i < n_elements; ++i) {
+				key_type k;
+				ar & k;
+				const auto ret_ins = insert(std::move(k));
+				// Check that there was no duplicate.
+				(void)ret_ins;
+				piranha_assert(ret_ins.second);
+			}
+		}
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 	public:
 		/// Iterator type.
 		/**
@@ -716,6 +803,51 @@ class array_hash_set
 			++m_n_elements;
 			return std::make_pair(it_retval,true);
 		}
+		/// Erase element.
+		/**
+		 * Erase the element to which \p it points. \p it must be a valid iterator
+		 * pointing to an element of the set.
+		 *
+		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
+		 * as the erased element.
+		 *
+		 * After the operation has taken place, the size() of the set will be decreased by one.
+		 *
+		 * @param[in] it iterator to the element of the set to be removed.
+		 *
+		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
+		 * no such element exists.
+		 */
+		iterator erase(const_iterator it)
+		{
+			piranha_assert(!empty());
+			const auto b_it = _erase(it);
+			iterator retval;
+			retval.m_set = this;
+			const auto b_count = bucket_count();
+			// Travel to the next iterator if necessary.
+			if (b_it == ptr()[it.m_idx].end()) {
+				size_type idx = it.m_idx + 1u;
+				// Advance to the first non-empty bucket if necessary,
+				// without going past the end of the set.
+				for (; idx < b_count; ++idx) {
+					if (!ptr()[idx].empty()) {
+						break;
+					}
+				}
+				retval.m_idx = idx;
+				// If we are not at the end, assign proper iterator.
+				if (idx != b_count) {
+					retval.m_it = ptr()[idx].begin();
+				}
+			} else {
+				retval.m_idx = it.m_idx;
+				retval.m_it = b_it;
+			}
+			piranha_assert(m_n_elements);
+			--m_n_elements;
+			return retval;
+		}
 		/// Rehash set.
 		/**
 		 * Change the number of buckets in the set to at least \p new_size. No rehash is performed
@@ -766,6 +898,27 @@ class array_hash_set
 			clear();
 			// Assign the new set.
 			*this = std::move(new_set);
+		}
+		/// Get information on the sparsity of the set.
+		/**
+		 * @return an <tt>std::map<size_type,size_type></tt> in which the key is the number of elements
+		 * stored in a bucket and the mapped type the number of buckets containing those many elements.
+		 *
+		 * @throws unspecified any exception thrown by memory errors in standard containers.
+		 */
+		std::map<size_type,size_type> evaluate_sparsity() const
+		{
+			const auto it_f = ptr() + bucket_count();
+			std::map<size_type,size_type> retval;
+			size_type counter;
+			for (auto it = ptr(); it != it_f; ++it) {
+				counter = 0u;
+				for (auto l_it = it->begin(); l_it != it->end(); ++l_it) {
+					++counter;
+				}
+				++retval[counter];
+			}
+			return retval;
 		}
 		/** @name Low-level interface
 		 * Low-level methods and types.
@@ -921,6 +1074,32 @@ class array_hash_set
 				}
 			}
 			return retval;
+		}
+		/// Erase element.
+		/**
+		 * Erase the element to which \p it points. \p it must be a valid iterator
+		 * pointing to an element of the set.
+		 *
+		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
+		 * as the erased element.
+		 *
+		 * This method will not update the number of elements in the set, nor it will try to access elements
+		 * outside the bucket to which \p it refers.
+		 *
+		 * @param[in] it iterator to the element of the set to be removed.
+		 *
+		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
+		 * no such element exists.
+		 */
+		local_iterator _erase(const_iterator it)
+		{
+			// Verify the iterator is valid.
+			piranha_assert(it.m_set == this);
+			piranha_assert(it.m_idx < bucket_count());
+			piranha_assert(!ptr()[it.m_idx].empty());
+			piranha_assert(it.m_it != ptr()[it.m_idx].end());
+			auto &bucket = ptr()[it.m_idx];
+			return bucket.erase(it.m_it);
 		}
 		//@}
 	private:
