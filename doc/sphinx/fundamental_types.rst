@@ -110,7 +110,7 @@ The following C++ code showcases a few features of the ``rational`` class:
 
 In the first code block, a few ways of constructing a ``rational`` are shown. In addition to the constructors from interoperable
 types, a ``rational`` can also be constructed from an integral numerator-denominator pair. The string representation for a ``rational``
-consists, intuitively, of the representation of numerator and denominator, separated by a ``/`` sign. The denominator can be
+consists, intuitively, of the representation of numerator and denominator in base 10, separated by a ``/`` sign. The denominator can be
 omitted if it is unitary.
 
 In the second code block, some examples of arithmetic and logical operations involving ``rational`` and interoperable types are
