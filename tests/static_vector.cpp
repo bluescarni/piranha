@@ -554,3 +554,74 @@ BOOST_AUTO_TEST_CASE(static_vector_empty_test)
 {
 	boost::mpl::for_each<value_types>(empty_tester());
 }
+
+struct erase_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			if (U::value == 1u) {
+				return;
+			}
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v1;
+			v1.push_back(boost::lexical_cast<T>(1));
+			auto it = v1.erase(v1.begin());
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(it == v1.end());
+			v1.push_back(boost::lexical_cast<T>(1));
+			v1.push_back(boost::lexical_cast<T>(2));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK_EQUAL(v1.size(),1u);
+			BOOST_CHECK(it == v1.begin());
+			BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(it == v1.end());
+			v1.push_back(boost::lexical_cast<T>(1));
+			v1.push_back(boost::lexical_cast<T>(2));
+			it = v1.erase(v1.begin() + 1);
+			BOOST_CHECK_EQUAL(v1.size(),1u);
+			BOOST_CHECK(it == v1.end());
+			BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(1));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(it == v1.end());
+			v1.push_back(boost::lexical_cast<T>(1));
+			v1.push_back(boost::lexical_cast<T>(2));
+			v1.push_back(boost::lexical_cast<T>(3));
+			v1.push_back(boost::lexical_cast<T>(4));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK_EQUAL(v1.size(),3u);
+			BOOST_CHECK(it == v1.begin());
+			BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+			BOOST_CHECK_EQUAL(v1[1u],boost::lexical_cast<T>(3));
+			BOOST_CHECK_EQUAL(v1[2u],boost::lexical_cast<T>(4));
+			it = v1.erase(v1.begin() + 1);
+			BOOST_CHECK_EQUAL(v1.size(),2u);
+			BOOST_CHECK(it == v1.begin() + 1);
+			BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+			BOOST_CHECK_EQUAL(v1[1u],boost::lexical_cast<T>(4));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK_EQUAL(v1.size(),1u);
+			BOOST_CHECK(it == v1.begin());
+			BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(4));
+			it = v1.erase(v1.begin());
+			BOOST_CHECK_EQUAL(v1.size(),0u);
+			BOOST_CHECK(it == v1.end());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_erase_test)
+{
+	boost::mpl::for_each<value_types>(erase_tester());
+}

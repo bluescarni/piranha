@@ -278,6 +278,55 @@ struct dynamic_tester
 		BOOST_CHECK(ptr == &ds16[0]);
 		ds16.resize(0);
 		BOOST_CHECK(old_cap == ds16.capacity());
+		{
+		// Erase testing.
+		typedef detail::dynamic_storage<T> vector_type;
+		vector_type v1;
+		v1.push_back(boost::lexical_cast<T>(1));
+		auto it = v1.erase(v1.begin());
+		BOOST_CHECK(v1.empty());
+		BOOST_CHECK(it == v1.end());
+		v1.push_back(boost::lexical_cast<T>(1));
+		v1.push_back(boost::lexical_cast<T>(2));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK_EQUAL(v1.size(),1u);
+		BOOST_CHECK(it == v1.begin());
+		BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK(v1.empty());
+		BOOST_CHECK(it == v1.end());
+		v1.push_back(boost::lexical_cast<T>(1));
+		v1.push_back(boost::lexical_cast<T>(2));
+		it = v1.erase(v1.begin() + 1);
+		BOOST_CHECK_EQUAL(v1.size(),1u);
+		BOOST_CHECK(it == v1.end());
+		BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(1));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK(v1.empty());
+		BOOST_CHECK(it == v1.end());
+		v1.push_back(boost::lexical_cast<T>(1));
+		v1.push_back(boost::lexical_cast<T>(2));
+		v1.push_back(boost::lexical_cast<T>(3));
+		v1.push_back(boost::lexical_cast<T>(4));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK_EQUAL(v1.size(),3u);
+		BOOST_CHECK(it == v1.begin());
+		BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+		BOOST_CHECK_EQUAL(v1[1u],boost::lexical_cast<T>(3));
+		BOOST_CHECK_EQUAL(v1[2u],boost::lexical_cast<T>(4));
+		it = v1.erase(v1.begin() + 1);
+		BOOST_CHECK_EQUAL(v1.size(),2u);
+		BOOST_CHECK(it == v1.begin() + 1);
+		BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(2));
+		BOOST_CHECK_EQUAL(v1[1u],boost::lexical_cast<T>(4));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK_EQUAL(v1.size(),1u);
+		BOOST_CHECK(it == v1.begin());
+		BOOST_CHECK_EQUAL(v1[0u],boost::lexical_cast<T>(4));
+		it = v1.erase(v1.begin());
+		BOOST_CHECK_EQUAL(v1.size(),0u);
+		BOOST_CHECK(it == v1.end());
+		}
 	}
 };
 
@@ -867,4 +916,53 @@ struct empty_tester
 BOOST_AUTO_TEST_CASE(small_vector_empty_test)
 {
 	boost::mpl::for_each<value_types>(empty_tester());
+}
+
+struct erase_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			if (U::value < 2u) {
+				return;
+			}
+			using v_type = small_vector<T,U>;
+			v_type v1;
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(v1.is_static());
+			v1.push_back(T(1));
+			auto it = v1.erase(v1.begin());
+			BOOST_CHECK(it == v1.end());
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(v1.is_static());
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size) + 1,[&n](){return T(n++);});
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(!v1.empty());
+			it = v1.erase(v1.begin());
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(!v1.empty());
+			BOOST_CHECK(it != v1.end());
+			BOOST_CHECK_EQUAL(*it,integer(1));
+			BOOST_CHECK_EQUAL(v1.size(),integer(v_type::max_static_size));
+			it = v1.erase(v1.end() - 1);
+			BOOST_CHECK(!v1.is_static());
+			BOOST_CHECK(!v1.empty());
+			BOOST_CHECK_EQUAL(v1.size(),integer(v_type::max_static_size) - 1);
+			BOOST_CHECK(it == v1.end());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_erase_test)
+{
+	boost::mpl::for_each<value_types>(erase_tester());
 }
