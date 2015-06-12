@@ -21,8 +21,6 @@
 #ifndef PIRANHA_HASH_SET_HPP
 #define PIRANHA_HASH_SET_HPP
 
-#include <algorithm>
-#include <array>
 #include <boost/iterator/iterator_facade.hpp>
 #include <cstddef>
 #include <functional>
