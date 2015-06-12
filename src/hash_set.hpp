@@ -110,6 +110,7 @@ namespace piranha
  * - in the dtor checks, remember to change the load_factor() logic if we make max
  *   load factor a soft limit (i.e., it could go past the limit while using
  *   the low level interface in poly multiplication).
+ * - maybe a bit more enabling for ctor and other template methods, not really essential though.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
