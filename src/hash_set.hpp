@@ -30,9 +30,9 @@
 #include <memory>
 #include <new>
 #include <stdexcept>
-#include <utility>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "config.hpp"
