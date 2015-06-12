@@ -25,7 +25,7 @@ This program will just print to screen the rational number :math:`\frac{4}{3}`, 
 in Piranha by a class called (unsurprisingly) ``rational``.
 In Unix-like environments, you can compile this simple program with GCC via the command:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ g++ -std=c++11 hello_piranha.cpp -lmpfr -lgmp
 
@@ -45,20 +45,20 @@ A couple of things to note:
 If you installed Piranha in a custom ``PREFIX``, you will need to specify on the command line where
 the Piranha headers are located via the ``-I`` switch. E.g.,
 
-.. code-block:: bash
+.. code-block:: console
 
    $ g++ -I/home/username/.local/include -std=c++11 hello_piranha.cpp -lmpfr -lgmp
 
 If the GMP and/or MPFR libraries are not installed in a standard path, you can use the ``-L`` switch to tell GCC
 where to look for them:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ g++ -std=c++11 hello_piranha.cpp -L/custom/library/path -lmpfr -lgmp
 
 After a successful compilation, the executable ``a.out`` can be run:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ ./a.out
    4/3

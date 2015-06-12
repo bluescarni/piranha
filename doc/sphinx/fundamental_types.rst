@@ -181,6 +181,59 @@ The following C++ code showcases a few features of the ``real`` class:
    :language: c++
    :linenos:
 
+In the first block, a few ways of constructing ``real`` objects are shown: from C++ arithmetic types, from string, from ``integer`` and ``rational``.
+The two-arguments constructors allow construction with custom precision. It is important to note that construction from a C++ floating-point
+type is different from string construction. That is,
+
+.. code-block:: c++
+
+   real{1.23};
+
+is in general different from
+
+.. code-block:: c++
+
+   real{"1.23"};
+
+In the first case, the ``1.23`` literal is first converted to a ``double`` by the compiler, and the ``double`` is then used to initialise the ``real`` object.
+In the second case, the ``real`` object is initialised directly with the string ``"1.23"``. On a typical desktop machine, in the first case printing to screen
+the constructed ``real`` object will produce
+
+.. code-block:: console
+
+   1.22999999999999998223643160599749535
+
+In the second case the output will be:
+
+.. code-block:: console
+
+   1.22999999999999999999999999999999998
+
+In the second code block, a few examples of arithmetic operations involving ``real`` are shown. Operations involving multiple ``real`` objects with different
+precision will produce a result with the highest precision among the operands.
+
+In the third code block, a few usages of the explicit conversion operator are shown.
+
+In the fourth code block, the ``_r`` string literal is introduced. Similarly to ``_z`` and ``_q``, it can be used to construct a ``real`` object with default
+precision from a floating-point literal. Construction via ``_r`` is equivalent to construction from string.
+
+Finally, in the last block, we can see another invocation of the ``math::binomial()`` function. This time the top argument is a ``real``,
+wheras the bottom argument is an ``int``. The specialisation of the binomial function for these two types will yield the approximate
+result as a ``real``, computed with the default precision of 113 bits.
+
+On the Python side, C++ ``real`` objects are automatically converted to/from ``mpf`` objects from the `mpmath <http://mpmath.org/>`__ Python library.
+
+.. note:: The mpmath module needs not to be installed when compiling Pyranha. Its presence is detected by Pyranha at runtime.
+
+Whereas in the case of integers and rationals the conversion to/from Python is straightforward and unambiguous, in the case of ``real`` things are slightly
+more complicated. In mpmath, there is a global precision setting which is user-configurable (either via ``mpmath.mp.prec`` or ``mpmath.mp.dps``) and, generally,
+one works without specifiying different precisions for different ``mpf`` objects.
+
+The rules of conversion between ``real`` and ``mpf`` are the following:
+
+* when a ``real`` object is returned to Python by some C++ function exposed in Pyranha, it will be converted to an ``mpf`` object with the current ``mpmath`` global precision
+  (as reported by ``mpmath.mp.prec``). That is, the original precision of the ``real`` object will be discarded;
+
 Potential pitfalls
 ------------------
 

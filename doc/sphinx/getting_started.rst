@@ -52,13 +52,13 @@ A snapshot of the ``master`` branch can be downloaded
 the `Git <http://git-scm.com/>`__ version control system. The following Git command will download
 the latest version of the ``master`` branch in a directory called ``piranha``:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ git clone git@github.com:bluescarni/piranha.git piranha
 
 You can keep the Piranha source code up-to-date by running periodically the command
 
-.. code-block:: bash
+.. code-block:: console
 
    $ git pull
 
@@ -92,7 +92,7 @@ generated during the build process are separated from the original source files.
 
 From within the ``build`` directory, run the command
 
-.. code-block:: bash
+.. code-block:: console
 
    $ cmake ../
 
@@ -100,7 +100,7 @@ CMake will look for Piranha's dependencies in standard paths, and it will produc
 detect them. It is possible to tell explicitly CMake where to find a specific library by passing the information
 on the command line. For instance,
 
-.. code-block:: bash
+.. code-block:: console
 
    $ cmake ../ -DGMP_LIBRARIES=/custom/location/for/libgmp.so
 
@@ -112,13 +112,13 @@ Piranha can be built either in ``Debug`` or in ``Release`` mode. In ``Debug`` mo
 extensive self-checking and performance will be greatly reduced with respect to the ``Release`` mode. The build
 mode can be set with the ``CMAKE_BUILD_TYPE`` CMake variable, e.g.,
 
-.. code-block:: bash
+.. code-block:: console
 
    $ cmake ../ -DCMAKE_BUILD_TYPE=Debug
 
 In order to compile Pyranha, the ``BUILD_PYRANHA`` option must be enabled:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ cmake ../ -DBUILD_PYRANHA=ON
 
@@ -130,7 +130,7 @@ installed on your system, there will be no ambiguity. If, however, you have mult
 to force CMake to pick a specific one, you can set the ``CXX`` environment variable *before* running CMake. In
 ``bash``, a possible way of doing this is
 
-.. code-block:: bash
+.. code-block:: console
 
    $ CXX=/path/to/other/compiler/icpc cmake ../
 
@@ -147,14 +147,14 @@ is however needed when building the Python bindings Pyranha and/or when testing 
 In Unix-like environments, you can build the tests and/or the Python bindings by running the standard
 ``make`` tool from the ``build`` directory:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ make
 
 On a multicore machine, it is possible to launch make in parallel to speed up the compilation. An example with 8 parallel
 jobs:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ make -j8
 
@@ -163,7 +163,7 @@ jobs:
 
 After a successful build in ``Debug`` mode, it is good practice to run the test suite:
 
-.. code-block:: bash
+.. code-block:: console
 
    $ make test
    Running tests...
@@ -194,9 +194,9 @@ After a successful build in ``Debug`` mode, it is good practice to run the test 
    44/45 Test #44: tuning ..................................   Passed    0.00 sec
          Start 45: type_traits
    45/45 Test #45: type_traits .............................   Passed    0.00 sec
-   
+
    100% tests passed, 0 tests failed out of 45
-   
+
    Total Test time (real) = 675.26 sec
 
 A full run of the test suite should take a few minutes on a modern desktop machine. Any failure in the unit tests should be reported as a bug.
@@ -210,7 +210,7 @@ Installation
 The final step is the installation of Piranha on the system. In Unix-like environments, the default installation path (also known as the
 ``PREFIX``) is ``/usr/local``. The standard
 
-.. code-block:: bash
+.. code-block:: console
 
    $ make install
 
@@ -242,10 +242,10 @@ test suite with the following commands:
    runTest (pyranha.test.poisson_series_test_case) ... ok
    runTest (pyranha.test.converters_test_case) ... ok
    runTest (pyranha.test.serialization_test_case) ... ok
-   
+
    ----------------------------------------------------------------------
    Ran 7 tests in 2.905s
-   
+
    OK
 
 Note that if you specified a non-standard ``PREFIX`` during the configuration phase, you might need to set the ``PYTHONPATH``
