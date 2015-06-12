@@ -32,7 +32,6 @@
 #include <memory>
 #include <new>
 #include <stdexcept>
-#include <unordered_set>
 #include <utility>
 #include <tuple>
 #include <type_traits>
@@ -65,7 +64,7 @@ namespace piranha
  * An additional set of low-level methods is provided: such methods are suitable for use in high-performance and multi-threaded contexts,
  * and, if misused, could lead to data corruption and other unpredictable errors.
  * 
- * Note that for performance reasons the implementation employs table sizes that are powers of two. Hence, particular care should be taken
+ * Note that for performance reasons the implementation employs sizes that are powers of two. Hence, particular care should be taken
  * that the hash function does not exhibit commensurabilities with powers of 2.
  * 
  * ## Type requirements ##
@@ -77,7 +76,7 @@ namespace piranha
  * ## Exception safety guarantee ##
  * 
  * This class provides the strong exception safety guarantee for all operations apart from methods involving insertion,
- * which provide the basic guarantee (after a failed insertion, the table will be left in an unspecified but valid state).
+ * which provide the basic guarantee (after a failed insertion, the set will be left in an unspecified but valid state).
  * 
  * ## Move semantics ##
  * 
@@ -91,19 +90,26 @@ namespace piranha
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
- /* Some TODOs:
- * \todo tests for low-level methods
- * \todo better increase_size with recycling of dynamically-allocated nodes
- * \todo see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
- * \todo see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
+ /* Some improvement NOTEs:
+ * - tests for low-level methods
+ * - better increase_size with recycling of dynamically-allocated nodes
+ * - see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
+ * - see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
  * implementation.
- * \todo memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
+ * - memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
  * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
- * \todo: use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
+ * - use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
  * in static_vector for instance.
- * \todo store functors in a tuple to get advantage of EBMO.
- * \todo inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
+ * - store functors in a tuple to get advantage of EBCO.
+ * - inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
  * when iterating over the series with the fat iterator).
+ * - optimisation for the begin() iterator,
+ * - check again about the mod implementation,
+ * - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
+ *   are we still acessing potentially global variables?
+ * - in the dtor checks, remember to change the load_factor() logic if we make max
+ *   load factor a soft limit (i.e., it could go past the limit while using
+ *   the low level interface in poly multiplication).
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
 class hash_set
@@ -349,17 +355,18 @@ class hash_set
 		typedef list *container_type;
 	public:
 		/// Functor type for the calculation of hash values.
-		typedef Hash hasher;
+		using hasher = Hash;
 		/// Functor type for comparing the items in the set.
-		typedef Pred key_equal;
+		using key_equal = Pred;
 		/// Key type.
-		typedef T key_type;
+		using key_type = T;
 		/// Size type.
 		/**
 		 * Alias for \p std::size_t.
 		 */
-		typedef std::size_t size_type;
+		using size_type = std::size_t;
 	private:
+		// Definition of the iterator type for the set.
 		template <typename Key>
 		class iterator_impl: public boost::iterator_facade<iterator_impl<Key>,Key,boost::forward_traversal_tag>
 		{
@@ -397,8 +404,10 @@ class hash_set
 				}
 				bool equal(const iterator_impl &other) const
 				{
+					// NOTE: comparing iterators from different containers is UB
+					// in the standard.
 					piranha_assert(m_set && other.m_set);
-					return (m_set == other.m_set && m_idx == other.m_idx && m_it == other.m_it);
+					return (m_idx == other.m_idx && m_it == other.m_it);
 				}
 				Key &dereference() const
 				{
@@ -436,7 +445,7 @@ class hash_set
 			} else {
 				// Sync variables.
 				using crs_type = std::vector<std::pair<size_type,size_type>>;
-				crs_type constructed_ranges(static_cast<typename crs_type::size_type>(n_threads),std::make_pair(0u,0u));
+				crs_type constructed_ranges(static_cast<typename crs_type::size_type>(n_threads),std::make_pair(size_type(0u),size_type(0u)));
 				if (unlikely(constructed_ranges.size() != n_threads)) {
 					piranha_throw(std::bad_alloc,);
 				}
@@ -480,7 +489,7 @@ class hash_set
 		// Destroy all elements and deallocate m_container.
 		void destroy_and_deallocate()
 		{
-			// Proceed to destroy all elements and deallocate only if the table is actually storing something.
+			// Proceed to destroy all elements and deallocate only if the set is actually storing something.
 			if (m_container) {
 				const size_type size = size_type(1u) << m_log2_size;
 				for (size_type i = 0u; i < size; ++i) {
@@ -527,12 +536,68 @@ class hash_set
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// Enabler for insert().
+		template <typename U>
+		using insert_enabler = typename std::enable_if<std::is_same<key_type,typename std::decay<U>::type>::value,int>::type;
+		// Run a consistency check on the set, will return false if something is wrong.
+		bool sanity_check() const
+		{
+			// Ignore sanity checks on shutdown.
+			if (environment::shutdown()) {
+				return true;
+			}
+			size_type count = 0u;
+			for (size_type i = 0u; i < bucket_count(); ++i) {
+				for (auto it = m_container[i].begin(); it != m_container[i].end(); ++it) {
+					if (_bucket(*it) != i) {
+						return false;
+					}
+					++count;
+				}
+			}
+			if (count != m_n_elements) {
+				return false;
+			}
+			// m_log2_size must not be equal to or greater than the number of bits of size_type.
+			if (m_log2_size >= unsigned(std::numeric_limits<size_type>::digits)) {
+				return false;
+			}
+			// The container pointer must be consistent with the other members.
+			if (!m_container && (m_log2_size || m_n_elements)) {
+				return false;
+			}
+			// Check size is consistent with number of iterator traversals.
+			count = 0u;
+			for (auto it = begin(); it != end(); ++it, ++count) {}
+			if (count != m_n_elements) {
+				return false;
+			}
+			// Check load factor is not exceeded.
+			if (load_factor() > max_load_factor()) {
+				return false;
+			}
+			return true;
+		}
+		// The number of available nonzero sizes will be the number of bits in the size type. Possible nonzero sizes will be in
+		// the [2 ** 0, 2 ** (n-1)] range.
+		static const size_type m_n_nonzero_sizes = static_cast<size_type>(std::numeric_limits<size_type>::digits);
+		// Get log2 of set size at least equal to hint. To be used only when hint is not zero.
+		static size_type get_log2_from_hint(const size_type &hint)
+		{
+			piranha_assert(hint);
+			for (size_type i = 0u; i < m_n_nonzero_sizes; ++i) {
+				if ((size_type(1u) << i) >= hint) {
+					return i;
+				}
+			}
+			piranha_throw(std::bad_alloc,);
+		}
 	public:
 		/// Iterator type.
 		/**
 		 * A read-only forward iterator.
 		 */
-		typedef iterator_impl<key_type const> iterator;
+		using iterator = iterator_impl<key_type const>;
 	private:
 		// Static checks on the iterator type.
 		PIRANHA_TT_CHECK(is_forward_iterator,iterator);
@@ -541,12 +606,12 @@ class hash_set
 		/**
 		 * Equivalent to the iterator type.
 		 */
-		typedef iterator const_iterator;
+		using const_iterator = iterator;
 		/// Local iterator.
 		/**
 		 * Const iterator that can be used to iterate through a single bucket.
 		 */
-		typedef typename list::const_iterator local_iterator;
+		using local_iterator = typename list::const_iterator;
 		/// Default constructor.
 		/**
 		 * If not specified, it will default-initialise the hasher and the equality predicate. The resulting
@@ -561,9 +626,9 @@ class hash_set
 			m_container(nullptr),m_log2_size(0u),m_hasher(h),m_key_equal(k),m_n_elements(0u),m_allocator() {}
 		/// Constructor from number of buckets.
 		/**
-		 * Will construct a table whose number of buckets is at least equal to \p n_buckets. If \p n_threads is not 1,
+		 * Will construct a set whose number of buckets is at least equal to \p n_buckets. If \p n_threads is not 1,
 		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently for the initialisation
-		 * of the table.
+		 * of the set.
 		 * 
 		 * @param[in] n_buckets desired number of buckets.
 		 * @param[in] h hasher functor.
@@ -627,7 +692,7 @@ class hash_set
 		 * After the move, \p other will have zero buckets and zero elements, and its hasher and equality predicate
 		 * will have been used to move-construct their counterparts in \p this.
 		 * 
-		 * @param[in] other table to be moved.
+		 * @param[in] other set to be moved.
 		 */
 		hash_set(hash_set &&other) noexcept : m_container(other.m_container),m_log2_size(other.m_log2_size),
 			m_hasher(std::move(other.m_hasher)),m_key_equal(std::move(other.m_key_equal)),m_n_elements(other.m_n_elements),
@@ -640,7 +705,7 @@ class hash_set
 		}
 		/// Constructor from range.
 		/**
-		 * Create a table with a copy of a range.
+		 * Create a set with a copy of a range.
 		 * 
 		 * @param[in] begin begin of range.
 		 * @param[in] end end of range.
@@ -709,7 +774,7 @@ class hash_set
 		}
 		/// Move assignment operator.
 		/**
-		 * @param[in] other table to be moved into \p this.
+		 * @param[in] other set to be moved into \p this.
 		 * 
 		 * @return reference to \p this.
 		 */
@@ -732,12 +797,12 @@ class hash_set
 		}
 		/// Const begin iterator.
 		/**
-		 * @return hash_set::const_iterator to the first element of the table, or end() if the table is empty.
+		 * @return hash_set::const_iterator to the first element of the set, or end() if the set is empty.
 		 */
 		const_iterator begin() const
 		{
-			// NOTE: this could take a while in case of an empty table with lots of buckets. Take a shortcut
-			// taking into account the number of elements in the table - if zero, go directly to end()?
+			// NOTE: this could take a while in case of an empty set with lots of buckets. Take a shortcut
+			// taking into account the number of elements in the set - if zero, go directly to end()?
 			const_iterator retval;
 			retval.m_set = this;
 			size_type idx = 0u;
@@ -756,7 +821,7 @@ class hash_set
 		}
 		/// Const end iterator.
 		/**
-		 * @return hash_set::const_iterator to the position past the last element of the table.
+		 * @return hash_set::const_iterator to the position past the last element of the set.
 		 */
 		const_iterator end() const
 		{
@@ -764,7 +829,7 @@ class hash_set
 		}
 		/// Begin iterator.
 		/**
-		 * @return hash_set::iterator to the first element of the table, or end() if the table is empty.
+		 * @return hash_set::iterator to the first element of the set, or end() if the set is empty.
 		 */
 		iterator begin()
 		{
@@ -772,21 +837,21 @@ class hash_set
 		}
 		/// End iterator.
 		/**
-		 * @return hash_set::iterator to the position past the last element of the table.
+		 * @return hash_set::iterator to the position past the last element of the set.
 		 */
 		iterator end()
 		{
 			return static_cast<hash_set const *>(this)->end();
 		}
-		/// Number of elements contained in the table.
+		/// Number of elements contained in the set.
 		/**
-		 * @return number of elements in the table.
+		 * @return number of elements in the set.
 		 */
 		size_type size() const
 		{
 			return m_n_elements;
 		}
-		/// Test for empty table.
+		/// Test for empty set.
 		/**
 		 * @return \p true if size() returns 0, \p false otherwise.
 		 */
@@ -796,7 +861,7 @@ class hash_set
 		}
 		/// Number of buckets.
 		/**
-		 * @return number of buckets in the table.
+		 * @return number of buckets in the set.
 		 */
 		size_type bucket_count() const
 		{
@@ -804,7 +869,7 @@ class hash_set
 		}
 		/// Load factor.
 		/**
-		 * @return <tt>(double)size() / bucket_count()</tt>, or 0 if the table is empty.
+		 * @return <tt>(double)size() / bucket_count()</tt>, or 0 if the set is empty.
 		 */
 		double load_factor() const
 		{
@@ -813,7 +878,7 @@ class hash_set
 		}
 		/// Index of destination bucket.
 		/**
-		 * Index to which \p k would belong, were it to be inserted into the table. The index of the
+		 * Index to which \p k would belong, were it to be inserted into the set. The index of the
 		 * destination bucket is the hash value reduced modulo the bucket count.
 		 * 
 		 * @param[in] k input argument.
@@ -826,7 +891,7 @@ class hash_set
 		size_type bucket(const key_type &k) const
 		{
 			if (unlikely(!bucket_count())) {
-				piranha_throw(zero_division_error,"cannot calculate bucket index in an empty table");
+				piranha_throw(zero_division_error,"cannot calculate bucket index in an empty set");
 			}
 			return _bucket(k);
 		}
@@ -834,7 +899,7 @@ class hash_set
 		/**
 		 * @param[in] k element to be located.
 		 * 
-		 * @return hash_set::const_iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * @return hash_set::const_iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
 		 * 
 		 * @throws unspecified any exception thrown by _find() or by _bucket().
 		 */
@@ -849,7 +914,7 @@ class hash_set
 		/**
 		 * @param[in] k element to be located.
 		 * 
-		 * @return hash_set::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * @return hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
 		 * 
 		 * @throws unspecified any exception thrown by _find().
 		 */
@@ -870,11 +935,11 @@ class hash_set
 		/// Insert element.
 		/**
 		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
-		 * If no other key equivalent to \p k exists in the table, the insertion is successful and returns the <tt>(it,true)</tt>
-		 * pair - where \p it is the position in the table into which the object has been inserted. Otherwise, the return value
+		 * If no other key equivalent to \p k exists in the set, the insertion is successful and returns the <tt>(it,true)</tt>
+		 * pair - where \p it is the position in the set into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
 		 * 
-		 * @param[in] k object that will be inserted into the table.
+		 * @param[in] k object that will be inserted into the set.
 		 * 
 		 * @return <tt>(hash_set::iterator,bool)</tt> pair containing an iterator to the newly-inserted object (or its existing
 		 * equivalent) and the result of the operation.
@@ -885,14 +950,14 @@ class hash_set
 		 * - _bucket().
 		 * @throws std::overflow_error if a successful insertion would result in size() exceeding the maximum
 		 * value representable by type piranha::hash_set::size_type.
-		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
+		 * @throws std::bad_alloc if the operation results in a resize of the set past an implementation-defined
 		 * maximum number of buckets.
 		 */
-		template <typename U>
-		std::pair<iterator,bool> insert(U &&k, typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = nullptr)
+		template <typename U, insert_enabler<U> = 0>
+		std::pair<iterator,bool> insert(U &&k)
 		{
 			auto b_count = bucket_count();
-			// Handle the case of a table with no buckets.
+			// Handle the case of a set with no buckets.
 			if (unlikely(!b_count)) {
 				_increase_size();
 				// Update the bucket count.
@@ -921,14 +986,14 @@ class hash_set
 		/// Erase element.
 		/**
 		 * Erase the element to which \p it points. \p it must be a valid iterator
-		 * pointing to an element of the table.
+		 * pointing to an element of the set.
 		 * 
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
 		 * 
-		 * After the operation has taken place, the size() of the table will be decreased by one.
+		 * After the operation has taken place, the size() of the set will be decreased by one.
 		 * 
-		 * @param[in] it iterator to the element of the table to be removed.
+		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
 		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
 		 * no such element exists.
@@ -944,7 +1009,7 @@ class hash_set
 			if (b_it == m_container[it.m_idx].end()) {
 				size_type idx = it.m_idx + 1u;
 				// Advance to the first non-empty bucket if necessary,
-				// without going past the end of the table.
+				// without going past the end of the set.
 				for (; idx < b_count; ++idx) {
 					if (!m_container[idx].empty()) {
 						break;
@@ -992,9 +1057,9 @@ class hash_set
 			std::swap(m_n_elements,other.m_n_elements);
 			std::swap(m_allocator,other.m_allocator);
 		}
-		/// Rehash table.
+		/// Rehash set.
 		/**
-		 * Change the number of buckets in the table to at least \p new_size. No rehash is performed
+		 * Change the number of buckets in the set to at least \p new_size. No rehash is performed
 		 * if rehashing would lead to exceeding the maximum load factor. If \p n_threads is not 1,
 		 * then the first \p n_threads threads from piranha::thread_pool will be used concurrently during
 		 * the rehash operation.
@@ -1011,7 +1076,7 @@ class hash_set
 			if (unlikely(!n_threads)) {
 				piranha_throw(std::invalid_argument,"the number of threads must be strictly positive");
 			}
-			// If rehash is requested to zero, do something only if there are no items stored in the table.
+			// If rehash is requested to zero, do something only if there are no items stored in the set.
 			if (!new_size) {
 				if (!size()) {
 					clear();
@@ -1022,28 +1087,28 @@ class hash_set
 			if (static_cast<double>(size()) / static_cast<double>(new_size) > max_load_factor()) {
 				return;
 			}
-			// Create a new table with needed amount of buckets.
-			hash_set new_table(new_size,m_hasher,m_key_equal,n_threads);
+			// Create a new set with needed amount of buckets.
+			hash_set new_set(new_size,m_hasher,m_key_equal,n_threads);
 			try {
 				const auto it_f = _m_end();
 				for (auto it = _m_begin(); it != it_f; ++it) {
-					const auto new_idx = new_table._bucket(*it);
-					new_table._unique_insert(std::move(*it),new_idx);
+					const auto new_idx = new_set._bucket(*it);
+					new_set._unique_insert(std::move(*it),new_idx);
 				}
 			} catch (...) {
-				// Clear up both this and the new table upon any kind of error.
+				// Clear up both this and the new set upon any kind of error.
 				clear();
-				new_table.clear();
+				new_set.clear();
 				throw;
 			}
 			// Retain the number of elements.
-			new_table.m_n_elements = m_n_elements;
-			// Clear the old table.
+			new_set.m_n_elements = m_n_elements;
+			// Clear the old set.
 			clear();
-			// Assign the new table.
-			*this = std::move(new_table);
+			// Assign the new set.
+			*this = std::move(new_set);
 		}
-		/// Get information on the sparsity of the table.
+		/// Get information on the sparsity of the set.
 		/**
 		 * @return an <tt>std::map<size_type,size_type></tt> in which the key is the number of elements
 		 * stored in a bucket and the mapped type the number of buckets containing those many elements.
@@ -1070,20 +1135,20 @@ class hash_set
 		//@{
 		/// Mutable iterator.
 		/**
-		 * This iterator type provides non-const access to the elements of the table. Please note that modifications
-		 * to an existing element of the table might invalidate the relation between the element and its position in the table.
+		 * This iterator type provides non-const access to the elements of the set. Please note that modifications
+		 * to an existing element of the set might invalidate the relation between the element and its position in the set.
 		 * After such modifications of one or more elements, the only valid operation is hash_set::clear() (destruction of the
-		 * table before calling hash_set::clear() will lead to assertion failures in debug mode).
+		 * set before calling hash_set::clear() will lead to assertion failures in debug mode).
 		 */
-		typedef iterator_impl<key_type> _m_iterator;
+		using _m_iterator = iterator_impl<key_type>;
 		/// Mutable begin iterator.
 		/**
-		 * @return hash_set::_m_iterator to the beginning of the table.
+		 * @return hash_set::_m_iterator to the beginning of the set.
 		 */
 		_m_iterator _m_begin()
 		{
-			// NOTE: this could take a while in case of an empty table with lots of buckets. Take a shortcut
-			// taking into account the number of elements in the table - if zero, go directly to end()?
+			// NOTE: this could take a while in case of an empty set with lots of buckets. Take a shortcut
+			// taking into account the number of elements in the set - if zero, go directly to end()?
 			const auto b_count = bucket_count();
 			_m_iterator retval;
 			retval.m_set = this;
@@ -1102,7 +1167,7 @@ class hash_set
 		}
 		/// Mutable end iterator.
 		/**
-		 * @return hash_set::_m_iterator to the end of the table.
+		 * @return hash_set::_m_iterator to the end of the set.
 		 */
 		_m_iterator _m_end()
 		{
@@ -1112,15 +1177,15 @@ class hash_set
 		/**
 		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
 		 * The parameter \p bucket_idx is the index of the destination bucket for \p k and, for a
-		 * table with a nonzero number of buckets, must be equal to the output
+		 * set with a nonzero number of buckets, must be equal to the output
 		 * of bucket() before the insertion.
 		 * 
-		 * This method will not check if a key equivalent to \p k already exists in the table, it will not
-		 * update the number of elements present in the table after the insertion, it will not resize
-		 * the table in case the maximum load factor is exceeded, nor it will check
+		 * This method will not check if a key equivalent to \p k already exists in the set, it will not
+		 * update the number of elements present in the set after the insertion, it will not resize
+		 * the set in case the maximum load factor is exceeded, nor it will check
 		 * if the value of \p bucket_idx is correct.
 		 * 
-		 * @param[in] k object that will be inserted into the table.
+		 * @param[in] k object that will be inserted into the set.
 		 * @param[in] bucket_idx destination bucket for \p k.
 		 * 
 		 * @return iterator pointing to the newly-inserted element.
@@ -1128,11 +1193,10 @@ class hash_set
 		 * @throws unspecified any exception thrown by the copy constructor of hash_set::key_type or by memory allocation
 		 * errors.
 		 */
-		template <typename U>
-		iterator _unique_insert(U &&k, const size_type &bucket_idx,
-			typename std::enable_if<std::is_same<T,typename std::decay<U>::type>::value>::type * = nullptr)
+		template <typename U, insert_enabler<U> = 0>
+		iterator _unique_insert(U &&k, const size_type &bucket_idx)
 		{
-			// Assert that key is not present already in the table.
+			// Assert that key is not present already in the set.
 			piranha_assert(find(std::forward<U>(k)) == end());
 			// Assert bucket index is correct.
 			piranha_assert(bucket_idx == _bucket(k));
@@ -1141,14 +1205,14 @@ class hash_set
 		}
 		/// Find element (low-level).
 		/**
-		 * Locate element in the table. The parameter \p bucket_idx is the index of the destination bucket for \p k and, for 
-		 * a table with a nonzero number of buckets, must be equal to the output
+		 * Locate element in the set. The parameter \p bucket_idx is the index of the destination bucket for \p k and, for
+		 * a set with a nonzero number of buckets, must be equal to the output
 		 * of bucket() before the insertion. This method will not check if the value of \p bucket_idx is correct.
 		 * 
 		 * @param[in] k element to be located.
 		 * @param[in] bucket_idx index of the destination bucket for \p k.
 		 * 
-		 * @return hash_set::iterator to <tt>k</tt>'s position in the table, or end() if \p k is not in the table.
+		 * @return hash_set::iterator to <tt>k</tt>'s position in the set, or end() if \p k is not in the set.
 		 *
 		 * @throws unspecified any exception thrown by calling the equality predicate.
 		 */
@@ -1198,9 +1262,9 @@ class hash_set
 		}
 		/// Force update of the number of elements.
 		/**
-		 * After this call, size() will return \p new_size regardless of the true number of elements in the table.
+		 * After this call, size() will return \p new_size regardless of the true number of elements in the set.
 		 * 
-		 * @param[in] new_size new table size.
+		 * @param[in] new_size new set size.
 		 */
 		void _update_size(const size_type &new_size)
 		{
@@ -1210,7 +1274,7 @@ class hash_set
 		/**
 		 * Increase the number of buckets to the next implementation-defined value.
 		 * 
-		 * @throws std::bad_alloc if the operation results in a resize of the table past an implementation-defined
+		 * @throws std::bad_alloc if the operation results in a resize of the set past an implementation-defined
 		 * maximum number of buckets.
 		 * @throws unspecified any exception thrown by rehash().
 		 */
@@ -1219,7 +1283,7 @@ class hash_set
 			if (unlikely(m_log2_size >= m_n_nonzero_sizes - 1u)) {
 				piranha_throw(std::bad_alloc,);
 			}
-			// We must take care here: if the table has zero buckets,
+			// We must take care here: if the set has zero buckets,
 			// the next log2_size is 0u. Otherwise increase current log2_size.
 			piranha_assert(m_container || (!m_container && !m_log2_size));
 			const auto new_log2_size = (m_container) ? (m_log2_size + 1u) : 0u;
@@ -1241,15 +1305,15 @@ class hash_set
 		/// Erase element.
 		/**
 		 * Erase the element to which \p it points. \p it must be a valid iterator
-		 * pointing to an element of the table.
+		 * pointing to an element of the set.
 		 * 
 		 * Erasing an element invalidates all iterators pointing to elements in the same bucket
 		 * as the erased element.
 		 * 
-		 * This method will not update the number of elements in the table, nor it will try to access elements
+		 * This method will not update the number of elements in the set, nor it will try to access elements
 		 * outside the bucket to which \p it refers.
 		 * 
-		 * @param[in] it iterator to the element of the table to be removed.
+		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
 		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
 		 * no such element exists.
@@ -1313,60 +1377,6 @@ class hash_set
 			}
 		}
 		//@}
-	private:
-		// Run a consistency check on the table, will return false if something is wrong.
-		bool sanity_check() const
-		{
-			// Ignore sanity checks on shutdown.
-			if (environment::shutdown()) {
-				return true;
-			}
-			size_type count = 0u;
-			for (size_type i = 0u; i < bucket_count(); ++i) {
-				for (auto it = m_container[i].begin(); it != m_container[i].end(); ++it) {
-					if (_bucket(*it) != i) {
-						return false;
-					}
-					++count;
-				}
-			}
-			if (count != m_n_elements) {
-				return false;
-			}
-			// m_log2_size must not be equal to or greater than the number of bits of size_type.
-			if (m_log2_size >= unsigned(std::numeric_limits<size_type>::digits)) {
-				return false;
-			}
-			// The container pointer must be consistent with the other members.
-			if (!m_container && (m_log2_size || m_n_elements)) {
-				return false;
-			}
-			// Check size is consistent with number of iterator traversals.
-			count = 0u;
-			for (auto it = begin(); it != end(); ++it, ++count) {}
-			if (count != m_n_elements) {
-				return false;
-			}
-			// Check load factor is not exceeded.
-			if (load_factor() > max_load_factor()) {
-				return false;
-			}
-			return true;
-		}
-		// The number of available nonzero sizes will be the number of bits in the size type. Possible nonzero sizes will be in
-		// the [2 ** 0, 2 ** (n-1)] range.
-		static const size_type m_n_nonzero_sizes = static_cast<size_type>(std::numeric_limits<size_type>::digits);
-		// Get log2 of table size at least equal to hint. To be used only when hint is not zero.
-		static size_type get_log2_from_hint(const size_type &hint)
-		{
-			piranha_assert(hint);
-			for (size_type i = 0u; i < m_n_nonzero_sizes; ++i) {
-				if ((size_type(1u) << i) >= hint) {
-					return i;
-				}
-			}
-			piranha_throw(std::bad_alloc,);
-		}
 	private:
 		container_type	m_container;
 		size_type	m_log2_size;
