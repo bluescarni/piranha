@@ -934,7 +934,9 @@ class hash_set
 		}
 		/// Insert element.
 		/**
-		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
+		 * \note
+		 * This template method is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
+		 *
 		 * If no other key equivalent to \p k exists in the set, the insertion is successful and returns the <tt>(it,true)</tt>
 		 * pair - where \p it is the position in the set into which the object has been inserted. Otherwise, the return value
 		 * will be <tt>(it,false)</tt> - where \p it is the position of the existing equivalent object.
@@ -1175,7 +1177,9 @@ class hash_set
 		}
 		/// Insert unique element (low-level).
 		/**
-		 * This template is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
+		 * \note
+		 * This template method is activated only if \p T and \p U are the same type, aside from cv qualifications and references.
+		 *
 		 * The parameter \p bucket_idx is the index of the destination bucket for \p k and, for a
 		 * set with a nonzero number of buckets, must be equal to the output
 		 * of bucket() before the insertion.
