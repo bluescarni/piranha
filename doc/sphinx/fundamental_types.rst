@@ -226,13 +226,15 @@ On the Python side, C++ ``real`` objects are automatically converted to/from ``m
 .. note:: The mpmath module needs not to be installed when compiling Pyranha. Its presence is detected by Pyranha at runtime.
 
 Whereas in the case of integers and rationals the conversion to/from Python is straightforward and unambiguous, in the case of ``real`` things are slightly
-more complicated. In mpmath, there is a global precision setting which is user-configurable (either via ``mpmath.mp.prec`` or ``mpmath.mp.dps``) and, generally,
+more complicated. In mpmath, there is a global precision setting which is user-configurable (either via ``mpmath.mp.prec`` or ``mpmath.mp.dps``) and
 one works without specifiying different precisions for different ``mpf`` objects.
 
 The rules of conversion between ``real`` and ``mpf`` are the following:
 
-* when a ``real`` object is returned to Python by some C++ function exposed in Pyranha, it will be converted to an ``mpf`` object with the current ``mpmath`` global precision
-  (as reported by ``mpmath.mp.prec``). That is, the original precision of the ``real`` object will be discarded;
+* when a ``real`` object is returned to Python by some C++ function exposed in Pyranha, it will be converted to an ``mpf`` object with the current
+  ``mpmath`` global precision;
+* when an ``mpf`` object is passed from Python into a C++ function exposed in Pyranha accepting a ``real`` argument, the ``mpf`` will be converted
+  to a ``real`` which will have the same precision as the global ``mpmath`` precision.
 
 Potential pitfalls
 ------------------
