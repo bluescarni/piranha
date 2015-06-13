@@ -183,10 +183,9 @@ class hash_set
 					iterator_impl():m_ptr(nullptr) {}
 					explicit iterator_impl(ptr_type ptr):m_ptr(ptr) {}
 					// Constructor from other iterator type.
-					template <typename V>
-					iterator_impl(const iterator_impl<V> &other,
-						typename std::enable_if<std::is_convertible<typename iterator_impl<V>::ptr_type,ptr_type>::value>::type * = nullptr):
-						m_ptr(other.m_ptr)
+					template <typename V, typename std::enable_if<
+						std::is_convertible<typename iterator_impl<V>::ptr_type,ptr_type>::value,int>::type = 0>
+					iterator_impl(const iterator_impl<V> &other):m_ptr(other.m_ptr)
 					{}
 				private:
 					friend class boost::iterator_core_access;
@@ -1026,7 +1025,7 @@ class hash_set
 		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
 		 * no such element exists.
 		 */
-		iterator erase(const iterator &it)
+		iterator erase(const_iterator it)
 		{
 			piranha_assert(!empty());
 			const auto b_it = _erase(it);
@@ -1345,7 +1344,7 @@ class hash_set
 		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
 		 * no such element exists.
 		 */
-		local_iterator _erase(const iterator &it)
+		local_iterator _erase(const_iterator it)
 		{
 			// Verify the iterator is valid.
 			piranha_assert(it.m_set == this);
