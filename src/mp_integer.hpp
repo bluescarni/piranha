@@ -1158,9 +1158,8 @@ struct is_mp_integer_interoperable_type
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
 /*
- * TODO
- * - more type traits tests, check wrt old integer tests.
- * TODO performance improvements:
+ * NOTES:
+ * - performance improvements:
  *   - it seems like for a bunch of operations we do not need GMP anymore (e.g., conversion to float),
  *     we can use mp_integer directly - this could be a performance improvement;
  *   - avoid going through mpz for print to stream.
@@ -1187,6 +1186,9 @@ struct is_mp_integer_interoperable_type
  *   attempt direct conversion if we have only 1 limb).
  * - more in general, for conversions to/from other types we should consider operating directly with limbs instead of bit-by-bit
  *   for increased performance.
+ * - there is some out-of-range conversion handling which is not hit by the test cases, need to proper test it.
+ * - fits_in_static() might be made obsolete by the new mpz_t ctor. fits_in_static() is more accurate, but potentially
+ *   slower and prone to overflow. See if it makes sense to replace it.
  */
 template <int NBits = 0>
 class mp_integer
@@ -2100,6 +2102,65 @@ class mp_integer
 		{
 			construct_from_string(str.c_str());
 		}
+		/// Constructor from <tt>mpz_t</tt>.
+		/**
+		 * The choice of storage type will depend on the value of \p z.
+		 *
+		 * @param[in] z <tt>mpz_t</tt> that will be used to initialise \p this.
+		 */
+		explicit mp_integer(const ::mpz_t z)
+		{
+			// Get the number of limbs in use.
+			const std::size_t size = ::mpz_size(z);
+			// Nothing to do if z is zero.
+			if (size == 0u) {
+				return;
+			}
+			// Get a read-only pointer to the limbs of z.
+			// NOTE: there is a specific mpz_limbs_read() function
+			// in later GMP versions for this.
+			const ::mp_limb_t *l_ptr = z->_mp_d;
+			// Effective number of bits used per limb in static storage.
+			const auto limb_bits = detail::integer_union<NBits>::s_storage::limb_bits;
+			// Here we are checking roughly if we need static or dynamic
+			// storage, based on the number of limbs used in z and the available
+			// bits in static storage. It is a conservative check, meaning there
+			// could be cases in which z fits in static but the check below fails
+			// and forces dynamic storage.
+			// Example: the mpz has a value of 1 and 64 bit limb, mp_integer
+			// has 16 bit limb.
+			// We could replace with mpz sizeinbase() but performance would be worse
+			// probably. Need to invesitgate.
+			if (unsigned(GMP_NUMB_BITS) > (limb_bits * 2u) / size) {
+				promote();
+				::mpz_set(&m_int.g_dy(),z);
+			} else {
+				// Limb type in static storage.
+				using limb_t = typename detail::integer_union<NBits>::s_storage::limb_t;
+				// Number of total bits per limb in static storage (>= limb_bits).
+				const auto total_bits = detail::integer_union<NBits>::s_storage::total_bits;
+				// The total number of bits we will need to extract from z. We know we can compute this
+				// because we know z fits static, and we can always represent the total number of bits
+				// in static.
+				const limb_t tot_nbits  = static_cast<limb_t>(unsigned(GMP_NUMB_BITS) * size),
+					q = static_cast<limb_t>(tot_nbits / limb_bits),
+					r = static_cast<limb_t>(tot_nbits % limb_bits),
+					n_limbs = static_cast<limb_t>(q + static_cast<limb_t>(r != 0u));
+				piranha_assert(n_limbs <= 2u && n_limbs > 0u);
+				// NOTE: if here the number of static limbs used will be only 1, the second
+				// limb has already been zeroed out by the intial construction.
+				for (std::size_t i = 0u; i < n_limbs; ++i) {
+					m_int.g_st().m_limbs[i] = detail::read_uint<limb_t,unsigned(GMP_LIMB_BITS - GMP_NUMB_BITS),
+						total_bits-limb_bits>(l_ptr,size,i);
+				}
+				// Calculate the number of limbs.
+				m_int.g_st()._mp_size = m_int.g_st().calculate_n_limbs();
+				// Negate if necessary.
+				if (mpz_sgn(z) == -1) {
+					m_int.g_st().negate();
+				}
+			}
+		}
 		/// Defaulted destructor.
 		~mp_integer() = default;
 		/// Defaulted copy-assignment operator.
@@ -2969,6 +3030,8 @@ class mp_integer
 				return m_int.g_st().hash();
 			}
 			const auto &dy = m_int.g_dy();
+			// NOTE: mpz_size gives the number of limbs effectively used by mpz, that is,
+			// the absolute value of the internal _mp_size member.
 			const std::size_t size = ::mpz_size(&dy);
 			if (size == 0u) {
 				return 0;

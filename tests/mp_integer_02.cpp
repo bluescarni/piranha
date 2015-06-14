@@ -2658,3 +2658,75 @@ BOOST_AUTO_TEST_CASE(mp_integer_is_unitary_test)
 {
 	boost::mpl::for_each<size_types>(is_unitary_tester());
 }
+
+struct mpz_t_ctor_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		typedef mp_integer<T::value> int_type;
+		BOOST_CHECK((std::is_constructible<int_type,::mpz_t>::value));
+		mpz_raii m;
+		// Some simple tests initially.
+		BOOST_CHECK_EQUAL(int_type{&m.m_mpz},0);
+		::mpz_set_si(&m.m_mpz,1);
+		BOOST_CHECK_EQUAL(int_type{&m.m_mpz},1);
+		::mpz_set_si(&m.m_mpz,-1);
+		BOOST_CHECK_EQUAL(int_type{&m.m_mpz},-1);
+		::mpz_set_si(&m.m_mpz,42);
+		BOOST_CHECK_EQUAL(int_type{&m.m_mpz},42);
+		::mpz_set_si(&m.m_mpz,-42);
+		BOOST_CHECK_EQUAL(int_type{&m.m_mpz},-42);
+		{
+		// Testing with long
+		std::uniform_int_distribution<long> int_dist;
+		for (int i = 0; i < ntries; ++i) {
+			// Test with up to 4 long limbs.
+			long tmp_int = int_dist(rng);
+			::mpz_set_si(&m.m_mpz,tmp_int);
+			int_type a{&m.m_mpz};
+			BOOST_CHECK_EQUAL(a,tmp_int);
+			long tmp_int2 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int2);
+			int_type b{&m.m_mpz};
+			BOOST_CHECK_EQUAL(b,a * tmp_int2);
+			long tmp_int3 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int3);
+			int_type c{&m.m_mpz};
+			BOOST_CHECK_EQUAL(c,(a * tmp_int2) * tmp_int3);
+			long tmp_int4 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int4);
+			int_type d{&m.m_mpz};
+			BOOST_CHECK_EQUAL(d,((a * tmp_int2) * tmp_int3) * tmp_int4);
+		}
+		}
+		{
+		// Testing with long long
+		std::uniform_int_distribution<long long> int_dist;
+		for (int i = 0; i < ntries; ++i) {
+			// Test with up to 4 long long limbs.
+			long long tmp_int = int_dist(rng);
+			::mpz_set_si(&m.m_mpz,tmp_int);
+			int_type a{&m.m_mpz};
+			BOOST_CHECK_EQUAL(a,tmp_int);
+			long long tmp_int2 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int2);
+			int_type b{&m.m_mpz};
+			BOOST_CHECK_EQUAL(b,a * tmp_int2);
+			long long tmp_int3 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int3);
+			int_type c{&m.m_mpz};
+			BOOST_CHECK_EQUAL(c,(a * tmp_int2) * tmp_int3);
+			long long tmp_int4 = int_dist(rng);
+			::mpz_mul_si(&m.m_mpz,&m.m_mpz,tmp_int4);
+			int_type d{&m.m_mpz};
+			BOOST_CHECK_EQUAL(d,((a * tmp_int2) * tmp_int3) * tmp_int4);
+		}
+		}
+	}
+};
+
+BOOST_AUTO_TEST_CASE(mp_integer_mpz_t_ctor_test)
+{
+	boost::mpl::for_each<size_types>(mpz_t_ctor_tester());
+}
