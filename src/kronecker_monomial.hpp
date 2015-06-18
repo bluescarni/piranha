@@ -343,7 +343,7 @@ class kronecker_monomial
 			if (s >= limits.size()) {
 				return false;
 			}
-			const auto &l = limits[s];
+			const auto &l = limits[static_cast<decltype(limits.size())>(s)];
 			// Value is compatible if it is within the bounds for the given size.
 			return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
 		}
