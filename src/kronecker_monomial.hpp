@@ -88,7 +88,6 @@ namespace piranha
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
-// - needs sfinaeing in sub, integrate, and other methods not generalised yet.
 // - review the use of a max_size for the static vector used in unpacking: it's probably too big.
 //   Also we should probably check how is it used in performance critical parts, i.e., check
 //   if we are not copying around too much data on the stack.
@@ -343,7 +342,7 @@ class kronecker_monomial
 			if (s >= limits.size()) {
 				return false;
 			}
-			const auto &l = limits[s];
+			const auto &l = limits[static_cast<decltype(limits.size())>(s)];
 			// Value is compatible if it is within the bounds for the given size.
 			return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
 		}
