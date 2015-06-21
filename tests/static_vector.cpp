@@ -625,3 +625,38 @@ BOOST_AUTO_TEST_CASE(static_vector_erase_test)
 {
 	boost::mpl::for_each<value_types>(erase_tester());
 }
+
+struct clear_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			if (U::value == 1u) {
+				return;
+			}
+			typedef static_vector<T,U::value> vector_type;
+			vector_type v1;
+			v1.push_back(boost::lexical_cast<T>(1));
+			v1.clear();
+			BOOST_CHECK(v1.empty());
+			v1.push_back(boost::lexical_cast<T>(1));
+			v1.push_back(boost::lexical_cast<T>(2));
+			BOOST_CHECK_EQUAL(v1.size(),2u);
+			v1.clear();
+			BOOST_CHECK(v1.empty());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(static_vector_clear_test)
+{
+	boost::mpl::for_each<value_types>(clear_tester());
+}
