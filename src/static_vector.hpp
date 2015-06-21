@@ -528,6 +528,15 @@ class static_vector
 			m_size = static_cast<size_type>(m_size - 1u);
 			return retval;
 		}
+		/// Clear.
+		/**
+		 * This method will destroy all elements of the vector and set the size to zero.
+		 */
+		void clear()
+		{
+			destroy_items();
+			m_size = 0u;
+		}
 		/// Hash value.
 		/**
 		 * \note
@@ -545,9 +554,7 @@ class static_vector
 		 *
 		 * @see http://www.boost.org/doc/libs/release/doc/html/hash/combine.html
 		 */
-		template <typename U = T, typename = typename std::enable_if<
-			is_hashable<U>::value
-			>::type>
+		template <typename U = T, typename = typename std::enable_if<is_hashable<U>::value>::type>
 		std::size_t hash() const
 		{
 			return detail::vector_hasher(*this);
