@@ -37,6 +37,7 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -965,4 +966,68 @@ struct erase_tester
 BOOST_AUTO_TEST_CASE(small_vector_erase_test)
 {
 	boost::mpl::for_each<value_types>(erase_tester());
+}
+
+struct size_be_tester
+{
+	template <typename T>
+	struct runner
+	{
+		template <typename U>
+		void operator()(const U &)
+		{
+			if (U::value < 2u) {
+				return;
+			}
+			using v_type = small_vector<T,U>;
+			v_type v1;
+			BOOST_CHECK(v1.empty());
+			BOOST_CHECK(v1.is_static());
+			auto t0 = v1.size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t0),0u);
+			BOOST_CHECK(std::get<1>(t0) == std::get<2>(t0));
+			BOOST_CHECK(std::get<1>(t0) == v1.begin());
+			BOOST_CHECK(std::get<2>(t0) == v1.end());
+			// Check the const counterpart too.
+			auto t1 = static_cast<const v_type &>(v1).size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t1),0u);
+			BOOST_CHECK(std::get<1>(t1) == std::get<2>(t1));
+			BOOST_CHECK(std::get<1>(t1) == static_cast<const v_type &>(v1).begin());
+			BOOST_CHECK(std::get<2>(t1) == static_cast<const v_type &>(v1).end());
+			// Switch to dynamic.
+			int n = 0;
+			std::generate_n(std::back_inserter(v1),integer(v_type::max_static_size) + 1,[&n](){return T(n++);});
+			t0 = v1.size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t0),integer(v_type::max_static_size) + 1);
+			BOOST_CHECK(std::get<1>(t0) == v1.begin());
+			BOOST_CHECK(std::get<2>(t0) == v1.end());
+			// Check again const.
+			t1 = static_cast<const v_type &>(v1).size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t1),integer(v_type::max_static_size) + 1);
+			BOOST_CHECK(std::get<1>(t1) == static_cast<const v_type &>(v1).begin());
+			BOOST_CHECK(std::get<2>(t1) == static_cast<const v_type &>(v1).end());
+			// Resize back to zero.
+			v1.resize(0u);
+			t0 = v1.size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t0),0u);
+			BOOST_CHECK(std::get<1>(t0) == std::get<2>(t0));
+			BOOST_CHECK(std::get<1>(t0) == v1.begin());
+			BOOST_CHECK(std::get<2>(t0) == v1.end());
+			t1 = static_cast<const v_type &>(v1).size_begin_end();
+			BOOST_CHECK_EQUAL(std::get<0>(t1),0u);
+			BOOST_CHECK(std::get<1>(t1) == std::get<2>(t1));
+			BOOST_CHECK(std::get<1>(t1) == static_cast<const v_type &>(v1).begin());
+			BOOST_CHECK(std::get<2>(t1) == static_cast<const v_type &>(v1).end());
+		}
+	};
+	template <typename T>
+	void operator()(const T &)
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(small_vector_size_begin_end_test)
+{
+	boost::mpl::for_each<value_types>(size_be_tester());
 }
