@@ -88,10 +88,6 @@ namespace piranha
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
-// - needs sfinaeing in sub, integrate, and other methods not generalised yet.
-// - review the use of a max_size for the static vector used in unpacking: it's probably too big.
-//   Also we should probably check how is it used in performance critical parts, i.e., check
-//   if we are not copying around too much data on the stack.
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial
 {
@@ -107,11 +103,8 @@ class kronecker_monomial
 		 * piranha::kronecker_array.
 		 */
 		typedef typename ka::size_type size_type;
-		/// Maximum monomial size.
-		static const size_type max_size = 255u;
 	private:
 #if !defined(PIRANHA_DOXYGEN_INVOKED)
-		static_assert(max_size <= std::numeric_limits<static_vector<int,1u>::size_type>::max(),"Invalid max size.");
 		// Eval and sub typedef.
 		template <typename U, typename = void>
 		struct eval_type_ {};
@@ -182,7 +175,11 @@ class kronecker_monomial
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
 		/// Vector type used for temporary packing/unpacking.
-		typedef static_vector<value_type,max_size> v_type;
+		// NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
+		// as we always need to pass through pack/unpack. In practice, it does not matter: in current
+		// architectures the bit width limit will result in kronecker array's limits to be smaller than
+		// 255 items.
+		using v_type = static_vector<value_type,255u>;
 		/// Default constructor.
 		/**
 		 * After construction all exponents in the monomial will be zero.
@@ -255,6 +252,9 @@ class kronecker_monomial
 		 */
 		explicit kronecker_monomial(const symbol_set &args)
 		{
+			// NOTE: this does incur in some overhead, but on the other hand it runs all sorts of
+			// checks on the size of args, the size of tmp, the encoding limits, etc. Probably it is
+			// better to leave it like this at the moment, unless it becomes a serious bottleneck.
 			v_type tmp;
 			for (auto it = args.begin(); it != args.end(); ++it) {
 				tmp.push_back(value_type(0));
