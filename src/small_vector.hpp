@@ -28,6 +28,7 @@
 #include <limits>
 #include <new>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -981,6 +982,34 @@ class small_vector
 				return m_union.g_st().erase(it);
 			} else {
 				return m_union.g_dy().erase(it);
+			}
+		}
+		/// Size, begin and end.
+		/**
+		 * @return a tuple containing the size and the begin and the end iterators.
+		 */
+		std::tuple<size_type,iterator,iterator> size_begin_end()
+		{
+			if (m_union.is_static()) {
+				return std::make_tuple(size_type(m_union.g_st().size()),m_union.g_st().begin(),
+					m_union.g_st().end());
+			} else {
+				return std::make_tuple(size_type(m_union.g_dy().size()),m_union.g_dy().begin(),
+					m_union.g_dy().end());
+			}
+		}
+		/// Size, begin and end (const version).
+		/**
+		 * @return a tuple containing the size and the begin and the end const iterators.
+		 */
+		std::tuple<size_type,const_iterator,const_iterator> size_begin_end() const
+		{
+			if (m_union.is_static()) {
+				return std::make_tuple(size_type(m_union.g_st().size()),m_union.g_st().begin(),
+					m_union.g_st().end());
+			} else {
+				return std::make_tuple(size_type(m_union.g_dy().size()),m_union.g_dy().begin(),
+					m_union.g_dy().end());
 			}
 		}
 	private:
