@@ -53,6 +53,7 @@ SET(HEADERS_LIST
 	substitutable_series.hpp
 	ipow_substitutable_series.hpp
 	invert.hpp
+	dynamic_kronecker_monomial.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
