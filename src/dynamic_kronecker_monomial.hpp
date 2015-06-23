@@ -22,11 +22,15 @@
 #define PIRANHA_DYNAMIC_KRONECKER_MONOMIAL_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <ostream>
 #include <limits>
+#include <random>
+#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 
@@ -34,6 +38,7 @@
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
 #include "kronecker_array.hpp"
+#include "mp_integer.hpp"
 #include "small_vector.hpp"
 #include "safe_cast.hpp"
 #include "static_vector.hpp"
@@ -61,8 +66,9 @@ class dynamic_kronecker_monomial
 		static_assert(ksize_ > 0u,"Error in the computation of ksize.");
 		// Turn it into a size_t for ease of use.
 		static_assert(ksize_ <= std::numeric_limits<std::size_t>::max(),"Overflow error.");
-		static const std::size_t ksize = static_cast<std::size_t>(ksize_);
 	public:
+		/// The number of values packed in each signed integer.
+		static const std::size_t ksize = static_cast<std::size_t>(ksize_);
 		using value_type = SignedInt;
 	private:
 		// This is a small static vector used for the decodification of a single signed integral.
@@ -105,6 +111,33 @@ class dynamic_kronecker_monomial
 					"of a dynamic_kronecker_monomial");
 			}
 		}
+		// Utilities for hashing.
+		// This is an array of randomly selected primes in the range provided by size_t.
+		static const std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> hash_mixer;
+		// This is the function used to build the above array at program startup.
+		static std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> get_hash_mixer()
+		{
+			std::mt19937 rng;
+			std::uniform_int_distribution<std::size_t> dist;
+			std::array<std::size_t,static_cast<std::size_t>(max_size/ksize)> retval;
+			for (auto it = retval.begin(); it != retval.end();) {
+				// NOTE: the idea here is: pick a random number, get the next prime and
+				// try to downcast it back to size_t. If this overflows, just try again.
+				// I have a gut feeling in theory this could fail a lot if the bit width
+				// of size_t is large enough, due to the way prime numbers distribute.
+				// But it does not seem to be a problem in practice so far. Just keep it
+				// in mind.
+				auto tmp = integer{dist(rng)};
+				tmp = tmp.nextprime();
+				try {
+					*it = static_cast<std::size_t>(tmp);
+				} catch (const std::overflow_error &) {
+					continue;
+				}
+				++it;
+			}
+			return retval;
+		}
 	public:
 		using v_type = static_vector<value_type,max_size>;
 		using size_type = typename container_type::size_type;
@@ -115,6 +148,12 @@ class dynamic_kronecker_monomial
 		explicit dynamic_kronecker_monomial(std::initializer_list<T> list)
 		{
 			construct_from_iterators(list.begin(),list.end());
+		}
+		// TODO enabler.
+		template <typename It>
+		explicit dynamic_kronecker_monomial(It begin, It end)
+		{
+			construct_from_iterators(begin,end);
 		}
 		~dynamic_kronecker_monomial()
 		{
@@ -144,9 +183,8 @@ class dynamic_kronecker_monomial
 				piranha_throw(std::invalid_argument,"incompatible symbol set");
 			}
 			k_type tmp(ksize,0);
-			// NOTE: candidate for begin_end() function from small_vector.
-			for (size_type i = 0u; i < m_vec.size(); ++i) {
-				ka::decode(tmp,m_vec[i]);
+			for (auto t = m_vec.size_begin_end(); std::get<1u>(t) != std::get<2u>(t); ++std::get<1u>(t)) {
+				ka::decode(tmp,*std::get<1u>(t));
 				std::copy(tmp.begin(),tmp.end(),std::back_inserter(retval));
 			}
 			piranha_assert(retval.size() >= args.size());
@@ -181,12 +219,16 @@ class dynamic_kronecker_monomial
 				case 1u:
 					return static_cast<std::size_t>(*std::get<1u>(t));
 			}
-			std::size_t retval = static_cast<std::size_t>(*std::get<1u>(t));
-			++std::get<1u>(t);
-			for (; std::get<1u>(t) != std::get<2u>(t); ++std::get<1u>(t)) {
-				retval = static_cast<std::size_t>(retval + static_cast<std::size_t>(*std::get<1u>(t)));
+			std::size_t retval = 0u;
+			for (std::size_t i = 0u; std::get<1u>(t) != std::get<2u>(t); ++std::get<1u>(t), ++i) {
+				retval = static_cast<std::size_t>(retval + static_cast<std::size_t>(*std::get<1u>(t)) *
+					hash_mixer[i]);
 			}
 			return retval;
+		}
+		bool operator==(const dynamic_kronecker_monomial &other) const
+		{
+			return m_vec == other.m_vec;
 		}
 		friend std::ostream &operator<<(std::ostream &os, const dynamic_kronecker_monomial &dkm)
 		{
@@ -207,7 +249,31 @@ class dynamic_kronecker_monomial
 template <typename SignedInt, int NBits>
 const std::size_t dynamic_kronecker_monomial<SignedInt,NBits>::ksize;
 
+// Static initialisation of the hash mixer.
+template <typename SignedInt, int NBits>
+const std::array<std::size_t,static_cast<std::size_t>(dynamic_kronecker_monomial<SignedInt,NBits>::max_size /
+	dynamic_kronecker_monomial<SignedInt,NBits>::ksize)> dynamic_kronecker_monomial<SignedInt,NBits>::hash_mixer =
+	dynamic_kronecker_monomial<SignedInt,NBits>::get_hash_mixer();
+
 using dk_monomial = dynamic_kronecker_monomial<>;
+
+}
+
+namespace std
+{
+
+template <typename SignedInt, int NBits>
+struct hash<piranha::dynamic_kronecker_monomial<SignedInt,NBits>>
+{
+	/// Result type.
+	using result_type = size_t;
+	/// Argument type.
+	using argument_type = piranha::dynamic_kronecker_monomial<SignedInt,NBits>;
+	result_type operator()(const argument_type &s) const
+	{
+		return s.hash();
+	}
+};
 
 }
 
