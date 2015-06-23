@@ -47,6 +47,12 @@
 namespace piranha
 {
 
+// TODOs:
+// - use std::array data instead of iterators?
+// - check that hashing/equality are consistent, esp. when inited with some padding.
+// - check homomorphic property of hash
+// - check hash with different NBits.
+
 // TODO: document that here NBits includes the sign bit as well.
 // NOTE: this class kind of looks like kronecker_monomial, but in many ways it is a different beast.
 // The major difference is that here we know exactly how many values are packed in a big int. As a
