@@ -23,12 +23,18 @@
 #define BOOST_TEST_MODULE dynamic_kronecker_monomial_test
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <cstddef>
+#include <functional>
+#include <iterator>
+#include <limits>
 #include <random>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 #include "../src/environment.hpp"
 #include "../src/hash_set.hpp"
@@ -39,8 +45,9 @@
 
 using namespace piranha;
 
-using int_types = boost::mpl::vector<signed char,int,long,long long>;
-using size_types = boost::mpl::vector<std::integral_constant<int,8>,std::integral_constant<int,12>,std::integral_constant<int,16>>;
+using int_types = boost::mpl::vector<signed char,short,int,long,long long>;
+using size_types = boost::mpl::vector<std::integral_constant<int,8>,std::integral_constant<int,12>,
+	std::integral_constant<int,16>,std::integral_constant<int,24>>;
 
 std::mt19937 rng;
 
@@ -71,21 +78,28 @@ BOOST_AUTO_TEST_CASE(dynamic_kronecker_monomial_constructor_test)
 	boost::mpl::for_each<int_types>(constructor_tester());
 }
 
+// Generate a vector of size total_size, in which groups of ksize members
+// are selected randomly from the limits in kronecker_array for size ksize.
 template <std::size_t ksize, typename T, std::size_t total_size>
 void generate_random_vector(std::array<T,total_size> &out)
 {
 	static_assert(total_size >= ksize && !(total_size % ksize),"Invalid size values.");
 	using ka = kronecker_array<T>;
+	using limits_size = decltype(ka::get_limits().size());
+	using v_size = decltype(std::vector<T>{}.size());
+	// Create a vector of random distributions with the appropriate limits.
 	std::array<std::uniform_int_distribution<T>,ksize> dist_array;
 	for (std::size_t i = 0u; i < ksize; ++i) {
-		dist_array[i] = std::uniform_int_distribution<T>(T(-std::get<0>(ka::get_limits()[ksize])[i]),
-			std::get<0>(ka::get_limits()[ksize])[i]);
+		dist_array[i] = std::uniform_int_distribution<T>(T(-std::get<0>(ka::get_limits()[boost::numeric_cast<limits_size>(ksize)])[boost::numeric_cast<v_size>(i)]),
+			std::get<0>(ka::get_limits()[boost::numeric_cast<limits_size>(ksize)])[boost::numeric_cast<v_size>(i)]);
 	}
 	for (std::size_t i = 0u; i < total_size; ++i) {
-		out[i] = dist_array[i % ksize](rng);
+		out[i] = dist_array[static_cast<std::size_t>(i % ksize)](rng);
 	}
 }
 
+// Evaluate the sparsity of a set. In this context, it means the average number of elements
+// in non-empty buckets.
 template <typename Set>
 double compute_sparsity(const Set &s)
 {
@@ -103,41 +117,266 @@ double compute_sparsity(const Set &s)
 struct hash_tester
 {
 	template <typename T>
-	void operator()(const T &)
+	struct runner
 	{
-		const unsigned nitems = 500;
-		using k_type = dynamic_kronecker_monomial<T>;
-		using h_set = hash_set<k_type>;
+		template <typename U>
+		void sparsity_testing() const
 		{
-		std::array<T,k_type::ksize> tmp;
-		h_set h;
-		for (unsigned i = 0; i < nitems; ++i) {
-			generate_random_vector<k_type::ksize>(tmp);
-			h.insert(k_type(tmp.begin(),tmp.end()));
+			std::cout << "Sparsity testing with NBits = " << U::value << " and type: '" << typeid(T).name() << "'\n";
+			const unsigned nitems = 500;
+			using k_type = dynamic_kronecker_monomial<T,U::value>;
+			using h_set = hash_set<k_type>;
+			{
+			std::array<T,k_type::ksize> tmp;
+			h_set h;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp);
+				h.insert(k_type(tmp.begin(),tmp.end()));
+			}
+			std::cout << "1 packed integral : " << compute_sparsity(h) << '\n';
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 2u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 2u> tmp;
+			h_set h;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp);
+				h.insert(k_type(tmp.begin(),tmp.end()));
+			}
+			std::cout << "2 packed integrals: " << compute_sparsity(h) << '\n';
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 3u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 3u> tmp;
+			h_set h;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp);
+				h.insert(k_type(tmp.begin(),tmp.end()));
+			}
+			std::cout << "3 packed integrals: " << compute_sparsity(h) << '\n';
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 4u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 4u> tmp;
+			h_set h;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp);
+				h.insert(k_type(tmp.begin(),tmp.end()));
+			}
+			std::cout << "4 packed integrals: " << compute_sparsity(h) << '\n';
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 5u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 5u> tmp;
+			h_set h;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp);
+				h.insert(k_type(tmp.begin(),tmp.end()));
+			}
+			std::cout << "5 packed integrals: " << compute_sparsity(h) << '\n';
+			}
 		}
-		std::cout << "Sparsity for type '" << typeid(T).name() << "', 1 packed integral: " << compute_sparsity(h) << '\n';
-		}
+		template <typename U>
+		void hash_equality() const
 		{
-		std::array<T,k_type::ksize * 2u> tmp;
-		h_set h;
-		for (unsigned i = 0; i < nitems; ++i) {
-			generate_random_vector<k_type::ksize>(tmp);
-			h.insert(k_type(tmp.begin(),tmp.end()));
+			// Some tests of consistency between equality and hash.
+			using k_type = dynamic_kronecker_monomial<T,U::value>;
+			const unsigned nitems = 500;
+			{
+			std::array<T,k_type::ksize> tmp;
+			std::vector<T> tmpv;
+			for (unsigned i = 0; i < nitems; ++i) {
+				// The test does not make sense if the ksize is only 1.
+				if (k_type::ksize == 1u) {
+					continue;
+				}
+				tmpv.clear();
+				generate_random_vector<k_type::ksize>(tmp);
+				std::copy(tmp.begin(),tmp.end(),std::back_inserter(tmpv));
+				// Erase the last element.
+				tmpv.back() = 0;
+				k_type k1(tmpv.begin(),tmpv.end() - 1);
+				k_type k2(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k1 == k2);
+				BOOST_CHECK(!(k1 != k2));
+				BOOST_CHECK(std::hash<k_type>()(k1) == std::hash<k_type>()(k2));
+				// Restore the last element.
+				tmpv.back() = 1;
+				k_type k3(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k2 != k3);
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 2u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 2u> tmp;
+			std::vector<T> tmpv;
+			for (unsigned i = 0; i < nitems; ++i) {
+				if (k_type::ksize == 1u) {
+					continue;
+				}
+				tmpv.clear();
+				generate_random_vector<k_type::ksize>(tmp);
+				std::copy(tmp.begin(),tmp.end(),std::back_inserter(tmpv));
+				generate_random_vector<k_type::ksize>(tmp);
+				std::copy(tmp.begin(),tmp.end(),std::back_inserter(tmpv));
+				tmpv.back() = 0;
+				k_type k1(tmpv.begin(),tmpv.end() - 1);
+				k_type k2(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k1 == k2);
+				BOOST_CHECK(!(k1 != k2));
+				BOOST_CHECK(std::hash<k_type>()(k1) == std::hash<k_type>()(k2));
+				tmpv.back() = 1;
+				k_type k3(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k2 != k3);
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 3u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 3u> tmp;
+			std::vector<T> tmpv;
+			for (unsigned i = 0; i < nitems; ++i) {
+				if (k_type::ksize == 1u) {
+					continue;
+				}
+				tmpv.clear();
+				generate_random_vector<k_type::ksize>(tmp);
+				std::copy(tmp.begin(),tmp.end(),std::back_inserter(tmpv));
+				generate_random_vector<k_type::ksize>(tmp);
+				std::copy(tmp.begin(),tmp.end(),std::back_inserter(tmpv));
+				tmpv.back() = 0;
+				k_type k1(tmpv.begin(),tmpv.end() - 1);
+				k_type k2(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k1 == k2);
+				BOOST_CHECK(!(k1 != k2));
+				BOOST_CHECK(std::hash<k_type>()(k1) == std::hash<k_type>()(k2));
+				tmpv.back() = 1;
+				k_type k3(tmpv.begin(),tmpv.end());
+				BOOST_CHECK(k2 != k3);
+			}
+			}
 		}
-		std::cout << "Sparsity for type '" << typeid(T).name() << "', 2 packed integrals: " << compute_sparsity(h) << '\n';
-		}
+		template <typename U>
+		void hash_homomorphic() const
 		{
-		std::array<T,k_type::ksize * 3u> tmp;
-		h_set h;
-		for (unsigned i = 0; i < nitems; ++i) {
-			generate_random_vector<k_type::ksize>(tmp);
-			h.insert(k_type(tmp.begin(),tmp.end()));
+			// Some tests of consistency between equality and hash.
+			using k_type = dynamic_kronecker_monomial<T,U::value>;
+			const unsigned nitems = 500;
+			{
+			std::array<T,k_type::ksize> tmp1, tmp2, tmp3;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp1);
+				generate_random_vector<k_type::ksize>(tmp2);
+				// Divide everything by two to avoid going outside the kronecker bounds.
+				std::for_each(tmp1.begin(),tmp1.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::for_each(tmp2.begin(),tmp2.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				// Add.
+				std::transform(tmp1.begin(),tmp1.end(),tmp2.begin(),tmp3.begin(),
+					[](const T &n, const T &m) {return static_cast<T>(n+m);});
+				k_type k1(tmp1.begin(),tmp1.end()), k2(tmp2.begin(),tmp2.end()), k3(tmp3.begin(),tmp3.end());
+				BOOST_CHECK_EQUAL(static_cast<std::size_t>(k1.hash() + k2.hash()),k3.hash());
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 2u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 2u> tmp1, tmp2, tmp3;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp1);
+				generate_random_vector<k_type::ksize>(tmp2);
+				std::for_each(tmp1.begin(),tmp1.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::for_each(tmp2.begin(),tmp2.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::transform(tmp1.begin(),tmp1.end(),tmp2.begin(),tmp3.begin(),
+					[](const T &n, const T &m) {return static_cast<T>(n+m);});
+				k_type k1(tmp1.begin(),tmp1.end()), k2(tmp2.begin(),tmp2.end()), k3(tmp3.begin(),tmp3.end());
+				BOOST_CHECK_EQUAL(static_cast<std::size_t>(k1.hash() + k2.hash()),k3.hash());
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 3u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 3u> tmp1, tmp2, tmp3;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp1);
+				generate_random_vector<k_type::ksize>(tmp2);
+				std::for_each(tmp1.begin(),tmp1.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::for_each(tmp2.begin(),tmp2.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::transform(tmp1.begin(),tmp1.end(),tmp2.begin(),tmp3.begin(),
+					[](const T &n, const T &m) {return static_cast<T>(n+m);});
+				k_type k1(tmp1.begin(),tmp1.end()), k2(tmp2.begin(),tmp2.end()), k3(tmp3.begin(),tmp3.end());
+				BOOST_CHECK_EQUAL(static_cast<std::size_t>(k1.hash() + k2.hash()),k3.hash());
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 4u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 4u> tmp1, tmp2, tmp3;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp1);
+				generate_random_vector<k_type::ksize>(tmp2);
+				std::for_each(tmp1.begin(),tmp1.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::for_each(tmp2.begin(),tmp2.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::transform(tmp1.begin(),tmp1.end(),tmp2.begin(),tmp3.begin(),
+					[](const T &n, const T &m) {return static_cast<T>(n+m);});
+				k_type k1(tmp1.begin(),tmp1.end()), k2(tmp2.begin(),tmp2.end()), k3(tmp3.begin(),tmp3.end());
+				BOOST_CHECK_EQUAL(static_cast<std::size_t>(k1.hash() + k2.hash()),k3.hash());
+			}
+			}
+			{
+			if (k_type::ksize > std::numeric_limits<std::size_t>::max() / 16u) {
+				return;
+			}
+			std::array<T,k_type::ksize * 16u> tmp1, tmp2, tmp3;
+			for (unsigned i = 0; i < nitems; ++i) {
+				generate_random_vector<k_type::ksize>(tmp1);
+				generate_random_vector<k_type::ksize>(tmp2);
+				std::for_each(tmp1.begin(),tmp1.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::for_each(tmp2.begin(),tmp2.end(),[](T &value) {value = static_cast<T>(value / 2);});
+				std::transform(tmp1.begin(),tmp1.end(),tmp2.begin(),tmp3.begin(),
+					[](const T &n, const T &m) {return static_cast<T>(n+m);});
+				k_type k1(tmp1.begin(),tmp1.end()), k2(tmp2.begin(),tmp2.end()), k3(tmp3.begin(),tmp3.end());
+				BOOST_CHECK_EQUAL(static_cast<std::size_t>(k1.hash() + k2.hash()),k3.hash());
+			}
+			}
 		}
-		std::cout << "Sparsity for type '" << typeid(T).name() << "', 3 packed integrals: " << compute_sparsity(h) << '\n';
+		template <typename U, typename std::enable_if<(U::value <= std::numeric_limits<T>::digits + 1),int>::type = 0>
+		void operator()(const U &) const
+		{
+			// Just a check with zero size / elements.
+			using k_type = dynamic_kronecker_monomial<T,U::value>;
+			k_type k;
+			BOOST_CHECK_EQUAL(std::hash<k_type>()(k),0u);
+			k = k_type{0,0,0,0,0,0,0};
+			BOOST_CHECK_EQUAL(std::hash<k_type>()(k),0u);
+			sparsity_testing<U>();
+			hash_equality<U>();
+			hash_homomorphic<U>();
 		}
+		template <typename U, typename std::enable_if<(U::value > std::numeric_limits<T>::digits + 1),int>::type = 0>
+		void operator()(const U &) const {}
+	};
+	template <typename T>
+	void operator()(const T &) const
+	{
+		boost::mpl::for_each<size_types>(runner<T>());
 	}
 };
 
+// This includes also equality testing.
 BOOST_AUTO_TEST_CASE(dynamic_kronecker_monomial_hash_test)
 {
 	boost::mpl::for_each<int_types>(hash_tester());

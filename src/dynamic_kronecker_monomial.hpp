@@ -48,10 +48,7 @@ namespace piranha
 {
 
 // TODOs:
-// - use std::array data instead of iterators?
-// - check that hashing/equality are consistent, esp. when inited with some padding.
 // - check homomorphic property of hash
-// - check hash with different NBits.
 
 // TODO: document that here NBits includes the sign bit as well.
 // NOTE: this class kind of looks like kronecker_monomial, but in many ways it is a different beast.
@@ -221,10 +218,14 @@ class dynamic_kronecker_monomial
 			auto t = m_vec.size_begin_end();
 			switch (std::get<0u>(t)) {
 				case 0u:
+					// The hash of zero is always zero.
 					return 0u;
 				case 1u:
+					// With only one packed element, do as k_monomial does.
 					return static_cast<std::size_t>(*std::get<1u>(t));
 			}
+			// In general, cast each element to size_t, multiply it by a random prime and
+			// return the accumulated value.
 			std::size_t retval = 0u;
 			for (std::size_t i = 0u; std::get<1u>(t) != std::get<2u>(t); ++std::get<1u>(t), ++i) {
 				retval = static_cast<std::size_t>(retval + static_cast<std::size_t>(*std::get<1u>(t)) *
@@ -235,6 +236,10 @@ class dynamic_kronecker_monomial
 		bool operator==(const dynamic_kronecker_monomial &other) const
 		{
 			return m_vec == other.m_vec;
+		}
+		bool operator!=(const dynamic_kronecker_monomial &other) const
+		{
+			return !operator==(other);
 		}
 		friend std::ostream &operator<<(std::ostream &os, const dynamic_kronecker_monomial &dkm)
 		{
