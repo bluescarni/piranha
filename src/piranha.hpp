@@ -136,7 +136,8 @@
  * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check that this behaviour
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test garbage archives
  * also in the existing serialization tests.
- * \todo std::move() needs the utility header.
+ * \todo positional new needs the <new> header.
+ * \todo std::move() needs the <utility> header.
  * \todo as an idea, the series specialisations for the impl functors in the toolboxes might all go in series.hpp, with the following conditions:
  * - the involved object is/are series,
  * - they support the needed methods (e.g., subs(), degree(), etc.).
