@@ -125,9 +125,9 @@ struct coding_tester
 			BOOST_CHECK(v2 == v1);
 			// Test with random values within the bounds.
 			for (auto j = 0; j < 10000; ++j) {
-				for (decltype(v1.size()) i = 0u; i < v1.size(); ++i) {
-					std::uniform_int_distribution<T> dist(m[i],M[i]);
-					v1[i] = dist(rng);
+				for (decltype(v1.size()) k = 0u; k < v1.size(); ++k) {
+					std::uniform_int_distribution<T> dist(m[k],M[k]);
+					v1[k] = dist(rng);
 				}
 				v2 = v1;
 				c = ka_type::encode(v1);

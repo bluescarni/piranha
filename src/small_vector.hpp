@@ -266,8 +266,8 @@ class dynamic_storage
 				// Move in old elements into the new storage. As we had to increase the capacity,
 				// we know that new_size has to be greater than the old one, hence all old elements
 				// need to be moved over.
-				for (size_type i = 0u; i < m_size; ++i) {
-					construct(storage + i,std::move((*this)[i]));
+				for (size_type j = 0u; j < m_size; ++j) {
+					construct(storage + j,std::move((*this)[j]));
 				}
 				// Erase the old content and assign new.
 				destroy_and_deallocate();
@@ -275,8 +275,8 @@ class dynamic_storage
 				m_ptr = storage;
 			} else {
 				// Destroy excess elements in the old storage.
-				for (size_type i = new_size; i < m_size; ++i) {
-					destroy(storage + i);
+				for (size_type j = new_size; j < m_size; ++j) {
+					destroy(storage + j);
 				}
 			}
 			// In any case, we need to update the size.

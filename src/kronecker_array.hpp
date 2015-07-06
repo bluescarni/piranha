@@ -154,7 +154,8 @@ class kronecker_array
 					std::vector<int_type> tmp;
 					// Check if we are at the first iteration.
 					if (prev_c_vec.size()) {
-						const auto h_min = dot_prod(prev_c_vec,prev_m_vec), h_max = dot_prod(prev_c_vec,prev_M_vec);
+						h_min = dot_prod(prev_c_vec,prev_m_vec);
+						h_max = dot_prod(prev_c_vec,prev_M_vec);
 						std::transform(prev_M_vec.begin(),prev_M_vec.end(),std::back_inserter(tmp),[](const integer &n) {
 							return static_cast<int_type>(n);
 						});

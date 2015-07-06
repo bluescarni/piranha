@@ -195,13 +195,13 @@ struct initializer_list_tester
 	}
 };
 
-std::mt19937 rng;
-std::uniform_int_distribution<int> dist(0,9);
+static std::mt19937 rng;
+static std::uniform_int_distribution<int> dist(0,9);
 
 // Struct that randomly fails on copy.
 struct random_failure
 {
-	random_failure()
+	[[ noreturn ]] random_failure()
 	{
 		throw;
 	}

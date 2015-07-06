@@ -38,7 +38,7 @@ struct dummy
 	}
 };
 
-dummy d;
+static dummy d;
 
 BOOST_AUTO_TEST_CASE(environment_main_test)
 {

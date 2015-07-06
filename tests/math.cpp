@@ -88,6 +88,7 @@ struct no_negate {};
 struct no_negate2
 {
 	no_negate2 operator-() const;
+	no_negate2 (const no_negate2 &) = delete;
 	no_negate2 &operator=(no_negate2 &) = delete;
 };
 
@@ -372,14 +373,14 @@ BOOST_AUTO_TEST_CASE(math_pbracket_test)
 	auto x = ps_type{"x"}, y = ps_type{"y"}, z = ps_type{"z"};
 	auto vx = ps_type{"vx"}, vy = ps_type{"vy"}, vz = ps_type{"vz"}, r = ps_type{"r"};
 	auto H_2 = (vx*vx + vy*vy + vz*vz) / 2 - r.pow(-1);
-	ps_type::register_custom_derivative("x",[&x,&r](const ps_type &p) {
-		return p.partial("x") - p.partial("r") * x * r.pow(-3);
+	ps_type::register_custom_derivative("x",[&x,&r](const ps_type &ps) {
+		return ps.partial("x") - ps.partial("r") * x * r.pow(-3);
 	});
-	ps_type::register_custom_derivative("y",[&y,&r](const ps_type &p) {
-		return p.partial("y") - p.partial("r") * y * r.pow(-3);
+	ps_type::register_custom_derivative("y",[&y,&r](const ps_type &ps) {
+		return ps.partial("y") - ps.partial("r") * y * r.pow(-3);
 	});
-	ps_type::register_custom_derivative("z",[&z,&r](const ps_type &p) {
-		return p.partial("z") - p.partial("r") * z * r.pow(-3);
+	ps_type::register_custom_derivative("z",[&z,&r](const ps_type &ps) {
+		return ps.partial("z") - ps.partial("r") * z * r.pow(-3);
 	});
 	BOOST_CHECK_EQUAL(math::pbracket(H_2,H_2,{"vx","vy","vz"},{"x","y","z"}),0);
 	// Angular momentum integral.

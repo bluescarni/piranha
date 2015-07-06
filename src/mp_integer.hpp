@@ -1234,11 +1234,11 @@ class mp_integer
 			while (exp >= 0) {
 				::mpz_ui_pow_ui(&tmp.m_mpz,radix,static_cast<unsigned>(exp));
 				::mpz_add(&m.m_mpz,&m.m_mpz,&tmp.m_mpz);
-				const Float tmp = std::scalbn(Float(1),exp);
-				if (unlikely(tmp == HUGE_VAL)) {
+				const Float ftmp = std::scalbn(Float(1),exp);
+				if (unlikely(ftmp == HUGE_VAL)) {
 					piranha_throw(std::invalid_argument,"output of std::scalbn is HUGE_VAL");
 				}
-				abs_x -= tmp;
+				abs_x -= ftmp;
 				// NOTE: if the float is an exact integer, we eventually
 				// get to abs_x == 0, in which case we have to prevent the call to ilogb below.
 				if (unlikely(abs_x == Float(0))) {
