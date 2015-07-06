@@ -592,9 +592,9 @@ class series_multiplier
 				std::accumulate(retval_list.begin(),retval_list.end(),integer(0),[](const integer &n, const Series &r) {return n + r.size();}));
 			container_type idx(size);
 			future_list<std::future<void>> f_list1;
-			size_type i = 0u;
 			piranha_assert(retval_list.size() <= n_threads);
 			try {
+				size_type i = 0u;
 				unsigned thread_idx = 0u;
 				for (auto r_it = retval_list.begin(); r_it != retval_list.end(); ++r_it, ++thread_idx) {
 					auto f = [&idx,&retval,i,r_it]() {

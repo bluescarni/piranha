@@ -927,7 +927,7 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 				piranha_assert(c_vec.size() == v.size());
 				piranha_assert(c_vec.size() == mins.size());
 				decltype(mins.size()) i = 0u;
-				value_type retval = std::inner_product(c_vec.begin(),c_vec.end(),v.begin(),value_type(0),
+				value_type result = std::inner_product(c_vec.begin(),c_vec.end(),v.begin(),value_type(0),
 					std::plus<value_type>(),[&i,&mins](const value_type &c, const value_type &n) -> value_type {
 						const decltype(mins.size()) old_i = i;
 						++i;
@@ -935,7 +935,7 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 						return static_cast<value_type>(c * (n - mins[old_i]));
 					}
 				);
-				return static_cast<value_type>(retval + hmin);
+				return static_cast<value_type>(result + hmin);
 			};
 			// Build copies of the input keys repacked according to the new Kronecker substitution. Attach
 			// also a pointer to the term.
@@ -1147,10 +1147,10 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 				std::generate(tmp_v.begin(),tmp_v.end(),
 					[&n,&i,&mins,&maxs,&c_vec]() -> value_type
 				{
-					auto retval = (n % c_vec[i + 1u]) / c_vec[i] + mins[i];
-					piranha_assert(retval >= mins[i] && retval <= maxs[i]);
+					auto res = (n % c_vec[i + 1u]) / c_vec[i] + mins[i];
+					piranha_assert(res >= mins[i] && res <= maxs[i]);
 					++i;
-					return static_cast<value_type>(retval);
+					return static_cast<value_type>(res);
 				});
 			};
 			const auto cf_size = cf_vector.size();
@@ -1233,7 +1233,8 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 					});
 					for (const auto &t: tasks) {
 						auto t1_ptr = std::get<0u>(t);
-						auto start = std::get<1u>(t), end = std::get<2u>(t);
+						start = std::get<1u>(t);
+						end = std::get<2u>(t);
 						const auto size = static_cast<index_type>(end - start);
 						piranha_assert(size != 0u);
 						fast_functor_type f(&t1_ptr,1u,start,size,retval);
@@ -1319,7 +1320,8 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 				bucket_size_type ins_count(0);
 				for (const auto &t: tasks) {
 					auto t1_ptr = std::get<0u>(t);
-					auto start = std::get<1u>(t), end = std::get<2u>(t);
+					start = std::get<1u>(t);
+					end = std::get<2u>(t);
 					// NOTE: cast is safe, end - start cannot be larger than the size of v2.
 					const auto size = static_cast<index_type>(end - start);
 					piranha_assert(size != 0u);

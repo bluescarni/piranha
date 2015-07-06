@@ -1259,9 +1259,9 @@ class series: detail::series_tag, series_operators
 			const auto it = m_container._find(term,bucket_idx);
 			// Cleanup function that checks ignorability of an element in the hash set,
 			// and removes it if necessary.
-			auto cleanup = [this](const typename container_type::const_iterator &it) {
-				if (unlikely(it->is_ignorable(this->m_symbol_set))) {
-					this->m_container.erase(it);
+			auto cleanup = [this](const typename container_type::const_iterator &it_c) {
+				if (unlikely(it_c->is_ignorable(this->m_symbol_set))) {
+					this->m_container.erase(it_c);
 				}
 			};
 			if (it == m_container.end()) {

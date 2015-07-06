@@ -126,16 +126,20 @@ class base_exception: public std::exception
 		 * @throws unspecified any exception thrown by the copy constructor of \p std::string.
 		 */
 		explicit base_exception(const std::string &s):m_what(s) {}
+		/// Defaulted copy constructor.
+		base_exception(const base_exception &) = default;
+		/// Defaulted move constructor.
+		base_exception(base_exception &&) = default;
 		/// Error description.
 		/**
 		 * @return const pointer to the internal error message.
 		 */
-		virtual const char *what() const throw() override
+		virtual const char *what() const noexcept override
 		{
 			return m_what.c_str();
 		}
 		/// Trivial destructor.
-		virtual ~base_exception() throw() {}
+		virtual ~base_exception() {}
 	private:
 		const std::string m_what;
 };

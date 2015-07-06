@@ -362,12 +362,12 @@ struct degree_tester
 			BOOST_CHECK_THROW(k2.degree(symbol_set{}),std::invalid_argument);
 			// Partial degree.
 			using positions = symbol_set::positions;
-			auto ss_to_pos = [](const symbol_set &v, const std::set<std::string> &s) {
+			auto ss_to_pos = [](const symbol_set &vs, const std::set<std::string> &s) {
 				symbol_set tmp;
 				for (const auto &str: s) {
 					tmp.add(str);
 				}
-				return positions(v,tmp);
+				return positions(vs,tmp);
 			};
 			BOOST_CHECK(k2.degree(ss_to_pos(v,std::set<std::string>{}),v) == T(0));
 			BOOST_CHECK(k2.degree(ss_to_pos(v,{"a"}),v) == T(2));

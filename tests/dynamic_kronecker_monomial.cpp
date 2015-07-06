@@ -49,7 +49,7 @@ using int_types = boost::mpl::vector<signed char,short,int,long,long long>;
 using size_types = boost::mpl::vector<std::integral_constant<int,8>,std::integral_constant<int,12>,
 	std::integral_constant<int,16>,std::integral_constant<int,24>>;
 
-std::mt19937 rng;
+static std::mt19937 rng;
 
 // Constructors, assignments, getters, setters, etc.
 struct constructor_tester
