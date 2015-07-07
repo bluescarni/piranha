@@ -5,13 +5,24 @@ compiler:
   - clang
 addons:
   apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - boost-latest
     packages:
     - libgmp-dev
     - libmpfr-dev
     - libboost-all-dev
+    - libboost-serialization-dev
+    - libboost-system-dev
+    - g++-4.8
+install:
+    - if [[ "${CC}" == "gcc" ]]; then
+          export CC=gcc-4.8;
+          export CXX=g++-4.8;
+      fi
 script:
-  - cmake .
-  - make
-  - ctest --output-on-failure
+    - cmake .
+    - make
+    - ctest --output-on-failure
 notifications:
   email: false
