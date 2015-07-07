@@ -1,0 +1,17 @@
+language: cpp
+sudo: false
+compiler:
+  - gcc
+  - clang
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+    - libmpfr-dev
+    - libboost-all-dev
+script:
+  - cmake .
+  - make
+  - ctest --output-on-failure
+notifications:
+  email: false
