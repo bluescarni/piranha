@@ -51,6 +51,7 @@
 #include "settings.hpp"
 #include "thread_pool.hpp"
 #include "tracing.hpp"
+#include "tuning.hpp"
 #include "type_traits.hpp"
 
 namespace piranha
@@ -373,15 +374,14 @@ class series_multiplier
 		 * 
 		 * @param[in] f multiplication functor.
 		 * 
-		 * @throws unspecified any exception thrown by the public interface of \p Functor.
+		 * @throws unspecified any exception thrown by the public interface of \p Functor or by piranha::safe_cast().
 		 */
 		template <typename Functor>
 		static void blocked_multiplication(const Functor &f)
 		{
 			typedef typename std::decay<decltype(f.m_s1)>::type size_type;
-			// NOTE: hard-coded block size of 256.
-			static_assert(std::numeric_limits<size_type>::max() >= 256u, "Invalid size type.");
-			const size_type size1 = f.m_s1, size2 = f.m_s2, bsize1 = 256u, nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
+			const size_type size1 = f.m_s1, size2 = f.m_s2, bsize1 = safe_cast<size_type>(tuning::get_multiplication_block_size()),
+				nblocks1 = size1 / bsize1, bsize2 = bsize1, nblocks2 = size2 / bsize2;
 			// Start and end of last (possibly irregular) blocks.
 			const size_type i_ir_start = nblocks1 * bsize1, i_ir_end = size1;
 			const size_type j_ir_start = nblocks2 * bsize2, j_ir_end = size2;
