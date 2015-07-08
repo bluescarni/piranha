@@ -41,6 +41,7 @@
 #include <fstream>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -881,6 +882,9 @@ class series_exposer
 		static void cpp_save_text(const S &s, const std::string &filename)
 		{
 			std::ofstream fs(filename);
+			if (unlikely(!fs.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
 			boost::archive::text_oarchive oa(fs);
 			oa << s;
 		}
@@ -889,6 +893,9 @@ class series_exposer
 		{
 			S retval;
 			std::ifstream fs(filename);
+			if (unlikely(!fs.good())) {
+				piranha_throw(std::runtime_error,std::string("file '") + filename + "' could not be opened");
+			}
 			boost::archive::text_iarchive ia(fs);
 			ia >> retval;
 			return retval;
