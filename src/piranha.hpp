@@ -164,6 +164,7 @@
  * so that, e.g., we can use them as coefficients in poisson series. Also the polynomial's special pow() and integrate() method should be able to deal
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
  * \todo disable test building by default, update copyright headers and relicense.
+ * \todo the polynomial specialisation of series_multiplier needs type checking.
  */
 namespace piranha
 {
