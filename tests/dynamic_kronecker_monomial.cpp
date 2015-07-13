@@ -270,7 +270,6 @@ struct hash_tester
 		template <typename U>
 		void hash_homomorphic() const
 		{
-			// Some tests of consistency between equality and hash.
 			using k_type = dynamic_kronecker_monomial<T,U::value>;
 			const unsigned nitems = 500;
 			{

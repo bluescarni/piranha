@@ -72,6 +72,7 @@ class dynamic_kronecker_monomial
 	public:
 		/// The number of values packed in each signed integer.
 		static const std::size_t ksize = static_cast<std::size_t>(ksize_);
+		/// Alias for \p SignedInt.
 		using value_type = SignedInt;
 	private:
 		// This is a small static vector used for the decodification of a single signed integral.
