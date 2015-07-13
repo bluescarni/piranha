@@ -98,6 +98,9 @@ IF(CMAKE_COMPILER_IS_CLANGXX)
 	# unnecessary on most platforms.
 	# PIRANHA_CHECK_ENABLE_CXX_FLAG(-stdlib=libc++)
 	PIRANHA_CHECK_UINT128_T()
+	# For now it seems like -Wshadow from clang behaves better than GCC's, just enable it here
+	# for the time being.
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wshadow)
 ENDIF(CMAKE_COMPILER_IS_CLANGXX)
 
 if(CMAKE_COMPILER_IS_INTELXX)
@@ -120,6 +123,7 @@ if(CMAKE_COMPILER_IS_CLANGXX OR CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_IN
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wnoexcept)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wlogical-op)
 	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wconversion)
+	PIRANHA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wdeprecated)
 	# In the serialization work, we started hitting the template recursive instantiation
 	# limit on clang. This limit is supposed to be at least 1024 in C++11, but for some reason
 	# clang sets this to 256, and gcc to 900.
