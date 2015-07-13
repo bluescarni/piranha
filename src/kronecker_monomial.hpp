@@ -88,6 +88,8 @@ namespace piranha
  */
 // TODO:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
+// - document the fact that, since the serialization routine does not have the symbol_set available,
+//   it is impossible to (de)serialize this class in a portable way.
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial
 {
