@@ -75,12 +75,18 @@ std::atomic_ullong base_settings<T>::s_min_work_per_thread(base_settings<T>::s_d
 
 /// Global settings.
 /**
+ * \note
+ * The template parameter in this class is unused: its only purpose is to prevent the instantiation
+ * of the class' methods if they are not explicitly used. Client code should always employ the
+ * piranha::settings alias.
+ *
  * This class stores the global settings of piranha's runtime environment.
  * The methods of this class are thread-safe.
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-class settings: private detail::base_settings<>
+template <typename = void>
+class settings_: private detail::base_settings<>
 {
 	public:
 		/// Get the number of threads available for use by piranha.
@@ -247,6 +253,12 @@ class settings: private detail::base_settings<>
 			s_min_work_per_thread.store(s_default_min_work_per_thread);
 		}
 };
+
+/// Alias for piranha::settings_.
+/**
+ * This is the alias through which the methods in piranha::settings_ should be called.
+ */
+using settings = settings_<>;
 
 }
 
