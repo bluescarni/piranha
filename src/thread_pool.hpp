@@ -188,6 +188,11 @@ std::mutex thread_pool_base<T>::s_mutex;
 
 /// Static thread pool.
 /**
+ * \note
+ * The template parameter in this class is unused: its only purpose is to prevent the instantiation
+ * of the class' methods if they are not explicitly used. Client code should always employ the
+ * piranha::thread_pool alias.
+ *
  * This class manages, via a set of static methods, a pool of threads created at program startup.
  * The number of threads created initially is equal to piranha::runtime_info::get_hardware_concurrency(),
  * and, if possible, each thread is bound to a different processor. If the hardware concurrency cannot be determined,
@@ -196,13 +201,13 @@ std::mutex thread_pool_base<T>::s_mutex;
  * This class provides methods to enqueue arbitray tasks to the threads in the pool, query the size of the pool
  * and resize the pool. All methods, unless otherwise specified, are thread-safe, and they provide the strong
  * exception safety guarantee.
- *
- * \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:
- * http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
- * detach() and wait as a workaround?
- * \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
  */
-class thread_pool: private detail::thread_pool_base<>
+// \todo work around MSVC bug in destruction of statically allocated threads (if needed once we support MSVC), as per:
+// http://stackoverflow.com/questions/10915233/stdthreadjoin-hangs-if-called-after-main-exits-when-using-vs2012-rc
+// detach() and wait as a workaround?
+// \todo try to understand if we can suppress the future list class below in favour of STL-like algorithms.
+template <typename = void>
+class thread_pool_: private detail::thread_pool_base<>
 {
 		using base = detail::thread_pool_base<>;
 		// Enabler for use_threads.
@@ -337,6 +342,12 @@ class thread_pool: private detail::thread_pool_base<>
 		}
 };
 
+/// Alias for piranha::thread_pool_.
+/**
+ * This is the alias through which the methods in piranha::thread_pool_ should be called.
+ */
+using thread_pool = thread_pool_<>;
+
 /// Class to store a list of futures.
 /**
  * This class is a minimal thin wrapper around an \p std::list of \p std::future objects.
@@ -345,10 +356,9 @@ class thread_pool: private detail::thread_pool_base<>
  * ## Type requirements ##
  *
  * \p F must be an instance of \p std::future.
- *
- * \todo provide method to retrieve future values from get_all() using a vector (in case the future type
- * is not void or a reference, in which case the get_all() method stays as it is).
  */
+// \todo provide method to retrieve future values from get_all() using a vector (in case the future type
+// is not void or a reference, in which case the get_all() method stays as it is).
 template <typename F>
 class future_list
 {
