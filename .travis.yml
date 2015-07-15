@@ -11,9 +11,11 @@ addons:
     packages:
     - libgmp-dev
     - libmpfr-dev
-    - libboost-all-dev
-    - libboost-serialization-dev
-    - libboost-system-dev
+    - libboost1.55-all-dev
+    - libboost-serialization1.55-dev
+    - libboost-system1.55-dev
+    - libboost-chrono1.55-dev
+    - libboost-timer1.55-dev
     - g++-4.8
 install:
     - if [[ "${CC}" == "gcc" ]]; then
