@@ -22,9 +22,12 @@ install:
           export CC=gcc-4.8;
           export CXX=g++-4.8;
       fi
+env:
+    - BUILD_TYPE="Debug"
+    - BUILD_TYPE="Release"
 script:
-    - cmake .
+    - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
     - make
-    - ctest --output-on-failure
+    - ctest -E gastineau --output-on-failure
 notifications:
   email: false
