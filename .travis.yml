@@ -1,8 +1,5 @@
 language: cpp
 sudo: false
-compiler:
-  - gcc
-  - clang
 addons:
   apt:
     sources:
@@ -17,17 +14,36 @@ addons:
     - libboost-chrono1.55-dev
     - libboost-timer1.55-dev
     - g++-4.8
+
+matrix:
+  include:
+    - compiler: gcc
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Release"
+    - compiler: clang
+      env: BUILD_TYPE="Release" CXXFLAGS="-stdlib=libc++"
+    - compiler: clang
+      env: BUILD_TYPE="Debug"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" CXXFLAGS="-fsanitize=address"
+    - compiler: clang
+      env: BUILD_TYPE="Debug" CXXFLAGS="-fsanitize=thread"
+
 install:
     - if [[ "${CC}" == "gcc" ]]; then
           export CC=gcc-4.8;
           export CXX=g++-4.8;
+      elif [[ "${CC}" == "clang" ]]; then
+          export CXXFLAGS="${CXXFLAGS} -Wno-mismatched-tags";
       fi
-env:
-    - BUILD_TYPE="Debug"
-    - BUILD_TYPE="Release"
 script:
     - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} .
     - make
-    - ctest -E gastineau --output-on-failure
+    - if [[ "${BUILD_TYPE}" == "Release" ]]; then
+          ctest -E gastineau --output-on-failure;
+      elif [[ "${BUILD_TYPE}" == "Debug"  ]]; then
+          ctest -E polynomial;
+      fi
 notifications:
   email: false
