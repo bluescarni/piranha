@@ -56,6 +56,7 @@ SET(HEADERS_LIST
 )
 
 SET(DETAIL_HEADERS_LIST
+	detail/atomic_utils.hpp
 	detail/series_multiplier_fwd.hpp
 	detail/mpfr.hpp
 	detail/config_clang.hpp
