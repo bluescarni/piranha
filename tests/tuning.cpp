@@ -44,6 +44,11 @@ BOOST_AUTO_TEST_CASE(tuning_parallel_memory_set_test)
 	});
 	t1.join();
 	t2.join();
+	BOOST_CHECK(tuning::get_parallel_memory_set());
+	tuning::set_parallel_memory_set(false);
+	BOOST_CHECK(!tuning::get_parallel_memory_set());
+	tuning::reset_parallel_memory_set();
+	BOOST_CHECK(tuning::get_parallel_memory_set());
 }
 
 BOOST_AUTO_TEST_CASE(tuning_block_size_test)
@@ -61,4 +66,6 @@ BOOST_AUTO_TEST_CASE(tuning_block_size_test)
 	t2.join();
 	BOOST_CHECK_THROW(tuning::set_multiplication_block_size(8000u),std::invalid_argument);
 	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),1024u);
+	tuning::reset_multiplication_block_size();
+	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),256u);
 }

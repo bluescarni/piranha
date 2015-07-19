@@ -82,6 +82,16 @@ class tuning: private detail::base_tuning<>
 		{
 			s_parallel_memory_set.store(flag);
 		}
+		/// Reset the \p parallel_memory_set flag.
+		/**
+		 * This method will reset the \p parallel_memory_set flag to its default value.
+		 *
+		 * @see piranha::tuning::get_parallel_memory_set() for an explanation of the meaning of this flag.
+		 */
+		static void reset_parallel_memory_set()
+		{
+			s_parallel_memory_set.store(true);
+		}
 		/// Get the multiplication block size.
 		/**
 		 * The multiplication algorithms for certain series types (e.g., polynomials) divide the input operands in
@@ -113,7 +123,16 @@ class tuning: private detail::base_tuning<>
 			}
 			s_mult_block_size.store(size);
 		}
-
+		/// Reset the multiplication block size.
+		/**
+		 * This method will reset the multiplication block size to its default value.
+		 *
+		 * @see piranha::tuning::get_multiplication_block_size() for an explanation of the meaning of this value.
+		 */
+		 static void reset_multiplication_block_size()
+		 {
+			s_mult_block_size.store(256u);
+		 }
 };
 
 }
