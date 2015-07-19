@@ -181,6 +181,7 @@ inline namespace literals {}
 }
 
 #include "array_key.hpp"
+#include "base_series_multiplier.hpp"
 #include "binomial.hpp"
 #include "cache_aligning_allocator.hpp"
 #include "config.hpp"

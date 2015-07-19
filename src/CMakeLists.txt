@@ -53,6 +53,7 @@ SET(HEADERS_LIST
 	substitutable_series.hpp
 	ipow_substitutable_series.hpp
 	invert.hpp
+	base_series_multiplier.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
