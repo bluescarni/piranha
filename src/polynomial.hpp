@@ -555,7 +555,7 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 		using base = base_series_multiplier<Series>;
 	public:
 		using size_type = typename base::size_type;
-		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2),m_s1(s1),m_s2(s2)
+		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2),m_ss(s1.get_symbol_set())
 		{
 			// TODO range checks, for kronecker and monomial with C++ integral types.
 		}
@@ -582,11 +582,13 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 			piranha_assert(n_threads >= 1u);
 //			if (likely(n_threads == 1u)) {
 				Series retval;
-				retval.set_symbol_set(m_s1.m_symbol_set);
+				retval.set_symbol_set(m_ss);
 				mult_functor f(this->m_v1,this->m_v2,retval);
-				auto foo = this->template estimate_final_series_size<1u>(retval,f);
-				retval._container().rehash(foo);
-std::cout << "estimated to: " << foo << '\n';
+				if (size1 > 100000u / size2) {
+					const auto n_buckets = this->template estimate_final_series_size<1u>(retval,f);
+					retval._container().rehash(n_buckets);
+std::cout << "estimated to: " << n_buckets << '\n';
+				}
 				this->blocked_multiplication(f,0u,size1,0u,size2);
 				return retval;
 //			}
@@ -610,8 +612,7 @@ std::cout << "estimated to: " << foo << '\n';
 			Series			&m_retval;
 		};
 	private:
-		const Series	&m_s1;
-		const Series	&m_s2;
+		const symbol_set m_ss;
 };
 
 /// Series multiplier specialisation for polynomials with Kronecker monomials.
