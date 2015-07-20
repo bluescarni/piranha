@@ -147,6 +147,15 @@ struct m_functor_0
 	mutable std::set<std::pair<unsigned,unsigned>,p_sorter> m_set;
 };
 
+struct s_functor_0
+{
+	template <typename T>
+	bool operator()(const T &, const T &) const
+	{
+		return false;
+	}
+};
+
 BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 {
 	using pt = p_type<rational>;

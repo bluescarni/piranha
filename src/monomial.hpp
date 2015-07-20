@@ -856,6 +856,19 @@ class monomial: public array_key<T,monomial<T,S>,S>
 			// Now deal with the key.
 			t1.m_key.vector_add(t.m_key,t2.m_key);
 		}
+		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
+		static void multiply2(term<Cf,monomial> &t, const term<Cf,monomial> &t1,
+			const term<Cf,monomial> &t2, const symbol_set &args)
+		{
+			// NOTE: the check on the monomials' size is in vector_add().
+			if(unlikely(t1.m_key.size() != args.size())) {
+				piranha_throw(std::invalid_argument,"invalid size of arguments set");
+			}
+			// Coefficient.
+			cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
+			// Now deal with the key.
+			t1.m_key.vector_add(t.m_key,t2.m_key);
+		}
 };
 
 template <typename T, typename S>

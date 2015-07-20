@@ -42,6 +42,7 @@
 #include <utility>
 #include <vector>
 
+#include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/divisor_series_fwd.hpp"
@@ -526,7 +527,92 @@ struct kronecker_enabler
 		is_kronecker_monomial<key_type>::value;
 };
 
+template <typename Series>
+struct poly_multiplier_enabler
+{
+	PIRANHA_TT_CHECK(is_series,Series);
+	template <typename Key>
+	struct is_kronecker_monomial
+	{
+		static const bool value = false;
+	};
+	template <typename T>
+	struct is_kronecker_monomial<kronecker_monomial<T>>
+	{
+		static const bool value = true;
+	};
+	using key_type = typename Series::term_type::key_type;
+	static const bool value = std::is_base_of<detail::polynomial_tag,Series>::value &&
+		!is_kronecker_monomial<key_type>::value;
+};
+
 }
+
+template <typename Series>
+class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_enabler<Series>::value>::type>:
+	base_series_multiplier<Series>
+{
+		using base = base_series_multiplier<Series>;
+	public:
+		using size_type = typename base::size_type;
+		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2),m_s1(s1),m_s2(s2)
+		{
+			// TODO range checks, for kronecker and monomial with C++ integral types.
+		}
+		// TODO enabler.
+		Series operator()() const
+		{
+			// Do not do anything if one of the two series is empty.
+			if (unlikely(this->m_v1.empty() || this->m_v2.empty())) {
+				// NOTE: requirement is ok, a series must be def-ctible.
+				return Series{};
+			}
+			const size_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
+			piranha_assert(size1 && size2);
+			// Establish the number of threads to use.
+			size_type n_threads = safe_cast<size_type>(thread_pool::use_threads(
+				integer(size1) * size2,integer(settings::get_min_work_per_thread())
+			));
+			piranha_assert(n_threads);
+			// An additional check on n_threads is that its size is not greater than the size of the first series,
+			// as we are using the first operand to split up the work.
+			if (n_threads > size1) {
+				n_threads = size1;
+			}
+			piranha_assert(n_threads >= 1u);
+//			if (likely(n_threads == 1u)) {
+				Series retval;
+				retval.set_symbol_set(m_s1.m_symbol_set);
+				mult_functor f(this->m_v1,this->m_v2,retval);
+				auto foo = this->template estimate_final_series_size<1u>(retval,f);
+				retval._container().rehash(foo);
+std::cout << "estimated to: " << foo << '\n';
+				this->blocked_multiplication(f,0u,size1,0u,size2);
+				return retval;
+//			}
+		}
+	private:
+		struct mult_functor
+		{
+			using term_type = typename Series::term_type;
+			using key_type = typename term_type::key_type;
+			using v_type = std::vector<term_type const *>;
+			explicit mult_functor(const v_type &v1, const v_type &v2, Series &retval):
+				m_v1(v1),m_v2(v2),m_retval(retval) {}
+			void operator()(const size_type &i, const size_type &j) const
+			{
+				key_type::multiply2(m_term,*(m_v1[i]),*(m_v2[j]),m_retval.m_symbol_set);
+				m_retval.insert(m_term);
+			}
+			mutable term_type	m_term;
+			const v_type		&m_v1;
+			const v_type		&m_v2;
+			Series			&m_retval;
+		};
+	private:
+		const Series	&m_s1;
+		const Series	&m_s2;
+};
 
 /// Series multiplier specialisation for polynomials with Kronecker monomials.
 /**

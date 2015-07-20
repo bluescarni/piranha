@@ -118,6 +118,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		using v_ptr = std::vector<typename Series::term_type const *>;
 		/// TODO...
 		using size_type = typename v_ptr::size_type;
+		using bucket_size_type = typename Series::size_type;
 	private:
 		struct no_skip
 		{
@@ -132,6 +133,17 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			{
 				return true;
 			}
+		};
+		// RAII struct to force the clearing of the series used during estimation
+		// in face of exceptions.
+		struct series_clearer
+		{
+			explicit series_clearer(Series &s):m_s(s) {}
+			~series_clearer()
+			{
+				m_s._container().clear();
+			}
+			Series &m_s;
 		};
 	public:
 		/// Constructor.
@@ -254,11 +266,15 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - overflow errors while converting between integer types,
 		 * - the public interface of \p Functor.
 		 */
-		template <typename MultFunctor, unsigned MultArity, typename AcceptFunctor = accept_all>
-		... estimate_final_series_size(Series &tmp, const Functor &mf, const AcceptFunctor &af = accept_all{}) const
+		// TODO: ignore functor
+		template <unsigned MultArity, typename MultFunctor>
+		bucket_size_type estimate_final_series_size(Series &tmp, const MultFunctor &mf) const
 		{
+			// Make sure tmp is cleared in any case.
+			series_clearer sc(tmp);
 			// Local shortcut.
-			constexpr result_size = MultArity;
+			constexpr unsigned result_size = MultArity;
+			static_assert(result_size != 0u,"Invalid multiplication arity in series multiplier.");
 			// Cache these.
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			// If one of the two series is empty, just return 0.
@@ -266,9 +282,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				return 0u;
 			}
 			// NOTE: Hard-coded number of trials = 10.
-			// NOTE: here consider that in case of extremely sparse series with few terms (e.g., next to the lower limit
-			// for which this function is called) this will incur in noticeable overhead, since we will need many term-by-term
-			// before encountering the first duplicate.
+			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
+			// overhead, since we will need many term-by-term before encountering the first duplicate.
 			const auto ntrials = 10u;
 			// NOTE: Hard-coded value for the estimation multiplier.
 			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
@@ -291,7 +306,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Init counter.
 			integer total(0);
 			// Go with the trials.
-			// NOTE: This could be easily parallelised, but not sure if it is worth.
+			// NOTE: This could be easily parallelised, but not sure if it is worth it.
 			for (auto n = 0u; n < ntrials; ++n) {
 				// Randomise.
 				std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
@@ -319,7 +334,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					{
 						piranha_throw(std::overflow_error,"overflow error");
 					}
-					if (retval.size() != count + result_size) {
+					if (tmp.size() != count + result_size) {
 						break;
 					}
 					// Increase cycle variables.
@@ -328,8 +343,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					++it2;
 				}
 				total += count;
-				// Reset retval.
-				retval.m_container.clear();
+				// Reset tmp.
+				tmp._container().clear();
 			}
 			const auto mean = total / ntrials;
 			// Avoid division by zero.
