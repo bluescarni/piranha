@@ -23,6 +23,8 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
+#include <random>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -117,11 +119,18 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// TODO...
 		using size_type = typename v_ptr::size_type;
 	private:
-		struct null_skip
+		struct no_skip
 		{
 			bool operator()(const size_type &, const size_type &) const
 			{
 				return false;
+			}
+		};
+		struct accept_all
+		{
+			bool operator()(const size_type &, const size_type &) const
+			{
+				return true;
 			}
 		};
 	public:
@@ -160,11 +169,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// Deleted move assignment operator.
 		base_series_multiplier &operator=(base_series_multiplier &&) = delete;
 	protected:
-		template <typename MultFunctor, typename SkipFunctor = null_skip>
+		template <typename MultFunctor, typename SkipFunctor = no_skip>
 		void blocked_multiplication(const MultFunctor &mf,
 			const size_type &start1, const size_type &end1,
 			const size_type &start2, const size_type &end2,
-			const SkipFunctor &sf = null_skip{}) const
+			const SkipFunctor &sf = no_skip{}) const
 		{
 			if (unlikely(start1 > end1 || start1 > m_v1.size() || end1 > m_v1.size())) {
 				piranha_throw(std::invalid_argument,"invalid bounds in blocked_multiplication");
@@ -226,6 +235,109 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					}
 					mf(i,j);
 				}
+			}
+		}
+		/// Estimate size of series multiplication.
+		/**
+		 * This method expects a \p Functor type exposing the same inteface as default_functor. The method
+		 * will employ a statistical approach to estimate the size of the output of the series multiplication represented
+		 * by \p f (without actually going through the whole calculation).
+		 *
+		 * If either input series has a null size, zero will be returned.
+		 *
+		 * @param[in] f multiplication functor.
+		 *
+		 * @return the estimated size of the series multiplication represented by \p f.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - memory allocation errors in standard containers,
+		 * - overflow errors while converting between integer types,
+		 * - the public interface of \p Functor.
+		 */
+		template <typename MultFunctor, unsigned MultArity, typename AcceptFunctor = accept_all>
+		... estimate_final_series_size(Series &tmp, const Functor &mf, const AcceptFunctor &af = accept_all{}) const
+		{
+			// Local shortcut.
+			constexpr result_size = MultArity;
+			// Cache these.
+			const size_type size1 = m_v1.size(), size2 = m_v2.size();
+			// If one of the two series is empty, just return 0.
+			if (unlikely(!size1 || !size2)) {
+				return 0u;
+			}
+			// NOTE: Hard-coded number of trials = 10.
+			// NOTE: here consider that in case of extremely sparse series with few terms (e.g., next to the lower limit
+			// for which this function is called) this will incur in noticeable overhead, since we will need many term-by-term
+			// before encountering the first duplicate.
+			const auto ntrials = 10u;
+			// NOTE: Hard-coded value for the estimation multiplier.
+			// NOTE: This value should be tuned for performance/memory usage tradeoffs.
+			const auto multiplier = 2u;
+			// Vectors of indices into m_v1/m_v2.
+			std::vector<size_type> v_idx1, v_idx2;
+			// Try to reserve space in advance.
+			v_idx1.reserve(static_cast<typename std::vector<size_type>::size_type>(size1));
+			v_idx2.reserve(static_cast<typename std::vector<size_type>::size_type>(size2));
+			for (size_type i = 0u; i < size1; ++i) {
+				v_idx1.push_back(i);
+			}
+			for (size_type i = 0u; i < size2; ++i) {
+				v_idx2.push_back(i);
+			}
+			// Maxium number of random multiplications before which a duplicate term must be generated.
+			const size_type max_M = static_cast<size_type>(((integer(size1) * size2) / multiplier).sqrt());
+			// Random number engine.
+			std::mt19937 engine;
+			// Init counter.
+			integer total(0);
+			// Go with the trials.
+			// NOTE: This could be easily parallelised, but not sure if it is worth.
+			for (auto n = 0u; n < ntrials; ++n) {
+				// Randomise.
+				std::shuffle(v_idx1.begin(),v_idx1.end(),engine);
+				std::shuffle(v_idx2.begin(),v_idx2.end(),engine);
+				size_type count = 0u;
+				auto it1 = v_idx1.begin(), it2 = v_idx2.begin();
+				while (count < max_M) {
+					if (it1 == v_idx1.end()) {
+						// Each time we wrap around the first series,
+						// wrap around also the second one and rotate it.
+						it1 = v_idx1.begin();
+						auto middle = v_idx2.end();
+						--middle;
+						std::rotate(v_idx2.begin(),middle,v_idx2.end());
+						it2 = v_idx2.begin();
+					}
+					if (it2 == v_idx2.end()) {
+						it2 = v_idx2.begin();
+					}
+					// Perform term multiplication.
+					mf(*it1,*it2);
+					// Check for unlikely overflow when increasing count.
+					if (unlikely(result_size > std::numeric_limits<size_type>::max() ||
+						count > std::numeric_limits<size_type>::max() - result_size))
+					{
+						piranha_throw(std::overflow_error,"overflow error");
+					}
+					if (retval.size() != count + result_size) {
+						break;
+					}
+					// Increase cycle variables.
+					count += result_size;
+					++it1;
+					++it2;
+				}
+				total += count;
+				// Reset retval.
+				retval.m_container.clear();
+			}
+			const auto mean = total / ntrials;
+			// Avoid division by zero.
+			if (total.sign()) {
+				const integer M = (mean * mean * multiplier * total) / total;
+				return static_cast<bucket_size_type>(M);
+			} else {
+				return static_cast<bucket_size_type>(mean * mean * multiplier);
 			}
 		}
 	protected:
