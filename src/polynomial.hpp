@@ -45,6 +45,7 @@
 #include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/atomic_utils.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -548,6 +549,9 @@ struct poly_multiplier_enabler
 
 }
 
+// TODO check the insertion in mt mode is logically equivalent to series insertion and to kronecker optimised insertion
+// TODO check wrt kronecker multiplication that exactly the same operations are performed, same exception safety, etc.
+// TODO load factor checks need to go.
 template <typename Series>
 class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_enabler<Series>::value>::type>:
 	base_series_multiplier<Series>
@@ -562,6 +566,10 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 		// TODO enabler.
 		Series operator()() const
 		{
+			// Shortcuts.
+			using bucket_size_type = typename Series::size_type;
+			using term_type = typename Series::term_type;
+			using key_type = typename term_type::key_type;
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(this->m_v1.empty() || this->m_v2.empty())) {
 				// NOTE: requirement is ok, a series must be def-ctible.
@@ -569,6 +577,12 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 			}
 			const size_type size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			piranha_assert(size1 && size2);
+			// Error out if the possible size of the output series is too large. This is to protect against
+			// overflows in insertion counts in mt mode.
+			// NOTE: this will have to be changed for Poisson series.
+			if (unlikely(integer(size1) * size2 > std::numeric_limits<bucket_size_type>::max())) {
+				piranha_throw(std::overflow_error,"possible overflow in series size");
+			}
 			// Establish the number of threads to use.
 			size_type n_threads = safe_cast<size_type>(thread_pool::use_threads(
 				integer(size1) * size2,integer(settings::get_min_work_per_thread())
@@ -579,38 +593,100 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 			if (n_threads > size1) {
 				n_threads = size1;
 			}
-			piranha_assert(n_threads >= 1u);
-//			if (likely(n_threads == 1u)) {
-				Series retval;
-				retval.set_symbol_set(m_ss);
-				mult_functor f(this->m_v1,this->m_v2,retval);
-				if (size1 > 100000u / size2) {
-					const auto n_buckets = this->template estimate_final_series_size<1u>(retval,f);
-					retval._container().rehash(n_buckets);
-std::cout << "estimated to: " << n_buckets << '\n';
-				}
-				this->blocked_multiplication(f,0u,size1,0u,size2);
-				return retval;
-//			}
-		}
-	private:
-		struct mult_functor
-		{
-			using term_type = typename Series::term_type;
-			using key_type = typename term_type::key_type;
-			using v_type = std::vector<term_type const *>;
-			explicit mult_functor(const v_type &v1, const v_type &v2, Series &retval):
-				m_v1(v1),m_v2(v2),m_retval(retval) {}
-			void operator()(const size_type &i, const size_type &j) const
-			{
-				key_type::multiply2(m_term,*(m_v1[i]),*(m_v2[j]),m_retval.m_symbol_set);
-				m_retval.insert(m_term);
+			piranha_assert(n_threads > 0u);
+			// Common setup for st/mt.
+			Series retval;
+			retval.set_symbol_set(m_ss);
+			// Temporary term used for storing the result of the multipication
+			// in the functor below.
+			term_type tmp_term;
+			// This is the functor used in the single-thread implementation and for estimation (a "plain" functor).
+			auto pf = [&tmp_term,this,&retval](const size_type &i, const size_type &j) {
+				key_type::multiply2(tmp_term,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
+				retval.insert(tmp_term);
+			};
+			// Estimate and rehash for multithread or when the multiplication size is large enough.
+			// NOTE: tuning param.
+			if (n_threads != 1u || size1 > 100000u / size2) {
+				const auto est = this->template estimate_final_series_size<1u>(retval,pf);
+				const auto n_buckets = safe_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
+						/ retval._container().max_load_factor()));
+				retval._container().rehash(n_buckets);
 			}
-			mutable term_type	m_term;
-			const v_type		&m_v1;
-			const v_type		&m_v2;
-			Series			&m_retval;
-		};
+			if (n_threads == 1u) {
+				// Single-thread case.
+				this->blocked_multiplication(pf,0u,size1,0u,size2);
+				return retval;
+			}
+			// Multi-threaded case.
+			// Init the vector of spinlocks.
+			detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
+			// Init the future list.
+			future_list<std::future<void>> f_list;
+			// Thread block size.
+			const auto block_size = size1 / n_threads;
+			piranha_assert(block_size > 0u);
+			// Number of total insertions in the table.
+			std::atomic<bucket_size_type> tot_ins(0u);
+			try {
+				for (size_type i = 0u; i < n_threads; ++i) {
+					// Thread functor.
+					auto tf = [i,this,block_size,n_threads,&sl_array,&retval,&tot_ins]()
+					{
+						// Total number of insertions performed by this thread. This is protected from
+						// overflow by the check up top.
+						bucket_size_type insertion_count = 0u;
+						// Used to store the result of term multiplication.
+						term_type tmp_term;
+						// End of retval container (thread-safe).
+						const auto c_end = retval._container().end();
+						// Block functor,
+						auto f = [&c_end,&tmp_term,this,&retval,&sl_array,&insertion_count] (const size_type &i, const size_type &j)
+						{
+							// Run the term multiplication.
+							key_type::multiply2(tmp_term,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
+							// Don't do anything if ignorable.
+							if (unlikely(tmp_term.is_ignorable(retval.get_symbol_set()))) {
+								return;
+							}
+							// Try to locate the term into retval.
+							auto bucket_idx = retval._container()._bucket(tmp_term);
+							// Lock the bucket.
+							detail::atomic_lock_guard alg(sl_array[static_cast<std::size_t>(bucket_idx)]);
+							const auto it = retval._container()._find(tmp_term,bucket_idx);
+							if (it == c_end) {
+								retval._container()._unique_insert(tmp_term,bucket_idx);
+								++insertion_count;
+							} else {
+								it->m_cf += tmp_term.m_cf;
+								if (unlikely(it->is_ignorable(retval.get_symbol_set()))) {
+									retval._container()._erase(it);
+									piranha_assert(insertion_count > 0u);
+									--insertion_count;
+								}
+							}
+						};
+						// Thread block limit.
+						const auto e1 = (i == n_threads - 1u) ? this->m_v1.size() :
+							static_cast<size_type>((i + 1u) * block_size);
+						this->blocked_multiplication(f,static_cast<size_type>(i * block_size),e1,0u,this->m_v2.size());
+						// Final update of insertion count.
+						tot_ins += insertion_count;
+					};
+					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(i),tf));
+				}
+				f_list.wait_all();
+				f_list.get_all();
+			} catch (...) {
+				f_list.wait_all();
+				// Clean up retval as it might be in an inconsistent state.
+				retval._container().clear();
+				throw;
+			}
+			// Final update of the number of elements.
+			retval.m_container._update_size(tot_ins.load());
+			return retval;
+		}
 	private:
 		const symbol_set m_ss;
 };

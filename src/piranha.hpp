@@ -166,6 +166,7 @@
  * with recursive polys in the same fashion. This should probably be a bullet point if we ever decide to support recrusive polynomials as first-class citizens.
  * \todo disable test building by default, update copyright headers and relicense.
  * \todo the polynomial specialisation of series_multiplier needs type checking.
+ * \todo the tuning:: class should probably be rolled into settings.
  */
 namespace piranha
 {

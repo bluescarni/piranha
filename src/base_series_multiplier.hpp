@@ -127,11 +127,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				return false;
 			}
 		};
-		struct accept_all
+		struct no_filter
 		{
-			bool operator()(const size_type &, const size_type &) const
+			unsigned operator()(const size_type &, const size_type &) const
 			{
-				return true;
+				return 0u;
 			}
 		};
 		// RAII struct to force the clearing of the series used during estimation
@@ -267,6 +267,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - the public interface of \p Functor.
 		 */
 		// TODO: ignore functor
+		// TODO: document exception behaviour.
 		template <unsigned MultArity, typename MultFunctor>
 		bucket_size_type estimate_final_series_size(Series &tmp, const MultFunctor &mf) const
 		{
