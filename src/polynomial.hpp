@@ -615,13 +615,9 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 				// Check if we want to use the parallel memory set.
 				// NOTE: it is important here that we use the same n_threads for multiplication and memset as
 				// we tie together pinned threads with potentially different NUMA regions.
-				const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
+				const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ?
+					static_cast<unsigned>(n_threads) : 1u;
 				retval._container().rehash(n_buckets,n_threads_rehash);
-			}
-			// Always make sure there is at least 1 bucket, so we can use the low level interface
-			// in hash_set safely.
-			if (retval._container().bucket_count() == 0u) {
-				retval._container().rehash(1u);
 			}
 			if (n_threads == 1u) {
 				// Single-thread case.
@@ -629,6 +625,11 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 				return retval;
 			}
 			// Multi-threaded case.
+			// Always make sure there is at least 1 bucket, so we can use the low level interface
+			// in hash_set safely.
+			if (retval._container().bucket_count() == 0u) {
+				retval._container().rehash(1u);
+			}
 			// Init the vector of spinlocks.
 			detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
 			// Init the future list.
