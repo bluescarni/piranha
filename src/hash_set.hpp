@@ -91,7 +91,6 @@ namespace piranha
  /* Some improvement NOTEs:
  * - tests for low-level methods
  * - better increase_size with recycling of dynamically-allocated nodes
- * - see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
  * - see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
  * implementation.
  * - memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
@@ -105,9 +104,6 @@ namespace piranha
  * - check again about the mod implementation,
  * - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
  *   are we still acessing potentially global variables?
- * - in the dtor checks, remember to change the load_factor() logic if we make max
- *   load factor a soft limit (i.e., it could go past the limit while using
- *   the low level interface in poly multiplication).
  * - maybe a bit more enabling for ctor and other template methods, not really essential though.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
@@ -597,10 +593,6 @@ class hash_set
 			count = 0u;
 			for (auto it = begin(); it != end(); ++it, ++count) {}
 			if (count != m_n_elements) {
-				return false;
-			}
-			// Check load factor is not exceeded.
-			if (load_factor() > max_load_factor()) {
 				return false;
 			}
 			return true;

@@ -1594,13 +1594,6 @@ class series_multiplier<Series,typename std::enable_if<detail::kronecker_enabler
 					throw;
 				}
 			}
-			// Finally, cope with excessive load factor.
-			if (unlikely(retval.m_container.load_factor() > retval.m_container.max_load_factor())) {
-				retval.m_container.rehash(
-					boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(retval.m_container.size()) / retval.m_container.max_load_factor())),
-					n_threads
-				);
-			}
 		}
 		// Functor for use in sparse multiplication.
 		template <bool FastMode = false>
