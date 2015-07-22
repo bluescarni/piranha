@@ -549,9 +549,8 @@ struct poly_multiplier_enabler
 
 }
 
-// TODO check the insertion in mt mode is logically equivalent to series insertion and to kronecker optimised insertion
-// TODO check wrt kronecker multiplication that exactly the same operations are performed, same exception safety, etc.
 // TODO load factor checks need to go.
+// TODO move-insertion of series coefficients for new terms in the plain multiplication.
 template <typename Series>
 class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_enabler<Series>::value>::type>:
 	base_series_multiplier<Series>
@@ -609,9 +608,20 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 			// NOTE: tuning param.
 			if (n_threads != 1u || size1 > 100000u / size2) {
 				const auto est = this->template estimate_final_series_size<1u>(retval,pf);
-				const auto n_buckets = safe_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
+				// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
+				// and in this case the behaviour of numeric_cast is appropriate.
+				const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
 						/ retval._container().max_load_factor()));
-				retval._container().rehash(n_buckets);
+				// Check if we want to use the parallel memory set.
+				// NOTE: it is important here that we use the same n_threads for multiplication and memset as
+				// we tie together pinned threads with potentially different NUMA regions.
+				const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
+				retval._container().rehash(n_buckets,n_threads_rehash);
+			}
+			// Always make sure there is at least 1 bucket, so we can use the low level interface
+			// in hash_set safely.
+			if (retval._container().bucket_count() == 0u) {
+				retval._container().rehash(1u);
 			}
 			if (n_threads == 1u) {
 				// Single-thread case.
@@ -645,6 +655,8 @@ class series_multiplier<Series,typename std::enable_if<detail::poly_multiplier_e
 						{
 							// Run the term multiplication.
 							key_type::multiply2(tmp_term,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
+							// NOTE: no need to check for compatibility, as we know all terms involved
+							// in the multiplication are compatible and produce compatible terms.
 							// Don't do anything if ignorable.
 							if (unlikely(tmp_term.is_ignorable(retval.get_symbol_set()))) {
 								return;
