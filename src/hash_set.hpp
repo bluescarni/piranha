@@ -97,13 +97,12 @@ namespace piranha
  * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
  * - use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
  * in static_vector for instance.
- * - store functors in a tuple to get advantage of EBCO.
  * - inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
  * when iterating over the series with the fat iterator).
  * - optimisation for the begin() iterator,
  * - check again about the mod implementation,
  * - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
- *   are we still acessing potentially global variables?
+ *   are we still accessing potentially global variables?
  * - maybe a bit more enabling for ctor and other template methods, not really essential though.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
