@@ -81,9 +81,6 @@ namespace piranha
  */
 /*
  * \todo we need a user-configurable parameter to determine when to use multiple threads.
- * \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
- * \todo think about the possibility of caching optimizations. For instance: merge the arguments of series coefficients, avoiding n ** 2 merge
- * operations during multiplication.
  * \todo possibly we could adopt some of the optimizations adopted, e.g., in the Kronecker multiplier. For instance, have a fast mode for the multiplier
  * to kick in when doing the full computation in order to avoid some branching in the insertion routines. The code though is already quite complex,
  * so better be very sure it is worth before embarking in this.
