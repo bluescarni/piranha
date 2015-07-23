@@ -42,10 +42,8 @@
 #include <utility>
 #include <vector>
 
-#include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
-#include "detail/atomic_utils.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
