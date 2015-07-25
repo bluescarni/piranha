@@ -163,12 +163,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		// The purpose of this helper is to move in a coefficient series during insertion. For series,
 		// we know that moves leave the series in a valid state, and series multiplications do not benefit
 		// from an already-constructed destination - hence it is convenient to move them rather than copy.
-		template <typename Term, typename std::enable_if<!is_series<typename T::cf_type>::value,int>::type = 0>
+		template <typename Term, typename std::enable_if<!is_series<typename Term::cf_type>::value,int>::type = 0>
 		static Term &term_insertion(Term &t)
 		{
 			return t;
 		}
-		template <typename Term, typename std::enable_if<is_series<typename T::cf_type>::value,int>::type = 0>
+		template <typename Term, typename std::enable_if<is_series<typename Term::cf_type>::value,int>::type = 0>
 		static Term term_insertion(Term &t)
 		{
 			return Term{std::move(t.m_cf),t.m_key};
@@ -383,9 +383,10 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		{
 			// Shortcuts.
 			using term_type = typename Series::term_type;
+			using cf_type = typename term_type::cf_type;
 			using key_type = typename term_type::key_type;
 			constexpr std::size_t m_arity = key_type::multiply_arity;
-			PIRANHA_TT_CHECK(key_type,key_is_multipliable);
+			PIRANHA_TT_CHECK(key_is_multipliable,cf_type,key_type);
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
 				// NOTE: requirement is ok, a series must be def-ctible.
@@ -414,7 +415,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			retval.set_symbol_set(m_ss);
 			// Temporary storage for the result of the multipication
 			// in the functor below.
-			std::array<m_arity,term_type> tmp_t;
+			std::array<term_type,m_arity> tmp_t;
 			// This is the functor used in the single-thread implementation and for estimation (a "plain" functor).
 			auto pf = [&tmp_t,this,&retval](const size_type &i, const size_type &j) {
 				key_type::multiply(tmp_t,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
@@ -466,7 +467,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						// overflow by the check up top.
 						bucket_size_type insertion_count = 0u, deletion_count = 0u;
 						// Used to store the result of term multiplication.
-						std::array<key_type::multiply_arity,term_type> tmp_t;
+						std::array<term_type,key_type::multiply_arity> tmp_t;
 						// End of retval container (thread-safe).
 						const auto c_end = retval._container().end();
 						// Block functor,
