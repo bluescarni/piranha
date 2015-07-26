@@ -525,7 +525,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			}
 			// Final update of the number of elements.
 			piranha_assert(tot_ins.load() >= tot_del.load());
-			retval.m_container._update_size(static_cast<bucket_size_type>(tot_ins.load() - tot_del.load()));
+			retval._container()._update_size(static_cast<bucket_size_type>(tot_ins.load() - tot_del.load()));
 			return retval;
 		}
 	protected:

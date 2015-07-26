@@ -560,8 +560,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		// Key type getter.
 		template <typename T>
 		using key_t = typename T::term_type::key_type;
-		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<key_t<T>>::value &&
-			!detail::is_monomial<key_t<T>>::value,int>::type = 0>
+		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
+			std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
 		void check_bounds() const {}
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<key_t<T>>::value,int>::type = 0>
 		void check_bounds() const
@@ -679,6 +679,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			return execute();
 		}
 	private:
+		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
+		Series execute() const
+		{
+			return this->plain_multiplication();
+		}
+		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
 		{
 			using bucket_size_type = typename base::bucket_size_type;
