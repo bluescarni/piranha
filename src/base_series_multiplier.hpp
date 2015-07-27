@@ -406,8 +406,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				// First perform the multiplication.
 				key_type::multiply(m_tmp_t,*m_v1[i],*m_v2[j],m_retval.get_symbol_set());
 				for (std::size_t n = 0u; n < m_arity; ++n) {
+					auto &tmp_term = m_tmp_t[n];
 					if (FastMode) {
-						auto &tmp_term = m_tmp_t[n];
 						auto &container = m_retval._container();
 						// Try to locate the term into retval.
 						auto bucket_idx = container._bucket(tmp_term);
@@ -418,7 +418,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 							it->m_cf += tmp_term.m_cf;
 						}
 					} else {
-						m_retval.insert(term_insertion(m_tmp_t[n]));
+						m_retval.insert(term_insertion(tmp_term));
 					}
 				}
 			}
