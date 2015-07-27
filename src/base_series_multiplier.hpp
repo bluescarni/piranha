@@ -296,6 +296,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 */
 		// TODO: ignore functor
 		// TODO: document exception behaviour.
+		// TODO: document it always returns 1 at least.
 		template <std::size_t MultArity, typename MultFunctor>
 		bucket_size_type estimate_final_series_size(Series &tmp, const MultFunctor &mf) const
 		{
@@ -308,7 +309,10 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			const size_type size1 = m_v1.size(), size2 = m_v2.size();
 			// If one of the two series is empty, just return 0.
 			if (unlikely(!size1 || !size2)) {
-				return 0u;
+				return 1u;
+			}
+			if (size1 == 1u || size2 == 1u) {
+				return static_cast<bucket_size_type>(integer(size1) * size2 * result_size);
 			}
 			// NOTE: Hard-coded number of trials = 10.
 			// NOTE: here consider that in case of extremely sparse series with few terms this will incur in noticeable
@@ -376,7 +380,67 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				tmp._container().clear();
 			}
 			const auto mean = total / ntrials;
-			return static_cast<bucket_size_type>(mean * mean * multiplier);
+			auto retval = mean * mean * multiplier;
+			// Return always at least one.
+			if (retval.sign() == 0) {
+				return 1u;
+			} else {
+				return static_cast<bucket_size_type>(retval);
+			}
+		}
+		template <bool FastMode>
+		struct plain_multiplier
+		{
+			using term_type = typename Series::term_type;
+			using key_type = typename term_type::key_type;
+			using it_type = decltype(std::declval<Series &>()._container().end());
+			static constexpr std::size_t m_arity = key_type::multiply_arity;
+			explicit plain_multiplier(const std::vector<term_type const *>	&v1, const std::vector<term_type const *> &v2,
+				Series &retval):m_v1(v1),m_v2(v2),m_retval(retval),m_c_end(retval._container().end())
+			{}
+			void operator()(const size_type &i, const size_type &j) const
+			{
+				// First perform the multiplication.
+				key_type::multiply(m_tmp_t,*m_v1[i],*m_v2[j],m_retval.get_symbol_set());
+				for (std::size_t n = 0u; n < m_arity; ++n) {
+					if (FastMode) {
+						auto &tmp_term = m_tmp_t[n];
+						auto &container = m_retval._container();
+						// Try to locate the term into retval.
+						auto bucket_idx = container._bucket(tmp_term);
+						const auto it = container._find(tmp_term,bucket_idx);
+						if (it == m_c_end) {
+							container._unique_insert(term_insertion(tmp_term),bucket_idx);
+						} else {
+							it->m_cf += tmp_term.m_cf;
+						}
+					} else {
+						m_retval.insert(term_insertion(m_tmp_t[n]));
+					}
+				}
+			}
+			mutable std::array<term_type,m_arity>	m_tmp_t;
+			const std::vector<term_type const *>	&m_v1;
+			const std::vector<term_type const *>	&m_v2;
+			Series					&m_retval;
+			const it_type				m_c_end;
+		};
+		static void sanitize_series(Series &retval)
+		{
+			auto &container = retval._container();
+			const auto &args = retval.get_symbol_set();
+			const auto it_end = container.end();
+			for (auto it = container.begin(); it != it_end;) {
+				if (unlikely(!it->is_compatible(args))) {
+					piranha_throw(std::invalid_argument,"incompatible term");
+				}
+				container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
+				if (unlikely(it->is_ignorable(args))) {
+					it = container.erase(it);
+				} else {
+					++it;
+				}
+			}
 		}
 		// TODO enabler.
 		Series plain_multiplication() const
@@ -413,42 +477,33 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Common setup for st/mt.
 			Series retval;
 			retval.set_symbol_set(m_ss);
-			// Temporary storage for the result of the multipication
-			// in the functor below.
-			std::array<term_type,m_arity> tmp_t;
-			// This is the functor used in the single-thread implementation and for estimation (a "plain" functor).
-			auto pf = [&tmp_t,this,&retval](const size_type &i, const size_type &j) {
-				key_type::multiply(tmp_t,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
-				for (std::size_t i = 0u; i < key_type::multiply_arity; ++i) {
-					retval.insert(term_insertion(tmp_t[i]));
-				}
-			};
-			// Estimate and rehash for multithread or when the multiplication size is large enough.
-			// NOTE: tuning param.
-			if (n_threads != 1u || size1 > 100000u / size2) {
-				const auto est = estimate_final_series_size<m_arity>(retval,pf);
-				// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
-				// and in this case the behaviour of numeric_cast is appropriate.
-				const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
-						/ retval._container().max_load_factor()));
-				// Check if we want to use the parallel memory set.
-				// NOTE: it is important here that we use the same n_threads for multiplication and memset as
-				// we tie together pinned threads with potentially different NUMA regions.
-				const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ?
-					static_cast<unsigned>(n_threads) : 1u;
-				retval._container().rehash(n_buckets,n_threads_rehash);
-			}
+			// Estimate and rehash.
+			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(m_v1,m_v2,retval));
+std::cout << "estimate: " << est << '\n';
+			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
+			// and in this case the behaviour of numeric_cast is appropriate.
+			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
+					/ retval._container().max_load_factor()));
+			piranha_assert(n_buckets > 0u);
+			// Check if we want to use the parallel memory set.
+			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
+			// we tie together pinned threads with potentially different NUMA regions.
+			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ?
+				static_cast<unsigned>(n_threads) : 1u;
+			retval._container().rehash(n_buckets,n_threads_rehash);
 			if (n_threads == 1u) {
-				// Single-thread case.
-				blocked_multiplication(pf,0u,size1,0u,size2);
-				return retval;
+				try {
+					// Single-thread case.
+					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2);
+					sanitize_series(retval);
+std::cout << retval._container().bucket_count() << ',' << retval._container().size() << '\n';
+					return retval;
+				} catch (...) {
+					retval._container().clear();
+					throw;
+				}
 			}
 			// Multi-threaded case.
-			// Always make sure there is at least 1 bucket, so we can use the low level interface
-			// in hash_set safely.
-			if (retval._container().bucket_count() == 0u) {
-				retval._container().rehash(1u);
-			}
 			// Init the vector of spinlocks.
 			detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
 			// Init the future list.
@@ -456,52 +511,32 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Thread block size.
 			const auto block_size = size1 / n_threads;
 			piranha_assert(block_size > 0u);
-			// Number of total insertions and deletions in the table.
-			std::atomic<bucket_size_type> tot_ins(0u), tot_del(0u);
 			try {
 				for (size_type i = 0u; i < n_threads; ++i) {
 					// Thread functor.
-					auto tf = [i,this,block_size,n_threads,&sl_array,&retval,&tot_ins,&tot_del]()
+					auto tf = [i,this,block_size,n_threads,&sl_array,&retval]()
 					{
-						// Total number of insertions and deletions performed by this thread. These are protected from
-						// overflow by the check up top.
-						bucket_size_type insertion_count = 0u, deletion_count = 0u;
 						// Used to store the result of term multiplication.
 						std::array<term_type,key_type::multiply_arity> tmp_t;
 						// End of retval container (thread-safe).
 						const auto c_end = retval._container().end();
 						// Block functor,
-						auto f = [&c_end,&tmp_t,this,&retval,&sl_array,&insertion_count,&deletion_count] (const size_type &i, const size_type &j)
+						auto f = [&c_end,&tmp_t,this,&retval,&sl_array] (const size_type &i, const size_type &j)
 						{
 							// Run the term multiplication.
 							key_type::multiply(tmp_t,*(this->m_v1[i]),*(this->m_v2[j]),retval.get_symbol_set());
 							for (std::size_t n = 0u; n < key_type::multiply_arity; ++n) {
+								auto &container = retval._container();
 								auto &tmp_term = tmp_t[n];
-								// Don't do anything if ignorable.
-								if (unlikely(tmp_term.is_ignorable(retval.get_symbol_set()))) {
-									continue;
-								}
-								// Check for compatibility.
-								if (unlikely(!tmp_term.is_compatible(retval.get_symbol_set()))) {
-									piranha_throw(std::invalid_argument,
-										"incompatible term generated during series multiplication");
-								}
 								// Try to locate the term into retval.
-								auto bucket_idx = retval._container()._bucket(tmp_term);
+								auto bucket_idx = container._bucket(tmp_term);
 								// Lock the bucket.
 								detail::atomic_lock_guard alg(sl_array[static_cast<std::size_t>(bucket_idx)]);
-								const auto it = retval._container()._find(tmp_term,bucket_idx);
+								const auto it = container._find(tmp_term,bucket_idx);
 								if (it == c_end) {
-									retval._container()._unique_insert(term_insertion(tmp_term),bucket_idx);
-									piranha_assert(insertion_count < std::numeric_limits<bucket_size_type>::max());
-									++insertion_count;
+									container._unique_insert(term_insertion(tmp_term),bucket_idx);
 								} else {
 									it->m_cf += tmp_term.m_cf;
-									if (unlikely(it->is_ignorable(retval.get_symbol_set()))) {
-										retval._container()._erase(it);
-										piranha_assert(insertion_count < std::numeric_limits<bucket_size_type>::max());
-										++deletion_count;
-									}
 								}
 							}
 						};
@@ -509,9 +544,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						const auto e1 = (i == n_threads - 1u) ? this->m_v1.size() :
 							static_cast<size_type>((i + 1u) * block_size);
 						this->blocked_multiplication(f,static_cast<size_type>(i * block_size),e1,0u,this->m_v2.size());
-						// Final update of insertion and deletion counts.
-						tot_ins += insertion_count;
-						tot_del += deletion_count;
 					};
 					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(i),tf));
 				}
@@ -523,9 +555,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				retval._container().clear();
 				throw;
 			}
-			// Final update of the number of elements.
-			piranha_assert(tot_ins.load() >= tot_del.load());
-			retval._container()._update_size(static_cast<bucket_size_type>(tot_ins.load() - tot_del.load()));
+			try {
+				sanitize_series(retval);
+			} catch (...) {
+				retval._container().clear();
+				throw;
+			}
 			return retval;
 		}
 	protected:
