@@ -798,33 +798,59 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// - the first term index in s2,
 			// - the last term index in s2.
 			using task_type = std::tuple<size_type,size_type,size_type>;
+			// Cache a few quantities.
+			auto &v1 = this->m_v1;
+			auto &v2 = this->m_v2;
+			auto &container = retval._container();
 			// A convenience functor to compute the destination bucket
 			// of a term into retval.
-			auto r_bucket = [&retval](term_type const *p) {
-				return retval._container()._bucket_from_hash(p->hash());
+			auto r_bucket = [&container](term_type const *p) {
+				return container._bucket_from_hash(p->hash());
 			};
 			// Sort input terms according to bucket positions in retval.
-			auto term_cmp = [&retval,&r_bucket](term_type const *p1, term_type const *p2)
+			auto term_cmp = [&r_bucket](term_type const *p1, term_type const *p2)
 			{
 				return r_bucket(p1) < r_bucket(p2);
 			};
-			std::stable_sort(this->m_v1.begin(),this->m_v1.end(),term_cmp);
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),term_cmp);
+			std::stable_sort(v1.begin(),v1.end(),term_cmp);
+			std::stable_sort(v2.begin(),v2.end(),term_cmp);
 			// Task comparator. It will compare the bucket index of the terms resulting from
 			// the multiplication of the term in the first series by the first term in the block
 			// of the second series. This is essentially the first bucket index of retval in which the task
 			// will write.
 			// NOTE: this is guaranteed not to overflow as the max bucket size in the hash set is 2**(nbits-1),
 			// and the max value of bucket_size_type is 2**nbits - 1.
-			auto task_cmp = [&r_bucket,this](const task_type &t1, const task_type &t2) {
-				return r_bucket(this->m_v1[std::get<0u>(t1)]) + r_bucket(this->m_v2[std::get<1u>(t1)]) <
-					r_bucket(this->m_v1[std::get<0u>(t2)]) + r_bucket(this->m_v2[std::get<1u>(t2)]);
+			auto task_cmp = [&r_bucket,&v1,&v2](const task_type &t1, const task_type &t2) {
+				return r_bucket(v1[std::get<0u>(t1)]) + r_bucket(v2[std::get<1u>(t1)]) <
+					r_bucket(v1[std::get<0u>(t2)]) + r_bucket(v2[std::get<1u>(t2)]);
 			};
+			// Task block size.
+			const size_type block_size = boost::numeric_cast<size_type>(tuning::get_multiplication_block_size());
 			if (n_threads == 1u) {
 				try {
 					// Single threaded case.
-					sparse_functor<true> mf{this->m_v1,this->m_v2,retval};
-					this->blocked_multiplication(mf,0u,this->m_v1.size(),0u,this->m_v2.size());
+					// Cache a few quantities.
+					const auto size1 = v1.size();
+					const auto size2 = v2.size();
+					std::vector<task_type> tasks;
+					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
+						size_type start = 0u, end = size2;
+						while (static_cast<size_type>(end - start) > block_size) {
+							tasks.emplace_back(i,start,static_cast<size_type>(start + block_size));
+							start = static_cast<size_type>(start + block_size);
+						}
+						if (end != start) {
+							tasks.emplace_back(i,start,end);
+						}
+					}
+					std::sort(tasks.begin(),tasks.end(),task_cmp);
+					sparse_functor<true> mf{v1,v2,retval};
+					for (auto it = tasks.begin(); it != tasks.end(); ++it) {
+						const size_type start = std::get<1u>(*it), end = std::get<2u>(*it), i = std::get<0u>(*it);
+						for (size_type j = start; j < end; ++j) {
+							mf(i,j);
+						}
+					}
 					this->sanitize_series(retval,1u);
 				} catch (...) {
 					retval._container().clear();
