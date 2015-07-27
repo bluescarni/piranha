@@ -779,6 +779,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					// Cache a few quantities.
 					const auto size1 = v1.size();
 					const auto size2 = v2.size();
+					// Create the vector of tasks.
 					std::vector<task_type> tasks;
 					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
 						size_type start = 0u, end = size2;
@@ -790,9 +791,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 							tasks.emplace_back(i,start,end);
 						}
 					}
+					// Sort the tasks.
 					std::stable_sort(tasks.begin(),tasks.end(),task_cmp);
+					// Temporary caching term used in term-by-term multiplications.
 					term_type tmp_term;
+					// End of the container, always the same value and thread-safe.
 					const auto it_end = container.end();
+					// Iterate over the tasks and run the multiplication.
 					for (auto it = tasks.begin(); it != tasks.end(); ++it) {
 						term_type const *t1 = v1[std::get<0u>(*it)];
 						term_type const **start2 = &(v2[std::get<1u>(*it)]), **end2 = &(v2[std::get<2u>(*it)]);
@@ -800,6 +805,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 						const auto &cf1 = t1->m_cf;
 						const int_type key1 = t1->m_key.get_int();
 						for (; start2 != end2; ++start2) {
+							// Const ref to the current term in the second series.
 							const auto &cur = **start2;
 							// Add the keys.
 							tmp_term.m_key.set_int(static_cast<int_type>(key1 + cur.m_key.get_int()));
