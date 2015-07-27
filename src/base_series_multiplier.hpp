@@ -23,14 +23,18 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <boost/numeric/conversion/cast.hpp>
+#include <boost/timer/timer.hpp>
 #include <cmath>
 #include <cstddef>
 #include <future>
 #include <iterator>
 #include <limits>
+#include <mutex>
 #include <random>
 #include <stdexcept>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -425,22 +429,99 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			Series					&m_retval;
 			const it_type				m_c_end;
 		};
-		static void sanitize_series(Series &retval)
+		static void sanitize_series(Series &retval, unsigned n_threads)
 		{
+boost::timer::auto_cpu_timer t;
+			using term_type = typename Series::term_type;
+			if (unlikely(n_threads == 0u)) {
+				piranha_throw(std::invalid_argument,"invalid number of threads");
+			}
 			auto &container = retval._container();
 			const auto &args = retval.get_symbol_set();
-			const auto it_end = container.end();
-			for (auto it = container.begin(); it != it_end;) {
-				if (unlikely(!it->is_compatible(args))) {
-					piranha_throw(std::invalid_argument,"incompatible term");
+			// Single-thread implementation.
+			if (n_threads == 1u) {
+				const auto it_end = container.end();
+				for (auto it = container.begin(); it != it_end;) {
+					if (unlikely(!it->is_compatible(args))) {
+						piranha_throw(std::invalid_argument,"incompatible term");
+					}
+					if (unlikely(container.size() == std::numeric_limits<bucket_size_type>::max())) {
+						piranha_throw(std::overflow_error,"overflow error in the number of terms of a series");
+					}
+					// First update the size, it will be scaled back in the erase() method if necessary.
+					container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
+					if (unlikely(it->is_ignorable(args))) {
+						it = container.erase(it);
+					} else {
+						++it;
+					}
 				}
-				container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
-				if (unlikely(it->is_ignorable(args))) {
-					it = container.erase(it);
-				} else {
-					++it;
-				}
+				return;
 			}
+			// Multi-thread implementation.
+			const auto b_count = container.bucket_count();
+			piranha_assert(b_count);
+			// Adjust the number of threads if they are more than the bucket count.
+			const unsigned nt = (n_threads <= b_count) ? n_threads : static_cast<unsigned>(b_count);
+			std::mutex m;
+			integer global_count(0);
+			auto eraser = [b_count,&container,&m,&args,&global_count](const bucket_size_type &start, const bucket_size_type &end) {
+				piranha_assert(start < end && end <= b_count);
+				(void)b_count;
+				bucket_size_type count = 0u;
+				std::vector<term_type> term_list;
+				// Examine and count the terms bucket-by-bucket.
+				for (bucket_size_type i = start; i != end; ++i) {
+					term_list.clear();
+					const auto &bl = container._get_bucket_list(i);
+					const auto it_f = bl.end();
+					for (auto it = bl.begin(); it != it_f; ++it) {
+						// Check first for compatibility.
+						if (unlikely(!it->is_compatible(args))) {
+							piranha_throw(std::invalid_argument,"incompatible term");
+						}
+						// Check for ignorability.
+						if (unlikely(it->is_ignorable(args))) {
+							term_list.push_back(*it);
+						}
+						// Update the count of terms.
+						if (unlikely(count == std::numeric_limits<bucket_size_type>::max())) {
+							piranha_throw(std::overflow_error,"overflow error in the number of terms of a series");
+						}
+						count = static_cast<bucket_size_type>(count + 1u);
+					}
+					for (auto it = term_list.begin(); it != term_list.end(); ++it) {
+						// NOTE: must use _erase to avoid concurrent modifications
+						// to the number of elements in the table.
+						container._erase(container._find(*it,i));
+						// Account for the erased term.
+						piranha_assert(count > 0u);
+						count = static_cast<bucket_size_type>(count - 1u);
+					}
+				}
+				// Update the global count.
+				std::lock_guard<std::mutex> lock(m);
+				global_count += count;
+			};
+			future_list<decltype(thread_pool::enqueue(0u,eraser,bucket_size_type(),bucket_size_type()))> f_list;
+			try {
+				for (unsigned i = 0u; i < nt; ++i) {
+					const auto start = static_cast<bucket_size_type>((b_count / nt) * i),
+						end = static_cast<bucket_size_type>((i == nt - 1u) ? b_count : (b_count / nt) * (i + 1u));
+					f_list.push_back(thread_pool::enqueue(i,eraser,start,end));
+				}
+				// First let's wait for everything to finish.
+				f_list.wait_all();
+				// Then, let's handle the exceptions.
+				f_list.get_all();
+			} catch (...) {
+				f_list.wait_all();
+				// Clean up and re-throw.
+				container.clear();
+				throw;
+			}
+			// Final update of the total count.
+			container._update_size(static_cast<bucket_size_type>(global_count));
 		}
 		// TODO enabler.
 		Series plain_multiplication() const
@@ -495,7 +576,7 @@ std::cout << "estimate: " << est << '\n';
 				try {
 					// Single-thread case.
 					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2);
-					sanitize_series(retval);
+					sanitize_series(retval,n_threads);
 std::cout << retval._container().bucket_count() << ',' << retval._container().size() << '\n';
 					return retval;
 				} catch (...) {
@@ -556,7 +637,7 @@ std::cout << retval._container().bucket_count() << ',' << retval._container().si
 				throw;
 			}
 			try {
-				sanitize_series(retval);
+				sanitize_series(retval,n_threads);
 			} catch (...) {
 				retval._container().clear();
 				throw;
