@@ -25,7 +25,6 @@
 #include <array>
 #include <atomic>
 #include <boost/numeric/conversion/cast.hpp>
-#include <boost/timer/timer.hpp>
 #include <cmath>
 #include <cstddef>
 #include <future>
@@ -431,7 +430,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		};
 		static void sanitize_series(Series &retval, unsigned n_threads)
 		{
-boost::timer::auto_cpu_timer t;
 			using term_type = typename Series::term_type;
 			if (unlikely(n_threads == 0u)) {
 				piranha_throw(std::invalid_argument,"invalid number of threads");
