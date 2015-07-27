@@ -711,14 +711,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
-			// Use the sparse functor for the estimation.
-			const auto estimate = this->template estimate_final_series_size<1u>(retval,sparse_functor<false>{this->m_v1,this->m_v2,retval});
+			// Use the plain functor in normal mode for the estimation.
+			const auto estimate = this->template estimate_final_series_size<1u>(retval,typename base::template plain_multiplier<false>{this->m_v1,this->m_v2,retval});
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
 			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval,n_threads);
-			// Trace the result of estimation.
 			return retval;
 		}
 		// Struct for extracting bucket indices.
@@ -735,58 +734,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return m_retval->_container()._bucket_from_hash(t->hash());
 			}
 			const Series *m_retval;
-		};
-		// Functor for use in sparse multiplication.
-		template <bool FastMode>
-		struct sparse_functor
-		{
-			using term_type = typename Series::term_type;
-			using size_type = typename base::size_type;
-			using it_type = decltype(std::declval<Series &>()._container().end());
-			explicit sparse_functor(const std::vector<term_type const *> &v1,
-				const std::vector<term_type const *> &v2, Series &retval):
-				m_v1(v1),m_v2(v2),m_retval(retval),m_it_end(retval._container().end())
-			{}
-			void operator()(const size_type &i, const size_type &j) const
-			{
-				using int_type = decltype(m_v1[i]->m_key.get_int());
-				piranha_assert(i < m_v1.size() && j < m_v2.size());
-				// Cache a few quantities.
-				auto &container = m_retval._container();
-				const auto &cf1 = m_v1[i]->m_cf;
-				const auto &cf2 = m_v2[j]->m_cf;
-				// First do the monomial multiplication.
-				m_term.m_key.set_int(static_cast<int_type>(m_v1[i]->m_key.get_int() + m_v2[j]->m_key.get_int()));
-				if (!FastMode) {
-					// Do the cf multiplication and insert normally.
-					m_term.m_cf = cf1 * cf2;
-					m_retval.insert(m_term);
-					return;
-				}
-				// Try to locate the term into retval.
-				auto bucket_idx = container._bucket(m_term);
-				const auto it = container._find(m_term,bucket_idx);
-				if (it == m_it_end) {
-					// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
-					// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
-					// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
-					// a copy anyway, so insertion with move seems ok after all? Mmmh...
-					// NOTE: other important thing: for coefficient series, we probably want to insert with move() below,
-					// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
-					// as much as possible.
-					// Take care of multiplying the coefficient.
-					m_term.m_cf = cf1;
-					m_term.m_cf *= cf2;
-					container._unique_insert(m_term,bucket_idx);
-				} else {
-					math::multiply_accumulate(it->m_cf,cf1,cf2);
-				}
-			}
-			const std::vector<term_type const *>	&m_v1;
-			const std::vector<term_type const *>	&m_v2;
-			Series					&m_retval;
-			mutable term_type			m_term;
-			const it_type				m_it_end;
 		};
 		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
 		{
@@ -843,15 +790,40 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 							tasks.emplace_back(i,start,end);
 						}
 					}
-					std::sort(tasks.begin(),tasks.end(),task_cmp);
-					sparse_functor<true> mf{v1,v2,retval};
+					std::stable_sort(tasks.begin(),tasks.end(),task_cmp);
+					term_type tmp_term;
+					const auto it_end = container.end();
 					for (auto it = tasks.begin(); it != tasks.end(); ++it) {
-						const size_type start = std::get<1u>(*it), end = std::get<2u>(*it), i = std::get<0u>(*it);
-						for (size_type j = start; j < end; ++j) {
-							mf(i,j);
+						term_type const *t1 = v1[std::get<0u>(*it)];
+						term_type const **start2 = &(v2[std::get<1u>(*it)]), **end2 = &(v2[std::get<2u>(*it)]);
+						using int_type = decltype(t1->m_key.get_int());
+						const auto &cf1 = t1->m_cf;
+						const int_type key1 = t1->m_key.get_int();
+						for (; start2 != end2; ++start2) {
+							const auto &cur = **start2;
+							// Add the keys.
+							tmp_term.m_key.set_int(static_cast<int_type>(key1 + cur.m_key.get_int()));
+							// Try to locate the term into retval.
+							auto bucket_idx = container._bucket(tmp_term);
+							const auto it = container._find(tmp_term,bucket_idx);
+							if (it == it_end) {
+								// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
+								// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
+								// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
+								// a copy anyway, so insertion with move seems ok after all? Mmmh...
+								// NOTE: other important thing: for coefficient series, we probably want to insert with move() below,
+								// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
+								// as much as possible.
+								// Take care of multiplying the coefficient.
+								tmp_term.m_cf = cf1;
+								tmp_term.m_cf *= cur.m_cf;
+								container._unique_insert(tmp_term,bucket_idx);
+							} else {
+								math::multiply_accumulate(it->m_cf,cf1,cur.m_cf);
+							}
 						}
 					}
-					this->sanitize_series(retval,1u);
+					this->sanitize_series(retval,n_threads);
 				} catch (...) {
 					retval._container().clear();
 					throw;
