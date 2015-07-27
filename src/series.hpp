@@ -1175,9 +1175,6 @@ class series: detail::series_tag, series_operators
 		// Make friend with debugging class.
 		template <typename>
 		friend class debug_access;
-		// Make friend with series multiplier class.
-		template <typename, typename>
-		friend class series_multiplier;
 		// Make friend with the operators class.
 		friend class series_operators;
 		// Partial need access to the custom derivatives.

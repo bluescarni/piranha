@@ -702,13 +702,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// First, let's get the estimation on the size of the final series.
 			Series retval;
 			retval.set_symbol_set(this->m_ss);
-			// TODO same heuristic as base?
-			// Use the sparse functor for the estimation.
-			auto estimate = this->template estimate_final_series_size<1u>(retval,sparse_functor<false>{this->m_v1,this->m_v2,retval});
-			// Correct the unlikely case of zero estimate.
-			if (unlikely(!estimate)) {
-				estimate = 1u;
-			}
 			// Get the number of threads to use.
 			const unsigned n_threads = thread_pool::use_threads(
 				integer(size1) * size2,integer(settings::get_min_work_per_thread())
@@ -718,10 +711,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// NOTE: it is important here that we use the same n_threads for multiplication and memset as
 			// we tie together pinned threads with potentially different NUMA regions.
 			const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? n_threads : 1u;
+			// Use the sparse functor for the estimation.
+			const auto estimate = this->template estimate_final_series_size<1u>(retval,sparse_functor<false>{this->m_v1,this->m_v2,retval});
 			// NOTE: if something goes wrong here, no big deal as retval is still empty.
-			retval.m_container.rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
-				retval.m_container.max_load_factor())),n_threads_rehash);
-			piranha_assert(retval.m_container.bucket_count());
+			retval._container().rehash(boost::numeric_cast<typename Series::size_type>(std::ceil(static_cast<double>(estimate) /
+				retval._container().max_load_factor())),n_threads_rehash);
+			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval,n_threads);
 			// Trace the result of estimation.
 			return retval;
@@ -747,44 +742,31 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			using term_type = typename Series::term_type;
 			using size_type = typename base::size_type;
-			using bucket_size_type = typename base::bucket_size_type;
+			using it_type = decltype(std::declval<Series &>()._container().end());
 			explicit sparse_functor(const std::vector<term_type const *> &v1,
 				const std::vector<term_type const *> &v2, Series &retval):
-				m_v1(v1),m_v2(v2),m_retval(retval),m_insertion_count(0u),m_deletion_count(0u)
+				m_v1(v1),m_v2(v2),m_retval(retval),m_it_end(retval._container().end())
 			{}
 			void operator()(const size_type &i, const size_type &j) const
 			{
 				using int_type = decltype(m_v1[i]->m_key.get_int());
 				piranha_assert(i < m_v1.size() && j < m_v2.size());
-				// First do the monomial multiplication.
-				m_term.m_key.set_int(static_cast<int_type>(m_v1[i]->m_key.get_int() + m_v2[j]->m_key.get_int()));
-				// Now proceed to the insertion.
 				// Cache a few quantities.
 				auto &container = m_retval._container();
 				const auto &cf1 = m_v1[i]->m_cf;
 				const auto &cf2 = m_v2[j]->m_cf;
-				const auto &args = m_retval.get_symbol_set();
-				// Prepare the return series.
-				piranha_assert(!FastMode || container.bucket_count());
-				if (!FastMode && unlikely(!container.bucket_count())) {
-					container._increase_size();
+				// First do the monomial multiplication.
+				m_term.m_key.set_int(static_cast<int_type>(m_v1[i]->m_key.get_int() + m_v2[j]->m_key.get_int()));
+				if (!FastMode) {
+					// Do the cf multiplication and insert normally.
+					m_term.m_cf = cf1 * cf2;
+					m_retval.insert(m_term);
+					return;
 				}
 				// Try to locate the term into retval.
 				auto bucket_idx = container._bucket(m_term);
 				const auto it = container._find(m_term,bucket_idx);
-				// NOTE: here we don't need to check for compatibility as we know that all supported monomial
-				// types produce compatible monomials during multiplication.
-				if (it == container.end()) {
-					// NOTE: this will not overflow, we have a check in operator().
-					piranha_assert(container.size() < std::numeric_limits<bucket_size_type>::max());
-					// Term is new. Handle the case in which we need to rehash because of load factor.
-					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / static_cast<double>(container.bucket_count()) >
-						container.max_load_factor()))
-					{
-						container._increase_size();
-						// We need a new bucket index in case of a rehash.
-						bucket_idx = container._bucket(m_term);
-					}
+				if (it == m_it_end) {
 					// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
 					// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
 					// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
@@ -795,35 +777,16 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					// Take care of multiplying the coefficient.
 					m_term.m_cf = cf1;
 					m_term.m_cf *= cf2;
-					if (likely(!m_term.is_ignorable(args))) {
-						// Insert and update size.
-						// NOTE: all counters here and below are protected by the top-level overflow check.
-						container._unique_insert(m_term,bucket_idx);
-						if (FastMode) {
-							m_insertion_count = static_cast<bucket_size_type>(m_insertion_count + 1u);
-						} else {
-							container._update_size(static_cast<bucket_size_type>(container.size() + 1u));
-						}
-					}
+					container._unique_insert(m_term,bucket_idx);
 				} else {
 					math::multiply_accumulate(it->m_cf,cf1,cf2);
-					if (unlikely(it->is_ignorable(args))) {
-						container._erase(it);
-						if (FastMode) {
-							m_deletion_count = static_cast<bucket_size_type>(m_deletion_count + 1u);
-						} else {
-							piranha_assert(container.size() > 0u);
-							container._update_size(static_cast<bucket_size_type>(container.size() - 1u));
-						}
-					}
 				}
 			}
 			const std::vector<term_type const *>	&m_v1;
 			const std::vector<term_type const *>	&m_v2;
 			Series					&m_retval;
 			mutable term_type			m_term;
-			mutable bucket_size_type		m_insertion_count;
-			mutable bucket_size_type		m_deletion_count;
+			const it_type				m_it_end;
 		};
 		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
 		{
@@ -858,11 +821,15 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					r_bucket(this->m_v1[std::get<0u>(t2)]) + r_bucket(this->m_v2[std::get<1u>(t2)]);
 			};
 			if (n_threads == 1u) {
-				// Single threaded case.
-				// TODO exception safety.
-				sparse_functor<true> mf{this->m_v1,this->m_v2,retval};
-				this->blocked_multiplication(mf,0u,this->m_v1.size(),0u,this->m_v2.size());
-				retval._container()._update_size(static_cast<bucket_size_type>(mf.m_insertion_count - mf.m_deletion_count));
+				try {
+					// Single threaded case.
+					sparse_functor<true> mf{this->m_v1,this->m_v2,retval};
+					this->blocked_multiplication(mf,0u,this->m_v1.size(),0u,this->m_v2.size());
+					this->sanitize_series(retval,1u);
+				} catch (...) {
+					retval._container().clear();
+					throw;
+				}
 				return;
 			}
 #if 0
