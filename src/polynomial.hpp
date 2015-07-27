@@ -723,12 +723,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		// Struct for extracting bucket indices.
 		// NOTE: use this instead of a lambda, since boost transform iterator needs the function
 		// object to be assignable.
-		struct sparse_bi_extractor
+		struct bi_extractor
 		{
 			// NOTE: in some setups Boost is apparently unable to deduce the result type
 			// of the functor and needs this typedef in the transform iterator.
 			using result_type = typename base::bucket_size_type;
-			explicit sparse_bi_extractor(const Series *retval) : m_retval(retval) {}
+			explicit bi_extractor(const Series *retval) : m_retval(retval) {}
 			result_type operator()(const typename Series::term_type *t) const
 			{
 				return m_retval->_container()._bucket_from_hash(t->hash());
@@ -837,73 +837,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return;
 			}
 #if 0
-			using task_type = std::tuple<term_type const *,term_type const **,term_type const **>;
-			// A couple of handy shortcuts.
-			using diff_type = std::ptrdiff_t;
-			// NOTE: this is always legal as ptrdiff_t is a signed integer.
-			using udiff_type = typename std::make_unsigned<diff_type>::type;
-			// Fast functor type.
-			using fast_functor_type = typename Functor::fast_rebind;
-			// Block size. Tasks will be split into chunks with this max size.
-			const diff_type block_size = boost::numeric_cast<diff_type>(tuning::get_multiplication_block_size());
-			// Sort input terms according to bucket positions in retval.
-			auto cmp = [&retval](term_type const *p1, term_type const *p2)
-			{
-				return retval._container()._bucket_from_hash(p1->hash()) <
-					retval._container()._bucket_from_hash(p2->hash());
-			};
-			std::stable_sort(this->m_v1.begin(),this->m_v1.end(),cmp);
-			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),cmp);
 			// Variable used to keep track of total unique insertions in retval.
 			bucket_size_type insertion_count = 0u;
 			// Number of buckets in retval.
 			const bucket_size_type bucket_count = retval._container().bucket_count();
-			// Special casing for single-thread.
-			if (n_threads == 1u) {
-				// Reduced version of the algorithm in single-threaded mode. See below for comments.
-				try {
-					integer n_mults(0);
-					auto &v1 = this->m_v1;
-					auto &v2 = this->m_v2;
-					const auto size1 = v1.size();
-					const auto size2 = v2.size();
-					std::vector<task_type> tasks;
-					term_type const **start, **end;
-					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
-						start = &v2[0u];
-						end = &v2[0u] + size2;
-						while (end - start > block_size) {
-							tasks.emplace_back(v1[i],start,start + block_size);
-							start += block_size;
-						}
-						if (end != start) {
-							tasks.emplace_back(v1[i],start,end);
-						}
-					}
-					std::stable_sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
-						return retval._container()._bucket_from_hash(std::get<0u>(t1)->hash()) + retval._container()._bucket_from_hash((*std::get<1u>(t1))->hash()) <
-							retval._container()._bucket_from_hash(std::get<0u>(t2)->hash()) + retval._container()._bucket_from_hash((*std::get<1u>(t2))->hash());
-					});
-					for (const auto &t: tasks) {
-						auto t1_ptr = std::get<0u>(t);
-						auto start = std::get<1u>(t), end = std::get<2u>(t);
-						const auto size = static_cast<size_type>(end - start);
-						piranha_assert(size != 0u);
-						fast_functor_type f(&t1_ptr,1u,start,size,retval);
-						for (index_type i = 0u; i < size; ++i) {
-							f(0u,i);
-						}
-						piranha_assert((n_mults += size,true));
-						insertion_count = static_cast<bucket_size_type>(insertion_count + f.m_insertion_count);
-					}
-					sanitize_series(retval,insertion_count,n_threads);
-					piranha_assert(n_mults == integer(this->m_v1.size()) * this->m_v2.size());
-					return;
-				} catch (...) {
-					retval.m_container.clear();
-					throw;
-				}
-			}
+
+
 			// Determine buckets per thread.
 			const auto bpt = static_cast<bucket_size_type>(bucket_count / n_threads);
 			// Will use to sync access to common vars.
@@ -1014,106 +953,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			piranha_assert(std::accumulate(n_mults.begin(),n_mults.end(),integer(0)) == integer(this->m_v1.size()) * this->m_v2.size());
 #endif
 		}
-#if 0
-		// Functor for use in sparse multiplication.
-		template <bool FastMode = false>
-		struct sparse_functor: base::default_functor
-		{
-			// Fast version of functor.
-			using fast_rebind = sparse_functor<true>;
-			// NOTE: here the coefficient of m_tmp gets default-inited explicitly by the default constructor of base term.
-			explicit sparse_functor(term_type const **ptr1, const index_type &s1,
-				term_type const **ptr2, const index_type &s2, Series &retval):
-				base::default_functor(ptr1,s1,ptr2,s2,retval),
-				m_cached_i(0u),m_cached_j(0u),m_insertion_count(0u)
-			{}
-			void operator()(const index_type &i, const index_type &j) const
-			{
-				using int_type = decltype(this->m_ptr1[i]->m_key.get_int());
-				piranha_assert(i < this->m_s1 && j < this->m_s2);
-				this->m_tmp[0u].m_key.set_int(static_cast<int_type>(this->m_ptr1[i]->m_key.get_int() + this->m_ptr2[j]->m_key.get_int()));
-				m_cached_i = i;
-				m_cached_j = j;
-			}
-			void insert() const
-			{
-				// NOTE: be very careful: every kind of optimization in here must involve only the key part,
-				// as the coefficient part is still generic.
-				auto &container = this->m_retval.m_container;
-				auto &tmp = this->m_tmp[0u];
-				const auto &cf1 = this->m_ptr1[m_cached_i]->m_cf;
-				const auto &cf2 = this->m_ptr2[m_cached_j]->m_cf;
-				const auto &args = this->m_retval.m_symbol_set;
-				// Prepare the return series.
-				piranha_assert(!FastMode || container.bucket_count());
-				if (!FastMode && unlikely(!container.bucket_count())) {
-					container._increase_size();
-				}
-				// Try to locate the term into retval.
-				auto bucket_idx = container._bucket(tmp);
-				const auto it = container._find(tmp,bucket_idx);
-				if (it == container.end()) {
-					// NOTE: the check here is done outside.
-					piranha_assert(container.size() < std::numeric_limits<bucket_size_type>::max());
-					// Term is new. Handle the case in which we need to rehash because of load factor.
-					if (!FastMode && unlikely(static_cast<double>(container.size() + bucket_size_type(1u)) / static_cast<double>(container.bucket_count()) >
-						container.max_load_factor()))
-					{
-						container._increase_size();
-						// We need a new bucket index in case of a rehash.
-						bucket_idx = container._bucket(tmp);
-					}
-					// TODO optimize this in case of series and integer (?), now it is optimized for simple coefficients.
-					// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
-					// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
-					// a copy anyway, so insertion with move seems ok after all? Mmmh...
-					// TODO: other important thing: for coefficient series, we probably want to insert with move() below,
-					// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
-					// as much as possible.
-					// Take care of multiplying the coefficient.
-					tmp.m_cf = cf1;
-					tmp.m_cf *= cf2;
-					// Insert and update size.
-					// NOTE: in fast mode, the check will be done at the end.
-					// NOTE: the counters are protected from overflows by the check done in the operator() of the multiplier.
-					if (FastMode) {
-						container._unique_insert(tmp,bucket_idx);
-						++m_insertion_count;
-					} else if (likely(!tmp.is_ignorable(args))) {
-						container._unique_insert(tmp,bucket_idx);
-						container._update_size(container.size() + 1u);
-					}
-				} else {
-					// Assert the existing term is not ignorable, in non-fast mode.
-					piranha_assert(FastMode || !it->is_ignorable(args));
-					if (FastMode) {
-						// In fast mode we do not care if this throws or produces a null coefficient,
-						// as we will be dealing with that from outside.
-						math::multiply_accumulate(it->m_cf,cf1,cf2);
-					} else {
-						// Cleanup function.
-						auto cleanup = [&it,&args,&container]() {
-							if (unlikely(it->is_ignorable(args))) {
-								container.erase(it);
-							}
-						};
-						try {
-							math::multiply_accumulate(it->m_cf,cf1,cf2);
-							// Check if the term has become ignorable or incompatible after the modification.
-							cleanup();
-						} catch (...) {
-							// In case of exceptions, do the check before re-throwing.
-							cleanup();
-							throw;
-						}
-					}
-				}
-			}
-			mutable index_type		m_cached_i;
-			mutable index_type		m_cached_j;
-			mutable bucket_size_type	m_insertion_count;
-		};
-#endif
 };
 
 }
