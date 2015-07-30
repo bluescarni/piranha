@@ -4,6 +4,7 @@ from scipy import stats
 import subprocess as sp
 import datetime
 import socket
+import os
 
 exec_name = sys.argv[1]
 max_t = int(sys.argv[2])
@@ -29,5 +30,5 @@ tot_timings = np.array(tot_timings)
 retval = np.array([np.mean(tot_timings,axis=1),stats.sem(tot_timings,axis=1)])
 
 fmt='{fname}_%Y%m%d%H%M%S'
-filename = datetime.datetime.now().strftime(fmt).format(fname=socket.gethostname()) + '.txt'
+filename = datetime.datetime.now().strftime(fmt).format(fname=socket.gethostname() + '_' + os.path.basename(exec_name)) + '.txt'
 np.savetxt(filename,retval)
