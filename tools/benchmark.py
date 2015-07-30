@@ -20,7 +20,7 @@ for t_idx in range(1,max_t + 1):
 		# Wait for it to finish and get stdout.
 		out = p.communicate()[0]
 		# Parse the stderr in order to find the time.
-		out = out.split('\n')[1].split()[0][0:-1]
+		out = out.split(bytes('\n','ascii'))[1].split()[0][0:-1]
 		cur_timings.append(float(out))
 	tot_timings.append(cur_timings)
 
