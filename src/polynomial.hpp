@@ -22,19 +22,13 @@
 #define PIRANHA_POLYNOMIAL_HPP
 
 #include <algorithm>
-#include <boost/iterator/transform_iterator.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
-#include <condition_variable>
 #include <cstddef>
-#include <functional> // For std::bind.
-#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <map>
-#include <mutex>
 #include <numeric>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -45,6 +39,7 @@
 #include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "debug_access.hpp"
+#include "detail/atomic_utils.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -552,6 +547,7 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
  */
 // TODO: checking for monomials
 // TODO: update doc with exception specs, invalid_argument -> overflow_error.
+// TODO: enabling and type checking.
 template <typename Series>
 class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 	public base_series_multiplier<Series>
@@ -562,6 +558,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		using key_t = typename T::term_type::key_type;
 		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
 			std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
+		// Bounds checking.
 		void check_bounds() const {}
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<key_t<T>>::value,int>::type = 0>
 		void check_bounds() const
@@ -748,6 +745,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Cache a few quantities.
 			auto &v1 = this->m_v1;
 			auto &v2 = this->m_v2;
+			const auto size1 = v1.size();
+			const auto size2 = v2.size();
 			auto &container = retval._container();
 			// A convenience functor to compute the destination bucket
 			// of a term into retval.
@@ -767,67 +766,75 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// will write.
 			// NOTE: this is guaranteed not to overflow as the max bucket size in the hash set is 2**(nbits-1),
 			// and the max value of bucket_size_type is 2**nbits - 1.
-			auto task_cmp = [&r_bucket,&v1,&v2](const task_type &t1, const task_type &t2) {
+			auto task_cmp = [&r_bucket,&v1,&v2] (const task_type &t1, const task_type &t2) {
 				return r_bucket(v1[std::get<0u>(t1)]) + r_bucket(v2[std::get<1u>(t1)]) <
 					r_bucket(v1[std::get<0u>(t2)]) + r_bucket(v2[std::get<1u>(t2)]);
 			};
 			// Task block size.
-			const size_type block_size = boost::numeric_cast<size_type>(tuning::get_multiplication_block_size());
+			const size_type block_size = safe_cast<size_type>(tuning::get_multiplication_block_size());
+			// Task splitter: split a task in block_size sized tasks and append them to retval.
+			auto task_split = [block_size] (const task_type &t, std::vector<task_type> &retval) {
+				size_type start = std::get<1u>(t), end = std::get<2u>(t);
+				while (static_cast<size_type>(end - start) > block_size) {
+					retval.emplace_back(std::get<0u>(t),start,static_cast<size_type>(start + block_size));
+					start = static_cast<size_type>(start + block_size);
+				}
+				if (end != start) {
+					retval.emplace_back(std::get<0u>(t),start,end);
+				}
+			};
+			// End of the container, always the same value.
+			const auto it_end = container.end();
+			// Function to perform all the term-by-term multiplications in a task.
+			auto task_consume = [&v1,&v2,&container,it_end] (const task_type &task, term_type &tmp_term) {
+				// Get the term in the first series.
+				term_type const *t1 = v1[std::get<0u>(task)];
+				// Get pointers to the second series.
+				term_type const **start2 = &(v2[std::get<1u>(task)]), **end2 = &(v2[std::get<2u>(task)]);
+				using int_type = decltype(t1->m_key.get_int());
+				// Get shortcuts to cf and key in t1.
+				const auto &cf1 = t1->m_cf;
+				const int_type key1 = t1->m_key.get_int();
+				// Iterate over the task.
+				for (; start2 != end2; ++start2) {
+					// Const ref to the current term in the second series.
+					const auto &cur = **start2;
+					// Add the keys.
+					tmp_term.m_key.set_int(static_cast<int_type>(key1 + cur.m_key.get_int()));
+					// Try to locate the term into retval.
+					auto bucket_idx = container._bucket(tmp_term);
+					const auto it = container._find(tmp_term,bucket_idx);
+					if (it == it_end) {
+						// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
+						// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
+						// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
+						// a copy anyway, so insertion with move seems ok after all? Mmmh...
+						// NOTE: other important thing: for coefficient series, we probably want to insert with move() below,
+						// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
+						// as much as possible.
+						// Take care of multiplying the coefficient.
+						tmp_term.m_cf = cf1;
+						tmp_term.m_cf *= cur.m_cf;
+						container._unique_insert(tmp_term,bucket_idx);
+					} else {
+						math::multiply_accumulate(it->m_cf,cf1,cur.m_cf);
+					}
+				}
+			};
 			if (n_threads == 1u) {
 				try {
 					// Single threaded case.
-					// Cache a few quantities.
-					const auto size1 = v1.size();
-					const auto size2 = v2.size();
 					// Create the vector of tasks.
 					std::vector<task_type> tasks;
 					for (decltype(v1.size()) i = 0u; i < size1; ++i) {
-						size_type start = 0u, end = size2;
-						while (static_cast<size_type>(end - start) > block_size) {
-							tasks.emplace_back(i,start,static_cast<size_type>(start + block_size));
-							start = static_cast<size_type>(start + block_size);
-						}
-						if (end != start) {
-							tasks.emplace_back(i,start,end);
-						}
+						task_split(std::make_tuple(i,size_type(0u),size2),tasks);
 					}
 					// Sort the tasks.
 					std::stable_sort(tasks.begin(),tasks.end(),task_cmp);
-					// Temporary caching term used in term-by-term multiplications.
-					term_type tmp_term;
-					// End of the container, always the same value and thread-safe.
-					const auto it_end = container.end();
 					// Iterate over the tasks and run the multiplication.
+					term_type tmp_term;
 					for (auto it = tasks.begin(); it != tasks.end(); ++it) {
-						term_type const *t1 = v1[std::get<0u>(*it)];
-						term_type const **start2 = &(v2[std::get<1u>(*it)]), **end2 = &(v2[std::get<2u>(*it)]);
-						using int_type = decltype(t1->m_key.get_int());
-						const auto &cf1 = t1->m_cf;
-						const int_type key1 = t1->m_key.get_int();
-						for (; start2 != end2; ++start2) {
-							// Const ref to the current term in the second series.
-							const auto &cur = **start2;
-							// Add the keys.
-							tmp_term.m_key.set_int(static_cast<int_type>(key1 + cur.m_key.get_int()));
-							// Try to locate the term into retval.
-							auto bucket_idx = container._bucket(tmp_term);
-							const auto it = container._find(tmp_term,bucket_idx);
-							if (it == it_end) {
-								// NOTE: optimize this in case of series and integer (?), now it is optimized for simple coefficients.
-								// Note that the best course of action here for integer multiplication would seem to resize tmp.m_cf appropriately
-								// and then use something like mpz_mul. On the other hand, it seems like in the insertion below we need to perform
-								// a copy anyway, so insertion with move seems ok after all? Mmmh...
-								// NOTE: other important thing: for coefficient series, we probably want to insert with move() below,
-								// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
-								// as much as possible.
-								// Take care of multiplying the coefficient.
-								tmp_term.m_cf = cf1;
-								tmp_term.m_cf *= cur.m_cf;
-								container._unique_insert(tmp_term,bucket_idx);
-							} else {
-								math::multiply_accumulate(it->m_cf,cf1,cur.m_cf);
-							}
-						}
+						task_consume(*it,tmp_term);
 					}
 					this->sanitize_series(retval,n_threads);
 				} catch (...) {
@@ -836,11 +843,180 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				}
 				return;
 			}
+			// Number of buckets in retval.
+			const bucket_size_type bucket_count = container.bucket_count();
+			// Number of zones in which the output container will be subdivided,
+			// a multiple of the number of threads.
+			// NOTE: zm is a tuning parameter.
+			const unsigned zm = 10u;
+			const bucket_size_type n_zones = static_cast<bucket_size_type>(integer(n_threads) * zm);
+			// Number of buckets per zone (can be zero).
+			const bucket_size_type bpz = static_cast<bucket_size_type>(bucket_count / n_zones);
+			// For each zone, we need to define a vector of tasks that will write only into that zone.
+			std::vector<std::vector<task_type>> task_table;
+			task_table.resize(safe_cast<decltype(task_table.size())>(n_zones));
+			// Lower bound implementation. Adapted from:
+			// http://en.cppreference.com/w/cpp/algorithm/lower_bound
+			// Given the [first,last[ index range in v2, find the first index idx such that the i-th term in v1
+			// multiplied by the idx-th term in v2 will be written into retval at a bucket index not less than zb.
+			auto l_bound = [&v1,&v2,&r_bucket,&task_split] (size_type first, size_type last, bucket_size_type zb, size_type i) -> size_type {
+				piranha_assert(last >= first);
+				bucket_size_type ib = r_bucket(v1[i]);
+				if (zb < ib) {
+					return 0u;
+				}
+				const auto cmp = static_cast<bucket_size_type>(zb - ib);
+				size_type idx, step, count = static_cast<size_type>(last - first);
+				while (count > 0u) {
+					idx = first;
+					step = static_cast<size_type>(count / 2u);
+					idx = static_cast<size_type>(idx + step);
+					if (r_bucket(v2[idx]) < cmp) {
+						idx = static_cast<size_type>(idx + 1u);
+						first = idx;
+						if (count <= step + 1u) {
+							break;
+						}
+						count = static_cast<size_type>(count - (step + 1u));
+					} else {
+						count = step;
+					}
+				}
+				return first;
+			};
+			// Fill the task table.
+			auto table_filler = [&task_table,bpz,zm,n_threads,bucket_count,size1,size2,&l_bound,&task_split,&task_cmp] (const unsigned &thread_idx) {
+				for (unsigned n = 0u; n < zm; ++n) {
+					std::vector<task_type> cur_tasks;
+					// [a,b[ is the container zone.
+					bucket_size_type a = static_cast<bucket_size_type>(thread_idx * bpz * zm + n * bpz);
+					bucket_size_type b;
+					if (n == zm - 1u && thread_idx == n_threads - 1u) {
+						// Special casing if this is the last zone in the container.
+						b = bucket_count;
+					} else {
+						b = static_cast<bucket_size_type>(a + bpz);
+					}
+					for (size_type i = 0u; i < size1; ++i) {
+						auto t = std::make_tuple(i,l_bound(0u,size2,a,i),l_bound(0u,size2,b,i));
+						if (std::get<1u>(t) == 0u && std::get<2u>(t) == 0u) {
+							break;
+						}
+						task_split(t,cur_tasks);
+					}
+					for (size_type i = 0u; i < size1; ++i) {
+						auto t = std::make_tuple(i,l_bound(0u,size2,static_cast<bucket_size_type>(a + bucket_count),i),
+							l_bound(0u,size2,static_cast<bucket_size_type>(b + bucket_count),i));
+						if (std::get<1u>(t) == 0u && std::get<2u>(t) == 0u) {
+							break;
+						}
+						task_split(t,cur_tasks);
+					}
+					// Sort the task vector.
+					std::stable_sort(cur_tasks.begin(),cur_tasks.end(),task_cmp);
+					// Move the vector of tasks in the table.
+					task_table[static_cast<decltype(task_table.size())>(thread_idx * zm + n)] = std::move(cur_tasks);
+				}
+			};
+			{
+			// Go with the threads to fill the task table.
+			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> f_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					f_list.push_back(thread_pool::enqueue(i,table_filler,i));
+				}
+				// First let's wait for everything to finish.
+				f_list.wait_all();
+				// Then, let's handle the exceptions.
+				f_list.get_all();
+			} catch (...) {
+				f_list.wait_all();
+				throw;
+			}
+			}
+			// Check the consistency of the table for debug purposes.
+			auto table_checker = [&task_table,size1,size2,&r_bucket,bpz,bucket_count,&v1,&v2] () -> bool {
+				// Total number of term-by-term multiplications. Needs to be equal
+				// to size1 * size2 at the end.
+				integer tot_n(0);
+				term_type tmp_term;
+				for (decltype(task_table.size()) i = 0u; i < task_table.size(); ++i) {
+					const auto &v = task_table[i];
+					// Bucket limits of each zone.
+					bucket_size_type a = static_cast<bucket_size_type>(bpz * i), b;
+					if (i == task_table.size() - 1u) {
+						b = bucket_count;
+					} else {
+						b = static_cast<bucket_size_type>(a + bpz);
+					}
+					for (const auto &t: v) {
+						auto idx1 = std::get<0u>(t), start2 = std::get<1u>(t), end2 = std::get<2u>(t);
+						using int_type = decltype(v1[idx1]->m_key.get_int());
+						tot_n += end2 - start2;
+						for (; start2 != end2; ++start2) {
+							tmp_term.m_key.set_int(static_cast<int_type>(v1[idx1]->m_key.get_int() + v2[start2]->m_key.get_int()));
+							auto b_idx = r_bucket(&tmp_term);
+							if (b_idx < a || b_idx >= b) {
+								return false;
+							}
+						}
+					}
+				}
+				return tot_n == integer(size1) * size2;
+			};
+			(void)table_checker;
+			piranha_assert(table_checker());
+			// Init the vector of atomic flags.
+			detail::atomic_flag_array af(safe_cast<std::size_t>(task_table.size()));
+			// Thread functor.
+			auto thread_functor = [zm,&task_table,&af,&v1,&v2,&container,&task_consume] (const unsigned &thread_idx) {
+				using t_size_type = decltype(task_table.size());
+				// Temporary term_type for caching.
+				term_type tmp_term;
+				// The starting index in the task table.
+				auto t_idx = static_cast<t_size_type>(t_size_type(thread_idx) * zm), start_t_idx = t_idx;
+				while (true) {
+					// If this returns false, it means that the tasks still need to be consumed;
+					if (!af[static_cast<std::size_t>(t_idx)].test_and_set()) {
+						// Current vector of tasks.
+						const auto &cur_tasks = task_table[t_idx];
+						for (const auto &t: cur_tasks) {
+							task_consume(t,tmp_term);
+						}
+					}
+					// Update the index, wrapping around if necessary.
+					t_idx = static_cast<t_size_type>(t_idx + 1u);
+					if (t_idx == task_table.size()) {
+						t_idx = 0u;
+					}
+					// If we got back to the original index, get out.
+					if (t_idx == start_t_idx) {
+						break;
+					}
+				}
+			};
+			{
+			// TODO exception safety.
+			// Go with the multiplication threads.
+			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> f_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					f_list.push_back(thread_pool::enqueue(i,thread_functor,i));
+				}
+				// First let's wait for everything to finish.
+				f_list.wait_all();
+				// Then, let's handle the exceptions.
+				f_list.get_all();
+			} catch (...) {
+				f_list.wait_all();
+				throw;
+			}
+			}
+			this->sanitize_series(retval,n_threads);
 #if 0
 			// Variable used to keep track of total unique insertions in retval.
 			bucket_size_type insertion_count = 0u;
-			// Number of buckets in retval.
-			const bucket_size_type bucket_count = retval._container().bucket_count();
+
 
 
 			// Determine buckets per thread.
