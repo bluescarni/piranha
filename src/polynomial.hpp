@@ -717,21 +717,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			sparse_kronecker_multiplication(retval,n_threads);
 			return retval;
 		}
-		// Struct for extracting bucket indices.
-		// NOTE: use this instead of a lambda, since boost transform iterator needs the function
-		// object to be assignable.
-		struct bi_extractor
-		{
-			// NOTE: in some setups Boost is apparently unable to deduce the result type
-			// of the functor and needs this typedef in the transform iterator.
-			using result_type = typename base::bucket_size_type;
-			explicit bi_extractor(const Series *retval) : m_retval(retval) {}
-			result_type operator()(const typename Series::term_type *t) const
-			{
-				return m_retval->_container()._bucket_from_hash(t->hash());
-			}
-			const Series *m_retval;
-		};
 		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
 		{
 			using bucket_size_type = typename base::bucket_size_type;
@@ -772,20 +757,21 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			};
 			// Task block size.
 			const size_type block_size = safe_cast<size_type>(tuning::get_multiplication_block_size());
-			// Task splitter: split a task in block_size sized tasks and append them to retval.
-			auto task_split = [block_size] (const task_type &t, std::vector<task_type> &retval) {
+			// Task splitter: split a task in block_size sized tasks and append them to out.
+			auto task_split = [block_size] (const task_type &t, std::vector<task_type> &out) {
 				size_type start = std::get<1u>(t), end = std::get<2u>(t);
 				while (static_cast<size_type>(end - start) > block_size) {
-					retval.emplace_back(std::get<0u>(t),start,static_cast<size_type>(start + block_size));
+					out.emplace_back(std::get<0u>(t),start,static_cast<size_type>(start + block_size));
 					start = static_cast<size_type>(start + block_size);
 				}
 				if (end != start) {
-					retval.emplace_back(std::get<0u>(t),start,end);
+					out.emplace_back(std::get<0u>(t),start,end);
 				}
 			};
 			// End of the container, always the same value.
 			const auto it_end = container.end();
-			// Function to perform all the term-by-term multiplications in a task.
+			// Function to perform all the term-by-term multiplications in a task, using tmp_term
+			// as a temporary value for the computation of the result.
 			auto task_consume = [&v1,&v2,&container,it_end] (const task_type &task, term_type &tmp_term) {
 				// Get the term in the first series.
 				term_type const *t1 = v1[std::get<0u>(task)];
@@ -793,6 +779,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				term_type const **start2 = &(v2[std::get<1u>(task)]), **end2 = &(v2[std::get<2u>(task)]);
 				using int_type = decltype(t1->m_key.get_int());
 				// Get shortcuts to cf and key in t1.
+				// NOTE: this will have to be adapted for kd_monomial.
 				const auto &cf1 = t1->m_cf;
 				const int_type key1 = t1->m_key.get_int();
 				// Iterate over the task.
@@ -800,6 +787,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					// Const ref to the current term in the second series.
 					const auto &cur = **start2;
 					// Add the keys.
+					// NOTE: this will have to be adapted for kd_monomial.
 					tmp_term.m_key.set_int(static_cast<int_type>(key1 + cur.m_key.get_int()));
 					// Try to locate the term into retval.
 					auto bucket_idx = container._bucket(tmp_term);
@@ -862,6 +850,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			auto l_bound = [&v1,&v2,&r_bucket,&task_split] (size_type first, size_type last, bucket_size_type zb, size_type i) -> size_type {
 				piranha_assert(last >= first);
 				bucket_size_type ib = r_bucket(v1[i]);
+				// Avoid zb - ib below wrapping around.
 				if (zb < ib) {
 					return 0u;
 				}
@@ -904,6 +893,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 						}
 						task_split(t,cur_tasks);
 					}
+					// Note: we can always compute a/b + bucket_count because of the limits on the maximum value of
+					// bucket_count.
 					for (size_type i = 0u; i < size1; ++i) {
 						auto t = std::make_tuple(i,l_bound(0u,size2,static_cast<bucket_size_type>(a + bucket_count),i),
 							l_bound(0u,size2,static_cast<bucket_size_type>(b + bucket_count),i));
@@ -918,21 +909,19 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					task_table[static_cast<decltype(task_table.size())>(thread_idx * zm + n)] = std::move(cur_tasks);
 				}
 			};
-			{
 			// Go with the threads to fill the task table.
-			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> f_list;
+			future_list<decltype(thread_pool::enqueue(0u,table_filler,0u))> ff_list;
 			try {
 				for (unsigned i = 0u; i < n_threads; ++i) {
-					f_list.push_back(thread_pool::enqueue(i,table_filler,i));
+					ff_list.push_back(thread_pool::enqueue(i,table_filler,i));
 				}
 				// First let's wait for everything to finish.
-				f_list.wait_all();
+				ff_list.wait_all();
 				// Then, let's handle the exceptions.
-				f_list.get_all();
+				ff_list.get_all();
 			} catch (...) {
-				f_list.wait_all();
+				ff_list.wait_all();
 				throw;
-			}
 			}
 			// Check the consistency of the table for debug purposes.
 			auto table_checker = [&task_table,size1,size2,&r_bucket,bpz,bucket_count,&v1,&v2] () -> bool {
@@ -995,139 +984,24 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					}
 				}
 			};
-			{
-			// TODO exception safety.
 			// Go with the multiplication threads.
-			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> f_list;
+			future_list<decltype(thread_pool::enqueue(0u,thread_functor,0u))> ft_list;
 			try {
 				for (unsigned i = 0u; i < n_threads; ++i) {
-					f_list.push_back(thread_pool::enqueue(i,thread_functor,i));
+					ft_list.push_back(thread_pool::enqueue(i,thread_functor,i));
 				}
 				// First let's wait for everything to finish.
-				f_list.wait_all();
+				ft_list.wait_all();
 				// Then, let's handle the exceptions.
-				f_list.get_all();
-			} catch (...) {
-				f_list.wait_all();
-				throw;
-			}
-			}
-			this->sanitize_series(retval,n_threads);
-#if 0
-			// Variable used to keep track of total unique insertions in retval.
-			bucket_size_type insertion_count = 0u;
-
-
-
-			// Determine buckets per thread.
-			const auto bpt = static_cast<bucket_size_type>(bucket_count / n_threads);
-			// Will use to sync access to common vars.
-			std::mutex m;
-			// Debug variable.
-			using vi_size_type = std::vector<integer>::size_type;
-			std::vector<integer> n_mults(boost::numeric_cast<vi_size_type>(n_threads));
-			auto thread_function = [n_threads,bpt,bucket_count,this,&retval,&m,&n_mults,&insertion_count,block_size] (const unsigned &idx) {
-				// Cache some quantities from this.
-				auto &v1 = this->m_v1;
-				auto &v2 = this->m_v2;
-				const auto size1 = v1.size();
-				const auto size2 = v2.size();
-				// Range of bucket indices into which the thread is allowed to write.
-				const auto a = static_cast<bucket_size_type>(bpt * idx),
-					b = (idx == n_threads - 1u) ? bucket_count : static_cast<bucket_size_type>(bpt * (idx + 1u));
-				// Bucket index extractor.
-				const sparse_bi_extractor bi_ex{&retval};
-				// Start and end of task in v2, to be used in the loop.
-				term_type const **start, **end;
-				// Check the safety of computing "end - start" in the loop.
-				if (unlikely(v2.size() > static_cast<udiff_type>(std::numeric_limits<diff_type>::max()))) {
-					piranha_throw(std::overflow_error,"the second operand in a sparse polynomial multiplication is too large");
-				}
-				// Vector of term multiplication tasks to be undertaken by the thread.
-				std::vector<task_type> tasks;
-				// Transform iterators that will compute the bucket indices from the terms in v2.
-				const auto t_start2 = boost::make_transform_iterator(&v2[0u],bi_ex),
-					t_end2 = boost::make_transform_iterator(&v2[0u] + size2,bi_ex);
-				for (decltype(v1.size()) i = 0u; i < size1; ++i) {
-					const bucket_size_type n = bi_ex(v1[i]);
-					start = (a < n) ? &v2[0u] :
-						std::lower_bound(t_start2,t_end2,bucket_size_type(a - n)).base();
-					end = (b < n) ? &v2[0u] :
-						std::lower_bound(t_start2,t_end2,bucket_size_type(b - n)).base();
-					// Split into smaller blocks.
-					while (end - start > block_size) {
-						tasks.emplace_back(v1[i],start,start + block_size);
-						start += block_size;
-					}
-					if (end != start) {
-						tasks.emplace_back(v1[i],start,end);
-					}
-					// Second batch.
-					// NOTE: a (or b) + bucket_count is always in the range of bucket_size_type as the maximum bucket size
-					// of a hash_set is 2**(n-1), where bucket_size_type has a bit width of n.
-					start = ((a + bucket_count) < n) ? &v2[0u] :
-						std::lower_bound(t_start2,t_end2,bucket_size_type((a + bucket_count) - n)).base();
-					end = ((b + bucket_count) < n) ? &v2[0u] :
-						std::lower_bound(t_start2,t_end2,bucket_size_type((b + bucket_count) - n)).base();
-					while (end - start > block_size) {
-						tasks.emplace_back(v1[i],start,start + block_size);
-						start += block_size;
-					}
-					if (end != start) {
-						tasks.emplace_back(v1[i],start,end);
-					}
-				}
-				// Sort the tasks in ascending order for the first write bucket index.
-				std::stable_sort(tasks.begin(),tasks.end(),[&retval](const task_type &t1, const task_type &t2) {
-					return retval.m_container._bucket_from_hash(std::get<0u>(t1)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t1))->hash()) <
-						retval.m_container._bucket_from_hash(std::get<0u>(t2)->hash()) + retval.m_container._bucket_from_hash((*std::get<1u>(t2))->hash());
-				});
-				// Perform the multiplications.
-				bucket_size_type ins_count(0);
-				for (const auto &t: tasks) {
-					auto t1_ptr = std::get<0u>(t);
-					auto start = std::get<1u>(t), end = std::get<2u>(t);
-					// NOTE: cast is safe, end - start cannot be larger than the size of v2.
-					const auto size = static_cast<index_type>(end - start);
-					piranha_assert(size != 0u);
-					// NOTE: here we will need to re-evaluate the use of this functor, as now the blocks have
-					// always a size of 1 term in the first series. There might be some performance gains to be had
-					// by switching to a simpler implementation.
-					fast_functor_type f(&t1_ptr,1u,start,size,retval);
-					for (index_type i = 0u; i < size; ++i) {
-						f(0u,i);
-						piranha_assert(retval.m_container._bucket_from_hash(f.m_tmp[0u].hash()) >= a &&
-							retval.m_container._bucket_from_hash(f.m_tmp[0u].hash()) < b);
-						f.insert();
-					}
-					piranha_assert((n_mults[static_cast<vi_size_type>(idx)] += size,true));
-					ins_count = static_cast<bucket_size_type>(ins_count + f.m_insertion_count);
-				}
-				// Final update of the insertion count, must be protected.
-				std::lock_guard<std::mutex> lock(m);
-				insertion_count += ins_count;
-			};
-			// Go with the threads.
-			future_list<decltype(thread_pool::enqueue(0u,thread_function,0u))> f_list;
-			try {
-				for (unsigned i = 0u; i < n_threads; ++i) {
-					f_list.push_back(thread_pool::enqueue(i,thread_function,i));
-				}
-				// First let's wait for everything to finish.
-				f_list.wait_all();
-				// Then, let's handle the exceptions.
-				f_list.get_all();
+				ft_list.get_all();
 				// Finally, fix the series.
-				sanitize_series(retval,insertion_count,n_threads);
+				this->sanitize_series(retval,n_threads);
 			} catch (...) {
-				f_list.wait_all();
+				ft_list.wait_all();
 				// Clean up and re-throw.
-				retval.m_container.clear();
+				retval._container().clear();
 				throw;
 			}
-			// Check that we performed all the multiplications.
-			piranha_assert(std::accumulate(n_mults.begin(),n_mults.end(),integer(0)) == integer(this->m_v1.size()) * this->m_v2.size());
-#endif
 		}
 };
 
