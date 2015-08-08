@@ -123,8 +123,9 @@ struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational
 // TODO document the swapping.
 // TODO static checks on the functors.
 // TODO test the skip.
-// \todo optimization in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
+// TODO optimisation in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
 // TODO optimisation for coefficient series that merges all args, similar to the rational optimisation
+// TODO optimisation for load balancing similar to the poly multiplier.
 /// Base series multiplier.
 /**
  * This is a class that provides functionality useful to define a piranha::series_multiplier specialisation. Note that this class
@@ -589,8 +590,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 */
 		// TODO test with zero bucket count, to make sure it does not cause problems.
 		// TODO test with n_threads larger than bucket count.
-		// TODO check this is always called in a try/catch with clearing on retval.
-		// TODO check sanitize series is called with the proper type for n_threads.
 		static void sanitize_series(Series &retval, unsigned n_threads)
 		{
 			using term_type = typename Series::term_type;
@@ -754,7 +753,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				try {
 					// Single-thread case.
 					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2);
-					sanitize_series(retval,n_threads);
+					sanitize_series(retval,static_cast<unsigned>(n_threads));
 					return retval;
 				} catch (...) {
 					retval._container().clear();
@@ -807,7 +806,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				}
 				f_list.wait_all();
 				f_list.get_all();
-				sanitize_series(retval,n_threads);
+				sanitize_series(retval,static_cast<unsigned>(n_threads));
 			} catch (...) {
 				f_list.wait_all();
 				// Clean up retval as it might be in an inconsistent state.
