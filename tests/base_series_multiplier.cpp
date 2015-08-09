@@ -98,6 +98,12 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 {
 	environment env;
 	{
+	// Check with empty series.
+	using pt = p_type<rational>;
+	pt e1, e2;
+	BOOST_CHECK_NO_THROW((m_checker<pt>{e1,e2}));
+	}
+	{
 	using pt = p_type<rational>;
 	pt x{"x"}, y{"y"}, z{"z"};
 	auto s1 = (x/2+y/5).pow(5), s2 = (x/3+y/22).pow(6);
@@ -147,7 +153,7 @@ struct m_functor_0
 	mutable std::set<std::pair<unsigned,unsigned>,p_sorter> m_set;
 };
 
-// A skipping functor that will skip all multiplications apart from those by the first term of
+// A skipping functor that will skip all multiplications apart from those by the first n terms of
 // of the second series.
 struct s_functor_0
 {
@@ -277,6 +283,11 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,3u,2u),std::invalid_argument);
 	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,101u,102u),std::invalid_argument);
 	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,1u,102u),std::invalid_argument);
+	// Try also with empty series, just to make sure.
+	pt e1, e2;
+	m_checker<pt> m1(e1,e2);
+	m_functor_0 mf1;
+	BOOST_CHECK_NO_THROW(m1.blocked_multiplication(mf1,0u,0u,0u,0u));
 	// Final reset of the mult block size.
 	tuning::reset_multiplication_block_size();
 }

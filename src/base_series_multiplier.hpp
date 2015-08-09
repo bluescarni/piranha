@@ -119,13 +119,6 @@ struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational
 
 }
 
-// TODO test with empty series.
-// TODO document the swapping.
-// TODO static checks on the functors.
-// TODO test the skip.
-// TODO optimisation in case one series has 1 term with unitary key and both series same type: multiply directly coefficients.
-// TODO optimisation for coefficient series that merges all args, similar to the rational optimisation
-// TODO optimisation for load balancing similar to the poly multiplier.
 /// Base series multiplier.
 /**
  * This is a class that provides functionality useful to define a piranha::series_multiplier specialisation. Note that this class
@@ -136,6 +129,10 @@ struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational
  *
  * \p Series must satisfy piranha::is_series.
  */
+// Some performance ideas:
+// - optimisation in case one series has 1 term with unitary key and both series same type: multiply directly coefficients;
+// - optimisation for coefficient series that merges all args, similar to the rational optimisation;
+// - optimisation for load balancing similar to the poly multiplier.
 template <typename Series>
 class base_series_multiplier: private detail::base_series_multiplier_impl<Series>
 {
@@ -720,7 +717,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - the construction of terms,
 		 * - in-place addition of coefficients.
 		 */
-		// TODO check about the old counter overflow check that was removed.
 		template <typename SkipFunctor = no_skip>
 		Series plain_multiplication(const SkipFunctor &sf = no_skip{}) const
 		{
