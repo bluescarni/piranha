@@ -496,6 +496,10 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		}
 		/// A plain multiplier functor.
 		/**
+		 * \note
+		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, a compile-time error will
+		 * be produced.
+		 *
 		 * This is a functor that conforms to the protocol expected by base_series_multiplier::blocked_multiplication() and
 		 * base_series_multiplier::estimate_final_series_size().
 		 *
@@ -587,6 +591,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * with the symbol set of \p retval.
 		 * @throws std::overflow_error if the number of terms in \p retval overflows the maximum value representable by
 		 * base_series_multiplier::bucket_size_type.
+		 * @throws unspecified any exception thrown by:
+		 * - the cast operator of piranha::integer,
+		 * - standard threading primitives,
+		 * - thread_pool::enqueue(),
+		 * - future_list::push_back().
 		 */
 		// TODO test with zero bucket count, to make sure it does not cause problems.
 		// TODO test with n_threads larger than bucket count.
@@ -684,12 +693,17 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/// A plain series multiplication routine.
 		/**
 		 * \note
-		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, a compile-time error will
+		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, or \p SkipFunctor does
+		 * not satisfy the requirements outlined in base_series_multiplier::blocked_multiplication(), a compile-time error will
 		 * be produced.
 		 *
 		 * This method implements a generic series multiplication routine suitable for key types that satisfy piranha::key_is_multipliable.
 		 * The implementation is either single-threaded or multi-threaded, depending on the sizes of the input series, and it will use
 		 * either base_series_multiplier::plain_multiplier or a similar thread-safe multiplier for the term-by-term multiplications.
+		 *
+		 * Note that, in multithreaded mode, \p sf will be shared among (and called concurrently from) all the threads.
+		 *
+		 * @param[in] sf the skipping functor (see base_series_multiplier::blocked_multiplication()).
 		 *
 		 * @return the series resulting from the multiplication of the two series used to construct \p this.
 		 *
@@ -707,13 +721,15 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - in-place addition of coefficients.
 		 */
 		// TODO check about the old counter overflow check that was removed.
-		Series plain_multiplication() const
+		template <typename SkipFunctor = no_skip>
+		Series plain_multiplication(const SkipFunctor &sf = no_skip{}) const
 		{
 			// Shortcuts.
 			using term_type = typename Series::term_type;
 			using cf_type = typename term_type::cf_type;
 			using key_type = typename term_type::key_type;
 			PIRANHA_TT_CHECK(key_is_multipliable,cf_type,key_type);
+			PIRANHA_TT_CHECK(is_function_object,SkipFunctor,bool,const size_type &, const size_type &);
 			constexpr std::size_t m_arity = key_type::multiply_arity;
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
@@ -752,7 +768,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			if (n_threads == 1u) {
 				try {
 					// Single-thread case.
-					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2);
+					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2,sf);
 					sanitize_series(retval,static_cast<unsigned>(n_threads));
 					return retval;
 				} catch (...) {
@@ -771,13 +787,15 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			try {
 				for (size_type i = 0u; i < n_threads; ++i) {
 					// Thread functor.
-					auto tf = [i,this,block_size,n_threads,&sl_array,&retval]()
+					auto tf = [i,this,block_size,n_threads,&sl_array,&retval,&sf]()
 					{
 						// Used to store the result of term multiplication.
 						std::array<term_type,key_type::multiply_arity> tmp_t;
 						// End of retval container (thread-safe).
 						const auto c_end = retval._container().end();
-						// Block functor,
+						// Block functor.
+						// NOTE: this is very similar to the plain functor, but it does the bucket locking
+						// additionally.
 						auto f = [&c_end,&tmp_t,this,&retval,&sl_array] (const size_type &i, const size_type &j)
 						{
 							// Run the term multiplication.
@@ -800,7 +818,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 						// Thread block limit.
 						const auto e1 = (i == n_threads - 1u) ? this->m_v1.size() :
 							static_cast<size_type>((i + 1u) * block_size);
-						this->blocked_multiplication(f,static_cast<size_type>(i * block_size),e1,0u,this->m_v2.size());
+						this->blocked_multiplication(f,static_cast<size_type>(i * block_size),e1,0u,this->m_v2.size(),sf);
 					};
 					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(i),tf));
 				}
