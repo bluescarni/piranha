@@ -147,13 +147,20 @@ struct m_functor_0
 	mutable std::set<std::pair<unsigned,unsigned>,p_sorter> m_set;
 };
 
+// A skipping functor that will skip all multiplications apart from those by the first term of
+// of the second series.
 struct s_functor_0
 {
+	s_functor_0(unsigned n):m_n(n) {}
 	template <typename T>
-	bool operator()(const T &, const T &) const
+	bool operator()(const T &, const T &j) const
 	{
-		return false;
+		if (j <= m_n) {
+			return false;
+		}
+		return true;
 	}
+	const unsigned m_n;
 };
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
@@ -213,4 +220,63 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
 		}
 	}
+	// Now with skipping.
+	tuning::set_multiplication_block_size(16u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{0u});
+	BOOST_CHECK(mf0.m_set.size() == 100u);
+	for (unsigned i = 0u; i < 100u; ++i) {
+		for (unsigned j = 0u; j < 1u; ++j) {
+			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
+		}
+	}
+	// Try with commensurable block size.
+	tuning::set_multiplication_block_size(25u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
+	for (unsigned i = 0u; i < 100u; ++i) {
+		for (unsigned j = 0u; j < 2u; ++j) {
+			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
+		}
+	}
+	// Block size same as series size.
+	tuning::set_multiplication_block_size(100u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
+	for (unsigned i = 0u; i < 100u; ++i) {
+		for (unsigned j = 0u; j < 2u; ++j) {
+			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
+		}
+	}
+	// Larger size than series size.
+	tuning::set_multiplication_block_size(200u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,0u,100u,0u,100u,s_functor_0{1u});
+	BOOST_CHECK(mf0.m_set.size() == 100u * 2u);
+	for (unsigned i = 0u; i < 100u; ++i) {
+		for (unsigned j = 0u; j < 2u; ++j) {
+			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
+		}
+	}
+	// Only parts of the series.
+	tuning::set_multiplication_block_size(23u);
+	mf0.m_set.clear();
+	m0.blocked_multiplication(mf0,20u,87u,1u,89u,s_functor_0{1u});
+	BOOST_CHECK(mf0.m_set.size() == (87u - 20u));
+	for (unsigned i = 20u; i < 87u; ++i) {
+		for (unsigned j = 1u; j < 2u; ++j) {
+			BOOST_CHECK(mf0.m_set.count(std::make_pair(i,j)) == 1u);
+		}
+	}
+	// Test error throwing.
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,3u,2u,1u,2u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,101u,102u,1u,2u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,102u,1u,2u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,3u,2u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,101u,102u),std::invalid_argument);
+	BOOST_CHECK_THROW(m0.blocked_multiplication(mf0,1u,2u,1u,102u),std::invalid_argument);
+	// Final reset of the mult block size.
+	tuning::reset_multiplication_block_size();
 }
