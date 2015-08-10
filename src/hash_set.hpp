@@ -225,14 +225,14 @@ class hash_set
 							// Create a new node with content equal to other_cur
 							// and linking forward to the terminator.
 							std::unique_ptr<node> new_node(::new node());
-							::new ((void *)&new_node->m_storage) T(*other_cur->ptr());
+							::new (static_cast<void *>(&new_node->m_storage)) T(*other_cur->ptr());
 							new_node->m_next = &terminator;
 							// Link the new node.
 							cur->m_next = new_node.release();
 							cur = cur->m_next;
 						} else {
 							// This means this is the first node.
-							::new ((void *)&cur->m_storage) T(*other_cur->ptr());
+							::new (static_cast<void *>(&cur->m_storage)) T(*other_cur->ptr());
 							cur->m_next = &terminator;
 						}
 						other_cur = other_cur->m_next;
@@ -269,7 +269,7 @@ class hash_set
 				// Do something only if there is content in the other.
 				if (other.m_node.m_next) {
 					// Move construct current first node with first node of other.
-					::new ((void *)&m_node.m_storage) T(std::move(*other.m_node.ptr()));
+					::new (static_cast<void *>(&m_node.m_storage)) T(std::move(*other.m_node.ptr()));
 					// Link remaining content of other into this.
 					m_node.m_next = other.m_node.m_next;
 					// Destroy first node of other.
@@ -285,13 +285,13 @@ class hash_set
 				if (m_node.m_next) {
 					// Create the new node and forward-link it to the second node.
 					std::unique_ptr<node> new_node(::new node());
-					::new ((void *)&new_node->m_storage) T(std::forward<U>(item));
+					::new (static_cast<void *>(&new_node->m_storage)) T(std::forward<U>(item));
 					new_node->m_next = m_node.m_next;
 					// Link first node to the new node.
 					m_node.m_next = new_node.release();
 					return m_node.m_next;
 				} else {
-					::new ((void *)&m_node.m_storage) T(std::forward<U>(item));
+					::new (static_cast<void *>(&m_node.m_storage)) T(std::forward<U>(item));
 					m_node.m_next = &terminator;
 					return &m_node;
 				}
@@ -1013,7 +1013,7 @@ class hash_set
 		 * 
 		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
-		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
+		 * @return iterator pointing to the element following \p it prior to the element being erased, or end() if
 		 * no such element exists.
 		 */
 		iterator erase(const_iterator it)
@@ -1023,9 +1023,10 @@ class hash_set
 			iterator retval;
 			retval.m_set = this;
 			const auto b_count = bucket_count();
-			// Travel to the next iterator if necessary.
 			if (b_it == ptr()[it.m_idx].end()) {
-				size_type idx = it.m_idx + 1u;
+				// Travel to the next iterator if the deleted element was
+				// the last one in the bucket.
+				auto idx = static_cast<size_type>(it.m_idx + 1u);
 				// Advance to the first non-empty bucket if necessary,
 				// without going past the end of the set.
 				for (; idx < b_count; ++idx) {
@@ -1038,12 +1039,18 @@ class hash_set
 				if (idx != b_count) {
 					retval.m_it = ptr()[idx].begin();
 				}
+				// NOTE: in case we reached the end of the container, the end() iterator should be:
+				// {this,bucket_count,local_iterator{}}
+				// this has been set above already, bucket_count is set by retval.m_idx = idx
+				// and the default local_iterator ctor is called by the def ctor of iterator.
 			} else {
+				// Otherwise, just copy over the iterator returned by _erase().
 				retval.m_idx = it.m_idx;
 				retval.m_it = b_it;
 			}
 			piranha_assert(m_n_elements);
-			--m_n_elements;
+			// Update the number of elements.
+			m_n_elements = static_cast<size_type>(m_n_elements - 1u);
 			return retval;
 		}
 		/// Remove all elements.
@@ -1332,7 +1339,7 @@ class hash_set
 		 * 
 		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
-		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
+		 * @return local iterator pointing to the element following \p it prior to the element being erased, or local end() if
 		 * no such element exists.
 		 */
 		local_iterator _erase(const_iterator it)
@@ -1352,10 +1359,10 @@ class hash_set
 					bucket.m_node.m_next = nullptr;
 					return bucket.end();
 				} else {
-					// Store the link in the second element.
+					// Store the link in the second element (this could be the terminator).
 					auto tmp = bucket.m_node.m_next->m_next;
 					// Move-construct from the second element, and then destroy it.
-					::new ((void *)&bucket.m_node.m_storage) T(std::move(*bucket.m_node.m_next->ptr()));
+					::new (static_cast<void *>(&bucket.m_node.m_storage)) T(std::move(*bucket.m_node.m_next->ptr()));
 					bucket.m_node.m_next->ptr()->~T();
 					::delete bucket.m_node.m_next;
 					// Establish the new link.
@@ -1381,16 +1388,9 @@ class hash_set
 				// to which 'it' refers is not here: assert that the iterator we just
 				// erased was not end() - i.e., it was pointing to something.
 				piranha_assert(b_it.m_ptr);
-				// See if the erased iterator was the last one of the list.
-				const auto tmp = prev_b_it;
-				++prev_b_it;
-				if (prev_b_it == b_it_f) {
-					// Iterator is the last one, return local end().
-					return b_it_f;
-				} else {
-					// Iterator is not the last one, return it.
-					return tmp;
-				}
+				// Move forward the iterator that originally preceded the erased item.
+				// It will now point to the item past the erased one or to the local end().
+				return ++prev_b_it;
 			}
 		}
 		//@}

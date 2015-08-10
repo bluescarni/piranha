@@ -401,9 +401,100 @@ struct erase_tester
 	}
 };
 
+struct custom_unsigned_hash
+{
+	std::size_t operator()(unsigned n) const
+	{
+		return static_cast<std::size_t>(n);
+	}
+};
+
 BOOST_AUTO_TEST_CASE(hash_set_erase_test)
 {
 	boost::mpl::for_each<key_types>(erase_tester());
+	// Tests various possibilities of bucket setup for erase(). This first one triggered a bug
+	// where erase() would return not the item after the erased member, but the item before.
+	using h_set = hash_set<unsigned,custom_unsigned_hash>;
+	h_set h;
+	// Rehash to 4.
+	h.rehash(4u);
+	// Insert so that they all end up in the same bucket
+	// and in order 0,4,8 (due to front-insertion after the first element).
+	h.insert(0u);
+	h.insert(8u);
+	h.insert(4u);
+	auto it = h.erase(h.find(4u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,8u);
+	// Reset the h, and try erasing the first element with 0, 1 and 2 other elements.
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	it = h.erase(h.find(0u));
+	BOOST_CHECK(it == h.end());
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(4u);
+	it = h.erase(h.find(0u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,4u);
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(8u);
+	h.insert(4u);
+	it = h.erase(h.find(0u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,4u);
+	// Now try erasing the second and third element of the bucket.
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(4u);
+	it = h.erase(h.find(4u));
+	BOOST_CHECK(it == h.end());
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(8u);
+	h.insert(4u);
+	it = h.erase(h.find(8u));
+	BOOST_CHECK(it == h.end());
+	// Some tests with more than 1 bucket.
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(1u);
+	it = h.erase(h.find(0u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,1u);
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(2u);
+	h.insert(1u);
+	it = h.erase(h.find(1u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,2u);
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(2u);
+	h.insert(1u);
+	it = h.erase(h.find(2u));
+	BOOST_CHECK(it == h.end());
+	h.clear();
+	h.rehash(4u);
+	h.insert(0u);
+	h.insert(4u);
+	h.insert(2u);
+	h.insert(1u);
+	it = h.erase(h.find(4u));
+	BOOST_CHECK(it != h.end());
+	BOOST_CHECK_EQUAL(*it,1u);
+	it = h.erase(h.find(2u));
+	BOOST_CHECK(it == h.end());
 }
 
 struct clear_tester
