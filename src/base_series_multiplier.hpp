@@ -380,12 +380,15 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * @throws unspecified any exception thrown by:
 		 * - overflow errors in the conversion of piranha::integer to integral types,
 		 * - the call operator of \p mf or \p ff,
-		 * - memory errors in standard containers.
+		 * - memory errors in standard containers,
+		 * - the conversion operator of piranha::integer.
 		 */
 		template <std::size_t MultArity, typename MultFunctor, typename FilterFunctor = no_filter>
 		bucket_size_type estimate_final_series_size(Series &tmp, const MultFunctor &mf, const FilterFunctor &ff = no_filter{}) const
 		{
 			static_assert(MultArity != 0u,"Invalid multiplication arity in base_series_multiplier.");
+			PIRANHA_TT_CHECK(is_function_object,MultFunctor,void,const size_type &, const size_type &);
+			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
 			// Clear the input series.
 			tmp._container().clear();
 			// Make sure tmp is cleared in any case on exit.
