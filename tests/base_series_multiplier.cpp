@@ -24,7 +24,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/vector.hpp>
 #include <cstddef>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
@@ -36,6 +39,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
+#include "../src/settings.hpp"
 #include "../src/tuning.hpp"
 
 using namespace piranha;
@@ -446,4 +450,122 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
 		BOOST_CHECK_THROW(mt::sanitize_series(e,n),std::invalid_argument);
 		e._container().clear();
 	}
+}
+
+struct multiplication_tester
+{
+	template <typename T>
+	void operator()(const T &)
+	{
+		// NOTE: this test is going to be exact in case of coefficients cancellations with double
+		// precision coefficients only if the platform has ieee 754 format (integer exactly representable
+		// as doubles up to 2 ** 53).
+		if (std::is_same<typename T::term_type::cf_type,double>::value && (!std::numeric_limits<double>::is_iec559 ||
+			std::numeric_limits<double>::digits < 53))
+		{
+			return;
+		}
+		T x("x"), y("y"), z("z"), t("t"), u("u");
+		// Dense case, default setup.
+		auto f = 1 + x + y + z + t;
+		auto tmp(f);
+		for (int i = 1; i < 10; ++i) {
+			f *= tmp;
+		}
+		auto g = f + 1;
+		auto retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),10626u);
+		// Test swapping.
+		BOOST_CHECK(x * (1 + x) == (1 + x) * x);
+		BOOST_CHECK(T(1) * retval == retval);
+		// Dense case, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * g;
+			BOOST_CHECK_EQUAL(tmp.size(),10626u);
+			BOOST_CHECK(tmp == retval);
+		}
+		settings::reset_n_threads();
+		// Dense case with cancellations, default setup.
+		auto h = 1 - x + y + z + t;
+		tmp = h;
+		for (int i = 1; i < 10; ++i) {
+			h *= tmp;
+		}
+		retval = f * h;
+		BOOST_CHECK_EQUAL(retval.size(),5786u);
+		// Dense case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * h;
+			BOOST_CHECK_EQUAL(tmp.size(),5786u);
+			BOOST_CHECK(retval == tmp);
+		}
+		settings::reset_n_threads();
+		// Sparse case, default.
+		f = (x + y + z*z*2 + t*t*t*3 + u*u*u*u*u*5 + 1);
+		auto tmp_f(f);
+		g = (u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_g(g);
+		h = (-u + t + z*z*2 + y*y*y*3 + x*x*x*x*x*5 + 1);
+		auto tmp_h(h);
+		for (int i = 1; i < 8; ++i) {
+			f *= tmp_f;
+			g *= tmp_g;
+			h *= tmp_h;
+		}
+		retval = f * g;
+		BOOST_CHECK_EQUAL(retval.size(),591235u);
+		// Sparse case, force n threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * g;
+			BOOST_CHECK_EQUAL(tmp.size(),591235u);
+			BOOST_CHECK(retval == tmp);
+		}
+		settings::reset_n_threads();
+		// Sparse case with cancellations, default.
+		retval = f * h;
+		BOOST_CHECK_EQUAL(retval.size(),591184u);
+		// Sparse case with cancellations, force number of threads.
+		for (auto i = 1u; i <= 4u; ++i) {
+			settings::set_n_threads(i);
+			auto tmp = f * h;
+			BOOST_CHECK_EQUAL(tmp.size(),591184u);
+			BOOST_CHECK(tmp == retval);
+		}
+		settings::reset_n_threads();
+	}
+};
+
+BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
+{
+	// Simple test with empty series.
+	using pt = p_type<integer>;
+	using mt = m_checker<pt>;
+	pt e1, e2;
+	mt m0{e1,e2};
+	BOOST_CHECK_EQUAL(m0.plain_multiplication(),0);
+	// Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
+	using pt1 = p_type<double>;
+	using pt2 = p_type<integer>;
+	pt1 p1{"x"}, p2{"x"};
+	p1._container().begin()->m_cf *= 2;
+	p2._container().begin()->m_cf *= 3;
+	auto retval = p1 * p2;
+	BOOST_CHECK(retval.size() == 1u);
+	BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+	BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+	BOOST_CHECK(retval._container().begin()->m_cf == (double(3) * double(1)) * (double(2) * double(1)));
+	pt2 p3{"x"};
+	p3._container().begin()->m_cf *= 4;
+	pt2 p4{"x"};
+	p4._container().begin()->m_cf *= 2;
+	retval = p4 * p3;
+	BOOST_CHECK(retval.size() == 1u);
+	BOOST_CHECK(retval._container().begin()->m_key.size() == 1u);
+	BOOST_CHECK(retval._container().begin()->m_key[0] == 2);
+	BOOST_CHECK(retval._container().begin()->m_cf == double((double(2) * double(1)) * (integer(1) * 4)));
+	using p_types = boost::mpl::vector<pt1,pt2,p_type<rational>>;
+	boost::mpl::for_each<p_types>(multiplication_tester());
 }
