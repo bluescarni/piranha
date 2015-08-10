@@ -23,6 +23,7 @@
 #define BOOST_TEST_MODULE base_series_multiplier_test
 #include <boost/test/unit_test.hpp>
 
+#include <cstddef>
 #include <set>
 #include <stdexcept>
 #include <type_traits>
@@ -91,6 +92,11 @@ struct m_checker: public base_series_multiplier<Series>
 	void blocked_multiplication(Args && ... args) const
 	{
 		base::blocked_multiplication(std::forward<Args>(args)...);
+	}
+	template <std::size_t N, typename ... Args>
+	typename Series::size_type estimate_final_series_size(Args && ... args) const
+	{
+		return base::template estimate_final_series_size<N>(std::forward<Args>(args)...);
 	}
 };
 
@@ -290,4 +296,78 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_blocked_multiplication_test)
 	BOOST_CHECK_NO_THROW(m1.blocked_multiplication(mf1,0u,0u,0u,0u));
 	// Final reset of the mult block size.
 	tuning::reset_multiplication_block_size();
+}
+
+BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
+{
+	using pt = p_type<integer>;
+	// Start with empty series.
+	pt e1, e2, tmp;
+	tmp += 1;
+	{
+	m_checker<pt> m0(e1,e2);
+	m_functor_0 mf0;
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
+	// Check tmp is cleared on exit.
+	BOOST_CHECK_EQUAL(tmp,0);
+	}
+	{
+	// Check with series with only one term.
+	e1 = 1;
+	e2 = 2;
+	tmp += 1;
+	m_checker<pt> m0(e1,e2);
+	m_functor_0 mf0;
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<2u>(tmp,mf0),2u);
+	BOOST_CHECK_EQUAL(tmp,0);
+	}
+	{
+	// 1 by n terms.
+	e1 = 1 + pt{"x"} - pt{"x"};
+	e2 = 2;
+	e2 += pt{"x"};
+	tmp += 1;
+	m_checker<pt> m0(e1,e2);
+	m_functor_0 mf0;
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),2u);
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<2u>(tmp,mf0),4u);
+	BOOST_CHECK_EQUAL(tmp,0);
+	}
+	{
+	// Check with bogus filter.
+	using b_size_type = pt::size_type;
+	auto ff = [] (const b_size_type &, const b_size_type &) {return 2u;};
+	e1 += pt{"x"};
+	tmp += 1;
+	m_checker<pt> m0(e1,e2);
+	m_functor_0 mf0;
+	BOOST_CHECK_THROW(m0.estimate_final_series_size<1u>(tmp,mf0,ff),std::invalid_argument);
+	BOOST_CHECK_EQUAL(tmp,0);
+	}
+	// Just a couple of simple tests using polynomials, we can't really know what to expect as the method
+	// works in a statistical fashion.
+	{
+	pt x{"x"}, y{"y"};
+	auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
+	auto tmp = a * b;
+	m_checker<pt> m0(a,b);
+	m_functor_0 mf0;
+	// Here the multiplier does nothing, tmp is cleared in input and thus the loop in the estimation
+	// will exit immediately, yielding a final result of 1.
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
+	BOOST_CHECK_EQUAL(tmp,0);
+	}
+	// A reduced fateman1 benchmark, just to test a bit more.
+	{
+	pt x("x"), y("y"), z("z"), t("t");
+	auto f = x + y + z + t + 1;
+	auto tmp(f);
+	for (auto i = 1; i < 10; ++i) {
+		f *= tmp;
+	}
+	auto b = f + 1;
+	auto retval = f * b;
+	std::cout << "Bucket count vs actual size: " << retval.table_bucket_count() << ',' << retval.size() << '\n';
+	}
 }
