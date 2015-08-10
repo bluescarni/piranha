@@ -574,11 +574,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		};
 		/// Sanitise series.
 		/**
-		 * When using the low-level interface of piranha::hash_set for term insertion, a series of invariants might be violated
+		 * When using the low-level interface of piranha::hash_set for term insertion, invariants might be violated
 		 * both in piranha::hash_set and piranha::series. In particular:
 		 *
 		 * - terms may not be checked for compatibility or ignorability upon insertion,
-		 * - the count of elements in piranha::hash_set is not updated.
+		 * - the count of elements in piranha::hash_set might not be updated.
 		 *
 		 * This method can be used to fix these invariants: each term of \p retval will be checked for ignorability and compatibility,
 		 * and the total count of terms in the series will be set to the number of non-ignorable terms. Ignorable terms will
@@ -607,6 +607,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			}
 			auto &container = retval._container();
 			const auto &args = retval.get_symbol_set();
+			// Reset the size to zero before doing anything.
+			container._update_size(static_cast<bucket_size_type>(0u));
 			// Single-thread implementation.
 			if (n_threads == 1u) {
 				const auto it_end = container.end();
@@ -632,7 +634,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			std::mutex m;
 			integer global_count(0);
 			auto eraser = [b_count,&container,&m,&args,&global_count](const bucket_size_type &start, const bucket_size_type &end) {
-				piranha_assert(start < end && end <= b_count);
+				piranha_assert(start <= end && end <= b_count);
 				(void)b_count;
 				bucket_size_type count = 0u;
 				std::vector<term_type> term_list;
