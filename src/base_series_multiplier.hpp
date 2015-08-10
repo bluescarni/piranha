@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <array>
-#include <atomic>
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath>
 #include <cstddef>
@@ -33,7 +32,6 @@
 #include <mutex>
 #include <random>
 #include <stdexcept>
-#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -41,7 +39,6 @@
 #include "config.hpp"
 #include "detail/atomic_utils.hpp"
 #include "detail/gcd.hpp"
-#include "detail/series_fwd.hpp"
 #include "exceptions.hpp"
 #include "key_is_multipliable.hpp"
 #include "mp_integer.hpp"
@@ -597,8 +594,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back().
 		 */
-		// TODO test with zero bucket count, to make sure it does not cause problems.
-		// TODO test with n_threads larger than bucket count.
 		static void sanitize_series(Series &retval, unsigned n_threads)
 		{
 			using term_type = typename Series::term_type;

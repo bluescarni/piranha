@@ -89,6 +89,7 @@ struct m_checker: public base_series_multiplier<Series>
 			BOOST_CHECK(this->m_v2[i]->m_cf.num() % it->m_cf.num() == 0);
 		}
 	}
+	// Perfect forwarding of protected members, to make them accessible.
 	template <typename ... Args>
 	void blocked_multiplication(Args && ... args) const
 	{
@@ -103,6 +104,11 @@ struct m_checker: public base_series_multiplier<Series>
 	static void sanitize_series(Args && ... args)
 	{
 		return base::sanitize_series(std::forward<Args>(args)...);
+	}
+	template <typename ... Args>
+	Series plain_multiplication(Args && ... args) const
+	{
+		return base::plain_multiplication(std::forward<Args>(args)...);
 	}
 };
 
