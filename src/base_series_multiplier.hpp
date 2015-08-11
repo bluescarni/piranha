@@ -527,6 +527,14 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				explicit plain_multiplier(const std::vector<term_type const *>	&v1, const std::vector<term_type const *> &v2,
 					Series &retval):m_v1(v1),m_v2(v2),m_retval(retval),m_c_end(retval._container().end())
 				{}
+				/// Deleted copy constructor.
+				plain_multiplier(const plain_multiplier &) = delete;
+				/// Deleted move constructor.
+				plain_multiplier(plain_multiplier &&) = delete;
+				/// Deleted copy assignment operator.
+				plain_multiplier &operator=(const plain_multiplier &) = delete;
+				/// Deleted move assignment operator.
+				plain_multiplier &operator=(plain_multiplier &&) = delete;
 				/// Call operator.
 				/**
 				 * The call operator will perform the multiplication of the <tt>i</tt>-th term of the first series by the
