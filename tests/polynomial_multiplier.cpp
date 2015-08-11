@@ -25,11 +25,14 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_array.hpp"
 #include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -39,7 +42,10 @@
 using namespace piranha;
 
 using cf_types = boost::mpl::vector<double,integer,rational>;
-using k_types = boost::mpl::vector<monomial<int>,monomial<integer>,monomial<rational>,k_monomial>;
+using k_types = boost::mpl::vector<monomial<int>,monomial<integer>,monomial<rational>,
+	// This should ensure in the overflow tests below we have enough bit width (we
+	// are testing with 3 variables).
+	kronecker_monomial<std::int_least64_t>>;
 
 struct bounds_tester
 {
@@ -75,7 +81,36 @@ struct bounds_tester
 		template <typename Key, typename std::enable_if<detail::is_kronecker_monomial<Key>::value,int>::type = 0>
 		void operator()(const Key &)
 		{
-			//using pt = polynomial<Cf,Key>;
+			using pt = polynomial<Cf,Key>;
+			using value_type = typename Key::value_type;
+			using ka = kronecker_array<value_type>;
+			// Use polynomials with 3 variables for testing.
+			const auto &limits = std::get<0u>(ka::get_limits()[3u]);
+			auto x = pt{"x"}, y = pt{"y"}, z = pt{"z"};
+			BOOST_CHECK_THROW(x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]) * x,
+				std::overflow_error);
+			BOOST_CHECK_THROW(x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]) * y,
+				std::overflow_error);
+			BOOST_CHECK_THROW(x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]) * z,
+				std::overflow_error);
+			BOOST_CHECK_THROW(x.pow(-limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]) * x.pow(-1),
+				std::overflow_error);
+			BOOST_CHECK_THROW(x.pow(limits[0u]) * y.pow(-limits[1u]) * z.pow(limits[2u]) * y.pow(-1),
+				std::overflow_error);
+			BOOST_CHECK_THROW(x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(-limits[2u]) * z.pow(-1),
+				std::overflow_error);
+			BOOST_CHECK_EQUAL(x.pow(limits[0u] - 1) * y.pow(limits[1u]) * z.pow(limits[2u]) * x,
+				x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]));
+			BOOST_CHECK_EQUAL(x.pow(limits[0u]) * y.pow(limits[1u] - 1) * z.pow(limits[2u]) * y,
+				x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]));
+			BOOST_CHECK_EQUAL(x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u] - 1) * z,
+				x.pow(limits[0u]) * y.pow(limits[1u]) * z.pow(limits[2u]));
+			BOOST_CHECK_EQUAL(x.pow(-limits[0u] + 1) * y.pow(-limits[1u]) * z.pow(-limits[2u]) * x.pow(-1),
+				x.pow(-limits[0u]) * y.pow(-limits[1u]) * z.pow(-limits[2u]));
+			BOOST_CHECK_EQUAL(x.pow(-limits[0u]) * y.pow(-limits[1u] + 1) * z.pow(-limits[2u]) * y.pow(-1),
+				x.pow(-limits[0u]) * y.pow(-limits[1u]) * z.pow(-limits[2u]));
+			BOOST_CHECK_EQUAL(x.pow(-limits[0u]) * y.pow(-limits[1u]) * z.pow(-limits[2u] + 1) * z.pow(-1),
+				x.pow(-limits[0u]) * y.pow(-limits[1u]) * z.pow(-limits[2u]));
 		}
 	};
 	template <typename Cf>
