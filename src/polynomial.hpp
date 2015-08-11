@@ -537,6 +537,10 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
 /**
  * This specialisation of piranha::series_multiplier is enabled when \p Series is an instance of
  * piranha::polynomial.
+ *
+ * ## Type requirements ##
+ *
+ * \p Series must be suitable for use in piranha::base_series_multiplier.
  * 
  * ## Exception safety guarantee ##
  * 
@@ -546,16 +550,13 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
  * 
  * Move semantics is equivalent to piranha::base_series_multiplier's move semantics.
  */
-// TODO: update doc with exception specs, invalid_argument -> overflow_error.
 // TODO: enabling and type checking.
 template <typename Series>
 class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 	public base_series_multiplier<Series>
 {
-		PIRANHA_TT_CHECK(is_series,Series);
-		// Key type getter.
-		template <typename T>
-		using key_t = typename T::term_type::key_type;
+		// Base multiplier type.
+		using base = base_series_multiplier<Series>;
 		// Bounds checking.
 		// Functor to return un updated copy of p if v is less than p.first or greater than p.second.
 		struct update_minmax
@@ -566,6 +567,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return std::make_pair(v < p.first ? v : p.first,v > p.second ? v : p.second);
 			}
 		};
+		// Key type getter shortcut.
+		template <typename T>
+		using key_t = typename T::term_type::key_type;
 		// No bounds checking if key is a monomial with non-integral exponents.
 		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
 			!std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
@@ -588,7 +592,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			auto monomial_checker = [this](const term_type &t) {
 				return t.m_key.size() == this->m_ss.size();
 			};
-			static_cast<void>(monomial_checker);
+			(void)monomial_checker;
 			piranha_assert(monomial_checker(**it1));
 			piranha_assert(monomial_checker(**it2));
 			std::transform((*it1)->m_key.begin(),(*it1)->m_key.end(),std::back_inserter(minmax_values1),[](const expo_type &v) {
@@ -685,11 +689,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			}
 		}
 	public:
-		/// Base multiplier type.
-		using base = base_series_multiplier<Series>;
 		/// Constructor.
 		/**
-		 * The constructor will call the base constructor and run the additional checks:
+		 * The constructor will call the base constructor and run these additional checks:
 		 * - if the key is a piranha::kronecker_monomial, it will be checked that the result of the multiplication does not overflow
 		 *   the representation limits of piranha::kronecker_monomial;
 		 * - if the key is a piranha::monomial of a C++ integral type, it will be checked that the result of the multiplication does not overflow
@@ -700,7 +702,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * @param[in] s1 first series operand.
 		 * @param[in] s2 second series operand.
 		 * 
-		 * @throws std::invalid_argument if a bounds check, as described above, fails.
+		 * @throws std::overflow_error if a bounds check, as described above, fails.
 		 * @throws unspecified any exception thrown by the base constructor.
 		 */
 		explicit series_multiplier(const Series &s1, const Series &s2):base(s1,s2)
@@ -832,9 +834,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				term_type const *t1 = v1[std::get<0u>(task)];
 				// Get pointers to the second series.
 				term_type const **start2 = &(v2[std::get<1u>(task)]), **end2 = &(v2[std::get<2u>(task)]);
+				// NOTE: these will have to be adapted for kd_monomial.
 				using int_type = decltype(t1->m_key.get_int());
 				// Get shortcuts to cf and key in t1.
-				// NOTE: this will have to be adapted for kd_monomial.
 				const auto &cf1 = t1->m_cf;
 				const int_type key1 = t1->m_key.get_int();
 				// Iterate over the task.
@@ -876,8 +878,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					std::stable_sort(tasks.begin(),tasks.end(),task_cmp);
 					// Iterate over the tasks and run the multiplication.
 					term_type tmp_term;
-					for (auto it = tasks.begin(); it != tasks.end(); ++it) {
-						task_consume(*it,tmp_term);
+					for (const auto &t: tasks) {
+						task_consume(t,tmp_term);
 					}
 					this->sanitize_series(retval,n_threads);
 				} catch (...) {
@@ -888,7 +890,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			}
 			// Number of buckets in retval.
 			const bucket_size_type bucket_count = container.bucket_count();
-			// Number of zones in which the output container will be subdivided,
+			// Compute the number of zones in which the output container will be subdivided,
 			// a multiple of the number of threads.
 			// NOTE: zm is a tuning parameter.
 			const unsigned zm = 10u;
@@ -900,10 +902,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			task_table.resize(safe_cast<decltype(task_table.size())>(n_zones));
 			// Lower bound implementation. Adapted from:
 			// http://en.cppreference.com/w/cpp/algorithm/lower_bound
-			// Given the [first,last[ index range in v2, find the first index idx such that the i-th term in v1
+			// Given the [first,last[ index range in v2, find the first index idx in the v2 range such that the i-th term in v1
 			// multiplied by the idx-th term in v2 will be written into retval at a bucket index not less than zb.
 			auto l_bound = [&v1,&v2,&r_bucket,&task_split] (size_type first, size_type last, bucket_size_type zb, size_type i) -> size_type {
-				piranha_assert(last >= first);
+				piranha_assert(first <= last);
 				bucket_size_type ib = r_bucket(v1[i]);
 				// Avoid zb - ib below wrapping around.
 				if (zb < ib) {
@@ -941,14 +943,18 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					} else {
 						b = static_cast<bucket_size_type>(a + bpz);
 					}
+					// First batch of tasks.
 					for (size_type i = 0u; i < size1; ++i) {
 						auto t = std::make_tuple(i,l_bound(0u,size2,a,i),l_bound(0u,size2,b,i));
 						if (std::get<1u>(t) == 0u && std::get<2u>(t) == 0u) {
+							// This means that all the next tasks we will compute will be empty,
+							// no sense in calculating them.
 							break;
 						}
 						task_split(t,cur_tasks);
 					}
-					// Note: we can always compute a/b + bucket_count because of the limits on the maximum value of
+					// Second batch of tasks.
+					// Note: we can always compute a,b + bucket_count because of the limits on the maximum value of
 					// bucket_count.
 					for (size_type i = 0u; i < size1; ++i) {
 						auto t = std::make_tuple(i,l_bound(0u,size2,static_cast<bucket_size_type>(a + bucket_count),i),
@@ -983,11 +989,13 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// Total number of term-by-term multiplications. Needs to be equal
 				// to size1 * size2 at the end.
 				integer tot_n(0);
+				// Tmp term for multiplications.
 				term_type tmp_term;
 				for (decltype(task_table.size()) i = 0u; i < task_table.size(); ++i) {
 					const auto &v = task_table[i];
 					// Bucket limits of each zone.
 					bucket_size_type a = static_cast<bucket_size_type>(bpz * i), b;
+					// Special casing for the last zone in the table.
 					if (i == task_table.size() - 1u) {
 						b = bucket_count;
 					} else {
@@ -996,6 +1004,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					for (const auto &t: v) {
 						auto idx1 = std::get<0u>(t), start2 = std::get<1u>(t), end2 = std::get<2u>(t);
 						using int_type = decltype(v1[idx1]->m_key.get_int());
+						piranha_assert(start2 <= end2);
 						tot_n += end2 - start2;
 						for (; start2 != end2; ++start2) {
 							tmp_term.m_key.set_int(static_cast<int_type>(v1[idx1]->m_key.get_int() + v2[start2]->m_key.get_int()));
@@ -1018,7 +1027,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// Temporary term_type for caching.
 				term_type tmp_term;
 				// The starting index in the task table.
-				auto t_idx = static_cast<t_size_type>(t_size_type(thread_idx) * zm), start_t_idx = t_idx;
+				auto t_idx = static_cast<t_size_type>(t_size_type(thread_idx) * zm);
+				const auto start_t_idx = t_idx;
 				while (true) {
 					// If this returns false, it means that the tasks still need to be consumed;
 					if (!af[static_cast<std::size_t>(t_idx)].test_and_set()) {
