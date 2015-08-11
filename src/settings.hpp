@@ -47,7 +47,7 @@ struct base_settings
 	static std::atomic_ullong	s_min_work_per_thread;
 	// NOTE: this corresponds to circa 2% overhead from thread management on a common desktop
 	// machine around 2012 for the fastest series multiplication scenario.
-	static const unsigned long long	s_default_min_work_per_thread = 500000ull;
+	static const unsigned long long	s_default_min_work_per_thread = 250000ull;
 };
 
 template <typename T>
