@@ -134,6 +134,7 @@ struct key_has_linarg: detail::sfinae_types
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
+// TODO: fix the ctor and assignment from string with proper uniform enabling.
 template <typename Cf, typename Key>
 class polynomial:
 	public power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
@@ -545,7 +546,6 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
  * 
  * Move semantics is equivalent to piranha::base_series_multiplier's move semantics.
  */
-// TODO: checking for monomials
 // TODO: update doc with exception specs, invalid_argument -> overflow_error.
 // TODO: enabling and type checking.
 template <typename Series>
@@ -556,10 +556,77 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		// Key type getter.
 		template <typename T>
 		using key_t = typename T::term_type::key_type;
+		// Bounds checking.
+		// Functor to return un updated copy of p if v is less than p.first or greater than p.second.
+		struct update_minmax
+		{
+			template <typename T>
+			std::pair<T,T> operator()(const std::pair<T,T> &p, const T &v) const
+			{
+				return std::make_pair(v < p.first ? v : p.first,v > p.second ? v : p.second);
+			}
+		};
+		// No bounds checking if key is a monomial with non-integral exponents.
+		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
+			!std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
+		void check_bounds() const {}
+		// Monomial with integral exponents.
 		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
 			std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
-		// Bounds checking.
-		void check_bounds() const {}
+		void check_bounds() const
+		{
+			using expo_type = typename key_t<T>::value_type;
+			using term_type = typename Series::term_type;
+			// NOTE: we know that the input series are not null.
+			piranha_assert(this->m_v1.size() != 0u && this->m_v2.size() != 0u);
+			// Initialise minmax values.
+			std::vector<std::pair<expo_type,expo_type>> minmax_values1;
+			std::vector<std::pair<expo_type,expo_type>> minmax_values2;
+			auto it1 = this->m_v1.begin();
+			auto it2 = this->m_v2.begin();
+			// Checker for monomial sizes in debug mode.
+			auto monomial_checker = [this](const term_type &t) {
+				return t.m_key.size() == this->m_ss.size();
+			};
+			static_cast<void>(monomial_checker);
+			piranha_assert(monomial_checker(**it1));
+			piranha_assert(monomial_checker(**it2));
+			std::transform((*it1)->m_key.begin(),(*it1)->m_key.end(),std::back_inserter(minmax_values1),[](const expo_type &v) {
+				return std::make_pair(v,v);
+			});
+			std::transform((*it2)->m_key.begin(),(*it2)->m_key.end(),std::back_inserter(minmax_values2),[](const expo_type &v) {
+				return std::make_pair(v,v);
+			});
+			// Find the minmaxs.
+			for (; it1 != this->m_v1.end(); ++it1) {
+				piranha_assert(monomial_checker(**it1));
+				// NOTE: std::transform is allowed to do transformations in-place - i.e., here the output range is the
+				// same as the first input range.
+				std::transform(minmax_values1.begin(),minmax_values1.end(),(*it1)->m_key.begin(),minmax_values1.begin(),update_minmax{});
+			}
+			for (; it2 != this->m_v2.end(); ++it2) {
+				piranha_assert(monomial_checker(**it2));
+				std::transform(minmax_values2.begin(),minmax_values2.end(),(*it2)->m_key.begin(),minmax_values2.begin(),update_minmax{});
+			}
+			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow (this is a simple interval addition).
+			std::vector<std::pair<integer,integer>> minmax_values;
+			std::transform(minmax_values1.begin(),minmax_values1.end(),minmax_values2.begin(),
+				std::back_inserter(minmax_values),[](const std::pair<expo_type,expo_type> &p1,
+				const std::pair<expo_type,expo_type> &p2) {
+					return std::make_pair(integer(p1.first) + integer(p2.first),integer(p1.second) + integer(p2.second));
+			});
+			piranha_assert(minmax_values.size() == minmax_values1.size());
+			piranha_assert(minmax_values.size() == minmax_values2.size());
+			// Now do the checking.
+			for (decltype(minmax_values.size()) i = 0u; i < minmax_values.size(); ++i) {
+				try {
+					static_cast<expo_type>(minmax_values[i].first);
+					static_cast<expo_type>(minmax_values[i].second);
+				} catch (...) {
+					piranha_throw(std::overflow_error,"monomial components are out of bounds");
+				}
+			}
+		}
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<key_t<T>>::value,int>::type = 0>
 		void check_bounds() const
 		{
@@ -593,24 +660,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			for (; it1 != this->m_v1.end(); ++it1) {
 				tmp_vec1 = (*it1)->m_key.unpack(this->m_ss);
 				piranha_assert(tmp_vec1.size() == minmax_values1.size());
-				std::transform(minmax_values1.begin(),minmax_values1.end(),tmp_vec1.begin(),minmax_values1.begin(),
-					[](const std::pair<value_type,value_type> &p, const value_type &v) {
-						return std::make_pair(
-							v < p.first ? v : p.first,
-							v > p.second ? v : p.second
-						);
-				});
+				std::transform(minmax_values1.begin(),minmax_values1.end(),tmp_vec1.begin(),minmax_values1.begin(),update_minmax{});
 			}
 			for (; it2 != this->m_v2.end(); ++it2) {
 				tmp_vec2 = (*it2)->m_key.unpack(this->m_ss);
 				piranha_assert(tmp_vec2.size() == minmax_values2.size());
-				std::transform(minmax_values2.begin(),minmax_values2.end(),tmp_vec2.begin(),minmax_values2.begin(),
-					[](const std::pair<value_type,value_type> &p, const value_type &v) {
-						return std::make_pair(
-							v < p.first ? v : p.first,
-							v > p.second ? v : p.second
-						);
-				});
+				std::transform(minmax_values2.begin(),minmax_values2.end(),tmp_vec2.begin(),minmax_values2.begin(),update_minmax{});
 			}
 			// Compute the sum of the two minmaxs, using multiprecision to avoid overflow.
 			std::vector<std::pair<integer,integer>> minmax_values;
