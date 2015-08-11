@@ -620,8 +620,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			// Now do the checking.
 			for (decltype(minmax_values.size()) i = 0u; i < minmax_values.size(); ++i) {
 				try {
-					static_cast<expo_type>(minmax_values[i].first);
-					static_cast<expo_type>(minmax_values[i].second);
+					(void)static_cast<expo_type>(minmax_values[i].first);
+					(void)static_cast<expo_type>(minmax_values[i].second);
 				} catch (...) {
 					piranha_throw(std::overflow_error,"monomial components are out of bounds");
 				}
