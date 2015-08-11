@@ -38,6 +38,7 @@
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/pow.hpp"
+#include "../src/settings.hpp"
 
 using namespace piranha;
 
@@ -124,4 +125,117 @@ BOOST_AUTO_TEST_CASE(polynomial_multiplier_bounds_test)
 {
 	environment env;
 	boost::mpl::for_each<cf_types>(bounds_tester());
+}
+
+struct multiplication_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			using pt = polynomial<Cf,Key>;
+			// First a test with empty series.
+			pt e1, e2;
+			BOOST_CHECK_EQUAL(e1 * e2,0);
+			BOOST_CHECK_EQUAL((e1 * e2).get_symbol_set().size(),0u);
+			pt x{"x"};
+			BOOST_CHECK_EQUAL(e1 * x,0);
+			BOOST_CHECK_EQUAL(x * e1,0);
+			BOOST_CHECK_EQUAL((x * e1).get_symbol_set().size(),0u);
+			BOOST_CHECK_EQUAL((e1 * x).get_symbol_set().size(),0u);
+			// A reduced fateman benchmark.
+			pt y{"y"}, z{"z"}, t{"t"};
+			auto f = 1 + x + y + z + t;
+			auto tmp2 = f;
+			for (int i = 1; i < 10; ++i) {
+				f *= tmp2;
+			}
+			auto g = f + 1;
+			auto retval = f * g;
+			BOOST_CHECK_EQUAL(retval.size(),10626u);
+			// NOTE: this test is going to be exact in case of coefficients cancellations with double
+			// precision coefficients only if the platform has ieee 754 format (integer exactly representable
+			// as doubles up to 2 ** 53).
+			// NOTE: no check on radix needed, 2 is the minimum value.
+			if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 ||
+				std::numeric_limits<double>::digits < 53))
+			{
+				return;
+			}
+			// With cancellations, default setup.
+			auto h = 1 - x + y + z + t;
+			f = 1 + x + y + z + t;
+			tmp2 = h;
+			auto tmp3 = f;
+			for (int i = 1; i < 10; ++i) {
+				h *= tmp2;
+				f *= tmp3;
+			}
+			retval = f * h;
+			BOOST_CHECK_EQUAL(retval.size(),5786u);
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<k_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_multiplier_multiplication_test)
+{
+	boost::mpl::for_each<cf_types>(multiplication_tester());
+	for (unsigned i = 1u; i <= 4u; ++i) {
+		settings::set_n_threads(i);
+		boost::mpl::for_each<cf_types>(multiplication_tester());
+	}
+	settings::reset_n_threads();
+}
+
+struct st_vs_mt_tester
+{
+	template <typename Cf>
+	struct runner
+	{
+		template <typename Key>
+		void operator()(const Key &)
+		{
+			if (std::is_same<Cf,double>::value && (!std::numeric_limits<double>::is_iec559 ||
+				std::numeric_limits<double>::digits < 53))
+			{
+				return;
+			}
+			// Compute result in st mode.
+			settings::set_n_threads(1u);
+			using p_type = polynomial<Cf,Key>;
+			p_type x("x"), y("y"), z("z"), t("t");
+			auto f = 1 + x + y + z + t;
+			auto tmp2 = f;
+			for (int i = 1; i < 10; ++i) {
+				f *= tmp2;
+			}
+			auto g = f + 1;
+			auto st = f * g;
+			// Now compute the same quantity in mt mode and check the result
+			// is the same as st mode.
+			for (auto i = 2u; i <= 4u; ++i) {
+				settings::set_n_threads(i);
+				auto mt = f * g;
+				BOOST_CHECK(mt == st);
+			}
+		}
+	};
+	template <typename Cf>
+	void operator()(const Cf &)
+	{
+		boost::mpl::for_each<k_types>(runner<Cf>());
+	}
+};
+
+BOOST_AUTO_TEST_CASE(polynomial_multiplier_st_vs_mt_test)
+{
+	boost::mpl::for_each<cf_types>(st_vs_mt_tester());
+	settings::reset_n_threads();
 }
