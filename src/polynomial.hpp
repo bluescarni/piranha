@@ -48,6 +48,7 @@
 #include "forwarding.hpp"
 #include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
+#include "key_is_multipliable.hpp"
 #include "kronecker_array.hpp"
 #include "kronecker_monomial.hpp"
 #include "math.hpp"
@@ -550,13 +551,18 @@ using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::
  * 
  * Move semantics is equivalent to piranha::base_series_multiplier's move semantics.
  */
-// TODO: enabling and type checking.
 template <typename Series>
 class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 	public base_series_multiplier<Series>
 {
 		// Base multiplier type.
 		using base = base_series_multiplier<Series>;
+		// Cf type getter shortcut.
+		template <typename T>
+		using cf_t = typename T::term_type::cf_type;
+		// Key type getter shortcut.
+		template <typename T>
+		using key_t = typename T::term_type::key_type;
 		// Bounds checking.
 		// Functor to return un updated copy of p if v is less than p.first or greater than p.second.
 		struct update_minmax
@@ -567,9 +573,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				return std::make_pair(v < p.first ? v : p.first,v > p.second ? v : p.second);
 			}
 		};
-		// Key type getter shortcut.
-		template <typename T>
-		using key_t = typename T::term_type::key_type;
 		// No bounds checking if key is a monomial with non-integral exponents.
 		template <typename T = Series, typename std::enable_if<detail::is_monomial<key_t<T>>::value &&
 			!std::is_integral<typename key_t<T>::value_type>::value,int>::type = 0>
@@ -688,6 +691,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				}
 			}
 		}
+		// Enabler for the call operator.
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<cf_t<T>,key_t<T>>::value &&
+			is_multipliable_in_place<cf_t<T>>::value && has_multiply_accumulate<cf_t<T>>::value,int>::type;
 	public:
 		/// Constructor.
 		/**
@@ -715,19 +722,32 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		}
 		/// Perform multiplication.
 		/**
+		 * \note
+		 * This template operator is enabled only if:
+		 * - the coefficient and key type of \p Series satisfy piranha::key_is_multipliable,
+		 * - the coefficient type of \p Series is multipliable in-place and it supports math::multiply_accumulate().
+		 *
+		 * This method will perform the multiplication of the series operands passed to the constructor. Depending on
+		 * the key type of \p Series, the implementation will use either base_series_multiplier::plain_multiplication()
+		 * with base_series_multiplier::plain_multiplier or a different algorithm.
+		 *
 		 * @return the result of the multiplication of the input series operands.
 		 * 
 		 * @throws std::overflow_error in case of (unlikely) overflow errors.
 		 * @throws unspecified any exception thrown by:
-		 * - (unlikely) conversion errors between numeric types,
+		 * - piranha::base_series_multiplier::plain_multiplication(),
+		 * - piranha::base_series_multiplier::estimate_final_series_size(),
+		 * - piranha::base_series_multiplier::sanitize_series(),
+		 * - <tt>boost::numeric_cast()</tt>,
 		 * - the public interface of piranha::hash_set,
-		 * - piranha::series_multiplier::estimate_final_series_size(),
-		 * - piranha::math::multiply_accumulate() on the coefficient types,
-		 * - threading primitives,
-		 * - memory allocation errors in standard containers,
-		 * - piranha::thread_pool::enqueue(),
-		 * - piranha::future_list::push_back().
+		 * - piranha::safe_cast(),
+		 * - memory errors in standard containers,
+		 * - the in-place multiplication operator of the coefficient type of \p Series,
+		 * - math::multiply_accumulate(),
+		 * - thread_pool::enqueue(),
+		 * - future_list::push_back().
 		 */
+		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
 		{
 			return execute();

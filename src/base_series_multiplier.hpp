@@ -125,6 +125,14 @@ struct base_series_multiplier_impl<Series,typename std::enable_if<is_mp_rational
  * ## Type requirements ##
  *
  * \p Series must satisfy piranha::is_series.
+ *
+ * ## Exception safety guarantee ##
+ *
+ * This class provides the strong exception safety guarantee.
+ *
+ * ## Move semantics ##
+ *
+ * Instances of this class cannot be copied, moved or assigned.
  */
 // Some performance ideas:
 // - optimisation in case one series has 1 term with unitary key and both series same type: multiply directly coefficients;
@@ -716,7 +724,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - piranha::safe_cast(),
 		 * - base_series_multiplier::estimate_final_series_size(),
 		 * - <tt>boost::numeric_cast()</tt>,
-		 * - the low-level interface of piranha::hash_set,
+		 * - the public interface of piranha::hash_set,
 		 * - base_series_multiplier::blocked_multiplication(),
 		 * - base_series_multiplier::sanitize_series(),
 		 * - the <tt>multiply()</tt> method of the key type of \p Series,
