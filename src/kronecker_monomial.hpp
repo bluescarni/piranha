@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "config.hpp"
+#include "detail/cf_mult_impl.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
@@ -140,7 +141,7 @@ class kronecker_monomial
 		// Enabler for multiply().
 		template <typename Cf>
 		using multiply_enabler = typename std::enable_if<std::is_same<Cf,decltype(std::declval<const Cf &>() * std::declval<const Cf &>())>::value &&
-			is_cf<Cf>::value,int>::type;
+			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
 		// Subs utilities.
 		template <typename U>
 		using subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const value_type &>()));
@@ -455,11 +456,12 @@ class kronecker_monomial
 		/// Multiply terms with a Kronecker monomial key.
 		/**
 		 * \note
-		 * This method is enabled only if \p Cf satisfies piranha::is_cf and it is multipliable, yielding a result
-		 * of type \p Cf.
+		 * This method is enabled only if \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
+		 * of type \p Cf, and it is copy-assignable.
 		 *
 		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
-		 * offers the basic exception safety guarantee.
+		 * offers the basic exception safety guarantee. If \p Cf is an instance of piranha::mp_rational, then
+		 * only the numerators of the coefficients will be multiplied.
 		 *
 		 * Note that the key of the return value is generated directly from the addition of the values of the input keys.
 		 * No check is performed for overflow of either the limits of the integral type or the limits of the Kronecker codification.
@@ -475,9 +477,8 @@ class kronecker_monomial
 			const term<Cf,kronecker_monomial> &t2, const symbol_set &)
 		{
 			auto &t = res[0u];
-			// NOTE: this can be optimised, but it is never used in speed-critical scenarios.
 			// Coefficient first.
-			t.m_cf = t1.m_cf * t2.m_cf;
+			detail::cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
 			// Now the key.
 			t.m_key.m_value = static_cast<value_type>(t1.m_key.get_int() + t2.m_key.get_int());
 		}
