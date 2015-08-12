@@ -741,17 +741,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
 		{
-			using bucket_size_type = typename base::bucket_size_type;
 			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {
 				return Series{};
-			}
-			// This check is done here to avoid controlling the number of elements of the output series
-			// at every iteration of the functor.
-			const auto max_size = integer(size1) * size2;
-			if (unlikely(max_size > std::numeric_limits<bucket_size_type>::max())) {
-				piranha_throw(std::overflow_error,"possible overflow in series size");
 			}
 			// First, let's get the estimation on the size of the final series.
 			Series retval;

@@ -25,6 +25,7 @@
 
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/vector.hpp>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -238,4 +239,20 @@ BOOST_AUTO_TEST_CASE(polynomial_multiplier_st_vs_mt_test)
 {
 	boost::mpl::for_each<cf_types>(st_vs_mt_tester());
 	settings::reset_n_threads();
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_multiplier_different_cf_test)
+{
+	settings::set_n_threads(1u);
+	using p_type1 = polynomial<std::size_t,k_monomial>;
+	using p_type2 = polynomial<integer,k_monomial>;
+	p_type1 x("x"), y("y"), z("z"), t("t");
+	auto f = 1 + x + y + z + t;
+	p_type2 tmp2(f);
+	for (int i = 1; i < 10; ++i) {
+		f *= tmp2;
+	}
+	auto g = f + 1;
+	auto st = f * g;
+	BOOST_CHECK_EQUAL(st.size(),10626u);
 }
