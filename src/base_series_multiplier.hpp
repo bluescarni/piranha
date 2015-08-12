@@ -189,6 +189,25 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		{
 			return Term{std::move(t.m_cf),t.m_key};
 		}
+		// Implementation of finalise().
+		template <typename T, typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
+		void finalise_impl(T &s) const
+		{
+			// Nothing to do if the lcm is unitary.
+			if (math::is_unitary(this->m_lcm)) {
+				return;
+			}
+			// NOTE: this has to be the square of the lcm, as in addition to uniformising
+			// the denominators in each series we are also multiplying the two series.
+			const auto l2 = this->m_lcm * this->m_lcm;
+			for (const auto &t: s._container()) {
+				t.m_cf._set_den(l2);
+				t.m_cf.canonicalise();
+			}
+		}
+		template <typename T, typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
+		void finalise_impl(T &) const
+		{}
 	public:
 		/// Constructor.
 		/**
@@ -844,6 +863,21 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				throw;
 			}
 			return retval;
+		}
+		/// Finalise series.
+		/**
+		 * This method will finalise the output \p s of a series multiplication undertaken via piranha::base_series_multiplier.
+		 * Currently, this method will not do anything unless the coefficient type of \p Series is an instance of piranha::mp_rational.
+		 * In this case, the coefficients of \p s will be normalised with respect to the least common multiplier computed in the
+		 * constructor of piranha::base_series_multiplier.
+		 *
+		 * @param[in] s the \p Series to be finalised.
+		 */
+		// NOTE: this is called outside any exception handling brace currently, so it must offer some level of exception safety.
+		// Keep it in mind if we add functionality here in the future.
+		void finalise_series(Series &s) const
+		{
+			finalise_impl(s);
 		}
 	protected:
 		/// Vector of const pointers to the terms in the larger series.

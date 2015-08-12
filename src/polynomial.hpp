@@ -40,6 +40,7 @@
 #include "config.hpp"
 #include "debug_access.hpp"
 #include "detail/atomic_utils.hpp"
+#include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/poisson_series_fwd.hpp"
 #include "detail/polynomial_fwd.hpp"
@@ -738,6 +739,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - piranha::base_series_multiplier::plain_multiplication(),
 		 * - piranha::base_series_multiplier::estimate_final_series_size(),
 		 * - piranha::base_series_multiplier::sanitize_series(),
+		 * - piranha::base_series_multiplier::finalise_series(),
 		 * - <tt>boost::numeric_cast()</tt>,
 		 * - the public interface of piranha::hash_set,
 		 * - piranha::safe_cast(),
@@ -753,10 +755,22 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			return execute();
 		}
 	private:
+		template <typename T, typename std::enable_if<!detail::is_mp_rational<T>::value,int>::type = 0>
+		static void fma_wrap(T &a, const T &b, const T &c)
+		{
+			math::multiply_accumulate(a,b,c);
+		}
+		template <typename T, typename std::enable_if<detail::is_mp_rational<T>::value,int>::type = 0>
+		static void fma_wrap(T &a, const T &b, const T &c)
+		{
+			math::multiply_accumulate(a._num(),b.num(),c.num());
+		}
 		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
 		{
-			return this->plain_multiplication();
+			auto retval = this->plain_multiplication();
+			this->finalise_series(retval);
+			return retval;
 		}
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
@@ -785,6 +799,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval,n_threads);
+			this->finalise_series(retval);
 			return retval;
 		}
 		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
@@ -842,7 +857,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			const auto it_end = container.end();
 			// Function to perform all the term-by-term multiplications in a task, using tmp_term
 			// as a temporary value for the computation of the result.
-			auto task_consume = [&v1,&v2,&container,it_end] (const task_type &task, term_type &tmp_term) {
+			auto task_consume = [&v1,&v2,&container,it_end,this] (const task_type &task, term_type &tmp_term) {
 				// Get the term in the first series.
 				term_type const *t1 = v1[std::get<0u>(task)];
 				// Get pointers to the second series.
@@ -871,11 +886,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 						// as we are not going to re-use the allocated resources in tmp.m_cf -> in other words, optimize this
 						// as much as possible.
 						// Take care of multiplying the coefficient.
-						tmp_term.m_cf = cf1;
-						tmp_term.m_cf *= cur.m_cf;
+						detail::cf_mult_impl(tmp_term.m_cf,cf1,cur.m_cf);
 						container._unique_insert(tmp_term,bucket_idx);
 					} else {
-						math::multiply_accumulate(it->m_cf,cf1,cur.m_cf);
+						this->fma_wrap(it->m_cf,cf1,cur.m_cf);
 					}
 				}
 			};

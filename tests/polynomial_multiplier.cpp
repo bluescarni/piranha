@@ -256,3 +256,13 @@ BOOST_AUTO_TEST_CASE(polynomial_multiplier_different_cf_test)
 	auto st = f * g;
 	BOOST_CHECK_EQUAL(st.size(),10626u);
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_multiplier_multiplier_finalise_test)
+{
+	// Test proper handling of rational coefficients.
+	using pt = polynomial<rational,k_monomial>;;
+	pt x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(x*4/3_q*y*5/2_q,10/3_q*x*y);
+	BOOST_CHECK_EQUAL((x*4/3_q+y*5/2_q)*(x.pow(2)*4/13_q-y*5/17_q),
+		16*x.pow(3)/39+10/13_q*y*x*x-20*x*y/51-25*y*y/34);
+}

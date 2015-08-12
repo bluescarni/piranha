@@ -569,3 +569,17 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 	using p_types = boost::mpl::vector<pt1,pt2,p_type<rational>>;
 	boost::mpl::for_each<p_types>(multiplication_tester());
 }
+
+BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
+{
+	// Test proper handling of rational coefficients.
+	using pt = p_type<rational>;
+	pt x{"x"}, y{"y"};
+	BOOST_CHECK_EQUAL(x*4/3_q*y*5/2_q,10/3_q*x*y);
+	BOOST_CHECK_EQUAL((x*4/3_q+y*5/2_q)*(x.pow(2)*4/13_q-y*5/17_q),
+		16*x.pow(3)/39+10/13_q*y*x*x-20*x*y/51-25*y*y/34);
+	// No finalisation happening with integral coefficients.
+	using pt2 = p_type<integer>;
+	pt2 x2{"x"}, y2{"y"};
+	BOOST_CHECK_EQUAL(x2*y2,y2*x2);
+}
