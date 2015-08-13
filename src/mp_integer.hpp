@@ -3213,6 +3213,7 @@ class mp_integer
 			if (is_static()) {
 				return m_int.g_st().is_unitary();
 			}
+			// NOTE: this is actually a macro.
 			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
 		}
 	private:
