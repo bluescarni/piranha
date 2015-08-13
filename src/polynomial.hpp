@@ -755,6 +755,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 			return execute();
 		}
 	private:
+		// NOTE: wrapper to multadd that treats specially rational coefficients. We need to decide in the future
+		// if this stays here or if it is better to generalise it.
 		template <typename T, typename std::enable_if<!detail::is_mp_rational<T>::value,int>::type = 0>
 		static void fma_wrap(T &a, const T &b, const T &c)
 		{
@@ -889,6 +891,8 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 						detail::cf_mult_impl(tmp_term.m_cf,cf1,cur.m_cf);
 						container._unique_insert(tmp_term,bucket_idx);
 					} else {
+						// NOTE: here we need to decide if we want to give the same treatment to fmp as we did with cf_mult_impl.
+						// For the moment it is an implementation detail of this class.
 						this->fma_wrap(it->m_cf,cf1,cur.m_cf);
 					}
 				}

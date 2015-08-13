@@ -140,8 +140,7 @@ class kronecker_monomial
 			has_safe_cast<value_type,decltype(*std::declval<Iterator &>())>::value,int>::type;
 		// Enabler for multiply().
 		template <typename Cf>
-		using multiply_enabler = typename std::enable_if<std::is_same<Cf,decltype(std::declval<const Cf &>() * std::declval<const Cf &>())>::value &&
-			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
+		using multiply_enabler = typename std::enable_if<detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
 		// Subs utilities.
 		template <typename U>
 		using subs_type__ = decltype(math::pow(std::declval<const U &>(),std::declval<const value_type &>()));

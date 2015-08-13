@@ -111,8 +111,7 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		template <typename Cf, typename U>
 		using multiply_enabler = typename std::enable_if<
 			detail::true_tt<decltype(std::declval<U const &>().vector_add(std::declval<U &>(),std::declval<U const &>()))>::value &&
-			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
-			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
+			detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
 		// Enabler for linear argument.
 		template <typename U>
 		using linarg_enabler = typename std::enable_if<has_safe_cast<integer,U>::value,int>::type;

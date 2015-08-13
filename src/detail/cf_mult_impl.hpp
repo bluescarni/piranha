@@ -22,8 +22,11 @@
 #define PIRANHA_DETAIL_CF_MULT_IMPL_HPP
 
 #include <type_traits>
+#include <utility>
 
+#include "../is_cf.hpp"
 #include "../mp_rational.hpp"
+#include "../type_traits.hpp"
 #include "series_fwd.hpp"
 
 namespace piranha
@@ -54,6 +57,11 @@ inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
 	out_cf = cf1;
 	out_cf *= cf2;
 }
+
+// Enabler for the functions above.
+template <typename Cf>
+using cf_mult_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+	is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value>::type;
 
 }
 
