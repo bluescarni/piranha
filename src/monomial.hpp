@@ -830,7 +830,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		 */
 		// NOTE: important, here we are assuming that the element of res is distinct from t1 and t2. Maybe this should
 		// be explicitly stated somewhere, in the runtime requirements of multiplication.
-		template <typename Cf, multiply_enabler<Cf,monomial> = 0>
+		// NOTE: here we need the extra U param as otherwise in the enabler we are accessing a method of monomial when
+		// it is still an incomplete type.
+		template <typename Cf, typename U = monomial, multiply_enabler<Cf,U> = 0>
 		static void multiply(std::array<term<Cf,monomial>,multiply_arity> &res, const term<Cf,monomial> &t1,
 			const term<Cf,monomial> &t2, const symbol_set &args)
 		{
