@@ -465,6 +465,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					if (it1 == v_idx1.end()) {
 						// Each time we wrap around the first series,
 						// wrap around also the second one and rotate it.
+						// NOTE: the code here cannot ever be executed as it stands, since:
+						// - the first series is guaranteed to be equal to or larger than the second;
+						// - the limit max_M is computed in a way such that it is always less than
+						//   the size of the first series.
+						// This code was here since the previous version of the multiplier, just keep it
+						// around in case something changes.
 						it1 = v_idx1.begin();
 						auto middle = v_idx2.end();
 						--middle;
@@ -774,12 +780,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				integer(size1) * size2,integer(settings::get_min_work_per_thread())
 			));
 			piranha_assert(n_threads);
-			// An additional check on n_threads is that its size is not greater than the size of the first series,
-			// as we are using the first operand to split up the work.
-			if (n_threads > size1) {
-				n_threads = size1;
-			}
-			piranha_assert(n_threads > 0u);
 			// Common setup for st/mt.
 			Series retval;
 			retval.set_symbol_set(m_ss);
