@@ -71,7 +71,7 @@ namespace piranha
  *
  * ## Type requirements ##
  *
- * \p T must be either a C++ integral type or an instance of piranha::mp_integer.
+ * \p T must be either a C++ signed integral type or an instance of piranha::mp_integer.
  *
  * ## Exception safety guarantee ##
  *
