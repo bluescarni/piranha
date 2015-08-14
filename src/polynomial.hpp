@@ -738,7 +738,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * @throws unspecified any exception thrown by:
 		 * - piranha::base_series_multiplier::plain_multiplication(),
 		 * - piranha::base_series_multiplier::estimate_final_series_size(),
-		 * - piranha::base_series_multiplier::sanitize_series(),
+		 * - piranha::base_series_multiplier::sanitise_series(),
 		 * - piranha::base_series_multiplier::finalise_series(),
 		 * - <tt>boost::numeric_cast()</tt>,
 		 * - the public interface of piranha::hash_set,
@@ -910,7 +910,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 					for (const auto &t: tasks) {
 						task_consume(t,tmp_term);
 					}
-					this->sanitize_series(retval,n_threads);
+					this->sanitise_series(retval,n_threads);
 					this->finalise_series(retval,n_threads);
 				} catch (...) {
 					retval._container().clear();
@@ -1090,7 +1090,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				// Then, let's handle the exceptions.
 				ft_list.get_all();
 				// Finally, fix and finalise the series.
-				this->sanitize_series(retval,n_threads);
+				this->sanitise_series(retval,n_threads);
 				this->finalise_series(retval,n_threads);
 			} catch (...) {
 				ft_list.wait_all();

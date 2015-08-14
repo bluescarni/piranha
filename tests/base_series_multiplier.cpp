@@ -108,9 +108,9 @@ struct m_checker: public base_series_multiplier<Series>
 		return base::template estimate_final_series_size<N>(std::forward<Args>(args)...);
 	}
 	template <typename ... Args>
-	static void sanitize_series(Args && ... args)
+	static void sanitise_series(Args && ... args)
 	{
-		return base::sanitize_series(std::forward<Args>(args)...);
+		return base::sanitise_series(std::forward<Args>(args)...);
 	}
 	template <typename ... Args>
 	Series plain_multiplication(Args && ... args) const
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
+BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitise_series_test)
 {
 	using pt = p_type<integer>;
 	using mt = m_checker<pt>;
@@ -406,20 +406,20 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
 		// First test with an empty series.
 		pt e;
 		term_type tmp;
-		BOOST_CHECK_THROW(mt::sanitize_series(e,0u),std::invalid_argument);
-		BOOST_CHECK_NO_THROW(mt::sanitize_series(e,n));
+		BOOST_CHECK_THROW(mt::sanitise_series(e,0u),std::invalid_argument);
+		BOOST_CHECK_NO_THROW(mt::sanitise_series(e,n));
 		// Insert a term without updating the count.
 		tmp = term_type{1_z,term_type::key_type{}};
 		e._container().rehash(1u);
 		e._container()._unique_insert(tmp,0u);
-		mt::sanitize_series(e,n);
+		mt::sanitise_series(e,n);
 		BOOST_CHECK_EQUAL(e.size(),1u);
 		// Try with a term with zero coefficient.
 		e._container().clear();
 		e._container().rehash(1u);
 		tmp = term_type{0_z,term_type::key_type{}};
 		e._container()._unique_insert(tmp,0u);
-		mt::sanitize_series(e,n);
+		mt::sanitise_series(e,n);
 		BOOST_CHECK_EQUAL(e.size(),0u);
 		// Try with an incompatible term.
 		e._container().clear();
@@ -427,14 +427,14 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
 		// NOTE: this is also ignorable, but the compatibility check is done first.
 		tmp = term_type{0_z,term_type::key_type{1}};
 		e._container()._unique_insert(tmp,0u);
-		BOOST_CHECK_THROW(mt::sanitize_series(e,n),std::invalid_argument);
+		BOOST_CHECK_THROW(mt::sanitise_series(e,n),std::invalid_argument);
 		e._container().clear();
 		// Wrong size.
 		e._container().rehash(1u);
 		e._container()._update_size(3u);
 		tmp = term_type{2_z,term_type::key_type{}};
 		e._container()._unique_insert(tmp,0u);
-		mt::sanitize_series(e,n);
+		mt::sanitise_series(e,n);
 		BOOST_CHECK_EQUAL(e.size(),1u);
 		// A test with multiple buckets.
 		e = pt{"x"} - pt{"x"}; // Just make sure we set the symbol set correctly.
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
 			tmp = term_type{i,term_type::key_type{int(i)}};
 			e._container()._unique_insert(tmp,e._container()._bucket(tmp));
 		}
-		mt::sanitize_series(e,n);
+		mt::sanitise_series(e,n);
 		BOOST_CHECK_EQUAL(e.size(),9u);
 		// Also with incompatible term.
 		e._container().clear();
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_sanitize_series_test)
 			tmp = term_type{i,term_type::key_type{int(i),int(i)}};
 			e._container()._unique_insert(tmp,e._container()._bucket(tmp));
 		}
-		BOOST_CHECK_THROW(mt::sanitize_series(e,n),std::invalid_argument);
+		BOOST_CHECK_THROW(mt::sanitise_series(e,n),std::invalid_argument);
 		e._container().clear();
 	}
 }

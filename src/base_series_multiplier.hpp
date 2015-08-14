@@ -670,7 +670,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back().
 		 */
-		static void sanitize_series(Series &retval, unsigned n_threads)
+		static void sanitise_series(Series &retval, unsigned n_threads)
 		{
 			using term_type = typename Series::term_type;
 			if (unlikely(n_threads == 0u)) {
@@ -756,7 +756,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			} catch (...) {
 				f_list.wait_all();
 				// NOTE: there's not need to clear retval here - it was already in an inconsistent
-				// state coming into this method. We rather need to make sure sanitize_series() is always
+				// state coming into this method. We rather need to make sure sanitise_series() is always
 				// called in a try/catch block that clears retval in case of errors.
 				throw;
 			}
@@ -786,7 +786,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - <tt>boost::numeric_cast()</tt>,
 		 * - the public interface of piranha::hash_set,
 		 * - base_series_multiplier::blocked_multiplication(),
-		 * - base_series_multiplier::sanitize_series(),
+		 * - base_series_multiplier::sanitise_series(),
 		 * - the <tt>multiply()</tt> method of the key type of \p Series,
 		 * - thread_pool::enqueue(),
 		 * - future_list::push_back(),
@@ -835,7 +835,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				try {
 					// Single-thread case.
 					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2,sf);
-					sanitize_series(retval,static_cast<unsigned>(n_threads));
+					sanitise_series(retval,static_cast<unsigned>(n_threads));
 					finalise_series(retval,static_cast<unsigned>(n_threads));
 					return retval;
 				} catch (...) {
@@ -891,7 +891,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				}
 				f_list.wait_all();
 				f_list.get_all();
-				sanitize_series(retval,static_cast<unsigned>(n_threads));
+				sanitise_series(retval,static_cast<unsigned>(n_threads));
 				finalise_series(retval,static_cast<unsigned>(n_threads));
 			} catch (...) {
 				f_list.wait_all();
