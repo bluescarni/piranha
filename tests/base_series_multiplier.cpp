@@ -122,6 +122,10 @@ struct m_checker: public base_series_multiplier<Series>
 	{
 		base::finalise_series(std::forward<Args>(args)...);
 	}
+	unsigned get_n_threads() const
+	{
+		return this->m_n_threads;
+	}
 };
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
@@ -132,6 +136,8 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_constructor_test)
 	using pt = p_type<rational>;
 	pt e1, e2;
 	BOOST_CHECK_NO_THROW((m_checker<pt>{e1,e2}));
+	m_checker<pt> mc{e1,e2};
+	BOOST_CHECK_EQUAL(mc.get_n_threads(),0u);
 	}
 	{
 	using pt = p_type<rational>;
@@ -560,6 +566,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 	pt e1, e2;
 	mt m0{e1,e2};
 	BOOST_CHECK_EQUAL(m0.plain_multiplication(),0);
+	BOOST_CHECK(m0.get_n_threads() != 0u);
 	// Testing ported over from the previous series_multiplier tests. Just use polynomial directly.
 	using pt1 = p_type<double>;
 	using pt2 = p_type<integer>;

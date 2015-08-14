@@ -263,7 +263,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * @throws unspecified any exception thrown by memory allocation errors in standard containers or by the construction
 		 * of the term type of \p Series.
 		 */
-		explicit base_series_multiplier(const Series &s1, const Series &s2):m_ss(s1.get_symbol_set())
+		explicit base_series_multiplier(const Series &s1, const Series &s2):m_ss(s1.get_symbol_set()),m_n_threads(0u)
 		{
 			if (unlikely(s1.get_symbol_set() != s2.get_symbol_set())) {
 				piranha_throw(std::invalid_argument,"incompatible arguments sets");
@@ -805,6 +805,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			constexpr std::size_t m_arity = key_type::multiply_arity;
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
+				m_n_threads = 1u;
 				// NOTE: requirement is ok, a series must be def-ctible.
 				return Series{};
 			}
@@ -815,6 +816,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				integer(size1) * size2,integer(settings::get_min_work_per_thread())
 			));
 			piranha_assert(n_threads);
+			// Store the number of threads.
+			m_n_threads = static_cast<unsigned>(n_threads);
 			// Common setup for st/mt.
 			Series retval;
 			retval.set_symbol_set(m_ss);
@@ -926,6 +929,12 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		mutable v_ptr		m_v2;
 		/// The symbol set of the series used during construction.
 		const symbol_set	m_ss;
+		/// The number of threads used by base_series_multiplier::plain_multiplication().
+		/**
+		 * This value will be set to zero upon construction, and it will be modified after calling
+		 * base_series_multiplier::plain_multiplication().
+		 */
+		mutable unsigned	m_n_threads;
 };
 
 }
