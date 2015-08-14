@@ -35,11 +35,14 @@
 #include <vector>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
 #include "../src/polynomial.hpp"
 #include "../src/settings.hpp"
+#include "../src/symbol.hpp"
+#include "../src/symbol_set.hpp"
 #include "../src/tuning.hpp"
 
 using namespace piranha;
@@ -113,6 +116,11 @@ struct m_checker: public base_series_multiplier<Series>
 	Series plain_multiplication(Args && ... args) const
 	{
 		return base::plain_multiplication(std::forward<Args>(args)...);
+	}
+	template <typename ... Args>
+	void finalise_series(Args && ... args) const
+	{
+		base::finalise_series(std::forward<Args>(args)...);
 	}
 };
 
@@ -572,6 +580,7 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_plain_multiplication_test)
 
 BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 {
+	{
 	// Test proper handling of rational coefficients.
 	using pt = p_type<rational>;
 	pt x{"x"}, y{"y"};
@@ -582,4 +591,54 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_finalise_test)
 	using pt2 = p_type<integer>;
 	pt2 x2{"x"}, y2{"y"};
 	BOOST_CHECK_EQUAL(x2*y2,y2*x2);
+	}
+	{
+	// Check with multiple threads.
+	using pt = p_type<rational>;
+	using mt = m_checker<pt>;
+	for (unsigned nt = 1u; nt <= 4u; ++nt) {
+		settings::set_n_threads(nt);
+		// Setup a multiplier for a polyomial with two variables and lcm 6.
+		auto tmp1 = pt{"x"}/3 + pt{"y"}, tmp2 = pt{"y"}/2 + pt{"x"};
+		mt m0{tmp1,tmp2};
+		// First let's try with an empty retval.
+		pt r;
+		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,0);
+		// Put in one term.
+		r += pt{"x"};
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
+		// Put in another term.
+		r += 12*pt{"y"};
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
+	}
+	}
+	{
+	// Same as above, but with k monomial.
+	using pt = polynomial<rational,k_monomial>;
+	using mt = m_checker<pt>;
+	for (unsigned nt = 1u; nt <= 4u; ++nt) {
+		settings::set_n_threads(nt);
+		// Setup a multiplier for a polyomial with two variables and lcm 6.
+		auto tmp1 = pt{"x"}/3 + pt{"y"}, tmp2 = pt{"y"}/2 + pt{"x"};
+		mt m0{tmp1,tmp2};
+		// First let's try with an empty retval.
+		pt r;
+		r.set_symbol_set(symbol_set({symbol{"x"},symbol{"y"}}));
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,0);
+		// Put in one term.
+		r += pt{"x"};
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,pt{"x"}/36);
+		// Put in another term.
+		r += 12*pt{"y"};
+		BOOST_CHECK_NO_THROW(m0.finalise_series(r,nt));
+		BOOST_CHECK_EQUAL(r,pt{"x"}/36 + pt{"y"}/3);
+	}
+	}
+	settings::reset_n_threads();
 }

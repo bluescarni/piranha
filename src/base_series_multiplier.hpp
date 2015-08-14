@@ -191,7 +191,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		}
 		// Implementation of finalise().
 		template <typename T, typename std::enable_if<detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
-		void finalise_impl(T &s) const
+		void finalise_impl(T &s, unsigned n_threads) const
 		{
 			// Nothing to do if the lcm is unitary.
 			if (math::is_unitary(this->m_lcm)) {
@@ -200,13 +200,48 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// NOTE: this has to be the square of the lcm, as in addition to uniformising
 			// the denominators in each series we are also multiplying the two series.
 			const auto l2 = this->m_lcm * this->m_lcm;
-			for (const auto &t: s._container()) {
-				t.m_cf._set_den(l2);
-				t.m_cf.canonicalise();
+			auto &container = s._container();
+			// Single thread implementation.
+			if (n_threads == 1u) {
+				for (const auto &t: container) {
+					t.m_cf._set_den(l2);
+					t.m_cf.canonicalise();
+				}
+				return;
+			}
+			// Multi-thread implementation.
+			// Buckets per thread.
+			const bucket_size_type bpt = static_cast<bucket_size_type>(container.bucket_count() / n_threads);
+			auto thread_func = [l2,&container,n_threads,bpt](unsigned t_idx) {
+				bucket_size_type start_idx = static_cast<bucket_size_type>(t_idx * bpt);
+				// Special handling for the last thread.
+				const bucket_size_type end_idx = t_idx == (n_threads - 1u) ? container.bucket_count() :
+					static_cast<bucket_size_type>((t_idx + 1u) * bpt);
+				for (; start_idx != end_idx; ++start_idx) {
+					auto &list = container._get_bucket_list(start_idx);
+					for (const auto &t: list) {
+						t.m_cf._set_den(l2);
+						t.m_cf.canonicalise();
+					}
+				}
+			};
+			// Go with the threads.
+			future_list<decltype(thread_pool::enqueue(0u,thread_func,0u))> ff_list;
+			try {
+				for (unsigned i = 0u; i < n_threads; ++i) {
+					ff_list.push_back(thread_pool::enqueue(i,thread_func,i));
+				}
+				// First let's wait for everything to finish.
+				ff_list.wait_all();
+				// Then, let's handle the exceptions.
+				ff_list.get_all();
+			} catch (...) {
+				ff_list.wait_all();
+				throw;
 			}
 		}
 		template <typename T, typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value,int>::type = 0>
-		void finalise_impl(T &) const
+		void finalise_impl(T &, unsigned) const
 		{}
 	public:
 		/// Constructor.
@@ -801,6 +836,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 					// Single-thread case.
 					blocked_multiplication(plain_multiplier<true>(m_v1,m_v2,retval),0u,size1,0u,size2,sf);
 					sanitize_series(retval,static_cast<unsigned>(n_threads));
+					finalise_series(retval,static_cast<unsigned>(n_threads));
 					return retval;
 				} catch (...) {
 					retval._container().clear();
@@ -856,6 +892,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				f_list.wait_all();
 				f_list.get_all();
 				sanitize_series(retval,static_cast<unsigned>(n_threads));
+				finalise_series(retval,static_cast<unsigned>(n_threads));
 			} catch (...) {
 				f_list.wait_all();
 				// Clean up retval as it might be in an inconsistent state.
@@ -871,13 +908,16 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * In this case, the coefficients of \p s will be normalised with respect to the least common multiplier computed in the
 		 * constructor of piranha::base_series_multiplier.
 		 *
-		 * @param[in] s the \p Series to be finalised.
+		 * @param[in,out] s the \p Series to be finalised.
+		 * @param[in] n_threads the number of threads to use.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - thread_pool::enqueue(),
+		 * - future_list::push_back().
 		 */
-		// NOTE: this is called outside any exception handling brace currently, so it must offer some level of exception safety.
-		// Keep it in mind if we add functionality here in the future.
-		void finalise_series(Series &s) const
+		void finalise_series(Series &s, unsigned n_threads) const
 		{
-			finalise_impl(s);
+			finalise_impl(s,n_threads);
 		}
 	protected:
 		/// Vector of const pointers to the terms in the larger series.

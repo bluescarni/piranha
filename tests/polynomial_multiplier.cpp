@@ -260,9 +260,41 @@ BOOST_AUTO_TEST_CASE(polynomial_multiplier_different_cf_test)
 BOOST_AUTO_TEST_CASE(polynomial_multiplier_multiplier_finalise_test)
 {
 	// Test proper handling of rational coefficients.
-	using pt = polynomial<rational,k_monomial>;;
-	pt x{"x"}, y{"y"};
+	using pt1 = polynomial<rational,k_monomial>;
+	using pt2 = polynomial<integer,k_monomial>;
+	{
+	pt1 x{"x"}, y{"y"};
 	BOOST_CHECK_EQUAL(x*4/3_q*y*5/2_q,10/3_q*x*y);
 	BOOST_CHECK_EQUAL((x*4/3_q+y*5/2_q)*(x.pow(2)*4/13_q-y*5/17_q),
 		16*x.pow(3)/39+10/13_q*y*x*x-20*x*y/51-25*y*y/34);
+	}
+	// Let's do a check with a fateman1-like: first compute the exact result using integers,
+	// then with rationals, then check the two are consistent. Do it with 1 and 4 threads.
+	for (unsigned nt = 1u; nt <= 4; nt += 3) {
+		settings::set_n_threads(nt);
+		pt2 cmp;
+		{
+			pt2 x("x"), y("y"), z("z"), t("t");
+			auto f = 1 + x + y + z + t;
+			auto tmp2 = f;
+			for (int i = 1; i < 10; ++i) {
+				f *= tmp2;
+			}
+			auto g = f + 1;
+			cmp = f * g;
+		}
+		pt1 res;
+		{
+			pt1 x("x"), y("y"), z("z"), t("t");
+			auto f = 1 + x + y + z + t;
+			auto tmp2 = f;
+			for (int i = 1; i < 10; ++i) {
+				f *= tmp2;
+			}
+			auto g = f + 1;
+			res = f/2 * g/3;
+		}
+		BOOST_CHECK_EQUAL(cmp,res * 6);
+	}
+	settings::reset_n_threads();
 }

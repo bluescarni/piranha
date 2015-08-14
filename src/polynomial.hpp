@@ -771,7 +771,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		Series execute() const
 		{
 			auto retval = this->plain_multiplication();
-			this->finalise_series(retval);
 			return retval;
 		}
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
@@ -801,7 +800,6 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				retval._container().max_load_factor())),n_threads_rehash);
 			piranha_assert(retval._container().bucket_count());
 			sparse_kronecker_multiplication(retval,n_threads);
-			this->finalise_series(retval);
 			return retval;
 		}
 		void sparse_kronecker_multiplication(Series &retval,const unsigned &n_threads) const
@@ -913,6 +911,7 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 						task_consume(t,tmp_term);
 					}
 					this->sanitize_series(retval,n_threads);
+					this->finalise_series(retval,n_threads);
 				} catch (...) {
 					retval._container().clear();
 					throw;
@@ -1090,8 +1089,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				ft_list.wait_all();
 				// Then, let's handle the exceptions.
 				ft_list.get_all();
-				// Finally, fix the series.
+				// Finally, fix and finalise the series.
 				this->sanitize_series(retval,n_threads);
+				this->finalise_series(retval,n_threads);
 			} catch (...) {
 				ft_list.wait_all();
 				// Clean up and re-throw.
