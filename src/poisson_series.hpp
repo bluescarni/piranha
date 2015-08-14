@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 
+#include "base_series_multiplier.hpp"
 #include "config.hpp"
 #include "detail/gcd.hpp"
 #include "detail/divisor_series_fwd.hpp"
@@ -39,6 +40,7 @@
 #include "forwarding.hpp"
 #include "ipow_substitutable_series.hpp"
 #include "is_cf.hpp"
+#include "key_is_multipliable.hpp"
 #include "math.hpp"
 #include "mp_integer.hpp"
 #include "power_series.hpp"
@@ -46,6 +48,7 @@
 #include "safe_cast.hpp"
 #include "serialization.hpp"
 #include "series.hpp"
+#include "series_multiplier.hpp"
 #include "substitutable_series.hpp"
 #include "symbol.hpp"
 #include "symbol_set.hpp"
@@ -630,6 +633,45 @@ class poisson_series:
 				retval += std::move(tmp);
 			}
 			return retval;
+		}
+};
+
+
+namespace detail
+{
+
+template <typename Series>
+using ps_series_multiplier_enabler = typename std::enable_if<std::is_base_of<poisson_series_tag,Series>::value>::type;
+
+}
+
+/// Specialisation of piranha::series_multiplier for piranha::poisson_series.
+template <typename Series>
+class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : public base_series_multiplier<Series>
+{
+		using base = base_series_multiplier<Series>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		/// Inherit base constructors.
+		using base::base;
+		/// Call operator.
+		/**
+		 * \note
+		 * This operator is enabled only if the coefficient and key types of \p Series satisfy
+		 * piranha::key_is_multipliable.
+		 *
+		 * The call operator will use base_series_multiplier::plain_multiplication().
+		 *
+		 * @return the result of the multiplication.
+		 *
+		 * @throws unspecified any exception thrown by base_series_multiplier::plain_multiplication().
+		 */
+		template <typename T = Series, call_enabler<T> = 0>
+		Series operator()() const
+		{
+			return this->plain_multiplication();
 		}
 };
 

@@ -31,7 +31,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
+#include "../src/base_series_multiplier.hpp"
 #include "../src/config.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
@@ -45,6 +47,7 @@
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
+#include "../src/series_multiplier.hpp"
 #include "../src/symbol_set.hpp"
 #include "../src/term.hpp"
 
@@ -74,6 +77,27 @@ class g_series_type: public substitutable_series<series<Cf,Key,g_series_type<Cf,
 		PIRANHA_FORWARDING_CTOR(g_series_type,base)
 		PIRANHA_FORWARDING_ASSIGNMENT(g_series_type,base)
 };
+
+namespace piranha
+{
+
+template <typename Cf, typename Key>
+class series_multiplier<g_series_type<Cf,Key>,void> : public base_series_multiplier<g_series_type<Cf,Key>>
+{
+		using base = base_series_multiplier<g_series_type<Cf,Key>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = g_series_type<Cf,Key>, call_enabler<T> = 0>
+		g_series_type<Cf,Key> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+}
 
 // An alternative monomial class with no suitable subs() method.
 template <class T>

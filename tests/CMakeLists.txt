@@ -25,6 +25,9 @@ MACRO(ADD_PIRANHA_PERFORMANCE_TESTCASE arg1)
 	ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
 ENDMACRO(ADD_PIRANHA_PERFORMANCE_TESTCASE)
 
+# The Intel compiler bombs out on some tests. Need to investigate more.
+# NOTE: some of these seem to involve the decltype() stuff in power_series.
+# Maybe changing the style of those will fix it.
 ADD_PIRANHA_TESTCASE(array_key)
 ADD_PIRANHA_TESTCASE(atomic_utils)
 ADD_PIRANHA_TESTCASE(base_series_multiplier)
@@ -43,12 +46,6 @@ ADD_PIRANHA_TESTCASE(key_is_convertible)
 ADD_PIRANHA_TESTCASE(key_is_multipliable)
 ADD_PIRANHA_TESTCASE(kronecker_array)
 ADD_PIRANHA_TESTCASE(kronecker_monomial)
-# The Intel compiler bombs out on some tests. Need to investigate more.
-# NOTE: some of these seem to involve the decltype() stuff in power_series.
-# Maybe changing the style of those will fix it.
-if(NOT CMAKE_COMPILER_IS_INTELXX)
-	ADD_PIRANHA_TESTCASE(kronecker_polynomial)
-endif()
 ADD_PIRANHA_TESTCASE(math)
 ADD_PIRANHA_TESTCASE(memory)
 ADD_PIRANHA_TESTCASE(monomial)
@@ -76,7 +73,6 @@ if(NOT CMAKE_COMPILER_IS_INTELXX)
 	ADD_PIRANHA_TESTCASE(series_02)
 	ADD_PIRANHA_TESTCASE(series_03)
 endif()
-ADD_PIRANHA_TESTCASE(series_multiplier)
 ADD_PIRANHA_TESTCASE(settings)
 ADD_PIRANHA_TESTCASE(small_vector)
 ADD_PIRANHA_TESTCASE(static_vector)

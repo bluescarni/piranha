@@ -37,11 +37,13 @@
 #include <type_traits>
 #include <utility>
 
+#include "../src/base_series_multiplier.hpp"
 #include "../src/config.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/mp_integer.hpp"
 #include "../src/mp_rational.hpp"
@@ -53,6 +55,7 @@
 #include "../src/real.hpp"
 #include "../src/safe_cast.hpp"
 #include "../src/serialization.hpp"
+#include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 #include "../src/symbol_set.hpp"
@@ -182,6 +185,75 @@ class g_series_type4: public series<Cf,monomial<Expo>,g_series_type4<Cf,Expo>>
 		g_series_type4 sin() const;
 		g_series_type4 cos() const;
 };
+
+namespace piranha
+{
+
+template <typename Cf, typename Key>
+class series_multiplier<g_series_type<Cf,Key>,void> : public base_series_multiplier<g_series_type<Cf,Key>>
+{
+		using base = base_series_multiplier<g_series_type<Cf,Key>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = g_series_type<Cf,Key>, call_enabler<T> = 0>
+		g_series_type<Cf,Key> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+template <typename Cf, typename Key>
+class series_multiplier<g_series_type2<Cf,Key>,void> : public base_series_multiplier<g_series_type2<Cf,Key>>
+{
+		using base = base_series_multiplier<g_series_type2<Cf,Key>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = g_series_type2<Cf,Key>, call_enabler<T> = 0>
+		g_series_type2<Cf,Key> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+template <typename Cf, typename Key>
+class series_multiplier<g_series_type3<Cf,Key>,void> : public base_series_multiplier<g_series_type3<Cf,Key>>
+{
+		using base = base_series_multiplier<g_series_type3<Cf,Key>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = g_series_type3<Cf,Key>, call_enabler<T> = 0>
+		g_series_type3<Cf,Key> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+template <typename Cf, typename Key>
+class series_multiplier<g_series_type4<Cf,Key>,void> : public base_series_multiplier<g_series_type4<Cf,Key>>
+{
+		using base = base_series_multiplier<g_series_type4<Cf,Key>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = g_series_type4<Cf,Key>, call_enabler<T> = 0>
+		g_series_type4<Cf,Key> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+}
 
 struct construction_tag {};
 
