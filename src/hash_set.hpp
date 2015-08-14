@@ -551,10 +551,9 @@ class hash_set
 			for (size_type i = 0u; i < n_elements; ++i) {
 				key_type k;
 				ar & k;
-				const auto ret_ins = insert(std::move(k));
-				// Check that there was no duplicate.
-				(void)ret_ins;
-				piranha_assert(ret_ins.second);
+				insert(std::move(k));
+				// NOTE: in case a malicious archive contains duplicates, it does
+				// not matter: we will have only one copy of each element.
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
