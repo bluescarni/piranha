@@ -493,6 +493,12 @@ struct multiplication_tester
 			BOOST_CHECK_EQUAL(tmp.size(),10626u);
 			BOOST_CHECK(tmp == retval);
 		}
+		// Dense case, same input series.
+		settings::set_n_threads(4u);
+		{
+		auto tmp = f * f;
+		BOOST_CHECK_EQUAL(tmp.size(),10626u);
+		}
 		settings::reset_n_threads();
 		// Dense case with cancellations, default setup.
 		auto h = 1 - x + y + z + t;
