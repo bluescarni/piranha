@@ -853,7 +853,6 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			future_list<std::future<void>> f_list;
 			// Thread block size.
 			const auto block_size = size1 / n_threads;
-			piranha_assert(block_size > 0u);
 			try {
 				for (size_type i = 0u; i < n_threads; ++i) {
 					// Thread functor.
