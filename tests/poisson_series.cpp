@@ -892,3 +892,50 @@ BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 	eps::unset_auto_truncate_degree();
 	}
 }
+
+BOOST_AUTO_TEST_CASE(poisson_series_multiplier_test)
+{
+	// Some checks for the erasing of terms after division by 2.
+	{
+	using ps = poisson_series<integer>;
+	BOOST_CHECK_EQUAL(ps(2)*ps(4),8);
+	}
+	{
+	using ps = poisson_series<polynomial<integer,monomial<short>>>;
+	ps x{"x"}, y{"y"}, z{"z"};
+	BOOST_CHECK_EQUAL(x*math::cos(y) * z*math::sin(y),0);
+	BOOST_CHECK_EQUAL(x*math::cos(y) * z*math::sin(y) + x * math::cos(z),x * math::cos(z));
+	}
+	{
+	using ps = poisson_series<polynomial<rational,monomial<short>>>;
+	using math::cos;
+	using math::sin;
+	using math::pow;
+	settings::set_min_work_per_thread(1u);
+	ps x{"x"}, y{"y"}, z{"z"};
+	for (unsigned nt = 1u; nt <= 4u; ++nt) {
+		settings::set_n_threads(nt);
+		auto res = (x*cos(x)+y*sin(x))*(z*cos(x)+x*sin(y));
+		auto cmp = -1/2_q*pow(x,2)*sin(x-y)+1/2_q*pow(x,2)*sin(x+y)+1/2_q*y*z*sin(2*x)
+			+1/2_q*x*y*cos(x-y)-1/2_q*x*y*cos(x+y)+x*z/2+1/2_q*x*z*cos(2*x);
+		BOOST_CHECK_EQUAL(res,cmp);
+	}
+	settings::reset_n_threads();
+	settings::reset_min_work_per_thread();
+	}
+	{
+	using ps = poisson_series<polynomial<integer,monomial<short>>>;
+	using math::cos;
+	using math::sin;
+	using math::pow;
+	settings::set_min_work_per_thread(1u);
+	ps x{"x"}, y{"y"}, z{"z"};
+	for (unsigned nt = 1u; nt <= 4u; ++nt) {
+		settings::set_n_threads(nt);
+		auto res = (x*cos(x)+y*sin(x))*(z*cos(x)+x*sin(y));
+		BOOST_CHECK_EQUAL(res,0);
+	}
+	settings::reset_n_threads();
+	settings::reset_min_work_per_thread();
+	}
+}

@@ -22,6 +22,7 @@
 #define PIRANHA_POISSON_SERIES_HPP
 
 #include <algorithm>
+#include <atomic>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -53,6 +54,7 @@
 #include "symbol.hpp"
 #include "symbol_set.hpp"
 #include "t_substitutable_series.hpp"
+#include "thread_pool.hpp"
 #include "term.hpp"
 #include "trigonometric_series.hpp"
 #include "type_traits.hpp"
@@ -653,6 +655,72 @@ class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : p
 		template <typename T>
 		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
 			typename T::term_type::key_type>::value,int>::type;
+		void divide_by_two(Series &s) const
+		{
+			// NOTE: if we ever implement multi-threaded series division we most likely need
+			// to revisit this.
+			piranha_assert(this->m_n_threads > 0u);
+			const auto n_threads = this->m_n_threads;
+			if (n_threads == 1u) {
+				// This is possible, as the requirements of series divisibility and trig key
+				// multipliability overlap.
+				s /= 2;
+			} else {
+				using bucket_size_type = typename base::bucket_size_type;
+				using term_type = typename Series::term_type;
+				auto &container = s._container();
+				std::atomic<bucket_size_type> total_erase_count(0u);
+				auto divider = [&container,&total_erase_count,this](bucket_size_type start_idx, bucket_size_type end_idx) {
+					// A vector of terms to be erased at each bucket iteration.
+					std::vector<term_type> term_list;
+					// Total number of terms erased by this thread.
+					bucket_size_type erase_count = 0u;
+					for (; start_idx != end_idx; ++start_idx) {
+						// Reset the list of terms to be erased.
+						term_list.clear();
+						const auto &list = container._get_bucket_list(start_idx);
+						for (const auto &t: list) {
+							t.m_cf /= 2;
+							if (unlikely(t.is_ignorable(this->m_ss))) {
+								term_list.push_back(t);
+							}
+						}
+						for (const auto &t: term_list) {
+							container._erase(container._find(t,start_idx));
+							erase_count = static_cast<bucket_size_type>(erase_count + 1u);
+						}
+					}
+					// Update the global counter of erased terms.
+					total_erase_count += erase_count;
+				};
+				// Buckets per thread.
+				const auto bpt = static_cast<bucket_size_type>(container.bucket_count() / n_threads);
+				// Go with the threads.
+				future_list<decltype(thread_pool::enqueue(0u,divider,0u,0u))> ff_list;
+				try {
+					for (unsigned i = 0u; i < n_threads; ++i) {
+						const auto start_idx = static_cast<bucket_size_type>(bpt * i);
+						// Special casing for the last thread.
+						const auto end_idx = (i == n_threads - 1u) ? container.bucket_count() :
+							static_cast<bucket_size_type>(bpt * (i + 1u));
+						ff_list.push_back(thread_pool::enqueue(i,divider,start_idx,end_idx));
+					}
+					// First let's wait for everything to finish.
+					ff_list.wait_all();
+					// Then, let's handle the exceptions.
+					ff_list.get_all();
+				} catch (...) {
+					ff_list.wait_all();
+					// Clear out the container as it might be in an inconsistent state.
+					container.clear();
+					throw;
+				}
+				// Final size update - all of this is noexcept.
+				const auto tot = total_erase_count.load();
+				piranha_assert(tot <= s.size());
+				container._update_size(static_cast<bucket_size_type>(s.size() - tot));
+			}
+		}
 	public:
 		/// Inherit base constructors.
 		using base::base;
@@ -671,7 +739,9 @@ class series_multiplier<Series,detail::ps_series_multiplier_enabler<Series>> : p
 		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const
 		{
-			return this->plain_multiplication();
+			auto retval(this->plain_multiplication());
+			divide_by_two(retval);
+			return retval;
 		}
 };
 
