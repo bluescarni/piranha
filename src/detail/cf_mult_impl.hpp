@@ -18,29 +18,53 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "fateman1.hpp"
+#ifndef PIRANHA_DETAIL_CF_MULT_IMPL_HPP
+#define PIRANHA_DETAIL_CF_MULT_IMPL_HPP
 
-#define BOOST_TEST_MODULE fateman1_unpacked_test
-#include <boost/test/unit_test.hpp>
+#include <type_traits>
+#include <utility>
 
-#include <boost/lexical_cast.hpp>
+#include "../is_cf.hpp"
+#include "../mp_rational.hpp"
+#include "../type_traits.hpp"
+#include "series_fwd.hpp"
 
-#include "../src/environment.hpp"
-#include "../src/monomial.hpp"
-#include "../src/mp_integer.hpp"
-#include "../src/settings.hpp"
-
-using namespace piranha;
-
-// Fateman's polynomial multiplication test number 1. Calculate:
-// f * (f+1)
-// where f = (1+x+y+z+t)**20, using unpacked monomials.
-
-BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
+namespace piranha
 {
-	environment env;
-	if (boost::unit_test::framework::master_test_suite().argc > 1) {
-		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
-	}
-	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),135751u);
+
+namespace detail
+{
+
+// Overload if the coefficient is a series.
+template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf = cf1 * cf2;
 }
+
+// Overload if the coefficient is a rational.
+template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf._num() = cf1.num();
+	out_cf._num() *= cf2.num();
+}
+
+// Overload if the coefficient is not a series and not a rational.
+template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value && !detail::is_mp_rational<Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf = cf1;
+	out_cf *= cf2;
+}
+
+// Enabler for the functions above.
+template <typename Cf>
+using cf_mult_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+	is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value>::type;
+
+}
+
+}
+
+#endif

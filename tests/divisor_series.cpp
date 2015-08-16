@@ -370,3 +370,11 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
 	BOOST_CHECK_THROW(math::pow(null,-1),zero_division_error);
 	}
 }
+
+BOOST_AUTO_TEST_CASE(divisor_series_rational_multiplication_test)
+{
+	// Test that we handle correctly rational coefficients wrt the lcm computation in the multiplier.
+	using s_type = divisor_series<rational,divisor<short>>;
+	s_type s1{1/2_q}, s2{2/3_q};
+	BOOST_CHECK_EQUAL(s1*s2,1/3_q);
+}

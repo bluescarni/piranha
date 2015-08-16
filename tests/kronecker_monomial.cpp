@@ -350,6 +350,19 @@ struct multiply_tester
 		ka::decode(tmp,result[0u].m_key.get_int());
 		BOOST_CHECK(tmp[0u] == 3);
 		BOOST_CHECK(tmp[1u] == -1);
+		// Check special handling of rational coefficients.
+		using term_type2 = term<rational,k_type>;
+		term_type2 ta, tb;
+		std::array<term_type2,1u> result2;
+		ta.m_cf = 2/3_q;
+		tb.m_cf = -4/5_q;
+		ta.m_key = k_type({1,-1});
+		tb.m_key = k_type({2,0});
+		k_type::multiply(result2,ta,tb,vs1);
+		BOOST_CHECK(result2[0u].m_cf == -8);
+		ka::decode(tmp,result2[0u].m_key.get_int());
+		BOOST_CHECK(tmp[0u] == 3);
+		BOOST_CHECK(tmp[1u] == -1);
 	}
 };
 

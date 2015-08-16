@@ -1189,6 +1189,9 @@ struct is_mp_integer_interoperable_type
  * - there is some out-of-range conversion handling which is not hit by the test cases, need to proper test it.
  * - fits_in_static() might be made obsolete by the new mpz_t ctor. fits_in_static() is more accurate, but potentially
  *   slower and prone to overflow. See if it makes sense to replace it.
+ * - use the GMP facilities via mpz_view and/or the mpz_t constructor when interacting with float and double? Maybe pass through a real
+ *   for interaction with long doubles? This might need a thread local mpz_t/real/mpfr_t in order to avoid having to allocate at each
+ *   construction, but for thread local we have the usual issue on OSX.
  */
 template <int NBits = 0>
 class mp_integer
@@ -3210,6 +3213,7 @@ class mp_integer
 			if (is_static()) {
 				return m_int.g_st().is_unitary();
 			}
+			// NOTE: this is actually a macro.
 			return mpz_cmp_ui(&m_int.g_dy(),1ul) == 0;
 		}
 	private:

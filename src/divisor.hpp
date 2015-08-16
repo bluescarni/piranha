@@ -34,6 +34,7 @@
 #include <utility>
 
 #include "config.hpp"
+#include "detail/cf_mult_impl.hpp"
 #include "detail/divisor_series_fwd.hpp"
 #include "detail/gcd.hpp"
 #include "detail/prepare_for_print.hpp"
@@ -71,7 +72,7 @@ namespace piranha
  *
  * ## Type requirements ##
  *
- * \p T must be either a C++ integral type or an instance of piranha::mp_integer.
+ * \p T must be either a C++ signed integral type or an instance of piranha::mp_integer.
  *
  * ## Exception safety guarantee ##
  *
@@ -301,22 +302,7 @@ class divisor
 			is_addable_in_place<eval_sum_type<U>>::value && detail::is_pmappable<U>::value,eval_type_<U>>::type;
 		// Multiplication utilities.
 		template <typename Cf>
-		using multiply_enabler = typename std::enable_if<
-			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
-			is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value,int>::type;
-		// Overload if the coefficient is a series.
-		template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
-		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
-		{
-			out_cf = cf1 * cf2;
-		}
-		// Overload if the coefficient is not a series.
-		template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
-		static void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
-		{
-			out_cf = cf1;
-			out_cf *= cf2;
-		}
+		using multiply_enabler = typename std::enable_if<detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
 	public:
 		/// Arity of the multiply() method.
 		static const std::size_t multiply_arity = 1u;
@@ -752,8 +738,10 @@ class divisor
 		 * This method is enabled only if \p Cf satisfies piranha::is_cf, it is multipliable in-place, it is multipliable yielding a result
 		 * of type \p Cf, and it is copy-assignable.
 		 *
-		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res. This method
-		 * offers the basic exception safety guarantee.
+		 * Multiply \p t1 by \p t2, storing the result in the only element of \p res.  If \p Cf is an instance of piranha::mp_rational, then
+		 * only the numerators of the coefficients will be multiplied.
+		 *
+		 * This method offers the basic exception safety guarantee.
 		 *
 		 * @param[out] res return value.
 		 * @param[in] t1 first argument.
@@ -778,7 +766,7 @@ class divisor
 				piranha_throw(std::invalid_argument,"invalid size of arguments set");
 			}
 			// Coefficient.
-			cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
+			detail::cf_mult_impl(t.m_cf,t1.m_cf,t2.m_cf);
 			// Now deal with the key.
 			// Establish the largest and smallest divisor.
 			const divisor &large = (t1.m_key.size() >= t2.m_key.size()) ? t1.m_key : t2.m_key;

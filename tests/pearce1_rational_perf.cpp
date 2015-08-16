@@ -18,54 +18,31 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "../src/tuning.hpp"
+#include "pearce1.hpp"
 
-#define BOOST_TEST_MODULE tuning_test
+#define BOOST_TEST_MODULE pearce1_test
 #include <boost/test/unit_test.hpp>
 
-#include <stdexcept>
-#include <thread>
+#include <boost/lexical_cast.hpp>
 
 #include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/mp_rational.hpp"
+#include "../src/settings.hpp"
 
 using namespace piranha;
 
-BOOST_AUTO_TEST_CASE(tuning_parallel_memory_set_test)
+// Pearce's polynomial multiplication test number 1. Calculate:
+// f * g
+// where
+// f = (1 + x + y + 2*z**2 + 3*t**3 + 5*u**5)**12
+// g = (1 + u + t + 2*z**2 + 3*y**3 + 5*x**5)**12
+
+BOOST_AUTO_TEST_CASE(pearce1_test)
 {
 	environment env;
-	BOOST_CHECK(tuning::get_parallel_memory_set());
-	tuning::set_parallel_memory_set(false);
-	BOOST_CHECK(!tuning::get_parallel_memory_set());
-	std::thread t1([](){
-		while (!tuning::get_parallel_memory_set()) {}
-	});
-	std::thread t2([](){
-		tuning::set_parallel_memory_set(true);
-	});
-	t1.join();
-	t2.join();
-	BOOST_CHECK(tuning::get_parallel_memory_set());
-	tuning::set_parallel_memory_set(false);
-	BOOST_CHECK(!tuning::get_parallel_memory_set());
-	tuning::reset_parallel_memory_set();
-	BOOST_CHECK(tuning::get_parallel_memory_set());
-}
-
-BOOST_AUTO_TEST_CASE(tuning_block_size_test)
-{
-	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),256u);
-	tuning::set_multiplication_block_size(512u);
-	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),512u);
-	std::thread t1([](){
-		while (tuning::get_multiplication_block_size() != 1024u) {}
-	});
-	std::thread t2([](){
-		tuning::set_multiplication_block_size(1024u);
-	});
-	t1.join();
-	t2.join();
-	BOOST_CHECK_THROW(tuning::set_multiplication_block_size(8000u),std::invalid_argument);
-	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),1024u);
-	tuning::reset_multiplication_block_size();
-	BOOST_CHECK_EQUAL(tuning::get_multiplication_block_size(),256u);
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	BOOST_CHECK_EQUAL((pearce1<rational,kronecker_monomial<>>().size()),5821335u);
 }

@@ -1175,9 +1175,6 @@ class series: detail::series_tag, series_operators
 		// Make friend with debugging class.
 		template <typename>
 		friend class debug_access;
-		// Make friend with series multiplier class.
-		template <typename, typename>
-		friend class series_multiplier;
 		// Make friend with the operators class.
 		friend class series_operators;
 		// Partial need access to the custom derivatives.
@@ -1192,8 +1189,8 @@ class series: detail::series_tag, series_operators
 	private:
 		// Avoid confusing doxygen.
 		typedef decltype(std::declval<container_type>().evaluate_sparsity()) sparsity_info_type;
-		template <bool Sign, typename T>
 		// Insertion.
+		template <bool Sign, typename T>
 		void dispatch_insertion(T &&term, typename std::enable_if<
 			std::is_same<typename std::decay<T>::type,term_type>::value
 			>::type * = nullptr)

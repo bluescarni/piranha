@@ -91,23 +91,18 @@ namespace piranha
  /* Some improvement NOTEs:
  * - tests for low-level methods
  * - better increase_size with recycling of dynamically-allocated nodes
- * - see if it is possible to rework max_load_factor() to return an unsigned instead of double. The unsigned is the max load factor in percentile: 50 means 0.5, etc.
  * - see if we can reduce the number of branches in the find algorithm (e.g., when traversing the list) -> this should be a general review of the internal linked list
  * implementation.
  * - memory handling: the usage of the allocator object should be more standard, i.e., use the pointer and reference typedefs defined within, replace
  * positional new with construct even in the list implementation. Then it can be made a template parameter with default = std::allocator.
  * - use of new: we should probably replace new with new, in case new is overloaded -> also, check all occurrences of root new, it is used as well
  * in static_vector for instance.
- * - store functors in a tuple to get advantage of EBCO.
  * - inline the first bucket, with the idea of avoiding memory allocations when the series consist of a single element (useful for instance
  * when iterating over the series with the fat iterator).
  * - optimisation for the begin() iterator,
  * - check again about the mod implementation,
  * - in the dtor checks, do we still want the shutdown() logic after we rework symbol?
- *   are we still acessing potentially global variables?
- * - in the dtor checks, remember to change the load_factor() logic if we make max
- *   load factor a soft limit (i.e., it could go past the limit while using
- *   the low level interface in poly multiplication).
+ *   are we still accessing potentially global variables?
  * - maybe a bit more enabling for ctor and other template methods, not really essential though.
  */
 template <typename T, typename Hash = std::hash<T>, typename Pred = std::equal_to<T>>
@@ -230,14 +225,14 @@ class hash_set
 							// Create a new node with content equal to other_cur
 							// and linking forward to the terminator.
 							std::unique_ptr<node> new_node(::new node());
-							::new ((void *)&new_node->m_storage) T(*other_cur->ptr());
+							::new (static_cast<void *>(&new_node->m_storage)) T(*other_cur->ptr());
 							new_node->m_next = &terminator;
 							// Link the new node.
 							cur->m_next = new_node.release();
 							cur = cur->m_next;
 						} else {
 							// This means this is the first node.
-							::new ((void *)&cur->m_storage) T(*other_cur->ptr());
+							::new (static_cast<void *>(&cur->m_storage)) T(*other_cur->ptr());
 							cur->m_next = &terminator;
 						}
 						other_cur = other_cur->m_next;
@@ -274,7 +269,7 @@ class hash_set
 				// Do something only if there is content in the other.
 				if (other.m_node.m_next) {
 					// Move construct current first node with first node of other.
-					::new ((void *)&m_node.m_storage) T(std::move(*other.m_node.ptr()));
+					::new (static_cast<void *>(&m_node.m_storage)) T(std::move(*other.m_node.ptr()));
 					// Link remaining content of other into this.
 					m_node.m_next = other.m_node.m_next;
 					// Destroy first node of other.
@@ -290,13 +285,13 @@ class hash_set
 				if (m_node.m_next) {
 					// Create the new node and forward-link it to the second node.
 					std::unique_ptr<node> new_node(::new node());
-					::new ((void *)&new_node->m_storage) T(std::forward<U>(item));
+					::new (static_cast<void *>(&new_node->m_storage)) T(std::forward<U>(item));
 					new_node->m_next = m_node.m_next;
 					// Link first node to the new node.
 					m_node.m_next = new_node.release();
 					return m_node.m_next;
 				} else {
-					::new ((void *)&m_node.m_storage) T(std::forward<U>(item));
+					::new (static_cast<void *>(&m_node.m_storage)) T(std::forward<U>(item));
 					m_node.m_next = &terminator;
 					return &m_node;
 				}
@@ -556,10 +551,9 @@ class hash_set
 			for (size_type i = 0u; i < n_elements; ++i) {
 				key_type k;
 				ar & k;
-				const auto ret_ins = insert(std::move(k));
-				// Check that there was no duplicate.
-				(void)ret_ins;
-				piranha_assert(ret_ins.second);
+				insert(std::move(k));
+				// NOTE: in case a malicious archive contains duplicates, it does
+				// not matter: we will have only one copy of each element.
 			}
 		}
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -597,10 +591,6 @@ class hash_set
 			count = 0u;
 			for (auto it = begin(); it != end(); ++it, ++count) {}
 			if (count != m_n_elements) {
-				return false;
-			}
-			// Check load factor is not exceeded.
-			if (load_factor() > max_load_factor()) {
 				return false;
 			}
 			return true;
@@ -1022,7 +1012,7 @@ class hash_set
 		 * 
 		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
-		 * @return iterator pointing to the element following \p it pior to the element being erased, or end() if
+		 * @return iterator pointing to the element following \p it prior to the element being erased, or end() if
 		 * no such element exists.
 		 */
 		iterator erase(const_iterator it)
@@ -1032,9 +1022,10 @@ class hash_set
 			iterator retval;
 			retval.m_set = this;
 			const auto b_count = bucket_count();
-			// Travel to the next iterator if necessary.
 			if (b_it == ptr()[it.m_idx].end()) {
-				size_type idx = it.m_idx + 1u;
+				// Travel to the next iterator if the deleted element was
+				// the last one in the bucket.
+				auto idx = static_cast<size_type>(it.m_idx + 1u);
 				// Advance to the first non-empty bucket if necessary,
 				// without going past the end of the set.
 				for (; idx < b_count; ++idx) {
@@ -1047,12 +1038,18 @@ class hash_set
 				if (idx != b_count) {
 					retval.m_it = ptr()[idx].begin();
 				}
+				// NOTE: in case we reached the end of the container, the end() iterator should be:
+				// {this,bucket_count,local_iterator{}}
+				// this has been set above already, bucket_count is set by retval.m_idx = idx
+				// and the default local_iterator ctor is called by the def ctor of iterator.
 			} else {
+				// Otherwise, just copy over the iterator returned by _erase().
 				retval.m_idx = it.m_idx;
 				retval.m_it = b_it;
 			}
 			piranha_assert(m_n_elements);
-			--m_n_elements;
+			// Update the number of elements.
+			m_n_elements = static_cast<size_type>(m_n_elements - 1u);
 			return retval;
 		}
 		/// Remove all elements.
@@ -1341,7 +1338,7 @@ class hash_set
 		 * 
 		 * @param[in] it iterator to the element of the set to be removed.
 		 * 
-		 * @return local iterator pointing to the element following \p it pior to the element being erased, or local end() if
+		 * @return local iterator pointing to the element following \p it prior to the element being erased, or local end() if
 		 * no such element exists.
 		 */
 		local_iterator _erase(const_iterator it)
@@ -1361,10 +1358,10 @@ class hash_set
 					bucket.m_node.m_next = nullptr;
 					return bucket.end();
 				} else {
-					// Store the link in the second element.
+					// Store the link in the second element (this could be the terminator).
 					auto tmp = bucket.m_node.m_next->m_next;
 					// Move-construct from the second element, and then destroy it.
-					::new ((void *)&bucket.m_node.m_storage) T(std::move(*bucket.m_node.m_next->ptr()));
+					::new (static_cast<void *>(&bucket.m_node.m_storage)) T(std::move(*bucket.m_node.m_next->ptr()));
 					bucket.m_node.m_next->ptr()->~T();
 					::delete bucket.m_node.m_next;
 					// Establish the new link.
@@ -1390,16 +1387,9 @@ class hash_set
 				// to which 'it' refers is not here: assert that the iterator we just
 				// erased was not end() - i.e., it was pointing to something.
 				piranha_assert(b_it.m_ptr);
-				// See if the erased iterator was the last one of the list.
-				const auto tmp = prev_b_it;
-				++prev_b_it;
-				if (prev_b_it == b_it_f) {
-					// Iterator is the last one, return local end().
-					return b_it_f;
-				} else {
-					// Iterator is not the last one, return it.
-					return tmp;
-				}
+				// Move forward the iterator that originally preceded the erased item.
+				// It will now point to the item past the erased one or to the local end().
+				return ++prev_b_it;
 			}
 		}
 		//@}

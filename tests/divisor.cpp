@@ -796,6 +796,18 @@ struct multiply_tester
 		d_type::multiply(res,t1,t2,v);
 		BOOST_CHECK_EQUAL(res[0u].m_cf,-6);
 		BOOST_CHECK_EQUAL(res[0u].m_key.size(),4u);
+		// Check correct handling of rationals.
+		std::array<term<rational,d_type>,1u> resq;
+		term<rational,d_type> ta, tb;
+		ta.m_cf = 2/3_q;
+		tb.m_cf = -3/5_q;
+		tmp = {T(1),T(-1)};
+		exponent = 4;
+		ta.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		tb.m_key.insert(tmp.begin(),tmp.end(),exponent);
+		d_type::multiply(resq,ta,tb,v);
+		BOOST_CHECK_EQUAL(resq[0u].m_cf,-6);
+		BOOST_CHECK_EQUAL(resq[0u].m_key.size(),1u);
 		// Coefficient series test.
 		std::array<term<polynomial<integer,monomial<int>>,d_type>,1u> res2;
 		term<polynomial<integer,monomial<int>>,d_type> t1a, t2a;

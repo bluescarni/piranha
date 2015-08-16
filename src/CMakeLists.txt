@@ -53,9 +53,11 @@ SET(HEADERS_LIST
 	substitutable_series.hpp
 	ipow_substitutable_series.hpp
 	invert.hpp
+	base_series_multiplier.hpp
 )
 
 SET(DETAIL_HEADERS_LIST
+	detail/atomic_utils.hpp
 	detail/series_multiplier_fwd.hpp
 	detail/mpfr.hpp
 	detail/config_clang.hpp
@@ -77,6 +79,7 @@ SET(DETAIL_HEADERS_LIST
 	detail/gcd.hpp
 	detail/vector_merge_args.hpp
 	detail/divisor_series_fwd.hpp
+	detail/cf_mult_impl.hpp
 )
 
 # NOTE: this dummy cpp file is here with the sole purpose of getting the headers
