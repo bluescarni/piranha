@@ -620,7 +620,7 @@ inline symbol_set::positions::positions(const symbol_set &a, const symbol_set &b
  * @param[in] map input map.
  *
  * @throws unspecified any exception thrown by memory errors in standard containers, by
- * the copy constructor of \p T, or by <tt>std::sort()</tt>.
+ * the copy constructor of \p T, or by <tt>std::stable_sort()</tt>.
  */
 template <typename T>
 inline symbol_set::positions_map<T>::positions_map(const symbol_set &a, const std::unordered_map<symbol,T> &map)
@@ -631,7 +631,7 @@ inline symbol_set::positions_map<T>::positions_map(const symbol_set &a, const st
 			m_pairs.push_back(std::make_pair(idx,p.second));
 		}
 	}
-	std::sort(m_pairs.begin(),m_pairs.end(),[](const value_type &p1, const value_type &p2) {
+	std::stable_sort(m_pairs.begin(),m_pairs.end(),[](const value_type &p1, const value_type &p2) {
 		return p1.first < p2.first;
 	});
 	// Check that there are no duplicate positions.
