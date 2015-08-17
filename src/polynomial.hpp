@@ -28,6 +28,7 @@
 #include <iterator>
 #include <limits>
 #include <map>
+#include <mutex>
 #include <numeric>
 #include <stdexcept>
 #include <string>
@@ -314,6 +315,37 @@ class polynomial:
 		// Invert utils.
 		template <typename Series>
 		using inverse_type = decltype(std::declval<const Series &>().pow(-1));
+		// Auto-truncation machinery.
+		// The degree and partial degree types, detected via math::degree().
+		template <typename T>
+		using degree_type = decltype(math::degree(std::declval<const T &>()));
+		template <typename T>
+		using pdegree_type = decltype(math::degree(std::declval<const T &>(),std::declval<const std::vector<std::string> &>()));
+		// Enablers for auto-truncation: degree and partial degree must be the same, series must support math::truncate_degree().
+		template <typename T>
+		using at_degree_enabler = typename std::enable_if<std::is_same<degree_type<T>,pdegree_type<T>>::value &&
+			has_truncate_degree<T,degree_type<T>>::value,int>::type;
+		// For the setter, we need the above plus we need to be able to convert safely U to the degree type.
+		template <typename T, typename U>
+		using at_degree_set_enabler = typename std::enable_if<detail::true_tt<at_degree_enabler<T>>::value &&
+			has_safe_cast<degree_type<T>,U>::value,int>::type;
+		// This needs to be separate from the other static inits because we don't have anything to init
+		// if the series does not support degree computation.
+		// NOTE: here the important thing is that this method does not
+		// return the same object for different series types, as the intent of the truncation mechanism is that each polynomial type
+		// has its own settings.
+		// We need to keep this in mind if we need static resources that must be unique for the series type, sometimes adding the Derived
+		// series as template argument in a toolbox might actually be necessary because of this. Note that, contrary to the, e.g., custom
+		// derivatives map in series.hpp here we don't care about the type of T - we just need to be able to extract the term type
+		// from it.
+		template <typename T = polynomial>
+		static degree_type<T> &get_at_degree_max()
+		{
+			// Init to zero for peace of mind - though this should never be accessed
+			// if the auto-truncation is not used.
+			static degree_type<T> at_degree_max(0);
+			return at_degree_max;
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -501,11 +533,130 @@ class polynomial:
 			}
 			return retval;
 		}
+		/// Set total-degree-based auto-truncation.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
+		 * and if \p U can be safely cast to the degree type.
+		 *
+		 * Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.
+		 *
+		 * @param[in] max_degree maximum total degree that will be retained during automatic truncation.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - piranha::safe_cast(),
+		 * - the constructor of the degree type.
+		 */
+		template <typename U, typename T = polynomial, at_degree_set_enabler<T,U> = 0>
+		static void set_auto_truncate_degree(const U &max_degree)
+		{
+			// Init out for exception safety.
+			auto new_degree(safe_cast<degree_type<T>>(max_degree));
+			// Initialisation of function-level statics is thread-safe, no need to lock. We get
+			// a ref before the lock because the initialisation of the static could throw in principle,
+			// and we want the section after the lock to be exception-free.
+			auto &at_dm = get_at_degree_max();
+			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+			s_at_degree_mode = 1;
+			at_dm = std::move(new_degree);
+			// This should not throw (a vector of strings, destructors and deallocation should be noexcept).
+			s_at_degree_names.clear();
+		}
+		/// Set partial-degree-based auto-truncation.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
+		 * and if \p U can be safely cast to the degree type.
+		 *
+		 * Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.
+		 *
+		 * @param[in] max_degree maximum partial degree that will be retained during automatic truncation.
+		 * @param[in] names names of the variables that will be considered during the computation of the
+		 * partial degree.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - piranha::safe_cast(),
+		 * - the constructor of the degree type,
+		 * - memory allocation errors in standard containers.
+		 */
+		template <typename U, typename T = polynomial, at_degree_set_enabler<T,U> = 0>
+		static void set_auto_truncate_degree(const U &max_degree, const std::vector<std::string> &names)
+		{
+			// Copy+move for exception safety.
+			auto new_degree(safe_cast<degree_type<T>>(max_degree));
+			auto new_names(names);
+			auto &at_dm = get_at_degree_max();
+			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+			s_at_degree_mode = 2;
+			at_dm = std::move(new_degree);
+			s_at_degree_names = std::move(new_names);
+		}
+		/// Disable degree-based auto-truncation.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * Disable the degree-based auto-truncation mechanism.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - threading primitives,
+		 * - the constructor of the degree type,
+		 * - memory allocation errors in standard containers.
+		 */
+		template <typename T = polynomial, at_degree_enabler<T> = 0>
+		static void unset_auto_truncate_degree()
+		{
+			degree_type<T> new_degree(0);
+			auto &at_dm = get_at_degree_max();
+			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+			s_at_degree_mode = 0;
+			at_dm = std::move(new_degree);
+			s_at_degree_names.clear();
+		}
+		/// Query the status of the degree-based auto-truncation mechanism.
+		/**
+		 * \note
+		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 *
+		 * This method will return a tuple of three elements describing the status of the degree-based auto-truncation mechanism.
+		 * The elements of the tuple have the following meaning:
+		 * - truncation mode (0 if disabled, 1 for total-degree truncation and 2 for partial-degree truncation),
+		 * - the maximum degree allowed,
+		 * - the list of names to be considered for partial truncation.
+		 *
+		 * @return a tuple representing the status of the degree-based auto-truncation mechanism.
+		 *
+		 * @throws unspecified any exception thrown by threading primitives or by the involved constructors.
+		 */
+		template <typename T = polynomial, at_degree_enabler<T> = 0>
+		static std::tuple<int,degree_type<T>,std::vector<std::string>> get_auto_truncate_degree()
+		{
+			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
+			return std::make_tuple(s_at_degree_mode,get_at_degree_max(),s_at_degree_names);
+		}
+	private:
+		// Static data for auto_truncate_degree.
+		static std::mutex		s_at_degree_mutex;
+		static int			s_at_degree_mode;
+		static std::vector<std::string>	s_at_degree_names;
 };
+
+// Static inits.
+template <typename Cf, typename Key>
+std::mutex polynomial<Cf,Key>::s_at_degree_mutex;
+
+template <typename Cf, typename Key>
+int polynomial<Cf,Key>::s_at_degree_mode = 0;
+
+template <typename Cf, typename Key>
+std::vector<std::string> polynomial<Cf,Key>::s_at_degree_names;
 
 namespace detail
 {
 
+// Identification of key types for dispatching in the multiplier.
 template <typename T>
 struct is_kronecker_monomial
 {
@@ -530,6 +681,35 @@ struct is_monomial<monomial<T,S>>
 	static const bool value = true;
 };
 
+// Identify the presence of auto-truncation methods in the poly multiplier.
+template <typename S, typename T>
+class has_set_auto_truncate_degree: sfinae_types
+{
+		// NOTE: if we have total degree auto truncation, we also have partial degree truncation.
+		template <typename S1, typename T1>
+		static auto test(const S1 &, const T1 &t) -> decltype(S1::set_auto_truncate_degree(t),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<yes,decltype(test(std::declval<S>(),std::declval<T>()))>::value;
+};
+
+template <typename S, typename T>
+const bool has_set_auto_truncate_degree<S,T>::value;
+
+template <typename S>
+class has_get_auto_truncate_degree: sfinae_types
+{
+		template <typename S1>
+		static auto test(const S1 &) -> decltype(S1::get_auto_truncate_degree(),void(),yes());
+		static no test(...);
+	public:
+		static const bool value = std::is_same<yes,decltype(test(std::declval<S>()))>::value;
+};
+
+template <typename S>
+const bool has_get_auto_truncate_degree<S>::value;
+
+// Global enabler for the polynomial multiplier.
 template <typename Series>
 using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag,Series>::value>::type;
 
@@ -767,15 +947,106 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		{
 			math::multiply_accumulate(a._num(),b.num(),c.num());
 		}
+		// Wrapper for the plain multiplication routine.
+		// Case 1: no auto truncation available, just run the plain multiplication.
+		template <typename T = Series, typename std::enable_if<!detail::has_get_auto_truncate_degree<T>::value,int>::type = 0>
+		Series plain_multiplication_wrapper() const
+		{
+			return this->plain_multiplication();
+		}
+		// Case 2: auto-truncation available. Check if auto truncation is active.
+		template <typename T = Series, typename std::enable_if<detail::has_get_auto_truncate_degree<T>::value,int>::type = 0>
+		Series plain_multiplication_wrapper() const
+		{
+			const auto t = T::get_auto_truncate_degree();
+			if (std::get<0u>(t) == 0) {
+				// No truncation active.
+				return this->plain_multiplication();
+			}
+			// Truncation is active.
+			if (std::get<0u>(t) == 1) {
+				// Total degree truncation.
+				return total_truncated_multiplication(std::get<1u>(t));
+			}
+			piranha_assert(std::get<0u>(t) == 2);
+			// Partial degree truncation.
+			return partial_truncated_multiplication(std::get<1u>(t),std::get<2u>(t));
+		}
+		template <typename T>
+		Series total_truncated_multiplication(const T &max_degree) const
+		{
+			using term_type = typename Series::term_type;
+			using degree_type = decltype(detail::ps_get_degree(term_type{},this->m_ss));
+			using size_type = typename base::size_type;
+			// First let's order the terms in the second series according to the degree.
+			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this](term_type const *p1, term_type const *p2) {
+				return detail::ps_get_degree(*p1,this->m_ss) < detail::ps_get_degree(*p2,this->m_ss);
+			});
+			// Next we create two vectors with the degrees of the terms in the two series. In the second series,
+			// we negate and add the max degree in order to avoid adding in the skipping functor.
+			std::vector<degree_type> v_d1, v_d2;
+			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this](term_type const *p) {
+				return detail::ps_get_degree(*p,this->m_ss);
+			});
+			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&max_degree](term_type const *p) {
+				return max_degree - detail::ps_get_degree(*p,this->m_ss);
+			});
+			// The skipping functor.
+			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
+				using d_size_type = decltype(v_d1.size());
+				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
+			};
+			return this->plain_multiplication(sf);
+		}
+		template <typename T>
+		Series partial_truncated_multiplication(const T &max_degree, const std::vector<std::string> &names) const
+		{
+			using term_type = typename Series::term_type;
+			const symbol_set::positions pos(this->m_ss,symbol_set(names.begin(),names.end()));
+			using degree_type = decltype(detail::ps_get_degree(term_type{},names,pos,this->m_ss));
+			using size_type = typename base::size_type;
+			std::stable_sort(this->m_v2.begin(),this->m_v2.end(),[this,&names,&pos](term_type const *p1, term_type const *p2) {
+				return detail::ps_get_degree(*p1,names,pos,this->m_ss) < detail::ps_get_degree(*p2,names,pos,this->m_ss);
+			});
+			std::vector<degree_type> v_d1, v_d2;
+			std::transform(this->m_v1.begin(),this->m_v1.end(),std::back_inserter(v_d1),[this,&names,&pos](term_type const *p) {
+				return detail::ps_get_degree(*p,names,pos,this->m_ss);
+			});
+			std::transform(this->m_v2.begin(),this->m_v2.end(),std::back_inserter(v_d2),[this,&names,&pos,&max_degree](term_type const *p) {
+				return max_degree - detail::ps_get_degree(*p,names,pos,this->m_ss);
+			});
+			auto sf = [&v_d1,&v_d2](const size_type &i, const size_type &j) -> bool {
+				using d_size_type = decltype(v_d1.size());
+				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
+			};
+			return this->plain_multiplication(sf);
+		}
+		// execute() is the top level dispatch for the actual multiplication.
+		// Case 1: not a Kronecker monomial, do the plain mult.
 		template <typename T = Series, typename std::enable_if<!detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
 		{
-			auto retval = this->plain_multiplication();
-			return retval;
+			return plain_multiplication_wrapper();
 		}
+		// Checking for active truncation.
+		template <typename T = Series, typename std::enable_if<detail::has_get_auto_truncate_degree<T>::value,int>::type = 0>
+		bool check_truncation() const
+		{
+			const auto t = T::get_auto_truncate_degree();
+			return std::get<0u>(t) != 0;
+		}
+		template <typename T = Series, typename std::enable_if<!detail::has_get_auto_truncate_degree<T>::value,int>::type = 0>
+		bool check_truncation() const
+		{
+			return false;
+		}
+		// Case 2: Kronecker mult, do the special multiplication unless a truncation is active. In that case, run the plain mult.
 		template <typename T = Series, typename std::enable_if<detail::is_kronecker_monomial<typename T::term_type::key_type>::value,int>::type = 0>
 		Series execute() const
 		{
+			if (check_truncation()) {
+				return plain_multiplication_wrapper();
+			}
 			const auto size1 = this->m_v1.size(), size2 = this->m_v2.size();
 			// Do not do anything if one of the two series is empty, just return an empty series.
 			if (unlikely(!size1 || !size2)) {

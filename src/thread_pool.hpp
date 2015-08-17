@@ -359,6 +359,8 @@ using thread_pool = thread_pool_<>;
  */
 // \todo provide method to retrieve future values from get_all() using a vector (in case the future type
 // is not void or a reference, in which case the get_all() method stays as it is).
+// NOTE: is it really needed that this is parameterisd over F, instead of - say, T - and force it to be
+// future<T> instead?
 template <typename F>
 class future_list
 {

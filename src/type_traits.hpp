@@ -1012,21 +1012,6 @@ struct true_tt
 template <typename T>
 const bool true_tt<T>::value;
 
-// Detect the presence of the auto_truncate() method in series.
-template <typename T>
-class has_auto_truncate: sfinae_types
-{
-		typedef typename std::decay<T>::type Td;
-		template <typename T1>
-		static auto test(T1 &t) -> decltype(t.auto_truncate(),void(),yes());
-		static no test(...);
-	public:
-		static const bool value = std::is_same<decltype(test(std::declval<Td &>())),yes>::value;
-};
-
-template <typename T>
-const bool has_auto_truncate<T>::value;
-
 }
 
 }

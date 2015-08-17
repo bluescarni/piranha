@@ -859,7 +859,8 @@ BOOST_AUTO_TEST_CASE(poisson_series_invert_test)
 
 BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 {
-	using ps = poisson_series<polynomial<rational,monomial<short>>>;
+	using pt = polynomial<rational,monomial<short>>;
+	using ps = poisson_series<pt>;
 	ps x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK((has_truncate_degree<ps,int>::value));
 	BOOST_CHECK_EQUAL(math::truncate_degree(x,1),x);
@@ -869,12 +870,12 @@ BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0),z.pow(-3)*math::cos(x));
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
-	ps::set_auto_truncate_degree(2,{"x","z"});
+	pt::set_auto_truncate_degree(2,{"x","z"});
 	BOOST_CHECK((x*x*z).empty());
 	BOOST_CHECK(!(x*x*math::cos(x)).empty());
-	ps::unset_auto_truncate_degree();
+	pt::unset_auto_truncate_degree();
 	{
-	using eps = poisson_series<divisor_series<polynomial<rational,monomial<short>>,divisor<short>>>;
+	using eps = poisson_series<divisor_series<pt,divisor<short>>>;
 	eps x{"x"}, y{"y"}, z{"z"};
 	BOOST_CHECK((has_truncate_degree<eps,int>::value));
 	BOOST_CHECK_EQUAL(math::truncate_degree(x,1),x);
@@ -885,11 +886,11 @@ BOOST_AUTO_TEST_CASE(poisson_series_truncation_test)
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0),z.pow(-3)*math::cos(x));
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
 	BOOST_CHECK_EQUAL(math::truncate_degree((y+x*x+z.pow(-3))*math::cos(x),0,{"x"}),(y+z.pow(-3))*math::cos(x));
-	eps::set_auto_truncate_degree(2,{"x","z"});
+	pt::set_auto_truncate_degree(2,{"x","z"});
 	BOOST_CHECK((x*x*z).empty());
 	BOOST_CHECK(!(x*x*math::cos(x)).empty());
 	BOOST_CHECK(!(math::invert(x)*x*x*math::cos(x)).empty());
-	eps::unset_auto_truncate_degree();
+	pt::unset_auto_truncate_degree();
 	}
 }
 

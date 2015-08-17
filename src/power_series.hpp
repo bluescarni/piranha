@@ -22,14 +22,11 @@
 #define PIRANHA_POWER_SERIES_HPP
 
 #include <algorithm>
-#include <mutex>
 #include <string>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "detail/sfinae_types.hpp"
 #include "forwarding.hpp"
 #include "math.hpp"
 #include "serialization.hpp"
@@ -40,6 +37,84 @@
 
 namespace piranha
 {
+
+namespace detail
+{
+
+// Detect power series terms.
+template <typename T>
+struct ps_term_score
+{
+	typedef typename T::cf_type cf_type;
+	typedef typename T::key_type key_type;
+	static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) +
+				      (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_ldegree<key_type>::value) << 1u);
+};
+
+// Common checks on degree/ldegree type for use in enabling conditions below.
+template <typename T>
+struct common_degree_type_checks
+{
+	static const bool value = std::is_constructible<T,int>::value &&
+				  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
+				  is_less_than_comparable<T>::value && std::is_nothrow_move_assignable<T>::value;
+};
+
+// Total (low) degree computation.
+#define PIRANHA_DEFINE_PS_PROPERTY_GETTER(property) \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const symbol_set &) -> decltype(math::property(t.m_cf)) \
+{ \
+	return math::property(t.m_cf); \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const symbol_set &s) -> decltype(t.m_key.property(s)) \
+{ \
+	return t.m_key.property(s); \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const symbol_set &s) -> decltype(math::property(t.m_cf) + t.m_key.property(s)) \
+{ \
+	return math::property(t.m_cf) + t.m_key.property(s); \
+} \
+template <typename T> \
+using ps_##property##_type_ = decltype(ps_get_##property(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>())); \
+template <typename T> \
+using ps_##property##_type = typename std::enable_if<common_degree_type_checks<ps_##property##_type_<T>>::value,ps_##property##_type_<T>>::type;
+PIRANHA_DEFINE_PS_PROPERTY_GETTER(degree)
+PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
+#undef PIRANHA_DEFINE_PS_PROPERTY_GETTER
+
+// Partial (low) degree computation.
+#define PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(property) \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names, \
+	const symbol_set::positions &, const symbol_set &) -> decltype(math::property(t.m_cf,names)) \
+{ \
+	return math::property(t.m_cf,names); \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const std::vector<std::string> &, \
+	const symbol_set::positions &p, const symbol_set &s) -> decltype(t.m_key.property(p,s)) \
+{ \
+	return t.m_key.property(p,s); \
+} \
+template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
+inline auto ps_get_##property(const Term &t, const std::vector<std::string> &names, \
+	const symbol_set::positions &p, const symbol_set &s) -> decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)) \
+{ \
+	return math::property(t.m_cf,names) + t.m_key.property(p,s); \
+} \
+template <typename T> \
+using ps_p##property##_type_ = decltype(ps_get_##property(std::declval<const typename T::term_type &>(), \
+	std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())); \
+template <typename T> \
+using ps_p##property##_type = typename std::enable_if<common_degree_type_checks<ps_p##property##_type_<T>>::value,ps_p##property##_type_<T>>::type;
+PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(degree)
+PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
+#undef PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER
+
+}
 
 /// Power series toolbox.
 /**
@@ -94,79 +169,10 @@ class power_series: public Series
 {
 		PIRANHA_TT_CHECK(is_series,Series);
 		typedef Series base;
-		// Detect power series terms.
-		template <typename T>
-		struct ps_term_score
-		{
-			typedef typename T::cf_type cf_type;
-			typedef typename T::key_type key_type;
-			static const unsigned value = static_cast<unsigned>(has_degree<cf_type>::value && has_ldegree<cf_type>::value) +
-						      (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_ldegree<key_type>::value) << 1u);
-		};
-		// Common checks on degree/ldegree type for use in enabling conditions below.
-		template <typename T>
-		struct common_type_checks
-		{
-			static const bool value = std::is_constructible<T,int>::value &&
-						  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
-						  is_less_than_comparable<T>::value && std::is_nothrow_move_assignable<T>::value;
-		};
-		// Total (low) degree computation.
-		#define PIRANHA_DEFINE_PS_PROPERTY_GETTER(property) \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
-		static auto get_##property(const Term &t, const symbol_set &) -> decltype(math::property(t.m_cf)) \
-		{ \
-			return math::property(t.m_cf); \
-		} \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
-		static auto get_##property(const Term &t, const symbol_set &s) -> decltype(t.m_key.property(s)) \
-		{ \
-			return t.m_key.property(s); \
-		} \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
-		static auto get_##property(const Term &t, const symbol_set &s) -> decltype(math::property(t.m_cf) + t.m_key.property(s)) \
-		{ \
-			return math::property(t.m_cf) + t.m_key.property(s); \
-		} \
-		template <typename T> \
-		using property##_type_ = decltype(get_##property(std::declval<const typename T::term_type &>(),std::declval<const symbol_set &>())); \
-		template <typename T> \
-		using property##_type = typename std::enable_if<common_type_checks<property##_type_<T>>::value,property##_type_<T>>::type;
-		PIRANHA_DEFINE_PS_PROPERTY_GETTER(degree)
-		PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
-		#undef PIRANHA_DEFINE_PS_PROPERTY_GETTER
-		// Partial (low) degree computation.
-		#define PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(property) \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 1u,int>::type = 0> \
-		static auto get_##property(const Term &t, const std::vector<std::string> &names, \
-			const symbol_set::positions &, const symbol_set &) -> decltype(math::property(t.m_cf,names)) \
-		{ \
-			return math::property(t.m_cf,names); \
-		} \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 2u,int>::type = 0> \
-		static auto get_##property(const Term &t, const std::vector<std::string> &, \
-			const symbol_set::positions &p, const symbol_set &s) -> decltype(t.m_key.property(p,s)) \
-		{ \
-			return t.m_key.property(p,s); \
-		} \
-		template <typename Term, typename std::enable_if<ps_term_score<Term>::value == 3u,int>::type = 0> \
-		static auto get_##property(const Term &t, const std::vector<std::string> &names, \
-			const symbol_set::positions &p, const symbol_set &s) -> decltype(math::property(t.m_cf,names) + t.m_key.property(p,s)) \
-		{ \
-			return math::property(t.m_cf,names) + t.m_key.property(p,s); \
-		} \
-		template <typename T> \
-		using p##property##_type_ = decltype(get_##property(std::declval<const typename T::term_type &>(), \
-			std::declval<const std::vector<std::string> &>(), std::declval<const symbol_set::positions &>(), std::declval<const symbol_set &>())); \
-		template <typename T> \
-		using p##property##_type = typename std::enable_if<common_type_checks<p##property##_type_<T>>::value,p##property##_type_<T>>::type;
-		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(degree)
-		PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
-		#undef PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER
 		// Total degree truncation.
 		// Case 1: coefficient can truncate, no degree or ldegree in key.
 		template <typename Term, typename T, typename std::enable_if<has_truncate_degree<typename Term::cf_type,T>::value &&
-			(ps_term_score<Term>::value >> 1u) == 0u,int>::type = 0>
+			(detail::ps_term_score<Term>::value >> 1u) == 0u,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &)
 		{
 			return std::make_pair(true,Term(math::truncate_degree(t.m_cf,max_degree),t.m_key));
@@ -175,7 +181,7 @@ class power_series: public Series
 		// NOTE: here we do not have support for key truncation (yet), so we decide based on the low degree of the key:
 		// if it is larger than the max degree, remove the term, otherwise keep it - it is an all-or-nothing scenario.
 		template <typename Term, typename T, typename std::enable_if<!has_truncate_degree<typename Term::cf_type,T>::value &&
-			(ps_term_score<Term>::value >> 1u) == 1u &&
+			(detail::ps_term_score<Term>::value >> 1u) == 1u &&
 			is_greater_than_comparable<decltype(std::declval<const typename Term::key_type &>().ldegree(std::declval<const symbol_set &>())),T>::value,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
 		{
@@ -192,7 +198,7 @@ class power_series: public Series
 		// all the important parts, plus some garbage.
 		template <typename Term, typename T, typename std::enable_if<has_truncate_degree<typename Term::cf_type,
 			decltype(std::declval<const T &>() - std::declval<const typename Term::key_type &>().ldegree(std::declval<const symbol_set &>()))>::value &&
-			(ps_term_score<Term>::value >> 1u) == 1u,int>::type = 0>
+			(detail::ps_term_score<Term>::value >> 1u) == 1u,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const symbol_set &s)
 		{
 			// The truncation level for the coefficient must be modified in order to take
@@ -207,14 +213,14 @@ class power_series: public Series
 		// Partial degree truncation.
 		// Case 1: coefficient can truncate, no degree or ldegree in key.
 		template <typename Term, typename T, typename std::enable_if<has_truncate_degree<typename Term::cf_type,T>::value &&
-			(ps_term_score<Term>::value >> 1u) == 0u,int>::type = 0>
+			(detail::ps_term_score<Term>::value >> 1u) == 0u,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &names, const symbol_set::positions &, const symbol_set &)
 		{
 			return std::make_pair(true,Term(math::truncate_degree(t.m_cf,max_degree,names),t.m_key));
 		}
 		// Case 2: coefficient cannot truncate, degree and ldegree in key, degrees are greater_than comparable.
 		template <typename Term, typename T, typename std::enable_if<!has_truncate_degree<typename Term::cf_type,T>::value &&
-			(ps_term_score<Term>::value >> 1u) == 1u &&
+			(detail::ps_term_score<Term>::value >> 1u) == 1u &&
 			is_greater_than_comparable<decltype(std::declval<const typename Term::key_type &>().ldegree(std::declval<const symbol_set::positions &>(),
 			std::declval<const symbol_set &>())),T>::value,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &, const symbol_set::positions &p, const symbol_set &s)
@@ -229,7 +235,7 @@ class power_series: public Series
 		template <typename Term, typename T, typename std::enable_if<has_truncate_degree<typename Term::cf_type,
 			decltype(std::declval<const T &>() - std::declval<const typename Term::key_type &>().ldegree(std::declval<const symbol_set::positions &>(),
 			std::declval<const symbol_set &>()))>::value &&
-			(ps_term_score<Term>::value >> 1u) == 1u,int>::type = 0>
+			(detail::ps_term_score<Term>::value >> 1u) == 1u,int>::type = 0>
 		static std::pair<bool,Term> truncate_term(const Term &t, const T &max_degree, const std::vector<std::string> &names, const symbol_set::positions &p, const symbol_set &s)
 		{
 			return std::make_pair(true,Term(math::truncate_degree(t.m_cf,max_degree - t.m_key.ldegree(p,s),names),t.m_key));
@@ -242,40 +248,15 @@ class power_series: public Series
 			>::value,int>::type;
 		// Serialization.
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
-		// Auto-truncation machinery.
+		// Lift definitions from the detail namespace.
 		template <typename T>
-		using at_degree_enabler = typename std::enable_if<std::is_same<degree_type<T>,pdegree_type<T>>::value &&
-			std::is_same<truncate_degree_enabler<degree_type<T>,T>,int>::value &&
-			std::is_same<truncate_pdegree_enabler<pdegree_type<T>,T>,int>::value,int>::type;
-		template <typename T, typename U>
-		using at_degree_set_enabler = typename std::enable_if<
-			std::is_same<at_degree_enabler<T>,int>::value && has_safe_cast<degree_type<T>,U>::value,
-			int>::type;
-		// This needs to be separate from the other static inits because we don't have anything to init
-		// if the series does not support degree computation.
-		// NOTE: here we can use either power_series or Derived as default template argument. The important thing is that this method does not
-		// return the same object for different series types, as the intent of the truncation mechanism is that each final series type
-		// has its own settings. Since power_series is parametrised over the final series type Derived, we should be ok.
-		// We need to keep this in mind if we need static resources that must be unique for the series type, sometimes adding the Derived
-		// series as template argument in a toolbox might actually be necessary because of this. Note that, contrary to the, e.g., custom
-		// derivatives map in series.hpp here we don't care about the type of T - we just need to be able to extract the term type
-		// from it.
-		template <typename T = power_series>
-		static degree_type<T> &get_at_degree_max()
-		{
-			// Init to zero for peace of mind - though this should never be accessed
-			// if the auto-truncation is not used.
-			static degree_type<T> at_degree_max(0);
-			return at_degree_max;
-		}
-		// Call the parent's auto_truncate() method, if available.
-		template <typename T = Series, typename std::enable_if<detail::has_auto_truncate<T>::value,int>::type = 0>
-		void parent_auto_truncate()
-		{
-			static_cast<base *>(this)->auto_truncate();
-		}
-		template <typename T = Series, typename std::enable_if<!detail::has_auto_truncate<T>::value,int>::type = 0>
-		void parent_auto_truncate() {}
+		using degree_type = detail::ps_degree_type<T>;
+		template <typename T>
+		using ldegree_type = detail::ps_ldegree_type<T>;
+		template <typename T>
+		using pdegree_type = detail::ps_pdegree_type<T>;
+		template <typename T>
+		using pldegree_type = detail::ps_pldegree_type<T>;
 	public:
 		/// Defaulted default constructor.
 		power_series() = default;
@@ -314,9 +295,9 @@ class power_series: public Series
 		{
 			using term_type = typename T::term_type;
 			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
-				return this->get_degree(t1,this->m_symbol_set) < this->get_degree(t2,this->m_symbol_set);
+				return detail::ps_get_degree(t1,this->m_symbol_set) < detail::ps_get_degree(t2,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? degree_type<T>(0) : get_degree(*it,this->m_symbol_set);
+			return (it == this->m_container.end()) ? degree_type<T>(0) : detail::ps_get_degree(*it,this->m_symbol_set);
 		}
 		/// Total low degree.
 		/**
@@ -337,9 +318,9 @@ class power_series: public Series
 		{
 			using term_type = typename T::term_type;
 			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this](const term_type &t1, const term_type &t2) {
-				return this->get_ldegree(t1,this->m_symbol_set) < this->get_ldegree(t2,this->m_symbol_set);
+				return detail::ps_get_ldegree(t1,this->m_symbol_set) < detail::ps_get_ldegree(t2,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? ldegree_type<T>(0) : get_ldegree(*it,this->m_symbol_set);
+			return (it == this->m_container.end()) ? ldegree_type<T>(0) : detail::ps_get_ldegree(*it,this->m_symbol_set);
 		}
 		/// Partial degree.
 		/**
@@ -363,9 +344,9 @@ class power_series: public Series
 			using term_type = typename T::term_type;
 			const symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::max_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
-				return this->get_degree(t1,names,p,this->m_symbol_set) < this->get_degree(t2,names,p,this->m_symbol_set);
+				return detail::ps_get_degree(t1,names,p,this->m_symbol_set) < detail::ps_get_degree(t2,names,p,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? pdegree_type<T>(0) : get_degree(*it,names,p,this->m_symbol_set);
+			return (it == this->m_container.end()) ? pdegree_type<T>(0) : detail::ps_get_degree(*it,names,p,this->m_symbol_set);
 		}
 		/// Partial low degree.
 		/**
@@ -389,9 +370,9 @@ class power_series: public Series
 			using term_type = typename T::term_type;
 			const symbol_set::positions p(this->m_symbol_set,symbol_set(names.begin(),names.end()));
 			auto it = std::min_element(this->m_container.begin(),this->m_container.end(),[this,&p,&names](const term_type &t1, const term_type &t2) {
-				return this->get_ldegree(t1,names,p,this->m_symbol_set) < this->get_ldegree(t2,names,p,this->m_symbol_set);
+				return detail::ps_get_ldegree(t1,names,p,this->m_symbol_set) < detail::ps_get_ldegree(t2,names,p,this->m_symbol_set);
 			});
-			return (it == this->m_container.end()) ? pldegree_type<T>(0) : get_ldegree(*it,names,p,this->m_symbol_set);
+			return (it == this->m_container.end()) ? pldegree_type<T>(0) : detail::ps_get_ldegree(*it,names,p,this->m_symbol_set);
 		}
 		/// Total degree truncation.
 		/**
@@ -463,171 +444,7 @@ class power_series: public Series
 			}
 			return retval;
 		}
-		/// Set total-degree-based auto-truncation.
-		/**
-		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
-		 * and if \p U can be safely cast to the degree type.
-		 *
-		 * Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.
-		 *
-		 * @param[in] max_degree maximum total degree that will be retained during automatic truncation.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - threading primitives,
-		 * - piranha::safe_cast(),
-		 * - the constructor of the degree type.
-		 */
-		template <typename U, typename T = power_series, at_degree_set_enabler<T,U> = 0>
-		static void set_auto_truncate_degree(const U &max_degree)
-		{
-			// Init out for exception safety.
-			auto new_degree(safe_cast<degree_type<T>>(max_degree));
-			// Initialisation of function-level statics is thread-safe, no need to lock. We get
-			// a ref here because the initialisation of the static could throw in principle,
-			// and we want the section after the lock to be exception-free.
-			auto &at_dm = get_at_degree_max();
-			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
-			s_at_degree_mode = 1;
-			at_dm = std::move(new_degree);
-			// This should not throw (a vector of strings, destructors and deallocation should be noexcept).
-			s_at_degree_names.clear();
-		}
-		/// Set partial-degree-based auto-truncation.
-		/**
-		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
-		 * and if \p U can be safely cast to the degree type.
-		 *
-		 * Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.
-		 *
-		 * @param[in] max_degree maximum partial degree that will be retained during automatic truncation.
-		 * @param[in] names names of the variables that will be considered during the computation of the
-		 * partial degree.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - threading primitives,
-		 * - piranha::safe_cast(),
-		 * - the constructor of the degree type,
-		 * - memory allocation errors in standard containers.
-		 */
-		template <typename U, typename T = power_series, at_degree_set_enabler<T,U> = 0>
-		static void set_auto_truncate_degree(const U &max_degree, const std::vector<std::string> &names)
-		{
-			// Copy+move for exception safety.
-			auto new_degree(safe_cast<degree_type<T>>(max_degree));
-			auto new_names(names);
-			auto &at_dm = get_at_degree_max();
-			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
-			s_at_degree_mode = 2;
-			at_dm = std::move(new_degree);
-			s_at_degree_names = std::move(new_names);
-		}
-		/// Disable degree-based auto-truncation.
-		/**
-		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
-		 *
-		 * Disable the degree-based auto-truncation mechanism.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - threading primitives,
-		 * - the constructor of the degree type,
-		 * - memory allocation errors in standard containers.
-		 */
-		template <typename T = power_series, at_degree_enabler<T> = 0>
-		static void unset_auto_truncate_degree()
-		{
-			degree_type<T> new_degree(0);
-			auto &at_dm = get_at_degree_max();
-			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
-			s_at_degree_mode = 0;
-			at_dm = std::move(new_degree);
-			s_at_degree_names.clear();
-		}
-		/// Query the status of the degree-based auto-truncation mechanism.
-		/**
-		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
-		 * 
-		 * This method will return a tuple of three elements describing the status of the degree-based auto-truncation mechanism.
-		 * The elements of the tuple have the following meaning:
-		 * - truncation mode (0 if disabled, 1 for total-degree truncation and 2 for partial-degree truncation),
-		 * - the maximum degree allowed,
-		 * - the list of names to be considered for partial truncation.
-		 * 
-		 * @return a tuple representing the status of the degree-based auto-truncation mechanism.
-		 * 
-		 * @throws unspecified any exception thrown by threading primitives or by the involved constructors.
-		 */
-		template <typename T = power_series, at_degree_enabler<T> = 0>
-		static std::tuple<int,degree_type<T>,std::vector<std::string>> get_auto_truncate_degree()
-		{
-			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
-			return std::make_tuple(s_at_degree_mode,get_at_degree_max(),s_at_degree_names);
-		}
-		/// Perform automatic truncation.
-		/**
-		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
-		 *
-		 * This method will truncate \p this according to the truncation settings from piranha::power_series. Additionally,
-		 * it will also call the <tt>%auto_truncate()</tt> method from the parent series type, if it exists.
-		 *
-		 * @throws unspecified any exception thrown by:
-		 * - threading primitives,
-		 * - construction and/or assignment of the degree type,
-		 * - memory errors in standard containers,
-		 * - truncate_degree(),
-		 * - the <tt>%auto_truncate()</tt> method from the parent series type, if it exists.
-		 */
-		template <typename T = power_series, at_degree_enabler<T> = 0>
-		void auto_truncate()
-		{
-			// This are local variables into which the global ones will be copied.
-			int at_degree_mode;
-			std::vector<std::string> names;
-			degree_type<T> max_degree;
-			{
-			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
-			if (!s_at_degree_mode) {
-				// Nothing to do if no auto truncation is requested.
-				return;
-			}
-			// Acquire the global vars into local. These are all read operations,
-			// no problems if they throw.
-			max_degree = get_at_degree_max();
-			names = s_at_degree_names;
-			at_degree_mode = s_at_degree_mode;
-			}
-			// No more locking needed from here.
-			switch (at_degree_mode) {
-				case 1:
-					*static_cast<Derived *>(this) = truncate_degree(max_degree);
-					break;
-				case 2:
-					*static_cast<Derived *>(this) = truncate_degree(max_degree,names);
-			}
-			// Do the auto truncation from the parent.
-			parent_auto_truncate();
-		}
-	private:
-		// Static data for auto_truncate_degree.
-		static std::mutex		s_at_degree_mutex;
-		static int			s_at_degree_mode;
-		static std::vector<std::string>	s_at_degree_names;
-
 };
-
-// Static inits.
-template <typename Series, typename Derived>
-std::mutex power_series<Series,Derived>::s_at_degree_mutex;
-
-template <typename Series, typename Derived>
-int power_series<Series,Derived>::s_at_degree_mode = 0;
-
-template <typename Series, typename Derived>
-std::vector<std::string> power_series<Series,Derived>::s_at_degree_names;
 
 namespace math
 {
@@ -710,38 +527,6 @@ struct truncate_degree_impl<Series,T,typename std::enable_if<is_instance_of<Seri
 		return s.truncate_degree(max_degree,args...);
 	}
 };
-
-}
-
-namespace detail
-{
-
-template <typename S, typename T>
-class has_set_auto_truncate_degree: sfinae_types
-{
-		// NOTE: if we have total degree auto truncation, we also have partial degree truncation.
-		template <typename S1, typename T1>
-		static auto test(const S1 &, const T1 &t) -> decltype(S1::set_auto_truncate_degree(t),void(),yes());
-		static no test(...);
-	public:
-		static const bool value = std::is_same<yes,decltype(test(std::declval<S>(),std::declval<T>()))>::value;
-};
-
-template <typename S, typename T>
-const bool has_set_auto_truncate_degree<S,T>::value;
-
-template <typename S>
-class has_get_auto_truncate_degree: sfinae_types
-{
-		template <typename S1>
-		static auto test(const S1 &) -> decltype(S1::get_auto_truncate_degree(),void(),yes());
-		static no test(...);
-	public:
-		static const bool value = std::is_same<yes,decltype(test(std::declval<S>()))>::value;
-};
-
-template <typename S>
-const bool has_get_auto_truncate_degree<S>::value;
 
 }
 
