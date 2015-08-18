@@ -116,8 +116,15 @@ struct key_has_linarg: detail::sfinae_types
  * This class represents multivariate polynomials as collections of multivariate polynomial terms.
  * \p Cf represents the ring over which the polynomial is defined, while \p Key represents the monomial type.
  * 
- * This class satisfies the piranha::is_series type trait.
+ * Polynomials support an automatic degree-based truncation mechanism, disabled by default, which comes into play during
+ * polynomial multiplication. It allows to discard automatically all those terms, generated during series multiplication,
+ * whose total or partial degree is greater than a specified limit. This mechanism can be configured via a set of
+ * thread-safe static methods, and it is enabled if:
+ * - the total and partial degree of the series are represented by the same type \p D,
+ * - all the truncation-related requirements in piranha::power_series are satsified,
+ * - the type \p D is subtractable and the type resulting from the subtraction is still \p D.
  * 
+ * This class satisfies the piranha::is_series type trait.
  * ## Type requirements ##
  * 
  * \p Cf must be suitable for use in piranha::series as first template argument,
@@ -321,10 +328,12 @@ class polynomial:
 		using degree_type = decltype(math::degree(std::declval<const T &>()));
 		template <typename T>
 		using pdegree_type = decltype(math::degree(std::declval<const T &>(),std::declval<const std::vector<std::string> &>()));
-		// Enablers for auto-truncation: degree and partial degree must be the same, series must support math::truncate_degree().
+		// Enablers for auto-truncation: degree and partial degree must be the same, series must support math::truncate_degree(), degree type
+		// must be subtractable and yield the same type.
 		template <typename T>
 		using at_degree_enabler = typename std::enable_if<std::is_same<degree_type<T>,pdegree_type<T>>::value &&
-			has_truncate_degree<T,degree_type<T>>::value,int>::type;
+			has_truncate_degree<T,degree_type<T>>::value &&
+			std::is_same<decltype(std::declval<const degree_type<T> &>() - std::declval<const degree_type<T> &>()),degree_type<T>>::value,int>::type;
 		// For the setter, we need the above plus we need to be able to convert safely U to the degree type.
 		template <typename T, typename U>
 		using at_degree_set_enabler = typename std::enable_if<detail::true_tt<at_degree_enabler<T>>::value &&
@@ -536,7 +545,7 @@ class polynomial:
 		/// Set total-degree-based auto-truncation.
 		/**
 		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
+		 * This method is available only if the requisites outlined in piranha::polynomial are satisfied
 		 * and if \p U can be safely cast to the degree type.
 		 *
 		 * Setup the degree-based auto-truncation mechanism to truncate according to the total maximum degree.
@@ -566,7 +575,7 @@ class polynomial:
 		/// Set partial-degree-based auto-truncation.
 		/**
 		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied,
+		 * This method is available only if the requisites outlined in piranha::polynomial are satisfied
 		 * and if \p U can be safely cast to the degree type.
 		 *
 		 * Setup the degree-based auto-truncation mechanism to truncate according to the partial degree.
@@ -596,7 +605,7 @@ class polynomial:
 		/// Disable degree-based auto-truncation.
 		/**
 		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 * This method is available only if the requisites outlined in piranha::polynomial are satisfied.
 		 *
 		 * Disable the degree-based auto-truncation mechanism.
 		 *
@@ -618,7 +627,7 @@ class polynomial:
 		/// Query the status of the degree-based auto-truncation mechanism.
 		/**
 		 * \note
-		 * This method is available only if the requisites outlined in piranha::power_series are satisfied.
+		 * This method is available only if the requisites outlined in piranha::polynomial are satisfied.
 		 *
 		 * This method will return a tuple of three elements describing the status of the degree-based auto-truncation mechanism.
 		 * The elements of the tuple have the following meaning:
@@ -927,7 +936,9 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 		 * - the in-place multiplication operator of the coefficient type of \p Series,
 		 * - math::multiply_accumulate(),
 		 * - thread_pool::enqueue(),
-		 * - future_list::push_back().
+		 * - future_list::push_back(),
+		 * - polynomial::get_auto_truncate_degree(), arithmetic and logical operations on the
+		 *   degree of terms, if truncation is active.
 		 */
 		template <typename T = Series, call_enabler<T> = 0>
 		Series operator()() const

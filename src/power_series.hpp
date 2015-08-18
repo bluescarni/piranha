@@ -55,9 +55,8 @@ struct ps_term_score
 template <typename T>
 struct common_degree_type_checks
 {
-	static const bool value = std::is_constructible<T,int>::value &&
-				  (std::is_copy_constructible<T>::value || std::is_move_constructible<T>::value) &&
-				  is_less_than_comparable<T>::value && std::is_nothrow_move_assignable<T>::value;
+	static const bool value = std::is_constructible<T,int>::value && is_less_than_comparable<T>::value &&
+		is_container_element<T>::value;
 };
 
 // Total (low) degree computation.
@@ -122,19 +121,15 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  *
  * Specifically, the toolbox will conditionally augment a \p Series type by adding methods to query the total and partial (low) degree
  * of a \p Series object. Such augmentation takes place if the series' coefficient and/or key types expose methods to query
- * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits).
- *
+ * their degree properties (as established by the piranha::has_degree, piranha::key_has_degree and similar type traits), and if the necessary
+ * arithmetic operations are supported by the involved types.
  * As an additional requirement, the types returned when querying the degree must be constructible from \p int,
- * copy or move constructible, less-than comparable and nothrow move-assignable.
+ * less-than comparable and they must satisfy piranha::is_container_element.
  *
  * This toolbox provides also support for truncation based on the total or partial degree. In addition to the requirements
  * of the degree-querying methods, the truncation methods also require the supplied degree limit to be comparable to the type
  * returned by the degree-querying methods. The truncation methods will recursively truncate the coefficients of the series
  * via the piranha::math::truncate_degree() function.
- *
- * This class supports also the automatic truncation mechanism, via auto_truncate(), used, e.g., by
- * the multiplication operator in piranha::series_operators. The degree-based automatic truncation can be configured via a set of
- * thread-safe static methods, enabled if the total and partial degree of the series are the same type, and if truncation is supported.
  *
  * If the requirements outlined above are not satisfied, the degree-querying and the truncation methods will be disabled.
  *
@@ -158,11 +153,6 @@ PIRANHA_DEFINE_PARTIAL_PS_PROPERTY_GETTER(ldegree)
  * This class supports serialization if \p Series does.
  *
  * @author Francesco Biscani (bluescarni@gmail.com)
- */
-/* TODO:
- * - the nothrow check on the degree type should probably be made conditional on the general noexcept checks in type_traits,
- *   in case the degree type is not a C++11 class. These checks should probably actually be abstracted away in piranha-specific
- *   nothrow_* type traits that disable the nothrow part if requested -> actually, maybe just make it a container_element check.
  */
 template <typename Series, typename Derived>
 class power_series: public Series
