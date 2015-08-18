@@ -550,8 +550,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 				tmp._container().clear();
 			}
 			piranha_assert(total >= tot_filtered);
-			const auto mean = (total - tot_filtered) / ntrials;
-			auto retval = mean * mean * multiplier;
+			// NOTE: the reasoning here is: with no filtering the estimation will be (total/ntrials)**2*multiplier.
+			// The number of terms to be discarded in the output series will be proportional to the ratio between
+			// filtered terms and total terms, that is, (total - filtered)/total. Hence in case of filtering the estimation
+			// will be (total/ntrials)**2*multiplier * (total - filtered)/total, hence the formula below.
+			const auto retval = (total * (total - tot_filtered) * multiplier) / (integer(ntrials) * ntrials);
 			// Return always at least one.
 			if (retval.sign() == 0) {
 				return 1u;
@@ -767,16 +770,20 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		/**
 		 * \note
 		 * If the key and coefficient types of \p Series do not satisfy piranha::key_is_multipliable, or \p SkipFunctor does
-		 * not satisfy the requirements outlined in base_series_multiplier::blocked_multiplication(), a compile-time error will
+		 * not satisfy the requirements outlined in base_series_multiplier::blocked_multiplication(), or \p FilterFunctor does
+		 * not satisfy the requirements outlined in base_series_multiplier::estimate_final_series_size(), a compile-time error will
 		 * be produced.
 		 *
 		 * This method implements a generic series multiplication routine suitable for key types that satisfy piranha::key_is_multipliable.
 		 * The implementation is either single-threaded or multi-threaded, depending on the sizes of the input series, and it will use
 		 * either base_series_multiplier::plain_multiplier or a similar thread-safe multiplier for the term-by-term multiplications.
+		 * The functors \p sf and \p ff will be forwarded as skipping and filter functors respectively to base_series_multiplier::blocked_multiplication()
+		 * and base_series_multiplier::estimate_final_series_size().
 		 *
 		 * Note that, in multithreaded mode, \p sf will be shared among (and called concurrently from) all the threads.
 		 *
 		 * @param[in] sf the skipping functor (see base_series_multiplier::blocked_multiplication()).
+		 * @param[in] ff the filter functor (base_series_multiplier::estimate_final_series_size()).
 		 *
 		 * @return the series resulting from the multiplication of the two series used to construct \p this.
 		 *
@@ -793,8 +800,8 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 		 * - the construction of terms,
 		 * - in-place addition of coefficients.
 		 */
-		template <typename SkipFunctor = no_skip>
-		Series plain_multiplication(const SkipFunctor &sf = no_skip{}) const
+		template <typename SkipFunctor = no_skip, typename FilterFunctor = no_filter>
+		Series plain_multiplication(const SkipFunctor &sf = no_skip{}, const FilterFunctor &ff = no_filter{}) const
 		{
 			// Shortcuts.
 			using term_type = typename Series::term_type;
@@ -802,6 +809,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			using key_type = typename term_type::key_type;
 			PIRANHA_TT_CHECK(key_is_multipliable,cf_type,key_type);
 			PIRANHA_TT_CHECK(is_function_object,SkipFunctor,bool,const size_type &, const size_type &);
+			PIRANHA_TT_CHECK(is_function_object,FilterFunctor,unsigned,const size_type &, const size_type &);
 			constexpr std::size_t m_arity = key_type::multiply_arity;
 			// Do not do anything if one of the two series is empty.
 			if (unlikely(m_v1.empty() || m_v2.empty())) {
@@ -822,7 +830,7 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			Series retval;
 			retval.set_symbol_set(m_ss);
 			// Estimate and rehash.
-			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(m_v1,m_v2,retval));
+			const auto est = estimate_final_series_size<m_arity>(retval,plain_multiplier<false>(m_v1,m_v2,retval),ff);
 			// NOTE: use numeric cast here as safe_cast is expensive, going through an integer-double conversion,
 			// and in this case the behaviour of numeric_cast is appropriate.
 			const auto n_buckets = boost::numeric_cast<bucket_size_type>(std::ceil(static_cast<double>(est)
