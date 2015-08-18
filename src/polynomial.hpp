@@ -1007,7 +1007,12 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				using d_size_type = decltype(v_d1.size());
 				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
 			};
-			return this->plain_multiplication(sf);
+			// The filter functor: will return 1 if the degree of the term resulting from the multiplication of i and j
+			// is greater than the max degree, zero otherwise.
+			auto ff = [&sf](const size_type &i, const size_type &j) {
+				return static_cast<unsigned>(sf(i,j));
+			};
+			return this->plain_multiplication(sf,ff);
 		}
 		template <typename T>
 		Series partial_truncated_multiplication(const T &max_degree, const std::vector<std::string> &names) const
@@ -1030,7 +1035,10 @@ class series_multiplier<Series,detail::poly_multiplier_enabler<Series>>:
 				using d_size_type = decltype(v_d1.size());
 				return v_d1[static_cast<d_size_type>(i)] > v_d2[static_cast<d_size_type>(j)];
 			};
-			return this->plain_multiplication(sf);
+			auto ff = [&sf](const size_type &i, const size_type &j) {
+				return static_cast<unsigned>(sf(i,j));
+			};
+			return this->plain_multiplication(sf,ff);
 		}
 		// execute() is the top level dispatch for the actual multiplication.
 		// Case 1: not a Kronecker monomial, do the plain mult.
