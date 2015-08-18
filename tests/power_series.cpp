@@ -53,32 +53,10 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
-template <typename T>
-class null_toolbox: public T
-{
-		PIRANHA_SERIALIZE_THROUGH_BASE(T)
-	public:
-		null_toolbox() = default;
-		null_toolbox(const null_toolbox &) = default;
-		null_toolbox(null_toolbox &&) = default;
-		null_toolbox &operator=(const null_toolbox &) = default;
-		null_toolbox &operator=(null_toolbox &&) = default;
-		PIRANHA_FORWARDING_CTOR(null_toolbox,T)
-		PIRANHA_FORWARDING_ASSIGNMENT(null_toolbox,T)
-		static bool at_called;
-		void auto_truncate()
-		{
-			at_called = true;
-		}
-};
-
-template <typename T>
-bool null_toolbox<T>::at_called = false;
-
 template <typename Cf, typename Expo>
-class g_series_type: public power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>>
+class g_series_type: public power_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>
 {
-		typedef power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>> base;
+		using base = power_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
