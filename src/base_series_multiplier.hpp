@@ -862,9 +862,9 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 			// Thread block size.
 			const auto block_size = size1 / n_threads;
 			try {
-				for (size_type i = 0u; i < n_threads; ++i) {
+				for (size_type idx = 0u; idx < n_threads; ++idx) {
 					// Thread functor.
-					auto tf = [i,this,block_size,n_threads,&sl_array,&retval,&sf]()
+					auto tf = [idx,this,block_size,n_threads,&sl_array,&retval,&sf]()
 					{
 						// Used to store the result of term multiplication.
 						std::array<term_type,key_type::multiply_arity> tmp_t;
@@ -893,11 +893,11 @@ class base_series_multiplier: private detail::base_series_multiplier_impl<Series
 							}
 						};
 						// Thread block limit.
-						const auto e1 = (i == n_threads - 1u) ? this->m_v1.size() :
-							static_cast<size_type>((i + 1u) * block_size);
-						this->blocked_multiplication(f,static_cast<size_type>(i * block_size),e1,0u,this->m_v2.size(),sf);
+						const auto e1 = (idx == n_threads - 1u) ? this->m_v1.size() :
+							static_cast<size_type>((idx + 1u) * block_size);
+						this->blocked_multiplication(f,static_cast<size_type>(idx * block_size),e1,0u,this->m_v2.size(),sf);
 					};
-					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(i),tf));
+					f_list.push_back(thread_pool::enqueue(static_cast<unsigned>(idx),tf));
 				}
 				f_list.wait_all();
 				f_list.get_all();

@@ -380,21 +380,21 @@ BOOST_AUTO_TEST_CASE(base_series_multiplier_estimate_final_series_size_test)
 	{
 	pt x{"x"}, y{"y"};
 	auto a = (x + 2*y + 4), b = (x*x-2*y*x-3-4*y);
-	auto tmp = a * b;
+	auto tmp2 = a * b;
 	m_checker<pt> m0(a,b);
 	m_functor_0 mf0;
-	// Here the multiplier does nothing, tmp is cleared in input and thus the loop in the estimation
+	// Here the multiplier does nothing, tmp2 is cleared in input and thus the loop in the estimation
 	// will exit immediately, yielding a final result of 1.
-	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp,mf0),1u);
-	BOOST_CHECK_EQUAL(tmp,0);
+	BOOST_CHECK_EQUAL(m0.estimate_final_series_size<1u>(tmp2,mf0),1u);
+	BOOST_CHECK_EQUAL(tmp2,0);
 	}
 	// A reduced fateman1 benchmark, just to test a bit more.
 	{
 	pt x("x"), y("y"), z("z"), t("t");
 	auto f = x + y + z + t + 1;
-	auto tmp(f);
+	auto tmp2(f);
 	for (auto i = 1; i < 10; ++i) {
-		f *= tmp;
+		f *= tmp2;
 	}
 	auto b = f + 1;
 	auto retval = f * b;
@@ -495,15 +495,15 @@ struct multiplication_tester
 		// Dense case, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * g;
-			BOOST_CHECK_EQUAL(tmp.size(),10626u);
-			BOOST_CHECK(tmp == retval);
+			auto tmp2 = f * g;
+			BOOST_CHECK_EQUAL(tmp2.size(),10626u);
+			BOOST_CHECK(tmp2 == retval);
 		}
 		// Dense case, same input series.
 		settings::set_n_threads(4u);
 		{
-		auto tmp = f * f;
-		BOOST_CHECK_EQUAL(tmp.size(),10626u);
+		auto tmp2 = f * f;
+		BOOST_CHECK_EQUAL(tmp2.size(),10626u);
 		}
 		settings::reset_n_threads();
 		// Dense case with cancellations, default setup.
@@ -517,9 +517,9 @@ struct multiplication_tester
 		// Dense case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * h;
-			BOOST_CHECK_EQUAL(tmp.size(),5786u);
-			BOOST_CHECK(retval == tmp);
+			auto tmp2 = f * h;
+			BOOST_CHECK_EQUAL(tmp2.size(),5786u);
+			BOOST_CHECK(retval == tmp2);
 		}
 		settings::reset_n_threads();
 		// Sparse case, default.
@@ -539,9 +539,9 @@ struct multiplication_tester
 		// Sparse case, force n threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * g;
-			BOOST_CHECK_EQUAL(tmp.size(),591235u);
-			BOOST_CHECK(retval == tmp);
+			auto tmp2 = f * g;
+			BOOST_CHECK_EQUAL(tmp2.size(),591235u);
+			BOOST_CHECK(retval == tmp2);
 		}
 		settings::reset_n_threads();
 		// Sparse case with cancellations, default.
@@ -550,9 +550,9 @@ struct multiplication_tester
 		// Sparse case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * h;
-			BOOST_CHECK_EQUAL(tmp.size(),591184u);
-			BOOST_CHECK(tmp == retval);
+			auto tmp2 = f * h;
+			BOOST_CHECK_EQUAL(tmp2.size(),591184u);
+			BOOST_CHECK(tmp2 == retval);
 		}
 		settings::reset_n_threads();
 	}
