@@ -791,3 +791,15 @@ BOOST_AUTO_TEST_CASE(polynomial_invert_test)
 	BOOST_CHECK_THROW(math::invert(pt1{0}),zero_division_error);
 	BOOST_CHECK_THROW(math::invert(pt1{"x"}+pt1{"y"}),std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_r_polynomial_test)
+{
+	BOOST_CHECK((std::is_same<polynomial<double,k_monomial>,r_polynomial<1,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<double,k_monomial>,k_monomial>,r_polynomial<2,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,
+		r_polynomial<3,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,k_monomial>,
+		r_polynomial<4,double,k_monomial>>::value));
+	BOOST_CHECK((!std::is_same<polynomial<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,monomial<int>>,
+		r_polynomial<4,double,k_monomial>>::value));
+}

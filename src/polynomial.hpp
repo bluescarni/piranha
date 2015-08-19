@@ -665,6 +665,51 @@ std::vector<std::string> polynomial<Cf,Key>::s_at_degree_names;
 namespace detail
 {
 
+template <unsigned N, typename Cf, typename Key, typename = void>
+struct r_poly_impl
+{
+	static_assert(N > 1u,"Invalid recursion index.");
+	using type = polynomial<typename r_poly_impl<N - 1u,Cf,Key>::type,Key>;
+};
+
+template <unsigned N, typename Cf, typename Key>
+struct r_poly_impl<N,Cf,Key,typename std::enable_if<N == 1u>::type>
+{
+	using type = polynomial<Cf,Key>;
+};
+
+}
+
+/// Recursive polynomial.
+/**
+ * This is a convenience alias that can be used to define multivariate polynomials
+ * as univariate polynomials with univariate polynomials as coefficients.
+ *
+ * For instance, the type
+ * @code
+ * r_polynomial<1,double,k_monomial>;
+ * @endcode
+ * is exactly equivalent to
+ * @code
+ * polynomial<double,k_monomial>;
+ * @endcode
+ * The type
+ * @code
+ * r_polynomial<2,double,k_monomial>;
+ * @endcode
+ * is exactly equivalent to
+ * @code
+ * polynomial<polynomial<double,k_monomial>,k_monomial>;
+ * @endcode
+ * And so on for increasing values of \p N. \p N must be nonzero, or a compile-time error will be
+ * generated.
+ */
+template <unsigned N, typename Cf, typename Key>
+using r_polynomial = typename detail::r_poly_impl<N,Cf,Key>::type;
+
+namespace detail
+{
+
 // Identification of key types for dispatching in the multiplier.
 template <typename T>
 struct is_kronecker_monomial
