@@ -447,7 +447,7 @@ struct multiply_tester
 			BOOST_CHECK_EQUAL(res[0].m_key[0],T(5));
 			}
 			{
-			// Try with rational as well.
+			// Try with rational as well, check special handling.
 			using key_type = monomial<T,U>;
 			using term_type = term<rational,key_type>;
 			symbol_set ed;
@@ -460,7 +460,7 @@ struct multiply_tester
 			t2.m_key = key_type{T(3),T(7)};
 			std::array<term_type,1u> res;
 			key_type::multiply(res,t1,t2,ed);
-			BOOST_CHECK_EQUAL(res[0].m_cf,-2);
+			BOOST_CHECK_EQUAL(res[0].m_cf,-6);
 			BOOST_CHECK_EQUAL(res[0].m_key[0],T(5));
 			BOOST_CHECK_EQUAL(res[0].m_key[1],T(6));
 			}

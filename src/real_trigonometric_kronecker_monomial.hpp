@@ -38,6 +38,7 @@
 
 #include "binomial.hpp"
 #include "config.hpp"
+#include "detail/cf_mult_impl.hpp"
 #include "detail/km_commons.hpp"
 #include "detail/prepare_for_print.hpp"
 #include "exceptions.hpp"
@@ -234,9 +235,8 @@ class real_trigonometric_kronecker_monomial
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
 		// Enabler for multiplication.
 		template <typename Cf>
-		using multiply_enabler = typename std::enable_if<is_cf<Cf>::value &&
-			std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
-			is_divisible_in_place<Cf,int>::value && std::is_copy_assignable<Cf>::value && has_negate<Cf>::value,int>::type;
+		using multiply_enabler = typename std::enable_if<is_divisible_in_place<Cf,int>::value && has_negate<Cf>::value &&
+			detail::true_tt<detail::cf_mult_enabler<Cf>>::value,int>::type;
 #endif
 	public:
 		/// Default constructor.
@@ -649,6 +649,8 @@ class real_trigonometric_kronecker_monomial
 		 * 
 		 * This method will compute the result of the multiplication of the two terms \p t1 and \p t2 with trigonometric key.
 		 * The result is stored in the two terms of \p res and it is computed using basic trigonometric formulae.
+		 * Note however that this method will **not** perform the division by two implied by Werner's formulae. Also, in case
+		 * \p Cf is an instance of piranha::mp_rational, only the numerators of the coefficients will be multiplied.
 		 *
 		 * @param[out] res result of the multiplication.
 		 * @param[in] t1 first argument.
@@ -669,14 +671,8 @@ class real_trigonometric_kronecker_monomial
 			const symbol_set &args)
 		{
 			// Coefficients first.
-			// NOTE: first divide by two here and then multiply, at least for series? Would reduce
-			// quadratically the number of coefficient divisions.
-			// Similarly, it might be worth to change the sign as needed before the multiplication.
-			// NOTE: and if we divide everything by two in the end instead? Might be better overall.
-			Cf res_cf(t1.m_cf * t2.m_cf);
-			res_cf /= 2;
-			res[0u].m_cf = res_cf;
-			res[1u].m_cf = std::move(res_cf);
+			detail::cf_mult_impl(res[0u].m_cf,t1.m_cf,t2.m_cf);
+			res[1u].m_cf = res[0u].m_cf;
 			const bool f1 = t1.m_key.get_flavour(), f2 = t2.m_key.get_flavour();
 			if (f1 && f2) {
 				// cos, cos: no change.

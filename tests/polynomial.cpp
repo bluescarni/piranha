@@ -36,11 +36,13 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "../src/base_series_multiplier.hpp"
 #include "../src/debug_access.hpp"
 #include "../src/environment.hpp"
 #include "../src/exceptions.hpp"
 #include "../src/forwarding.hpp"
 #include "../src/invert.hpp"
+#include "../src/key_is_multipliable.hpp"
 #include "../src/math.hpp"
 #include "../src/monomial.hpp"
 #include "../src/mp_integer.hpp"
@@ -49,6 +51,7 @@
 #include "../src/real.hpp"
 #include "../src/serialization.hpp"
 #include "../src/series.hpp"
+#include "../src/series_multiplier.hpp"
 #include "../src/settings.hpp"
 #include "../src/symbol.hpp"
 
@@ -81,6 +84,27 @@ class polynomial_alt:
 		polynomial_alt &operator=(polynomial_alt &&) = default;
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial_alt,base)
 };
+
+namespace piranha
+{
+
+template <typename Cf, typename Expo>
+class series_multiplier<polynomial_alt<Cf,Expo>,void> : public base_series_multiplier<polynomial_alt<Cf,Expo>>
+{
+		using base = base_series_multiplier<polynomial_alt<Cf,Expo>>;
+		template <typename T>
+		using call_enabler = typename std::enable_if<key_is_multipliable<typename T::term_type::cf_type,
+			typename T::term_type::key_type>::value,int>::type;
+	public:
+		using base::base;
+		template <typename T = polynomial_alt<Cf,Expo>, call_enabler<T> = 0>
+		polynomial_alt<Cf,Expo> operator()() const
+		{
+			return this->plain_multiplication();
+		}
+};
+
+}
 
 // Mock coefficient.
 struct mock_cf
@@ -766,4 +790,16 @@ BOOST_AUTO_TEST_CASE(polynomial_invert_test)
 	BOOST_CHECK_EQUAL(math::invert(2*pt1{"y"}),1/2_q*pt1{"y"}.pow(-1));
 	BOOST_CHECK_THROW(math::invert(pt1{0}),zero_division_error);
 	BOOST_CHECK_THROW(math::invert(pt1{"x"}+pt1{"y"}),std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_r_polynomial_test)
+{
+	BOOST_CHECK((std::is_same<polynomial<double,k_monomial>,r_polynomial<1,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<double,k_monomial>,k_monomial>,r_polynomial<2,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,
+		r_polynomial<3,double,k_monomial>>::value));
+	BOOST_CHECK((std::is_same<polynomial<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,k_monomial>,
+		r_polynomial<4,double,k_monomial>>::value));
+	BOOST_CHECK((!std::is_same<polynomial<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,monomial<int>>,
+		r_polynomial<4,double,k_monomial>>::value));
 }

@@ -299,19 +299,19 @@ class thread_pool_: private detail::thread_pool_base<>
 		/**
 		 * \note
 		 * This function is enabled only if \p Int is an unsigned integer type or piranha::integer.
-		 * 
+		 *
 		 * This function computes the suggested number of threads to use, given an amount of total \p work_size units of work
 		 * and a minimum amount of work units per thread \p min_work_per_thread.
-		 * 
+		 *
 		 * The returned value will always be 1 if the calling thread is not the main thread; otherwise, a number of threads
 		 * such that each thread has at least \p min_work_per_thread units of work to consume will be returned. In any case, the return
 		 * value is always greater than zero.
-		 * 
+		 *
 		 * @param[in] work_size total number of work units.
 		 * @param[in] min_work_per_thread minimum number of work units to be consumed by a thread in the pool.
-		 * 
+		 *
 		 * @return the suggested number of threads to be used, always greater than zero.
-		 * 
+		 *
 		 * @throws std::invalid_argument if \p work_size or \p min_work_per_thread are not strictly positive.
 		 * @throws unspecified any exception thrown by threading primitives.
 		 */
@@ -359,6 +359,8 @@ using thread_pool = thread_pool_<>;
  */
 // \todo provide method to retrieve future values from get_all() using a vector (in case the future type
 // is not void or a reference, in which case the get_all() method stays as it is).
+// NOTE: is it really needed that this is parameterisd over F, instead of - say, T - and force it to be
+// future<T> instead?
 template <typename F>
 class future_list
 {

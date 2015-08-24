@@ -53,32 +53,10 @@ using namespace piranha;
 typedef boost::mpl::vector<double,integer,rational,real> cf_types;
 typedef boost::mpl::vector<int,integer> expo_types;
 
-template <typename T>
-class null_toolbox: public T
-{
-		PIRANHA_SERIALIZE_THROUGH_BASE(T)
-	public:
-		null_toolbox() = default;
-		null_toolbox(const null_toolbox &) = default;
-		null_toolbox(null_toolbox &&) = default;
-		null_toolbox &operator=(const null_toolbox &) = default;
-		null_toolbox &operator=(null_toolbox &&) = default;
-		PIRANHA_FORWARDING_CTOR(null_toolbox,T)
-		PIRANHA_FORWARDING_ASSIGNMENT(null_toolbox,T)
-		static bool at_called;
-		void auto_truncate()
-		{
-			at_called = true;
-		}
-};
-
-template <typename T>
-bool null_toolbox<T>::at_called = false;
-
 template <typename Cf, typename Expo>
-class g_series_type: public power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>>
+class g_series_type: public power_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>
 {
-		typedef power_series<null_toolbox<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>>,g_series_type<Cf,Expo>> base;
+		using base = power_series<series<Cf,monomial<Expo>,g_series_type<Cf,Expo>>,g_series_type<Cf,Expo>>;
 		PIRANHA_SERIALIZE_THROUGH_BASE(base)
 	public:
 		g_series_type() = default;
@@ -484,95 +462,4 @@ BOOST_AUTO_TEST_CASE(power_series_truncation_test)
 	// Test with non-existing variable.
 	BOOST_CHECK_EQUAL(math::truncate_degree(s0,0_z,{"foo","bar"}),s0);
 	}
-}
-
-BOOST_AUTO_TEST_CASE(power_series_auto_truncate_test)
-{
-	typedef polynomial<double,monomial<rational>> stype0;
-	typedef polynomial<rational,monomial<int>> stype1;
-	// Check the initial setup.
-	auto tup0 = stype0::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
-	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
-	BOOST_CHECK(std::get<2>(tup0).empty());
-	BOOST_CHECK((std::is_same<rational,std::decay<decltype(std::get<1>(tup0))>::type>::value));
-	// With no truncation enabled first.
-	auto x = stype0{"x"};
-	x.auto_truncate();
-	BOOST_CHECK_EQUAL(x,stype0{"x"});
-	// Activate total truncation.
-	x.set_auto_truncate_degree(2);
-	x.auto_truncate();
-	BOOST_CHECK_EQUAL(x,stype0{"x"});
-	x.set_auto_truncate_degree(0);
-	x.auto_truncate();
-	BOOST_CHECK_EQUAL(x,stype0{});
-	tup0 = stype0::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup0),1);
-	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
-	BOOST_CHECK(std::get<2>(tup0).empty());
-	// Check the resetting.
-	stype0::unset_auto_truncate_degree();
-	tup0 = stype0::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
-	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
-	BOOST_CHECK(std::get<2>(tup0).empty());
-	// Revive x and check partial.
-	x = stype0{"x"};
-	stype0::set_auto_truncate_degree(0,{"y"});
-	x.auto_truncate();
-	BOOST_CHECK_EQUAL(x,stype0{"x"});
-	stype0::set_auto_truncate_degree(0,{"x","y"});
-	x.auto_truncate();
-	BOOST_CHECK_EQUAL(x,stype0{});
-	tup0 = stype0::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup0),2);
-	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
-	BOOST_CHECK((std::get<2>(tup0) == std::vector<std::string>{"x","y"}));
-	// Check that for another series type the truncation settings are untouched.
-	auto tup1 = stype1::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup1),0);
-	BOOST_CHECK_EQUAL(std::get<1>(tup1),0);
-	BOOST_CHECK(std::get<2>(tup1).empty());
-	BOOST_CHECK((std::is_same<integer,std::decay<decltype(std::get<1>(tup1))>::type>::value));
-	// Final unset.
-	stype0::unset_auto_truncate_degree();
-	tup0 = stype0::get_auto_truncate_degree();
-	BOOST_CHECK_EQUAL(std::get<0>(tup0),0);
-	BOOST_CHECK_EQUAL(std::get<1>(tup0),0);
-	BOOST_CHECK(std::get<2>(tup0).empty());
-	// Check that the auto truncation from the null toolbox is called.
-	using stype2 = g_series_type<rational,rational>;
-	BOOST_CHECK(!stype2::at_called);
-	stype2::set_auto_truncate_degree(-1);
-	auto x2 = stype2{1};
-	x2.auto_truncate();
-	BOOST_CHECK(x2.empty());
-	BOOST_CHECK(stype2::at_called);
-	// Check the auto truncation when doing multiplications.
-	x = stype0{"x"};
-	x.set_auto_truncate_degree(3);
-	BOOST_CHECK_EQUAL((x + 1).pow(4),6*x*x+1+4*x+4*x*x*x);
-	auto y = stype0{"y"};
-	x.unset_auto_truncate_degree();
-	BOOST_CHECK_EQUAL((y + 1).pow(4),6*y*y+1+4*y+4*y*y*y+y*y*y*y);
-	y.clear_pow_cache();
-	x.set_auto_truncate_degree(3,{"x","y"});
-	BOOST_CHECK_EQUAL((y + 1).pow(4),6*y*y+1+4*y+4*y*y*y);
-	// Test the type traits.
-	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,int>::value));
-	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,integer>::value));
-	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,rational>::value));
-	BOOST_CHECK((detail::has_set_auto_truncate_degree<stype0,double>::value));
-	BOOST_CHECK((!detail::has_set_auto_truncate_degree<stype0,std::string>::value));
-	BOOST_CHECK((!detail::has_set_auto_truncate_degree<stype0,std::vector<int>>::value));
-	BOOST_CHECK((detail::has_get_auto_truncate_degree<stype0>::value));
-	BOOST_CHECK((detail::has_get_auto_truncate_degree<stype0>::value));
-	BOOST_CHECK((detail::has_get_auto_truncate_degree<stype0>::value));
-	BOOST_CHECK((detail::has_get_auto_truncate_degree<stype0>::value));
-	using ps_type0 = poisson_series<double>;
-	BOOST_CHECK((!detail::has_get_auto_truncate_degree<ps_type0>::value));
-	// Check a failing safe_cast.
-	BOOST_CHECK_NO_THROW(stype1::set_auto_truncate_degree(rational(3),{"x","y"}));
-	BOOST_CHECK_THROW(stype1::set_auto_truncate_degree(rational(3,4),{"x","y"}),std::invalid_argument);
 }

@@ -18,19 +18,33 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "python_includes.hpp"
+#include "fateman1.hpp"
 
+#define BOOST_TEST_MODULE fateman1_unpacked_test
+#include <boost/test/unit_test.hpp>
+
+#include <boost/lexical_cast.hpp>
+
+#include "../src/environment.hpp"
+#include "../src/monomial.hpp"
+#include "../src/mp_integer.hpp"
 #include "../src/polynomial.hpp"
-#include "expose_polynomials.hpp"
-#include "expose_utils.hpp"
-#include "polynomial_descriptor.hpp"
+#include "../src/settings.hpp"
 
-namespace pyranha
+using namespace piranha;
+
+// Fateman's polynomial multiplication test number 1. Calculate:
+// f * (f+1)
+// where f = (1+x+y+z+t)**20, using unpacked monomials. Truncate the result to degree 20 and 30.
+
+BOOST_AUTO_TEST_CASE(fateman1_unpacked_test)
 {
-
-void expose_polynomials_1()
-{
-	series_exposer<piranha::polynomial,polynomial_descriptor,3u,6u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
-}
-
+	environment env;
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	polynomial<integer,monomial<signed char>>::set_auto_truncate_degree(20);
+	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),10626u);
+	polynomial<integer,monomial<signed char>>::set_auto_truncate_degree(30);
+	BOOST_CHECK_EQUAL((fateman1<integer,monomial<signed char>>().size()),46376u);
 }

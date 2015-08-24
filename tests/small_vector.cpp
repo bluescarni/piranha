@@ -212,7 +212,7 @@ struct dynamic_tester
 		d1 ds14;
 		std::copy(tmp_vec.rbegin(),tmp_vec.rend(),std::back_inserter(ds14));
 		std::random_shuffle(ds14.begin(),ds14.end());
-		std::sort(ds14.begin(),ds14.end());
+		std::stable_sort(ds14.begin(),ds14.end());
 		BOOST_CHECK(*std::max_element(ds14.begin(),ds14.end()) == T(10));
 		BOOST_CHECK(*std::min_element(ds14.begin(),ds14.end()) == T(0));
 		BOOST_CHECK(std::equal(ds14.begin(),ds14.end(),tmp_vec.begin()));

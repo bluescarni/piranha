@@ -18,19 +18,31 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "python_includes.hpp"
+#include "pearce1.hpp"
 
-#include "../src/polynomial.hpp"
-#include "expose_polynomials.hpp"
-#include "expose_utils.hpp"
-#include "polynomial_descriptor.hpp"
+#define BOOST_TEST_MODULE pearce1_test
+#include <boost/test/unit_test.hpp>
 
-namespace pyranha
+#include <boost/lexical_cast.hpp>
+
+#include "../src/environment.hpp"
+#include "../src/kronecker_monomial.hpp"
+#include "../src/mp_rational.hpp"
+#include "../src/settings.hpp"
+
+using namespace piranha;
+
+// Pearce's polynomial multiplication test number 1. Calculate:
+// f * g
+// where
+// f = (1 + x + y + 2*z**2 + 3*t**3 + 5*u**5)**12
+// g = (1 + u + t + 2*z**2 + 3*y**3 + 5*x**5)**12
+
+BOOST_AUTO_TEST_CASE(pearce1_test)
 {
-
-void expose_polynomials_1()
-{
-	series_exposer<piranha::polynomial,polynomial_descriptor,3u,6u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
-}
-
+	environment env;
+	if (boost::unit_test::framework::master_test_suite().argc > 1) {
+		settings::set_n_threads(boost::lexical_cast<unsigned>(boost::unit_test::framework::master_test_suite().argv[1u]));
+	}
+	BOOST_CHECK_EQUAL((pearce1<rational,kronecker_monomial<>>().size()),5821335u);
 }

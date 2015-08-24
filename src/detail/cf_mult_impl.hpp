@@ -18,19 +18,53 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "python_includes.hpp"
+#ifndef PIRANHA_DETAIL_CF_MULT_IMPL_HPP
+#define PIRANHA_DETAIL_CF_MULT_IMPL_HPP
 
-#include "../src/polynomial.hpp"
-#include "expose_polynomials.hpp"
-#include "expose_utils.hpp"
-#include "polynomial_descriptor.hpp"
+#include <type_traits>
+#include <utility>
 
-namespace pyranha
+#include "../is_cf.hpp"
+#include "../mp_rational.hpp"
+#include "../type_traits.hpp"
+#include "series_fwd.hpp"
+
+namespace piranha
 {
 
-void expose_polynomials_1()
+namespace detail
 {
-	series_exposer<piranha::polynomial,polynomial_descriptor,3u,6u,poly_custom_hook<polynomial_descriptor>> poly_exposer;
+
+// Overload if the coefficient is a series.
+template <typename Cf, typename std::enable_if<std::is_base_of<detail::series_tag,Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf = cf1 * cf2;
+}
+
+// Overload if the coefficient is a rational.
+template <typename Cf, typename std::enable_if<detail::is_mp_rational<Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf._num() = cf1.num();
+	out_cf._num() *= cf2.num();
+}
+
+// Overload if the coefficient is not a series and not a rational.
+template <typename Cf, typename std::enable_if<!std::is_base_of<detail::series_tag,Cf>::value && !detail::is_mp_rational<Cf>::value,int>::type = 0>
+inline void cf_mult_impl(Cf &out_cf, const Cf &cf1, const Cf &cf2)
+{
+	out_cf = cf1;
+	out_cf *= cf2;
+}
+
+// Enabler for the functions above.
+template <typename Cf>
+using cf_mult_enabler = typename std::enable_if<std::is_same<decltype(std::declval<const Cf &>() * std::declval<const Cf &>()),Cf>::value &&
+	is_multipliable_in_place<Cf>::value && is_cf<Cf>::value && std::is_copy_assignable<Cf>::value>::type;
+
 }
 
 }
+
+#endif
