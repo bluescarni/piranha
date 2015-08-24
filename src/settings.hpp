@@ -40,7 +40,6 @@ template <typename = int>
 struct base_settings
 {
 	static std::mutex		m_mutex;
-	static bool			m_tracing;
 	static unsigned			m_cache_line_size;
 	static unsigned long		m_max_term_output;
 	static const unsigned long	m_default_max_term_output = 20ul;
@@ -52,9 +51,6 @@ struct base_settings
 
 template <typename T>
 std::mutex base_settings<T>::m_mutex;
-
-template <typename T>
-bool base_settings<T>::m_tracing = false;
 
 template <typename T>
 unsigned base_settings<T>::m_cache_line_size = runtime_info::get_cache_line_size();
@@ -163,32 +159,6 @@ class settings_: private detail::base_settings<>
 		{
 			std::lock_guard<std::mutex> lock(m_mutex);
 			m_cache_line_size = runtime_info::get_cache_line_size();
-		}
-		/// Get tracing status.
-		/**
-		 * Tracing is disabled by default on program startup.
-		 *
-		 * @return \p true if tracing is enabled, \p false otherwise.
-		 *
-		 * @throws std::system_error in case of failure(s) by threading primitives.
-		 */
-		static bool get_tracing()
-		{
-			std::lock_guard<std::mutex> lock(m_mutex);
-			return m_tracing;
-		}
-		/// Set tracing status.
-		/**
-		 * Tracing is disabled by default on program startup.
-		 *
-		 * @param[in] flag \p true to enable tracing, \p false to disable it.
-		 *
-		 * @throws std::system_error in case of failure(s) by threading primitives.
-		 */
-		static void set_tracing(bool flag)
-		{
-			std::lock_guard<std::mutex> lock(m_mutex);
-			m_tracing = flag;
 		}
 		/// Get max term output.
 		/**

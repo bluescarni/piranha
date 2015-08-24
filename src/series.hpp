@@ -65,7 +65,6 @@
 #include "symbol_set.hpp"
 #include "symbol.hpp"
 #include "term.hpp"
-#include "tracing.hpp"
 #include "type_traits.hpp"
 
 namespace piranha

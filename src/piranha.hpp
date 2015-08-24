@@ -153,7 +153,6 @@
  * \todo the replace_symbol() method for series. Or maybe rename_symbol().
  * \todo truncation tests based on the email discussion with ondrej.
  * \todo get rid of the global state for the symbols, just store strings. This should allow to remove the ugliness of checking the shutdown flag.
- * \todo get rid of tracing.
  * \todo consider the use of the upcoming std::shared_lock/mutex for multiple readers/single writer situations (e.g., in the custom derivative
  * machinery). Maybe we can do with the boost counterpart if it does not require extra linking, until C++14.
  * \todo it looks like in many cases we can hide excess default template parameters used in TMP by adding an extra layer of indirection. This has only cosmetic
@@ -235,7 +234,6 @@ inline namespace literals {}
 #include "thread_barrier.hpp"
 #include "thread_management.hpp"
 #include "thread_pool.hpp"
-#include "tracing.hpp"
 #include "trigonometric_series.hpp"
 #include "tuning.hpp"
 #include "type_traits.hpp"
