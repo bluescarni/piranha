@@ -170,6 +170,9 @@
  * if the exception safety is weaker). If we do this, we need to check all usages of is_ignorable()/is_compatible(), re-evaluate the exception handling
  * where they are used and update the docs for exception specifications.
  * \todo hash_set needs more testing.
+ * \todo maybe we should rename is_container_element to is_regular_type.
+ * \todo we should probably add the is_container_element check to the type inferred for evaluation, and possibly other automatically inferred types
+ * in generic algorithms - subs, ipow_subs, etc.?
  */
 namespace piranha
 {
