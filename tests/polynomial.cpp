@@ -233,10 +233,7 @@ struct assignment_tester
 			BOOST_CHECK(p1 == 1);
 			p1 = integer(10);
 			BOOST_CHECK(p1 == integer(10));
-			p1 = "x";
-			BOOST_CHECK(p1 == p_type("x"));
 			BOOST_CHECK((std::is_assignable<p_type,Cf>::value));
-			BOOST_CHECK((std::is_assignable<p_type,std::string>::value));
 			BOOST_CHECK((std::is_assignable<p_type,p_type>::value));
 			BOOST_CHECK((!std::is_assignable<p_type,symbol>::value));
 		}
@@ -443,7 +440,7 @@ class debug_access<integral_combination_tag>
 				typedef std::map<std::string,integer> map_type;
 				p_type p1;
 				BOOST_CHECK((p1.integral_combination() == map_type{}));
-				p1 = "x";
+				p1 = p_type{"x"};
 				BOOST_CHECK((p1.integral_combination() == map_type{{"x",integer(1)}}));
 				p1 += 2 * p_type{"y"};
 				BOOST_CHECK((p1.integral_combination() == map_type{{"y",integer(2)},{"x",integer(1)}}));

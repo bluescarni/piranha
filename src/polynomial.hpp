@@ -144,7 +144,6 @@ struct key_has_linarg: detail::sfinae_types
  * 
  * @author Francesco Biscani (bluescarni@gmail.com)
  */
-// TODO: fix the ctor and assignment from string with proper uniform enabling.
 template <typename Cf, typename Key>
 class polynomial:
 	public power_series<trigonometric_series<ipow_substitutable_series<substitutable_series<t_substitutable_series<series<Cf,Key,
@@ -355,6 +354,11 @@ class polynomial:
 			static degree_type<T> at_degree_max(0);
 			return at_degree_max;
 		}
+		// Enabler for string construction/assignment.
+		template <typename Str>
+		using str_enabler = typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
+			std::is_same<typename std::decay<Str>::type,char *>::value ||
+			std::is_same<typename std::decay<Str>::type,const char *>::value,int>::type;
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -370,6 +374,9 @@ class polynomial:
 		polynomial(polynomial &&) = default;
 		/// Constructor from symbol name.
 		/**
+		 * \note
+		 * This template constructor is enabled only if the decay type of \p Str is a C or C++ string.
+		 *
 		 * Will construct a univariate polynomial made of a single term with unitary coefficient and exponent, representing
 		 * the symbolic variable \p name. The type of \p name must be a string type (either C or C++).
 		 * 
@@ -383,11 +390,8 @@ class polynomial:
 		 * - the constructor of the term type from coefficient and key,
 		 * - piranha::series::insert().
 		 */
-		template <typename Str>
-		explicit polynomial(Str &&name, typename std::enable_if<
-			std::is_same<typename std::decay<Str>::type,std::string>::value ||
-			std::is_same<typename std::decay<Str>::type,char *>::value ||
-			std::is_same<typename std::decay<Str>::type,const char *>::value>::type * = nullptr) : base()
+		template <typename Str, str_enabler<Str> = 0>
+		explicit polynomial(Str &&name) : base()
 		{
 			construct_from_string(std::forward<Str>(name));
 		}
@@ -402,36 +406,6 @@ class polynomial:
 		polynomial &operator=(const polynomial &) = default;
 		/// Defaulted move assignment operator.
 		polynomial &operator=(polynomial &&) = default;
-		/// Assignment from symbol name (C string).
-		/**
-		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
-		 * 
-		 * @param[in] name name of the symbolic variable that the polynomial will represent.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the constructor from symbol name.
-		 */
-		polynomial &operator=(const char *name)
-		{
-			operator=(polynomial(name));
-			return *this;
-		}
-		/// Assignment from symbol name (C++ string).
-		/**
-		 * Equivalent to invoking the constructor from symbol name and assigning the result to \p this.
-		 * 
-		 * @param[in] name name of the symbolic variable that the polynomial will represent.
-		 * 
-		 * @return reference to \p this.
-		 * 
-		 * @throws unspecified any exception thrown by the constructor from symbol name.
-		 */
-		polynomial &operator=(const std::string &name)
-		{
-			operator=(polynomial(name));
-			return *this;
-		}
 		PIRANHA_FORWARDING_ASSIGNMENT(polynomial,base)
 		/// Override default exponentiation method.
 		/**
