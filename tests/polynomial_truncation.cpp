@@ -156,3 +156,31 @@ BOOST_AUTO_TEST_CASE(polynomial_truncation_main_test)
 	environment env;
 	boost::mpl::for_each<cf_types>(main_tester());
 }
+
+BOOST_AUTO_TEST_CASE(polynomial_truncation_recursive_test)
+{
+	// A couple of simple truncation tests with recursive polynomials.
+	using p1 = r_polynomial<1,integer,monomial<short>>;
+	using p2 = r_polynomial<2,integer,monomial<short>>;
+	using p3 = r_polynomial<3,integer,monomial<short>>;
+	p1 x{"x"};
+	p2 y{"y"};
+	p3 z{"z"};
+	p3::set_auto_truncate_degree(5);
+	BOOST_CHECK(math::degree(x*y*z) == 3);
+	BOOST_CHECK(math::degree(x*x*y*z) == 4);
+	BOOST_CHECK(math::degree(x*x*x*y*z) == 5);
+	BOOST_CHECK(x*x*x*y*y*z == 0);
+	p3::unset_auto_truncate_degree();
+	p2::set_auto_truncate_degree(4);
+	BOOST_CHECK(math::degree(x*x*y*z) == 4);
+	BOOST_CHECK(math::degree(x*x*y*y*z) == 5);
+	BOOST_CHECK(x*x*y*y*y*z == 0);
+	p2::unset_auto_truncate_degree();
+	p1::set_auto_truncate_degree(4);
+	BOOST_CHECK(math::degree(x*x*y*z) == 4);
+	BOOST_CHECK(math::degree(x*x*x*y*z) == 5);
+	BOOST_CHECK(math::degree(x*x*x*x*y*z) == 6);
+	BOOST_CHECK(x*x*x*x*x*y*z == 0);
+	p1::unset_auto_truncate_degree();
+}
