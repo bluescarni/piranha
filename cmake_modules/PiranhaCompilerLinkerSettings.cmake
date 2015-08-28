@@ -61,6 +61,11 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 		MESSAGE(FATAL_ERROR "Unsupported GCC version, please upgrade your compiler.")
 	ENDIF(NOT GCC_VERSION_CHECK)
 	MESSAGE(STATUS "GCC version is ok.")
+	# The trouble here is that -g (which implies -g2) results in ICE in some tests and in
+	# some pyranha exposition cases. We just append -g1 here, which overrides the default -g.
+	message(STATUS "Forcing the debug flag to -g1 for GCC.")
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g1")
+	# Set the standard flag.
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 	# Enable libstdc++ pedantic debug mode in debug builds.
 	# NOTE: this is disabled by default, as it requires the c++ library to be compiled with this
