@@ -238,6 +238,9 @@ class monomial: public array_key<T,monomial<T,S>,S>
 		monomial(monomial &&) = default;
 		/// Constructor from initializer list.
 		/**
+		 * \note
+		 * This constructor is enabled only if the corresponding constructor in piranha::array_key is enabled.
+		 *
 		 * @param[in] list initializer list.
 		 *
 		 * @see piranha::array_key's constructor from initializer list.

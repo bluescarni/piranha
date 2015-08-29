@@ -218,7 +218,7 @@ class kronecker_monomial
 		/**
 		 * \note
 		 * This constructor is enabled only if \p Iterator is an input iterator whose value type
-		 * is convertible to \p T.
+		 * is safely convertible to \p T.
 		 *
 		 * Will build internally a vector of values from the input iterators, encode it and assign the result
 		 * to the internal integer instance. The value type of the iterator is converted to \p T using
