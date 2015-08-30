@@ -365,6 +365,7 @@ class polynomial_test_case(_ut.TestCase):
 		self.assertRaises(ValueError,lambda : x.find_cf([1,2]))
 		self.assertRaises(TypeError,lambda : x.find_cf([1.]))
 		self.assertRaises(TypeError,lambda : x.find_cf([1,'a']))
+		self.assertRaises(TypeError,lambda : x.find_cf(1))
 
 class divisor_series_test_case(_ut.TestCase):
 	""":mod:`divisor_series` module test case.
