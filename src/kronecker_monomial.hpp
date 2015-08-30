@@ -528,13 +528,8 @@ class kronecker_monomial
 			const auto size = args.size();
 			decltype(args.size()) n_linear = 0u, candidate = 0u;
 			for (typename v_type::size_type i = 0u; i < size; ++i) {
-				integer tmp;
-				try {
-					tmp = safe_cast<integer>(v[i]);
-				} catch (const std::invalid_argument &) {
-					piranha_throw(std::invalid_argument,"exponent is not an integer");
-				}
-				if (tmp == 0) {
+				integer tmp = safe_cast<integer>(v[i]);
+				if (tmp.sign() == 0) {
 					continue;
 				}
 				if (tmp != 1) {
