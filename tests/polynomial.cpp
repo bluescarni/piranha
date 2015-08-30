@@ -28,6 +28,7 @@
 #include <boost/mpl/vector.hpp>
 #include <cstddef>
 #include <limits>
+#include <list>
 #include <map>
 #include <sstream>
 #include <stdexcept>
@@ -343,11 +344,11 @@ struct multiplication_tester
 		// Dense case, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * g;
+			auto tmp1 = f * g;
 			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
-			BOOST_CHECK_EQUAL(tmp.size(),10626u);
-			BOOST_CHECK(tmp == retval);
-			BOOST_CHECK(tmp == p_type{tmp_alt});
+			BOOST_CHECK_EQUAL(tmp1.size(),10626u);
+			BOOST_CHECK(tmp1 == retval);
+			BOOST_CHECK(tmp1 == p_type{tmp_alt});
 		}
 		settings::reset_n_threads();
 		// Dense case with cancellations, default setup.
@@ -363,11 +364,11 @@ struct multiplication_tester
 		// Dense case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * h;
+			auto tmp1 = f * h;
 			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
-			BOOST_CHECK_EQUAL(tmp.size(),5786u);
-			BOOST_CHECK(retval == tmp);
-			BOOST_CHECK(tmp_alt == p_type_alt{tmp});
+			BOOST_CHECK_EQUAL(tmp1.size(),5786u);
+			BOOST_CHECK(retval == tmp1);
+			BOOST_CHECK(tmp_alt == p_type_alt{tmp1});
 		}
 		settings::reset_n_threads();
 		// Sparse case, default.
@@ -389,11 +390,11 @@ struct multiplication_tester
 		// Sparse case, force n threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * g;
+			auto tmp1 = f * g;
 			auto tmp_alt = p_type_alt(f) * p_type_alt(g);
-			BOOST_CHECK_EQUAL(tmp.size(),591235u);
-			BOOST_CHECK(retval == tmp);
-			BOOST_CHECK(tmp_alt == p_type_alt{tmp});
+			BOOST_CHECK_EQUAL(tmp1.size(),591235u);
+			BOOST_CHECK(retval == tmp1);
+			BOOST_CHECK(tmp_alt == p_type_alt{tmp1});
 		}
 		settings::reset_n_threads();
 		// Sparse case with cancellations, default.
@@ -404,11 +405,11 @@ struct multiplication_tester
 		// Sparse case with cancellations, force number of threads.
 		for (auto i = 1u; i <= 4u; ++i) {
 			settings::set_n_threads(i);
-			auto tmp = f * h;
+			auto tmp1 = f * h;
 			auto tmp_alt = p_type_alt(f) * p_type_alt(h);
-			BOOST_CHECK_EQUAL(tmp.size(),591184u);
-			BOOST_CHECK(tmp == retval);
-			BOOST_CHECK(tmp == p_type{tmp_alt});
+			BOOST_CHECK_EQUAL(tmp1.size(),591184u);
+			BOOST_CHECK(tmp1 == retval);
+			BOOST_CHECK(tmp1 == p_type{tmp_alt});
 		}
 	}
 };
@@ -799,4 +800,36 @@ BOOST_AUTO_TEST_CASE(polynomial_r_polynomial_test)
 		r_polynomial<4,double,k_monomial>>::value));
 	BOOST_CHECK((!std::is_same<polynomial<polynomial<polynomial<polynomial<double,k_monomial>,k_monomial>,k_monomial>,monomial<int>>,
 		r_polynomial<4,double,k_monomial>>::value));
+}
+
+BOOST_AUTO_TEST_CASE(polynomial_find_cf_test)
+{
+	using pt1 = polynomial<integer,k_monomial>;
+	BOOST_CHECK_EQUAL(pt1{}.find_cf<int>({}),0);
+	BOOST_CHECK_THROW(pt1{}.find_cf({1}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(3*pt1{"x"}.find_cf({1}),3);
+	BOOST_CHECK_EQUAL(3*pt1{"x"}.find_cf({0}),0);
+	BOOST_CHECK_EQUAL(3*pt1{"x"}.find_cf({2}),0);
+	BOOST_CHECK_THROW((3*pt1{"x"}+4*pt1{"y"}).find_cf({2}),std::invalid_argument);
+	BOOST_CHECK_EQUAL((3*pt1{"x"}+4*pt1{"y"}).find_cf({1,0}),3);
+	BOOST_CHECK_EQUAL((3*pt1{"x"}+4*pt1{"y"}).find_cf({0,1}),4);
+	BOOST_CHECK_EQUAL((3*pt1{"x"}+4*pt1{"y"}).find_cf({1_z,1_z}),0);
+	BOOST_CHECK_EQUAL((3*pt1{"x"}+4*pt1{"y"}).find_cf(std::vector<integer>{1_z,1_z}),0);
+	BOOST_CHECK_EQUAL((3*pt1{"x"}+4*pt1{"y"}).find_cf(std::list<int>{0,1}),4);
+	using pt2 = polynomial<integer,monomial<int>>;
+	BOOST_CHECK_EQUAL(pt2{}.find_cf<int>({}),0);
+	BOOST_CHECK_THROW(pt2{}.find_cf({1}),std::invalid_argument);
+	BOOST_CHECK_EQUAL(3*pt2{"x"}.find_cf({1}),3);
+	BOOST_CHECK_EQUAL(3*pt2{"x"}.find_cf({0}),0);
+	BOOST_CHECK_EQUAL(3*pt2{"x"}.find_cf({2}),0);
+	BOOST_CHECK_THROW((3*pt2{"x"}+4*pt2{"y"}).find_cf({2}),std::invalid_argument);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf({1,0}),3);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf({0,1}),4);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf({1_z,1_z}),0);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf(std::vector<integer>{1_z,1_z}),0);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf(std::list<int>{0,1}),4);
+	BOOST_CHECK_EQUAL((3*pt2{"x"}+4*pt2{"y"}).find_cf(std::list<signed char>{0,1}),4);
+	if (std::numeric_limits<long>::max() > std::numeric_limits<int>::max()) {
+		BOOST_CHECK_THROW(pt2{"x"}.find_cf(std::list<long>{std::numeric_limits<long>::max()}),std::invalid_argument);
+	}
 }

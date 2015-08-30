@@ -25,6 +25,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <cmath> // For std::ceil.
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <map>
@@ -359,6 +360,23 @@ class polynomial:
 		using str_enabler = typename std::enable_if<std::is_same<typename std::decay<Str>::type,std::string>::value ||
 			std::is_same<typename std::decay<Str>::type,char *>::value ||
 			std::is_same<typename std::decay<Str>::type,const char *>::value,int>::type;
+		// Implementation of find_cf().
+		template <typename T>
+		using find_cf_enabler = typename std::enable_if<std::is_constructible<typename base::term_type::key_type,
+			decltype(std::begin(std::declval<const T &>())),decltype(std::end(std::declval<const T &>())),const symbol_set &>::value &&
+			has_begin_end<const T>::value,int>::type;
+		template <typename T>
+		using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T>>;
+		template <typename Iterator>
+		Cf find_cf_impl(Iterator begin, Iterator end) const
+		{
+			typename base::term_type tmp_term{Cf(0),Key(begin,end,this->m_symbol_set)};
+			auto it = this->m_container.find(tmp_term);
+			if (it == this->m_container.end()) {
+				return Cf(0);
+			}
+			return it->m_cf;
+		}
 	public:
 		/// Series rebind alias.
 		template <typename Cf2>
@@ -618,6 +636,51 @@ class polynomial:
 		{
 			std::lock_guard<std::mutex> lock(s_at_degree_mutex);
 			return std::make_tuple(s_at_degree_mode,get_at_degree_max(),s_at_degree_names);
+		}
+		/// Find coefficient.
+		/**
+		 * \note
+		 * This method is enabled only if:
+		 * - \p T satisfies piranha::has_begin_end,
+		 * - \p Key can be constructed from the begin/end iterators of \p c and a piranha::symbol_set.
+		 *
+		 * This method will first construct a term with zero coefficient and key initialised from the begin/end iterators
+		 * of \p c and the symbol set of \p this, and it will then try to locate the term inside \p this.
+		 * If the term is found, its coefficient will be returned. Otherwise, a coefficient initialised
+		 * from 0 will be returned.
+		 *
+		 * @param[in] c the container that will be used to construct the \p Key to be located.
+		 *
+		 * @returns the coefficient of the term whose \p Key corresponds to \p c if such term exists,
+		 * zero otherwise.
+		 *
+		 * @throws unspecified any exception thrown by:
+		 * - term, coefficient and key construction,
+		 * - piranha::hash_set::find().
+		 */
+		template <typename T, find_cf_enabler<T> = 0>
+		Cf find_cf(const T &c) const
+		{
+			return find_cf_impl(std::begin(c),std::end(c));
+		}
+		/// Find coefficient.
+		/**
+		 * \note
+		 * This method is enabled only if \p Key can be constructed from the begin/end iterators of \p l and a piranha::symbol_set.
+		 *
+		 * This method is identical to the other overload with the same name, and it is provided for convenience.
+		 *
+		 * @param[in] l the list that will be used to construct the \p Key to be located.
+		 *
+		 * @returns the coefficient of the term whose \p Key corresponds to \p l if such term exists,
+		 * zero otherwise.
+		 *
+		 * @throws unspecified any exception thrown by the other overload.
+		 */
+		template <typename T, find_cf_init_list_enabler<T> = 0>
+		Cf find_cf(std::initializer_list<T> l) const
+		{
+			return find_cf_impl(std::begin(l),std::end(l));
 		}
 	private:
 		// Static data for auto_truncate_degree.
